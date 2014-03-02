@@ -6,12 +6,37 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F7AB71C918C3E19D0077F07D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libStonefish.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7AB71CB18C3E19D0077F07D /* FallingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FallingTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7AB71CD18C3E19D0077F07D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F7AB71B318C3D8EC0077F07D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7AB71C818C3E19D0077F07D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -24,6 +49,8 @@
 		F7AB71AD18C3D8EC0077F07D = {
 			isa = PBXGroup;
 			children = (
+				F7AB71BF18C3DCA90077F07D /* Library */,
+				F7AB71BE18C3DC950077F07D /* Tests */,
 				F7AB71B718C3D8EC0077F07D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -32,8 +59,48 @@
 			isa = PBXGroup;
 			children = (
 				F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */,
+				F7AB71CB18C3E19D0077F07D /* FallingTest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F7AB71BE18C3DC950077F07D /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				F7AB71CC18C3E19D0077F07D /* FallingTest */,
+			);
+			path = Tests;
+			sourceTree = SOURCE_ROOT;
+		};
+		F7AB71BF18C3DCA90077F07D /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				F7AB71C118C3DCE60077F07D /* include */,
+				F7AB71C018C3DCC30077F07D /* src */,
+			);
+			path = Library;
+			sourceTree = SOURCE_ROOT;
+		};
+		F7AB71C018C3DCC30077F07D /* src */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		F7AB71C118C3DCE60077F07D /* include */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		F7AB71CC18C3E19D0077F07D /* FallingTest */ = {
+			isa = PBXGroup;
+			children = (
+				F7AB71CD18C3E19D0077F07D /* main.cpp */,
+			);
+			path = FallingTest;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -66,6 +133,23 @@
 			productReference = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		F7AB71CA18C3E19D0077F07D /* FallingTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7AB71D118C3E19D0077F07D /* Build configuration list for PBXNativeTarget "FallingTest" */;
+			buildPhases = (
+				F7AB71C718C3E19D0077F07D /* Sources */,
+				F7AB71C818C3E19D0077F07D /* Frameworks */,
+				F7AB71C918C3E19D0077F07D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FallingTest;
+			productName = FallingTest;
+			productReference = F7AB71CB18C3E19D0077F07D /* FallingTest */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -88,6 +172,7 @@
 			projectRoot = "";
 			targets = (
 				F7AB71B518C3D8EC0077F07D /* Stonefish */,
+				F7AB71CA18C3E19D0077F07D /* FallingTest */,
 			);
 		};
 /* End PBXProject section */
@@ -97,6 +182,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7AB71C718C3E19D0077F07D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,6 +280,24 @@
 			};
 			name = Release;
 		};
+		F7AB71D218C3E19D0077F07D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		F7AB71D318C3E19D0077F07D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -204,6 +315,15 @@
 			buildConfigurations = (
 				F7AB71BB18C3D8EC0077F07D /* Debug */,
 				F7AB71BC18C3D8EC0077F07D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F7AB71D118C3E19D0077F07D /* Build configuration list for PBXNativeTarget "FallingTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F7AB71D218C3E19D0077F07D /* Debug */,
+				F7AB71D318C3E19D0077F07D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

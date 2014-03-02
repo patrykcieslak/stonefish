@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>FallingTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>Stonefish.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -13,6 +18,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>F7AB71B518C3D8EC0077F07D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F7AB71CA18C3E19D0077F07D</key>
 		<dict>
 			<key>primary</key>
 			<true/>
