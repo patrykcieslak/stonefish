@@ -1,0 +1,614 @@
+//
+//  IMGUI.cpp
+//  Stonefish
+//
+//  Created by Patryk Cieslak on 11/27/12.
+//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//
+
+#include "IMGUI.h"
+#include <stdio.h>
+#include <math.h>
+
+static GLfloat ui_colors[36][4] =
+{
+    //Panel
+    {0.8f,0.8f,0.8f,0.6f},
+    {0.2f,0.22f,0.25f,0.7f},
+    {0.3f,0.32f,0.35f,0.7f},
+    {0.3f,0.32f,0.35f,0.7f},
+    {0.2f,0.22f,0.25f,0.7f},
+    {0.8f,0.8f,0.8f,1.0f},
+    //Button
+    {0.8f,0.8f,0.8f,1.0f},
+    {0.85f,0.85f,0.85f,1.0f},
+    {0.9f,0.9f,0.9f,1.0f},
+    {0.2f,0.22f,0.25f,0.7f},
+    {0.2f,0.22f,0.25f,1.0f},
+    //Slider
+    {0.2f, 0.2f, 0.2f, 1.f},
+    {1.f, 0.4f, 0.1f, 1.f},
+    {1.0f,1.0f,1.0f,1.0f},
+    {1.0f,1.0f,1.0f,1.0f},
+    {1.0f,1.0f,1.0f,1.0f},
+    {1.0f,1.0f,1.0f,0.7f},
+    {1.0f,1.0f,1.0f,1.0f},
+    {1.0f,1.0f,1.0f,1.0f},
+    //Progress bar
+    {0.2f, 0.22f, 0.25f, 1.f},
+    {1.f, 0.95f, 0.1f, 1.f},
+    {0.2f,0.22f,0.25f,0.7f},
+    {1.0f,1.0f,1.0f,1.0f},
+    {1.0f,1.0f,1.0f,1.0f},
+    //Check box
+    {0.8f,0.8f,0.8f,1.0f},
+    {0.85f,0.85f,0.85f,1.0f},
+    {0.9f,0.9f,0.9f,1.0f},
+    {0.2f,0.22f,0.25f,0.7f},
+    {0.2f,0.22f,0.25f,1.0f},
+    {0.2f,0.22f,0.25f,1.0f},
+    //Radio button
+    {0.8f,0.8f,0.8f,1.0f},
+    {0.85f,0.85f,0.85f,1.0f},
+    {0.9f,0.9f,0.9f,1.0f},
+    {0.2f,0.22f,0.25f,0.7f},
+    {0.2f,0.22f,0.25f,1.0f},
+    {0.2f,0.22f,0.25f,1.0f}
+};
+
+IMGUI::IMGUI()
+{
+    windowW = windowH = 200;
+    shaders = false;
+    mouseX = 0;
+    mouseY = 0;
+    mouseLeftDown = false;
+    mouseRightDown = false;
+}
+
+IMGUI::~IMGUI()
+{
+    delete plainPrinter;
+}
+
+void IMGUI::SetRenderSize(int width, int height)
+{
+    windowW = width;
+    windowH = height;
+}
+
+ui_id IMGUI::getHot()
+{
+    return hot;
+}
+
+ui_id IMGUI::getActive()
+{
+    return active;
+}
+
+void IMGUI::setHot(ui_id newHot)
+{
+    hot = newHot;
+}
+
+void IMGUI::setActive(ui_id newActive)
+{
+    active = newActive;
+}
+
+bool IMGUI::isHot(ui_id ID)
+{
+    return (hot.owner == ID.owner && hot.item == ID.item && hot.index == ID.index);
+}
+
+bool IMGUI::isActive(ui_id ID)
+{
+    return (active.owner == ID.owner && active.item == ID.item && active.index == ID.index);
+}
+
+void IMGUI::clearActive()
+{
+    active.owner = -1;
+}
+
+void IMGUI::clearHot()
+{
+    hot.owner = -1;
+}
+
+int IMGUI::getMouseX()
+{
+    return mouseX;
+}
+
+int IMGUI::getMouseY()
+{
+    return mouseY;
+}
+
+int IMGUI::getWindowHeight()
+{
+    return windowH;
+}
+
+int IMGUI::getWindowWidth()
+{
+    return windowW;
+}
+
+void IMGUI::Init()
+{
+    OpenGLPrinter::SetWindowSize(windowW, windowH);
+    plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE, 1.0);
+}
+
+void IMGUI::Begin()
+{
+    //prepare orthographic projection
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable (GL_LIGHTING);
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_POLYGON_SMOOTH);
+	glEnable(GL_LINE_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+    glScissor(0, 0, windowW, windowH);
+    glViewport(0, 0, windowW, windowH);
+    glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, (GLfloat)windowW, (GLfloat)windowH, 0, 0, 1.f);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+    
+    clearHot();
+}
+
+void IMGUI::End()
+{
+    //revert to previous projection
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+    glPopAttrib();
+}
+
+void IMGUI::DrawPlainText(GLfloat x, GLfloat y, GLfloat *color, const char *text)
+{
+    plainPrinter->Print(color, x, y, FONT_SIZE, text);
+}
+
+GLfloat IMGUI::PlainTextLength(const char* text)
+{
+    return plainPrinter->TextLength(text);
+}
+
+bool IMGUI::MouseInRect(int x, int y, int w, int h)
+{
+    return (mouseX >= x && mouseX <= (x+w) && mouseY >= y && mouseY <= (y+h));
+}
+
+bool IMGUI::MouseIsDown(bool leftButton)
+{
+    if(leftButton)
+        return mouseLeftDown;
+    else
+        return mouseRightDown;
+}
+
+void IMGUI::MouseDown(int x, int y, bool leftButton)
+{
+    mouseX = x;
+    mouseY = y;
+    
+    if(leftButton)
+        mouseLeftDown = true;
+    else
+        mouseRightDown = true;
+}
+
+void IMGUI::MouseUp(int x, int y, bool leftButton)
+{
+    mouseX = x;
+    mouseY = y;
+    
+    if(leftButton)
+        mouseLeftDown = false;
+    else
+        mouseRightDown = false;
+}
+
+void IMGUI::MouseMove(int x, int y)
+{
+    mouseX = x;
+    mouseY = y;
+}
+
+void IMGUI::KeyDown(SDL_Keycode key)
+{
+}
+
+void IMGUI::KeyUp(SDL_Keycode key)
+{
+}
+
+//static
+void IMGUI::DoLabel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text)
+{
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+    
+    glEnable(GL_TEXTURE_2D);
+    UI->DrawPlainText(x+m[12], y+m[13], color, text);
+}
+
+void IMGUI::DoPanel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
+{
+    glLoadIdentity();
+    glScissor(x, UI->getWindowHeight()-y-h, w, UI->getWindowHeight()-y-25.f);
+    
+    glDisable(GL_TEXTURE_2D);
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
+    glVertex2f(x, y);
+    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
+    glVertex2f(x + w, y);
+    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
+    glVertex2f(x, y+3.f);
+    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
+    glVertex2f(x+w, y+3.f);
+    
+    glColor4fv(ui_colors[PANEL_LEFT_BAR_COLOR]);
+    glVertex2f(x, y+3.f);
+    glColor4fv(ui_colors[PANEL_RIGHT_BAR_COLOR]);
+    glVertex2f(x+w, y+3.f);
+    glColor4fv(ui_colors[PANEL_LEFT_BAR_COLOR]);
+    glVertex2f(x, y+25.f);
+    glColor4fv(ui_colors[PANEL_RIGHT_BAR_COLOR]);
+    glVertex2f(x+w, y+25.f);
+    
+    glColor4fv(ui_colors[PANEL_BACKGROUND_COLOR]);
+    glVertex2f(x, y+25.f);
+    glVertex2f(x+w, y+25.f);
+    glVertex2f(x, y+h);
+    glVertex2f(x+w, y+h);
+    glEnd();
+    
+    glColor4fv(ui_colors[PANEL_BORDER_COLOR]);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(x, y);
+    glVertex2f(x+w+1.f, y);
+    glVertex2f(x+w+1.f, y+h+1.f);
+    glVertex2f(x, y+h+1.f);
+    glVertex2f(x, y-1.f);
+    glEnd();
+
+    glEnable(GL_TEXTURE_2D);
+    UI->DrawPlainText(x+5, y+8, ui_colors[PANEL_TITLE_COLOR], title);
+    
+    glTranslatef(x, y+25.f, 0);
+}
+
+bool IMGUI::DoButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
+{
+    bool result = false;
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    
+    if(UI->MouseInRect(x+m[12], y+m[13], w, h))
+        UI->setHot(ID);
+    
+    if(UI->isActive(ID))
+    {
+        if(!UI->MouseIsDown(true)) //mouse went up
+        {
+            if(UI->isHot(ID))
+                result = true;
+            UI->clearActive();
+        }
+    }
+    else if(UI->isHot(ID))
+    {
+        if(UI->MouseIsDown(true)) //mouse went down
+        {
+            UI->setActive(ID);
+        }
+    }
+    
+    //drawing
+    glDisable(GL_TEXTURE_2D);
+    
+    if(UI->isActive(ID))
+        glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
+    else if(UI->isHot(ID))
+        glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
+    else
+        glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x, y);
+    glVertex2f(x, y+h);
+    glVertex2f(x+w, y);
+    glVertex2f(x+w, y+h);
+    glEnd();
+    
+    glColor4fv(ui_colors[BUTTON_BORDER_COLOR]);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(x, y);
+    glVertex2f(x+w+1.f, y);
+    glVertex2f(x+w+1.f, y+h+1.f);
+    glVertex2f(x, y+h+1.f);
+    glVertex2f(x, y-1.f);
+    glEnd();
+    
+    glEnable(GL_TEXTURE_2D);
+    GLfloat len = UI->PlainTextLength(title);
+	
+    UI->DrawPlainText(x+floorf((w-len)/2.f), y+h/2.f-6.f, ui_colors[BUTTON_TITLE_COLOR], title);
+    
+    return result;
+}
+
+double IMGUI::DoSlider(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title)
+{
+    double result = value;
+    GLfloat sliderPosition = (value-min)/(max-min);
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    
+    if(UI->MouseInRect(x+m[12]+sliderPosition*w-sliderW/2.f, y+m[13]-sliderH/2.f, sliderW, sliderH))
+        UI->setHot(ID);
+    
+    if(UI->isActive(ID))
+    {
+        GLfloat mouseX = UI->getMouseX();
+        if(mouseX <= x+m[12])
+            sliderPosition = 0;
+        else if(mouseX >=x+m[12]+w)
+            sliderPosition = 1.f;
+        else
+            sliderPosition = (mouseX-x-m[12])/w;
+        
+        result = min+sliderPosition*(max-min);
+        
+        if(!UI->MouseIsDown(true)) //mouse went up
+        {
+            UI->clearActive();
+        }
+    }
+    else if(UI->isHot(ID))
+    {
+        if(UI->MouseIsDown(true)) //mouse went down
+        {
+            UI->setActive(ID);
+        }
+    }
+    
+    //drawing
+    glDisable(GL_TEXTURE_2D);
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(ui_colors[SLIDER_BAR_FILLED_COLOR]);
+    glVertex2f(x, y-2.f);
+    glVertex2f(x, y+2.f);
+    glVertex2f(x+sliderPosition*w, y-2.f);
+    glVertex2f(x+sliderPosition*w, y+2.f);
+    
+    glColor4fv(ui_colors[SLIDER_BAR_EMPTY_COLOR]);
+    glVertex2f(x+sliderPosition*w, y-2.f);
+    glVertex2f(x+sliderPosition*w, y+2.f);
+    glVertex2f(x+w, y-2.f);
+    glVertex2f(x+w, y+2.f);
+    glEnd();
+    
+    if(UI->isActive(ID))
+        glColor4fv(ui_colors[SLIDER_ACTIVE_COLOR]);
+    else if(UI->isHot(ID))
+        glColor4fv(ui_colors[SLIDER_HOT_COLOR]);
+    else
+        glColor4fv(ui_colors[SLIDER_NORMAL_COLOR]);
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x+sliderPosition*w-sliderW/2.f, y-sliderH/2.f);
+    glVertex2f(x+sliderPosition*w+sliderW/2.f, y-sliderH/2.f);
+    glVertex2f(x+sliderPosition*w-sliderW/2.f, y+sliderH/2.f);
+    glVertex2f(x+sliderPosition*w+sliderW/2.f, y+sliderH/2.f);
+    glEnd();
+
+    /*glColor4fv(ui_colors[SLIDER_BORDER_COLOR]);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(x+sliderPosition*w-sliderW/2.f, y-sliderH/2.f);
+    glVertex2f(x+sliderPosition*w+sliderW/2.f, y-sliderH/2.f);
+    glVertex2f(x+sliderPosition*w+sliderW/2.f, y+sliderH/2.f);
+    glVertex2f(x+sliderPosition*w-sliderW/2.f, y+sliderH/2.f);
+    glVertex2f(x+sliderPosition*w-sliderW/2.f, y-sliderH/2.f-1.f);
+    glEnd();*/
+    
+    glEnable(GL_TEXTURE_2D);
+    UI->DrawPlainText(x-2.0, y - 15.f - sliderH/2.f, ui_colors[SLIDER_TITLE_COLOR], title);
+    
+    char buffer[16];
+    sprintf(buffer, "%1.2lf", result);
+    GLfloat len = UI->PlainTextLength(buffer);
+    UI->DrawPlainText(x-4.0 + w - len, y - 15.f - sliderH/2.f, ui_colors[SLIDER_VALUE_COLOR], buffer);
+    
+    return result;
+}
+
+void IMGUI::DoProgressBar(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title)
+{
+    glDisable(GL_TEXTURE_2D);
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(ui_colors[PROGRESSBAR_FILLED_COLOR]);
+    glVertex2f(x, y);
+    glVertex2f(x, y+h);
+    glVertex2f(x+progress*w, y);
+    glVertex2f(x+progress*w, y+h);
+    
+    glColor4fv(ui_colors[PROGRESSBAR_EMPTY_COLOR]);
+    glVertex2f(x+progress*w, y);
+    glVertex2f(x+progress*w, y+h);
+    glVertex2f(x+w, y);
+    glVertex2f(x+w, y+h);
+    glEnd();
+    
+    glEnable(GL_TEXTURE_2D);
+    UI->DrawPlainText(x, y-18.f, ui_colors[PROGRESSBAR_TITLE_COLOR], title);
+    
+    char buffer[16];
+    sprintf(buffer, "%1.2lf%%", progress*100.0);
+    GLfloat len = UI->PlainTextLength(buffer);
+    UI->DrawPlainText(x+w-len, y-18.f, ui_colors[PROGRESSBAR_VALUE_COLOR], buffer);
+}
+
+bool IMGUI::DoCheckBox(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
+{
+    bool result = value;
+    GLfloat size = 12.f;
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    
+    if(UI->MouseInRect(x+m[12], y+m[13], size, size))
+        UI->setHot(ID);
+    
+    if(UI->isActive(ID))
+    {
+        if(!UI->MouseIsDown(true)) //mouse went up
+        {
+            if(UI->isHot(ID))
+                result = !result;
+                
+            UI->clearActive();
+        }
+    }
+    else if(UI->isHot(ID))
+    {
+        if(UI->MouseIsDown(true)) //mouse went down
+        {
+            UI->setActive(ID);
+        }
+    }
+    
+    //drawing
+    glDisable(GL_TEXTURE_2D);
+    
+    if(UI->isActive(ID))
+        glColor4fv(ui_colors[CHECKBOX_ACTIVE_COLOR]);
+    else if(UI->isHot(ID))
+        glColor4fv(ui_colors[CHECKBOX_HOT_COLOR]);
+    else
+        glColor4fv(ui_colors[CHECKBOX_NORMAL_COLOR]);
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x, y);
+    glVertex2f(x, y+size);
+    glVertex2f(x+size, y);
+    glVertex2f(x+size, y+size);
+    glEnd();
+    
+    glColor4fv(ui_colors[CHECKBOX_BORDER_COLOR]);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(x, y);
+    glVertex2f(x+size+1.f, y);
+    glVertex2f(x+size+1.f, y+size+1.f);
+    glVertex2f(x, y+size+1.f);
+    glVertex2f(x, y-1.f);
+    glEnd();
+    
+    if(value)
+    {
+        glColor4fv(ui_colors[CHECKBOX_TICK_COLOR]);
+        glBegin(GL_TRIANGLE_STRIP);
+        glVertex2f(x+0.2f*size, y+0.2f*size);
+        glVertex2f(x+0.2f*size, y+0.8f*size);
+        glVertex2f(x+0.8f*size, y+0.2f*size);
+        glVertex2f(x+0.8f*size, y+0.8f*size);
+        glEnd();
+    }
+    
+    glEnable(GL_TEXTURE_2D);
+    UI->DrawPlainText(x+size+5.f, y, ui_colors[CHECKBOX_TITLE_COLOR], title);
+    
+    return result;
+}
+
+bool IMGUI::DoRadioButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
+{
+    bool result = value;
+    GLfloat size = 12.f;
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    
+    if(UI->MouseInRect(x+m[12], y+m[13], size, size))
+        UI->setHot(ID);
+    
+    if(UI->isActive(ID))
+    {
+        if(!UI->MouseIsDown(true)) //mouse went up
+        {
+            if(UI->isHot(ID))
+                result = !result;
+            
+            UI->clearActive();
+        }
+    }
+    else if(UI->isHot(ID))
+    {
+        if(UI->MouseIsDown(true)) //mouse went down
+        {
+            UI->setActive(ID);
+        }
+    }
+    
+    //drawing
+    glDisable(GL_TEXTURE_2D);
+    
+    if(UI->isActive(ID))
+        glColor4fv(ui_colors[RADIOBUTTON_ACTIVE_COLOR]);
+    else if(UI->isHot(ID))
+        glColor4fv(ui_colors[RADIOBUTTON_HOT_COLOR]);
+    else
+        glColor4fv(ui_colors[RADIOBUTTON_NORMAL_COLOR]);
+    
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(x+size/2.0f, y+size/2.0f);
+    for(int i=0; i<=12; i++)
+    {
+        glVertex2f(x+size/2.f+size/2.f*sinf((float)i/12.f*M_PI*2.f), y+size/2.0f+size/2.f*cosf((float)i/12.f*M_PI*2.f));
+    }
+    glEnd();
+    
+    glColor4fv(ui_colors[RADIOBUTTON_BORDER_COLOR]);
+    glBegin(GL_LINE_STRIP);
+    for(int i=0; i<=12; i++)
+    {
+        glVertex2f(x+size/2.f+(size+2.f)/2.f*sinf((float)i/12.f*M_PI*2.f), y+size/2.0f+(size+2.f)/2.f*cosf((float)i/12.f*M_PI*2.f));
+    }
+    glEnd();
+    
+    if(value)
+    {
+        glColor4fv(ui_colors[RADIOBUTTON_BUTTON_COLOR]);
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(x+size/2.0f, y+size/2.0f);
+        for(int i=0; i<=12; i++)
+        {
+            glVertex2f(x+size/2.f+(size*0.8f)/2.f*sinf((float)i/12.f*M_PI*2.f), y+size/2.0f+(size*0.8f)/2.f*cosf((float)i/12.f*M_PI*2.f));
+        }
+        glEnd();
+    }
+    
+    glEnable(GL_TEXTURE_2D);
+    UI->DrawPlainText(x+size+5.f, y, ui_colors[RADIOBUTTON_TITLE_COLOR], title);
+    
+    return result;
+}

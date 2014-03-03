@@ -7,25 +7,335 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F71323BE18C47F0600C718D8 /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
+		F71323E418C47FC500C718D8 /* fluidBorder.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */; };
+		F71323E518C47FC500C718D8 /* fluidVolume.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */; };
+		F71323E618C47FC500C718D8 /* belowFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */; };
+		F71323E718C47FC500C718D8 /* fluidSurface.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */; };
+		F71323E818C47FC500C718D8 /* aboveFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */; };
+		F71323E918C47FC500C718D8 /* gbuffer.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */; };
+		F71323EA18C47FC500C718D8 /* gbuffer.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */; };
+		F71323EB18C47FC500C718D8 /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
+		F71323EC18C47FC500C718D8 /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
+		F71323ED18C47FC500C718D8 /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
+		F71323EE18C47FC500C718D8 /* ssao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */; };
+		F71323EF18C47FC500C718D8 /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
+		F71323F018C47FC500C718D8 /* blur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2C18C40AEC001C0CE8 /* blur.frag */; };
+		F71323F118C47FCF00C718D8 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
+		F71323F218C47FCF00C718D8 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
+		F71323F318C47FCF00C718D8 /* deferredDirectional.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */; };
+		F71323F418C47FCF00C718D8 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
+		F71323F518C47FCF00C718D8 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F75B6E5818C3E74C0092C1A2 /* Actuator.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2418C3E74B0092C1A2 /* Actuator.h */; };
+		F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */; };
+		F75B6E5A18C3E74C0092C1A2 /* CableEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2618C3E74B0092C1A2 /* CableEntity.h */; };
+		F75B6E5B18C3E74C0092C1A2 /* common.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2718C3E74B0092C1A2 /* common.h */; };
+		F75B6E5C18C3E74C0092C1A2 /* CompoundEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2818C3E74B0092C1A2 /* CompoundEntity.h */; };
+		F75B6E5D18C3E74C0092C1A2 /* Controller.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2918C3E74B0092C1A2 /* Controller.h */; };
+		F75B6E5E18C3E74C0092C1A2 /* ControlSurface.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2A18C3E74B0092C1A2 /* ControlSurface.h */; };
+		F75B6E5F18C3E74C0092C1A2 /* CurrentEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2B18C3E74B0092C1A2 /* CurrentEntity.h */; };
+		F75B6E6018C3E74C0092C1A2 /* CylinderEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2C18C3E74B0092C1A2 /* CylinderEntity.h */; };
+		F75B6E6118C3E74C0092C1A2 /* DCMotor.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2D18C3E74B0092C1A2 /* DCMotor.h */; };
+		F75B6E6218C3E74C0092C1A2 /* DialogAppKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2E18C3E74B0092C1A2 /* DialogAppKit.h */; };
+		F75B6E6318C3E74C0092C1A2 /* Entity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2F18C3E74B0092C1A2 /* Entity.h */; };
+		F75B6E6418C3E74C0092C1A2 /* FixedJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3018C3E74B0092C1A2 /* FixedJoint.h */; };
+		F75B6E6518C3E74C0092C1A2 /* FluidEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3118C3E74B0092C1A2 /* FluidEntity.h */; };
+		F75B6E6618C3E74C0092C1A2 /* GeometryFileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3218C3E74B0092C1A2 /* GeometryFileUtil.h */; };
+		F75B6E6718C3E74C0092C1A2 /* GeometryUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3318C3E74B0092C1A2 /* GeometryUtil.h */; };
+		F75B6E6818C3E74C0092C1A2 /* GhostEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3418C3E74B0092C1A2 /* GhostEntity.h */; };
+		F75B6E6918C3E74C0092C1A2 /* IMGUI.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3518C3E74B0092C1A2 /* IMGUI.h */; };
+		F75B6E6A18C3E74C0092C1A2 /* IMU.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3618C3E74B0092C1A2 /* IMU.h */; };
+		F75B6E6B18C3E74C0092C1A2 /* Joint.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3718C3E74B0092C1A2 /* Joint.h */; };
+		F75B6E6E18C3E74C0092C1A2 /* MaterialManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3A18C3E74B0092C1A2 /* MaterialManager.h */; };
+		F75B6E6F18C3E74C0092C1A2 /* MeshEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3B18C3E74B0092C1A2 /* MeshEntity.h */; };
+		F75B6E7018C3E74C0092C1A2 /* NativeDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3C18C3E74B0092C1A2 /* NativeDialog.h */; };
+		F75B6E7118C3E74C0092C1A2 /* OpenGLCamera.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3D18C3E74B0092C1A2 /* OpenGLCamera.h */; };
+		F75B6E7218C3E74C0092C1A2 /* OpenGLGBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3E18C3E74B0092C1A2 /* OpenGLGBuffer.h */; };
+		F75B6E7318C3E74C0092C1A2 /* OpenGLLight.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3F18C3E74B0092C1A2 /* OpenGLLight.h */; };
+		F75B6E7418C3E74C0092C1A2 /* OpenGLMaterial.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4018C3E74B0092C1A2 /* OpenGLMaterial.h */; };
+		F75B6E7518C3E74C0092C1A2 /* OpenGLOmniLight.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4118C3E74B0092C1A2 /* OpenGLOmniLight.h */; };
+		F75B6E7618C3E74C0092C1A2 /* OpenGLPrinter.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4218C3E74B0092C1A2 /* OpenGLPrinter.h */; };
+		F75B6E7718C3E74C0092C1A2 /* OpenGLSky.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4318C3E74B0092C1A2 /* OpenGLSky.h */; };
+		F75B6E7818C3E74C0092C1A2 /* OpenGLSolids.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4418C3E74B0092C1A2 /* OpenGLSolids.h */; };
+		F75B6E7918C3E74C0092C1A2 /* OpenGLSpotLight.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4518C3E74B0092C1A2 /* OpenGLSpotLight.h */; };
+		F75B6E7A18C3E74C0092C1A2 /* OpenGLTrackball.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4618C3E74B0092C1A2 /* OpenGLTrackball.h */; };
+		F75B6E7B18C3E74C0092C1A2 /* OpenGLUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4718C3E74B0092C1A2 /* OpenGLUtil.h */; };
+		F75B6E7C18C3E74C0092C1A2 /* OpenGLView.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4818C3E74B0092C1A2 /* OpenGLView.h */; };
+		F75B6E7D18C3E74C0092C1A2 /* PlaneEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4918C3E74B0092C1A2 /* PlaneEntity.h */; };
+		F75B6E7E18C3E74C0092C1A2 /* PoolEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4A18C3E74B0092C1A2 /* PoolEntity.h */; };
+		F75B6E7F18C3E74C0092C1A2 /* RevoluteJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4B18C3E74B0092C1A2 /* RevoluteJoint.h */; };
+		F75B6E8018C3E74C0092C1A2 /* Sensor.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4C18C3E74B0092C1A2 /* Sensor.h */; };
+		F75B6E8118C3E74C0092C1A2 /* SimulationApp.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4D18C3E74B0092C1A2 /* SimulationApp.h */; };
+		F75B6E8218C3E74C0092C1A2 /* SimulationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4E18C3E74B0092C1A2 /* SimulationManager.h */; };
+		F75B6E8318C3E74C0092C1A2 /* SolidEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E4F18C3E74B0092C1A2 /* SolidEntity.h */; };
+		F75B6E8418C3E74C0092C1A2 /* SphereEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5018C3E74B0092C1A2 /* SphereEntity.h */; };
+		F75B6E8518C3E74C0092C1A2 /* SphericalJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5118C3E74B0092C1A2 /* SphericalJoint.h */; };
+		F75B6E8618C3E74C0092C1A2 /* stb_image.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5218C3E74B0092C1A2 /* stb_image.h */; };
+		F75B6E8818C3E74C0092C1A2 /* TerrainEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5418C3E74B0092C1A2 /* TerrainEntity.h */; };
+		F75B6E8918C3E74C0092C1A2 /* Thruster.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5518C3E74C0092C1A2 /* Thruster.h */; };
+		F75B6E8A18C3E74C0092C1A2 /* UnitSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5618C3E74C0092C1A2 /* UnitSystem.h */; };
+		F75B6EC718C3EA6A0092C1A2 /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9418C3EA6A0092C1A2 /* stb_image.c */; };
+		F75B6EC818C3EA6A0092C1A2 /* Actuator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9518C3EA6A0092C1A2 /* Actuator.cpp */; };
+		F75B6EC918C3EA6A0092C1A2 /* BoxEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9618C3EA6A0092C1A2 /* BoxEntity.cpp */; };
+		F75B6ECA18C3EA6A0092C1A2 /* CableEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9718C3EA6A0092C1A2 /* CableEntity.cpp */; };
+		F75B6ECB18C3EA6A0092C1A2 /* CompoundEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9818C3EA6A0092C1A2 /* CompoundEntity.cpp */; };
+		F75B6ECC18C3EA6A0092C1A2 /* Controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9918C3EA6A0092C1A2 /* Controller.cpp */; };
+		F75B6ECD18C3EA6A0092C1A2 /* ControlSurface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9A18C3EA6A0092C1A2 /* ControlSurface.cpp */; };
+		F75B6ECE18C3EA6A0092C1A2 /* CurrentEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9B18C3EA6A0092C1A2 /* CurrentEntity.cpp */; };
+		F75B6ECF18C3EA6A0092C1A2 /* CylinderEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9C18C3EA6A0092C1A2 /* CylinderEntity.cpp */; };
+		F75B6ED018C3EA6A0092C1A2 /* DCMotor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9D18C3EA6A0092C1A2 /* DCMotor.cpp */; };
+		F75B6ED118C3EA6A0092C1A2 /* Entity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9E18C3EA6A0092C1A2 /* Entity.cpp */; };
+		F75B6ED218C3EA6A0092C1A2 /* FixedJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6E9F18C3EA6A0092C1A2 /* FixedJoint.cpp */; };
+		F75B6ED318C3EA6A0092C1A2 /* FluidEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA018C3EA6A0092C1A2 /* FluidEntity.cpp */; };
+		F75B6ED418C3EA6A0092C1A2 /* GeometryFileUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA118C3EA6A0092C1A2 /* GeometryFileUtil.cpp */; };
+		F75B6ED518C3EA6A0092C1A2 /* GeometryUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA218C3EA6A0092C1A2 /* GeometryUtil.cpp */; };
+		F75B6ED618C3EA6A0092C1A2 /* GhostEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA318C3EA6A0092C1A2 /* GhostEntity.cpp */; };
+		F75B6ED718C3EA6A0092C1A2 /* IMGUI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA418C3EA6A0092C1A2 /* IMGUI.cpp */; };
+		F75B6ED818C3EA6A0092C1A2 /* IMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA518C3EA6A0092C1A2 /* IMU.cpp */; };
+		F75B6ED918C3EA6A0092C1A2 /* Joint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA618C3EA6A0092C1A2 /* Joint.cpp */; };
+		F75B6EDA18C3EA6A0092C1A2 /* Machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA718C3EA6A0092C1A2 /* Machine.cpp */; };
+		F75B6EDB18C3EA6A0092C1A2 /* Manipulator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA818C3EA6A0092C1A2 /* Manipulator.cpp */; };
+		F75B6EDC18C3EA6A0092C1A2 /* MaterialManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA918C3EA6A0092C1A2 /* MaterialManager.cpp */; };
+		F75B6EDD18C3EA6A0092C1A2 /* MeshEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EAA18C3EA6A0092C1A2 /* MeshEntity.cpp */; };
+		F75B6EDE18C3EA6A0092C1A2 /* NativeDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EAB18C3EA6A0092C1A2 /* NativeDialog.cpp */; };
+		F75B6EDF18C3EA6A0092C1A2 /* OpenGLCamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EAC18C3EA6A0092C1A2 /* OpenGLCamera.cpp */; };
+		F75B6EE018C3EA6A0092C1A2 /* OpenGLGBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EAD18C3EA6A0092C1A2 /* OpenGLGBuffer.cpp */; };
+		F75B6EE118C3EA6A0092C1A2 /* OpenGLLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EAE18C3EA6A0092C1A2 /* OpenGLLight.cpp */; };
+		F75B6EE218C3EA6A0092C1A2 /* OpenGLMaterial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EAF18C3EA6A0092C1A2 /* OpenGLMaterial.cpp */; };
+		F75B6EE318C3EA6A0092C1A2 /* OpenGLOmniLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB018C3EA6A0092C1A2 /* OpenGLOmniLight.cpp */; };
+		F75B6EE418C3EA6A0092C1A2 /* OpenGLPrinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB118C3EA6A0092C1A2 /* OpenGLPrinter.cpp */; };
+		F75B6EE518C3EA6A0092C1A2 /* OpenGLSky.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB218C3EA6A0092C1A2 /* OpenGLSky.cpp */; };
+		F75B6EE618C3EA6A0092C1A2 /* OpenGLSolids.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB318C3EA6A0092C1A2 /* OpenGLSolids.cpp */; };
+		F75B6EE718C3EA6A0092C1A2 /* OpenGLSpotLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB418C3EA6A0092C1A2 /* OpenGLSpotLight.cpp */; };
+		F75B6EE818C3EA6A0092C1A2 /* OpenGLTrackball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB518C3EA6A0092C1A2 /* OpenGLTrackball.cpp */; };
+		F75B6EE918C3EA6A0092C1A2 /* OpenGLUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB618C3EA6A0092C1A2 /* OpenGLUtil.cpp */; };
+		F75B6EEA18C3EA6A0092C1A2 /* OpenGLView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB718C3EA6A0092C1A2 /* OpenGLView.cpp */; };
+		F75B6EEB18C3EA6A0092C1A2 /* PlaneEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB818C3EA6A0092C1A2 /* PlaneEntity.cpp */; };
+		F75B6EEC18C3EA6A0092C1A2 /* PoolEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EB918C3EA6A0092C1A2 /* PoolEntity.cpp */; };
+		F75B6EED18C3EA6A0092C1A2 /* RevoluteJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EBA18C3EA6A0092C1A2 /* RevoluteJoint.cpp */; };
+		F75B6EEE18C3EA6A0092C1A2 /* Sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EBB18C3EA6A0092C1A2 /* Sensor.cpp */; };
+		F75B6EEF18C3EA6A0092C1A2 /* SimulationApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EBC18C3EA6A0092C1A2 /* SimulationApp.cpp */; };
+		F75B6EF018C3EA6A0092C1A2 /* SimulationManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EBD18C3EA6A0092C1A2 /* SimulationManager.cpp */; };
+		F75B6EF118C3EA6A0092C1A2 /* SolidEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EBE18C3EA6A0092C1A2 /* SolidEntity.cpp */; };
+		F75B6EF218C3EA6A0092C1A2 /* SphereEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EBF18C3EA6A0092C1A2 /* SphereEntity.cpp */; };
+		F75B6EF318C3EA6A0092C1A2 /* SphericalJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EC018C3EA6A0092C1A2 /* SphericalJoint.cpp */; };
+		F75B6EF418C3EA6A0092C1A2 /* Submersible.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EC118C3EA6A0092C1A2 /* Submersible.cpp */; };
+		F75B6EF518C3EA6A0092C1A2 /* TerrainEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EC218C3EA6A0092C1A2 /* TerrainEntity.cpp */; };
+		F75B6EF618C3EA6A0092C1A2 /* Thruster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EC318C3EA6A0092C1A2 /* Thruster.cpp */; };
+		F75B6EF718C3EA6A0092C1A2 /* UnitSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EC418C3EA6A0092C1A2 /* UnitSystem.cpp */; };
+		F75B6EF918C3EA6A0092C1A2 /* DialogAppKit.mm in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EC618C3EA6A0092C1A2 /* DialogAppKit.mm */; };
+		F75B6F0418C3EC480092C1A2 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F75B6F0518C3F0950092C1A2 /* Machine.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3818C3E74B0092C1A2 /* Machine.h */; };
+		F75B6F0618C3F0950092C1A2 /* Manipulator.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3918C3E74B0092C1A2 /* Manipulator.h */; };
+		F75B6F0718C3F0950092C1A2 /* Submersible.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5318C3E74B0092C1A2 /* Submersible.h */; };
+		F75B6F0918C3F7EC0092C1A2 /* libBulletDynamics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0818C3F7EC0092C1A2 /* libBulletDynamics.a */; };
+		F75B6F0B18C3F80A0092C1A2 /* libBulletCollision.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0A18C3F80A0092C1A2 /* libBulletCollision.a */; };
+		F75B6F0D18C3F8290092C1A2 /* libBulletSoftBody.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0C18C3F8290092C1A2 /* libBulletSoftBody.a */; };
+		F75B6F0F18C3F83C0092C1A2 /* libLinearMath.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0E18C3F83C0092C1A2 /* libLinearMath.a */; };
+		F75B6F1218C3F8BF0092C1A2 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1118C3F8BF0092C1A2 /* libSDL2.a */; };
+		F75B6F1718C3F8ED0092C1A2 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1318C3F8ED0092C1A2 /* AudioToolbox.framework */; };
+		F75B6F1818C3F8ED0092C1A2 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */; };
+		F75B6F1918C3F8ED0092C1A2 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */; };
+		F75B6F1A18C3F8ED0092C1A2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1618C3F8ED0092C1A2 /* Cocoa.framework */; };
+		F75B6F1D18C3F9110092C1A2 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1B18C3F9110092C1A2 /* CoreAudio.framework */; };
+		F75B6F1E18C3F9110092C1A2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1C18C3F9110092C1A2 /* OpenGL.framework */; };
+		F75B6F2118C3F92F0092C1A2 /* ForceFeedback.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1F18C3F92F0092C1A2 /* ForceFeedback.framework */; };
+		F75B6F2218C3F92F0092C1A2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2018C3F92F0092C1A2 /* IOKit.framework */; };
+		F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */; };
+		F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
 		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		F75B6F0218C3EC3F0092C1A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
+			remoteInfo = Stonefish;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
-		F7AB71C918C3E19D0077F07D /* CopyFiles */ = {
+		F792236918C47ED300D27F76 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			dstPath = Data;
+			dstSubfolderSpec = 16;
 			files = (
+				F71323BE18C47F0600C718D8 /* noise.png in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7AB71C918C3E19D0077F07D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = Shaders;
+			dstSubfolderSpec = 16;
+			files = (
+				F71323F118C47FCF00C718D8 /* cubeDownsample.frag in CopyFiles */,
+				F71323F218C47FCF00C718D8 /* cubeConvolve.frag in CopyFiles */,
+				F71323F318C47FCF00C718D8 /* deferredDirectional.frag in CopyFiles */,
+				F71323F418C47FCF00C718D8 /* deferredOmni.frag in CopyFiles */,
+				F71323F518C47FCF00C718D8 /* saq.vert in CopyFiles */,
+				F71323E418C47FC500C718D8 /* fluidBorder.frag in CopyFiles */,
+				F71323E518C47FC500C718D8 /* fluidVolume.frag in CopyFiles */,
+				F71323E618C47FC500C718D8 /* belowFluidSurface.frag in CopyFiles */,
+				F71323E718C47FC500C718D8 /* fluidSurface.vert in CopyFiles */,
+				F71323E818C47FC500C718D8 /* aboveFluidSurface.frag in CopyFiles */,
+				F71323E918C47FC500C718D8 /* gbuffer.frag in CopyFiles */,
+				F71323EA18C47FC500C718D8 /* gbuffer.vert in CopyFiles */,
+				F71323EB18C47FC500C718D8 /* deferredAmbient.frag in CopyFiles */,
+				F71323EC18C47FC500C718D8 /* deferredSpot.frag in CopyFiles */,
+				F71323ED18C47FC500C718D8 /* cubeSky.frag in CopyFiles */,
+				F71323EE18C47FC500C718D8 /* ssao.frag in CopyFiles */,
+				F71323EF18C47FC500C718D8 /* cubePass.frag in CopyFiles */,
+				F71323F018C47FC500C718D8 /* blur.frag in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F71323F618C4849A00C718D8 /* ToDo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToDo.txt; sourceTree = "<group>"; };
+		F75B6E2418C3E74B0092C1A2 /* Actuator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Actuator.h; sourceTree = "<group>"; };
+		F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxEntity.h; sourceTree = "<group>"; };
+		F75B6E2618C3E74B0092C1A2 /* CableEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CableEntity.h; sourceTree = "<group>"; };
+		F75B6E2718C3E74B0092C1A2 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		F75B6E2818C3E74B0092C1A2 /* CompoundEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CompoundEntity.h; sourceTree = "<group>"; };
+		F75B6E2918C3E74B0092C1A2 /* Controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Controller.h; sourceTree = "<group>"; };
+		F75B6E2A18C3E74B0092C1A2 /* ControlSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControlSurface.h; sourceTree = "<group>"; };
+		F75B6E2B18C3E74B0092C1A2 /* CurrentEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CurrentEntity.h; sourceTree = "<group>"; };
+		F75B6E2C18C3E74B0092C1A2 /* CylinderEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CylinderEntity.h; sourceTree = "<group>"; };
+		F75B6E2D18C3E74B0092C1A2 /* DCMotor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DCMotor.h; sourceTree = "<group>"; };
+		F75B6E2E18C3E74B0092C1A2 /* DialogAppKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DialogAppKit.h; sourceTree = "<group>"; };
+		F75B6E2F18C3E74B0092C1A2 /* Entity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Entity.h; sourceTree = "<group>"; };
+		F75B6E3018C3E74B0092C1A2 /* FixedJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FixedJoint.h; sourceTree = "<group>"; };
+		F75B6E3118C3E74B0092C1A2 /* FluidEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FluidEntity.h; sourceTree = "<group>"; };
+		F75B6E3218C3E74B0092C1A2 /* GeometryFileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GeometryFileUtil.h; sourceTree = "<group>"; };
+		F75B6E3318C3E74B0092C1A2 /* GeometryUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GeometryUtil.h; sourceTree = "<group>"; };
+		F75B6E3418C3E74B0092C1A2 /* GhostEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GhostEntity.h; sourceTree = "<group>"; };
+		F75B6E3518C3E74B0092C1A2 /* IMGUI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMGUI.h; sourceTree = "<group>"; };
+		F75B6E3618C3E74B0092C1A2 /* IMU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMU.h; sourceTree = "<group>"; };
+		F75B6E3718C3E74B0092C1A2 /* Joint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Joint.h; sourceTree = "<group>"; };
+		F75B6E3818C3E74B0092C1A2 /* Machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Machine.h; sourceTree = "<group>"; };
+		F75B6E3918C3E74B0092C1A2 /* Manipulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Manipulator.h; sourceTree = "<group>"; };
+		F75B6E3A18C3E74B0092C1A2 /* MaterialManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MaterialManager.h; sourceTree = "<group>"; };
+		F75B6E3B18C3E74B0092C1A2 /* MeshEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeshEntity.h; sourceTree = "<group>"; };
+		F75B6E3C18C3E74B0092C1A2 /* NativeDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeDialog.h; sourceTree = "<group>"; };
+		F75B6E3D18C3E74B0092C1A2 /* OpenGLCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLCamera.h; sourceTree = "<group>"; };
+		F75B6E3E18C3E74B0092C1A2 /* OpenGLGBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLGBuffer.h; sourceTree = "<group>"; };
+		F75B6E3F18C3E74B0092C1A2 /* OpenGLLight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLLight.h; sourceTree = "<group>"; };
+		F75B6E4018C3E74B0092C1A2 /* OpenGLMaterial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLMaterial.h; sourceTree = "<group>"; };
+		F75B6E4118C3E74B0092C1A2 /* OpenGLOmniLight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLOmniLight.h; sourceTree = "<group>"; };
+		F75B6E4218C3E74B0092C1A2 /* OpenGLPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLPrinter.h; sourceTree = "<group>"; };
+		F75B6E4318C3E74B0092C1A2 /* OpenGLSky.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLSky.h; sourceTree = "<group>"; };
+		F75B6E4418C3E74B0092C1A2 /* OpenGLSolids.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLSolids.h; sourceTree = "<group>"; };
+		F75B6E4518C3E74B0092C1A2 /* OpenGLSpotLight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLSpotLight.h; sourceTree = "<group>"; };
+		F75B6E4618C3E74B0092C1A2 /* OpenGLTrackball.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLTrackball.h; sourceTree = "<group>"; };
+		F75B6E4718C3E74B0092C1A2 /* OpenGLUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLUtil.h; sourceTree = "<group>"; };
+		F75B6E4818C3E74B0092C1A2 /* OpenGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLView.h; sourceTree = "<group>"; };
+		F75B6E4918C3E74B0092C1A2 /* PlaneEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlaneEntity.h; sourceTree = "<group>"; };
+		F75B6E4A18C3E74B0092C1A2 /* PoolEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoolEntity.h; sourceTree = "<group>"; };
+		F75B6E4B18C3E74B0092C1A2 /* RevoluteJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RevoluteJoint.h; sourceTree = "<group>"; };
+		F75B6E4C18C3E74B0092C1A2 /* Sensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sensor.h; sourceTree = "<group>"; };
+		F75B6E4D18C3E74B0092C1A2 /* SimulationApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimulationApp.h; sourceTree = "<group>"; };
+		F75B6E4E18C3E74B0092C1A2 /* SimulationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimulationManager.h; sourceTree = "<group>"; };
+		F75B6E4F18C3E74B0092C1A2 /* SolidEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolidEntity.h; sourceTree = "<group>"; };
+		F75B6E5018C3E74B0092C1A2 /* SphereEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SphereEntity.h; sourceTree = "<group>"; };
+		F75B6E5118C3E74B0092C1A2 /* SphericalJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SphericalJoint.h; sourceTree = "<group>"; };
+		F75B6E5218C3E74B0092C1A2 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
+		F75B6E5318C3E74B0092C1A2 /* Submersible.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Submersible.h; sourceTree = "<group>"; };
+		F75B6E5418C3E74B0092C1A2 /* TerrainEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerrainEntity.h; sourceTree = "<group>"; };
+		F75B6E5518C3E74C0092C1A2 /* Thruster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Thruster.h; sourceTree = "<group>"; };
+		F75B6E5618C3E74C0092C1A2 /* UnitSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnitSystem.h; sourceTree = "<group>"; };
+		F75B6E9418C3EA6A0092C1A2 /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stb_image.c; sourceTree = "<group>"; };
+		F75B6E9518C3EA6A0092C1A2 /* Actuator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Actuator.cpp; sourceTree = "<group>"; };
+		F75B6E9618C3EA6A0092C1A2 /* BoxEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxEntity.cpp; sourceTree = "<group>"; };
+		F75B6E9718C3EA6A0092C1A2 /* CableEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CableEntity.cpp; sourceTree = "<group>"; };
+		F75B6E9818C3EA6A0092C1A2 /* CompoundEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CompoundEntity.cpp; sourceTree = "<group>"; };
+		F75B6E9918C3EA6A0092C1A2 /* Controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Controller.cpp; sourceTree = "<group>"; };
+		F75B6E9A18C3EA6A0092C1A2 /* ControlSurface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ControlSurface.cpp; sourceTree = "<group>"; };
+		F75B6E9B18C3EA6A0092C1A2 /* CurrentEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CurrentEntity.cpp; sourceTree = "<group>"; };
+		F75B6E9C18C3EA6A0092C1A2 /* CylinderEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CylinderEntity.cpp; sourceTree = "<group>"; };
+		F75B6E9D18C3EA6A0092C1A2 /* DCMotor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DCMotor.cpp; sourceTree = "<group>"; };
+		F75B6E9E18C3EA6A0092C1A2 /* Entity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Entity.cpp; sourceTree = "<group>"; };
+		F75B6E9F18C3EA6A0092C1A2 /* FixedJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FixedJoint.cpp; sourceTree = "<group>"; };
+		F75B6EA018C3EA6A0092C1A2 /* FluidEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FluidEntity.cpp; sourceTree = "<group>"; };
+		F75B6EA118C3EA6A0092C1A2 /* GeometryFileUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GeometryFileUtil.cpp; sourceTree = "<group>"; };
+		F75B6EA218C3EA6A0092C1A2 /* GeometryUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GeometryUtil.cpp; sourceTree = "<group>"; };
+		F75B6EA318C3EA6A0092C1A2 /* GhostEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GhostEntity.cpp; sourceTree = "<group>"; };
+		F75B6EA418C3EA6A0092C1A2 /* IMGUI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IMGUI.cpp; sourceTree = "<group>"; };
+		F75B6EA518C3EA6A0092C1A2 /* IMU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IMU.cpp; sourceTree = "<group>"; };
+		F75B6EA618C3EA6A0092C1A2 /* Joint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Joint.cpp; sourceTree = "<group>"; };
+		F75B6EA718C3EA6A0092C1A2 /* Machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Machine.cpp; sourceTree = "<group>"; };
+		F75B6EA818C3EA6A0092C1A2 /* Manipulator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Manipulator.cpp; sourceTree = "<group>"; };
+		F75B6EA918C3EA6A0092C1A2 /* MaterialManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MaterialManager.cpp; sourceTree = "<group>"; };
+		F75B6EAA18C3EA6A0092C1A2 /* MeshEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MeshEntity.cpp; sourceTree = "<group>"; };
+		F75B6EAB18C3EA6A0092C1A2 /* NativeDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NativeDialog.cpp; sourceTree = "<group>"; };
+		F75B6EAC18C3EA6A0092C1A2 /* OpenGLCamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLCamera.cpp; sourceTree = "<group>"; };
+		F75B6EAD18C3EA6A0092C1A2 /* OpenGLGBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLGBuffer.cpp; sourceTree = "<group>"; };
+		F75B6EAE18C3EA6A0092C1A2 /* OpenGLLight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLLight.cpp; sourceTree = "<group>"; };
+		F75B6EAF18C3EA6A0092C1A2 /* OpenGLMaterial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLMaterial.cpp; sourceTree = "<group>"; };
+		F75B6EB018C3EA6A0092C1A2 /* OpenGLOmniLight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLOmniLight.cpp; sourceTree = "<group>"; };
+		F75B6EB118C3EA6A0092C1A2 /* OpenGLPrinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLPrinter.cpp; sourceTree = "<group>"; };
+		F75B6EB218C3EA6A0092C1A2 /* OpenGLSky.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLSky.cpp; sourceTree = "<group>"; };
+		F75B6EB318C3EA6A0092C1A2 /* OpenGLSolids.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLSolids.cpp; sourceTree = "<group>"; };
+		F75B6EB418C3EA6A0092C1A2 /* OpenGLSpotLight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLSpotLight.cpp; sourceTree = "<group>"; };
+		F75B6EB518C3EA6A0092C1A2 /* OpenGLTrackball.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLTrackball.cpp; sourceTree = "<group>"; };
+		F75B6EB618C3EA6A0092C1A2 /* OpenGLUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLUtil.cpp; sourceTree = "<group>"; };
+		F75B6EB718C3EA6A0092C1A2 /* OpenGLView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLView.cpp; sourceTree = "<group>"; };
+		F75B6EB818C3EA6A0092C1A2 /* PlaneEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlaneEntity.cpp; sourceTree = "<group>"; };
+		F75B6EB918C3EA6A0092C1A2 /* PoolEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PoolEntity.cpp; sourceTree = "<group>"; };
+		F75B6EBA18C3EA6A0092C1A2 /* RevoluteJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RevoluteJoint.cpp; sourceTree = "<group>"; };
+		F75B6EBB18C3EA6A0092C1A2 /* Sensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sensor.cpp; sourceTree = "<group>"; };
+		F75B6EBC18C3EA6A0092C1A2 /* SimulationApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationApp.cpp; sourceTree = "<group>"; };
+		F75B6EBD18C3EA6A0092C1A2 /* SimulationManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationManager.cpp; sourceTree = "<group>"; };
+		F75B6EBE18C3EA6A0092C1A2 /* SolidEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolidEntity.cpp; sourceTree = "<group>"; };
+		F75B6EBF18C3EA6A0092C1A2 /* SphereEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SphereEntity.cpp; sourceTree = "<group>"; };
+		F75B6EC018C3EA6A0092C1A2 /* SphericalJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SphericalJoint.cpp; sourceTree = "<group>"; };
+		F75B6EC118C3EA6A0092C1A2 /* Submersible.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Submersible.cpp; sourceTree = "<group>"; };
+		F75B6EC218C3EA6A0092C1A2 /* TerrainEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TerrainEntity.cpp; sourceTree = "<group>"; };
+		F75B6EC318C3EA6A0092C1A2 /* Thruster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thruster.cpp; sourceTree = "<group>"; };
+		F75B6EC418C3EA6A0092C1A2 /* UnitSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnitSystem.cpp; sourceTree = "<group>"; };
+		F75B6EC618C3EA6A0092C1A2 /* DialogAppKit.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DialogAppKit.mm; sourceTree = "<group>"; };
+		F75B6F0818C3F7EC0092C1A2 /* libBulletDynamics.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletDynamics.a; path = "../../../Libs/bullet-2.81/cbuild/src/BulletDynamics/Debug/libBulletDynamics.a"; sourceTree = "<group>"; };
+		F75B6F0A18C3F80A0092C1A2 /* libBulletCollision.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletCollision.a; path = "../../../Libs/bullet-2.81/cbuild/src/BulletCollision/Debug/libBulletCollision.a"; sourceTree = "<group>"; };
+		F75B6F0C18C3F8290092C1A2 /* libBulletSoftBody.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletSoftBody.a; path = "../../../Libs/bullet-2.81/cbuild/src/BulletSoftBody/Debug/libBulletSoftBody.a"; sourceTree = "<group>"; };
+		F75B6F0E18C3F83C0092C1A2 /* libLinearMath.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLinearMath.a; path = "../../../Libs/bullet-2.81/cbuild/src/LinearMath/Debug/libLinearMath.a"; sourceTree = "<group>"; };
+		F75B6F1118C3F8BF0092C1A2 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../../Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/libSDL2.a"; sourceTree = "<group>"; };
+		F75B6F1318C3F8ED0092C1A2 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		F75B6F1618C3F8ED0092C1A2 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		F75B6F1B18C3F9110092C1A2 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		F75B6F1C18C3F9110092C1A2 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		F75B6F1F18C3F92F0092C1A2 /* ForceFeedback.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ForceFeedback.framework; path = System/Library/Frameworks/ForceFeedback.framework; sourceTree = SDKROOT; };
+		F75B6F2018C3F92F0092C1A2 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftgl.2.1.3.dylib; path = /usr/local/lib/libftgl.2.1.3.dylib; sourceTree = "<absolute>"; };
+		F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = /usr/local/lib/libfreetype.6.dylib; sourceTree = "<absolute>"; };
 		F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libStonefish.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CB18C3E19D0077F07D /* FallingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FallingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CD18C3E19D0077F07D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = fluidBorder.frag; sourceTree = "<group>"; };
+		F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = fluidVolume.frag; sourceTree = "<group>"; };
+		F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = belowFluidSurface.frag; sourceTree = "<group>"; };
+		F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = fluidSurface.vert; sourceTree = "<group>"; };
+		F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = aboveFluidSurface.frag; sourceTree = "<group>"; };
+		F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gbuffer.frag; sourceTree = "<group>"; };
+		F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gbuffer.vert; sourceTree = "<group>"; };
+		F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredAmbient.frag; sourceTree = "<group>"; };
+		F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredSpot.frag; sourceTree = "<group>"; };
+		F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeSky.frag; sourceTree = "<group>"; };
+		F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ssao.frag; sourceTree = "<group>"; };
+		F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubePass.frag; sourceTree = "<group>"; };
+		F7B1DC2C18C40AEC001C0CE8 /* blur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = blur.frag; sourceTree = "<group>"; };
+		F7B1DC2D18C40AEC001C0CE8 /* noise.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = noise.png; sourceTree = "<group>"; };
+		F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeDownsample.frag; sourceTree = "<group>"; };
+		F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeConvolve.frag; sourceTree = "<group>"; };
+		F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredDirectional.frag; sourceTree = "<group>"; };
+		F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredOmni.frag; sourceTree = "<group>"; };
+		F7B1DC3218C40AEC001C0CE8 /* saq.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saq.vert; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,6 +343,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */,
+				F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */,
+				F75B6F2118C3F92F0092C1A2 /* ForceFeedback.framework in Frameworks */,
+				F75B6F2218C3F92F0092C1A2 /* IOKit.framework in Frameworks */,
+				F75B6F1D18C3F9110092C1A2 /* CoreAudio.framework in Frameworks */,
+				F75B6F1E18C3F9110092C1A2 /* OpenGL.framework in Frameworks */,
+				F75B6F1718C3F8ED0092C1A2 /* AudioToolbox.framework in Frameworks */,
+				F75B6F1818C3F8ED0092C1A2 /* AudioUnit.framework in Frameworks */,
+				F75B6F1918C3F8ED0092C1A2 /* Carbon.framework in Frameworks */,
+				F75B6F1A18C3F8ED0092C1A2 /* Cocoa.framework in Frameworks */,
+				F75B6F1218C3F8BF0092C1A2 /* libSDL2.a in Frameworks */,
+				F75B6F0F18C3F83C0092C1A2 /* libLinearMath.a in Frameworks */,
+				F75B6F0D18C3F8290092C1A2 /* libBulletSoftBody.a in Frameworks */,
+				F75B6F0B18C3F80A0092C1A2 /* libBulletCollision.a in Frameworks */,
+				F75B6F0918C3F7EC0092C1A2 /* libBulletDynamics.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,12 +365,256 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F75B6F0418C3EC480092C1A2 /* libStonefish.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F71323F718C48C0100C718D8 /* data */ = {
+			isa = PBXGroup;
+			children = (
+				F7B1DC2D18C40AEC001C0CE8 /* noise.png */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		F75B6E8C18C3E7550092C1A2 /* Actuators */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E2418C3E74B0092C1A2 /* Actuator.h */,
+				F75B6E5518C3E74C0092C1A2 /* Thruster.h */,
+				F75B6E2A18C3E74B0092C1A2 /* ControlSurface.h */,
+				F75B6E2D18C3E74B0092C1A2 /* DCMotor.h */,
+				F75B6E2918C3E74B0092C1A2 /* Controller.h */,
+			);
+			name = Actuators;
+			sourceTree = "<group>";
+		};
+		F75B6E8D18C3E7880092C1A2 /* Entities */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E2F18C3E74B0092C1A2 /* Entity.h */,
+				F75B6E4F18C3E74B0092C1A2 /* SolidEntity.h */,
+				F75B6E4918C3E74B0092C1A2 /* PlaneEntity.h */,
+				F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */,
+				F75B6E5018C3E74B0092C1A2 /* SphereEntity.h */,
+				F75B6E2C18C3E74B0092C1A2 /* CylinderEntity.h */,
+				F75B6E3B18C3E74B0092C1A2 /* MeshEntity.h */,
+				F75B6E2818C3E74B0092C1A2 /* CompoundEntity.h */,
+				F75B6E5418C3E74B0092C1A2 /* TerrainEntity.h */,
+				F75B6E2618C3E74B0092C1A2 /* CableEntity.h */,
+				F75B6E3418C3E74B0092C1A2 /* GhostEntity.h */,
+				F75B6E3118C3E74B0092C1A2 /* FluidEntity.h */,
+				F75B6E4A18C3E74B0092C1A2 /* PoolEntity.h */,
+				F75B6E2B18C3E74B0092C1A2 /* CurrentEntity.h */,
+			);
+			name = Entities;
+			sourceTree = "<group>";
+		};
+		F75B6E8E18C3E84D0092C1A2 /* Joints */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E3718C3E74B0092C1A2 /* Joint.h */,
+				F75B6E3018C3E74B0092C1A2 /* FixedJoint.h */,
+				F75B6E4B18C3E74B0092C1A2 /* RevoluteJoint.h */,
+				F75B6E5118C3E74B0092C1A2 /* SphericalJoint.h */,
+			);
+			name = Joints;
+			sourceTree = "<group>";
+		};
+		F75B6E8F18C3E8810092C1A2 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E2718C3E74B0092C1A2 /* common.h */,
+				F75B6E4D18C3E74B0092C1A2 /* SimulationApp.h */,
+				F75B6E4E18C3E74B0092C1A2 /* SimulationManager.h */,
+				F75B6E5618C3E74C0092C1A2 /* UnitSystem.h */,
+				F75B6E3A18C3E74B0092C1A2 /* MaterialManager.h */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		F75B6E9018C3E89A0092C1A2 /* Graphics */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E3D18C3E74B0092C1A2 /* OpenGLCamera.h */,
+				F75B6E3E18C3E74B0092C1A2 /* OpenGLGBuffer.h */,
+				F75B6E3F18C3E74B0092C1A2 /* OpenGLLight.h */,
+				F75B6E4018C3E74B0092C1A2 /* OpenGLMaterial.h */,
+				F75B6E4118C3E74B0092C1A2 /* OpenGLOmniLight.h */,
+				F75B6E4218C3E74B0092C1A2 /* OpenGLPrinter.h */,
+				F75B6E4318C3E74B0092C1A2 /* OpenGLSky.h */,
+				F75B6E4418C3E74B0092C1A2 /* OpenGLSolids.h */,
+				F75B6E4518C3E74B0092C1A2 /* OpenGLSpotLight.h */,
+				F75B6E4618C3E74B0092C1A2 /* OpenGLTrackball.h */,
+				F75B6E4718C3E74B0092C1A2 /* OpenGLUtil.h */,
+				F75B6E4818C3E74B0092C1A2 /* OpenGLView.h */,
+				F75B6E3218C3E74B0092C1A2 /* GeometryFileUtil.h */,
+				F75B6E3318C3E74B0092C1A2 /* GeometryUtil.h */,
+				F75B6E5218C3E74B0092C1A2 /* stb_image.h */,
+			);
+			name = Graphics;
+			sourceTree = "<group>";
+		};
+		F75B6E9118C3E9240092C1A2 /* GUI */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E3518C3E74B0092C1A2 /* IMGUI.h */,
+				F75B6E3C18C3E74B0092C1A2 /* NativeDialog.h */,
+				F75B6E2E18C3E74B0092C1A2 /* DialogAppKit.h */,
+			);
+			name = GUI;
+			sourceTree = "<group>";
+		};
+		F75B6E9218C3E9390092C1A2 /* Sensors */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E4C18C3E74B0092C1A2 /* Sensor.h */,
+				F75B6E3618C3E74B0092C1A2 /* IMU.h */,
+			);
+			name = Sensors;
+			sourceTree = "<group>";
+		};
+		F75B6E9318C3E9CE0092C1A2 /* Machines */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E3818C3E74B0092C1A2 /* Machine.h */,
+				F75B6E3918C3E74B0092C1A2 /* Manipulator.h */,
+				F75B6E5318C3E74B0092C1A2 /* Submersible.h */,
+			);
+			name = Machines;
+			sourceTree = "<group>";
+		};
+		F75B6EFA18C3EA830092C1A2 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6EC418C3EA6A0092C1A2 /* UnitSystem.cpp */,
+				F75B6EA918C3EA6A0092C1A2 /* MaterialManager.cpp */,
+				F75B6EBC18C3EA6A0092C1A2 /* SimulationApp.cpp */,
+				F75B6EBD18C3EA6A0092C1A2 /* SimulationManager.cpp */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		F75B6EFB18C3EA8A0092C1A2 /* Entities */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E9E18C3EA6A0092C1A2 /* Entity.cpp */,
+				F75B6EBE18C3EA6A0092C1A2 /* SolidEntity.cpp */,
+				F75B6EB818C3EA6A0092C1A2 /* PlaneEntity.cpp */,
+				F75B6E9618C3EA6A0092C1A2 /* BoxEntity.cpp */,
+				F75B6EBF18C3EA6A0092C1A2 /* SphereEntity.cpp */,
+				F75B6E9C18C3EA6A0092C1A2 /* CylinderEntity.cpp */,
+				F75B6EAA18C3EA6A0092C1A2 /* MeshEntity.cpp */,
+				F75B6EC218C3EA6A0092C1A2 /* TerrainEntity.cpp */,
+				F75B6E9818C3EA6A0092C1A2 /* CompoundEntity.cpp */,
+				F75B6E9718C3EA6A0092C1A2 /* CableEntity.cpp */,
+				F75B6EA318C3EA6A0092C1A2 /* GhostEntity.cpp */,
+				F75B6EA018C3EA6A0092C1A2 /* FluidEntity.cpp */,
+				F75B6EB918C3EA6A0092C1A2 /* PoolEntity.cpp */,
+				F75B6E9B18C3EA6A0092C1A2 /* CurrentEntity.cpp */,
+			);
+			name = Entities;
+			sourceTree = "<group>";
+		};
+		F75B6EFC18C3EA910092C1A2 /* Joints */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6EA618C3EA6A0092C1A2 /* Joint.cpp */,
+				F75B6E9F18C3EA6A0092C1A2 /* FixedJoint.cpp */,
+				F75B6EBA18C3EA6A0092C1A2 /* RevoluteJoint.cpp */,
+				F75B6EC018C3EA6A0092C1A2 /* SphericalJoint.cpp */,
+			);
+			name = Joints;
+			sourceTree = "<group>";
+		};
+		F75B6EFD18C3EA980092C1A2 /* Actuators */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E9518C3EA6A0092C1A2 /* Actuator.cpp */,
+				F75B6EC318C3EA6A0092C1A2 /* Thruster.cpp */,
+				F75B6E9A18C3EA6A0092C1A2 /* ControlSurface.cpp */,
+				F75B6E9D18C3EA6A0092C1A2 /* DCMotor.cpp */,
+				F75B6E9918C3EA6A0092C1A2 /* Controller.cpp */,
+			);
+			name = Actuators;
+			sourceTree = "<group>";
+		};
+		F75B6EFE18C3EAAF0092C1A2 /* Sensors */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6EBB18C3EA6A0092C1A2 /* Sensor.cpp */,
+				F75B6EA518C3EA6A0092C1A2 /* IMU.cpp */,
+			);
+			name = Sensors;
+			sourceTree = "<group>";
+		};
+		F75B6EFF18C3EAB70092C1A2 /* Machines */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6EA718C3EA6A0092C1A2 /* Machine.cpp */,
+				F75B6EA818C3EA6A0092C1A2 /* Manipulator.cpp */,
+				F75B6EC118C3EA6A0092C1A2 /* Submersible.cpp */,
+			);
+			name = Machines;
+			sourceTree = "<group>";
+		};
+		F75B6F0018C3EABD0092C1A2 /* Graphics */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6EAC18C3EA6A0092C1A2 /* OpenGLCamera.cpp */,
+				F75B6EAD18C3EA6A0092C1A2 /* OpenGLGBuffer.cpp */,
+				F75B6EAE18C3EA6A0092C1A2 /* OpenGLLight.cpp */,
+				F75B6EAF18C3EA6A0092C1A2 /* OpenGLMaterial.cpp */,
+				F75B6EB018C3EA6A0092C1A2 /* OpenGLOmniLight.cpp */,
+				F75B6EB118C3EA6A0092C1A2 /* OpenGLPrinter.cpp */,
+				F75B6EB218C3EA6A0092C1A2 /* OpenGLSky.cpp */,
+				F75B6EB318C3EA6A0092C1A2 /* OpenGLSolids.cpp */,
+				F75B6EB418C3EA6A0092C1A2 /* OpenGLSpotLight.cpp */,
+				F75B6EB518C3EA6A0092C1A2 /* OpenGLTrackball.cpp */,
+				F75B6EB618C3EA6A0092C1A2 /* OpenGLUtil.cpp */,
+				F75B6EB718C3EA6A0092C1A2 /* OpenGLView.cpp */,
+				F75B6EA118C3EA6A0092C1A2 /* GeometryFileUtil.cpp */,
+				F75B6EA218C3EA6A0092C1A2 /* GeometryUtil.cpp */,
+				F75B6E9418C3EA6A0092C1A2 /* stb_image.c */,
+			);
+			name = Graphics;
+			sourceTree = "<group>";
+		};
+		F75B6F0118C3EAC50092C1A2 /* GUI */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6EA418C3EA6A0092C1A2 /* IMGUI.cpp */,
+				F75B6EAB18C3EA6A0092C1A2 /* NativeDialog.cpp */,
+				F75B6EC618C3EA6A0092C1A2 /* DialogAppKit.mm */,
+			);
+			name = GUI;
+			sourceTree = "<group>";
+		};
+		F75B6F1018C3F8510092C1A2 /* dependencies */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6F1F18C3F92F0092C1A2 /* ForceFeedback.framework */,
+				F75B6F2018C3F92F0092C1A2 /* IOKit.framework */,
+				F75B6F1B18C3F9110092C1A2 /* CoreAudio.framework */,
+				F75B6F1C18C3F9110092C1A2 /* OpenGL.framework */,
+				F75B6F1318C3F8ED0092C1A2 /* AudioToolbox.framework */,
+				F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */,
+				F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */,
+				F75B6F1618C3F8ED0092C1A2 /* Cocoa.framework */,
+				F75B6F1118C3F8BF0092C1A2 /* libSDL2.a */,
+				F75B6F0E18C3F83C0092C1A2 /* libLinearMath.a */,
+				F75B6F0C18C3F8290092C1A2 /* libBulletSoftBody.a */,
+				F75B6F0A18C3F80A0092C1A2 /* libBulletCollision.a */,
+				F75B6F0818C3F7EC0092C1A2 /* libBulletDynamics.a */,
+				F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */,
+				F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */,
+			);
+			name = dependencies;
+			sourceTree = "<group>";
+		};
 		F7AB71AD18C3D8EC0077F07D = {
 			isa = PBXGroup;
 			children = (
@@ -75,8 +644,12 @@
 		F7AB71BF18C3DCA90077F07D /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				F71323F618C4849A00C718D8 /* ToDo.txt */,
 				F7AB71C118C3DCE60077F07D /* include */,
 				F7AB71C018C3DCC30077F07D /* src */,
+				F7B1DC1F18C40AC5001C0CE8 /* shaders */,
+				F71323F718C48C0100C718D8 /* data */,
+				F75B6F1018C3F8510092C1A2 /* dependencies */,
 			);
 			path = Library;
 			sourceTree = SOURCE_ROOT;
@@ -84,6 +657,14 @@
 		F7AB71C018C3DCC30077F07D /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F75B6EFA18C3EA830092C1A2 /* Core */,
+				F75B6EFB18C3EA8A0092C1A2 /* Entities */,
+				F75B6EFC18C3EA910092C1A2 /* Joints */,
+				F75B6EFD18C3EA980092C1A2 /* Actuators */,
+				F75B6EFE18C3EAAF0092C1A2 /* Sensors */,
+				F75B6EFF18C3EAB70092C1A2 /* Machines */,
+				F75B6F0018C3EABD0092C1A2 /* Graphics */,
+				F75B6F0118C3EAC50092C1A2 /* GUI */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -91,6 +672,7 @@
 		F7AB71C118C3DCE60077F07D /* include */ = {
 			isa = PBXGroup;
 			children = (
+				F7B5011E18C4068200587293 /* Stonefish */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -103,6 +685,46 @@
 			path = FallingTest;
 			sourceTree = "<group>";
 		};
+		F7B1DC1F18C40AC5001C0CE8 /* shaders */ = {
+			isa = PBXGroup;
+			children = (
+				F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */,
+				F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */,
+				F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */,
+				F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */,
+				F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */,
+				F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */,
+				F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */,
+				F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */,
+				F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */,
+				F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */,
+				F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */,
+				F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */,
+				F7B1DC2C18C40AEC001C0CE8 /* blur.frag */,
+				F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */,
+				F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */,
+				F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */,
+				F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */,
+				F7B1DC3218C40AEC001C0CE8 /* saq.vert */,
+			);
+			path = shaders;
+			sourceTree = "<group>";
+		};
+		F7B5011E18C4068200587293 /* Stonefish */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E8F18C3E8810092C1A2 /* Core */,
+				F75B6E8D18C3E7880092C1A2 /* Entities */,
+				F75B6E8E18C3E84D0092C1A2 /* Joints */,
+				F75B6E8C18C3E7550092C1A2 /* Actuators */,
+				F75B6E9218C3E9390092C1A2 /* Sensors */,
+				F75B6E9318C3E9CE0092C1A2 /* Machines */,
+				F75B6E9018C3E89A0092C1A2 /* Graphics */,
+				F75B6E9118C3E9240092C1A2 /* GUI */,
+			);
+			path = Stonefish;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -110,6 +732,57 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F75B6E6418C3E74C0092C1A2 /* FixedJoint.h in Headers */,
+				F75B6E6018C3E74C0092C1A2 /* CylinderEntity.h in Headers */,
+				F75B6F0518C3F0950092C1A2 /* Machine.h in Headers */,
+				F75B6E7D18C3E74C0092C1A2 /* PlaneEntity.h in Headers */,
+				F75B6E6818C3E74C0092C1A2 /* GhostEntity.h in Headers */,
+				F75B6E8418C3E74C0092C1A2 /* SphereEntity.h in Headers */,
+				F75B6E6118C3E74C0092C1A2 /* DCMotor.h in Headers */,
+				F75B6E5C18C3E74C0092C1A2 /* CompoundEntity.h in Headers */,
+				F75B6E5818C3E74C0092C1A2 /* Actuator.h in Headers */,
+				F75B6E8318C3E74C0092C1A2 /* SolidEntity.h in Headers */,
+				F75B6E8118C3E74C0092C1A2 /* SimulationApp.h in Headers */,
+				F75B6E7118C3E74C0092C1A2 /* OpenGLCamera.h in Headers */,
+				F75B6E6A18C3E74C0092C1A2 /* IMU.h in Headers */,
+				F75B6E7C18C3E74C0092C1A2 /* OpenGLView.h in Headers */,
+				F75B6E8918C3E74C0092C1A2 /* Thruster.h in Headers */,
+				F75B6E6918C3E74C0092C1A2 /* IMGUI.h in Headers */,
+				F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */,
+				F75B6E7E18C3E74C0092C1A2 /* PoolEntity.h in Headers */,
+				F75B6E6518C3E74C0092C1A2 /* FluidEntity.h in Headers */,
+				F75B6E8818C3E74C0092C1A2 /* TerrainEntity.h in Headers */,
+				F75B6F0718C3F0950092C1A2 /* Submersible.h in Headers */,
+				F75B6E7A18C3E74C0092C1A2 /* OpenGLTrackball.h in Headers */,
+				F75B6E7F18C3E74C0092C1A2 /* RevoluteJoint.h in Headers */,
+				F75B6E7618C3E74C0092C1A2 /* OpenGLPrinter.h in Headers */,
+				F75B6E8018C3E74C0092C1A2 /* Sensor.h in Headers */,
+				F75B6E6218C3E74C0092C1A2 /* DialogAppKit.h in Headers */,
+				F75B6F0618C3F0950092C1A2 /* Manipulator.h in Headers */,
+				F75B6E5A18C3E74C0092C1A2 /* CableEntity.h in Headers */,
+				F75B6E6F18C3E74C0092C1A2 /* MeshEntity.h in Headers */,
+				F75B6E6618C3E74C0092C1A2 /* GeometryFileUtil.h in Headers */,
+				F75B6E7818C3E74C0092C1A2 /* OpenGLSolids.h in Headers */,
+				F75B6E7518C3E74C0092C1A2 /* OpenGLOmniLight.h in Headers */,
+				F75B6E8218C3E74C0092C1A2 /* SimulationManager.h in Headers */,
+				F75B6E7918C3E74C0092C1A2 /* OpenGLSpotLight.h in Headers */,
+				F75B6E5D18C3E74C0092C1A2 /* Controller.h in Headers */,
+				F75B6E7318C3E74C0092C1A2 /* OpenGLLight.h in Headers */,
+				F75B6E5F18C3E74C0092C1A2 /* CurrentEntity.h in Headers */,
+				F75B6E7218C3E74C0092C1A2 /* OpenGLGBuffer.h in Headers */,
+				F75B6E5B18C3E74C0092C1A2 /* common.h in Headers */,
+				F75B6E7018C3E74C0092C1A2 /* NativeDialog.h in Headers */,
+				F75B6E7418C3E74C0092C1A2 /* OpenGLMaterial.h in Headers */,
+				F75B6E8518C3E74C0092C1A2 /* SphericalJoint.h in Headers */,
+				F75B6E5E18C3E74C0092C1A2 /* ControlSurface.h in Headers */,
+				F75B6E8A18C3E74C0092C1A2 /* UnitSystem.h in Headers */,
+				F75B6E6B18C3E74C0092C1A2 /* Joint.h in Headers */,
+				F75B6E6E18C3E74C0092C1A2 /* MaterialManager.h in Headers */,
+				F75B6E6718C3E74C0092C1A2 /* GeometryUtil.h in Headers */,
+				F75B6E7718C3E74C0092C1A2 /* OpenGLSky.h in Headers */,
+				F75B6E7B18C3E74C0092C1A2 /* OpenGLUtil.h in Headers */,
+				F75B6E8618C3E74C0092C1A2 /* stb_image.h in Headers */,
+				F75B6E6318C3E74C0092C1A2 /* Entity.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,10 +813,12 @@
 				F7AB71C718C3E19D0077F07D /* Sources */,
 				F7AB71C818C3E19D0077F07D /* Frameworks */,
 				F7AB71C918C3E19D0077F07D /* CopyFiles */,
+				F792236918C47ED300D27F76 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F75B6F0318C3EC3F0092C1A2 /* PBXTargetDependency */,
 			);
 			name = FallingTest;
 			productName = FallingTest;
@@ -182,6 +857,56 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F75B6ECA18C3EA6A0092C1A2 /* CableEntity.cpp in Sources */,
+				F75B6EF418C3EA6A0092C1A2 /* Submersible.cpp in Sources */,
+				F75B6EF218C3EA6A0092C1A2 /* SphereEntity.cpp in Sources */,
+				F75B6EDF18C3EA6A0092C1A2 /* OpenGLCamera.cpp in Sources */,
+				F75B6EF318C3EA6A0092C1A2 /* SphericalJoint.cpp in Sources */,
+				F75B6EE318C3EA6A0092C1A2 /* OpenGLOmniLight.cpp in Sources */,
+				F75B6EEB18C3EA6A0092C1A2 /* PlaneEntity.cpp in Sources */,
+				F75B6EE518C3EA6A0092C1A2 /* OpenGLSky.cpp in Sources */,
+				F75B6ECD18C3EA6A0092C1A2 /* ControlSurface.cpp in Sources */,
+				F75B6ED618C3EA6A0092C1A2 /* GhostEntity.cpp in Sources */,
+				F75B6ECE18C3EA6A0092C1A2 /* CurrentEntity.cpp in Sources */,
+				F75B6EEF18C3EA6A0092C1A2 /* SimulationApp.cpp in Sources */,
+				F75B6ED418C3EA6A0092C1A2 /* GeometryFileUtil.cpp in Sources */,
+				F75B6ED118C3EA6A0092C1A2 /* Entity.cpp in Sources */,
+				F75B6EE218C3EA6A0092C1A2 /* OpenGLMaterial.cpp in Sources */,
+				F75B6EDD18C3EA6A0092C1A2 /* MeshEntity.cpp in Sources */,
+				F75B6ECC18C3EA6A0092C1A2 /* Controller.cpp in Sources */,
+				F75B6ECB18C3EA6A0092C1A2 /* CompoundEntity.cpp in Sources */,
+				F75B6EF918C3EA6A0092C1A2 /* DialogAppKit.mm in Sources */,
+				F75B6EDC18C3EA6A0092C1A2 /* MaterialManager.cpp in Sources */,
+				F75B6EF118C3EA6A0092C1A2 /* SolidEntity.cpp in Sources */,
+				F75B6EE418C3EA6A0092C1A2 /* OpenGLPrinter.cpp in Sources */,
+				F75B6EF718C3EA6A0092C1A2 /* UnitSystem.cpp in Sources */,
+				F75B6EEC18C3EA6A0092C1A2 /* PoolEntity.cpp in Sources */,
+				F75B6EE918C3EA6A0092C1A2 /* OpenGLUtil.cpp in Sources */,
+				F75B6EE118C3EA6A0092C1A2 /* OpenGLLight.cpp in Sources */,
+				F75B6ED518C3EA6A0092C1A2 /* GeometryUtil.cpp in Sources */,
+				F75B6ED718C3EA6A0092C1A2 /* IMGUI.cpp in Sources */,
+				F75B6EC818C3EA6A0092C1A2 /* Actuator.cpp in Sources */,
+				F75B6EC718C3EA6A0092C1A2 /* stb_image.c in Sources */,
+				F75B6EE618C3EA6A0092C1A2 /* OpenGLSolids.cpp in Sources */,
+				F75B6ECF18C3EA6A0092C1A2 /* CylinderEntity.cpp in Sources */,
+				F75B6EF618C3EA6A0092C1A2 /* Thruster.cpp in Sources */,
+				F75B6EE018C3EA6A0092C1A2 /* OpenGLGBuffer.cpp in Sources */,
+				F75B6EDA18C3EA6A0092C1A2 /* Machine.cpp in Sources */,
+				F75B6EF518C3EA6A0092C1A2 /* TerrainEntity.cpp in Sources */,
+				F75B6EF018C3EA6A0092C1A2 /* SimulationManager.cpp in Sources */,
+				F75B6EDE18C3EA6A0092C1A2 /* NativeDialog.cpp in Sources */,
+				F75B6ED018C3EA6A0092C1A2 /* DCMotor.cpp in Sources */,
+				F75B6EEA18C3EA6A0092C1A2 /* OpenGLView.cpp in Sources */,
+				F75B6EED18C3EA6A0092C1A2 /* RevoluteJoint.cpp in Sources */,
+				F75B6EC918C3EA6A0092C1A2 /* BoxEntity.cpp in Sources */,
+				F75B6ED818C3EA6A0092C1A2 /* IMU.cpp in Sources */,
+				F75B6ED318C3EA6A0092C1A2 /* FluidEntity.cpp in Sources */,
+				F75B6EE818C3EA6A0092C1A2 /* OpenGLTrackball.cpp in Sources */,
+				F75B6ED218C3EA6A0092C1A2 /* FixedJoint.cpp in Sources */,
+				F75B6EE718C3EA6A0092C1A2 /* OpenGLSpotLight.cpp in Sources */,
+				F75B6EEE18C3EA6A0092C1A2 /* Sensor.cpp in Sources */,
+				F75B6EDB18C3EA6A0092C1A2 /* Manipulator.cpp in Sources */,
+				F75B6ED918C3EA6A0092C1A2 /* Joint.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -194,6 +919,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F75B6F0318C3EC3F0092C1A2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
+			targetProxy = F75B6F0218C3EC3F0092C1A2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		F7AB71B818C3D8EC0077F07D /* Debug */ = {
@@ -267,7 +1000,33 @@
 		F7AB71BB18C3D8EC0077F07D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/zbuffer/Documents/Programming/Libs/glm/,
+					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
+					/usr/local/include,
+					/usr/local/include/freetype2,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletDynamics/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletCollision/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletSoftBody/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/LinearMath/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug",
+					/usr/local/lib,
+				);
+				PRELINK_LIBS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -275,7 +1034,33 @@
 		F7AB71BC18C3D8EC0077F07D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/zbuffer/Documents/Programming/Libs/glm/,
+					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
+					/usr/local/include,
+					/usr/local/include/freetype2,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletDynamics/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletCollision/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletSoftBody/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/LinearMath/Debug",
+					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug",
+					/usr/local/lib,
+				);
+				PRELINK_LIBS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -283,9 +1068,23 @@
 		F7AB71D218C3E19D0077F07D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
+				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/zbuffer/Documents/Programming/Libs/glm/,
+					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
+					/usr/local/include,
+					/usr/local/include/freetype2,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -294,6 +1093,20 @@
 		F7AB71D318C3E19D0077F07D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
+					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/zbuffer/Documents/Programming/Libs/glm/,
+					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
+					/usr/local/include,
+					/usr/local/include/freetype2,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -326,6 +1139,7 @@
 				F7AB71D318C3E19D0077F07D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
