@@ -21,14 +21,14 @@
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
 
-class SimulationManager
+class SimulationManager //abstract class!
 {
 public:
     SimulationManager(btScalar stepsPerSecond);
 	virtual ~SimulationManager(void);
     
     //physics
-    virtual void BuildScenario();
+    virtual void BuildScenario() = 0;
     void DestroyScenario();
     void RestartScenario();
     void StartSimulation();

@@ -37,8 +37,8 @@
 
 //opengl
 #define GL_GLEXT_PROTOTYPES
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #include <OpenGL/glu.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>

@@ -26,6 +26,16 @@
 		F71323F318C47FCF00C718D8 /* deferredDirectional.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */; };
 		F71323F418C47FCF00C718D8 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
 		F71323F518C47FCF00C718D8 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F73B0A7718C4C64800E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
+		F73B0A7818C4C64800E128CF /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
+		F73B0A7918C4C64800E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
+		F73B0A7A18C4C64800E128CF /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
+		F73B0A9418C5407300E128CF /* FallingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9218C5407300E128CF /* FallingTestApp.cpp */; };
+		F73B0A9918C5424500E128CF /* FallingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9718C5424500E128CF /* FallingTestManager.cpp */; };
+		F73B0A9A18C5498D00E128CF /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
+		F73B0A9B18C5498D00E128CF /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
+		F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
+		F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
 		F75B6E5818C3E74C0092C1A2 /* Actuator.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2418C3E74B0092C1A2 /* Actuator.h */; };
 		F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */; };
 		F75B6E5A18C3E74C0092C1A2 /* CableEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2618C3E74B0092C1A2 /* CableEntity.h */; };
@@ -128,11 +138,6 @@
 		F75B6F0518C3F0950092C1A2 /* Machine.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3818C3E74B0092C1A2 /* Machine.h */; };
 		F75B6F0618C3F0950092C1A2 /* Manipulator.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3918C3E74B0092C1A2 /* Manipulator.h */; };
 		F75B6F0718C3F0950092C1A2 /* Submersible.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E5318C3E74B0092C1A2 /* Submersible.h */; };
-		F75B6F0918C3F7EC0092C1A2 /* libBulletDynamics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0818C3F7EC0092C1A2 /* libBulletDynamics.a */; };
-		F75B6F0B18C3F80A0092C1A2 /* libBulletCollision.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0A18C3F80A0092C1A2 /* libBulletCollision.a */; };
-		F75B6F0D18C3F8290092C1A2 /* libBulletSoftBody.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0C18C3F8290092C1A2 /* libBulletSoftBody.a */; };
-		F75B6F0F18C3F83C0092C1A2 /* libLinearMath.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F0E18C3F83C0092C1A2 /* libLinearMath.a */; };
-		F75B6F1218C3F8BF0092C1A2 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1118C3F8BF0092C1A2 /* libSDL2.a */; };
 		F75B6F1718C3F8ED0092C1A2 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1318C3F8ED0092C1A2 /* AudioToolbox.framework */; };
 		F75B6F1818C3F8ED0092C1A2 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */; };
 		F75B6F1918C3F8ED0092C1A2 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */; };
@@ -143,11 +148,12 @@
 		F75B6F2218C3F92F0092C1A2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2018C3F92F0092C1A2 /* IOKit.framework */; };
 		F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */; };
 		F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
+		F7A6B5AC18C4BF73009B6D41 /* libSDL2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */; };
 		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F75B6F0218C3EC3F0092C1A2 /* PBXContainerItemProxy */ = {
+		F73B0A9518C541A900E128CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
 			proxyType = 1;
@@ -198,6 +204,14 @@
 
 /* Begin PBXFileReference section */
 		F71323F618C4849A00C718D8 /* ToDo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToDo.txt; sourceTree = "<group>"; };
+		F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletCollision.dylib; path = /usr/local/lib/libBulletCollision.dylib; sourceTree = "<absolute>"; };
+		F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletDynamics.dylib; path = /usr/local/lib/libBulletDynamics.dylib; sourceTree = "<absolute>"; };
+		F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletSoftBody.dylib; path = /usr/local/lib/libBulletSoftBody.dylib; sourceTree = "<absolute>"; };
+		F73B0A7618C4C64800E128CF /* libLinearMath.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLinearMath.dylib; path = /usr/local/lib/libLinearMath.dylib; sourceTree = "<absolute>"; };
+		F73B0A9218C5407300E128CF /* FallingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestApp.cpp; sourceTree = "<group>"; };
+		F73B0A9318C5407300E128CF /* FallingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestApp.h; sourceTree = "<group>"; };
+		F73B0A9718C5424500E128CF /* FallingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestManager.cpp; sourceTree = "<group>"; };
+		F73B0A9818C5424500E128CF /* FallingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestManager.h; sourceTree = "<group>"; };
 		F75B6E2418C3E74B0092C1A2 /* Actuator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Actuator.h; sourceTree = "<group>"; };
 		F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxEntity.h; sourceTree = "<group>"; };
 		F75B6E2618C3E74B0092C1A2 /* CableEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CableEntity.h; sourceTree = "<group>"; };
@@ -299,11 +313,6 @@
 		F75B6EC318C3EA6A0092C1A2 /* Thruster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thruster.cpp; sourceTree = "<group>"; };
 		F75B6EC418C3EA6A0092C1A2 /* UnitSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnitSystem.cpp; sourceTree = "<group>"; };
 		F75B6EC618C3EA6A0092C1A2 /* DialogAppKit.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DialogAppKit.mm; sourceTree = "<group>"; };
-		F75B6F0818C3F7EC0092C1A2 /* libBulletDynamics.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletDynamics.a; path = "../../../Libs/bullet-2.81/cbuild/src/BulletDynamics/Debug/libBulletDynamics.a"; sourceTree = "<group>"; };
-		F75B6F0A18C3F80A0092C1A2 /* libBulletCollision.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletCollision.a; path = "../../../Libs/bullet-2.81/cbuild/src/BulletCollision/Debug/libBulletCollision.a"; sourceTree = "<group>"; };
-		F75B6F0C18C3F8290092C1A2 /* libBulletSoftBody.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletSoftBody.a; path = "../../../Libs/bullet-2.81/cbuild/src/BulletSoftBody/Debug/libBulletSoftBody.a"; sourceTree = "<group>"; };
-		F75B6F0E18C3F83C0092C1A2 /* libLinearMath.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLinearMath.a; path = "../../../Libs/bullet-2.81/cbuild/src/LinearMath/Debug/libLinearMath.a"; sourceTree = "<group>"; };
-		F75B6F1118C3F8BF0092C1A2 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../../Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/libSDL2.a"; sourceTree = "<group>"; };
 		F75B6F1318C3F8ED0092C1A2 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -314,6 +323,7 @@
 		F75B6F2018C3F92F0092C1A2 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftgl.2.1.3.dylib; path = /usr/local/lib/libftgl.2.1.3.dylib; sourceTree = "<absolute>"; };
 		F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = /usr/local/lib/libfreetype.6.dylib; sourceTree = "<absolute>"; };
+		F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libSDL2.dylib; path = /usr/local/lib/libSDL2.dylib; sourceTree = "<absolute>"; };
 		F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libStonefish.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CB18C3E19D0077F07D /* FallingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FallingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CD18C3E19D0077F07D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -343,6 +353,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F73B0A7A18C4C64800E128CF /* libLinearMath.dylib in Frameworks */,
+				F73B0A7718C4C64800E128CF /* libBulletCollision.dylib in Frameworks */,
+				F73B0A7818C4C64800E128CF /* libBulletDynamics.dylib in Frameworks */,
+				F73B0A7918C4C64800E128CF /* libBulletSoftBody.dylib in Frameworks */,
+				F7A6B5AC18C4BF73009B6D41 /* libSDL2.dylib in Frameworks */,
 				F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */,
 				F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */,
 				F75B6F2118C3F92F0092C1A2 /* ForceFeedback.framework in Frameworks */,
@@ -353,11 +368,6 @@
 				F75B6F1818C3F8ED0092C1A2 /* AudioUnit.framework in Frameworks */,
 				F75B6F1918C3F8ED0092C1A2 /* Carbon.framework in Frameworks */,
 				F75B6F1A18C3F8ED0092C1A2 /* Cocoa.framework in Frameworks */,
-				F75B6F1218C3F8BF0092C1A2 /* libSDL2.a in Frameworks */,
-				F75B6F0F18C3F83C0092C1A2 /* libLinearMath.a in Frameworks */,
-				F75B6F0D18C3F8290092C1A2 /* libBulletSoftBody.a in Frameworks */,
-				F75B6F0B18C3F80A0092C1A2 /* libBulletCollision.a in Frameworks */,
-				F75B6F0918C3F7EC0092C1A2 /* libBulletDynamics.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -366,6 +376,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				F75B6F0418C3EC480092C1A2 /* libStonefish.dylib in Frameworks */,
+				F73B0A9B18C5498D00E128CF /* libLinearMath.dylib in Frameworks */,
+				F73B0A9A18C5498D00E128CF /* libBulletDynamics.dylib in Frameworks */,
+				F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */,
+				F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -604,13 +618,13 @@
 				F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */,
 				F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */,
 				F75B6F1618C3F8ED0092C1A2 /* Cocoa.framework */,
-				F75B6F1118C3F8BF0092C1A2 /* libSDL2.a */,
-				F75B6F0E18C3F83C0092C1A2 /* libLinearMath.a */,
-				F75B6F0C18C3F8290092C1A2 /* libBulletSoftBody.a */,
-				F75B6F0A18C3F80A0092C1A2 /* libBulletCollision.a */,
-				F75B6F0818C3F7EC0092C1A2 /* libBulletDynamics.a */,
+				F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */,
+				F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */,
+				F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */,
+				F73B0A7618C4C64800E128CF /* libLinearMath.dylib */,
 				F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */,
 				F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */,
+				F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */,
 			);
 			name = dependencies;
 			sourceTree = "<group>";
@@ -681,6 +695,10 @@
 			isa = PBXGroup;
 			children = (
 				F7AB71CD18C3E19D0077F07D /* main.cpp */,
+				F73B0A9218C5407300E128CF /* FallingTestApp.cpp */,
+				F73B0A9318C5407300E128CF /* FallingTestApp.h */,
+				F73B0A9718C5424500E128CF /* FallingTestManager.cpp */,
+				F73B0A9818C5424500E128CF /* FallingTestManager.h */,
 			);
 			path = FallingTest;
 			sourceTree = "<group>";
@@ -818,7 +836,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				F75B6F0318C3EC3F0092C1A2 /* PBXTargetDependency */,
+				F73B0A9618C541A900E128CF /* PBXTargetDependency */,
 			);
 			name = FallingTest;
 			productName = FallingTest;
@@ -915,16 +933,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */,
+				F73B0A9418C5407300E128CF /* FallingTestApp.cpp in Sources */,
+				F73B0A9918C5424500E128CF /* FallingTestManager.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		F75B6F0318C3EC3F0092C1A2 /* PBXTargetDependency */ = {
+		F73B0A9618C541A900E128CF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
-			targetProxy = F75B6F0218C3EC3F0092C1A2 /* PBXContainerItemProxy */;
+			targetProxy = F73B0A9518C541A900E128CF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1000,32 +1020,22 @@
 		F7AB71BB18C3D8EC0077F07D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					/Users/zbuffer/Documents/Programming/Libs/glm/,
-					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
-					/usr/local/include,
+					/usr/local/include/,
 					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletDynamics/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletCollision/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletSoftBody/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/LinearMath/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug",
 					/usr/local/lib,
 				);
+				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PRELINK_LIBS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1034,32 +1044,22 @@
 		F7AB71BC18C3D8EC0077F07D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					/Users/zbuffer/Documents/Programming/Libs/glm/,
-					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
-					/usr/local/include,
+					/usr/local/include/,
 					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletDynamics/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletCollision/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/BulletSoftBody/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/bullet-2.81/cbuild/src/LinearMath/Debug",
-					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug",
 					/usr/local/lib,
 				);
+				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PRELINK_LIBS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1068,12 +1068,8 @@
 		F7AB71D218C3E19D0077F07D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
-				);
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -1081,11 +1077,13 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					/Users/zbuffer/Documents/Programming/Libs/glm/,
-					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
 					/usr/local/include,
 					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
 				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1093,20 +1091,18 @@
 		F7AB71D318C3E19D0077F07D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletDynamics\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletCollision\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/LinearMath\"",
-					"\"$(SRCROOT)/../../Libs/bullet-2.81/src/BulletSoftBody\"",
-				);
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					/Users/zbuffer/Documents/Programming/Libs/glm/,
-					"/Users/zbuffer/Documents/Programming/Libs/SDL2-2.0.1/Xcode/SDL/build/Debug/usr/local/include",
 					/usr/local/include,
 					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
 				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

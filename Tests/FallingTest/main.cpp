@@ -6,13 +6,13 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "SimulationApp.h"
-#include "SimulationManager.h"
+#include "FallingTestApp.h"
+#include "FallingTestManager.h"
 
 int main(int argc, const char * argv[])
 {
-    SimulationManager* simulationManager = new SimulationManager(60.0);
-    SimulationApp app("Falling objects test", 800, 600, simulationManager);
+    FallingTestManager* simulationManager = new FallingTestManager(300.0);
+    FallingTestApp app(800, 600, simulationManager);
     app.Init("Data", "Shaders");
     app.EventLoop();
     app.CleanUp();
