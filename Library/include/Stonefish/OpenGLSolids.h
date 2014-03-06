@@ -19,5 +19,6 @@ void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ);
 void DrawSolidSphere(GLfloat radius);
 void DrawPointSphere(GLfloat radius);
 void DrawSolidCylinder(GLfloat radius, GLfloat height);
+void DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius);
 
 #endif

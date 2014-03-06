@@ -1,3 +1,4 @@
 - Combine setTransform with unit system
 - Add global coord system choice (z-up or z-down)
 - Global coordinate system displayed and rotated with camera
+x Torus collision shape

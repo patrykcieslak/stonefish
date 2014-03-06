@@ -11,7 +11,7 @@
 
 int main(int argc, const char * argv[])
 {
-    FallingTestManager* simulationManager = new FallingTestManager(300.0);
+    FallingTestManager* simulationManager = new FallingTestManager(100.0);
     FallingTestApp app(800, 600, simulationManager);
     app.Init("Data", "Shaders");
     app.EventLoop();

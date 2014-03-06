@@ -14,7 +14,7 @@
 #include "OpenGLMaterial.h"
 #include "GeometryUtil.h"
 
-typedef enum {MESH = 0, SPHERE, CYLINDER, BOX, COMPOUND} SolidEntityType;
+typedef enum {MESH = 0, SPHERE, CYLINDER, BOX, TORUS, COMPOUND} SolidEntityType;
 
 //pure virtual class
 class SolidEntity : public Entity

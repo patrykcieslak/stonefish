@@ -187,7 +187,7 @@ void SolidEntity::BuildRigidBody()
         rigidBodyCI.m_linearDamping = 0.0;
         rigidBodyCI.m_angularDamping = 0.0;
         rigidBodyCI.m_linearSleepingThreshold = 0.1;
-        rigidBodyCI.m_angularSleepingThreshold = 0.01;
+        rigidBodyCI.m_angularSleepingThreshold = 0.005;
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);

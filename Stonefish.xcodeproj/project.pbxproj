@@ -150,6 +150,10 @@
 		F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
 		F7A6B5AC18C4BF73009B6D41 /* libSDL2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */; };
 		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
+		F7CA235E18C7D3F2009439F3 /* btTorusShape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7CA235D18C7D3F2009439F3 /* btTorusShape.cpp */; };
+		F7CA236118C7D42C009439F3 /* btTorusShape.h in Headers */ = {isa = PBXBuildFile; fileRef = F7CA236018C7D42C009439F3 /* btTorusShape.h */; };
+		F7CA236318C7DA5E009439F3 /* TorusEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F7CA236218C7DA5E009439F3 /* TorusEntity.h */; };
+		F7CA236518C7DADD009439F3 /* TorusEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7CA236418C7DADD009439F3 /* TorusEntity.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -346,6 +350,10 @@
 		F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredDirectional.frag; sourceTree = "<group>"; };
 		F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredOmni.frag; sourceTree = "<group>"; };
 		F7B1DC3218C40AEC001C0CE8 /* saq.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saq.vert; sourceTree = "<group>"; };
+		F7CA235D18C7D3F2009439F3 /* btTorusShape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = btTorusShape.cpp; sourceTree = "<group>"; };
+		F7CA236018C7D42C009439F3 /* btTorusShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btTorusShape.h; sourceTree = "<group>"; };
+		F7CA236218C7DA5E009439F3 /* TorusEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TorusEntity.h; sourceTree = "<group>"; };
+		F7CA236418C7DADD009439F3 /* TorusEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TorusEntity.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -415,6 +423,7 @@
 				F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */,
 				F75B6E5018C3E74B0092C1A2 /* SphereEntity.h */,
 				F75B6E2C18C3E74B0092C1A2 /* CylinderEntity.h */,
+				F7CA236218C7DA5E009439F3 /* TorusEntity.h */,
 				F75B6E3B18C3E74B0092C1A2 /* MeshEntity.h */,
 				F75B6E2818C3E74B0092C1A2 /* CompoundEntity.h */,
 				F75B6E5418C3E74B0092C1A2 /* TerrainEntity.h */,
@@ -521,6 +530,7 @@
 				F75B6E9618C3EA6A0092C1A2 /* BoxEntity.cpp */,
 				F75B6EBF18C3EA6A0092C1A2 /* SphereEntity.cpp */,
 				F75B6E9C18C3EA6A0092C1A2 /* CylinderEntity.cpp */,
+				F7CA236418C7DADD009439F3 /* TorusEntity.cpp */,
 				F75B6EAA18C3EA6A0092C1A2 /* MeshEntity.cpp */,
 				F75B6EC218C3EA6A0092C1A2 /* TerrainEntity.cpp */,
 				F75B6E9818C3EA6A0092C1A2 /* CompoundEntity.cpp */,
@@ -679,6 +689,7 @@
 				F75B6EFF18C3EAB70092C1A2 /* Machines */,
 				F75B6F0018C3EABD0092C1A2 /* Graphics */,
 				F75B6F0118C3EAC50092C1A2 /* GUI */,
+				F7CA235C18C7D3C4009439F3 /* Bullet extension */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -739,8 +750,25 @@
 				F75B6E9318C3E9CE0092C1A2 /* Machines */,
 				F75B6E9018C3E89A0092C1A2 /* Graphics */,
 				F75B6E9118C3E9240092C1A2 /* GUI */,
+				F7CA235F18C7D416009439F3 /* Bullet extension */,
 			);
 			path = Stonefish;
+			sourceTree = "<group>";
+		};
+		F7CA235C18C7D3C4009439F3 /* Bullet extension */ = {
+			isa = PBXGroup;
+			children = (
+				F7CA235D18C7D3F2009439F3 /* btTorusShape.cpp */,
+			);
+			name = "Bullet extension";
+			sourceTree = "<group>";
+		};
+		F7CA235F18C7D416009439F3 /* Bullet extension */ = {
+			isa = PBXGroup;
+			children = (
+				F7CA236018C7D42C009439F3 /* btTorusShape.h */,
+			);
+			name = "Bullet extension";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -784,6 +812,7 @@
 				F75B6E7518C3E74C0092C1A2 /* OpenGLOmniLight.h in Headers */,
 				F75B6E8218C3E74C0092C1A2 /* SimulationManager.h in Headers */,
 				F75B6E7918C3E74C0092C1A2 /* OpenGLSpotLight.h in Headers */,
+				F7CA236318C7DA5E009439F3 /* TorusEntity.h in Headers */,
 				F75B6E5D18C3E74C0092C1A2 /* Controller.h in Headers */,
 				F75B6E7318C3E74C0092C1A2 /* OpenGLLight.h in Headers */,
 				F75B6E5F18C3E74C0092C1A2 /* CurrentEntity.h in Headers */,
@@ -794,6 +823,7 @@
 				F75B6E8518C3E74C0092C1A2 /* SphericalJoint.h in Headers */,
 				F75B6E5E18C3E74C0092C1A2 /* ControlSurface.h in Headers */,
 				F75B6E8A18C3E74C0092C1A2 /* UnitSystem.h in Headers */,
+				F7CA236118C7D42C009439F3 /* btTorusShape.h in Headers */,
 				F75B6E6B18C3E74C0092C1A2 /* Joint.h in Headers */,
 				F75B6E6E18C3E74C0092C1A2 /* MaterialManager.h in Headers */,
 				F75B6E6718C3E74C0092C1A2 /* GeometryUtil.h in Headers */,
@@ -889,6 +919,7 @@
 				F75B6EEF18C3EA6A0092C1A2 /* SimulationApp.cpp in Sources */,
 				F75B6ED418C3EA6A0092C1A2 /* GeometryFileUtil.cpp in Sources */,
 				F75B6ED118C3EA6A0092C1A2 /* Entity.cpp in Sources */,
+				F7CA236518C7DADD009439F3 /* TorusEntity.cpp in Sources */,
 				F75B6EE218C3EA6A0092C1A2 /* OpenGLMaterial.cpp in Sources */,
 				F75B6EDD18C3EA6A0092C1A2 /* MeshEntity.cpp in Sources */,
 				F75B6ECC18C3EA6A0092C1A2 /* Controller.cpp in Sources */,
@@ -911,6 +942,7 @@
 				F75B6EE018C3EA6A0092C1A2 /* OpenGLGBuffer.cpp in Sources */,
 				F75B6EDA18C3EA6A0092C1A2 /* Machine.cpp in Sources */,
 				F75B6EF518C3EA6A0092C1A2 /* TerrainEntity.cpp in Sources */,
+				F7CA235E18C7D3F2009439F3 /* btTorusShape.cpp in Sources */,
 				F75B6EF018C3EA6A0092C1A2 /* SimulationManager.cpp in Sources */,
 				F75B6EDE18C3EA6A0092C1A2 /* NativeDialog.cpp in Sources */,
 				F75B6ED018C3EA6A0092C1A2 /* DCMotor.cpp in Sources */,

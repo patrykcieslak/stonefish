@@ -53,6 +53,7 @@ SimulationManager::SimulationManager(btScalar stepsPerSecond)
     dynamicsWorld->getSolverInfo().m_friction = GLOBAL_FRICTION;
     dynamicsWorld->getSolverInfo().m_tau = 0.0;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
+    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 0.f;
     
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);

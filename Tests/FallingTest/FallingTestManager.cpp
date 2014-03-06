@@ -11,6 +11,8 @@
 #include "FallingTestApp.h"
 #include "PlaneEntity.h"
 #include "BoxEntity.h"
+#include "TorusEntity.h"
+#include "CylinderEntity.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 
@@ -25,7 +27,8 @@ void FallingTestManager::BuildScenario()
     SetGravity(UnitSystem::Acceleration(MKS, MMKS, btVector3(0,0,9.81)));
     
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Steel", 7.81, 0.1, 1.0, 1.0);
+    getMaterialManager()->CreateMaterial("Steel", 7.81, 0.5, 1.0, 1.0);
+    getMaterialManager()->CreateMaterial("Plastic", 1.5, 0.5, 1.0, 1.0);
     
     ///////LOOKS///////////
     Look grey = CreateMatteLook(0.7f, 0.7f, 0.7f, 0.8f);
@@ -43,11 +46,22 @@ void FallingTestManager::BuildScenario()
         AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0, 0), btVector3(sinf(i * M_PI/10.f)*200.f, cosf(i * M_PI/10.f)*200.f, -100.f - i*300.f)));
     }
     
+    /*Look shiny = CreateGlossyLook(1.f, 0.5f, 0.2f, 0.5f, 0.f);
+    TorusEntity* torus = new TorusEntity("Torus", 1000.f, 400.f, false, getMaterialManager()->getMaterial("Plastic"), shiny);
+    torus->setRenderable(true);
+    AddSolidEntity(torus, btTransform(btQuaternion(M_PI/180.0,0,M_PI_2), btVector3(0,0,-1000.f)));
+    torus->getRigidBody()->setAngularVelocity(btVector3(10.0,0.0,0.0));
+    torus->getRigidBody()->setRollingFriction(1.0);*/
+    
+    /*CylinderEntity* cylinder = new CylinderEntity("Cyl", 1000.f, 400.f, false, getMaterialManager()->getMaterial("Plastic"), shiny);
+    cylinder->setRenderable(true);
+    AddSolidEntity(cylinder, btTransform(btQuaternion(0,M_PI/360.0,0), btVector3(0,0,-1000.f)));*/
+    
     //////CAMERA & LIGHT//////
     OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(-1000,-3000,-4000), btVector3(0,500,0), 30, OpenGLLight::ColorFromTemperature(8000, 1200000));
     AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, -500.f), 8000.f, btVector3(0,0,-1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 2, 60.f);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, -500.f), 8000.f, btVector3(0,0,-1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60.f);
     trackb->Rotate(btQuaternion(M_PI, -M_PI/10.0, 0));
     trackb->Activate();
     AddView(trackb);

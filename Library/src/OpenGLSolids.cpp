@@ -212,3 +212,25 @@ void DrawSolidCylinder(GLfloat radius, GLfloat height)
     }
     glEnd();
 }
+
+void DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius)
+{
+    for(int i=0; i<48; i++)
+    {
+        GLfloat alpha0 = i/48.f*M_PI*2.f;
+        GLfloat alpha1 = (i+1)/48.f*M_PI*2.f;
+        
+        glBegin(GL_TRIANGLE_STRIP);
+        for(int h=0; h<=24; h++)
+        {
+            GLfloat ry = cosf(h/24.f*M_PI*2.f) * minorRadius;
+            GLfloat rx = sinf(h/24.f*M_PI*2.f) * minorRadius;
+            
+            glNormal3f(sinf(h/24.f*M_PI*2.f)*cosf(alpha0), cosf(h/24.f*M_PI*2.f), sinf(h/24.f*M_PI*2.f)*sinf(alpha0));
+            glVertex3f((rx + majorRadius)*cosf(alpha0), ry, (rx + majorRadius)*sinf(alpha0));
+            glNormal3f(sinf(h/24.f*M_PI*2.f)*cosf(alpha1), cosf(h/24.f*M_PI*2.f), sinf(h/24.f*M_PI*2.f)*sinf(alpha1));
+            glVertex3f((rx + majorRadius)*cosf(alpha1), ry, (rx + majorRadius)*sinf(alpha1));
+        }
+        glEnd();
+    }
+}
