@@ -20,7 +20,7 @@ public:
     static void Init();
     static void Destroy();
     static void Generate(GLfloat elevation, GLfloat orientation);
-    static void Render(OpenGLView* view, const btTransform& viewTransform);
+    static void Render(OpenGLView* view, const btTransform& viewTransform, bool zAxisUp);
     static GLuint getSkyCubemap();
     static GLuint getDiffuseCubemap();
     static GLuint getReflectionCubemap();

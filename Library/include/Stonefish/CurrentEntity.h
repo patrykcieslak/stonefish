@@ -6,8 +6,8 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__CurrentEntity__
-#define __Stonefish__CurrentEntity__
+#ifndef __Stonefish_CurrentEntity__
+#define __Stonefish_CurrentEntity__
 
 
 #endif

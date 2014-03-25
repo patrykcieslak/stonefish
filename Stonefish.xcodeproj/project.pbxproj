@@ -26,6 +26,8 @@
 		F71323F318C47FCF00C718D8 /* deferredDirectional.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */; };
 		F71323F418C47FCF00C718D8 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
 		F71323F518C47FCF00C718D8 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F716FA2518E0DBF700B7E0F2 /* ADC.h in Headers */ = {isa = PBXBuildFile; fileRef = F716FA2418E0DBF700B7E0F2 /* ADC.h */; };
+		F716FA2718E0DE5F00B7E0F2 /* ADC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */; };
 		F73B0A7718C4C64800E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
 		F73B0A7818C4C64800E128CF /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
 		F73B0A7918C4C64800E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
@@ -36,6 +38,10 @@
 		F73B0A9B18C5498D00E128CF /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
 		F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
 		F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
+		F755999E18DF1375009A7983 /* Sample.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F755999C18DF1375009A7983 /* Sample.cpp */; };
+		F75599A118DF1400009A7983 /* Sample.h in Headers */ = {isa = PBXBuildFile; fileRef = F75599A018DF1398009A7983 /* Sample.h */; };
+		F75599A318DF25B0009A7983 /* AccelerationSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75599A218DF25B0009A7983 /* AccelerationSensor.cpp */; };
+		F75599A618DF2615009A7983 /* AccelerationSensor.h in Headers */ = {isa = PBXBuildFile; fileRef = F75599A418DF25DF009A7983 /* AccelerationSensor.h */; };
 		F75B6E5818C3E74C0092C1A2 /* Actuator.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2418C3E74B0092C1A2 /* Actuator.h */; };
 		F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */; };
 		F75B6E5A18C3E74C0092C1A2 /* CableEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E2618C3E74B0092C1A2 /* CableEntity.h */; };
@@ -54,7 +60,6 @@
 		F75B6E6718C3E74C0092C1A2 /* GeometryUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3318C3E74B0092C1A2 /* GeometryUtil.h */; };
 		F75B6E6818C3E74C0092C1A2 /* GhostEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3418C3E74B0092C1A2 /* GhostEntity.h */; };
 		F75B6E6918C3E74C0092C1A2 /* IMGUI.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3518C3E74B0092C1A2 /* IMGUI.h */; };
-		F75B6E6A18C3E74C0092C1A2 /* IMU.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3618C3E74B0092C1A2 /* IMU.h */; };
 		F75B6E6B18C3E74C0092C1A2 /* Joint.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3718C3E74B0092C1A2 /* Joint.h */; };
 		F75B6E6E18C3E74C0092C1A2 /* MaterialManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3A18C3E74B0092C1A2 /* MaterialManager.h */; };
 		F75B6E6F18C3E74C0092C1A2 /* MeshEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F75B6E3B18C3E74B0092C1A2 /* MeshEntity.h */; };
@@ -101,7 +106,6 @@
 		F75B6ED518C3EA6A0092C1A2 /* GeometryUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA218C3EA6A0092C1A2 /* GeometryUtil.cpp */; };
 		F75B6ED618C3EA6A0092C1A2 /* GhostEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA318C3EA6A0092C1A2 /* GhostEntity.cpp */; };
 		F75B6ED718C3EA6A0092C1A2 /* IMGUI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA418C3EA6A0092C1A2 /* IMGUI.cpp */; };
-		F75B6ED818C3EA6A0092C1A2 /* IMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA518C3EA6A0092C1A2 /* IMU.cpp */; };
 		F75B6ED918C3EA6A0092C1A2 /* Joint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA618C3EA6A0092C1A2 /* Joint.cpp */; };
 		F75B6EDA18C3EA6A0092C1A2 /* Machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA718C3EA6A0092C1A2 /* Machine.cpp */; };
 		F75B6EDB18C3EA6A0092C1A2 /* Manipulator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75B6EA818C3EA6A0092C1A2 /* Manipulator.cpp */; };
@@ -150,6 +154,33 @@
 		F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
 		F7A6B5AC18C4BF73009B6D41 /* libSDL2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */; };
 		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
+		F7C2313118CA0D3F00817B69 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F7C2313218CA0D3F00817B69 /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
+		F7C2313318CA0D3F00817B69 /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
+		F7C2313418CA0D3F00817B69 /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
+		F7C2313518CA0D3F00817B69 /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
+		F7C2313718CA0D3F00817B69 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
+		F7C2313818CA0D3F00817B69 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
+		F7C2313918CA0D3F00817B69 /* deferredDirectional.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */; };
+		F7C2313A18CA0D3F00817B69 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
+		F7C2313B18CA0D3F00817B69 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F7C2313C18CA0D3F00817B69 /* fluidBorder.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */; };
+		F7C2313D18CA0D3F00817B69 /* fluidVolume.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */; };
+		F7C2313E18CA0D3F00817B69 /* belowFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */; };
+		F7C2313F18CA0D3F00817B69 /* fluidSurface.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */; };
+		F7C2314018CA0D3F00817B69 /* aboveFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */; };
+		F7C2314118CA0D3F00817B69 /* gbuffer.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */; };
+		F7C2314218CA0D3F00817B69 /* gbuffer.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */; };
+		F7C2314318CA0D3F00817B69 /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
+		F7C2314418CA0D3F00817B69 /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
+		F7C2314518CA0D3F00817B69 /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
+		F7C2314618CA0D3F00817B69 /* ssao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */; };
+		F7C2314718CA0D3F00817B69 /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
+		F7C2314818CA0D3F00817B69 /* blur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2C18C40AEC001C0CE8 /* blur.frag */; };
+		F7C2314A18CA0D3F00817B69 /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
+		F7C2315A18CA0E3900817B69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7C2315018CA0E1700817B69 /* main.cpp */; };
+		F7C2315B18CA0E3900817B69 /* RollingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7C2315118CA0E1700817B69 /* RollingTestApp.cpp */; };
+		F7C2315C18CA0E3900817B69 /* RollingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7C2315318CA0E1700817B69 /* RollingTestManager.cpp */; };
 		F7CA235E18C7D3F2009439F3 /* btTorusShape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7CA235D18C7D3F2009439F3 /* btTorusShape.cpp */; };
 		F7CA236118C7D42C009439F3 /* btTorusShape.h in Headers */ = {isa = PBXBuildFile; fileRef = F7CA236018C7D42C009439F3 /* btTorusShape.h */; };
 		F7CA236318C7DA5E009439F3 /* TorusEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F7CA236218C7DA5E009439F3 /* TorusEntity.h */; };
@@ -158,6 +189,13 @@
 
 /* Begin PBXContainerItemProxy section */
 		F73B0A9518C541A900E128CF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
+			remoteInfo = Stonefish;
+		};
+		F7C2312B18CA0D3F00817B69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
 			proxyType = 1;
@@ -204,10 +242,49 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F7C2313618CA0D3F00817B69 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = Shaders;
+			dstSubfolderSpec = 16;
+			files = (
+				F7C2313718CA0D3F00817B69 /* cubeDownsample.frag in CopyFiles */,
+				F7C2313818CA0D3F00817B69 /* cubeConvolve.frag in CopyFiles */,
+				F7C2313918CA0D3F00817B69 /* deferredDirectional.frag in CopyFiles */,
+				F7C2313A18CA0D3F00817B69 /* deferredOmni.frag in CopyFiles */,
+				F7C2313B18CA0D3F00817B69 /* saq.vert in CopyFiles */,
+				F7C2313C18CA0D3F00817B69 /* fluidBorder.frag in CopyFiles */,
+				F7C2313D18CA0D3F00817B69 /* fluidVolume.frag in CopyFiles */,
+				F7C2313E18CA0D3F00817B69 /* belowFluidSurface.frag in CopyFiles */,
+				F7C2313F18CA0D3F00817B69 /* fluidSurface.vert in CopyFiles */,
+				F7C2314018CA0D3F00817B69 /* aboveFluidSurface.frag in CopyFiles */,
+				F7C2314118CA0D3F00817B69 /* gbuffer.frag in CopyFiles */,
+				F7C2314218CA0D3F00817B69 /* gbuffer.vert in CopyFiles */,
+				F7C2314318CA0D3F00817B69 /* deferredAmbient.frag in CopyFiles */,
+				F7C2314418CA0D3F00817B69 /* deferredSpot.frag in CopyFiles */,
+				F7C2314518CA0D3F00817B69 /* cubeSky.frag in CopyFiles */,
+				F7C2314618CA0D3F00817B69 /* ssao.frag in CopyFiles */,
+				F7C2314718CA0D3F00817B69 /* cubePass.frag in CopyFiles */,
+				F7C2314818CA0D3F00817B69 /* blur.frag in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7C2314918CA0D3F00817B69 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Data;
+			dstSubfolderSpec = 16;
+			files = (
+				F7C2314A18CA0D3F00817B69 /* noise.png in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		F71323F618C4849A00C718D8 /* ToDo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToDo.txt; sourceTree = "<group>"; };
+		F716FA2418E0DBF700B7E0F2 /* ADC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
+		F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ADC.cpp; sourceTree = "<group>"; };
 		F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletCollision.dylib; path = /usr/local/lib/libBulletCollision.dylib; sourceTree = "<absolute>"; };
 		F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletDynamics.dylib; path = /usr/local/lib/libBulletDynamics.dylib; sourceTree = "<absolute>"; };
 		F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletSoftBody.dylib; path = /usr/local/lib/libBulletSoftBody.dylib; sourceTree = "<absolute>"; };
@@ -216,6 +293,10 @@
 		F73B0A9318C5407300E128CF /* FallingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestApp.h; sourceTree = "<group>"; };
 		F73B0A9718C5424500E128CF /* FallingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestManager.cpp; sourceTree = "<group>"; };
 		F73B0A9818C5424500E128CF /* FallingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestManager.h; sourceTree = "<group>"; };
+		F755999C18DF1375009A7983 /* Sample.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sample.cpp; sourceTree = "<group>"; };
+		F75599A018DF1398009A7983 /* Sample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sample.h; sourceTree = "<group>"; };
+		F75599A218DF25B0009A7983 /* AccelerationSensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AccelerationSensor.cpp; sourceTree = "<group>"; };
+		F75599A418DF25DF009A7983 /* AccelerationSensor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AccelerationSensor.h; sourceTree = "<group>"; };
 		F75B6E2418C3E74B0092C1A2 /* Actuator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Actuator.h; sourceTree = "<group>"; };
 		F75B6E2518C3E74B0092C1A2 /* BoxEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxEntity.h; sourceTree = "<group>"; };
 		F75B6E2618C3E74B0092C1A2 /* CableEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CableEntity.h; sourceTree = "<group>"; };
@@ -234,7 +315,6 @@
 		F75B6E3318C3E74B0092C1A2 /* GeometryUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GeometryUtil.h; sourceTree = "<group>"; };
 		F75B6E3418C3E74B0092C1A2 /* GhostEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GhostEntity.h; sourceTree = "<group>"; };
 		F75B6E3518C3E74B0092C1A2 /* IMGUI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMGUI.h; sourceTree = "<group>"; };
-		F75B6E3618C3E74B0092C1A2 /* IMU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMU.h; sourceTree = "<group>"; };
 		F75B6E3718C3E74B0092C1A2 /* Joint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Joint.h; sourceTree = "<group>"; };
 		F75B6E3818C3E74B0092C1A2 /* Machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Machine.h; sourceTree = "<group>"; };
 		F75B6E3918C3E74B0092C1A2 /* Manipulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Manipulator.h; sourceTree = "<group>"; };
@@ -284,7 +364,6 @@
 		F75B6EA218C3EA6A0092C1A2 /* GeometryUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GeometryUtil.cpp; sourceTree = "<group>"; };
 		F75B6EA318C3EA6A0092C1A2 /* GhostEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GhostEntity.cpp; sourceTree = "<group>"; };
 		F75B6EA418C3EA6A0092C1A2 /* IMGUI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IMGUI.cpp; sourceTree = "<group>"; };
-		F75B6EA518C3EA6A0092C1A2 /* IMU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IMU.cpp; sourceTree = "<group>"; };
 		F75B6EA618C3EA6A0092C1A2 /* Joint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Joint.cpp; sourceTree = "<group>"; };
 		F75B6EA718C3EA6A0092C1A2 /* Machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Machine.cpp; sourceTree = "<group>"; };
 		F75B6EA818C3EA6A0092C1A2 /* Manipulator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Manipulator.cpp; sourceTree = "<group>"; };
@@ -350,6 +429,12 @@
 		F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredDirectional.frag; sourceTree = "<group>"; };
 		F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredOmni.frag; sourceTree = "<group>"; };
 		F7B1DC3218C40AEC001C0CE8 /* saq.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saq.vert; sourceTree = "<group>"; };
+		F7C2314E18CA0D3F00817B69 /* FallingTest copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FallingTest copy"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7C2315018CA0E1700817B69 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F7C2315118CA0E1700817B69 /* RollingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RollingTestApp.cpp; sourceTree = "<group>"; };
+		F7C2315218CA0E1700817B69 /* RollingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RollingTestApp.h; sourceTree = "<group>"; };
+		F7C2315318CA0E1700817B69 /* RollingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RollingTestManager.cpp; sourceTree = "<group>"; };
+		F7C2315418CA0E1700817B69 /* RollingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RollingTestManager.h; sourceTree = "<group>"; };
 		F7CA235D18C7D3F2009439F3 /* btTorusShape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = btTorusShape.cpp; sourceTree = "<group>"; };
 		F7CA236018C7D42C009439F3 /* btTorusShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btTorusShape.h; sourceTree = "<group>"; };
 		F7CA236218C7DA5E009439F3 /* TorusEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TorusEntity.h; sourceTree = "<group>"; };
@@ -388,6 +473,18 @@
 				F73B0A9A18C5498D00E128CF /* libBulletDynamics.dylib in Frameworks */,
 				F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */,
 				F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7C2313018CA0D3F00817B69 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7C2313118CA0D3F00817B69 /* libStonefish.dylib in Frameworks */,
+				F7C2313218CA0D3F00817B69 /* libLinearMath.dylib in Frameworks */,
+				F7C2313318CA0D3F00817B69 /* libBulletDynamics.dylib in Frameworks */,
+				F7C2313418CA0D3F00817B69 /* libBulletCollision.dylib in Frameworks */,
+				F7C2313518CA0D3F00817B69 /* libBulletSoftBody.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,8 +591,10 @@
 		F75B6E9218C3E9390092C1A2 /* Sensors */ = {
 			isa = PBXGroup;
 			children = (
+				F75599A018DF1398009A7983 /* Sample.h */,
+				F716FA2418E0DBF700B7E0F2 /* ADC.h */,
 				F75B6E4C18C3E74B0092C1A2 /* Sensor.h */,
-				F75B6E3618C3E74B0092C1A2 /* IMU.h */,
+				F75599A418DF25DF009A7983 /* AccelerationSensor.h */,
 			);
 			name = Sensors;
 			sourceTree = "<group>";
@@ -569,8 +668,10 @@
 		F75B6EFE18C3EAAF0092C1A2 /* Sensors */ = {
 			isa = PBXGroup;
 			children = (
+				F755999C18DF1375009A7983 /* Sample.cpp */,
+				F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */,
 				F75B6EBB18C3EA6A0092C1A2 /* Sensor.cpp */,
-				F75B6EA518C3EA6A0092C1A2 /* IMU.cpp */,
+				F75599A218DF25B0009A7983 /* AccelerationSensor.cpp */,
 			);
 			name = Sensors;
 			sourceTree = "<group>";
@@ -653,6 +754,7 @@
 			children = (
 				F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */,
 				F7AB71CB18C3E19D0077F07D /* FallingTest */,
+				F7C2314E18CA0D3F00817B69 /* FallingTest copy */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -661,6 +763,7 @@
 			isa = PBXGroup;
 			children = (
 				F7AB71CC18C3E19D0077F07D /* FallingTest */,
+				F7C2314F18CA0E1700817B69 /* RollingTest */,
 			);
 			path = Tests;
 			sourceTree = SOURCE_ROOT;
@@ -755,6 +858,18 @@
 			path = Stonefish;
 			sourceTree = "<group>";
 		};
+		F7C2314F18CA0E1700817B69 /* RollingTest */ = {
+			isa = PBXGroup;
+			children = (
+				F7C2315018CA0E1700817B69 /* main.cpp */,
+				F7C2315118CA0E1700817B69 /* RollingTestApp.cpp */,
+				F7C2315218CA0E1700817B69 /* RollingTestApp.h */,
+				F7C2315318CA0E1700817B69 /* RollingTestManager.cpp */,
+				F7C2315418CA0E1700817B69 /* RollingTestManager.h */,
+			);
+			path = RollingTest;
+			sourceTree = "<group>";
+		};
 		F7CA235C18C7D3C4009439F3 /* Bullet extension */ = {
 			isa = PBXGroup;
 			children = (
@@ -790,8 +905,8 @@
 				F75B6E8318C3E74C0092C1A2 /* SolidEntity.h in Headers */,
 				F75B6E8118C3E74C0092C1A2 /* SimulationApp.h in Headers */,
 				F75B6E7118C3E74C0092C1A2 /* OpenGLCamera.h in Headers */,
-				F75B6E6A18C3E74C0092C1A2 /* IMU.h in Headers */,
 				F75B6E7C18C3E74C0092C1A2 /* OpenGLView.h in Headers */,
+				F75599A118DF1400009A7983 /* Sample.h in Headers */,
 				F75B6E8918C3E74C0092C1A2 /* Thruster.h in Headers */,
 				F75B6E6918C3E74C0092C1A2 /* IMGUI.h in Headers */,
 				F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */,
@@ -818,9 +933,11 @@
 				F75B6E5F18C3E74C0092C1A2 /* CurrentEntity.h in Headers */,
 				F75B6E7218C3E74C0092C1A2 /* OpenGLGBuffer.h in Headers */,
 				F75B6E5B18C3E74C0092C1A2 /* common.h in Headers */,
+				F75599A618DF2615009A7983 /* AccelerationSensor.h in Headers */,
 				F75B6E7018C3E74C0092C1A2 /* NativeDialog.h in Headers */,
 				F75B6E7418C3E74C0092C1A2 /* OpenGLMaterial.h in Headers */,
 				F75B6E8518C3E74C0092C1A2 /* SphericalJoint.h in Headers */,
+				F716FA2518E0DBF700B7E0F2 /* ADC.h in Headers */,
 				F75B6E5E18C3E74C0092C1A2 /* ControlSurface.h in Headers */,
 				F75B6E8A18C3E74C0092C1A2 /* UnitSystem.h in Headers */,
 				F7CA236118C7D42C009439F3 /* btTorusShape.h in Headers */,
@@ -873,6 +990,25 @@
 			productReference = F7AB71CB18C3E19D0077F07D /* FallingTest */;
 			productType = "com.apple.product-type.tool";
 		};
+		F7C2312918CA0D3F00817B69 /* RollingTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7C2314B18CA0D3F00817B69 /* Build configuration list for PBXNativeTarget "RollingTest" */;
+			buildPhases = (
+				F7C2312C18CA0D3F00817B69 /* Sources */,
+				F7C2313018CA0D3F00817B69 /* Frameworks */,
+				F7C2313618CA0D3F00817B69 /* CopyFiles */,
+				F7C2314918CA0D3F00817B69 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F7C2312A18CA0D3F00817B69 /* PBXTargetDependency */,
+			);
+			name = RollingTest;
+			productName = FallingTest;
+			productReference = F7C2314E18CA0D3F00817B69 /* FallingTest copy */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -896,6 +1032,7 @@
 			targets = (
 				F7AB71B518C3D8EC0077F07D /* Stonefish */,
 				F7AB71CA18C3E19D0077F07D /* FallingTest */,
+				F7C2312918CA0D3F00817B69 /* RollingTest */,
 			);
 		};
 /* End PBXProject section */
@@ -921,7 +1058,9 @@
 				F75B6ED118C3EA6A0092C1A2 /* Entity.cpp in Sources */,
 				F7CA236518C7DADD009439F3 /* TorusEntity.cpp in Sources */,
 				F75B6EE218C3EA6A0092C1A2 /* OpenGLMaterial.cpp in Sources */,
+				F755999E18DF1375009A7983 /* Sample.cpp in Sources */,
 				F75B6EDD18C3EA6A0092C1A2 /* MeshEntity.cpp in Sources */,
+				F716FA2718E0DE5F00B7E0F2 /* ADC.cpp in Sources */,
 				F75B6ECC18C3EA6A0092C1A2 /* Controller.cpp in Sources */,
 				F75B6ECB18C3EA6A0092C1A2 /* CompoundEntity.cpp in Sources */,
 				F75B6EF918C3EA6A0092C1A2 /* DialogAppKit.mm in Sources */,
@@ -949,8 +1088,8 @@
 				F75B6EEA18C3EA6A0092C1A2 /* OpenGLView.cpp in Sources */,
 				F75B6EED18C3EA6A0092C1A2 /* RevoluteJoint.cpp in Sources */,
 				F75B6EC918C3EA6A0092C1A2 /* BoxEntity.cpp in Sources */,
-				F75B6ED818C3EA6A0092C1A2 /* IMU.cpp in Sources */,
 				F75B6ED318C3EA6A0092C1A2 /* FluidEntity.cpp in Sources */,
+				F75599A318DF25B0009A7983 /* AccelerationSensor.cpp in Sources */,
 				F75B6EE818C3EA6A0092C1A2 /* OpenGLTrackball.cpp in Sources */,
 				F75B6ED218C3EA6A0092C1A2 /* FixedJoint.cpp in Sources */,
 				F75B6EE718C3EA6A0092C1A2 /* OpenGLSpotLight.cpp in Sources */,
@@ -970,6 +1109,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F7C2312C18CA0D3F00817B69 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7C2315A18CA0E3900817B69 /* main.cpp in Sources */,
+				F7C2315B18CA0E3900817B69 /* RollingTestApp.cpp in Sources */,
+				F7C2315C18CA0E3900817B69 /* RollingTestManager.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -977,6 +1126,11 @@
 			isa = PBXTargetDependency;
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
 			targetProxy = F73B0A9518C541A900E128CF /* PBXContainerItemProxy */;
+		};
+		F7C2312A18CA0D3F00817B69 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
+			targetProxy = F7C2312B18CA0D3F00817B69 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1139,6 +1293,48 @@
 			};
 			name = Release;
 		};
+		F7C2314C18CA0D3F00817B69 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include,
+					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = "FallingTest copy";
+			};
+			name = Debug;
+		};
+		F7C2314D18CA0D3F00817B69 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include,
+					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = "FallingTest copy";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1165,6 +1361,15 @@
 			buildConfigurations = (
 				F7AB71D218C3E19D0077F07D /* Debug */,
 				F7AB71D318C3E19D0077F07D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F7C2314B18CA0D3F00817B69 /* Build configuration list for PBXNativeTarget "RollingTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F7C2314C18CA0D3F00817B69 /* Debug */,
+				F7C2314D18CA0D3F00817B69 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -20,11 +20,12 @@
 #include "Machine.h"
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
+#include "UnitSystem.h"
 
 class SimulationManager //abstract class!
 {
 public:
-    SimulationManager(btScalar stepsPerSecond);
+    SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -53,8 +54,9 @@ public:
     Sensor* getSensor(int index);
     Machine* getMachine(int index);
     
-    void SetGravity(const btVector3& g);
+    void setGravity(const btVector3& g);
     btDynamicsWorld* getDynamicsWorld();
+    btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
     
     //graphics
@@ -75,10 +77,11 @@ private:
     static void SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep);
     
     btScalar sps;
+    btScalar simulationTime;
     uint64_t currentTime;
     uint64_t physicTime;
     uint64_t ssus;
-    
+
     std::vector<Entity*> entities;
     std::vector<FluidEntity*> fluids;
     std::vector<Joint*> joints;
@@ -88,6 +91,7 @@ private:
     
     btDynamicsWorld* dynamicsWorld;
     MaterialManager* materialManager;
+    bool zUp;
 
     //graphics
     std::vector<OpenGLView*> views;

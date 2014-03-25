@@ -32,6 +32,7 @@ private:
     btQuaternion rotation;
     btVector3 center;
     btScalar radius;
+    btVector3 up;
 };
 
 

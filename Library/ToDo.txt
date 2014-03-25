@@ -1,4 +1,19 @@
 - Combine setTransform with unit system
-- Add global coord system choice (z-up or z-down)
+x Add global coord system choice (z-up or z-down)
 - Global coordinate system displayed and rotated with camera
 x Torus collision shape
+x Sensor architecture
+x Accelerometer
+- Gyroscope
+- IMU
+- Encoder
+- Compass (magnetometer)
+- Laser rangefinder
+- Laser scanner 2d
+- Laser scanner 3d
+- Camera with lens
+- Ultrasonic radar
+- Drawing dummy shapes without lighting
+- HUD graph
+- HUD car indicator
+-

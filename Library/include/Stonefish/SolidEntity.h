@@ -41,6 +41,7 @@ public:
                                         btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
                                         const btVector3& angularVelocity = btVector3(0,0,0)) = 0;
     bool isStatic();
+    void setDisplayCoordSys(bool enabled);
     void setTransform(const btTransform& trans);
     btTransform getTransform();
     btRigidBody* getRigidBody();
@@ -77,6 +78,7 @@ protected:
     GLint displayList;
     GLint collisionList;
     TriangleMesh *mesh;
+    bool dispCoordSys;
 };
 
 #endif

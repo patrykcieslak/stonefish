@@ -53,7 +53,7 @@ public:
 	
 	virtual btVector3	getAnisotropicRollingFrictionDirection() const
 	{
-		return btVector3 (1,0,0);
+		return btVector3(0,1,1);
 	}
 };
 

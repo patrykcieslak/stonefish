@@ -8,6 +8,10 @@
 
 #include "SimulationManager.h"
 
+#include <BulletDynamics/MLCPSolvers/btDantzigSolver.h>
+#include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
+#include <BulletDynamics/MLCPSolvers/btMLCPSolver.h>
+
 #include "SimulationApp.h"
 #include "OpenGLSolids.h"
 #include "OpenGLUtil.h"
@@ -22,26 +26,39 @@
 #include "FluidEntity.h"
 #include "CompoundEntity.h"
 
-SimulationManager::SimulationManager(btScalar stepsPerSecond)
+SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond)
 {
+    UnitSystem::SetUnitSystem(unitSystem, false);
+    zUp = zAxisUp;
     setStepsPerSecond(stepsPerSecond);
+    
     currentTime = 0;
     physicTime = 0;
     drawLightDummies = false;
     drawCameraDummies = false;
-
-    btBroadphaseInterface* broadphase = new btDbvtBroadphase();
-    btDefaultCollisionConfiguration* collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();  //new btDefaultCollisionConfiguration();
-    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
-    btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver();
-    //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
-    btSoftBodySolver* softBodySolver = 0;
-    dynamicsWorld = new btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver); //new btDiscreteDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
     
-    dynamicsWorld->getDispatchInfo().m_useContinuous = USE_CONTINUOUS_COLLISION;
-    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = ALLOWED_CCD_PENETRATION;
+    //initialize dynamic world
+    btBroadphaseInterface* broadphase = new btDbvtBroadphase();
+    
+    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+    //btDefaultCollisionConfiguration* collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
+    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+    
+    btConstraintSolver* solver;
+    //btDantzigSolver* mlcp = new btDantzigSolver();
+    //btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
+    //solver = new btMLCPSolver(mlcp);
+    solver = new btSequentialImpulseConstraintSolver();
+    
+    //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
+    //btSoftBodySolver* softBodySolver = 0;
+    //dynamicsWorld = new btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver); //new btDiscreteDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
+    dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    
+    //dynamicsWorld->getDispatchInfo().m_useContinuous = USE_CONTINUOUS_COLLISION;
+    //dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = ALLOWED_CCD_PENETRATION;
 
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = MAX_ERROR_REDUCTION;
+    /*dynamicsWorld->getSolverInfo().m_maxErrorReduction = MAX_ERROR_REDUCTION;
     dynamicsWorld->getSolverInfo().m_globalCfm = GLOBAL_CFM;
     dynamicsWorld->getSolverInfo().m_erp = GLOBAL_ERP;
     dynamicsWorld->getSolverInfo().m_erp2 = GLOBAL_ERP2;
@@ -54,11 +71,17 @@ SimulationManager::SimulationManager(btScalar stepsPerSecond)
     dynamicsWorld->getSolverInfo().m_tau = 0.0;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
     dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 0.f;
+    */
+    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
     
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     
+    //set standard world params
+    setGravity(UnitSystem::Acceleration(MKS, unitSystem, btVector3(btScalar(0.), btScalar(0.), (zAxisUp ? btScalar(-9.81) : btScalar(9.81)) )));
+    
+    //create material manager & load standard materials
     materialManager = new MaterialManager();
 }
 
@@ -288,8 +311,22 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
     int substeps = 30000;
     
     physicTime = GetTimeInMicroseconds();
-    dynamicsWorld->stepSimulation((btScalar)deltaTime/1000000.0, substeps, (btScalar)ssus/1000000.0);
+    dynamicsWorld->stepSimulation((btScalar)deltaTime/btScalar(1000000.0), substeps, (btScalar)ssus/btScalar(1000000.0));
+    simulationTime += (btScalar)deltaTime/btScalar(1000000.0);
     physicTime = GetTimeInMicroseconds() - physicTime;
+    
+    if (dynamicsWorld->getConstraintSolver()->getSolverType()==BT_MLCP_SOLVER)
+    {
+        btMLCPSolver* solver = (btMLCPSolver*) dynamicsWorld->getConstraintSolver();
+        int numFallbacks = solver->getNumFallbacks();
+        if (numFallbacks)
+        {
+            static int totalFailures = 0;
+            totalFailures+=numFallbacks;
+            printf("MLCP solver failed %d times, falling back to btSequentialImpulseSolver (SI)\n",totalFailures);
+        }
+        solver->setNumFallbacks(0);
+    }
 }
 
 void SimulationManager::StartSimulation()
@@ -303,10 +340,10 @@ void SimulationManager::StopSimulation()
 {
 }
 
-void SimulationManager::SetGravity(const btVector3& g)
+void SimulationManager::setGravity(const btVector3& g)
 {
 #ifdef USE_SOFT_BODY_DYNAMICS
-    dynamicsWorld->SetGravity(UnitSystem::SetAcceleration(g));
+    dynamicsWorld->setGravity(UnitSystem::SetAcceleration(g));
     softBodyWorldInfo.m_gravity = UnitSystem::SetAcceleration(g);
 #else
     dynamicsWorld->setGravity(UnitSystem::SetAcceleration(g));
@@ -316,6 +353,11 @@ void SimulationManager::SetGravity(const btVector3& g)
 btDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
+}
+
+btScalar SimulationManager::getSimulationTime()
+{
+    return simulationTime;
 }
 
 MaterialManager* SimulationManager::getMaterialManager()
@@ -515,7 +557,7 @@ void SimulationManager::RenderView(OpenGLView *view, const btTransform& viewTran
     //glClear(GL_COLOR_BUFFER_BIT);
     
     //2. Draw sky
-    OpenGLSky::Render(view, viewTransform);
+    OpenGLSky::Render(view, viewTransform, zUp);
     
     //3. Bind deferred textures to texture units
     glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -549,7 +591,7 @@ void SimulationManager::RenderView(OpenGLView *view, const btTransform& viewTran
     OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5);
     
     //5. Render ambient pass - sky, sun, ssao
-    OpenGLLight::UseAmbientShader(viewTransform);
+    OpenGLLight::UseAmbientShader(viewTransform, zUp);
     DrawScreenAlignedQuad();
     
     //6. Render light passes
@@ -600,16 +642,20 @@ void SimulationManager::RenderView(OpenGLView *view, const btTransform& viewTran
 void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    world->clearForces(); //clear all forces to ensure that no summing occurs
+    
+    //clear all forces to ensure that no summing occurs
+    world->clearForces();
+    
+    //loop through all sensors
+    for(int i=0; i<simManager->sensors.size(); i++)
+        simManager->sensors[i]->Update(timeStep);
 
     //loop through all machines
-    for(int i=0; i<simManager->machines.size(); i++)
+    /*for(int i=0; i<simManager->machines.size(); i++)
     {
         //SimulationManager->machines[i]->Update(timeStep);
         simManager->machines[i]->ApplyForces();
-    }
-    
-    //loop through all sensors
+    }*/
     
     
     //loop through all controllers

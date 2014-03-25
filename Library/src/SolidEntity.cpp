@@ -29,6 +29,7 @@ SolidEntity::SolidEntity(std::string uniqueName, bool isStatic, Material* mat) :
     rigidBody = NULL;
     displayList = 0;
     collisionList = 0;
+    dispCoordSys = false;
     
     fullyImmersed = false;
 }
@@ -70,6 +71,11 @@ void SolidEntity::SetLook(Look newLook)
     look = newLook;
 }
 
+void SolidEntity::setDisplayCoordSys(bool enabled)
+{
+    dispCoordSys = enabled;
+}
+
 bool SolidEntity::isStatic()
 {
     return staticBody;
@@ -109,13 +115,19 @@ void SolidEntity::Render()
         DrawCoordSystem(100);
         glPopMatrix();*/
         
+        if(dispCoordSys)
+        {
+            glDisable(GL_LIGHTING);
+            glColor3f(1.0, 1.0, 1.0);
+            DrawCoordSystem(100);
+            glEnable(GL_LIGHTING);
+        }
+        
         UseLook(look);
         //if(fullyImmersed)
         //    glColor3f(1.0, 0.0, 0.0);
         
-        //glPolygonMode(GL_FRONT, GL_LINE);
         glCallList(displayList);
-        //glPolygonMode(GL_FRONT, GL_FILL);
         glPopMatrix();
     }
 }

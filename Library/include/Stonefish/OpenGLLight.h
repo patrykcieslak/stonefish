@@ -50,7 +50,7 @@ public:
     static void Destroy();
     static void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao);
     static void SetCamera(OpenGLView* view);
-    static void UseAmbientShader(const btTransform& viewTransform);
+    static void UseAmbientShader(const btTransform& viewTransform, bool zAxisUp);
    
     //Utilities
     static GLfloat* ColorFromTemperature(GLfloat temperatureK, GLfloat intensity);

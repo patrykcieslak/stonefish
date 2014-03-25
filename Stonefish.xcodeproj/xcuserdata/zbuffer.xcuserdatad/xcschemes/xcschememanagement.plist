@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
+		<key>RollingTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>Stonefish.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -23,6 +28,16 @@
 			<true/>
 		</dict>
 		<key>F7AB71CA18C3E19D0077F07D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F7C2311F18CA0CA900817B69</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F7C2312918CA0D3F00817B69</key>
 		<dict>
 			<key>primary</key>
 			<true/>

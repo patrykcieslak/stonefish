@@ -11,9 +11,9 @@
 
 #include "Machine.h"
 #include "CompoundEntity.h"
-#include "IMU.h"
 #include "Thruster.h"
 #include "ControlSurface.h"
+#include "Sensor.h"
 
 class Submersible : public Machine
 {

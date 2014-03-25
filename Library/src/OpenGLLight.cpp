@@ -207,7 +207,7 @@ void OpenGLLight::SetCamera(OpenGLView* view)
     activeView = view;
 }
 
-void OpenGLLight::UseAmbientShader(const btTransform& viewTransform)
+void OpenGLLight::UseAmbientShader(const btTransform& viewTransform, bool zAxisUp)
 {
     glm::mat4 proj = activeView->GetProjection();
     proj = glm::inverse(proj);
@@ -215,7 +215,7 @@ void OpenGLLight::UseAmbientShader(const btTransform& viewTransform)
     GLint* viewport = activeView->GetViewport();
     
     btMatrix3x3 flip;
-    flip.setEulerZYX(M_PI_2, 0, 0);
+    flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
     flip = flip * (viewTransform.getBasis().inverse());
     
     GLfloat IVRMatrix[9];

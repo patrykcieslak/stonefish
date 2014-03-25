@@ -10,24 +10,33 @@
 #define __Stonefish_Sensor__
 
 #include "common.h"
+#include "Sample.h"
 
-//pure virtual class
+typedef enum {X_AXIS, Y_AXIS, Z_AXIS} AxisType;
+
+//abstract class
 class Sensor
 {
 public:
-    Sensor();
+    Sensor(std::string uniqueName, uint historyLength);
     virtual ~Sensor();
     
-    virtual btScalar* getHistory();
-    virtual short getNumOfDimensions() = 0;
+    virtual void Update(btScalar dt) = 0;
+    virtual ushort getNumOfDimensions() = 0;
+    
+    void ClearHistory();
+    const std::shared_ptr<Sample> getLastSample();
+    const std::shared_ptr<std::deque<std::shared_ptr<Sample>>> getHistory();
+    std::shared_ptr<std::vector<std::shared_ptr<Sample>>> getHistory(unsigned long nLastSamples = 0);
+    std::string getName();
+    
+protected:
+    void AddSampleToHistory(const Sample& s);
     
 private:
-    short resolutionBits;
-    btScalar quantumSize; //range divided by resolution
-    btScalar rangeMin;
-    btScalar rangeMax;
-    btScalar sensitivity;
-    btScalar* history;
+    std::string name;
+    uint historyLen;
+    std::deque<std::shared_ptr<Sample>> history;
 };
 
 #endif

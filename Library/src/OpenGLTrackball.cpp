@@ -35,8 +35,8 @@ btQuaternion calculateRot(btVector3 v_start, btVector3 v)
 
 OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLuint ssaoSize, GLfloat fov) : OpenGLView(x, y, width, height, ssaoSize)
 {
-    rotation = btQuaternion(0, 0, 0);
-    rotation = calculateRot(btVector3(0,-1,0), up) * rotation;
+    this->up = up;
+    rotation = calculateRot(this->up, btVector3(0.,1.,0.));
     
     radius = UnitSystem::SetLength(orbitRadius);
     center = UnitSystem::SetPosition(centerPosition);
@@ -111,5 +111,5 @@ btTransform OpenGLTrackball::GetViewTransform()
 
 void OpenGLTrackball::Rotate(const btQuaternion& rot)
 {
-    rotation = rot * rotation;
+    rotation = calculateRot(this->up, btVector3(0.,1.,0.)) * rot;
 }

@@ -30,6 +30,8 @@
 //common
 #include <string>
 #include <vector>
+#include <deque>
+#include <memory>
 #include <math.h>
 
 //macosx
@@ -44,6 +46,7 @@
 #include <glm/ext.hpp>
 
 //bullet physics
+#define BT_EULER_DEFAULT_ZYX
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h>
