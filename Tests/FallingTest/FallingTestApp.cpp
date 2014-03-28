@@ -42,5 +42,5 @@ void FallingTestApp::MouseMove(SDL_Event* event)
 void FallingTestApp::MouseScroll(SDL_Event* event)
 {
     OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseScroll(event->wheel.y * -10.f);
+    trackball->MouseScroll(event->wheel.y * -1.f);
 }

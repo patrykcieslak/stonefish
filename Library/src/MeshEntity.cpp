@@ -11,7 +11,7 @@
 #include "OpenGLSolids.h"
 #include "GeometryFileUtil.h"
 
-MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, bool isStatic, Material* mat, Look l, bool smoothNormals) : SolidEntity(uniqueName, isStatic, mat)
+MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
 {
     scale = UnitSystem::SetLength(scale);
     
@@ -126,9 +126,11 @@ void MeshEntity::BuildCollisionList()
         
         if(staticBody)
         {
-            btBvhTriangleMeshShape* shape = (btBvhTriangleMeshShape*)rigidBody->getCollisionShape();
-            btTriangleIndexVertexArray* vertexArray = (btTriangleIndexVertexArray*)shape->getMeshInterface();
-            
+            //btBvhTriangleMeshShape* shape = (btBvhTriangleMeshShape*)rigidBody->getCollisionShape();
+            //btTriangleIndexVertexArray* vertexArray = (btTriangleIndexVertexArray*)shape->getMeshInterface();
+            //
+            //
+            //...............
         }
         else
         {

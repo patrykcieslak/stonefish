@@ -8,25 +8,15 @@
 
 #include "SphericalJoint.h"
 
-SphericalJoint::SphericalJoint(btRigidBody* bodyA, btRigidBody* bodyB, const btVector3& pivot) : Joint()
+SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
-    btVector3 pivotInA = bodyA->getWorldTransform().inverse()*UnitSystem::SetPosition(pivot);
-    btVector3 pivotInB = bodyB->getWorldTransform().inverse()*UnitSystem::SetPosition(pivot);
-    btTransform frameInA = btTransform(btMatrix3x3().getIdentity(), pivotInA);
-    btTransform frameInB = btTransform(btMatrix3x3().getIdentity(), pivotInB);
+    btRigidBody* bodyA = solidA->getRigidBody();
+    btRigidBody* bodyB = solidB->getRigidBody();
+    btVector3 pivotInA = bodyA->getCenterOfMassTransform().inverse()*UnitSystem::SetPosition(pivot);
+    btVector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()*UnitSystem::SetPosition(pivot);
     
-    btGeneric6DofConstraint* generic = new btGeneric6DofConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
-    //translations locked, rotations free
-    generic->setLinearLowerLimit(btVector3(0,0,0));
-    generic->setLinearUpperLimit(btVector3(0,0,0));
-    generic->setAngularLowerLimit(btVector3(1,1,1));    //no limit
-    generic->setAngularUpperLimit(btVector3(-1,-1,-1)); //
-    
-    generic->setParam(BT_CONSTRAINT_CFM, CONSTRAINT_CFM);
-    generic->setParam(BT_CONSTRAINT_STOP_ERP, CONSTRAINT_STOP_ERP);
-    generic->setParam(BT_CONSTRAINT_STOP_CFM, CONSTRAINT_STOP_CFM);
-    
-    setConstraint(generic);
+    btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*bodyA, *bodyB, pivotInA, pivotInB);
+    setConstraint(p2p);
 }
 
 SphericalJoint::~SphericalJoint()
@@ -40,4 +30,23 @@ JointType SphericalJoint::getType()
 
 void SphericalJoint::Render()
 {
+    btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
+    
+    btVector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
+    btVector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
+    btVector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
+        
+    glColor3f(1.f, 0, 0);
+    glBegin(GL_LINES);
+    glVertex3f(A.x(), A.y(), A.z());
+    glVertex3f(pivot.x(), pivot.y(), pivot.z());
+    glVertex3f(B.x(), B.y(), B.z());
+    glVertex3f(pivot.x(), pivot.y(), pivot.z());
+    glEnd();
+}
+
+btVector3 SphericalJoint::getPivot()
+{
+    btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
+    return p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
 }

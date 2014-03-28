@@ -11,11 +11,13 @@
 
 #include "SolidEntity.h"
 
-
+/** @brief Spherical solid entity. */
 class SphereEntity : public SolidEntity
 {
 public:
-    SphereEntity(std::string uniqueName, btScalar sphereRadius, bool isStatic, Material* mat, Look l);
+    
+    /** @brief Spherical solid entity constructor. */
+    SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l, bool isStatic = false);
     ~SphereEntity();
     
     SolidEntityType getSolidType();

@@ -10,7 +10,7 @@
 #include "OpenGLUtil.h"
 #include "OpenGLSolids.h"
 
-SolidEntity::SolidEntity(std::string uniqueName, bool isStatic, Material* mat) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material* mat, bool isStatic) : Entity(uniqueName)
 {
     material = mat;
     look = CreateMatteLook(1.f, 1.f, 1.f, 0.5f);
@@ -190,16 +190,16 @@ void SolidEntity::BuildRigidBody()
         btDefaultMotionState* motionState = new btDefaultMotionState(localTransform);
 	
         btCollisionShape* colShape = BuildCollisionShape();
-        colShape->setMargin(0.01);
+        colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(staticBody ? 0 : mass, motionState, colShape, Ipri);
         rigidBodyCI.m_friction = material->statFriction;
         rigidBodyCI.m_rollingFriction = material->dynFriction;
         rigidBodyCI.m_restitution = material->restitution;
-        rigidBodyCI.m_linearDamping = 0.0;
-        rigidBodyCI.m_angularDamping = 0.0;
-        rigidBodyCI.m_linearSleepingThreshold = 0.1;
-        rigidBodyCI.m_angularSleepingThreshold = 0.005;
+        rigidBodyCI.m_linearDamping = 0;
+        rigidBodyCI.m_angularDamping = 0;
+        rigidBodyCI.m_linearSleepingThreshold = UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.0001);
+        rigidBodyCI.m_angularSleepingThreshold = 0.0001;
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
@@ -207,7 +207,7 @@ void SolidEntity::BuildRigidBody()
         if(staticBody)
             rigidBody->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
         //else
-        //    rigidBody->setActivationState(DISABLE_DEACTIVATION);
+          //  rigidBody->setActivationState(DISABLE_DEACTIVATION);
     }
 }
 
@@ -272,6 +272,7 @@ void SolidEntity::AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& 
         BuildCollisionList();
         
         rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
+        world->synchronizeMotionStates();
         
         if(staticBody)
             world->addRigidBody(rigidBody, STATIC, DEFAULT | CABLE_EVEN | CABLE_ODD);

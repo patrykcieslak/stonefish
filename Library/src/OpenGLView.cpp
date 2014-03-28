@@ -57,8 +57,8 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     active = false;
     ssaoSizeDiv = ssaoSize;
     gBuffer = new OpenGLGBuffer(viewportWidth, viewportHeight);
-    far = 1000000.f;
-    near = 1.f;
+    far = 1000.f;
+    near = 0.01f;
     
     glGenFramebuffersEXT(1, &sceneFBO);
     glGenRenderbuffersEXT(1, &sceneDepthBuffer);

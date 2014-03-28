@@ -38,6 +38,41 @@
 		F73B0A9B18C5498D00E128CF /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
 		F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
 		F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
+		F74CEBEA18E485CF00D0C42D /* PrismaticJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F74CEBE918E485CF00D0C42D /* PrismaticJoint.h */; };
+		F74CEBEC18E4861000D0C42D /* PrismaticJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEBEB18E4861000D0C42D /* PrismaticJoint.cpp */; };
+		F74CEBF518E56EEB00D0C42D /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F74CEBF618E56EEB00D0C42D /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
+		F74CEBF718E56EEB00D0C42D /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
+		F74CEBF818E56EEB00D0C42D /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
+		F74CEBF918E56EEB00D0C42D /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
+		F74CEBFB18E56EEB00D0C42D /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
+		F74CEBFC18E56EEB00D0C42D /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
+		F74CEBFD18E56EEB00D0C42D /* deferredDirectional.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */; };
+		F74CEBFE18E56EEB00D0C42D /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
+		F74CEBFF18E56EEB00D0C42D /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F74CEC0018E56EEB00D0C42D /* fluidBorder.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */; };
+		F74CEC0118E56EEB00D0C42D /* fluidVolume.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */; };
+		F74CEC0218E56EEB00D0C42D /* belowFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */; };
+		F74CEC0318E56EEB00D0C42D /* fluidSurface.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */; };
+		F74CEC0418E56EEB00D0C42D /* aboveFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */; };
+		F74CEC0518E56EEB00D0C42D /* gbuffer.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */; };
+		F74CEC0618E56EEB00D0C42D /* gbuffer.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */; };
+		F74CEC0718E56EEB00D0C42D /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
+		F74CEC0818E56EEB00D0C42D /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
+		F74CEC0918E56EEB00D0C42D /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
+		F74CEC0A18E56EEB00D0C42D /* ssao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */; };
+		F74CEC0B18E56EEB00D0C42D /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
+		F74CEC0C18E56EEB00D0C42D /* blur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2C18C40AEC001C0CE8 /* blur.frag */; };
+		F74CEC0E18E56EEB00D0C42D /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
+		F74CEC1918E56FCB00D0C42D /* JointsTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */; };
+		F74CEC1A18E56FCB00D0C42D /* JointsTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */; };
+		F74CEC1B18E56FCB00D0C42D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1818E56FCB00D0C42D /* main.cpp */; };
+		F74CEC1D18E5A99200D0C42D /* GearJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1C18E5A99200D0C42D /* GearJoint.cpp */; };
+		F74CEC1F18E5A9C300D0C42D /* GearJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F74CEC1E18E5A9C300D0C42D /* GearJoint.h */; };
+		F74CEC2118E5C5AC00D0C42D /* BeltJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F74CEC2018E5C5AC00D0C42D /* BeltJoint.h */; };
+		F74CEC2318E5C60B00D0C42D /* BeltJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC2218E5C60B00D0C42D /* BeltJoint.cpp */; };
+		F74CEC2518E5C7D500D0C42D /* CylindricalJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F74CEC2418E5C7D500D0C42D /* CylindricalJoint.h */; };
+		F74CEC2818E5D49300D0C42D /* CylindricalJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC2618E5C98600D0C42D /* CylindricalJoint.cpp */; };
 		F755999E18DF1375009A7983 /* Sample.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F755999C18DF1375009A7983 /* Sample.cpp */; };
 		F75599A118DF1400009A7983 /* Sample.h in Headers */ = {isa = PBXBuildFile; fileRef = F75599A018DF1398009A7983 /* Sample.h */; };
 		F75599A318DF25B0009A7983 /* AccelerationSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75599A218DF25B0009A7983 /* AccelerationSensor.cpp */; };
@@ -195,6 +230,13 @@
 			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
 			remoteInfo = Stonefish;
 		};
+		F74CEBEF18E56EEB00D0C42D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
+			remoteInfo = Stonefish;
+		};
 		F7C2312B18CA0D3F00817B69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
@@ -205,6 +247,43 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		F74CEBFA18E56EEB00D0C42D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = Shaders;
+			dstSubfolderSpec = 16;
+			files = (
+				F74CEBFB18E56EEB00D0C42D /* cubeDownsample.frag in CopyFiles */,
+				F74CEBFC18E56EEB00D0C42D /* cubeConvolve.frag in CopyFiles */,
+				F74CEBFD18E56EEB00D0C42D /* deferredDirectional.frag in CopyFiles */,
+				F74CEBFE18E56EEB00D0C42D /* deferredOmni.frag in CopyFiles */,
+				F74CEBFF18E56EEB00D0C42D /* saq.vert in CopyFiles */,
+				F74CEC0018E56EEB00D0C42D /* fluidBorder.frag in CopyFiles */,
+				F74CEC0118E56EEB00D0C42D /* fluidVolume.frag in CopyFiles */,
+				F74CEC0218E56EEB00D0C42D /* belowFluidSurface.frag in CopyFiles */,
+				F74CEC0318E56EEB00D0C42D /* fluidSurface.vert in CopyFiles */,
+				F74CEC0418E56EEB00D0C42D /* aboveFluidSurface.frag in CopyFiles */,
+				F74CEC0518E56EEB00D0C42D /* gbuffer.frag in CopyFiles */,
+				F74CEC0618E56EEB00D0C42D /* gbuffer.vert in CopyFiles */,
+				F74CEC0718E56EEB00D0C42D /* deferredAmbient.frag in CopyFiles */,
+				F74CEC0818E56EEB00D0C42D /* deferredSpot.frag in CopyFiles */,
+				F74CEC0918E56EEB00D0C42D /* cubeSky.frag in CopyFiles */,
+				F74CEC0A18E56EEB00D0C42D /* ssao.frag in CopyFiles */,
+				F74CEC0B18E56EEB00D0C42D /* cubePass.frag in CopyFiles */,
+				F74CEC0C18E56EEB00D0C42D /* blur.frag in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F74CEC0D18E56EEB00D0C42D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Data;
+			dstSubfolderSpec = 16;
+			files = (
+				F74CEC0E18E56EEB00D0C42D /* noise.png in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F792236918C47ED300D27F76 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -293,6 +372,20 @@
 		F73B0A9318C5407300E128CF /* FallingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestApp.h; sourceTree = "<group>"; };
 		F73B0A9718C5424500E128CF /* FallingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestManager.cpp; sourceTree = "<group>"; };
 		F73B0A9818C5424500E128CF /* FallingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestManager.h; sourceTree = "<group>"; };
+		F74CEBE918E485CF00D0C42D /* PrismaticJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrismaticJoint.h; sourceTree = "<group>"; };
+		F74CEBEB18E4861000D0C42D /* PrismaticJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PrismaticJoint.cpp; sourceTree = "<group>"; };
+		F74CEC1218E56EEB00D0C42D /* JointsTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = JointsTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JointsTestApp.cpp; sourceTree = "<group>"; };
+		F74CEC1518E56FCB00D0C42D /* JointsTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JointsTestApp.h; sourceTree = "<group>"; };
+		F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JointsTestManager.cpp; sourceTree = "<group>"; };
+		F74CEC1718E56FCB00D0C42D /* JointsTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JointsTestManager.h; sourceTree = "<group>"; };
+		F74CEC1818E56FCB00D0C42D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F74CEC1C18E5A99200D0C42D /* GearJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GearJoint.cpp; sourceTree = "<group>"; };
+		F74CEC1E18E5A9C300D0C42D /* GearJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GearJoint.h; sourceTree = "<group>"; };
+		F74CEC2018E5C5AC00D0C42D /* BeltJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BeltJoint.h; sourceTree = "<group>"; };
+		F74CEC2218E5C60B00D0C42D /* BeltJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BeltJoint.cpp; sourceTree = "<group>"; };
+		F74CEC2418E5C7D500D0C42D /* CylindricalJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CylindricalJoint.h; sourceTree = "<group>"; };
+		F74CEC2618E5C98600D0C42D /* CylindricalJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CylindricalJoint.cpp; sourceTree = "<group>"; };
 		F755999C18DF1375009A7983 /* Sample.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sample.cpp; sourceTree = "<group>"; };
 		F75599A018DF1398009A7983 /* Sample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sample.h; sourceTree = "<group>"; };
 		F75599A218DF25B0009A7983 /* AccelerationSensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AccelerationSensor.cpp; sourceTree = "<group>"; };
@@ -429,7 +522,7 @@
 		F7B1DC3018C40AEC001C0CE8 /* deferredDirectional.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredDirectional.frag; sourceTree = "<group>"; };
 		F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredOmni.frag; sourceTree = "<group>"; };
 		F7B1DC3218C40AEC001C0CE8 /* saq.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saq.vert; sourceTree = "<group>"; };
-		F7C2314E18CA0D3F00817B69 /* FallingTest copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FallingTest copy"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7C2314E18CA0D3F00817B69 /* RollingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RollingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7C2315018CA0E1700817B69 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F7C2315118CA0E1700817B69 /* RollingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RollingTestApp.cpp; sourceTree = "<group>"; };
 		F7C2315218CA0E1700817B69 /* RollingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RollingTestApp.h; sourceTree = "<group>"; };
@@ -442,6 +535,18 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F74CEBF418E56EEB00D0C42D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F74CEBF518E56EEB00D0C42D /* libStonefish.dylib in Frameworks */,
+				F74CEBF618E56EEB00D0C42D /* libLinearMath.dylib in Frameworks */,
+				F74CEBF718E56EEB00D0C42D /* libBulletDynamics.dylib in Frameworks */,
+				F74CEBF818E56EEB00D0C42D /* libBulletCollision.dylib in Frameworks */,
+				F74CEBF918E56EEB00D0C42D /* libBulletSoftBody.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F7AB71B318C3D8EC0077F07D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -499,6 +604,18 @@
 			path = data;
 			sourceTree = "<group>";
 		};
+		F74CEC1318E56FCB00D0C42D /* JointsTest */ = {
+			isa = PBXGroup;
+			children = (
+				F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */,
+				F74CEC1518E56FCB00D0C42D /* JointsTestApp.h */,
+				F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */,
+				F74CEC1718E56FCB00D0C42D /* JointsTestManager.h */,
+				F74CEC1818E56FCB00D0C42D /* main.cpp */,
+			);
+			path = JointsTest;
+			sourceTree = "<group>";
+		};
 		F75B6E8C18C3E7550092C1A2 /* Actuators */ = {
 			isa = PBXGroup;
 			children = (
@@ -540,6 +657,10 @@
 				F75B6E3018C3E74B0092C1A2 /* FixedJoint.h */,
 				F75B6E4B18C3E74B0092C1A2 /* RevoluteJoint.h */,
 				F75B6E5118C3E74B0092C1A2 /* SphericalJoint.h */,
+				F74CEBE918E485CF00D0C42D /* PrismaticJoint.h */,
+				F74CEC2418E5C7D500D0C42D /* CylindricalJoint.h */,
+				F74CEC1E18E5A9C300D0C42D /* GearJoint.h */,
+				F74CEC2018E5C5AC00D0C42D /* BeltJoint.h */,
 			);
 			name = Joints;
 			sourceTree = "<group>";
@@ -649,6 +770,10 @@
 				F75B6E9F18C3EA6A0092C1A2 /* FixedJoint.cpp */,
 				F75B6EBA18C3EA6A0092C1A2 /* RevoluteJoint.cpp */,
 				F75B6EC018C3EA6A0092C1A2 /* SphericalJoint.cpp */,
+				F74CEBEB18E4861000D0C42D /* PrismaticJoint.cpp */,
+				F74CEC2618E5C98600D0C42D /* CylindricalJoint.cpp */,
+				F74CEC1C18E5A99200D0C42D /* GearJoint.cpp */,
+				F74CEC2218E5C60B00D0C42D /* BeltJoint.cpp */,
 			);
 			name = Joints;
 			sourceTree = "<group>";
@@ -754,7 +879,8 @@
 			children = (
 				F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */,
 				F7AB71CB18C3E19D0077F07D /* FallingTest */,
-				F7C2314E18CA0D3F00817B69 /* FallingTest copy */,
+				F7C2314E18CA0D3F00817B69 /* RollingTest */,
+				F74CEC1218E56EEB00D0C42D /* JointsTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -764,6 +890,7 @@
 			children = (
 				F7AB71CC18C3E19D0077F07D /* FallingTest */,
 				F7C2314F18CA0E1700817B69 /* RollingTest */,
+				F74CEC1318E56FCB00D0C42D /* JointsTest */,
 			);
 			path = Tests;
 			sourceTree = SOURCE_ROOT;
@@ -897,16 +1024,20 @@
 				F75B6E6018C3E74C0092C1A2 /* CylinderEntity.h in Headers */,
 				F75B6F0518C3F0950092C1A2 /* Machine.h in Headers */,
 				F75B6E7D18C3E74C0092C1A2 /* PlaneEntity.h in Headers */,
+				F74CEC2518E5C7D500D0C42D /* CylindricalJoint.h in Headers */,
+				F74CEC2118E5C5AC00D0C42D /* BeltJoint.h in Headers */,
 				F75B6E6818C3E74C0092C1A2 /* GhostEntity.h in Headers */,
 				F75B6E8418C3E74C0092C1A2 /* SphereEntity.h in Headers */,
 				F75B6E6118C3E74C0092C1A2 /* DCMotor.h in Headers */,
 				F75B6E5C18C3E74C0092C1A2 /* CompoundEntity.h in Headers */,
 				F75B6E5818C3E74C0092C1A2 /* Actuator.h in Headers */,
 				F75B6E8318C3E74C0092C1A2 /* SolidEntity.h in Headers */,
+				F74CEBEA18E485CF00D0C42D /* PrismaticJoint.h in Headers */,
 				F75B6E8118C3E74C0092C1A2 /* SimulationApp.h in Headers */,
 				F75B6E7118C3E74C0092C1A2 /* OpenGLCamera.h in Headers */,
 				F75B6E7C18C3E74C0092C1A2 /* OpenGLView.h in Headers */,
 				F75599A118DF1400009A7983 /* Sample.h in Headers */,
+				F74CEC1F18E5A9C300D0C42D /* GearJoint.h in Headers */,
 				F75B6E8918C3E74C0092C1A2 /* Thruster.h in Headers */,
 				F75B6E6918C3E74C0092C1A2 /* IMGUI.h in Headers */,
 				F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */,
@@ -954,6 +1085,25 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		F74CEBED18E56EEB00D0C42D /* JointsTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F74CEC0F18E56EEB00D0C42D /* Build configuration list for PBXNativeTarget "JointsTest" */;
+			buildPhases = (
+				F74CEBF018E56EEB00D0C42D /* Sources */,
+				F74CEBF418E56EEB00D0C42D /* Frameworks */,
+				F74CEBFA18E56EEB00D0C42D /* CopyFiles */,
+				F74CEC0D18E56EEB00D0C42D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F74CEBEE18E56EEB00D0C42D /* PBXTargetDependency */,
+			);
+			name = JointsTest;
+			productName = FallingTest;
+			productReference = F74CEC1218E56EEB00D0C42D /* JointsTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		F7AB71B518C3D8EC0077F07D /* Stonefish */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F7AB71BA18C3D8EC0077F07D /* Build configuration list for PBXNativeTarget "Stonefish" */;
@@ -1006,7 +1156,7 @@
 			);
 			name = RollingTest;
 			productName = FallingTest;
-			productReference = F7C2314E18CA0D3F00817B69 /* FallingTest copy */;
+			productReference = F7C2314E18CA0D3F00817B69 /* RollingTest */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -1033,11 +1183,22 @@
 				F7AB71B518C3D8EC0077F07D /* Stonefish */,
 				F7AB71CA18C3E19D0077F07D /* FallingTest */,
 				F7C2312918CA0D3F00817B69 /* RollingTest */,
+				F74CEBED18E56EEB00D0C42D /* JointsTest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		F74CEBF018E56EEB00D0C42D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F74CEC1A18E56FCB00D0C42D /* JointsTestManager.cpp in Sources */,
+				F74CEC1918E56FCB00D0C42D /* JointsTestApp.cpp in Sources */,
+				F74CEC1B18E56FCB00D0C42D /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F7AB71B218C3D8EC0077F07D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1047,6 +1208,7 @@
 				F75B6EF218C3EA6A0092C1A2 /* SphereEntity.cpp in Sources */,
 				F75B6EDF18C3EA6A0092C1A2 /* OpenGLCamera.cpp in Sources */,
 				F75B6EF318C3EA6A0092C1A2 /* SphericalJoint.cpp in Sources */,
+				F74CEC2318E5C60B00D0C42D /* BeltJoint.cpp in Sources */,
 				F75B6EE318C3EA6A0092C1A2 /* OpenGLOmniLight.cpp in Sources */,
 				F75B6EEB18C3EA6A0092C1A2 /* PlaneEntity.cpp in Sources */,
 				F75B6EE518C3EA6A0092C1A2 /* OpenGLSky.cpp in Sources */,
@@ -1084,12 +1246,15 @@
 				F7CA235E18C7D3F2009439F3 /* btTorusShape.cpp in Sources */,
 				F75B6EF018C3EA6A0092C1A2 /* SimulationManager.cpp in Sources */,
 				F75B6EDE18C3EA6A0092C1A2 /* NativeDialog.cpp in Sources */,
+				F74CEC2818E5D49300D0C42D /* CylindricalJoint.cpp in Sources */,
 				F75B6ED018C3EA6A0092C1A2 /* DCMotor.cpp in Sources */,
+				F74CEBEC18E4861000D0C42D /* PrismaticJoint.cpp in Sources */,
 				F75B6EEA18C3EA6A0092C1A2 /* OpenGLView.cpp in Sources */,
 				F75B6EED18C3EA6A0092C1A2 /* RevoluteJoint.cpp in Sources */,
 				F75B6EC918C3EA6A0092C1A2 /* BoxEntity.cpp in Sources */,
 				F75B6ED318C3EA6A0092C1A2 /* FluidEntity.cpp in Sources */,
 				F75599A318DF25B0009A7983 /* AccelerationSensor.cpp in Sources */,
+				F74CEC1D18E5A99200D0C42D /* GearJoint.cpp in Sources */,
 				F75B6EE818C3EA6A0092C1A2 /* OpenGLTrackball.cpp in Sources */,
 				F75B6ED218C3EA6A0092C1A2 /* FixedJoint.cpp in Sources */,
 				F75B6EE718C3EA6A0092C1A2 /* OpenGLSpotLight.cpp in Sources */,
@@ -1127,6 +1292,11 @@
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
 			targetProxy = F73B0A9518C541A900E128CF /* PBXContainerItemProxy */;
 		};
+		F74CEBEE18E56EEB00D0C42D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
+			targetProxy = F74CEBEF18E56EEB00D0C42D /* PBXContainerItemProxy */;
+		};
 		F7C2312A18CA0D3F00817B69 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
@@ -1135,6 +1305,48 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		F74CEC1018E56EEB00D0C42D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include,
+					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = JointsTest;
+			};
+			name = Debug;
+		};
+		F74CEC1118E56EEB00D0C42D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include,
+					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = JointsTest;
+			};
+			name = Release;
+		};
 		F7AB71B818C3D8EC0077F07D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1206,7 +1418,7 @@
 		F7AB71BB18C3D8EC0077F07D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -1230,7 +1442,7 @@
 		F7AB71BC18C3D8EC0077F07D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -1312,7 +1524,7 @@
 					/Library/include,
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				PRODUCT_NAME = "FallingTest copy";
+				PRODUCT_NAME = RollingTest;
 			};
 			name = Debug;
 		};
@@ -1331,13 +1543,22 @@
 					/Library/include,
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				PRODUCT_NAME = "FallingTest copy";
+				PRODUCT_NAME = RollingTest;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F74CEC0F18E56EEB00D0C42D /* Build configuration list for PBXNativeTarget "JointsTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F74CEC1018E56EEB00D0C42D /* Debug */,
+				F74CEC1118E56EEB00D0C42D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F7AB71B118C3D8EC0077F07D /* Build configuration list for PBXProject "Stonefish" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

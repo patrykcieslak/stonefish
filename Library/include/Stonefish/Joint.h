@@ -10,29 +10,34 @@
 #define __Stonefish_Joint__
 
 #include "common.h"
+#include "SolidEntity.h"
 
-typedef enum { FIXED, SPHERICAL, TRANSLATIONAL, REVOLUTE, CYLINDRICAL, PLANAR } JointType;
+typedef enum {FIXED, REVOLUTE, SPHERICAL, PRISMATIC, CYLINDRICAL, GEAR, BELT} JointType;
 
-//pure virtual class
+//abstract class
 class Joint
 {
 public:
-    Joint();
+    Joint(std::string uniqueName, bool collideLinkedEntities = true);
     virtual ~Joint();
     
-	void setRenderable(bool render);
-    bool isRenderable();
-    void AddToDynamicsWorld(btDynamicsWorld* world);
-    btTypedConstraint* getConstraint();
-    
+	virtual void Render() = 0;
     virtual JointType getType() = 0;
-    virtual void Render() = 0;
+    
+    void AddToDynamicsWorld(btDynamicsWorld* world);
+    
+    void setRenderable(bool render);
+    btTypedConstraint* getConstraint();
+    bool isRenderable();
+    std::string getName();
 
 protected:
     void setConstraint(btTypedConstraint* constr);
     
 private:
+    std::string name;
     bool renderable;
+    bool collisionEnabled;
     btTypedConstraint* constraint;
 };
 

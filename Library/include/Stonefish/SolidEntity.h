@@ -20,7 +20,7 @@ typedef enum {MESH = 0, SPHERE, CYLINDER, BOX, TORUS, COMPOUND} SolidEntityType;
 class SolidEntity : public Entity
 {
 public:
-    SolidEntity(std::string uniqueName, bool isStatic, Material* mat);
+    SolidEntity(std::string uniqueName, Material* mat, bool isStatic);
     virtual ~SolidEntity();
     
     EntityType getType();

@@ -11,20 +11,7 @@
 
 //Framework options
 //#define USE_ADVANCED_GUI
-
-//Bullet options
-#define USE_CONTINUOUS_COLLISION false
-#define ALLOWED_CCD_PENETRATION 0.1
-#define MAX_ERROR_REDUCTION 100.0
-#define GLOBAL_CFM 0.0
-#define GLOBAL_ERP 0.2
-#define GLOBAL_ERP2 0.5
-#define GLOBAL_DAMPING 1.0
-#define GLOBAL_FRICTION 1.0
-#define CONSTRAINT_ERP 0.2
-#define CONSTRAINT_CFM 0.0
-#define CONSTRAINT_STOP_ERP 0.4
-#define CONSTRAINT_STOP_CFM 0.0
+//#define BT_USE_DOUBLE_PRECISION
 
 //Headers
 //common
@@ -47,6 +34,11 @@
 
 //bullet physics
 #define BT_EULER_DEFAULT_ZYX
+#define CONSTRAINT_ERP 0.2
+#define CONSTRAINT_CFM 0.0
+#define CONSTRAINT_STOP_ERP 1.0
+#define CONSTRAINT_STOP_CFM 0.0
+
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h>

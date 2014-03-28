@@ -14,7 +14,7 @@
 class FixedJoint : public Joint
 {
 public:
-    FixedJoint(btRigidBody* bodyA, btRigidBody* bodyB);
+    FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
     ~FixedJoint();
     
     JointType getType();

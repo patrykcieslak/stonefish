@@ -15,7 +15,7 @@
 class TorusEntity : public SolidEntity
 {
 public:
-    TorusEntity(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, bool isStatic, Material* mat, Look l);
+    TorusEntity(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material* mat, Look l, bool isStatic = false);
     ~TorusEntity();
     
     SolidEntityType getSolidType();

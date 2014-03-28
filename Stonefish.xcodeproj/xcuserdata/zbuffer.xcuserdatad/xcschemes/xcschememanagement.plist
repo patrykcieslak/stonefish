@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
+		<key>JointsTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
 		<key>RollingTest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -22,6 +27,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>F74CEBED18E56EEB00D0C42D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>F7AB71B518C3D8EC0077F07D</key>
 		<dict>
 			<key>primary</key>

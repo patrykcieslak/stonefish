@@ -9,9 +9,9 @@
 #include "BoxEntity.h"
 #include "OpenGLSolids.h"
 
-BoxEntity::BoxEntity(std::string uniqueName, const btVector3& boxHalfExtents, bool isStatic, Material* mat, Look l) : SolidEntity(uniqueName, isStatic, mat)
+BoxEntity::BoxEntity(std::string uniqueName, const btVector3& dimensions, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
 {
-    halfExtents = UnitSystem::SetPosition(boxHalfExtents);
+    halfExtents = UnitSystem::SetPosition(dimensions * btScalar(0.5));
     material = mat;
  
     //Calculate physical properties

@@ -10,8 +10,7 @@
 #include "OpenGLSolids.h"
 #include "GeometryUtil.h"
 
-
-SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, bool isStatic, Material* mat, Look l) : SolidEntity(uniqueName, isStatic, mat)
+SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
 {
     radius = UnitSystem::SetLength(sphereRadius);
     
@@ -25,8 +24,8 @@ SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, bool i
     
     //Build mesh
     mesh = new TriangleMesh();
-    TriangleFace f;
-    OpenGLNormal gln;
+    //TriangleFace f;
+    //OpenGLNormal gln;
     btVector3 v;
     
     /////VERTICES

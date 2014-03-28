@@ -1,9 +1,14 @@
-- Combine setTransform with unit system
+x Ability to set internal unit system -> MKS as default
 x Add global coord system choice (z-up or z-down)
-- Global coordinate system displayed and rotated with camera
 x Torus collision shape
+x Joints: Fixed, Revolute, Spherical, Prysmatic, Cylindrical, Gear, Belt
 x Sensor architecture
 x Accelerometer
+
+- Name system preserving uniqueness
+- Combine setTransform with unit system
+- Global coordinate system displayed and rotated with camera
+- Friction material pair table - custom friction callback
 - Gyroscope
 - IMU
 - Encoder
@@ -12,8 +17,11 @@ x Accelerometer
 - Laser scanner 2d
 - Laser scanner 3d
 - Camera with lens
-- Ultrasonic radar
+- Ultrasonic range finder
 - Drawing dummy shapes without lighting
-- HUD graph
-- HUD car indicator
--
+- IMGUI graph
+- IMGUI gauge
+- Rendering put into Engine class
+- Fix rendering of initial configuration
+- Don't move camera when you move a part of the gui
+- Fix trackball target position

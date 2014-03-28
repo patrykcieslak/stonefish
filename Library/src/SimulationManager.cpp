@@ -36,60 +36,11 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     physicTime = 0;
     drawLightDummies = false;
     drawCameraDummies = false;
-    
-    //initialize dynamic world
-    btBroadphaseInterface* broadphase = new btDbvtBroadphase();
-    
-    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-    //btDefaultCollisionConfiguration* collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
-    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
-    
-    btConstraintSolver* solver;
-    //btDantzigSolver* mlcp = new btDantzigSolver();
-    //btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
-    //solver = new btMLCPSolver(mlcp);
-    solver = new btSequentialImpulseConstraintSolver();
-    
-    //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
-    //btSoftBodySolver* softBodySolver = 0;
-    //dynamicsWorld = new btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver); //new btDiscreteDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
-    dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-    
-    //dynamicsWorld->getDispatchInfo().m_useContinuous = USE_CONTINUOUS_COLLISION;
-    //dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = ALLOWED_CCD_PENETRATION;
-
-    /*dynamicsWorld->getSolverInfo().m_maxErrorReduction = MAX_ERROR_REDUCTION;
-    dynamicsWorld->getSolverInfo().m_globalCfm = GLOBAL_CFM;
-    dynamicsWorld->getSolverInfo().m_erp = GLOBAL_ERP;
-    dynamicsWorld->getSolverInfo().m_erp2 = GLOBAL_ERP2;
-    dynamicsWorld->getSolverInfo().m_splitImpulse = true;
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.2;
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.1;
-	dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_ENABLE_FRICTION_DIRECTION_CACHING | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_SIMD | SOLVER_USE_WARMSTARTING | SOLVER_RANDMIZE_ORDER;
-    dynamicsWorld->getSolverInfo().m_damping = GLOBAL_DAMPING;
-    dynamicsWorld->getSolverInfo().m_friction = GLOBAL_FRICTION;
-    dynamicsWorld->getSolverInfo().m_tau = 0.0;
-    dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
-    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 0.f;
-    */
-    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
-    
-    dynamicsWorld->setWorldUserInfo(this);
-    dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);
-    dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
-    
-    //set standard world params
-    setGravity(UnitSystem::Acceleration(MKS, unitSystem, btVector3(btScalar(0.), btScalar(0.), (zAxisUp ? btScalar(-9.81) : btScalar(9.81)) )));
-    
-    //create material manager & load standard materials
-    materialManager = new MaterialManager();
 }
 
 SimulationManager::~SimulationManager(void)
 {
     DestroyScenario();
-    delete dynamicsWorld;
-    delete materialManager;
     
     OpenGLLight::Destroy();
     OpenGLSky::Destroy();
@@ -238,6 +189,53 @@ OpenGLLight* SimulationManager::getLight(int index)
         return NULL;
 }
 
+void SimulationManager::BuildScenario()
+{
+    //initialize dynamic world
+    dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration(); //dwCollisionConfig = new btDefaultCollisionConfiguration();
+    dwDispatcher = new btCollisionDispatcher(dwCollisionConfig); //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
+    dwBroadphase = new btDbvtBroadphase();
+    //dwSolver = new btSequentialImpulseConstraintSolver();
+    btDantzigSolver* mlcp = new btDantzigSolver();
+    //btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
+    dwSolver = new btMLCPSolver(mlcp);
+    btSoftBodySolver* softBodySolver = 0;
+    dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver); //dynamicsWorld = new btDiscreteDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
+    
+    dynamicsWorld->getSolverInfo().m_erp = GLOBAL_ERP;
+    dynamicsWorld->getSolverInfo().m_erp2 = GLOBAL_ERP2;
+    dynamicsWorld->getSolverInfo().m_maxErrorReduction = MAX_ERROR_REDUCTION;
+    dynamicsWorld->getSolverInfo().m_globalCfm = 0.0;
+    dynamicsWorld->getSolverInfo().m_splitImpulse = true;
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.01;
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.2;
+    dynamicsWorld->getSolverInfo().m_sor = 1.0;
+    dynamicsWorld->getSolverInfo().m_linearSlop = 0.0;
+    dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
+    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_ENABLE_FRICTION_DIRECTION_CACHING | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_SIMD | SOLVER_USE_WARMSTARTING | SOLVER_RANDMIZE_ORDER;
+    dynamicsWorld->getSolverInfo().m_tau = 0.8;
+    dynamicsWorld->getSolverInfo().m_damping = GLOBAL_DAMPING;
+    dynamicsWorld->getSolverInfo().m_friction = GLOBAL_FRICTION;
+    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 64;
+    dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = 10e6;
+    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 100.f;
+    dynamicsWorld->getSolverInfo().m_numIterations = 50;
+    dynamicsWorld->getSolverInfo().m_timeStep = btScalar(1.f/getStepsPerSecond());
+    
+    //dynamicsWorld->getDispatchInfo().m_useContinuous = USE_CONTINUOUS_COLLISION;
+    //dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = ALLOWED_CCD_PENETRATION;
+    
+    dynamicsWorld->setWorldUserInfo(this);
+    dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);
+    dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+    
+    //set standard world params
+    setGravity(UnitSystem::Acceleration(MKS, UnitSystem::GetUnitSystem(), btVector3(btScalar(0.), btScalar(0.), (zUp ? btScalar(-9.81) : btScalar(9.81)) )));
+    
+    //create material manager & load standard materials
+    materialManager = new MaterialManager();
+}
+
 void SimulationManager::DestroyScenario()
 {
     //remove objects from dynamic world
@@ -288,7 +286,13 @@ void SimulationManager::DestroyScenario()
         delete lights[i];
     lights.clear();
     
-    materialManager->clearMaterialsAndFluids();
+    //materialManager->clearMaterialsAndFluids();
+    delete materialManager;
+    delete dynamicsWorld;
+    delete dwCollisionConfig;
+    delete dwDispatcher;
+    delete dwSolver;
+    delete dwBroadphase;
 }
 
 void SimulationManager::RestartScenario()
@@ -301,7 +305,7 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
 {
 	uint64_t deltaTime;
     if(currentTime == 0)
-        deltaTime = 0;
+        deltaTime = 0.0;
     else if(timeInMicroseconds < currentTime)
         deltaTime = timeInMicroseconds + (UINT64_MAX - currentTime);
     else
@@ -315,8 +319,8 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
     simulationTime += (btScalar)deltaTime/btScalar(1000000.0);
     physicTime = GetTimeInMicroseconds() - physicTime;
     
-    if (dynamicsWorld->getConstraintSolver()->getSolverType()==BT_MLCP_SOLVER)
-    {
+   if (dynamicsWorld->getConstraintSolver()->getSolverType()==BT_MLCP_SOLVER)
+   {
         btMLCPSolver* solver = (btMLCPSolver*) dynamicsWorld->getConstraintSolver();
         int numFallbacks = solver->getNumFallbacks();
         if (numFallbacks)
@@ -408,11 +412,18 @@ void SimulationManager::Render()
             views[i]->SetProjection();
             views[i]->SetViewTransform();
             
-            for(int h=0; h<entities.size(); h++) //render simple entities
+            //render simple entities
+            for(int h=0; h<entities.size(); h++)
                 entities[h]->Render();
             
-            for(int h=0; h<machines.size(); h++) //render machines
+            //render machines
+            for(int h=0; h<machines.size(); h++)
                 machines[h]->Render();
+            
+            //render dummies, icons, joints
+            for(int h=0; h<joints.size(); h++)
+                if(joints[h]->isRenderable())
+                    joints[h]->Render();
             
             views[i]->getGBuffer()->Stop();
             
@@ -646,6 +657,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar 
     //clear all forces to ensure that no summing occurs
     world->clearForces();
     
+    //btJointFeedback* fb = simManager->getJoint(0)->getConstraint()->getJointFeedback();
+    //printf("%f\n", fb->m_appliedForceBodyA.getX());
+    
     //loop through all sensors
     for(int i=0; i<simManager->sensors.size(); i++)
         simManager->sensors[i]->Update(timeStep);
@@ -656,7 +670,6 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar 
         //SimulationManager->machines[i]->Update(timeStep);
         simManager->machines[i]->ApplyForces();
     }*/
-    
     
     //loop through all controllers
     

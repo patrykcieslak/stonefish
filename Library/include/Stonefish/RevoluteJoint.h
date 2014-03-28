@@ -14,7 +14,7 @@
 class RevoluteJoint : public Joint
 {
 public:
-    RevoluteJoint(btRigidBody* bodyA, btRigidBody* bodyB, const btVector3& pivot, const btVector3& axis);
+    RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
     ~RevoluteJoint();
     
    	JointType getType();

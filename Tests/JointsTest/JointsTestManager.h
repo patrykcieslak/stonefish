@@ -1,20 +1,20 @@
 //
-//  RollingTestManager.h
+//  JointsTestManager.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__RollingTestManager__
-#define __Stonefish__RollingTestManager__
+#ifndef __Stonefish__JointsTestManager__
+#define __Stonefish__JointsTestManager__
 
 #include "SimulationManager.h"
 
-class RollingTestManager : public SimulationManager
+class JointsTestManager : public SimulationManager
 {
 public:
-    RollingTestManager(btScalar stepsPerSecond);
+    JointsTestManager(btScalar stepsPerSecond);
     
     void BuildScenario();
 };

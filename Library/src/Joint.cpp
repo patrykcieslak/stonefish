@@ -8,9 +8,11 @@
 
 #include "Joint.h"
 
-Joint::Joint()
+Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
-    renderable = true;
+    name = uniqueName;
+    renderable = false;
+    collisionEnabled = collideLinkedEntities;
 }
 
 Joint::~Joint(void)
@@ -32,6 +34,11 @@ btTypedConstraint* Joint::getConstraint()
     return constraint;
 }
 
+std::string Joint::getName()
+{
+    return name;
+}
+
 void Joint::setConstraint(btTypedConstraint *constr)
 {
     constraint = constr;
@@ -39,5 +46,9 @@ void Joint::setConstraint(btTypedConstraint *constr)
 
 void Joint::AddToDynamicsWorld(btDynamicsWorld *world)
 {
-    world->addConstraint(constraint);
+    btJointFeedback* fb = new btJointFeedback();
+    constraint->enableFeedback(true);
+    constraint->setJointFeedback(fb);
+    
+    world->addConstraint(constraint, !collisionEnabled);
 }

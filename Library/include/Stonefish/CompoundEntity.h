@@ -15,7 +15,7 @@
 class CompoundEntity : public SolidEntity
 {
 public:
-    CompoundEntity(std::string uniqueName, bool isStatic);
+    CompoundEntity(std::string uniqueName, bool isStatic = false);
     ~CompoundEntity();
     
     SolidEntityType getSolidType();
@@ -28,7 +28,7 @@ public:
     void AddSolid(SolidEntity* solid, const btTransform& location);
     void RemoveSolid(unsigned int index);
     SolidEntity* GetSolid(unsigned int index);
-    unsigned int SolidsCount();
+    unsigned long SolidsCount();
     
 private:
     void BuildRigidBody();

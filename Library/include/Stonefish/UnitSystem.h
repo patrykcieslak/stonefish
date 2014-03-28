@@ -19,7 +19,11 @@ typedef enum {CGS = 0, MKS, MMKS} UnitSystems;
 class UnitSystem
 {
 public:
+    //external
     static void SetUnitSystem(UnitSystems unitSystem, bool useDegrees);
+    static UnitSystems GetUnitSystem();
+    //internal
+    static UnitSystems GetInternalUnitSystem();
     
     //universal
     static btScalar Length(UnitSystems from, UnitSystems to, btScalar value);               //0
@@ -82,7 +86,7 @@ private:
     static btScalar Convert(unsigned int quantity, UnitSystems from, UnitSystems to, btScalar value);
     static btVector3 Convert(unsigned int quantity, UnitSystems from, UnitSystems to, const btVector3& value);
     
-    static const UnitSystems internalUS = CGS; //+Radians
+    static const UnitSystems internalUS = MKS; //+Radians
     static const btScalar CGStoOther[2][9];
     static UnitSystems externalUS;
     static bool externalDeg;

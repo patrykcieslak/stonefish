@@ -22,6 +22,14 @@
 #include "OpenGLCamera.h"
 #include "UnitSystem.h"
 
+#define USE_CONTINUOUS_COLLISION false
+#define ALLOWED_CCD_PENETRATION 0.001
+#define MAX_ERROR_REDUCTION 100.0
+#define GLOBAL_ERP 0.2
+#define GLOBAL_ERP2 0.8
+#define GLOBAL_DAMPING 0.1
+#define GLOBAL_FRICTION 0.0
+
 class SimulationManager //abstract class!
 {
 public:
@@ -29,7 +37,7 @@ public:
 	virtual ~SimulationManager(void);
     
     //physics
-    virtual void BuildScenario() = 0;
+    virtual void BuildScenario();
     void DestroyScenario();
     void RestartScenario();
     void StartSimulation();
@@ -72,10 +80,18 @@ public:
     OpenGLLight* getLight(int index);
     bool drawLightDummies;
     
-private:
-    //physics
+protected:
     static void SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep);
     
+    btDynamicsWorld* dynamicsWorld;
+    btBroadphaseInterface* dwBroadphase;
+    btDefaultCollisionConfiguration* dwCollisionConfig;
+    btCollisionDispatcher* dwDispatcher;
+    btConstraintSolver* dwSolver;
+    MaterialManager* materialManager;
+    
+private:
+    //physics
     btScalar sps;
     btScalar simulationTime;
     uint64_t currentTime;
@@ -89,8 +105,6 @@ private:
     std::vector<Actuator*> actuators;
     std::vector<Machine*> machines;
     
-    btDynamicsWorld* dynamicsWorld;
-    MaterialManager* materialManager;
     bool zUp;
 
     //graphics

@@ -15,7 +15,7 @@
 class CylinderEntity : public SolidEntity
 {
 public:
-    CylinderEntity(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, bool isStatic, Material* mat, Look l);
+    CylinderEntity(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material* mat, Look l, bool isStatic = false);
     ~CylinderEntity();
     
     SolidEntityType getSolidType();

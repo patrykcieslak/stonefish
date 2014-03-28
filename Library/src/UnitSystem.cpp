@@ -22,6 +22,16 @@ void UnitSystem::SetUnitSystem(UnitSystems unitSystem, bool useDegrees)
     externalDeg = useDegrees;
 }
 
+UnitSystems UnitSystem::GetUnitSystem()
+{
+    return externalUS;
+}
+
+UnitSystems UnitSystem::GetInternalUnitSystem()
+{
+    return internalUS;
+}
+
 //universal
 
 btScalar UnitSystem::Convert(unsigned int quantity, UnitSystems from, UnitSystems to, btScalar value)

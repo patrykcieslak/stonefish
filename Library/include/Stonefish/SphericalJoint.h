@@ -14,11 +14,13 @@
 class SphericalJoint : public Joint
 {
 public:
-    SphericalJoint(btRigidBody* bodyA, btRigidBody* bodyB, const btVector3& pivot);
+    SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities = true);
     ~SphericalJoint();
     
     JointType getType();
     void Render();
+    
+    btVector3 getPivot();
     
 private:
 };

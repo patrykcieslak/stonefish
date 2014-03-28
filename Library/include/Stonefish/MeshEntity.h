@@ -14,7 +14,7 @@
 class MeshEntity : public SolidEntity
 {
 public:
-    MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, bool isStatic, Material* mat, Look l, bool smoothNormals);
+    MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals = true, bool isStatic = false);
 	~MeshEntity();
     
     void SetLook(Look newLook);

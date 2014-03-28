@@ -112,8 +112,8 @@ void SimulationApp::Init(const char* dataPath, const char* shaderPath)
     
     InitializeSDL();
     InitializeOpenGL();
-    InitializeSimulation();
     InitializeGUI();
+    InitializeSimulation();
     printf("Running...\n");
 }
 
@@ -263,7 +263,7 @@ void SimulationApp::InitializeSimulation()
 {
     simulation->BuildScenario();
 
-    printf("Simulation initialized. Using Bullet version %d.%d.\n", 2, 81);
+    printf("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
 }
 
 //window
@@ -292,6 +292,7 @@ void SimulationApp::KeyDown(SDL_Event *event)
             break;
             
         case SDLK_SPACE:
+            getSimulationManager()->RestartScenario();
             StartSimulation();
             break;
             
@@ -565,18 +566,20 @@ void SimulationApp::DoHUD()
     char buffer[256];
     
 	GLfloat white[4] = {1.f,1.f,1.f,1.f};
+    double fps = getFPS();
     ui_id label1;
     label1.owner = 0;
     label1.item = 0;
     label1.index = 0;
-    sprintf(buffer, "FPS: %1.2f", getFPS());
+    sprintf(buffer, "FPS: %1.2lf", fps);
     IMGUI::DoLabel(getHUD(), label1, 10, getWindowHeight()-15, white, buffer);
     
     ui_id label2;
     label2.owner = 0;
     label2.item = 1;
     label2.index = 0;
-    sprintf(buffer, "Physics time: %1.2fms", getPhysicsTime());
+    
+    sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", getPhysicsTime()/(10.0/fps), getPhysicsTime());
     IMGUI::DoLabel(getHUD(), label2, 90, getWindowHeight()-15, white, buffer);
     
     ui_id label3;
@@ -584,7 +587,7 @@ void SimulationApp::DoHUD()
     label3.item = 2;
     label3.index = 0;
     sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
-    IMGUI::DoLabel(getHUD(), label3, 240, getWindowHeight()-15, white, buffer);
+    IMGUI::DoLabel(getHUD(), label3, 140, 14, white, buffer);
     
     ui_id slider1;
     slider1.owner = 0;

@@ -9,7 +9,7 @@
 #include "CompoundEntity.h"
 #include "OpenGLSolids.h"
 
-CompoundEntity::CompoundEntity(std::string uniqueName, bool isStatic):SolidEntity(uniqueName, isStatic, NULL)
+CompoundEntity::CompoundEntity(std::string uniqueName, bool isStatic):SolidEntity(uniqueName, NULL, isStatic)
 {
 }
 
@@ -204,9 +204,9 @@ SolidEntity* CompoundEntity::GetSolid(unsigned int index)
         return NULL;
 }
 
-unsigned int CompoundEntity::SolidsCount()
+unsigned long CompoundEntity::SolidsCount()
 {
-    return solids.size();
+    return (unsigned long)solids.size();
 }
 
 void CompoundEntity::CalculateFluidDynamics(const btVector3 &surfaceN, const btVector3 &surfaceD, const btVector3 &fluidV, const Fluid *fluid,
