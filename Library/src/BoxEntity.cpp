@@ -12,8 +12,7 @@
 BoxEntity::BoxEntity(std::string uniqueName, const btVector3& dimensions, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
 {
     halfExtents = UnitSystem::SetPosition(dimensions * btScalar(0.5));
-    material = mat;
- 
+    
     //Calculate physical properties
     volume = halfExtents.x()*halfExtents.y()*halfExtents.z()*8;
     dragCoeff = btVector3(halfExtents.y()*halfExtents.z()*4*1.05, halfExtents.x()*halfExtents.z()*4*1.05, halfExtents.y()*halfExtents.x()*4*1.05);

@@ -9,7 +9,7 @@
 #ifndef __Stonefish_GeometryUtil__
 #define __Stonefish_GeometryUtil__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 
 #define GOLDEN_RATIO ((btScalar)1.61803398875)
 

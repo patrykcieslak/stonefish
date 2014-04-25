@@ -44,7 +44,7 @@ bool __ShowDialog(const char* Message)
         return false;
 }
 
-bool __ShowSaveDialog(const char* Message, const char* FileExtension, char* OutBuffer, int OutLength)
+/*bool __ShowSaveDialog(const char* Message, const char* FileExtension, char* OutBuffer, int OutLength)
 { 
     // Alloc a temporary ObjC memory manager
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -68,6 +68,40 @@ bool __ShowSaveDialog(const char* Message, const char* FileExtension, char* OutB
     }
     
     // Else, something failed
+    [pool drain];
+    return result;
+}*/
+
+bool __ShowSaveDialog(const char* Message, const char* FileExtension, char* OutBuffer, int OutLength)
+{
+    // Alloc a temporary ObjC memory manager
+    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+    bool result = false;
+    
+    // Open panel to open file
+    NSSavePanel* spanel = [NSSavePanel savePanel];
+    [spanel setTitle:[NSString stringWithCString:Message encoding:NSASCIIStringEncoding]];
+    
+    NSString *str = [NSString stringWithCString:FileExtension encoding:NSASCIIStringEncoding];
+    NSCharacterSet *lineSeparatingSet = [NSCharacterSet characterSetWithCharactersInString:@"|"];
+    NSArray *extensions = [str componentsSeparatedByCharactersInSet:lineSeparatingSet];
+    [spanel setAllowedFileTypes:extensions];
+    
+    [spanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
+    NSInteger panelResult = [spanel runModal];
+    
+    if(panelResult == NSFileHandlingPanelOKButton)
+    {
+        NSString* file = [[spanel URL] path];
+        
+        if([file length] < OutLength)
+        {
+            strcpy(OutBuffer, [file cStringUsingEncoding:NSASCIIStringEncoding]);
+            result = true;
+        }
+    }
+    
+    [NSApp endSheet:spanel];
     [pool drain];
     return result;
 }

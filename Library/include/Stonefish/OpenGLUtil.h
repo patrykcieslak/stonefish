@@ -10,7 +10,7 @@
 #define __Stonefish_OpenGLUtil__
 
 #include <stdint.h>
-#include "common.h"
+#include "OpenGLPipeline.h"
 
 uint64_t GetTimeInMicroseconds();
 void GetCWD(char* buffer,int length);

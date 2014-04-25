@@ -9,7 +9,7 @@
 #ifndef __Stonefish_OpenGLSky__
 #define __Stonefish_OpenGLSky__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 #include "OpenGLView.h"
 
 typedef enum {SKY,DOWNSAMPLE2, DOWNSAMPLE4, DOWNSAMPLE8, CONVOLUTION_DIFFUSE, CONVOLUTION_REFLECT} SkyCubemap;
@@ -19,13 +19,13 @@ class OpenGLSky
 public:
     static void Init();
     static void Destroy();
-    static void Generate(GLfloat elevation, GLfloat orientation);
+    static void Generate(btScalar elevation, btScalar orientation);
     static void Render(OpenGLView* view, const btTransform& viewTransform, bool zAxisUp);
     static GLuint getSkyCubemap();
     static GLuint getDiffuseCubemap();
     static GLuint getReflectionCubemap();
     static void ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width, GLfloat height);
-    
+ 
 private:
     OpenGLSky();
     static void ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment);

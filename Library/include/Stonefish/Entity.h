@@ -9,7 +9,9 @@
 #ifndef __Stonefish_Entity__
 #define __Stonefish_Entity__
 
-#include "common.h"
+#include "UnitSystem.h"
+#include "NameManager.h"
+#include "OpenGLPipeline.h"
 
 #define BIT(x) (1<<(x))
 
@@ -29,7 +31,7 @@ typedef enum
 }
 CollisionMask;
 
-//pure virtual class
+//abstract class
 class Entity
 {
 public:
@@ -50,6 +52,8 @@ public:
 private:
     bool renderable;
     std::string name;
+    
+    static NameManager nameManager;
 };
 
 #endif

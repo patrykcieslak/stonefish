@@ -44,12 +44,36 @@ JointType PrismaticJoint::getType()
     return PRISMATIC;
 }
 
-void PrismaticJoint::Render()
+btVector3 PrismaticJoint::Render()
 {
+    btTypedConstraint* slider = getConstraint();
+    btVector3 A = slider->getRigidBodyA().getCenterOfMassPosition();
+    btVector3 B = slider->getRigidBodyB().getCenterOfMassPosition();
+    btVector3 pivot = (A+B)/btScalar(2.);
+    btVector3 axis = (slider->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
     
-}
-
-btVector3 PrismaticJoint::getAxis()
-{
-    return (getConstraint()->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    //calculate axis ends
+    btScalar e1 = (A-pivot).dot(axis);
+    btScalar e2 = (B-pivot).dot(axis);
+    btVector3 C1 = pivot + e1 * axis;
+    btVector3 C2 = pivot + e2 * axis;
+    
+    glDummyColor();
+    //links
+    glBegin(GL_LINES);
+    glBulletVertex(A);
+    glBulletVertex(C1);
+    glBulletVertex(B);
+    glBulletVertex(C2);
+    glEnd();
+    
+    //axis
+    glEnable(GL_LINE_STIPPLE);
+    glBegin(GL_LINES);
+    glBulletVertex(C1);
+    glBulletVertex(C2);
+    glEnd();
+    glDisable(GL_LINE_STIPPLE);
+    
+    return (C1+C2)/btScalar(2.);
 }

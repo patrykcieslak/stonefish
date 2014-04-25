@@ -20,14 +20,13 @@ PlaneEntity::PlaneEntity(std::string uniqueName, btScalar size, Material* mat, L
     btCollisionShape* shape = new btStaticPlaneShape(btVector3(0,1,0),0);
     
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0,0,0));
-    rigidBodyCI.m_friction = material->statFriction;
-    rigidBodyCI.m_rollingFriction = material->dynFriction;
-    rigidBodyCI.m_restitution = material->restitution;
+    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(1.); //not used
     rigidBody = new btRigidBody(rigidBodyCI);
     rigidBody->setUserPointer(this);
+    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     
     GLfloat halfSize = size/2.f;
-    GLfloat texCoord = size/100.f;
+    GLfloat texCoord = size;
     
     displayList = glGenLists(1);
     glNewList(displayList, GL_COMPILE);
@@ -96,6 +95,11 @@ void PlaneEntity::setTransform(const btTransform &trans)
 {
     btDefaultMotionState* motionState = new btDefaultMotionState(trans);
     rigidBody->setMotionState(motionState);
+}
+
+Material* PlaneEntity::getMaterial()
+{
+    return material;
 }
 
 void PlaneEntity::AddToDynamicsWorld(btDynamicsWorld *world)

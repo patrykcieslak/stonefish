@@ -4,24 +4,52 @@ x Torus collision shape
 x Joints: Fixed, Revolute, Spherical, Prysmatic, Cylindrical, Gear, Belt
 x Sensor architecture
 x Accelerometer
+x Gyroscope
+x Rendering put into OpenGLPipeline class
+x Drawing dummy shapes without lighting
+x Common includes cleaned and distributed
+x Drawing joints
+x Rotary encoder
+x Compass (magnetometer)
+x Drawing coord systems
+x Don't move camera when you move a part of the gui
+x Rendering options
+x DCMotor
+x Name System preserving uniqueness
+x Friction material pair table - custom friction callback
+x Sky improvements + sun lighting
+x Fix native dialog memory leak when returning result
+x IMGUI save plot data
+x IMGUI TimePlot
+x IMGUI doesn't need static
+x Spot light shadows
+x Sun shadow (Cascaded Shadow Maps)
+x Drawing global coordinate system + grid
+- Shadow filtering to improve borders
+- Material shading
+- IMGUI PhasePlot
+- IMU (true and fake)
+- Joint limits
+- GearJoint/BeltJoint from two revolute joints
 
-- Name system preserving uniqueness
-- Combine setTransform with unit system
-- Global coordinate system displayed and rotated with camera
-- Friction material pair table - custom friction callback
-- Gyroscope
-- IMU
-- Encoder
-- Compass (magnetometer)
+- IMGUI PolarPlot
+- IMGUI gauge
+- Linear actuator
+- Drawing actuators
+- Stickers
+- Camera with lens
+- GPS
+- Linear encoder
 - Laser rangefinder
+- Ultrasonic range finder
 - Laser scanner 2d
 - Laser scanner 3d
-- Camera with lens
-- Ultrasonic range finder
-- Drawing dummy shapes without lighting
-- IMGUI graph
-- IMGUI gauge
-- Rendering put into Engine class
+- DVL
+- Multi-beam
+- Side sonar
 - Fix rendering of initial configuration
-- Don't move camera when you move a part of the gui
 - Fix trackball target position
+- Draw camera frustum and sensors
+- Cable entity -> soft body rope
+- Omni light shadows
+- Transparency

@@ -8,7 +8,7 @@
 
 #include "ADC.h"
 
-ADC::ADC(ushort resolution, btScalar plusRefVoltage, btScalar minusRefVoltage)
+ADC::ADC(unsigned short resolution, btScalar plusRefVoltage, btScalar minusRefVoltage)
 {
     bits = resolution;
     pRefV = plusRefVoltage;

@@ -10,31 +10,31 @@
 #define __Stonefish_Actuator__
 
 #include "common.h"
-#include "Joint.h"
+#include "NameManager.h"
 
-//pure virtual class
+typedef enum {DC_MOTOR, STEPPER_MOTOR, SERVO_DRIVE, LINEAR_DRIVE, THRUSTER, CONTROL_SURFACE} ActuatorType;
+
+//abstract class
 class Actuator
 {
 public:
-    typedef enum
-    {
-        DCMOTOR
-    }
-    ActuatorType;
-    
-    Actuator();
+    Actuator(std::string uniqueName);
     virtual ~Actuator();
     
+    virtual void Update(btScalar dt) = 0;
+    virtual btVector3 Render() = 0;
+    
     void setRenderable(bool render);
+    virtual ActuatorType getType() = 0;
+    std::string getName();
+    
     bool isRenderable();
     
-    virtual void Render() = 0;
-   	virtual ActuatorType getType() = 0;
-    virtual void SetInput(btScalar* inputValues) = 0;
-    virtual void Update(btScalar dt) = 0;
-    
 private:
+    std::string name;
     bool renderable;
+    
+    static NameManager nameManager;
 };
 
 #endif 

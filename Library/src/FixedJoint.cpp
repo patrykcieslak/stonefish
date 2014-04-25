@@ -28,16 +28,18 @@ JointType FixedJoint::getType()
     return FIXED;
 }
 
-void FixedJoint::Render()
+btVector3 FixedJoint::Render()
 {
     btTypedConstraint* fixed = getConstraint();
-    
     btVector3 A = fixed->getRigidBodyA().getCenterOfMassPosition();
     btVector3 B = fixed->getRigidBodyB().getCenterOfMassPosition();
         
-    glColor3f(1.f, 0, 0);
+    glDummyColor();
+    //link
     glBegin(GL_LINES);
-    glVertex3f(A.x(), A.y(), A.z());
-    glVertex3f(B.x(), B.y(), B.z());
+    glBulletVertex(A);
+    glBulletVertex(B);
     glEnd();
+    
+    return (A+B)/btScalar(2.);
 }

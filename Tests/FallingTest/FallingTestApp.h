@@ -21,6 +21,8 @@ public:
     void MouseUp(SDL_Event* event);
     void MouseMove(SDL_Event* event);
     void MouseScroll(SDL_Event* event);
+    
+    void DoHUD();
 };
 
 #endif

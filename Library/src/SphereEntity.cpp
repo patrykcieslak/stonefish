@@ -54,8 +54,6 @@ SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, Materi
     v = btVector3(-GOLDEN_RATIO,0,-1);
     mesh->vertices.push_back(v);
     
-    
-    
     SetLook(l);
 }
 

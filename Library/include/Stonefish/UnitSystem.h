@@ -9,10 +9,11 @@
 #ifndef __Stonefish_UnitSystem__
 #define __Stonefish_UnitSystem__
 
-#include <BulletDynamics/btBulletDynamicsCommon.h>
+#include "common.h"
 
+#define FULL_ANGLE  btScalar(2. * M_PI)
 #define PIover180   0.01745329
-#define _180overPI 57.29577951
+#define _180overPI  57.29577951
 
 typedef enum {CGS = 0, MKS, MMKS} UnitSystems;
 
@@ -83,6 +84,8 @@ public:
     static btVector3 GetTorque(const btVector3& value);
     
 private:
+    UnitSystem();
+    
     static btScalar Convert(unsigned int quantity, UnitSystems from, UnitSystems to, btScalar value);
     static btVector3 Convert(unsigned int quantity, UnitSystems from, UnitSystems to, const btVector3& value);
     

@@ -9,7 +9,7 @@
 #ifndef __Stonefish_OpenGLGBuffer__
 #define __Stonefish_OpenGLGBuffer__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 
 typedef enum {DIFFUSE, POSITION1, POSITION2, NORMAL1, NORMAL2} FBOComponent;
 

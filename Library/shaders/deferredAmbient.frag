@@ -40,7 +40,7 @@ void main()
         float factor1 = color_mat.a;
         int mat_type = int(floor(position_mat.a/10.0));
         float factor2 = position_mat.a-float(mat_type)*10.0;
-        vec3 diffuse_color = 2.0*sky(texSkyDiff, normal);
+        vec3 diffuse_color = sky(texSkyDiff, normal);
         vec3 result = diffuse_color.rgb * color;
         
         if(mat_type == 1 && factor2 > 0.0)
@@ -55,7 +55,7 @@ void main()
         if(occlusion != 0)
             result *= occlusion;
         
-        gl_FragColor = vec4(pow(result, vec3(1.0/2.2)), 1.0);
+        gl_FragColor = vec4(pow(result, vec3(1.0/1.0)), 1.0);
     }
     else
         gl_FragColor = vec4(0.0);

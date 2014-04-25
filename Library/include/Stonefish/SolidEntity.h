@@ -28,8 +28,8 @@ public:
     void AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& worldTransform);
     void RemoveFromDynamicsWorld(btDynamicsWorld* world);
     void ApplyGravity();
-    void Render();
     void SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia);
+    void Render();
     
     virtual void SetLook(Look newLook);
     virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btVector3& centerOfGravity);
@@ -40,7 +40,7 @@ public:
                                         btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                         btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
                                         const btVector3& angularVelocity = btVector3(0,0,0)) = 0;
-    bool isStatic();
+    
     void setDisplayCoordSys(bool enabled);
     void setTransform(const btTransform& trans);
     btTransform getTransform();
@@ -53,7 +53,10 @@ public:
     btVector3 getDragCoefficients();
     Look getLook();
     GLint getDisplayList();
-    
+
+    bool isStatic();
+    bool isCoordSysVisible();
+
     bool fullyImmersed;
     
 protected:

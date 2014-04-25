@@ -9,7 +9,7 @@
 #ifndef __Stonefish__OpenGLMaterial__
 #define __Stonefish__OpenGLMaterial__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 
 typedef enum {MATTE = 0, GLOSSY, METALLIC, TRANSPARENT} LookType;
 

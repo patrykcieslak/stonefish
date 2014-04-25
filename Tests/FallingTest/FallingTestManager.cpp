@@ -11,11 +11,13 @@
 #include "FallingTestApp.h"
 #include "PlaneEntity.h"
 #include "BoxEntity.h"
+#include "SphereEntity.h"
 #include "TorusEntity.h"
 #include "CylinderEntity.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
-#include "AccelerationSensor.h"
+#include "OpenGLUtil.h"
+#include "Accelerometer.h"
 #include "ADC.h"
 
 FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MMKS, true, stepsPerSecond)
@@ -25,38 +27,60 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 void FallingTestManager::BuildScenario()
 {
     SimulationManager::BuildScenario();
+    SimulationApp::getApp()->getRenderer()->SetVisibleElements(false, false, false, false, false);
     
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 7.8), 0.5, 1.0, 1.0);
-    getMaterialManager()->CreateMaterial("Plastic", UnitSystem::Density(CGS, MMKS, 1.5), 0.5, 1.0, 1.0);
+    getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 7.8), 0.4);
+    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.2, 0.01);
     
     ///////LOOKS///////////
-    Look grey = CreateMatteLook(0.7f, 0.7f, 0.7f, 0.8f);
+    char path[1024];
+    GetCWD(path, 1024);
+    strcat(path, "/");
+    strcat(path, SimulationApp::getApp()->getDataPath());
+    strcat(path, "/");
+    strcat(path, "grid.png");
+    
+    Look grey = CreateMatteLook(0.8f, 0.8f, 0.8f, 1.0f, path);
     Look color;
     
     ////////OBJECTS
-    BoxEntity* box = new BoxEntity("Floor", btVector3(2000.f,2000.f,10.f), getMaterialManager()->getMaterial("Steel"), grey, true);
+    PlaneEntity* floor = new PlaneEntity("Floor", 100000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0, 0, M_PI_2), btVector3(0,0,0)));
+    floor->setRenderable(true);
+    AddEntity(floor);
+    /*BoxEntity* box = new BoxEntity("Floor", btVector3(100000.f,100000.f,100.f), getMaterialManager()->getMaterial("Steel"), grey, true);
     box->setRenderable(true);
-    AddEntity(box);
+    AddEntity(box);*/
     
-    for(int i=0; i<100; i++)
+    for(int i=0; i<10; i++)
     {
-        color = CreateMatteLook(i/100.f+0.2f, 1.0f - i/100.f * 0.8f, 0.1f, 0.5f);
-        BoxEntity* box = new BoxEntity("Box" + std::to_string(i), btVector3(100.f,100.f,100.f), getMaterialManager()->getMaterial("Steel"), color);
+        color = CreateMatteLook(i/10.f+0.2f, 1.0f - i/10.f * 0.8f, 0.1f, 0.5f);
+        BoxEntity* box = new BoxEntity("Box" + std::to_string(i), btVector3(500.f,500.f,500.f), getMaterialManager()->getMaterial("Steel"), color);
         box->setRenderable(true);
-        AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0., 0.), btVector3(sinf(i * M_PI/10.f)*200.f, cosf(i * M_PI/10.f)*200.f, 1000.f + i*300.f)));
+        AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0., 0.), btVector3(sinf(i * M_PI/10.f)*5000.f, -i*1000.f, 1000.f + i*300.f)));
         
-        if(i == 50)
+        if(i == 5)
         {
             ADC* adc = new ADC(12, 3.3);
-            AccelerationSensor* acc = new AccelerationSensor("Acc", box, btTransform(btQuaternion(0.,0.,0.), btVector3(0.,0.,0.)), Y_AXIS, -3, 3, 0.3, 1.5, 0.00000028, adc);
+            Accelerometer* acc = new Accelerometer("Acc", box, btTransform(btQuaternion(0.,0.,0.), btVector3(0.,0.,0.)), Z_AXIS, -3, 3, 0.3, 1.5, 0.00000028, adc, true, 1000);
             box->setDisplayCoordSys(true);
             AddSensor(acc);
         }
     }
     
+    for(int i=0; i<10; i++)
+    {
+        color = CreateMatteLook(1.f, 0.6f, 0.2f, 0.9f);
+        SphereEntity* sphere = new SphereEntity("Sphere" + std::to_string(i), i*50.f, getMaterialManager()->getMaterial("Steel"), color);
+        sphere->setRenderable(true);
+        AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(i * 100.f, sin(i)*100.f, i*200.f+10.f)));
+    }
+    
     //////CAMERA & LIGHT//////
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 3000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60);
+    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(5000.f, 5000.f, 10000.f), btVector3(), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000));
+    //AddLight(spot);
+    
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60.f);
     trackb->Rotate(btQuaternion(M_PI, 0, -M_PI/8.0));
     trackb->Activate();
     AddView(trackb);

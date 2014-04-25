@@ -40,7 +40,7 @@ OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbit
     
     radius = UnitSystem::SetLength(orbitRadius);
     center = UnitSystem::SetPosition(centerPosition);
-    fovx = UnitSystem::SetAngle(fov);
+    fovx = fov/180.f*M_PI;
     dragging = false;
     
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
@@ -59,15 +59,23 @@ ViewType OpenGLTrackball::getType()
 
 btVector3 OpenGLTrackball::GetEyePosition()
 {
-    btVector3 dir = btVector3(0,0,-1);
-    dir = dir.rotate(rotation.getAxis(), -rotation.getAngle());
-    dir.normalize();
-    return center-radius*dir;
+    return center - radius * GetLookingDirection();
 }
 
 btVector3 OpenGLTrackball::GetLookingDirection()
 {
-    return (center-GetEyePosition()).normalized();
+    btVector3 dir(0,0,-1.f);
+    dir = dir.rotate(rotation.getAxis(), -rotation.getAngle());
+    dir.normalize();
+    return dir;
+}
+
+btVector3 OpenGLTrackball::GetUpDirection()
+{
+    btVector3 trueUp(0,1.f,0);
+    trueUp = trueUp.rotate(rotation.getAxis(), -rotation.getAngle());
+    trueUp.normalize();
+    return trueUp;
 }
 
 void OpenGLTrackball::MouseDown(GLfloat x, GLfloat y)

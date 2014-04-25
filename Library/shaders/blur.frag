@@ -11,7 +11,7 @@ uniform vec2 viewport, axis;
 
 void main(void)
 {
-    vec2 off = (axis*1.0)/viewport;
+    vec2 off = axis/viewport;
 
     vec4 da = texture2D(texNormal, gl_TexCoord[0].xy);
     vec4 db = texture2D(texNormal, gl_TexCoord[0].xy+off);

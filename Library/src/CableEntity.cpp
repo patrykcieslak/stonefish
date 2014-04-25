@@ -7,6 +7,7 @@
 //
 
 #include "CableEntity.h"
+#include "Joint.h"
 #include "OpenGLSolids.h"
 #include "GeometryUtil.h"
 
@@ -53,9 +54,7 @@ CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const b
         btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(rotation, center));
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, shape, inertia);
-        rigidBodyCI.m_friction = material->statFriction;
-        rigidBodyCI.m_rollingFriction = material->dynFriction;
-        rigidBodyCI.m_restitution = material->restitution;
+        rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(1.); //not used
         rigidBodyCI.m_linearDamping = 0;
         rigidBodyCI.m_angularDamping = 0;
         rigidBodyCI.m_linearSleepingThreshold = 0.0;
@@ -64,6 +63,8 @@ CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const b
         btRigidBody* cablePart = new btRigidBody(rigidBodyCI);
         cablePart->setActivationState(DISABLE_DEACTIVATION);
         cablePart->setUserPointer(this);
+        cablePart->setCollisionFlags(cablePart->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        
         cableParts.push_back(cablePart);
     }
     
@@ -177,6 +178,11 @@ btTransform CableEntity::getTransform()
 
 void CableEntity::setTransform(const btTransform& trans)
 {
+}
+
+Material* CableEntity::getMaterial()
+{
+    return material;
 }
 
 btRigidBody* CableEntity::getFirstEnd()

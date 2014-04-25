@@ -23,5 +23,5 @@ void main(void)
     //clipping
     clipPos = dot(position.xyz, clipPlane.xyz) + clipPlane.w;
     
-    gl_Position = ftransform();
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; //ftransform();
 }

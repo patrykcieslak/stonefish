@@ -17,7 +17,7 @@ public:
     BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio);
     ~BeltJoint();
     
-    void Render();
+    btVector3 Render();
     JointType getType();
     btScalar getRatio();
     

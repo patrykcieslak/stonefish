@@ -22,6 +22,7 @@ public:
     EntityType getType();
     void Render();
     btTransform getTransform();
+    Material* getMaterial();
     void setTransform(const btTransform& trans);
     void AddToDynamicsWorld(btDynamicsWorld* world);
     

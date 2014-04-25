@@ -15,15 +15,15 @@
 class DCMotor : public Actuator
 {
 public:
-    DCMotor(RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction, btScalar motorEfficiency);
+    DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
     ~DCMotor();
     
-    ActuatorType getType();
-    void Render();
-    void SetInput(btScalar* inputValues);
     void Update(btScalar dt);
+    btVector3 Render();
+    void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);
     
-    void SetGearbox(bool enable, btScalar ratio, btScalar efficiency);
+    void setVoltage(btScalar volt);
+    ActuatorType getType();
     
 private:
     //output
@@ -41,7 +41,6 @@ private:
     btScalar Ke;
     btScalar Km;
     btScalar B;
-    btScalar eff;
     bool gearEnabled;
     btScalar gearRatio;
     btScalar gearEff;

@@ -81,6 +81,11 @@ bool SolidEntity::isStatic()
     return staticBody;
 }
 
+bool SolidEntity::isCoordSysVisible()
+{
+    return dispCoordSys;
+}
+
 Look SolidEntity::getLook()
 {
     return look;
@@ -95,9 +100,8 @@ void SolidEntity::Render()
 {
     if(rigidBody != NULL && isRenderable())
     {
-        btTransform trans;
+        btTransform trans = getTransform();
         btScalar openglTrans[16];
-        rigidBody->getMotionState()->getWorldTransform(trans);
         trans.getOpenGLMatrix(openglTrans);
         
         glPushMatrix();
@@ -106,28 +110,9 @@ void SolidEntity::Render()
 #else
         glMultMatrixf(openglTrans);
 #endif
-        /*glColor3f(1.0, 1.0, 1.0);
-        DrawCoordSystem(100);
-        
-        glPushMatrix();
-        glTranslatef(centerOfBuoyancy.x(), centerOfBuoyancy.y(), centerOfBuoyancy.z());
-        glColor3f(1.0, 1.0, 1.0);
-        DrawCoordSystem(100);
-        glPopMatrix();*/
-        
-        if(dispCoordSys)
-        {
-            glDisable(GL_LIGHTING);
-            glColor3f(1.0, 1.0, 1.0);
-            DrawCoordSystem(100);
-            glEnable(GL_LIGHTING);
-        }
-        
         UseLook(look);
-        //if(fullyImmersed)
-        //    glColor3f(1.0, 0.0, 0.0);
-        
         glCallList(displayList);
+        
         glPopMatrix();
     }
 }
@@ -138,6 +123,7 @@ btTransform SolidEntity::getTransform()
     {
         btTransform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
+        //trans = rigidBody->getCenterOfMassTransform();
         return trans;
     }
     
@@ -193,9 +179,7 @@ void SolidEntity::BuildRigidBody()
         colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(staticBody ? 0 : mass, motionState, colShape, Ipri);
-        rigidBodyCI.m_friction = material->statFriction;
-        rigidBodyCI.m_rollingFriction = material->dynFriction;
-        rigidBodyCI.m_restitution = material->restitution;
+        rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.5); //not used
         rigidBodyCI.m_linearDamping = 0;
         rigidBodyCI.m_angularDamping = 0;
         rigidBodyCI.m_linearSleepingThreshold = UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.0001);
@@ -203,9 +187,10 @@ void SolidEntity::BuildRigidBody()
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
+        rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         
         if(staticBody)
-            rigidBody->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+            rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
         //else
           //  rigidBody->setActivationState(DISABLE_DEACTIVATION);
     }

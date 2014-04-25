@@ -8,15 +8,17 @@
 
 #include "Entity.h"
 
+NameManager Entity::nameManager;
 
 Entity::Entity(std::string uniqueName)
 {
+    name = nameManager.AddName(uniqueName);
     renderable = true;
-    name = uniqueName;
 }
 
 Entity::~Entity(void)
 {
+    nameManager.RemoveName(name);
 }
 
 void Entity::setRenderable(bool render)

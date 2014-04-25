@@ -207,9 +207,18 @@ GLint* OpenGLView::GetViewport()
     return view;
 }
 
-glm::mat4 OpenGLView::GetProjection()
+glm::mat4 OpenGLView::GetProjectionMatrix()
 {
     return projection;
+}
+
+glm::mat4 OpenGLView::GetViewMatrix()
+{
+    GLfloat glmatrix[16];
+    btTransform trans = GetViewTransform();
+    trans.getOpenGLMatrix(glmatrix);
+    glm::mat4 view = glm::make_mat4(glmatrix);
+    return view;
 }
 
 GLfloat OpenGLView::GetFOVY()
@@ -283,8 +292,7 @@ void OpenGLView::SetViewTransform()
     trans.getOpenGLMatrix(openglTrans);
     
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
+  
 #ifdef BT_USE_DOUBLE_PRECISION
     glLoadMatrixd(openglTrans);
 #else
@@ -309,7 +317,6 @@ void OpenGLView::SetReflectedViewTransform(FluidEntity* fluid)
     trans.getOpenGLMatrix(openglTrans);
     
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
     
 #ifdef BT_USE_DOUBLE_PRECISION
     glLoadMatrixd(openglTrans);
@@ -342,7 +349,6 @@ void OpenGLView::SetRefractedViewTransform(FluidEntity* fluid)
     (trans * shift).getOpenGLMatrix(openglTrans);
     
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
     
 #ifdef BT_USE_DOUBLE_PRECISION
     glLoadMatrixd(openglTrans);
@@ -445,12 +451,13 @@ void OpenGLView::RenderSSAO()
         glClear(GL_COLOR_BUFFER_BIT);
         
         glUseProgramObjectARB(ssaoShader);
-        glUniform1f(uniSsaoRadius, 100.f);
-        glUniform1f(uniSsaoEpsilon, 0.01f);
-        glUniform1f(uniSsaoFullOcclTh, 2.0f);
-        glUniform1f(uniSsaoNoOcclTh, 50.f);
-        glUniform1f(uniSsaoOcclPower, 2.0f);
-        glUniform1f(uniSsaoRandomSize, 64.f);
+        //Params for MKS
+        glUniform1f(uniSsaoRadius,      0.25f);  //Search radius
+        glUniform1f(uniSsaoEpsilon,     0.0001f);//Zero epsilon
+        glUniform1f(uniSsaoNoOcclTh,    0.1f);   //Distance without occlusion
+        glUniform1f(uniSsaoFullOcclTh,  0.005f); //Distance with total occlusion
+        glUniform1f(uniSsaoOcclPower,   0.5f);   //Function of occlusion vs distance
+        glUniform1f(uniSsaoRandomSize,  64.f);   //Size of random texture
         glUniform2f(uniSsaoViewport, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
         glUniform1i(uniSsaoNormal, normalTextureUnit);
         glUniform1i(uniSsaoRandom, randomTextureUnit);
@@ -465,14 +472,15 @@ void OpenGLView::RenderSSAO()
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
         
         glUseProgramObjectARB(blurShader);
+        GLfloat blurSize = 2.5f;
         glUniform2f(uniBlurViewport, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
         glUniform1i(uniBlurSource, randomTextureUnit);
         glUniform1i(uniBlurNormal, normalTextureUnit);
-        glUniform1f(uniBlurNormalPower, 1.f);
-        glUniform1f(uniBlurNormalFactor, 1.f);
-        glUniform1f(uniBlurDepthPower, 0.5f);
-        glUniform1f(uniBlurDistanceFactor, 100.f);
-        glUniform2f(uniBlurAxis, 1.2f, 0.f);
+        glUniform1f(uniBlurNormalPower, 1.0f);
+        glUniform1f(uniBlurNormalFactor, 0.5f);
+        glUniform1f(uniBlurDepthPower, 2.0f);
+        glUniform1f(uniBlurDistanceFactor, 1.0f);
+        glUniform2f(uniBlurAxis, blurSize, 0.f);
         
         for(int i=0; i<4; i++)
         {
@@ -483,7 +491,7 @@ void OpenGLView::RenderSSAO()
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
             
             glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-            glUniform2f(uniBlurAxis, 0.f, 1.2f);
+            glUniform2f(uniBlurAxis, 0.f, blurSize);
             
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, vBlurFBO);
             glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
@@ -492,7 +500,7 @@ void OpenGLView::RenderSSAO()
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
             
             glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-            glUniform2f(uniBlurAxis, 1.2f, 0.f);
+            glUniform2f(uniBlurAxis, blurSize, 0.f);
         }
         
         glUseProgramObjectARB(0);

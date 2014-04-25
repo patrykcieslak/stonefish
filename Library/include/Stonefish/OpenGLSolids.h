@@ -9,7 +9,7 @@
 #ifndef __Stonefish_OpenGLSolids__
 #define __Stonefish_OpenGLSolids__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 
 void SetupOrtho();
 void DrawScreenAlignedQuad();

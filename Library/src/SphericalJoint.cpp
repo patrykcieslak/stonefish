@@ -28,25 +28,20 @@ JointType SphericalJoint::getType()
     return SPHERICAL;
 }
 
-void SphericalJoint::Render()
+btVector3 SphericalJoint::Render()
 {
     btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
-    
     btVector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
     btVector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
     btVector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
-        
-    glColor3f(1.f, 0, 0);
+    
+    glDummyColor();
     glBegin(GL_LINES);
-    glVertex3f(A.x(), A.y(), A.z());
-    glVertex3f(pivot.x(), pivot.y(), pivot.z());
-    glVertex3f(B.x(), B.y(), B.z());
-    glVertex3f(pivot.x(), pivot.y(), pivot.z());
+    glBulletVertex(A);
+    glBulletVertex(pivot);
+    glBulletVertex(B);
+    glBulletVertex(pivot);
     glEnd();
-}
-
-btVector3 SphericalJoint::getPivot()
-{
-    btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
-    return p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
+    
+    return pivot;
 }

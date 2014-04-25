@@ -24,11 +24,11 @@ void DrawScreenAlignedQuad()
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
     glVertex3f(-1.0f, -1.0f, 0.0f);
-    glTexCoord2f(1, 0);
+    glTexCoord2f(1.f, 0);
     glVertex3f(1.f, -1.0f, 0.0f);
-    glTexCoord2f(1, 1);
+    glTexCoord2f(1.f, 1.f);
     glVertex3f(1.f, 1.f, 0.0f);
-    glTexCoord2f(0, 1);
+    glTexCoord2f(0, 1.f);
     glVertex3f(-1.0f, 1.f, 0.0f);
     glEnd();
 }
@@ -36,15 +36,15 @@ void DrawScreenAlignedQuad()
 void DrawCoordSystem(GLfloat size)
 {
     glBegin(GL_LINES);
-    glColor4f(1.f, 0.f, 0.f, 0.0f);
+    glXAxisColor();
     glVertex3f(0, 0, 0);
     glVertex3f(size, 0, 0);
     
-    glColor4f(0.f, 1.f, 0.f, 0.0f);
+    glYAxisColor();
     glVertex3f(0, 0, 0);
     glVertex3f(0, size, 0);
     
-    glColor4f(0.f, 0.f, 1.f, 0.0f);
+    glZAxisColor();
     glVertex3f(0, 0, 0);
     glVertex3f(0, 0, size);
     glEnd();

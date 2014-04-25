@@ -9,8 +9,12 @@
 #ifndef __Stonefish_IMGUI__
 #define __Stonefish_IMGUI__
 
+#include <SDL2/SDL_keyboard.h>
+
 #include "common.h"
+#include "OpenGLPipeline.h"
 #include "OpenGLPrinter.h"
+#include "Sensor.h"
 
 //font
 #define FONT_NAME "/Library/Fonts/Arial Narrow Bold.ttf"
@@ -53,6 +57,11 @@
 #define RADIOBUTTON_BORDER_COLOR 33
 #define RADIOBUTTON_BUTTON_COLOR 34
 #define RADIOBUTTON_TITLE_COLOR 35
+#define PLOT_BACKGROUND_COLOR 36
+#define PLOT_TITLE_COLOR 37
+#define PLOT_AXES_COLOR 38
+#define PLOT_GRID_COLOR 39
+#define PLOT_DATA_COLOR 40
 
 struct ui_id
 {
@@ -64,16 +73,6 @@ struct ui_id
 class IMGUI
 {
 public:
-    //static
-    static void DoLabel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text);
-    static void DoPanel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    static void DoProgressBar(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title);
-    static bool DoButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    static double DoSlider(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title);
-    static bool DoCheckBox(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
-    static bool DoRadioButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
-    
-    //non-static
     IMGUI();
     ~IMGUI();
     void SetRenderSize(int width, int height);
@@ -83,6 +82,7 @@ public:
     void setActive(ui_id newActive);
     bool isHot(ui_id ID);
     bool isActive(ui_id ID);
+    bool isAnyActive();
     void clearActive();
     void clearHot();
     int getWindowHeight();
@@ -106,6 +106,18 @@ public:
     void MouseMove(int x, int y);
     void KeyDown(SDL_Keycode key);
     void KeyUp(SDL_Keycode key);
+    
+    //widgets
+    void DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text);
+    void DoPanel(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
+    void DoProgressBar(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title);
+    bool DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
+    double DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title);
+    bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
+    bool DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
+    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, const char* title, double fixedRange[2] = NULL, unsigned int historyLength = 0);
+    //bool DoPhasePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
+    //bool DoPolarPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
     
 private:
     int windowW,windowH;

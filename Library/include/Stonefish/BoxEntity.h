@@ -11,7 +11,6 @@
 
 #include "SolidEntity.h"
 
-
 class BoxEntity : public SolidEntity
 {
 public:

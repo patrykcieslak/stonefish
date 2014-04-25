@@ -18,9 +18,7 @@ public:
     ~PrismaticJoint();
     
     JointType getType();
-    void Render();
-    
-    btVector3 getAxis();
+    btVector3 Render();
     
 private:
     btVector3 axisInA;

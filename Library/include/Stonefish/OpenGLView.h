@@ -9,9 +9,19 @@
 #ifndef __Stonefish_OpenGLView__
 #define __Stonefish_OpenGLView__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 #include "OpenGLGBuffer.h"
 #include "FluidEntity.h"
+
+typedef struct
+{
+    GLfloat near;
+    GLfloat far;
+    GLfloat fov;
+    GLfloat ratio;
+    glm::vec3 corners[8];
+}
+ViewFrustum;
 
 typedef enum {CAMERA, TRACKBALL} ViewType;
 
@@ -25,6 +35,7 @@ public:
     virtual btTransform GetViewTransform() = 0;
     virtual btVector3 GetEyePosition() = 0;
     virtual btVector3 GetLookingDirection() = 0;
+    virtual btVector3 GetUpDirection() = 0;
     virtual ViewType getType() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
@@ -42,7 +53,8 @@ public:
     void RenderFluid(FluidEntity* fluid);
     
     GLint* GetViewport();
-    glm::mat4 GetProjection();
+    glm::mat4 GetProjectionMatrix();
+    glm::mat4 GetViewMatrix();
     GLfloat GetFOVY();
     GLfloat GetNearClip();
     GLfloat GetFarClip();

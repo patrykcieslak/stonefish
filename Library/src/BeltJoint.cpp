@@ -31,9 +31,9 @@ JointType BeltJoint::getType()
     return BELT;
 }
 
-void BeltJoint::Render()
+btVector3 BeltJoint::Render()
 {
-    
+    return btVector3();
 }
 
 btScalar BeltJoint::getRatio()

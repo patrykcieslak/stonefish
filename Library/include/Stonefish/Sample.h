@@ -14,17 +14,17 @@
 class Sample
 {
 public:
-    Sample(ushort nDimensions, btScalar* values);
+    Sample(unsigned short nDimensions, btScalar* values);
     Sample(const Sample& other);
     ~Sample();
     
     btScalar getTimestamp();
-    btScalar getValue(ushort dimension);
-    std::shared_ptr<std::vector<btScalar>> getData();
+    btScalar getValue(unsigned short dimension);
+    std::vector<btScalar> getData();
     
 private:
     btScalar timestamp;
-    ushort nDim;
+    unsigned short nDim;
     btScalar* data;
 };
 

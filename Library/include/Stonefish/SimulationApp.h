@@ -9,9 +9,16 @@
 #ifndef __Stonefish_SimulationApp__
 #define __Stonefish_SimulationApp__
 
+#include <SDL2/SDL.h>
 #include "common.h"
-#include "SimulationManager.h"
+#ifdef USE_ADVANCED_GUI
+#include <CEGUI/CEGUI.h>
+#include <CEGUI/RendererModules/OpenGL/GLRenderer.h>
+#endif
+
+#include "OpenGLPipeline.h"
 #include "IMGUI.h"
+#include "SimulationManager.h"
 
 class SimulationApp
 {
@@ -56,6 +63,7 @@ public:
     SimulationManager* getSimulationManager();
     btScalar getSimulationSpeed();
     IMGUI* getHUD();
+    OpenGLPipeline* getRenderer();
     SDL_Joystick* getJoystick();
     double getFPS();
     double getPhysicsTime();
@@ -70,7 +78,6 @@ public:
     
 private:
     void InitializeSDL();
-    void InitializeOpenGL();
     void InitializeSimulation();
     void InitializeGUI();
     
@@ -80,6 +87,7 @@ private:
     
     SimulationManager* simulation;
     btScalar simSpeedFactor;
+    OpenGLPipeline* pipeline;
     
     const char* appName;
     const char* shaderPath;

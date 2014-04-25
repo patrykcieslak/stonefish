@@ -6,9 +6,8 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__OpenGLSpotLight__
-#define __Stonefish__OpenGLSpotLight__
-
+#ifndef __Stonefish_OpenGLSpotLight__
+#define __Stonefish_OpenGLSpotLight__
 
 #include "OpenGLLight.h"
 
@@ -22,8 +21,10 @@ public:
     void UpdateLight();
     void RenderLightSurface();
     void RenderDummy();
+    void RenderShadowMap(OpenGLPipeline* pipe);
+    void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale);
     
-    btVector3 getDirection();
+    btVector3 getViewDirection();
     GLfloat getAngle();
     
 private:
@@ -31,7 +32,10 @@ private:
     btVector3 dir;
     GLfloat coneAngle;
     
-    static void UseSpotShader(OpenGLSpotLight* light);
+    GLuint shadowMap;
+    GLuint shadowFBO;
+    GLuint shadowSize;
+    glm::mat4 lightClipSpace;
 };
 
 #endif

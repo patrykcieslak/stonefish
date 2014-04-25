@@ -21,6 +21,7 @@ public:
     btTransform GetViewTransform();
     btVector3 GetEyePosition();
     btVector3 GetLookingDirection();
+    btVector3 GetUpDirection();
     ViewType getType();
     
     void SetupCamera();

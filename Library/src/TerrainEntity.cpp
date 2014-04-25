@@ -59,11 +59,10 @@ TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btSc
     shape->setUseDiamondSubdivision(true);
     
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0,0,0));
-    rigidBodyCI.m_friction = material->statFriction;
-    rigidBodyCI.m_rollingFriction = material->dynFriction;
-    rigidBodyCI.m_restitution = material->restitution;
+    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(1.); //not used
     rigidBody = new btRigidBody(rigidBodyCI);
-
+    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+    
     //rendering mesh
     GLfloat offsetX = ((width-1)/2.0)*size;
     GLfloat offsetZ = ((length-1)/2.0)*size;
@@ -140,6 +139,11 @@ void TerrainEntity::setTransform(const btTransform &trans)
 {
     btDefaultMotionState* motionState = new btDefaultMotionState(trans);
     rigidBody->setMotionState(motionState);
+}
+
+Material* TerrainEntity::getMaterial()
+{
+    return material;
 }
 
 void TerrainEntity::AddToDynamicsWorld(btDynamicsWorld *world)

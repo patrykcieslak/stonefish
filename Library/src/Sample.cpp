@@ -43,8 +43,7 @@ btScalar Sample::getValue(ushort dimension)
         return btScalar(0.);
 }
 
-std::shared_ptr<std::vector<btScalar>> Sample::getData()
+std::vector<btScalar> Sample::getData()
 {
-    std::shared_ptr<std::vector<btScalar>> vdata(new std::vector<btScalar>(data, data+nDim));
-    return vdata;
+    return std::vector<btScalar>(data, data+nDim);
 }

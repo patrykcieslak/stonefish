@@ -37,9 +37,9 @@ void main(void)
     vec3 eyeNormal = getEyeNormal(texCoord);
     vec3 reflection = texture2D(texReflection, texCoord).rgb;
     vec3 refraction = texture2D(texScene, texCoord).rgb;
-    float waterDepth = dot(eyeSurfacePosition-position, eyeSurfaceNormal)/100.0;
+    float waterDepth = dot(eyeSurfacePosition-position, eyeSurfaceNormal);
     float eyeWaterDepth = eyeSurfacePosition.z - position.z;
-    float depthN = eyeWaterDepth/100.0 * fadeSpeed;
+    float depthN = eyeWaterDepth * fadeSpeed;
             
     refraction = mix(mix(refraction, depthColor, clamp(depthN/visibility, 0.0, 1.0)),
                     bigDepthColor,

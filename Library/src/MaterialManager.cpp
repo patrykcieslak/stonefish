@@ -15,45 +15,66 @@ MaterialManager::MaterialManager()
 
 MaterialManager::~MaterialManager()
 {
-    clearMaterialsAndFluids();
+    ClearMaterialsAndFluids();
 }
 
-std::string MaterialManager::CreateMaterial(std::string name, btScalar density, btScalar restitution, btScalar staticF, btScalar dynamicF)
+std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar density, btScalar restitution)
 {
     Material mat;
+    mat.index = (int)materials.size();
+    mat.name = materialNameManager.AddName(uniqueName);
     mat.density = UnitSystem::SetDensity(density);
     mat.restitution = restitution;
-    mat.statFriction = staticF;
-    mat.dynFriction = dynamicF;
     
-    if(name == "")
-        return NULL;
-    
-check_name:
-    for(int i=0; i<materials.size(); i++)
+    for(int i = 0; i <= mat.index; i++)
     {
-        if(name.compare(materials[i].name) == 0)
-        {
-            name.append("_");
-            goto check_name;
-        }
+        mat.staticFriction.push_back(btScalar(1.));
+        mat.dynamicFriction.push_back(btScalar(1.));
     }
     
-    mat.name = name;
+    for(int i = 0; i < mat.index; i++)
+    {
+        materials[i].staticFriction.push_back(btScalar(1.));
+        materials[i].dynamicFriction.push_back(btScalar(1.));
+    }
+    
     materials.push_back(mat);
     
-    return name;
+    return mat.name;
+}
+
+bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, btScalar staticFricCoeff, btScalar dynamicFricCoeff)
+{
+    int index1 = getMaterialIndex(firstMaterialName);
+    int index2 = getMaterialIndex(secondMaterialName);
+    
+    if(index1 < 0 || index2 < 0)
+        return false;
+    
+    materials[index1].staticFriction[index2] = staticFricCoeff;
+    materials[index2].staticFriction[index1] = staticFricCoeff;
+    materials[index1].dynamicFriction[index2] = dynamicFricCoeff;
+    materials[index2].dynamicFriction[index1] = dynamicFricCoeff;
+    return true;
+}
+
+int MaterialManager::getMaterialIndex(std::string name)
+{
+    for(int i=0; i<materials.size(); i++)
+        if(materials[i].name.compare(name) == 0)
+            return i;
+    
+    return -1;
 }
 
 Material* MaterialManager::getMaterial(std::string name)
 {
-    for(int i=0; i<materials.size(); i++)
-    {
-        if(materials[i].name.compare(name) == 0)
-            return &materials[i];
-    }
+    int index = getMaterialIndex(name);
     
-    return NULL;
+    if(index >= 0)
+        return &materials[index];
+    else
+        return NULL;
 }
 
 Material* MaterialManager::getMaterial(int index)
@@ -74,30 +95,16 @@ std::vector<std::string> MaterialManager::GetMaterialsList()
     return list;
 }
 
-std::string MaterialManager::CreateFluid(std::string name, btScalar density, btScalar viscousity, btScalar IOR)
+std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscousity, btScalar IOR)
 {
     Fluid flu;
+    flu.name = fluidNameManager.AddName(uniqueName);
     flu.density = UnitSystem::SetDensity(density);
     flu.viscousity = viscousity;
     flu.IOR = IOR > 0 ? IOR : 1.0;
-    
-    if(name == "")
-        return NULL;
-    
-check_name:
-    for(int i=0; i<materials.size(); i++)
-    {
-        if(name.compare(materials[i].name) == 0)
-        {
-            name.append("_");
-            goto check_name;
-        }
-    }
-    
-    flu.name = name;
     fluids.push_back(flu);
     
-    return name;
+    return flu.name;
 }
 
 Fluid* MaterialManager::getFluid(std::string name)
@@ -119,8 +126,10 @@ Fluid* MaterialManager::getFluid(int index)
         return NULL;
 }
 
-void MaterialManager::clearMaterialsAndFluids()
+void MaterialManager::ClearMaterialsAndFluids()
 {
     materials.clear();
     fluids.clear();
+    materialNameManager.ClearNames();
+    fluidNameManager.ClearNames();
 }

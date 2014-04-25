@@ -9,7 +9,7 @@
 #ifndef __Stonefish_OpenGLPrinter__
 #define __Stonefish_OpenGLPrinter__
 
-#include "common.h"
+#include "OpenGLPipeline.h"
 #include <FTGL/ftgl.h>
 #include <stdint.h>
 

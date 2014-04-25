@@ -7,7 +7,6 @@
 //
 
 #include "OpenGLOmniLight.h"
-
 #include "OpenGLSolids.h"
 
 OpenGLOmniLight::OpenGLOmniLight(const btVector3& position, GLfloat* color4) : OpenGLLight(position, color4)
@@ -32,7 +31,20 @@ void OpenGLOmniLight::UpdateLight()
 
 void OpenGLOmniLight::Render()
 {
-    UseOmniShader(this);
+    if(isActive())
+    {
+        btVector3 lightPos = getViewPosition();
+        GLfloat lposition[3] = {(GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ()};
+        
+        glUseProgramObjectARB(omniShader);
+        glUniform1iARB(uniODiffuse, diffuseTextureUnit);
+        glUniform1iARB(uniOPosition, positionTextureUnit);
+        glUniform1iARB(uniONormal, normalTextureUnit);
+        glUniform3fvARB(uniOLightPos, 1, lposition);
+        glUniform4fvARB(uniOColor, 1, getColor());
+        DrawScreenAlignedQuad();
+        glUseProgramObjectARB(0);
+    }
 }
 
 void OpenGLOmniLight::RenderLightSurface()
@@ -132,15 +144,12 @@ void OpenGLOmniLight::RenderDummy()
     glPopMatrix();
 }
 
-void OpenGLOmniLight::UseOmniShader(OpenGLOmniLight* light)
+void OpenGLOmniLight::RenderShadowMap(OpenGLPipeline* pipe)
 {
-	btVector3 lightPos = light->getPosition();
-	GLfloat lposition[3] = {(GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ()};
     
-    glUseProgramObjectARB(omniShader);
-    glUniform1iARB(uniODiffuse, diffuseTextureUnit);
-    glUniform1iARB(uniOPosition, positionTextureUnit);
-    glUniform1iARB(uniONormal, normalTextureUnit);
-    glUniform3fvARB(uniOLightPos, 1, lposition);
-    glUniform4fvARB(uniOColor, 1, light->getColor());
+}
+
+void OpenGLOmniLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
+{
+    
 }

@@ -8,15 +8,19 @@
 
 #include "Sensor.h"
 
-Sensor::Sensor(std::string uniqueName, uint historyLength)
+NameManager Sensor::nameManager;
+
+Sensor::Sensor(std::string uniqueName, unsigned int historyLength)
 {
-    name = uniqueName;
+    name = nameManager.AddName(uniqueName);
     historyLen = historyLength > 0 ? historyLength : 1;
+    history = std::deque<std::unique_ptr<Sample>>(0);
 }
 
 Sensor::~Sensor()
 {
     ClearHistory();
+    nameManager.RemoveName(name);
 }
 
 void Sensor::AddSampleToHistory(const Sample& s)
@@ -24,7 +28,7 @@ void Sensor::AddSampleToHistory(const Sample& s)
     if(history.size() == historyLen)
         history.pop_front();
         
-    history.push_back(std::shared_ptr<Sample>(new Sample(s)));
+    history.push_back(std::unique_ptr<Sample>(new Sample(s)));
 }
 
 void Sensor::ClearHistory()
@@ -36,36 +40,15 @@ void Sensor::ClearHistory()
 const std::shared_ptr<Sample> Sensor::getLastSample()
 {
     if(history.size() > 0)
-        return history.back();
+        return std::shared_ptr<Sample>(history.back().get());
     else
-    {
-        ushort dim = getNumOfDimensions();
-        btScalar sd[dim];
-        std::memset(sd, 0, sizeof(btScalar)*dim);
-        return std::shared_ptr<Sample>(new Sample(dim, sd));
-    }
+        return nullptr;
 }
 
-//return a constant smart pointer to the history
-const std::shared_ptr<std::deque<std::shared_ptr<Sample>>> Sensor::getHistory()
+//return a const reference to history
+const std::deque<std::unique_ptr<Sample>>& Sensor::getHistory()
 {
-    return std::shared_ptr<std::deque<std::shared_ptr<Sample>>>(&history);
-}
-
-//return a deep copy of the (part of) history
-std::shared_ptr<std::vector<std::shared_ptr<Sample>>> Sensor::getHistory(unsigned long nLastSamples)
-{
-    unsigned long firstSampleId = 0;
-    if(nLastSamples > 0 && nLastSamples < history.size())
-        firstSampleId = history.size()-nLastSamples;
-    
-    std::shared_ptr<std::vector<std::shared_ptr<Sample>>> subHistory(new std::vector<std::shared_ptr<Sample>>());
-    for(unsigned long i = firstSampleId; i < history.size(); i++)
-    {
-        std::shared_ptr<Sample> s(new Sample(*history[i].get()));
-        subHistory->push_back(s);
-    }
-    return subHistory;
+    return history;
 }
 
 std::string Sensor::getName()

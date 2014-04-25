@@ -4,7 +4,7 @@
     :license: GNU AGPL3, see LICENSE for more details.
 */
 #define sample_count 8
-#define pattern_size 4.0
+#define pattern_size 5
 
 uniform sampler2D texNormal, texRandom;
 uniform vec2 viewport;
@@ -15,8 +15,8 @@ uniform mat3 inv_rot;
 vec3 getSample(int i)
 {
     vec2 mod_coord = mod(floor(gl_FragCoord.xy), pattern_size);
-    float y = ((mod_coord.x + mod_coord.y*pattern_size)+0.5)/(pattern_size*pattern_size);
     float x = (float(i)+0.5)/float(sample_count);
+    float y = ((mod_coord.x + mod_coord.y*pattern_size)+0.5)/(pattern_size * pattern_size);
     return (texture2D(texRandom, vec2(x, y)).xyz-0.5)*2.0;
 }
 
@@ -52,7 +52,7 @@ float testOcclusion(vec3 eye_normal, vec3 eye_pos, vec3 sample_offset)
 {
     sample_offset *= inv_rot;
     sample_offset *= sign(dot(eye_normal, sample_offset));
-    vec3 sample_pos = eye_pos + radius*sample_offset;
+    vec3 sample_pos = eye_pos + sample_offset;
     vec4 device = proj * vec4(sample_pos, 1.0);
     vec4 device_norm = device/device.w;
     vec2 screen_coord = (device_norm.xy+1.0)*0.5;
@@ -74,10 +74,10 @@ void main(void)
     
     for(int i=0; i<sample_count; i++)
     {
-        vec3 sample_offset = getSample(i);
+        vec3 sample_offset = getSample(i) * radius;
         result += testOcclusion(eye_normal, eye_pos, sample_offset);
     }
     result = result/float(sample_count);
-    gl_FragColor = vec4(pow(1.0-result, 5.0));
+    gl_FragColor = vec4(max(1.0 - 25.0*result, 0.01)); //vec4(pow(1.0-result, 5.0));
 }
 

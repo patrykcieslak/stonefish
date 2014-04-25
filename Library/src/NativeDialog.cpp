@@ -193,13 +193,17 @@ void NativeDialog::Show()
 
 DialogResult NativeDialog::GetInput(char** result)
 {
-    // Copy if a buffer was given
-    if(result != NULL)
-    {
-        *result = new char[strlen(ResultBuffer) + 1];
-        strcpy(*result, ResultBuffer);
-    }
+    // Return path
+    *result = new char[strlen(ResultBuffer) + 1];
+    strcpy(*result, ResultBuffer);
     
     // Return the user's selection
     return Selection;
+    
+    // Copy if a buffer was given
+    //  if(result != NULL)
+    //  {
+    //      *result = new char[strlen(ResultBuffer) + 1];
+    //      strcpy(*result, ResultBuffer);
+    //  }
 }

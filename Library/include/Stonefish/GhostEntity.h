@@ -9,6 +9,7 @@
 #ifndef __Stonefish_GhostEntity__
 #define __Stonefish_GhostEntity__
 
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include "Entity.h"
 
 typedef enum {FLUID} GhostType;

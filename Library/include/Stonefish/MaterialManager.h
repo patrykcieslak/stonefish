@@ -9,15 +9,17 @@
 #ifndef __Stonefish_MaterialManager__
 #define __Stonefish_MaterialManager__
 
-#include "common.h"
+#include "UnitSystem.h"
+#include "NameManager.h"
 
 typedef struct
 {
+    int index;
     std::string name;
     btScalar density;
     btScalar restitution;
-    btScalar statFriction;
-    btScalar dynFriction;
+    std::vector<btScalar> staticFriction;
+    std::vector<btScalar> dynamicFriction;
 }
 Material;
 
@@ -36,20 +38,26 @@ public:
     MaterialManager();
     ~MaterialManager();
     
-    std::string CreateMaterial(std::string name, btScalar density, btScalar restitution, btScalar staticF, btScalar dynamicF);
+    std::string CreateMaterial(std::string uniqueName, btScalar density, btScalar restitution);
+    bool SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, btScalar staticFricCoeff, btScalar dynamicFricCoeff);
+    std::vector<std::string> GetMaterialsList();
     Material* getMaterial(std::string name);
     Material* getMaterial(int index);
-    std::vector<std::string> GetMaterialsList();
     
-    std::string CreateFluid(std::string name, btScalar density, btScalar viscousity, btScalar IOR);
+    std::string CreateFluid(std::string uniqueName, btScalar density, btScalar viscousity, btScalar IOR);
     Fluid* getFluid(std::string name);
     Fluid* getFluid(int index);
     
-    void clearMaterialsAndFluids();
+    void ClearMaterialsAndFluids();
     
 private:
+    int getMaterialIndex(std::string name);
+    
     std::vector<Material> materials;
     std::vector<Fluid> fluids;
+    
+    NameManager materialNameManager;
+    NameManager fluidNameManager;
 };
 
 #endif 

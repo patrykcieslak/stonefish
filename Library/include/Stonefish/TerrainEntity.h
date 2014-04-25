@@ -9,6 +9,7 @@
 #ifndef __Stonefish_TerrainEntity__
 #define __Stonefish_TerrainEntity__
 
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include "Entity.h"
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
@@ -22,6 +23,7 @@ public:
     EntityType getType();
     void Render();
     btTransform getTransform();
+    Material* getMaterial();
     void setTransform(const btTransform& trans);
     void AddToDynamicsWorld(btDynamicsWorld* world);
     

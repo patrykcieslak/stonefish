@@ -20,6 +20,7 @@ public:
     btTransform GetViewTransform();
     btVector3 GetEyePosition();
     btVector3 GetLookingDirection();
+    btVector3 GetUpDirection();
     void Rotate(const btQuaternion& rot);
     ViewType getType();
     

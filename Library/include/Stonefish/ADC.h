@@ -14,12 +14,12 @@
 class ADC
 {
 public:
-    ADC(ushort resolution, btScalar plusRefVoltage, btScalar minusRefVoltage = btScalar(0.));
+    ADC(unsigned short resolution, btScalar plusRefVoltage, btScalar minusRefVoltage = btScalar(0.));
     
     btScalar MeasureVoltage(btScalar Vin);
     
 private:
-    ushort bits;
+    unsigned short bits;
     btScalar pRefV;
     btScalar mRefV;
 };

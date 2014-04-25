@@ -18,17 +18,17 @@ public:
     ~RevoluteJoint();
     
    	JointType getType();
-    void Render();
+    btVector3 Render();
     
     btScalar getAngle();
     btScalar getAngularVelocity();
     void applyTorque(btScalar T);
     void setTargetVelocity(btScalar v, btScalar maxT);
     btScalar getTargetVelocity();
-    btVector3 getAxis();
     
 private:
     btVector3 axisInA;
+    btVector3 pivotInA;
 };
 
 #endif

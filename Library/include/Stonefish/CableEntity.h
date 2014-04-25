@@ -9,11 +9,10 @@
 #ifndef __Stonefish_CableEntity__
 #define __Stonefish_CableEntity__
 
-#include <vector>
+#include <BulletSoftBody/btSoftBodyHelpers.h>
 #include "Entity.h"
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
-#include <BulletSoftBody/btSoftBodyHelpers.h>
 
 class CableEntity : public Entity
 {
@@ -33,6 +32,7 @@ public:
                                 const btTransform& worldTransform, const btVector3& velocity, const btVector3& angularVelocity);
     
     btTransform getTransform();
+    Material* getMaterial();
     btRigidBody* getFirstEnd();
     btRigidBody* getSecondEnd();
     btScalar getPartVolume();

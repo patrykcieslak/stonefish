@@ -8,18 +8,19 @@
 
 #include "OpenGLLight.h"
 #include "OpenGLUtil.h"
+#include "OpenGLSolids.h"
 
 //static variables
 OpenGLView* OpenGLLight::activeView = NULL;
 GLhandleARB OpenGLLight::ambientShader = NULL;
 GLhandleARB OpenGLLight::omniShader = NULL;
-GLhandleARB OpenGLLight::directionalShader = NULL;
 GLhandleARB OpenGLLight::spotShader = NULL;
 GLint OpenGLLight::diffuseTextureUnit = 0;
 GLint OpenGLLight::normalTextureUnit = 0;
 GLint OpenGLLight::positionTextureUnit = 0;
 GLint OpenGLLight::skyDiffuseTextureUnit = 0;
 GLint OpenGLLight::skyReflectionTextureUnit = 0;
+GLint OpenGLLight::shadowTextureUnit = 0;
 GLint OpenGLLight::ssaoTextureUnit = 0;
 GLint OpenGLLight::uniADiffuse = -1;
 GLint OpenGLLight::uniAPosition = -1;
@@ -35,12 +36,6 @@ GLint OpenGLLight::uniONormal = -1;
 GLint OpenGLLight::uniOPosition = -1;
 GLint OpenGLLight::uniOLightPos = -1;
 GLint OpenGLLight::uniOColor = -1;
-GLint OpenGLLight::uniDDiffuse = -1;
-GLint OpenGLLight::uniDNormal = -1;
-GLint OpenGLLight::uniDPosition = -1;
-GLint OpenGLLight::uniDLightPos = -1;
-GLint OpenGLLight::uniDLightDir = -1;
-GLint OpenGLLight::uniDColor = -1;
 GLint OpenGLLight::uniSDiffuse = -1;
 GLint OpenGLLight::uniSNormal = -1;
 GLint OpenGLLight::uniSPosition = -1;
@@ -48,6 +43,8 @@ GLint OpenGLLight::uniSLightPos = -1;
 GLint OpenGLLight::uniSLightDir = -1;
 GLint OpenGLLight::uniSLightAngle = -1;
 GLint OpenGLLight::uniSColor = -1;
+GLint OpenGLLight::uniSLightClipSpace = -1;
+GLint OpenGLLight::uniSShadow = -1;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 ////////////////////
 
@@ -99,11 +96,16 @@ GLfloat* OpenGLLight::getColor()
     return color;
 }
 
-btVector3 OpenGLLight::getPosition()
+btVector3 OpenGLLight::getViewPosition()
 {
     //transform to eye space
     btVector3 esPos = activeView->GetViewTransform() * pos;
     return esPos;
+}
+
+btVector3 OpenGLLight::getPosition()
+{
+    return pos;
 }
 
 Entity* OpenGLLight::getHoldingEntity()
@@ -146,21 +148,7 @@ void OpenGLLight::Init()
     uniOLightPos = glGetUniformLocationARB(omniShader, "lightPosition");
     uniOColor = glGetUniformLocationARB(omniShader, "lightColor");
     glUseProgramObjectARB(0);
-    
-    //DIRECTIONAL
-    fs = LoadShader(GL_FRAGMENT_SHADER, "deferredDirectional.frag", &compiled);
-    directionalShader = CreateProgramObject(vs, fs);
-    LinkProgram(directionalShader, &compiled);
-    
-    glUseProgramObjectARB(directionalShader);
-    uniDDiffuse = glGetUniformLocationARB(directionalShader, "texDiffuse");
-    uniDPosition = glGetUniformLocationARB(directionalShader, "texPosition");
-    uniDNormal = glGetUniformLocationARB(directionalShader, "texNormal");
-    uniDLightPos = glGetUniformLocationARB(directionalShader, "lightPosition");
-    uniDLightDir = glGetUniformLocationARB(directionalShader, "lightDirection");
-    uniDColor = glGetUniformLocationARB(directionalShader, "lightColor");
-    glUseProgramObjectARB(0);
-
+  
     //SPOT
     fs = LoadShader(GL_FRAGMENT_SHADER, "deferredSpot.frag", &compiled);
     spotShader = CreateProgramObject(vs, fs);
@@ -174,6 +162,8 @@ void OpenGLLight::Init()
     uniSLightDir = glGetUniformLocationARB(spotShader, "lightDirection");
     uniSLightAngle = glGetUniformLocationARB(spotShader, "lightAngle");
     uniSColor = glGetUniformLocationARB(spotShader, "lightColor");
+    uniSShadow = glGetUniformLocationARB(spotShader, "texShadow");
+    uniSLightClipSpace = glGetUniformLocationARB(spotShader, "lightClipSpace");
     glUseProgramObjectARB(0);
 }
 
@@ -184,15 +174,12 @@ void OpenGLLight::Destroy()
     
     if(omniShader != NULL)
         glDeleteObjectARB(omniShader);
-    
-    if(directionalShader != NULL)
-        glDeleteObjectARB(directionalShader);
-    
+  
     if(spotShader != NULL)
         glDeleteObjectARB(spotShader);
 }
 
-void OpenGLLight::SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao)
+void OpenGLLight::SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao, GLint shadow)
 {
     diffuseTextureUnit = diffuse;
     normalTextureUnit = normal;
@@ -200,6 +187,7 @@ void OpenGLLight::SetTextureUnits(GLint diffuse, GLint normal, GLint position, G
     skyDiffuseTextureUnit = skyDiffuse;
     skyReflectionTextureUnit = skyReflection;
     ssaoTextureUnit = ssao;
+    shadowTextureUnit = shadow;
 }
 
 void OpenGLLight::SetCamera(OpenGLView* view)
@@ -207,9 +195,9 @@ void OpenGLLight::SetCamera(OpenGLView* view)
     activeView = view;
 }
 
-void OpenGLLight::UseAmbientShader(const btTransform& viewTransform, bool zAxisUp)
+void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp)
 {
-    glm::mat4 proj = activeView->GetProjection();
+    glm::mat4 proj = activeView->GetProjectionMatrix();
     proj = glm::inverse(proj);
     
     GLint* viewport = activeView->GetViewport();
@@ -231,6 +219,8 @@ void OpenGLLight::UseAmbientShader(const btTransform& viewTransform, bool zAxisU
     glUniformMatrix3fvARB(uniAIVR, 1, GL_FALSE, IVRMatrix);
     glUniformMatrix4fvARB(uniAIP, 1, GL_FALSE, glm::value_ptr(proj));
     glUniform2f(uniAViewport, viewport[2], viewport[3]);
+    DrawScreenAlignedQuad();
+    glUseProgramObjectARB(0);
 }
 
 GLfloat* OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intensity)

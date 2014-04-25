@@ -18,9 +18,7 @@ public:
     ~SphericalJoint();
     
     JointType getType();
-    void Render();
-    
-    btVector3 getPivot();
+    btVector3 Render();
     
 private:
 };

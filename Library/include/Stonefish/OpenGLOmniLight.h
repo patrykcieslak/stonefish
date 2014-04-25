@@ -6,9 +6,8 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__OpenGLOmniLight__
-#define __Stonefish__OpenGLOmniLight__
-
+#ifndef __Stonefish_OpenGLOmniLight__
+#define __Stonefish_OpenGLOmniLight__
 
 #include "OpenGLLight.h"
 
@@ -22,9 +21,8 @@ public:
     void UpdateLight();
     void RenderLightSurface();
     void RenderDummy();
-    
-private:
-    static void UseOmniShader(OpenGLOmniLight* light);
+    void RenderShadowMap(OpenGLPipeline* pipe);
+    void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale);
 };
 
 #endif

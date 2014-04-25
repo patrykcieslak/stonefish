@@ -1,26 +1,27 @@
 //
-//  AccelerationSensor.h
+//  Accelerometer.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_AccelerationSensor__
-#define __Stonefish_AccelerationSensor__
+#ifndef __Stonefish_Accelerometer__
+#define __Stonefish_Accelerometer__
 
 #include "Sensor.h"
 #include "ADC.h"
 #include "SolidEntity.h"
 
-class AccelerationSensor : public Sensor
+class Accelerometer : public Sensor
 {
 public:
-    AccelerationSensor(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG = true, uint historyLength = 1);
-
+    Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG = true, unsigned int historyLength = 1);
+    
+    void Reset();
     void Update(btScalar dt);
     
-    ushort getNumOfDimensions();
+    unsigned short getNumOfDimensions();
     
 private:
     //parameters

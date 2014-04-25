@@ -12,8 +12,8 @@ uniform float rayleigh_collection_power, mie_collection_power, mie_distribution;
     
 float surface_height = 0.99;
 float range = 0.01;
-float intensity = 5.0;
-const int step_count = 16;
+float intensity = 2.0;
+const int step_count = 32;
     
 vec3 get_world_normal()
 {
@@ -71,6 +71,12 @@ vec3 absorb(float dist, vec3 color, float factor)
     return color-color*pow(Kr, vec3(factor/dist));
 }
 
+vec3 saturateColor(vec3 color, float amount)
+{
+    vec3 gray = vec3(dot(vec3(0.2126,0.7152,0.0722), color));
+    return vec3(mix(color, gray, -amount));
+}
+
 void main(void)
 {
     vec3 eyedir = get_world_normal();
@@ -103,6 +109,7 @@ void main(void)
     mie_collected = (mie_collected*eye_extinction*pow(eye_depth, mie_collection_power))/float(step_count);
 
     vec3 color = vec3(spot*mie_collected + mie_factor*mie_collected + rayleigh_factor*rayleigh_collected);
-
+    color = saturateColor(color, 0.5); //negative value can simulate foggy day :)
+    
     gl_FragColor = vec4(color, 1.0);
 }

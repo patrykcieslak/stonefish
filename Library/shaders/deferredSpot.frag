@@ -1,12 +1,27 @@
+#version 120
 uniform sampler2D texDiffuse;
 uniform sampler2D texPosition;
 uniform sampler2D texNormal;
+uniform sampler2D texShadow;
 uniform vec3 lightPosition;
 uniform vec3 lightDirection;
 uniform float lightAngle;
 uniform vec4 lightColor;
+uniform mat4 lightClipSpace;
 
 const vec3 eyeDir = vec3(0.0,0.0,-1.0);
+
+float shadowCoeff(vec4 eyePosition, float bias)
+{
+    vec4 shadowCoord = lightClipSpace * eyePosition;
+    float shadowDepth = texture2D(texShadow, shadowCoord.xy/shadowCoord.w).x;
+	
+    float visibility = 1.0;
+    if(shadowDepth < (shadowCoord.z-bias)/shadowCoord.w)
+        visibility = 0.0;
+    
+	return visibility;
+}
 
 void main(void)
 {
@@ -33,9 +48,14 @@ void main(void)
         
         if(NdotL > 0.0)
         {
-            spotEffect = pow(spotEffect, 5.0);
+            spotEffect = pow(spotEffect, 100.0);
             float attenuation = spotEffect/(distance + distance*distance);
             float NdotV = dot(normal, eyeDir);
+            
+            float bias = 0.0025 * tan(acos(NdotL));
+            bias = clamp(bias, 0, 0.01);
+            
+            float shadow = shadowCoeff(vec4(position, 1.0), bias);
             
             if(mat_type == 0) //Oren-Nayar
             {
@@ -52,14 +72,14 @@ void main(void)
                 float C = sin(alpha) * tan(beta);
                 float L1 = max(0.0, NdotL) * (A + B * max(0.0, gamma) * C);
                 
-                finalColor = vec4(lightColor.rgb * color * L1 * attenuation, 1.0);
+                finalColor = vec4(lightColor.rgb * color * L1 * attenuation * shadow, 1.0);
             }
             else if(mat_type == 1) //Phong
             {
                 vec3 R = reflect(lightDir, normal);
                 float specular = pow(max(dot(R, eyeDir), 0.0), factor1*10.0+1.0);
                 
-                finalColor = vec4(lightColor.rgb * color * NdotL * attenuation + lightColor.rgb * specular * attenuation, 1.0);
+                finalColor = vec4(lightColor.rgb * color * NdotL * attenuation * shadow + lightColor.rgb * specular * attenuation * shadow, 1.0);
             }
             else if(mat_type == 2) //Metallic
             {

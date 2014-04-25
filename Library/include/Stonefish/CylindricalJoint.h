@@ -14,16 +14,15 @@
 class CylindricalJoint : public Joint
 {
 public:
-    CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities = true);
+    CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
     ~CylindricalJoint();
     
     JointType getType();
-    void Render();
-    
-    btVector3 getAxis();
+    btVector3 Render();
     
 private:
     btVector3 axisInA;
+    btVector3 pivotInA;
 };
 
 #endif

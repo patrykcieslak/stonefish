@@ -9,6 +9,7 @@
 #include "OpenGLSky.h"
 #include "OpenGLUtil.h"
 #include "OpenGLSolids.h"
+#include "OpenGLSun.h"
 
 //Sky Cubemap
 GLuint OpenGLSky::skyCubeFBO = 0;
@@ -334,6 +335,8 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
 
 void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
 {
+    OpenGLSun::SetPosition(elevation, orientation);
+    
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_SCISSOR_TEST);
 	glDisable(GL_POLYGON_SMOOTH);
@@ -371,16 +374,22 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     lightDir = glm::mul(lightDir, lightMat);
     
     glUseProgramObjectARB(skyCubeShader);
-    glUniform3f(uniKr, 0.18867780436772762f, 0.4978442963618773f, 0.6616065586417131f);
-    glUniform1f(uniRayleighBrightness, 33.f/10.f);
+    //glUniform3f(uniKr, 0.18867780436772762f, 0.4978442963618773f, 0.6616065586417131f);
+    glUniform3f(uniKr, 0.18, 0.38, 0.65f);
+    //glUniform1f(uniRayleighBrightness, 33.f/10.f);
+    glUniform1f(uniRayleighBrightness, 50.f/10.f);
     glUniform1f(uniRayleighStrength, 139.f/1000.f);
     glUniform1f(uniRayleighCollection, 81.f/100.f);
+    //glUniform1f(uniMieBrightness, 100.f/1000.f);
     glUniform1f(uniMieBrightness, 100.f/1000.f);
     glUniform1f(uniMieStrength, 264.f/10000.f);
     glUniform1f(uniMieCollection, 39.f/100.f);
     glUniform1f(uniMieDistribution, 63.f/100.f);
-    glUniform1f(uniSpotBrightness, 1000.f/100.f);
-    glUniform1f(uniScatterStrength, 28.f/1000.f);
+    //glUniform1f(uniSpotBrightness, 1000.f/100.f);
+    glUniform1f(uniSpotBrightness, 500.f/100.f);
+    //glUniform1f(uniScatterStrength, 28.f/1000.f);
+    glUniform1f(uniScatterStrength, 50.f/1000.f);
+    
     glUniform3fv(uniLightDir, 1, glm::value_ptr(glm::vec3(lightDir)));
     glUniform2f(uniSCViewport, skyCubeSize, skyCubeSize);
     glUniformMatrix4fv(uniSCIP, 1, GL_FALSE, glm::value_ptr(projection));

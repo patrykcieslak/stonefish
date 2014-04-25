@@ -1,14 +1,14 @@
 //
-//  AccelerationSensor.cpp
+//  Accelerometer.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "AccelerationSensor.h"
+#include "Accelerometer.h"
 
-AccelerationSensor::AccelerationSensor(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, uint historyLength):Sensor(uniqueName, historyLength)
+Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, uint historyLength):Sensor(uniqueName, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -21,13 +21,18 @@ AccelerationSensor::AccelerationSensor(std::string uniqueName, SolidEntity* atta
     this->adc = adc;
     G = measuresInG;
     
+    Reset();
+}
+
+void Accelerometer::Reset()
+{
     lastV = btVector3(0.,0.,0.);
 }
 
-void AccelerationSensor::Update(btScalar dt)
+void Accelerometer::Update(btScalar dt)
 {
     //calculate transformation from global to acc frame
-    btMatrix3x3 toAccFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getWorldTransform().getBasis().inverse();
+    btMatrix3x3 toAccFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();
     
     //inertial component
     btVector3 actualV = solid->getRigidBody()->getVelocityInLocalPoint(relToSolid.getOrigin()); //get velocity in sensor location
@@ -59,7 +64,7 @@ void AccelerationSensor::Update(btScalar dt)
     AddSampleToHistory(s);
 }
 
-ushort  AccelerationSensor::getNumOfDimensions()
+ushort Accelerometer::getNumOfDimensions()
 {
     return 1;
 }

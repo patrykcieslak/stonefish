@@ -18,7 +18,7 @@ public:
     ~FixedJoint();
     
     JointType getType();
-    void Render();
+    btVector3 Render();
     
 private:
 };

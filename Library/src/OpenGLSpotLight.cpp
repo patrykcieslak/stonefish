@@ -7,20 +7,50 @@
 //
 
 #include "OpenGLSpotLight.h"
+#include "OpenGLSolids.h"
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, GLfloat* color4) : OpenGLLight(position, color4)
 {
-    reldir = UnitSystem::SetPosition(target-position);
+    reldir = UnitSystem::SetPosition(target - position);
     reldir.normalize();
     dir = reldir;
-    coneAngle = UnitSystem::SetAngle(cone);
+    coneAngle = cone/180.f*M_PI;//UnitSystem::SetAngle(cone);
+    lightClipSpace = glm::mat4();
+    
+    //Create shadowmap texture
+    shadowSize = 1024;
+    glGenTextures(1, &shadowMap);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //GL_NEAREST - may be needed for more than 8 bits
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    //Create shadowmap framebuffer
+    glGenFramebuffers(1, &shadowFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    glReadBuffer(GL_NONE);
+    glDrawBuffer(GL_NONE);
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+        printf("FBO initialization failed.\n");
+    
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 OpenGLSpotLight::~OpenGLSpotLight()
 {
+    if(shadowMap != 0)
+        glDeleteTextures(1, &shadowMap);
+    if(shadowFBO != 0)
+        glDeleteFramebuffers(1, &shadowFBO);
 }
 
-btVector3 OpenGLSpotLight::getDirection()
+btVector3 OpenGLSpotLight::getViewDirection()
 {
     btVector3 direction = (activeView->GetViewTransform()).getBasis() * dir;
     return direction;
@@ -46,7 +76,33 @@ void OpenGLSpotLight::UpdateLight()
 
 void OpenGLSpotLight::Render()
 {
-    UseSpotShader(this);
+    if(isActive())
+    {
+        btVector3 lightPos = getViewPosition();
+        GLfloat lposition[3] = {(GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ()};
+        btVector3 lightDir = getViewDirection();
+        GLfloat ldirection[3] = {(GLfloat)lightDir.getX(),(GLfloat)lightDir.getY(),(GLfloat)lightDir.getZ()};
+        glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix());
+
+        glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, shadowMap);
+      
+        glUseProgramObjectARB(spotShader);
+        glUniform1iARB(uniSDiffuse, diffuseTextureUnit);
+        glUniform1iARB(uniSPosition, positionTextureUnit);
+        glUniform1iARB(uniSNormal, normalTextureUnit);
+        glUniform1iARB(uniSShadow, shadowTextureUnit);
+        glUniform3fvARB(uniSLightPos, 1, lposition);
+        glUniform3fvARB(uniSLightDir, 1, ldirection);
+        glUniform1f(uniSLightAngle, cosf(getAngle()));
+        glUniform4fvARB(uniSColor, 1, getColor());
+        glUniformMatrix4fvARB(uniSLightClipSpace, 1, GL_FALSE, glm::value_ptr(eyeToLight));
+        DrawScreenAlignedQuad();
+        glUseProgramObjectARB(0);
+        
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 void OpenGLSpotLight::RenderLightSurface()
@@ -175,19 +231,77 @@ void OpenGLSpotLight::RenderDummy()
     glPopMatrix();
 }
 
-void OpenGLSpotLight::UseSpotShader(OpenGLSpotLight* light)
+void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe)
 {
-	btVector3 lightPos = light->getPosition();
-	GLfloat lposition[3] = {(GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ()};
-	btVector3 lightDir = light->getDirection();
-	GLfloat ldirection[3] = {(GLfloat)lightDir.getX(),(GLfloat)lightDir.getY(),(GLfloat)lightDir.getZ()};
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle / M_PI * 180.f), 1.f, 1.f, 100.f);
+    glLoadMatrixf(glm::value_ptr(proj));
     
-    glUseProgramObjectARB(spotShader);
-    glUniform1iARB(uniSDiffuse, diffuseTextureUnit);
-    glUniform1iARB(uniSPosition, positionTextureUnit);
-    glUniform1iARB(uniSNormal, normalTextureUnit);
-    glUniform3fvARB(uniSLightPos, 1, lposition);
-    glUniform3fvARB(uniSLightDir, 1, ldirection);
-    glUniform1f(uniSLightAngle, cosf(light->getAngle()));
-    glUniform4fvARB(uniSColor, 1, light->getColor());
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    btVector3 lightPos = getPosition();
+    btVector3 lightDir = dir;
+    glm::mat4 view = glm::lookAt(glm::vec3(lightPos.x(), lightPos.y(), lightPos.z()),
+                                 glm::vec3(lightPos.x() + lightDir.x(), lightPos.y() + lightDir.y(), lightPos.z() + lightDir.z()),
+                                 glm::vec3(0,0,1.f));
+    
+    glLoadMatrixf(glm::value_ptr(view));
+    
+    glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
+                   0.f, 0.5f, 0.f, 0.f,
+                   0.f, 0.f, 0.5f, 0.f,
+                   0.5f, 0.5f, 0.5f, 1.f);
+    lightClipSpace = bias * (proj * view);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+    glPushAttrib(GL_VIEWPORT_BIT);
+    glViewport(0, 0, shadowSize, shadowSize);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    pipe->DrawStandardObjects();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    glPopAttrib();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
+
+void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
+{
+    //save current state
+    glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+    glPushAttrib(GL_VIEWPORT_BIT);
+    
+    //Set projection and modelview
+    SetupOrtho();
+    
+	//Texture setup
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    
+	//Render the shadowmap
+    glViewport(x, y, shadowSize * scale, shadowSize * scale);
+    glColor4f(1.f, 1.f, 1.f, 1.f);
+    DrawScreenAlignedQuad();
+    
+	//Reset
+	glBindTexture(GL_TEXTURE_2D, 0);
+    glPopAttrib();
+    glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+}
+
+

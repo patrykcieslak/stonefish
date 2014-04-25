@@ -20,7 +20,8 @@ SimulationApp::SimulationApp(const char* name, int width, int height, Simulation
     winHeight = height;
     finished = false;
     running = false;
-    this->simulation = sim;
+    simulation = sim;
+    pipeline = new OpenGLPipeline(simulation);
     simSpeedFactor = 1;
     
 	fps = 0.0;
@@ -63,6 +64,11 @@ SimulationManager* SimulationApp::getSimulationManager()
 IMGUI* SimulationApp::getHUD()
 {
     return hud;
+}
+
+OpenGLPipeline* SimulationApp::getRenderer()
+{
+    return pipeline;
 }
 
 SDL_Joystick* SimulationApp::getJoystick()
@@ -111,7 +117,7 @@ void SimulationApp::Init(const char* dataPath, const char* shaderPath)
     this->shaderPath = shaderPath;
     
     InitializeSDL();
-    InitializeOpenGL();
+    pipeline->Initialize(); //OpenGL initialization
     InitializeGUI();
     InitializeSimulation();
     printf("Running...\n");
@@ -157,23 +163,6 @@ void SimulationApp::InitializeSDL()
         printf("Joystick %s connected ", SDL_JoystickName(0));
         printf("(%d axes, %d hats, %d buttons).\n", SDL_JoystickNumAxes(joystick), SDL_JoystickNumHats(joystick), SDL_JoystickNumButtons(joystick));
     }
-}
-
-void SimulationApp::InitializeOpenGL()
-{
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glShadeModel(GL_SMOOTH);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-    glDisable(GL_LIGHTING);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glPointSize(5.f);
-    
-    simulation->InitializeRendering();
-    
-    printf("OpenGL initialized.\n");
 }
 
 #ifdef USE_ADVANCED_GUI
@@ -292,7 +281,7 @@ void SimulationApp::KeyDown(SDL_Event *event)
             break;
             
         case SDLK_SPACE:
-            getSimulationManager()->RestartScenario();
+            //getSimulationManager()->RestartScenario();
             StartSimulation();
             break;
             
@@ -339,6 +328,7 @@ void SimulationApp::ProcessInputs()
 void SimulationApp::EventLoop()
 {
     SDL_Event event;
+    bool mouseWasDown = false;
     startTime = GetTimeInMicroseconds();
 #ifdef USE_ADVANCED_GUI
     CEGUI::GUIContext& guiContext = CEGUI::System::getSingleton().getDefaultGUIContext();
@@ -452,11 +442,11 @@ void SimulationApp::EventLoop()
                     if(guiContext.getWindowContainingMouse() == rootWindow)
                     {
                         hud->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
-                        MouseDown(&event);
+                        mouseWasDown = true;
                     }
 #else
                     hud->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
-                    MouseDown(&event);
+                    mouseWasDown = true;
 #endif
                     break;
                     
@@ -523,6 +513,11 @@ void SimulationApp::EventLoop()
         
         ProcessInputs();
         AppLoop();
+        
+        //workaround for checking if IMGUI is being manipulated
+        if(mouseWasDown && !hud->isAnyActive())
+            MouseDown(&event);
+        mouseWasDown = false;
     }
 }
 
@@ -542,9 +537,9 @@ void SimulationApp::AppLoop()
     }
     
     //Rendering
-    glViewport(0, 0, winWidth, winHeight);
-    glClear(GL_COLOR_BUFFER_BIT);
-    simulation->Render();
+    //glViewport(0, 0, winWidth, winHeight);
+    //glClear(GL_COLOR_BUFFER_BIT);
+    pipeline->Render();
     
     //GUI
     hud->Begin();
@@ -572,7 +567,7 @@ void SimulationApp::DoHUD()
     label1.item = 0;
     label1.index = 0;
     sprintf(buffer, "FPS: %1.2lf", fps);
-    IMGUI::DoLabel(getHUD(), label1, 10, getWindowHeight()-15, white, buffer);
+    getHUD()->DoLabel(label1, 10, getWindowHeight()-15, white, buffer);
     
     ui_id label2;
     label2.owner = 0;
@@ -580,20 +575,20 @@ void SimulationApp::DoHUD()
     label2.index = 0;
     
     sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", getPhysicsTime()/(10.0/fps), getPhysicsTime());
-    IMGUI::DoLabel(getHUD(), label2, 90, getWindowHeight()-15, white, buffer);
+    getHUD()->DoLabel(label2, 90, getWindowHeight()-15, white, buffer);
     
     ui_id label3;
     label3.owner = 0;
     label3.item = 2;
     label3.index = 0;
     sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
-    IMGUI::DoLabel(getHUD(), label3, 140, 14, white, buffer);
+    getHUD()->DoLabel(label3, 140, 14, white, buffer);
     
     ui_id slider1;
     slider1.owner = 0;
     slider1.item = 3;
     slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::DoSlider(getHUD(), slider1, 12, 40, 100.0, 5.0, 20.0, 60.0, 1000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    getSimulationManager()->setStepsPerSecond(getHUD()->DoSlider(slider1, 12, 40, 100.0, 5.0, 20.0, 60.0, 1000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
 }
 
 void SimulationApp::StartSimulation()

@@ -9,7 +9,8 @@
 #ifndef __Stonefish_Sensor__
 #define __Stonefish_Sensor__
 
-#include "common.h"
+#include "UnitSystem.h"
+#include "NameManager.h"
 #include "Sample.h"
 
 typedef enum {X_AXIS, Y_AXIS, Z_AXIS} AxisType;
@@ -18,16 +19,16 @@ typedef enum {X_AXIS, Y_AXIS, Z_AXIS} AxisType;
 class Sensor
 {
 public:
-    Sensor(std::string uniqueName, uint historyLength);
+    Sensor(std::string uniqueName, unsigned int historyLength);
     virtual ~Sensor();
     
+    virtual void Reset() = 0;
     virtual void Update(btScalar dt) = 0;
-    virtual ushort getNumOfDimensions() = 0;
+    virtual unsigned short getNumOfDimensions() = 0;
     
     void ClearHistory();
     const std::shared_ptr<Sample> getLastSample();
-    const std::shared_ptr<std::deque<std::shared_ptr<Sample>>> getHistory();
-    std::shared_ptr<std::vector<std::shared_ptr<Sample>>> getHistory(unsigned long nLastSamples = 0);
+    const std::deque<std::unique_ptr<Sample>>& getHistory();
     std::string getName();
     
 protected:
@@ -35,8 +36,10 @@ protected:
     
 private:
     std::string name;
-    uint historyLen;
-    std::deque<std::shared_ptr<Sample>> history;
+    unsigned int historyLen;
+    std::deque<std::unique_ptr<Sample>> history;
+    
+    static NameManager nameManager;
 };
 
 #endif

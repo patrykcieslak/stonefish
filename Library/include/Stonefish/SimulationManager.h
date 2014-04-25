@@ -9,7 +9,8 @@
 #ifndef __Stonefish_SimulationManager__
 #define __Stonefish_SimulationManager__
 
-#include "common.h"
+#include "UnitSystem.h"
+#include "NameManager.h"
 #include "MaterialManager.h"
 #include "Entity.h"
 #include "SolidEntity.h"
@@ -17,10 +18,8 @@
 #include "Joint.h"
 #include "Sensor.h"
 #include "Actuator.h"
-#include "Machine.h"
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
-#include "UnitSystem.h"
 
 #define USE_CONTINUOUS_COLLISION false
 #define ALLOWED_CCD_PENETRATION 0.001
@@ -30,8 +29,16 @@
 #define GLOBAL_DAMPING 0.1
 #define GLOBAL_FRICTION 0.0
 
+typedef struct
+{
+    uint type;
+    btVector3 location;
+} Sticker;
+
 class SimulationManager //abstract class!
 {
+    friend class OpenGLPipeline;
+    
 public:
     SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond);
 	virtual ~SimulationManager(void);
@@ -53,26 +60,19 @@ public:
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
-    void AddMachine(Machine* mach);
     
     Entity* getEntity(int index);
     Entity* getEntity(std::string name);
     Joint* getJoint(int index);
     Actuator* getActuator(int index);
     Sensor* getSensor(int index);
-    Machine* getMachine(int index);
     
     void setGravity(const btVector3& g);
     btDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
     
-    //graphics
-    void Render();
-    void InitializeRendering();
-    
     void AddView(OpenGLView* view);
-    void RenderView(OpenGLView *view, const btTransform& viewTransform, bool ssao);
     OpenGLView* getView(int index);
     bool drawCameraDummies;
     
@@ -82,6 +82,7 @@ public:
     
 protected:
     static void SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep);
+    static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
     
     btDynamicsWorld* dynamicsWorld;
     btBroadphaseInterface* dwBroadphase;
@@ -103,7 +104,6 @@ private:
     std::vector<Joint*> joints;
     std::vector<Sensor*> sensors;
     std::vector<Actuator*> actuators;
-    std::vector<Machine*> machines;
     
     bool zUp;
 

@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 
-static GLfloat ui_colors[36][4] =
+static GLfloat ui_colors[41][4] =
 {
     //Panel
     {0.8f,0.8f,0.8f,0.6f},
@@ -53,7 +53,13 @@ static GLfloat ui_colors[36][4] =
     {0.9f,0.9f,0.9f,1.0f},
     {0.2f,0.22f,0.25f,0.7f},
     {0.2f,0.22f,0.25f,1.0f},
-    {0.2f,0.22f,0.25f,1.0f}
+    {0.2f,0.22f,0.25f,1.0f},
+    //Plots
+    {0.2f,0.2f,0.2f,0.8f},
+    {1.0f,1.0f,1.0f,1.0f},
+    {0.8f,0.8f,0.8f,1.0f},
+    {0.5f,0.5f,0.5f,0.8f},
+    {1.0f,0.4f,0.1f,1.0f},
 };
 
 IMGUI::IMGUI()
@@ -64,6 +70,7 @@ IMGUI::IMGUI()
     mouseY = 0;
     mouseLeftDown = false;
     mouseRightDown = false;
+    clearActive();
 }
 
 IMGUI::~IMGUI()
@@ -105,6 +112,11 @@ bool IMGUI::isHot(ui_id ID)
 bool IMGUI::isActive(ui_id ID)
 {
     return (active.owner == ID.owner && active.item == ID.item && active.index == ID.index);
+}
+
+bool IMGUI::isAnyActive()
+{
+    return (active.owner != -1);
 }
 
 void IMGUI::clearActive()
@@ -157,6 +169,7 @@ void IMGUI::Begin()
 	glDisable(GL_POLYGON_SMOOTH);
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glLineWidth(1.f);
 
     glScissor(0, 0, windowW, windowH);
     glViewport(0, 0, windowW, windowH);
@@ -241,19 +254,19 @@ void IMGUI::KeyUp(SDL_Keycode key)
 }
 
 //static
-void IMGUI::DoLabel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text)
+void IMGUI::DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text)
 {
     GLfloat m[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, m);
     
     glEnable(GL_TEXTURE_2D);
-    UI->DrawPlainText(x+m[12], y+m[13], color, text);
+    DrawPlainText(x+m[12], y+m[13], color, text);
 }
 
-void IMGUI::DoPanel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
+void IMGUI::DoPanel(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
 {
     glLoadIdentity();
-    glScissor(x, UI->getWindowHeight()-y-h, w, UI->getWindowHeight()-y-25.f);
+    glScissor(x, getWindowHeight()-y-h, w, getWindowHeight()-y-25.f);
     
     glDisable(GL_TEXTURE_2D);
     glBegin(GL_TRIANGLE_STRIP);
@@ -292,43 +305,43 @@ void IMGUI::DoPanel(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloa
     glEnd();
 
     glEnable(GL_TEXTURE_2D);
-    UI->DrawPlainText(x+5, y+8, ui_colors[PANEL_TITLE_COLOR], title);
+    DrawPlainText(x+5, y+8, ui_colors[PANEL_TITLE_COLOR], title);
     
     glTranslatef(x, y+25.f, 0);
 }
 
-bool IMGUI::DoButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
+bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
 {
     bool result = false;
     GLfloat m[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(UI->MouseInRect(x+m[12], y+m[13], w, h))
-        UI->setHot(ID);
+    if(MouseInRect(x+m[12], y+m[13], w, h))
+        setHot(ID);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
     {
-        if(!UI->MouseIsDown(true)) //mouse went up
+        if(!MouseIsDown(true)) //mouse went up
         {
-            if(UI->isHot(ID))
+            if(isHot(ID))
                 result = true;
-            UI->clearActive();
+            clearActive();
         }
     }
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
     {
-        if(UI->MouseIsDown(true)) //mouse went down
+        if(MouseIsDown(true)) //mouse went down
         {
-            UI->setActive(ID);
+            setActive(ID);
         }
     }
     
     //drawing
     glDisable(GL_TEXTURE_2D);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
         glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
         glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
     else
         glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
@@ -350,26 +363,26 @@ bool IMGUI::DoButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLflo
     glEnd();
     
     glEnable(GL_TEXTURE_2D);
-    GLfloat len = UI->PlainTextLength(title);
+    GLfloat len = PlainTextLength(title);
 	
-    UI->DrawPlainText(x+floorf((w-len)/2.f), y+h/2.f-6.f, ui_colors[BUTTON_TITLE_COLOR], title);
+    DrawPlainText(x+floorf((w-len)/2.f), y+h/2.f-6.f, ui_colors[BUTTON_TITLE_COLOR], title);
     
     return result;
 }
 
-double IMGUI::DoSlider(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title)
+double IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title)
 {
     double result = value;
     GLfloat sliderPosition = (value-min)/(max-min);
     GLfloat m[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(UI->MouseInRect(x+m[12]+sliderPosition*w-sliderW/2.f, y+m[13]-sliderH/2.f, sliderW, sliderH))
-        UI->setHot(ID);
+    if(MouseInRect(x+m[12]+sliderPosition*w-sliderW/2.f, y+m[13]-sliderH/2.f, sliderW, sliderH))
+        setHot(ID);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
     {
-        GLfloat mouseX = UI->getMouseX();
+        GLfloat mouseX = getMouseX();
         if(mouseX <= x+m[12])
             sliderPosition = 0;
         else if(mouseX >=x+m[12]+w)
@@ -379,16 +392,16 @@ double IMGUI::DoSlider(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLf
         
         result = min+sliderPosition*(max-min);
         
-        if(!UI->MouseIsDown(true)) //mouse went up
+        if(!MouseIsDown(true)) //mouse went up
         {
-            UI->clearActive();
+            clearActive();
         }
     }
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
     {
-        if(UI->MouseIsDown(true)) //mouse went down
+        if(MouseIsDown(true)) //mouse went down
         {
-            UI->setActive(ID);
+            setActive(ID);
         }
     }
     
@@ -409,9 +422,9 @@ double IMGUI::DoSlider(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLf
     glVertex2f(x+w, y+2.f);
     glEnd();
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
         glColor4fv(ui_colors[SLIDER_ACTIVE_COLOR]);
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
         glColor4fv(ui_colors[SLIDER_HOT_COLOR]);
     else
         glColor4fv(ui_colors[SLIDER_NORMAL_COLOR]);
@@ -433,17 +446,17 @@ double IMGUI::DoSlider(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLf
     glEnd();*/
     
     glEnable(GL_TEXTURE_2D);
-    UI->DrawPlainText(x-2.0, y - 15.f - sliderH/2.f, ui_colors[SLIDER_TITLE_COLOR], title);
+    DrawPlainText(x-2.0, y - 15.f - sliderH/2.f, ui_colors[SLIDER_TITLE_COLOR], title);
     
     char buffer[16];
     sprintf(buffer, "%1.2lf", result);
-    GLfloat len = UI->PlainTextLength(buffer);
-    UI->DrawPlainText(x-4.0 + w - len, y - 15.f - sliderH/2.f, ui_colors[SLIDER_VALUE_COLOR], buffer);
+    GLfloat len = PlainTextLength(buffer);
+    DrawPlainText(x-4.0 + w - len, y - 15.f - sliderH/2.f, ui_colors[SLIDER_VALUE_COLOR], buffer);
     
     return result;
 }
 
-void IMGUI::DoProgressBar(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title)
+void IMGUI::DoProgressBar(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title)
 {
     glDisable(GL_TEXTURE_2D);
     
@@ -462,48 +475,48 @@ void IMGUI::DoProgressBar(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, GLfloat w, 
     glEnd();
     
     glEnable(GL_TEXTURE_2D);
-    UI->DrawPlainText(x, y-18.f, ui_colors[PROGRESSBAR_TITLE_COLOR], title);
+    DrawPlainText(x, y-18.f, ui_colors[PROGRESSBAR_TITLE_COLOR], title);
     
     char buffer[16];
     sprintf(buffer, "%1.2lf%%", progress*100.0);
-    GLfloat len = UI->PlainTextLength(buffer);
-    UI->DrawPlainText(x+w-len, y-18.f, ui_colors[PROGRESSBAR_VALUE_COLOR], buffer);
+    GLfloat len = PlainTextLength(buffer);
+    DrawPlainText(x+w-len, y-18.f, ui_colors[PROGRESSBAR_VALUE_COLOR], buffer);
 }
 
-bool IMGUI::DoCheckBox(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
+bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
 {
     bool result = value;
     GLfloat size = 12.f;
     GLfloat m[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(UI->MouseInRect(x+m[12], y+m[13], size, size))
-        UI->setHot(ID);
+    if(MouseInRect(x+m[12], y+m[13], size, size))
+        setHot(ID);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
     {
-        if(!UI->MouseIsDown(true)) //mouse went up
+        if(!MouseIsDown(true)) //mouse went up
         {
-            if(UI->isHot(ID))
+            if(isHot(ID))
                 result = !result;
                 
-            UI->clearActive();
+            clearActive();
         }
     }
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
     {
-        if(UI->MouseIsDown(true)) //mouse went down
+        if(MouseIsDown(true)) //mouse went down
         {
-            UI->setActive(ID);
+            setActive(ID);
         }
     }
     
     //drawing
     glDisable(GL_TEXTURE_2D);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
         glColor4fv(ui_colors[CHECKBOX_ACTIVE_COLOR]);
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
         glColor4fv(ui_colors[CHECKBOX_HOT_COLOR]);
     else
         glColor4fv(ui_colors[CHECKBOX_NORMAL_COLOR]);
@@ -536,45 +549,45 @@ bool IMGUI::DoCheckBox(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, co
     }
     
     glEnable(GL_TEXTURE_2D);
-    UI->DrawPlainText(x+size+5.f, y, ui_colors[CHECKBOX_TITLE_COLOR], title);
+    DrawPlainText(x+size+5.f, y, ui_colors[CHECKBOX_TITLE_COLOR], title);
     
     return result;
 }
 
-bool IMGUI::DoRadioButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
+bool IMGUI::DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
 {
     bool result = value;
     GLfloat size = 12.f;
     GLfloat m[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(UI->MouseInRect(x+m[12], y+m[13], size, size))
-        UI->setHot(ID);
+    if(MouseInRect(x+m[12], y+m[13], size, size))
+        setHot(ID);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
     {
-        if(!UI->MouseIsDown(true)) //mouse went up
+        if(!MouseIsDown(true)) //mouse went up
         {
-            if(UI->isHot(ID))
+            if(isHot(ID))
                 result = !result;
             
-            UI->clearActive();
+            clearActive();
         }
     }
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
     {
-        if(UI->MouseIsDown(true)) //mouse went down
+        if(MouseIsDown(true)) //mouse went down
         {
-            UI->setActive(ID);
+            setActive(ID);
         }
     }
     
     //drawing
     glDisable(GL_TEXTURE_2D);
     
-    if(UI->isActive(ID))
+    if(isActive(ID))
         glColor4fv(ui_colors[RADIOBUTTON_ACTIVE_COLOR]);
-    else if(UI->isHot(ID))
+    else if(isHot(ID))
         glColor4fv(ui_colors[RADIOBUTTON_HOT_COLOR]);
     else
         glColor4fv(ui_colors[RADIOBUTTON_NORMAL_COLOR]);
@@ -608,7 +621,116 @@ bool IMGUI::DoRadioButton(IMGUI* UI, ui_id ID, GLfloat x, GLfloat y, bool value,
     }
     
     glEnable(GL_TEXTURE_2D);
-    UI->DrawPlainText(x+size+5.f, y, ui_colors[RADIOBUTTON_TITLE_COLOR], title);
+    DrawPlainText(x+size+5.f, y, ui_colors[RADIOBUTTON_TITLE_COLOR], title);
+    
+    return result;
+}
+
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, const char* title, double fixedRange[2], unsigned int historyLength)
+{
+    bool result = false;
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    
+    if(MouseInRect(x+m[12], y+m[13], w, h))
+        setHot(ID);
+    
+    if(isActive(ID))
+    {
+        if(!MouseIsDown(true)) //mouse went up
+        {
+            if(isHot(ID))
+                result = true;
+            clearActive();
+        }
+    }
+    else if(isHot(ID))
+    {
+        if(MouseIsDown(true)) //mouse went down
+        {
+            setActive(ID);
+        }
+    }
+    
+    //drawing
+    glDisable(GL_TEXTURE_2D);
+    
+    /*if(UI->isActive(ID))
+        glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
+    else if(UI->isHot(ID))
+        glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
+    else
+        glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
+    */
+    
+    //background
+    glColor4fv(ui_colors[PLOT_BACKGROUND_COLOR]);
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x, y);
+    glVertex2f(x, y+h);
+    glVertex2f(x+w, y);
+    glVertex2f(x+w, y+h);
+    glEnd();
+    
+    //data
+    const std::deque<std::unique_ptr<Sample>>& data = sens->getHistory();
+    if(data.size() > 0)
+    {
+        //autoscale
+        btScalar minValue = data[0]->getValue(0);
+        btScalar maxValue = data[0]->getValue(0);
+        
+        for(int i=1; i<data.size(); i++)
+        {
+            btScalar value = data[i]->getValue(0);
+            if(value > maxValue)
+                maxValue = value;
+            else if(value < minValue)
+                minValue = value;
+        }
+        
+        if(maxValue == minValue) //secure division by zero
+        {
+            maxValue += 1.f;
+            minValue -= 1.f;
+        }
+        
+        GLfloat dy = (h-20.f)/(maxValue-minValue);
+        
+        //autostretch
+        GLfloat dt = w/(GLfloat)(data.size()-1);
+    
+        //drawing
+        glDisable(GL_LINE_SMOOTH);
+        
+        glColor4fv(ui_colors[PLOT_DATA_COLOR]);
+        glBegin(GL_LINE_STRIP);
+        
+        for(int i=0; i<data.size(); i++)
+        {
+            btScalar value = data[i]->getValue(0);
+            glVertex2f(x + dt*i, y + (h-10.f) - (value-minValue)*dy);
+        }
+    
+        glEnd();
+        
+        glColor4fv(ui_colors[PLOT_AXES_COLOR]);
+        glBegin(GL_LINES);
+        if(minValue < 0 && maxValue > 0)
+        {
+            glVertex2f(x, y + (h-10.f) + minValue * dy);
+            glVertex2f(x + w, y + (h-10.f) + minValue * dy);
+        }
+        glEnd();
+        
+        glEnable(GL_LINE_SMOOTH);
+    }
+        
+    //title
+    glEnable(GL_TEXTURE_2D);
+    GLfloat len = PlainTextLength(title);
+	
+    DrawPlainText(x+floorf((w-len)/2.f), y+10.f, ui_colors[PLOT_TITLE_COLOR], title);
     
     return result;
 }

@@ -9,8 +9,8 @@
 #ifndef __Stonefish_GeometryFileUtil__
 #define __Stonefish_GeometryFileUtil__
 
-#include "common.h"
 #include "GeometryUtil.h"
+#include "OpenGLPipeline.h"
 
 TriangleMesh* LoadModel(const char* filename, btScalar scale, bool smooth);
 TriangleMesh* LoadSTL(const char* filename, btScalar scale, bool smooth);

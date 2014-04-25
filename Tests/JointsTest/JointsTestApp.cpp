@@ -41,5 +41,5 @@ void JointsTestApp::MouseMove(SDL_Event* event)
 void JointsTestApp::MouseScroll(SDL_Event* event)
 {
     OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseScroll(event->wheel.y * -1.f);
+    trackball->MouseScroll(event->wheel.y * -0.1f);
 }

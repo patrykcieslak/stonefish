@@ -6,11 +6,10 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__CompoundEntity__
-#define __Stonefish__CompoundEntity__
+#ifndef __Stonefish_CompoundEntity__
+#define __Stonefish_CompoundEntity__
 
 #include "SolidEntity.h"
-#include <vector>
 
 class CompoundEntity : public SolidEntity
 {

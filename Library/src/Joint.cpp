@@ -8,15 +8,18 @@
 
 #include "Joint.h"
 
+NameManager Joint::nameManager;
+
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
-    name = uniqueName;
+    name = nameManager.AddName(uniqueName);
     renderable = false;
     collisionEnabled = collideLinkedEntities;
 }
 
 Joint::~Joint(void)
 {
+    nameManager.RemoveName(name);
 }
 
 void Joint::setRenderable(bool render)
