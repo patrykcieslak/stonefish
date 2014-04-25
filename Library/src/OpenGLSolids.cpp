@@ -123,16 +123,16 @@ void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ)
 
 void DrawSolidSphere(GLfloat radius)
 {
-    for(int i=-5; i<5; i++)
+    for(int i = -(SPHERE_RESOLUTION/4-1); i<(SPHERE_RESOLUTION/4-1); i++)
     {
         glBegin(GL_TRIANGLE_STRIP);
-        for(int h=0; h<=24; h++)
+        for(int h = 0; h <= SPHERE_RESOLUTION; h++)
         {
-            glNormal3f(cosf(i/6.f*M_PI_2)*cosf(h/12.f*M_PI), sinf(i/6.f*M_PI_2), cosf(i/6.f*M_PI_2)*sinf(h/12.f*M_PI));
-            glVertex3f(cosf(i/6.f*M_PI_2)*cosf(h/12.f*M_PI)*radius, sinf(i/6.f*M_PI_2)*radius, cosf(i/6.f*M_PI_2)*sinf(h/12.f*M_PI)*radius);
+            glNormal3f(cosf(i/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * cosf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI), sinf(i/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2), cosf(i/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * sinf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI));
+            glVertex3f(cosf(i/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * cosf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius, sinf(i/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*radius, cosf(i/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*sinf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius);
             
-            glNormal3f(cosf((i+1)/6.f*M_PI_2)*cosf(h/12.f*M_PI), sinf((i+1)/6.f*M_PI_2), cosf((i+1)/6.f*M_PI_2)*sinf(h/12.f*M_PI));
-            glVertex3f(cosf((i+1)/6.f*M_PI_2)*cosf(h/12.f*M_PI)*radius, sinf((i+1)/6.f*M_PI_2)*radius, cosf((i+1)/6.f*M_PI_2)*sinf(h/12.f*M_PI)*radius);
+            glNormal3f(cosf((i+1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*cosf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI), sinf((i+1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2), cosf((i+1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*sinf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI));
+            glVertex3f(cosf((i+1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*cosf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius, sinf((i+1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*radius, cosf((i+1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*sinf(h/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius);
         }
         glEnd();
     }
@@ -140,20 +140,20 @@ void DrawSolidSphere(GLfloat radius)
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0, -1.f, 0);
     glVertex3f(0, -radius, 0);
-    for(int i=0; i<=24; i++)
+    for(int i=0; i<=SPHERE_RESOLUTION; i++)
     {
-        glNormal3f(cosf(-5.f/6.f*M_PI_2)*cosf(i/12.f*M_PI), sinf(-5.f/6.f*M_PI_2), cosf(-5.f/6.f*M_PI_2)*sinf(i/12.f*M_PI));
-        glVertex3f(cosf(-5.f/6.f*M_PI_2)*cosf(i/12.f*M_PI)*radius, sinf(-5.f/6.f*M_PI_2)*radius, cosf(-5.f/6.f*M_PI_2)*sinf(i/12.f*M_PI)*radius);
+        glNormal3f(cosf(-(GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * cosf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI), sinf(-(GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2), cosf(-(GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*sinf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI));
+        glVertex3f(cosf(-(GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)* cosf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius, sinf(-(GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*radius, cosf(-(GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * sinf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius);
     }
     glEnd();
     
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0, 1.f, 0);
     glVertex3f(0, radius, 0);
-    for(int i=24; i>=0; i--)
+    for(int i=SPHERE_RESOLUTION; i>=0; i--)
     {
-        glNormal3f(cosf(5.f/6.f*M_PI_2)*cosf(i/12.f*M_PI), sinf(5.f/6.f*M_PI_2), cosf(5.f/6.f*M_PI_2)*sinf(i/12.f*M_PI));
-        glVertex3f(cosf(5.f/6.f*M_PI_2)*cosf(i/12.f*M_PI)*radius, sinf(5.f/6.f*M_PI_2)*radius, cosf(5.f/6.f*M_PI_2)*sinf(i/12.f*M_PI)*radius);
+        glNormal3f(cosf((GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * cosf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI), sinf((GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2), cosf((GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * sinf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI));
+        glVertex3f(cosf((GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2) * cosf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius, sinf((GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*radius, cosf((GLfloat)(SPHERE_RESOLUTION/4-1)/(GLfloat)(SPHERE_RESOLUTION/4) * M_PI_2)*sinf(i/(GLfloat)(SPHERE_RESOLUTION/2) * M_PI)*radius);
     }
     glEnd();
 }

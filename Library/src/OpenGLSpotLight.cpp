@@ -22,10 +22,11 @@ OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& tar
     glGenTextures(1, &shadowMap);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //GL_NEAREST - may be needed for more than 8 bits
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //GL_NEAREST - may be needed for more than 8 bits
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glBindTexture(GL_TEXTURE_2D, 0);
     
     //Create shadowmap framebuffer
@@ -87,7 +88,8 @@ void OpenGLSpotLight::Render()
         glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, shadowMap);
-      
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+        
         glUseProgramObjectARB(spotShader);
         glUniform1iARB(uniSDiffuse, diffuseTextureUnit);
         glUniform1iARB(uniSPosition, positionTextureUnit);
@@ -289,6 +291,7 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     
 	//Render the shadowmap
     glViewport(x, y, shadowSize * scale, shadowSize * scale);

@@ -43,19 +43,19 @@ void main()
         vec3 diffuse_color = sky(texSkyDiff, normal);
         vec3 result = diffuse_color.rgb * color;
         
-        if(mat_type == 1 && factor2 > 0.0)
+        /*if(mat_type == 1 && factor1 > 0.0)
         {
             vec3 eye_normal = get_world_normal();
             vec3 specular_normal = reflect(eye_normal, normal);
-            float reflection = smoothstep(0.0, 1.0, pow(dot(-eye_normal, normal), (1.0-factor2)*(1.0-factor2)*10.0));
+            float reflection = smoothstep(0.0, 1.0, pow(dot(-eye_normal, normal), (1.0-factor1)*(1.0-factor1)*10.0));
             vec3 specular_color = sky(texSkyReflect, specular_normal) * reflection;
             result += specular_color.rgb * color;
-        }
+        }*/
         
-        if(occlusion != 0)
+        if(occlusion != 0.0)
             result *= occlusion;
         
-        gl_FragColor = vec4(pow(result, vec3(1.0/1.0)), 1.0);
+        gl_FragColor = vec4(result, 1.0); //vec4(pow(result, vec3(1.0/1.0)), 1.0);
     }
     else
         gl_FragColor = vec4(0.0);

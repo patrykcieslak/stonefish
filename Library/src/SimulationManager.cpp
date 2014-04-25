@@ -217,16 +217,21 @@ OpenGLLight* SimulationManager::getLight(int index)
         return NULL;
 }
 
+void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
+{
+    dynamicsWorld->getBroadphase()->getBroadphaseAabb(min, max);
+}
+
 void SimulationManager::BuildScenario()
 {
     //initialize dynamic world
     dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration(); //dwCollisionConfig = new btDefaultCollisionConfiguration();
     dwDispatcher = new btCollisionDispatcher(dwCollisionConfig); //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
     dwBroadphase = new btDbvtBroadphase();
-    dwSolver = new btSequentialImpulseConstraintSolver();
-    //btDantzigSolver* mlcp = new btDantzigSolver();
+    //dwSolver = new btSequentialImpulseConstraintSolver();
+    btDantzigSolver* mlcp = new btDantzigSolver();
     //btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
-    //dwSolver = new btMLCPSolver(mlcp);
+    dwSolver = new btMLCPSolver(mlcp);
     btSoftBodySolver* softBodySolver = 0;
     dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver); //dynamicsWorld = new btDiscreteDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     

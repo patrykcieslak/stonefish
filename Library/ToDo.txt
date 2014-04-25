@@ -25,12 +25,15 @@ x IMGUI doesn't need static
 x Spot light shadows
 x Sun shadow (Cascaded Shadow Maps)
 x Drawing global coordinate system + grid
-- Shadow filtering to improve borders
-- Material shading
+x Shadow filtering to improve borders
+x Material shading
 - IMGUI PhasePlot
 - IMU (true and fake)
 - Joint limits
 - GearJoint/BeltJoint from two revolute joints
+- HDR + bloom (lighting blur)
+- Reflective material
+- CSM -> take scene bounding box to build better crop matrix
 
 - IMGUI PolarPlot
 - IMGUI gauge

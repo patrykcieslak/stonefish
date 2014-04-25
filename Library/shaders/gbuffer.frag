@@ -19,7 +19,7 @@ void main(void)
     if(isTextured)
     {
         vec4 texColor = texture2D(texture, gl_TexCoord[0].st);
-        finalColor = mix(color.rgb, texColor.rgb, texColor.a);
+        finalColor = color.rgb * texColor.rgb;
     }
     else
         finalColor = color.rgb;

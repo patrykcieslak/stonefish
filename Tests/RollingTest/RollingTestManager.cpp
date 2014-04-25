@@ -35,8 +35,8 @@ void RollingTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.5, 0.2);
     
     ///////LOOKS///////////
-    Look grey = CreateMatteLook(0.7f, 0.7f, 0.7f, 0.8f);
-    Look shiny = CreateMatteLook(0.7f, 0.7f, 0.7f, 0.1f); //CreateGlossyLook(1.f, 0.5f, 0.2f, 0.5f, 0.f);
+    Look grey = CreateMatteLook(1.0f, 1.0f, 1.0f, 0.0f);
+    Look shiny = CreateMatteLook(0.7f, 0.7f, 0.7f, 0.3f);
     
     ////////OBJECTS
     PlaneEntity* floor = new PlaneEntity("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,M_PI/90.f,M_PI_2), btVector3(0,0,-1000.f)));
@@ -48,9 +48,6 @@ void RollingTestManager::BuildScenario()
     AddSolidEntity(torus, btTransform(btQuaternion(M_PI_4,0,0), btVector3(0,0,1000.f)));
     
     //////CAMERA & LIGHT//////
-    OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(0.f, 500.f, 5000.f), OpenGLLight::ColorFromTemperature(6500, 40));
-    AddLight(omni);
-    
     OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 2000.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 0, 60.f);
     trackb->Rotate(btQuaternion(M_PI, 0.0, -M_PI/10.0));
     trackb->Activate();

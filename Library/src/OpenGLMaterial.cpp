@@ -36,19 +36,19 @@ Look CreateMatteLook(GLfloat R, GLfloat G, GLfloat B, GLfloat roughness, const c
     return newLook;
 }
 
-Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininess, GLfloat reflectivity, const char* textureName)
+Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininness, GLfloat scattering, const char* textureName)
 {
     Look newLook = CreateBasicLook(R, G, B, textureName);
     newLook.type = GLOSSY;
-    newLook.factor[0] = clamp(shininess, 0.f, 1.f);
-    newLook.factor[1] = clamp(reflectivity, 0.f, 1.f);
+    newLook.factor[0] = clamp(shininness, 0.f, 1.f);
+    newLook.factor[1] = clamp(scattering, 0.f, 1.f);
     return newLook;
 }
 
-Look CreateMetallicLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName)
+Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName)
 {
     Look newLook = CreateBasicLook(R, G, B, textureName);
-    newLook.type = METALLIC;
+    newLook.type = REFLECTIVE;
     newLook.factor[0] = clamp(hFactor, 0.f, 1.f);
     newLook.factor[1] = clamp(vFactor, 0.f, 1.f);
     return newLook;

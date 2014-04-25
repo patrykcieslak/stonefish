@@ -2,41 +2,69 @@
 uniform sampler2D texDiffuse;
 uniform sampler2D texPosition;
 uniform sampler2D texNormal;
-uniform sampler2D texShadow;
+uniform sampler2DShadow texShadow;
 uniform vec3 lightPosition;
 uniform vec3 lightDirection;
 uniform float lightAngle;
 uniform vec4 lightColor;
 uniform mat4 lightClipSpace;
 
-const vec3 eyeDir = vec3(0.0,0.0,-1.0);
+const vec3 eyeDir = vec3(0.0,0.0,1.0);
+const vec2 poissonDisk[16] = vec2[]( vec2( -0.94201624, -0.39906216 ),
+                                    vec2( 0.94558609, -0.76890725 ),
+                                    vec2( -0.094184101, -0.92938870 ),
+                                    vec2( 0.34495938, 0.29387760 ),
+                                    vec2( -0.91588581, 0.45771432 ),
+                                    vec2( -0.81544232, -0.87912464 ),
+                                    vec2( -0.38277543, 0.27676845 ),
+                                    vec2( 0.97484398, 0.75648379 ),
+                                    vec2( 0.44323325, -0.97511554 ),
+                                    vec2( 0.53742981, -0.47373420 ),
+                                    vec2( -0.26496911, -0.41893023 ),
+                                    vec2( 0.79197514, 0.19090188 ),
+                                    vec2( -0.24188840, 0.99706507 ),
+                                    vec2( -0.81409955, 0.91437590 ),
+                                    vec2( 0.19984126, 0.78641367 ),
+                                    vec2( 0.14383161, -0.14100790 ) );
 
-float shadowCoeff(vec4 eyePosition, float bias)
+float random(vec3 seed, int i)
+{
+	vec4 seed4 = vec4(seed,i);
+	float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
+	return fract(sin(dot_product) * 43758.5453);
+}
+
+float calculateShadowCoeff(vec4 eyePosition, float bias)
 {
     vec4 shadowCoord = lightClipSpace * eyePosition;
-    float shadowDepth = texture2D(texShadow, shadowCoord.xy/shadowCoord.w).x;
-	
-    float visibility = 1.0;
-    if(shadowDepth < (shadowCoord.z-bias)/shadowCoord.w)
-        visibility = 0.0;
+    float fragmentDepth = (shadowCoord.z - bias)/shadowCoord.w;
     
-	return visibility;
+    //Compare
+    float visibility = 1.0;
+    for(int i=0; i<4; i++)
+    {
+        int pdIndex = int(mod(random(floor(eyePosition.xyz * 1000.0), i) * 16.0, 16.0));
+        visibility -= 0.25 * (1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w + poissonDisk[pdIndex]/750.0, fragmentDepth)).r);
+    }
+    return visibility;
 }
 
 void main(void)
 {
+    vec4 finalColor = vec4(0.0,0.0,0.0,0.0);
+    
     vec4 color_mat = texture2D(texDiffuse, gl_TexCoord[0].xy);
-    vec4 position_mat = texture2D(texPosition, gl_TexCoord[0].xy);
-    vec4 normal_depth = texture2D(texNormal, gl_TexCoord[0].xy);
- 
     vec3 color = color_mat.rgb;
     float factor1 = color_mat.a;
+    
+    vec4 position_mat = texture2D(texPosition, gl_TexCoord[0].xy);
     int mat_type = int(floor(position_mat.a/10.0));
     float factor2 = position_mat.a-float(mat_type)*10.0;
     vec3 position = position_mat.xyz;
+    
+    vec4 normal_depth = texture2D(texNormal, gl_TexCoord[0].xy);
     vec3 normal = normalize(normal_depth.xyz);
 
-    vec4 finalColor = vec4(0.0,0.0,0.0,0.0);
     vec3 lightDir = lightPosition - position;
     float distance = length(lightDir);
     lightDir = lightDir/distance;
@@ -44,18 +72,16 @@ void main(void)
     
     if(spotEffect > lightAngle)
     {
-        float NdotL = max(dot(normal, lightDir), 0.0);
+        spotEffect = pow(spotEffect, 100.0);
+        float attenuation = spotEffect/(distance + distance*distance);
+        float NdotL = dot(normal, lightDir);
+        float NdotV = dot(normal, eyeDir);
         
         if(NdotL > 0.0)
         {
-            spotEffect = pow(spotEffect, 100.0);
-            float attenuation = spotEffect/(distance + distance*distance);
-            float NdotV = dot(normal, eyeDir);
-            
-            float bias = 0.0025 * tan(acos(NdotL));
+            float bias = 0.005 * tan(acos(NdotL));
             bias = clamp(bias, 0, 0.01);
-            
-            float shadow = shadowCoeff(vec4(position, 1.0), bias);
+            float shadow = calculateShadowCoeff(vec4(position, 1.0), bias);
             
             if(mat_type == 0) //Oren-Nayar
             {
@@ -74,22 +100,27 @@ void main(void)
                 
                 finalColor = vec4(lightColor.rgb * color * L1 * attenuation * shadow, 1.0);
             }
-            else if(mat_type == 1) //Phong
+            else if(mat_type == 1) //Blinn-Phong
             {
-                vec3 R = reflect(lightDir, normal);
-                float specular = pow(max(dot(R, eyeDir), 0.0), factor1*10.0+1.0);
+                vec3 H = normalize(lightDir + eyeDir);
+                float specular = pow(max(dot(normal, H), 0.0), factor1 * factor1 * 512.0 + 8.0);
                 
-                finalColor = vec4(lightColor.rgb * color * NdotL * attenuation * shadow + lightColor.rgb * specular * attenuation * shadow, 1.0);
+                finalColor = vec4(lightColor.rgb * color * NdotL * attenuation * shadow
+                                  + lightColor.rgb * specular * attenuation * shadow, 1.0);
             }
-            else if(mat_type == 2) //Metallic
+            else if(mat_type == 2) //Reflective
             {
-                
-                
-                
-                
-                
                 finalColor = vec4(0.0,0.0,0.0,1.0);
             }
+        }
+        
+        //Rim lighting
+        if(mat_type == 1 && factor2 > 0.0)
+        {
+            float rim = 0.90 - NdotV;
+            rim = smoothstep(0.0, 1.0, rim);
+            rim = pow(rim, (1.0 - factor2) * 9.0 + 1.0);
+            finalColor += vec4(lightColor.rgb * color * attenuation * rim, 1.0);
         }
     }
     

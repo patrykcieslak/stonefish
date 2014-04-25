@@ -11,6 +11,8 @@
 
 #include "OpenGLPipeline.h"
 
+#define SPHERE_RESOLUTION 48
+
 void SetupOrtho();
 void DrawScreenAlignedQuad();
 void DrawCoordSystem(GLfloat size);

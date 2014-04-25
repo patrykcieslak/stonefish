@@ -11,6 +11,7 @@
 #include "OpenGLSky.h"
 #include "OpenGLLight.h"
 #include "OpenGLSolids.h"
+#include "SimulationApp.h"
 
 OpenGLView* OpenGLSun::activeView = NULL;
 GLhandleARB OpenGLSun::sunShader = 0;
@@ -76,10 +77,11 @@ void OpenGLSun::Init()
     glGenTextures(1, &shadowmapArray);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
 	glTexImage3D(GL_TEXTURE_2D_ARRAY_EXT, 0, GL_DEPTH_COMPONENT24, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //GL_NEAREST - may be needed for more than 8 bits
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //GL_NEAREST - may be needed for more than 8 bits
+	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
     
     //Create shadowmap framebuffer
@@ -185,11 +187,13 @@ glm::mat4 OpenGLSun::BuildCropProjMatrix(ViewFrustum &f)
 	}
     
 	//Make sure all relevant shadow casters are included - use object bounding boxes!
-	/*transf = shad_mv * glm::vec4(-50.f, -50.f, -2.f, 1.0f);
+    /*btVector3 aabbMin, aabbMax;
+    SimulationApp::getApp()->getSimulationManager()->getWorldAABB(aabbMin, aabbMax);
+    transf = shad_mv * glm::vec4(aabbMin.x(), aabbMin.y(), aabbMin.z(), 1.f);
     if(transf.z > maxZ) maxZ = transf.z;
     if(transf.z < minZ) minZ = transf.z;
     
-    transf = shad_mv * glm::vec4(50.f, 50.f, 2.f, 1.0f);
+    transf = shad_mv * glm::vec4(aabbMax.x(), aabbMax.y(), aabbMax.z(), 1.f);
     if(transf.z > maxZ) maxZ = transf.z;
     if(transf.z < minZ) minZ = transf.z;*/
     
@@ -265,6 +269,7 @@ void OpenGLSun::Render()
     //use sun shader
     glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
     
     glUseProgramObjectARB(sunShader);
     glUniform1iARB(uniDiffuse, diffuseTextureUnit);
@@ -287,7 +292,7 @@ void OpenGLSun::Render()
 void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe)
 {
     //Compute the z-distances for each split as seen in camera space
-    UpdateSplitDist(0.1f, 100.f);
+    UpdateSplitDist(activeView->GetNearClip(), activeView->GetFarClip());
     
     //Render maps
     glDisable(GL_TEXTURE_2D);

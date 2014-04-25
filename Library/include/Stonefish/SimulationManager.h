@@ -53,7 +53,7 @@ public:
 	double getPhysicsTimeInMiliseconds();
     void setStepsPerSecond(btScalar steps);
     btScalar getStepsPerSecond();
-    
+    void getWorldAABB(btVector3& min, btVector3& max);
     void AddEntity(Entity* ent);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
     void AddFluidEntity(FluidEntity* flu);

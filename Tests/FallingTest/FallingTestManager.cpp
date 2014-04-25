@@ -14,6 +14,7 @@
 #include "SphereEntity.h"
 #include "TorusEntity.h"
 #include "CylinderEntity.h"
+#include "OpenGLOmniLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "OpenGLUtil.h"
@@ -41,13 +42,19 @@ void FallingTestManager::BuildScenario()
     strcat(path, "/");
     strcat(path, "grid.png");
     
-    Look grey = CreateMatteLook(0.8f, 0.8f, 0.8f, 1.0f, path);
-    Look color;
+    Look grey = CreateMatteLook(1.0f, 1.0f, 1.0f, 0.0f, path);
+    //Look color;
     
     ////////OBJECTS
     PlaneEntity* floor = new PlaneEntity("Floor", 100000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0, 0, M_PI_2), btVector3(0,0,0)));
     floor->setRenderable(true);
     AddEntity(floor);
+    
+    Look color = CreateGlossyLook(1.f, 0.6f, 0.2f, 0.5f, 0.1f);
+    SphereEntity* sphere = new SphereEntity("Sphere", 1000.f, getMaterialManager()->getMaterial("Steel"), color);
+    sphere->setRenderable(true);
+    AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(0, 0, 1000.f)));
+    
     /*BoxEntity* box = new BoxEntity("Floor", btVector3(100000.f,100000.f,100.f), getMaterialManager()->getMaterial("Steel"), grey, true);
     box->setRenderable(true);
     AddEntity(box);*/
@@ -67,17 +74,19 @@ void FallingTestManager::BuildScenario()
             AddSensor(acc);
         }
     }
-    
+    /*
     for(int i=0; i<10; i++)
     {
         color = CreateMatteLook(1.f, 0.6f, 0.2f, 0.9f);
         SphereEntity* sphere = new SphereEntity("Sphere" + std::to_string(i), i*50.f, getMaterialManager()->getMaterial("Steel"), color);
         sphere->setRenderable(true);
         AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(i * 100.f, sin(i)*100.f, i*200.f+10.f)));
-    }
+    }*/
     
     //////CAMERA & LIGHT//////
-    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(5000.f, 5000.f, 10000.f), btVector3(), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000));
+    //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(5000.f, 5000.f, 10000.f), OpenGLLight::ColorFromTemperature(4500, 1000));
+    //AddLight(omni);
+    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(5000.f, 5000.f, 10000.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(spot);
     
     OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60.f);

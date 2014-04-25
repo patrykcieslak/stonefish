@@ -11,7 +11,7 @@
 
 #include "OpenGLPipeline.h"
 
-typedef enum {MATTE = 0, GLOSSY, METALLIC, TRANSPARENT} LookType;
+typedef enum {MATTE = 0, GLOSSY, REFLECTIVE, TRANSPARENT} LookType;
 
 struct Look
 {
@@ -33,8 +33,8 @@ struct Look
 };
 
 Look CreateMatteLook(GLfloat R, GLfloat G, GLfloat B, GLfloat roughness, const char* textureName = NULL);
-Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininess, GLfloat reflectivity, const char* textureName = NULL);
-Look CreateMetallicLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName = NULL);
+Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininness, GLfloat scattering, const char* textureName = NULL);
+Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName = NULL);
 Look CreateTransparentLook(GLfloat R, GLfloat G, GLfloat B, GLfloat opacity, GLfloat shininess, const char* textureName = NULL);
 void UseLook(Look l);
 
