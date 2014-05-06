@@ -54,11 +54,7 @@ void FallingTestManager::BuildScenario()
     SphereEntity* sphere = new SphereEntity("Sphere", 1000.f, getMaterialManager()->getMaterial("Steel"), color);
     sphere->setRenderable(true);
     AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(0, 0, 1000.f)));
-    
-    /*BoxEntity* box = new BoxEntity("Floor", btVector3(100000.f,100000.f,100.f), getMaterialManager()->getMaterial("Steel"), grey, true);
-    box->setRenderable(true);
-    AddEntity(box);*/
-    
+
     for(int i=0; i<10; i++)
     {
         color = CreateMatteLook(i/10.f+0.2f, 1.0f - i/10.f * 0.8f, 0.1f, 0.5f);
@@ -74,14 +70,6 @@ void FallingTestManager::BuildScenario()
             AddSensor(acc);
         }
     }
-    /*
-    for(int i=0; i<10; i++)
-    {
-        color = CreateMatteLook(1.f, 0.6f, 0.2f, 0.9f);
-        SphereEntity* sphere = new SphereEntity("Sphere" + std::to_string(i), i*50.f, getMaterialManager()->getMaterial("Steel"), color);
-        sphere->setRenderable(true);
-        AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(i * 100.f, sin(i)*100.f, i*200.f+10.f)));
-    }*/
     
     //////CAMERA & LIGHT//////
     //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(5000.f, 5000.f, 10000.f), OpenGLLight::ColorFromTemperature(4500, 1000));
@@ -89,7 +77,7 @@ void FallingTestManager::BuildScenario()
     //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(5000.f, 5000.f, 10000.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60.f);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 1, 60.f);
     trackb->Rotate(btQuaternion(M_PI, 0, -M_PI/8.0));
     trackb->Activate();
     AddView(trackb);

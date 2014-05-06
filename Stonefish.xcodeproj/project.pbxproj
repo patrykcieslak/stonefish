@@ -18,9 +18,7 @@
 		F71323EB18C47FC500C718D8 /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
 		F71323EC18C47FC500C718D8 /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
 		F71323ED18C47FC500C718D8 /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
-		F71323EE18C47FC500C718D8 /* ssao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */; };
 		F71323EF18C47FC500C718D8 /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
-		F71323F018C47FC500C718D8 /* blur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2C18C40AEC001C0CE8 /* blur.frag */; };
 		F71323F118C47FCF00C718D8 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
 		F71323F218C47FCF00C718D8 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
 		F71323F418C47FCF00C718D8 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
@@ -58,9 +56,7 @@
 		F74CEC0718E56EEB00D0C42D /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
 		F74CEC0818E56EEB00D0C42D /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
 		F74CEC0918E56EEB00D0C42D /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
-		F74CEC0A18E56EEB00D0C42D /* ssao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */; };
 		F74CEC0B18E56EEB00D0C42D /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
-		F74CEC0C18E56EEB00D0C42D /* blur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2C18C40AEC001C0CE8 /* blur.frag */; };
 		F74CEC0E18E56EEB00D0C42D /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
 		F74CEC1918E56FCB00D0C42D /* JointsTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */; };
 		F74CEC1A18E56FCB00D0C42D /* JointsTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */; };
@@ -181,6 +177,13 @@
 		F75B6F2218C3F92F0092C1A2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2018C3F92F0092C1A2 /* IOKit.framework */; };
 		F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */; };
 		F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
+		F791D96119111D7F00E0703F /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
+		F791D9631918373100E0703F /* saoBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D9621918327600E0703F /* saoBlur.frag */; };
+		F791D9641918517000E0703F /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
+		F791D9651918517000E0703F /* saoBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D9621918327600E0703F /* saoBlur.frag */; };
+		F791D9661918517C00E0703F /* grid.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DD1BFE19041AF300B6BF14 /* grid.png */; };
+		F791D9671918518700E0703F /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
+		F791D9681918518700E0703F /* saoBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D9621918327600E0703F /* saoBlur.frag */; };
 		F7A503CC18E7013200913252 /* Gyroscope.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A503CB18E7013200913252 /* Gyroscope.h */; };
 		F7A503CE18E7014600913252 /* Gyroscope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A503CD18E7014600913252 /* Gyroscope.cpp */; };
 		F7A503D018E7055000913252 /* RotaryEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A503CF18E7055000913252 /* RotaryEncoder.h */; };
@@ -214,9 +217,7 @@
 		F7C2314318CA0D3F00817B69 /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
 		F7C2314418CA0D3F00817B69 /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
 		F7C2314518CA0D3F00817B69 /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
-		F7C2314618CA0D3F00817B69 /* ssao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */; };
 		F7C2314718CA0D3F00817B69 /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
-		F7C2314818CA0D3F00817B69 /* blur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2C18C40AEC001C0CE8 /* blur.frag */; };
 		F7C2314A18CA0D3F00817B69 /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
 		F7C2315A18CA0E3900817B69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7C2315018CA0E1700817B69 /* main.cpp */; };
 		F7C2315B18CA0E3900817B69 /* RollingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7C2315118CA0E1700817B69 /* RollingTestApp.cpp */; };
@@ -267,6 +268,8 @@
 			dstPath = Shaders;
 			dstSubfolderSpec = 16;
 			files = (
+				F791D9671918518700E0703F /* sao.frag in CopyFiles */,
+				F791D9681918518700E0703F /* saoBlur.frag in CopyFiles */,
 				F7DE34361907C5C400D21981 /* cascadedShadowMap.frag in CopyFiles */,
 				F7DD1C081904470C00B6BF14 /* deferredSun.frag in CopyFiles */,
 				F74CEBFB18E56EEB00D0C42D /* cubeDownsample.frag in CopyFiles */,
@@ -283,9 +286,7 @@
 				F74CEC0718E56EEB00D0C42D /* deferredAmbient.frag in CopyFiles */,
 				F74CEC0818E56EEB00D0C42D /* deferredSpot.frag in CopyFiles */,
 				F74CEC0918E56EEB00D0C42D /* cubeSky.frag in CopyFiles */,
-				F74CEC0A18E56EEB00D0C42D /* ssao.frag in CopyFiles */,
 				F74CEC0B18E56EEB00D0C42D /* cubePass.frag in CopyFiles */,
-				F74CEC0C18E56EEB00D0C42D /* blur.frag in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -316,6 +317,8 @@
 			dstPath = Shaders;
 			dstSubfolderSpec = 16;
 			files = (
+				F791D9631918373100E0703F /* saoBlur.frag in CopyFiles */,
+				F791D96119111D7F00E0703F /* sao.frag in CopyFiles */,
 				F7DE34341907C5A900D21981 /* cascadedShadowMap.frag in CopyFiles */,
 				F7DD1C06190446EF00B6BF14 /* deferredSun.frag in CopyFiles */,
 				F71323F118C47FCF00C718D8 /* cubeDownsample.frag in CopyFiles */,
@@ -332,9 +335,7 @@
 				F71323EB18C47FC500C718D8 /* deferredAmbient.frag in CopyFiles */,
 				F71323EC18C47FC500C718D8 /* deferredSpot.frag in CopyFiles */,
 				F71323ED18C47FC500C718D8 /* cubeSky.frag in CopyFiles */,
-				F71323EE18C47FC500C718D8 /* ssao.frag in CopyFiles */,
 				F71323EF18C47FC500C718D8 /* cubePass.frag in CopyFiles */,
-				F71323F018C47FC500C718D8 /* blur.frag in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,6 +345,8 @@
 			dstPath = Shaders;
 			dstSubfolderSpec = 16;
 			files = (
+				F791D9641918517000E0703F /* sao.frag in CopyFiles */,
+				F791D9651918517000E0703F /* saoBlur.frag in CopyFiles */,
 				F7DE34351907C5B700D21981 /* cascadedShadowMap.frag in CopyFiles */,
 				F7DD1C07190446F800B6BF14 /* deferredSun.frag in CopyFiles */,
 				F7C2313718CA0D3F00817B69 /* cubeDownsample.frag in CopyFiles */,
@@ -360,9 +363,7 @@
 				F7C2314318CA0D3F00817B69 /* deferredAmbient.frag in CopyFiles */,
 				F7C2314418CA0D3F00817B69 /* deferredSpot.frag in CopyFiles */,
 				F7C2314518CA0D3F00817B69 /* cubeSky.frag in CopyFiles */,
-				F7C2314618CA0D3F00817B69 /* ssao.frag in CopyFiles */,
 				F7C2314718CA0D3F00817B69 /* cubePass.frag in CopyFiles */,
-				F7C2314818CA0D3F00817B69 /* blur.frag in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,6 +373,7 @@
 			dstPath = Data;
 			dstSubfolderSpec = 16;
 			files = (
+				F791D9661918517C00E0703F /* grid.png in CopyFiles */,
 				F7C2314A18CA0D3F00817B69 /* noise.png in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -513,6 +515,8 @@
 		F75B6F2018C3F92F0092C1A2 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftgl.2.1.3.dylib; path = /usr/local/lib/libftgl.2.1.3.dylib; sourceTree = "<absolute>"; };
 		F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = /usr/local/lib/libfreetype.6.dylib; sourceTree = "<absolute>"; };
+		F791D96019111D6C00E0703F /* sao.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sao.frag; sourceTree = "<group>"; };
+		F791D9621918327600E0703F /* saoBlur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saoBlur.frag; sourceTree = "<group>"; };
 		F7A503CB18E7013200913252 /* Gyroscope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gyroscope.h; sourceTree = "<group>"; };
 		F7A503CD18E7014600913252 /* Gyroscope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Gyroscope.cpp; sourceTree = "<group>"; };
 		F7A503CF18E7055000913252 /* RotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotaryEncoder.h; sourceTree = "<group>"; };
@@ -539,9 +543,7 @@
 		F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredAmbient.frag; sourceTree = "<group>"; };
 		F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredSpot.frag; sourceTree = "<group>"; };
 		F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeSky.frag; sourceTree = "<group>"; };
-		F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ssao.frag; sourceTree = "<group>"; };
 		F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubePass.frag; sourceTree = "<group>"; };
-		F7B1DC2C18C40AEC001C0CE8 /* blur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = blur.frag; sourceTree = "<group>"; };
 		F7B1DC2D18C40AEC001C0CE8 /* noise.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = noise.png; sourceTree = "<group>"; };
 		F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeDownsample.frag; sourceTree = "<group>"; };
 		F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeConvolve.frag; sourceTree = "<group>"; };
@@ -985,13 +987,13 @@
 				F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */,
 				F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */,
 				F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */,
-				F7B1DC2A18C40AEC001C0CE8 /* ssao.frag */,
 				F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */,
-				F7B1DC2C18C40AEC001C0CE8 /* blur.frag */,
 				F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */,
 				F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */,
 				F7DE34331907C49000D21981 /* cascadedShadowMap.frag */,
 				F7B1DC3218C40AEC001C0CE8 /* saq.vert */,
+				F791D96019111D6C00E0703F /* sao.frag */,
+				F791D9621918327600E0703F /* saoBlur.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";

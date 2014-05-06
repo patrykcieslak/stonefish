@@ -73,7 +73,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     }
     
     cp.m_combinedFriction = mat0->staticFriction[mat1->index];
-    cp.m_combinedRollingFriction = mat0->dynamicFriction[mat1->index];
+    cp.m_combinedRollingFriction = mat0->dynamicFriction[mat1->index] * 0.1f;
     cp.m_combinedRestitution = mat0->restitution * mat1->restitution;
     
     //printf("%s<->%s %f %f %f\n", mat0->name.c_str(), mat1->name.c_str(), cp.m_combinedFriction, cp.m_combinedRollingFriction, cp.m_combinedRestitution);
@@ -228,10 +228,10 @@ void SimulationManager::BuildScenario()
     dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration(); //dwCollisionConfig = new btDefaultCollisionConfiguration();
     dwDispatcher = new btCollisionDispatcher(dwCollisionConfig); //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
     dwBroadphase = new btDbvtBroadphase();
-    //dwSolver = new btSequentialImpulseConstraintSolver();
-    btDantzigSolver* mlcp = new btDantzigSolver();
+    dwSolver = new btSequentialImpulseConstraintSolver();
+    //btDantzigSolver* mlcp = new btDantzigSolver();
     //btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
-    dwSolver = new btMLCPSolver(mlcp);
+    //dwSolver = new btMLCPSolver(mlcp);
     btSoftBodySolver* softBodySolver = 0;
     dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver); //dynamicsWorld = new btDiscreteDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     

@@ -12,7 +12,7 @@
 int main(int argc, const char * argv[])
 {
     RollingTestManager* simulationManager = new RollingTestManager(100.0);
-    RollingTestApp app(800, 600, simulationManager);
+    RollingTestApp app(1100, 700, simulationManager);
     app.Init("Data", "Shaders");
     app.EventLoop();
     app.CleanUp();

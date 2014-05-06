@@ -55,7 +55,7 @@ public:
     static void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao, GLint shadow);
     static void SetCamera(OpenGLView* view);
     static void RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp);
-   
+    
     //Utilities
     static GLfloat* ColorFromTemperature(GLfloat temperatureK, GLfloat intensity);
     

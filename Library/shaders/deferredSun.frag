@@ -4,7 +4,7 @@
 uniform sampler2D texDiffuse;
 uniform sampler2D texPosition;
 uniform sampler2D texNormal;
-uniform sampler2DArrayShadow texShadowArray;
+uniform sampler2DArray texShadowArray;
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform vec4 frustumFar;
@@ -54,14 +54,26 @@ float calculateShadowCoef(float depth, vec4 eyePosition, float bias)
 
     //Compare
     float visibility = 1.0;
+    float shadowDepth = texture2DArray(texShadowArray, vec3(shadowCoord.xy, float(index))).x;
+    float diff = fragmentDepth - shadowDepth;
+    
+    if(diff > 0)
+        diff = diff * 2.0 + 1.0;
+    else
+        diff = 1.0;
+    
     for(int i=0; i<4; i++)
     {
         int pdIndex = int(mod(random(floor(eyePosition.xyz * 1000.0), i) * 16.0, 16.0));
-        //float shadowDepth = texture2DArray(texShadowArray, vec3(shadowCoord.xy + poissonDisk[pdIndex]/(750.0 + 50.0 * depth), float(index))).x;
-        //if(shadowDepth < fragmentDepth)
-        //    visibility -= 0.25;
-        visibility -= 0.25 * (1.0 - shadow2DArray(texShadowArray, vec4(shadowCoord.xy + poissonDisk[pdIndex]/(750.0 + 50.0 * depth), float(index), fragmentDepth)).x);
+        float shadowDepth = texture2DArray(texShadowArray, vec3(shadowCoord.xy + poissonDisk[pdIndex] * diff * diff/(750.0 + 50.0 * depth), float(index))).x;
+        
+        if(shadowDepth < fragmentDepth)
+            visibility -= 0.25;
+        
+        //visibility -= 0.25 * (1.0 - shadow2DArray(texShadowArray, vec4(shadowCoord.xy + poissonDisk[pdIndex]/(750.0 + 50.0 * depth), float(index), fragmentDepth)).x);
     }
+    visibility = sqrt(visibility);
+    
     return visibility;
 }
 

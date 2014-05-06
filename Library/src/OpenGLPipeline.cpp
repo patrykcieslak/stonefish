@@ -132,8 +132,12 @@ void OpenGLPipeline::Render()
                 glActiveTextureARB(GL_TEXTURE1_ARB);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, OpenGLView::getRandomTexture());
+    
+                glActiveTextureARB(GL_TEXTURE2_ARB);
+                glEnable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(0));
                 
-                OpenGLView::SetTextureUnits(0, 1);
+                OpenGLView::SetTextureUnits(2, 0, 1);
                 simulation->views[i]->RenderSSAO();
             }
             
@@ -243,7 +247,7 @@ void OpenGLPipeline::Render()
             simulation->views[i]->SetViewTransform();
             
             //Coordinate systems
-            DrawCoordSystem(2.f);
+            //DrawCoordSystem(2.f);
             //OpenGLSun::ShowFrustumSplits();
             
             if(showCoordSys)
@@ -325,13 +329,14 @@ void OpenGLPipeline::Render()
             glDisable(GL_SCISSOR_TEST);
             
             //Debugging
+            //simulation->views[i]->ShowAmbientOcclusion();
             //simulation->lights[0]->RenderShadowMap(this);
             //simulation->lights[0]->ShowShadowMap(0, 0, 0.5f);
             //OpenGLSun::ShowShadowMaps(0, 0, 0.2);
             //OpenGLSky::ShowCubemap(CONVOLUTION_DIFFUSE, 0, 0, 400, 400);
             //OpenGLSky::ShowCubemap(CONVOLUTION_REFLECT, 400, 0, 400, 400);
-            //views[i]->getGBuffer()->ShowTexture(POSITION1, 0,0,250,200); // FBO debugging
-            //views[i]->getGBuffer()->ShowTexture(POSITION2, 0,200,250,200); // FBO debugging
+            //simulation->views[i]->getGBuffer()->ShowTexture(POSITION1, 0,0,250,200); // FBO debugging
+            //simulation->views[i]->getGBuffer()->ShowTexture(POSITION2, 0,200,250,200); // FBO debugging
             
             delete viewport;
         }

@@ -27,8 +27,9 @@ x Sun shadow (Cascaded Shadow Maps)
 x Drawing global coordinate system + grid
 x Shadow filtering to improve borders
 x Material shading
-- IMGUI PhasePlot
+x New ambient occlusion algorithm - SAO (+ edge-aware blur)
 - IMU (true and fake)
+- IMGUI PhasePlot
 - Joint limits
 - GearJoint/BeltJoint from two revolute joints
 - HDR + bloom (lighting blur)
@@ -56,3 +57,4 @@ x Material shading
 - Cable entity -> soft body rope
 - Omni light shadows
 - Transparency
+- Blur sun shadow

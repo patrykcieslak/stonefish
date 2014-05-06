@@ -14,29 +14,20 @@
 GLhandleARB OpenGLView::ssaoShader = NULL;
 GLhandleARB OpenGLView::blurShader = NULL;
 GLhandleARB OpenGLView::fluidShader[] = {NULL, NULL, NULL, NULL};
-GLuint OpenGLView::randomTexture = 0;
 GLint OpenGLView::randomTextureUnit = -1;
+GLuint OpenGLView::randomTexture = 0;
+GLint OpenGLView::positionTextureUnit = -1;
 GLint OpenGLView::normalTextureUnit = -1;
-GLint OpenGLView::uniSsaoNormal = -1;
-GLint OpenGLView::uniSsaoRandom = -1;
-GLint OpenGLView::uniSsaoEpsilon = -1;
-GLint OpenGLView::uniSsaoViewport = -1;
-GLint OpenGLView::uniSsaoIP = -1;
-GLint OpenGLView::uniSsaoIVR = -1;
-GLint OpenGLView::uniSsaoP = -1;
-GLint OpenGLView::uniSsaoRandomSize = -1;
-GLint OpenGLView::uniSsaoFullOcclTh = -1;
-GLint OpenGLView::uniSsaoNoOcclTh = -1;
-GLint OpenGLView::uniSsaoOcclPower = -1;
-GLint OpenGLView::uniSsaoRadius = -1;
-GLint OpenGLView::uniBlurViewport = -1;
-GLint OpenGLView::uniBlurSource = -1;
-GLint OpenGLView::uniBlurNormal = -1;
-GLint OpenGLView::uniBlurAxis = -1;
-GLint OpenGLView::uniBlurNormalFactor = -1;
-GLint OpenGLView::uniBlurNormalPower = -1;
-GLint OpenGLView::uniBlurDepthPower = -1;
-GLint OpenGLView::uniBlurDistanceFactor = -1;
+GLint OpenGLView::uniSaoRandom = -1;
+GLint OpenGLView::uniSaoPosition = -1;
+GLint OpenGLView::uniSaoNormal = -1;
+GLint OpenGLView::uniSaoRadius = -1;
+GLint OpenGLView::uniSaoBias = -1;
+GLint OpenGLView::uniSaoProjScale = -1;
+GLint OpenGLView::uniSaoIntDivR6 = -1;
+GLint OpenGLView::uniSaoViewport = -1;
+GLint OpenGLView::uniSaoBlurSource = -1;
+GLint OpenGLView::uniSaoBlurAxis = -1;
 GLint OpenGLView::uniFluidReflection[] = {-1,-1};
 GLint OpenGLView::uniFluidPosition[] = {-1,-1,-1};
 GLint OpenGLView::uniFluidViewport[] = {-1,-1,-1};
@@ -109,7 +100,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         glGenTextures(1, &ssaoTexture);
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -127,7 +118,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         glGenTextures(1, &hBlurTexture);
         glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -145,7 +136,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         glGenTextures(1, &vBlurTexture);
         glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -432,17 +423,11 @@ void OpenGLView::RenderSSAO()
 {
     if(ssaoSizeDiv > 0)
     {
-        glm::mat4 invProj= glm::inverse(projection);
-        
-        btTransform viewtrans = GetViewTransform();
-        btMatrix3x3 ivr = viewtrans.getBasis().inverse();
-        GLfloat IVRMatrix[9];
-        SetFloatvFromMat(ivr, IVRMatrix);
-        
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         
+        //Draw SAO
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ssaoFBO);
         glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
         SetupOrtho();
@@ -450,63 +435,87 @@ void OpenGLView::RenderSSAO()
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glClear(GL_COLOR_BUFFER_BIT);
         
+        GLfloat intensity = 0.5;
+        GLfloat radius = 0.5;
+        GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth/ssaoSizeDiv)/2.f;
+        
         glUseProgramObjectARB(ssaoShader);
-        //Params for MKS
-        glUniform1f(uniSsaoRadius,      0.25f);  //Search radius
-        glUniform1f(uniSsaoEpsilon,     0.0001f);//Zero epsilon
-        glUniform1f(uniSsaoNoOcclTh,    0.1f);   //Distance without occlusion
-        glUniform1f(uniSsaoFullOcclTh,  0.005f); //Distance with total occlusion
-        glUniform1f(uniSsaoOcclPower,   0.5f);   //Function of occlusion vs distance
-        glUniform1f(uniSsaoRandomSize,  64.f);   //Size of random texture
-        glUniform2f(uniSsaoViewport, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        glUniform1i(uniSsaoNormal, normalTextureUnit);
-        glUniform1i(uniSsaoRandom, randomTextureUnit);
-        glUniformMatrix4fv(uniSsaoP, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(uniSsaoIP, 1, GL_FALSE, glm::value_ptr(invProj));
-        glUniformMatrix3fv(uniSsaoIVR, 1, GL_FALSE, IVRMatrix);
+        glUniform1i(uniSaoRandom, randomTextureUnit);
+        glUniform1i(uniSaoPosition, positionTextureUnit);
+        glUniform1i(uniSaoNormal, normalTextureUnit);
+        glUniform1f(uniSaoRadius, radius);
+        glUniform1f(uniSaoBias, 0.012);
+        glUniform1f(uniSaoProjScale, projScale);
+        glUniform1f(uniSaoIntDivR6, intensity/pow(radius, 6.0));
+        glUniform2f(uniSaoViewport, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
         DrawScreenAlignedQuad();
         glUseProgramObjectARB(0);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-        
+
+        //Blur SAO
         glActiveTextureARB(GL_TEXTURE0_ARB + randomTextureUnit);
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
         
-        glUseProgramObjectARB(blurShader);
-        GLfloat blurSize = 2.5f;
-        glUniform2f(uniBlurViewport, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        glUniform1i(uniBlurSource, randomTextureUnit);
-        glUniform1i(uniBlurNormal, normalTextureUnit);
-        glUniform1f(uniBlurNormalPower, 1.0f);
-        glUniform1f(uniBlurNormalFactor, 0.5f);
-        glUniform1f(uniBlurDepthPower, 2.0f);
-        glUniform1f(uniBlurDistanceFactor, 1.0f);
-        glUniform2f(uniBlurAxis, blurSize, 0.f);
-        
-        for(int i=0; i<4; i++)
+        for(int i=0; i<1; i++)
         {
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, hBlurFBO);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-            glClear(GL_COLOR_BUFFER_BIT);
+            
+            glUseProgramObjectARB(blurShader);
+            glUniform1i(uniSaoBlurSource, randomTextureUnit);
+            glUniform2f(uniSaoBlurAxis, 1.f/float(viewportWidth/ssaoSizeDiv), 0.f);
             DrawScreenAlignedQuad();
+            glUseProgramObjectARB(0);
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
             
-            glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-            glUniform2f(uniBlurAxis, 0.f, blurSize);
-            
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, vBlurFBO);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glBindTexture(GL_TEXTURE_2D, hBlurTexture);
+            
+            glUseProgramObjectARB(blurShader);
+            glUniform1i(uniSaoBlurSource, randomTextureUnit);
+            glUniform2f(uniSaoBlurAxis, 0.f, 1.f/float(viewportHeight/ssaoSizeDiv));
             DrawScreenAlignedQuad();
+            glUseProgramObjectARB(0);
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
             
             glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-            glUniform2f(uniBlurAxis, blurSize, 0.f);
         }
         
         glUseProgramObjectARB(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         glPopAttrib();
     }
+}
+
+void OpenGLView::ShowAmbientOcclusion()
+{
+    //save current state
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glPushAttrib(GL_VIEWPORT_BIT);
+    
+    //Set projection and modelview
+    SetupOrtho();
+        
+    //Texture setup
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glBindTexture(GL_TEXTURE_2D, vBlurTexture);
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+        
+    //Render the texture
+    glViewport(0, 0, viewportWidth, viewportHeight);
+    glColor4f(1.f,1.f,1.f,1.f);
+    DrawScreenAlignedQuad();
+    
+    //Reset
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPopAttrib();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 GLuint OpenGLView::getSSAOTexture()
@@ -631,40 +640,30 @@ void OpenGLView::Init()
 {
     GLint compiled = 0;
     GLhandleARB vs = LoadShader(GL_VERTEX_SHADER, "saq.vert", &compiled);
-    GLhandleARB fs = LoadShader(GL_FRAGMENT_SHADER, "ssao.frag", &compiled);
+    GLhandleARB fs = LoadShader(GL_FRAGMENT_SHADER, "sao.frag", &compiled);
     ssaoShader = CreateProgramObject(vs, fs);
     LinkProgram(ssaoShader, &compiled);
     
     glUseProgramObjectARB(ssaoShader);
-    uniSsaoNormal = glGetUniformLocationARB(ssaoShader, "texNormal");
-    uniSsaoRandom = glGetUniformLocationARB(ssaoShader, "texRandom");
-    uniSsaoViewport = glGetUniformLocationARB(ssaoShader, "viewport");
-    uniSsaoRandomSize = glGetUniformLocationARB(ssaoShader, "random_size");
-    uniSsaoRadius = glGetUniformLocationARB(ssaoShader, "radius");
-    uniSsaoEpsilon = glGetUniformLocationARB(ssaoShader, "epsilon");
-    uniSsaoFullOcclTh = glGetUniformLocationARB(ssaoShader, "full_occlusion_treshold");
-    uniSsaoNoOcclTh = glGetUniformLocationARB(ssaoShader, "no_occlusion_treshold");
-    uniSsaoOcclPower = glGetUniformLocationARB(ssaoShader, "occlusion_power");
-    uniSsaoIP = glGetUniformLocationARB(ssaoShader, "inv_proj");
-    uniSsaoP = glGetUniformLocationARB(ssaoShader, "proj");
-    uniSsaoIVR = glGetUniformLocationARB(ssaoShader, "inv_rot");
+    uniSaoRandom = glGetUniformLocationARB(ssaoShader, "texRandom");
+    uniSaoPosition = glGetUniformLocationARB(ssaoShader, "texPosition");
+    uniSaoNormal = glGetUniformLocationARB(ssaoShader, "texNormal");
+    uniSaoRadius = glGetUniformLocationARB(ssaoShader, "radius");
+    uniSaoBias = glGetUniformLocationARB(ssaoShader, "bias");
+    uniSaoProjScale = glGetUniformLocationARB(ssaoShader, "projScale");
+    uniSaoIntDivR6 = glGetUniformLocationARB(ssaoShader, "intensityDivR6");
+    uniSaoViewport = glGetUniformLocationARB(ssaoShader, "viewportSize");
     glUseProgramObjectARB(0);
     
     randomTexture = LoadInternalTexture("noise.png");
     
-    fs = LoadShader(GL_FRAGMENT_SHADER, "blur.frag", &compiled);
+    fs = LoadShader(GL_FRAGMENT_SHADER, "saoBlur.frag", &compiled);
     blurShader = CreateProgramObject(vs, fs);
     LinkProgram(blurShader, &compiled);
     
     glUseProgramObjectARB(blurShader);
-    uniBlurNormal = glGetUniformLocationARB(blurShader, "texNormal");
-    uniBlurSource = glGetUniformLocationARB(blurShader, "source");
-    uniBlurViewport = glGetUniformLocationARB(blurShader, "viewport");
-    uniBlurAxis = glGetUniformLocationARB(blurShader, "axis");
-    uniBlurNormalFactor = glGetUniformLocationARB(blurShader, "normal_factor");
-    uniBlurNormalPower = glGetUniformLocationARB(blurShader, "normal_power");
-    uniBlurDepthPower = glGetUniformLocationARB(blurShader, "depth_power");
-    uniBlurDistanceFactor = glGetUniformLocationARB(blurShader, "distance_factor");
+    uniSaoBlurSource = glGetUniformLocationARB(blurShader, "texSource");
+    uniSaoBlurAxis = glGetUniformLocationARB(blurShader, "axis");
     glUseProgramObjectARB(0);
     
     fs = LoadShader(GL_FRAGMENT_SHADER, "fluidBorder.frag", &compiled);
@@ -745,8 +744,9 @@ void OpenGLView::Destroy()
         glDeleteObjectARB(fluidShader[2]);
 }
 
-void OpenGLView::SetTextureUnits(GLint normal, GLint random)
+void OpenGLView::SetTextureUnits(GLint position, GLint normal, GLint random)
 {
+    positionTextureUnit = position;
     normalTextureUnit = normal;
     randomTextureUnit = random;
 }

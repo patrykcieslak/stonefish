@@ -51,6 +51,7 @@ public:
     void Deactivate();
     void RenderSSAO();
     void RenderFluid(FluidEntity* fluid);
+    void ShowAmbientOcclusion();
     
     GLint* GetViewport();
     glm::mat4 GetProjectionMatrix();
@@ -69,7 +70,7 @@ public:
     
     static void Init();
     static void Destroy();
-    static void SetTextureUnits(GLint normal, GLint random);
+    static void SetTextureUnits(GLint position, GLint normal, GLint random);
     static GLuint getRandomTexture();
     
 protected:
@@ -103,13 +104,12 @@ protected:
     //ssao
     static GLhandleARB ssaoShader;
     static GLhandleARB blurShader;
-    static GLint randomTextureUnit;
+    static GLint positionTextureUnit;
     static GLint normalTextureUnit;
+    static GLint randomTextureUnit;
+    static GLint uniSaoRandom, uniSaoPosition, uniSaoNormal, uniSaoRadius, uniSaoProjScale, uniSaoBias, uniSaoIntDivR6, uniSaoViewport;
+    static GLint uniSaoBlurSource, uniSaoBlurAxis;
     static GLuint randomTexture;
-    static GLint uniSsaoNormal, uniSsaoRandom, uniSsaoViewport, uniSsaoRadius, uniSsaoEpsilon, uniSsaoFullOcclTh, uniSsaoNoOcclTh;
-    static GLint uniSsaoOcclPower, uniSsaoRandomSize, uniSsaoP, uniSsaoIP, uniSsaoIVR;
-    static GLint uniBlurSource, uniBlurNormal, uniBlurViewport, uniBlurDistanceFactor, uniBlurNormalFactor;
-    static GLint uniBlurDepthPower, uniBlurNormalPower, uniBlurAxis;
     
     //fluid
     static GLhandleARB fluidShader[4];
