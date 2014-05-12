@@ -13,14 +13,24 @@
 
 #define SPHERE_RESOLUTION 48
 
-void SetupOrtho();
-void DrawScreenAlignedQuad();
-void DrawCoordSystem(GLfloat size);
-void DrawPoint(GLfloat size);
-void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ);
-void DrawSolidSphere(GLfloat radius);
-void DrawPointSphere(GLfloat radius);
-void DrawSolidCylinder(GLfloat radius, GLfloat height);
-void DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius);
+class OpenGLSolids
+{
+public:
+    static void Init();
+    static void Destroy();
+    static void SetupOrtho();
+    static void DrawScreenAlignedQuad();
+    static void DrawCoordSystem(GLfloat size);
+    static void DrawPoint(GLfloat size);
+    static void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ);
+    static void DrawSolidSphere(GLfloat radius);
+    static void DrawPointSphere(GLfloat radius);
+    static void DrawSolidCylinder(GLfloat radius, GLfloat height);
+    static void DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius);
+    
+private:
+    OpenGLSolids();
+    static GLint saqDisplayList;
+};
 
 #endif

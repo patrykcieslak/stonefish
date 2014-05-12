@@ -31,6 +31,10 @@ JointType BeltJoint::getType()
     return BELT;
 }
 
+void BeltJoint::ApplyDamping()
+{
+}
+
 btVector3 BeltJoint::Render()
 {
     return btVector3();

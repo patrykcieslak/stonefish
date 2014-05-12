@@ -17,8 +17,9 @@
 #include "Sensor.h"
 
 //font
-#define FONT_NAME "/Library/Fonts/Arial Narrow Bold.ttf"
+#define FONT_NAME "/Library/Fonts/Arial.ttf"
 #define FONT_SIZE 12
+#define SCREEN_DPI 72
 
 //interface colors
 #define PANEL_BACKGROUND_COLOR 0
@@ -61,7 +62,12 @@
 #define PLOT_TITLE_COLOR 37
 #define PLOT_AXES_COLOR 38
 #define PLOT_GRID_COLOR 39
-#define PLOT_DATA_COLOR 40
+#define PLOT_DATA_COLOR1 40
+#define PLOT_DATA_COLOR2 41
+#define PLOT_DATA_COLOR3 42
+#define PLOT_DATA_COLOR4 43
+#define PLOT_DATA_COLOR5 44
+#define PLOT_DATA_COLOR6 45
 
 struct ui_id
 {
@@ -115,7 +121,7 @@ public:
     double DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title);
     bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
     bool DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
-    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, const char* title, double fixedRange[2] = NULL, unsigned int historyLength = 0);
+    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, double fixedRange[2] = NULL, unsigned int historyLength = 0);
     //bool DoPhasePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
     //bool DoPolarPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
     

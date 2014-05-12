@@ -32,7 +32,7 @@ public:
     void Render();
     
     virtual void SetLook(Look newLook);
-    virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btVector3& centerOfGravity);
+    virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
     
     virtual SolidEntityType getSolidType() = 0;
     virtual btCollisionShape* BuildCollisionShape() = 0;

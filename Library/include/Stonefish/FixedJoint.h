@@ -17,8 +17,9 @@ public:
     FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
     ~FixedJoint();
     
-    JointType getType();
+    void ApplyDamping();
     btVector3 Render();
+    JointType getType();
     
 private:
 };

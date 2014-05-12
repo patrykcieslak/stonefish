@@ -23,6 +23,7 @@ public:
     void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);
     
     void setVoltage(btScalar volt);
+    btScalar getTorque();
     ActuatorType getType();
     
 private:
@@ -34,6 +35,7 @@ private:
     
     //states
     btScalar I;
+    btScalar torque;
     
     //motor params
     btScalar R;

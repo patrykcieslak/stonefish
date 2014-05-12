@@ -17,6 +17,7 @@ public:
     GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio);
     ~GearJoint();
     
+    void ApplyDamping();
     btVector3 Render();
     JointType getType();
     btScalar getRatio();

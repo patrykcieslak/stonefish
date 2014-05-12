@@ -24,6 +24,7 @@ DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motor
     //Internal states
     I = btScalar(0);
     V = btScalar(0);
+    torque = btScalar(0);
 }
 
 DCMotor::~DCMotor()
@@ -35,6 +36,11 @@ void DCMotor::setVoltage(btScalar volt)
     V = volt;
 }
 
+btScalar DCMotor::getTorque()
+{
+    return UnitSystem::GetLength(torque);
+}
+
 ActuatorType DCMotor::getType()
 {
     return DC_MOTOR;
@@ -42,7 +48,7 @@ ActuatorType DCMotor::getType()
 
 btVector3 DCMotor::Render()
 {
-    return btVector3();
+    return btVector3(0.f,0.f,0.f);
 }
 
 void DCMotor::SetupGearbox(bool enable, btScalar ratio, btScalar efficiency)
@@ -56,7 +62,6 @@ void DCMotor::Update(btScalar dt)
 {
     //Get joint angular velocity in radians
     btScalar aVelocity = UnitSystem::SetAngle(output->getAngularVelocity());
-    btScalar torque;
     
     //Calculate internal state and output
     if(gearEnabled)

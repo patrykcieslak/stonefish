@@ -1,3 +1,4 @@
+Implemented:
 x Ability to set internal unit system -> MKS as default
 x Add global coord system choice (z-up or z-down)
 x Torus collision shape
@@ -28,19 +29,37 @@ x Drawing global coordinate system + grid
 x Shadow filtering to improve borders
 x Material shading
 x New ambient occlusion algorithm - SAO (+ edge-aware blur)
-- IMU (true and fake)
-- IMGUI PhasePlot
+x Revolute joint damping
+x Replaced Bullet motors with direct force/torque (it was blowing up!)
+x Optimized, fast text rendering -> FTGL exchanged for OGLFT (true-type fonts through Freetype2)
+x Adaptive shadow sampling with spiral sample pattern (high precision sampling only for the borders of shadows)
+x Setting arbitrary physical properties for simple solid entities
+x Comparison with ADAMS for a double pendulum (undamped and damped case) - ALMOST IDENTICAL!
+x Tested double precision - NO SIGNIFICANT DIFFERENCE!
+x Trackball class rewritten
+x Controller architecture
+x Servo controller (PID)
+x Removed autopointers from Sensor
+x Fixed simulation time
+x Fake IMU - ideal readings from Bullet, RPY angles
+x Collision filtering or contact joints - exclusive or inclusive
+x Easy solver and collision filtering setup
 - Joint limits
-- GearJoint/BeltJoint from two revolute joints
-- HDR + bloom (lighting blur)
-- Reflective material
-- CSM -> take scene bounding box to build better crop matrix
+- Acrobot SS controller
+- MWR SS controller
+- IMGUI PhasePlot
+- Fixed rendering of initial configuration
 
-- IMGUI PolarPlot
-- IMGUI gauge
+Simulation:
+- Gyroscopic effect
+- Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
+- Joystick controller/teleoperation
+- True IMU - acc, gyro, kalman filter etc.
+- Setting arbitrary physical properties for MeshEntity
+- Cable entity -> soft body rope
+- GearJoint/BeltJoint from two revolute joints
+- AHRS
 - Linear actuator
-- Drawing actuators
-- Stickers
 - Camera with lens
 - GPS
 - Linear encoder
@@ -48,13 +67,31 @@ x New ambient occlusion algorithm - SAO (+ edge-aware blur)
 - Ultrasonic range finder
 - Laser scanner 2d
 - Laser scanner 3d
+- Battery
+- Solar panel
+
+Underwater:
+- Account for localTransform in buoyancy calculation
+- Water rendering
+- Underwater rendering
 - DVL
 - Multi-beam
 - Side sonar
-- Fix rendering of initial configuration
-- Fix trackball target position
-- Draw camera frustum and sensors
-- Cable entity -> soft body rope
+- Thruster
+
+Graphics:
+- Object picking to display info/modify params
+- HDR tonemapping (Film curve)
+- Reflective material
+- CSM -> take scene bounding box to build better crop matrix
+- IMGUI Gauge
+- IMGUI vertical progress bar(filled tube)
+- IMGUI Stonefish logo
+- Drawing actuators
+- Drawing camera frustum and sensors
+- Stickers
 - Omni light shadows
-- Transparency
-- Blur sun shadow
+- Stencil light volumes (taking into account the attenuation)
+- Order Independent Transparency
+- Lens flare with occlusion query
+- Bloom

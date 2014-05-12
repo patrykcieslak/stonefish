@@ -24,14 +24,12 @@
 #include "BeltJoint.h"
 #include "DCMotor.h"
 
-JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(MMKS, true, stepsPerSecond)
+JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(MMKS, true, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 
 void JointsTestManager::BuildScenario()
 {
-    SimulationManager::BuildScenario();
-    
     //--------------------Using MMSK unit system--------------------
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 7.8), 0.8);
@@ -46,7 +44,7 @@ void JointsTestManager::BuildScenario()
     Look green = CreateMatteLook(0.2f, 1.f, 0.3f, 0.5f);
     
     ////////OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.f)));
+    PlaneEntity* floor = new PlaneEntity("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)));
     floor->setRenderable(true);
     AddEntity(floor);
     

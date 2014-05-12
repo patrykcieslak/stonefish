@@ -17,8 +17,9 @@ public:
     SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities = true);
     ~SphericalJoint();
     
-    JointType getType();
+    void ApplyDamping();
     btVector3 Render();
+    JointType getType();
     
 private:
 };

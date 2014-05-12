@@ -17,8 +17,9 @@ public:
     PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities = true);
     ~PrismaticJoint();
     
-    JointType getType();
+    void ApplyDamping();
     btVector3 Render();
+    JointType getType();
     
 private:
     btVector3 axisInA;

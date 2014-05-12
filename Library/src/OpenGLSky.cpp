@@ -287,7 +287,7 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
     IVR = IVR._inverse();
     glUniformMatrix3fv(ivrUniform, 1, GL_FALSE, glm::value_ptr(IVR));
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, cubemap, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
     V = glm::rotate(V, 90.f, glm::vec3(0.f,1.f,0.f));
@@ -296,7 +296,7 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
     IVR = IVR._inverse();
     glUniformMatrix3fv(ivrUniform, 1, GL_FALSE, glm::value_ptr(IVR));
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemap, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
     V = glm::rotate(V, 90.f, glm::vec3(1.f,0.f,0.f));
@@ -304,7 +304,7 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
     IVR = IVR._inverse();
     glUniformMatrix3fv(ivrUniform, 1, GL_FALSE, glm::value_ptr(IVR));
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, cubemap, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
     V = glm::rotate(V, 180.f, glm::vec3(0.f,1.f,0.f));
@@ -313,7 +313,7 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
     IVR = IVR._inverse();
     glUniformMatrix3fv(ivrUniform, 1, GL_FALSE, glm::value_ptr(IVR));
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, cubemap, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
     V = glm::rotate(V, -90.f, glm::vec3(1.f,0.f,0.f));
@@ -321,7 +321,7 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
     IVR = IVR._inverse();
     glUniformMatrix3fv(ivrUniform, 1, GL_FALSE, glm::value_ptr(IVR));
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, cubemap, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
     V = glm::rotate(V, -90.f, glm::vec3(0.f,1.f,0.f));
@@ -330,7 +330,7 @@ void OpenGLSky::ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment)
     IVR = IVR._inverse();
     glUniformMatrix3fv(ivrUniform, 1, GL_FALSE, glm::value_ptr(IVR));
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, cubemap, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
 }
 
 void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
@@ -519,7 +519,7 @@ void OpenGLSky::Render(OpenGLView *view, const btTransform& viewTransform, bool 
     glUniformMatrix4fv(uniSkyDrawIP, 1, GL_FALSE, glm::value_ptr(projection));
     glUniformMatrix3fv(uniSkyDrawIVR, 1, GL_FALSE, IVRMatrix);
     glUniform1i(uniSkyDrawSampler, 0);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     glUseProgramObjectARB(0);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);

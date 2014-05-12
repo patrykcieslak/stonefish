@@ -9,7 +9,32 @@
 #include "OpenGLSolids.h"
 #include <math.h>
 
-void SetupOrtho()
+GLint OpenGLSolids::saqDisplayList = 0;
+
+void OpenGLSolids::Init()
+{
+    saqDisplayList = glGenLists(1);
+    glNewList(saqDisplayList, GL_COMPILE);
+    glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(0, 0);
+    glVertex3f(-1.0f, -1.0f, 0.0f);
+    glTexCoord2f(1.f, 0);
+    glVertex3f(1.f, -1.0f, 0.0f);
+    glTexCoord2f(0, 1.f);
+    glVertex3f(-1.0f, 1.f, 0.0f);
+    glTexCoord2f(1.f, 1.f);
+    glVertex3f(1.f, 1.f, 0.0f);
+    glEnd();
+    glEndList();
+}
+
+void OpenGLSolids::Destroy()
+{
+    if(saqDisplayList != 0)
+        glDeleteLists(saqDisplayList, 1);
+}
+
+void OpenGLSolids::SetupOrtho()
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -19,21 +44,12 @@ void SetupOrtho()
     glLoadIdentity();
 }
 
-void DrawScreenAlignedQuad()
+void OpenGLSolids::DrawScreenAlignedQuad()
 {
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0);
-    glVertex3f(-1.0f, -1.0f, 0.0f);
-    glTexCoord2f(1.f, 0);
-    glVertex3f(1.f, -1.0f, 0.0f);
-    glTexCoord2f(1.f, 1.f);
-    glVertex3f(1.f, 1.f, 0.0f);
-    glTexCoord2f(0, 1.f);
-    glVertex3f(-1.0f, 1.f, 0.0f);
-    glEnd();
+    glCallList(saqDisplayList);
 }
 
-void DrawCoordSystem(GLfloat size)
+void OpenGLSolids::DrawCoordSystem(GLfloat size)
 {
     glBegin(GL_LINES);
     glXAxisColor();
@@ -50,7 +66,7 @@ void DrawCoordSystem(GLfloat size)
     glEnd();
 }
 
-void DrawPoint(GLfloat size)
+void OpenGLSolids::DrawPoint(GLfloat size)
 {
     glBegin(GL_LINES);
     glVertex3f(-size, 0, 0);
@@ -62,7 +78,7 @@ void DrawPoint(GLfloat size)
     glEnd();
 }
 
-void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ)
+void OpenGLSolids::DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ)
 {
     glBegin(GL_TRIANGLES);
     //front
@@ -121,7 +137,7 @@ void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ)
     glEnd();
 }
 
-void DrawSolidSphere(GLfloat radius)
+void OpenGLSolids::DrawSolidSphere(GLfloat radius)
 {
     for(int i = -(SPHERE_RESOLUTION/4-1); i<(SPHERE_RESOLUTION/4-1); i++)
     {
@@ -158,7 +174,7 @@ void DrawSolidSphere(GLfloat radius)
     glEnd();
 }
 
-void DrawPointSphere(GLfloat radius)
+void OpenGLSolids::DrawPointSphere(GLfloat radius)
 {
     for(int i=-5; i<=5; i++)
     {
@@ -177,7 +193,7 @@ void DrawPointSphere(GLfloat radius)
     }
 }
 
-void DrawSolidCylinder(GLfloat radius, GLfloat height)
+void OpenGLSolids::DrawSolidCylinder(GLfloat radius, GLfloat height)
 {
     glBegin(GL_TRIANGLE_STRIP);
     for(int i=0; i<=24; i++)
@@ -213,7 +229,7 @@ void DrawSolidCylinder(GLfloat radius, GLfloat height)
     glEnd();
 }
 
-void DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius)
+void OpenGLSolids::DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius)
 {
     for(int i=0; i<48; i++)
     {

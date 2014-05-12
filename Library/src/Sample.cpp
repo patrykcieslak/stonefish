@@ -27,7 +27,7 @@ Sample::Sample(const Sample& other)
 
 Sample::~Sample()
 {
-    delete[] data;
+    delete [] data;
 }
 
 btScalar Sample::getTimestamp()
@@ -37,7 +37,7 @@ btScalar Sample::getTimestamp()
 
 btScalar Sample::getValue(ushort dimension)
 {
-    if(dimension < nDim)
+    if((dimension < nDim) && (data != NULL))
         return data[dimension];
     else
         return btScalar(0.);

@@ -59,8 +59,20 @@ void SolidEntity::SetHydrodynamicProperties(btVector3 dragCoefficients, btVector
     addInertia = addedInertia;
 }
 
-void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btVector3& centerOfGravity)
+void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform)
 {
+    if(rigidBody != NULL)
+    {
+        this->mass = UnitSystem::SetMass(mass);
+        Ipri = UnitSystem::SetInertia(inertia);
+        rigidBody->setMassProps(this->mass, Ipri);
+        
+        btTransform internalTrans = UnitSystem::SetTransform(cogTransform);
+        btCompoundShape* colShape = (btCompoundShape*)rigidBody->getCollisionShape();
+        rigidBody->setCenterOfMassTransform(internalTrans * rigidBody->getCenterOfMassTransform());
+        localTransform = internalTrans.inverse();
+        colShape->updateChildTransform(0, localTransform);
+    }
 }
 
 void SolidEntity::SetLook(Look newLook)
@@ -100,7 +112,7 @@ void SolidEntity::Render()
 {
     if(rigidBody != NULL && isRenderable())
     {
-        btTransform trans = getTransform();
+        btTransform trans = getTransform() * localTransform;
         btScalar openglTrans[16];
         trans.getOpenGLMatrix(openglTrans);
         
@@ -123,7 +135,6 @@ btTransform SolidEntity::getTransform()
     {
         btTransform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
-        //trans = rigidBody->getCenterOfMassTransform();
         return trans;
     }
     
@@ -173,9 +184,13 @@ void SolidEntity::BuildRigidBody()
 {
     if(rigidBody == NULL)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(localTransform);
+        btDefaultMotionState* motionState = new btDefaultMotionState(localTransform); //localTransform is non-zero only for MeshEntity
+        localTransform = btTransform::getIdentity(); //clear localTransform passed by the MeshEntity for correct rendering
 	
-        btCollisionShape* colShape = BuildCollisionShape();
+        btCompoundShape* colShape = new btCompoundShape();
+        colShape->addChildShape(btTransform::getIdentity(), BuildCollisionShape());
+        
+        //btCollisionShape* colShape = BuildCollisionShape();
         colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(staticBody ? 0 : mass, motionState, colShape, Ipri);

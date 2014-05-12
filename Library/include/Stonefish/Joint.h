@@ -27,6 +27,7 @@ public:
     Joint(std::string uniqueName, bool collideLinkedEntities = true);
     virtual ~Joint();
     
+    virtual void ApplyDamping() = 0;
 	virtual btVector3 Render() = 0;
     virtual JointType getType() = 0;
     

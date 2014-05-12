@@ -133,11 +133,17 @@ void OpenGLCamera::SetupCamera()
     newUp = newUp.rotate(panAxis, pan);
     newUp = newUp.normalize();
     
+#ifdef BT_USE_DOUBLE_PRECISION
+    glm::dvec3 eyeV(eye.x(), eye.y(), eye.z());
+    glm::dvec3 dirV(lookingDir.x(), lookingDir.y(), lookingDir.z());
+    glm::dvec3 upV(newUp.x(), newUp.y(), newUp.z());
+    glm::dmat4x4 cameraM = glm::lookAt(eyeV, eyeV+dirV, upV);
+#else
     glm::vec3 eyeV(eye.x(), eye.y(), eye.z());
     glm::vec3 dirV(lookingDir.x(), lookingDir.y(), lookingDir.z());
     glm::vec3 upV(newUp.x(), newUp.y(), newUp.z());
     glm::mat4x4 cameraM = glm::lookAt(eyeV, eyeV+dirV, upV);
-    
+#endif
     cameraTransform.setFromOpenGLMatrix(glm::value_ptr(cameraM));
     cameraRender = cameraTransform.inverse();
 }

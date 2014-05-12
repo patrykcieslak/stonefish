@@ -172,7 +172,7 @@ void TorusEntity::BuildDisplayList()
     
     displayList = glGenLists(1);
     glNewList(displayList, GL_COMPILE);
-    DrawSolidTorus(majorRadius, minorRadius);
+    OpenGLSolids::DrawSolidTorus(majorRadius, minorRadius);
     glEndList();
 }
 
@@ -182,7 +182,9 @@ void TorusEntity::BuildCollisionList()
 
 btCollisionShape* TorusEntity::BuildCollisionShape()
 {
-    return new btTorusShape(majorRadius, minorRadius);  //btCylinderShape(btVector3(radius, halfHeight, radius));
+    btTorusShape* colShape = new btTorusShape(majorRadius, minorRadius);
+    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+    return colShape;
 }
 
 void TorusEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,

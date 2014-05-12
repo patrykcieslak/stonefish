@@ -165,7 +165,7 @@ void CableEntity::Render()
 #endif
             glBindTexture(GL_TEXTURE_2D, 0);
             UseLook(look);
-            DrawSolidCylinder(diameter/2.f, partLength);
+            OpenGLSolids::DrawSolidCylinder(diameter/2.f, partLength);
             glPopMatrix();
         }
     }

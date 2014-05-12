@@ -28,6 +28,10 @@ JointType FixedJoint::getType()
     return FIXED;
 }
 
+void FixedJoint::ApplyDamping()
+{
+}
+
 btVector3 FixedJoint::Render()
 {
     btTypedConstraint* fixed = getConstraint();

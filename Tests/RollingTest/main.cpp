@@ -11,7 +11,7 @@
 
 int main(int argc, const char * argv[])
 {
-    RollingTestManager* simulationManager = new RollingTestManager(100.0);
+    RollingTestManager* simulationManager = new RollingTestManager(500.0);
     RollingTestApp app(1100, 700, simulationManager);
     app.Init("Data", "Shaders");
     app.EventLoop();

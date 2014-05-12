@@ -195,7 +195,9 @@ void BoxEntity::BuildCollisionList()
 
 btCollisionShape* BoxEntity::BuildCollisionShape()
 {
-    return new btBoxShape(halfExtents);
+    btBoxShape* colShape = new btBoxShape(halfExtents);
+    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+    return colShape;
 }
 
 void BoxEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,

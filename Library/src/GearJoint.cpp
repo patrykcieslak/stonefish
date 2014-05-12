@@ -30,6 +30,10 @@ JointType GearJoint::getType()
     return GEAR;
 }
 
+void GearJoint::ApplyDamping()
+{
+}
+
 btVector3 GearJoint::Render()
 {
     btGearConstraint* gear = (btGearConstraint*)getConstraint();

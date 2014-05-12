@@ -45,6 +45,10 @@ JointType CylindricalJoint::getType()
     return CYLINDRICAL;
 }
 
+void CylindricalJoint::ApplyDamping()
+{
+}
+
 btVector3 CylindricalJoint::Render()
 {
     btTypedConstraint* cyli = getConstraint();

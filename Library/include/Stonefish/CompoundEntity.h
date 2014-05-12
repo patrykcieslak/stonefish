@@ -29,6 +29,9 @@ public:
     SolidEntity* GetSolid(unsigned int index);
     unsigned long SolidsCount();
     
+    //not applicable
+    void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform) {};
+    
 private:
     void BuildRigidBody();
     void BuildCollisionList();

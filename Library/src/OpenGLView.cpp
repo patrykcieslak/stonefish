@@ -62,7 +62,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
     glGenTextures(1, &sceneTexture);
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -71,7 +71,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
     glGenTextures(1, &sceneReflectionTexture);
     glBindTexture(GL_TEXTURE_2D, sceneReflectionTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -80,7 +80,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
     glGenTextures(1, &sceneRefractionTexture);
     glBindTexture(GL_TEXTURE_2D, sceneRefractionTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -100,9 +100,9 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         glGenTextures(1, &ssaoTexture);
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ssaoTexture, 0);
@@ -205,10 +205,19 @@ glm::mat4 OpenGLView::GetProjectionMatrix()
 
 glm::mat4 OpenGLView::GetViewMatrix()
 {
-    GLfloat glmatrix[16];
     btTransform trans = GetViewTransform();
+#ifdef BT_USE_DOUBLE_PRECISION
+    double glmatrix[16];
+    trans.getOpenGLMatrix(glmatrix);
+    glm::mat4 view((GLfloat)glmatrix[0],(GLfloat)glmatrix[1],(GLfloat)glmatrix[2],(GLfloat)glmatrix[3],
+                   (GLfloat)glmatrix[4],(GLfloat)glmatrix[5],(GLfloat)glmatrix[6],(GLfloat)glmatrix[7],
+                   (GLfloat)glmatrix[8],(GLfloat)glmatrix[9],(GLfloat)glmatrix[10],(GLfloat)glmatrix[11],
+                   (GLfloat)glmatrix[12],(GLfloat)glmatrix[13],(GLfloat)glmatrix[14],(GLfloat)glmatrix[15]);
+#else
+    GLfloat glmatrix[16];
     trans.getOpenGLMatrix(glmatrix);
     glm::mat4 view = glm::make_mat4(glmatrix);
+#endif
     return view;
 }
 
@@ -426,18 +435,19 @@ void OpenGLView::RenderSSAO()
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
         
         //Draw SAO
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ssaoFBO);
-        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        SetupOrtho();
+        glViewport(0, 0, viewportWidth, viewportHeight);
+        OpenGLSolids::SetupOrtho();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glClear(GL_COLOR_BUFFER_BIT);
         
-        GLfloat intensity = 0.5;
-        GLfloat radius = 0.5;
-        GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth/ssaoSizeDiv)/2.f;
+        GLfloat intensity = 1.0;
+        GLfloat radius = 0.25;
+        GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth)/2.f;
         
         glUseProgramObjectARB(ssaoShader);
         glUniform1i(uniSaoRandom, randomTextureUnit);
@@ -447,40 +457,35 @@ void OpenGLView::RenderSSAO()
         glUniform1f(uniSaoBias, 0.012);
         glUniform1f(uniSaoProjScale, projScale);
         glUniform1f(uniSaoIntDivR6, intensity/pow(radius, 6.0));
-        glUniform2f(uniSaoViewport, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        DrawScreenAlignedQuad();
-        glUseProgramObjectARB(0);
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
+        glUniform2f(uniSaoViewport, viewportWidth, viewportHeight);
+        OpenGLSolids::DrawScreenAlignedQuad();
+        
         //Blur SAO
         glActiveTextureARB(GL_TEXTURE0_ARB + randomTextureUnit);
+      
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
         
-        for(int i=0; i<1; i++)
-        {
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, hBlurFBO);
-            
-            glUseProgramObjectARB(blurShader);
-            glUniform1i(uniSaoBlurSource, randomTextureUnit);
-            glUniform2f(uniSaoBlurAxis, 1.f/float(viewportWidth/ssaoSizeDiv), 0.f);
-            DrawScreenAlignedQuad();
-            glUseProgramObjectARB(0);
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-            
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, vBlurFBO);
-            glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-            
-            glUseProgramObjectARB(blurShader);
-            glUniform1i(uniSaoBlurSource, randomTextureUnit);
-            glUniform2f(uniSaoBlurAxis, 0.f, 1.f/float(viewportHeight/ssaoSizeDiv));
-            DrawScreenAlignedQuad();
-            glUseProgramObjectARB(0);
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-            
-            glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-        }
-        
+        //Horizontal blur
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, hBlurFBO);
+        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
+        glUseProgramObjectARB(blurShader);
+        glUniform1i(uniSaoBlurSource, randomTextureUnit);
+        glUniform2f(uniSaoBlurAxis, 1.f/float(viewportWidth/ssaoSizeDiv), 0.f);
+        OpenGLSolids::DrawScreenAlignedQuad();
         glUseProgramObjectARB(0);
+        
+        glBindTexture(GL_TEXTURE_2D, hBlurTexture);
+        
+        //Vertical blur
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, vBlurFBO);
+        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
+        glUseProgramObjectARB(blurShader);
+        glUniform1i(uniSaoBlurSource, randomTextureUnit);
+        glUniform2f(uniSaoBlurAxis, 0.f, 1.f/float(viewportHeight/ssaoSizeDiv));
+        OpenGLSolids::DrawScreenAlignedQuad();
+        glUseProgramObjectARB(0);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+        
         glBindTexture(GL_TEXTURE_2D, 0);
         glPopAttrib();
     }
@@ -496,18 +501,18 @@ void OpenGLView::ShowAmbientOcclusion()
     glPushAttrib(GL_VIEWPORT_BIT);
     
     //Set projection and modelview
-    SetupOrtho();
+    OpenGLSolids::SetupOrtho();
         
     //Texture setup
     glActiveTextureARB(GL_TEXTURE0_ARB);
-    glBindTexture(GL_TEXTURE_2D, vBlurTexture);
+    glBindTexture(GL_TEXTURE_2D, getSSAOTexture());
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
         
     //Render the texture
     glViewport(0, 0, viewportWidth, viewportHeight);
-    glColor4f(1.f,1.f,1.f,1.f);
-    DrawScreenAlignedQuad();
+    glColor4f(1.f,0.f,0.f,1.f);
+    OpenGLSolids::DrawScreenAlignedQuad();
     
     //Reset
     glBindTexture(GL_TEXTURE_2D, 0);

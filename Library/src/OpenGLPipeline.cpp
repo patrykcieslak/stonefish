@@ -23,6 +23,7 @@ OpenGLPipeline::OpenGLPipeline(SimulationManager* sim)
 
 OpenGLPipeline::~OpenGLPipeline()
 {
+    OpenGLSolids::Destroy();
     OpenGLLight::Destroy();
     OpenGLSun::Destroy();
     OpenGLSky::Destroy();
@@ -33,6 +34,7 @@ OpenGLPipeline::~OpenGLPipeline()
 void OpenGLPipeline::Initialize()
 {
     //Load shaders and create rendering buffers
+    OpenGLSolids::Init();
     OpenGLGBuffer::LoadShaders();
     OpenGLView::Init();
     OpenGLSky::Init();
@@ -144,7 +146,7 @@ void OpenGLPipeline::Render()
             //Scene
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
             glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             RenderView(simulation->views[i], simulation->views[i]->GetViewTransform());
             //Render water fog
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -235,11 +237,11 @@ void OpenGLPipeline::Render()
             
             glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            SetupOrtho();
+            OpenGLSolids::SetupOrtho();
             
             glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getSceneTexture());
             glColor4f(1.f, 1.f, 1.f, 1.f);
-            DrawScreenAlignedQuad(); //introduce distortion?
+            OpenGLSolids::DrawScreenAlignedQuad(); //introduce distortion?
             
             /////////OVERLAY DUMMIES////////
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -247,8 +249,7 @@ void OpenGLPipeline::Render()
             simulation->views[i]->SetViewTransform();
             
             //Coordinate systems
-            //DrawCoordSystem(2.f);
-            //OpenGLSun::ShowFrustumSplits();
+            //OpenGLSolids::DrawCoordSystem(2.f);
             
             if(showCoordSys)
             {
@@ -266,7 +267,7 @@ void OpenGLPipeline::Render()
 #else
                         glMultMatrixf(oglComT);
 #endif
-                        DrawCoordSystem(0.1f);
+                        OpenGLSolids::DrawCoordSystem(0.1f);
                         glPopMatrix();
                     }
             }
@@ -345,8 +346,36 @@ void OpenGLPipeline::Render()
 
 void OpenGLPipeline::RenderView(OpenGLView *view, const btTransform& viewTransform)
 {
+    //0. Create stencil mask
+    glEnable(GL_STENCIL_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilMask(0xFF);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glDepthMask(GL_FALSE);
+    view->SetProjection();
+    btScalar openglTrans[16];
+    viewTransform.getOpenGLMatrix(openglTrans);
+    glMatrixMode(GL_MODELVIEW);
+#ifdef BT_USE_DOUBLE_PRECISION
+    glLoadMatrixd(openglTrans);
+#else
+    glLoadMatrixf(openglTrans);
+#endif
+    DrawStandardObjects();
+    glDepthMask(GL_TRUE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    glStencilMask(0x00);
+    
     //1. Enter deferred rendering
-    SetupOrtho();
+    OpenGLSolids::SetupOrtho();
     
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -356,9 +385,14 @@ void OpenGLPipeline::RenderView(OpenGLView *view, const btTransform& viewTransfo
     
     //2. Draw sky
     if(renderSky)
+    {
+        glStencilFunc(GL_EQUAL, 0, 0xFF);
         OpenGLSky::Render(view, viewTransform, simulation->zUp);
+    }
     
     //3. Bind deferred textures to texture units
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    
     glActiveTextureARB(GL_TEXTURE0_ARB);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, view->getGBuffer()->getDiffuseTexture());
@@ -403,6 +437,7 @@ void OpenGLPipeline::RenderView(OpenGLView *view, const btTransform& viewTransfo
     
     //7. Reset OpenGL
     glUseProgramObjectARB(0);
+    glDisable(GL_STENCIL_TEST);
     
     glActiveTextureARB(GL_TEXTURE0_ARB);
     glBindTexture(GL_TEXTURE_2D, 0);

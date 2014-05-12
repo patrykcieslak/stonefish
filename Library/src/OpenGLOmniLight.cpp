@@ -42,7 +42,7 @@ void OpenGLOmniLight::Render()
         glUniform1iARB(uniONormal, normalTextureUnit);
         glUniform3fvARB(uniOLightPos, 1, lposition);
         glUniform4fvARB(uniOColor, 1, getColor());
-        DrawScreenAlignedQuad();
+        OpenGLSolids::DrawScreenAlignedQuad();
         glUseProgramObjectARB(0);
     }
 }
@@ -78,7 +78,7 @@ void OpenGLOmniLight::RenderLightSurface()
 #endif
         //rendering
         glColor4f(color[0], color[1], color[2], 1.0f);
-        DrawSolidSphere(surfaceDistance);
+        OpenGLSolids::DrawSolidSphere(surfaceDistance);
         
         glPopMatrix();
     }

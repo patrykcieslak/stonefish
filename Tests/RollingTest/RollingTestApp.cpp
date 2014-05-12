@@ -9,6 +9,7 @@
 #include "RollingTestApp.h"
 
 #include "OpenGLTrackball.h"
+#include "NativeDialog.h"
 
 RollingTestApp::RollingTestApp(int width, int height, RollingTestManager* sim) : SimulationApp("Rolling Test", width, height, sim)
 {
@@ -42,4 +43,45 @@ void RollingTestApp::MouseScroll(SDL_Event* event)
 {
     OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
     trackball->MouseScroll(event->wheel.y * -1.f);
+}
+
+void RollingTestApp::DoHUD()
+{
+    SimulationApp::DoHUD();
+    
+    ui_id plot;
+    plot.owner = 1;
+    plot.item = 0;
+    plot.index = 0;
+    
+    std::vector<unsigned short> dims;
+    dims.push_back(0);
+    dims.push_back(1);
+    dims.push_back(2);
+    
+    if(getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "RPY"))
+    {
+         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
+        openDialog->Show();
+     
+        char* pathToFile;
+        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
+        {
+            const std::deque<Sample*>& data = getSimulationManager()->getSensor(0)->getHistory();
+            if(data.size() > 0)
+            {
+                FILE* fp;
+                fp = fopen(pathToFile, "wt");
+                
+                for(int i=0; i<data.size(); i++)
+                    fprintf(fp, "%1.6f\n", data[i]->getValue(0));
+                fclose(fp);
+     
+                printf("Saved plot data to %s.\n", pathToFile);
+            }
+        }
+     
+     delete [] pathToFile;
+     delete openDialog;
+     }
 }

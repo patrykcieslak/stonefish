@@ -7,6 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F7037CCA191AA86A00A1FA98 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F7037CD0191AA86A00A1FA98 /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
+		F7037CD1191AA86A00A1FA98 /* saoBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D9621918327600E0703F /* saoBlur.frag */; };
+		F7037CD2191AA86A00A1FA98 /* cascadedShadowMap.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DE34331907C49000D21981 /* cascadedShadowMap.frag */; };
+		F7037CD3191AA86A00A1FA98 /* deferredSun.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DD1C051904466800B6BF14 /* deferredSun.frag */; };
+		F7037CD4191AA86A00A1FA98 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
+		F7037CD5191AA86A00A1FA98 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
+		F7037CD6191AA86A00A1FA98 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
+		F7037CD7191AA86A00A1FA98 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F7037CD8191AA86A00A1FA98 /* fluidBorder.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */; };
+		F7037CD9191AA86A00A1FA98 /* fluidVolume.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */; };
+		F7037CDA191AA86A00A1FA98 /* belowFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */; };
+		F7037CDB191AA86A00A1FA98 /* fluidSurface.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */; };
+		F7037CDC191AA86A00A1FA98 /* aboveFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */; };
+		F7037CDD191AA86A00A1FA98 /* gbuffer.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */; };
+		F7037CDE191AA86A00A1FA98 /* gbuffer.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */; };
+		F7037CDF191AA86A00A1FA98 /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
+		F7037CE0191AA86A00A1FA98 /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
+		F7037CE1191AA86A00A1FA98 /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
+		F7037CE2191AA86A00A1FA98 /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
+		F7037CE4191AA86A00A1FA98 /* grid.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DD1BFE19041AF300B6BF14 /* grid.png */; };
+		F7037CE5191AA86A00A1FA98 /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
+		F7037CEA191AA88600A1FA98 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CBD191AA77600A1FA98 /* main.cpp */; };
+		F7037CEB191AA88600A1FA98 /* AcrobotTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */; };
+		F7037CEC191AA88600A1FA98 /* AcrobotTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */; };
 		F71323BE18C47F0600C718D8 /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
 		F71323E418C47FC500C718D8 /* fluidBorder.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */; };
 		F71323E518C47FC500C718D8 /* fluidVolume.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */; };
@@ -25,23 +50,12 @@
 		F71323F518C47FCF00C718D8 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
 		F716FA2518E0DBF700B7E0F2 /* ADC.h in Headers */ = {isa = PBXBuildFile; fileRef = F716FA2418E0DBF700B7E0F2 /* ADC.h */; };
 		F716FA2718E0DE5F00B7E0F2 /* ADC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */; };
-		F73B0A7718C4C64800E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
-		F73B0A7818C4C64800E128CF /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
-		F73B0A7918C4C64800E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
-		F73B0A7A18C4C64800E128CF /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
+		F739D7AC191C228500AEC1AB /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
 		F73B0A9418C5407300E128CF /* FallingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9218C5407300E128CF /* FallingTestApp.cpp */; };
 		F73B0A9918C5424500E128CF /* FallingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9718C5424500E128CF /* FallingTestManager.cpp */; };
-		F73B0A9A18C5498D00E128CF /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
-		F73B0A9B18C5498D00E128CF /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
-		F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
-		F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
 		F74CEBEA18E485CF00D0C42D /* PrismaticJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F74CEBE918E485CF00D0C42D /* PrismaticJoint.h */; };
 		F74CEBEC18E4861000D0C42D /* PrismaticJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEBEB18E4861000D0C42D /* PrismaticJoint.cpp */; };
 		F74CEBF518E56EEB00D0C42D /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
-		F74CEBF618E56EEB00D0C42D /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
-		F74CEBF718E56EEB00D0C42D /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
-		F74CEBF818E56EEB00D0C42D /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
-		F74CEBF918E56EEB00D0C42D /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
 		F74CEBFB18E56EEB00D0C42D /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
 		F74CEBFC18E56EEB00D0C42D /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
 		F74CEBFE18E56EEB00D0C42D /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
@@ -67,6 +81,8 @@
 		F74CEC2318E5C60B00D0C42D /* BeltJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC2218E5C60B00D0C42D /* BeltJoint.cpp */; };
 		F74CEC2518E5C7D500D0C42D /* CylindricalJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F74CEC2418E5C7D500D0C42D /* CylindricalJoint.h */; };
 		F74CEC2818E5D49300D0C42D /* CylindricalJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC2618E5C98600D0C42D /* CylindricalJoint.cpp */; };
+		F7526650191EB54D00FFC736 /* FakeRotaryEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F752664F191EB54D00FFC736 /* FakeRotaryEncoder.cpp */; };
+		F7526652191EB57700FFC736 /* FakeRotaryEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = F7526651191EB57700FFC736 /* FakeRotaryEncoder.h */; };
 		F755999E18DF1375009A7983 /* Sample.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F755999C18DF1375009A7983 /* Sample.cpp */; };
 		F75599A118DF1400009A7983 /* Sample.h in Headers */ = {isa = PBXBuildFile; fileRef = F75599A018DF1398009A7983 /* Sample.h */; };
 		F75599A318DF25B0009A7983 /* Accelerometer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75599A218DF25B0009A7983 /* Accelerometer.cpp */; };
@@ -175,8 +191,6 @@
 		F75B6F1E18C3F9110092C1A2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1C18C3F9110092C1A2 /* OpenGL.framework */; };
 		F75B6F2118C3F92F0092C1A2 /* ForceFeedback.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F1F18C3F92F0092C1A2 /* ForceFeedback.framework */; };
 		F75B6F2218C3F92F0092C1A2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2018C3F92F0092C1A2 /* IOKit.framework */; };
-		F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */; };
-		F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */; };
 		F791D96119111D7F00E0703F /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
 		F791D9631918373100E0703F /* saoBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D9621918327600E0703F /* saoBlur.frag */; };
 		F791D9641918517000E0703F /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
@@ -199,10 +213,6 @@
 		F7A6B5AC18C4BF73009B6D41 /* libSDL2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */; };
 		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
 		F7C2313118CA0D3F00817B69 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
-		F7C2313218CA0D3F00817B69 /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7618C4C64800E128CF /* libLinearMath.dylib */; };
-		F7C2313318CA0D3F00817B69 /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */; };
-		F7C2313418CA0D3F00817B69 /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */; };
-		F7C2313518CA0D3F00817B69 /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */; };
 		F7C2313718CA0D3F00817B69 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
 		F7C2313818CA0D3F00817B69 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
 		F7C2313A18CA0D3F00817B69 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
@@ -235,9 +245,34 @@
 		F7DE34341907C5A900D21981 /* cascadedShadowMap.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DE34331907C49000D21981 /* cascadedShadowMap.frag */; };
 		F7DE34351907C5B700D21981 /* cascadedShadowMap.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DE34331907C49000D21981 /* cascadedShadowMap.frag */; };
 		F7DE34361907C5C400D21981 /* cascadedShadowMap.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DE34331907C49000D21981 /* cascadedShadowMap.frag */; };
+		F7E6FFE0191BCE08004C99F6 /* OGLFT.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E6FFDF191BCE08004C99F6 /* OGLFT.h */; };
+		F7E6FFE2191BCE1A004C99F6 /* OGLFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E6FFE1191BCE1A004C99F6 /* OGLFT.cpp */; };
+		F7EB93D819196189006504F0 /* IMU.h in Headers */ = {isa = PBXBuildFile; fileRef = F7EB93D719196189006504F0 /* IMU.h */; };
+		F7EB93DA19196432006504F0 /* FakeIMU.h in Headers */ = {isa = PBXBuildFile; fileRef = F7EB93D919196432006504F0 /* FakeIMU.h */; };
+		F7EB93DC191964B8006504F0 /* IMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7EB93DB191964B8006504F0 /* IMU.cpp */; };
+		F7EB93DE191964CA006504F0 /* FakeIMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7EB93DD191964CA006504F0 /* FakeIMU.cpp */; };
+		F7FDAC9F191F7BF700471370 /* libBulletCollision.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7FDAC9A191F7BF700471370 /* libBulletCollision.dylib */; };
+		F7FDACA0191F7BF700471370 /* libBulletDynamics.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7FDAC9B191F7BF700471370 /* libBulletDynamics.dylib */; };
+		F7FDACA2191F7BF700471370 /* libBulletSoftBody.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7FDAC9D191F7BF700471370 /* libBulletSoftBody.dylib */; };
+		F7FDACA3191F7BF700471370 /* libLinearMath.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7FDAC9E191F7BF700471370 /* libLinearMath.dylib */; };
+		F7FDACA8191F94BB00471370 /* Battery.h in Headers */ = {isa = PBXBuildFile; fileRef = F7FDACA7191F94BB00471370 /* Battery.h */; };
+		F7FDACAB191F950900471370 /* Battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7FDACAA191F950900471370 /* Battery.cpp */; };
+		F7FDACAD191FB28A00471370 /* Servo.h in Headers */ = {isa = PBXBuildFile; fileRef = F7FDACAC191FB28A00471370 /* Servo.h */; };
+		F7FDACAF191FB2AF00471370 /* Servo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7FDACAE191FB2AF00471370 /* Servo.cpp */; };
+		F7FDACB11920151100471370 /* btFilteredCollisionDispatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = F7FDACB01920151100471370 /* btFilteredCollisionDispatcher.h */; };
+		F7FDACB3192016C900471370 /* btFilteredCollisionDispatcher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7FDACB2192016C900471370 /* btFilteredCollisionDispatcher.cpp */; };
+		F7FDACB519201D7900471370 /* Contact.h in Headers */ = {isa = PBXBuildFile; fileRef = F7FDACB419201D7900471370 /* Contact.h */; };
+		F7FDACB719201EA500471370 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7FDACB619201EA500471370 /* Contact.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		F7037CC4191AA86A00A1FA98 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
+			remoteInfo = Stonefish;
+		};
 		F73B0A9518C541A900E128CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
@@ -262,6 +297,45 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		F7037CCF191AA86A00A1FA98 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = Shaders;
+			dstSubfolderSpec = 16;
+			files = (
+				F7037CD0191AA86A00A1FA98 /* sao.frag in CopyFiles */,
+				F7037CD1191AA86A00A1FA98 /* saoBlur.frag in CopyFiles */,
+				F7037CD2191AA86A00A1FA98 /* cascadedShadowMap.frag in CopyFiles */,
+				F7037CD3191AA86A00A1FA98 /* deferredSun.frag in CopyFiles */,
+				F7037CD4191AA86A00A1FA98 /* cubeDownsample.frag in CopyFiles */,
+				F7037CD5191AA86A00A1FA98 /* cubeConvolve.frag in CopyFiles */,
+				F7037CD6191AA86A00A1FA98 /* deferredOmni.frag in CopyFiles */,
+				F7037CD7191AA86A00A1FA98 /* saq.vert in CopyFiles */,
+				F7037CD8191AA86A00A1FA98 /* fluidBorder.frag in CopyFiles */,
+				F7037CD9191AA86A00A1FA98 /* fluidVolume.frag in CopyFiles */,
+				F7037CDA191AA86A00A1FA98 /* belowFluidSurface.frag in CopyFiles */,
+				F7037CDB191AA86A00A1FA98 /* fluidSurface.vert in CopyFiles */,
+				F7037CDC191AA86A00A1FA98 /* aboveFluidSurface.frag in CopyFiles */,
+				F7037CDD191AA86A00A1FA98 /* gbuffer.frag in CopyFiles */,
+				F7037CDE191AA86A00A1FA98 /* gbuffer.vert in CopyFiles */,
+				F7037CDF191AA86A00A1FA98 /* deferredAmbient.frag in CopyFiles */,
+				F7037CE0191AA86A00A1FA98 /* deferredSpot.frag in CopyFiles */,
+				F7037CE1191AA86A00A1FA98 /* cubeSky.frag in CopyFiles */,
+				F7037CE2191AA86A00A1FA98 /* cubePass.frag in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7037CE3191AA86A00A1FA98 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Data;
+			dstSubfolderSpec = 16;
+			files = (
+				F7037CE4191AA86A00A1FA98 /* grid.png in CopyFiles */,
+				F7037CE5191AA86A00A1FA98 /* noise.png in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F74CEBFA18E56EEB00D0C42D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
@@ -381,13 +455,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F7037CBD191AA77600A1FA98 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AcrobotTestApp.cpp; sourceTree = "<group>"; };
+		F7037CBF191AA77600A1FA98 /* AcrobotTestApp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AcrobotTestApp.h; sourceTree = "<group>"; };
+		F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AcrobotTestManager.cpp; sourceTree = "<group>"; };
+		F7037CC1191AA77600A1FA98 /* AcrobotTestManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AcrobotTestManager.h; sourceTree = "<group>"; };
+		F7037CE9191AA86A00A1FA98 /* AcrobotTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AcrobotTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F71323F618C4849A00C718D8 /* ToDo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToDo.txt; sourceTree = "<group>"; };
 		F716FA2418E0DBF700B7E0F2 /* ADC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ADC.cpp; sourceTree = "<group>"; };
-		F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletCollision.dylib; path = /usr/local/lib/libBulletCollision.dylib; sourceTree = "<absolute>"; };
-		F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletDynamics.dylib; path = /usr/local/lib/libBulletDynamics.dylib; sourceTree = "<absolute>"; };
-		F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletSoftBody.dylib; path = /usr/local/lib/libBulletSoftBody.dylib; sourceTree = "<absolute>"; };
-		F73B0A7618C4C64800E128CF /* libLinearMath.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLinearMath.dylib; path = /usr/local/lib/libLinearMath.dylib; sourceTree = "<absolute>"; };
 		F73B0A9218C5407300E128CF /* FallingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestApp.cpp; sourceTree = "<group>"; };
 		F73B0A9318C5407300E128CF /* FallingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestApp.h; sourceTree = "<group>"; };
 		F73B0A9718C5424500E128CF /* FallingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestManager.cpp; sourceTree = "<group>"; };
@@ -406,6 +482,8 @@
 		F74CEC2218E5C60B00D0C42D /* BeltJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BeltJoint.cpp; sourceTree = "<group>"; };
 		F74CEC2418E5C7D500D0C42D /* CylindricalJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CylindricalJoint.h; sourceTree = "<group>"; };
 		F74CEC2618E5C98600D0C42D /* CylindricalJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CylindricalJoint.cpp; sourceTree = "<group>"; };
+		F752664F191EB54D00FFC736 /* FakeRotaryEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FakeRotaryEncoder.cpp; sourceTree = "<group>"; };
+		F7526651191EB57700FFC736 /* FakeRotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FakeRotaryEncoder.h; sourceTree = "<group>"; };
 		F755999C18DF1375009A7983 /* Sample.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sample.cpp; sourceTree = "<group>"; };
 		F75599A018DF1398009A7983 /* Sample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sample.h; sourceTree = "<group>"; };
 		F75599A218DF25B0009A7983 /* Accelerometer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Accelerometer.cpp; sourceTree = "<group>"; };
@@ -513,7 +591,6 @@
 		F75B6F1C18C3F9110092C1A2 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F75B6F1F18C3F92F0092C1A2 /* ForceFeedback.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ForceFeedback.framework; path = System/Library/Frameworks/ForceFeedback.framework; sourceTree = SDKROOT; };
 		F75B6F2018C3F92F0092C1A2 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftgl.2.1.3.dylib; path = /usr/local/lib/libftgl.2.1.3.dylib; sourceTree = "<absolute>"; };
 		F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = /usr/local/lib/libfreetype.6.dylib; sourceTree = "<absolute>"; };
 		F791D96019111D6C00E0703F /* sao.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sao.frag; sourceTree = "<group>"; };
 		F791D9621918327600E0703F /* saoBlur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saoBlur.frag; sourceTree = "<group>"; };
@@ -564,18 +641,41 @@
 		F7DD1C031904315E00B6BF14 /* OpenGLSun.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLSun.cpp; sourceTree = "<group>"; };
 		F7DD1C051904466800B6BF14 /* deferredSun.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredSun.frag; sourceTree = "<group>"; };
 		F7DE34331907C49000D21981 /* cascadedShadowMap.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cascadedShadowMap.frag; sourceTree = "<group>"; };
+		F7E6FFDF191BCE08004C99F6 /* OGLFT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OGLFT.h; sourceTree = "<group>"; };
+		F7E6FFE1191BCE1A004C99F6 /* OGLFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OGLFT.cpp; sourceTree = "<group>"; };
+		F7EB93D719196189006504F0 /* IMU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMU.h; sourceTree = "<group>"; };
+		F7EB93D919196432006504F0 /* FakeIMU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FakeIMU.h; sourceTree = "<group>"; };
+		F7EB93DB191964B8006504F0 /* IMU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IMU.cpp; sourceTree = "<group>"; };
+		F7EB93DD191964CA006504F0 /* FakeIMU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FakeIMU.cpp; sourceTree = "<group>"; };
+		F7FDAC9A191F7BF700471370 /* libBulletCollision.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletCollision.dylib; path = /usr/local/lib/libBulletCollision.dylib; sourceTree = "<absolute>"; };
+		F7FDAC9B191F7BF700471370 /* libBulletDynamics.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletDynamics.dylib; path = /usr/local/lib/libBulletDynamics.dylib; sourceTree = "<absolute>"; };
+		F7FDAC9C191F7BF700471370 /* libBulletMultiThreaded.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletMultiThreaded.dylib; path = /usr/local/lib/libBulletMultiThreaded.dylib; sourceTree = "<absolute>"; };
+		F7FDAC9D191F7BF700471370 /* libBulletSoftBody.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletSoftBody.dylib; path = /usr/local/lib/libBulletSoftBody.dylib; sourceTree = "<absolute>"; };
+		F7FDAC9E191F7BF700471370 /* libLinearMath.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLinearMath.dylib; path = /usr/local/lib/libLinearMath.dylib; sourceTree = "<absolute>"; };
+		F7FDACA7191F94BB00471370 /* Battery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Battery.h; sourceTree = "<group>"; };
+		F7FDACAA191F950900471370 /* Battery.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Battery.cpp; sourceTree = "<group>"; };
+		F7FDACAC191FB28A00471370 /* Servo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Servo.h; sourceTree = "<group>"; };
+		F7FDACAE191FB2AF00471370 /* Servo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Servo.cpp; sourceTree = "<group>"; };
+		F7FDACB01920151100471370 /* btFilteredCollisionDispatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btFilteredCollisionDispatcher.h; sourceTree = "<group>"; };
+		F7FDACB2192016C900471370 /* btFilteredCollisionDispatcher.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = btFilteredCollisionDispatcher.cpp; sourceTree = "<group>"; };
+		F7FDACB419201D7900471370 /* Contact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Contact.h; sourceTree = "<group>"; };
+		F7FDACB619201EA500471370 /* Contact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Contact.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F7037CC9191AA86A00A1FA98 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7037CCA191AA86A00A1FA98 /* libStonefish.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F74CEBF418E56EEB00D0C42D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				F74CEBF518E56EEB00D0C42D /* libStonefish.dylib in Frameworks */,
-				F74CEBF618E56EEB00D0C42D /* libLinearMath.dylib in Frameworks */,
-				F74CEBF718E56EEB00D0C42D /* libBulletDynamics.dylib in Frameworks */,
-				F74CEBF818E56EEB00D0C42D /* libBulletCollision.dylib in Frameworks */,
-				F74CEBF918E56EEB00D0C42D /* libBulletSoftBody.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -583,13 +683,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F73B0A7A18C4C64800E128CF /* libLinearMath.dylib in Frameworks */,
-				F73B0A7718C4C64800E128CF /* libBulletCollision.dylib in Frameworks */,
-				F73B0A7818C4C64800E128CF /* libBulletDynamics.dylib in Frameworks */,
-				F73B0A7918C4C64800E128CF /* libBulletSoftBody.dylib in Frameworks */,
+				F7FDACA3191F7BF700471370 /* libLinearMath.dylib in Frameworks */,
+				F7FDAC9F191F7BF700471370 /* libBulletCollision.dylib in Frameworks */,
+				F7FDACA0191F7BF700471370 /* libBulletDynamics.dylib in Frameworks */,
+				F7FDACA2191F7BF700471370 /* libBulletSoftBody.dylib in Frameworks */,
+				F739D7AC191C228500AEC1AB /* libfreetype.6.dylib in Frameworks */,
 				F7A6B5AC18C4BF73009B6D41 /* libSDL2.dylib in Frameworks */,
-				F75B6F2718C4048D0092C1A2 /* libftgl.2.1.3.dylib in Frameworks */,
-				F75B6F2818C4048D0092C1A2 /* libfreetype.6.dylib in Frameworks */,
 				F75B6F2118C3F92F0092C1A2 /* ForceFeedback.framework in Frameworks */,
 				F75B6F2218C3F92F0092C1A2 /* IOKit.framework in Frameworks */,
 				F75B6F1D18C3F9110092C1A2 /* CoreAudio.framework in Frameworks */,
@@ -606,10 +705,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F75B6F0418C3EC480092C1A2 /* libStonefish.dylib in Frameworks */,
-				F73B0A9B18C5498D00E128CF /* libLinearMath.dylib in Frameworks */,
-				F73B0A9A18C5498D00E128CF /* libBulletDynamics.dylib in Frameworks */,
-				F73B0A9C18C5498D00E128CF /* libBulletCollision.dylib in Frameworks */,
-				F73B0A9D18C5498D00E128CF /* libBulletSoftBody.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -618,16 +713,24 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7C2313118CA0D3F00817B69 /* libStonefish.dylib in Frameworks */,
-				F7C2313218CA0D3F00817B69 /* libLinearMath.dylib in Frameworks */,
-				F7C2313318CA0D3F00817B69 /* libBulletDynamics.dylib in Frameworks */,
-				F7C2313418CA0D3F00817B69 /* libBulletCollision.dylib in Frameworks */,
-				F7C2313518CA0D3F00817B69 /* libBulletSoftBody.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F7037CBC191AA77600A1FA98 /* AcrobotTest */ = {
+			isa = PBXGroup;
+			children = (
+				F7037CBD191AA77600A1FA98 /* main.cpp */,
+				F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */,
+				F7037CBF191AA77600A1FA98 /* AcrobotTestApp.h */,
+				F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */,
+				F7037CC1191AA77600A1FA98 /* AcrobotTestManager.h */,
+			);
+			path = AcrobotTest;
+			sourceTree = "<group>";
+		};
 		F71323F718C48C0100C718D8 /* data */ = {
 			isa = PBXGroup;
 			children = (
@@ -656,7 +759,6 @@
 				F75B6E2D18C3E74B0092C1A2 /* DCMotor.h */,
 				F75B6E5518C3E74C0092C1A2 /* Thruster.h */,
 				F75B6E2A18C3E74B0092C1A2 /* ControlSurface.h */,
-				F75B6E2918C3E74B0092C1A2 /* Controller.h */,
 			);
 			name = Actuators;
 			sourceTree = "<group>";
@@ -687,6 +789,7 @@
 		F75B6E8E18C3E84D0092C1A2 /* Joints */ = {
 			isa = PBXGroup;
 			children = (
+				F7FDACB419201D7900471370 /* Contact.h */,
 				F75B6E3718C3E74B0092C1A2 /* Joint.h */,
 				F75B6E3018C3E74B0092C1A2 /* FixedJoint.h */,
 				F75B6E4B18C3E74B0092C1A2 /* RevoluteJoint.h */,
@@ -724,7 +827,6 @@
 				F75B6E4118C3E74B0092C1A2 /* OpenGLOmniLight.h */,
 				F75B6E4518C3E74B0092C1A2 /* OpenGLSpotLight.h */,
 				F75B6E4018C3E74B0092C1A2 /* OpenGLMaterial.h */,
-				F75B6E4218C3E74B0092C1A2 /* OpenGLPrinter.h */,
 				F75B6E4418C3E74B0092C1A2 /* OpenGLSolids.h */,
 				F75B6E4618C3E74B0092C1A2 /* OpenGLTrackball.h */,
 				F75B6E4718C3E74B0092C1A2 /* OpenGLUtil.h */,
@@ -740,6 +842,8 @@
 			isa = PBXGroup;
 			children = (
 				F75B6E3518C3E74B0092C1A2 /* IMGUI.h */,
+				F75B6E4218C3E74B0092C1A2 /* OpenGLPrinter.h */,
+				F7E6FFDF191BCE08004C99F6 /* OGLFT.h */,
 				F75B6E3C18C3E74B0092C1A2 /* NativeDialog.h */,
 				F75B6E2E18C3E74B0092C1A2 /* DialogAppKit.h */,
 			);
@@ -756,7 +860,10 @@
 				F7A503CB18E7013200913252 /* Gyroscope.h */,
 				F7A503D718E70A3B00913252 /* Magnetometer.h */,
 				F7A503CF18E7055000913252 /* RotaryEncoder.h */,
+				F7526651191EB57700FFC736 /* FakeRotaryEncoder.h */,
 				F7A503D318E7080500913252 /* LinearEncoder.h */,
+				F7EB93D719196189006504F0 /* IMU.h */,
+				F7EB93D919196432006504F0 /* FakeIMU.h */,
 			);
 			name = Sensors;
 			sourceTree = "<group>";
@@ -799,6 +906,7 @@
 		F75B6EFC18C3EA910092C1A2 /* Joints */ = {
 			isa = PBXGroup;
 			children = (
+				F7FDACB619201EA500471370 /* Contact.cpp */,
 				F75B6EA618C3EA6A0092C1A2 /* Joint.cpp */,
 				F75B6E9F18C3EA6A0092C1A2 /* FixedJoint.cpp */,
 				F75B6EBA18C3EA6A0092C1A2 /* RevoluteJoint.cpp */,
@@ -818,7 +926,6 @@
 				F75B6E9D18C3EA6A0092C1A2 /* DCMotor.cpp */,
 				F75B6EC318C3EA6A0092C1A2 /* Thruster.cpp */,
 				F75B6E9A18C3EA6A0092C1A2 /* ControlSurface.cpp */,
-				F75B6E9918C3EA6A0092C1A2 /* Controller.cpp */,
 			);
 			name = Actuators;
 			sourceTree = "<group>";
@@ -833,7 +940,10 @@
 				F7A503CD18E7014600913252 /* Gyroscope.cpp */,
 				F7A503D918E70A5900913252 /* Magnetometer.cpp */,
 				F7A503D118E706CC00913252 /* RotaryEncoder.cpp */,
+				F752664F191EB54D00FFC736 /* FakeRotaryEncoder.cpp */,
 				F7A503D518E7082100913252 /* LinearEncoder.cpp */,
+				F7EB93DB191964B8006504F0 /* IMU.cpp */,
+				F7EB93DD191964CA006504F0 /* FakeIMU.cpp */,
 			);
 			name = Sensors;
 			sourceTree = "<group>";
@@ -850,7 +960,6 @@
 				F75B6EB018C3EA6A0092C1A2 /* OpenGLOmniLight.cpp */,
 				F75B6EB418C3EA6A0092C1A2 /* OpenGLSpotLight.cpp */,
 				F75B6EAF18C3EA6A0092C1A2 /* OpenGLMaterial.cpp */,
-				F75B6EB118C3EA6A0092C1A2 /* OpenGLPrinter.cpp */,
 				F75B6EB318C3EA6A0092C1A2 /* OpenGLSolids.cpp */,
 				F75B6EB518C3EA6A0092C1A2 /* OpenGLTrackball.cpp */,
 				F75B6EB618C3EA6A0092C1A2 /* OpenGLUtil.cpp */,
@@ -866,6 +975,8 @@
 			isa = PBXGroup;
 			children = (
 				F75B6EA418C3EA6A0092C1A2 /* IMGUI.cpp */,
+				F75B6EB118C3EA6A0092C1A2 /* OpenGLPrinter.cpp */,
+				F7E6FFE1191BCE1A004C99F6 /* OGLFT.cpp */,
 				F75B6EAB18C3EA6A0092C1A2 /* NativeDialog.cpp */,
 				F75B6EC618C3EA6A0092C1A2 /* DialogAppKit.mm */,
 			);
@@ -883,11 +994,11 @@
 				F75B6F1418C3F8ED0092C1A2 /* AudioUnit.framework */,
 				F75B6F1518C3F8ED0092C1A2 /* Carbon.framework */,
 				F75B6F1618C3F8ED0092C1A2 /* Cocoa.framework */,
-				F73B0A7318C4C64800E128CF /* libBulletCollision.dylib */,
-				F73B0A7418C4C64800E128CF /* libBulletDynamics.dylib */,
-				F73B0A7518C4C64800E128CF /* libBulletSoftBody.dylib */,
-				F73B0A7618C4C64800E128CF /* libLinearMath.dylib */,
-				F75B6F2518C4048D0092C1A2 /* libftgl.2.1.3.dylib */,
+				F7FDAC9A191F7BF700471370 /* libBulletCollision.dylib */,
+				F7FDAC9B191F7BF700471370 /* libBulletDynamics.dylib */,
+				F7FDAC9C191F7BF700471370 /* libBulletMultiThreaded.dylib */,
+				F7FDAC9D191F7BF700471370 /* libBulletSoftBody.dylib */,
+				F7FDAC9E191F7BF700471370 /* libLinearMath.dylib */,
 				F75B6F2618C4048D0092C1A2 /* libfreetype.6.dylib */,
 				F7A6B5AB18C4BF73009B6D41 /* libSDL2.dylib */,
 			);
@@ -910,6 +1021,7 @@
 				F7AB71CB18C3E19D0077F07D /* FallingTest */,
 				F7C2314E18CA0D3F00817B69 /* RollingTest */,
 				F74CEC1218E56EEB00D0C42D /* JointsTest */,
+				F7037CE9191AA86A00A1FA98 /* AcrobotTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -917,6 +1029,7 @@
 		F7AB71BE18C3DC950077F07D /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F7037CBC191AA77600A1FA98 /* AcrobotTest */,
 				F7AB71CC18C3E19D0077F07D /* FallingTest */,
 				F7C2314F18CA0E1700817B69 /* RollingTest */,
 				F74CEC1318E56FCB00D0C42D /* JointsTest */,
@@ -943,8 +1056,10 @@
 				F75B6EFA18C3EA830092C1A2 /* Core */,
 				F75B6EFB18C3EA8A0092C1A2 /* Entities */,
 				F75B6EFC18C3EA910092C1A2 /* Joints */,
-				F75B6EFD18C3EA980092C1A2 /* Actuators */,
 				F75B6EFE18C3EAAF0092C1A2 /* Sensors */,
+				F75B6EFD18C3EA980092C1A2 /* Actuators */,
+				F7FDACA5191F92FC00471370 /* Controllers */,
+				F7FDACA9191F94E800471370 /* Supplies */,
 				F75B6F0018C3EABD0092C1A2 /* Graphics */,
 				F75B6F0118C3EAC50092C1A2 /* GUI */,
 				F7CA235C18C7D3C4009439F3 /* Bullet extension */,
@@ -1004,8 +1119,10 @@
 				F75B6E8F18C3E8810092C1A2 /* Core */,
 				F75B6E8D18C3E7880092C1A2 /* Entities */,
 				F75B6E8E18C3E84D0092C1A2 /* Joints */,
-				F75B6E8C18C3E7550092C1A2 /* Actuators */,
 				F75B6E9218C3E9390092C1A2 /* Sensors */,
+				F75B6E8C18C3E7550092C1A2 /* Actuators */,
+				F7FDACA4191F92DA00471370 /* Controllers */,
+				F7FDACA6191F949300471370 /* Supplies */,
 				F75B6E9018C3E89A0092C1A2 /* Graphics */,
 				F75B6E9118C3E9240092C1A2 /* GUI */,
 				F7CA235F18C7D416009439F3 /* Bullet extension */,
@@ -1029,6 +1146,7 @@
 			isa = PBXGroup;
 			children = (
 				F7CA235D18C7D3F2009439F3 /* btTorusShape.cpp */,
+				F7FDACB2192016C900471370 /* btFilteredCollisionDispatcher.cpp */,
 			);
 			name = "Bullet extension";
 			sourceTree = "<group>";
@@ -1037,8 +1155,43 @@
 			isa = PBXGroup;
 			children = (
 				F7CA236018C7D42C009439F3 /* btTorusShape.h */,
+				F7FDACB01920151100471370 /* btFilteredCollisionDispatcher.h */,
 			);
 			name = "Bullet extension";
+			sourceTree = "<group>";
+		};
+		F7FDACA4191F92DA00471370 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E2918C3E74B0092C1A2 /* Controller.h */,
+				F7FDACAC191FB28A00471370 /* Servo.h */,
+			);
+			name = Controllers;
+			sourceTree = "<group>";
+		};
+		F7FDACA5191F92FC00471370 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				F75B6E9918C3EA6A0092C1A2 /* Controller.cpp */,
+				F7FDACAE191FB2AF00471370 /* Servo.cpp */,
+			);
+			name = Controllers;
+			sourceTree = "<group>";
+		};
+		F7FDACA6191F949300471370 /* Supplies */ = {
+			isa = PBXGroup;
+			children = (
+				F7FDACA7191F94BB00471370 /* Battery.h */,
+			);
+			name = Supplies;
+			sourceTree = "<group>";
+		};
+		F7FDACA9191F94E800471370 /* Supplies */ = {
+			isa = PBXGroup;
+			children = (
+				F7FDACAA191F950900471370 /* Battery.cpp */,
+			);
+			name = Supplies;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1061,6 +1214,7 @@
 				F75B6E6118C3E74C0092C1A2 /* DCMotor.h in Headers */,
 				F75B6E5C18C3E74C0092C1A2 /* CompoundEntity.h in Headers */,
 				F75B6E5818C3E74C0092C1A2 /* Actuator.h in Headers */,
+				F7526652191EB57700FFC736 /* FakeRotaryEncoder.h in Headers */,
 				F75B6E8318C3E74C0092C1A2 /* SolidEntity.h in Headers */,
 				F74CEBEA18E485CF00D0C42D /* PrismaticJoint.h in Headers */,
 				F75B6E8118C3E74C0092C1A2 /* SimulationApp.h in Headers */,
@@ -1068,14 +1222,19 @@
 				F75B6E7C18C3E74C0092C1A2 /* OpenGLView.h in Headers */,
 				F75599A118DF1400009A7983 /* Sample.h in Headers */,
 				F74CEC1F18E5A9C300D0C42D /* GearJoint.h in Headers */,
+				F7EB93D819196189006504F0 /* IMU.h in Headers */,
 				F75B6E8918C3E74C0092C1A2 /* Thruster.h in Headers */,
 				F75B6E6918C3E74C0092C1A2 /* IMGUI.h in Headers */,
 				F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */,
 				F75B6E7E18C3E74C0092C1A2 /* PoolEntity.h in Headers */,
+				F7EB93DA19196432006504F0 /* FakeIMU.h in Headers */,
 				F75B6E6518C3E74C0092C1A2 /* FluidEntity.h in Headers */,
+				F7FDACAD191FB28A00471370 /* Servo.h in Headers */,
 				F75B6E8818C3E74C0092C1A2 /* TerrainEntity.h in Headers */,
 				F75B6E7A18C3E74C0092C1A2 /* OpenGLTrackball.h in Headers */,
 				F75B6E7F18C3E74C0092C1A2 /* RevoluteJoint.h in Headers */,
+				F7FDACB11920151100471370 /* btFilteredCollisionDispatcher.h in Headers */,
+				F7FDACA8191F94BB00471370 /* Battery.h in Headers */,
 				F75B6E7618C3E74C0092C1A2 /* OpenGLPrinter.h in Headers */,
 				F75B6E8018C3E74C0092C1A2 /* Sensor.h in Headers */,
 				F75B6E6218C3E74C0092C1A2 /* DialogAppKit.h in Headers */,
@@ -1085,6 +1244,7 @@
 				F75B6E6618C3E74C0092C1A2 /* GeometryFileUtil.h in Headers */,
 				F75B6E7818C3E74C0092C1A2 /* OpenGLSolids.h in Headers */,
 				F75B6E7518C3E74C0092C1A2 /* OpenGLOmniLight.h in Headers */,
+				F7FDACB519201D7900471370 /* Contact.h in Headers */,
 				F75B6E8218C3E74C0092C1A2 /* SimulationManager.h in Headers */,
 				F7A503CC18E7013200913252 /* Gyroscope.h in Headers */,
 				F75B6E7918C3E74C0092C1A2 /* OpenGLSpotLight.h in Headers */,
@@ -1110,6 +1270,7 @@
 				F75B6E7718C3E74C0092C1A2 /* OpenGLSky.h in Headers */,
 				F7DD1C021904311600B6BF14 /* OpenGLSun.h in Headers */,
 				F75B6E7B18C3E74C0092C1A2 /* OpenGLUtil.h in Headers */,
+				F7E6FFE0191BCE08004C99F6 /* OGLFT.h in Headers */,
 				F75B6E8618C3E74C0092C1A2 /* stb_image.h in Headers */,
 				F75B6E6318C3E74C0092C1A2 /* Entity.h in Headers */,
 			);
@@ -1118,6 +1279,25 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		F7037CC2191AA86A00A1FA98 /* AcrobotTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7037CE6191AA86A00A1FA98 /* Build configuration list for PBXNativeTarget "AcrobotTest" */;
+			buildPhases = (
+				F7037CC5191AA86A00A1FA98 /* Sources */,
+				F7037CC9191AA86A00A1FA98 /* Frameworks */,
+				F7037CCF191AA86A00A1FA98 /* CopyFiles */,
+				F7037CE3191AA86A00A1FA98 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F7037CC3191AA86A00A1FA98 /* PBXTargetDependency */,
+			);
+			name = AcrobotTest;
+			productName = FallingTest;
+			productReference = F7037CE9191AA86A00A1FA98 /* AcrobotTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		F74CEBED18E56EEB00D0C42D /* JointsTest */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F74CEC0F18E56EEB00D0C42D /* Build configuration list for PBXNativeTarget "JointsTest" */;
@@ -1217,11 +1397,22 @@
 				F7AB71CA18C3E19D0077F07D /* FallingTest */,
 				F7C2312918CA0D3F00817B69 /* RollingTest */,
 				F74CEBED18E56EEB00D0C42D /* JointsTest */,
+				F7037CC2191AA86A00A1FA98 /* AcrobotTest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		F7037CC5191AA86A00A1FA98 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7037CEA191AA88600A1FA98 /* main.cpp in Sources */,
+				F7037CEB191AA88600A1FA98 /* AcrobotTestApp.cpp in Sources */,
+				F7037CEC191AA88600A1FA98 /* AcrobotTestManager.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F74CEBF018E56EEB00D0C42D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1237,11 +1428,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				F75B6ECA18C3EA6A0092C1A2 /* CableEntity.cpp in Sources */,
+				F7526650191EB54D00FFC736 /* FakeRotaryEncoder.cpp in Sources */,
 				F75B6EF218C3EA6A0092C1A2 /* SphereEntity.cpp in Sources */,
 				F75B6EDF18C3EA6A0092C1A2 /* OpenGLCamera.cpp in Sources */,
 				F75B6EF318C3EA6A0092C1A2 /* SphericalJoint.cpp in Sources */,
 				F74CEC2318E5C60B00D0C42D /* BeltJoint.cpp in Sources */,
 				F75B6EE318C3EA6A0092C1A2 /* OpenGLOmniLight.cpp in Sources */,
+				F7FDACAB191F950900471370 /* Battery.cpp in Sources */,
 				F75B6EEB18C3EA6A0092C1A2 /* PlaneEntity.cpp in Sources */,
 				F75B6EE518C3EA6A0092C1A2 /* OpenGLSky.cpp in Sources */,
 				F75B6ECD18C3EA6A0092C1A2 /* ControlSurface.cpp in Sources */,
@@ -1251,6 +1444,7 @@
 				F7A503D618E7082100913252 /* LinearEncoder.cpp in Sources */,
 				F75B6ED418C3EA6A0092C1A2 /* GeometryFileUtil.cpp in Sources */,
 				F75B6ED118C3EA6A0092C1A2 /* Entity.cpp in Sources */,
+				F7EB93DE191964CA006504F0 /* FakeIMU.cpp in Sources */,
 				F7CA236518C7DADD009439F3 /* TorusEntity.cpp in Sources */,
 				F75B6EE218C3EA6A0092C1A2 /* OpenGLMaterial.cpp in Sources */,
 				F755999E18DF1375009A7983 /* Sample.cpp in Sources */,
@@ -1261,6 +1455,7 @@
 				F75B6EF918C3EA6A0092C1A2 /* DialogAppKit.mm in Sources */,
 				F75B6EDC18C3EA6A0092C1A2 /* MaterialManager.cpp in Sources */,
 				F75B6EF118C3EA6A0092C1A2 /* SolidEntity.cpp in Sources */,
+				F7FDACB3192016C900471370 /* btFilteredCollisionDispatcher.cpp in Sources */,
 				F75B6EE418C3EA6A0092C1A2 /* OpenGLPrinter.cpp in Sources */,
 				F75B6EF718C3EA6A0092C1A2 /* UnitSystem.cpp in Sources */,
 				F7A503DE18E836FA00913252 /* OpenGLPipeline.cpp in Sources */,
@@ -1271,17 +1466,20 @@
 				F75B6ED718C3EA6A0092C1A2 /* IMGUI.cpp in Sources */,
 				F75B6EC818C3EA6A0092C1A2 /* Actuator.cpp in Sources */,
 				F75B6EC718C3EA6A0092C1A2 /* stb_image.c in Sources */,
+				F7EB93DC191964B8006504F0 /* IMU.cpp in Sources */,
 				F75B6EE618C3EA6A0092C1A2 /* OpenGLSolids.cpp in Sources */,
 				F75B6ECF18C3EA6A0092C1A2 /* CylinderEntity.cpp in Sources */,
 				F75B6EF618C3EA6A0092C1A2 /* Thruster.cpp in Sources */,
 				F75B6EE018C3EA6A0092C1A2 /* OpenGLGBuffer.cpp in Sources */,
 				F7A503DA18E70A5900913252 /* Magnetometer.cpp in Sources */,
+				F7FDACAF191FB2AF00471370 /* Servo.cpp in Sources */,
 				F7A503CE18E7014600913252 /* Gyroscope.cpp in Sources */,
 				F75B6EF518C3EA6A0092C1A2 /* TerrainEntity.cpp in Sources */,
 				F7CA235E18C7D3F2009439F3 /* btTorusShape.cpp in Sources */,
 				F75B6EF018C3EA6A0092C1A2 /* SimulationManager.cpp in Sources */,
 				F75B6EDE18C3EA6A0092C1A2 /* NativeDialog.cpp in Sources */,
 				F7DD1C041904315E00B6BF14 /* OpenGLSun.cpp in Sources */,
+				F7FDACB719201EA500471370 /* Contact.cpp in Sources */,
 				F7A503D218E706CC00913252 /* RotaryEncoder.cpp in Sources */,
 				F74CEC2818E5D49300D0C42D /* CylindricalJoint.cpp in Sources */,
 				F75B6ED018C3EA6A0092C1A2 /* DCMotor.cpp in Sources */,
@@ -1294,6 +1492,7 @@
 				F74CEC1D18E5A99200D0C42D /* GearJoint.cpp in Sources */,
 				F75B6EE818C3EA6A0092C1A2 /* OpenGLTrackball.cpp in Sources */,
 				F75B6ED218C3EA6A0092C1A2 /* FixedJoint.cpp in Sources */,
+				F7E6FFE2191BCE1A004C99F6 /* OGLFT.cpp in Sources */,
 				F75B6EE718C3EA6A0092C1A2 /* OpenGLSpotLight.cpp in Sources */,
 				F7A503E218E84BAE00913252 /* NameManager.cpp in Sources */,
 				F75B6EEE18C3EA6A0092C1A2 /* Sensor.cpp in Sources */,
@@ -1325,6 +1524,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F7037CC3191AA86A00A1FA98 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
+			targetProxy = F7037CC4191AA86A00A1FA98 /* PBXContainerItemProxy */;
+		};
 		F73B0A9618C541A900E128CF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
@@ -1343,6 +1547,48 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		F7037CE7191AA86A00A1FA98 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include,
+					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = AcrobotTest;
+			};
+			name = Debug;
+		};
+		F7037CE8191AA86A00A1FA98 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/include,
+					/usr/local/include/freetype2,
+					/usr/local/include/bullet,
+					/usr/local/include/SDL2,
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = AcrobotTest;
+			};
+			name = Release;
+		};
 		F74CEC1018E56EEB00D0C42D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1408,6 +1654,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					BT_EULER_DEFAULT_ZYX,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1442,6 +1689,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = BT_EULER_DEFAULT_ZYX;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -1460,6 +1708,7 @@
 				CLANG_ENABLE_OBJC_ARC = NO;
 				EXECUTABLE_PREFIX = lib;
 				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -1588,6 +1837,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F7037CE6191AA86A00A1FA98 /* Build configuration list for PBXNativeTarget "AcrobotTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F7037CE7191AA86A00A1FA98 /* Debug */,
+				F7037CE8191AA86A00A1FA98 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F74CEC0F18E56EEB00D0C42D /* Build configuration list for PBXNativeTarget "JointsTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

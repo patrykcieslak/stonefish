@@ -17,7 +17,7 @@ PlaneEntity::PlaneEntity(std::string uniqueName, btScalar size, Material* mat, L
     size = UnitSystem::SetLength(size);
     
     btDefaultMotionState* motionState = new btDefaultMotionState(UnitSystem::SetTransform(worldTransform));
-    btCollisionShape* shape = new btStaticPlaneShape(btVector3(0,1,0),0);
+    btCollisionShape* shape = new btStaticPlaneShape(btVector3(0,0,1.0),0);
     
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0,0,0));
     rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(1.); //not used
@@ -31,20 +31,36 @@ PlaneEntity::PlaneEntity(std::string uniqueName, btScalar size, Material* mat, L
     displayList = glGenLists(1);
     glNewList(displayList, GL_COMPILE);
     glBegin(GL_QUADS);
-    glNormal3f(0, 1.f, 0);
-    
-    glTexCoord2f(0, texCoord);
-    glVertex3f(-halfSize, 0, halfSize);
-    
-    glTexCoord2f(texCoord, texCoord);
-    glVertex3f(halfSize, 0, halfSize);
-    
-    glTexCoord2f(texCoord, 0);
-    glVertex3f(halfSize, 0, -halfSize);
+    glNormal3f(0, 0, 1.f);
     
     glTexCoord2f(0, 0);
-    glVertex3f(-halfSize, 0, -halfSize);
+    glVertex3f(-halfSize, -halfSize, 0);
+    
+    glTexCoord2f(texCoord, 0);
+    glVertex3f(halfSize, -halfSize, 0);
+    
+    glTexCoord2f(texCoord, texCoord);
+    glVertex3f(halfSize, halfSize, 0);
+    
+    glTexCoord2f(0, texCoord);
+    glVertex3f(-halfSize, halfSize, 0);
+    
+    /*glNormal3f(0, 0, -1.f);
+    
+    glTexCoord2f(0, 0);
+    glVertex3f(-halfSize, -halfSize, 0);
+    
+    glTexCoord2f(texCoord, 0);
+    glVertex3f(halfSize, -halfSize, 0);
+    
+    glTexCoord2f(texCoord, texCoord);
+    glVertex3f(halfSize, halfSize, 0);
+    
+    glTexCoord2f(0, texCoord);
+    glVertex3f(-halfSize, halfSize, 0);*/
+    
     glEnd();
+    
     glEndList();
 }
 
@@ -78,6 +94,7 @@ void PlaneEntity::Render()
 #else
         glMultMatrixf(openglTrans);
 #endif
+        
         UseLook(look);
         glCallList(displayList);
         glPopMatrix();

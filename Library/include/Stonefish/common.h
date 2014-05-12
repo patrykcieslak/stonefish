@@ -11,7 +11,6 @@
 
 //Stonefish
 //#define USE_ADVANCED_GUI
-//#define USE_DOUBLE_PRECISION
 
 //System
 #include <string>
@@ -22,11 +21,11 @@
 #include <stdint.h>
 
 //Bullet Physics
-#ifdef USE_DOUBLE_PRECISION
-#define BT_USE_DOUBLE_PRECISION
-#endif
-#define BT_EULER_DEFAULT_ZYX
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include <BulletCollision/btBulletCollisionCommon.h>
+
+//OGLFT
+#define OGLFT_NO_SOLID
+#define OGLFT_NO_QT
 
 #endif

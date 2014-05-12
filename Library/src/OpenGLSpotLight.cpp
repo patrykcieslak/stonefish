@@ -18,12 +18,12 @@ OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& tar
     lightClipSpace = glm::mat4();
     
     //Create shadowmap texture
-    shadowSize = 1024;
+    shadowSize = 2048;
     glGenTextures(1, &shadowMap);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //GL_NEAREST - may be needed for more than 8 bits
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
@@ -100,7 +100,7 @@ void OpenGLSpotLight::Render()
         glUniform1f(uniSLightAngle, cosf(getAngle()));
         glUniform4fvARB(uniSColor, 1, getColor());
         glUniformMatrix4fvARB(uniSLightClipSpace, 1, GL_FALSE, glm::value_ptr(eyeToLight));
-        DrawScreenAlignedQuad();
+        OpenGLSolids::DrawScreenAlignedQuad();
         glUseProgramObjectARB(0);
         
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -237,6 +237,8 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe)
 {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -266,6 +268,7 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe)
     pipe->DrawStandardObjects();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
+    glCullFace(GL_BACK);
     glPopAttrib();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -283,7 +286,7 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
     glPushAttrib(GL_VIEWPORT_BIT);
     
     //Set projection and modelview
-    SetupOrtho();
+    OpenGLSolids::SetupOrtho();
     
 	//Texture setup
     glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -296,7 +299,7 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
 	//Render the shadowmap
     glViewport(x, y, shadowSize * scale, shadowSize * scale);
     glColor4f(1.f, 1.f, 1.f, 1.f);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     
 	//Reset
 	glBindTexture(GL_TEXTURE_2D, 0);

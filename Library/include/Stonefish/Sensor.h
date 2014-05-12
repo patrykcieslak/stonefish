@@ -27,8 +27,8 @@ public:
     virtual unsigned short getNumOfDimensions() = 0;
     
     void ClearHistory();
-    const std::shared_ptr<Sample> getLastSample();
-    const std::deque<std::unique_ptr<Sample>>& getHistory();
+    Sample getLastSample();
+    const std::deque<Sample*>& getHistory();
     std::string getName();
     
 protected:
@@ -37,7 +37,7 @@ protected:
 private:
     std::string name;
     unsigned int historyLen;
-    std::deque<std::unique_ptr<Sample>> history;
+    std::deque<Sample*> history;
     
     static NameManager nameManager;
 };

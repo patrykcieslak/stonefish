@@ -34,7 +34,7 @@ GLfloat OpenGLSun::sunElevation = 45.f;
 GLfloat OpenGLSun::sunOrientation = 0.f;
 GLuint OpenGLSun::shadowmapArray = 0;
 GLuint OpenGLSun::shadowmapSplits = 4;
-GLuint OpenGLSun::shadowmapSize = 1024;
+GLuint OpenGLSun::shadowmapSize = 2048;
 GLuint OpenGLSun::shadowFBO = 0;
 btVector3 OpenGLSun::sunDirection = btVector3();
 glm::mat4x4 OpenGLSun::sunModelview = glm::mat4x4(0);
@@ -76,9 +76,9 @@ void OpenGLSun::Init()
     //Create shadowmap texture array
     glGenTextures(1, &shadowmapArray);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY_EXT, 0, GL_DEPTH_COMPONENT24, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //GL_NEAREST - may be needed for more than 8 bits
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY_EXT, 0, GL_DEPTH_COMPONENT16, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
@@ -283,7 +283,7 @@ void OpenGLSun::Render()
     glUniformMatrix4fvARB(uniLightClipSpace[1], 1, GL_FALSE, glm::value_ptr(lightClipSpace[1]));
     glUniformMatrix4fvARB(uniLightClipSpace[2], 1, GL_FALSE, glm::value_ptr(lightClipSpace[2]));
     glUniformMatrix4fvARB(uniLightClipSpace[3], 1, GL_FALSE, glm::value_ptr(lightClipSpace[3]));
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     glUseProgramObjectARB(0);
     
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
@@ -297,6 +297,8 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe)
     //Render maps
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT); //GL_FRONT -> no shadow acne but problems with filtering
     
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -332,8 +334,8 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe)
 	}
     
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    //glDisable(GL_POLYGON_OFFSET_FILL);
+
+    glCullFace(GL_BACK);
     glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	glMatrixMode(GL_PROJECTION);
@@ -364,7 +366,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     glPushAttrib(GL_VIEWPORT_BIT);
     
     //Set projection and modelview
-    SetupOrtho();
+    OpenGLSolids::SetupOrtho();
     
 	//Texture setup
 	glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
@@ -381,7 +383,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
         glViewport(x + shadowmapSize * scale * i, y, shadowmapSize * scale, shadowmapSize * scale);
         glUniform1fARB(uniShadowmapLayer, (GLfloat)i);
         glColor4f(1.f,1.f,1.f,1.f);
-        DrawScreenAlignedQuad();
+        OpenGLSolids::DrawScreenAlignedQuad();
     }
     glUseProgramObjectARB(0);
     

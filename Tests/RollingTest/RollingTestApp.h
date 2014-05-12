@@ -16,6 +16,8 @@ class RollingTestApp : public SimulationApp
 {
 public:
     RollingTestApp(int width, int height, RollingTestManager* sim);
+
+    void DoHUD();
     
     void MouseDown(SDL_Event* event);
     void MouseUp(SDL_Event* event);

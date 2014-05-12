@@ -67,8 +67,8 @@ void RotaryEncoder::Update(btScalar dt)
     }
     
     //save sample
-    angle = UnitSystem::GetAngle(angle);
-    Sample s(1, &angle);
+    btScalar extAngle = UnitSystem::GetAngle(angle);
+    Sample s(1, &extAngle);
     AddSampleToHistory(s);
 }
 

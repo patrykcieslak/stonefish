@@ -21,18 +21,17 @@
 #include "Accelerometer.h"
 #include "ADC.h"
 
-FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MMKS, true, stepsPerSecond)
+FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MMKS, true, stepsPerSecond, SEQUENTIAL_IMPULSE, STANDARD)
 {
 }
 
 void FallingTestManager::BuildScenario()
 {
-    SimulationManager::BuildScenario();
-    SimulationApp::getApp()->getRenderer()->SetVisibleElements(false, false, false, false, false);
+    SimulationApp::getApp()->getRenderer()->SetVisibleElements(true, false, false, false, false);
     
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 7.8), 0.4);
-    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.2, 0.01);
+    getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 1.5), 0.4);
+    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.9, 0.01);
     
     ///////LOOKS///////////
     char path[1024];
@@ -41,26 +40,29 @@ void FallingTestManager::BuildScenario()
     strcat(path, SimulationApp::getApp()->getDataPath());
     strcat(path, "/");
     strcat(path, "grid.png");
+    printf("%s\n", path);
     
     Look grey = CreateMatteLook(1.0f, 1.0f, 1.0f, 0.0f, path);
     //Look color;
     
     ////////OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 100000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0, 0, M_PI_2), btVector3(0,0,0)));
+    PlaneEntity* floor = new PlaneEntity("Floor", 100000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,-M_PI_2/18.0,0), btVector3(0,0,0)));
     floor->setRenderable(true);
     AddEntity(floor);
     
     Look color = CreateGlossyLook(1.f, 0.6f, 0.2f, 0.5f, 0.1f);
-    SphereEntity* sphere = new SphereEntity("Sphere", 1000.f, getMaterialManager()->getMaterial("Steel"), color);
+    
+    SphereEntity* sphere = new SphereEntity("Sphere", 400.f, getMaterialManager()->getMaterial("Steel"), color);
     sphere->setRenderable(true);
-    AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(0, 0, 1000.f)));
+    AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(0.f, 0.f, 500.f)));
+    sphere->SetArbitraryPhysicalProperties(100.0, btVector3(10000000.0,10000000.0,10000000.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,200.0)));
 
     for(int i=0; i<10; i++)
     {
         color = CreateMatteLook(i/10.f+0.2f, 1.0f - i/10.f * 0.8f, 0.1f, 0.5f);
         BoxEntity* box = new BoxEntity("Box" + std::to_string(i), btVector3(500.f,500.f,500.f), getMaterialManager()->getMaterial("Steel"), color);
         box->setRenderable(true);
-        AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0., 0.), btVector3(sinf(i * M_PI/10.f)*5000.f, -i*1000.f, 1000.f + i*300.f)));
+        AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0., 0.), btVector3(sinf(i * M_PI/10.f)*5000.f, -i*1000.f, 3000.f + i*300.f)));
         
         if(i == 5)
         {
@@ -76,9 +78,11 @@ void FallingTestManager::BuildScenario()
     //AddLight(omni);
     //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(5000.f, 5000.f, 10000.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(spot);
+    //spot = new OpenGLSpotLight(btVector3(10000.f, -12000.f, 5000.f), btVector3(5000.f,-5000.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(5600, 500));
+    //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 1, 60.f);
-    trackb->Rotate(btQuaternion(M_PI, 0, -M_PI/8.0));
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60.f);
+    trackb->Rotate(btQuaternion(M_PI, 0, M_PI/8.0));
     trackb->Activate();
     AddView(trackb);
 }

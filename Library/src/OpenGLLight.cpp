@@ -219,7 +219,7 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     glUniformMatrix3fvARB(uniAIVR, 1, GL_FALSE, IVRMatrix);
     glUniformMatrix4fvARB(uniAIP, 1, GL_FALSE, glm::value_ptr(proj));
     glUniform2f(uniAViewport, viewport[2], viewport[3]);
-    DrawScreenAlignedQuad();
+    OpenGLSolids::DrawScreenAlignedQuad();
     glUseProgramObjectARB(0);
 }
 

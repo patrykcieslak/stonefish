@@ -34,29 +34,24 @@ void main()
     vec3 color = color_mat.rgb;
     vec3 normal = normal_depth.xyz;
     
-    if(length(normal) != 0.0)
+    float occlusion = texture2D(texSSAO, gl_TexCoord[0].xy).r;
+    float factor1 = color_mat.a;
+    int mat_type = int(floor(position_mat.a/10.0));
+    float factor2 = position_mat.a-float(mat_type)*10.0;
+    vec3 diffuse_color = 1.5 * sky(texSkyDiff, normal);
+    vec3 result = diffuse_color.rgb * color;
+        
+    /*if(mat_type == 1 && factor1 > 0.0)
     {
-        float occlusion = texture2D(texSSAO, gl_TexCoord[0].xy).r;
-        float factor1 = color_mat.a;
-        int mat_type = int(floor(position_mat.a/10.0));
-        float factor2 = position_mat.a-float(mat_type)*10.0;
-        vec3 diffuse_color = 1.5 * sky(texSkyDiff, normal);
-        vec3 result = diffuse_color.rgb * color;
+        vec3 eye_normal = get_world_normal();
+        vec3 specular_normal = reflect(eye_normal, normal);
+        float reflection = smoothstep(0.0, 1.0, pow(dot(-eye_normal, normal), (1.0-factor1)*(1.0-factor1)*10.0));
+        vec3 specular_color = sky(texSkyReflect, specular_normal) * reflection;
+        result += specular_color.rgb * color;
+    }*/
         
-        /*if(mat_type == 1 && factor1 > 0.0)
-        {
-            vec3 eye_normal = get_world_normal();
-            vec3 specular_normal = reflect(eye_normal, normal);
-            float reflection = smoothstep(0.0, 1.0, pow(dot(-eye_normal, normal), (1.0-factor1)*(1.0-factor1)*10.0));
-            vec3 specular_color = sky(texSkyReflect, specular_normal) * reflection;
-            result += specular_color.rgb * color;
-        }*/
+    if(occlusion > 0.0)
+        result *= occlusion;
         
-        if(occlusion > 0.0)
-            result *= occlusion;
-        
-        gl_FragColor = vec4(result, 1.0); //vec4(pow(result, vec3(1.0/1.0)), 1.0);
-    }
-    else
-        gl_FragColor = vec4(0.0);
+    gl_FragColor = vec4(result, 1.0); //vec4(pow(result, vec3(1.0/1.0)), 1.0);
 }

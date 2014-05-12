@@ -117,6 +117,11 @@ void MeshEntity::SetLook(Look newLook)
     BuildDisplayList();
 }
 
+void MeshEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform)
+{
+    //TO DO
+}
+
 void MeshEntity::BuildCollisionList()
 {
     if(rigidBody != NULL)

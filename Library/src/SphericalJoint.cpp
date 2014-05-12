@@ -28,6 +28,10 @@ JointType SphericalJoint::getType()
     return SPHERICAL;
 }
 
+void SphericalJoint::ApplyDamping()
+{
+}
+
 btVector3 SphericalJoint::Render()
 {
     btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();

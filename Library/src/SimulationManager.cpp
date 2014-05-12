@@ -15,6 +15,7 @@
 #include <BulletDynamics/MLCPSolvers/btMLCPSolver.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <BulletCollision/Gimpact/btGImpactShape.h>
+#include "btFilteredCollisionDispatcher.h"
 
 #include "SimulationApp.h"
 #include "OpenGLSolids.h"
@@ -82,7 +83,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
 }
 ///////////////////////////
 
-SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond)
+SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
 {
     UnitSystem::SetUnitSystem(unitSystem, false);
     zUp = zAxisUp;
@@ -92,6 +93,7 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     physicTime = 0;
     drawLightDummies = false;
     drawCameraDummies = false;
+    InitializeSolver(st, cft);
 }
 
 SimulationManager::~SimulationManager(void)
@@ -142,6 +144,44 @@ void SimulationManager::AddActuator(Actuator *act)
         actuators.push_back(act);
 }
 
+void SimulationManager::AddContact(Entity *e0, Entity *e1)
+{
+    bool contactExists = CheckContact(e0, e1);
+    if(!contactExists)
+    {
+        Contact* c = new Contact(e0, e1);
+        contacts.push_back(c);
+    }
+}
+
+bool SimulationManager::CheckContact(Entity *e0, Entity *e1)
+{
+    bool inContact = false;
+    
+    for(int i = 0; i < contacts.size(); i++)
+    {
+        if(contacts[i]->getEntity0() == e0)
+            inContact = contacts[i]->getEntity1() == e1;
+        else if(contacts[i]->getEntity1() == e0)
+            inContact = contacts[i]->getEntity0() == e1;
+        
+        if(inContact)
+            break;
+    }
+    
+    return inContact;
+}
+
+CollisionFilteringType SimulationManager::getCollisionFilter()
+{
+    return collisionFilter;
+}
+
+SolverType SimulationManager::getSolverType()
+{
+    return solver;
+}
+
 Entity* SimulationManager::getEntity(int index)
 {
     if(index < entities.size())
@@ -154,6 +194,12 @@ void SimulationManager::AddSensor(Sensor *sens)
 {
     if(sens != NULL)
         sensors.push_back(sens);
+}
+
+void SimulationManager::AddController(Controller *cntrl)
+{
+    if(cntrl != NULL)
+        controllers.push_back(cntrl);
 }
 
 Entity* SimulationManager::getEntity(std::string name)
@@ -191,6 +237,14 @@ Sensor* SimulationManager::getSensor(int index)
         return NULL;
 }
 
+Controller* SimulationManager::getController(int index)
+{
+    if(index < controllers.size())
+        return controllers[index];
+    else
+        return NULL;
+}
+
 void SimulationManager::AddView(OpenGLView* view)
 {
     views.push_back(view);
@@ -222,16 +276,49 @@ void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
     dynamicsWorld->getBroadphase()->getBroadphaseAabb(min, max);
 }
 
-void SimulationManager::BuildScenario()
+void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType cft)
 {
-    //initialize dynamic world
-    dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration(); //dwCollisionConfig = new btDefaultCollisionConfiguration();
-    dwDispatcher = new btCollisionDispatcher(dwCollisionConfig); //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
+    solver = st;
+    collisionFilter = cft;
+    
     dwBroadphase = new btDbvtBroadphase();
-    dwSolver = new btSequentialImpulseConstraintSolver();
-    //btDantzigSolver* mlcp = new btDantzigSolver();
-    //btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
-    //dwSolver = new btMLCPSolver(mlcp);
+    dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
+    //dwCollisionConfig = new btDefaultCollisionConfiguration();
+    //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
+
+    switch(collisionFilter)
+    {
+        case STANDARD:
+            dwDispatcher = new btCollisionDispatcher(dwCollisionConfig);
+            break;
+            
+        case INCLUSIVE:
+        case EXCLUSIVE:
+            dwDispatcher = new btFilteredCollisionDispatcher(dwCollisionConfig);
+            break;
+    }
+    
+    switch(solver)
+    {
+        case SEQUENTIAL_IMPULSE:
+            dwSolver = new btSequentialImpulseConstraintSolver();
+            break;
+            
+        case DANTZIG:
+        {
+            btDantzigSolver* mlcp = new btDantzigSolver();
+            dwSolver = new btMLCPSolver(mlcp);
+        }
+            break;
+            
+        case PROJ_GAUSS_SIEDEL:
+        {
+            btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
+            dwSolver = new btMLCPSolver(mlcp);
+        }
+            break;
+    }
+    
     btSoftBodySolver* softBodySolver = 0;
     dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver); //dynamicsWorld = new btDiscreteDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     
@@ -245,7 +332,7 @@ void SimulationManager::BuildScenario()
     dynamicsWorld->getSolverInfo().m_sor = 1.0;
     dynamicsWorld->getSolverInfo().m_linearSlop = 0.0;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
-    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_ENABLE_FRICTION_DIRECTION_CACHING | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_SIMD | SOLVER_USE_WARMSTARTING | SOLVER_RANDMIZE_ORDER;
+    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_ENABLE_FRICTION_DIRECTION_CACHING | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_SIMD | SOLVER_RANDMIZE_ORDER;
     dynamicsWorld->getSolverInfo().m_tau = 0.8;
     dynamicsWorld->getSolverInfo().m_damping = GLOBAL_DAMPING;
     dynamicsWorld->getSolverInfo().m_friction = GLOBAL_FRICTION;
@@ -299,6 +386,10 @@ void SimulationManager::DestroyScenario()
         delete joints[i];
     joints.clear();
     
+    for(int i=0; i<contacts.size(); i++)
+        delete contacts[i];
+    contacts.clear();
+    
     for(int i=0; i<sensors.size(); i++)
         delete sensors[i];
     sensors.clear();
@@ -306,6 +397,10 @@ void SimulationManager::DestroyScenario()
     for(int i=0; i<actuators.size(); i++)
         delete actuators[i];
     actuators.clear();
+    
+    for(int i=0; i<controllers.size(); i++)
+        delete controllers[i];
+    controllers.clear();
     
     for(int i=0; i<views.size(); i++)
         delete views[i];
@@ -328,6 +423,7 @@ void SimulationManager::RestartScenario()
 {
     DestroyScenario();
     BuildScenario();
+    dynamicsWorld->synchronizeMotionStates();
 }
 
 void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
@@ -341,11 +437,10 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
         deltaTime = timeInMicroseconds - currentTime;
     currentTime = timeInMicroseconds;
     
-    int substeps = 30000;
+    int substeps = 1000000;
     
     physicTime = GetTimeInMicroseconds();
     dynamicsWorld->stepSimulation((btScalar)deltaTime/btScalar(1000000.0), substeps, (btScalar)ssus/btScalar(1000000.0));
-    simulationTime += (btScalar)deltaTime/btScalar(1000000.0);
     physicTime = GetTimeInMicroseconds() - physicTime;
     
    if (dynamicsWorld->getConstraintSolver()->getSolverType()==BT_MLCP_SOLVER)
@@ -366,11 +461,15 @@ void SimulationManager::StartSimulation()
 {
     currentTime = 0;
     physicTime = 0;
-    dynamicsWorld->synchronizeMotionStates();
+    
+    for(int i=0; i < controllers.size(); i++)
+        controllers[i]->Start();
 }
 
 void SimulationManager::StopSimulation()
 {
+    for(int i=0; i < controllers.size(); i++)
+        controllers[i]->Stop();
 }
 
 void SimulationManager::setGravity(const btVector3& g)
@@ -418,22 +517,29 @@ double SimulationManager::getPhysicsTimeInMiliseconds()
 void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
+    simManager->simulationTime += timeStep;
     
     //clear all forces to ensure that no summing occurs
     world->clearForces();
     
-    //loop through all sensors
-    for(int i=0; i<simManager->sensors.size(); i++)
+    //loop through all sensors -> update measurements
+    for(int i = 0; i < simManager->sensors.size(); i++)
         simManager->sensors[i]->Update(timeStep);
 
     //loop through all controllers
+    for(int i = 0; i < simManager->controllers.size(); i++)
+        simManager->controllers[i]->Update(timeStep);
     
-    //loop through all actuators
-    for(int i=0; i< simManager->actuators.size(); i++)
+    //loop through all actuators -> apply forces to bodies (free and connected by joints)
+    for(int i = 0; i < simManager->actuators.size(); i++)
         simManager->actuators[i]->Update(timeStep);
     
+    //loop through all joints -> apply damping forces to bodies connected by joints
+    for(int i = 0; i < simManager->joints.size(); i++)
+        simManager->joints[i]->ApplyDamping();
+    
     //loop through all entities that may need special actions
-    for(int i=0; i<simManager->entities.size(); i++)
+    for(int i = 0; i < simManager->entities.size(); i++)
     {
         Entity* ent = simManager->entities[i];
         
@@ -442,7 +548,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar 
         {
             SolidEntity* simple = (SolidEntity*)ent;
             simple->ApplyGravity();
-            simple->getRigidBody()->setDamping(0, 0);
+            //simple->getRigidBody()->setDamping(0, 0);
         }
         else if(ent->getType() == CABLE)
         {

@@ -44,6 +44,10 @@ JointType PrismaticJoint::getType()
     return PRISMATIC;
 }
 
+void PrismaticJoint::ApplyDamping()
+{
+}
+
 btVector3 PrismaticJoint::Render()
 {
     btTypedConstraint* slider = getConstraint();

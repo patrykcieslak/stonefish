@@ -16,8 +16,10 @@
 #include "SolidEntity.h"
 #include "FluidEntity.h"
 #include "Joint.h"
+#include "Contact.h"
 #include "Sensor.h"
 #include "Actuator.h"
+#include "Controller.h"
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
 
@@ -26,8 +28,11 @@
 #define MAX_ERROR_REDUCTION 100.0
 #define GLOBAL_ERP 0.2
 #define GLOBAL_ERP2 0.8
-#define GLOBAL_DAMPING 0.1
+#define GLOBAL_DAMPING 0.0
 #define GLOBAL_FRICTION 0.0
+
+typedef enum {SEQUENTIAL_IMPULSE, DANTZIG, PROJ_GAUSS_SIEDEL} SolverType;
+typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 
 typedef struct
 {
@@ -35,16 +40,17 @@ typedef struct
     btVector3 location;
 } Sticker;
 
-class SimulationManager //abstract class!
+//abstract class
+class SimulationManager
 {
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond);
+    SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st = DANTZIG, CollisionFilteringType cft = STANDARD);
 	virtual ~SimulationManager(void);
     
     //physics
-    virtual void BuildScenario();
+    virtual void BuildScenario() = 0;
     void DestroyScenario();
     void RestartScenario();
     void StartSimulation();
@@ -60,12 +66,18 @@ public:
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
+    void AddController(Controller* cntrl);
+    void AddContact(Entity* e0, Entity* e1);
+    bool CheckContact(Entity* e0, Entity* e1);
     
+    CollisionFilteringType getCollisionFilter();
+    SolverType getSolverType();
     Entity* getEntity(int index);
     Entity* getEntity(std::string name);
     Joint* getJoint(int index);
     Actuator* getActuator(int index);
     Sensor* getSensor(int index);
+    Controller* getController(int index);
     
     void setGravity(const btVector3& g);
     btDynamicsWorld* getDynamicsWorld();
@@ -93,17 +105,23 @@ protected:
     
 private:
     //physics
+    void InitializeSolver(SolverType st, CollisionFilteringType cft);
+    
     btScalar sps;
     btScalar simulationTime;
     uint64_t currentTime;
     uint64_t physicTime;
     uint64_t ssus;
+    SolverType solver;
+    CollisionFilteringType collisionFilter;
 
     std::vector<Entity*> entities;
     std::vector<FluidEntity*> fluids;
     std::vector<Joint*> joints;
     std::vector<Sensor*> sensors;
     std::vector<Actuator*> actuators;
+    std::vector<Controller*> controllers;
+    std::vector<Contact*> contacts;
     
     bool zUp;
 

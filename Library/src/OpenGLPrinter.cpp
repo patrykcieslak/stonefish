@@ -9,9 +9,6 @@
 #include "OpenGLPrinter.h"
 
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include "OpenGLUtil.h"
 
 GLint OpenGLPrinter::windowW = 800;
 GLint OpenGLPrinter::windowH = 600;
@@ -22,18 +19,20 @@ void OpenGLPrinter::SetWindowSize(GLint width, GLint height)
     windowH = height;
 }
 
-OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLint size, GLfloat spacing)
+OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLint size, GLint dpi)
 {
-	font = new FTTextureFont(fontPath);
-    font->FaceSize(size, size);
-    font->UseDisplayList(true);
-    font->CharMap(ft_encoding_unicode);
-    this->spacing = spacing;
+    font = new OGLFT::MonochromeTexture(fontPath, size, dpi);
+    if(font == NULL || !font->isValid())
+    {
+        printf("Could not construct font!\n");
+        font = NULL;
+    }
 }
 
 OpenGLPrinter::~OpenGLPrinter()
 {
-    delete font;
+    if(font != NULL)
+        delete font;
 }
 
 void OpenGLPrinter::Start()
@@ -41,7 +40,6 @@ void OpenGLPrinter::Start()
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glDisable (GL_LIGHTING);
 	glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -49,7 +47,7 @@ void OpenGLPrinter::Start()
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0.0, windowW, windowH, 0.0, 0.0, 1.0);
+	glOrtho(0.0, windowW, 0.0, windowH, -100.0, 100.0);
     
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -58,21 +56,18 @@ void OpenGLPrinter::Start()
 
 void OpenGLPrinter::Print(GLfloat *color, GLfloat x, GLfloat y, GLfloat size, const char* text)//, ...)
 {
-    float fontSize = (float)font->FaceSize();
-    
-    glPushMatrix();
-    glTranslatef(x, y+fontSize/2.f, 0);
-    glScalef(size/fontSize, -size/fontSize, size/fontSize);
-    
-    glColor4fv(color);
-    font->Render(text, -1, FTPoint(), FTPoint(spacing, 0));
-    
-    glPopMatrix();
+    if(font != NULL)
+    {
+        font->setForegroundColor(color); //invalidates cache
+        font->setPointSize(size);        //invalidates cache
+        font->draw(x, y, text);
+    }
 }
 
 GLfloat OpenGLPrinter::TextLength(const char *text)
 {
-    return font->Advance(text);
+    OGLFT::BBox bounds = font->measure(text);
+    return bounds.x_max_ - bounds.x_min_;
 }
 
 void OpenGLPrinter::Finish()

@@ -1,4 +1,10 @@
 #version 120
+
+#define SHADOWMAP_SIZE (2048.0)
+#define NUM_SAMPLES (32)
+#define INV_NUM_SAMPLES (1.0/32.0)
+#define NUM_SPIRAL_TURNS (7)
+
 uniform sampler2D texDiffuse;
 uniform sampler2D texPosition;
 uniform sampler2D texNormal;
@@ -10,23 +16,8 @@ uniform vec4 lightColor;
 uniform mat4 lightClipSpace;
 
 const vec3 eyeDir = vec3(0.0,0.0,1.0);
-const vec2 poissonDisk[16] = vec2[]( vec2( -0.94201624, -0.39906216 ),
-                                    vec2( 0.94558609, -0.76890725 ),
-                                    vec2( -0.094184101, -0.92938870 ),
-                                    vec2( 0.34495938, 0.29387760 ),
-                                    vec2( -0.91588581, 0.45771432 ),
-                                    vec2( -0.81544232, -0.87912464 ),
-                                    vec2( -0.38277543, 0.27676845 ),
-                                    vec2( 0.97484398, 0.75648379 ),
-                                    vec2( 0.44323325, -0.97511554 ),
-                                    vec2( 0.53742981, -0.47373420 ),
-                                    vec2( -0.26496911, -0.41893023 ),
-                                    vec2( 0.79197514, 0.19090188 ),
-                                    vec2( -0.24188840, 0.99706507 ),
-                                    vec2( -0.81409955, 0.91437590 ),
-                                    vec2( 0.19984126, 0.78641367 ),
-                                    vec2( 0.14383161, -0.14100790 ) );
 
+//Generate random number
 float random(vec3 seed, int i)
 {
 	vec4 seed4 = vec4(seed,i);
@@ -34,19 +25,54 @@ float random(vec3 seed, int i)
 	return fract(sin(dot_product) * 43758.5453);
 }
 
-float calculateShadowCoeff(vec4 eyePosition, float bias)
+//Generate sample location based on a spiral curve
+vec2 tapLocation(int sampleNumber, float spinAngle, out float radius)
 {
-    vec4 shadowCoord = lightClipSpace * eyePosition;
-    float fragmentDepth = (shadowCoord.z - bias)/shadowCoord.w;
+    float alpha = (float(sampleNumber) + 0.5) * INV_NUM_SAMPLES;
+    float angle = alpha * (float(NUM_SPIRAL_TURNS) * 6.28) + spinAngle;
     
-    //Compare
-    float visibility = 1.0;
-    for(int i=0; i<4; i++)
+    radius = alpha;
+    return vec2(cos(angle), sin(angle));
+}
+
+//Calculate shadow contribution
+float calculateShadowCoef(vec4 eyePosition, float bias)
+{
+	//Transform this fragment's position from view space to scaled light clip space such that the xy coordinates are in [0;1]
+	vec4 shadowCoord = lightClipSpace * eyePosition;
+    float fragmentDepth = (shadowCoord.z + bias)/shadowCoord.w;
+    
+    float nominalRadius = SHADOWMAP_SIZE/400.0;
+    float rnd = random(eyePosition.xyz, 0) * 10.0;
+    
+    //Cheap shadow testing for all pixels (5 samples)
+    int inShadow = 0;
+    inShadow += int(1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w, fragmentDepth)).r);
+    
+    for(int i = NUM_SAMPLES - 5; i < NUM_SAMPLES - 1; i++)
     {
-        int pdIndex = int(mod(random(floor(eyePosition.xyz * 1000.0), i) * 16.0, 16.0));
-        visibility -= 0.25 * (1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w + poissonDisk[pdIndex]/750.0, fragmentDepth)).r);
+        float radiusFactor;
+        vec2 offset = tapLocation(i, rnd, radiusFactor);
+        inShadow += int(1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w + (offset * radiusFactor * nominalRadius)/SHADOWMAP_SIZE, fragmentDepth)).r);
     }
-    return visibility;
+    
+    if(inShadow == 0) //Fully in light
+        return 1.0;
+    else if(inShadow == 5) //Fully in shadow
+        return 0.0;
+    else //Precise sampling for the shadow border pixels
+    {
+        float lightness = 1.0 - inShadow * INV_NUM_SAMPLES;
+        
+        for(int i = 0; i < NUM_SAMPLES - 5; i++)
+        {
+            float radiusFactor;
+            vec2 offset = tapLocation(i, rnd, radiusFactor);
+            lightness -= INV_NUM_SAMPLES * (1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w + (offset * radiusFactor * nominalRadius)/SHADOWMAP_SIZE, fragmentDepth)).r);
+        }
+        
+        return lightness;
+    }
 }
 
 void main(void)
@@ -79,38 +105,41 @@ void main(void)
         
         if(NdotL > 0.0)
         {
-            float bias = 0.005 * tan(acos(NdotL));
-            bias = clamp(bias, 0, 0.01);
-            float shadow = calculateShadowCoeff(vec4(position, 1.0), bias);
-            
-            if(mat_type == 0) //Oren-Nayar
+            float bias = 0.0005 * tan(acos(NdotL));
+            bias = clamp(bias, 0, 0.005);
+            float lightness = calculateShadowCoef(vec4(position,1.0), bias);
+
+            if(lightness > 0.0)
             {
-                float angleVN = acos(NdotV);
-                float angleLN = acos(NdotL);
-                
-                float alpha = max(angleVN, angleLN);
-                float beta = min(angleVN, angleLN);
-                float gamma = dot(eyeDir - normal * NdotV, lightDir - normal * NdotL);
-                factor1 *= 100.0;
-                float roughnessSquared = factor1*factor1;
-                float A = 1.0 - 0.5 * (roughnessSquared / (roughnessSquared + 0.57));
-                float B = 0.45 * (roughnessSquared / (roughnessSquared + 0.09));
-                float C = sin(alpha) * tan(beta);
-                float L1 = max(0.0, NdotL) * (A + B * max(0.0, gamma) * C);
-                
-                finalColor = vec4(lightColor.rgb * color * L1 * attenuation * shadow, 1.0);
-            }
-            else if(mat_type == 1) //Blinn-Phong
-            {
-                vec3 H = normalize(lightDir + eyeDir);
-                float specular = pow(max(dot(normal, H), 0.0), factor1 * factor1 * 512.0 + 8.0);
-                
-                finalColor = vec4(lightColor.rgb * color * NdotL * attenuation * shadow
-                                  + lightColor.rgb * specular * attenuation * shadow, 1.0);
-            }
-            else if(mat_type == 2) //Reflective
-            {
-                finalColor = vec4(0.0,0.0,0.0,1.0);
+                if(mat_type == 0) //Oren-Nayar
+                {
+                    float angleVN = acos(NdotV);
+                    float angleLN = acos(NdotL);
+                    
+                    float alpha = max(angleVN, angleLN);
+                    float beta = min(angleVN, angleLN);
+                    float gamma = dot(eyeDir - normal * NdotV, lightDir - normal * NdotL);
+                    factor1 *= 100.0;
+                    float roughnessSquared = factor1*factor1;
+                    float A = 1.0 - 0.5 * (roughnessSquared / (roughnessSquared + 0.57));
+                    float B = 0.45 * (roughnessSquared / (roughnessSquared + 0.09));
+                    float C = sin(alpha) * tan(beta);
+                    float L1 = max(0.0, NdotL) * (A + B * max(0.0, gamma) * C);
+                    
+                    finalColor = vec4(lightColor.rgb * color * L1 * attenuation * lightness, 1.0);
+                }
+                else if(mat_type == 1) //Blinn-Phong
+                {
+                    vec3 H = normalize(lightDir + eyeDir);
+                    float specular = pow(max(dot(normal, H), 0.0), factor1 * factor1 * 512.0 + 8.0);
+                    
+                    finalColor = vec4(lightColor.rgb * color * NdotL * attenuation * lightness
+                                      + lightColor.rgb * specular * attenuation * lightness, 1.0);
+                }
+                else if(mat_type == 2) //Reflective
+                {
+                    finalColor = vec4(0.0,0.0,0.0,1.0);
+                }
             }
         }
         

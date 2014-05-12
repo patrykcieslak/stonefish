@@ -68,7 +68,9 @@ SolidEntityType SphereEntity::getSolidType()
 
 btCollisionShape* SphereEntity::BuildCollisionShape()
 {
-    return new btSphereShape(radius);
+    btSphereShape* colShape = new btSphereShape(radius);
+    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+    return colShape;
 }
 
 void SphereEntity::BuildDisplayList()
@@ -78,7 +80,7 @@ void SphereEntity::BuildDisplayList()
     
     displayList = glGenLists(1);
     glNewList(displayList, GL_COMPILE);
-    DrawSolidSphere(radius);
+    OpenGLSolids::DrawSolidSphere(radius);
     glEndList();
 }
 
@@ -89,7 +91,7 @@ void SphereEntity::BuildCollisionList()
     
     collisionList = glGenLists(1);
     glNewList(collisionList, GL_COMPILE);
-    DrawPointSphere(radius);
+    OpenGLSolids::DrawPointSphere(radius);
     glEndList();
 }
 

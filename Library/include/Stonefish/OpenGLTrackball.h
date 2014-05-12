@@ -10,6 +10,7 @@
 #define __Stonefish_OpenGLTrackball__
 
 #include "OpenGLView.h"
+#include "SolidEntity.h"
 
 class OpenGLTrackball : public OpenGLView
 {
@@ -22,6 +23,7 @@ public:
     btVector3 GetLookingDirection();
     btVector3 GetUpDirection();
     void Rotate(const btQuaternion& rot);
+    void GlueToEntity(SolidEntity* solid);
     ViewType getType();
     
     void MouseDown(GLfloat x, GLfloat y);
@@ -30,6 +32,10 @@ public:
     void MouseScroll(GLfloat s);
     
 private:
+    void UpdateTrackballTransform();
+    
+    SolidEntity* holdingEntity;
+    btTransform trackballTransform;
     btQuaternion rotation;
     btVector3 center;
     btScalar radius;

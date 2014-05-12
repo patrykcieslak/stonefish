@@ -251,7 +251,8 @@ void SimulationApp::InitializeGUI()
 void SimulationApp::InitializeSimulation()
 {
     simulation->BuildScenario();
-
+    //simulation->getDynamicsWorld()->synchronizeMotionStates(); //NOT WORKING. WHY???
+    
     printf("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
 }
 

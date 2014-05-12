@@ -31,14 +31,14 @@ void Gyroscope::Reset()
 
 void Gyroscope::Update(btScalar dt)
 {
-    //calculate transformation from global to acc frame
+    //calculate transformation from global to gyro frame
     btMatrix3x3 toGyroFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();
     
     //get angular velocity
     btVector3 actualAV = solid->getRigidBody()->getAngularVelocity();
     actualAV = toGyroFrame * actualAV;
     
-    //select axis and convert to external unit system or G's
+    //select axis and convert to external unit system
     btScalar av = actualAV[axis];
     av = UnitSystem::GetAngle(av);
     

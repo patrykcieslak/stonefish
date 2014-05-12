@@ -168,7 +168,9 @@ void CylinderEntity::BuildCollisionList()
 
 btCollisionShape* CylinderEntity::BuildCollisionShape()
 {
-    return new btCylinderShape(btVector3(radius, halfHeight, radius));
+    btCylinderShape* colShape = new btCylinderShape(btVector3(radius, halfHeight, radius));
+    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+    return colShape;
 }
 
 void CylinderEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,

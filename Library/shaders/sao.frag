@@ -69,15 +69,15 @@ float sampleAO(ivec2 ssC, vec3 C, vec3 n_C, float ssDiskRadius, int tapIndex, fl
     float vv = dot(v, v);
     float vn = dot(v, n_C);
     
-    const float epsilon = 0.01;
+    const float epsilon = 0.005;
     
     // A: From the HPG12 paper
     // Note large epsilon to avoid overdarkening within cracks
     // return float(vv < radius2) * max((vn - bias) / (epsilon + vv), 0.0) * radius2 * 0.6;
     
     // B: Smoother transition to zero (lowers contrast, smoothing out corners). [Recommended]
-     float f = max(radius2 - vv, 0.0);
-     return f * f * f * max((vn - bias) / (epsilon + vv), 0.0);
+    float f = max(radius2 - vv, 0.0);
+    return f * f * f * max((vn - bias) / (epsilon + vv), 0.0);
     
     // C: Medium contrast (which looks better at high radii), no division.  Note that the
     // contribution still falls off with radius^2, but we've adjusted the rate in a way that is
@@ -99,9 +99,9 @@ void main(void)
     packKey(CSZToKey(C.z), gl_FragColor.gb);
     
     // Hash function used in the HPG12 AlchemyAO paper
-    //vec3 random = texture2D(texRandom, ssCCoord * viewportSize/vec2(64.0)).xyz;
-    //float randomPatternRotationAngle = float((201.0 * random.x + ssC.x * ssC.y) * 11.0);
-    float randomPatternRotationAngle = float((3.0 * (ssC.x + ssC.y) + ssC.x * ssC.y) * 10.0);
+    vec3 random = texture2D(texRandom, ssCCoord * viewportSize/vec2(64.0)).xyz;
+    float randomPatternRotationAngle = float((201.0 * random.x + ssC.x * ssC.y) * 11.0);
+    //float randomPatternRotationAngle = float((3.0 * (ssC.x + ssC.y) + ssC.x * ssC.y) * 10.0);
     
     // Reconstruct normals from positions. These will lead to 1-pixel black lines
     // at depth discontinuities, however the blur will wipe those out so they are not visible

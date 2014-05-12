@@ -22,7 +22,6 @@ SolidEntityType CompoundEntity::getSolidType()
     return COMPOUND;
 }
 
-
 btCollisionShape* CompoundEntity::BuildCollisionShape()
 {
     btCompoundShape* compoundShape = new btCompoundShape();
@@ -127,8 +126,11 @@ void CompoundEntity::BuildCollisionList()
             chT.getOpenGLMatrix(openglTrans);
 
             glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+            glMultMatrixd(openglTrans);
+#else
             glMultMatrixf(openglTrans);
-            
+#endif
             switch(ch->getShapeType())
             {
                 case CONVEX_HULL_SHAPE_PROXYTYPE:
@@ -149,7 +151,7 @@ void CompoundEntity::BuildCollisionList()
                 case SPHERE_SHAPE_PROXYTYPE:
                 {
                     btSphereShape* sph = (btSphereShape*)ch;
-                    DrawPointSphere(sph->getRadius());
+                    OpenGLSolids::DrawPointSphere(sph->getRadius());
                 }
                 break;
             }

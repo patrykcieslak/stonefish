@@ -22,7 +22,7 @@
 #define glYAxisColor() glColor4f(0, 1.f, 0, 1.f)
 #define glZAxisColor() glColor4f(0, 0, 1.f, 1.f)
 
-#ifdef USE_DOUBLE_PRECISION
+#ifdef BT_USE_DOUBLE_PRECISION
 #define glBulletVertex(V) glVertex3dv((V).m_floats)
 #else
 #define glBulletVertex(V) glVertex3fv((V).m_floats)

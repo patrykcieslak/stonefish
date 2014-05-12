@@ -9,14 +9,12 @@
 #ifndef __Stonefish_OpenGLPrinter__
 #define __Stonefish_OpenGLPrinter__
 
-#include "OpenGLPipeline.h"
-#include <FTGL/ftgl.h>
-#include <stdint.h>
+#include "OGLFT.h"
 
 class OpenGLPrinter
 {
 public:
-    OpenGLPrinter(const char* fontPath, GLint size, GLfloat spacing);
+    OpenGLPrinter(const char* fontPath, GLint size, GLint dpi);
     ~OpenGLPrinter();
     
     void Start();
@@ -27,8 +25,7 @@ public:
     static void SetWindowSize(GLint width, GLint height);
     
 private:
-    FTFont* font;
-    GLfloat spacing;
+    OGLFT::MonochromeTexture* font;
     static GLint windowW, windowH;
 };
 
