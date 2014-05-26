@@ -11,7 +11,13 @@
 
 #include "OpenGLPipeline.h"
 #include "OpenGLGBuffer.h"
+#include "GLSLShader.h"
 #include "FluidEntity.h"
+
+#define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1_EXT
+#define REFLECTION_ATTACHMENT   GL_COLOR_ATTACHMENT2_EXT
+#define REFRACTION_ATTACHMENT   GL_COLOR_ATTACHMENT3_EXT
+#define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0_EXT
 
 typedef struct
 {
@@ -24,12 +30,12 @@ typedef struct
 ViewFrustum;
 
 typedef enum {CAMERA, TRACKBALL} ViewType;
+typedef enum {NORMAL, REFLECTED, REFRACTED} SceneComponent;
 
 class OpenGLView
 {
 public:
-    
-    OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLuint ssaoSize);
+    OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, bool sao);
     virtual ~OpenGLView(void);
     
     virtual btTransform GetViewTransform() = 0;
@@ -44,28 +50,34 @@ public:
     void SetViewTransform();
     void SetReflectedViewTransform(FluidEntity* fluid);
     void SetRefractedViewTransform(FluidEntity* fluid);
-    btTransform GetReflectedViewTransform(const btVector3& normal, const btVector3& position);
-    btTransform GetRefractedViewTransform(const btVector3& normal, const btVector3& position, const Fluid* fluid);
+    btTransform GetReflectedViewTransform(const FluidEntity* fluid);
+    btTransform GetRefractedViewTransform(const FluidEntity* fluid);
+    void ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
+    btVector3 Ray(GLint x, GLint y);
 
     void Activate();
     void Deactivate();
     void RenderSSAO();
-    void RenderFluid(FluidEntity* fluid);
+    void RenderFluidSurface(FluidEntity* fluid, bool underwater);
+    void RenderFluidVolume(FluidEntity* fluid);
+    void RenderHDR();
     void ShowAmbientOcclusion();
     
     GLint* GetViewport();
     glm::mat4 GetProjectionMatrix();
-    glm::mat4 GetViewMatrix();
+    glm::mat4 GetViewMatrix(const btTransform& viewTransform);
     GLfloat GetFOVY();
     GLfloat GetNearClip();
     GLfloat GetFarClip();
     
     GLuint getSceneFBO();
+    GLuint getFinalTexture();
     GLuint getSceneTexture();
     GLuint getSceneReflectionTexture();
     GLuint getSceneRefractionTexture();
     GLuint getSSAOTexture();
     bool isActive();
+    bool hasSSAO();
     OpenGLGBuffer* getGBuffer();
     
     static void Init();
@@ -77,6 +89,7 @@ protected:
     OpenGLGBuffer* gBuffer;
     
     GLuint sceneFBO;
+    GLuint finalTexture;
     GLuint sceneTexture;
     GLuint sceneReflectionTexture;
     GLuint sceneRefractionTexture;
@@ -90,6 +103,9 @@ protected:
     GLuint vBlurFBO;
     GLuint vBlurTexture;
     
+    GLuint lightMeterFBO;
+    GLuint lightMeterTexture;
+    
     GLint originX;
     GLint originY;
     GLint viewportWidth;
@@ -101,20 +117,24 @@ protected:
     glm::mat4 projection;
     bool active;
     
+    //downsample
+    static GLSLShader* downsampleShader;
+    
     //ssao
-    static GLhandleARB ssaoShader;
-    static GLhandleARB blurShader;
+    static GLSLShader* ssaoShader;
+    static GLSLShader* blurShader;
     static GLint positionTextureUnit;
     static GLint normalTextureUnit;
     static GLint randomTextureUnit;
-    static GLint uniSaoRandom, uniSaoPosition, uniSaoNormal, uniSaoRadius, uniSaoProjScale, uniSaoBias, uniSaoIntDivR6, uniSaoViewport;
-    static GLint uniSaoBlurSource, uniSaoBlurAxis;
     static GLuint randomTexture;
     
     //fluid
-    static GLhandleARB fluidShader[4];
-    static GLint uniFluidReflection[2], uniFluidScene[4], uniFluidPosition[3], uniFluidViewport[3], uniFluidIP[2], uniFluidR0[2];
-    static GLint uniFluidEyeSurfaceP[3], uniFluidEyeSurfaceN[3], uniFluidVisibility[3];
+    static GLSLShader* fluidShader[4];
+    static GLuint waveNormalTexture;
+    
+    //tonemapping
+    static GLSLShader* lightMeterShader;
+    static GLSLShader* tonemapShader;
 };
 
 #endif

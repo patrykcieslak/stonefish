@@ -7,7 +7,8 @@
 //
 
 #include "GeometryFileUtil.h"
-#include "OpenGLUtil.h"
+#include "SystemUtil.h"
+#include "Console.h"
 
 TriangleMesh* LoadModel(const char* filename, btScalar scale, bool smooth)
 {
@@ -22,12 +23,17 @@ TriangleMesh* LoadModel(const char* filename, btScalar scale, bool smooth)
         return LoadOBJ(filename, scale, smooth);
     }
     else
+    {
+        cError("Unsupported model file type: %s!", extension.c_str());
         return NULL;
+    }
 }
 
 TriangleMesh* LoadSTL(const char *filename, btScalar scale, bool smooth)
 {
     //Read STL data
+    cInfo("Loading model from: %s", filename);
+    
 	FILE* file = fopen(filename, "rb");
     char line[256];
     char keyword[10];
@@ -119,6 +125,8 @@ TriangleMesh* LoadSTL(const char *filename, btScalar scale, bool smooth)
 TriangleMesh* LoadOBJ(const char *filename, btScalar scale, bool smooth)
 {
     //Read OBJ data
+    cInfo("Loading model from: %s", filename);
+    
 	FILE* file = fopen(filename, "rb");
     char line[256];
     char c1, c2;

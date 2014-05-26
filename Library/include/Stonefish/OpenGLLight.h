@@ -10,6 +10,7 @@
 #define __Stonefish_OpenGLLight__
 
 #include "OpenGLPipeline.h"
+#include "GLSLShader.h"
 #include "Entity.h"
 #include "OpenGLCamera.h"
 
@@ -17,7 +18,7 @@
 
 typedef struct
 {
-    GLfloat xRed, yRed,	    	    /* Red x, y */
+    GLfloat xRed, yRed,	    /* Red x, y */
     xGreen, yGreen,  	    /* Green x, y */
     xBlue, yBlue,    	    /* Blue x, y */
     xWhite, yWhite,  	    /* White point x, y */
@@ -29,7 +30,7 @@ class OpenGLLight
 {
 public:
     //Discrete lights
-    OpenGLLight(const btVector3& position, GLfloat* color4);
+    OpenGLLight(const btVector3& position, glm::vec4 color);
     virtual ~OpenGLLight();
     
     virtual void Render() = 0;
@@ -43,7 +44,7 @@ public:
     void Deactivate();
     bool isActive();
     void setLightSurfaceDistance(GLfloat dist);
-    GLfloat* getColor();
+    glm::vec4 getColor();
     btVector3 getViewPosition();
     btVector3 getPosition();
     //btVector3 getPosition();
@@ -57,7 +58,7 @@ public:
     static void RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp);
     
     //Utilities
-    static GLfloat* ColorFromTemperature(GLfloat temperatureK, GLfloat intensity);
+    static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat intensity);
     
 protected:
     Entity* holdingEntity;
@@ -65,18 +66,13 @@ protected:
     btVector3 relpos;
     btVector3 pos;
     GLfloat surfaceDistance;
-    GLfloat* color;
+    glm::vec4 color;
     
     static OpenGLView* activeView;
-    static GLhandleARB omniShader;
-    static GLhandleARB spotShader;
-    
+    static GLSLShader* omniShader;
+    static GLSLShader* spotShader;
+    static GLSLShader* ambientShader;
     static GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, skyDiffuseTextureUnit, skyReflectionTextureUnit, ssaoTextureUnit, shadowTextureUnit;
-    static GLint uniODiffuse, uniONormal, uniOPosition, uniOLightPos, uniOColor;
-    static GLint uniSDiffuse, uniSNormal, uniSPosition, uniSLightPos, uniSLightDir, uniSLightAngle, uniSColor, uniSLightClipSpace, uniSShadow;
-    
-    static GLhandleARB ambientShader;
-    static GLint uniADiffuse, uniANormal, uniAPosition, uniASkyDiff, uniASkyReflect, uniAIVR, uniAIP, uniAViewport, uniASsao;
     
     static ColorSystem cs;
     static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);

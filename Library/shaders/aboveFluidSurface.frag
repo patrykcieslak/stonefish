@@ -1,16 +1,15 @@
 #version 120
 uniform sampler2D texPosition;
-uniform sampler2D texScene;
 uniform sampler2D texReflection;
+uniform sampler2D texRefraction;
+uniform sampler2D texWaveNormal;
 uniform float R0;
 uniform vec2 viewport;
 uniform mat4 invProj;
 uniform float visibility;
 uniform vec3 eyeSurfaceNormal;
 uniform vec3 eyeSurfacePosition;
-
-varying vec3 fluidPosition;
-//varying vec3 fluidNormal;
+uniform float time;
 
 const float fadeSpeed = 0.15;
 const vec3 depthColor = vec3(0.0078, 0.5176, 0.7);
@@ -25,18 +24,27 @@ vec3 getEyeNormal(vec2 texCoord)
     return eyeNormal;
 }
 
+vec3 getFluidNormal(vec2 coord)
+{
+    vec3 waveNormal = texture2D(texWaveNormal, 10.0 * coord + 0.05 * time).rgb;
+    waveNormal.z *= sin(time) * sin(time * 0.3);
+    vec3 normal = 2.0 * waveNormal - vec3(1.0);
+    normal = normalize(reflect(eyeSurfaceNormal, normal));
+    return normal;
+}
+
 void main(void)
 {
     vec2 texCoord = gl_FragCoord.xy/viewport;
     vec4 position_mat = texture2D(texPosition, texCoord);
     vec3 position = position_mat.xyz;
     
-    if(fluidPosition.z < position.z) //depth testing
-        discard;
-    
     vec3 eyeNormal = getEyeNormal(texCoord);
-    vec3 reflection = texture2D(texReflection, texCoord).rgb;
-    vec3 refraction = texture2D(texScene, texCoord).rgb;
+    vec3 modEyeSurfaceNormal = getFluidNormal(texCoord);
+
+    vec3 reflection = texture2D(texReflection, vec2(texCoord.x, 1.0-texCoord.y) + modEyeSurfaceNormal.xy * 0.01).rgb;
+    vec3 refraction = texture2D(texRefraction, texCoord + modEyeSurfaceNormal.xy * 0.01).rgb;
+    
     float waterDepth = dot(eyeSurfacePosition-position, eyeSurfaceNormal);
     float eyeWaterDepth = eyeSurfacePosition.z - position.z;
     float depthN = eyeWaterDepth * fadeSpeed;
@@ -44,7 +52,8 @@ void main(void)
     refraction = mix(mix(refraction, depthColor, clamp(depthN/visibility, 0.0, 1.0)),
                     bigDepthColor,
                     clamp(waterDepth/extinction, 0.0, 1.0));
-
-    float fresnel = R0 + (1.0-R0)*pow(1.0-dot(-eyeNormal, eyeSurfaceNormal), 5.0);
+    
+    float fresnel = R0 + (1.0-R0)*pow(1.0-dot(-eyeNormal, (modEyeSurfaceNormal+5.0*eyeSurfaceNormal)/6.0), 5.0);
     gl_FragColor = vec4(mix(refraction, reflection, fresnel), 1.0);
+    //gl_FragColor = vec4(reflection, 1.0);
 }

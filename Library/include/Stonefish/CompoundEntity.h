@@ -14,7 +14,7 @@
 class CompoundEntity : public SolidEntity
 {
 public:
-    CompoundEntity(std::string uniqueName, bool isStatic = false);
+    CompoundEntity(std::string uniqueName);
     ~CompoundEntity();
     
     SolidEntityType getSolidType();

@@ -9,7 +9,7 @@
 #include "OpenGLSpotLight.h"
 #include "OpenGLSolids.h"
 
-OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, GLfloat* color4) : OpenGLLight(position, color4)
+OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {
     reldir = UnitSystem::SetPosition(target - position);
     reldir.normalize();
@@ -80,28 +80,28 @@ void OpenGLSpotLight::Render()
     if(isActive())
     {
         btVector3 lightPos = getViewPosition();
-        GLfloat lposition[3] = {(GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ()};
+        glm::vec3 lposition((GLfloat)lightPos.getX(), (GLfloat)lightPos.getY(), (GLfloat)lightPos.getZ());
         btVector3 lightDir = getViewDirection();
-        GLfloat ldirection[3] = {(GLfloat)lightDir.getX(),(GLfloat)lightDir.getY(),(GLfloat)lightDir.getZ()};
-        glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix());
+        glm::vec3 ldirection((GLfloat)lightDir.getX(), (GLfloat)lightDir.getY(), (GLfloat)lightDir.getZ());
+        glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix(activeView->GetViewTransform()));
 
         glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, shadowMap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
         
-        glUseProgramObjectARB(spotShader);
-        glUniform1iARB(uniSDiffuse, diffuseTextureUnit);
-        glUniform1iARB(uniSPosition, positionTextureUnit);
-        glUniform1iARB(uniSNormal, normalTextureUnit);
-        glUniform1iARB(uniSShadow, shadowTextureUnit);
-        glUniform3fvARB(uniSLightPos, 1, lposition);
-        glUniform3fvARB(uniSLightDir, 1, ldirection);
-        glUniform1f(uniSLightAngle, cosf(getAngle()));
-        glUniform4fvARB(uniSColor, 1, getColor());
-        glUniformMatrix4fvARB(uniSLightClipSpace, 1, GL_FALSE, glm::value_ptr(eyeToLight));
+        spotShader->Enable();
+        spotShader->SetUniform("texDiffuse", diffuseTextureUnit);
+        spotShader->SetUniform("texPosition", positionTextureUnit);
+        spotShader->SetUniform("texNormal", normalTextureUnit);
+        spotShader->SetUniform("texShadow", shadowTextureUnit);
+        spotShader->SetUniform("lightPosition", lposition);
+        spotShader->SetUniform("lightDirection", ldirection);
+        spotShader->SetUniform("lightAngle", (GLfloat)cosf(getAngle()));
+        spotShader->SetUniform("lightColor", getColor());
+        spotShader->SetUniform("lightClipSpace", eyeToLight);
         OpenGLSolids::DrawScreenAlignedQuad();
-        glUseProgramObjectARB(0);
+        spotShader->Disable();
         
         glBindTexture(GL_TEXTURE_2D, 0);
     }

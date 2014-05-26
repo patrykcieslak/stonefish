@@ -135,7 +135,7 @@ CableEntity::~CableEntity()
 
 EntityType CableEntity::getType()
 {
-    return CABLE;
+    return ENTITY_CABLE;
 }
 
 void CableEntity::SetLook(Look newLook)

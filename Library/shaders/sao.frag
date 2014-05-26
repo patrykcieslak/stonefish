@@ -13,6 +13,7 @@ uniform float intensityDivR6; //intensity/radius^6
 uniform vec2 viewportSize;
 
 float radius2 = radius * radius;
+//float invRadius2 = 1.0/radius2;
 
 // Used for packing Z into the GB channels
 float CSZToKey(float z)
@@ -73,7 +74,7 @@ float sampleAO(ivec2 ssC, vec3 C, vec3 n_C, float ssDiskRadius, int tapIndex, fl
     
     // A: From the HPG12 paper
     // Note large epsilon to avoid overdarkening within cracks
-    // return float(vv < radius2) * max((vn - bias) / (epsilon + vv), 0.0) * radius2 * 0.6;
+    //return float(vv < radius2) * max((vn - bias) / (epsilon + vv), 0.0) * radius2 * 0.6;
     
     // B: Smoother transition to zero (lowers contrast, smoothing out corners). [Recommended]
     float f = max(radius2 - vv, 0.0);
@@ -82,7 +83,7 @@ float sampleAO(ivec2 ssC, vec3 C, vec3 n_C, float ssDiskRadius, int tapIndex, fl
     // C: Medium contrast (which looks better at high radii), no division.  Note that the
     // contribution still falls off with radius^2, but we've adjusted the rate in a way that is
     // more computationally efficient and happens to be aesthetically pleasing.
-    // return 4.0 * max(1.0 - vv * invRadius2, 0.0) * max(vn - bias, 0.0);
+    //return 4.0 * max(1.0 - vv * invRadius2, 0.0) * max(vn - bias, 0.0);
     
     // D: Low contrast, no division operation
     // return 2.0 * float(vv < radius * radius) * max(vn - bias, 0.0);
@@ -129,6 +130,6 @@ void main(void)
         A -= dFdy(A) * (mod(ssC.y, 2) - 0.5);
     
     //gl_FragColor = vec4(cos(randomPatternRotationAngle), sin(randomPatternRotationAngle), 0.0, 1.0);
-    gl_FragColor.r = A;
+    gl_FragColor.r = max(A, 0.1);
 }
 

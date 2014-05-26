@@ -38,60 +38,73 @@ x Comparison with ADAMS for a double pendulum (undamped and damped case) - ALMOS
 x Tested double precision - NO SIGNIFICANT DIFFERENCE!
 x Trackball class rewritten
 x Controller architecture
-x Servo controller (PID)
+x ServoController controller (PID)
 x Removed autopointers from Sensor
 x Fixed simulation time
 x Fake IMU - ideal readings from Bullet, RPY angles
 x Collision filtering or contact joints - exclusive or inclusive
 x Easy solver and collision filtering setup
-- Joint limits
-- Acrobot SS controller
-- MWR SS controller
+x SAO downsampling with separate averaging of encoded depth
+x Only one fluid entity in simulation
+x OpenGLPipeline is now a singleton
+x Shader system
+x New Utils group, textures transferred to Material
+x Gyroscopic effect
+x Fixed rendering of initial configuration
+x New concept of rendering pipeline - three different paths
+x Object picking
+x HDR tonemapping
+x Static entities - Plane(update), Terrain, Obstacle
+x Graphical console
+x Multithreaded loading stage
+x Mux
+x CSM -> take scene bounding box to build better crop matrix (correct shadow)
+x Universal SS controller
+x Drawing path of the rolling object contact points
+x Drawing path of the COG(+offset) of objects
+x Setting arbitrary physical properties for MeshEntity
+- IMGUI Panel
 - IMGUI PhasePlot
-- Fixed rendering of initial configuration
+- IMGUI Gauge
+- Above water surface rendering
+- Underwater rendering
 
 Simulation:
-- Gyroscopic effect
 - Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
-- Joystick controller/teleoperation
 - True IMU - acc, gyro, kalman filter etc.
-- Setting arbitrary physical properties for MeshEntity
-- Cable entity -> soft body rope
-- GearJoint/BeltJoint from two revolute joints
-- AHRS
-- Linear actuator
-- Camera with lens
 - GPS
-- Linear encoder
+- Camera with lens
 - Laser rangefinder
 - Ultrasonic range finder
 - Laser scanner 2d
-- Laser scanner 3d
-- Battery
-- Solar panel
+- AHRS
+- Joint limits
+- Manipulator(Featherstone)
+- Linear encoder
+- Linear actuator
+- Battery(LiIon, LiPoly, A123)
+- Solar panel(with shadow checking)
+- LIDAR
+- Leap Motion support
+- Joystick controller/teleoperation
 
 Underwater:
 - Account for localTransform in buoyancy calculation
-- Water rendering
-- Underwater rendering
+- Thruster
+- Cable entity -> soft body rope
 - DVL
 - Multi-beam
-- Side sonar
-- Thruster
+- Side-scan
 
 Graphics:
-- Object picking to display info/modify params
-- HDR tonemapping (Film curve)
 - Reflective material
-- CSM -> take scene bounding box to build better crop matrix
-- IMGUI Gauge
-- IMGUI vertical progress bar(filled tube)
-- IMGUI Stonefish logo
+- BRDF materials
+- Omni light shadows
 - Drawing actuators
 - Drawing camera frustum and sensors
 - Stickers
-- Omni light shadows
 - Stencil light volumes (taking into account the attenuation)
 - Order Independent Transparency
 - Lens flare with occlusion query
-- Bloom
+- Subtle light bloom
+- Design Stonefish LOGO

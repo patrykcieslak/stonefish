@@ -10,6 +10,7 @@
 #define __Stonefish_OpenGLSky__
 
 #include "OpenGLPipeline.h"
+#include "GLSLShader.h"
 #include "OpenGLView.h"
 
 typedef enum {SKY,DOWNSAMPLE2, DOWNSAMPLE4, DOWNSAMPLE8, CONVOLUTION_DIFFUSE, CONVOLUTION_REFLECT} SkyCubemap;
@@ -28,7 +29,7 @@ public:
  
 private:
     OpenGLSky();
-    static void ProcessCube(GLint ivrUniform, GLuint cubemap, GLenum attachment);
+    static void ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachment);
     
     //Sky cubemap rendering
     //framebuffer
@@ -36,11 +37,7 @@ private:
     static GLsizei skyCubeSize;
     static GLuint skyCubemap;
     //shader
-    static GLhandleARB skyCubeShader;
-    static GLint uniSCViewport, uniSCIP, uniSCIVR, uniLightDir, uniKr;
-    static GLint uniRayleighBrightness, uniMieBrightness, uniSpotBrightness;
-    static GLint uniScatterStrength, uniRayleighStrength, uniMieStrength;
-    static GLint uniRayleighCollection, uniMieCollection, uniMieDistribution;
+    static GLSLShader* skyCubeShader;
     
     //Downsampling
     //framebuffer
@@ -51,26 +48,19 @@ private:
     static GLuint ds4Cubemap;
     static GLuint ds8Cubemap;
     //shader
-    static GLhandleARB dsShader;
-    static GLint uniDsViewport, uniDsIP, uniDsIVR;
-    static GLint uniDsSampler;
+    static GLSLShader* dsShader;
     
     //Convolution
     //framebuffer
     static GLuint convolveFBO;
     static GLuint convolveDiffuseCubemap;
     static GLuint convolveReflectionCubemap;
-    
     //shader
-    static GLhandleARB convolveShader;
-    static GLint uniConvolveViewport, uniConvolveIP, uniConvolveIVR;
-    static GLint uniConvolveSampler, uniConvolveSpecularity;
+    static GLSLShader* convolveShader;
     
     //Sky drawing
     //shader
-    static GLhandleARB skyDrawShader;
-    static GLint uniSkyDrawViewport, uniSkyDrawIP, uniSkyDrawIVR;
-    static GLint uniSkyDrawSampler;
+    static GLSLShader* skyDrawShader;
     
     //misc
     static GLfloat debugAngle;

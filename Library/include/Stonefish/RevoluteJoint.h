@@ -22,8 +22,8 @@ public:
    	btVector3 Render();
     
     void applyTorque(btScalar T);
-    void setTargetVelocity(btScalar v, btScalar maxT);
     void setDamping(btScalar constantFactor, btScalar viscousFactor);
+    void setLimits(btScalar min, btScalar max);
     
     JointType getType();
     btScalar getAngle();

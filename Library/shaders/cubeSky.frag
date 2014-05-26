@@ -12,7 +12,7 @@ uniform float rayleigh_collection_power, mie_collection_power, mie_distribution;
     
 float surface_height = 0.99;
 float range = 0.01;
-float intensity = 2.0;
+float intensity = 1.0;
 const int step_count = 32;
     
 vec3 get_world_normal()

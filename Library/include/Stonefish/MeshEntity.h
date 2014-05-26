@@ -14,11 +14,10 @@
 class MeshEntity : public SolidEntity
 {
 public:
-    MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals = true, bool isStatic = false);
+    MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals = true);
 	~MeshEntity();
     
     void SetLook(Look newLook);
-    void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
     SolidEntityType getSolidType();
     btCollisionShape* BuildCollisionShape();
     void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,

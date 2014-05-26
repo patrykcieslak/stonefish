@@ -10,6 +10,7 @@
 #define __Stonefish_OpenGLGBuffer__
 
 #include "OpenGLPipeline.h"
+#include "GLSLShader.h"
 
 typedef enum {DIFFUSE, POSITION1, POSITION2, NORMAL1, NORMAL2} FBOComponent;
 
@@ -22,7 +23,7 @@ public:
     void Start(GLuint texIndex);
 	void Stop();
     void ShowTexture(FBOComponent component, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
-    void SetClipPlane(GLfloat* planeEq);
+    void SetClipPlane(double* plane);
     
 	GLuint getDiffuseTexture() const { return diffuseTexture; }
 	GLuint getPositionTexture(GLuint index) const { return positionTexture[index]; }
@@ -30,8 +31,8 @@ public:
     
     static void LoadShaders();
     static void DeleteShaders();
-    static GLint getUniformLocation_IsTextured();
-    static GLint getAttributeLocation_MaterialData();
+    static void SetUniformIsTextured(bool x);
+    static void SetAttributeMaterialData(GLfloat x);
     
 private:
     GLuint fbo;                // FBO handle
@@ -39,12 +40,12 @@ private:
 	GLuint positionTexture[2]; // texture for the position render target
 	GLuint normalsTexture[2];  // texture for the normals render target
 	GLuint depthBuffer;        // depth buffer handle
+    double* clipPlane;
     int	width;  // FBO width
 	int	height; // FBO height
     bool rendering;
     
-    static GLhandleARB splittingShader;
-    static GLint uniIsTextured, uniTexture, attMatData, uniClipPlane;
+    static GLSLShader* splittingShader;
 };
 
 #endif

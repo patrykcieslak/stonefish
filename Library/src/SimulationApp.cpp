@@ -7,7 +7,7 @@
 //
 
 #include "SimulationApp.h"
-#include "OpenGLUtil.h"
+#include "SystemUtil.h"
 
 SimulationApp* SimulationApp::handle = NULL;
 
@@ -21,8 +21,9 @@ SimulationApp::SimulationApp(const char* name, int width, int height, Simulation
     finished = false;
     running = false;
     simulation = sim;
-    pipeline = new OpenGLPipeline(simulation);
     simSpeedFactor = 1;
+    lastPicked = NULL;
+    loading = true;
     
 	fps = 0.0;
 	physics = 0.0;
@@ -51,11 +52,6 @@ btScalar SimulationApp::getSimulationSpeed()
     return simSpeedFactor;
 }
 
-SimulationApp* SimulationApp::getApp()
-{
-    return SimulationApp::handle;
-}
-
 SimulationManager* SimulationApp::getSimulationManager()
 {
     return simulation;
@@ -64,11 +60,6 @@ SimulationManager* SimulationApp::getSimulationManager()
 IMGUI* SimulationApp::getHUD()
 {
     return hud;
-}
-
-OpenGLPipeline* SimulationApp::getRenderer()
-{
-    return pipeline;
 }
 
 SDL_Joystick* SimulationApp::getJoystick()
@@ -101,6 +92,11 @@ bool SimulationApp::isRunning()
 	return running;
 }
 
+bool SimulationApp::isLoading()
+{
+    return loading;
+}
+
 const char* SimulationApp::getDataPath()
 {
     return dataPath;
@@ -116,11 +112,23 @@ void SimulationApp::Init(const char* dataPath, const char* shaderPath)
     this->dataPath = dataPath;
     this->shaderPath = shaderPath;
     
-    InitializeSDL();
-    pipeline->Initialize(); //OpenGL initialization
+    //Basics
+    InitializeSDL(); //Window initialization + loading thread
+    cInfo("Window created. OpenGL contexts created.");
+    
+    //Continue initialization with console visible
+    cInfo("Initializing rendering pipeline:");
+    cInfo("Loading GUI...");
     InitializeGUI();
+    OpenGLPipeline::getInstance()->Initialize(simulation); //OpenGL initialization
+    
+    cInfo("Initializing simulation:");
     InitializeSimulation();
-    printf("Running...\n");
+    
+    cInfo("Running...");
+    loading = false;
+    int status = 0;
+    SDL_WaitThread(loadingThread, &status);
 }
 
 void SimulationApp::InitializeSDL()
@@ -137,18 +145,22 @@ void SimulationApp::InitializeSDL()
    
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-    SDL_GL_CreateContext(window);
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+    
+    glLoadingContext = SDL_GL_CreateContext(window);
+    glMainContext = SDL_GL_CreateContext(window);
+    Console::getInstance()->SetRenderSize(winWidth, winHeight);
+    loadingThread = SDL_CreateThread(SimulationApp::RenderLoadingScreen, "loadingThread", this);
     
 #ifdef _MSC_VER
 	glewInit();
 #endif
 	
-    printf("OpenGL context created.\n");
-    
     joystick = NULL;
     int jcount = SDL_NumJoysticks();
     if(jcount > 0)
@@ -244,16 +256,17 @@ void SimulationApp::InitializeGUI()
     hud = new IMGUI();
     hud->SetRenderSize(winWidth, winHeight);
     hud->Init();
-    
-    printf("GUI initialized.\n");
 }
 
 void SimulationApp::InitializeSimulation()
 {
+    cInfo("Building scenario...");
     simulation->BuildScenario();
-    //simulation->getDynamicsWorld()->synchronizeMotionStates(); //NOT WORKING. WHY???
+    cInfo("Synchronizing motion states...");
+    simulation->getDynamicsWorld()->synchronizeMotionStates();
+    cInfo("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
     
-    printf("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
+    //printf("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
 }
 
 //window
@@ -517,7 +530,10 @@ void SimulationApp::EventLoop()
         
         //workaround for checking if IMGUI is being manipulated
         if(mouseWasDown && !hud->isAnyActive())
+        {
+            lastPicked = simulation->PickEntity(event.button.x, event.button.y);
             MouseDown(&event);
+        }
         mouseWasDown = false;
     }
 }
@@ -538,9 +554,7 @@ void SimulationApp::AppLoop()
     }
     
     //Rendering
-    //glViewport(0, 0, winWidth, winHeight);
-    //glClear(GL_COLOR_BUFFER_BIT);
-    pipeline->Render();
+    OpenGLPipeline::getInstance()->Render();
     
     //GUI
     hud->Begin();
@@ -560,8 +574,37 @@ void SimulationApp::AppLoop()
 void SimulationApp::DoHUD()
 {
     char buffer[256];
+    GLfloat white[4] = {1.f,1.f,1.f,1.f};
     
-	GLfloat white[4] = {1.f,1.f,1.f,1.f};
+    ui_id label3;
+    label3.owner = 0;
+    label3.item = 2;
+    label3.index = 0;
+    sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
+    getHUD()->DoLabel(label3, 140, 14, white, buffer);
+    
+    ui_id slider1;
+    slider1.owner = 0;
+    slider1.item = 3;
+    slider1.index = 0;
+    getSimulationManager()->setStepsPerSecond(getHUD()->DoSlider(slider1, 12, 40, 100.0, 5.0, 20.0, 60.0, 1000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    
+    if(lastPicked != NULL)
+    {
+        ui_id label4;
+        label4.owner = 0;
+        label4.item = 4;
+        label4.index = 0;
+        sprintf(buffer, "Last picked entity: %s", lastPicked->getName().c_str());
+        getHUD()->DoLabel(label3, 300, 14, white, buffer);
+    }
+    
+	/*ui_id panel1;
+    panel1.owner = 0;
+    panel1.item = 0;
+    panel1.index = 0;
+    getHUD()->DoPanel(panel1, 20, getWindowHeight()-100, 200, 50, "Test");*/
+    
     double fps = getFPS();
     ui_id label1;
     label1.owner = 0;
@@ -577,19 +620,6 @@ void SimulationApp::DoHUD()
     
     sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", getPhysicsTime()/(10.0/fps), getPhysicsTime());
     getHUD()->DoLabel(label2, 90, getWindowHeight()-15, white, buffer);
-    
-    ui_id label3;
-    label3.owner = 0;
-    label3.item = 2;
-    label3.index = 0;
-    sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
-    getHUD()->DoLabel(label3, 140, 14, white, buffer);
-    
-    ui_id slider1;
-    slider1.owner = 0;
-    slider1.item = 3;
-    slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(getHUD()->DoSlider(slider1, 12, 40, 100.0, 5.0, 20.0, 60.0, 1000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
 }
 
 void SimulationApp::StartSimulation()
@@ -621,7 +651,48 @@ void SimulationApp::CleanUp()
     if(joystick != NULL)
         SDL_JoystickClose(0);
     
+    SDL_GL_DeleteContext(glLoadingContext);
+    SDL_GL_DeleteContext(glMainContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
+
+///////Static/////////////////
+SimulationApp* SimulationApp::getApp()
+{
+    return SimulationApp::handle;
+}
+
+int SimulationApp::RenderLoadingScreen(void* app)
+{
+    //Get application
+    SimulationApp* simApp = (SimulationApp*)app;
+    
+    //Make drawing in this thread possible
+    SDL_GL_MakeCurrent(simApp->window, simApp->glLoadingContext);
+    SDL_mutex* consoleMutex = SDL_CreateMutex();
+    
+    //Render loading screen
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    
+    while(simApp->loading)
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        //Lock to prevent adding lines to the console while rendering
+        SDL_LockMutex(consoleMutex);
+        Console::getInstance()->Render();
+        SDL_UnlockMutex(consoleMutex);
+        
+        glFlush();
+        SDL_GL_SwapWindow(simApp->window);
+    }
+    
+    //Detach thread from GL context
+    SDL_GL_MakeCurrent(simApp->window, NULL);
+    SDL_DestroyMutex(consoleMutex);
+    
+    return 0;
+}
+
 

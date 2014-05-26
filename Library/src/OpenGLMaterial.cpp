@@ -7,8 +7,10 @@
 //
 
 #include "OpenGLMaterial.h"
-#include "OpenGLUtil.h"
 #include "OpenGLGBuffer.h"
+#include "SystemUtil.h"
+#include "stb_image.h"
+#include "Console.h"
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
@@ -68,14 +70,62 @@ void UseLook(Look l)
     if(l.texture != 0)
     {
         glBindTexture(GL_TEXTURE_2D, l.texture);
-        glUniform1i(OpenGLGBuffer::getUniformLocation_IsTextured(), 1);
+        OpenGLGBuffer::SetUniformIsTextured(true);
     }
     else
     {
         glBindTexture(GL_TEXTURE_2D, 0);
-        glUniform1i(OpenGLGBuffer::getUniformLocation_IsTextured(), 0);
+        OpenGLGBuffer::SetUniformIsTextured(false);
     }
-        
-    glColor4f(l.color[0], l.color[1], l.color[2], l.factor[0]);                                              //Color + Factor 1
-    glVertexAttrib1fARB(OpenGLGBuffer::getAttributeLocation_MaterialData(), (float)10.f*l.type+l.factor[1]); //Type + Factor 2
+    
+    glColor4f(l.color[0], l.color[1], l.color[2], l.factor[0]);                  //Color + Factor 1
+    OpenGLGBuffer::SetAttributeMaterialData((GLfloat)(10.f*l.type+l.factor[1])); //Type + Factor 2
 }
+
+//Statics
+GLuint LoadTexture(const char* filename)
+{
+    int width, height, channels;
+    GLuint texture;
+    
+    // Allocate image; fail out on error
+    cInfo("Loading texture from: %s\n", filename);
+    
+    unsigned char* dataBuffer = stbi_load(filename, &width, &height, &channels, 3);
+    if(dataBuffer == NULL)
+    {
+        cError("Failed to load texture!");
+        return -1;
+    }
+    
+    GLfloat maxAniso = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+    
+    // Allocate an OpenGL texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // Upload texture to memory
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
+    // Set certain properties of texture
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
+    // Wrap texture around
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // Release internal buffer
+    stbi_image_free(dataBuffer);
+    
+    return texture;
+}
+
+GLuint LoadInternalTexture(const char* filename)
+{
+    char path[1024];
+    GetDataPath(path, 1024-32);
+    strcat(path, filename);
+    return LoadTexture(path);
+}
+
+

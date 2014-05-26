@@ -20,7 +20,7 @@ GhostEntity::~GhostEntity()
 
 EntityType GhostEntity::getType()
 {
-    return GHOST;
+    return ENTITY_GHOST;
 }
 
 btPairCachingGhostObject* GhostEntity::getGhost()

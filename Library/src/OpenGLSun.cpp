@@ -7,36 +7,27 @@
 //
 
 #include "OpenGLSun.h"
-#include "OpenGLUtil.h"
 #include "OpenGLSky.h"
 #include "OpenGLLight.h"
 #include "OpenGLSolids.h"
 #include "SimulationApp.h"
+#include "Console.h"
 
 OpenGLView* OpenGLSun::activeView = NULL;
-GLhandleARB OpenGLSun::sunShader = 0;
-GLhandleARB OpenGLSun::shadowmapShader = 0;
+GLSLShader* OpenGLSun::sunShader = NULL;
+GLSLShader* OpenGLSun::shadowmapShader = NULL;
 GLint OpenGLSun::diffuseTextureUnit = 0;
 GLint OpenGLSun::normalTextureUnit = 0;
 GLint OpenGLSun::positionTextureUnit = 0;
 GLint OpenGLSun::shadowTextureUnit = 0;
-GLint OpenGLSun::uniColor = -1;
-GLint OpenGLSun::uniDiffuse = -1;
-GLint OpenGLSun::uniNormal = -1;
-GLint OpenGLSun::uniPosition = -1;
-GLint OpenGLSun::uniLightDir = -1;
-GLint OpenGLSun::uniShadowmapLayer = -1;
-GLint OpenGLSun::uniShadowmapArray = -1;
-GLint OpenGLSun::uniShadowArray = -1;
-GLint OpenGLSun::uniFrustum = -1;
-GLint OpenGLSun::uniLightClipSpace[] = {-1,-1,-1,-1};
 GLfloat OpenGLSun::sunElevation = 45.f;
 GLfloat OpenGLSun::sunOrientation = 0.f;
 GLuint OpenGLSun::shadowmapArray = 0;
 GLuint OpenGLSun::shadowmapSplits = 4;
 GLuint OpenGLSun::shadowmapSize = 2048;
 GLuint OpenGLSun::shadowFBO = 0;
-btVector3 OpenGLSun::sunDirection = btVector3();
+btVector3 OpenGLSun::sunDirection = btVector3(0.,0.,1.);
+glm::vec4 OpenGLSun::sunColor = glm::vec4(1.0,1.0,1.0,1.0);
 glm::mat4x4 OpenGLSun::sunModelview = glm::mat4x4(0);
 ViewFrustum* OpenGLSun::frustum = NULL;
 glm::mat4x4* OpenGLSun::shadowCPM = NULL;
@@ -44,34 +35,22 @@ glm::mat4x4* OpenGLSun::shadowCPM = NULL;
 void OpenGLSun::Init()
 {
     //load shaders
-    GLint compiled = 0;
-    GLhandleARB vs = LoadShader(GL_VERTEX_SHADER, "saq.vert", &compiled);
-    GLhandleARB fs = LoadShader(GL_FRAGMENT_SHADER, "deferredSun.frag", &compiled);
-    sunShader = CreateProgramObject(vs, fs);
-    LinkProgram(sunShader, &compiled);
+    sunShader = new GLSLShader("deferredSun.frag");
+    sunShader->AddUniform("texDiffuse", INT);
+    sunShader->AddUniform("texPosition", INT);
+    sunShader->AddUniform("texNormal", INT);
+    sunShader->AddUniform("lightDirection", VEC3);
+    sunShader->AddUniform("lightColor", VEC4);
+    sunShader->AddUniform("texShadowArray", INT);
+    sunShader->AddUniform("frustumFar", VEC4);
+    sunShader->AddUniform("lightClipSpace[0]", MAT4);
+    sunShader->AddUniform("lightClipSpace[1]", MAT4);
+    sunShader->AddUniform("lightClipSpace[2]", MAT4);
+    sunShader->AddUniform("lightClipSpace[3]", MAT4);
     
-    glUseProgramObjectARB(sunShader);
-    uniDiffuse = glGetUniformLocationARB(sunShader, "texDiffuse");
-    uniPosition = glGetUniformLocationARB(sunShader, "texPosition");
-    uniNormal = glGetUniformLocationARB(sunShader, "texNormal");
-    uniLightDir = glGetUniformLocationARB(sunShader, "lightDirection");
-    uniColor = glGetUniformLocationARB(sunShader, "lightColor");
-    uniShadowArray = glGetUniformLocationARB(sunShader, "texShadowArray");
-    uniFrustum = glGetUniformLocationARB(sunShader, "frustumFar");
-    uniLightClipSpace[0] = glGetUniformLocationARB(sunShader, "lightClipSpace[0]");
-    uniLightClipSpace[1] = glGetUniformLocationARB(sunShader, "lightClipSpace[1]");
-    uniLightClipSpace[2] = glGetUniformLocationARB(sunShader, "lightClipSpace[2]");
-    uniLightClipSpace[3] = glGetUniformLocationARB(sunShader, "lightClipSpace[3]");
-    glUseProgramObjectARB(0);
-    
-    fs = LoadShader(GL_FRAGMENT_SHADER, "cascadedShadowMap.frag", &compiled);
-    shadowmapShader = CreateProgramObject(vs, fs);
-    LinkProgram(shadowmapShader, &compiled);
-    
-    glUseProgramObjectARB(shadowmapShader);
-    uniShadowmapArray = glGetUniformLocationARB(shadowmapShader, "shadowmapArray");
-    uniShadowmapLayer = glGetUniformLocationARB(shadowmapShader, "shadowmapLayer");
-    glUseProgramObjectARB(0);
+    shadowmapShader = new GLSLShader("cascadedShadowMap.frag");
+    shadowmapShader->AddUniform("shadowmapArray", INT);
+    shadowmapShader->AddUniform("shadowmapLayer", FLOAT);
     
     //Create shadowmap texture array
     glGenTextures(1, &shadowmapArray);
@@ -93,7 +72,7 @@ void OpenGLSun::Init()
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if(status != GL_FRAMEBUFFER_COMPLETE)
-        printf("FBO initialization failed.\n");
+        cError("Sun shadow FBO initialization failed!");
     
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -105,8 +84,19 @@ void OpenGLSun::Destroy()
 {
     glDeleteTextures(1, &shadowmapArray);
     glDeleteFramebuffers(1, &shadowFBO);
-    glDeleteObjectARB(&sunShader);
-    glDeleteObjectARB(&shadowmapShader);
+    
+    delete sunShader;
+    delete shadowmapShader;
+}
+
+btVector3 OpenGLSun::GetSunDirection()
+{
+    return sunDirection;
+}
+
+glm::vec4 OpenGLSun::GetSunColor()
+{
+    return sunColor;
 }
 
 //Computes the near and far distances for every frustum slice in camera eye space
@@ -187,15 +177,17 @@ glm::mat4 OpenGLSun::BuildCropProjMatrix(ViewFrustum &f)
 	}
     
 	//Make sure all relevant shadow casters are included - use object bounding boxes!
-    /*btVector3 aabbMin, aabbMax;
+    btVector3 aabbMin;
+    btVector3 aabbMax;
     SimulationApp::getApp()->getSimulationManager()->getWorldAABB(aabbMin, aabbMax);
+    
     transf = shad_mv * glm::vec4(aabbMin.x(), aabbMin.y(), aabbMin.z(), 1.f);
     if(transf.z > maxZ) maxZ = transf.z;
     if(transf.z < minZ) minZ = transf.z;
     
     transf = shad_mv * glm::vec4(aabbMax.x(), aabbMax.y(), aabbMax.z(), 1.f);
     if(transf.z > maxZ) maxZ = transf.z;
-    if(transf.z < minZ) minZ = transf.z;*/
+    if(transf.z < minZ) minZ = transf.z;
     
 	//Set the projection matrix with the new z-bounds
 	//Note: there is inversion because the light looks at the neg z axis
@@ -233,22 +225,25 @@ glm::mat4 OpenGLSun::BuildCropProjMatrix(ViewFrustum &f)
 	return shad_crop_proj;
 }
 
-void OpenGLSun::Render()
+void OpenGLSun::Render(const btTransform& viewTransform)
 {
     //Rendering is done in screen space! (camera eye space)
     
     //calculate eye space sun direction
-    btVector3 sunDirectionEye = (activeView->GetViewTransform()).getBasis() * sunDirection;
-	GLfloat sunDirEye[3] = {(GLfloat)sunDirectionEye.getX(),(GLfloat)sunDirectionEye.getY(),(GLfloat)sunDirectionEye.getZ()};
+    btVector3 sunDirectionEye = viewTransform.getBasis() * sunDirection;
+    glm::vec3 sunDirEye;
+    sunDirEye[0] = (GLfloat)sunDirectionEye.getX();
+    sunDirEye[1] = (GLfloat)sunDirectionEye.getY();
+    sunDirEye[2] = (GLfloat)sunDirectionEye.getZ();
     
     //calculate sun color
-    GLfloat* sunColor = OpenGLLight::ColorFromTemperature(5000.f + 20.f*sunElevation, 3.f);
-    glm::mat4 invCamView = glm::inverse(activeView->GetViewMatrix());
+    sunColor = OpenGLLight::ColorFromTemperature(5000.f + 20.f*sunElevation, 10.f * sin(sunElevation / 180.0 * M_PI));
+    glm::mat4 invCamView = glm::inverse(activeView->GetViewMatrix(viewTransform));
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
                    0.f, 0.5f, 0.f, 0.f,
                    0.f, 0.f, 0.5f, 0.f,
                    0.5f, 0.5f, 0.5f, 1.f);
-    GLfloat frustumFar[4];
+    glm::vec4 frustumFar;
     glm::mat4 lightClipSpace[4];
     
     for(int i = shadowmapSplits; i < 4; i++)
@@ -271,20 +266,20 @@ void OpenGLSun::Render()
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
     glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
     
-    glUseProgramObjectARB(sunShader);
-    glUniform1iARB(uniDiffuse, diffuseTextureUnit);
-    glUniform1iARB(uniPosition, positionTextureUnit);
-    glUniform1iARB(uniNormal, normalTextureUnit);
-    glUniform3fvARB(uniLightDir, 1, sunDirEye);
-    glUniform4fvARB(uniColor, 1, sunColor);
-    glUniform1iARB(uniShadowArray, shadowTextureUnit);
-    glUniform4fvARB(uniFrustum, 1, frustumFar);
-    glUniformMatrix4fvARB(uniLightClipSpace[0], 1, GL_FALSE, glm::value_ptr(lightClipSpace[0]));
-    glUniformMatrix4fvARB(uniLightClipSpace[1], 1, GL_FALSE, glm::value_ptr(lightClipSpace[1]));
-    glUniformMatrix4fvARB(uniLightClipSpace[2], 1, GL_FALSE, glm::value_ptr(lightClipSpace[2]));
-    glUniformMatrix4fvARB(uniLightClipSpace[3], 1, GL_FALSE, glm::value_ptr(lightClipSpace[3]));
+    sunShader->Enable();
+    sunShader->SetUniform("texDiffuse", diffuseTextureUnit);
+    sunShader->SetUniform("texPosition", positionTextureUnit);
+    sunShader->SetUniform("texNormal", normalTextureUnit);
+    sunShader->SetUniform("lightDirection", sunDirEye);
+    sunShader->SetUniform("lightColor", sunColor);
+    sunShader->SetUniform("texShadowArray", shadowTextureUnit);
+    sunShader->SetUniform("frustumFar", frustumFar);
+    sunShader->SetUniform("lightClipSpace[0]", lightClipSpace[0]);
+    sunShader->SetUniform("lightClipSpace[1]", lightClipSpace[1]);
+    sunShader->SetUniform("lightClipSpace[2]", lightClipSpace[2]);
+    sunShader->SetUniform("lightClipSpace[3]", lightClipSpace[3]);
     OpenGLSolids::DrawScreenAlignedQuad();
-    glUseProgramObjectARB(0);
+    sunShader->Disable();
     
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
 }
@@ -376,16 +371,16 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     glDisable(GL_DEPTH_TEST);
     
 	//Render the shadowmaps
-    glUseProgramObjectARB(shadowmapShader);
-    glUniform1iARB(uniShadowmapArray, 6);
+    shadowmapShader->Enable();
+    shadowmapShader->SetUniform("shadowmapArray", shadowTextureUnit);
     for(int i = 0; i < shadowmapSplits; i++)
     {
         glViewport(x + shadowmapSize * scale * i, y, shadowmapSize * scale, shadowmapSize * scale);
-        glUniform1fARB(uniShadowmapLayer, (GLfloat)i);
+        shadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
         glColor4f(1.f,1.f,1.f,1.f);
         OpenGLSolids::DrawScreenAlignedQuad();
     }
-    glUseProgramObjectARB(0);
+    shadowmapShader->Disable();
     
 	//Reset
 	glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
@@ -422,14 +417,24 @@ void OpenGLSun::SetPosition(GLfloat elevation, GLfloat orientation)
     sunOrientation = orientation;
     
     //calculate sun direction
+    bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
+
     sunDirection = btVector3(0.f, -1.f, 0.f);
-    sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), sunElevation/180.f*M_PI);
-    sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), -sunOrientation/180.f*M_PI);
+    if(zUp)
+    {
+        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), sunElevation/180.f*M_PI);
+        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), -sunOrientation/180.f*M_PI);
+    }
+    else
+    {
+        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), -sunElevation/180.f*M_PI);
+        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), sunOrientation/180.f*M_PI+M_PI);
+    }
     sunDirection.normalize();
     
     //build sun modelview
     glm::vec3 dir(sunDirection.x(), sunDirection.y(), sunDirection.z());
-    glm::vec3 up(0.f, 0.f, 1.f);
+    glm::vec3 up(0.f, 0.f, zUp ? 1.f : -1.f);
     glm::vec3 right = glm::cross(dir, up);
 	right = glm::normalize(right);
 	up = glm::normalize(glm::cross(right, dir));

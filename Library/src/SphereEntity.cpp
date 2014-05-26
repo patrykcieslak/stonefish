@@ -10,7 +10,7 @@
 #include "OpenGLSolids.h"
 #include "GeometryUtil.h"
 
-SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
+SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l) : SolidEntity(uniqueName, mat)
 {
     radius = UnitSystem::SetLength(sphereRadius);
     

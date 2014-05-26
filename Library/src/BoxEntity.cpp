@@ -9,7 +9,7 @@
 #include "BoxEntity.h"
 #include "OpenGLSolids.h"
 
-BoxEntity::BoxEntity(std::string uniqueName, const btVector3& dimensions, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
+BoxEntity::BoxEntity(std::string uniqueName, const btVector3& dimensions, Material* mat, Look l) : SolidEntity(uniqueName, mat)
 {
     halfExtents = UnitSystem::SetPosition(dimensions * btScalar(0.5));
     

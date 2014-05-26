@@ -308,3 +308,17 @@ btScalar distanceFromCenteredPlane(const btVector3& planeN, const btVector3& v)
     btScalar distance = planeN.dot(v);
     return distance == 0.0 ? 10e-9 : distance;
 }
+
+
+void SetFloatvFromMat(const btMatrix3x3 &mat, GLfloat* fv)
+{
+    fv[0] = btScalar(mat.getRow(0).x());
+    fv[1] = btScalar(mat.getRow(1).x());
+    fv[2] = btScalar(mat.getRow(2).x());
+    fv[3] = btScalar(mat.getRow(0).y());
+    fv[4] = btScalar(mat.getRow(1).y());
+    fv[5] = btScalar(mat.getRow(2).y());
+    fv[6] = btScalar(mat.getRow(0).z());
+    fv[7] = btScalar(mat.getRow(1).z());
+    fv[8] = btScalar(mat.getRow(2).z());
+}

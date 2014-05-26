@@ -89,7 +89,7 @@ void AcrobotTestApp::DoHUD()
                     fprintf(fp, "%1.6f\t%1.6f\n", data[i]->getTimestamp(), data[i]->getValue(0));
                 fclose(fp);
      
-                printf("Saved plot data to %s.\n", pathToFile);
+                cInfo("Saved plot data to %s.\n", pathToFile);
             }
         }
      

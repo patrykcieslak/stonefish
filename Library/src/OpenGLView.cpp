@@ -8,37 +8,25 @@
 
 #include "OpenGLView.h"
 #include "OpenGLSolids.h"
-#include "OpenGLUtil.h"
+#include "OpenGLMaterial.h"
 #include "GeometryUtil.h"
+#include "OpenGLSun.h"
+#include "SimulationApp.h"
+#include "Console.h"
 
-GLhandleARB OpenGLView::ssaoShader = NULL;
-GLhandleARB OpenGLView::blurShader = NULL;
-GLhandleARB OpenGLView::fluidShader[] = {NULL, NULL, NULL, NULL};
+GLSLShader* OpenGLView::downsampleShader = NULL;
+GLSLShader* OpenGLView::ssaoShader = NULL;
+GLSLShader* OpenGLView::blurShader = NULL;
+GLSLShader* OpenGLView::fluidShader[] = {NULL, NULL, NULL, NULL};
+GLSLShader* OpenGLView::lightMeterShader = NULL;
+GLSLShader* OpenGLView::tonemapShader = NULL;
 GLint OpenGLView::randomTextureUnit = -1;
 GLuint OpenGLView::randomTexture = 0;
+GLuint OpenGLView::waveNormalTexture = 0;
 GLint OpenGLView::positionTextureUnit = -1;
 GLint OpenGLView::normalTextureUnit = -1;
-GLint OpenGLView::uniSaoRandom = -1;
-GLint OpenGLView::uniSaoPosition = -1;
-GLint OpenGLView::uniSaoNormal = -1;
-GLint OpenGLView::uniSaoRadius = -1;
-GLint OpenGLView::uniSaoBias = -1;
-GLint OpenGLView::uniSaoProjScale = -1;
-GLint OpenGLView::uniSaoIntDivR6 = -1;
-GLint OpenGLView::uniSaoViewport = -1;
-GLint OpenGLView::uniSaoBlurSource = -1;
-GLint OpenGLView::uniSaoBlurAxis = -1;
-GLint OpenGLView::uniFluidReflection[] = {-1,-1};
-GLint OpenGLView::uniFluidPosition[] = {-1,-1,-1};
-GLint OpenGLView::uniFluidViewport[] = {-1,-1,-1};
-GLint OpenGLView::uniFluidIP[] = {-1,-1};
-GLint OpenGLView::uniFluidR0[] = {-1,-1};
-GLint OpenGLView::uniFluidScene[] = {-1,-1,-1,-1};
-GLint OpenGLView::uniFluidEyeSurfaceN[] = {-1,-1,-1};
-GLint OpenGLView::uniFluidEyeSurfaceP[] = {-1,-1,-1};
-GLint OpenGLView::uniFluidVisibility[] = {-1,-1,-1};
 
-OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoSize)
+OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat horizon, bool sao)
 {
     viewportWidth = width;
     viewportHeight = height;
@@ -46,9 +34,9 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     originY = y;
     fovx = 0.785f;
     active = false;
-    ssaoSizeDiv = ssaoSize;
+    ssaoSizeDiv = sao ? 2 : 0;
     gBuffer = new OpenGLGBuffer(viewportWidth, viewportHeight);
-    far = 100.f;
+    far = UnitSystem::SetLength(horizon);
     near = 0.1f;
     
     glGenFramebuffersEXT(1, &sceneFBO);
@@ -60,36 +48,66 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
 	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER_EXT, sceneDepthBuffer);
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
     
+    glGenTextures(1, &finalTexture);
+    glBindTexture(GL_TEXTURE_2D, finalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, FINAL_ATTACHMENT, GL_TEXTURE_2D, finalTexture, 0);
+    
     glGenTextures(1, &sceneTexture);
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, sceneTexture, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, SCENE_ATTACHMENT, GL_TEXTURE_2D, sceneTexture, 0);
     
-    glGenTextures(1, &sceneReflectionTexture);
-    glBindTexture(GL_TEXTURE_2D, sceneReflectionTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, sceneReflectionTexture, 0);
-    
-    glGenTextures(1, &sceneRefractionTexture);
-    glBindTexture(GL_TEXTURE_2D, sceneRefractionTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT, GL_TEXTURE_2D, sceneRefractionTexture, 0);
+    if(OpenGLPipeline::getInstance()->isFluidRendered())
+    {
+        glGenTextures(1, &sceneReflectionTexture);
+        glBindTexture(GL_TEXTURE_2D, sceneReflectionTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, REFLECTION_ATTACHMENT, GL_TEXTURE_2D, sceneReflectionTexture, 0);
+        
+        glGenTextures(1, &sceneRefractionTexture);
+        glBindTexture(GL_TEXTURE_2D, sceneRefractionTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, REFRACTION_ATTACHMENT, GL_TEXTURE_2D, sceneRefractionTexture, 0);
+    }
     
     GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
     if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-        printf("Scene FBO initialization failed.\n");
+        cError("Scene FBO initialization failed!");
+    
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    
+    glGenFramebuffersEXT(1, &lightMeterFBO);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, lightMeterFBO);
+    
+    glGenTextures(1, &lightMeterTexture);
+    glBindTexture(GL_TEXTURE_2D, lightMeterTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1, 1, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, lightMeterTexture, 0);
+    
+    status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+    if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+        cError("Light meter FBO initialization failed!");
     
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     
@@ -109,7 +127,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
         if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-            printf("SSAO FBO initialization failed.\n");
+            cError("SAO FBO initialization failed!");
     
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     
@@ -127,7 +145,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
         if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-            printf("Horizontal blur FBO initialization failed.\n");
+            cError("SAO horizontal blur FBO initialization failed!");
     
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     
@@ -145,7 +163,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
     
         status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
         if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-            printf("Vertical blur FBO initialization failed.\n");
+            cError("SAO vertical blur FBO initialization failed!");
     
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
@@ -154,10 +172,16 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLuint ssaoS
 OpenGLView::~OpenGLView()
 {
     glDeleteRenderbuffersEXT(1, &sceneDepthBuffer);
+    glDeleteTextures(1, &finalTexture);
     glDeleteTextures(1, &sceneTexture);
-    glDeleteTextures(1, &sceneReflectionTexture);
-    glDeleteTextures(1, &sceneRefractionTexture);
+    if(OpenGLPipeline::getInstance()->isFluidRendered())
+    {
+        glDeleteTextures(1, &sceneReflectionTexture);
+        glDeleteTextures(1, &sceneRefractionTexture);
+    }
     glDeleteFramebuffersEXT(1, &sceneFBO);
+    glDeleteTextures(1, &lightMeterTexture);
+    glDeleteFramebuffersEXT(1, &lightMeterFBO);
     
     if(ssaoSizeDiv > 0)
     {
@@ -203,19 +227,18 @@ glm::mat4 OpenGLView::GetProjectionMatrix()
     return projection;
 }
 
-glm::mat4 OpenGLView::GetViewMatrix()
+glm::mat4 OpenGLView::GetViewMatrix(const btTransform& viewTransform)
 {
-    btTransform trans = GetViewTransform();
 #ifdef BT_USE_DOUBLE_PRECISION
     double glmatrix[16];
-    trans.getOpenGLMatrix(glmatrix);
+    viewTransform.getOpenGLMatrix(glmatrix);
     glm::mat4 view((GLfloat)glmatrix[0],(GLfloat)glmatrix[1],(GLfloat)glmatrix[2],(GLfloat)glmatrix[3],
                    (GLfloat)glmatrix[4],(GLfloat)glmatrix[5],(GLfloat)glmatrix[6],(GLfloat)glmatrix[7],
                    (GLfloat)glmatrix[8],(GLfloat)glmatrix[9],(GLfloat)glmatrix[10],(GLfloat)glmatrix[11],
                    (GLfloat)glmatrix[12],(GLfloat)glmatrix[13],(GLfloat)glmatrix[14],(GLfloat)glmatrix[15]);
 #else
     GLfloat glmatrix[16];
-    trans.getOpenGLMatrix(glmatrix);
+    viewTransform.getOpenGLMatrix(glmatrix);
     glm::mat4 view = glm::make_mat4(glmatrix);
 #endif
     return view;
@@ -237,6 +260,41 @@ GLfloat OpenGLView::GetFarClip()
     return far;
 }
 
+btVector3 OpenGLView::Ray(GLint x, GLint y)
+{
+    //translate point to view
+    x -= originX;
+    y -= originY;
+    
+    //check if point in view
+    if((x < 0) || (x >= viewportWidth) || (y < 0) || (y >= viewportHeight))
+        return btVector3(0,0,0);
+    
+    //calculate ray from point
+    btVector3 rayFrom = GetEyePosition();
+    btVector3 rayForward = GetLookingDirection() * far;
+    btVector3 horizontal = rayForward.cross(GetUpDirection());
+    horizontal.normalize();
+    btVector3 vertical = horizontal.cross(rayForward);
+    vertical.normalize();
+    
+    GLfloat tanFov = tanf(0.5f*fovx);
+    horizontal *= 2.f * far * tanFov;
+    vertical *= 2.f * far * tanFov;
+    GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
+    vertical /= aspect;
+    
+    btVector3 rayToCenter = rayFrom + rayForward;
+    btVector3 dH = horizontal * 1.f/(GLfloat)viewportWidth;
+    btVector3 dV = vertical * 1.f/(GLfloat)viewportHeight;
+    
+    btVector3 rayTo = rayToCenter - 0.5f * horizontal + 0.5f * vertical;
+    rayTo += btScalar(x) * dH;
+    rayTo -= btScalar(y) * dV;
+    
+    return rayTo;
+}
+
 OpenGLGBuffer* OpenGLView::getGBuffer()
 {
     return gBuffer;
@@ -245,6 +303,11 @@ OpenGLGBuffer* OpenGLView::getGBuffer()
 GLuint OpenGLView::getSceneFBO()
 {
     return sceneFBO;
+}
+
+GLuint OpenGLView::getFinalTexture()
+{
+    return finalTexture;
 }
 
 GLuint OpenGLView::getSceneTexture()
@@ -260,6 +323,11 @@ GLuint OpenGLView::getSceneReflectionTexture()
 GLuint OpenGLView::getSceneRefractionTexture()
 {
     return sceneRefractionTexture;
+}
+
+bool OpenGLView::hasSSAO()
+{
+    return ssaoSizeDiv > 0;
 }
 
 void OpenGLView::SetupViewport(GLint x, GLint y, GLint width)
@@ -292,84 +360,93 @@ void OpenGLView::SetViewTransform()
     trans.getOpenGLMatrix(openglTrans);
     
     glMatrixMode(GL_MODELVIEW);
-  
+    glLoadIdentity();
+    gBuffer->SetClipPlane(NULL);
+    
 #ifdef BT_USE_DOUBLE_PRECISION
     glLoadMatrixd(openglTrans);
 #else
     glLoadMatrixf(openglTrans);
 #endif
-    
-    gBuffer->SetClipPlane(NULL);
 }
 
 void OpenGLView::SetReflectedViewTransform(FluidEntity* fluid)
 {
-    btVector3 surfN, surfP;
-    fluid->GetSurface(surfN, surfP);
-    
-    btScalar eyeDepth = distanceFromCenteredPlane(surfN, surfP-GetEyePosition());
+    btVector3 normal, position;
+    fluid->GetSurface(normal, position);
+    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
     if(eyeDepth >= 0)
-        surfN = -surfN;
+        normal = -normal;
     
-    btTransform trans = GetReflectedViewTransform(surfN, surfP);
+    btTransform trans = GetReflectedViewTransform(fluid);
+    btVector3 eyePosition = trans * position;
+    btVector3 eyeNormal = trans.getBasis() * normal;
+    
+    double surface[4];
+    surface[0] = eyeNormal.x();
+    surface[1] = eyeNormal.y();
+    surface[2] = eyeNormal.z();
+    surface[3] = -eyeNormal.dot(eyePosition);
     
     btScalar openglTrans[16];
     trans.getOpenGLMatrix(openglTrans);
     
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //clip plane must be declared when modelview equals identity (otherwise it is transformed by inverse modelview)
+    gBuffer->SetClipPlane(surface);
     
 #ifdef BT_USE_DOUBLE_PRECISION
     glLoadMatrixd(openglTrans);
 #else
     glLoadMatrixf(openglTrans);
 #endif
-    
-    glFrontFace(GL_CW);
-    
-    //calculate eye space clip plane equation
-    GLfloat planeEq[4];
-    btVector3 transPlaneP = trans * surfP;
-    btVector3 transPlaneN = trans.getBasis().inverse().transpose() * surfN;
-    planeEq[0] = transPlaneN.x();
-    planeEq[1] = transPlaneN.y();
-    planeEq[2] = transPlaneN.z();
-    planeEq[3] = -transPlaneN.dot(transPlaneP);
-    gBuffer->SetClipPlane(planeEq);
 }
 
 void OpenGLView::SetRefractedViewTransform(FluidEntity* fluid)
 {
-    btVector3 surfN, surfP;
-    fluid->GetSurface(surfN, surfP);
-
-    btTransform trans = GetViewTransform();  //GetRefractedViewTransform(surfN, surfP, fluid->getFluid());
+    btVector3 normal, position;
+    fluid->GetSurface(normal, position);
+    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
+    if(eyeDepth >= 0)
+        normal = -normal;
+    
+    btTransform trans = GetRefractedViewTransform(fluid);
+    btVector3 eyeNormal = trans.getBasis() * -normal;
+    btVector3 eyePosition = trans * position;
+    
+    double surface[4];
+    surface[0] = eyeNormal.x();
+    surface[1] = eyeNormal.y();
+    surface[2] = eyeNormal.z();
+    surface[3] = -eyeNormal.dot(eyePosition);
+    
     btTransform shift = btTransform(btQuaternion(0,0,0), btVector3(0,0,0));
     
     btScalar openglTrans[16];
     (trans * shift).getOpenGLMatrix(openglTrans);
     
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //clip plane must be declared when modelview equals identity (otherwise it is transformed by inverse modelview)
+    gBuffer->SetClipPlane(surface);
     
 #ifdef BT_USE_DOUBLE_PRECISION
     glLoadMatrixd(openglTrans);
 #else
     glLoadMatrixf(openglTrans);
 #endif
-    
-    //calculate eye space clip plane equation
-    GLfloat planeEq[4];
-    btVector3 transPlaneP = trans * surfP;
-    btVector3 transPlaneN = trans.getBasis().inverse().transpose() * surfN;
-    planeEq[0] = -transPlaneN.x();
-    planeEq[1] = -transPlaneN.y();
-    planeEq[2] = -transPlaneN.z();
-    planeEq[3] = transPlaneN.dot(transPlaneP);
-    gBuffer->SetClipPlane(planeEq);
 }
 
-
-btTransform OpenGLView::GetReflectedViewTransform(const btVector3 &normal, const btVector3 &position)
+btTransform OpenGLView::GetReflectedViewTransform(const FluidEntity* fluid)
 {
+    //get plane
+    btVector3 normal, position;
+    fluid->GetSurface(normal, position);
+    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
+    if(eyeDepth >= 0)
+        normal = -normal;
+    
     //get camera transform
     btTransform trans = GetViewTransform();
     
@@ -389,19 +466,26 @@ btTransform OpenGLView::GetReflectedViewTransform(const btVector3 &normal, const
     reflection.setOrigin(-2.0*planeEq[3]*btVector3(planeEq[0], planeEq[1], planeEq[2]));
     
     //create flipping transform
-    //btTransform flip = btTransform::getIdentity();
-    //rotation = btMatrix3x3(1.0, 0.0, 0.0,
-    //                       0.0, -1.0, 0.0,
-    //                       0.0, 0.0, 1.0);
-    //flip.setBasis(rotation);
+    btTransform flip = btTransform::getIdentity();
+    rotation = btMatrix3x3(1.0, 0.0, 0.0,
+                           0.0, -1.0, 0.0,
+                           0.0, 0.0, 1.0);
+    flip.setBasis(rotation);
     
     //combine transforms
-    trans = trans * reflection;//flip * trans * reflection;
+    trans = flip * trans * reflection;
     return trans;
 }
 
-btTransform OpenGLView::GetRefractedViewTransform(const btVector3 &normal, const btVector3 &position, const Fluid* fluid)
+btTransform OpenGLView::GetRefractedViewTransform(const FluidEntity* fluid)
 {
+    //get plane
+    btVector3 normal, position;
+    fluid->GetSurface(normal, position);
+    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
+    if(eyeDepth >= 0)
+        normal = -normal;
+    
     GLfloat planeEq[4];
     planeEq[0] = normal.x();
     planeEq[1] = normal.y();
@@ -412,7 +496,7 @@ btTransform OpenGLView::GetRefractedViewTransform(const btVector3 &normal, const
     btVector3 dir = GetLookingDirection().normalize();
     btVector3 axis = dir.cross(normal);
     btScalar alpha = acos(normal.dot(-dir));
-    btScalar beta = asin(axis.length()/fluid->IOR);
+    btScalar beta = asin(axis.length()/fluid->getFluid()->IOR);
     axis = axis.normalize();
     
     btQuaternion rotation = btQuaternion(axis, alpha-beta);
@@ -421,16 +505,75 @@ btTransform OpenGLView::GetRefractedViewTransform(const btVector3 &normal, const
     //create reflection transform
     btTransform refraction = btTransform::getIdentity();
     refraction.setBasis(btMatrix3x3(rotation));
-
     
     //combine transforms
     trans = trans * refraction;
-    return trans;
+    
+    return GetViewTransform();//trans;
+}
+
+void OpenGLView::ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY)
+{
+    GLuint texture;
+    
+    switch (sc)
+    {
+        case NORMAL:
+            texture = sceneTexture;
+            break;
+            
+        case REFLECTED:
+            texture = sceneReflectionTexture;
+            break;
+            
+        case REFRACTED:
+            texture = sceneRefractionTexture;
+            break;
+    }
+    
+    //Projection setup
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, viewportWidth, 0, viewportHeight, 0.1f, 2.f);
+    
+	//Model setup
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+    
+	glActiveTextureARB(GL_TEXTURE0_ARB);
+	glEnable(GL_TEXTURE_2D);
+    glDisable(GL_BLEND);
+	glBindTexture(GL_TEXTURE_2D, texture);
+    
+	// Render the quad
+	glLoadIdentity();
+	glTranslatef(x,-y,-1.0);
+    
+	glColor3f(1,1,1);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 1);
+	glVertex3f(0.0f,(float)viewportHeight, 0.0f);
+	glTexCoord2f(0, 0);
+	glVertex3f(0.0f, viewportHeight-sizeY, 0.0f);
+	glTexCoord2f(1, 0);
+	glVertex3f(sizeX, viewportHeight-sizeY, 0.0f);
+	glTexCoord2f(1, 1);
+	glVertex3f(sizeX, (float)viewportHeight, 0.0f);
+	glEnd();
+    
+	glBindTexture(GL_TEXTURE_2D, 0);
+    
+	//Reset to the matrices
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 
 void OpenGLView::RenderSSAO()
 {
-    if(ssaoSizeDiv > 0)
+    if(hasSSAO())
     {
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glDisable(GL_BLEND);
@@ -445,45 +588,61 @@ void OpenGLView::RenderSSAO()
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glClear(GL_COLOR_BUFFER_BIT);
         
-        GLfloat intensity = 1.0;
+        GLfloat intensity = 0.5;
         GLfloat radius = 0.25;
         GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth)/2.f;
         
-        glUseProgramObjectARB(ssaoShader);
-        glUniform1i(uniSaoRandom, randomTextureUnit);
-        glUniform1i(uniSaoPosition, positionTextureUnit);
-        glUniform1i(uniSaoNormal, normalTextureUnit);
-        glUniform1f(uniSaoRadius, radius);
-        glUniform1f(uniSaoBias, 0.012);
-        glUniform1f(uniSaoProjScale, projScale);
-        glUniform1f(uniSaoIntDivR6, intensity/pow(radius, 6.0));
-        glUniform2f(uniSaoViewport, viewportWidth, viewportHeight);
+        ssaoShader->Enable();
+        ssaoShader->SetUniform("texRandom", randomTextureUnit);
+        ssaoShader->SetUniform("texPosition", positionTextureUnit);
+        ssaoShader->SetUniform("texNormal", normalTextureUnit);
+        ssaoShader->SetUniform("radius", radius);
+        ssaoShader->SetUniform("bias", 0.012f);
+        ssaoShader->SetUniform("projScale", projScale);
+        ssaoShader->SetUniform("intensityDivR6", (GLfloat)(intensity/pow(radius, 6.0)));
+        ssaoShader->SetUniform("viewportSize", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
         OpenGLSolids::DrawScreenAlignedQuad();
+        ssaoShader->Disable();
         
         //Blur SAO
         glActiveTextureARB(GL_TEXTURE0_ARB + randomTextureUnit);
       
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
         
-        //Horizontal blur
+        //Downsample SA0
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, hBlurFBO);
         glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        glUseProgramObjectARB(blurShader);
-        glUniform1i(uniSaoBlurSource, randomTextureUnit);
-        glUniform2f(uniSaoBlurAxis, 1.f/float(viewportWidth/ssaoSizeDiv), 0.f);
-        OpenGLSolids::DrawScreenAlignedQuad();
-        glUseProgramObjectARB(0);
         
+        downsampleShader->Enable();
+        downsampleShader->SetUniform("source", randomTextureUnit);
+        downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
+        OpenGLSolids::DrawScreenAlignedQuad();
+        downsampleShader->Disable();
+       
         glBindTexture(GL_TEXTURE_2D, hBlurTexture);
         
         //Vertical blur
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, vBlurFBO);
         glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        glUseProgramObjectARB(blurShader);
-        glUniform1i(uniSaoBlurSource, randomTextureUnit);
-        glUniform2f(uniSaoBlurAxis, 0.f, 1.f/float(viewportHeight/ssaoSizeDiv));
+        
+        blurShader->Enable();
+        blurShader->SetUniform("texSource", randomTextureUnit);
+        blurShader->SetUniform("axis", glm::vec2(0.f, 1.f/(GLfloat)(viewportHeight/ssaoSizeDiv)));
         OpenGLSolids::DrawScreenAlignedQuad();
-        glUseProgramObjectARB(0);
+        blurShader->Disable();
+        
+        glBindTexture(GL_TEXTURE_2D, vBlurTexture);
+        
+        //Horizontal blur
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, hBlurFBO);
+        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
+        
+        blurShader->Enable();
+        blurShader->SetUniform("texSource", randomTextureUnit);
+        blurShader->SetUniform("axis", glm::vec2(1.f/(GLfloat)(viewportHeight/ssaoSizeDiv), 0.f));
+        OpenGLSolids::DrawScreenAlignedQuad();
+        blurShader->Disable();
+      
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
         
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -526,23 +685,34 @@ void OpenGLView::ShowAmbientOcclusion()
 GLuint OpenGLView::getSSAOTexture()
 {
     if(ssaoSizeDiv > 0)
-        return vBlurTexture;
+        return hBlurTexture;
     else
         return 0;
 }
 
-void OpenGLView::RenderFluid(FluidEntity* fluid)
+void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
 {
     btVector3 position;
     btVector3 normal;
     fluid->GetSurface(normal, position);
     
+    if(underwater)
+        normal = -normal;
+    
     btTransform trans = GetViewTransform();
     glm::mat4 invProj= glm::inverse(projection);
     
     btVector3 transPlaneP = trans * position;
-    btVector3 transPlaneN = trans.getBasis().inverse().transpose() * normal;
-    btScalar eyeDepth = distanceFromCenteredPlane(transPlaneN, transPlaneP);
+    btVector3 transPlaneN = trans.getBasis() * normal;
+    
+    GLfloat c = 1.0/fluid->getFluid()->IOR;
+    GLfloat R0 = 0.5f*powf((1.f-c)/(1.f+c), 2.f)*(1.f+powf((c*(1.f+c)-c*c)/(c*(1.f-c)+c*c), 2.f));
+    
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    SetProjection();
+    SetViewTransform();
     
     glActiveTextureARB(GL_TEXTURE0_ARB);
     glEnable(GL_TEXTURE_2D);
@@ -550,86 +720,46 @@ void OpenGLView::RenderFluid(FluidEntity* fluid)
     
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, sceneTexture);
+    glBindTexture(GL_TEXTURE_2D, sceneReflectionTexture);
     
     glActiveTextureARB(GL_TEXTURE2_ARB);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, sceneReflectionTexture);
+    glBindTexture(GL_TEXTURE_2D, sceneRefractionTexture);
     
-    if(eyeDepth < 0) //above fluid surface
-    {
-        SetProjection();
-        SetViewTransform();
-        
-        GLfloat c = 1.0/fluid->getFluid()->IOR;
-        GLfloat R0 = 0.5f*powf((1.f-c)/(1.f+c), 2.f)*(1.f+powf((c*(1.f+c)-c*c)/(c*(1.f-c)+c*c), 2.f));
-        
-        glUseProgramObjectARB(fluidShader[0]);
-        glUniform1i(uniFluidPosition[0], 0);
-        glUniform1i(uniFluidScene[0], 1);
-        glUniform1i(uniFluidReflection[0], 2);
-        glUniform2f(uniFluidViewport[0], viewportWidth, viewportHeight);
-        glUniformMatrix4fv(uniFluidIP[0], 1, GL_FALSE, glm::value_ptr(invProj));
-        glUniform1f(uniFluidR0[0], R0);
-        glUniform1f(uniFluidVisibility[0], 5.f);
-        glUniform3f(uniFluidEyeSurfaceN[0], transPlaneN.x(), transPlaneN.y(), transPlaneN.z());
-        glUniform3f(uniFluidEyeSurfaceP[0], transPlaneP.x(), transPlaneP.y(), transPlaneP.z());
-        fluid->RenderSurface();
-        glUseProgramObjectARB(0);
-    }
-    else if(fluid->IsInsideFluid(GetEyePosition()+GetLookingDirection()*near))
-    {
-        SetProjection();
-        SetViewTransform();
-        
-        GLfloat c = 1.0/fluid->getFluid()->IOR;
-        GLfloat R0 = 0.5f*powf((1.f-c)/(1.f+c), 2.f)*(1.f+powf((c*(1.f+c)-c*c)/(c*(1.f-c)+c*c), 2.f));
-        
-        glUseProgramObjectARB(fluidShader[1]);
-        glUniform1i(uniFluidPosition[1], 0);
-        glUniform1i(uniFluidScene[1], 1);
-        glUniform1i(uniFluidReflection[1], 2);
-        glUniform2f(uniFluidViewport[1], viewportWidth, viewportHeight);
-        glUniformMatrix4fv(uniFluidIP[1], 1, GL_FALSE, glm::value_ptr(invProj));
-        glUniform1f(uniFluidR0[1], R0);
-        glUniform1f(uniFluidVisibility[1], 5.f);
-        glUniform3f(uniFluidEyeSurfaceN[1], transPlaneN.x(), transPlaneN.y(), transPlaneN.z());
-        glUniform3f(uniFluidEyeSurfaceP[1], transPlaneP.x(), transPlaneP.y(), transPlaneP.z());
-        fluid->RenderSurface();
-        glUseProgramObjectARB(0);
-        
-        //THIS WORKS BECAUSE I WRITE TO THE SCENE TEXTURE!
-        glUseProgramObjectARB(fluidShader[2]);
-        glUniform1i(uniFluidPosition[2], 0);
-        glUniform1i(uniFluidScene[2], 1);
-        glUniform1f(uniFluidVisibility[2], 5.f);
-        glUniform2f(uniFluidViewport[2], viewportWidth, viewportHeight);
-        glUniform3f(uniFluidEyeSurfaceN[2], transPlaneN.x(), transPlaneN.y(), transPlaneN.z());
-        glUniform3f(uniFluidEyeSurfaceP[2], transPlaneP.x(), transPlaneP.y(), transPlaneP.z());
-        fluid->RenderSurface();
-        fluid->RenderVolume();
-        glUseProgramObjectARB(0);
-    }
+    glActiveTextureARB(GL_TEXTURE3_ARB);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, waveNormalTexture);
     
-    /*if(1) //fluid border crossed
-    {
-        glDisable(GL_DEPTH_TEST);
-        SetupOrtho();
-        glUseProgramObjectARB(fluidShader[3]);
-        glUniform1i(uniFluidScene[3], 1);
-        
-        glBegin(GL_QUADS);
-        glTexCoord2f(0, 0);
-        glVertex3f(-1.0f, -0.1f, 0.0f);
-        glTexCoord2f(1, 0);
-        glVertex3f(1.f, -0.1f, 0.0f);
-        glTexCoord2f(1, 1);
-        glVertex3f(1.f, 0.1f, 0.0f);
-        glTexCoord2f(0, 1);
-        glVertex3f(-1.0f, 0.1f, 0.0f);
-        glEnd();
-        glUseProgramObjectARB(0);
-    }*/
+    fluidShader[0]->Enable();
+    fluidShader[0]->SetUniform("texPosition", 0);
+    fluidShader[0]->SetUniform("texReflection", 1);
+    fluidShader[0]->SetUniform("texRefraction", 2);
+    fluidShader[0]->SetUniform("texWaveNormal", 3);
+    fluidShader[0]->SetUniform("viewport", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
+    fluidShader[0]->SetUniform("invProj", invProj);
+    fluidShader[0]->SetUniform("R0", R0);
+    fluidShader[0]->SetUniform("visibility", 5.0f);
+    fluidShader[0]->SetUniform("eyeSurfaceNormal", glm::vec3((GLfloat)transPlaneN.x(), (GLfloat)transPlaneN.y(), (GLfloat)transPlaneN.z()));
+    fluidShader[0]->SetUniform("eyeSurfacePosition", glm::vec3((GLfloat)transPlaneP.x(), (GLfloat)transPlaneP.y(), (GLfloat)transPlaneP.z()));
+    fluidShader[0]->SetUniform("time", SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
+    fluid->RenderSurface();
+    fluidShader[0]->Disable();
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    
+    btVector3 sunDirectionEye = trans * OpenGLSun::GetSunDirection();
+    glm::vec3 sunDirEye((GLfloat)sunDirectionEye.x(), (GLfloat)sunDirectionEye.y(), (GLfloat)sunDirectionEye.z());
+    
+    fluidShader[1]->Enable();
+    fluidShader[1]->SetUniform("texWaveNormal", 3);
+    fluidShader[1]->SetUniform("viewport", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
+    fluidShader[1]->SetUniform("eyeSurfaceNormal", glm::vec3((GLfloat)transPlaneN.x(), (GLfloat)transPlaneN.y(), (GLfloat)transPlaneN.z()));
+    fluidShader[1]->SetUniform("lightColor", OpenGLSun::GetSunColor());
+    fluidShader[1]->SetUniform("lightDirection", sunDirEye);
+    fluidShader[1]->SetUniform("time", SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
+    fluid->RenderSurface();
+    fluidShader[1]->Disable();
     
     glActiveTextureARB(GL_TEXTURE0_ARB);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -639,91 +769,109 @@ void OpenGLView::RenderFluid(FluidEntity* fluid)
     
     glActiveTextureARB(GL_TEXTURE2_ARB);
     glBindTexture(GL_TEXTURE_2D, 0);
+    
+    glActiveTextureARB(GL_TEXTURE3_ARB);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void OpenGLView::RenderFluidVolume(FluidEntity* fluid)
+{
+    
+}
+
+void OpenGLView::RenderHDR()
+{
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glBindTexture(GL_TEXTURE_2D, sceneTexture);
+    
+    OpenGLSolids::SetupOrtho();
+    glColor4f(1.f, 1.f, 1.f, 1.f);
+    
+    //matrix light metering
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, lightMeterFBO);
+    
+    lightMeterShader->Enable();
+    lightMeterShader->SetUniform("texHDR", 0);
+    lightMeterShader->SetUniform("samples", glm::ivec2(24,16));
+    OpenGLSolids::DrawScreenAlignedQuad();
+    lightMeterShader->Disable();
+    
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    
+    //hdr drawing
+    glActiveTextureARB(GL_TEXTURE1_ARB);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, lightMeterTexture);
+    
+    tonemapShader->Enable();
+    tonemapShader->SetUniform("texHDR", 0);
+    tonemapShader->SetUniform("texAverage", 1);
+    OpenGLSolids::DrawScreenAlignedQuad();
+    tonemapShader->Disable();
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+///////////////////////// Static /////////////////////////////
 void OpenGLView::Init()
 {
-    GLint compiled = 0;
-    GLhandleARB vs = LoadShader(GL_VERTEX_SHADER, "saq.vert", &compiled);
-    GLhandleARB fs = LoadShader(GL_FRAGMENT_SHADER, "sao.frag", &compiled);
-    ssaoShader = CreateProgramObject(vs, fs);
-    LinkProgram(ssaoShader, &compiled);
-    
-    glUseProgramObjectARB(ssaoShader);
-    uniSaoRandom = glGetUniformLocationARB(ssaoShader, "texRandom");
-    uniSaoPosition = glGetUniformLocationARB(ssaoShader, "texPosition");
-    uniSaoNormal = glGetUniformLocationARB(ssaoShader, "texNormal");
-    uniSaoRadius = glGetUniformLocationARB(ssaoShader, "radius");
-    uniSaoBias = glGetUniformLocationARB(ssaoShader, "bias");
-    uniSaoProjScale = glGetUniformLocationARB(ssaoShader, "projScale");
-    uniSaoIntDivR6 = glGetUniformLocationARB(ssaoShader, "intensityDivR6");
-    uniSaoViewport = glGetUniformLocationARB(ssaoShader, "viewportSize");
-    glUseProgramObjectARB(0);
-    
+    /////SAO - Screen-Space Ambient Obscurrance/////
     randomTexture = LoadInternalTexture("noise.png");
     
-    fs = LoadShader(GL_FRAGMENT_SHADER, "saoBlur.frag", &compiled);
-    blurShader = CreateProgramObject(vs, fs);
-    LinkProgram(blurShader, &compiled);
+    ssaoShader = new GLSLShader("sao.frag");
+    ssaoShader->AddUniform("texRandom", INT);
+    ssaoShader->AddUniform("texPosition", INT);
+    ssaoShader->AddUniform("texNormal", INT);
+    ssaoShader->AddUniform("radius", FLOAT);
+    ssaoShader->AddUniform("bias", FLOAT);
+    ssaoShader->AddUniform("projScale", FLOAT);
+    ssaoShader->AddUniform("intensityDivR6", FLOAT);
+    ssaoShader->AddUniform("viewportSize", VEC2);
     
-    glUseProgramObjectARB(blurShader);
-    uniSaoBlurSource = glGetUniformLocationARB(blurShader, "texSource");
-    uniSaoBlurAxis = glGetUniformLocationARB(blurShader, "axis");
-    glUseProgramObjectARB(0);
+    blurShader = new GLSLShader("saoBlur.frag");
+    blurShader->AddUniform("texSource", INT);
+    blurShader->AddUniform("axis", VEC2);
     
-    fs = LoadShader(GL_FRAGMENT_SHADER, "fluidBorder.frag", &compiled);
-    fluidShader[3] = CreateProgramObject(vs, fs);
-    LinkProgram(fluidShader[3], &compiled);
+    downsampleShader = new GLSLShader("saoDownsample.frag");
+    downsampleShader->AddUniform("source", INT);
+    downsampleShader->AddUniform("srcViewport", VEC2);
     
-    glUseProgramObjectARB(fluidShader[3]);
-    uniFluidScene[3] = glGetUniformLocationARB(fluidShader[3], "texScene");
-    glUseProgramObjectARB(0);
+    //////Fluid//////
+    waveNormalTexture = LoadInternalTexture("water.jpg");
     
-    vs = LoadShader(GL_VERTEX_SHADER, "fluidSurface.vert", &compiled);
-    fs = LoadShader(GL_FRAGMENT_SHADER, "aboveFluidSurface.frag", &compiled);
-    fluidShader[0] = CreateProgramObject(vs, fs);
-    LinkProgram(fluidShader[0], &compiled);
+    fluidShader[0] = new GLSLShader("aboveFluidSurface.frag");
+    fluidShader[0]->AddUniform("texPosition", INT);
+    fluidShader[0]->AddUniform("texReflection", INT);
+    fluidShader[0]->AddUniform("texRefraction", INT);
+    fluidShader[0]->AddUniform("viewport", VEC2);
+    fluidShader[0]->AddUniform("invProj", MAT4);
+    fluidShader[0]->AddUniform("R0", FLOAT);
+    fluidShader[0]->AddUniform("eyeSurfaceNormal", VEC3);
+    fluidShader[0]->AddUniform("eyeSurfacePosition", VEC3);
+    fluidShader[0]->AddUniform("visibility", FLOAT);
+    fluidShader[0]->AddUniform("texWaveNormal", INT);
+    fluidShader[0]->AddUniform("time", FLOAT);
     
-    glUseProgramObjectARB(fluidShader[0]);
-    uniFluidReflection[0] = glGetUniformLocationARB(fluidShader[0], "texReflection");
-    uniFluidScene[0] = glGetUniformLocationARB(fluidShader[0], "texScene");
-    uniFluidPosition[0] = glGetUniformLocationARB(fluidShader[0], "texPosition");
-    uniFluidViewport[0] = glGetUniformLocationARB(fluidShader[0], "viewport");
-    uniFluidIP[0] = glGetUniformLocationARB(fluidShader[0], "invProj");
-    uniFluidR0[0] = glGetUniformLocationARB(fluidShader[0], "R0");
-    uniFluidEyeSurfaceN[0] = glGetUniformLocationARB(fluidShader[0], "eyeSurfaceNormal");
-    uniFluidEyeSurfaceP[0] = glGetUniformLocationARB(fluidShader[0], "eyeSurfacePosition");
-    uniFluidVisibility[0] = glGetUniformLocationARB(fluidShader[0], "visibility");
-    glUseProgramObjectARB(0);
-
-    fs = LoadShader(GL_FRAGMENT_SHADER, "belowFluidSurface.frag", &compiled);
-    fluidShader[1] = CreateProgramObject(vs, fs);
-    LinkProgram(fluidShader[1], &compiled);
+    fluidShader[1] = new GLSLShader("fluidSurfaceSun.frag");
+    fluidShader[1]->AddUniform("texWaveNormal", INT);
+    fluidShader[1]->AddUniform("viewport", VEC2);
+    fluidShader[1]->AddUniform("eyeSurfaceNormal", VEC3);
+    fluidShader[1]->AddUniform("lightDirection", VEC3);
+    fluidShader[1]->AddUniform("lightColor", VEC4);
+    fluidShader[1]->AddUniform("time", FLOAT);
     
-    glUseProgramObjectARB(fluidShader[1]);
-    uniFluidReflection[1] = glGetUniformLocationARB(fluidShader[1], "texReflection");
-    uniFluidScene[1] = glGetUniformLocationARB(fluidShader[1], "texScene");
-    uniFluidPosition[1] = glGetUniformLocationARB(fluidShader[1], "texPosition");
-    uniFluidViewport[1] = glGetUniformLocationARB(fluidShader[1], "viewport");
-    uniFluidIP[1] = glGetUniformLocationARB(fluidShader[1], "invProj");
-    uniFluidR0[1] = glGetUniformLocationARB(fluidShader[1], "R0");
-    uniFluidEyeSurfaceN[1] = glGetUniformLocationARB(fluidShader[1], "eyeSurfaceNormal");
-    uniFluidEyeSurfaceP[1] = glGetUniformLocationARB(fluidShader[1], "eyeSurfacePosition");
-    uniFluidVisibility[1] = glGetUniformLocationARB(fluidShader[1], "visibility");
-    glUseProgramObjectARB(0);
+    /////Tonemapping//////
+    lightMeterShader = new GLSLShader("lightMeter.frag");
+    lightMeterShader->AddUniform("texHDR", INT);
+    lightMeterShader->AddUniform("samples", IVEC2);
     
-    fs = LoadShader(GL_FRAGMENT_SHADER, "fluidVolume.frag", &compiled);
-    fluidShader[2] = CreateProgramObject(vs, fs);
-    LinkProgram(fluidShader[2], &compiled);
-    
-    glUseProgramObjectARB(fluidShader[2]);
-    uniFluidScene[2] = glGetUniformLocationARB(fluidShader[2], "texScene");
-    uniFluidPosition[2] = glGetUniformLocationARB(fluidShader[2], "texPosition");
-    uniFluidEyeSurfaceN[2] = glGetUniformLocationARB(fluidShader[2], "eyeSurfaceNormal");
-    uniFluidEyeSurfaceP[2] = glGetUniformLocationARB(fluidShader[2], "eyeSurfacePosition");
-    uniFluidVisibility[2] = glGetUniformLocationARB(fluidShader[2], "visibility");
-    uniFluidViewport[2] = glGetUniformLocationARB(fluidShader[2], "viewport");
-    glUseProgramObjectARB(0);
+    tonemapShader = new GLSLShader("tonemapping.frag");
+    tonemapShader->AddUniform("texHDR", INT);
+    tonemapShader->AddUniform("texAverage", INT);
 }
 
 void OpenGLView::Destroy()
@@ -731,22 +879,31 @@ void OpenGLView::Destroy()
     glDeleteTextures(1, &randomTexture);
     
     if(ssaoShader != NULL)
-        glDeleteObjectARB(ssaoShader);
+        delete ssaoShader;
     
     if(blurShader != NULL)
-        glDeleteObjectARB(blurShader);
+        delete blurShader;
+    
+    if(downsampleShader != NULL)
+        delete downsampleShader;
+    
+    if(lightMeterShader != NULL)
+        delete lightMeterShader;
+    
+    if(tonemapShader != NULL)
+        delete tonemapShader;
     
     if(fluidShader[0] != NULL)
-        glDeleteObjectARB(fluidShader[0]);
+        delete fluidShader[0];
     
     if(fluidShader[1] != NULL)
-        glDeleteObjectARB(fluidShader[1]);
+        delete fluidShader[1];
     
     if(fluidShader[2] != NULL)
-        glDeleteObjectARB(fluidShader[2]);
+        delete fluidShader[2];
     
     if(fluidShader[3] != NULL)
-        glDeleteObjectARB(fluidShader[2]);
+        delete fluidShader[3];
 }
 
 void OpenGLView::SetTextureUnits(GLint position, GLint normal, GLint random)

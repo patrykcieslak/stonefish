@@ -4,16 +4,12 @@ varying vec4 position;
 varying vec3 normal;
 varying float depth;
 varying float material;
-varying float clipPos;
-
 uniform sampler2D texture;
 uniform bool isTextured;
 
 void main(void)
 {
-    if(clipPos < 0.0)
-        discard;
-    
+    //rendering
     vec3 finalColor;
     
     if(isTextured)

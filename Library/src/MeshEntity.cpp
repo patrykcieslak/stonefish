@@ -7,11 +7,11 @@
 //
 
 #include "MeshEntity.h"
-#include "OpenGLUtil.h"
 #include "OpenGLSolids.h"
+#include "SystemUtil.h"
 #include "GeometryFileUtil.h"
 
-MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
+MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals) : SolidEntity(uniqueName, mat)
 {
     scale = UnitSystem::SetLength(scale);
     
@@ -44,9 +44,8 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
     
     //3.Move vertices so that COG is in (0,0,0)
     localTransform.setOrigin(meshCog);
-    
-    for(int i=0; i<mesh->vertices.size(); i++)
-        mesh->vertices[i] -= meshCog;
+    //for(int i=0; i<mesh->vertices.size(); i++)
+    //    mesh->vertices[i] -= meshCog;
     
     //4.Calculate moments of inertia for local coordinate system located in COG (not necessarily principal)
     btScalar Pxx = 0.0, Pyy = 0.0, Pzz = 0.0, Pxy = 0.0, Pxz = 0.0, Pyz = 0.0; //products of inertia
@@ -79,17 +78,17 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
     
     //5.Calculate principal axes and moments of inertia
     btMatrix3x3 rotMat;
-    I.diagonalize(rotMat, 0.0001, 100);
+    I.diagonalize(rotMat, 0.00001, 1000);
     Ipri = btVector3(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
     
     //6.Rotate body so that principal axes are parallel to (x,y,z) system
     btQuaternion rotation;
     rotMat.getRotation(rotation);
-    btVector3 axis = rotation.getAxis();
-    btScalar angle = rotation.getAngle();
     
-    for(int i=0; i<mesh->vertices.size(); i++)
-        mesh->vertices[i] = mesh->vertices[i].rotate(axis, angle);
+    //btVector3 axis = rotation.getAxis();
+    //btScalar angle = rotation.getAngle();
+    //for(int i=0; i<mesh->vertices.size(); i++)
+    //    mesh->vertices[i] = mesh->vertices[i].rotate(axis, angle);
     
     localTransform.setRotation(rotation.inverse());
     
@@ -117,86 +116,52 @@ void MeshEntity::SetLook(Look newLook)
     BuildDisplayList();
 }
 
-void MeshEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform)
-{
-    //TO DO
-}
-
 void MeshEntity::BuildCollisionList()
 {
-    if(rigidBody != NULL)
+    /*if(rigidBody != NULL)
     {
         if(collisionList != 0)
             glDeleteLists(collisionList, 1);
         
-        if(staticBody)
+        btConvexHullShape* shape = (btConvexHullShape*)rigidBody->getCollisionShape();
+        collisionList = glGenLists(1);
+        glNewList(collisionList, GL_COMPILE);
+        glBegin(GL_POINTS);
+        for(int i=0; i<shape->getNumVertices(); i++)
         {
-            //btBvhTriangleMeshShape* shape = (btBvhTriangleMeshShape*)rigidBody->getCollisionShape();
-            //btTriangleIndexVertexArray* vertexArray = (btTriangleIndexVertexArray*)shape->getMeshInterface();
-            //
-            //
-            //...............
+            btVector3 v1;
+            shape->getVertex(i, v1);
+            glVertex3f((GLfloat)v1.x(), (GLfloat)v1.y(), (GLfloat)v1.z());
         }
-        else
-        {
-            btConvexHullShape* shape = (btConvexHullShape*)rigidBody->getCollisionShape();
-            collisionList = glGenLists(1);
-            glNewList(collisionList, GL_COMPILE);
-            glBegin(GL_POINTS);
-            for(int i=0; i<shape->getNumVertices(); i++)
-            {
-                btVector3 v1;
-                shape->getVertex(i, v1);
-                glVertex3f((GLfloat)v1.x(), (GLfloat)v1.y(), (GLfloat)v1.z());
-            }
-            glEnd();
-            glEndList();
-        }
-    }
+        glEnd();
+        glEndList();
+    }*/
 }
 
 btCollisionShape* MeshEntity::BuildCollisionShape()
 {
-    if(staticBody)
+    //Build GIMPACT concave shape
+    /*int* indices = new int[mesh->faces.size()*3];
+    for(int i=0; i<mesh->faces.size(); i++)
     {
-        int* indices = new int[mesh->faces.size()*3];
-        for(int i=0; i<mesh->faces.size(); i++)
-        {
-            indices[i*3+0] = mesh->faces[i].vertexIndex[0];
-            indices[i*3+1] = mesh->faces[i].vertexIndex[1];
-            indices[i*3+2] = mesh->faces[i].vertexIndex[2];
-        }
-        
-        triangleArray = new btTriangleIndexVertexArray(mesh->faces.size(), indices, 3*sizeof(int),
-                                                                                  mesh->vertices.size(), (btScalar*)&mesh->vertices[0].x(), sizeof(btVector3));
-        
-        btBvhTriangleMeshShape* triangle = new btBvhTriangleMeshShape(triangleArray, true);
-        return triangle;
+        indices[i*3+0] = mesh->faces[i].vertexIndex[0];
+        indices[i*3+1] = mesh->faces[i].vertexIndex[1];
+        indices[i*3+2] = mesh->faces[i].vertexIndex[2];
     }
-    else
-    {
-        //Build GIMPACT concave shape
-        /*int* indices = new int[mesh->faces.size()*3];
-        for(int i=0; i<mesh->faces.size(); i++)
-        {
-            indices[i*3+0] = mesh->faces[i].vertexIndex[0];
-            indices[i*3+1] = mesh->faces[i].vertexIndex[1];
-            indices[i*3+2] = mesh->faces[i].vertexIndex[2];
-        }
         
-        triangleArray = new btTriangleIndexVertexArray(mesh->faces.size(), indices, 3*sizeof(int),
+    triangleArray = new btTriangleIndexVertexArray(mesh->faces.size(), indices, 3*sizeof(int),
                                                        mesh->vertices.size(), (btScalar*)&mesh->vertices[0].x(), sizeof(btVector3));
         
-        */
-        /*btGImpactMeshShape * trimesh = new btGImpactMeshShape(triangleArray);
-        trimesh->updateBound();*/
+    */
+    /*btGImpactMeshShape * trimesh = new btGImpactMeshShape(triangleArray);
+    trimesh->updateBound();*/
         
-        btConvexHullShape* convex = new btConvexHullShape();
-        for(int i=0; i<mesh->vertices.size(); i++)
-            convex->addPoint(mesh->vertices[i]);
+    btConvexHullShape* convex = new btConvexHullShape();
+    for(int i=0; i<mesh->vertices.size(); i++)
+        convex->addPoint(mesh->vertices[i] * 0.9); //This param has to depend on something?!
     
-        return convex;
-    }
+    return convex;
+    
 }
 
 void calculateDrag(const btVector3& v1, const btVector3& v2, const btVector3& v3, const Fluid* fluid, const btVector3& fluidV, const btVector3& angularV, btVector3& dragForce, btVector3& dragTorque)

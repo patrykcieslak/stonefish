@@ -18,6 +18,7 @@
 
 #include "OpenGLPipeline.h"
 #include "IMGUI.h"
+#include "Console.h"
 #include "SimulationManager.h"
 
 class SimulationApp
@@ -63,13 +64,13 @@ public:
     SimulationManager* getSimulationManager();
     btScalar getSimulationSpeed();
     IMGUI* getHUD();
-    OpenGLPipeline* getRenderer();
     SDL_Joystick* getJoystick();
     double getFPS();
     double getPhysicsTime();
     int getWindowWidth();
     int getWindowHeight();
 	bool isRunning();
+    bool isLoading();
     const char* getShaderPath();
     const char* getDataPath();
 
@@ -81,13 +82,16 @@ private:
     void InitializeSimulation();
     void InitializeGUI();
     
+    SDL_GLContext glMainContext;
+    SDL_GLContext glLoadingContext;
+    SDL_Thread* loadingThread;
     SDL_Window* window;
     SDL_Joystick* joystick;
     IMGUI* hud;
     
     SimulationManager* simulation;
     btScalar simSpeedFactor;
-    OpenGLPipeline* pipeline;
+    Entity* lastPicked;
     
     const char* appName;
     const char* shaderPath;
@@ -96,10 +100,13 @@ private:
     int winHeight;
     bool finished;
     bool running;
+    bool loading;
     double fps;
     double physics;
     uint64_t startTime;
-    
+  
+    //static pthread_t loadingThread;
+    static int RenderLoadingScreen(void* app);
     static SimulationApp* handle;
     
 #ifdef USE_ADVANCED_GUI

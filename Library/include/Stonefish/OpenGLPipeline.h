@@ -21,6 +21,7 @@
 #define glXAxisColor() glColor4f(1.f, 0, 0, 1.f)
 #define glYAxisColor() glColor4f(0, 1.f, 0, 1.f)
 #define glZAxisColor() glColor4f(0, 0, 1.f, 1.f)
+#define glContactColor() glColor4f(1.f, 0, 0, 1.f)
 
 #ifdef BT_USE_DOUBLE_PRECISION
 #define glBulletVertex(V) glVertex3dv((V).m_floats)
@@ -34,31 +35,36 @@ class OpenGLView;
 class OpenGLPipeline
 {
 public:
-    OpenGLPipeline(SimulationManager* sim);
-    ~OpenGLPipeline();
-    
-    void Initialize();
+    void Initialize(SimulationManager* sim);
     void Render();
-    void SetRenderingEffects(bool sky, bool shadows, bool water, bool ssao);
+    void SetRenderingEffects(bool sky, bool shadows, bool fluid, bool sao);
     void SetVisibleElements(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers);
     void DrawStandardObjects();
     
+    bool isFluidRendered();
+    bool isSAORendered();
+
+    static OpenGLPipeline* getInstance();
+    
 private:
-    void RenderView(OpenGLView *view, const btTransform& viewTransform);
+    OpenGLPipeline();
+    ~OpenGLPipeline();
     void DrawSpecialObjects();
     
     SimulationManager* simulation;
     
     bool renderSky;
     bool renderShadows;
-    bool renderWater;
-    bool renderSSAO;
+    bool renderFluid;
+    bool renderSAO;
     
     bool showCoordSys;
     bool showJoints;
     bool showActuators;
     bool showSensors;
     bool showStickers;
+    
+    static OpenGLPipeline* instance;
 };
 
 #endif

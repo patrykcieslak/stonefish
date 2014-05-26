@@ -22,6 +22,7 @@
 #include "Controller.h"
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
+#include "Console.h"
 
 #define USE_CONTINUOUS_COLLISION false
 #define ALLOWED_CCD_PENETRATION 0.001
@@ -56,20 +57,22 @@ public:
     void StartSimulation();
     void AdvanceSimulation(uint64_t timeInMicroseconds);
     void StopSimulation();
-	double getPhysicsTimeInMiliseconds();
-    void setStepsPerSecond(btScalar steps);
-    btScalar getStepsPerSecond();
-    void getWorldAABB(btVector3& min, btVector3& max);
+	
     void AddEntity(Entity* ent);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
-    void AddFluidEntity(FluidEntity* flu);
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
     void AddController(Controller* cntrl);
-    void AddContact(Entity* e0, Entity* e1);
+    Contact* AddContact(Entity* e0, Entity* e1, unsigned int contactHistoryLength = 0);
+    void SetFluidEntity(FluidEntity* flu);
     bool CheckContact(Entity* e0, Entity* e1);
+    Entity* PickEntity(int x, int y);
     
+    double getPhysicsTimeInMiliseconds();
+    void setStepsPerSecond(btScalar steps);
+    btScalar getStepsPerSecond();
+    void getWorldAABB(btVector3& min, btVector3& max);
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
     Entity* getEntity(int index);
@@ -78,11 +81,13 @@ public:
     Actuator* getActuator(int index);
     Sensor* getSensor(int index);
     Controller* getController(int index);
+    Contact* getContact(Entity* e0, Entity* e1);
     
     void setGravity(const btVector3& g);
     btDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
+    bool isZAxisUp();
     
     void AddView(OpenGLView* view);
     OpenGLView* getView(int index);
@@ -116,12 +121,12 @@ private:
     CollisionFilteringType collisionFilter;
 
     std::vector<Entity*> entities;
-    std::vector<FluidEntity*> fluids;
     std::vector<Joint*> joints;
     std::vector<Sensor*> sensors;
     std::vector<Actuator*> actuators;
     std::vector<Controller*> controllers;
     std::vector<Contact*> contacts;
+    FluidEntity* fluid;
     
     bool zUp;
 

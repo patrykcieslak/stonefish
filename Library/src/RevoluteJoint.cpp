@@ -129,16 +129,16 @@ void RevoluteJoint::applyTorque(btScalar T)
     bodyB.applyTorque(-torque);
 }
 
-void RevoluteJoint::setTargetVelocity(btScalar v, btScalar maxT)
-{
-    //Have to divide by 10 to get correct velocity???
-    ((btHingeConstraint*)getConstraint())->enableAngularMotor(true, UnitSystem::SetAngle(v)/btScalar(10.), maxT);
-}
-
 void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
 {
     sigDamping = constantFactor > btScalar(0.0) ? UnitSystem::SetTorque(btVector3(constantFactor,0.0,0.0)).x() : btScalar(0.0);
     velDamping = viscousFactor > btScalar(0.0) ? viscousFactor : btScalar(0.0);
+}
+
+void RevoluteJoint::setLimits(btScalar min, btScalar max)
+{
+    //btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
+    //hinge->setLimit(UnitSystem::SetAngle(min), UnitSystem::SetAngle(max));
 }
 
 btScalar RevoluteJoint::getTargetVelocity()

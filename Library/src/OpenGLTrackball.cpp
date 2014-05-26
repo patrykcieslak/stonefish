@@ -7,6 +7,7 @@
 //
 
 #include "OpenGLTrackball.h"
+#include "SimulationApp.h"
 
 GLfloat x_start, y_start, z_start;
 btQuaternion rotation_start;
@@ -33,10 +34,10 @@ btQuaternion calculateRot(btVector3 v_start, btVector3 v)
         return btQuaternion::getIdentity();
 }
 
-OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLuint ssaoSize, GLfloat fov) : OpenGLView(x, y, width, height, ssaoSize)
+OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao) : OpenGLView(x, y, width, height, horizon, sao)
 {
     this->up = up;
-    rotation = calculateRot(this->up, btVector3(0.,0.,1.));
+    rotation = calculateRot(this->up, SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? btVector3(0,0,1.) : btVector3(0,0,-1.));
     
     radius = UnitSystem::SetLength(orbitRadius);
     center = UnitSystem::SetPosition(centerPosition);
@@ -75,7 +76,7 @@ btVector3 OpenGLTrackball::GetLookingDirection()
 
 btVector3 OpenGLTrackball::GetUpDirection()
 {
-    btVector3 localUp(0.,0.,1.f);
+    btVector3 localUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? btVector3(0,0,1.) : btVector3(0,0,-1.);
     localUp = localUp.rotate(rotation.getAxis(), -rotation.getAngle());
     localUp.normalize();
     return localUp;
@@ -118,8 +119,9 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 {
     if(dragging)
     {
+        bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
         GLfloat z = calculateZ(x, y);
-        btQuaternion rotation_new = calculateRot(btVector3(-x_start, z_start, y_start).normalized(), btVector3(-x, z, y).normalized());
+        btQuaternion rotation_new = calculateRot(btVector3(-x_start, z_start * (zUp ? 1.0 : -1.0), y_start).normalized(), btVector3(-x, z * (zUp ? 1.0 : -1.0), y).normalized());
         rotation = rotation_new * rotation_start;
         UpdateTrackballTransform();
     }
@@ -154,7 +156,7 @@ btTransform OpenGLTrackball::GetViewTransform()
 
 void OpenGLTrackball::Rotate(const btQuaternion& rot)
 {
-    rotation = calculateRot(this->up, btVector3(0.,0.,1.f)) * rot;
+    rotation = calculateRot(this->up, SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? btVector3(0,0,1.) : btVector3(0,0,-1.)) * rot;
     UpdateTrackballTransform();
 }
 

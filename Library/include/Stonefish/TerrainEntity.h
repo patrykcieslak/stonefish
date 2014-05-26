@@ -10,34 +10,20 @@
 #define __Stonefish_TerrainEntity__
 
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
-#include "Entity.h"
+#include "StaticEntity.h"
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
 
-class TerrainEntity : public Entity
+class TerrainEntity : public StaticEntity
 {
 public:
     TerrainEntity(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material* mat, Look l, const btTransform& worldTransform);
     ~TerrainEntity();
     
-    EntityType getType();
-    void Render();
-    btTransform getTransform();
-    Material* getMaterial();
-    void setTransform(const btTransform& trans);
-    void AddToDynamicsWorld(btDynamicsWorld* world);
-    
-    void SetLook(Look newLook);
-    void setDrawWireframe(bool wire);
+    StaticEntityType getStaticType();
     
 private:
     btScalar* terrainHeight;
-    btRigidBody* rigidBody;
-    Material* material;
-    
-    Look look;
-    GLint displayList;
-    bool wireframe;
 };
 
 #endif

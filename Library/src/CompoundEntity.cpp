@@ -9,7 +9,7 @@
 #include "CompoundEntity.h"
 #include "OpenGLSolids.h"
 
-CompoundEntity::CompoundEntity(std::string uniqueName, bool isStatic):SolidEntity(uniqueName, NULL, isStatic)
+CompoundEntity::CompoundEntity(std::string uniqueName):SolidEntity(uniqueName, NULL)
 {
 }
 

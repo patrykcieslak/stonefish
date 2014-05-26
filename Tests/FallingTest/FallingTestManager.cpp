@@ -10,6 +10,8 @@
 
 #include "FallingTestApp.h"
 #include "PlaneEntity.h"
+#include "ObstacleEntity.h"
+#include "MeshEntity.h"
 #include "BoxEntity.h"
 #include "SphereEntity.h"
 #include "TorusEntity.h"
@@ -17,7 +19,7 @@
 #include "OpenGLOmniLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
-#include "OpenGLUtil.h"
+#include "SystemUtil.h"
 #include "Accelerometer.h"
 #include "ADC.h"
 
@@ -27,7 +29,7 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-    SimulationApp::getApp()->getRenderer()->SetVisibleElements(true, false, false, false, false);
+    OpenGLPipeline::getInstance()->SetVisibleElements(true, false, false, false, false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 1.5), 0.4);
@@ -35,20 +37,25 @@ void FallingTestManager::BuildScenario()
     
     ///////LOOKS///////////
     char path[1024];
-    GetCWD(path, 1024);
-    strcat(path, "/");
-    strcat(path, SimulationApp::getApp()->getDataPath());
-    strcat(path, "/");
+    GetDataPath(path, 1024-32);
     strcat(path, "grid.png");
-    printf("%s\n", path);
     
     Look grey = CreateMatteLook(1.0f, 1.0f, 1.0f, 0.0f, path);
     //Look color;
     
     ////////OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 100000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,-M_PI_2/18.0,0), btVector3(0,0,0)));
-    floor->setRenderable(true);
+    PlaneEntity* floor = new PlaneEntity("Floor", 100000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)));
     AddEntity(floor);
+    
+    GetDataPath(path, 1024-32);
+    strcat(path, "cone.obj");
+    
+    MeshEntity* mesh = new MeshEntity("Cone", path, 1000.0, getMaterialManager()->getMaterial("Steel"), grey, true);
+    AddSolidEntity(mesh, btTransform(btQuaternion(0,0,0), btVector3(2000.f, 0.f, 0.f)));
+    //mesh->SetArbitraryPhysicalProperties(1000, btVector3(10000000.0,10000000.0,10000000.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    
+    //ObstacleEntity* terrain = new ObstacleEntity("Terrain", path, 10000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), false);
+    //AddEntity(terrain);
     
     Look color = CreateGlossyLook(1.f, 0.6f, 0.2f, 0.5f, 0.1f);
     
@@ -81,7 +88,7 @@ void FallingTestManager::BuildScenario()
     //spot = new OpenGLSpotLight(btVector3(10000.f, -12000.f, 5000.f), btVector3(5000.f,-5000.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(5600, 500));
     //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 0, 60.f);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 500.f), 5000.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 100000.f, true);
     trackb->Rotate(btQuaternion(M_PI, 0, M_PI/8.0));
     trackb->Activate();
     AddView(trackb);

@@ -4,13 +4,11 @@ varying vec3 normal;
 varying vec4 position;
 varying float depth;
 varying float material;
-varying float clipPos;
-
 attribute float materialData;
-uniform vec4 clipPlane;
 
 void main(void)
 {
+    //texture and material
 	gl_TexCoord[0] = gl_MultiTexCoord0;
     color = gl_Color;
     material = materialData;
@@ -19,9 +17,10 @@ void main(void)
     normal = normalize(gl_NormalMatrix * gl_Normal);
     position = gl_ModelViewMatrix * gl_Vertex;
     depth = -position.z;
+
+    //clipping plane in eye space
+    gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;
     
-    //clipping
-    clipPos = dot(position.xyz, clipPlane.xyz) + clipPlane.w;
-    
+    //transform
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; //ftransform();
 }

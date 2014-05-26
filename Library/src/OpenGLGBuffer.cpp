@@ -7,58 +7,55 @@
 //
 
 #include "OpenGLGBuffer.h"
+#include "Console.h"
 
-#include <stdio.h>
-#include "OpenGLUtil.h"
-
-GLhandleARB OpenGLGBuffer::splittingShader = NULL;
-GLint OpenGLGBuffer::uniIsTextured = 0;
-GLint OpenGLGBuffer::uniTexture = 0;
-GLint OpenGLGBuffer::attMatData = 0;
-GLint OpenGLGBuffer::uniClipPlane = 0;
+GLSLShader* OpenGLGBuffer::splittingShader = NULL;
 
 void OpenGLGBuffer::LoadShaders()
 {
-    GLhandleARB vertexShader, fragmentShader;
-    GLint compiled;
-    vertexShader = LoadShader(GL_VERTEX_SHADER, "gbuffer.vert", &compiled);
-    fragmentShader = LoadShader(GL_FRAGMENT_SHADER, "gbuffer.frag", &compiled);
-    splittingShader = CreateProgramObject(vertexShader, fragmentShader);
-    LinkProgram(splittingShader, &compiled);
-    
-    glUseProgramObjectARB(splittingShader);
-    uniIsTextured = glGetUniformLocationARB(splittingShader, "isTextured");
-    uniTexture = glGetUniformLocationARB(splittingShader, "texture");
-    attMatData = glGetAttribLocationARB(splittingShader, "materialData");
-    uniClipPlane = glGetUniformLocationARB(splittingShader, "clipPlane");
-    glUseProgramObjectARB(0);
+    splittingShader = new GLSLShader("gbuffer.frag", "gbuffer.vert");
+    splittingShader->AddUniform("isTextured", BOOLEAN);
+    splittingShader->AddUniform("texture", INT);
+    splittingShader->AddAttribute("materialData", FLOAT);
 }
 
 void OpenGLGBuffer::DeleteShaders()
 {
-    glDeleteObjectARB(splittingShader);
+    delete splittingShader;
 }
 
-GLint OpenGLGBuffer::getAttributeLocation_MaterialData()
+void OpenGLGBuffer::SetAttributeMaterialData(GLfloat x)
 {
-    return attMatData;
+    if(splittingShader->isEnabled())
+        splittingShader->SetAttribute("materialData", x);
 }
 
-GLint OpenGLGBuffer::getUniformLocation_IsTextured()
+void OpenGLGBuffer::SetUniformIsTextured(bool x)
 {
-    return uniIsTextured;
+    if(splittingShader->isEnabled())
+        splittingShader->SetUniform("isTextured", x);
 }
 
-void OpenGLGBuffer::SetClipPlane(GLfloat *planeEq)
+void OpenGLGBuffer::SetClipPlane(double* plane)
 {
-    if(planeEq == NULL)
+    if(plane == NULL)
     {
-        GLfloat eq[4];
-        eq[0] = eq[1] = eq[2] = eq[3] = 0.f;
-        glUniform4fvARB(uniClipPlane, 1, eq);
+        if(clipPlane != NULL)
+        {
+            delete [] clipPlane;
+            clipPlane = NULL;
+        }
     }
     else
-        glUniform4fvARB(uniClipPlane, 1, planeEq);
+    {
+        if(clipPlane == NULL)
+            clipPlane = new double[4];
+        
+        std::memcpy(clipPlane, plane, sizeof(double)*4);
+        
+        glEnable(GL_CLIP_PLANE0);
+        glClipPlane(GL_CLIP_PLANE0, clipPlane);
+    }
 }
 
 OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
@@ -66,6 +63,7 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
     width  = fboWidth;
 	height = fboHeight;
     rendering = false;
+    clipPlane = NULL;
     
 	// Generate the OGL resources for what we need
 	glGenFramebuffersEXT(1, &fbo);
@@ -84,8 +82,8 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
 	glGenTextures(1, &diffuseTexture);
 	glBindTexture(GL_TEXTURE_2D, diffuseTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// Attach the texture to the FBO
@@ -94,7 +92,7 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
 	// Generate and bind the OGL texture for positions
 	glGenTextures(2, positionTexture);
 	glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL); //32-bit precision needed for SAO
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -134,7 +132,7 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
     // Check if all worked fine and unbind the FBO
 	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-        printf("FBO initialization failed.\n");
+        cError("GBuffer FBO initialization failed!");
 	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
@@ -165,7 +163,7 @@ void OpenGLGBuffer::Start(GLuint texIndex)
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
 	
 	GLenum buffers[3];
-    buffers[0] = GL_COLOR_ATTACHMENT0_EXT;
+    buffers[0] = GL_COLOR_ATTACHMENT0_EXT; //Diffuse reused
     
     if(texIndex == 0)
     {
@@ -181,13 +179,17 @@ void OpenGLGBuffer::Start(GLuint texIndex)
     glDrawBuffers(3, buffers);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
-    glUseProgramObjectARB(splittingShader);
-    glUniform1iARB(uniTexture, 0);
+    splittingShader->Enable();
+    splittingShader->SetUniform("texture", 0);
 }
 
 void OpenGLGBuffer::Stop()
 {
-    glUseProgramObjectARB(0);
+    splittingShader->Disable();
+    
+    if(clipPlane != NULL)
+        glDisable(GL_CLIP_PLANE0);
+        
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	glPopAttrib();
     

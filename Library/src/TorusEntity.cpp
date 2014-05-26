@@ -10,7 +10,7 @@
 #include "OpenGLSolids.h"
 #include "btTorusShape.h"
 
-TorusEntity::TorusEntity(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
+TorusEntity::TorusEntity(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material* mat, Look l) : SolidEntity(uniqueName, mat)
 {
     majorRadius = UnitSystem::SetLength(torusMajorRadius);
     minorRadius = UnitSystem::SetLength(torusMinorRadius);

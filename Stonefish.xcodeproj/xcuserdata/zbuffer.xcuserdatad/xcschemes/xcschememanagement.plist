@@ -29,6 +29,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>UnderwaterTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>5</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
@@ -38,6 +43,11 @@
 			<true/>
 		</dict>
 		<key>F74CEBED18E56EEB00D0C42D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F776647919213D6500996CF3</key>
 		<dict>
 			<key>primary</key>
 			<true/>

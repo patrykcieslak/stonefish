@@ -1,14 +1,14 @@
 //
-//  Servo.cpp
+//  ServoController.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "Servo.h"
+#include "ServoController.h"
 
-Servo::Servo(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
+ServoController::ServoController(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
 {
     motor = m;
     encoder = e;
@@ -20,35 +20,35 @@ Servo::Servo(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar 
     Reset();
 }
 
-Servo::~Servo()
+ServoController::~ServoController()
 {
 }
 
-void Servo::Reset()
+void ServoController::Reset()
 {
     targetPos = 0.0;
     lastError = 0.0;
     integratedError = 0.0;
 }
 
-void Servo::SetPosition(btScalar pos)
+void ServoController::SetPosition(btScalar pos)
 {
     targetPos = UnitSystem::SetAngle(pos);
 }
 
-void Servo::SetGains(btScalar P, btScalar I, btScalar D)
+void ServoController::SetGains(btScalar P, btScalar I, btScalar D)
 {
     gainP = P;
     gainI = I;
     gainD = D;
 }
 
-ControllerType Servo::getType()
+ControllerType ServoController::getType()
 {
     return SERVO;
 }
 
-void Servo::Tick()
+void ServoController::Tick()
 {
     //get measurements
     Sample encSample = encoder->getLastSample();

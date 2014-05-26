@@ -16,7 +16,7 @@ class SphereEntity : public SolidEntity
 {
 public:
     /** @brief Spherical solid entity constructor. */
-    SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l, bool isStatic = false);
+    SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l);
     ~SphereEntity();
     
     SolidEntityType getSolidType();

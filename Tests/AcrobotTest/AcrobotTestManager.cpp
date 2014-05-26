@@ -21,7 +21,7 @@
 #include "DCMotor.h"
 #include "RotaryEncoder.h"
 #include "FakeRotaryEncoder.h"
-#include "Servo.h"
+#include "ServoController.h"
 
 AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, INCLUSIVE)
 {
@@ -74,13 +74,13 @@ void AcrobotTestManager::BuildScenario()
     DCMotor* motor = new DCMotor("DCX", revo2, 0.212f, 0.0774e-3, 1.f/408.f, 23.4e-3, 0.0000055f);
     AddActuator(motor);
     
-/*    Servo* srv = new Servo("Servo", motor, enc2, 5.0, 500);
+/*    ServoController* srv = new ServoController("ServoController", motor, enc2, 5.0, 500);
     AddController(srv);
     srv->SetPosition(M_PI);
     srv->SetGains(3.0, 0.0, 0.0);*/
     
     //////CAMERA & LIGHT//////
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.0f), 1.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 0, 60.f);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.0f), 1.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 50.f, false);
     trackb->Rotate(btQuaternion(0.0, 0.0, -M_PI_2/9.f) * btQuaternion(-M_PI_4,0.0,0.0));
     trackb->Activate();
     AddView(trackb);

@@ -17,7 +17,7 @@
 
 typedef enum
 {
-    SOLID, PLANE, TERRAIN, CABLE, GHOST
+    ENTITY_STATIC, ENTITY_SOLID, ENTITY_CABLE, ENTITY_GHOST
 }
 EntityType;
 
@@ -47,8 +47,8 @@ public:
     virtual btTransform getTransform() = 0;
     virtual void setTransform(const btTransform& trans) = 0;
     virtual void AddToDynamicsWorld(btDynamicsWorld* world) = 0;
-    //virtual void RemoveFromDynamicsWorld(btDynamicsWorld* world) = 0;
-    
+    virtual void GetAABB(btVector3& min, btVector3& max);
+        
 private:
     bool renderable;
     std::string name;

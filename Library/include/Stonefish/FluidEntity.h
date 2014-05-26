@@ -25,9 +25,10 @@ public:
     virtual void ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co) = 0;
     virtual bool IsInsideFluid(const btVector3& point) = 0;
     
-    void GetSurface(btVector3& normal, btVector3& position);
+    void GetSurface(btVector3& normal, btVector3& position) const;
+    void GetSurfaceEquation(double* plane4) const;
     btScalar getDepth();
-    const Fluid* getFluid();
+    const Fluid* getFluid() const;
     
 protected:
     Fluid* fluid;

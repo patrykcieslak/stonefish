@@ -15,7 +15,7 @@
 class OpenGLCamera : public OpenGLView
 {
 public:
-    OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLuint ssaoSize, GLfloat fov);
+    OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao = false);
     ~OpenGLCamera();
     
     btTransform GetViewTransform();

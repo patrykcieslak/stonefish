@@ -14,9 +14,14 @@
 class btFilteredCollisionDispatcher : public btCollisionDispatcher
 {
 public:
-    btFilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration);
+    btFilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode);
     
     bool needsCollision(const btCollisionObject* body0, const btCollisionObject* body1);
+    
+    static void myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+    
+private:
+    bool inclusive;
 };
 
 #endif

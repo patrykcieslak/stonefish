@@ -14,7 +14,7 @@
 class OpenGLSpotLight : public OpenGLLight
 {
 public:
-    OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, GLfloat* color4);
+    OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color);
     ~OpenGLSpotLight();
     
     void Render();

@@ -7,10 +7,9 @@
 //
 
 #include "SolidEntity.h"
-#include "OpenGLUtil.h"
 #include "OpenGLSolids.h"
 
-SolidEntity::SolidEntity(std::string uniqueName, Material* mat, bool isStatic) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueName)
 {
     material = mat;
     look = CreateMatteLook(1.f, 1.f, 1.f, 0.5f);
@@ -18,7 +17,6 @@ SolidEntity::SolidEntity(std::string uniqueName, Material* mat, bool isStatic) :
     localTransform = btTransform::getIdentity();
     Ipri = btVector3(0,0,0);
     mass = 0;
-    staticBody = isStatic;
     
     volume = 0;
     dragCoeff = btVector3(0,0,0);
@@ -49,7 +47,7 @@ SolidEntity::~SolidEntity()
 
 EntityType SolidEntity::getType()
 {
-    return SOLID;
+    return ENTITY_SOLID;
 }
 
 void SolidEntity::SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia)
@@ -67,11 +65,11 @@ void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3&
         Ipri = UnitSystem::SetInertia(inertia);
         rigidBody->setMassProps(this->mass, Ipri);
         
-        btTransform internalTrans = UnitSystem::SetTransform(cogTransform);
+        btTransform oldLocalTransform = localTransform;
+        localTransform = UnitSystem::SetTransform(cogTransform);
         btCompoundShape* colShape = (btCompoundShape*)rigidBody->getCollisionShape();
-        rigidBody->setCenterOfMassTransform(internalTrans * rigidBody->getCenterOfMassTransform());
-        localTransform = internalTrans.inverse();
-        colShape->updateChildTransform(0, localTransform);
+        rigidBody->setCenterOfMassTransform(oldLocalTransform.inverse() * localTransform * rigidBody->getCenterOfMassTransform());
+        colShape->updateChildTransform(0, localTransform.inverse());
     }
 }
 
@@ -86,11 +84,6 @@ void SolidEntity::SetLook(Look newLook)
 void SolidEntity::setDisplayCoordSys(bool enabled)
 {
     dispCoordSys = enabled;
-}
-
-bool SolidEntity::isStatic()
-{
-    return staticBody;
 }
 
 bool SolidEntity::isCoordSysVisible()
@@ -112,7 +105,7 @@ void SolidEntity::Render()
 {
     if(rigidBody != NULL && isRenderable())
     {
-        btTransform trans = getTransform() * localTransform;
+        btTransform trans = localTransform.inverse() * getTransform();
         btScalar openglTrans[16];
         trans.getOpenGLMatrix(openglTrans);
         
@@ -184,16 +177,13 @@ void SolidEntity::BuildRigidBody()
 {
     if(rigidBody == NULL)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(localTransform); //localTransform is non-zero only for MeshEntity
-        localTransform = btTransform::getIdentity(); //clear localTransform passed by the MeshEntity for correct rendering
-	
-        btCompoundShape* colShape = new btCompoundShape();
-        colShape->addChildShape(btTransform::getIdentity(), BuildCollisionShape());
+        btDefaultMotionState* motionState = new btDefaultMotionState();
         
-        //btCollisionShape* colShape = BuildCollisionShape();
+        btCompoundShape* colShape = new btCompoundShape();
+        colShape->addChildShape(localTransform.inverse(), BuildCollisionShape());
         colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
         
-        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(staticBody ? 0 : mass, motionState, colShape, Ipri);
+        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, colShape, Ipri);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.5); //not used
         rigidBodyCI.m_linearDamping = 0;
         rigidBodyCI.m_angularDamping = 0;
@@ -203,11 +193,8 @@ void SolidEntity::BuildRigidBody()
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-        
-        if(staticBody)
-            rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-        //else
-          //  rigidBody->setActivationState(DISABLE_DEACTIVATION);
+        rigidBody->setActivationState(DISABLE_DEACTIVATION);
+        rigidBody->setFlags(BT_ENABLE_GYROPSCOPIC_FORCE);
     }
 }
 
@@ -271,13 +258,9 @@ void SolidEntity::AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& 
         BuildDisplayList();
         BuildCollisionList();
         
-        rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
-        world->synchronizeMotionStates();
-        
-        if(staticBody)
-            world->addRigidBody(rigidBody, STATIC, DEFAULT | CABLE_EVEN | CABLE_ODD);
-        else
-            world->addRigidBody(rigidBody, DEFAULT, DEFAULT | STATIC | CABLE_EVEN | CABLE_ODD);
+        //rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
+        rigidBody->setCenterOfMassTransform(localTransform * UnitSystem::SetTransform(worldTransform));
+        world->addRigidBody(rigidBody, DEFAULT, DEFAULT | STATIC | CABLE_EVEN | CABLE_ODD);
     }
 }
 
@@ -303,4 +286,9 @@ void SolidEntity::ApplyGravity()
 btRigidBody* SolidEntity::getRigidBody()
 {
     return rigidBody;
+}
+
+void SolidEntity::GetAABB(btVector3& min, btVector3& max)
+{
+    rigidBody->getAabb(min, max);
 }

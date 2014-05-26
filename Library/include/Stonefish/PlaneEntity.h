@@ -9,32 +9,20 @@
 #ifndef __Stonefish_PlaneEntity__
 #define __Stonefish_PlaneEntity__
 
-#include "Entity.h"
+#include "StaticEntity.h"
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
 
-class PlaneEntity : public Entity
+class PlaneEntity : public StaticEntity
 {
 public:
     PlaneEntity(std::string uniqueName, btScalar size, Material* mat, Look l, const btTransform& worldTransform);
     ~PlaneEntity();
     
-    EntityType getType();
-    void Render();
-    btTransform getTransform();
-    Material* getMaterial();
-    void setTransform(const btTransform& trans);
-    void AddToDynamicsWorld(btDynamicsWorld* world);
-    
-    void SetLook(Look newLook);
-    btRigidBody* getRigidBody();
+    StaticEntityType getStaticType();
     
 private:
-    Material* material;
-    btRigidBody* rigidBody;
-    
-    Look look;
-    GLint displayList;
+    btScalar size;
 };
 
 #endif

@@ -12,7 +12,7 @@
 #include "common.h"
 #include "NameManager.h"
 
-typedef enum {SERVO, CUSTOM} ControllerType;
+typedef enum {SERVO, MISO} ControllerType;
 
 //abstract class
 class Controller

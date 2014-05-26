@@ -20,10 +20,11 @@ typedef enum {MESH = 0, SPHERE, CYLINDER, BOX, TORUS, COMPOUND} SolidEntityType;
 class SolidEntity : public Entity
 {
 public:
-    SolidEntity(std::string uniqueName, Material* mat, bool isStatic);
+    SolidEntity(std::string uniqueName, Material* mat);
     virtual ~SolidEntity();
     
     EntityType getType();
+    void GetAABB(btVector3& min, btVector3& max);
     void AddToDynamicsWorld(btDynamicsWorld* world);
     void AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& worldTransform);
     void RemoveFromDynamicsWorld(btDynamicsWorld* world);
@@ -54,7 +55,6 @@ public:
     Look getLook();
     GLint getDisplayList();
 
-    bool isStatic();
     bool isCoordSysVisible();
 
     bool fullyImmersed;
@@ -64,7 +64,6 @@ protected:
     virtual void BuildDisplayList();
     virtual void BuildCollisionList() = 0;
 
-    bool staticBody;
     Material* material;
     btRigidBody* rigidBody;
     btScalar mass;

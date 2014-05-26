@@ -66,5 +66,6 @@ void AABB(TriangleMesh* mesh, btVector3& min, btVector3& max);
 void AABS(TriangleMesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffset);
 btScalar signedVolumeOfTetrahedron6(const btVector3& v1, const btVector3& v2, const btVector3& v3);
 btScalar distanceFromCenteredPlane(const btVector3& planeN, const btVector3& v);
+void SetFloatvFromMat(const btMatrix3x3 &mat, GLfloat* fv);
 
 #endif

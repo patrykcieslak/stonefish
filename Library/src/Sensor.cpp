@@ -15,6 +15,7 @@ Sensor::Sensor(std::string uniqueName, unsigned int historyLength)
     name = nameManager.AddName(uniqueName);
     historyLen = historyLength > 0 ? historyLength : 1;
     history = std::deque<Sample*>(0);
+    renderable = false;
 }
 
 Sensor::~Sensor()
@@ -65,4 +66,18 @@ const std::deque<Sample*>& Sensor::getHistory()
 std::string Sensor::getName()
 {
     return name;
+}
+
+void Sensor::Render()
+{
+}
+
+void Sensor::setRenderable(bool render)
+{
+    renderable = render;
+}
+
+bool Sensor::isRenderable()
+{
+    return renderable;
 }

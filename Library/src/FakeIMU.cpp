@@ -11,7 +11,7 @@
 FakeIMU::FakeIMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, unsigned int historyLength) : Sensor(uniqueName, historyLength)
 {
     solid = attachment;
-    relToSolid = relFrame;
+    relToSolid = UnitSystem::SetTransform(relFrame);
 
     Reset();
 }

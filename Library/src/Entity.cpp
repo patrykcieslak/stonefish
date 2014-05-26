@@ -35,3 +35,9 @@ std::string Entity::getName()
 {
     return name;
 }
+
+void Entity::GetAABB(btVector3& min, btVector3& max)
+{
+    min.setValue(0, 0, 0);
+    max.setValue(0, 0, 0);
+}

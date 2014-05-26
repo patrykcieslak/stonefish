@@ -272,7 +272,7 @@ void IMGUI::DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* 
 void IMGUI::DoPanel(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
 {
     glLoadIdentity();
-    glScissor(x, getWindowHeight()-y-h, w, getWindowHeight()-y-25.f);
+    //glScissor(x, getWindowHeight()-y-h, w, getWindowHeight()-y-25.f);
     
     glDisable(GL_TEXTURE_2D);
     glBegin(GL_TRIANGLE_STRIP);

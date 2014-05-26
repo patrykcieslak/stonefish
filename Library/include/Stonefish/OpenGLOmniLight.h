@@ -14,7 +14,7 @@
 class OpenGLOmniLight : public OpenGLLight
 {
 public:
-    OpenGLOmniLight(const btVector3& position, GLfloat* color4);
+    OpenGLOmniLight(const btVector3& position, glm::vec4 color);
     ~OpenGLOmniLight();
     
     void Render();

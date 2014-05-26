@@ -25,19 +25,23 @@ public:
     virtual void Reset() = 0;
     virtual void Update(btScalar dt) = 0;
     virtual unsigned short getNumOfDimensions() = 0;
+    virtual void Render();
     
     void ClearHistory();
+    bool isRenderable();
+    void setRenderable(bool render);
     Sample getLastSample();
     const std::deque<Sample*>& getHistory();
     std::string getName();
     
 protected:
     void AddSampleToHistory(const Sample& s);
+    std::deque<Sample*> history;
     
 private:
     std::string name;
     unsigned int historyLen;
-    std::deque<Sample*> history;
+    bool renderable;
     
     static NameManager nameManager;
 };

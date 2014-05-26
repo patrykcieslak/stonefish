@@ -19,15 +19,14 @@
 
 #include "SimulationApp.h"
 #include "OpenGLSolids.h"
-#include "OpenGLUtil.h"
+#include "SystemUtil.h"
 #include "OpenGLSky.h"
 #include "OpenGLOmniLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "SolidEntity.h"
 #include "BoxEntity.h"
-#include "TerrainEntity.h"
-#include "PlaneEntity.h"
+#include "StaticEntity.h"
 #include "CableEntity.h"
 #include "GhostEntity.h"
 #include "FluidEntity.h"
@@ -40,13 +39,11 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     const btRigidBody* rb0 = btRigidBody::upcast(colObj0Wrap->getCollisionObject());
     Entity* ent0 = (Entity*)rb0->getUserPointer();
     Material* mat0;
-    if(ent0->getType() == SOLID)
+    if(ent0->getType() == ENTITY_SOLID)
         mat0 = ((SolidEntity*)ent0)->getMaterial();
-    else if(ent0->getType() == PLANE)
-        mat0 = ((PlaneEntity*)ent0)->getMaterial();
-    else if(ent0->getType() == TERRAIN)
-        mat0 = ((TerrainEntity*)ent0)->getMaterial();
-    else if(ent0->getType() == CABLE)
+    else if(ent0->getType() == ENTITY_STATIC)
+        mat0 = ((StaticEntity*)ent0)->getMaterial();
+    else if(ent0->getType() == ENTITY_CABLE)
         mat0 = ((CableEntity*)ent0)->getMaterial();
     else
     {
@@ -58,13 +55,11 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     const btRigidBody* rb1 = btRigidBody::upcast(colObj1Wrap->getCollisionObject());
     Entity* ent1 = (Entity*)rb1->getUserPointer();
     Material* mat1;
-    if(ent1->getType() == SOLID)
+    if(ent1->getType() == ENTITY_SOLID)
         mat1 = ((SolidEntity*)ent1)->getMaterial();
-    else if(ent1->getType() == PLANE)
-        mat1 = ((PlaneEntity*)ent1)->getMaterial();
-    else if(ent1->getType() == TERRAIN)
-        mat1 = ((TerrainEntity*)ent1)->getMaterial();
-    else if(ent1->getType() == CABLE)
+    else if(ent1->getType() == ENTITY_STATIC)
+        mat1 = ((StaticEntity*)ent1)->getMaterial();
+    else if(ent1->getType() == ENTITY_CABLE)
         mat1 = ((CableEntity*)ent1)->getMaterial();
     else
     {
@@ -88,11 +83,11 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     UnitSystem::SetUnitSystem(unitSystem, false);
     zUp = zAxisUp;
     setStepsPerSecond(stepsPerSecond);
-    gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback;
     currentTime = 0;
     physicTime = 0;
     drawLightDummies = false;
     drawCameraDummies = false;
+    fluid = NULL;
     InitializeSolver(st, cft);
 }
 
@@ -119,13 +114,15 @@ void SimulationManager::AddSolidEntity(SolidEntity* ent, const btTransform& worl
     }
 }
 
-void SimulationManager::AddFluidEntity(FluidEntity *flu)
+void SimulationManager::SetFluidEntity(FluidEntity *flu)
 {
     if(flu != NULL)
     {
-        entities.push_back(flu);
-        fluids.push_back(flu);
-        flu->AddToDynamicsWorld(dynamicsWorld);
+        //if(fluid != NULL)
+        //remove old fluid
+        
+        fluid = flu;
+        fluid->AddToDynamicsWorld(dynamicsWorld);
     }
 }
 
@@ -144,14 +141,17 @@ void SimulationManager::AddActuator(Actuator *act)
         actuators.push_back(act);
 }
 
-void SimulationManager::AddContact(Entity *e0, Entity *e1)
+Contact* SimulationManager::AddContact(Entity *e0, Entity *e1, unsigned int contactHistoryLength)
 {
-    bool contactExists = CheckContact(e0, e1);
-    if(!contactExists)
+    Contact* contact = getContact(e0, e1);
+    
+    if(contact == NULL)
     {
-        Contact* c = new Contact(e0, e1);
-        contacts.push_back(c);
+        contact = new Contact(e0, e1, contactHistoryLength);
+        contacts.push_back(contact);
     }
+    
+    return contact;
 }
 
 bool SimulationManager::CheckContact(Entity *e0, Entity *e1)
@@ -170,6 +170,51 @@ bool SimulationManager::CheckContact(Entity *e0, Entity *e1)
     }
     
     return inContact;
+}
+
+Contact* SimulationManager::getContact(Entity* e0, Entity* e1)
+{
+    for(int i = 0; i < contacts.size(); i++)
+    {
+        if(contacts[i]->getEntity0() == e0)
+        {
+            if(contacts[i]->getEntity1() == e1)
+                return contacts[i];
+        }
+        else if(contacts[i]->getEntity1() == e0)
+        {
+            if(contacts[i]->getEntity0() == e1)
+                return contacts[i];
+        }
+    }
+    
+    return NULL;
+}
+
+
+Entity* SimulationManager::PickEntity(int x, int y)
+{
+    for(int i = 0; i < views.size(); i++)
+    {
+        if(views[i]->isActive())
+        {
+            btVector3 ray = views[i]->Ray(x, y);
+            if(ray.length2() > 0)
+            {
+                btCollisionWorld::ClosestRayResultCallback rayCallback(views[i]->GetEyePosition(), ray);
+                dynamicsWorld->rayTest(views[i]->GetEyePosition(), ray, rayCallback);
+                if (rayCallback.hasHit())
+                {
+                    const btRigidBody* body = btRigidBody::upcast(rayCallback.m_collisionObject);
+                    if (body)
+                        return (Entity*)body->getUserPointer();
+                }
+                
+                return NULL;
+            }
+        }
+    }
+    return NULL;
 }
 
 CollisionFilteringType SimulationManager::getCollisionFilter()
@@ -273,7 +318,36 @@ OpenGLLight* SimulationManager::getLight(int index)
 
 void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
 {
-    dynamicsWorld->getBroadphase()->getBroadphaseAabb(min, max);
+    min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+    max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+    
+    for(int i = 0; i < entities.size(); i++)
+    {
+        btVector3 entAabbMin, entAabbMax;
+        
+        if(entities[i]->getType() == ENTITY_SOLID)
+        {
+            SolidEntity* solid = (SolidEntity*)entities[i];
+            solid->GetAABB(entAabbMin, entAabbMax);
+        }
+        else if(entities[i]->getType() == ENTITY_STATIC)
+        {
+            StaticEntity* stat = (StaticEntity*)entities[i];
+            if(stat->getStaticType() != STATIC_PLANE)
+                stat->GetAABB(entAabbMin, entAabbMax);
+            else
+                continue;
+        }
+        else
+            continue;
+        
+        if(entAabbMin.x() < min.x()) min.setX(entAabbMin.x());
+        if(entAabbMin.y() < min.y()) min.setY(entAabbMin.y());
+        if(entAabbMin.z() < min.z()) min.setZ(entAabbMin.z());
+        if(entAabbMax.x() > max.x()) max.setX(entAabbMax.x());
+        if(entAabbMax.y() > max.y()) max.setY(entAabbMax.y());
+        if(entAabbMax.z() > max.z()) max.setZ(entAabbMax.z());
+    }
 }
 
 void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType cft)
@@ -293,8 +367,11 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
             break;
             
         case INCLUSIVE:
+            dwDispatcher = new btFilteredCollisionDispatcher(dwCollisionConfig, true);
+            break;
+
         case EXCLUSIVE:
-            dwDispatcher = new btFilteredCollisionDispatcher(dwCollisionConfig);
+            dwDispatcher = new btFilteredCollisionDispatcher(dwCollisionConfig, false);
             break;
     }
     
@@ -341,13 +418,13 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
     dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 100.f;
     //dynamicsWorld->getSolverInfo().m_numIterations = 50;
     //dynamicsWorld->getSolverInfo().m_timeStep = btScalar(1.f/getStepsPerSecond());
-    
     //dynamicsWorld->getDispatchInfo().m_useContinuous = USE_CONTINUOUS_COLLISION;
     //dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = ALLOWED_CCD_PENETRATION;
     
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+    gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback;
     
     //set standard world params
     setGravity(UnitSystem::Acceleration(MKS, UnitSystem::GetUnitSystem(), btVector3(btScalar(0.), btScalar(0.), (zUp ? btScalar(-9.81) : btScalar(9.81)) )));
@@ -380,7 +457,9 @@ void SimulationManager::DestroyScenario()
     for(int i=0; i<entities.size(); i++)
         delete entities[i];
     entities.clear();
-    fluids.clear();
+    
+    if(fluid != NULL)
+        delete fluid;
     
     for(int i=0; i<joints.size(); i++)
         delete joints[i];
@@ -410,7 +489,6 @@ void SimulationManager::DestroyScenario()
         delete lights[i];
     lights.clear();
     
-    //materialManager->clearMaterialsAndFluids();
     delete materialManager;
     delete dynamicsWorld;
     delete dwCollisionConfig;
@@ -451,7 +529,7 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
         {
             static int totalFailures = 0;
             totalFailures+=numFallbacks;
-            printf("MLCP solver failed %d times, falling back to btSequentialImpulseSolver (SI)\n",totalFailures);
+            cInfo("MLCP solver failed %d times, falling back to btSequentialImpulseSolver (SI)\n", totalFailures);
         }
         solver->setNumFallbacks(0);
     }
@@ -485,6 +563,11 @@ void SimulationManager::setGravity(const btVector3& g)
 btDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
+}
+
+bool SimulationManager::isZAxisUp()
+{
+    return zUp;
 }
 
 btScalar SimulationManager::getSimulationTime()
@@ -544,18 +627,18 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar 
         Entity* ent = simManager->entities[i];
         
         //apply gravity only to dynamic objects
-        if(ent->getType() == SOLID)
+        if(ent->getType() == ENTITY_SOLID)
         {
             SolidEntity* simple = (SolidEntity*)ent;
             simple->ApplyGravity();
             //simple->getRigidBody()->setDamping(0, 0);
         }
-        else if(ent->getType() == CABLE)
+        else if(ent->getType() == ENTITY_CABLE)
         {
             CableEntity* cable = (CableEntity*)ent;
             cable->ApplyGravity();
         }
-        else if(simManager->entities[i]->getType() == GHOST) //ghost entities - action triggers
+       /* else if(simManager->entities[i]->getType() == GHOST) //ghost entities - action triggers
         {
             btManifoldArray manifoldArray;
             GhostEntity* ghost = (GhostEntity*)simManager->entities[i];
@@ -584,6 +667,6 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar 
                         fluid->ApplyFluidForces(world, co1);
                 }
             }
-        }
+        }*/
     }
 }

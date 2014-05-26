@@ -14,7 +14,7 @@
 class BoxEntity : public SolidEntity
 {
 public:
-    BoxEntity(std::string uniqueName, const btVector3& dimensions, Material* mat, Look l, bool isStatic = false);
+    BoxEntity(std::string uniqueName, const btVector3& dimensions, Material* mat, Look l);
     ~BoxEntity();
     
     SolidEntityType getSolidType();

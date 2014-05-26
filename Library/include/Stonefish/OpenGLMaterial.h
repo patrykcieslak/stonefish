@@ -37,5 +37,7 @@ Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininness, GLflo
 Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName = NULL);
 Look CreateTransparentLook(GLfloat R, GLfloat G, GLfloat B, GLfloat opacity, GLfloat shininess, const char* textureName = NULL);
 void UseLook(Look l);
+GLuint LoadTexture(const char* filename);
+GLuint LoadInternalTexture(const char* filename);
 
 #endif

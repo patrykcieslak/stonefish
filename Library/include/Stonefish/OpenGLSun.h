@@ -10,6 +10,7 @@
 #define __Stonefish_OpenGLSun__
 
 #include "OpenGLPipeline.h"
+#include "GLSLShader.h"
 #include "OpenGLView.h"
 
 class OpenGLSun
@@ -17,13 +18,15 @@ class OpenGLSun
 public:
     static void Init();
     static void Destroy();
-    static void Render();
+    static void Render(const btTransform& viewTransform);
     static void RenderShadowMaps(OpenGLPipeline* pipe);
     static void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
     static void ShowFrustumSplits();
     static void SetCamera(OpenGLView* view);
     static void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow);
     static void SetPosition(GLfloat elevation, GLfloat orientation);
+    static btVector3 GetSunDirection();
+    static glm::vec4 GetSunColor();
     
 private:
     OpenGLSun();
@@ -34,6 +37,7 @@ private:
     static GLfloat sunElevation;
     static GLfloat sunOrientation;
     static btVector3 sunDirection;
+    static glm::vec4 sunColor;
     static GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, shadowTextureUnit;
     static OpenGLView* activeView;
     
@@ -45,14 +49,8 @@ private:
     static ViewFrustum* frustum;
     static GLuint shadowFBO;
     
-    //sun light with shadow
-    static GLhandleARB sunShader;
-    static GLint uniDiffuse, uniNormal, uniPosition, uniLightDir, uniColor, uniShadowArray, uniFrustum;
-    static GLint uniLightClipSpace[4];
-    
-    //debug drawing shadowmap
-    static GLhandleARB shadowmapShader;
-    static GLint uniShadowmapArray, uniShadowmapLayer;
+    static GLSLShader* sunShader; //sun light with shadow
+    static GLSLShader* shadowmapShader; //debug draw shadowmap
 };
 
 #endif

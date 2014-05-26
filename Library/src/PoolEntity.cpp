@@ -126,7 +126,7 @@ void PoolEntity::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
     
     switch (ent->getType())
     {
-        case SOLID:
+        case ENTITY_SOLID:
         {
             SolidEntity* solid = (SolidEntity*)ent;
             solid->CalculateFluidDynamics(surfaceN, surfaceD, fluidVelocity, fluid, submergedV, cob, dForce, adTorque);
@@ -137,7 +137,7 @@ void PoolEntity::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
         }
         break;
     
-        case CABLE:
+        case ENTITY_CABLE:
         {
             CableEntity* cable = (CableEntity*)ent;
             cable->CalculateFluidDynamics(surfaceN, surfaceD, fluidVelocity, fluid, submergedV, cob, dForce, adTorque, rb->getWorldTransform(), rb->getLinearVelocity(), rb->getAngularVelocity());

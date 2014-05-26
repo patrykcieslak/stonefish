@@ -7,14 +7,14 @@
 //
 
 #include "OpenGLLight.h"
-#include "OpenGLUtil.h"
 #include "OpenGLSolids.h"
+#include "GeometryUtil.h"
 
 //static variables
 OpenGLView* OpenGLLight::activeView = NULL;
-GLhandleARB OpenGLLight::ambientShader = NULL;
-GLhandleARB OpenGLLight::omniShader = NULL;
-GLhandleARB OpenGLLight::spotShader = NULL;
+GLSLShader* OpenGLLight::spotShader = NULL;
+GLSLShader* OpenGLLight::omniShader = NULL;
+GLSLShader* OpenGLLight::ambientShader = NULL;
 GLint OpenGLLight::diffuseTextureUnit = 0;
 GLint OpenGLLight::normalTextureUnit = 0;
 GLint OpenGLLight::positionTextureUnit = 0;
@@ -22,37 +22,13 @@ GLint OpenGLLight::skyDiffuseTextureUnit = 0;
 GLint OpenGLLight::skyReflectionTextureUnit = 0;
 GLint OpenGLLight::shadowTextureUnit = 0;
 GLint OpenGLLight::ssaoTextureUnit = 0;
-GLint OpenGLLight::uniADiffuse = -1;
-GLint OpenGLLight::uniAPosition = -1;
-GLint OpenGLLight::uniANormal = -1;
-GLint OpenGLLight::uniASkyDiff = -1;
-GLint OpenGLLight::uniASkyReflect = -1;
-GLint OpenGLLight::uniAIVR = -1;
-GLint OpenGLLight::uniAIP = -1;
-GLint OpenGLLight::uniAViewport = -1;
-GLint OpenGLLight::uniASsao = -1;
-GLint OpenGLLight::uniODiffuse = -1;
-GLint OpenGLLight::uniONormal = -1;
-GLint OpenGLLight::uniOPosition = -1;
-GLint OpenGLLight::uniOLightPos = -1;
-GLint OpenGLLight::uniOColor = -1;
-GLint OpenGLLight::uniSDiffuse = -1;
-GLint OpenGLLight::uniSNormal = -1;
-GLint OpenGLLight::uniSPosition = -1;
-GLint OpenGLLight::uniSLightPos = -1;
-GLint OpenGLLight::uniSLightDir = -1;
-GLint OpenGLLight::uniSLightAngle = -1;
-GLint OpenGLLight::uniSColor = -1;
-GLint OpenGLLight::uniSLightClipSpace = -1;
-GLint OpenGLLight::uniSShadow = -1;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 ////////////////////
 
 
-OpenGLLight::OpenGLLight(const btVector3& position, GLfloat* color4)
+OpenGLLight::OpenGLLight(const btVector3& position, glm::vec4 c)
 {
-    color = new GLfloat[4];
-    memcpy(color, color4, sizeof(GLfloat)*4);
+    color = c;
     relpos = UnitSystem::SetPosition(position);
     pos = relpos;
     active = true;
@@ -62,7 +38,6 @@ OpenGLLight::OpenGLLight(const btVector3& position, GLfloat* color4)
 
 OpenGLLight::~OpenGLLight()
 {
-    delete [] color;
     holdingEntity = NULL;
 }
 
@@ -91,7 +66,7 @@ void OpenGLLight::setLightSurfaceDistance(GLfloat dist)
     surfaceDistance = UnitSystem::SetLength(dist);
 }
 
-GLfloat* OpenGLLight::getColor()
+glm::vec4 OpenGLLight::getColor()
 {
     return color;
 }
@@ -116,67 +91,41 @@ Entity* OpenGLLight::getHoldingEntity()
 //////////////////static//////////////////////////////
 void OpenGLLight::Init()
 {
-    GLint compiled = 0;
-    
     //AMBIENT
-    GLhandleARB vs = LoadShader(GL_VERTEX_SHADER, "saq.vert", &compiled);
-    GLhandleARB fs = LoadShader(GL_FRAGMENT_SHADER, "deferredAmbient.frag", &compiled);
-    ambientShader = CreateProgramObject(vs, fs);
-    LinkProgram(ambientShader, &compiled);
-    
-    glUseProgramObjectARB(ambientShader);
-    uniADiffuse = glGetUniformLocationARB(ambientShader, "texDiffuse");
-    uniAPosition = glGetUniformLocationARB(ambientShader, "texPosition");
-    uniANormal = glGetUniformLocationARB(ambientShader, "texNormal");
-    uniASkyDiff = glGetUniformLocationARB(ambientShader, "texSkyDiff");
-    uniASkyReflect = glGetUniformLocationARB(ambientShader, "texSkyReflect");
-    uniASsao = glGetUniformLocationARB(ambientShader, "texSSAO");
-    uniAIVR = glGetUniformLocationARB(ambientShader, "inv_view_rot");
-    uniAIP = glGetUniformLocationARB(ambientShader, "inv_proj");
-    uniAViewport = glGetUniformLocationARB(ambientShader, "viewport");
-    glUseProgramObjectARB(0);
+    ambientShader = new GLSLShader("deferredAmbient.frag");
+    ambientShader->AddUniform("texDiffuse", INT);
+    ambientShader->AddUniform("texPosition", INT);
+    ambientShader->AddUniform("texNormal", INT);
+    ambientShader->AddUniform("texSSAO", INT);
+    ambientShader->AddUniform("texSkyDiff", INT);
+    ambientShader->AddUniform("inv_view_rot", MAT3);
     
     //OMNI
-    fs = LoadShader(GL_FRAGMENT_SHADER, "deferredOmni.frag", &compiled);
-    omniShader = CreateProgramObject(vs, fs);
-    LinkProgram(omniShader, &compiled);
-
-    glUseProgramObjectARB(omniShader);
-    uniODiffuse = glGetUniformLocationARB(omniShader, "texDiffuse");
-    uniOPosition = glGetUniformLocationARB(omniShader, "texPosition");
-    uniONormal = glGetUniformLocationARB(omniShader, "texNormal");
-    uniOLightPos = glGetUniformLocationARB(omniShader, "lightPosition");
-    uniOColor = glGetUniformLocationARB(omniShader, "lightColor");
-    glUseProgramObjectARB(0);
+    omniShader = new GLSLShader("deferredOmni.frag");
+    omniShader->AddUniform("texDiffuse", INT);
+    omniShader->AddUniform("texPosition", INT);
+    omniShader->AddUniform("texNormal", INT);
+    omniShader->AddUniform("lightPosition", VEC3);
+    omniShader->AddUniform("lightColor", VEC4);
   
     //SPOT
-    fs = LoadShader(GL_FRAGMENT_SHADER, "deferredSpot.frag", &compiled);
-    spotShader = CreateProgramObject(vs, fs);
-    LinkProgram(spotShader, &compiled);
-    
-    glUseProgramObjectARB(spotShader);
-    uniSDiffuse = glGetUniformLocationARB(spotShader, "texDiffuse");
-    uniSPosition = glGetUniformLocationARB(spotShader, "texPosition");
-    uniSNormal = glGetUniformLocationARB(spotShader, "texNormal");
-    uniSLightPos = glGetUniformLocationARB(spotShader, "lightPosition");
-    uniSLightDir = glGetUniformLocationARB(spotShader, "lightDirection");
-    uniSLightAngle = glGetUniformLocationARB(spotShader, "lightAngle");
-    uniSColor = glGetUniformLocationARB(spotShader, "lightColor");
-    uniSShadow = glGetUniformLocationARB(spotShader, "texShadow");
-    uniSLightClipSpace = glGetUniformLocationARB(spotShader, "lightClipSpace");
-    glUseProgramObjectARB(0);
+    spotShader = new GLSLShader("deferredSpot.frag");
+    spotShader->AddUniform("texDiffuse", INT);
+    spotShader->AddUniform("texPosition", INT);
+    spotShader->AddUniform("texNormal", INT);
+    spotShader->AddUniform("lightPosition", VEC3);
+    spotShader->AddUniform("lightDirection", VEC3);
+    spotShader->AddUniform("lightAngle", FLOAT);
+    spotShader->AddUniform("lightColor", VEC4);
+    spotShader->AddUniform("texShadow", INT);
+    spotShader->AddUniform("lightClipSpace", MAT4);
 }
 
 void OpenGLLight::Destroy()
 {
-    if(ambientShader != NULL)
-        glDeleteObjectARB(ambientShader);
-    
-    if(omniShader != NULL)
-        glDeleteObjectARB(omniShader);
-  
-    if(spotShader != NULL)
-        glDeleteObjectARB(spotShader);
+    delete ambientShader;
+    delete omniShader;
+    delete spotShader;
 }
 
 void OpenGLLight::SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao, GLint shadow)
@@ -200,7 +149,7 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     glm::mat4 proj = activeView->GetProjectionMatrix();
     proj = glm::inverse(proj);
     
-    GLint* viewport = activeView->GetViewport();
+    //GLint* viewport = activeView->GetViewport();
     
     btMatrix3x3 flip;
     flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
@@ -208,24 +157,25 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     
     GLfloat IVRMatrix[9];
     SetFloatvFromMat(flip, IVRMatrix);
+    glm::mat3 ivr = glm::make_mat3(IVRMatrix);
     
-    glUseProgramObjectARB(ambientShader);
-    glUniform1iARB(uniADiffuse, diffuseTextureUnit);
-    glUniform1iARB(uniAPosition, positionTextureUnit);
-    glUniform1iARB(uniANormal, normalTextureUnit);
-    glUniform1iARB(uniASkyDiff, skyDiffuseTextureUnit);
-    glUniform1iARB(uniASkyReflect, skyReflectionTextureUnit);
-    glUniform1iARB(uniASsao, ssaoTextureUnit);
-    glUniformMatrix3fvARB(uniAIVR, 1, GL_FALSE, IVRMatrix);
-    glUniformMatrix4fvARB(uniAIP, 1, GL_FALSE, glm::value_ptr(proj));
-    glUniform2f(uniAViewport, viewport[2], viewport[3]);
+    ambientShader->Enable();
+    ambientShader->SetUniform("texDiffuse", diffuseTextureUnit);
+    ambientShader->SetUniform("texPosition", positionTextureUnit);
+    ambientShader->SetUniform("texNormal", normalTextureUnit);
+    ambientShader->SetUniform("texSkyDiff", skyDiffuseTextureUnit);
+    ambientShader->SetUniform("texSSAO", ssaoTextureUnit);
+    ambientShader->SetUniform("inv_view_rot", ivr);
+    //ambientShader->SetUniform("texSkyReflect", skyReflectionTextureUnit);
+    //ambientShader->SetUniform("inv_proj", proj);
+    //ambientShader->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     OpenGLSolids::DrawScreenAlignedQuad();
-    glUseProgramObjectARB(0);
+    ambientShader->Disable();
 }
 
-GLfloat* OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intensity)
+glm::vec4 OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intensity)
 {
-    GLfloat* color4 = new GLfloat[4];
+    glm::vec4 color4;
     GLfloat c1,c2,c3;
     bbSpectrumToXYZ(temperatureK, c1, c2, c3);
     xyzToRGB(c1, c2, c3, c1, c2, c3);

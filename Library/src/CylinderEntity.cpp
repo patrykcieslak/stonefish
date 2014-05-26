@@ -9,7 +9,7 @@
 #include "CylinderEntity.h"
 #include "OpenGLSolids.h"
 
-CylinderEntity::CylinderEntity(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material* mat, Look l, bool isStatic) : SolidEntity(uniqueName, mat, isStatic)
+CylinderEntity::CylinderEntity(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material* mat, Look l) : SolidEntity(uniqueName, mat)
 {
     radius = UnitSystem::SetLength(cylinderRadius);
     halfHeight = UnitSystem::SetLength(cylinderHeight/2.0);

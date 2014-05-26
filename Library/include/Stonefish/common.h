@@ -28,4 +28,7 @@
 #define OGLFT_NO_SOLID
 #define OGLFT_NO_QT
 
+//Console
+//#include "Console.h"
+
 #endif

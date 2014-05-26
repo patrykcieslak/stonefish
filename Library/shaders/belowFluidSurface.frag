@@ -1,6 +1,7 @@
 #version 120
 uniform sampler2D texPosition;
 uniform sampler2D texScene;
+uniform sampler2D texRefraction;
 uniform sampler2D texReflection;
 uniform float R0;
 uniform vec2 viewport;
@@ -10,7 +11,6 @@ uniform vec3 eyeSurfaceNormal;
 uniform vec3 eyeSurfacePosition;
 
 varying vec3 fluidPosition;
-//varying vec3 fluidNormal;
 
 const float fadeSpeed = 0.15;
 const vec3 depthColor = vec3(0.0078, 0.5176, 0.7);
@@ -38,7 +38,7 @@ void main(void)
         discard;
     
     vec3 eyeNormal = getEyeNormal(texCoord);
-    vec3 reflection = texture2D(texReflection, texCoord).rgb;
+    vec3 reflection = texture2D(texReflection, vec2(texCoord.x, texCoord.y)).rgb;
     vec3 refraction = texture2D(texScene, texCoord).rgb;
     float waterDepth = dot(eyeSurfacePosition-position, eyeSurfaceNormal);
     

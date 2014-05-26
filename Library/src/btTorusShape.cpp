@@ -24,7 +24,7 @@ btTorusShape::btTorusShape(btScalar majorRadius, btScalar minorRadius)
 	
 	btVector3 margin(getMargin(),getMargin(),getMargin());
 	m_implicitShapeDimensions = (btVector3(m_majorRadius + m_minorRadius, m_minorRadius, m_majorRadius + m_minorRadius) * m_localScaling) - margin;
-	m_shapeType = CYLINDER_SHAPE_PROXYTYPE;
+	m_shapeType = CUSTOM_CONVEX_SHAPE_TYPE;
 }
 
 btVector3 btTorusShape::getHalfExtentsWithMargin() const
@@ -112,6 +112,7 @@ void btTorusShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btVec
 {
 	for (int i=0;i<numVectors;i++)
 	{
-		supportVerticesOut[i] = localGetSupportingVertexWithoutMargin(vectors[i]);
+        btVector3 support = localGetSupportingVertexWithoutMargin(vectors[i]);
+		supportVerticesOut[i].setValue(support.x(), support.y(), support.z());
 	}
 }

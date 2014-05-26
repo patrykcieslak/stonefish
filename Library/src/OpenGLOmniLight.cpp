@@ -9,7 +9,7 @@
 #include "OpenGLOmniLight.h"
 #include "OpenGLSolids.h"
 
-OpenGLOmniLight::OpenGLOmniLight(const btVector3& position, GLfloat* color4) : OpenGLLight(position, color4)
+OpenGLOmniLight::OpenGLOmniLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {
 }
 
@@ -34,16 +34,16 @@ void OpenGLOmniLight::Render()
     if(isActive())
     {
         btVector3 lightPos = getViewPosition();
-        GLfloat lposition[3] = {(GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ()};
+        glm::vec3 lpos((GLfloat)lightPos.getX(),(GLfloat)lightPos.getY(),(GLfloat)lightPos.getZ());
         
-        glUseProgramObjectARB(omniShader);
-        glUniform1iARB(uniODiffuse, diffuseTextureUnit);
-        glUniform1iARB(uniOPosition, positionTextureUnit);
-        glUniform1iARB(uniONormal, normalTextureUnit);
-        glUniform3fvARB(uniOLightPos, 1, lposition);
-        glUniform4fvARB(uniOColor, 1, getColor());
+        omniShader->Enable();
+        omniShader->SetUniform("texDiffuse", diffuseTextureUnit);
+        omniShader->SetUniform("texPosition", positionTextureUnit);
+        omniShader->SetUniform("texNormal", normalTextureUnit);
+        omniShader->SetUniform("lightPosition", lpos);
+        omniShader->SetUniform("lightColor", getColor());
         OpenGLSolids::DrawScreenAlignedQuad();
-        glUseProgramObjectARB(0);
+        omniShader->Disable();
     }
 }
 

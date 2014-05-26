@@ -8,7 +8,7 @@
 
 #include "OpenGLCamera.h"
 
-OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLuint ssaoSize, GLfloat fov) : OpenGLView(x, y, width, height, ssaoSize)
+OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao) : OpenGLView(x, y, width, height, horizon, sao)
 {
     eye = UnitSystem::SetPosition(eyePosition);
     dir = UnitSystem::SetPosition(targetPosition - eyePosition);

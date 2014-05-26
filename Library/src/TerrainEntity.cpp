@@ -8,14 +8,8 @@
 
 #include "TerrainEntity.h"
 
-#include "OpenGLUtil.h"
-
-TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material* mat, Look l, const btTransform& worldTransform) : Entity(uniqueName)
+TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material* mat, Look l, const btTransform& worldTransform) : StaticEntity(uniqueName, mat, l)
 {
-    wireframe = false;
-    material = mat;
-    look = l;
-    
     size = UnitSystem::SetLength(size);
     minHeight = UnitSystem::SetLength(minHeight);
     maxHeight = UnitSystem::SetLength(maxHeight);
@@ -89,85 +83,12 @@ TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btSc
 
 TerrainEntity::~TerrainEntity()
 {
-    if(displayList != 0)
-        glDeleteLists(displayList, 1);
-    if(look.texture != 0)
-        glDeleteTextures(1, &look.texture);
-    
-    material = NULL;
-    rigidBody = NULL;
 }
 
-EntityType TerrainEntity::getType()
+StaticEntityType TerrainEntity::getStaticType()
 {
-    return TERRAIN;
+    return STATIC_TERRAIN;
 }
-
-void TerrainEntity::Render()
-{
-    if(isRenderable())
-    {
-        btTransform trans;
-        btScalar openglTrans[16];
-        rigidBody->getMotionState()->getWorldTransform(trans);
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-        glPushAttrib(GL_POLYGON_BIT);
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        UseLook(look);
-        if(wireframe)
-            glPolygonMode(GL_FRONT, GL_LINE);
-        glCallList(displayList);
-        glPopAttrib();
-        glPopMatrix();
-    }
-}
-
-btTransform TerrainEntity::getTransform()
-{
-    btTransform trans;
-    rigidBody->getMotionState()->getWorldTransform(trans);
-    return trans;
-}
-
-void TerrainEntity::setTransform(const btTransform &trans)
-{
-    btDefaultMotionState* motionState = new btDefaultMotionState(trans);
-    rigidBody->setMotionState(motionState);
-}
-
-Material* TerrainEntity::getMaterial()
-{
-    return material;
-}
-
-void TerrainEntity::AddToDynamicsWorld(btDynamicsWorld *world)
-{
-    world->addRigidBody(rigidBody, DEFAULT, DEFAULT | CABLE_EVEN | CABLE_ODD);
-}
-
-void TerrainEntity::SetLook(Look newLook)
-{
-    if(look.texture != 0)
-        glDeleteTextures(1, &look.texture);
-    
-    look = newLook;
-}
-
-void TerrainEntity::setDrawWireframe(bool wire)
-{
-    wireframe = wire;
-}
-
-
-
-
-
 
 /*
 ////////////////

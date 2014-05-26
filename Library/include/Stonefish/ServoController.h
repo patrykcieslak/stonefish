@@ -1,23 +1,23 @@
 //
-//  Servo.h
+//  ServoController.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Servo__
-#define __Stonefish_Servo__
+#ifndef __Stonefish_ServoController__
+#define __Stonefish_ServoController__
 
 #include "Controller.h"
 #include "DCMotor.h"
 #include "FakeRotaryEncoder.h"
 
-class Servo : public Controller
+class ServoController : public Controller
 {
 public:
-    Servo(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency);
-    ~Servo();
+    ServoController(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency);
+    ~ServoController();
     
     void SetPosition(btScalar pos);
     void Reset();

@@ -70,7 +70,7 @@ void JointsTestManager::BuildScenario()
     AddJoint(revo);
     
     //----Spherical Joint----
-    sph = new SphereEntity("Sph2", 200.0, getMaterialManager()->getMaterial("Plastic"), green, true);
+    sph = new SphereEntity("Sph2", 200.0, getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.0, -2000.0,1000.0)));
     SphereEntity* sph2 = new SphereEntity("Sph3", 150.0, getMaterialManager()->getMaterial("Plastic"), orange);
     AddSolidEntity(sph2, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-2200.0,400.0)));
@@ -80,7 +80,7 @@ void JointsTestManager::BuildScenario()
     AddJoint(spher);
     
     //----Prismatic Joint----
-    box = new BoxEntity("Box4", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green, true);
+    box = new BoxEntity("Box4", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(1000.0,0.0,51.0)));
     
     box2 = new BoxEntity("Box5", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
@@ -91,7 +91,7 @@ void JointsTestManager::BuildScenario()
     AddJoint(trans);
     
     //----Cylindrical Joint----
-    box = new BoxEntity("Box6", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green, true);
+    box = new BoxEntity("Box6", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(-1000.0,0.0,51.0)));
     
     box2 = new BoxEntity("Box7", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
@@ -125,7 +125,7 @@ void JointsTestManager::BuildScenario()
     motor->setVoltage(0.1f);
     
     //////CAMERA & LIGHT//////
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 200.f, 500.f), 2000.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 1, 60.f);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 200.f, 500.f), 2000.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 100000.f, true);
     trackb->Rotate(btQuaternion(M_PI+M_PI_4, 0.0, 0.0));
     trackb->Activate();
     AddView(trackb);

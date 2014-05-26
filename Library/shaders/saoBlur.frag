@@ -1,6 +1,6 @@
 #version 120
 
-#define EDGE_SHARPNESS     (1.0)
+#define EDGE_SHARPNESS     (0.8)
 
 /** Step in 2-pixel intervals since we already blurred against neighbors in the
  first AO pass.  This constant can be increased while R decreases to improve
@@ -10,7 +10,7 @@
  unobjectionable after shading was applied but eliminated most temporal incoherence
  from using small numbers of sample taps.
  */
-#define SCALE               (1.5)
+#define SCALE               (2)
 
 /** Filter radius in pixels. This will be multiplied by SCALE. */
 #define R                   (4)
@@ -60,7 +60,7 @@ void main()
         // so the IF statement has no runtime cost
         if (r != 0)
         {
-            temp = texture2D(texSource, gl_TexCoord[0].st + axis * float(r * SCALE)/(key*25.0));
+            temp = texture2D(texSource, gl_TexCoord[0].st + axis * float(r * SCALE)/(key*20.0));
             float tapKey = unpackKey(temp.gb);
             float value  = temp.r;
             
@@ -68,7 +68,7 @@ void main()
             float weight = 0.3 + gaussian[int(abs(r))];
             
             // range domain (the "bilateral" weight). As depth difference increases, decrease weight.
-            weight *= max(0.0, 1.0 - (EDGE_SHARPNESS * 200.0) * abs(tapKey - key));
+            weight *= max(0.0, 1.0 - (EDGE_SHARPNESS * 2000.0) * abs(tapKey - key));
             
             sum += value * weight;
             totalWeight += weight;
