@@ -24,14 +24,6 @@
 #include "OpenGLCamera.h"
 #include "Console.h"
 
-#define USE_CONTINUOUS_COLLISION false
-#define ALLOWED_CCD_PENETRATION 0.001
-#define MAX_ERROR_REDUCTION 100.0
-#define GLOBAL_ERP 0.2
-#define GLOBAL_ERP2 0.8
-#define GLOBAL_DAMPING 0.0
-#define GLOBAL_FRICTION 0.0
-
 typedef enum {SEQUENTIAL_IMPULSE, DANTZIG, PROJ_GAUSS_SIEDEL} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 

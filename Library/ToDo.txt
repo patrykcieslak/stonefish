@@ -63,6 +63,9 @@ x Universal SS controller
 x Drawing path of the rolling object contact points
 x Drawing path of the COG(+offset) of objects
 x Setting arbitrary physical properties for MeshEntity
+x Designed simple logo
+x Improved loading screen -> mutex, delay, color logo in the corner
+x IMGUI subtle transparent logo in the corner
 - IMGUI Panel
 - IMGUI PhasePlot
 - IMGUI Gauge
@@ -107,4 +110,3 @@ Graphics:
 - Order Independent Transparency
 - Lens flare with occlusion query
 - Subtle light bloom
-- Design Stonefish LOGO

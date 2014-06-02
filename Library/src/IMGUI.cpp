@@ -9,6 +9,8 @@
 #include "IMGUI.h"
 #include <stdio.h>
 #include <math.h>
+#include "SystemUtil.h"
+#include "stb_image.h"
 
 static GLfloat ui_colors[46][4] =
 {
@@ -81,6 +83,8 @@ IMGUI::IMGUI()
 IMGUI::~IMGUI()
 {
     delete plainPrinter;
+    if(logoTexture > 0)
+        glDeleteTextures(1, &logoTexture);
 }
 
 void IMGUI::SetRenderSize(int width, int height)
@@ -158,6 +162,33 @@ void IMGUI::Init()
 {
     OpenGLPrinter::SetWindowSize(windowW, windowH);
     plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE, SCREEN_DPI);
+    
+    //Load logo texture - can't use material class because it writes to the console
+    char path[1024];
+    int width, height, channels;
+    GetDataPath(path, 1024-32);
+    strcat(path, "logo_gray.png");
+    
+    // Allocate image; fail out on error
+    unsigned char* dataBuffer = stbi_load(path, &width, &height, &channels, 4);
+    if(dataBuffer != NULL)
+    {
+        // Allocate an OpenGL texture
+        glGenTextures(1, &logoTexture);
+        glBindTexture(GL_TEXTURE_2D, logoTexture);
+        // Upload texture to memory
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
+        // Set certain properties of texture
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // Wrap texture around
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // Release internal buffer
+        stbi_image_free(dataBuffer);
+    }
+    else
+        logoTexture = 0;
 }
 
 void IMGUI::Begin()
@@ -168,7 +199,7 @@ void IMGUI::Begin()
 	glDisable(GL_CULL_FACE);
 	glDisable (GL_LIGHTING);
     glActiveTextureARB(GL_TEXTURE0_ARB);
-	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_POLYGON_SMOOTH);
@@ -182,10 +213,26 @@ void IMGUI::Begin()
     glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0.0, (GLfloat)windowW, 0.0, (GLfloat)windowH, -100.f, 100.f);
+	glOrtho(0.0, (GLfloat)windowW, 0.0, (GLfloat)windowH, -1.f, 1.f);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
+    
+    GLfloat logoSize = 64.f;
+    GLfloat logoMargin = 10.f;
+    
+    glBindTexture(GL_TEXTURE_2D, logoTexture);
+    glColor4f(1.f, 1.f, 1.f, 0.1f);
+    glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(0, 0);
+    glVertex2f(windowW - logoSize - logoMargin, windowH - logoMargin);
+    glTexCoord2f(0, 1.f);
+    glVertex2f(windowW - logoSize - logoMargin, windowH - logoMargin - logoSize);
+    glTexCoord2f(1.f, 0);
+    glVertex2f(windowW - logoMargin, windowH - logoMargin);
+    glTexCoord2f(1.f, 1.f);
+    glVertex2f(windowW - logoMargin, windowH - logoMargin - logoSize);
+    glEnd();
     
     clearHot();
 }

@@ -117,4 +117,11 @@ private:
 #endif
 };
 
+typedef struct
+{
+    SimulationApp* app;
+    SDL_mutex* mutex;
+}
+LoadingThreadData;
+
 #endif

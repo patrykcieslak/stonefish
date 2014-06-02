@@ -133,6 +133,7 @@ private:
     ui_id hot;
     ui_id active;
     OpenGLPrinter* plainPrinter;
+    GLuint logoTexture;
 };
 
 #endif

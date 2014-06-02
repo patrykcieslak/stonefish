@@ -126,6 +126,9 @@ void SimulationApp::Init(const char* dataPath, const char* shaderPath)
     InitializeSimulation();
     
     cInfo("Running...");
+    
+    //Close loading console - exit loading thread
+    SDL_Delay(1000);
     loading = false;
     int status = 0;
     SDL_WaitThread(loadingThread, &status);
@@ -155,7 +158,10 @@ void SimulationApp::InitializeSDL()
     glLoadingContext = SDL_GL_CreateContext(window);
     glMainContext = SDL_GL_CreateContext(window);
     Console::getInstance()->SetRenderSize(winWidth, winHeight);
-    loadingThread = SDL_CreateThread(SimulationApp::RenderLoadingScreen, "loadingThread", this);
+    LoadingThreadData* data = new LoadingThreadData();
+    data->app = this;
+    data->mutex = Console::getInstance()->getLinesMutex();
+    loadingThread = SDL_CreateThread(SimulationApp::RenderLoadingScreen, "loadingThread", data);
     
 #ifdef _MSC_VER
 	glewInit();
@@ -295,7 +301,7 @@ void SimulationApp::KeyDown(SDL_Event *event)
             break;
             
         case SDLK_SPACE:
-            //getSimulationManager()->RestartScenario();
+            getSimulationManager()->RestartScenario();
             StartSimulation();
             break;
             
@@ -663,34 +669,33 @@ SimulationApp* SimulationApp::getApp()
     return SimulationApp::handle;
 }
 
-int SimulationApp::RenderLoadingScreen(void* app)
+int SimulationApp::RenderLoadingScreen(void* data)
 {
     //Get application
-    SimulationApp* simApp = (SimulationApp*)app;
+    LoadingThreadData* ltdata = (LoadingThreadData*)data;
     
     //Make drawing in this thread possible
-    SDL_GL_MakeCurrent(simApp->window, simApp->glLoadingContext);
-    SDL_mutex* consoleMutex = SDL_CreateMutex();
+    SDL_GL_MakeCurrent(ltdata->app->window, ltdata->app->glLoadingContext);
     
     //Render loading screen
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     
-    while(simApp->loading)
+    while(ltdata->app->loading)
     {
         glClear(GL_COLOR_BUFFER_BIT);
         
         //Lock to prevent adding lines to the console while rendering
-        SDL_LockMutex(consoleMutex);
+        SDL_LockMutex(ltdata->mutex);
         Console::getInstance()->Render();
-        SDL_UnlockMutex(consoleMutex);
+        SDL_UnlockMutex(ltdata->mutex);
         
         glFlush();
-        SDL_GL_SwapWindow(simApp->window);
+        glFinish();
+        SDL_GL_SwapWindow(ltdata->app->window);
     }
     
     //Detach thread from GL context
-    SDL_GL_MakeCurrent(simApp->window, NULL);
-    SDL_DestroyMutex(consoleMutex);
+    SDL_GL_MakeCurrent(ltdata->app->window, NULL);
     
     return 0;
 }

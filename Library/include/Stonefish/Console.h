@@ -10,9 +10,9 @@
 #define __Stonefish_Console__
 
 #include "common.h"
-//#include "OpenGLPipeline.h"
 #include "OpenGLPrinter.h"
 #include "Sensor.h"
+#include <SDL2/SDL_thread.h>
 
 //font
 #define FONT_NAME "/Library/Fonts/Arial.ttf"
@@ -40,6 +40,8 @@ public:
     void Clear();
     void Print(int messageType, const char* format, ...);
     
+    SDL_mutex* getLinesMutex();
+    
     static Console* getInstance();
     
 private:
@@ -49,6 +51,8 @@ private:
     GLint windowW, windowH;
     std::vector<ConsoleMessage> lines;
     OpenGLPrinter* printer;
+    GLuint logoTexture;
+    SDL_mutex* linesMutex;
     
     static Console* instance;
 };

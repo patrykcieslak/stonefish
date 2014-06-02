@@ -22,7 +22,6 @@
 #ifndef OGLFT_H
 #define OGLFT_H
 
-#include "common.h"
 #include "OpenGLPipeline.h"
 
 #include <cmath>

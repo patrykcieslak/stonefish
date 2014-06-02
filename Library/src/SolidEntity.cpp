@@ -105,7 +105,7 @@ void SolidEntity::Render()
 {
     if(rigidBody != NULL && isRenderable())
     {
-        btTransform trans = localTransform.inverse() * getTransform();
+        btTransform trans =  getTransform() * localTransform.inverse();
         btScalar openglTrans[16];
         trans.getOpenGLMatrix(openglTrans);
         
@@ -184,7 +184,7 @@ void SolidEntity::BuildRigidBody()
         colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, colShape, Ipri);
-        rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.5); //not used
+        rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.0); //not used
         rigidBodyCI.m_linearDamping = 0;
         rigidBodyCI.m_angularDamping = 0;
         rigidBodyCI.m_linearSleepingThreshold = UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.0001);
@@ -193,8 +193,10 @@ void SolidEntity::BuildRigidBody()
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-        rigidBody->setActivationState(DISABLE_DEACTIVATION);
-        rigidBody->setFlags(BT_ENABLE_GYROPSCOPIC_FORCE);
+        rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROPSCOPIC_FORCE);
+        rigidBody->forceActivationState(DISABLE_DEACTIVATION);
+        //rigidBody->setCcdMotionThreshold(0.01);
+        //rigidBody->setCcdSweptSphereRadius(0.9);
     }
 }
 

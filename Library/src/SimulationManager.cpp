@@ -37,6 +37,15 @@ extern ContactAddedCallback gContactAddedCallback;
 bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)
 {
     const btRigidBody* rb0 = btRigidBody::upcast(colObj0Wrap->getCollisionObject());
+    const btRigidBody* rb1 = btRigidBody::upcast(colObj1Wrap->getCollisionObject());
+    
+    if(rb0 == NULL || rb1 == NULL)
+    {
+        cp.m_combinedFriction = btScalar(0.);
+        cp.m_combinedRestitution = btScalar(0.);
+        return true;
+    }
+    
     Entity* ent0 = (Entity*)rb0->getUserPointer();
     Material* mat0;
     if(ent0->getType() == ENTITY_SOLID)
@@ -47,12 +56,11 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         mat0 = ((CableEntity*)ent0)->getMaterial();
     else
     {
-        cp.m_combinedFriction = btScalar(1.);
+        cp.m_combinedFriction = btScalar(0.);
         cp.m_combinedRestitution = btScalar(0.);
         return true;
     }
     
-    const btRigidBody* rb1 = btRigidBody::upcast(colObj1Wrap->getCollisionObject());
     Entity* ent1 = (Entity*)rb1->getUserPointer();
     Material* mat1;
     if(ent1->getType() == ENTITY_SOLID)
@@ -63,16 +71,16 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         mat1 = ((CableEntity*)ent1)->getMaterial();
     else
     {
-        cp.m_combinedFriction = btScalar(1.);
+        cp.m_combinedFriction = btScalar(0.);
         cp.m_combinedRestitution = btScalar(0.);
         return true;
     }
     
     cp.m_combinedFriction = mat0->staticFriction[mat1->index];
-    cp.m_combinedRollingFriction = mat0->dynamicFriction[mat1->index] * 0.1f;
-    cp.m_combinedRestitution = mat0->restitution * mat1->restitution;
+    cp.m_combinedRollingFriction = mat0->dynamicFriction[mat1->index];
+    cp.m_combinedRestitution = 1.0; //mat0->restitution * mat1->restitution;
     
-    //printf("%s<->%s %f %f %f\n", mat0->name.c_str(), mat1->name.c_str(), cp.m_combinedFriction, cp.m_combinedRollingFriction, cp.m_combinedRestitution);
+    //printf("%s<->%s Restitution: %1.3f\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution);
     
     return true;
 }
@@ -94,6 +102,12 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
 SimulationManager::~SimulationManager(void)
 {
     DestroyScenario();
+    delete materialManager;
+    delete dynamicsWorld;
+    delete dwCollisionConfig;
+    delete dwDispatcher;
+    delete dwSolver;
+    delete dwBroadphase;
 }
 
 void SimulationManager::AddEntity(Entity *ent)
@@ -357,9 +371,8 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
     
     dwBroadphase = new btDbvtBroadphase();
     dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
-    //dwCollisionConfig = new btDefaultCollisionConfiguration();
-    //btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
-
+  
+    //Choose collision dispatcher
     switch(collisionFilter)
     {
         case STANDARD:
@@ -375,6 +388,7 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
             break;
     }
     
+    //Choose constraint solver
     switch(solver)
     {
         case SEQUENTIAL_IMPULSE:
@@ -396,31 +410,39 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
             break;
     }
     
+    //Create solver
     btSoftBodySolver* softBodySolver = 0;
     dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver); //dynamicsWorld = new btDiscreteDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
-    
-    dynamicsWorld->getSolverInfo().m_erp = GLOBAL_ERP;
-    dynamicsWorld->getSolverInfo().m_erp2 = GLOBAL_ERP2;
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = MAX_ERROR_REDUCTION;
-    dynamicsWorld->getSolverInfo().m_globalCfm = 0.0;
-    dynamicsWorld->getSolverInfo().m_splitImpulse = true;
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.01;
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.2;
-    dynamicsWorld->getSolverInfo().m_sor = 1.0;
-    dynamicsWorld->getSolverInfo().m_linearSlop = 0.0;
-    dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
     dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_ENABLE_FRICTION_DIRECTION_CACHING | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_SIMD | SOLVER_RANDMIZE_ORDER;
-    dynamicsWorld->getSolverInfo().m_tau = 0.8;
-    dynamicsWorld->getSolverInfo().m_damping = GLOBAL_DAMPING;
-    dynamicsWorld->getSolverInfo().m_friction = GLOBAL_FRICTION;
-    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 64;
+    dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
+    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
+
+    //Quality/stability
+    dynamicsWorld->getSolverInfo().m_erp = 0.5;
+    dynamicsWorld->getSolverInfo().m_erp2 = 1.0;
+    dynamicsWorld->getSolverInfo().m_maxErrorReduction = 1e30;
+    //dynamicsWorld->getSolverInfo().m_sor = 1.0;
+    //dynamicsWorld->getSolverInfo().m_linearSlop = 0.0;
+    //dynamicsWorld->getSolverInfo().m_tau = 0.8;
+
+    //Collision
+    dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = 1e30;
+    dynamicsWorld->getSolverInfo().m_splitImpulse = true;
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = 0.005;
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.5;
+    dynamicsWorld->getDispatchInfo().m_useContinuous = false;
+    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.001;
+
+    //Special forces
     dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = 10e6;
-    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 100.f;
-    //dynamicsWorld->getSolverInfo().m_numIterations = 50;
-    //dynamicsWorld->getSolverInfo().m_timeStep = btScalar(1.f/getStepsPerSecond());
-    //dynamicsWorld->getDispatchInfo().m_useContinuous = USE_CONTINUOUS_COLLISION;
-    //dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = ALLOWED_CCD_PENETRATION;
     
+    //Unrealistic components
+    dynamicsWorld->getSolverInfo().m_globalCfm = 0.0;
+    dynamicsWorld->getSolverInfo().m_damping = 0.0;
+    dynamicsWorld->getSolverInfo().m_friction = 0.0;
+    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 100.f;
+    
+    //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
@@ -436,14 +458,14 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
 void SimulationManager::DestroyScenario()
 {
     //remove objects from dynamic world
-    for (int i=dynamicsWorld->getNumConstraints()-1; i>=0 ;i--)
+    for(int i = dynamicsWorld->getNumConstraints()-1; i >= 0; i--)
 	{
 		btTypedConstraint* constraint = dynamicsWorld->getConstraint(i);
 		dynamicsWorld->removeConstraint(constraint);
 		delete constraint;
 	}
     
-    for(int i=dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
+    for(int i = dynamicsWorld->getNumCollisionObjects()-1; i >= 0; i--)
 	{
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
@@ -489,19 +511,13 @@ void SimulationManager::DestroyScenario()
         delete lights[i];
     lights.clear();
     
-    delete materialManager;
-    delete dynamicsWorld;
-    delete dwCollisionConfig;
-    delete dwDispatcher;
-    delete dwSolver;
-    delete dwBroadphase;
+    materialManager->ClearMaterialsAndFluids();
 }
 
 void SimulationManager::RestartScenario()
 {
     DestroyScenario();
     BuildScenario();
-    dynamicsWorld->synchronizeMotionStates();
 }
 
 void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)

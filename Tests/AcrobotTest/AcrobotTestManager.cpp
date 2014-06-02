@@ -29,6 +29,8 @@ AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void AcrobotTestManager::BuildScenario()
 {
+    OpenGLPipeline::getInstance()->SetVisibleElements(true, true, false, false, false);
+    
     //--------------------Using MSK unit system--------------------
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 4.0), 0.7);

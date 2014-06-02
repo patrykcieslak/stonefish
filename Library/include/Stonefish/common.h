@@ -21,8 +21,8 @@
 #include <stdint.h>
 
 //Bullet Physics
-#include <BulletDynamics/btBulletDynamicsCommon.h>
-#include <BulletCollision/btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 
 //OGLFT
 #define OGLFT_NO_SOLID

@@ -21,40 +21,34 @@ subject to the following restrictions:
 
 ATTRIBUTE_ALIGNED16(class) btTorusShape : public btConvexInternalShape
 {
-	btScalar m_majorRadius;
+protected:
+    btScalar m_majorRadius;
 	btScalar m_minorRadius;
-
+    
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
 	btTorusShape(btScalar majorRadius, btScalar minorRadius);
 
-	btVector3 getHalfExtentsWithMargin() const;
-	const btVector3& getHalfExtentsWithoutMargin() const;		
+    virtual btVector3 localGetSupportingVertex(const btVector3& vec)const;
+	virtual btVector3 localGetSupportingVertexWithoutMargin(const btVector3& vec)const;
+	virtual void batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
+
+	virtual void calculateLocalInertia(btScalar mass,btVector3& inertia) const;
+    
 	virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
-	
-	virtual void	calculateLocalInertia(btScalar mass,btVector3& inertia) const;
-
-	virtual void setLocalScaling(const btVector3& scaling);
-
-	virtual btVector3	localGetSupportingVertex(const btVector3& vec)const;
-	virtual btVector3	localGetSupportingVertexWithoutMargin(const btVector3& vec)const;
-	virtual void	batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
-
-	btScalar getMajorRadius() const { return m_majorRadius; }
+    
+    btScalar getMajorRadius() const { return m_majorRadius; }
 	btScalar getMinorRadius() const { return m_minorRadius; }
 	btScalar getRadius() const { return getMajorRadius(); }
 	
+	btVector3 getHalfExtentsWithMargin() const;
+	const btVector3& getHalfExtentsWithoutMargin() const;
+	virtual void setLocalScaling(const btVector3& scaling);
+
+	virtual const char*	getName()const { return "TORUS"; }
 	
-	virtual const char*	getName()const 
-	{ 
-		return "Torus"; 
-	}
-	
-	virtual btVector3	getAnisotropicRollingFrictionDirection() const
-	{
-		return btVector3(0,1,1);
-	}
+	virtual btVector3 getAnisotropicRollingFrictionDirection() const { return btVector3(0,1,1); }
 };
 
 #endif
