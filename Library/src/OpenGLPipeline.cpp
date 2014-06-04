@@ -67,7 +67,7 @@ void OpenGLPipeline::Initialize(SimulationManager* sim)
     OpenGLLight::Init();
     
     cInfo("Generating sky...");
-    OpenGLSky::Generate(45.f,0.f);
+    OpenGLSky::Generate(20.f,30.f);
     
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");
@@ -982,9 +982,8 @@ void OpenGLPipeline::Render()
                 glGetFloatv(GL_MODELVIEW, glm::value_ptr(model));
                 
                 glMatrixMode(GL_PROJECTION);
-                glLoadIdentity();
-                glOrtho(0,viewport[2],0,viewport[3],-1,1);
-                
+                glm::mat4 oproj = glm::ortho(0.f, (GLfloat)viewport[2], 0.f, (GLfloat)viewport[3], -1.f, 1.f);
+                glLoadMatrixf(glm::value_ptr(oproj));
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
                 

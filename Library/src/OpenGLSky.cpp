@@ -228,53 +228,52 @@ void OpenGLSky::Destroy()
 void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachment)
 {
     glm::mat4 V = glm::mat4();
-    V = glm::rotate(V, 180.f, glm::vec3(1.f,0.f,0.f));
+    V = glm::rotate(V, glm::pi<float>(), glm::vec3(1.f,0.f,0.f));
     glm::mat3 IVR = glm::mat3(V);
-    IVR = IVR._inverse();
-    
+    IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, cubemap, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, cubemap, 0); //negative Y
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
-    V = glm::rotate(V, 90.f, glm::vec3(0.f,1.f,0.f));
-    V = glm::rotate(V, 180.f, glm::vec3(1.f,0.f,0.f));
+    V = glm::rotate(V, glm::pi<float>()/2.f, glm::vec3(0.f,1.f,0.f));
+    V = glm::rotate(V, glm::pi<float>(), glm::vec3(1.f,0.f,0.f));
     IVR = glm::mat3(V);
-    IVR = IVR._inverse();
+    IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemap, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemap, 0); //positive X
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
-    V = glm::rotate(V, 90.f, glm::vec3(1.f,0.f,0.f));
+    V = glm::rotate(V, -glm::pi<float>()/2.f, glm::vec3(1.f,0.f,0.f));
     IVR = glm::mat3(V);
-    IVR = IVR._inverse();
+    IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, cubemap, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, cubemap, 0); //negative Z
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
-    V = glm::rotate(V, 180.f, glm::vec3(0.f,1.f,0.f));
-    V = glm::rotate(V, 180.f, glm::vec3(1.f,0.f,0.f));
+    V = glm::rotate(V, glm::pi<float>(), glm::vec3(0.f,1.f,0.f));
+    V = glm::rotate(V, glm::pi<float>(), glm::vec3(1.f,0.f,0.f));
     IVR = glm::mat3(V);
-    IVR = IVR._inverse();
+    IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, cubemap, 0);
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
-    V = glm::rotate(V, -90.f, glm::vec3(1.f,0.f,0.f));
+    V = glm::rotate(V, glm::pi<float>()/2.f, glm::vec3(1.f,0.f,0.f));
     IVR = glm::mat3(V);
-    IVR = IVR._inverse();
+    IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, cubemap, 0);
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
-    V = glm::rotate(V, -90.f, glm::vec3(0.f,1.f,0.f));
-    V = glm::rotate(V, 180.f, glm::vec3(1.f,0.f,0.f));
+    V = glm::rotate(V, -glm::pi<float>()/2.f, glm::vec3(0.f,1.f,0.f));
+    V = glm::rotate(V, glm::pi<float>(), glm::vec3(1.f,0.f,0.f));
     IVR = glm::mat3(V);
-    IVR = IVR._inverse();
+    IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, cubemap, 0);
     OpenGLSolids::DrawScreenAlignedQuad();
@@ -294,15 +293,10 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     glDisable(GL_TEXTURE_2D);
     
     //Setup matrices
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
+    OpenGLSolids::SetupOrtho();
+   
     //Calculate projection
-    glm::mat4 projection = glm::perspective(90.f, 1.f, 1.f, 100.f);
+    glm::mat4 projection = glm::perspective(glm::radians(90.f), 1.f, 1.f, 100.f);
     projection = glm::inverse(projection);
     
     ///////Render Sky Cubemap
@@ -315,10 +309,10 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     
     //Light direction
     glm::mat4 lightMat;
-    lightMat = glm::rotate(lightMat, 90.f-elevation, glm::vec3(1.f,0.f,0.f)); //elevation
-    lightMat = glm::rotate(lightMat, orientation, glm::vec3(0.f,1.f,0.f)); //orientation
-    glm::vec4 lightDir = glm::vec4(0.f,1.f,0.f,0.f);
-    lightDir = glm::mul(lightDir, lightMat);
+    lightMat = glm::rotate(lightMat, glm::radians(orientation), glm::vec3(0.f,1.f,0.f)); //orientation
+    lightMat = glm::rotate(lightMat, glm::radians(90.f-elevation), glm::vec3(1.f,0.f,0.f)); //elevation
+    glm::vec4 lightDir = glm::vec4(0.f, 1.f, 0.f, 1.f);
+    lightDir = lightMat * lightDir;
     
     skyCubeShader->Enable();
     skyCubeShader->SetUniform("Kr", glm::vec3(0.18867780436772762f, 0.38f, 0.65f)); //skyCubeShader->SetUniform("Kr", glm::vec3(0.18867780436772762f, 0.4978442963618773f, 0.6616065586417131f));
@@ -437,9 +431,8 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
 void OpenGLSky::Render(OpenGLView *view, const btTransform& viewTransform, bool zAxisUp)
 {
     GLint* viewport = view->GetViewport();
-    GLfloat fovy = view->GetFOVY()/M_PI*180.f;
     
-    glm::mat4 projection = glm::perspective(fovy, (GLfloat)viewport[2]/(GLfloat)viewport[3], 0.1f, 100.f);
+    glm::mat4 projection = glm::perspective(view->GetFOVY(), (GLfloat)viewport[2]/(GLfloat)viewport[3], 0.1f, 100.f);
     projection = glm::inverse(projection);
     
     btMatrix3x3 flip;
@@ -509,7 +502,7 @@ void OpenGLSky::ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width
     //Projection setup
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-    glm::mat4 proj = glm::perspective(90.f, 1.f, 10.f, 1000000000.f);
+    glm::mat4 proj = glm::perspective(glm::radians(90.f), 1.f, 10.f, 1000000000.f);
     glLoadMatrixf(glm::value_ptr(proj));
 	
 	//Model setup

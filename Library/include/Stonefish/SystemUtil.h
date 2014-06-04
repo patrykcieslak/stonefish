@@ -17,7 +17,6 @@ void GetCWD(char* buffer,int length);
 void GetShaderPath(char* path, int len);
 void GetDataPath(char* path, int len);
 const char* GetDataPathPrefix(const char* directory);
-GLboolean CheckForExtension(const GLchar *extensionName, const GLubyte *extensions);
-
+bool CheckForExtension(const char* extensionName);
 #endif 
 

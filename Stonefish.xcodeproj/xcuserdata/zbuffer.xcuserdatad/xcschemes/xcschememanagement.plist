@@ -4,10 +4,15 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>AcrobotTest Release.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>6</integer>
+		</dict>
 		<key>AcrobotTest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>4</integer>
+			<integer>5</integer>
 		</dict>
 		<key>FallingTest.xcscheme</key>
 		<dict>
@@ -17,9 +22,14 @@
 		<key>JointsTest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>3</integer>
+			<integer>4</integer>
 		</dict>
 		<key>RollingTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
+		<key>SlidingTest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>2</integer>
@@ -32,7 +42,7 @@
 		<key>UnderwaterTest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>5</integer>
+			<integer>7</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
@@ -68,6 +78,11 @@
 			<true/>
 		</dict>
 		<key>F7C2312918CA0D3F00817B69</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F7DE5F39193E7830007FEE22</key>
 		<dict>
 			<key>primary</key>
 			<true/>

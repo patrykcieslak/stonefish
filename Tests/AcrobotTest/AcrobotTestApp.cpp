@@ -58,20 +58,21 @@ void AcrobotTestApp::DoHUD()
     label1.item = 0;
     label1.index = 0;
     
-    sprintf(buffer, "Motor Torque: %1.3lf [Nm]", ((DCMotor*)getSimulationManager()->getActuator(0))->getTorque());
-    getHUD()->DoLabel(label1, 90, getWindowHeight()-50, white, buffer);
+    //sprintf(buffer, "Motor Torque: %1.3lf [Nm]", ((DCMotor*)getSimulationManager()->getActuator(0))->getTorque());
+    //getHUD()->DoLabel(label1, 90, getWindowHeight()-50, white, buffer);
     
     ui_id plot;
     plot.owner = 1;
     plot.item = 0;
     plot.index = 0;
     
-    std::vector<unsigned short> dims;
+    getHUD()->DoXYPlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(1), 0, getSimulationManager()->getSensor(1), 1, "Arm1");
+    
+    /*std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
-    dims.push_back(2);
     
-    if(getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(2), dims, "Arm1"))
+    if(getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "Arm1"))
     {
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
@@ -86,7 +87,7 @@ void AcrobotTestApp::DoHUD()
                 fp = fopen(pathToFile, "wt");
                 
                 for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6f\t%1.6f\n", data[i]->getTimestamp(), data[i]->getValue(0));
+                    fprintf(fp, "%1.6lf\t%1.6lf\n", data[i]->getTimestamp(), data[i]->getValue(1));
                 fclose(fp);
      
                 cInfo("Saved plot data to %s.\n", pathToFile);
@@ -101,5 +102,5 @@ void AcrobotTestApp::DoHUD()
     plot.item = 1;
     plot.index = 0;
     //getHUD()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor(1), "Arm2");
-    
+    */
 }

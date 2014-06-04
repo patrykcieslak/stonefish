@@ -46,9 +46,8 @@ void OpenGLPrinter::Start()
     
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0.0, windowW, 0.0, windowH, -100.0, 100.0);
-    
+	glm::mat4 proj = glm::ortho(0.f, (GLfloat)windowW, 0.f, (GLfloat)windowH, -1.f, 1.f);
+	glLoadMatrixf(glm::value_ptr(proj));
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();

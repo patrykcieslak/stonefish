@@ -8,7 +8,7 @@
 
 #include "Accelerometer.h"
 
-Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, uint historyLength):Sensor(uniqueName, historyLength)
+Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, unsigned int historyLength):Sensor(uniqueName, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -64,7 +64,7 @@ void Accelerometer::Update(btScalar dt)
     AddSampleToHistory(s);
 }
 
-ushort Accelerometer::getNumOfDimensions()
+unsigned short Accelerometer::getNumOfDimensions()
 {
     return 1;
 }

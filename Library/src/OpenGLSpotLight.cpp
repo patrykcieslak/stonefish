@@ -242,7 +242,7 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe)
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle / M_PI * 180.f), 1.f, 1.f, 100.f);
+    glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, 1.f, 100.f);
     glLoadMatrixf(glm::value_ptr(proj));
     
     glMatrixMode(GL_MODELVIEW);

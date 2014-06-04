@@ -226,9 +226,9 @@ void OpenGLGBuffer::ShowTexture(FBOComponent component, GLfloat x, GLfloat y, GL
 	//Projection setup
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0,width,0,height,0.1f,2.f);
-    
+	glm::mat4 proj = glm::ortho(0.f, (GLfloat)width, 0.f, (GLfloat)height, -1.f, 1.f);
+	glLoadMatrixf(glm::value_ptr(proj));
+	
 	//Model setup
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();

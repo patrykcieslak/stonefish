@@ -422,13 +422,13 @@ void OpenGLSun::SetPosition(GLfloat elevation, GLfloat orientation)
     sunDirection = btVector3(0.f, -1.f, 0.f);
     if(zUp)
     {
-        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), sunElevation/180.f*M_PI);
-        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), -sunOrientation/180.f*M_PI);
+        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f-sunElevation));
+        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(sunOrientation));
     }
     else
     {
-        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), -sunElevation/180.f*M_PI);
-        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), sunOrientation/180.f*M_PI+M_PI);
+        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f+sunElevation));
+        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(180.f-sunOrientation));
     }
     sunDirection.normalize();
     

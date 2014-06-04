@@ -17,7 +17,7 @@ x Don't move camera when you move a part of the gui
 x Rendering options
 x DCMotor
 x Name System preserving uniqueness
-x Friction material pair table - custom friction callback
+x Friction material pair table
 x Sky improvements + sun lighting
 x Fix native dialog memory leak when returning result
 x IMGUI save plot data
@@ -66,8 +66,12 @@ x Setting arbitrary physical properties for MeshEntity
 x Designed simple logo
 x Improved loading screen -> mutex, delay, color logo in the corner
 x IMGUI subtle transparent logo in the corner
+x CEGUI removed, Bullet source moved to the project, static dependences
+x IMGUI XYPlot
+x Custom contact callback -> friction coefficient computed from relative velocity, restitution combined by multiplication
+x Sliding test demo - friction works very accurate
+- Accurate collision restitution for high iteration count (>60)
 - IMGUI Panel
-- IMGUI PhasePlot
 - IMGUI Gauge
 - Above water surface rendering
 - Underwater rendering

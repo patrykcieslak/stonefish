@@ -10,9 +10,9 @@
 #define __Stonefish_Console__
 
 #include "common.h"
+#include <SDL_thread.h>
 #include "OpenGLPrinter.h"
 #include "Sensor.h"
-#include <SDL2/SDL_thread.h>
 
 //font
 #define FONT_NAME "/Library/Fonts/Arial.ttf"

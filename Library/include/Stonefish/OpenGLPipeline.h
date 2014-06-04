@@ -12,8 +12,10 @@
 #include "common.h"
 
 #define GL_GLEXT_PROTOTYPES
-#include <SDL2/SDL_opengl.h>
+#include <SDL_opengl.h>
 #include <OpenGL/glu.h>
+
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 

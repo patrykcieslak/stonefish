@@ -37,8 +37,8 @@ void OpenGLSolids::Destroy()
 void OpenGLSolids::SetupOrtho()
 {
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1,1,-1,1,-1,1);
+    glm::mat4 proj = glm::ortho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f);
+    glLoadMatrixf(glm::value_ptr(proj));
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

@@ -63,7 +63,7 @@ void CalculateNeighbours(TriangleMesh* m, bool smooth)
             for(uint8_t h=0; h<3; h++)
             {
                 btVector3 n = thisN;
-                uint contrib = 1;
+                uint32_t contrib = 1;
                 
                 //Loop through all faces
                 for(uint32_t j=0; j<m->faces.size(); j++)

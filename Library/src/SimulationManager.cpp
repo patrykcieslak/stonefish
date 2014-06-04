@@ -42,6 +42,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     if(rb0 == NULL || rb1 == NULL)
     {
         cp.m_combinedFriction = btScalar(0.);
+        cp.m_combinedRollingFriction = btScalar(0.);
         cp.m_combinedRestitution = btScalar(0.);
         return true;
     }
@@ -57,6 +58,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     else
     {
         cp.m_combinedFriction = btScalar(0.);
+        cp.m_combinedRollingFriction = btScalar(0.);
         cp.m_combinedRestitution = btScalar(0.);
         return true;
     }
@@ -72,15 +74,23 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     else
     {
         cp.m_combinedFriction = btScalar(0.);
+        cp.m_combinedRollingFriction = btScalar(0.);
         cp.m_combinedRestitution = btScalar(0.);
         return true;
     }
     
-    cp.m_combinedFriction = mat0->staticFriction[mat1->index];
-    cp.m_combinedRollingFriction = mat0->dynamicFriction[mat1->index];
-    cp.m_combinedRestitution = 1.0; //mat0->restitution * mat1->restitution;
+    //Calculate friction coefficient based on relative velocity
+    btVector3 relVel = rb1->getLinearVelocity() - rb0->getLinearVelocity();
+    btVector3 normalVel = cp.m_normalWorldOnB * cp.m_normalWorldOnB.dot(relVel);
+    btScalar relVelMod = (relVel - normalVel).length();
+    btScalar sigma = 100;
+    // f = (static - dynamic)/(sigma * v^2 + 1) + dynamic
+    cp.m_combinedFriction = (mat0->staticFriction[mat1->index] - mat0->dynamicFriction[mat1->index])/(sigma * relVelMod * relVelMod + btScalar(1.)) + mat0->dynamicFriction[mat1->index];
+    btScalar factor = 1.5;//0.81 + 0.69 * (SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond()/60.0);
+    cp.m_combinedRestitution = mat0->restitution * mat1->restitution * factor;
+    cp.m_combinedRollingFriction = btScalar(0.);
     
-    //printf("%s<->%s Restitution: %1.3f\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution);
+    //printf("%s<->%s Relative velocity: %1.3lf Friction coeff: %1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), relVelMod, cp.m_combinedFriction);
     
     return true;
 }
@@ -420,16 +430,16 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
     //Quality/stability
     dynamicsWorld->getSolverInfo().m_erp = 0.5;
     dynamicsWorld->getSolverInfo().m_erp2 = 1.0;
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = 1e30;
-    //dynamicsWorld->getSolverInfo().m_sor = 1.0;
+    dynamicsWorld->getSolverInfo().m_maxErrorReduction = 1000;
+    dynamicsWorld->getSolverInfo().m_sor = 1.0;
     //dynamicsWorld->getSolverInfo().m_linearSlop = 0.0;
     //dynamicsWorld->getSolverInfo().m_tau = 0.8;
 
     //Collision
     dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = 1e30;
     dynamicsWorld->getSolverInfo().m_splitImpulse = true;
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = 0.005;
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.5;
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.005;
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.1;
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
     dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.001;
 
@@ -440,7 +450,7 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
     dynamicsWorld->getSolverInfo().m_globalCfm = 0.0;
     dynamicsWorld->getSolverInfo().m_damping = 0.0;
     dynamicsWorld->getSolverInfo().m_friction = 0.0;
-    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 100.f;
+    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 1e30;
     
     //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
@@ -555,6 +565,7 @@ void SimulationManager::StartSimulation()
 {
     currentTime = 0;
     physicTime = 0;
+    simulationTime = 0;
     
     for(int i=0; i < controllers.size(); i++)
         controllers[i]->Start();
@@ -616,8 +627,6 @@ double SimulationManager::getPhysicsTimeInMiliseconds()
 void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    simManager->simulationTime += timeStep;
-    
     //clear all forces to ensure that no summing occurs
     world->clearForces();
     
@@ -685,4 +694,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld *world, btScalar 
             }
         }*/
     }
+    
+    //Update simulation time
+    simManager->simulationTime += timeStep;
 }

@@ -46,7 +46,7 @@ OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbit
     holdingEntity = NULL;
     
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
-    GLfloat fovy = (fovx/M_PI*180.f)/aspect;
+    GLfloat fovy = fovx/aspect;
     projection = glm::perspective(fovy, aspect, near, far);
     
     UpdateTrackballTransform();
@@ -88,10 +88,10 @@ void OpenGLTrackball::UpdateTrackballTransform()
     btVector3 eyePos = GetEyePosition();
     
 #ifdef BT_USE_DOUBLE_PRECISION
-    glm::dvec3 eyeV(center.x(), center.y(), center.z());
-    glm::dvec3 dirV(lookingDir.x(), lookingDir.y(), lookingDir.z());
+    glm::dvec3 centerV(center.x(), center.y(), center.z());
+    glm::dvec3 eyeV(eyePos.x(), eyePos.y(), eyePos.z());
     glm::dvec3 upV(upDir.x(), upDir.y(), upDir.z());
-    glm::dmat4x4 cameraM = glm::lookAt(eyeV, eyeV+dirV, upV);
+    glm::dmat4x4 cameraM = glm::lookAt(eyeV, centerV, upV);
 #else
     glm::vec3 centerV(center.x(), center.y(), center.z());
     glm::vec3 eyeV(eyePos.x(), eyePos.y(), eyePos.z());
@@ -142,11 +142,6 @@ btTransform OpenGLTrackball::GetViewTransform()
         center = solidTrans.getOrigin();
         UpdateTrackballTransform();
         return trackballTransform;
-        
-        /*btTransform trans =  trackballTransform * solidTrans.inverse();
-        btVector3 translate = solidTrans.getBasis() * GetEyePosition();
-        trans.getOrigin() = trans.getOrigin() - translate;
-        return trans;*/
     }
     else
     {

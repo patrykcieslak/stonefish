@@ -9,7 +9,7 @@
 #include "Sample.h"
 #include "SimulationApp.h"
 
-Sample::Sample(ushort nDimensions, btScalar* values)
+Sample::Sample(unsigned short nDimensions, btScalar* values)
 {
     nDim = nDimensions > 0 ? nDimensions : 1;
     data = new btScalar[nDim];
@@ -35,7 +35,7 @@ btScalar Sample::getTimestamp()
     return timestamp;
 }
 
-btScalar Sample::getValue(ushort dimension)
+btScalar Sample::getValue(unsigned short dimension)
 {
     if((dimension < nDim) && (data != NULL))
         return data[dimension];

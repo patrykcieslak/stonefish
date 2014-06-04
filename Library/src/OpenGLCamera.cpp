@@ -22,7 +22,7 @@ OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& target
     holdingEntity = NULL;
     
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
-    GLfloat fovy = (fovx/M_PI*180.f)/aspect;
+    GLfloat fovy = fovx/aspect;
     projection = glm::perspective(fovy, aspect, near, far);
     
     SetupCamera();

@@ -24,7 +24,7 @@
 #include "ADC.h"
 #include "Trajectory.h"
 
-FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, SEQUENTIAL_IMPULSE, STANDARD)
+FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 
@@ -34,10 +34,10 @@ void FallingTestManager::BuildScenario()
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
-    getMaterialManager()->CreateMaterial("Steel", 1000.0, 1.0);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.0, 0.0);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.0, 0.0);
-    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.0, 0.0);
+    getMaterialManager()->CreateMaterial("Steel", 1000.0, 0.5);
+    getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
+    getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
+    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
     ///////LOOKS///////////
     char path[1024];

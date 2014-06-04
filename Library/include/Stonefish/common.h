@@ -9,9 +9,6 @@
 #ifndef __Stonefish_common_h__
 #define __Stonefish_common_h__
 
-//Stonefish
-//#define USE_ADVANCED_GUI
-
 //System
 #include <string>
 #include <vector>
@@ -27,8 +24,5 @@
 //OGLFT
 #define OGLFT_NO_SOLID
 #define OGLFT_NO_QT
-
-//Console
-//#include "Console.h"
 
 #endif

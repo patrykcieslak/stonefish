@@ -286,21 +286,13 @@ void GLSLShader::Destroy()
 }
 
 //// Private statics
-GLboolean GLSLShader::CheckShadersAvailable()
+bool GLSLShader::CheckShadersAvailable()
 {
-    GLboolean exts[4];
-#ifdef _MSC_VER
-	exts[0] = glewIsSupported("GL_ARB_shader_objects");
-	exts[1] = glewIsSupported("GL_ARB_shading_language_100");
-	exts[2] = glewIsSupported("GL_ARB_vertex_shader");
-	exts[3] = glewIsSupported("GL_ARB_fragment_shader");
-#else
-    const GLubyte *extensions = glGetString(GL_EXTENSIONS);
-    exts[0] = gluCheckExtension((GLubyte*)"GL_ARB_shader_objects", extensions);
-    exts[1] = gluCheckExtension((GLubyte*)"GL_ARB_shading_language_100", extensions);
-    exts[2] = gluCheckExtension((GLubyte*)"GL_ARB_vertex_shader", extensions);
-    exts[3] = gluCheckExtension((GLubyte*)"GL_ARB_fragment_shader", extensions);
-#endif
+    bool exts[4];
+    exts[0] = CheckForExtension("GL_ARB_shader_objects");
+    exts[1] = CheckForExtension("GL_ARB_shading_language_100");
+    exts[2] = CheckForExtension("GL_ARB_vertex_shader");
+    exts[3] = CheckForExtension("GL_ARB_fragment_shader");
     return exts[0] && exts[1] && exts[2] && exts[3];
 }
 

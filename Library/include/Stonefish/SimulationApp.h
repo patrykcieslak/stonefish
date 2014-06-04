@@ -9,13 +9,8 @@
 #ifndef __Stonefish_SimulationApp__
 #define __Stonefish_SimulationApp__
 
-#include <SDL2/SDL.h>
 #include "common.h"
-#ifdef USE_ADVANCED_GUI
-#include <CEGUI/CEGUI.h>
-#include <CEGUI/RendererModules/OpenGL/GLRenderer.h>
-#endif
-
+#include <SDL.h>
 #include "OpenGLPipeline.h"
 #include "IMGUI.h"
 #include "Console.h"
@@ -39,9 +34,6 @@ public:
     
     //virtual methods
     virtual void DoHUD();
-#ifdef USE_ADVANCED_GUI
-    virtual void BuildCEGUI();
-#endif
     
     //input handling
     bool* joystickButtons;
@@ -105,16 +97,8 @@ private:
     double physics;
     uint64_t startTime;
   
-    //static pthread_t loadingThread;
     static int RenderLoadingScreen(void* app);
     static SimulationApp* handle;
-    
-#ifdef USE_ADVANCED_GUI
-    void SetCEGUIPaths();
-    CEGUI::Renderer* guiRenderer;
-    CEGUI::ImageCodec* guiImageCodec;
-    CEGUI::ResourceProvider* guiResourceProvider;
-#endif
 };
 
 typedef struct

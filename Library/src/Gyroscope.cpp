@@ -8,7 +8,7 @@
 
 #include "Gyroscope.h"
 
-Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, uint historyLength) : Sensor(uniqueName, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, unsigned int historyLength) : Sensor(uniqueName, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;

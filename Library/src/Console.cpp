@@ -82,8 +82,9 @@ void Console::Render()
     glViewport(0, 0, windowW, windowH);
     glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0.0, (GLfloat)windowW, 0.0, (GLfloat)windowH, -1.f, 1.f);
+	glm::mat4 proj = glm::ortho(0.f, (GLfloat)windowW, 0.f, (GLfloat)windowH, -1.f, 1.f);
+	glLoadMatrixf(glm::value_ptr(proj));
+    
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();

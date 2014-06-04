@@ -111,13 +111,25 @@ const char* GetDataPathPrefix(const char* directory)
 }
 
 //Extensions
-GLboolean CheckForExtension(const GLchar *extensionName, const GLubyte *extensions)
+bool CheckForExtension(const char* extensionName)
 {
-	GLboolean extensionAvailable;
 #ifdef _MSC_VER
-	extensionAvailable = glewIsSupported(extensionName);
+	return glewIsSupported(extensionName);
 #else
-	extensionAvailable = gluCheckExtension((GLubyte *)extensionName, extensions);
+    char* extensions = (char*)glGetString(GL_EXTENSIONS);
+    if(extensions == NULL)
+        return false;
+    
+    size_t extNameLen = strlen(extensionName);
+    char* end = extensions + strlen(extensions);
+    
+    while (extensions < end)
+    {
+        size_t n = strcspn(extensions, " ");
+        if((extNameLen == n) && (strncmp(extensionName, extensions, n) == 0))
+            return true;
+        extensions += (n+1);
+    }
+    return false;
 #endif
-	return extensionAvailable;
 }

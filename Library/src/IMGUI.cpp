@@ -212,9 +212,9 @@ void IMGUI::Begin()
     glViewport(0, 0, windowW, windowH);
     glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0.0, (GLfloat)windowW, 0.0, (GLfloat)windowH, -1.f, 1.f);
-	glMatrixMode(GL_MODELVIEW);
+	glm::mat4 proj = glm::ortho(0.f, (GLfloat)windowW, 0.f, (GLfloat)windowH, -1.f, 1.f);
+	glLoadMatrixf(glm::value_ptr(proj));
+    glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
     
@@ -664,6 +664,33 @@ bool IMGUI::DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char
     return result;
 }
 
+void IMGUI::DoGauge(ui_id ID, GLfloat x, GLfloat y, GLfloat r, double value, double range[2], const char* title, double dangerRange[2])
+{
+    /*glDisable(GL_TEXTURE_2D);
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(ui_colors[PROGRESSBAR_FILLED_COLOR]);
+    glVertex2f(x, windowH - y);
+    glVertex2f(x, windowH - y -h);
+    glVertex2f(x+progress*w, windowH - y);
+    glVertex2f(x+progress*w, windowH - y-h);
+    
+    glColor4fv(ui_colors[PROGRESSBAR_EMPTY_COLOR]);
+    glVertex2f(x+progress*w, windowH - y);
+    glVertex2f(x+progress*w, windowH - y -h);
+    glVertex2f(x+w, windowH - y);
+    glVertex2f(x+w, windowH -y -h);
+    glEnd();
+    
+    glEnable(GL_TEXTURE_2D);
+    DrawPlainText(x, windowH-y+18.f, ui_colors[PROGRESSBAR_TITLE_COLOR], title);
+    
+    char buffer[16];
+    sprintf(buffer, "%1.2lf%%", progress*100.0);
+    GLfloat len = PlainTextLength(buffer);
+    DrawPlainText(x+w-len, windowH- y + 18.f, ui_colors[PROGRESSBAR_VALUE_COLOR], buffer);*/
+}
+
 bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, double fixedRange[2], unsigned int historyLength)
 {
     bool result = false;
@@ -787,6 +814,149 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
         DrawPlainText(x, windowH - y - h + 10.f, ui_colors[PLOT_TITLE_COLOR], values);
     }
         
+    //title
+    glEnable(GL_TEXTURE_2D);
+    GLfloat len = PlainTextLength(title);
+	
+    DrawPlainText(x+floorf((w-len)/2.f), windowH - y - 10.f, ui_colors[PLOT_TITLE_COLOR], title);
+    
+    return result;
+}
+
+bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sensX, unsigned short dimX, Sensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength)
+{
+    bool result = false;
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    
+    if(MouseInRect(x+m[12], y+m[13], w, h))
+        setHot(ID);
+    
+    if(isActive(ID))
+    {
+        if(!MouseIsDown(true)) //mouse went up
+        {
+            if(isHot(ID))
+                result = true;
+            clearActive();
+        }
+    }
+    else if(isHot(ID))
+    {
+        if(MouseIsDown(true)) //mouse went down
+        {
+            setActive(ID);
+        }
+    }
+    
+    //drawing
+    glDisable(GL_TEXTURE_2D);
+    
+    /*if(UI->isActive(ID))
+     glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
+     else if(UI->isHot(ID))
+     glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
+     else
+     glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
+     */
+    
+    //background
+    glColor4fv(ui_colors[PLOT_BACKGROUND_COLOR]);
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x, windowH - y);
+    glVertex2f(x, windowH - y -h);
+    glVertex2f(x+w, windowH - y);
+    glVertex2f(x+w, windowH - y -h);
+    glEnd();
+    
+    //data
+    const std::deque<Sample*>& dataX = sensX->getHistory();
+    const std::deque<Sample*>& dataY = sensY->getHistory();
+    
+    if((dataX.size() > 1) && (dataY.size() > 1))
+    {
+        //common sample count
+        unsigned long dataCount = dataX.size();
+        if(dataY.size() < dataCount)
+            dataCount = dataY.size();
+        
+        //autoscale X axis
+        btScalar minValueX = 1000;
+        btScalar maxValueX = -1000;
+        
+        for(unsigned long i = 0; i < dataCount; i++)
+        {
+            btScalar value = dataX[i]->getValue(dimX);
+            if(value > maxValueX)
+                maxValueX = value;
+            else if(value < minValueX)
+                minValueX = value;
+        }
+        
+        if(maxValueX == minValueX) //secure division by zero
+        {
+            maxValueX += 1.f;
+            minValueX -= 1.f;
+        }
+        
+        GLfloat dx = w/(maxValueX - minValueX);
+        
+        //autoscale Y axis
+        btScalar minValueY = 1000;
+        btScalar maxValueY = -1000;
+        
+        for(unsigned long i = 0; i < dataCount; i++)
+        {
+            btScalar value = dataY[i]->getValue(dimY);
+            if(value > maxValueY)
+                maxValueY = value;
+            else if(value < minValueY)
+                minValueY = value;
+        }
+        
+        if(maxValueY == minValueY) //secure division by zero
+        {
+            maxValueY += 1.f;
+            minValueY -= 1.f;
+        }
+        
+        GLfloat dy = h/(maxValueY - minValueY);
+        
+        //drawing
+        //glDisable(GL_LINE_SMOOTH);
+        glColor4fv(ui_colors[PLOT_DATA_COLOR1]);
+            
+        //graph
+        glBegin(GL_LINE_STRIP);
+        for(unsigned long i = 0;  i < dataCount; i++)
+        {
+            btScalar valueX = dataX[i]->getValue(dimX);
+            btScalar valueY = dataY[i]->getValue(dimY);
+            glVertex2f(x + (valueX - minValueX) * dx, windowH - y - h + (valueY - minValueY) * dy);
+        }
+        glEnd();
+        
+        glColor4fv(ui_colors[PLOT_AXES_COLOR]);
+        glBegin(GL_LINES);
+        if(minValueX * maxValueX < 0)
+        {
+            glVertex2f(x - minValueX * dx, windowH - y - h);
+            glVertex2f(x - minValueX * dx, windowH - y);
+        }
+        if(minValueY * maxValueY < 0)
+        {
+            glVertex2f(x, windowH - y - h - minValueY * dy);
+            glVertex2f(x + w, windowH - y - h - minValueY * dy);
+        }
+        glEnd();
+        
+        //glEnable(GL_LINE_SMOOTH);
+        //glEnable(GL_TEXTURE_2D);
+        //char values[32];
+        //sprintf(values, "%1.6f %1.6f", minValue, maxValue);
+        //DrawPlainText(x, windowH - y - h + 10.f, ui_colors[PLOT_TITLE_COLOR], values);
+    }
+    
     //title
     glEnable(GL_TEXTURE_2D);
     GLfloat len = PlainTextLength(title);

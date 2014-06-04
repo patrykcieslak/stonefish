@@ -70,11 +70,11 @@ void AcrobotTestManager::BuildScenario()
     FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Arm2Encoder", revo2, 1000000);
     AddSensor(enc2);
     
-    FakeIMU* imu = new FakeIMU("IMU", arm1, btTransform::getIdentity(), 1000000);
-    AddSensor(imu);
+    //FakeIMU* imu = new FakeIMU("IMU", arm1, btTransform::getIdentity(), 1000000);
+    //AddSensor(imu);
     
-    DCMotor* motor = new DCMotor("DCX", revo2, 0.212f, 0.0774e-3, 1.f/408.f, 23.4e-3, 0.0000055f);
-    AddActuator(motor);
+    //DCMotor* motor = new DCMotor("DCX", revo2, 0.212f, 0.0774e-3, 1.f/408.f, 23.4e-3, 0.0000055f);
+    //AddActuator(motor);
     
 /*    ServoController* srv = new ServoController("ServoController", motor, enc2, 5.0, 500);
     AddController(srv);

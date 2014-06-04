@@ -531,13 +531,11 @@ void OpenGLView::ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLflo
             break;
     }
     
-    //Projection setup
+    //Matrices setup
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, viewportWidth, 0, viewportHeight, 0.1f, 2.f);
-    
-	//Model setup
+    glm::mat4 proj = glm::ortho(0.f, (GLfloat)viewportWidth, 0.f, (GLfloat)viewportHeight, -1.f, 1.f);
+	glLoadMatrixf(glm::value_ptr(proj));
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
     
@@ -741,7 +739,7 @@ void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
     fluidShader[0]->SetUniform("visibility", 5.0f);
     fluidShader[0]->SetUniform("eyeSurfaceNormal", glm::vec3((GLfloat)transPlaneN.x(), (GLfloat)transPlaneN.y(), (GLfloat)transPlaneN.z()));
     fluidShader[0]->SetUniform("eyeSurfacePosition", glm::vec3((GLfloat)transPlaneP.x(), (GLfloat)transPlaneP.y(), (GLfloat)transPlaneP.z()));
-    fluidShader[0]->SetUniform("time", SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
+    fluidShader[0]->SetUniform("time", (GLfloat)SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
     fluid->RenderSurface();
     fluidShader[0]->Disable();
     
@@ -757,7 +755,7 @@ void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
     fluidShader[1]->SetUniform("eyeSurfaceNormal", glm::vec3((GLfloat)transPlaneN.x(), (GLfloat)transPlaneN.y(), (GLfloat)transPlaneN.z()));
     fluidShader[1]->SetUniform("lightColor", OpenGLSun::GetSunColor());
     fluidShader[1]->SetUniform("lightDirection", sunDirEye);
-    fluidShader[1]->SetUniform("time", SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
+    fluidShader[1]->SetUniform("time", (GLfloat)SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
     fluid->RenderSurface();
     fluidShader[1]->Disable();
     

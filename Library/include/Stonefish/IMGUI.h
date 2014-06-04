@@ -9,9 +9,8 @@
 #ifndef __Stonefish_IMGUI__
 #define __Stonefish_IMGUI__
 
-#include <SDL2/SDL_keyboard.h>
-
 #include "common.h"
+#include <SDL_keyboard.h>
 #include "OpenGLPipeline.h"
 #include "OpenGLPrinter.h"
 #include "Sensor.h"
@@ -114,16 +113,16 @@ public:
     void KeyUp(SDL_Keycode key);
     
     //widgets
-    void DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text);
     void DoPanel(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    void DoProgressBar(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title);
+    void DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text);
     bool DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    double DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title);
-    bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
     bool DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
+    bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
+    double DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title);
+    void DoGauge(ui_id ID, GLfloat x, GLfloat y, GLfloat r, double value, double range[2], const char* title, double dangerRange[2] = NULL);
+    void DoProgressBar(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title);
     bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, double fixedRange[2] = NULL, unsigned int historyLength = 0);
-    //bool DoPhasePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    //bool DoPolarPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
+    bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sensX, unsigned short dimX, Sensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength = 0);
     
 private:
     int windowW,windowH;

@@ -183,81 +183,8 @@ void SimulationApp::InitializeSDL()
     }
 }
 
-#ifdef USE_ADVANCED_GUI
-void SimulationApp::SetCEGUIPaths()
-{
-    // Initialises the required directories for the DefaultResourceProvider:
-    CEGUI::DefaultResourceProvider* rp = static_cast<CEGUI::DefaultResourceProvider*>(CEGUI::System::getSingleton().getResourceProvider());
-    
-    // For each resource type, sets a corresponding resource group directory:
-    const char* prefix = GetDataPathPrefix("CEGUI");
-    char resourcePath[1024];
-    
-    sprintf(resourcePath, "%s/%s", prefix, "schemes/");
-    rp->setResourceGroupDirectory("schemes", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "imagesets/");
-    rp->setResourceGroupDirectory("imagesets", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "fonts/");
-    rp->setResourceGroupDirectory("fonts", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "layouts/");
-    rp->setResourceGroupDirectory("layouts", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "looknfeel/");
-    rp->setResourceGroupDirectory("looknfeels", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "lua_scripts/");
-    rp->setResourceGroupDirectory("lua_scripts", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "xml_schemas/");
-    rp->setResourceGroupDirectory("schemas", resourcePath);
-    sprintf(resourcePath, "%s/%s", prefix, "animations/");
-    rp->setResourceGroupDirectory("animations", resourcePath);
-    
-    // Sets the default resource groups to be used:
-    CEGUI::ImageManager::setImagesetDefaultResourceGroup("imagesets");
-    CEGUI::Font::setDefaultResourceGroup("fonts");
-    CEGUI::Scheme::setDefaultResourceGroup("schemes");
-    CEGUI::WidgetLookManager::setDefaultResourceGroup("looknfeels");
-    CEGUI::WindowManager::setDefaultResourceGroup("layouts");
-    CEGUI::ScriptModule::setDefaultResourceGroup("lua_scripts");
-    CEGUI::AnimationManager::setDefaultResourceGroup("animations");
-    
-    // Set-up default group for validation schemas:
-    CEGUI::XMLParser* parser = CEGUI::System::getSingleton().getXMLParser();
-    if(parser->isPropertyPresent("SchemaDefaultResourceGroup"))
-        parser->setProperty("SchemaDefaultResourceGroup", "schemas");
-}
-
-void SimulationApp::BuildCEGUI()
-{
-    CEGUI::Window* root = CEGUI::System::getSingleton().getDefaultGUIContext().getRootWindow();
-    
-    CEGUI::FrameWindow *simControlWindow = static_cast<CEGUI::FrameWindow*>(CEGUI::WindowManager::getSingleton().createWindow("StonefishOrange/FrameWindow", "SimControlWindow"));
-    root->addChild(simControlWindow);
-    simControlWindow->setPosition(CEGUI::UVector2(CEGUI::UDim(0.5f, 0), CEGUI::UDim(0.5f, 0)));
-    simControlWindow->setSize(CEGUI::USize(CEGUI::UDim(0, 100.f), CEGUI::UDim(0, 100.f)));
-    simControlWindow->setText("Simulation control");
-}
-#endif
-
 void SimulationApp::InitializeGUI()
 {
-#ifdef USE_ADVANCED_GUI
-    //Advanced GUI setup
-    guiResourceProvider = 0;
-    guiImageCodec = 0;
-    guiRenderer = &CEGUI::OpenGLRenderer::create();
-
-    const char * prefix = GetDataPathPrefix("Resources");
-    char path[1024];
-    strcpy(path, prefix);
-    strcat(path, "/CEGUIlog.txt");
-        
-    CEGUI::System::create(*guiRenderer, guiResourceProvider, 0, guiImageCodec, 0, "", path);
-    SetCEGUIPaths();
-    CEGUI::SchemeManager::getSingleton().createFromFile("StonefishOrange.scheme");
-    CEGUI::Window *rootWindow = CEGUI::WindowManager::getSingleton().createWindow("DefaultWindow","root");
-    CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow(rootWindow);
-    BuildCEGUI();
-#endif
-    
     //Simple immediate GUI setup
     hud = new IMGUI();
     hud->SetRenderSize(winWidth, winHeight);
@@ -271,8 +198,6 @@ void SimulationApp::InitializeSimulation()
     cInfo("Synchronizing motion states...");
     simulation->getDynamicsWorld()->synchronizeMotionStates();
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
-    
-    //printf("Simulation initialized -> using Bullet Physics %d.%d.\n", btGetVersion()/100, btGetVersion()%100);
 }
 
 //window
@@ -284,9 +209,7 @@ void SimulationApp::WindowEvent(SDL_Event* event)
     {
         case SDL_WINDOWEVENT_RESIZED:
             SDL_GetWindowSize(window, &w, &h);
-#ifdef USE_ADVANCED_GUI
-            CEGUI::System::getSingleton().notifyDisplaySizeChanged(CEGUI::Sizef(w,h));
-#endif
+            hud->SetRenderSize(w, h);
             break;
     }
 }
@@ -350,16 +273,11 @@ void SimulationApp::EventLoop()
     SDL_Event event;
     bool mouseWasDown = false;
     startTime = GetTimeInMicroseconds();
-#ifdef USE_ADVANCED_GUI
-    CEGUI::GUIContext& guiContext = CEGUI::System::getSingleton().getDefaultGUIContext();
-#endif
     
     while(!finished)
     {
         SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
-#ifdef USE_ADVANCED_GUI
-        CEGUI::Window *rootWindow = guiContext.getRootWindow();
-#endif
+
         if(SDL_PollEvent(&event))
         {
             switch(event.type)
@@ -369,43 +287,10 @@ void SimulationApp::EventLoop()
                     break;
                 
                 case SDL_TEXTINPUT:
-#ifdef USE_ADVANCED_GUI
-                    guiContext.injectChar(event.text.text[0]);
-#endif
                     break;
                     
                 case SDL_KEYDOWN:
                 {
-#ifdef USE_ADVANCED_GUI
-                    switch(event.key.keysym.sym)
-                    {
-
-                        case SDLK_BACKSPACE:
-                            guiContext.injectKeyDown(CEGUI::Key::Backspace);
-                            break;
-                            
-                        case SDLK_LEFT:
-                            guiContext.injectKeyDown(CEGUI::Key::ArrowLeft);
-                            break;
-                            
-                        case SDLK_RIGHT:
-                            guiContext.injectKeyDown(CEGUI::Key::ArrowRight);
-                            break;
-                            
-                        case SDLK_UP:
-                            guiContext.injectKeyDown(CEGUI::Key::ArrowUp);
-                            break;
-                            
-                        case SDLK_DOWN:
-                            guiContext.injectKeyDown(CEGUI::Key::ArrowDown);
-                            break;
-                            
-                        default:
-                            guiContext.injectKeyDown((CEGUI::Key::Scan)event.key.keysym.scancode);
-                            break;
-                    }
-                    //guiContext.injectChar(event.key.keysym.sym);
-#endif
                     hud->KeyDown(event.key.keysym.sym);
                     KeyDown(&event);
                     break;
@@ -413,97 +298,28 @@ void SimulationApp::EventLoop()
                     
                 case SDL_KEYUP:
                 {
-#ifdef USE_ADVANCED_GUI
-                    switch(event.key.keysym.sym)
-                    {
-                        case SDLK_BACKSPACE:
-                            guiContext.injectKeyUp(CEGUI::Key::Backspace);
-                            break;
-                        
-                        case SDLK_LEFT:
-                            guiContext.injectKeyUp(CEGUI::Key::ArrowLeft);
-                            break;
-                        
-                        case SDLK_RIGHT:
-                            guiContext.injectKeyUp(CEGUI::Key::ArrowRight);
-                            break;
-                        
-                        case SDLK_UP:
-                            guiContext.injectKeyUp(CEGUI::Key::ArrowUp);
-                            break;
-                        
-                        case SDLK_DOWN:
-                            guiContext.injectKeyUp(CEGUI::Key::ArrowDown);
-                            break;
-                        
-                        default:
-                            guiContext.injectKeyUp((CEGUI::Key::Scan)event.key.keysym.scancode);
-                            break;
-                    }
-#endif
                     hud->KeyUp(event.key.keysym.sym);
                     KeyUp(&event);
                     break;
                 }
                     
                 case SDL_MOUSEBUTTONDOWN:
-#ifdef USE_ADVANCED_GUI
-                    switch (event.button.button)
-                    {
-                        case SDL_BUTTON_LEFT:
-                            guiContext.injectMouseButtonDown(CEGUI::LeftButton);
-                            break;
-                        
-                        case SDL_BUTTON_RIGHT:
-                            guiContext.injectMouseButtonDown(CEGUI::RightButton);
-                            break;
-                    }
-                    
-                    if(guiContext.getWindowContainingMouse() == rootWindow)
-                    {
-                        hud->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
-                        mouseWasDown = true;
-                    }
-#else
                     hud->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
                     mouseWasDown = true;
-#endif
                     break;
                     
                 case SDL_MOUSEBUTTONUP:
-#ifdef USE_ADVANCED_GUI
-                    switch (event.button.button)
-                    {
-                        case SDL_BUTTON_LEFT:
-                            guiContext.injectMouseButtonUp(CEGUI::LeftButton);
-                            break;
-                            
-                        case SDL_BUTTON_RIGHT:
-                            guiContext.injectMouseButtonUp(CEGUI::RightButton);
-                            break;
-                    }
-#endif
                     hud->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
                     MouseUp(&event);
                     break;
                     
                 case SDL_MOUSEMOTION:
-#ifdef USE_ADVANCED_GUI
-                    guiContext.injectMousePosition(static_cast<float>(event.motion.x), static_cast<float>(event.motion.y));
-#endif
                     hud->MouseMove(event.motion.x, event.motion.y);
                     MouseMove(&event);
                     break;
                     
                 case SDL_MOUSEWHEEL:
-#ifdef USE_ADVANCED_GUI
-                    guiContext.injectMouseWheelChange(event.wheel.y);
-            
-                    if(guiContext.getWindowContainingMouse() == rootWindow)
-                        MouseScroll(&event);
-#else
                     MouseScroll(&event);
-#endif
                     break;
                     
                 case SDL_JOYBUTTONDOWN:
@@ -566,13 +382,7 @@ void SimulationApp::AppLoop()
     hud->Begin();
     DoHUD();
     hud->End();
-#ifdef USE_ADVANCED_GUI
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-    CEGUI::GUIContext& guiContext = CEGUI::System::getSingleton().getDefaultGUIContext();
-    CEGUI::System::getSingleton().renderAllGUIContexts();
-    CEGUI::System::getSingleton().injectTimePulse((float)eleapsed);
-    guiContext.injectTimePulse((float)eleapsed);
-#endif
+
     glFlush();
 	SDL_GL_SwapWindow(window);
 }

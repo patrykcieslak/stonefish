@@ -32,9 +32,9 @@ void RollingTestManager::BuildScenario()
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MMKS, 4.0), 0.7);
     getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MMKS, 2.0), 0.5);
-    getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.6, 0.3);
-    getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.9, 0.7);
-    getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.7, 0.5);
+    getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.7, 0.3);
+    getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.9, 0.8);
+    getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.8, 0.6);
     
     ///////LOOKS///////////
     char path[1024];

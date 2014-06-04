@@ -70,7 +70,7 @@ private:
     bool enabled;
     
     static GLhandleARB saqVertexShader;
-    static GLboolean CheckShadersAvailable();
+    static bool CheckShadersAvailable();
     static GLhandleARB LoadShader(GLenum shaderType, const char *filename, GLint *shaderCompiled);
     static GLhandleARB CreateProgramObject(GLhandleARB vertexShader, GLhandleARB fragmentShader);
     static void LinkProgram(GLhandleARB programObject, GLint *programLinked);
