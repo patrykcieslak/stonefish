@@ -24,7 +24,7 @@
 #include "ADC.h"
 #include "Trajectory.h"
 
-SlidingTestManager::SlidingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, STANDARD)
+SlidingTestManager::SlidingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, SEQUENTIAL_IMPULSE, STANDARD)
 {
 }
 
@@ -48,7 +48,7 @@ void SlidingTestManager::BuildScenario()
     //Look color;
     
     ////////OBJECTS
-    btScalar angle = M_PI/180.0 * 14.03;
+    btScalar angle = M_PI/180.0 * 13.95;
     
     PlaneEntity* floor = new PlaneEntity("Floor", 100.f, getMaterialManager()->getMaterial("Ground"), grey, btTransform(btQuaternion(0,angle,0), btVector3(0,0,0)));
     AddEntity(floor);

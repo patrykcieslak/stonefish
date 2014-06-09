@@ -60,7 +60,7 @@ public:
     void RenderSSAO();
     void RenderFluidSurface(FluidEntity* fluid, bool underwater);
     void RenderFluidVolume(FluidEntity* fluid);
-    void RenderHDR();
+    void RenderHDR(GLuint destinationFBO);
     void ShowAmbientOcclusion();
     
     GLint* GetViewport();

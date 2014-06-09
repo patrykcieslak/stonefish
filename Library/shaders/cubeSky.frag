@@ -13,7 +13,7 @@ uniform float rayleigh_collection_power, mie_collection_power, mie_distribution;
 float surface_height = 0.99;
 float range = 0.01;
 float intensity = 1.0;
-const int step_count = 32;
+const int step_count = 64;
     
 vec3 get_world_normal()
 {
@@ -71,12 +71,6 @@ vec3 absorb(float dist, vec3 color, float factor)
     return color-color*pow(Kr, vec3(factor/dist));
 }
 
-vec3 saturateColor(vec3 color, float amount)
-{
-    vec3 gray = vec3(dot(vec3(0.2126,0.7152,0.0722), color));
-    return vec3(mix(color, gray, -amount));
-}
-
 void main(void)
 {
     vec3 eyedir = get_world_normal();
@@ -84,12 +78,12 @@ void main(void)
         
     float rayleigh_factor = phase(alpha, -0.01)*rayleigh_brightness;
     float mie_factor = phase(alpha, mie_distribution)*mie_brightness;
-    float spot = smoothstep(0.0, 35.0, phase(alpha, 0.9995))*spot_brightness;
+    float spot = smoothstep(0.0, 50.0, phase(alpha, 0.9995))*spot_brightness;
 
     vec3 eye_position = vec3(0.0, surface_height, 0.0);
     float eye_depth = atmospheric_depth(eye_position, eyedir);
     float step_length = eye_depth/float(step_count);
-    float eye_extinction = horizon_extinction(eye_position, eyedir, surface_height-0.1);
+    float eye_extinction = horizon_extinction(eye_position, eyedir, surface_height-0.05);
         
     vec3 rayleigh_collected = vec3(0.0, 0.0, 0.0);
     vec3 mie_collected = vec3(0.0, 0.0, 0.0);
@@ -98,7 +92,7 @@ void main(void)
     {
         float sample_distance = step_length*float(i);
         vec3 position = eye_position + eyedir*sample_distance;
-        float extinction = horizon_extinction(position, lightdir, surface_height-0.35);
+        float extinction = horizon_extinction(position, lightdir, surface_height-0.05);
         float sample_depth = atmospheric_depth(position, lightdir);
         vec3 influx = absorb(sample_depth, vec3(intensity), scatter_strength)*extinction;
         rayleigh_collected += absorb(sample_distance, Kr*influx, rayleigh_strength);
@@ -109,7 +103,5 @@ void main(void)
     mie_collected = (mie_collected*eye_extinction*pow(eye_depth, mie_collection_power))/float(step_count);
 
     vec3 color = vec3(spot*mie_collected + mie_factor*mie_collected + rayleigh_factor*rayleigh_collected);
-    color = saturateColor(color, 0.5); //negative value can simulate foggy day :)
-    
     gl_FragColor = vec4(color, 1.0);
 }

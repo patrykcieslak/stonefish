@@ -18,17 +18,16 @@ public:
     RevoluteJoint(std::string uniqueName, SolidEntity* solid, const btVector3& pivot, const btVector3& axis);
     ~RevoluteJoint();
     
+    void ApplyTorque(btScalar T);
     void ApplyDamping();
    	btVector3 Render();
     
-    void applyTorque(btScalar T);
     void setDamping(btScalar constantFactor, btScalar viscousFactor);
     void setLimits(btScalar min, btScalar max);
     
-    JointType getType();
     btScalar getAngle();
     btScalar getAngularVelocity();
-    btScalar getTargetVelocity();
+    JointType getType();
     
 private:
     btVector3 axisInA;

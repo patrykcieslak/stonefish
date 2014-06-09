@@ -33,18 +33,27 @@ vec3 Uncharted2Tonemap(vec3 c)
     return ((c * (A * c + vec3(C * B)) + vec3(D * E))/(c * (A * c + vec3(B)) + vec3(D*F))) - vec3(E/F);
 }
 
+float Uncharted2TonemapValue(float v)
+{
+    return ((v * (A * v + C * B) + D * E)/(v * (A * v + B) + D * F)) - E/F;
+}
+
 void main(void)
 {
+    //Read textures
     vec3 hsvAvg = texture2D(texAverage, vec2(0.5, 0.5)).rgb;
     vec3 rgbColor = texture2D(texHDR, gl_TexCoord[0].st).rgb;
-    rgbColor = Uncharted2Tonemap(10.0 * rgbColor / hsvAvg.z);
     
+    //Correct exposition and tonemap
+    rgbColor = Uncharted2Tonemap(8.0 * rgbColor / pow(hsvAvg.z, 0.5));
     vec3 whiteScale = vec3(1.0) / Uncharted2Tonemap(vec3(W));
     rgbColor *= whiteScale;
     
+    //Increase saturation
     vec3 hsvColor = rgb2hsv(rgbColor);
     hsvColor.y *= 1.2;
     rgbColor = hsv2rgb(hsvColor);
     
+    //Correct Gamma
     gl_FragColor = vec4(pow(rgbColor, vec3(1.0/1.5)), 1.0);
 }

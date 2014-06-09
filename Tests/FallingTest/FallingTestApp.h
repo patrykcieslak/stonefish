@@ -23,6 +23,10 @@ public:
     void MouseScroll(SDL_Event* event);
     
     void DoHUD();
+    
+private:
+    bool checked;
+    unsigned short radioOption;
 };
 
 #endif

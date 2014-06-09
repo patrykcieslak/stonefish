@@ -59,6 +59,7 @@ void AcrobotTestManager::BuildScenario()
     RevoluteJoint* revo1 = new RevoluteJoint("Arm1Rotation", arm1, btVector3(0.001f,0.0f,0.f), btVector3(0.f,1.f,0.f));
     AddJoint(revo1);
     revo1->setDamping(0.0, 0.001);
+    revo1->setLimits(-M_PI_4, M_PI_4);
     
     RevoluteJoint* revo2 = new RevoluteJoint("Arm2Rotation", arm2, arm1, btVector3(0.f,0.f,0.15f), btVector3(0.f,1.f,0.f), false);
     AddJoint(revo2);
@@ -80,6 +81,9 @@ void AcrobotTestManager::BuildScenario()
     AddController(srv);
     srv->SetPosition(M_PI);
     srv->SetGains(3.0, 0.0, 0.0);*/
+    
+    //LFcombo = -42.3737    4.7897   -5.5093    0.3535   -0.1888 [theta alpha dtheta dalpha current]
+    //Sampling: 1/1000  Theta0: 3 deg
     
     //////CAMERA & LIGHT//////
     OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.0f), 1.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 50.f, false);

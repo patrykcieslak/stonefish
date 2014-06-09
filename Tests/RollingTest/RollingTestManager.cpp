@@ -30,11 +30,11 @@ void RollingTestManager::BuildScenario()
 {
     //--------------------Using MMSK unit system--------------------
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MMKS, 4.0), 0.7);
+    getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MMKS, 4.0), 0.5);
     getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MMKS, 2.0), 0.5);
-    getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.7, 0.3);
+    getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.75, 0.5);
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.9, 0.8);
-    getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.8, 0.6);
+    getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.8, 0.7);
     
     ///////LOOKS///////////
     char path[1024];
@@ -47,7 +47,7 @@ void RollingTestManager::BuildScenario()
     Look shiny = CreateMatteLook(0.2f, 0.2f, 0.2f, 0.5f);
     
     ////////OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 2000000.f, getMaterialManager()->getMaterial("Concrete"), grid, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)));
+    PlaneEntity* floor = new PlaneEntity("Floor", 2000000.f, getMaterialManager()->getMaterial("Concrete"), grid, btTransform(btQuaternion(0,0,0), btVector3(0,0,-1000.f)));
     floor->setRenderable(true);
     AddEntity(floor);
     
@@ -67,7 +67,7 @@ void RollingTestManager::BuildScenario()
     
     DCMotor* motor = new DCMotor("DCXWheel", revo, 0.212f, 0.0774e-3, 1.f/408.f, 23.4e-3, 0.0000055f);
     AddActuator(motor);
-    motor->setVoltage(-3.f);
+    motor->setVoltage(-1.f);
     
     revo = new RevoluteJoint("CartLever", box, cyl, btVector3(0.f,0.f,300.f), btVector3(1.f,0,0), false);
     AddJoint(revo);
@@ -75,7 +75,7 @@ void RollingTestManager::BuildScenario()
     
     motor = new DCMotor("DCXLever", revo, 0.212f, 0.0774e-3, 1.f/408.f, 23.4e-3, 0.0000055f);
     AddActuator(motor);
-    motor->setVoltage(0.0001f);
+    //motor->setVoltage(0.0001f);
     
     
     Contact* c = AddContact(torus, floor, 10000);

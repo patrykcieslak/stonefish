@@ -49,9 +49,14 @@ void Joint::setConstraint(btTypedConstraint *constr)
 
 void Joint::AddToDynamicsWorld(btDynamicsWorld *world)
 {
+    //Force feedback
     btJointFeedback* fb = new btJointFeedback();
     constraint->enableFeedback(true);
     constraint->setJointFeedback(fb);
     
+    //Joint limits damping - avoid explosion
+    constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
+    
+    //Add joint to dynamics world
     world->addConstraint(constraint, !collisionEnabled);
 }

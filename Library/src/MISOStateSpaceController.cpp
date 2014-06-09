@@ -14,13 +14,17 @@ MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* 
     this->output = output;
     this->maxOutput = maxOutput;
     
-    for(int i = 0; i < this->input->getNumOfComponents(); i++)
+    for(int i = 0; i < input->getNumOfComponents(); i++)
+    {
         gains.push_back(btScalar(0.));
+        desiredValues.push_back(btScalar(0.));
+    }
 }
 
 MISOStateSpaceController::~MISOStateSpaceController()
 {
     gains.clear();
+    desiredValues.clear();
 }
 
 void MISOStateSpaceController::Reset()
@@ -34,23 +38,30 @@ ControllerType MISOStateSpaceController::getType()
 
 void MISOStateSpaceController::Tick()
 {
-    //get last measurements
-    btScalar* sample = input->getLastSample();
+    //Get last measurements
+    btScalar* measurements = input->getLastSample();
     
-    //calculate and apply control
+    //Calculate control
     btScalar control = 0;
     for(int i = 0; i < gains.size(); i++)
-        control += sample[i] * gains[i];
+        control += (desiredValues[i] - measurements[i]) * gains[i];
+    
+    //Limit control
     control = control > maxOutput ? maxOutput : (control < -maxOutput ? -maxOutput : control);
-    output->setVoltage(-control);
+    
+    //Apply control
+    output->setVoltage(control);
 }
 
 void MISOStateSpaceController::SetGains(const std::vector<btScalar>& g)
 {
     if(g.size() == gains.size())
-    {
-        for(int i = 0; i < gains.size(); i++)
-            gains[i] = g[i];
-    }
+        gains = std::vector<btScalar>(g);
+}
+
+void MISOStateSpaceController::SetDesiredValues(const std::vector<btScalar>& d)
+{
+    if(d.size() == desiredValues.size())
+        desiredValues = std::vector<btScalar>(d);
 }
 

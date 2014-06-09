@@ -33,10 +33,26 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     slider->setLowerAngLimit(0.0);
     slider->setUpperAngLimit(0.0);
     setConstraint(slider);
+    
+    sigDamping = btScalar(0.);
+    velDamping = btScalar(0.);
 }
 
 PrismaticJoint::~PrismaticJoint()
 {
+}
+
+void PrismaticJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
+{
+    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetForce(btVector3(constantFactor,0.,0.)).x() : btScalar(0.);
+    velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
+}
+
+void PrismaticJoint::setLimits(btScalar min, btScalar max)
+{
+    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();
+    slider->setLowerLinLimit(UnitSystem::SetLength(min));
+    slider->setUpperLinLimit(UnitSystem::SetLength(max));
 }
 
 JointType PrismaticJoint::getType()
@@ -44,8 +60,35 @@ JointType PrismaticJoint::getType()
     return PRISMATIC;
 }
 
+void PrismaticJoint::ApplyForce(btScalar F)
+{
+    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    btVector3 force = UnitSystem::SetForce(axis * F);
+    bodyA.applyCentralForce(force);
+    bodyB.applyCentralForce(-force);
+}
+
 void PrismaticJoint::ApplyDamping()
 {
+    if(sigDamping > btScalar(0.) || velDamping > btScalar(0.))
+    {
+        btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+        btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+        btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+        btVector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
+        btScalar v = relativeV.dot(axis);
+        
+        if(v != btScalar(0.))
+        {
+            btScalar F = sigDamping * v/fabs(v) + velDamping * v;
+            btVector3 force = axis * -F;
+            
+            bodyA.applyCentralForce(force);
+            bodyB.applyCentralForce(-force);
+        }
+    }
 }
 
 btVector3 PrismaticJoint::Render()

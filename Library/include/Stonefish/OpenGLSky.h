@@ -15,55 +15,60 @@
 
 typedef enum {SKY,DOWNSAMPLE2, DOWNSAMPLE4, DOWNSAMPLE8, CONVOLUTION_DIFFUSE, CONVOLUTION_REFLECT} SkyCubemap;
 
+//singleton
 class OpenGLSky
 {
 public:
-    static void Init();
-    static void Destroy();
-    static void Generate(GLfloat elevation, GLfloat orientation);
-    static void Render(OpenGLView* view, const btTransform& viewTransform, bool zAxisUp);
-    static GLuint getSkyCubemap();
-    static GLuint getDiffuseCubemap();
-    static GLuint getReflectionCubemap();
-    static void ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width, GLfloat height);
+    void Init();
+    void Generate(GLfloat elevation, GLfloat orientation);
+    void Render(OpenGLView* view, const btTransform& viewTransform, bool zAxisUp);
+    GLuint getSkyCubemap();
+    GLuint getDiffuseCubemap();
+    GLuint getReflectionCubemap();
+    void ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width, GLfloat height);
+    
+    static OpenGLSky* getInstance();
  
 private:
     OpenGLSky();
-    static void ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachment);
+    ~OpenGLSky();
+    void ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachment);
     
     //Sky cubemap rendering
     //framebuffer
-    static GLuint skyCubeFBO;
-    static GLsizei skyCubeSize;
-    static GLuint skyCubemap;
+    GLuint skyCubeFBO;
+    GLsizei skyCubeSize;
+    GLuint skyCubemap;
     //shader
-    static GLSLShader* skyCubeShader;
+    GLSLShader* skyCubeShader;
     
     //Downsampling
     //framebuffer
-    static GLuint ds2FBO;
-    static GLuint ds4FBO;
-    static GLuint ds8FBO;
-    static GLuint ds2Cubemap;
-    static GLuint ds4Cubemap;
-    static GLuint ds8Cubemap;
+    GLuint ds2FBO;
+    GLuint ds4FBO;
+    GLuint ds8FBO;
+    GLuint ds2Cubemap;
+    GLuint ds4Cubemap;
+    GLuint ds8Cubemap;
     //shader
-    static GLSLShader* dsShader;
+    GLSLShader* dsShader;
     
     //Convolution
     //framebuffer
-    static GLuint convolveFBO;
-    static GLuint convolveDiffuseCubemap;
-    static GLuint convolveReflectionCubemap;
+    GLuint convolveFBO;
+    GLuint convolveDiffuseCubemap;
+    GLuint convolveReflectionCubemap;
     //shader
-    static GLSLShader* convolveShader;
+    GLSLShader* convolveShader;
     
     //Sky drawing
     //shader
-    static GLSLShader* skyDrawShader;
+    GLSLShader* skyDrawShader;
     
     //misc
-    static GLfloat debugAngle;
+    GLfloat debugAngle;
+    
+    static OpenGLSky* instance;
 };
 
 

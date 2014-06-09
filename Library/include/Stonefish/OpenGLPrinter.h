@@ -20,12 +20,15 @@ public:
     void Start();
     void Print(GLfloat* color, GLfloat x, GLfloat y, GLfloat size, const char* text);
     GLfloat TextLength(const char* text);
+    glm::vec2 TextDimensions(const char* text);
     void Finish();
     
     static void SetWindowSize(GLint width, GLint height);
     
 private:
     OGLFT::MonochromeTexture* font;
+    GLint lastFontSize;
+    GLfloat lastFontColor[4];
     static GLint windowW, windowH;
 };
 

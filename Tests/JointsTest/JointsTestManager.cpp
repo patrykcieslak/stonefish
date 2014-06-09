@@ -32,7 +32,7 @@ void JointsTestManager::BuildScenario()
 {
     //--------------------Using MMSK unit system--------------------
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 7.8), 0.8);
+    getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MMKS, 7.8), 0.5);
     getMaterialManager()->CreateMaterial("Plastic", UnitSystem::Density(CGS, MMKS, 1.5), 0.2);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Plastic", 0.8, 0.2);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.1);

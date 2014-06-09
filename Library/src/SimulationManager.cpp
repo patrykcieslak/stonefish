@@ -8,10 +8,10 @@
 
 #include "SimulationManager.h"
 
-#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletDynamics/MLCPSolvers/btDantzigSolver.h>
 #include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
+#include <BulletDynamics/MLCPSolvers/btLemkeSolver.h>
 #include <BulletDynamics/MLCPSolvers/btMLCPSolver.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <BulletCollision/Gimpact/btGImpactShape.h>
@@ -86,11 +86,12 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     btScalar sigma = 100;
     // f = (static - dynamic)/(sigma * v^2 + 1) + dynamic
     cp.m_combinedFriction = (mat0->staticFriction[mat1->index] - mat0->dynamicFriction[mat1->index])/(sigma * relVelMod * relVelMod + btScalar(1.)) + mat0->dynamicFriction[mat1->index];
-    btScalar factor = 1.5;//0.81 + 0.69 * (SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond()/60.0);
-    cp.m_combinedRestitution = mat0->restitution * mat1->restitution * factor;
+    
+    //Rolling friction not possible to generalize - needs special treatment
     cp.m_combinedRollingFriction = btScalar(0.);
     
-    //printf("%s<->%s Relative velocity: %1.3lf Friction coeff: %1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), relVelMod, cp.m_combinedFriction);
+    //Restitution
+    cp.m_combinedRestitution = mat0->restitution * mat1->restitution;
     
     return true;
 }
@@ -103,6 +104,7 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     setStepsPerSecond(stepsPerSecond);
     currentTime = 0;
     physicTime = 0;
+    simulationTime = 0;
     drawLightDummies = false;
     drawCameraDummies = false;
     fluid = NULL;
@@ -409,6 +411,7 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
         {
             btDantzigSolver* mlcp = new btDantzigSolver();
             dwSolver = new btMLCPSolver(mlcp);
+            ((btMLCPSolver*)dwSolver)->setCfm(0.0);
         }
             break;
             
@@ -416,41 +419,53 @@ void SimulationManager::InitializeSolver(SolverType st, CollisionFilteringType c
         {
             btSolveProjectedGaussSeidel* mlcp = new btSolveProjectedGaussSeidel();
             dwSolver = new btMLCPSolver(mlcp);
+            ((btMLCPSolver*)dwSolver)->setCfm(0.0);
+        }
+            break;
+            
+        case LEMKE:
+        {
+            btLemkeSolver* mlcp = new btLemkeSolver();
+            //mlcp->m_maxLoops = 10000;
+            dwSolver = new btMLCPSolver(mlcp);
+            ((btMLCPSolver*)dwSolver)->setCfm(0.0);
         }
             break;
     }
     
     //Create solver
     btSoftBodySolver* softBodySolver = 0;
-    dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver); //dynamicsWorld = new btDiscreteDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
-    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_ENABLE_FRICTION_DIRECTION_CACHING | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_SIMD | SOLVER_RANDMIZE_ORDER;
+    dynamicsWorld = new btSoftRigidDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig, softBodySolver);
+    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
     dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
 
     //Quality/stability
-    dynamicsWorld->getSolverInfo().m_erp = 0.5;
-    dynamicsWorld->getSolverInfo().m_erp2 = 1.0;
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = 1000;
-    dynamicsWorld->getSolverInfo().m_sor = 1.0;
-    //dynamicsWorld->getSolverInfo().m_linearSlop = 0.0;
-    //dynamicsWorld->getSolverInfo().m_tau = 0.8;
-
+    dynamicsWorld->getSolverInfo().m_tau = 1.0;  //mass factor
+    dynamicsWorld->getSolverInfo().m_erp = 0.5;  //constraint error reduction in one step
+    dynamicsWorld->getSolverInfo().m_erp2 = 1.0; //constraint error reduction in one step for split impulse
+    dynamicsWorld->getSolverInfo().m_numIterations = 50; //number of constraint iterations
+    dynamicsWorld->getSolverInfo().m_sor = 1.0; //not used
+    dynamicsWorld->getSolverInfo().m_maxErrorReduction = 0; //not used
+    
     //Collision
-    dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = 1e30;
-    dynamicsWorld->getSolverInfo().m_splitImpulse = true;
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.005;
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 0.1;
+    dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.000001; //value close to zero needed for accurate friction
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 1.0; //error reduction for rigid body angular velocity
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
-    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.001;
-
+    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = -0.001;
+    dynamicsWorld->setApplySpeculativeContactRestitution(true);
+    dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = 1e30; //not used
+    
     //Special forces
-    dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = 10e6;
+    dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = 1e30; //gyroscopic effect
     
     //Unrealistic components
-    dynamicsWorld->getSolverInfo().m_globalCfm = 0.0;
-    dynamicsWorld->getSolverInfo().m_damping = 0.0;
-    dynamicsWorld->getSolverInfo().m_friction = 0.0;
-    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 1e30;
+    dynamicsWorld->getSolverInfo().m_globalCfm = 0.0; //global constraint force mixing factor
+    dynamicsWorld->getSolverInfo().m_damping = 0.0; //global damping
+    dynamicsWorld->getSolverInfo().m_friction = 0.0; //global friction
+    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 1e30; //single axis rolling velocity threshold
+    dynamicsWorld->getSolverInfo().m_linearSlop = 0.0; //position bias
     
     //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
@@ -555,7 +570,7 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
         {
             static int totalFailures = 0;
             totalFailures+=numFallbacks;
-            cInfo("MLCP solver failed %d times, falling back to btSequentialImpulseSolver (SI)\n", totalFailures);
+            cInfo("MLCP solver failed %d times.", totalFailures);
         }
         solver->setNumFallbacks(0);
     }
@@ -587,7 +602,7 @@ void SimulationManager::setGravity(const btVector3& g)
 #endif
 }
 
-btDynamicsWorld* SimulationManager::getDynamicsWorld()
+btSoftRigidDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
 }

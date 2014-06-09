@@ -24,7 +24,7 @@
 #include "ADC.h"
 #include "Trajectory.h"
 
-FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, STANDARD)
+FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, SEQUENTIAL_IMPULSE, STANDARD)
 {
 }
 
@@ -62,11 +62,11 @@ void FallingTestManager::BuildScenario()
     
     Look color = CreateGlossyLook(1.f, 0.6f, 0.2f, 0.5f, 0.1f);
     
-    SphereEntity* sphere = new SphereEntity("Sphere", 1.f, getMaterialManager()->getMaterial("Steel"), color);
+    SphereEntity* sphere = new SphereEntity("Sphere", 1.0f, getMaterialManager()->getMaterial("Steel"), color);
     sphere->setRenderable(true);
     AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(0.f, 0.f, 5.f)));
     
-    Trajectory* traj = new Trajectory("Trajectory", sphere, btVector3(0,0,0), 1000);
+    Trajectory* traj = new Trajectory("Trajectory", sphere, btVector3(0,0,0), 10000);
     traj->setRenderable(true);
     AddSensor(traj);
     
@@ -75,17 +75,9 @@ void FallingTestManager::BuildScenario()
     /*for(int i=0; i<10; i++)
     {
         color = CreateMatteLook(i/10.f+0.2f, 1.0f - i/10.f * 0.8f, 0.1f, 0.5f);
-        BoxEntity* box = new BoxEntity("Box" + std::to_string(i), btVector3(500.f,500.f,500.f), getMaterialManager()->getMaterial("Steel"), color);
+        BoxEntity* box = new BoxEntity("Box" + std::to_string(i), btVector3(0.5f, 0.5f, 0.5f), getMaterialManager()->getMaterial("Steel"), color);
         box->setRenderable(true);
-        AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0., 0.), btVector3(sinf(i * M_PI/10.f)*5000.f, -i*1000.f, 3000.f + i*300.f)));
-        
-        if(i == 5)
-        {
-            ADC* adc = new ADC(12, 3.3);
-            Accelerometer* acc = new Accelerometer("Acc", box, btTransform(btQuaternion(0.,0.,0.), btVector3(0.,0.,0.)), Z_AXIS, -3, 3, 0.3, 1.5, 0.00000028, adc, true, 1000);
-            box->setDisplayCoordSys(true);
-            AddSensor(acc);
-        }
+        AddSolidEntity(box, btTransform(btQuaternion(UnitSystem::Angle(true, i * 25.f), 0., 0.), btVector3(sinf(i * M_PI/10.f) * 5.f, -i * 1.f, 3.f + i * 0.3f)));
     }*/
     
     //////CAMERA & LIGHT//////

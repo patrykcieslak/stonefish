@@ -12,39 +12,65 @@
 #include "OpenGLSun.h"
 #include "Console.h"
 
-//Sky Cubemap
-GLuint OpenGLSky::skyCubeFBO = 0;
-GLuint OpenGLSky::skyCubemap = 0;
-GLsizei OpenGLSky::skyCubeSize = 512;
-GLSLShader* OpenGLSky::skyCubeShader = NULL;
+OpenGLSky* OpenGLSky::instance = NULL;
 
-//Downsampling
-GLuint OpenGLSky::ds2FBO = 0;
-GLuint OpenGLSky::ds2Cubemap = 0;
-GLuint OpenGLSky::ds4FBO = 0;
-GLuint OpenGLSky::ds4Cubemap = 0;
-GLuint OpenGLSky::ds8FBO = 0;
-GLuint OpenGLSky::ds8Cubemap = 0;
-GLSLShader* OpenGLSky::dsShader = NULL;
+OpenGLSky* OpenGLSky::getInstance()
+{
+    if(instance == NULL)
+        instance = new OpenGLSky();
+    
+    return instance;
+}
 
-//Convolution
-GLuint OpenGLSky::convolveFBO = 0;
-GLuint OpenGLSky::convolveDiffuseCubemap = 0;
-GLuint OpenGLSky::convolveReflectionCubemap = 0;
-GLSLShader* OpenGLSky::convolveShader = NULL;
+OpenGLSky::OpenGLSky()
+{
+    skyCubeFBO = 0;
+    skyCubemap = 0;
+    skyCubeSize = 512;
+    skyCubeShader = NULL;
+    
+    ds2FBO = 0;
+    ds2Cubemap = 0;
+    ds4FBO = 0;
+    ds4Cubemap = 0;
+    ds8FBO = 0;
+    ds8Cubemap = 0;
+    dsShader = NULL;
+    
+    convolveFBO = 0;
+    convolveDiffuseCubemap = 0;
+    convolveReflectionCubemap = 0;
+    convolveShader = NULL;
+    
+    skyDrawShader = NULL;
+    debugAngle = 0;
+}
 
-//Sky drawing
-GLSLShader* OpenGLSky::skyDrawShader = NULL;
-
-//misc
-GLfloat OpenGLSky::debugAngle = 0;
+OpenGLSky::~OpenGLSky()
+{
+    glDeleteTextures(1, &skyCubemap);
+    glDeleteTextures(1, &ds2Cubemap);
+    glDeleteTextures(1, &ds4Cubemap);
+    glDeleteTextures(1, &ds8Cubemap);
+    glDeleteTextures(1, &convolveDiffuseCubemap);
+    glDeleteTextures(1, &convolveReflectionCubemap);
+    glDeleteFramebuffers(1, &skyCubeFBO);
+    glDeleteFramebuffers(1, &ds2FBO);
+    glDeleteFramebuffers(1, &ds4FBO);
+    glDeleteFramebuffers(1, &ds8FBO);
+    glDeleteFramebuffers(1, &convolveFBO);
+    delete skyCubeShader;
+    delete convolveShader;
+    delete dsShader;
+    delete skyDrawShader;
+}
 
 void OpenGLSky::Init()
 {
     ////////Generate FBOs
     //Sky Cubemap
-    glGenFramebuffersEXT(1, &skyCubeFBO);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, skyCubeFBO);
+    glGenFramebuffers(1, &skyCubeFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, skyCubeFBO);
     
     glGenTextures(1, &skyCubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyCubemap);
@@ -54,20 +80,22 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
+    {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize, skyCubeSize, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, skyCubemap, 0);
+    }
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, skyCubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
-    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sky FBO initialization failed!");
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     //Downsampling
     //x2
-    glGenFramebuffersEXT(1, &ds2FBO);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ds2FBO);
+    glGenFramebuffers(1, &ds2FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, ds2FBO);
     
     glGenTextures(1, &ds2Cubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, ds2Cubemap);
@@ -78,18 +106,18 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize/2, skyCubeSize/2, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ds2Cubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ds2Cubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
-    status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sky downsample x2 FBO initialization failed!");
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     //x4
-    glGenFramebuffersEXT(1, &ds4FBO);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ds4FBO);
+    glGenFramebuffers(1, &ds4FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, ds4FBO);
     
     glGenTextures(1, &ds4Cubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, ds4Cubemap);
@@ -100,18 +128,18 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize/4, skyCubeSize/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ds4Cubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ds4Cubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
-    status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sky downsample x4 FBO initialization failed!");
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     //x8
-    glGenFramebuffersEXT(1, &ds8FBO);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ds8FBO);
+    glGenFramebuffers(1, &ds8FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, ds8FBO);
     
     glGenTextures(1, &ds8Cubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, ds8Cubemap);
@@ -122,18 +150,18 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize/8, skyCubeSize/8, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ds8Cubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ds8Cubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
-    status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sky downsample x8 FBO initialization failed!");
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     //Convolution
-    glGenFramebuffersEXT(1, &convolveFBO);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, convolveFBO);
+    glGenFramebuffers(1, &convolveFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, convolveFBO);
     
     glGenTextures(1, &convolveDiffuseCubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, convolveDiffuseCubemap);
@@ -144,7 +172,7 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize/8, skyCubeSize/8, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, convolveDiffuseCubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, convolveDiffuseCubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
     glGenTextures(1, &convolveReflectionCubemap);
@@ -156,14 +184,14 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize/8, skyCubeSize/8, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, convolveReflectionCubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_CUBE_MAP_POSITIVE_X, convolveReflectionCubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
-    status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sky convolve FBO initialization failed!");
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     ////////Load shaders
     //Sky Cubemap
@@ -206,25 +234,6 @@ void OpenGLSky::Init()
     skyDrawShader->AddUniform("source", INT);
 }
 
-void OpenGLSky::Destroy()
-{
-    glDeleteTextures(1, &skyCubemap);
-    glDeleteTextures(1, &ds2Cubemap);
-    glDeleteTextures(1, &ds4Cubemap);
-    glDeleteTextures(1, &ds8Cubemap);
-    glDeleteTextures(1, &convolveDiffuseCubemap);
-    glDeleteTextures(1, &convolveReflectionCubemap);
-    glDeleteFramebuffersEXT(1, &skyCubeFBO);
-    glDeleteFramebuffersEXT(1, &ds2FBO);
-    glDeleteFramebuffersEXT(1, &ds4FBO);
-    glDeleteFramebuffersEXT(1, &ds8FBO);
-    glDeleteFramebuffersEXT(1, &convolveFBO);
-    delete skyCubeShader;
-    delete convolveShader;
-    delete dsShader;
-    delete skyDrawShader;
-}
-
 void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachment)
 {
     glm::mat4 V = glm::mat4();
@@ -232,7 +241,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     glm::mat3 IVR = glm::mat3(V);
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, cubemap, 0); //negative Y
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, cubemap, 0); //negative Y
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
@@ -241,7 +250,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::mat3(V);
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemap, 0); //positive X
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemap, 0); //positive X
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
@@ -249,7 +258,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::mat3(V);
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, cubemap, 0); //negative Z
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, cubemap, 0); //negative Z
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
@@ -258,7 +267,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::mat3(V);
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, cubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, cubemap, 0);
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
@@ -266,7 +275,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::mat3(V);
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, cubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, cubemap, 0);
     OpenGLSolids::DrawScreenAlignedQuad();
     
     V = glm::mat4();
@@ -275,13 +284,13 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::mat3(V);
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, cubemap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, cubemap, 0);
     OpenGLSolids::DrawScreenAlignedQuad();
 }
 
 void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
 {
-    OpenGLSun::SetPosition(elevation, orientation);
+    OpenGLSun::getInstance()->SetPosition(elevation, orientation);
     
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_SCISSOR_TEST);
@@ -300,8 +309,8 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     projection = glm::inverse(projection);
     
     ///////Render Sky Cubemap
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, skyCubeFBO);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glBindFramebuffer(GL_FRAMEBUFFER, skyCubeFBO);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
     
     //Setup viewport
     glViewport(0, 0, skyCubeSize, skyCubeSize);
@@ -316,7 +325,7 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     
     skyCubeShader->Enable();
     skyCubeShader->SetUniform("Kr", glm::vec3(0.18867780436772762f, 0.38f, 0.65f)); //skyCubeShader->SetUniform("Kr", glm::vec3(0.18867780436772762f, 0.4978442963618773f, 0.6616065586417131f));
-    skyCubeShader->SetUniform("rayleigh_brightness", 50.f/10.f); //skyCubeShader->SetUniform("rayleigh_brightness", 33.f/10.f);
+    skyCubeShader->SetUniform("rayleigh_brightness", 33.f/10.f); //skyCubeShader->SetUniform("rayleigh_brightness", 33.f/10.f);
     skyCubeShader->SetUniform("rayleigh_strength", 139.f/1000.f);
     skyCubeShader->SetUniform("rayleigh_collection_power", 81.f/100.f);
     skyCubeShader->SetUniform("mie_brightness", 100.f/1000.f);
@@ -324,22 +333,22 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     skyCubeShader->SetUniform("mie_collection_power", 39.f/100.f);
     skyCubeShader->SetUniform("mie_distribution", 63.f/100.f);
     skyCubeShader->SetUniform("spot_brightness", 500.f/100.f); //skyCubeShader->SetUniform("spot_brightness", 1000.f/100.f);
-    skyCubeShader->SetUniform("scatter_strength", 50.f/1000.f); //skyCubeShader->SetUniform("scatter_strength", 28.f/1000.f);
+    skyCubeShader->SetUniform("scatter_strength", 100.f/1000.f); //skyCubeShader->SetUniform("scatter_strength", 28.f/1000.f);
     skyCubeShader->SetUniform("lightdir", glm::vec3(lightDir));
     skyCubeShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize, (GLfloat)skyCubeSize));
     skyCubeShader->SetUniform("inv_proj", projection);
-    ProcessCube(skyCubeShader, skyCubemap, GL_COLOR_ATTACHMENT0_EXT);
+    ProcessCube(skyCubeShader, skyCubemap, GL_COLOR_ATTACHMENT0);
     skyCubeShader->Disable();
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     ////////Downsample Sky Cubemap x2
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_CUBE_MAP);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyCubemap);
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ds2FBO);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glBindFramebuffer(GL_FRAMEBUFFER, ds2FBO);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     
     glViewport(0, 0, skyCubeSize/2, skyCubeSize/2);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -348,17 +357,17 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     dsShader->SetUniform("source", 0);
     dsShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/2, (GLfloat)skyCubeSize/2));
     dsShader->SetUniform("inv_proj", projection);
-    ProcessCube(dsShader, ds2Cubemap, GL_COLOR_ATTACHMENT0_EXT);
+    ProcessCube(dsShader, ds2Cubemap, GL_COLOR_ATTACHMENT0);
     dsShader->Disable();
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
     ///////////Downsample Sky Cubemap x4
     glBindTexture(GL_TEXTURE_CUBE_MAP, ds2Cubemap);
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ds4FBO);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glBindFramebuffer(GL_FRAMEBUFFER, ds4FBO);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     
     glViewport(0, 0, skyCubeSize/4, skyCubeSize/4);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -367,17 +376,17 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     dsShader->SetUniform("source", 0);
     dsShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/4, (GLfloat)skyCubeSize/4));
     dsShader->SetUniform("inv_proj", projection);
-    ProcessCube(dsShader, ds4Cubemap, GL_COLOR_ATTACHMENT0_EXT);
+    ProcessCube(dsShader, ds4Cubemap, GL_COLOR_ATTACHMENT0);
     dsShader->Disable();
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     ///////////Downsample Sky Cubemap x8
     glBindTexture(GL_TEXTURE_CUBE_MAP, ds4Cubemap);
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, ds8FBO);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glBindFramebuffer(GL_FRAMEBUFFER, ds8FBO);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     
     glViewport(0, 0, skyCubeSize/8, skyCubeSize/8);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -386,18 +395,18 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     dsShader->SetUniform("source", 0);
     dsShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/8, (GLfloat)skyCubeSize/8));
     dsShader->SetUniform("inv_proj", projection);
-    ProcessCube(dsShader, ds8Cubemap, GL_COLOR_ATTACHMENT0_EXT);
+    ProcessCube(dsShader, ds8Cubemap, GL_COLOR_ATTACHMENT0);
     dsShader->Disable();
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     ///////////Convolve
     glBindTexture(GL_TEXTURE_CUBE_MAP, ds8Cubemap);
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, convolveFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, convolveFBO);
     
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glViewport(0, 0, skyCubeSize/8, skyCubeSize/8);
     glClear(GL_COLOR_BUFFER_BIT);
     
@@ -406,10 +415,10 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     convolveShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/8, (GLfloat)skyCubeSize/8));
     convolveShader->SetUniform("inv_proj", projection);
     convolveShader->SetUniform("specularity", 1.f);
-    ProcessCube(convolveShader, convolveDiffuseCubemap, GL_COLOR_ATTACHMENT0_EXT);
+    ProcessCube(convolveShader, convolveDiffuseCubemap, GL_COLOR_ATTACHMENT0);
     convolveShader->Disable();
     
-    glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT);
+    glDrawBuffer(GL_COLOR_ATTACHMENT1);
     glViewport(0, 0, skyCubeSize/8, skyCubeSize/8);
     glClear(GL_COLOR_BUFFER_BIT);
     
@@ -418,10 +427,10 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     convolveShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/8, (GLfloat)skyCubeSize/8));
     convolveShader->SetUniform("inv_proj", projection);
     convolveShader->SetUniform("specularity", 100.f);
-    ProcessCube(convolveShader, convolveReflectionCubemap, GL_COLOR_ATTACHMENT1_EXT);
+    ProcessCube(convolveShader, convolveReflectionCubemap, GL_COLOR_ATTACHMENT1);
     convolveShader->Disable();
     
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     ////////////////////////
     
@@ -443,7 +452,7 @@ void OpenGLSky::Render(OpenGLView *view, const btTransform& viewTransform, bool 
     SetFloatvFromMat(flip, IVRMatrix);
     glm::mat3 ivr = glm::make_mat3(IVRMatrix);
     
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_CUBE_MAP);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyCubemap);
     
@@ -509,7 +518,7 @@ void OpenGLSky::ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
     
-	glActiveTextureARB(GL_TEXTURE0_ARB);
+	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_CUBE_MAP);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, ctex);
     
@@ -581,10 +590,4 @@ GLuint OpenGLSky::getReflectionCubemap()
 {
     return convolveReflectionCubemap;
 }
-
-//private constructor - unused
-OpenGLSky::OpenGLSky()
-{
-}
-
 

@@ -70,42 +70,52 @@ x CEGUI removed, Bullet source moved to the project, static dependences
 x IMGUI XYPlot
 x Custom contact callback -> friction coefficient computed from relative velocity, restitution combined by multiplication
 x Sliding test demo - friction works very accurate
-- Accurate collision restitution for high iteration count (>60)
-- IMGUI Panel
-- IMGUI Gauge
-- Above water surface rendering
-- Underwater rendering
+x Complete IMGUI rewrite: translucent panels, HSV based color theme, radio button group, gauge
+x One pass 4x downsampling shader and fast gaussian shader
+x MISO state-space controller (regulator or reference tracking)
+x Switchable HUD and console rendering
+x Joint damping (sigmoidal + viscous)
+x Joint limits
+x Accurate collision restitution for high iteration count (>60)
+x Console scrolling with momentum when displayed as overlay
+- State-space controller with smooth gain scheduling - gains as polynomial functions
+- True IMU - acc, gyro, kalman filter etc.
+- Sensor frequency
+- Path planners
+- Path following controller for MWR
 
 Simulation:
-- Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
-- True IMU - acc, gyro, kalman filter etc.
-- GPS
 - Camera with lens
 - Laser rangefinder
 - Ultrasonic range finder
 - Laser scanner 2d
-- AHRS
-- Joint limits
-- Manipulator(Featherstone)
-- Linear encoder
-- Linear actuator
-- Battery(LiIon, LiPoly, A123)
-- Solar panel(with shadow checking)
-- LIDAR
-- Leap Motion support
+- Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
 - Joystick controller/teleoperation
+- Battery(LiIon, LiPoly, A123)
+- GPS
+- AHRS
+- Cable entity -> soft body rope
+- Linear motor actuator
+- Linear encoder
+- Manipulator(Featherstone)
+- LiDAR
+- Leap Motion support
+- Solar panel(with shadow checking)
 
 Underwater:
+- Above water surface rendering
+- Underwater rendering
 - Account for localTransform in buoyancy calculation
 - Thruster
-- Cable entity -> soft body rope
 - DVL
 - Multi-beam
 - Side-scan
 
 Graphics:
+- Tonemapping/exposure improvement and sun color from sky cubemap
+- Move to OpenGL 3.3 Core (remove deprecated stuff)
+- Cook-Torrence materials(single shader approach without branching?)
 - Reflective material
-- BRDF materials
 - Omni light shadows
 - Drawing actuators
 - Drawing camera frustum and sensors
@@ -113,4 +123,3 @@ Graphics:
 - Stencil light volumes (taking into account the attenuation)
 - Order Independent Transparency
 - Lens flare with occlusion query
-- Subtle light bloom

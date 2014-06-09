@@ -30,8 +30,9 @@ JointType GearJoint::getType()
     return GEAR;
 }
 
-void GearJoint::ApplyDamping()
+btScalar GearJoint::getRatio()
 {
+    return gearRatio;
 }
 
 btVector3 GearJoint::Render()
@@ -74,9 +75,4 @@ btVector3 GearJoint::Render()
     glEnd();
     
     return B + rBn*rBp;
-}
-
-btScalar GearJoint::getRatio()
-{
-    return gearRatio;
 }

@@ -22,8 +22,8 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidE
     hinge->setLimit(1, -1); //no limit (min > max)
     setConstraint(hinge);
     
-    sigDamping = btScalar(0.0);
-    velDamping = btScalar(0.0);
+    sigDamping = btScalar(0.);
+    velDamping = btScalar(0.);
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const btVector3& pivot, const btVector3& axis) : Joint(uniqueName, false)
@@ -37,12 +37,24 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const b
     hinge->setLimit(1, -1); //no limit (min > max)
     setConstraint(hinge);
     
-    sigDamping = btScalar(0.0);
-    velDamping = btScalar(0.0);
+    sigDamping = btScalar(0.);
+    velDamping = btScalar(0.);
 }
 
 RevoluteJoint::~RevoluteJoint()
 {
+}
+
+void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
+{
+    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetTorque(btVector3(constantFactor,0.,0.)).x() : btScalar(0.);
+    velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
+}
+
+void RevoluteJoint::setLimits(btScalar min, btScalar max)
+{
+    btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
+    hinge->setLimit(UnitSystem::SetAngle(min), UnitSystem::SetAngle(max));
 }
 
 JointType RevoluteJoint::getType()
@@ -50,9 +62,33 @@ JointType RevoluteJoint::getType()
     return REVOLUTE;
 }
 
+btScalar RevoluteJoint::getAngle()
+{
+    return UnitSystem::GetAngle(((btHingeConstraint*)getConstraint())->getHingeAngle());
+}
+
+btScalar RevoluteJoint::getAngularVelocity()
+{
+    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btVector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
+    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    return UnitSystem::GetAngle(relativeAV.dot(axis));
+}
+
+void RevoluteJoint::ApplyTorque(btScalar T)
+{
+    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    btVector3 torque = UnitSystem::SetTorque(axis * T);
+    bodyA.applyTorque(torque);
+    bodyB.applyTorque(-torque);
+}
+
 void RevoluteJoint::ApplyDamping()
 {
-    if(sigDamping > btScalar(0.0) || velDamping > btScalar(0.0))
+    if(sigDamping > btScalar(0.) || velDamping > btScalar(0.))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
         btRigidBody& bodyB = getConstraint()->getRigidBodyB();
@@ -60,7 +96,7 @@ void RevoluteJoint::ApplyDamping()
         btVector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
         btScalar av = relativeAV.dot(axis);
        
-        if(av != btScalar(0.0))
+        if(av != btScalar(0.))
         {
             btScalar T = sigDamping * av/fabs(av) + velDamping * av;
             btVector3 torque = axis * -T;
@@ -103,45 +139,4 @@ btVector3 RevoluteJoint::Render()
     glDisable(GL_LINE_STIPPLE);
     
     return (C1+C2)/btScalar(2.);
-}
-
-btScalar RevoluteJoint::getAngle()
-{
-    return UnitSystem::GetAngle(((btHingeConstraint*)getConstraint())->getHingeAngle());
-}
-
-btScalar RevoluteJoint::getAngularVelocity()
-{
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    btVector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
-    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
-    return UnitSystem::GetAngle(relativeAV.dot(axis));
-}
-
-void RevoluteJoint::applyTorque(btScalar T)
-{
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
-    btVector3 torque = UnitSystem::SetTorque(axis * T);
-    bodyA.applyTorque(torque);
-    bodyB.applyTorque(-torque);
-}
-
-void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
-{
-    sigDamping = constantFactor > btScalar(0.0) ? UnitSystem::SetTorque(btVector3(constantFactor,0.0,0.0)).x() : btScalar(0.0);
-    velDamping = viscousFactor > btScalar(0.0) ? viscousFactor : btScalar(0.0);
-}
-
-void RevoluteJoint::setLimits(btScalar min, btScalar max)
-{
-    //btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
-    //hinge->setLimit(UnitSystem::SetAngle(min), UnitSystem::SetAngle(max));
-}
-
-btScalar RevoluteJoint::getTargetVelocity()
-{
-    return UnitSystem::GetAngle(((btHingeConstraint*)getConstraint())->getMotorTargetVelosity());
 }

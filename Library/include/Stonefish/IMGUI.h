@@ -13,60 +13,23 @@
 #include <SDL_keyboard.h>
 #include "OpenGLPipeline.h"
 #include "OpenGLPrinter.h"
+#include "GLSLShader.h"
 #include "Sensor.h"
 
-//font
-#define FONT_NAME "/Library/Fonts/Arial.ttf"
-#define FONT_SIZE 12
-#define SCREEN_DPI 72
-
 //interface colors
-#define PANEL_BACKGROUND_COLOR 0
-#define PANEL_TOP_BAR_COLOR 1
-#define PANEL_LEFT_BAR_COLOR 2
-#define PANEL_RIGHT_BAR_COLOR 3
-#define PANEL_BORDER_COLOR 4
-#define PANEL_TITLE_COLOR 5
-#define BUTTON_NORMAL_COLOR 6
-#define BUTTON_HOT_COLOR 7
-#define BUTTON_ACTIVE_COLOR 8
-#define BUTTON_BORDER_COLOR 9
-#define BUTTON_TITLE_COLOR 10
-#define SLIDER_BAR_EMPTY_COLOR 11
-#define SLIDER_BAR_FILLED_COLOR 12
-#define SLIDER_NORMAL_COLOR 13
-#define SLIDER_HOT_COLOR 14
-#define SLIDER_ACTIVE_COLOR 15
-#define SLIDER_BORDER_COLOR 16
-#define SLIDER_TITLE_COLOR 17
-#define SLIDER_VALUE_COLOR 18
-#define PROGRESSBAR_EMPTY_COLOR 19
-#define PROGRESSBAR_FILLED_COLOR 20
-#define PROGRESSBAR_BORDER_COLOR 21
-#define PROGRESSBAR_TITLE_COLOR 22
-#define PROGRESSBAR_VALUE_COLOR 23
-#define CHECKBOX_NORMAL_COLOR 24
-#define CHECKBOX_HOT_COLOR 25
-#define CHECKBOX_ACTIVE_COLOR 26
-#define CHECKBOX_BORDER_COLOR 27
-#define CHECKBOX_TICK_COLOR 28
-#define CHECKBOX_TITLE_COLOR 29
-#define RADIOBUTTON_NORMAL_COLOR 30
-#define RADIOBUTTON_HOT_COLOR 31
-#define RADIOBUTTON_ACTIVE_COLOR 32
-#define RADIOBUTTON_BORDER_COLOR 33
-#define RADIOBUTTON_BUTTON_COLOR 34
-#define RADIOBUTTON_TITLE_COLOR 35
-#define PLOT_BACKGROUND_COLOR 36
-#define PLOT_TITLE_COLOR 37
-#define PLOT_AXES_COLOR 38
-#define PLOT_GRID_COLOR 39
-#define PLOT_DATA_COLOR1 40
-#define PLOT_DATA_COLOR2 41
-#define PLOT_DATA_COLOR3 42
-#define PLOT_DATA_COLOR4 43
-#define PLOT_DATA_COLOR5 44
-#define PLOT_DATA_COLOR6 45
+#define PANEL_COLOR 0                 //Panel/background
+#define ACTIVE_TEXT_COLOR 1           //Label, title....
+#define INACTIVE_TEXT_COLOR 2
+#define ACTIVE_CONTROL_COLOR 3        //Button, slider...
+#define INACTIVE_CONTROL_COLOR 4
+#define HOT_CONTROL_COLOR 5
+#define PUSHED_CONTROL_COLOR 6
+#define EMPTY_COLOR 7                 //Slider, progress, checkbox, radio...
+#define FILLED_COLOR 8
+#define PLOT_COLOR 9                  //Plots
+#define PLOT_TEXT_COLOR 10
+#define GAUGE_SAFE_COLOR 11           //Gauge
+#define GAUGE_DANGER_COLOR 12
 
 struct ui_id
 {
@@ -75,12 +38,17 @@ struct ui_id
     int index;
 };
 
+//singleton
 class IMGUI
 {
 public:
-    IMGUI();
-    ~IMGUI();
-    void SetRenderSize(int width, int height);
+    void Init(GLint windowWidth, GLint windowHeight, GLfloat hue = 0.52f);
+    void GenerateBackground();
+    void Begin();
+    void End();
+    bool MouseInRect(int x, int y, int w, int h);
+    bool MouseIsDown(bool leftButton);
+    
     ui_id getHot();
     ui_id getActive();
     void setHot(ui_id newHot);
@@ -92,18 +60,9 @@ public:
     void clearHot();
     int getWindowHeight();
     int getWindowWidth();
-    
-    //graphics
-    void Init();
-    void Begin();
-    void End();
-    bool MouseInRect(int x, int y, int w, int h);
-    bool MouseIsDown(bool leftButton);
     int getMouseX();
     int getMouseY();
-    
-    void DrawPlainText(GLfloat x, GLfloat y, GLfloat* color, const char* text);
-    GLfloat PlainTextLength(const char* text);
+    GLuint getTranslucentTexture();
     
     //input handling
     void MouseDown(int x, int y, bool leftButton);
@@ -113,26 +72,49 @@ public:
     void KeyUp(SDL_Keycode key);
     
     //widgets
-    void DoPanel(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    void DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text);
+    //passive
+    void DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat radius = 0.f);
+    void DoLabel(GLfloat x, GLfloat y, const char* text, GLfloat* color = NULL);
+    void DoProgressBar(GLfloat x, GLfloat y, GLfloat barW, GLfloat barH, btScalar progress, const char* title);
+    void DoGauge(GLfloat x, GLfloat y, GLfloat diameter, btScalar value, btScalar range[2], btScalar safeRange[2], const char* title);
+    //active
     bool DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    bool DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
+    btScalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat railW, GLfloat railH, GLfloat sliderW, GLfloat sliderH, btScalar min, btScalar max, btScalar value, const char* title);
     bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
-    double DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title);
-    void DoGauge(ui_id ID, GLfloat x, GLfloat y, GLfloat r, double value, double range[2], const char* title, double dangerRange[2] = NULL);
-    void DoProgressBar(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title);
-    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, double fixedRange[2] = NULL, unsigned int historyLength = 0);
+    unsigned short DoRadioGroup(ui_id ID, GLfloat x, GLfloat y, unsigned short selection, std::vector<std::string>& items, const char* title);
+    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2] = NULL, unsigned int historyLength = 0);
     bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sensX, unsigned short dimX, Sensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength = 0);
     
+    static IMGUI* getInstance();
+    static glm::vec4 HSV2RGB(glm::vec4 hsv);
+    
 private:
-    int windowW,windowH;
+    IMGUI();
+    ~IMGUI();
+    void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const char* text);
+    GLfloat PlainTextLength(const char* text);
+    glm::vec2 PlainTextDimensions(const char* text);
+    void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat radius);
+    
+    GLint windowW,windowH;
     bool shaders;
     int mouseX, mouseY;
     bool mouseLeftDown, mouseRightDown;
     ui_id hot;
     ui_id active;
+    
     OpenGLPrinter* plainPrinter;
     GLuint logoTexture;
+    glm::vec4 theme[13];
+    GLfloat backgroundMargin;
+    
+    //Translucent background
+    GLuint translucentFBO;
+    GLuint translucentTexture[2];
+    GLSLShader* downsampleShader;
+    GLSLShader* gaussianShader;
+    
+    static IMGUI* instance;
 };
 
 #endif

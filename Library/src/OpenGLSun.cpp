@@ -13,24 +13,46 @@
 #include "SimulationApp.h"
 #include "Console.h"
 
-OpenGLView* OpenGLSun::activeView = NULL;
-GLSLShader* OpenGLSun::sunShader = NULL;
-GLSLShader* OpenGLSun::shadowmapShader = NULL;
-GLint OpenGLSun::diffuseTextureUnit = 0;
-GLint OpenGLSun::normalTextureUnit = 0;
-GLint OpenGLSun::positionTextureUnit = 0;
-GLint OpenGLSun::shadowTextureUnit = 0;
-GLfloat OpenGLSun::sunElevation = 45.f;
-GLfloat OpenGLSun::sunOrientation = 0.f;
-GLuint OpenGLSun::shadowmapArray = 0;
-GLuint OpenGLSun::shadowmapSplits = 4;
-GLuint OpenGLSun::shadowmapSize = 2048;
-GLuint OpenGLSun::shadowFBO = 0;
-btVector3 OpenGLSun::sunDirection = btVector3(0.,0.,1.);
-glm::vec4 OpenGLSun::sunColor = glm::vec4(1.0,1.0,1.0,1.0);
-glm::mat4x4 OpenGLSun::sunModelview = glm::mat4x4(0);
-ViewFrustum* OpenGLSun::frustum = NULL;
-glm::mat4x4* OpenGLSun::shadowCPM = NULL;
+OpenGLSun* OpenGLSun::instance = NULL;
+
+OpenGLSun* OpenGLSun::getInstance()
+{
+    if(instance == NULL)
+        instance = new OpenGLSun();
+    
+    return instance;
+}
+
+OpenGLSun::OpenGLSun()
+{
+    activeView = NULL;
+    sunShader = NULL;
+    shadowmapShader = NULL;
+    diffuseTextureUnit = 0;
+    normalTextureUnit = 0;
+    positionTextureUnit = 0;
+    shadowTextureUnit = 0;
+    sunElevation = 45.f;
+    sunOrientation = 0.f;
+    shadowmapArray = 0;
+    shadowmapSplits = 4;
+    shadowmapSize = 2048;
+    shadowFBO = 0;
+    sunDirection = btVector3(0.,0.,1.);
+    sunColor = glm::vec4(1.0,1.0,1.0,1.0);
+    sunModelview = glm::mat4x4(0);
+    frustum = NULL;
+    shadowCPM = NULL;
+}
+
+OpenGLSun::~OpenGLSun()
+{
+    glDeleteTextures(1, &shadowmapArray);
+    glDeleteFramebuffers(1, &shadowFBO);
+    
+    delete sunShader;
+    delete shadowmapShader;
+}
 
 void OpenGLSun::Init()
 {
@@ -54,14 +76,14 @@ void OpenGLSun::Init()
     
     //Create shadowmap texture array
     glGenTextures(1, &shadowmapArray);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY_EXT, 0, GL_DEPTH_COMPONENT16, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     
     //Create shadowmap framebuffer
     glGenFramebuffers(1, &shadowFBO);
@@ -78,15 +100,6 @@ void OpenGLSun::Init()
     
     frustum = new ViewFrustum[shadowmapSplits];
     shadowCPM = new glm::mat4x4[shadowmapSplits];
-}
-
-void OpenGLSun::Destroy()
-{
-    glDeleteTextures(1, &shadowmapArray);
-    glDeleteFramebuffers(1, &shadowFBO);
-    
-    delete sunShader;
-    delete shadowmapShader;
 }
 
 btVector3 OpenGLSun::GetSunDirection()
@@ -262,9 +275,9 @@ void OpenGLSun::Render(const btTransform& viewTransform)
 	}
     
     //use sun shader
-    glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+    glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
     
     sunShader->Enable();
     sunShader->SetUniform("texDiffuse", diffuseTextureUnit);
@@ -281,7 +294,7 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     OpenGLSolids::DrawScreenAlignedQuad();
     sunShader->Disable();
     
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
 void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe)
@@ -364,9 +377,9 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     OpenGLSolids::SetupOrtho();
     
 	//Texture setup
-	glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, shadowmapArray);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+	glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     
@@ -383,7 +396,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     shadowmapShader->Disable();
     
 	//Reset
-	glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, 0);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     glPopAttrib();
     glMatrixMode(GL_PROJECTION);
 	glPopMatrix();

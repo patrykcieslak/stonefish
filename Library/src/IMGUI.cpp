@@ -11,86 +11,50 @@
 #include <math.h>
 #include "SystemUtil.h"
 #include "stb_image.h"
+#include "Console.h"
+#include "OpenGLSolids.h"
 
-static GLfloat ui_colors[46][4] =
+IMGUI* IMGUI::instance = NULL;
+
+IMGUI* IMGUI::getInstance()
 {
-    //Panel
-    {0.8f,0.8f,0.8f,0.6f},
-    {0.2f,0.22f,0.25f,0.7f},
-    {0.3f,0.32f,0.35f,0.7f},
-    {0.3f,0.32f,0.35f,0.7f},
-    {0.2f,0.22f,0.25f,0.7f},
-    {0.8f,0.8f,0.8f,1.0f},
-    //Button
-    {0.8f,0.8f,0.8f,1.0f},
-    {0.85f,0.85f,0.85f,1.0f},
-    {0.9f,0.9f,0.9f,1.0f},
-    {0.2f,0.22f,0.25f,0.7f},
-    {0.2f,0.22f,0.25f,1.0f},
-    //Slider
-    {0.2f, 0.2f, 0.2f, 1.f},
-    {1.f, 0.4f, 0.1f, 1.f},
-    {1.0f,1.0f,1.0f,1.0f},
-    {1.0f,1.0f,1.0f,1.0f},
-    {1.0f,1.0f,1.0f,1.0f},
-    {1.0f,1.0f,1.0f,0.7f},
-    {1.0f,1.0f,1.0f,1.0f},
-    {1.0f,1.0f,1.0f,1.0f},
-    //Progress bar
-    {0.2f, 0.22f, 0.25f, 1.f},
-    {1.f, 0.95f, 0.1f, 1.f},
-    {0.2f,0.22f,0.25f,0.7f},
-    {1.0f,1.0f,1.0f,1.0f},
-    {1.0f,1.0f,1.0f,1.0f},
-    //Check box
-    {0.8f,0.8f,0.8f,1.0f},
-    {0.85f,0.85f,0.85f,1.0f},
-    {0.9f,0.9f,0.9f,1.0f},
-    {0.2f,0.22f,0.25f,0.7f},
-    {0.2f,0.22f,0.25f,1.0f},
-    {0.2f,0.22f,0.25f,1.0f},
-    //Radio button
-    {0.8f,0.8f,0.8f,1.0f},
-    {0.85f,0.85f,0.85f,1.0f},
-    {0.9f,0.9f,0.9f,1.0f},
-    {0.2f,0.22f,0.25f,0.7f},
-    {0.2f,0.22f,0.25f,1.0f},
-    {0.2f,0.22f,0.25f,1.0f},
-    //Plots
-    {0.2f,0.2f,0.2f,0.8f},
-    {1.0f,1.0f,1.0f,1.0f},
-    {0.8f,0.8f,0.8f,1.0f},
-    {0.5f,0.5f,0.5f,0.8f},
-    {1.0f,1.0f,1.0f,1.0f}, //PLOT_DATA_COLOR1
-    {1.0f,0.3f,0.3f,1.0f},
-    {0.3f,1.0f,0.3f,1.0f},
-    {0.3f,0.3f,1.0f,1.0f},
-    {1.0f,1.0f,0.3f,1.0f},
-    {0.3f,1.0f,1.0f,1.0f}
-};
+    if(instance == NULL)
+        instance = new IMGUI();
+    
+    return instance;
+}
+
+glm::vec4 IMGUI::HSV2RGB(glm::vec4 hsv)
+{
+    glm::vec4 K = glm::vec4(1.f, 2.f/3.f, 1.f/3.f, 3.f);
+    glm::vec3 p = glm::abs(glm::fract(glm::vec3(hsv.x) + glm::vec3(K.x, K.y, K.z)) * 6.f - glm::vec3(K.w));
+    return glm::vec4(hsv.z * glm::mix(glm::vec3(K.x), glm::clamp(p - glm::vec3(K.x), 0.f, 1.f), hsv.y), hsv.w);
+}
 
 IMGUI::IMGUI()
 {
-    windowW = windowH = 200;
+    windowW = windowH = -1; //Not initialized
     shaders = false;
     mouseX = 0;
     mouseY = 0;
     mouseLeftDown = false;
     mouseRightDown = false;
     clearActive();
+    translucentFBO = 0;
+    translucentTexture[0] = 0;
+    translucentTexture[1] = 0;
+    downsampleShader = NULL;
+    gaussianShader = NULL;
 }
 
 IMGUI::~IMGUI()
 {
     delete plainPrinter;
-    if(logoTexture > 0)
-        glDeleteTextures(1, &logoTexture);
-}
-
-void IMGUI::SetRenderSize(int width, int height)
-{
-    windowW = width;
-    windowH = height;
+    if(logoTexture > 0) glDeleteTextures(1, &logoTexture);
+    delete downsampleShader;
+    delete gaussianShader;
+    glDeleteTextures(2, translucentTexture);
+    glDeleteFramebuffers(1, &translucentFBO);
 }
 
 ui_id IMGUI::getHot()
@@ -158,37 +122,156 @@ int IMGUI::getWindowWidth()
     return windowW;
 }
 
-void IMGUI::Init()
+GLuint IMGUI::getTranslucentTexture()
 {
+    return translucentTexture[0];
+}
+
+void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
+{
+    if(windowWidth < 1 || windowHeight < 1)
+        return;
+    
+    bool firstInit = windowW < 0;
+    windowW = windowWidth;
+    windowH = windowHeight;
+    
+    //Resize printing area
     OpenGLPrinter::SetWindowSize(windowW, windowH);
-    plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE, SCREEN_DPI);
     
-    //Load logo texture - can't use material class because it writes to the console
-    char path[1024];
-    int width, height, channels;
-    GetDataPath(path, 1024-32);
-    strcat(path, "logo_gray.png");
+    //Set interface colors
+    theme[PANEL_COLOR] = glm::vec4(0.98f, 0.98f, 0.98f, 1.f);
+    theme[ACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.9f);
+    theme[INACTIVE_TEXT_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
+    theme[ACTIVE_CONTROL_COLOR] = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);
+    theme[INACTIVE_CONTROL_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
+    theme[HOT_CONTROL_COLOR] = HSV2RGB(glm::vec4(hue, 0.1f, 1.0f, 1.0f));
+    theme[PUSHED_CONTROL_COLOR] = HSV2RGB(glm::vec4(hue, 0.2f, 0.8f, 1.0f));
+    theme[EMPTY_COLOR] = glm::vec4(0.6f, 0.6f, 0.6f, 0.9f);
+    theme[FILLED_COLOR] = HSV2RGB(glm::vec4(hue, 1.f, 0.8f, 0.9f));
+    theme[PLOT_COLOR] = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+    theme[PLOT_TEXT_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.9f);
+    theme[GAUGE_SAFE_COLOR] = glm::vec4(0.6f, 0.6f, 0.6f, 0.9f);
+    theme[GAUGE_DANGER_COLOR] = HSV2RGB(glm::vec4(1.f, 1.f, 0.9f, 0.9f));
     
-    // Allocate image; fail out on error
-    unsigned char* dataBuffer = stbi_load(path, &width, &height, &channels, 4);
-    if(dataBuffer != NULL)
+    //Destroy translucent background textures and framebuffers
+    if(translucentTexture[0] != 0)
+        glDeleteTextures(2, translucentTexture);
+    if(translucentFBO != 0)
+        glDeleteFramebuffers(1, &translucentFBO);
+    
+    //Create translucent background resources
+    glGenFramebuffers(1, &translucentFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
+    
+    glGenTextures(1, &translucentTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, translucentTexture[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW/4, windowH/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, translucentTexture[0], 0);
+    
+    glGenTextures(1, &translucentTexture[1]);
+    glBindTexture(GL_TEXTURE_2D, translucentTexture[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW/4, windowH/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, translucentTexture[1], 0);
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+        cError("Translucent background FBO initialization failed!");
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    if(firstInit)
     {
-        // Allocate an OpenGL texture
-        glGenTextures(1, &logoTexture);
-        glBindTexture(GL_TEXTURE_2D, logoTexture);
-        // Upload texture to memory
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
-        // Set certain properties of texture
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Wrap texture around
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // Release internal buffer
-        stbi_image_free(dataBuffer);
+        //Create printers
+        plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE, SCREEN_DPI);
+        backgroundMargin = 5.f;
+        
+        //Load logo texture - can't use material class because it writes to the console
+        char path[1024];
+        int width, height, channels;
+        GetDataPath(path, 1024-32);
+        strcat(path, "logo_gray.png");
+        
+        // Allocate image; fail out on error
+        unsigned char* dataBuffer = stbi_load(path, &width, &height, &channels, 4);
+        if(dataBuffer != NULL)
+        {
+            // Allocate an OpenGL texture
+            glGenTextures(1, &logoTexture);
+            glBindTexture(GL_TEXTURE_2D, logoTexture);
+            // Upload texture to memory
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
+            // Set certain properties of texture
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            // Wrap texture around
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            // Release internal buffer
+            stbi_image_free(dataBuffer);
+        }
+        else
+            logoTexture = 0;
+        
+        //Load translucent shaders
+        downsampleShader = new GLSLShader("simpleDownsample.frag");
+        downsampleShader->AddUniform("source", INT);
+        downsampleShader->AddUniform("srcViewport", VEC2);
+        gaussianShader = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
+        gaussianShader->AddUniform("source", INT);
+        gaussianShader->AddUniform("texelOffset", VEC2);
     }
-    else
-        logoTexture = 0;
+}
+
+void IMGUI::GenerateBackground()
+{
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
+    glViewport(0, 0, windowW/4, windowH/4);
+    OpenGLSolids::SetupOrtho();
+    
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glBindTexture(GL_TEXTURE_2D, OpenGLPipeline::getInstance()->getDisplayTexture());
+    
+    downsampleShader->Enable();
+    downsampleShader->SetUniform("source", 0);
+    downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
+    OpenGLSolids::DrawScreenAlignedQuad();
+    downsampleShader->Disable();
+    
+    for(int i=0; i<3; i++)
+    {
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        glBindTexture(GL_TEXTURE_2D, translucentTexture[0]);
+        
+        gaussianShader->Enable();
+        gaussianShader->SetUniform("source", 0);
+        gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
+        OpenGLSolids::DrawScreenAlignedQuad();
+        gaussianShader->Disable();
+        
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glBindTexture(GL_TEXTURE_2D, translucentTexture[1]);
+        
+        gaussianShader->Enable();
+        gaussianShader->SetUniform("source", 0);
+        gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
+        OpenGLSolids::DrawScreenAlignedQuad();
+        gaussianShader->Disable();
+    }
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void IMGUI::Begin()
@@ -197,14 +280,10 @@ void IMGUI::Begin()
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glDisable (GL_LIGHTING);
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable(GL_POLYGON_SMOOTH);
-	//glEnable(GL_LINE_SMOOTH);
-	//glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glLineWidth(1.f);
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ); //for OGLFT
     
@@ -218,9 +297,16 @@ void IMGUI::Begin()
 	glPushMatrix();
 	glLoadIdentity();
     
+    clearHot();
+}
+
+void IMGUI::End()
+{
+    //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
     
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, logoTexture);
     glColor4f(1.f, 1.f, 1.f, 0.1f);
     glBegin(GL_TRIANGLE_STRIP);
@@ -234,11 +320,6 @@ void IMGUI::Begin()
     glVertex2f(windowW - logoMargin, windowH - logoMargin - logoSize);
     glEnd();
     
-    clearHot();
-}
-
-void IMGUI::End()
-{
     //revert to previous projection
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
@@ -247,14 +328,19 @@ void IMGUI::End()
     glPopAttrib();
 }
 
-void IMGUI::DrawPlainText(GLfloat x, GLfloat y, GLfloat *color, const char *text)
+void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const char *text)
 {
-    plainPrinter->Print(color, x, y, FONT_SIZE, text);
+    plainPrinter->Print(glm::value_ptr(color), x, windowH - y - FONT_BASELINE, FONT_SIZE, text);
 }
 
 GLfloat IMGUI::PlainTextLength(const char* text)
 {
     return plainPrinter->TextLength(text);
+}
+
+glm::vec2 IMGUI::PlainTextDimensions(const char *text)
+{
+    return plainPrinter->TextDimensions(text);
 }
 
 bool IMGUI::MouseInRect(int x, int y, int w, int h)
@@ -306,70 +392,150 @@ void IMGUI::KeyUp(SDL_Keycode key)
 {
 }
 
-//static
-void IMGUI::DoLabel(ui_id ID, GLfloat x, GLfloat y, GLfloat* color, const char* text)
+void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat radius)
 {
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+    //Check radius and correct if needed
+    radius = radius < 0.f ? 0.f : radius;
     
+    if((2.f * radius > w) || (2.f * radius > h))
+        radius = w < h ? w/2.f : h/2.f;
+    
+    w -= 2.f * radius;
+    h -= 2.f * radius;
+    x += radius;
+    y += radius;
+    
+    //Get translucent texture
+    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x+m[12], windowH-y-m[13], color, text);
+    glBindTexture(GL_TEXTURE_2D, getTranslucentTexture());
+    glm::vec2 coord;
+    
+    //Draw corners
+    if(radius > 0.f)
+    {
+        glm::vec2 center[4] = { glm::vec2(x, windowH - y),
+                                glm::vec2(x + w, windowH - y),
+                                glm::vec2(x + w, windowH - y - h),
+                                glm::vec2(x, windowH - y -h)};
+        GLfloat startAngle;
+        int divCount = 4;
+        
+        for(int i = 0; i < 4; i++) //Draw 4 corners
+        {
+            glBegin(GL_TRIANGLE_FAN);
+            coord = center[i];
+            glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+            glVertex2fv(glm::value_ptr(coord));
+            
+            startAngle = M_PI_2 - i * M_PI_2;
+            
+            for(int h = 0; h <= divCount; h++)
+            {
+                coord = center[i] + radius * glm::vec2(cosf(startAngle + h/(GLfloat)divCount * M_PI_2), sinf(startAngle + h/(GLfloat)divCount * M_PI_2));
+                glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+                glVertex2fv(glm::value_ptr(coord));
+            }
+            glEnd();
+        }
+    }
+    
+    //Draw central part (cross)
+    glBegin(GL_TRIANGLE_STRIP);
+    coord = glm::vec2(x, windowH - y + radius);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x + w, windowH - y + radius);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x, windowH - y);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x + w, windowH - y);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x - radius, windowH - y);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x + w + radius, windowH - y);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x - radius, windowH - y - h);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x + w + radius, windowH - y - h);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x, windowH - y - h);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x + w, windowH - y - h);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x, windowH - y - h - radius);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    
+    coord = glm::vec2(x + w, windowH - y - h - radius);
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    glEnd();
 }
 
-void IMGUI::DoPanel(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
+void IMGUI::DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat radius)
 {
-    glLoadIdentity();
-    //glScissor(x, getWindowHeight()-y-h, w, getWindowHeight()-y-25.f);
+    if(radius > 0.f)
+    {
+        glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+        DrawRoundedRect(x, y, w, h, radius);
+    }
+    else
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, getTranslucentTexture());
     
-    glDisable(GL_TEXTURE_2D);
-    glBegin(GL_TRIANGLE_STRIP);
-    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
-    glVertex2f(x, windowH - y);
-    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
-    glVertex2f(x + w, windowH - y);
-    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
-    glVertex2f(x, windowH - y - 3.f);
-    glColor4fv(ui_colors[PANEL_TOP_BAR_COLOR]);
-    glVertex2f(x+w, windowH - y - 3.f);
-    
-    glColor4fv(ui_colors[PANEL_LEFT_BAR_COLOR]);
-    glVertex2f(x, windowH - y - 3.f);
-    glColor4fv(ui_colors[PANEL_RIGHT_BAR_COLOR]);
-    glVertex2f(x+w, windowH - y - 3.f);
-    glColor4fv(ui_colors[PANEL_LEFT_BAR_COLOR]);
-    glVertex2f(x, windowH - y - 25.f);
-    glColor4fv(ui_colors[PANEL_RIGHT_BAR_COLOR]);
-    glVertex2f(x+w, windowH - y - 25.f);
-    
-    glColor4fv(ui_colors[PANEL_BACKGROUND_COLOR]);
-    glVertex2f(x, windowH - y -25.f);
-    glVertex2f(x+w, windowH - y -25.f);
-    glVertex2f(x, windowH - y -h);
-    glVertex2f(x+w, windowH - y -h);
-    glEnd();
-    
-    glColor4fv(ui_colors[PANEL_BORDER_COLOR]);
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x+w+1.f, windowH - y);
-    glVertex2f(x+w+1.f, windowH - y - h -1.f);
-    glVertex2f(x, windowH - y - h - 1.f);
-    glVertex2f(x, windowH - y + 1.f);
-    glEnd();
+        glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+        glBegin(GL_TRIANGLE_STRIP);
+        glTexCoord2f(x/(GLfloat)windowW, 1.f - y/(GLfloat)windowH);
+        glVertex2f(x, windowH - y);
+        glTexCoord2f((x + w)/(GLfloat)windowW, 1.f - y/(GLfloat)windowH);
+        glVertex2f(x + w, windowH - y);
+        glTexCoord2f(x/(GLfloat)windowW, 1.f - (y + h)/(GLfloat)windowH);
+        glVertex2f(x, windowH - y - h);
+        glTexCoord2f((x + w)/(GLfloat)windowW, 1.f - (y + h)/(GLfloat)windowH);
+        glVertex2f(x + w, windowH - y - h);
+        glEnd();
+    }
+}
 
-    glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x+5, windowH - y - 8.f, ui_colors[PANEL_TITLE_COLOR], title);
+void IMGUI::DoLabel(GLfloat x, GLfloat y, const char* text, GLfloat* color)
+{
+    glm::vec4 c;
     
-    glTranslatef(x, windowH - y - 25.f, 0);
+    if(color == NULL)
+        c = theme[ACTIVE_TEXT_COLOR];
+    else
+        c = glm::make_vec4(color);
+       
+    DrawPlainText(x, y, c, text);
 }
 
 bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
 {
     bool result = false;
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(MouseInRect(x+m[12], y+m[13], w, h))
+    if(MouseInRect(x, y, w, h))
         setHot(ID);
     
     if(isActive(ID))
@@ -390,60 +556,47 @@ bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const
     }
     
     //drawing
-    glDisable(GL_TEXTURE_2D);
-    
     if(isActive(ID))
-        glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
+        glColor4fv(glm::value_ptr(theme[PUSHED_CONTROL_COLOR]));
     else if(isHot(ID))
-        glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
+        glColor4fv(glm::value_ptr(theme[HOT_CONTROL_COLOR]));
     else
-        glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
+        glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
     
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex2f(x, windowH-y);
-    glVertex2f(x, windowH-y-h);
-    glVertex2f(x+w, windowH-y);
-    glVertex2f(x+w, windowH-y-h);
-    glEnd();
+    DrawRoundedRect(x, y, w, h, 5.f);
     
-    glColor4fv(ui_colors[BUTTON_BORDER_COLOR]);
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x+w+1.f, windowH-y+1.f);
-    glVertex2f(x+w+1.f, windowH-y-h-1.f);
-    glVertex2f(x, windowH-y-h-1.f);
-    glVertex2f(x, windowH - y + 1.f);
-    glEnd();
-    
-    glEnable(GL_TEXTURE_2D);
-    GLfloat len = PlainTextLength(title);
-	
-    DrawPlainText(x+floorf((w-len)/2.f), windowH-y-h/2.f+6.f, ui_colors[BUTTON_TITLE_COLOR], title);
+    glm::vec2 textDim = PlainTextDimensions(title);
+    DrawPlainText(x + floorf((w - textDim.x)/2.f), y + floorf((h - textDim.y)/2.f), theme[ACTIVE_TEXT_COLOR], title);
     
     return result;
 }
 
-double IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat sliderW, GLfloat sliderH, double min, double max, double value, const char* title)
+btScalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat railW, GLfloat railH, GLfloat sliderW, GLfloat sliderH, btScalar min, btScalar max, btScalar value, const char* title)
 {
-    double result = value;
-    GLfloat sliderPosition = (value-min)/(max-min);
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    //Check and correct dimensions
+    if(railH > sliderH)
+        railH = sliderH;
+    if(railW < sliderW)
+        railW = sliderW;
     
-    if(MouseInRect(x+m[12]+sliderPosition*w-sliderW/2.f, y+m[13]-sliderH/2.f, sliderW, sliderH))
+    //Check mouse position
+    btScalar result = value;
+    GLfloat sliderPosition = (value-min)/(max-min);
+    
+    if(MouseInRect(x + backgroundMargin + sliderPosition * railW - sliderW/2.f, y + backgroundMargin + FONT_SIZE + 5.f, sliderW, sliderH))
         setHot(ID);
     
     if(isActive(ID))
     {
         GLfloat mouseX = getMouseX();
-        if(mouseX <= x+m[12])
+        if(mouseX <= x + backgroundMargin)
             sliderPosition = 0;
-        else if(mouseX >=x+m[12]+w)
+        else if(mouseX >= x + backgroundMargin + railW)
             sliderPosition = 1.f;
         else
-            sliderPosition = (mouseX-x-m[12])/w;
+            sliderPosition = (mouseX - x - backgroundMargin)/railW;
         
-        result = min+sliderPosition*(max-min);
+        result = min + sliderPosition * (max - min);
         
         if(!MouseIsDown(true)) //mouse went up
         {
@@ -458,83 +611,89 @@ double IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat slider
         }
     }
     
-    //drawing
-    glDisable(GL_TEXTURE_2D);
-    
-    glBegin(GL_TRIANGLE_STRIP);
-    glColor4fv(ui_colors[SLIDER_BAR_FILLED_COLOR]);
-    glVertex2f(x, windowH-y+2.f);
-    glVertex2f(x, windowH-y-2.f);
-    glVertex2f(x+sliderPosition*w, windowH-y+2.f);
-    glVertex2f(x+sliderPosition*w, windowH-y-2.f);
-    
-    glColor4fv(ui_colors[SLIDER_BAR_EMPTY_COLOR]);
-    glVertex2f(x+sliderPosition*w, windowH-y+2.f);
-    glVertex2f(x+sliderPosition*w, windowH-y-2.f);
-    glVertex2f(x+w, windowH-y+2.f);
-    glVertex2f(x+w, windowH-y-2.f);
-    glEnd();
-    
-    if(isActive(ID))
-        glColor4fv(ui_colors[SLIDER_ACTIVE_COLOR]);
-    else if(isHot(ID))
-        glColor4fv(ui_colors[SLIDER_HOT_COLOR]);
-    else
-        glColor4fv(ui_colors[SLIDER_NORMAL_COLOR]);
-    
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex2f(x+sliderPosition*w-sliderW/2.f, windowH-y+sliderH/2.f);
-    glVertex2f(x+sliderPosition*w+sliderW/2.f, windowH-y+sliderH/2.f);
-    glVertex2f(x+sliderPosition*w-sliderW/2.f, windowH-y-sliderH/2.f);
-    glVertex2f(x+sliderPosition*w+sliderW/2.f, windowH-y-sliderH/2.f);
-    glEnd();
-
-    glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x-2.0, windowH - y + 15.f + sliderH/2.f, ui_colors[SLIDER_TITLE_COLOR], title);
+    //Drawing
+    //background and text
+    glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+    DrawRoundedRect(x, y, railW + 2.f * backgroundMargin, sliderH + 2.f * backgroundMargin + 5.f + FONT_SIZE, 5.f);
+    DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
     
     char buffer[16];
     sprintf(buffer, "%1.2lf", result);
-    GLfloat len = PlainTextLength(buffer);
-    DrawPlainText(x-4.0 + w - len, windowH - y + 15.f + sliderH/2.f, ui_colors[SLIDER_VALUE_COLOR], buffer);
+    glm::vec2 textDim = PlainTextDimensions(buffer);
+    DrawPlainText(x + railW + backgroundMargin - textDim.x, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
     
+    //Bar
+    glDisable(GL_TEXTURE_2D);
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(glm::value_ptr(theme[FILLED_COLOR]));
+    glVertex2f(x + backgroundMargin, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f + railH/2.f);
+    glVertex2f(x + backgroundMargin, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f - railH/2.f);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f + railH/2.f);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f - railH/2.f);
+    
+    glColor4fv(glm::value_ptr(theme[EMPTY_COLOR]));
+    glVertex2f(x + backgroundMargin + sliderPosition * railW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f + railH/2.f);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f - railH/2.f);
+    glVertex2f(x + backgroundMargin + railW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f + railH/2.f);
+    glVertex2f(x + backgroundMargin + railW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH/2.f - railH/2.f);
+    glEnd();
+    
+    //Slider
+    if(isActive(ID))
+        glColor4fv(glm::value_ptr(theme[PUSHED_CONTROL_COLOR]));
+    else if(isHot(ID))
+        glColor4fv(glm::value_ptr(theme[HOT_CONTROL_COLOR]));
+    else
+        glColor4fv(glm::value_ptr(theme[ACTIVE_CONTROL_COLOR]));
+    
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW - sliderW/2.f, windowH - y - backgroundMargin - FONT_SIZE - 5.f);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW + sliderW/2.f, windowH - y - backgroundMargin - FONT_SIZE - 5.f);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW - sliderW/2.f, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH);
+    glVertex2f(x + backgroundMargin + sliderPosition * railW + sliderW/2.f, windowH - y - backgroundMargin - FONT_SIZE - 5.f - sliderH);
+    glEnd();
+
     return result;
 }
 
-void IMGUI::DoProgressBar(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, double progress, const char* title)
+void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat barW, GLfloat barH, btScalar progress, const char* title)
 {
-    glDisable(GL_TEXTURE_2D);
+    //Check and correct progress value
+    progress = progress < btScalar(0.) ? btScalar(0.) : (progress > btScalar(1.) ? btScalar(1.) : progress);
     
-    glBegin(GL_TRIANGLE_STRIP);
-    glColor4fv(ui_colors[PROGRESSBAR_FILLED_COLOR]);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x, windowH - y -h);
-    glVertex2f(x+progress*w, windowH - y);
-    glVertex2f(x+progress*w, windowH - y-h);
-    
-    glColor4fv(ui_colors[PROGRESSBAR_EMPTY_COLOR]);
-    glVertex2f(x+progress*w, windowH - y);
-    glVertex2f(x+progress*w, windowH - y -h);
-    glVertex2f(x+w, windowH - y);
-    glVertex2f(x+w, windowH -y -h);
-    glEnd();
-    
-    glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x, windowH-y+18.f, ui_colors[PROGRESSBAR_TITLE_COLOR], title);
+    //Draw background and title
+    glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+    DrawRoundedRect(x, y, barW + 2.f * backgroundMargin, barH + 2.f * backgroundMargin + 5.f + FONT_SIZE, 5.f);
+    DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
     
     char buffer[16];
-    sprintf(buffer, "%1.2lf%%", progress*100.0);
+    sprintf(buffer, "%1.1lf%%", progress * 100.0);
     GLfloat len = PlainTextLength(buffer);
-    DrawPlainText(x+w-len, windowH- y + 18.f, ui_colors[PROGRESSBAR_VALUE_COLOR], buffer);
+    DrawPlainText(x + backgroundMargin + barW - len, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
+    
+    //Draw bar
+    glDisable(GL_TEXTURE_2D);
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(glm::value_ptr(theme[FILLED_COLOR]));
+    glVertex2f(x + backgroundMargin, windowH - y - backgroundMargin - FONT_SIZE - 5.f);
+    glVertex2f(x + backgroundMargin, windowH - y - backgroundMargin - FONT_SIZE - 5.f - barH);
+    glVertex2f(x + backgroundMargin + progress * barW, windowH - y - backgroundMargin - FONT_SIZE - 5.f);
+    glVertex2f(x + backgroundMargin + progress * barW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - barH);
+    
+    glColor4fv(glm::value_ptr(theme[EMPTY_COLOR]));
+    glVertex2f(x + backgroundMargin + progress * barW, windowH - y - backgroundMargin - FONT_SIZE - 5.f);
+    glVertex2f(x + backgroundMargin + progress * barW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - barH);
+    glVertex2f(x + backgroundMargin + barW, windowH - y - backgroundMargin - FONT_SIZE - 5.f);
+    glVertex2f(x + backgroundMargin + barW, windowH - y - backgroundMargin - FONT_SIZE - 5.f - barH);
+    glEnd();
 }
 
 bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
 {
     bool result = value;
-    GLfloat size = 12.f;
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    GLfloat size = 14.f;
     
-    if(MouseInRect(x+m[12], y+m[13], size, size))
+    if(MouseInRect(x + backgroundMargin, y + backgroundMargin, size, size))
         setHot(ID);
     
     if(isActive(ID))
@@ -556,148 +715,219 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* t
     }
     
     //drawing
+    glm::vec2 textDim = PlainTextDimensions(title);
+    glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+    DrawRoundedRect(x, y, size + textDim.x + 3.f * backgroundMargin, size + 2.f * backgroundMargin, 5.f);
+    DrawPlainText(x + size + backgroundMargin + 5.f, y + backgroundMargin + size/2.f - textDim.y/2.f, theme[ACTIVE_TEXT_COLOR], title);
+    
     glDisable(GL_TEXTURE_2D);
     
     if(isActive(ID))
-        glColor4fv(ui_colors[CHECKBOX_ACTIVE_COLOR]);
+        glColor4fv(glm::value_ptr(theme[PUSHED_CONTROL_COLOR]));
     else if(isHot(ID))
-        glColor4fv(ui_colors[CHECKBOX_HOT_COLOR]);
+        glColor4fv(glm::value_ptr(theme[HOT_CONTROL_COLOR]));
     else
-        glColor4fv(ui_colors[CHECKBOX_NORMAL_COLOR]);
+        glColor4fv(glm::value_ptr(theme[ACTIVE_CONTROL_COLOR]));
     
     glBegin(GL_TRIANGLE_STRIP);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x, windowH - y - size);
-    glVertex2f(x+size, windowH - y);
-    glVertex2f(x+size, windowH - y - size);
+    glVertex2f(x + backgroundMargin, windowH - y - backgroundMargin);
+    glVertex2f(x + backgroundMargin, windowH - y - size - backgroundMargin);
+    glVertex2f(x + size + backgroundMargin, windowH - y - backgroundMargin);
+    glVertex2f(x + size + backgroundMargin, windowH - y - size - backgroundMargin);
     glEnd();
     
-    glColor4fv(ui_colors[CHECKBOX_BORDER_COLOR]);
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x+size+1.f, windowH - y);
-    glVertex2f(x+size+1.f, windowH - y - size -1.f);
-    glVertex2f(x, windowH - y -size -1.f);
-    glVertex2f(x, windowH - y +1.f);
-    glEnd();
-    
-    if(value)
+    if(result)
     {
-        glColor4fv(ui_colors[CHECKBOX_TICK_COLOR]);
+        glColor4fv(glm::value_ptr(theme[FILLED_COLOR]));
         glBegin(GL_TRIANGLE_STRIP);
-        glVertex2f(x+0.2f*size, windowH - y - 0.2f*size);
-        glVertex2f(x+0.2f*size, windowH - y - 0.8f*size);
-        glVertex2f(x+0.8f*size, windowH - y - 0.2f*size);
-        glVertex2f(x+0.8f*size, windowH - y - 0.8f*size);
+        glVertex2f(x + 0.2f * size + backgroundMargin, windowH - y - 0.2f * size - backgroundMargin);
+        glVertex2f(x + 0.2f * size + backgroundMargin, windowH - y - 0.8f * size - backgroundMargin);
+        glVertex2f(x + 0.8f * size + backgroundMargin, windowH - y - 0.2f * size - backgroundMargin);
+        glVertex2f(x + 0.8f * size + backgroundMargin, windowH - y - 0.8f * size - backgroundMargin);
         glEnd();
     }
-    
-    glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x+size+5.f, windowH - y, ui_colors[CHECKBOX_TITLE_COLOR], title);
     
     return result;
 }
 
-bool IMGUI::DoRadioButton(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title)
+unsigned short IMGUI::DoRadioGroup(ui_id ID, GLfloat x, GLfloat y, unsigned short selection, std::vector<std::string>& items, const char *title)
 {
-    bool result = value;
-    GLfloat size = 12.f;
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
+    unsigned short result = selection;
+    GLfloat size = 14.f;
+    GLfloat topOffset = title == NULL ? 0.f : FONT_SIZE + 5.f;
     
-    if(MouseInRect(x+m[12], y+m[13], size, size))
-        setHot(ID);
-    
-    if(isActive(ID))
+    //Check if mouse interacts with any item
+    for(unsigned int i = 0; i < items.size(); i++)
     {
-        if(!MouseIsDown(true)) //mouse went up
+        ID.index = i;
+        
+        if(MouseInRect(x + backgroundMargin, y + backgroundMargin + i * (size + 10.f) + topOffset, size, size))
+            setHot(ID);
+        
+        if(isActive(ID))
         {
-            if(isHot(ID))
-                result = !result;
-            
-            clearActive();
+            if(!MouseIsDown(true)) //mouse went up
+            {
+                if(isHot(ID))
+                    result = i;
+                
+                clearActive();
+            }
+        }
+        else if(isHot(ID))
+        {
+            if(MouseIsDown(true)) //mouse went down
+            {
+                setActive(ID);
+            }
         }
     }
-    else if(isHot(ID))
+    
+    //Drawing
+    //Background and title/items text
+    GLfloat maxLen = 0;
+    GLfloat len;
+    for(unsigned int i = 0; i < items.size(); i++)
+        if((len = PlainTextLength(items[i].c_str())) > maxLen)
+            maxLen = len;
+    
+    glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+    DrawRoundedRect(x, y, 2.f * backgroundMargin + size + 5.f + maxLen, 2.f * backgroundMargin + topOffset + items.size() * (size + 10.f) - 10.f, 5.f);
+    
+    for(unsigned int i = 0; i < items.size(); i++)
     {
-        if(MouseIsDown(true)) //mouse went down
-        {
-            setActive(ID);
-        }
+        glm::vec2 textDim = PlainTextDimensions(items[i].c_str());
+        DrawPlainText(x + backgroundMargin + size + 5.f, y + backgroundMargin + topOffset + size/2.f + i * (size + 10.f) - textDim.y/2.f, theme[ACTIVE_TEXT_COLOR], items[i].c_str());
     }
     
-    //drawing
+    if(title != NULL)
+    {
+        len = PlainTextLength(title);
+        DrawPlainText(x + (2.f * backgroundMargin + size + 5.f + maxLen - len)/2.f, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
+    }
+    
+    //Items
     glDisable(GL_TEXTURE_2D);
+    int divCount = 12;
     
-    if(isActive(ID))
-        glColor4fv(ui_colors[RADIOBUTTON_ACTIVE_COLOR]);
-    else if(isHot(ID))
-        glColor4fv(ui_colors[RADIOBUTTON_HOT_COLOR]);
-    else
-        glColor4fv(ui_colors[RADIOBUTTON_NORMAL_COLOR]);
-    
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(x+size/2.0f, windowH - y - size/2.0f);
-    for(int i=0; i<=12; i++)
-        glVertex2f(x+size/2.f+size/2.f*sinf((float)i/12.f*M_PI*2.f), windowH - (y+size/2.0f+size/2.f*cosf((float)i/12.f*M_PI*2.f)));
-    glEnd();
-    
-    glColor4fv(ui_colors[RADIOBUTTON_BORDER_COLOR]);
-    glBegin(GL_LINE_STRIP);
-    for(int i=0; i<=12; i++)
-        glVertex2f(x+size/2.f+(size+2.f)/2.f*sinf((float)i/12.f*M_PI*2.f), windowH - (y+size/2.0f+(size+2.f)/2.f*cosf((float)i/12.f*M_PI*2.f)));
-    glEnd();
-    
-    if(value)
+    for(unsigned int i = 0; i < items.size(); i++)
     {
-        glColor4fv(ui_colors[RADIOBUTTON_BUTTON_COLOR]);
+        ID.index = i;
+        
+        if(isActive(ID))
+            glColor4fv(glm::value_ptr(theme[PUSHED_CONTROL_COLOR]));
+        else if(isHot(ID))
+            glColor4fv(glm::value_ptr(theme[HOT_CONTROL_COLOR]));
+        else
+            glColor4fv(glm::value_ptr(theme[ACTIVE_CONTROL_COLOR]));
+        
         glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(x+size/2.0f, windowH - y - size/2.0f);
-        for(int i=0; i<=12; i++)
-            glVertex2f(x+size/2.f+(size*0.8f)/2.f*sinf((float)i/12.f*M_PI*2.f), windowH - (y+size/2.0f+(size*0.8f)/2.f*cosf((float)i/12.f*M_PI*2.f)));
+        glVertex2f(x + backgroundMargin + size/2.0f, windowH - y - backgroundMargin - topOffset - i * (size + 10.f) - size/2.f);
+        for(unsigned int h = 0; h <= divCount; h++)
+            glVertex2f(x + backgroundMargin + size/2.f + size/2.f * sinf(h/(GLfloat)divCount * M_PI * 2.f), windowH - y - backgroundMargin - topOffset - i * (size + 10.f) - size/2.f - (size/2.f * cosf(h/(GLfloat)divCount * M_PI * 2.f)));
         glEnd();
+        
+        if(i == result)
+        {
+            glColor4fv(glm::value_ptr(theme[FILLED_COLOR]));
+            glBegin(GL_TRIANGLE_FAN);
+            glVertex2f(x + backgroundMargin + size/2.f, windowH - y - backgroundMargin - topOffset - i * (size + 10.f) - size/2.f);
+            for(unsigned int h = 0; h <= divCount; h++)
+                glVertex2f(x + backgroundMargin + size/2.f + (size/2.f * 0.7f) * sinf(h/(GLfloat)divCount * M_PI * 2.f), windowH - y - backgroundMargin - topOffset - i * (size + 10.f) - size/2.f - ((size/2.f * 0.7f) * cosf(h/(GLfloat)divCount * M_PI * 2.f)));
+            glEnd();
+        }
     }
-    
-    glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x+size+5.f, windowH - y, ui_colors[RADIOBUTTON_TITLE_COLOR], title);
     
     return result;
 }
 
-void IMGUI::DoGauge(ui_id ID, GLfloat x, GLfloat y, GLfloat r, double value, double range[2], const char* title, double dangerRange[2])
+void IMGUI::DoGauge(GLfloat x, GLfloat y, GLfloat diameter, btScalar value, btScalar range[2], btScalar safeRange[2], const char* title)
 {
-    /*glDisable(GL_TEXTURE_2D);
-    
-    glBegin(GL_TRIANGLE_STRIP);
-    glColor4fv(ui_colors[PROGRESSBAR_FILLED_COLOR]);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x, windowH - y -h);
-    glVertex2f(x+progress*w, windowH - y);
-    glVertex2f(x+progress*w, windowH - y-h);
-    
-    glColor4fv(ui_colors[PROGRESSBAR_EMPTY_COLOR]);
-    glVertex2f(x+progress*w, windowH - y);
-    glVertex2f(x+progress*w, windowH - y -h);
-    glVertex2f(x+w, windowH - y);
-    glVertex2f(x+w, windowH -y -h);
-    glEnd();
-    
+    //Background and text
+    //Get translucent texture
+    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
-    DrawPlainText(x, windowH-y+18.f, ui_colors[PROGRESSBAR_TITLE_COLOR], title);
+    glBindTexture(GL_TEXTURE_2D, getTranslucentTexture());
+    
+    int divCount = 24;
+    glm::vec2 coord;
+    glm::vec2 center(x + diameter/2.f, windowH - y - diameter/2.f);
+   
+    glColor4fv(glm::value_ptr(theme[PANEL_COLOR]));
+    glBegin(GL_TRIANGLE_FAN);
+    coord = center;
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+            
+    for(int i = 0; i <= divCount; i++)
+    {
+        coord = center + diameter/2.f * glm::vec2(cosf(i/(GLfloat)divCount * 2.f * M_PI), sinf(i/(GLfloat)divCount * 2.f * M_PI));
+        glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+        glVertex2fv(glm::value_ptr(coord));
+    }
+    glEnd();
     
     char buffer[16];
-    sprintf(buffer, "%1.2lf%%", progress*100.0);
+    sprintf(buffer, "%1.1lf", value);
     GLfloat len = PlainTextLength(buffer);
-    DrawPlainText(x+w-len, windowH- y + 18.f, ui_colors[PROGRESSBAR_VALUE_COLOR], buffer);*/
+    DrawPlainText(x + diameter/2.f - len/2.f, y + diameter/2.f + 20.f, theme[ACTIVE_TEXT_COLOR], buffer);
+    len = PlainTextLength(title);
+    DrawPlainText(x + diameter/2.f - len/2.f, y + diameter/2.f + 20.f + FONT_SIZE, theme[ACTIVE_TEXT_COLOR], title);
+    
+    //Scale
+    GLfloat angleRange = M_PI + M_PI_2;
+    
+    glDisable(GL_TEXTURE_2D);
+    glBegin(GL_TRIANGLE_STRIP);
+    for(int i = 0; i <= divCount; i++)
+    {
+        btScalar value = (1.0 - i/(btScalar)divCount) * (range[1] - range[0]) + range[0];
+        
+        if(value < safeRange[0] || value > safeRange[1])
+            glColor4fv(glm::value_ptr(theme[GAUGE_DANGER_COLOR]));
+        else
+            glColor4fv(glm::value_ptr(theme[GAUGE_SAFE_COLOR]));
+        
+        coord = center + diameter/2.f * 0.85f * glm::vec2(cosf(i/(GLfloat)divCount * angleRange - M_PI/4.f), sinf(i/(GLfloat)divCount * angleRange - M_PI/4.f));
+        glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+        glVertex2fv(glm::value_ptr(coord));
+        coord = center + diameter/2.f * 0.75f * glm::vec2(cosf(i/(GLfloat)divCount * angleRange - M_PI/4.f), sinf(i/(GLfloat)divCount * angleRange - M_PI/4.f));
+        glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+        glVertex2fv(glm::value_ptr(coord));
+    }
+    glEnd();
+    
+    //Arm
+    GLfloat angle = (1.f - (value - range[0])/(range[1] - range[0])) * angleRange;
+    
+    glColor4fv(glm::value_ptr(theme[FILLED_COLOR]));
+    glBegin(GL_TRIANGLES);
+    coord = center + diameter/2.f * 0.9f * glm::vec2(cosf(angle - M_PI/4.f), sinf(angle - M_PI/4.f));
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    coord = center + diameter/2.f * 0.1f * glm::vec2(cosf(angle - M_PI/4.f - M_PI_2), sinf(angle - M_PI/4.f - M_PI_2));
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    coord = center + diameter/2.f * 0.1f * glm::vec2(cosf(angle - M_PI/4.f + M_PI), sinf(angle - M_PI/4.f + M_PI));
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    coord = center + diameter/2.f * 0.9f * glm::vec2(cosf(angle - M_PI/4.f), sinf(angle - M_PI/4.f));
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    coord = center + diameter/2.f * 0.1f * glm::vec2(cosf(angle - M_PI/4.f + M_PI_2), sinf(angle - M_PI/4.f + M_PI_2));
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    coord = center + diameter/2.f * 0.1f * glm::vec2(cosf(angle - M_PI/4.f + M_PI), sinf(angle - M_PI/4.f + M_PI));
+    glTexCoord2f(coord.x/(GLfloat)windowW, coord.y/(GLfloat)windowH);
+    glVertex2fv(glm::value_ptr(coord));
+    glEnd();
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, double fixedRange[2], unsigned int historyLength)
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2], unsigned int historyLength)
 {
     bool result = false;
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(MouseInRect(x+m[12], y+m[13], w, h))
+    if(MouseInRect(x, y, w, h))
         setHot(ID);
     
     if(isActive(ID))
@@ -718,24 +948,9 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
     }
     
     //drawing
+    glColor4fv(glm::value_ptr(theme[PLOT_COLOR]));
+    DrawRoundedRect(x, y, w, h, 5.f);
     glDisable(GL_TEXTURE_2D);
-    
-    /*if(UI->isActive(ID))
-        glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
-    else if(UI->isHot(ID))
-        glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
-    else
-        glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
-    */
-    
-    //background
-    glColor4fv(ui_colors[PLOT_BACKGROUND_COLOR]);
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x, windowH - y -h);
-    glVertex2f(x+w, windowH - y);
-    glVertex2f(x+w, windowH - y -h);
-    glEnd();
     
     //data
     const std::deque<Sample*>& data = sens->getHistory();
@@ -769,12 +984,18 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
         GLfloat dt = w/(GLfloat)(data.size()-1);
     
         //drawing
-        //glDisable(GL_LINE_SMOOTH);
         for(int n = 0; n < dims.size(); n++)
         {
-            glColor4fv(ui_colors[PLOT_DATA_COLOR1 + n % 6]);
+            //set color
+            glm::vec4 color;
             
-            //graph
+            if(dims.size() > 1)
+                color = HSV2RGB(glm::vec4(n/(GLfloat)(dims.size()-1)*0.5, 1.f, 1.f, 1.f));
+            else
+                color = theme[FILLED_COLOR];
+            
+            //draw graph
+            glColor4fv(glm::value_ptr(color));
             glBegin(GL_LINE_STRIP);
             for(int i = 0;  i < data.size(); i++)
             {
@@ -785,20 +1006,14 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
             
             //legend
             glBegin(GL_TRIANGLE_STRIP);
-            /*glVertex2f(x-3.f, windowH - y  - ((GLfloat)n/(GLfloat)(dims.size())) * h);
-            glVertex2f(x, windowH - y  - ((GLfloat)n/(GLfloat)(dims.size())) * h);
-            glVertex2f(x-3.f, windowH - y - ((GLfloat)(n+1)/(GLfloat)(dims.size())) * h);
-            glVertex2f(x, windowH - y - ((GLfloat)(n+1)/(GLfloat)(dims.size())) * h);*/
-            
-            glVertex2f(x-10.f, windowH - y  - n * 10.f);
-            glVertex2f(x, windowH - y - n * 10.f);
-            glVertex2f(x-10.f, windowH - y - (n+1) * 10.f);
-            glVertex2f(x, windowH - y - (n+1) * 10.f);
-            
+            glVertex2f(x -10.f, windowH - y  - n * 10.f - 5.f);
+            glVertex2f(x, windowH - y - n * 10.f - 5.f);
+            glVertex2f(x -10.f, windowH - y - (n + 1) * 10.f - 5.f);
+            glVertex2f(x, windowH - y - (n + 1) * 10.f - 5.f);
             glEnd();
         }
         
-        glColor4fv(ui_colors[PLOT_AXES_COLOR]);
+        glColor4fv(glm::value_ptr(theme[PLOT_TEXT_COLOR]));
         glBegin(GL_LINES);
         if(minValue < 0 && maxValue > 0)
         {
@@ -807,18 +1022,27 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
         }
         glEnd();
         
-        //glEnable(GL_LINE_SMOOTH);
-        glEnable(GL_TEXTURE_2D);
-        char values[32];
-        sprintf(values, "%1.6f %1.6f", minValue, maxValue);
-        DrawPlainText(x, windowH - y - h + 10.f, ui_colors[PLOT_TITLE_COLOR], values);
+        //Check if mouse cursor above legend item and display signal info
+        if(MouseInRect(x - 10.f, y + 5.f, 10.f, dims.size() * 10.f)) //mouse above legend
+        {
+            long selectedDim = (long)floorf((mouseY - y - 5.f)/10.f);
+            if(selectedDim < 0)
+                selectedDim = 0;
+            if(selectedDim > dims.size()-1)
+                selectedDim = dims.size()-1;
+            
+            char buffer[64];
+            sprintf(buffer, "%1.6f", sens->getLastSample().getValue(dims[selectedDim]));
+
+            glEnable(GL_TEXTURE_2D);
+            DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[PLOT_TEXT_COLOR], buffer);
+        }
     }
         
     //title
     glEnable(GL_TEXTURE_2D);
-    GLfloat len = PlainTextLength(title);
-	
-    DrawPlainText(x+floorf((w-len)/2.f), windowH - y - 10.f, ui_colors[PLOT_TITLE_COLOR], title);
+    glm::vec2 titleDim = PlainTextDimensions(title);
+    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
     
     return result;
 }
@@ -826,10 +1050,8 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
 bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sensX, unsigned short dimX, Sensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength)
 {
     bool result = false;
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m); //12, 13, 14 -> x,y,z
     
-    if(MouseInRect(x+m[12], y+m[13], w, h))
+    if(MouseInRect(x, y, w, h))
         setHot(ID);
     
     if(isActive(ID))
@@ -850,24 +1072,10 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Senso
     }
     
     //drawing
-    glDisable(GL_TEXTURE_2D);
-    
-    /*if(UI->isActive(ID))
-     glColor4fv(ui_colors[BUTTON_ACTIVE_COLOR]);
-     else if(UI->isHot(ID))
-     glColor4fv(ui_colors[BUTTON_HOT_COLOR]);
-     else
-     glColor4fv(ui_colors[BUTTON_NORMAL_COLOR]);
-     */
-    
     //background
-    glColor4fv(ui_colors[PLOT_BACKGROUND_COLOR]);
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex2f(x, windowH - y);
-    glVertex2f(x, windowH - y -h);
-    glVertex2f(x+w, windowH - y);
-    glVertex2f(x+w, windowH - y -h);
-    glEnd();
+    glColor4fv(glm::value_ptr(theme[PLOT_COLOR]));
+    DrawRoundedRect(x, y, w, h, 5.f);
+    glDisable(GL_TEXTURE_2D);
     
     //data
     const std::deque<Sample*>& dataX = sensX->getHistory();
@@ -922,11 +1130,8 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Senso
         
         GLfloat dy = h/(maxValueY - minValueY);
         
-        //drawing
-        //glDisable(GL_LINE_SMOOTH);
-        glColor4fv(ui_colors[PLOT_DATA_COLOR1]);
-            
-        //graph
+        //draw graph
+        glColor4fv(glm::value_ptr(theme[FILLED_COLOR]));
         glBegin(GL_LINE_STRIP);
         for(unsigned long i = 0;  i < dataCount; i++)
         {
@@ -936,7 +1141,7 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Senso
         }
         glEnd();
         
-        glColor4fv(ui_colors[PLOT_AXES_COLOR]);
+        glColor4fv(glm::value_ptr(theme[PLOT_TEXT_COLOR]));
         glBegin(GL_LINES);
         if(minValueX * maxValueX < 0)
         {
@@ -949,19 +1154,12 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Senso
             glVertex2f(x + w, windowH - y - h - minValueY * dy);
         }
         glEnd();
-        
-        //glEnable(GL_LINE_SMOOTH);
-        //glEnable(GL_TEXTURE_2D);
-        //char values[32];
-        //sprintf(values, "%1.6f %1.6f", minValue, maxValue);
-        //DrawPlainText(x, windowH - y - h + 10.f, ui_colors[PLOT_TITLE_COLOR], values);
     }
     
     //title
     glEnable(GL_TEXTURE_2D);
-    GLfloat len = PlainTextLength(title);
-	
-    DrawPlainText(x+floorf((w-len)/2.f), windowH - y - 10.f, ui_colors[PLOT_TITLE_COLOR], title);
+    glm::vec2 titleDim = PlainTextDimensions(title);
+    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
     
     return result;
 }

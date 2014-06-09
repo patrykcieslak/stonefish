@@ -14,11 +14,6 @@
 #include "OpenGLPrinter.h"
 #include "Sensor.h"
 
-//font
-#define FONT_NAME "/Library/Fonts/Arial.ttf"
-#define FONT_SIZE 12
-#define SCREEN_DPI 72
-
 //shortcut
 #define cInfo(format, ...)     Console::getInstance()->Print(0, format, ##__VA_ARGS__)
 #define cWarning(format, ...)  Console::getInstance()->Print(1, format, ##__VA_ARGS__)
@@ -36,9 +31,11 @@ class Console
 {
 public:
     void SetRenderSize(GLint w, GLint h);
-    void Render();
+    void Render(bool overlay, GLfloat dt);
     void Clear();
     void Print(int messageType, const char* format, ...);
+    void Scroll(GLfloat amount);
+    void ResetScroll();
     
     SDL_mutex* getLinesMutex();
     
@@ -53,6 +50,8 @@ private:
     OpenGLPrinter* printer;
     GLuint logoTexture;
     SDL_mutex* linesMutex;
+    GLfloat scrollOffset;
+    GLfloat scrollVelocity;
     
     static Console* instance;
 };

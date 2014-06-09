@@ -34,6 +34,10 @@ public:
     
     //virtual methods
     virtual void DoHUD();
+    void ShowHUD();
+    void HideHUD();
+    void ShowConsole();
+    void HideConsole();
     
     //input handling
     bool* joystickButtons;
@@ -55,7 +59,6 @@ public:
     void setSimulationSpeed(btScalar factor);
     SimulationManager* getSimulationManager();
     btScalar getSimulationSpeed();
-    IMGUI* getHUD();
     SDL_Joystick* getJoystick();
     double getFPS();
     double getPhysicsTime();
@@ -79,7 +82,6 @@ private:
     SDL_Thread* loadingThread;
     SDL_Window* window;
     SDL_Joystick* joystick;
-    IMGUI* hud;
     
     SimulationManager* simulation;
     btScalar simSpeedFactor;
@@ -96,6 +98,8 @@ private:
     double fps;
     double physics;
     uint64_t startTime;
+    bool displayHUD;
+    bool displayConsole;
   
     static int RenderLoadingScreen(void* app);
     static SimulationApp* handle;

@@ -11,9 +11,15 @@
 
 #include "common.h"
 
+//OpenGL 2.1 Compatibility
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 #include <OpenGL/glu.h>
+
+//OpenGL 3.3 Core
+//#define GL3_PROTOTYPES
+//#include <OpenGL/gl3.h>
+//#include <OpenGL/gl3ext.h>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -34,10 +40,12 @@
 class SimulationManager;
 class OpenGLView;
 
+//singleton
 class OpenGLPipeline
 {
 public:
-    void Initialize(SimulationManager* sim);
+    void Initialize(SimulationManager* sim, GLint windowWidth, GLint windowHeight);
+    void DrawDisplay();
     void Render();
     void SetRenderingEffects(bool sky, bool shadows, bool fluid, bool sao);
     void SetVisibleElements(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers);
@@ -45,6 +53,7 @@ public:
     
     bool isFluidRendered();
     bool isSAORendered();
+    GLuint getDisplayTexture();
 
     static OpenGLPipeline* getInstance();
     
@@ -65,6 +74,12 @@ private:
     bool showActuators;
     bool showSensors;
     bool showStickers;
+    
+    GLint windowW;
+    GLint windowH;
+    
+    GLuint displayFBO;
+    GLuint displayTexture;
     
     static OpenGLPipeline* instance;
 };

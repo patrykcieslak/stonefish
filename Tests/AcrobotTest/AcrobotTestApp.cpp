@@ -66,13 +66,13 @@ void AcrobotTestApp::DoHUD()
     plot.item = 0;
     plot.index = 0;
     
-    getHUD()->DoXYPlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(1), 0, getSimulationManager()->getSensor(1), 1, "Arm1");
+    IMGUI::getInstance()->DoXYPlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, getSimulationManager()->getSensor(1), 0, getSimulationManager()->getSensor(1), 1, "Arm1");
     
     /*std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
     
-    if(getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "Arm1"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "Arm1"))
     {
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
@@ -96,11 +96,5 @@ void AcrobotTestApp::DoHUD()
      
         delete [] pathToFile;
         delete openDialog;
-     }
-    
-    plot.owner = 1;
-    plot.item = 1;
-    plot.index = 0;
-    //getHUD()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor(1), "Arm2");
-    */
+     }*/
 }

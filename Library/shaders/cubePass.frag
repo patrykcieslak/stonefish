@@ -14,13 +14,13 @@ vec3 get_world_normal()
     frag_coord = (frag_coord-0.5)*2.0;
     vec4 device_normal = vec4(frag_coord, 0.0, 1.0);
     vec3 eye_normal = normalize((inv_proj * device_normal).xyz);
-    vec3 world_normal = normalize(inv_view_rot*eye_normal);
+    vec3 world_normal = normalize(inv_view_rot * eye_normal);
     return world_normal;
 }
 
 void main(void)
 {
     vec3 normal = get_world_normal();
-    vec4 color = textureCube(source, normal, 64.0);
-    gl_FragColor = vec4(color.rgb, 1.0);  //vec4(pow(color.rgb, vec3(1.0/4.0)), 1.0);
+    vec4 color = textureCube(source, normal);
+    gl_FragColor = vec4(2.0 * color.rgb, 1.0);
 }

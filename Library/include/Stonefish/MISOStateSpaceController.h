@@ -20,6 +20,7 @@ public:
     ~MISOStateSpaceController();
     
     void SetGains(const std::vector<btScalar>& g);
+    void SetDesiredValues(const std::vector<btScalar>& d);
     void Reset();
     
     ControllerType getType();
@@ -31,6 +32,7 @@ private:
     DCMotor* output;
     btScalar maxOutput;
     std::vector<btScalar> gains;
+    std::vector<btScalar> desiredValues;
 };
 
 #endif

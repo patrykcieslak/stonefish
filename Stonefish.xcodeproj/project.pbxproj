@@ -407,6 +407,10 @@
 		F71323F518C47FCF00C718D8 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
 		F716FA2518E0DBF700B7E0F2 /* ADC.h in Headers */ = {isa = PBXBuildFile; fileRef = F716FA2418E0DBF700B7E0F2 /* ADC.h */; };
 		F716FA2718E0DE5F00B7E0F2 /* ADC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */; };
+		F7227799194125FD004AF1DA /* simpleDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F722779519412585004AF1DA /* simpleDownsample.frag */; };
+		F722779A194125FD004AF1DA /* gaussianBlur.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7227796194125A1004AF1DA /* gaussianBlur.vert */; };
+		F722779C194125FD004AF1DA /* gaussianBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7227798194125BB004AF1DA /* gaussianBlur.frag */; };
+		F722779D19412604004AF1DA /* fluidSurfaceSun.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7CAD32E19294E48004FBECF /* fluidSurfaceSun.frag */; };
 		F729785B19254CA800B21266 /* tank.obj in CopyFiles */ = {isa = PBXBuildFile; fileRef = F729785A19254C9200B21266 /* tank.obj */; };
 		F73B0A9418C5407300E128CF /* FallingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9218C5407300E128CF /* FallingTestApp.cpp */; };
 		F73B0A9918C5424500E128CF /* FallingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9718C5424500E128CF /* FallingTestManager.cpp */; };
@@ -925,6 +929,10 @@
 			dstPath = Shaders;
 			dstSubfolderSpec = 16;
 			files = (
+				F722779D19412604004AF1DA /* fluidSurfaceSun.frag in CopyFiles */,
+				F7227799194125FD004AF1DA /* simpleDownsample.frag in CopyFiles */,
+				F722779A194125FD004AF1DA /* gaussianBlur.vert in CopyFiles */,
+				F722779C194125FD004AF1DA /* gaussianBlur.frag in CopyFiles */,
 				F7F0ED321930005400EA89F9 /* lightMeter.frag in CopyFiles */,
 				F7F0ED2B192FD7DF00EA89F9 /* tonemapping.frag in CopyFiles */,
 				F77512FA1922CD2200C3AD9E /* saoDownsample.frag in CopyFiles */,
@@ -1417,6 +1425,9 @@
 		F71323F618C4849A00C718D8 /* ToDo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToDo.txt; sourceTree = "<group>"; };
 		F716FA2418E0DBF700B7E0F2 /* ADC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		F716FA2618E0DE5F00B7E0F2 /* ADC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ADC.cpp; sourceTree = "<group>"; };
+		F722779519412585004AF1DA /* simpleDownsample.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = simpleDownsample.frag; sourceTree = "<group>"; };
+		F7227796194125A1004AF1DA /* gaussianBlur.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gaussianBlur.vert; sourceTree = "<group>"; };
+		F7227798194125BB004AF1DA /* gaussianBlur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gaussianBlur.frag; sourceTree = "<group>"; };
 		F729785A19254C9200B21266 /* tank.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tank.obj; sourceTree = "<group>"; };
 		F73B0A9218C5407300E128CF /* FallingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestApp.cpp; sourceTree = "<group>"; };
 		F73B0A9318C5407300E128CF /* FallingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestApp.h; sourceTree = "<group>"; };
@@ -2301,7 +2312,7 @@
 			name = Entities;
 			sourceTree = "<group>";
 		};
-		F75B6E8E18C3E84D0092C1A2 /* Joints */ = {
+		F75B6E8E18C3E84D0092C1A2 /* Constraints */ = {
 			isa = PBXGroup;
 			children = (
 				F7FDACB419201D7900471370 /* Contact.h */,
@@ -2314,7 +2325,7 @@
 				F74CEC1E18E5A9C300D0C42D /* GearJoint.h */,
 				F74CEC2018E5C5AC00D0C42D /* BeltJoint.h */,
 			);
-			name = Joints;
+			name = Constraints;
 			sourceTree = "<group>";
 		};
 		F75B6E8F18C3E8810092C1A2 /* Core */ = {
@@ -2334,18 +2345,18 @@
 			isa = PBXGroup;
 			children = (
 				F7A503DB18E836E400913252 /* OpenGLPipeline.h */,
-				F75B6E3E18C3E74B0092C1A2 /* OpenGLGBuffer.h */,
 				F75B6E4318C3E74B0092C1A2 /* OpenGLSky.h */,
 				F7DD1C011904311600B6BF14 /* OpenGLSun.h */,
+				F75B6E3E18C3E74B0092C1A2 /* OpenGLGBuffer.h */,
 				F75B6E3F18C3E74B0092C1A2 /* OpenGLLight.h */,
 				F75B6E4118C3E74B0092C1A2 /* OpenGLOmniLight.h */,
 				F75B6E4518C3E74B0092C1A2 /* OpenGLSpotLight.h */,
 				F75B6E4818C3E74B0092C1A2 /* OpenGLView.h */,
 				F75B6E3D18C3E74B0092C1A2 /* OpenGLCamera.h */,
 				F75B6E4618C3E74B0092C1A2 /* OpenGLTrackball.h */,
-				F75B6E4018C3E74B0092C1A2 /* OpenGLMaterial.h */,
-				F75B6E4418C3E74B0092C1A2 /* OpenGLSolids.h */,
 				F75D00681928B54D00AF3DFE /* GLSLShader.h */,
+				F75B6E4418C3E74B0092C1A2 /* OpenGLSolids.h */,
+				F75B6E4018C3E74B0092C1A2 /* OpenGLMaterial.h */,
 			);
 			name = Graphics;
 			sourceTree = "<group>";
@@ -2417,7 +2428,7 @@
 			name = Entities;
 			sourceTree = "<group>";
 		};
-		F75B6EFC18C3EA910092C1A2 /* Joints */ = {
+		F75B6EFC18C3EA910092C1A2 /* Constraints */ = {
 			isa = PBXGroup;
 			children = (
 				F7FDACB619201EA500471370 /* Contact.cpp */,
@@ -2430,7 +2441,7 @@
 				F74CEC1C18E5A99200D0C42D /* GearJoint.cpp */,
 				F74CEC2218E5C60B00D0C42D /* BeltJoint.cpp */,
 			);
-			name = Joints;
+			name = Constraints;
 			sourceTree = "<group>";
 		};
 		F75B6EFD18C3EA980092C1A2 /* Actuators */ = {
@@ -2598,7 +2609,7 @@
 			children = (
 				F75B6EFA18C3EA830092C1A2 /* Core */,
 				F75B6EFB18C3EA8A0092C1A2 /* Entities */,
-				F75B6EFC18C3EA910092C1A2 /* Joints */,
+				F75B6EFC18C3EA910092C1A2 /* Constraints */,
 				F75B6EFE18C3EAAF0092C1A2 /* Sensors */,
 				F75B6EFD18C3EA980092C1A2 /* Actuators */,
 				F7FDACA5191F92FC00471370 /* Controllers */,
@@ -2657,6 +2668,9 @@
 				F77512F91922C83200C3AD9E /* saoDownsample.frag */,
 				F7F0ED2A192FD7C500EA89F9 /* tonemapping.frag */,
 				F7F0ED30192FF14700EA89F9 /* lightMeter.frag */,
+				F722779519412585004AF1DA /* simpleDownsample.frag */,
+				F7227796194125A1004AF1DA /* gaussianBlur.vert */,
+				F7227798194125BB004AF1DA /* gaussianBlur.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -2666,7 +2680,7 @@
 			children = (
 				F75B6E8F18C3E8810092C1A2 /* Core */,
 				F75B6E8D18C3E7880092C1A2 /* Entities */,
-				F75B6E8E18C3E84D0092C1A2 /* Joints */,
+				F75B6E8E18C3E84D0092C1A2 /* Constraints */,
 				F75B6E9218C3E9390092C1A2 /* Sensors */,
 				F75B6E8C18C3E7550092C1A2 /* Actuators */,
 				F7FDACA4191F92DA00471370 /* Controllers */,

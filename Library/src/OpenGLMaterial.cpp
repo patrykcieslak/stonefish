@@ -89,7 +89,7 @@ GLuint LoadTexture(const char* filename)
     GLuint texture;
     
     // Allocate image; fail out on error
-    cInfo("Loading texture from: %s\n", filename);
+    cInfo("Loading texture from: %s", filename);
     
     unsigned char* dataBuffer = stbi_load(filename, &width, &height, &channels, 3);
     if(dataBuffer == NULL)

@@ -9,6 +9,7 @@
 #include "Console.h"
 #include "SystemUtil.h"
 #include "stb_image.h"
+#include "IMGUI.h"
 
 Console* Console::instance = NULL;
 
@@ -17,6 +18,8 @@ Console::Console()
     windowW = 800;
     windowH = 600;
     printer = new OpenGLPrinter(FONT_NAME, FONT_SIZE, SCREEN_DPI);
+    scrollOffset = 0;
+    scrollVelocity = 0;
     
     //Load logo texture - can't use material class because it writes to the console
     char path[1024];
@@ -63,17 +66,62 @@ void Console::SetRenderSize(GLint w, GLint h)
     windowH = h;
 }
 
-void Console::Render()
+void Console::Scroll(GLfloat amount)
+{
+    scrollOffset += 1.f * amount;
+    scrollVelocity = 25.f * amount;
+}
+
+void Console::ResetScroll()
+{
+    scrollOffset = 0.f;
+    scrollVelocity = 0.f;
+}
+
+void Console::Render(bool overlay, GLfloat dt)
 {
     if(lines.size() == 0)
         return;
+    
+    //Calculate visible lines range
+    long int maxVisibleLines = (long int)floorf((GLfloat)windowH/(GLfloat)(FONT_SIZE + 5)) + 1;
+    long int linesCount = lines.size();
+    long int visibleLines = maxVisibleLines;
+    long int scrolledLines = 0;
+    
+    if(linesCount < maxVisibleLines) //there is enough space to display all lines
+    {
+        scrollOffset = 0.f;
+        scrollVelocity = 0.f;
+        visibleLines = linesCount;
+    }
+    else //there is more lines than can appear on screen at once
+    {
+        scrolledLines = (long int)floorf(-scrollOffset /(GLfloat)(FONT_SIZE + 5));
+        scrolledLines = scrolledLines < 0 ? 0 : scrolledLines;
+        if(linesCount < scrolledLines + visibleLines)
+            visibleLines = linesCount - scrolledLines;
+
+        if(scrollVelocity != 0.f) //velocity damping (momentum effect)
+        {
+            scrollOffset += scrollVelocity * dt;
+            GLfloat dampingAcc = -scrollVelocity * 3.f;
+            scrollVelocity += dampingAcc * dt;
+        }
+        
+        //springy effect
+        if(scrollOffset > 0.f) //the list is scrolled up too much
+            scrollVelocity -= scrollOffset * 5.f * dt;
+        else if(visibleLines < (maxVisibleLines - 1)) //the list is scrolled down too much
+            scrollVelocity += (1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 1)) * (GLfloat)windowH * 5.f * dt;
+    }
     
     //Set rendering params
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-	glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
@@ -89,21 +137,22 @@ void Console::Render()
 	glPushMatrix();
 	glLoadIdentity();
     
-    //Draw stonefish logo/name/version/author
-    /*GLfloat logoSize = 256.f;
-    
-    glBindTexture(GL_TEXTURE_2D, logoTexture);
-    glColor4f(1.f, 1.f, 1.f, 0.3f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0, 0);
-    glVertex2f(windowW/2.f - logoSize/2.f, windowH/2.f + logoSize/2.f);
-    glTexCoord2f(0, 1.f);
-    glVertex2f(windowW/2.f - logoSize/2.f, windowH/2.f - logoSize/2.f);
-    glTexCoord2f(1.f, 0);
-    glVertex2f(windowW/2.f + logoSize/2.f, windowH/2.f + logoSize/2.f);
-    glTexCoord2f(1.f, 1.f);
-    glVertex2f(windowW/2.f + logoSize/2.f, windowH/2.f - logoSize/2.f);
-    glEnd();*/
+    if(overlay)
+    {
+        //Draw background
+        glBindTexture(GL_TEXTURE_2D, IMGUI::getInstance()->getTranslucentTexture());
+        glColor4f(0.4f, 0.4f, 0.4f, 1.f);
+        glBegin(GL_TRIANGLE_STRIP);
+        glTexCoord2f(0, 0);
+        glVertex2f(0, 0);
+        glTexCoord2f(1.f, 0);
+        glVertex2f(windowW, 0);
+        glTexCoord2f(0, 1.f);
+        glVertex2f(0, windowH);
+        glTexCoord2f(1.f, 1.f);
+        glVertex2f(windowW, windowH);
+        glEnd();
+    }
     
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
@@ -124,22 +173,16 @@ void Console::Render()
     //Rendering params for text
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //for OGLFT
     
-    //Calculate visible lines range
-    long int visibleLines = (long int)floorf((GLfloat)(windowH - 20)/(GLfloat)(FONT_SIZE * 1.3f));
-    long int linesCount = lines.size();
-    if(linesCount < visibleLines)
-        visibleLines = linesCount;
-    
     //Rendering
-    GLfloat info[4] = {1.0, 1.0, 1.0, 1.0};
-    GLfloat warning[4] = {1.0, 1.0, 0.0, 1.0};
-    GLfloat error[4] = {1.0, 0.0, 0.0, 1.0};
+    GLfloat info[4] = {1.f, 1.f, 1.f, 0.95f};
+    GLfloat warning[4] = {1.f, 1.f, 0.f, 1.f};
+    GLfloat error[4] = {1.f, 0.f, 0.f, 1.f};
     GLfloat* colors[3] = {info, warning, error};
     
-    for(long int i = 0; i < visibleLines; i++)
+    for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
     {
         ConsoleMessage* msg = &lines[linesCount-1-i];
-        printer->Print(colors[msg->type], 10.f, 10.f + i * FONT_SIZE * 1.3f, FONT_SIZE, msg->text.c_str());
+        printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
     }
     
     glMatrixMode(GL_MODELVIEW);

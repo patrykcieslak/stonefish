@@ -17,11 +17,17 @@ public:
     SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities = true);
     ~SphericalJoint();
     
+    void ApplyTorque(btVector3 T);
     void ApplyDamping();
     btVector3 Render();
+    
+    void setDamping(btVector3 constantFactor, btVector3 viscousFactor);
+    
     JointType getType();
     
 private:
+    btVector3 sigDamping;
+    btVector3 velDamping;
 };
 
 #endif

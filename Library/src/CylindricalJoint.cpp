@@ -34,10 +34,32 @@ CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, 
     slider->setLowerAngLimit(1.);
     slider->setUpperAngLimit(-1.);
     setConstraint(slider);
+    
+    linSigDamping = btScalar(0.);
+    linVelDamping = btScalar(0.);
+    angSigDamping = btScalar(0.);
+    angVelDamping = btScalar(0.);
 }
 
 CylindricalJoint::~CylindricalJoint()
 {
+}
+
+void CylindricalJoint::setDamping(btScalar linearConstantFactor, btScalar linearViscousFactor, btScalar angularConstantFactor, btScalar angularViscousFactor)
+{
+    linSigDamping = linearConstantFactor > btScalar(0.) ? UnitSystem::SetForce(btVector3(linearConstantFactor,0.,0.)).x() : btScalar(0.);
+    linVelDamping = linearViscousFactor > btScalar(0.) ? linearViscousFactor : btScalar(0.);
+    angSigDamping = angularConstantFactor > btScalar(0.) ? UnitSystem::SetTorque(btVector3(angularConstantFactor,0.,0.)).x() : btScalar(0.);
+    angVelDamping = angularViscousFactor > btScalar(0.) ? angularViscousFactor : btScalar(0.);
+}
+
+void CylindricalJoint::setLimits(btScalar linearMin, btScalar linearMax, btScalar angularMin, btScalar angularMax)
+{
+    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();
+    slider->setLowerLinLimit(UnitSystem::SetLength(linearMin));
+    slider->setUpperLinLimit(UnitSystem::SetLength(linearMax));
+    slider->setLowerAngLimit(UnitSystem::SetAngle(angularMin));
+    slider->setUpperAngLimit(UnitSystem::SetAngle(angularMax));
 }
 
 JointType CylindricalJoint::getType()
@@ -45,8 +67,56 @@ JointType CylindricalJoint::getType()
     return CYLINDRICAL;
 }
 
+void CylindricalJoint::ApplyForce(btScalar F)
+{
+    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    btVector3 force = UnitSystem::SetForce(axis * F);
+    bodyA.applyCentralForce(force);
+    bodyB.applyCentralForce(-force);
+}
+
+void CylindricalJoint::ApplyTorque(btScalar T)
+{
+    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    btVector3 torque = UnitSystem::SetTorque(axis * T);
+    bodyA.applyTorque(torque);
+    bodyB.applyTorque(-torque);
+}
+
 void CylindricalJoint::ApplyDamping()
 {
+    if(linSigDamping > btScalar(0.) || linVelDamping > btScalar(0.) || angSigDamping > btScalar(0.) || angVelDamping > btScalar(0.))
+    {
+        btRigidBody& bodyA = getConstraint()->getRigidBodyA();
+        btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+        btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+        btVector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
+        btScalar v = relativeV.dot(axis);
+        btVector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
+        btScalar av = relativeAV.dot(axis);
+        
+        if(v != btScalar(0.))
+        {
+            btScalar F = linSigDamping * v/fabs(v) + linVelDamping * v;
+            btVector3 force = axis * -F;
+            
+            bodyA.applyCentralForce(force);
+            bodyB.applyCentralForce(-force);
+        }
+        
+        if(av != btScalar(0.))
+        {
+            btScalar T = angSigDamping * av/fabs(av) + angVelDamping * av;
+            btVector3 torque = axis * -T;
+            
+            bodyA.applyTorque(torque);
+            bodyB.applyTorque(-torque);
+        }
+    }
 }
 
 btVector3 CylindricalJoint::Render()

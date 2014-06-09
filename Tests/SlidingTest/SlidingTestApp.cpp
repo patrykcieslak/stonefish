@@ -57,5 +57,5 @@ void SlidingTestApp::DoHUD()
   
     std::vector<unsigned short> dims;
     dims.push_back(2);
-    getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "Height");
+    IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "Height");
 }

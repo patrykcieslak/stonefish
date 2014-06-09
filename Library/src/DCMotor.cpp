@@ -77,5 +77,5 @@ void DCMotor::Update(btScalar dt)
     }
     
     //Drive the revolute joint
-    output->applyTorque(UnitSystem::GetTorque(btVector3(torque,0,0)).x());
+    output->ApplyTorque(UnitSystem::GetTorque(btVector3(torque,0,0)).x());
 }

@@ -31,16 +31,12 @@ JointType BeltJoint::getType()
     return BELT;
 }
 
-void BeltJoint::ApplyDamping()
+btScalar BeltJoint::getRatio()
 {
+    return gearRatio;
 }
 
 btVector3 BeltJoint::Render()
 {
     return btVector3();
-}
-
-btScalar BeltJoint::getRatio()
-{
-    return gearRatio;
 }

@@ -27,6 +27,13 @@ OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLint size, GLint dpi)
         printf("Could not construct font!\n");
         font = NULL;
     }
+    else
+    {
+        font->setCompileMode(OGLFT::Face::GlyphCompileMode::COMPILE);
+        lastFontSize = size;
+        lastFontColor[0] = lastFontColor[1] = lastFontColor[2] = 0.f;
+        lastFontColor[3] = 1.f;
+    }
 }
 
 OpenGLPrinter::~OpenGLPrinter()
@@ -57,8 +64,19 @@ void OpenGLPrinter::Print(GLfloat *color, GLfloat x, GLfloat y, GLfloat size, co
 {
     if(font != NULL)
     {
-        font->setForegroundColor(color); //invalidates cache
-        font->setPointSize(size);        //invalidates cache
+        if(size != lastFontSize)
+        {
+            font->setPointSize(size);
+            lastFontSize = size;
+        }
+        if(lastFontColor[0] != color[0] || lastFontColor[1] != color[1] || lastFontColor[2] != color[2] || lastFontColor[3] != color[3])
+        {
+            font->setForegroundColor(color);
+            lastFontColor[0] = color[0];
+            lastFontColor[1] = color[1];
+            lastFontColor[2] = color[2];
+            lastFontColor[3] = color[3];
+        }
         font->draw(x, y, text);
     }
 }
@@ -67,6 +85,12 @@ GLfloat OpenGLPrinter::TextLength(const char *text)
 {
     OGLFT::BBox bounds = font->measure(text);
     return bounds.x_max_ - bounds.x_min_;
+}
+
+glm::vec2 OpenGLPrinter::TextDimensions(const char *text)
+{
+    OGLFT::BBox bounds = font->measure(text);
+    return glm::vec2(bounds.x_max_ - bounds.x_min_, bounds.y_max_ - bounds.y_min_);
 }
 
 void OpenGLPrinter::Finish()

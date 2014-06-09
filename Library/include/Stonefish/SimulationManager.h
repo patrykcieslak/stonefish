@@ -23,8 +23,9 @@
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
 #include "Console.h"
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
-typedef enum {SEQUENTIAL_IMPULSE, DANTZIG, PROJ_GAUSS_SIEDEL} SolverType;
+typedef enum {SEQUENTIAL_IMPULSE, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 
 typedef struct
@@ -76,7 +77,7 @@ public:
     Contact* getContact(Entity* e0, Entity* e1);
     
     void setGravity(const btVector3& g);
-    btDynamicsWorld* getDynamicsWorld();
+    btSoftRigidDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
     bool isZAxisUp();
@@ -93,7 +94,7 @@ protected:
     static void SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep);
     static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
     
-    btDynamicsWorld* dynamicsWorld;
+    btSoftRigidDynamicsWorld* dynamicsWorld;
     btBroadphaseInterface* dwBroadphase;
     btDefaultCollisionConfiguration* dwCollisionConfig;
     btCollisionDispatcher* dwDispatcher;

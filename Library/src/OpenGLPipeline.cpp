@@ -35,11 +35,12 @@ OpenGLPipeline::OpenGLPipeline()
 OpenGLPipeline::~OpenGLPipeline()
 {
     OpenGLSolids::Destroy();
+    OpenGLView::Destroy();
     OpenGLLight::Destroy();
-    OpenGLSun::Destroy();
-    OpenGLSky::Destroy();
-    OpenGLSky::Destroy();
     OpenGLGBuffer::DeleteShaders();
+    
+    glDeleteTextures(1, &displayTexture);
+    glDeleteFramebuffers(1, &displayFBO);
 }
 
 bool OpenGLPipeline::isFluidRendered()
@@ -52,22 +53,29 @@ bool OpenGLPipeline::isSAORendered()
     return renderSAO;
 }
 
-void OpenGLPipeline::Initialize(SimulationManager* sim)
+GLuint OpenGLPipeline::getDisplayTexture()
+{
+    return displayTexture;
+}
+
+void OpenGLPipeline::Initialize(SimulationManager* sim, GLint windowWidth, GLint windowHeight)
 {
     simulation = sim;
+    windowW = windowWidth;
+    windowH = windowHeight;
     
     //Load shaders and create rendering buffers
-    cInfo("Loading shaders...");
+    cInfo("Loading scene shaders...");
     OpenGLSolids::Init();
     GLSLShader::Init(); //check if shaders available!!!
+    OpenGLSky::getInstance()->Init();
+    OpenGLSun::getInstance()->Init();
     OpenGLGBuffer::LoadShaders();
     OpenGLView::Init();
-    OpenGLSky::Init();
-    OpenGLSun::Init();
     OpenGLLight::Init();
     
     cInfo("Generating sky...");
-    OpenGLSky::Generate(20.f,30.f);
+    OpenGLSky::getInstance()->Generate(45.f,30.f);
     
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");
@@ -81,12 +89,29 @@ void OpenGLPipeline::Initialize(SimulationManager* sim)
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glDisable(GL_LIGHTING);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glPointSize(5.f);
     glLineWidth(2.0f);
     glLineStipple(3, 0xE4E4);
     
+    //Create display framebuffer
+    glGenFramebuffers(1, &displayFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+    
+    glGenTextures(1, &displayTexture);
+    glBindTexture(GL_TEXTURE_2D, displayTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW, windowH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTexture, 0);
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+        cError("Display FBO initialization failed!");
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     cInfo("OpenGL pipeline initialized.");
 }
 
@@ -107,6 +132,15 @@ void OpenGLPipeline::SetVisibleElements(bool coordSystems, bool joints, bool act
     showStickers = stickers;
 }
 
+void OpenGLPipeline::DrawDisplay()
+{
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, displayFBO);
+    glDrawBuffer(GL_BACK);
+    glBlitFramebuffer(0, 0, windowW, windowH, 0, 0, windowW, windowH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+}
+
 void OpenGLPipeline::DrawStandardObjects()
 {
     for(int h=0; h<simulation->entities.size(); h++) //Render entities
@@ -122,6 +156,11 @@ void OpenGLPipeline::DrawSpecialObjects()
 
 void OpenGLPipeline::Render()
 {
+    //Clear display framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
     //Move lights attached to rigid bodies
     for(int i=0; i<simulation->lights.size(); i++)
     {
@@ -139,9 +178,9 @@ void OpenGLPipeline::Render()
             GLuint finalTexture = 0;
             
             //Setup and initialize lighting
-            OpenGLSun::SetCamera(simulation->views[i]);
+            OpenGLSun::getInstance()->SetCamera(simulation->views[i]);
             if(renderShadows)
-                OpenGLSun::RenderShadowMaps(this);
+                OpenGLSun::getInstance()->RenderShadowMaps(this);
             OpenGLLight::SetCamera(simulation->views[i]);
             
             //Setup viewport
@@ -158,15 +197,15 @@ void OpenGLPipeline::Render()
             //Prepare SAO
             if(renderSAO && simulation->views[i]->hasSSAO())
             {
-                glActiveTextureARB(GL_TEXTURE0_ARB);
+                glActiveTexture(GL_TEXTURE0);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getNormalsTexture(0));
                 
-                glActiveTextureARB(GL_TEXTURE1_ARB);
+                glActiveTexture(GL_TEXTURE1);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, OpenGLView::getRandomTexture());
     
-                glActiveTextureARB(GL_TEXTURE2_ARB);
+                glActiveTexture(GL_TEXTURE2);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(0));
                 
@@ -178,7 +217,7 @@ void OpenGLPipeline::Render()
             /////////////////////////////// N O R M A L  P I P E L I N E //////////////////////////////
             {
             normal_pipeline:
-                glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
+                glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                 glDrawBuffer(SCENE_ATTACHMENT);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 
@@ -219,41 +258,41 @@ void OpenGLPipeline::Render()
                 if(renderSky)
                 {
                     glStencilFunc(GL_EQUAL, 0, 0xFF);
-                    OpenGLSky::Render(simulation->views[i], simulation->views[i]->GetViewTransform(), simulation->zUp);
+                    OpenGLSky::getInstance()->Render(simulation->views[i], simulation->views[i]->GetViewTransform(), simulation->zUp);
                 }
                 
                 //4. Bind deferred textures to texture units
                 glStencilFunc(GL_EQUAL, 1, 0xFF);
                 
-                glActiveTextureARB(GL_TEXTURE0_ARB);
+                glActiveTexture(GL_TEXTURE0);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getDiffuseTexture()); //Diffuse is reused
                 
-                glActiveTextureARB(GL_TEXTURE1_ARB);
+                glActiveTexture(GL_TEXTURE1);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(0));
                 
-                glActiveTextureARB(GL_TEXTURE2_ARB);
+                glActiveTexture(GL_TEXTURE2);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getNormalsTexture(0));
                 
-                glActiveTextureARB(GL_TEXTURE3_ARB);
+                glActiveTexture(GL_TEXTURE3);
                 glEnable(GL_TEXTURE_CUBE_MAP);
-                glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getDiffuseCubemap());
+                glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
                 
-                glActiveTextureARB(GL_TEXTURE4_ARB);
+                glActiveTexture(GL_TEXTURE4);
                 glEnable(GL_TEXTURE_CUBE_MAP);
-                glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getReflectionCubemap());
+                glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getReflectionCubemap());
                 
                 //5. Bind SSAO texture if needed
-                glActiveTextureARB(GL_TEXTURE5_ARB);
+                glActiveTexture(GL_TEXTURE5);
                 glEnable(GL_TEXTURE_2D);
                 if(renderSAO && simulation->views[i]->hasSSAO())
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getSSAOTexture());
                 else
                     glBindTexture(GL_TEXTURE_2D, 0);
                 
-                OpenGLSun::SetTextureUnits(0, 2, 1, 6);
+                OpenGLSun::getInstance()->SetTextureUnits(0, 2, 1, 6);
                 OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5, 6);
                 
                 //5. Render ambient pass - sky, ssao
@@ -264,7 +303,7 @@ void OpenGLPipeline::Render()
                 glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_ONE, GL_ONE); //accumulate light
                 
-                OpenGLSun::Render(simulation->views[i]->GetViewTransform()); //Render sun pass
+                OpenGLSun::getInstance()->Render(simulation->views[i]->GetViewTransform()); //Render sun pass
                 
                 for(int h=0; h<simulation->lights.size(); h++) //Render light passes
                     simulation->lights[h]->Render();
@@ -273,35 +312,35 @@ void OpenGLPipeline::Render()
                 glUseProgramObjectARB(0);
                 glDisable(GL_STENCIL_TEST);
                 
-                glActiveTextureARB(GL_TEXTURE0_ARB);
+                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 
-                glActiveTextureARB(GL_TEXTURE1_ARB);
+                glActiveTexture(GL_TEXTURE1);
                 glDisable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 
-                glActiveTextureARB(GL_TEXTURE2_ARB);
+                glActiveTexture(GL_TEXTURE2);
                 glDisable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 
-                glActiveTextureARB(GL_TEXTURE3_ARB);
+                glActiveTexture(GL_TEXTURE3);
                 glDisable(GL_TEXTURE_CUBE_MAP);
                 glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                 
-                glActiveTextureARB(GL_TEXTURE4_ARB);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                 glDisable(GL_TEXTURE_CUBE_MAP);
                 
-                glActiveTextureARB(GL_TEXTURE5_ARB);
+                glActiveTexture(GL_TEXTURE5);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glDisable(GL_TEXTURE_2D);
                 
-                glActiveTextureARB(GL_TEXTURE6_ARB);
+                glActiveTexture(GL_TEXTURE6);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glDisable(GL_TEXTURE_2D);
                 
                 //8. Finish rendering
-                glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 finalTexture = simulation->views[i]->getSceneTexture();
             }
             /////////////////////////////////////////////////////////////////////////////////////
@@ -347,7 +386,7 @@ void OpenGLPipeline::Render()
             //////////////////////// A B O V E  W A T E R  P I P E L I N E //////////////////////
                 {
                     /////////// Render normal scene with special stencil masking ////////////////
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
+                    glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(SCENE_ATTACHMENT);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     
@@ -392,41 +431,41 @@ void OpenGLPipeline::Render()
                     if(renderSky)
                     {
                         glStencilFunc(GL_EQUAL, 0, 0xFF);
-                        OpenGLSky::Render(simulation->views[i], simulation->views[i]->GetViewTransform(), simulation->zUp);
+                        OpenGLSky::getInstance()->Render(simulation->views[i], simulation->views[i]->GetViewTransform(), simulation->zUp);
                     }
                     
                     //4. Bind deferred textures to texture units
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
                     
-                    glActiveTextureARB(GL_TEXTURE0_ARB);
+                    glActiveTexture(GL_TEXTURE0);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getDiffuseTexture()); //Diffuse is reused
                     
-                    glActiveTextureARB(GL_TEXTURE1_ARB);
+                    glActiveTexture(GL_TEXTURE1);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(0));
                     
-                    glActiveTextureARB(GL_TEXTURE2_ARB);
+                    glActiveTexture(GL_TEXTURE2);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getNormalsTexture(0));
                     
-                    glActiveTextureARB(GL_TEXTURE3_ARB);
+                    glActiveTexture(GL_TEXTURE3);
                     glEnable(GL_TEXTURE_CUBE_MAP);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getDiffuseCubemap());
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
                     
-                    glActiveTextureARB(GL_TEXTURE4_ARB);
+                    glActiveTexture(GL_TEXTURE4);
                     glEnable(GL_TEXTURE_CUBE_MAP);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getReflectionCubemap());
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getReflectionCubemap());
                     
                     //5. Bind SSAO texture if needed
-                    glActiveTextureARB(GL_TEXTURE5_ARB);
+                    glActiveTexture(GL_TEXTURE5);
                     glEnable(GL_TEXTURE_2D);
                     if(renderSAO && simulation->views[i]->hasSSAO())
                         glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getSSAOTexture());
                     else
                         glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    OpenGLSun::SetTextureUnits(0, 2, 1, 6);
+                    OpenGLSun::getInstance()->SetTextureUnits(0, 2, 1, 6);
                     OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5, 6);
                     
                     //5. Render ambient pass - sky, ssao
@@ -437,7 +476,7 @@ void OpenGLPipeline::Render()
                     glBlendFunc(GL_ONE, GL_ONE); //accumulate light
                     
                     //6. Render lights
-                    OpenGLSun::Render(simulation->views[i]->GetViewTransform()); //Render sun pass
+                    OpenGLSun::getInstance()->Render(simulation->views[i]->GetViewTransform()); //Render sun pass
                     
                     for(int h=0; h<simulation->lights.size(); h++) //Render light passes
                         simulation->lights[h]->Render();
@@ -446,34 +485,34 @@ void OpenGLPipeline::Render()
                     glUseProgramObjectARB(0);
                     glDisable(GL_STENCIL_TEST);
                     
-                    glActiveTextureARB(GL_TEXTURE0_ARB);
+                    glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE1_ARB);
+                    glActiveTexture(GL_TEXTURE1);
                     glDisable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE2_ARB);
+                    glActiveTexture(GL_TEXTURE2);
                     glDisable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE3_ARB);
+                    glActiveTexture(GL_TEXTURE3);
                     glDisable(GL_TEXTURE_CUBE_MAP);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE4_ARB);
+                    glActiveTexture(GL_TEXTURE4);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                     glDisable(GL_TEXTURE_CUBE_MAP);
                     
-                    glActiveTextureARB(GL_TEXTURE5_ARB);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     glDisable(GL_TEXTURE_2D);
                     
-                    glActiveTextureARB(GL_TEXTURE6_ARB);
+                    glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     glDisable(GL_TEXTURE_2D);
                     
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
                     
                     //////////////// Fill reflected G-buffer ////////////////////////
                     double surface[4];
@@ -489,7 +528,7 @@ void OpenGLPipeline::Render()
                     simulation->views[i]->getGBuffer()->Stop();
                     
                     ///////////////// Render reflected scene with special stencil masking /////////////////////
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
+                    glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(REFLECTION_ATTACHMENT);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     
@@ -540,38 +579,38 @@ void OpenGLPipeline::Render()
                     if(renderSky)
                     {
                         glStencilFunc(GL_EQUAL, 1, 0xFF);
-                        OpenGLSky::Render(simulation->views[i], simulation->views[i]->GetReflectedViewTransform(simulation->fluid), simulation->zUp);
+                        OpenGLSky::getInstance()->Render(simulation->views[i], simulation->views[i]->GetReflectedViewTransform(simulation->fluid), simulation->zUp);
                     }
                     
                     //4. Bind deferred textures to texture units
                     glStencilFunc(GL_EQUAL, 2, 0xFF); //Draw objects where not only surface was drawn
                     
-                    glActiveTextureARB(GL_TEXTURE0_ARB);
+                    glActiveTexture(GL_TEXTURE0);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getDiffuseTexture()); //Diffuse is reused
                     
-                    glActiveTextureARB(GL_TEXTURE1_ARB);
+                    glActiveTexture(GL_TEXTURE1);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(1));
                     
-                    glActiveTextureARB(GL_TEXTURE2_ARB);
+                    glActiveTexture(GL_TEXTURE2);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getNormalsTexture(1));
                     
-                    glActiveTextureARB(GL_TEXTURE3_ARB);
+                    glActiveTexture(GL_TEXTURE3);
                     glEnable(GL_TEXTURE_CUBE_MAP);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getDiffuseCubemap());
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
                     
-                    glActiveTextureARB(GL_TEXTURE4_ARB);
+                    glActiveTexture(GL_TEXTURE4);
                     glEnable(GL_TEXTURE_CUBE_MAP);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getReflectionCubemap());
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getReflectionCubemap());
                     
                     //5. Bind empty texture as SAO - no SAO on reflections
-                    glActiveTextureARB(GL_TEXTURE5_ARB);
+                    glActiveTexture(GL_TEXTURE5);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    OpenGLSun::SetTextureUnits(0, 2, 1, 6);
+                    OpenGLSun::getInstance()->SetTextureUnits(0, 2, 1, 6);
                     OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5, 6);
                     
                     //5. Render ambient pass - sky
@@ -582,7 +621,7 @@ void OpenGLPipeline::Render()
                     glBlendFunc(GL_ONE, GL_ONE); //accumulate light
                     
                     //6. Render lights
-                    OpenGLSun::Render(simulation->views[i]->GetReflectedViewTransform(simulation->fluid)); //Render sun pass
+                    OpenGLSun::getInstance()->Render(simulation->views[i]->GetReflectedViewTransform(simulation->fluid)); //Render sun pass
                     
                     for(int h=0; h<simulation->lights.size(); h++) //Render light passes
                         simulation->lights[h]->Render();
@@ -591,34 +630,34 @@ void OpenGLPipeline::Render()
                     glUseProgramObjectARB(0);
                     glDisable(GL_STENCIL_TEST);
                     
-                    glActiveTextureARB(GL_TEXTURE0_ARB);
+                    glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE1_ARB);
+                    glActiveTexture(GL_TEXTURE1);
                     glDisable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE2_ARB);
+                    glActiveTexture(GL_TEXTURE2);
                     glDisable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE3_ARB);
+                    glActiveTexture(GL_TEXTURE3);
                     glDisable(GL_TEXTURE_CUBE_MAP);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE4_ARB);
+                    glActiveTexture(GL_TEXTURE4);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                     glDisable(GL_TEXTURE_CUBE_MAP);
                     
-                    glActiveTextureARB(GL_TEXTURE5_ARB);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     glDisable(GL_TEXTURE_2D);
                     
-                    glActiveTextureARB(GL_TEXTURE6_ARB);
+                    glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     glDisable(GL_TEXTURE_2D);
                     
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
                     
                     ////////////////// Fill refracted G-buffer //////////////////////////////////////
                     surface[0] = -surface[0];
@@ -633,7 +672,7 @@ void OpenGLPipeline::Render()
                     simulation->views[i]->getGBuffer()->Stop();
            
                     ///////////////// Render refracted scene with special stencil masking /////////////////////
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
+                    glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(REFRACTION_ATTACHMENT);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     
@@ -681,39 +720,39 @@ void OpenGLPipeline::Render()
                     glBlendEquation(GL_FUNC_ADD);
                     glBlendFunc(GL_ONE, GL_ONE); //accumulate light
                     
-                    glActiveTextureARB(GL_TEXTURE0_ARB);
+                    glActiveTexture(GL_TEXTURE0);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getDiffuseTexture()); //Diffuse is reused
                     
-                    glActiveTextureARB(GL_TEXTURE1_ARB);
+                    glActiveTexture(GL_TEXTURE1);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(1));
                     
-                    glActiveTextureARB(GL_TEXTURE2_ARB);
+                    glActiveTexture(GL_TEXTURE2);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getNormalsTexture(1));
                     
-                    glActiveTextureARB(GL_TEXTURE3_ARB);
+                    glActiveTexture(GL_TEXTURE3);
                     glEnable(GL_TEXTURE_CUBE_MAP);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getDiffuseCubemap());
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
                     
-                    glActiveTextureARB(GL_TEXTURE4_ARB);
+                    glActiveTexture(GL_TEXTURE4);
                     glEnable(GL_TEXTURE_CUBE_MAP);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getReflectionCubemap());
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getReflectionCubemap());
                     
                     //5. Bind empty texture - no SAO
-                    glActiveTextureARB(GL_TEXTURE5_ARB);
+                    glActiveTexture(GL_TEXTURE5);
                     glEnable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    OpenGLSun::SetTextureUnits(0, 2, 1, 6);
+                    OpenGLSun::getInstance()->SetTextureUnits(0, 2, 1, 6);
                     OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5, 6);
                     
                     //5. Render ambient pass - sky, ssao
                     OpenGLLight::RenderAmbientLight(simulation->views[i]->GetRefractedViewTransform(simulation->fluid), simulation->zUp);
                     
                     //6. Render lights
-                    OpenGLSun::Render(simulation->views[i]->GetRefractedViewTransform(simulation->fluid)); //Render sun pass
+                    OpenGLSun::getInstance()->Render(simulation->views[i]->GetRefractedViewTransform(simulation->fluid)); //Render sun pass
                     
                     for(int h=0; h<simulation->lights.size(); h++) //Render light passes
                         simulation->lights[h]->Render();
@@ -722,37 +761,37 @@ void OpenGLPipeline::Render()
                     glUseProgramObjectARB(0);
                     glDisable(GL_STENCIL_TEST);
                     
-                    glActiveTextureARB(GL_TEXTURE0_ARB);
+                    glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE1_ARB);
+                    glActiveTexture(GL_TEXTURE1);
                     glDisable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE2_ARB);
+                    glActiveTexture(GL_TEXTURE2);
                     glDisable(GL_TEXTURE_2D);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE3_ARB);
+                    glActiveTexture(GL_TEXTURE3);
                     glDisable(GL_TEXTURE_CUBE_MAP);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                     
-                    glActiveTextureARB(GL_TEXTURE4_ARB);
+                    glActiveTexture(GL_TEXTURE4);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                     glDisable(GL_TEXTURE_CUBE_MAP);
                     
-                    glActiveTextureARB(GL_TEXTURE5_ARB);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     glDisable(GL_TEXTURE_2D);
                     
-                    glActiveTextureARB(GL_TEXTURE6_ARB);
+                    glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_2D, 0);
                     glDisable(GL_TEXTURE_2D);
                     
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 
                     ////////////////// Render water surface using last stencil mask ////////////////
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
+                    glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(SCENE_ATTACHMENT);
                     glEnable(GL_STENCIL_TEST);
                     glStencilMask(0x00);
@@ -767,7 +806,7 @@ void OpenGLPipeline::Render()
                     
                     
                     glDisable(GL_STENCIL_TEST);
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
                     //////////////// Finish rendering /////////////////////////
                     finalTexture = simulation->views[i]->getSceneTexture();
@@ -911,9 +950,10 @@ void OpenGLPipeline::Render()
             
             glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            simulation->views[i]->RenderHDR();
+            simulation->views[i]->RenderHDR(displayFBO);
             
             /////////OVERLAY DUMMIES////////
+            glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
             glBindTexture(GL_TEXTURE_2D, 0);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -1023,6 +1063,8 @@ void OpenGLPipeline::Render()
             //OpenGLSky::ShowCubemap(CONVOLUTION_REFLECT, 400, 0, 400, 400);
             //simulation->views[i]->getGBuffer()->ShowTexture(POSITION2, 0,450,300,200); // FBO debugging
             //simulation->views[i]->getGBuffer()->ShowTexture(POSITION2, 0,200,250,200); // FBO debugging
+            
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             
             delete viewport;
         }

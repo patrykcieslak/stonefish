@@ -66,17 +66,17 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
     clipPlane = NULL;
     
 	// Generate the OGL resources for what we need
-	glGenFramebuffersEXT(1, &fbo);
-	glGenRenderbuffersEXT(1, &depthBuffer);
+	glGenFramebuffers(1, &fbo);
+	glGenRenderbuffers(1, &depthBuffer);
     
 	// Bind the FBO so that the next operations will be bound to it
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     
 	// Bind the depth buffer
-	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthBuffer);
-	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, width, height);
-	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER_EXT, depthBuffer);
-    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
 	// Generate and bind the OGL texture for diffuse
 	glGenTextures(1, &diffuseTexture);
@@ -87,63 +87,63 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// Attach the texture to the FBO
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, diffuseTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, diffuseTexture, 0);
     
 	// Generate and bind the OGL texture for positions
 	glGenTextures(2, positionTexture);
 	glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL); //32-bit precision needed for SAO
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL); //32-bit precision needed for SAO
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// Attach the texture to the FBO
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, positionTexture[0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, positionTexture[0], 0);
     
     glBindTexture(GL_TEXTURE_2D, positionTexture[1]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// Attach the texture to the FBO
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT3_EXT, GL_TEXTURE_2D, positionTexture[1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, positionTexture[1], 0);
     
 	// Generate and bind the OGL texture for normals
 	glGenTextures(2, normalsTexture);
 	glBindTexture(GL_TEXTURE_2D, normalsTexture[0]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// Attach the texture to the FBO
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT, GL_TEXTURE_2D, normalsTexture[0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, normalsTexture[0], 0);
     
     glBindTexture(GL_TEXTURE_2D, normalsTexture[1]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// Attach the texture to the FBO
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT4_EXT, GL_TEXTURE_2D, normalsTexture[1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, normalsTexture[1], 0);
     
     // Check if all worked fine and unbind the FBO
-	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("GBuffer FBO initialization failed!");
 	
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 OpenGLGBuffer::~OpenGLGBuffer()
 {
-    glDeleteRenderbuffersEXT(1, &depthBuffer);
     glDeleteTextures(2, normalsTexture);
 	glDeleteTextures(2, positionTexture);
 	glDeleteTextures(1, &diffuseTexture);
-    glDeleteFramebuffersEXT(1, &fbo);
+    glDeleteRenderbuffers(1, &depthBuffer);
+    glDeleteFramebuffers(1, &fbo);
 }
 
 void OpenGLGBuffer::Start(GLuint texIndex)
@@ -159,21 +159,21 @@ void OpenGLGBuffer::Start(GLuint texIndex)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
     
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
+    glActiveTexture(GL_TEXTURE0);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	
 	GLenum buffers[3];
-    buffers[0] = GL_COLOR_ATTACHMENT0_EXT; //Diffuse reused
+    buffers[0] = GL_COLOR_ATTACHMENT0; //Diffuse reused
     
     if(texIndex == 0)
     {
-        buffers[1] = GL_COLOR_ATTACHMENT1_EXT;
-        buffers[2] = GL_COLOR_ATTACHMENT2_EXT;
+        buffers[1] = GL_COLOR_ATTACHMENT1;
+        buffers[2] = GL_COLOR_ATTACHMENT2;
     }
     else
     {
-        buffers[1] = GL_COLOR_ATTACHMENT3_EXT;
-        buffers[2] = GL_COLOR_ATTACHMENT4_EXT;
+        buffers[1] = GL_COLOR_ATTACHMENT3;
+        buffers[2] = GL_COLOR_ATTACHMENT4;
     }
     
     glDrawBuffers(3, buffers);
@@ -190,7 +190,7 @@ void OpenGLGBuffer::Stop()
     if(clipPlane != NULL)
         glDisable(GL_CLIP_PLANE0);
         
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glPopAttrib();
     
     rendering = false;
@@ -233,7 +233,7 @@ void OpenGLGBuffer::ShowTexture(FBOComponent component, GLfloat x, GLfloat y, GL
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
     
-	glActiveTextureARB(GL_TEXTURE0_ARB);
+	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D, texture);

@@ -13,44 +13,49 @@
 #include "GLSLShader.h"
 #include "OpenGLView.h"
 
+//singleton
 class OpenGLSun
 {
 public:
-    static void Init();
-    static void Destroy();
-    static void Render(const btTransform& viewTransform);
-    static void RenderShadowMaps(OpenGLPipeline* pipe);
-    static void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
-    static void ShowFrustumSplits();
-    static void SetCamera(OpenGLView* view);
-    static void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow);
-    static void SetPosition(GLfloat elevation, GLfloat orientation);
-    static btVector3 GetSunDirection();
-    static glm::vec4 GetSunColor();
+    void Init();
+    void Render(const btTransform& viewTransform);
+    void RenderShadowMaps(OpenGLPipeline* pipe);
+    void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
+    void ShowFrustumSplits();
+    void SetCamera(OpenGLView* view);
+    void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow);
+    void SetPosition(GLfloat elevation, GLfloat orientation);
+    btVector3 GetSunDirection();
+    glm::vec4 GetSunColor();
+    
+    static OpenGLSun* getInstance();
     
 private:
     OpenGLSun();
-    static glm::mat4 BuildCropProjMatrix(ViewFrustum &f);
-    static void UpdateFrustumCorners(ViewFrustum &f, glm::vec3 center, glm::vec3 dir, glm::vec3 up);
-    static void UpdateSplitDist(GLfloat nd, GLfloat fd);
+    ~OpenGLSun();
+    glm::mat4 BuildCropProjMatrix(ViewFrustum &f);
+    void UpdateFrustumCorners(ViewFrustum &f, glm::vec3 center, glm::vec3 dir, glm::vec3 up);
+    void UpdateSplitDist(GLfloat nd, GLfloat fd);
     
-    static GLfloat sunElevation;
-    static GLfloat sunOrientation;
-    static btVector3 sunDirection;
-    static glm::vec4 sunColor;
-    static GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, shadowTextureUnit;
-    static OpenGLView* activeView;
+    GLfloat sunElevation;
+    GLfloat sunOrientation;
+    btVector3 sunDirection;
+    glm::vec4 sunColor;
+    GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, shadowTextureUnit;
+    OpenGLView* activeView;
     
-    static GLuint shadowmapArray;
-    static GLuint shadowmapSplits;
-    static GLuint shadowmapSize;
-    static glm::mat4x4* shadowCPM;
-    static glm::mat4x4 sunModelview;
-    static ViewFrustum* frustum;
-    static GLuint shadowFBO;
+    GLuint shadowmapArray;
+    GLuint shadowmapSplits;
+    GLuint shadowmapSize;
+    glm::mat4x4* shadowCPM;
+    glm::mat4x4 sunModelview;
+    ViewFrustum* frustum;
+    GLuint shadowFBO;
     
-    static GLSLShader* sunShader; //sun light with shadow
-    static GLSLShader* shadowmapShader; //debug draw shadowmap
+    GLSLShader* sunShader; //sun light with shadow
+    GLSLShader* shadowmapShader; //debug draw shadowmap
+    
+    static OpenGLSun* instance;
 };
 
 #endif

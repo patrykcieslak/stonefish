@@ -85,7 +85,7 @@ void OpenGLSpotLight::Render()
         glm::vec3 ldirection((GLfloat)lightDir.getX(), (GLfloat)lightDir.getY(), (GLfloat)lightDir.getZ());
         glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix(activeView->GetViewTransform()));
 
-        glActiveTextureARB(GL_TEXTURE0_ARB + shadowTextureUnit);
+        glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, shadowMap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
@@ -289,7 +289,7 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
     OpenGLSolids::SetupOrtho();
     
 	//Texture setup
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
