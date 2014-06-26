@@ -8,7 +8,7 @@
 
 #include "Trajectory.h"
 
-Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btVector3 offset, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btVector3 offset, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToCOG = solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse() * UnitSystem::SetPosition(offset);
@@ -16,9 +16,10 @@ Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btVector
 
 void Trajectory::Reset()
 {
+    Sensor::Reset();
 }
 
-void Trajectory::Update(btScalar dt)
+void Trajectory::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to imu frame
     btVector3 cog = solid->getRigidBody()->getCenterOfMassPosition();

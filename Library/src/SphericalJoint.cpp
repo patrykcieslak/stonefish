@@ -20,6 +20,8 @@ SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, Soli
     
     sigDamping = btVector3(0.,0.,0.);
     velDamping = btVector3(0.,0.,0.);
+    
+    angleIC = btVector3(0.,0.,0.);
 }
 
 SphericalJoint::~SphericalJoint()
@@ -35,9 +37,14 @@ void SphericalJoint::setDamping(btVector3 constantFactor, btVector3 viscousFacto
     }
 }
 
+void SphericalJoint::setIC(btVector3 angles)
+{
+    angleIC = UnitSystem::SetAngularVelocity(angles);
+}
+
 JointType SphericalJoint::getType()
 {
-    return SPHERICAL;
+    return JOINT_SPHERICAL;
 }
 
 void SphericalJoint::ApplyTorque(btVector3 T)
@@ -68,6 +75,11 @@ void SphericalJoint::ApplyDamping()
         bodyA.applyTorque(torque);
         bodyB.applyTorque(-torque);
     }
+}
+
+bool SphericalJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance)
+{
+    return true;
 }
 
 btVector3 SphericalJoint::Render()

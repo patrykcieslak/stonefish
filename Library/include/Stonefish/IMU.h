@@ -15,10 +15,10 @@
 class IMU : public Sensor
 {
 public:
-    IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, unsigned int historyLength = 1);
+    IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
+    void InternalUpdate(btScalar dt);
     void Reset();
-    void Update(btScalar dt);
     unsigned short getNumOfDimensions();
     
 protected:

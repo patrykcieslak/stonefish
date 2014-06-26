@@ -28,17 +28,7 @@ btPairCachingGhostObject* GhostEntity::getGhost()
     return ghost;
 }
 
-btTransform GhostEntity::getTransform()
-{
-    return ghost->getWorldTransform();
-}
-
-void GhostEntity::setTransform(const btTransform &trans)
-{
-    ghost->setWorldTransform(trans);
-}
-
-void GhostEntity::AddToDynamicsWorld(btDynamicsWorld *world)
+void GhostEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
     world->addCollisionObject(ghost);
 }

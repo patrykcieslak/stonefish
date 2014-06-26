@@ -17,11 +17,12 @@ public:
     FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
     ~FixedJoint();
     
-    void ApplyDamping(){} //Not applicable
     btVector3 Render();
     JointType getType();
     
-private:
+    //Not applicable
+    void ApplyDamping(){}
+    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance){ return true; }
 };
 
 #endif

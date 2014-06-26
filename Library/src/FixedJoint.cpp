@@ -25,7 +25,7 @@ FixedJoint::~FixedJoint()
 
 JointType FixedJoint::getType()
 {
-    return FIXED;
+    return JOINT_FIXED;
 }
 
 btVector3 FixedJoint::Render()

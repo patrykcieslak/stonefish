@@ -11,7 +11,7 @@
 
 #include "OpenGLPipeline.h"
 #include "GLSLShader.h"
-#include "Entity.h"
+#include "SolidEntity.h"
 #include "OpenGLCamera.h"
 
 #define Max(a, b)   (((a) > (b)) ? (a) : (b))
@@ -39,7 +39,7 @@ public:
     virtual void RenderDummy() = 0;
     virtual void RenderShadowMap(OpenGLPipeline* pipe) = 0;
     virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale) = 0;
-    void GlueToEntity(Entity* ent);
+    void GlueToEntity(SolidEntity* ent);
     void Activate();
     void Deactivate();
     bool isActive();
@@ -47,8 +47,7 @@ public:
     glm::vec4 getColor();
     btVector3 getViewPosition();
     btVector3 getPosition();
-    //btVector3 getPosition();
-    Entity* getHoldingEntity();
+    SolidEntity* getHoldingEntity();
     
     //Ambient light and shaders
     static void Init();
@@ -61,7 +60,7 @@ public:
     static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat intensity);
     
 protected:
-    Entity* holdingEntity;
+    SolidEntity* holdingEntity;
     bool active;
     btVector3 relpos;
     btVector3 pos;

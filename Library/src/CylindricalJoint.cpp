@@ -39,6 +39,9 @@ CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, 
     linVelDamping = btScalar(0.);
     angSigDamping = btScalar(0.);
     angVelDamping = btScalar(0.);
+    
+    displacementIC = btScalar(0.);
+    angleIC = btScalar(0.);
 }
 
 CylindricalJoint::~CylindricalJoint()
@@ -62,9 +65,15 @@ void CylindricalJoint::setLimits(btScalar linearMin, btScalar linearMax, btScala
     slider->setUpperAngLimit(UnitSystem::SetAngle(angularMax));
 }
 
+void CylindricalJoint::setIC(btScalar displacement, btScalar angle)
+{
+    displacementIC = UnitSystem::SetLength(displacement);
+    angleIC = UnitSystem::SetAngle(angle);
+}
+
 JointType CylindricalJoint::getType()
 {
-    return CYLINDRICAL;
+    return JOINT_CYLINDRICAL;
 }
 
 void CylindricalJoint::ApplyForce(btScalar F)
@@ -117,6 +126,11 @@ void CylindricalJoint::ApplyDamping()
             bodyB.applyTorque(-torque);
         }
     }
+}
+
+bool CylindricalJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance)
+{
+    return true;
 }
 
 btVector3 CylindricalJoint::Render()

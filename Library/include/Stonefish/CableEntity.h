@@ -9,7 +9,6 @@
 #ifndef __Stonefish_CableEntity__
 #define __Stonefish_CableEntity__
 
-#include <BulletSoftBody/btSoftBodyHelpers.h>
 #include "Entity.h"
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
@@ -24,14 +23,12 @@ public:
     EntityType getType();
     void SetLook(Look newLook);
     void Render();
-    void AddToDynamicsWorld(btDynamicsWorld* world);
-    void setTransform(const btTransform& trans);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void ApplyGravity();
     void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
                                 btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                 const btTransform& worldTransform, const btVector3& velocity, const btVector3& angularVelocity);
     
-    btTransform getTransform();
     Material* getMaterial();
     btRigidBody* getFirstEnd();
     btRigidBody* getSecondEnd();

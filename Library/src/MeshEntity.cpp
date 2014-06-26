@@ -107,7 +107,7 @@ MeshEntity::~MeshEntity(void)
 
 SolidEntityType MeshEntity::getSolidType()
 {
-    return MESH;
+    return SOLID_MESH;
 }
 
 void MeshEntity::SetLook(Look newLook)

@@ -962,11 +962,11 @@ void OpenGLPipeline::Render()
             simulation->views[i]->SetViewTransform();
             
             //Coordinate systems
-            //OpenGLSolids::DrawCoordSystem(2.f);
+            OpenGLSolids::DrawCoordSystem(2.f);
             
             if(showCoordSys)
             {
-                for(int h=0; h<simulation->entities.size(); h++)
+                for(int h = 0; h < simulation->entities.size(); h++)
                     if(simulation->entities[h]->getType() == ENTITY_SOLID)
                     {
                         SolidEntity* solid = (SolidEntity*)simulation->entities[h];
@@ -982,6 +982,11 @@ void OpenGLPipeline::Render()
 #endif
                         OpenGLSolids::DrawCoordSystem(0.1f);
                         glPopMatrix();
+                    }
+                    else if(simulation->entities[h]->getType() == ENTITY_FEATHERSTONE)
+                    {
+                        FeatherstoneEntity* fe = (FeatherstoneEntity*)simulation->entities[h];
+                        fe->RenderStructure();
                     }
             }
             
@@ -1010,6 +1015,11 @@ void OpenGLPipeline::Render()
             for(int h = 0; h < simulation->sensors.size(); h++)
                 if(simulation->sensors[h]->isRenderable())
                     simulation->sensors[h]->Render();
+            
+            //Paths
+            for(int h = 0; h < simulation->pathGenerators.size(); h++)
+                if(simulation->pathGenerators[h]->isRenderable())
+                    simulation->pathGenerators[h]->Render();
             
             //Stickers
             glDisable(GL_DEPTH_TEST);

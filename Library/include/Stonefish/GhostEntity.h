@@ -20,11 +20,10 @@ class GhostEntity : public Entity
 public:
     GhostEntity(std::string uniqueName);
     virtual ~GhostEntity();
+    
     EntityType getType();
     btPairCachingGhostObject* getGhost();
-    btTransform getTransform();
-    void setTransform(const btTransform& trans);
-    void AddToDynamicsWorld(btDynamicsWorld* world);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     
     virtual GhostType getGhostType() = 0;
     virtual void Render() = 0;

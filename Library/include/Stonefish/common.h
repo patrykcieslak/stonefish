@@ -20,6 +20,7 @@
 //Bullet Physics
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
+#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 
 //OGLFT
 #define OGLFT_NO_SOLID

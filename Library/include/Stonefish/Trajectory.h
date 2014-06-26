@@ -15,10 +15,10 @@
 class Trajectory : public Sensor
 {
 public:
-    Trajectory(std::string uniqueName, SolidEntity* attachment, btVector3 offset = btVector3(0,0,0), unsigned int historyLength = 1);
+    Trajectory(std::string uniqueName, SolidEntity* attachment, btVector3 offset = btVector3(0,0,0), btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
+    void InternalUpdate(btScalar dt);
     void Reset();
-    void Update(btScalar dt);
     unsigned short getNumOfDimensions();
     void Render();
     

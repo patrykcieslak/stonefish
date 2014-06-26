@@ -66,13 +66,13 @@ void AcrobotTestApp::DoHUD()
     plot.item = 0;
     plot.index = 0;
     
-    IMGUI::getInstance()->DoXYPlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, getSimulationManager()->getSensor(1), 0, getSimulationManager()->getSensor(1), 1, "Arm1");
+    //IMGUI::getInstance()->DoXYPlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, getSimulationManager()->getSensor(1), 0, getSimulationManager()->getSensor(1), 1, "Arm1");
     
-    /*std::vector<unsigned short> dims;
+    std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
-    
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "Arm1"))
+ 
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
     {
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
@@ -80,14 +80,14 @@ void AcrobotTestApp::DoHUD()
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            const std::deque<Sample*>& data = getSimulationManager()->getSensor(0)->getHistory();
+            const std::deque<Sample*>& data = getSimulationManager()->getSensor("Encoder1")->getHistory();
             if(data.size() > 0)
             {
                 FILE* fp;
                 fp = fopen(pathToFile, "wt");
                 
                 for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6lf\t%1.6lf\n", data[i]->getTimestamp(), data[i]->getValue(1));
+                    fprintf(fp, "%1.6lf\t%1.6lf\t%1.6lf\n", data[i]->getTimestamp(), data[i]->getValue(0), data[i]->getValue(1));
                 fclose(fp);
      
                 cInfo("Saved plot data to %s.\n", pathToFile);
@@ -96,5 +96,5 @@ void AcrobotTestApp::DoHUD()
      
         delete [] pathToFile;
         delete openDialog;
-     }*/
+     }
 }

@@ -57,9 +57,8 @@ void RollingTestApp::DoHUD()
     std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
-    dims.push_back(2);
     
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), dims, "RPY"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("EncoderWheel"), dims, "Enc"))
     {
          NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
@@ -67,14 +66,14 @@ void RollingTestApp::DoHUD()
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            const std::deque<Sample*>& data = getSimulationManager()->getSensor(0)->getHistory();
+            const std::deque<Sample*>& data = getSimulationManager()->getSensor("EncoderWheel")->getHistory();
             if(data.size() > 0)
             {
                 FILE* fp;
                 fp = fopen(pathToFile, "wt");
                 
                 for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6f\n", data[i]->getValue(0));
+                    fprintf(fp, "%1.6f\n", data[i]->getValue(1));
                 fclose(fp);
      
                 printf("Saved plot data to %s.\n", pathToFile);

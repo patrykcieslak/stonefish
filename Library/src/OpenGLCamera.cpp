@@ -108,7 +108,7 @@ btVector3 OpenGLCamera::GetUpDirection()
     return up;
 }
 
-void OpenGLCamera::GlueToEntity(Entity *ent)
+void OpenGLCamera::GlueToEntity(SolidEntity *ent)
 {
     holdingEntity = ent;
 }

@@ -8,7 +8,7 @@
 
 #include "IMU.h"
 
-IMU::IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+IMU::IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -16,12 +16,11 @@ IMU::IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, 
 
 void IMU::Reset()
 {
-    
+    Sensor::Reset();
 }
 
-void IMU::Update(btScalar dt)
+void IMU::InternalUpdate(btScalar dt)
 {
-    
 }
 
 unsigned short IMU::getNumOfDimensions()

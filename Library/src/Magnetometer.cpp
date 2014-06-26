@@ -8,21 +8,20 @@
 
 #include "Magnetometer.h"
 
-Magnetometer::Magnetometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, unsigned short resolution, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+Magnetometer::Magnetometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, unsigned short resolution, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
     axis = senseAxis;
     bits = resolution;
-    
-    Reset();
 }
 
 void Magnetometer::Reset()
 {
+    Sensor::Reset();
 }
 
-void Magnetometer::Update(btScalar dt)
+void Magnetometer::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to acc frame
     btMatrix3x3 toMagFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();

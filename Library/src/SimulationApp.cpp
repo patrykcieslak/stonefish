@@ -9,9 +9,7 @@
 #include "SimulationApp.h"
 #include "SystemUtil.h"
 
-SimulationApp* SimulationApp::handle = NULL;
-
-//////////////////////////////////////
+#pragma mark Constructors
 SimulationApp::SimulationApp(const char* name, int width, int height, SimulationManager* sim)
 {
     SimulationApp::handle = this;
@@ -31,6 +29,7 @@ SimulationApp::SimulationApp(const char* name, int width, int height, Simulation
 	physics = 0.0;
 }
 
+#pragma mark - Destructor
 SimulationApp::~SimulationApp()
 {
 	if(joystick != NULL)
@@ -41,6 +40,7 @@ SimulationApp::~SimulationApp()
 	}
 }
 
+#pragma mark - Accessors
 void SimulationApp::setSimulationSpeed(btScalar factor)
 {
     if(factor > 0.f)
@@ -124,6 +124,7 @@ const char* SimulationApp::getShaderPath()
     return shaderPath;
 }
 
+#pragma mark - Initialization
 void SimulationApp::Init(const char* dataPath, const char* shaderPath)
 {
     this->dataPath = dataPath;
@@ -220,13 +221,14 @@ void SimulationApp::InitializeSDL()
 void SimulationApp::InitializeSimulation()
 {
     cInfo("Building scenario...");
-    simulation->BuildScenario();
+    simulation->RestartScenario();
     cInfo("Synchronizing motion states...");
     simulation->getDynamicsWorld()->synchronizeMotionStates();
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.", btGetVersion()/100, btGetVersion()%100);
 }
 
-//window
+#pragma mark - Events
+#pragma mark window
 void SimulationApp::WindowEvent(SDL_Event* event)
 {
     int w, h;
@@ -240,7 +242,7 @@ void SimulationApp::WindowEvent(SDL_Event* event)
     }
 }
 
-//keyboard
+#pragma mark keyboard
 void SimulationApp::KeyDown(SDL_Event *event)
 {
     switch (event->key.keysym.sym)
@@ -273,7 +275,7 @@ void SimulationApp::KeyUp(SDL_Event *event)
 {
 }
 
-//mouse
+#pragma mark mouse
 void SimulationApp::MouseDown(SDL_Event *event)
 {
 }
@@ -290,7 +292,7 @@ void SimulationApp::MouseScroll(SDL_Event *event)
 {
 }
 
-//joystick
+#pragma mark joystick
 void SimulationApp::JoystickDown(SDL_Event *event)
 {
 }
@@ -303,7 +305,7 @@ void SimulationApp::ProcessInputs()
 {
 }
 
-//event loop
+#pragma mark loops
 void SimulationApp::EventLoop()
 {
     SDL_Event event;
@@ -445,10 +447,10 @@ void SimulationApp::AppLoop()
         }
     }
     
-    glFlush();
 	SDL_GL_SwapWindow(window);
 }
 
+#pragma mark - Basic Control
 void SimulationApp::DoHUD()
 {
     char buffer[256];
@@ -457,7 +459,7 @@ void SimulationApp::DoHUD()
     slider1.owner = 0;
     slider1.item = 3;
     slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 100.f, 5.f, 5.f, 20.f, 100.f, 1000.f, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 100.0, 5.f, 5.f, 20.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
     //Bottom panel
     IMGUI::getInstance()->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
@@ -514,7 +516,9 @@ void SimulationApp::CleanUp()
     SDL_Quit();
 }
 
-///////Static/////////////////
+#pragma mark - Statics
+SimulationApp* SimulationApp::handle = NULL;
+
 SimulationApp* SimulationApp::getApp()
 {
     return SimulationApp::handle;

@@ -186,7 +186,7 @@ BoxEntity::~BoxEntity()
 
 SolidEntityType BoxEntity::getSolidType()
 {
-    return BOX;
+    return SOLID_BOX;
 }
 
 void BoxEntity::BuildCollisionList()

@@ -13,6 +13,7 @@
 #include "OpenGLGBuffer.h"
 #include "GLSLShader.h"
 #include "FluidEntity.h"
+#include "SolidEntity.h"
 
 #define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1_EXT
 #define REFLECTION_ATTACHMENT   GL_COLOR_ATTACHMENT2_EXT
@@ -98,9 +99,8 @@ protected:
     GLuint ssaoFBO;
     GLuint ssaoTexture;
     
-    GLuint hBlurFBO;
+    GLuint blurFBO;
     GLuint hBlurTexture;
-    GLuint vBlurFBO;
     GLuint vBlurTexture;
     
     GLuint lightMeterFBO;

@@ -9,43 +9,47 @@
 #ifndef __Stonefish_SolidEntity__
 #define __Stonefish_SolidEntity__
 
+#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "Entity.h"
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
 #include "GeometryUtil.h"
 
-typedef enum {MESH = 0, SPHERE, CYLINDER, BOX, TORUS, COMPOUND} SolidEntityType;
+typedef enum {SOLID_MESH = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidEntityType;
 
 //pure virtual class
 class SolidEntity : public Entity
 {
+    friend class FeatherstoneEntity;
+    
 public:
     SolidEntity(std::string uniqueName, Material* mat);
     virtual ~SolidEntity();
     
     EntityType getType();
     void GetAABB(btVector3& min, btVector3& max);
-    void AddToDynamicsWorld(btDynamicsWorld* world);
-    void AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& worldTransform);
-    void RemoveFromDynamicsWorld(btDynamicsWorld* world);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+    void RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world);
+
     void ApplyGravity();
     void SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia);
     void Render();
-    
+
+    virtual btCollisionShape* BuildCollisionShape() = 0;
     virtual void SetLook(Look newLook);
     virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
     
     virtual SolidEntityType getSolidType() = 0;
-    virtual btCollisionShape* BuildCollisionShape() = 0;
     virtual void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
                                         btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                         btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
                                         const btVector3& angularVelocity = btVector3(0,0,0)) = 0;
     
     void setDisplayCoordSys(bool enabled);
-    void setTransform(const btTransform& trans);
-    btTransform getTransform();
     btRigidBody* getRigidBody();
+    btMultiBodyLinkCollider* getMultibodyLinkCollider();
+    btTransform getTransform();
     btTransform getLocalTransform();
     btVector3 getMomentsOfInertia();
     btScalar getMass();
@@ -63,9 +67,11 @@ protected:
     virtual void BuildRigidBody();
     virtual void BuildDisplayList();
     virtual void BuildCollisionList() = 0;
-
+    void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
+    
     Material* material;
     btRigidBody* rigidBody;
+    btMultiBodyLinkCollider* multibodyCollider;
     btScalar mass;
     btVector3 Ipri;  //principal moments of inertia
     btTransform localTransform;

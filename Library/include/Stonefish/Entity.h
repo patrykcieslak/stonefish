@@ -17,7 +17,7 @@
 
 typedef enum
 {
-    ENTITY_STATIC, ENTITY_SOLID, ENTITY_CABLE, ENTITY_GHOST
+    ENTITY_STATIC, ENTITY_SOLID, ENTITY_CABLE, ENTITY_GHOST, ENTITY_FEATHERSTONE
 }
 EntityType;
 
@@ -44,9 +44,7 @@ public:
     
    	virtual EntityType getType() = 0;
     virtual void Render() = 0;
-    virtual btTransform getTransform() = 0;
-    virtual void setTransform(const btTransform& trans) = 0;
-    virtual void AddToDynamicsWorld(btDynamicsWorld* world) = 0;
+    virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world) = 0;
     virtual void GetAABB(btVector3& min, btVector3& max);
         
 private:

@@ -8,6 +8,7 @@
 
 #include "ServoController.h"
 
+#pragma mark Constructors
 ServoController::ServoController(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
 {
     motor = m;
@@ -20,10 +21,12 @@ ServoController::ServoController(std::string uniqueName, DCMotor* m, FakeRotaryE
     Reset();
 }
 
+#pragma mark - Destructor
 ServoController::~ServoController()
 {
 }
 
+#pragma mark - Controller
 void ServoController::Reset()
 {
     targetPos = 0.0;
@@ -31,28 +34,15 @@ void ServoController::Reset()
     integratedError = 0.0;
 }
 
-void ServoController::SetPosition(btScalar pos)
-{
-    targetPos = UnitSystem::SetAngle(pos);
-}
-
-void ServoController::SetGains(btScalar P, btScalar I, btScalar D)
-{
-    gainP = P;
-    gainI = I;
-    gainD = D;
-}
-
 ControllerType ServoController::getType()
 {
-    return SERVO;
+    return CONTROLLER_DCSERVO;
 }
 
-void ServoController::Tick()
+void ServoController::Tick(btScalar dt)
 {
     //get measurements
     Sample encSample = encoder->getLastSample();
-    btScalar dt = btScalar(1.)/freq;
     
     //calculate error
     btScalar error = targetPos - encSample.getValue(0);
@@ -64,4 +54,17 @@ void ServoController::Tick()
     btScalar control = gainP * error + gainI * integratedError + gainD * derivativeError;
     control = control > maxV ? maxV : (control < -maxV ? -maxV : control);
     motor->setVoltage(control);
+}
+
+#pragma mark - Servo
+void ServoController::SetPosition(btScalar pos)
+{
+    targetPos = UnitSystem::SetAngle(pos);
+}
+
+void ServoController::SetGains(btScalar P, btScalar I, btScalar D)
+{
+    gainP = P;
+    gainI = I;
+    gainD = D;
 }

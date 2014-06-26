@@ -95,75 +95,88 @@ float calculateShadowCoef(float depth, vec4 eyePosition, float bias)
     }
 }
 
+void unpackMaterialData(float data, out float diffuse, out float roughness, out float f0, out float reflection)
+{
+    //decode
+    reflection = floor(data / (256.0 * 256.0 * 256.0));
+    f0 = floor((data - reflection * 256.0 * 256.0 * 256.0) / (256.0 * 256.0));
+    roughness = floor((data - reflection * 256.0 * 256.0 * 256.0 - f0 * 256.0 * 256.0) / 256.0);
+    diffuse = floor(data - reflection * 256.0 * 256.0 * 256.0 - f0 * 256.0 * 256.0 - roughness * 256.0);
+    
+    //normalize
+    reflection /= 256.0;
+    f0 /= 256.0;
+    roughness /= 256.0;
+    diffuse /= 256.0;
+}
+
 void main(void)
 {
-    vec4 finalColor = vec4(0.0,0.0,0.0,0.0);
+    vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
     
-    vec4 color_mat = texture2D(texDiffuse, gl_TexCoord[0].xy);
-    vec3 color = color_mat.rgb;
-    float factor1 = color_mat.a;
+    //Color texture
+    vec3 color = texture2D(texDiffuse, gl_TexCoord[0].xy).rgb;
     
-    vec4 position_mat = texture2D(texPosition, gl_TexCoord[0].xy);
-    int mat_type = int(floor(position_mat.a/10.0));
-    float factor2 = position_mat.a - float(mat_type) * 10.0;
+    //Position texture
+    vec4 position_material = texture2D(texPosition, gl_TexCoord[0].xy);
+    float diffuseReflectance;
+    float roughness;
+    float F0;
+    float reflectionCoeff;
+    unpackMaterialData(position_material.w, diffuseReflectance, roughness, F0, reflectionCoeff);
     
+    //Normal texture
     vec4 normal_depth = texture2D(texNormal, gl_TexCoord[0].xy);
     vec3 normal = normalize(normal_depth.xyz);
     float depth = normal_depth.w;
     
     vec3 lightDir = -lightDirection;
     float NdotL = dot(normal, lightDir);
-    float NdotV = dot(normal, eyeDir);
     
     if(NdotL > 0.0)
     {
         //Calculate shadow
-        vec4 position = vec4(position_mat.xyz,1.0);
+        vec4 position = vec4(position_material.xyz, 1.0);
         float bias = 0.0005 * tan(acos(NdotL));
         bias = clamp(bias, 0, 0.005);
         float lightness = calculateShadowCoef(depth, position, bias);
         
-        if(lightness > 0.0) //If not fully in shadow use shading according to material type
+        if(lightness > 0.0) //If not fully in shadow
         {
-            if(mat_type == 0) //Oren-Nayar
-            {
-                float angleVN = acos(NdotV);
-                float angleLN = acos(NdotL);
-                
-                float alpha = max(angleVN, angleLN);
-                float beta = min(angleVN, angleLN);
-                float gamma = dot(eyeDir - normal * NdotV, lightDir - normal * NdotL);
-                factor1 *= 100.0;
-                float roughnessSquared = factor1*factor1;
-                float A = 1.0 - 0.5 * (roughnessSquared / (roughnessSquared + 0.57));
-                float B = 0.45 * (roughnessSquared / (roughnessSquared + 0.09));
-                float C = sin(alpha) * tan(beta);
-                float L1 = max(0.0, NdotL) * (A + B * max(0.0, gamma) * C);
-                
-                finalColor = vec4(lightColor.rgb * color * L1 * lightness, 1.0);
-            }
-            else if(mat_type == 1) //Blinn-Phong
-            {
-                vec3 H = normalize(lightDir + eyeDir);
-                float specular = pow(max(dot(normal, H), 0.0), factor1 * factor1 * 512.0 + 8.0);
-                
-                finalColor = vec4(lightColor.rgb * color * NdotL * lightness
-                                  + lightColor.rgb * specular * lightness, 1.0);
-            }
-            else if(mat_type == 2) //Reflective
-            {
-                finalColor = vec4(0.0,0.0,0.0,1.0);
-            }
+            vec3 halfVector = normalize(lightDir + eyeDir);
+            float NdotH = max(dot(normal, halfVector), 0.001);
+            float NdotV = max(dot(normal, eyeDir), 0.001);
+            float VdotH = max(dot(eyeDir, halfVector), 0.001);
+            roughness = max(roughness, 0.01);
+            float mSquared = roughness * roughness;
+            
+            // geometric attenuation
+            float NH2 = 2.0 * NdotH;
+            float g1 = (NH2 * NdotV) / VdotH;
+            float g2 = (NH2 * NdotL) / VdotH;
+            float geoAtt = min(1.0, min(g1, g2));
+            
+            // roughness (or: microfacet distribution function)
+            // beckmann distribution function
+            float r1 = 1.0 / ( 4.0 * mSquared * pow(NdotH, 4.0));
+            float r2 = (NdotH * NdotH - 1.0) / (mSquared * NdotH * NdotH);
+            float roughness = r1 * exp(r2);
+            
+            /*
+            //Pixar
+            float alpha = acos(NdotH);
+            roughness = 100.0 * exp(-(alpha * alpha)/mSquared);
+            */
+            
+            // fresnel
+            // Schlick approximation
+            float fresnel = pow(1.0 - VdotH, 5.0);
+            fresnel *= (1.0 - F0);
+            fresnel += F0;
+            
+            float specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14159);
+            finalColor.rgb = lightness * lightColor.rgb * NdotL * (diffuseReflectance * color + specular * (1.0 - diffuseReflectance));
         }
-    }
-    
-    //Rim lighting
-    if(mat_type == 1 && factor2 > 0.0)
-    {
-        float rim = 0.90 - NdotV;
-        rim = smoothstep(0.0, 1.0, rim);
-        rim = pow(rim, (1.0 - factor2) * 9.0 + 1.0);
-        finalColor += vec4(lightColor.rgb * color * rim, 1.0);
     }
     
     gl_FragColor = finalColor;

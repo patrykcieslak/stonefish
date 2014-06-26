@@ -78,48 +78,61 @@ x Joint damping (sigmoidal + viscous)
 x Joint limits
 x Accurate collision restitution for high iteration count (>60)
 x Console scrolling with momentum when displayed as overlay
-- State-space controller with smooth gain scheduling - gains as polynomial functions
+x Tested Acrobot stabilization with MISO controller - no more than 5% of difference compared to SimMechanics
+x Motor current sensor
+x Cook-Torrence materials, improvements to SAO
+x Contact sliding detection and recording
+x Contact impulse recording
+x Standard joint initial position -> iterative solver
+x Own Solver and DynamicsWorld classes for combination of MLCP and Multibody
+x Sensor frequency
+x 2D path generator
+x 1D and 2D polynomials
+- Mono-wheel controllers with smooth gain scheduling
+- Mono-wheel path following controller
+- Featherstone multibody
+- Attaching views and lights to solids and Featherstone links
 - True IMU - acc, gyro, kalman filter etc.
-- Sensor frequency
-- Path planners
-- Path following controller for MWR
 
 Simulation:
 - Camera with lens
 - Laser rangefinder
 - Ultrasonic range finder
-- Laser scanner 2d
+- Laser scanner 2d + polar plot
 - Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
 - Joystick controller/teleoperation
 - Battery(LiIon, LiPoly, A123)
+- 3D path generator
 - GPS
 - AHRS
-- Cable entity -> soft body rope
+- Cable entity
+- Gimpact for concave meshes
 - Linear motor actuator
 - Linear encoder
-- Manipulator(Featherstone)
 - LiDAR
 - Leap Motion support
-- Solar panel(with shadow checking)
+- Solar panel with light amount estimation (raytest sky and lights + directions/power/attenuation)
 
 Underwater:
 - Above water surface rendering
 - Underwater rendering
 - Account for localTransform in buoyancy calculation
+- Buoyancy as difference in hydrostatic pressure(?)
 - Thruster
 - DVL
 - Multi-beam
 - Side-scan
+- SVS
+- Sea current
 
 Graphics:
 - Tonemapping/exposure improvement and sun color from sky cubemap
 - Move to OpenGL 3.3 Core (remove deprecated stuff)
-- Cook-Torrence materials(single shader approach without branching?)
 - Reflective material
 - Omni light shadows
-- Drawing actuators
-- Drawing camera frustum and sensors
+- Drawing actuators, camera frustum and sensors
 - Stickers
 - Stencil light volumes (taking into account the attenuation)
 - Order Independent Transparency
 - Lens flare with occlusion query
+- Remove Bullet types from OpenGL classes - use glm exclusively

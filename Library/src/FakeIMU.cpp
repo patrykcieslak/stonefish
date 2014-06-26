@@ -8,7 +8,7 @@
 
 #include "FakeIMU.h"
 
-FakeIMU::FakeIMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+FakeIMU::FakeIMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = UnitSystem::SetTransform(relFrame);
@@ -18,10 +18,11 @@ FakeIMU::FakeIMU(std::string uniqueName, SolidEntity* attachment, btTransform re
 
 void FakeIMU::Reset()
 {
+    Sensor::Reset();
     lastV = btVector3(0.,0.,0.);
 }
 
-void FakeIMU::Update(btScalar dt)
+void FakeIMU::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to imu frame
     btMatrix3x3 toImuFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();

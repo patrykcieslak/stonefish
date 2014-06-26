@@ -18,7 +18,7 @@
 #define CONSTRAINT_STOP_ERP 1.0
 #define CONSTRAINT_STOP_CFM 0.0
 
-typedef enum {FIXED, REVOLUTE, SPHERICAL, PRISMATIC, CYLINDRICAL, GEAR, BELT} JointType;
+typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL, JOINT_GEAR, JOINT_BELT} JointType;
 
 //abstract class
 class Joint
@@ -28,7 +28,8 @@ public:
     virtual ~Joint();
     
     virtual void ApplyDamping() = 0;
-	virtual btVector3 Render() = 0;
+	virtual bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance) = 0;
+    virtual btVector3 Render() = 0;
     virtual JointType getType() = 0;
     
     void AddToDynamicsWorld(btDynamicsWorld* world);
@@ -38,7 +39,7 @@ public:
     std::string getName();
     
     bool isRenderable();
-
+    
 protected:
     void setConstraint(btTypedConstraint* constr);
     

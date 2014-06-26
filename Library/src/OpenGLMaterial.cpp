@@ -14,39 +14,24 @@
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
-Look CreateBasicLook(GLfloat R, GLfloat G, GLfloat B, const char* textureName)
+Look CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName)
 {
-    Look newLook;
-    newLook.color[0] = clamp(R, 0.f, 1.f);
-    newLook.color[1] = clamp(G, 0.f, 1.f);
-    newLook.color[2] = clamp(B, 0.f, 1.f);
+    Look look;
+    look.color = rgbColor;
+    look.data[0] = diffuseReflectance;
+    look.data[1] = roughness;
+    look.data[2] = IOR;
+    look.data[3] = 0.f; //No reflections
     
     if(textureName != NULL)
-        newLook.texture = LoadTexture(textureName);
+        look.texture = LoadTexture(textureName);
     else
-        newLook.texture = 0;
+        look.texture = 0;
     
-    return newLook;
+    return look;
 }
 
-Look CreateMatteLook(GLfloat R, GLfloat G, GLfloat B, GLfloat roughness, const char* textureName)
-{
-    Look newLook = CreateBasicLook(R, G, B, textureName);
-    newLook.type = MATTE;
-    newLook.factor[0] = clamp(roughness, 0.f, 1.f);
-    newLook.factor[1] = 0.f;
-    return newLook;
-}
-
-Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininness, GLfloat scattering, const char* textureName)
-{
-    Look newLook = CreateBasicLook(R, G, B, textureName);
-    newLook.type = GLOSSY;
-    newLook.factor[0] = clamp(shininness, 0.f, 1.f);
-    newLook.factor[1] = clamp(scattering, 0.f, 1.f);
-    return newLook;
-}
-
+/*
 Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName)
 {
     Look newLook = CreateBasicLook(R, G, B, textureName);
@@ -63,7 +48,7 @@ Look CreateTransparentLook(GLfloat R, GLfloat G, GLfloat B, GLfloat opacity, GLf
     newLook.factor[0] = clamp(opacity, 0.f, 1.f);
     newLook.factor[1] = clamp(shininess, 0.f, 1.f);
     return newLook;
-}
+}*/
 
 void UseLook(Look l)
 {
@@ -78,8 +63,18 @@ void UseLook(Look l)
         OpenGLGBuffer::SetUniformIsTextured(false);
     }
     
-    glColor4f(l.color[0], l.color[1], l.color[2], l.factor[0]);                  //Color + Factor 1
-    OpenGLGBuffer::SetAttributeMaterialData((GLfloat)(10.f*l.type+l.factor[1])); //Type + Factor 2
+    //diffuse reflectance, roughness, FO, reflection factor
+    GLfloat diffuseReflectance = floor(l.data[0] * 255.f);
+    GLfloat roughness = floor(l.data[1] * 255.f);
+    GLfloat F0 = floor(powf((1.f - l.data[2])/(1.f + l.data[2]), 2.f) * 255.f);
+    GLfloat reflection = floor(l.data[3] * 255.f);
+    GLfloat materialData = diffuseReflectance
+                           + (roughness * 256)
+                           + (F0 * 256 * 256)
+                           + (reflection * 256 * 256 * 256);
+    
+    glColor4f(l.color[0], l.color[1], l.color[2], 1.0); //Color + Texture mix factor
+    OpenGLGBuffer::SetUniformMaterialData(materialData);
 }
 
 //Statics

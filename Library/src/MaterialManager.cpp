@@ -8,16 +8,26 @@
 
 #include "MaterialManager.h"
 
-
+#pragma mark Constructors
 MaterialManager::MaterialManager()
 {
 }
 
+#pragma mark - Destructor
 MaterialManager::~MaterialManager()
 {
     ClearMaterialsAndFluids();
 }
 
+void MaterialManager::ClearMaterialsAndFluids()
+{
+    materials.clear();
+    fluids.clear();
+    materialNameManager.ClearNames();
+    fluidNameManager.ClearNames();
+}
+
+#pragma mark - Creators
 std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar density, btScalar restitution)
 {
     Material mat;
@@ -43,6 +53,18 @@ std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar den
     return mat.name;
 }
 
+std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscousity, btScalar IOR)
+{
+    Fluid flu;
+    flu.name = fluidNameManager.AddName(uniqueName);
+    flu.density = UnitSystem::SetDensity(density);
+    flu.viscousity = viscousity;
+    flu.IOR = IOR > 0 ? IOR : 1.0;
+    fluids.push_back(flu);
+    
+    return flu.name;
+}
+
 bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, btScalar staticFricCoeff, btScalar dynamicFricCoeff)
 {
     int index1 = getMaterialIndex(firstMaterialName);
@@ -58,6 +80,7 @@ bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std
     return true;
 }
 
+#pragma mark - Accessors
 int MaterialManager::getMaterialIndex(std::string name)
 {
     for(int i=0; i<materials.size(); i++)
@@ -85,28 +108,6 @@ Material* MaterialManager::getMaterial(int index)
         return NULL;
 }
 
-std::vector<std::string> MaterialManager::GetMaterialsList()
-{
-    std::vector<std::string> list;
-    
-    for(int i=0; i<materials.size(); i++)
-        list.push_back(materials[i].name);
-    
-    return list;
-}
-
-std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscousity, btScalar IOR)
-{
-    Fluid flu;
-    flu.name = fluidNameManager.AddName(uniqueName);
-    flu.density = UnitSystem::SetDensity(density);
-    flu.viscousity = viscousity;
-    flu.IOR = IOR > 0 ? IOR : 1.0;
-    fluids.push_back(flu);
-    
-    return flu.name;
-}
-
 Fluid* MaterialManager::getFluid(std::string name)
 {
     for(int i=0; i<fluids.size(); i++)
@@ -126,10 +127,12 @@ Fluid* MaterialManager::getFluid(int index)
         return NULL;
 }
 
-void MaterialManager::ClearMaterialsAndFluids()
+std::vector<std::string> MaterialManager::GetMaterialsList()
 {
-    materials.clear();
-    fluids.clear();
-    materialNameManager.ClearNames();
-    fluidNameManager.ClearNames();
+    std::vector<std::string> list;
+    
+    for(int i=0; i<materials.size(); i++)
+        list.push_back(materials[i].name);
+    
+    return list;
 }

@@ -8,7 +8,7 @@
 
 #include "Gyroscope.h"
 
-Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -26,10 +26,11 @@ Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransfor
 
 void Gyroscope::Reset()
 {
+    Sensor::Reset();
     accumulatedDrift = 0;
 }
 
-void Gyroscope::Update(btScalar dt)
+void Gyroscope::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to gyro frame
     btMatrix3x3 toGyroFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();

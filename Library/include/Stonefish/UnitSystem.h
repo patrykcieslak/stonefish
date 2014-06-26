@@ -16,6 +16,8 @@
 #define _180overPI  57.29577951
 
 typedef enum {CGS = 0, MKS, MMKS} UnitSystems;
+typedef enum {AXIS_X, AXIS_Y, AXIS_Z} AxisType;
+typedef enum {PLANE_XY, PLANE_XZ, PLANE_YZ} PlaneType;
 
 class UnitSystem
 {

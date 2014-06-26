@@ -1,0 +1,45 @@
+SIMULATION ALGORITHM
+1. Simulation sequence (stepSimulation):
+a) calculate number of substeps -> n
+b) save state of kinematic objects
+c) apply gravity
+d) run internalSingleStepSimulation n times
+e) synchronize motion states
+f) clear forces
+
+1d. Single simulation step (internalSingleStepSimulation)
+a) Execute pretick callback (m_internalPreTickCallback)
+b) Predict unconstrained motion
+c) Create predictive contacts - only works if CCD enabled
+d) Perform discrete collision detection
+e) Calculate simulation islands - groups of bodies connected with constraints
+f) Solve constraints
+g) Integrate transforms
+h) Update actions - btActionInterface
+i) Update activation states
+j) Execute [post]tick callback (m_internalTickCallback)
+
+1db. Predict unconstrained motion
+a) Apply damping - global linear and angular damping - not realistic = unused
+b) Predict integrated transform and save it to interpolationWorldTransform
+
+1dd. Discrete collision detection
+a) Update AABBs
+b) Compute broadphase overlapping pairs (collision candidates)
+c) Dispatch all collision pairs - btDispatcher
+
+1df. Solve constraints (btDiscreteDynamicsWorld)
+a) Sort constraints by island id
+b) Setup solver island callback
+c) Prepare solve
+d) Build and process islands
+e) Process constraints
+f) All solved
+
+1dg. Integrate transforms
+a) Predict integrated transform
+b) Calculate hit fraction - only works if CCD enabled
+c) Proceed to predicted transform
+
+REMARKS
+a) Line 1092 btDiscreteDynamicsWorld -> speculative restitution -> need to pass proper combined restitution to work

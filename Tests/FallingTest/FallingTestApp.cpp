@@ -53,7 +53,7 @@ void FallingTestApp::DoHUD()
     SimulationApp::DoHUD();
     
     //Left side
-    ui_id button;
+    /*ui_id button;
     button.owner = 1;
     button.item = 1;
     button.index = 0;
@@ -78,6 +78,28 @@ void FallingTestApp::DoHUD()
     IMGUI::getInstance()->DoProgressBar(5.f, 220.f, 100.f, 10.f, 0.3, "Test");
     
     IMGUI::getInstance()->DoGauge(5.f, 265.f, 100.f, 10.0, new btScalar[2]{0.0,100.0}, new btScalar[2]{10.0, 80.0}, "Test");
+    */
+    
+    SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
+    Look l = solid->getLook();
+    
+    ui_id sliderMat;
+    sliderMat.owner = 1;
+    sliderMat.item = 10;
+    sliderMat.index = 0;
+    l.data[0] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 55.f, 100.0, 5.f, 5.f, 20.f, 0.0, 1.0, l.data[0], "Diffuse");
+    
+    sliderMat.owner = 1;
+    sliderMat.item = 11;
+    sliderMat.index = 0;
+    l.data[1] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 105.f, 100.0, 5.f, 5.f, 20.f, 0.0, 1.0, l.data[1], "Roughness");
+    
+    sliderMat.owner = 1;
+    sliderMat.item = 12;
+    sliderMat.index = 0;
+    l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
+    
+    solid->SetLook(l);
     
     //Right side
     ui_id plot;

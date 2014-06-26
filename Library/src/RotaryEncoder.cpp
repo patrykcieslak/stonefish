@@ -8,7 +8,7 @@
 
 #include "RotaryEncoder.h"
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     revolute = joint;
     cpr_res = cpr_resolution;
@@ -19,6 +19,8 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsig
 
 void RotaryEncoder::Reset()
 {
+    Sensor::Reset();
+    
     //incremental angle
     angle = btScalar(0);
     lastAngle = UnitSystem::SetAngle(revolute->getAngle());
@@ -28,7 +30,7 @@ void RotaryEncoder::Reset()
     lastAngle = btScalar(trunc(lastAngle * cpr_res)) / btScalar(cpr_res) * FULL_ANGLE;
 }
 
-void RotaryEncoder::Update(btScalar dt)
+void RotaryEncoder::InternalUpdate(btScalar dt)
 {
     if(abs)
     {

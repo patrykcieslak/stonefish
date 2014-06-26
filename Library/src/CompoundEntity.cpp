@@ -19,7 +19,7 @@ CompoundEntity::~CompoundEntity()
 
 SolidEntityType CompoundEntity::getSolidType()
 {
-    return COMPOUND;
+    return SOLID_COMPOUND;
 }
 
 btCollisionShape* CompoundEntity::BuildCollisionShape()

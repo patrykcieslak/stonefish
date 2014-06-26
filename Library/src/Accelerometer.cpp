@@ -8,7 +8,7 @@
 
 #include "Accelerometer.h"
 
-Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, unsigned int historyLength):Sensor(uniqueName, historyLength)
+Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, btScalar frequency, unsigned int historyLength):Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -26,10 +26,11 @@ Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, bt
 
 void Accelerometer::Reset()
 {
+    Sensor::Reset();
     lastV = btVector3(0.,0.,0.);
 }
 
-void Accelerometer::Update(btScalar dt)
+void Accelerometer::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to acc frame
     btMatrix3x3 toAccFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();

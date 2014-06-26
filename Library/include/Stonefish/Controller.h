@@ -12,13 +12,13 @@
 #include "common.h"
 #include "NameManager.h"
 
-typedef enum {SERVO, MISO} ControllerType;
+typedef enum {CONTROLLER_DCSERVO, CONTROLLER_MISO, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} ControllerType;
 
-//abstract class
+/*! Abstract controller base class */
 class Controller
 {
 public:
-    Controller(std::string uniqueName, btScalar frequency);
+    Controller(std::string uniqueName, btScalar frequency = btScalar(-1.));
     virtual ~Controller();
     
     void Start();
@@ -32,7 +32,7 @@ public:
     btScalar getFrequency();
     
 protected:
-    virtual void Tick() = 0;
+    virtual void Tick(btScalar dt) = 0;
 
     btScalar freq;
 

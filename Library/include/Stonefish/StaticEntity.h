@@ -26,14 +26,12 @@ public:
     void SetLook(Look newLook);
     void SetWireframe(bool enabled);
     
-    btTransform getTransform();
-    void setTransform(const btTransform& trans);
-    Material* getMaterial();
-    void AddToDynamicsWorld(btDynamicsWorld* world);
-    btRigidBody* getRigidBody();
-    
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     EntityType getType();
     void GetAABB(btVector3& min, btVector3& max);
+    
+    Material* getMaterial();
+    btRigidBody* getRigidBody();
     
     virtual StaticEntityType getStaticType() = 0;
     

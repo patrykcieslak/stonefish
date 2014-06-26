@@ -10,17 +10,20 @@
 
 NameManager Actuator::nameManager;
 
+#pragma mark Constructors
 Actuator::Actuator(std::string uniqueName)
 {
     name = nameManager.AddName(uniqueName);
     renderable = false;
 }
 
+#pragma mark - Destructor
 Actuator::~Actuator()
 {
     nameManager.RemoveName(name);
 }
 
+#pragma mark - Accessors
 void Actuator::setRenderable(bool render)
 {
     renderable = render;

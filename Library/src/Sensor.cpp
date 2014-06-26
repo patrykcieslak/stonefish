@@ -10,11 +10,13 @@
 
 NameManager Sensor::nameManager;
 
-Sensor::Sensor(std::string uniqueName, unsigned int historyLength)
+Sensor::Sensor(std::string uniqueName, btScalar frequency, unsigned int historyLength)
 {
     name = nameManager.AddName(uniqueName);
-    historyLen = historyLength > 0 ? historyLength : 1;
+    historyLen = historyLength;
     history = std::deque<Sample*>(0);
+    freq = frequency;
+    eleapsedTime = btScalar(0.);
     renderable = false;
 }
 
@@ -24,9 +26,33 @@ Sensor::~Sensor()
     nameManager.RemoveName(name);
 }
 
+void Sensor::Reset()
+{
+    eleapsedTime = btScalar(0.);
+}
+
+void Sensor::Update(btScalar dt)
+{
+    if(freq <= btScalar(0.)) // Every simulation tick
+    {
+        InternalUpdate(dt);
+    }
+    else //Fixed rate
+    {
+        eleapsedTime += dt;
+        btScalar invFreq = btScalar(1.)/freq;
+    
+        if(eleapsedTime >= invFreq)
+        {
+            InternalUpdate(invFreq);
+            eleapsedTime -= invFreq;
+        }
+    }
+}
+
 void Sensor::AddSampleToHistory(const Sample& s)
 {
-    if(history.size() == historyLen)
+    if(historyLen > 0 && history.size() == historyLen) // 0 means unlimited history
     {
         delete history[0];
         history.pop_front();

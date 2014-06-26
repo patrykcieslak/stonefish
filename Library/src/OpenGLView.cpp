@@ -13,6 +13,7 @@
 #include "OpenGLSun.h"
 #include "SimulationApp.h"
 #include "Console.h"
+#include "SystemUtil.h"
 
 GLSLShader* OpenGLView::downsampleShader = NULL;
 GLSLShader* OpenGLView::ssaoShader = NULL;
@@ -119,8 +120,8 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
         glGenTextures(1, &ssaoTexture);
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoTexture, 0);
@@ -131,8 +132,8 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-        glGenFramebuffers(1, &hBlurFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, hBlurFBO);
+        glGenFramebuffers(1, &blurFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
     
         glGenTextures(1, &hBlurTexture);
         glBindTexture(GL_TEXTURE_2D, hBlurTexture);
@@ -143,15 +144,6 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hBlurTexture, 0);
     
-        status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if(status != GL_FRAMEBUFFER_COMPLETE)
-            cError("SAO horizontal blur FBO initialization failed!");
-    
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-        glGenFramebuffers(1, &vBlurFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, vBlurFBO);
-    
         glGenTextures(1, &vBlurTexture);
         glBindTexture(GL_TEXTURE_2D, vBlurTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -159,7 +151,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, vBlurTexture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, vBlurTexture, 0);
     
         status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
@@ -190,8 +182,7 @@ OpenGLView::~OpenGLView()
         glDeleteTextures(1, &vBlurTexture);
         glDeleteFramebuffers(1, &sceneFBO);
         glDeleteFramebuffers(1, &ssaoFBO);
-        glDeleteFramebuffers(1, &hBlurFBO);
-        glDeleteFramebuffers(1, &vBlurFBO);
+        glDeleteFramebuffers(1, &blurFBO);
     }
     
     delete gBuffer;
@@ -583,13 +574,11 @@ void OpenGLView::RenderSSAO()
         glViewport(0, 0, viewportWidth, viewportHeight);
         OpenGLSolids::SetupOrtho();
         
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        
-        GLfloat intensity = 0.5;
-        GLfloat radius = 0.25;
+        GLfloat intensity = 1.0;
+        GLfloat radius = 0.3;
         GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth)/2.f;
         
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
         ssaoShader->Enable();
         ssaoShader->SetUniform("texRandom", randomTextureUnit);
         ssaoShader->SetUniform("texPosition", positionTextureUnit);
@@ -607,41 +596,36 @@ void OpenGLView::RenderSSAO()
         glBindTexture(GL_TEXTURE_2D, ssaoTexture);
         
         //Downsample SA0
-        glBindFramebuffer(GL_FRAMEBUFFER, hBlurFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
         glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
         
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
         downsampleShader->Enable();
         downsampleShader->SetUniform("source", randomTextureUnit);
         downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
         OpenGLSolids::DrawScreenAlignedQuad();
         downsampleShader->Disable();
        
-        glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-        
-        //Vertical blur
-        glBindFramebuffer(GL_FRAMEBUFFER, vBlurFBO);
-        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        
         blurShader->Enable();
         blurShader->SetUniform("texSource", randomTextureUnit);
-        blurShader->SetUniform("axis", glm::vec2(0.f, 1.f/(GLfloat)(viewportHeight/ssaoSizeDiv)));
-        OpenGLSolids::DrawScreenAlignedQuad();
+        
+        for(int i = 0; i < 2; i++)
+        {
+            //Vertical blur
+            glBindTexture(GL_TEXTURE_2D, hBlurTexture);
+            glDrawBuffer(GL_COLOR_ATTACHMENT1);
+            blurShader->SetUniform("texelOffset", glm::vec2(0.f, 1.f/(GLfloat)(viewportHeight/ssaoSizeDiv)));
+            OpenGLSolids::DrawScreenAlignedQuad();
+            
+            //Horizontal blur
+            glBindTexture(GL_TEXTURE_2D, vBlurTexture);
+            glDrawBuffer(GL_COLOR_ATTACHMENT0);
+            blurShader->SetUniform("texelOffset", glm::vec2(1.f/(GLfloat)(viewportWidth/ssaoSizeDiv), 0.f));
+            OpenGLSolids::DrawScreenAlignedQuad();
+        }
+        
         blurShader->Disable();
-        
-        glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-        
-        //Horizontal blur
-        glBindFramebuffer(GL_FRAMEBUFFER, hBlurFBO);
-        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        
-        blurShader->Enable();
-        blurShader->SetUniform("texSource", randomTextureUnit);
-        blurShader->SetUniform("axis", glm::vec2(1.f/(GLfloat)(viewportHeight/ssaoSizeDiv), 0.f));
-        OpenGLSolids::DrawScreenAlignedQuad();
-        blurShader->Disable();
-      
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        
         glBindTexture(GL_TEXTURE_2D, 0);
         glPopAttrib();
     }
@@ -829,13 +813,13 @@ void OpenGLView::Init()
     ssaoShader->AddUniform("intensityDivR6", FLOAT);
     ssaoShader->AddUniform("viewportSize", VEC2);
     
-    blurShader = new GLSLShader("saoBlur.frag");
-    blurShader->AddUniform("texSource", INT);
-    blurShader->AddUniform("axis", VEC2);
-    
     downsampleShader = new GLSLShader("saoDownsample.frag");
     downsampleShader->AddUniform("source", INT);
     downsampleShader->AddUniform("srcViewport", VEC2);
+    
+    blurShader = new GLSLShader("saoBlur.frag", "gaussianBlur.vert");
+    blurShader->AddUniform("texSource", INT);
+    blurShader->AddUniform("texelOffset", VEC2);
     
     //////Fluid//////
     waveNormalTexture = LoadInternalTexture("water.jpg");

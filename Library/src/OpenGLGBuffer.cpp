@@ -16,7 +16,7 @@ void OpenGLGBuffer::LoadShaders()
     splittingShader = new GLSLShader("gbuffer.frag", "gbuffer.vert");
     splittingShader->AddUniform("isTextured", BOOLEAN);
     splittingShader->AddUniform("texture", INT);
-    splittingShader->AddAttribute("materialData", FLOAT);
+    splittingShader->AddUniform("materialData", FLOAT);
 }
 
 void OpenGLGBuffer::DeleteShaders()
@@ -24,10 +24,10 @@ void OpenGLGBuffer::DeleteShaders()
     delete splittingShader;
 }
 
-void OpenGLGBuffer::SetAttributeMaterialData(GLfloat x)
+void OpenGLGBuffer::SetUniformMaterialData(GLfloat x)
 {
     if(splittingShader->isEnabled())
-        splittingShader->SetAttribute("materialData", x);
+        splittingShader->SetUniform("materialData", x);
 }
 
 void OpenGLGBuffer::SetUniformIsTextured(bool x)
@@ -81,7 +81,7 @@ OpenGLGBuffer::OpenGLGBuffer(int fboWidth, int fboHeight)
 	// Generate and bind the OGL texture for diffuse
 	glGenTextures(1, &diffuseTexture);
 	glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

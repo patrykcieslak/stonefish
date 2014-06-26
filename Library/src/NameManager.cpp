@@ -8,15 +8,19 @@
 
 #include "NameManager.h"
 
+#pragma mark Constructors
 NameManager::NameManager()
 {
     names = std::vector<std::string>(0);
 }
 
+#pragma mark - Destructor
 NameManager::~NameManager()
 {
+    names.clear();
 }
 
+#pragma mark - Methods
 std::string NameManager::AddName(std::string proposedName)
 {
     std::string goodName = proposedName;

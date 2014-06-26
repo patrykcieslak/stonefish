@@ -8,6 +8,7 @@
 
 #include "RevoluteJoint.h"
 
+#pragma mark Constructors
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -19,11 +20,14 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidE
     btVector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(UnitSystem::SetPosition(pivot));
     
     btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
-    hinge->setLimit(1, -1); //no limit (min > max)
+    hinge->setLimit(1.0, -1.0); //no limit (min > max)
+    hinge->enableMotor(false);
     setConstraint(hinge);
     
     sigDamping = btScalar(0.);
     velDamping = btScalar(0.);
+    
+    angleIC = btScalar(0.);
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const btVector3& pivot, const btVector3& axis) : Joint(uniqueName, false)
@@ -34,17 +38,21 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const b
     pivotInA = body->getCenterOfMassTransform().inverse()(UnitSystem::SetPosition(pivot));
     
     btHingeConstraint* hinge = new btHingeConstraint(*body, pivotInA, axisInA);
-    hinge->setLimit(1, -1); //no limit (min > max)
+    hinge->setLimit(1.0, -1.0); //no limit (min > max)
     setConstraint(hinge);
     
     sigDamping = btScalar(0.);
     velDamping = btScalar(0.);
+    
+    angleIC = btScalar(0.);
 }
 
+#pragma mark - Destructors
 RevoluteJoint::~RevoluteJoint()
 {
 }
 
+#pragma mark - Accessors
 void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
 {
     sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetTorque(btVector3(constantFactor,0.,0.)).x() : btScalar(0.);
@@ -57,9 +65,14 @@ void RevoluteJoint::setLimits(btScalar min, btScalar max)
     hinge->setLimit(UnitSystem::SetAngle(min), UnitSystem::SetAngle(max));
 }
 
+void RevoluteJoint::setIC(btScalar angle)
+{
+    angleIC = UnitSystem::SetAngle(angle);
+}
+
 JointType RevoluteJoint::getType()
 {
-    return REVOLUTE;
+    return JOINT_REVOLUTE;
 }
 
 btScalar RevoluteJoint::getAngle()
@@ -76,6 +89,7 @@ btScalar RevoluteJoint::getAngularVelocity()
     return UnitSystem::GetAngle(relativeAV.dot(axis));
 }
 
+#pragma mark - Actions
 void RevoluteJoint::ApplyTorque(btScalar T)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -107,6 +121,22 @@ void RevoluteJoint::ApplyDamping()
     }
 }
 
+bool RevoluteJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance)
+{
+    btScalar angleError = angleIC - UnitSystem::SetAngle(getAngle());
+    //printf("%s: Angle error = %1.3f\n", getName().c_str(), angleError);
+    
+    //Check if IC reached
+    if(fabs(angleError) < angularTolerance)
+        return true;
+    
+    //Move joint
+    ApplyTorque(angleError * btScalar(1000.) - UnitSystem::SetAngle(getAngularVelocity()) * btScalar(2000.));
+    
+    return false;
+}
+
+#pragma mark - Graphics
 btVector3 RevoluteJoint::Render()
 {
     btTypedConstraint* revo = getConstraint();

@@ -159,7 +159,7 @@ CylinderEntity::~CylinderEntity()
 
 SolidEntityType CylinderEntity::getSolidType()
 {
-    return CYLINDER;
+    return SOLID_CYLINDER;
 }
 
 void CylinderEntity::BuildCollisionList()

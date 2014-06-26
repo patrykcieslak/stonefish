@@ -10,7 +10,6 @@
 #define __Stonefish_OpenGLTrackball__
 
 #include "OpenGLView.h"
-#include "SolidEntity.h"
 
 class OpenGLTrackball : public OpenGLView
 {

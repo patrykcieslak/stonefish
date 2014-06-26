@@ -15,11 +15,10 @@
 class RotaryEncoder : public Sensor
 {
 public:
-    RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute = false, unsigned int historyLength = 1);
+    RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
+    void InternalUpdate(btScalar dt);
     void Reset();
-    void Update(btScalar dt);
-    
     unsigned short getNumOfDimensions();
     
 private:

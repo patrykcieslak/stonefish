@@ -41,7 +41,7 @@ OpenGLLight::~OpenGLLight()
     holdingEntity = NULL;
 }
 
-void OpenGLLight::GlueToEntity(Entity* ent)
+void OpenGLLight::GlueToEntity(SolidEntity* ent)
 {
     holdingEntity = ent;
 }
@@ -83,7 +83,7 @@ btVector3 OpenGLLight::getPosition()
     return pos;
 }
 
-Entity* OpenGLLight::getHoldingEntity()
+SolidEntity* OpenGLLight::getHoldingEntity()
 {
     return holdingEntity;
 }
@@ -94,7 +94,6 @@ void OpenGLLight::Init()
     //AMBIENT
     ambientShader = new GLSLShader("deferredAmbient.frag");
     ambientShader->AddUniform("texDiffuse", INT);
-    ambientShader->AddUniform("texPosition", INT);
     ambientShader->AddUniform("texNormal", INT);
     ambientShader->AddUniform("texSSAO", INT);
     ambientShader->AddUniform("texSkyDiff", INT);
@@ -161,7 +160,6 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     
     ambientShader->Enable();
     ambientShader->SetUniform("texDiffuse", diffuseTextureUnit);
-    ambientShader->SetUniform("texPosition", positionTextureUnit);
     ambientShader->SetUniform("texNormal", normalTextureUnit);
     ambientShader->SetUniform("texSkyDiff", skyDiffuseTextureUnit);
     ambientShader->SetUniform("texSSAO", ssaoTextureUnit);

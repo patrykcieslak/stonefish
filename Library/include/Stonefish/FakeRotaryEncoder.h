@@ -11,18 +11,26 @@
 
 #include "Sensor.h"
 #include "RevoluteJoint.h"
+#include "FeatherstoneEntity.h"
 
 class FakeRotaryEncoder : public Sensor
 {
 public:
-    FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int historyLength = 1);
+    FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int child, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    
+    void InternalUpdate(btScalar dt);
     void Reset();
-    void Update(btScalar dt);
     unsigned short getNumOfDimensions();
         
 private:
+    btScalar getRawAngle();
+    btScalar getRawAngularVelocity();
+    
     //params
     RevoluteJoint* revolute;
+    FeatherstoneEntity* multibody;
+    unsigned int multibodyChild;
     
     //temporary
     btScalar angle;

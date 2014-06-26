@@ -10,6 +10,7 @@
 
 NameManager Controller::nameManager;
 
+#pragma mark Constructors
 Controller::Controller(std::string uniqueName, btScalar frequency)
 {
     name = nameManager.AddName(uniqueName);
@@ -17,11 +18,24 @@ Controller::Controller(std::string uniqueName, btScalar frequency)
     running = false;
 }
 
+#pragma mark - Destructor
 Controller::~Controller()
 {
     nameManager.RemoveName(name);
 }
 
+#pragma mark - Accessors
+std::string Controller::getName()
+{
+    return name;
+}
+
+btScalar Controller::getFrequency()
+{
+    return freq;
+}
+
+#pragma mark - Methods
 void Controller::Start()
 {
     running = true;
@@ -37,24 +51,20 @@ void Controller::Update(btScalar dt)
 {
     if(running)
     {
-        eleapsedTime += dt;
-        btScalar invFreq = btScalar(1.)/freq;
-        
-        if(eleapsedTime >= invFreq)
+        if(freq <= btScalar(0.)) //Every simulation tick
         {
-            Tick();
-            eleapsedTime -= invFreq;
+            Tick(dt);
+        }
+        else //Fixed rate
+        {
+            eleapsedTime += dt;
+            btScalar invFreq = btScalar(1.)/freq;
+        
+            if(eleapsedTime >= invFreq)
+            {
+                Tick(invFreq);
+                eleapsedTime -= invFreq;
+            }
         }
     }
 }
-
-std::string Controller::getName()
-{
-    return name;
-}
-
-btScalar Controller::getFrequency()
-{
-    return freq;
-}
-

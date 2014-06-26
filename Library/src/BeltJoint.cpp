@@ -28,7 +28,7 @@ BeltJoint::~BeltJoint()
 
 JointType BeltJoint::getType()
 {
-    return BELT;
+    return JOINT_BELT;
 }
 
 btScalar BeltJoint::getRatio()

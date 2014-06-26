@@ -8,6 +8,7 @@
 
 #include "MISOStateSpaceController.h"
 
+#pragma mark Constructors
 MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency) : Controller(uniqueName, frequency)
 {
     this->input = inputs;
@@ -21,22 +22,24 @@ MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* 
     }
 }
 
+#pragma mark - Destructor
 MISOStateSpaceController::~MISOStateSpaceController()
 {
     gains.clear();
     desiredValues.clear();
 }
 
+#pragma mark - Controller
 void MISOStateSpaceController::Reset()
 {
 }
 
 ControllerType MISOStateSpaceController::getType()
 {
-    return MISO;
+    return CONTROLLER_MISO;
 }
 
-void MISOStateSpaceController::Tick()
+void MISOStateSpaceController::Tick(btScalar dt)
 {
     //Get last measurements
     btScalar* measurements = input->getLastSample();
@@ -53,6 +56,7 @@ void MISOStateSpaceController::Tick()
     output->setVoltage(control);
 }
 
+#pragma mark - MISO
 void MISOStateSpaceController::SetGains(const std::vector<btScalar>& g)
 {
     if(g.size() == gains.size())
@@ -64,4 +68,3 @@ void MISOStateSpaceController::SetDesiredValues(const std::vector<btScalar>& d)
     if(d.size() == desiredValues.size())
         desiredValues = std::vector<btScalar>(d);
 }
-

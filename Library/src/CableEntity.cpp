@@ -14,7 +14,6 @@
 CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const btVector3& _end2, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat) : Entity(uniqueName)
 {
     material = mat;
-    look = CreateMatteLook(1.f, 1.f, 1.f, 0.5f);
     diameter = UnitSystem::SetLength(diam);
     selfCollision = selfCollidable;
     btVector3 end1 = UnitSystem::SetPosition(_end1);
@@ -171,15 +170,6 @@ void CableEntity::Render()
     }
 }
 
-btTransform CableEntity::getTransform()
-{
-    return btTransform();
-}
-
-void CableEntity::setTransform(const btTransform& trans)
-{
-}
-
 Material* CableEntity::getMaterial()
 {
     return material;
@@ -206,7 +196,7 @@ void CableEntity::ApplyGravity()
         cableParts[i]->applyGravity();
 }
 
-void CableEntity::AddToDynamicsWorld(btDynamicsWorld *world)
+void CableEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
     for(int i=0; i<cableParts.size(); i++)
     {

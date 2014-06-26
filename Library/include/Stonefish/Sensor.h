@@ -13,20 +13,19 @@
 #include "NameManager.h"
 #include "Sample.h"
 
-typedef enum {X_AXIS, Y_AXIS, Z_AXIS} AxisType;
-
 //abstract class
 class Sensor
 {
 public:
-    Sensor(std::string uniqueName, unsigned int historyLength);
+    Sensor(std::string uniqueName, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     virtual ~Sensor();
     
-    virtual void Reset() = 0;
-    virtual void Update(btScalar dt) = 0;
+    virtual void InternalUpdate(btScalar dt) = 0;
     virtual unsigned short getNumOfDimensions() = 0;
+    virtual void Reset();
     virtual void Render();
     
+    void Update(btScalar dt);
     void ClearHistory();
     bool isRenderable();
     void setRenderable(bool render);
@@ -37,10 +36,12 @@ public:
 protected:
     void AddSampleToHistory(const Sample& s);
     std::deque<Sample*> history;
+    btScalar freq;
     
 private:
     std::string name;
     unsigned int historyLen;
+    btScalar eleapsedTime;
     bool renderable;
     
     static NameManager nameManager;

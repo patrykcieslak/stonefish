@@ -39,9 +39,9 @@ void JointsTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.5, 0.2);
     
     ///////LOOKS///////////
-    Look grey = CreateMatteLook(0.7f, 0.7f, 0.7f, 0.8f);
-    Look orange = CreateGlossyLook(1.f, 0.5f, 0.2f, 0.1f, 0.0f);
-    Look green = CreateMatteLook(0.2f, 1.f, 0.3f, 0.5f);
+    Look grey = CreateOpaqueLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f, 1.5f);
+    Look orange = CreateOpaqueLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f, 1.5f);
+    Look green = CreateOpaqueLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f, 1.5f);
     
     ////////OBJECTS
     PlaneEntity* floor = new PlaneEntity("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)));

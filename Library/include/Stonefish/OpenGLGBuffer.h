@@ -32,7 +32,7 @@ public:
     static void LoadShaders();
     static void DeleteShaders();
     static void SetUniformIsTextured(bool x);
-    static void SetAttributeMaterialData(GLfloat x);
+    static void SetUniformMaterialData(GLfloat x);
     
 private:
     GLuint fbo;                // FBO handle

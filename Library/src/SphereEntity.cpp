@@ -10,6 +10,13 @@
 #include "OpenGLSolids.h"
 #include "GeometryUtil.h"
 
+/*! Spherical solid entity constructor.
+ *
+ *  \param uniqueName name of the entity
+ *  \param sphereRadius radius of the sphere
+ *  \param mat pointer to a physical material
+ *  \param l rendering style
+ */
 SphereEntity::SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l) : SolidEntity(uniqueName, mat)
 {
     radius = UnitSystem::SetLength(sphereRadius);
@@ -63,7 +70,7 @@ SphereEntity::~SphereEntity()
 
 SolidEntityType SphereEntity::getSolidType()
 {
-    return SPHERE;
+    return SOLID_SPHERE;
 }
 
 btCollisionShape* SphereEntity::BuildCollisionShape()

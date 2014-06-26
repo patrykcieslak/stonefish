@@ -10,6 +10,7 @@
 
 void CalculateNeighbours(TriangleMesh* m, bool smooth)
 {
+    /*
     //For every face
     for(uint32_t i=0; i<m->faces.size(); i++)
     {
@@ -45,7 +46,7 @@ void CalculateNeighbours(TriangleMesh* m, bool smooth)
                     break;
             }
         }
-    }
+    }*/
     
     //generate new smoothed normals for rendering
     if(smooth)

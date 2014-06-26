@@ -17,11 +17,14 @@ public:
     BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio);
     ~BeltJoint();
     
-    void ApplyDamping(){} //Not applicable
     btVector3 Render();
     
     JointType getType();
     btScalar getRatio();
+    
+    //Not applicable
+    void ApplyDamping(){}
+    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance){ return true; }
     
 private:
     btScalar gearRatio;

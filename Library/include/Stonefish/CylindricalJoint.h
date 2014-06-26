@@ -20,10 +20,13 @@ public:
     void ApplyForce(btScalar F);
     void ApplyTorque(btScalar T);
     void ApplyDamping();
+    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
+   	
     btVector3 Render();
     
     void setDamping(btScalar linearConstantFactor, btScalar linearViscousFactor, btScalar angularConstantFactor, btScalar angularViscousFactor);
     void setLimits(btScalar linearMin, btScalar linearMax, btScalar angularMin, btScalar angularMax);
+    void setIC(btScalar displacement, btScalar angle);
     
     JointType getType();
     
@@ -34,6 +37,8 @@ private:
     btScalar linVelDamping;
     btScalar angSigDamping;
     btScalar angVelDamping;
+    btScalar displacementIC;
+    btScalar angleIC;
 };
 
 #endif

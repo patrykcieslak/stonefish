@@ -11,33 +11,31 @@
 
 #include "OpenGLPipeline.h"
 
-typedef enum {MATTE = 0, GLOSSY, REFLECTIVE, TRANSPARENT} LookType;
+typedef enum {OPAQUE, REFLECTIVE, TRANSPARENT} LookType;
 
 struct Look
 {
     LookType type;
-    GLfloat color[3];
+    glm::vec3 color;
+    glm::vec4 data;
     GLuint texture;
-    GLfloat factor[2];
     
     Look()
     {
-        type = MATTE;
-        color[0] = 1.f;
-        color[1] = 1.f;
-        color[2] = 1.f;
-        factor[0] = 0.5f;
-        factor[1] = 0.f;
+        type = OPAQUE;
+        color = glm::vec3(1.f,1.f,1.f);
+        data = glm::vec4(0.2f, 1.33f, 0.2f, 0.0f);
         texture = 0;
     }
 };
 
-Look CreateMatteLook(GLfloat R, GLfloat G, GLfloat B, GLfloat roughness, const char* textureName = NULL);
-Look CreateGlossyLook(GLfloat R, GLfloat G, GLfloat B, GLfloat shininness, GLfloat scattering, const char* textureName = NULL);
-Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName = NULL);
-Look CreateTransparentLook(GLfloat R, GLfloat G, GLfloat B, GLfloat opacity, GLfloat shininess, const char* textureName = NULL);
+//TODO: HSV color
+Look CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName = NULL);
+//Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName = NULL);
+//Look CreateTransparentLook(GLfloat R, GLfloat G, GLfloat B, GLfloat opacity, GLfloat shininess, const char* textureName = NULL);
 void UseLook(Look l);
 GLuint LoadTexture(const char* filename);
 GLuint LoadInternalTexture(const char* filename);
+//TODO: loading parameters -> aniso, alpha
 
 #endif

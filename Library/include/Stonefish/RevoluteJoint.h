@@ -20,10 +20,12 @@ public:
     
     void ApplyTorque(btScalar T);
     void ApplyDamping();
+    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
    	btVector3 Render();
     
     void setDamping(btScalar constantFactor, btScalar viscousFactor);
     void setLimits(btScalar min, btScalar max);
+    void setIC(btScalar angle);
     
     btScalar getAngle();
     btScalar getAngularVelocity();
@@ -34,6 +36,7 @@ private:
     btVector3 pivotInA;
     btScalar sigDamping;
     btScalar velDamping;
+    btScalar angleIC;
 };
 
 #endif

@@ -13,10 +13,11 @@
 #include "Mux.h"
 #include "DCMotor.h"
 
+/*! MISO controller for controlling SIMO systems */
 class MISOStateSpaceController : public Controller
 {
 public:
-    MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency);
+    MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency = btScalar(-1.));
     ~MISOStateSpaceController();
     
     void SetGains(const std::vector<btScalar>& g);
@@ -26,7 +27,7 @@ public:
     ControllerType getType();
     
 private:
-    void Tick();
+    void Tick(btScalar dt);
     
     Mux* input;
     DCMotor* output;

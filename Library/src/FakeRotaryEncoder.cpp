@@ -8,26 +8,39 @@
 
 #include "FakeRotaryEncoder.h"
 
-FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int historyLength) : Sensor(uniqueName, historyLength)
+#pragma mark Constructors
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     revolute = joint;
+    multibody = NULL;
+    multibodyChild = 0;
     Reset();
 }
 
-void FakeRotaryEncoder::Reset()
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
-    angle = btScalar(0);
-    lastAngle = UnitSystem::SetAngle(revolute->getAngle());
-    angularVelocity = btScalar(0);
+    revolute = NULL;
+    multibody = mb;
+    multibodyChild = child;
+    Reset();
 }
 
-void FakeRotaryEncoder::Update(btScalar dt)
+#pragma mark - Sensor
+void FakeRotaryEncoder::Reset()
+{
+    Sensor::Reset();
+    angle = btScalar(0.);
+    lastAngle = getRawAngle();
+    angularVelocity = btScalar(0.);
+}
+
+void FakeRotaryEncoder::InternalUpdate(btScalar dt)
 {
     //new angle
-    btScalar actualAngle = UnitSystem::SetAngle(revolute->getAngle());
+    btScalar actualAngle = getRawAngle();
         
     //accumulate
-    if(lastAngle * actualAngle < btScalar(0))
+    if(lastAngle * actualAngle < btScalar(0.))
     {
         if(lastAngle > M_PI_4)
             angle += ((actualAngle + FULL_ANGLE) - lastAngle);
@@ -38,11 +51,11 @@ void FakeRotaryEncoder::Update(btScalar dt)
     }
     else
         angle += (actualAngle-lastAngle);
-        
+    
     lastAngle = actualAngle;
     
     //angular velocity
-    angularVelocity = UnitSystem::SetAngle(revolute->getAngularVelocity());
+    angularVelocity = getRawAngularVelocity();
     
     //save sample
     btScalar ext[2];
@@ -56,4 +69,43 @@ void FakeRotaryEncoder::Update(btScalar dt)
 unsigned short FakeRotaryEncoder::getNumOfDimensions()
 {
     return 2;
+}
+
+#pragma mark - Encoder
+btScalar FakeRotaryEncoder::getRawAngle()
+{
+    if(multibody == NULL)
+    {
+        return UnitSystem::SetAngle(revolute->getAngle());
+    }
+    else
+    {
+        btScalar angle = btScalar(0.);
+        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
+        multibody->getJointPosition(multibodyChild, angle, jt);
+        
+        if(jt == btMultibodyLink::eRevolute)
+            return UnitSystem::SetAngle(angle);
+        else
+            return btScalar(0.);
+    }
+}
+
+btScalar FakeRotaryEncoder::getRawAngularVelocity()
+{
+    if(multibody == NULL)
+    {
+        return UnitSystem::SetAngle(revolute->getAngularVelocity());
+    }
+    else
+    {
+        btScalar angularV = btScalar(0.);
+        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
+        multibody->getJointVelocity(multibodyChild, angularV, jt);
+        
+        if(jt == btMultibodyLink::eRevolute)
+            return UnitSystem::SetAngle(angularV);
+        else
+            return btScalar(0.);
+    }
 }

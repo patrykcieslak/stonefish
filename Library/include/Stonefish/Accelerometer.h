@@ -16,11 +16,10 @@
 class Accelerometer : public Sensor
 {
 public:
-    Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG = true, unsigned int historyLength = 1);
+    Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG = true, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
+    void InternalUpdate(btScalar dt);
     void Reset();
-    void Update(btScalar dt);
-    
     unsigned short getNumOfDimensions();
     
 private:

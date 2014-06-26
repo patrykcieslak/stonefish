@@ -66,25 +66,12 @@ void StaticEntity::Render()
     }
 }
 
-btTransform StaticEntity::getTransform()
-{
-    btTransform trans;
-    rigidBody->getMotionState()->getWorldTransform(trans);
-    return trans;
-}
-
-void StaticEntity::setTransform(const btTransform &trans)
-{
-    btDefaultMotionState* motionState = new btDefaultMotionState(trans);
-    rigidBody->setMotionState(motionState);
-}
-
 Material* StaticEntity::getMaterial()
 {
     return material;
 }
 
-void StaticEntity::AddToDynamicsWorld(btDynamicsWorld *world)
+void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
     world->addRigidBody(rigidBody, STATIC, DEFAULT | CABLE_EVEN | CABLE_ODD);
 }

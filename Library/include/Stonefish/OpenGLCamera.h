@@ -10,7 +10,6 @@
 #define __Stonefish_OpenGLCamera__
 
 #include "OpenGLView.h"
-#include "Entity.h"
 
 class OpenGLCamera : public OpenGLView
 {
@@ -26,7 +25,7 @@ public:
     
     void SetupCamera();
     void RenderDummy();
-    void GlueToEntity(Entity* ent);
+    void GlueToEntity(SolidEntity* ent);
     void MoveCamera(const btVector3& move);
     void MoveCamera(btScalar step);
     void RotateCamera(btScalar panStep, btScalar tiltStep);
@@ -43,7 +42,7 @@ private:
     btVector3 dir;
     btVector3 up;
     
-    Entity* holdingEntity;
+    SolidEntity* holdingEntity;
     GLfloat pan;
     GLfloat tilt;
     btVector3 lookingDir;

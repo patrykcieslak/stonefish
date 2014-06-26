@@ -12,8 +12,6 @@
 SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueName)
 {
     material = mat;
-    look = CreateMatteLook(1.f, 1.f, 1.f, 0.5f);
-    
     localTransform = btTransform::getIdentity();
     Ipri = btVector3(0,0,0);
     mass = 0;
@@ -25,10 +23,10 @@ SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueN
     addMass = btVector3(0,0,0);
     
     rigidBody = NULL;
+    multibodyCollider = NULL;
     displayList = 0;
     collisionList = 0;
     dispCoordSys = false;
-    
     fullyImmersed = false;
 }
 
@@ -43,6 +41,7 @@ SolidEntity::~SolidEntity()
     
     material = NULL;
     rigidBody = NULL;
+    multibodyCollider = NULL;
 }
 
 EntityType SolidEntity::getType()
@@ -70,6 +69,12 @@ void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3&
         btCompoundShape* colShape = (btCompoundShape*)rigidBody->getCollisionShape();
         rigidBody->setCenterOfMassTransform(oldLocalTransform.inverse() * localTransform * rigidBody->getCenterOfMassTransform());
         colShape->updateChildTransform(0, localTransform.inverse());
+    }
+    else if(rigidBody == NULL && multibodyCollider == NULL)
+    {
+        this->mass = UnitSystem::SetMass(mass);
+        Ipri = UnitSystem::SetInertia(inertia);
+        localTransform = UnitSystem::SetTransform(cogTransform);
     }
 }
 
@@ -99,6 +104,21 @@ Look SolidEntity::getLook()
 GLint SolidEntity::getDisplayList()
 {
     return displayList;
+}
+
+btRigidBody* SolidEntity::getRigidBody()
+{
+    return rigidBody;
+}
+
+btMultiBodyLinkCollider* SolidEntity::getMultibodyLinkCollider()
+{
+    return multibodyCollider;
+}
+
+void SolidEntity::GetAABB(btVector3& min, btVector3& max)
+{
+    rigidBody->getAabb(min, max);
 }
 
 void SolidEntity::Render()
@@ -132,15 +152,6 @@ btTransform SolidEntity::getTransform()
     }
     
     return btTransform::getIdentity();
-}
-
-void SolidEntity::setTransform(const btTransform &trans)
-{
-    if(rigidBody != NULL)
-    {
-        btDefaultMotionState* motionState = new btDefaultMotionState(trans);
-        rigidBody->setMotionState(motionState);
-    }
 }
 
 btScalar SolidEntity::getVolume()
@@ -184,19 +195,43 @@ void SolidEntity::BuildRigidBody()
         colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, colShape, Ipri);
-        rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.0); //not used
-        rigidBodyCI.m_linearDamping = 0;
-        rigidBodyCI.m_angularDamping = 0;
-        rigidBodyCI.m_linearSleepingThreshold = UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.0001);
-        rigidBodyCI.m_angularSleepingThreshold = 0.0001;
+        rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.); //not used
+        rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = btScalar(0.); //not used
+        rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = btScalar(0.); //not used
+        rigidBodyCI.m_additionalDamping = false;
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        rigidBody->setActivationState(DISABLE_DEACTIVATION);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROPSCOPIC_FORCE);
-        rigidBody->forceActivationState(DISABLE_DEACTIVATION);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
+    }
+}
+
+void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child, btMultiBodyDynamicsWorld *world)
+{
+    if(multibodyCollider == NULL)
+    {
+        //Shape with offset
+        btCompoundShape* colShape = new btCompoundShape();
+        colShape->addChildShape(localTransform.inverse(), BuildCollisionShape());
+        colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+        
+        //Link
+        multibodyCollider = new btMultiBodyLinkCollider(mb, child - 1);
+        multibodyCollider->setCollisionShape(colShape);
+        world->addCollisionObject(multibodyCollider, DEFAULT, DEFAULT | CABLE_EVEN | CABLE_ODD);
+        
+        if(child > 0)
+            mb->getLink(child - 1).m_collider = multibodyCollider;
+        else
+            mb->setBaseCollider(multibodyCollider);
+        
+        //Graphics
+        BuildDisplayList();
+        BuildCollisionList();
     }
 }
 
@@ -247,12 +282,12 @@ void SolidEntity::BuildDisplayList()
     glEndList();
 }
 
-void SolidEntity::AddToDynamicsWorld(btDynamicsWorld* world)
+void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
 {
     AddToDynamicsWorld(world, btTransform::getIdentity());
 }
 
-void SolidEntity::AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& worldTransform)
+void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
     if(rigidBody == NULL)
     {
@@ -266,7 +301,7 @@ void SolidEntity::AddToDynamicsWorld(btDynamicsWorld* world, const btTransform& 
     }
 }
 
-void SolidEntity::RemoveFromDynamicsWorld(btDynamicsWorld* world)
+void SolidEntity::RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world)
 {
     if(rigidBody != NULL)
     {
@@ -283,14 +318,4 @@ void SolidEntity::ApplyGravity()
         ///added mass!
         rigidBody->applyGravity();
     }
-}
-
-btRigidBody* SolidEntity::getRigidBody()
-{
-    return rigidBody;
-}
-
-void SolidEntity::GetAABB(btVector3& min, btVector3& max)
-{
-    rigidBody->getAabb(min, max);
 }

@@ -16,11 +16,10 @@
 class Magnetometer : public Sensor
 {
 public:
-    Magnetometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, unsigned short resolution, unsigned int historyLength = 1);
+    Magnetometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, unsigned short resolution, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
+    void InternalUpdate(btScalar dt);
     void Reset();
-    void Update(btScalar dt);
-    
     unsigned short getNumOfDimensions();
     
 private:

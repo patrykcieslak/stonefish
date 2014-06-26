@@ -19,15 +19,18 @@ public:
     
     void ApplyTorque(btVector3 T);
     void ApplyDamping();
+    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
     btVector3 Render();
     
     void setDamping(btVector3 constantFactor, btVector3 viscousFactor);
+    void setIC(btVector3 angles);
     
     JointType getType();
     
 private:
     btVector3 sigDamping;
     btVector3 velDamping;
+    btVector3 angleIC;
 };
 
 #endif

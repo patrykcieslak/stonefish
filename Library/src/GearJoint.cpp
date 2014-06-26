@@ -27,7 +27,7 @@ GearJoint::~GearJoint()
 
 JointType GearJoint::getType()
 {
-    return GEAR;
+    return JOINT_GEAR;
 }
 
 btScalar GearJoint::getRatio()

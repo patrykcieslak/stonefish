@@ -1,25 +1,25 @@
 //
-//  btFilteredCollisionDispatcher.cpp
+//  FilteredCollisionDispatcher.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "btFilteredCollisionDispatcher.h"
+#include "FilteredCollisionDispatcher.h"
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include "Entity.h"
 #include "SolidEntity.h"
 #include "SimulationApp.h"
 
-btFilteredCollisionDispatcher::btFilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
+FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
     inclusive = inclusiveMode;
     if(inclusive)
         setNearCallback(myNearCallback);
 }
 
-bool btFilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
+bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
 {
     
     if(inclusive)
@@ -61,7 +61,7 @@ bool btFilteredCollisionDispatcher::needsCollision(const btCollisionObject* body
     }
 }
 
-void btFilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
     btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
     btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
@@ -85,16 +85,6 @@ void btFilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPa
             {
                 //discrete collision detection query
                 collisionPair.m_algorithm->processCollision(&obj0Wrap,&obj1Wrap,dispatchInfo,&contactPointResult);
-                
-                if(contactPointResult.getPersistentManifold()->getNumContacts() > 0)
-                {
-                    const btRigidBody* rb0 = btRigidBody::upcast(colObj0);
-                    const btRigidBody* rb1 = btRigidBody::upcast(colObj1);
-                    Entity* ent0 = (Entity*)rb0->getUserPointer();
-                    Entity* ent1 = (Entity*)rb1->getUserPointer();
-                    Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(ent0, ent1);
-                    contact->AddContactPoint(contactPointResult.getPersistentManifold());
-                }
             }
             else
             {
@@ -102,6 +92,24 @@ void btFilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPa
                 btScalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0,colObj1,dispatchInfo,&contactPointResult);
                 if (dispatchInfo.m_timeOfImpact > toi)
                     dispatchInfo.m_timeOfImpact = toi;
+            }
+            
+            //Add contact point information
+            if(contactPointResult.getPersistentManifold()->getNumContacts() > 0)
+            {
+                const btRigidBody* rbA = btRigidBody::upcast(obj0Wrap.m_collisionObject);
+                const btRigidBody* rbB = btRigidBody::upcast(obj1Wrap.m_collisionObject);
+                Entity* entA = (Entity*)rbA->getUserPointer();
+                Entity* entB = (Entity*)rbB->getUserPointer();
+                Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
+                contact->AddContactPoint(contactPointResult.getPersistentManifold(), contact->getEntityA() != entA);
+                
+                //Clear persistent user data (it will leak if not!)
+                for(int i = 0; i < contactPointResult.getPersistentManifold()->getNumContacts(); i++)
+                {
+                    delete (btVector3*)contactPointResult.getPersistentManifold()->getContactPoint(i).m_userPersistentData;
+                    contactPointResult.getPersistentManifold()->getContactPoint(i).m_userPersistentData = 0;
+                }
             }
         }
     }

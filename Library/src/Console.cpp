@@ -206,6 +206,10 @@ void Console::Print(int messageType, const char *format, ...)
     SDL_LockMutex(linesMutex);
     lines.push_back(msg);
     SDL_UnlockMutex(linesMutex);
+    
+#ifdef DEBUG
+    printf("%s\n", msg.text.c_str());
+#endif
 }
 
 void Console::Clear()

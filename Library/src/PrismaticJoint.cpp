@@ -28,14 +28,16 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     axisInA = frameInA.getBasis().getColumn(0).normalized();
     
     btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
-    slider->setLowerLinLimit(1);
-    slider->setUpperLinLimit(-1);
-    slider->setLowerAngLimit(0.0);
-    slider->setUpperAngLimit(0.0);
+    slider->setLowerLinLimit(1.);
+    slider->setUpperLinLimit(-1.);
+    slider->setLowerAngLimit(0.);
+    slider->setUpperAngLimit(0.);
     setConstraint(slider);
     
     sigDamping = btScalar(0.);
     velDamping = btScalar(0.);
+    
+    displacementIC = btScalar(0.);
 }
 
 PrismaticJoint::~PrismaticJoint()
@@ -55,9 +57,14 @@ void PrismaticJoint::setLimits(btScalar min, btScalar max)
     slider->setUpperLinLimit(UnitSystem::SetLength(max));
 }
 
+void PrismaticJoint::setIC(btScalar displacement)
+{
+    displacementIC = UnitSystem::SetLength(displacement);
+}
+
 JointType PrismaticJoint::getType()
 {
-    return PRISMATIC;
+    return JOINT_PRISMATIC;
 }
 
 void PrismaticJoint::ApplyForce(btScalar F)
@@ -89,6 +96,11 @@ void PrismaticJoint::ApplyDamping()
             bodyB.applyCentralForce(-force);
         }
     }
+}
+
+bool PrismaticJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance)
+{
+    return true;
 }
 
 btVector3 PrismaticJoint::Render()

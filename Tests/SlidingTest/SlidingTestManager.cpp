@@ -24,7 +24,7 @@
 #include "ADC.h"
 #include "Trajectory.h"
 
-SlidingTestManager::SlidingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, SEQUENTIAL_IMPULSE, STANDARD)
+SlidingTestManager::SlidingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 
@@ -44,11 +44,11 @@ void SlidingTestManager::BuildScenario()
     GetDataPath(path, 1024-32);
     strcat(path, "grid.png");
     
-    Look grey = CreateMatteLook(1.0f, 1.0f, 1.0f, 0.0f, path);
+    Look grey = CreateOpaqueLook(glm::vec3(1.f, 1.f, 1.f), 0.3f, 0.8f, 1.4f, path);
     //Look color;
     
     ////////OBJECTS
-    btScalar angle = M_PI/180.0 * 13.95;
+    btScalar angle = M_PI/180.0 * 14.0;
     
     PlaneEntity* floor = new PlaneEntity("Floor", 100.f, getMaterialManager()->getMaterial("Ground"), grey, btTransform(btQuaternion(0,angle,0), btVector3(0,0,0)));
     AddEntity(floor);
@@ -62,12 +62,12 @@ void SlidingTestManager::BuildScenario()
     //ObstacleEntity* terrain = new ObstacleEntity("Terrain", path, 10000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), false);
     //AddEntity(terrain);
     
-    Look color = CreateGlossyLook(1.f, 0.6f, 0.2f, 0.5f, 0.1f);
+    Look color = CreateOpaqueLook(glm::vec3(1.f,0.6f,0.2f), 0.5f, 0.2f, 1.5f);
     
     BoxEntity* box = new BoxEntity("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Steel"), color);
     AddSolidEntity(box, btTransform(btQuaternion(0,angle,0), btVector3(0, 0, 0.05)));
     
-    Trajectory* traj = new Trajectory("Trajectory", box, btVector3(0,0,0), 1000);
+    Trajectory* traj = new Trajectory("Trajectory", box, btVector3(0,0,0));
     traj->setRenderable(true);
     AddSensor(traj);
     

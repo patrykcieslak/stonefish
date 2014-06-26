@@ -1,21 +1,14 @@
-/*
-Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2014 Patryk Cieslak  http://bulletphysics.org
+//
+//  TorusShape.cpp
+//  Stonefish
+//
+//  Created by Patryk Cieslak on 5/15/14.
+//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//
 
-This software is provided 'as-is', without any express or implied warranty.
-In no event will the authors be held liable for any damages arising from the use of this software.
-Permission is granted to anyone to use this software for any purpose, 
-including commercial applications, and to alter it and redistribute it freely, 
-subject to the following restrictions:
+#include "TorusShape.h"
 
-1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
-*/
-
-#include "btTorusShape.h"
-
-btTorusShape::btTorusShape(btScalar majorRadius, btScalar minorRadius)
+TorusShape::TorusShape(btScalar majorRadius, btScalar minorRadius)
 {
 	m_majorRadius = majorRadius;
 	m_minorRadius = minorRadius;
@@ -27,7 +20,7 @@ btTorusShape::btTorusShape(btScalar majorRadius, btScalar minorRadius)
 	m_shapeType = CUSTOM_CONVEX_SHAPE_TYPE;
 }
 
-btVector3 btTorusShape::getHalfExtentsWithMargin() const
+btVector3 TorusShape::getHalfExtentsWithMargin() const
 {
 	btVector3 halfExtents = getHalfExtentsWithoutMargin();
 	btVector3 margin(getMargin(),getMargin(),getMargin());
@@ -35,17 +28,17 @@ btVector3 btTorusShape::getHalfExtentsWithMargin() const
 	return halfExtents;
 }
 
-const btVector3& btTorusShape::getHalfExtentsWithoutMargin() const
+const btVector3& TorusShape::getHalfExtentsWithoutMargin() const
 {
 	return m_implicitShapeDimensions;
 }
 
-void btTorusShape::getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
+void TorusShape::getAabb(const btTransform& t, btVector3& aabbMin, btVector3& aabbMax) const
 {
-	btTransformAabb(getHalfExtentsWithoutMargin(),getMargin(),t,aabbMin,aabbMax);
+	btTransformAabb(getHalfExtentsWithoutMargin(), getMargin(), t, aabbMin, aabbMax);
 }
 	
-void btTorusShape::calculateLocalInertia(btScalar mass,btVector3& inertia) const
+void TorusShape::calculateLocalInertia(btScalar mass, btVector3& inertia) const
 {
 	//Torus with Y principal axis
 	btScalar idiam, ivert;
@@ -54,7 +47,7 @@ void btTorusShape::calculateLocalInertia(btScalar mass,btVector3& inertia) const
 	inertia.setValue(ivert, idiam, ivert);
 }
 
-void btTorusShape::setLocalScaling(const btVector3& scaling)
+void TorusShape::setLocalScaling(const btVector3& scaling)
 {
     btScalar m_minorRadiusOld = m_minorRadius;
     m_minorRadius *= scaling[1] / m_localScaling[1];
@@ -62,7 +55,7 @@ void btTorusShape::setLocalScaling(const btVector3& scaling)
     btConvexInternalShape::setLocalScaling(scaling);
 }
 
-btVector3 btTorusShape::localGetSupportingVertex(const btVector3& vec)const
+btVector3 TorusShape::localGetSupportingVertex(const btVector3& vec)const
 {
 	//Torus with Y principal axis
 	btScalar s = btSqrt(vec[0]*vec[0] + vec[2]*vec[2]);
@@ -85,7 +78,7 @@ btVector3 btTorusShape::localGetSupportingVertex(const btVector3& vec)const
 	return res;
 }
 
-btVector3 btTorusShape::localGetSupportingVertexWithoutMargin(const btVector3& vec)const
+btVector3 TorusShape::localGetSupportingVertexWithoutMargin(const btVector3& vec)const
 {
 	//Torus with Y principal axis
 	btScalar s = btSqrt(vec[0]*vec[0] + vec[2]*vec[2]);
@@ -108,7 +101,7 @@ btVector3 btTorusShape::localGetSupportingVertexWithoutMargin(const btVector3& v
 	return res;
 }
 
-void btTorusShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
+void TorusShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors, btVector3* supportVerticesOut, int numVectors) const
 {
 	for (int i=0;i<numVectors;i++)
 	{

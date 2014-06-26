@@ -8,6 +8,7 @@
 
 #include "UnitSystem.h"
 
+#pragma mark Global
 UnitSystems UnitSystem::externalUS = MKS;
 bool UnitSystem::externalDeg = true;
 const btScalar UnitSystem::CGStoOther[2][9] = //MKS = 0 , MMKS = 1
@@ -32,8 +33,8 @@ UnitSystems UnitSystem::GetInternalUnitSystem()
     return internalUS;
 }
 
-//universal
 
+#pragma mark - General Converters
 btScalar UnitSystem::Convert(unsigned int quantity, UnitSystems from, UnitSystems to, btScalar value)
 {
     if(from == to)
@@ -155,7 +156,7 @@ btVector3 UnitSystem::Torque(UnitSystems from, UnitSystems to, const btVector3 &
     return Convert(8, from, to, value);
 }
 
-//from external to internal
+#pragma mark - External to Internal Converters
 btScalar UnitSystem::SetLength(btScalar value)
 {
     return Convert(0, externalUS, internalUS, value);
@@ -247,7 +248,7 @@ btVector3 UnitSystem::SetTorque(const btVector3 &value)
     return Convert(8, externalUS, internalUS, value);
 }
 
-//from internal to external
+#pragma mark - Internal to External Converters
 btScalar UnitSystem::GetLength(btScalar value)
 {
     return Convert(0, internalUS, externalUS, value);

@@ -8,7 +8,7 @@
 
 #include "TorusEntity.h"
 #include "OpenGLSolids.h"
-#include "btTorusShape.h"
+#include "TorusShape.h"
 
 TorusEntity::TorusEntity(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material* mat, Look l) : SolidEntity(uniqueName, mat)
 {
@@ -162,7 +162,7 @@ TorusEntity::~TorusEntity()
 
 SolidEntityType TorusEntity::getSolidType()
 {
-    return TORUS;
+    return SOLID_TORUS;
 }
 
 void TorusEntity::BuildDisplayList()
@@ -182,7 +182,7 @@ void TorusEntity::BuildCollisionList()
 
 btCollisionShape* TorusEntity::BuildCollisionShape()
 {
-    btTorusShape* colShape = new btTorusShape(majorRadius, minorRadius);
+    TorusShape* colShape = new TorusShape(majorRadius, minorRadius);
     colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
     return colShape;
 }

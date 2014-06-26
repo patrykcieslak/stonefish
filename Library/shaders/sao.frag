@@ -35,7 +35,8 @@ void packKey(float key, out vec2 p)
 }
 
 // Returns a unit vector and a screen-space radius for the tap on a unit disk (the caller should scale by the actual disk radius) */
-vec2 tapLocation(int sampleNumber, float spinAngle, out float ssR){
+vec2 tapLocation(int sampleNumber, float spinAngle, out float ssR)
+{
     // Radius relative to ssR
     float alpha = (float(sampleNumber) + 0.5) * (1.0 / float(NUM_SAMPLES));
     float angle = alpha * (float(NUM_SPIRAL_TURNS) * 6.28) + spinAngle;
@@ -56,7 +57,8 @@ vec3 getOffsetPosition(ivec2 ssC, vec2 unitOffset, float ssR)
  to camera-space point \a C with unit normal \a n_C, using maximum screen-space sampling radius \a ssDiskRadius
  
  Four versions of the falloff function are implemented below */
-float sampleAO(ivec2 ssC, vec3 C, vec3 n_C, float ssDiskRadius, int tapIndex, float randomPatternRotationAngle) {
+float sampleAO(ivec2 ssC, vec3 C, vec3 n_C, float ssDiskRadius, int tapIndex, float randomPatternRotationAngle)
+{
     // Offset on the unit disk, spun for this pixel
     float ssR = 0.0;
     vec2 unitOffset = tapLocation(tapIndex, randomPatternRotationAngle, ssR);
@@ -130,6 +132,6 @@ void main(void)
         A -= dFdy(A) * (mod(ssC.y, 2) - 0.5);
     
     //gl_FragColor = vec4(cos(randomPatternRotationAngle), sin(randomPatternRotationAngle), 0.0, 1.0);
-    gl_FragColor.r = max(A, 0.1);
+    gl_FragColor.r = 1.0 - A;
 }
 

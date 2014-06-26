@@ -9,11 +9,14 @@
 #ifndef __Stonefish_SimulationManager__
 #define __Stonefish_SimulationManager__
 
+#include "ResearchDynamicsWorld.h"
+#include "ResearchConstraintSolver.h"
 #include "UnitSystem.h"
 #include "NameManager.h"
 #include "MaterialManager.h"
 #include "Entity.h"
 #include "SolidEntity.h"
+#include "FeatherstoneEntity.h"
 #include "FluidEntity.h"
 #include "Joint.h"
 #include "Contact.h"
@@ -23,9 +26,9 @@
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
 #include "Console.h"
-#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
+#include "PathGenerator.h"
 
-typedef enum {SEQUENTIAL_IMPULSE, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
+typedef enum {DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 
 typedef struct
@@ -45,9 +48,10 @@ public:
     
     //physics
     virtual void BuildScenario() = 0;
+    bool SolveICProblem();
     void DestroyScenario();
     void RestartScenario();
-    void StartSimulation();
+    bool StartSimulation();
     void AdvanceSimulation(uint64_t timeInMicroseconds);
     void StopSimulation();
 	
@@ -57,27 +61,33 @@ public:
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
     void AddController(Controller* cntrl);
-    Contact* AddContact(Entity* e0, Entity* e1, unsigned int contactHistoryLength = 0);
+    void AddPathGenerator(PathGenerator* pg);
+    Contact* AddContact(Entity* entA, Entity* entB, size_type contactHistoryLength = 1);
     void SetFluidEntity(FluidEntity* flu);
-    bool CheckContact(Entity* e0, Entity* e1);
     Entity* PickEntity(int x, int y);
-    
+    bool CheckContact(Entity* entA, Entity* entB);
+
     double getPhysicsTimeInMiliseconds();
     void setStepsPerSecond(btScalar steps);
     btScalar getStepsPerSecond();
     void getWorldAABB(btVector3& min, btVector3& max);
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
+    
     Entity* getEntity(int index);
     Entity* getEntity(std::string name);
     Joint* getJoint(int index);
+    Joint* getJoint(std::string name);
+    Contact* getContact(Entity* entA, Entity* entB);
     Actuator* getActuator(int index);
+    Actuator* getActuator(std::string name);
     Sensor* getSensor(int index);
+    Sensor* getSensor(std::string name);
     Controller* getController(int index);
-    Contact* getContact(Entity* e0, Entity* e1);
+    Controller* getController(std::string name);
     
-    void setGravity(const btVector3& g);
-    btSoftRigidDynamicsWorld* getDynamicsWorld();
+    void setGravity(btScalar gravityConstant);
+    ResearchDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
     bool isZAxisUp();
@@ -91,19 +101,21 @@ public:
     bool drawLightDummies;
     
 protected:
-    static void SimulationTickCallback(btDynamicsWorld *world, btScalar timeStep);
+    static void SolveICTickCallback(btDynamicsWorld* world, btScalar timeStep);
+    static void SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep);
     static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
     
-    btSoftRigidDynamicsWorld* dynamicsWorld;
+    ResearchDynamicsWorld* dynamicsWorld;
+    ResearchConstraintSolver* dwSolver;
+    btCollisionDispatcher* dwDispatcher;
     btBroadphaseInterface* dwBroadphase;
     btDefaultCollisionConfiguration* dwCollisionConfig;
-    btCollisionDispatcher* dwDispatcher;
-    btConstraintSolver* dwSolver;
+    
     MaterialManager* materialManager;
     
 private:
     //physics
-    void InitializeSolver(SolverType st, CollisionFilteringType cft);
+    void InitializeSolver();
     
     btScalar sps;
     btScalar simulationTime;
@@ -112,15 +124,17 @@ private:
     uint64_t ssus;
     SolverType solver;
     CollisionFilteringType collisionFilter;
+    bool icProblemSolved;
 
     std::vector<Entity*> entities;
     std::vector<Joint*> joints;
     std::vector<Sensor*> sensors;
     std::vector<Actuator*> actuators;
     std::vector<Controller*> controllers;
+    std::vector<PathGenerator*> pathGenerators;
     std::vector<Contact*> contacts;
     FluidEntity* fluid;
-    
+    btScalar g;
     bool zUp;
 
     //graphics

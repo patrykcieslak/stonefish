@@ -3,9 +3,10 @@ varying vec4 color;
 varying vec4 position;
 varying vec3 normal;
 varying float depth;
-varying float material;
+
 uniform sampler2D texture;
 uniform bool isTextured;
+uniform float materialData;
 
 void main(void)
 {
@@ -20,7 +21,7 @@ void main(void)
     else
         finalColor = color.rgb;
     
-	gl_FragData[0] = vec4(finalColor, color.a);   //Alpha - Factor1
-	gl_FragData[1] = vec4(position.xyz, material);//Alpha - Material type + Factor2
+	gl_FragData[0] = vec4(finalColor, 1.0);
+    gl_FragData[1] = vec4(position.xyz, materialData);
 	gl_FragData[2] = vec4(normal.xyz, depth);
 }

@@ -12,7 +12,7 @@
 #include "common.h"
 #include "NameManager.h"
 
-typedef enum {DC_MOTOR, STEPPER_MOTOR, LINEAR_DRIVE, THRUSTER, CONTROL_SURFACE} ActuatorType;
+typedef enum {ACTUATOR_DCMOTOR, ACTUATOR_THRUSTER, ACTUATOR_CONTROLSURFACE} ActuatorType;
 
 //abstract class
 class Actuator

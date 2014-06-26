@@ -11,11 +11,13 @@
 
 #include "Actuator.h"
 #include "RevoluteJoint.h"
+#include "FeatherstoneEntity.h"
 
 class DCMotor : public Actuator
 {
 public:
     DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
+    DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
     ~DCMotor();
     
     void Update(btScalar dt);
@@ -24,11 +26,16 @@ public:
     
     void setVoltage(btScalar volt);
     btScalar getTorque();
+    btScalar getCurrent();
     ActuatorType getType();
     
 private:
+    btScalar getRawAngularVelocity();
+    
     //output
-    RevoluteJoint* output;
+    RevoluteJoint* revoluteOutput;
+    FeatherstoneEntity* multibodyOutput;
+    unsigned int multibodyChild;
     
     //inputs
     btScalar V;
