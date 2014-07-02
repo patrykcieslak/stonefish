@@ -33,6 +33,8 @@ RollingTestManager::RollingTestManager(btScalar stepsPerSecond) : SimulationMana
 void RollingTestManager::BuildScenario()
 {
     //--------------------Using MMSK unit system--------------------
+    setICSolverParams(true);
+    
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MMKS, 4.0), 0.5);
     getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MMKS, 2.0), 0.2);

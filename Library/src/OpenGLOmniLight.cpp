@@ -17,18 +17,6 @@ OpenGLOmniLight::~OpenGLOmniLight()
 {
 }
 
-void OpenGLOmniLight::UpdateLight()
-{
-    if(holdingEntity != NULL)
-    {
-        btTransform trans;
-        trans = holdingEntity->getTransform();
-        btQuaternion rotation = trans.getRotation();
-        btTransform rotTrans(rotation, btVector3(0,0,0));
-        pos = rotTrans * relpos + trans.getOrigin();
-    }
-}
-
 void OpenGLOmniLight::Render()
 {
     if(isActive())
@@ -52,23 +40,9 @@ void OpenGLOmniLight::RenderLightSurface()
     if(surfaceDistance > 0)
     {
         //transformation
+        btTransform trans(btQuaternion::getIdentity(), getPosition());
         btScalar openglTrans[16];
-        openglTrans[0] = 1;
-        openglTrans[1] = 0;
-        openglTrans[2] = 0;
-        openglTrans[3] = 0;
-        openglTrans[4] = 0;
-        openglTrans[5] = 1;
-        openglTrans[6] = 0;
-        openglTrans[7] = 0;
-        openglTrans[8] = 0;
-        openglTrans[9] = 0;
-        openglTrans[10] = 1;
-        openglTrans[11] = 0;
-        openglTrans[12] = pos.x();
-        openglTrans[13] = pos.y();
-        openglTrans[14] = pos.z();
-        openglTrans[15] = 1;
+        trans.getOpenGLMatrix(openglTrans);
         
         glPushMatrix();
 #ifdef BT_USE_DOUBLE_PRECISION
@@ -87,23 +61,9 @@ void OpenGLOmniLight::RenderLightSurface()
 void OpenGLOmniLight::RenderDummy()
 {
     //transformation
+    btTransform trans(btQuaternion::getIdentity(), getPosition());
     btScalar openglTrans[16];
-    openglTrans[0] = 1;
-    openglTrans[1] = 0;
-    openglTrans[2] = 0;
-    openglTrans[3] = 0;
-    openglTrans[4] = 0;
-    openglTrans[5] = 1;
-    openglTrans[6] = 0;
-    openglTrans[7] = 0;
-    openglTrans[8] = 0;
-    openglTrans[9] = 0;
-    openglTrans[10] = 1;
-    openglTrans[11] = 0;
-    openglTrans[12] = pos.x();
-    openglTrans[13] = pos.y();
-    openglTrans[14] = pos.z();
-    openglTrans[15] = 1;
+    trans.getOpenGLMatrix(openglTrans);
     
     glPushMatrix();
 #ifdef BT_USE_DOUBLE_PRECISION
@@ -113,12 +73,10 @@ void OpenGLOmniLight::RenderDummy()
 #endif
     
     //rendering
-    GLfloat iconSize = 5.f;
+    GLfloat iconSize = surfaceDistance;
     int steps = 24;
     
     glColor4f(0.f, 1.f, 0.f, 1.f);
-    
-    iconSize /= 3.f;
     
     glBegin(GL_LINE_LOOP);
     for(int i=0; i<steps; i++)

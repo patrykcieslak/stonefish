@@ -46,11 +46,12 @@ public:
                                         btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
                                         const btVector3& angularVelocity = btVector3(0,0,0)) = 0;
     
+    
+    
+    
     void setDisplayCoordSys(bool enabled);
     btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
-    btTransform getTransform();
-    btTransform getLocalTransform();
     btVector3 getMomentsOfInertia();
     btScalar getMass();
     Material* getMaterial();
@@ -59,8 +60,13 @@ public:
     Look getLook();
     GLint getDisplayList();
 
+    btTransform getTransform();
+    btTransform getLocalTransform();
+    btVector3 getLinearVelocity();
+    btVector3 getLinearVelocityInLocalPoint(const btVector3& relPos);
+    btVector3 getAngularVelocity();
+    
     bool isCoordSysVisible();
-
     bool fullyImmersed;
     
 protected:

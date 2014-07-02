@@ -574,8 +574,11 @@ void OpenGLView::RenderSSAO()
         glViewport(0, 0, viewportWidth, viewportHeight);
         OpenGLSolids::SetupOrtho();
         
+        btVector3 min, max;
+        SimulationApp::getApp()->getSimulationManager()->getWorldAABB(min, max);
+        GLfloat meanDimension = ((max[0] - min[0]) + (max[1] - min[1]) + (max[2] - min[2]))/3.f;
+        GLfloat radius = meanDimension * 0.2;
         GLfloat intensity = 1.0;
-        GLfloat radius = 0.3;
         GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth)/2.f;
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);

@@ -29,11 +29,10 @@ ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 
 OpenGLLight::OpenGLLight(const btVector3& position, glm::vec4 c)
 {
     color = c;
-    relpos = UnitSystem::SetPosition(position);
-    pos = relpos;
+    pos = UnitSystem::SetPosition(position);
     active = true;
     holdingEntity = NULL;
-    surfaceDistance = 0;
+    surfaceDistance = 1.f; // attenuation = 1 / distance^2 * intesity [Lum] ????
 }
 
 OpenGLLight::~OpenGLLight()
@@ -74,13 +73,16 @@ glm::vec4 OpenGLLight::getColor()
 btVector3 OpenGLLight::getViewPosition()
 {
     //transform to eye space
-    btVector3 esPos = activeView->GetViewTransform() * pos;
+    btVector3 esPos = activeView->GetViewTransform() * getPosition();
     return esPos;
 }
 
 btVector3 OpenGLLight::getPosition()
 {
-    return pos;
+    if(holdingEntity != NULL)
+        return holdingEntity->getTransform().getOrigin() + holdingEntity->getTransform().getBasis() * pos;
+    else
+        return pos;
 }
 
 SolidEntity* OpenGLLight::getHoldingEntity()
@@ -180,7 +182,7 @@ glm::vec4 OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intens
     color4[0] = c1*intensity;
     color4[1] = c2*intensity;
     color4[2] = c3*intensity;
-    color4[3] = 1.f;
+    color4[3] = intensity;
     return color4;
 }
 

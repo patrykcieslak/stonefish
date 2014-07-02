@@ -30,7 +30,7 @@ SlidingTestManager::SlidingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void SlidingTestManager::BuildScenario()
 {
-    OpenGLPipeline::getInstance()->SetVisibleElements(true, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, true, true);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
@@ -48,7 +48,7 @@ void SlidingTestManager::BuildScenario()
     //Look color;
     
     ////////OBJECTS
-    btScalar angle = M_PI/180.0 * 14.0;
+    btScalar angle = M_PI/180.0 * 14.9;
     
     PlaneEntity* floor = new PlaneEntity("Floor", 100.f, getMaterialManager()->getMaterial("Ground"), grey, btTransform(btQuaternion(0,angle,0), btVector3(0,0,0)));
     AddEntity(floor);
@@ -65,15 +65,27 @@ void SlidingTestManager::BuildScenario()
     Look color = CreateOpaqueLook(glm::vec3(1.f,0.6f,0.2f), 0.5f, 0.2f, 1.5f);
     
     BoxEntity* box = new BoxEntity("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Steel"), color);
-    AddSolidEntity(box, btTransform(btQuaternion(0,angle,0), btVector3(0, 0, 0.05)));
+    AddSolidEntity(box, btTransform(btQuaternion(0,angle,0), btVector3(0, 0, 0.052)));
     
     Trajectory* traj = new Trajectory("Trajectory", box, btVector3(0,0,0));
     traj->setRenderable(true);
     AddSensor(traj);
     
     //////CAMERA & LIGHT//////
+    //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(0,0,1.0), OpenGLLight::ColorFromTemperature(4000, 10));
+    //omni->GlueToEntity(box);
+    //AddLight(omni);
+    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(0,0,0.5), btVector3(1.0,0,0.0), 30, OpenGLLight::ColorFromTemperature(4000, 10));
+    //spot->GlueToEntity(box);
+    //AddLight(spot);
+    
     OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.2), 2.f, btVector3(0,0,1.f), 0, 0, SlidingTestApp::getApp()->getWindowWidth(), SlidingTestApp::getApp()->getWindowHeight(), 60.f, 100.f, false);
     trackb->Rotate(btQuaternion(M_PI, 0, M_PI/8.0));
     trackb->Activate();
     AddView(trackb);
+    
+    OpenGLCamera* cam = new OpenGLCamera(btVector3(0,0,1.0), btVector3(1.0,0.0,0.0), btVector3(0.0,0.0,1.0), 10, 10, 400, 200, 50, 100, false);
+    cam->Activate();
+    cam->GlueToEntity(box);
+    AddView(cam);
 }

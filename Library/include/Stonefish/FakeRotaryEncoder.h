@@ -17,7 +17,7 @@ class FakeRotaryEncoder : public Sensor
 {
 public:
     FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
-    FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int child, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     void InternalUpdate(btScalar dt);
     void Reset();
@@ -30,7 +30,7 @@ private:
     //params
     RevoluteJoint* revolute;
     FeatherstoneEntity* multibody;
-    unsigned int multibodyChild;
+    unsigned int multibodyJoint;
     
     //temporary
     btScalar angle;

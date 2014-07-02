@@ -21,17 +21,13 @@ FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguratio
 
 bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
 {
-    
     if(inclusive)
     {
-        //get entities from collision objects
-        const btRigidBody* rb0 = btRigidBody::upcast(body0);
-        Entity* ent0 = (Entity*)rb0->getUserPointer();
+        Entity* ent0 = (Entity*)body0->getUserPointer();
         if(ent0 == NULL)
             return false;
         
-        const btRigidBody* rb1 = btRigidBody::upcast(body1);
-        Entity* ent1 = (Entity*)rb1->getUserPointer();
+        Entity* ent1 = (Entity*)body1->getUserPointer();
         if(ent1 == NULL)
             return false;
         
@@ -44,20 +40,18 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
         
         if(needs)
         {
-            const btRigidBody* rb0 = btRigidBody::upcast(body0);
-            Entity* ent0 = (Entity*)rb0->getUserPointer();
+            Entity* ent0 = (Entity*)body0->getUserPointer();
             if(ent0 == NULL)
-                return true; //really?
+                return true;
             
-            const btRigidBody* rb1 = btRigidBody::upcast(body1);
-            Entity* ent1 = (Entity*)rb1->getUserPointer();
+            Entity* ent1 = (Entity*)body1->getUserPointer();
             if(ent1 == NULL)
-                return true; //really?
+                return true;
             
             return !SimulationApp::getApp()->getSimulationManager()->CheckContact(ent0, ent1);
         }
-        
-        return false;
+        else
+            return false;
     }
 }
 
@@ -97,10 +91,9 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
             //Add contact point information
             if(contactPointResult.getPersistentManifold()->getNumContacts() > 0)
             {
-                const btRigidBody* rbA = btRigidBody::upcast(obj0Wrap.m_collisionObject);
-                const btRigidBody* rbB = btRigidBody::upcast(obj1Wrap.m_collisionObject);
-                Entity* entA = (Entity*)rbA->getUserPointer();
-                Entity* entB = (Entity*)rbB->getUserPointer();
+                //Add contact point to Contact object
+                Entity* entA = (Entity*)obj0Wrap.m_collisionObject->getUserPointer();
+                Entity* entB = (Entity*)obj1Wrap.m_collisionObject->getUserPointer();
                 Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
                 contact->AddContactPoint(contactPointResult.getPersistentManifold(), contact->getEntityA() != entA);
                 

@@ -18,17 +18,16 @@ public:
     ~OpenGLSpotLight();
     
     void Render();
-    void UpdateLight();
     void RenderLightSurface();
     void RenderDummy();
     void RenderShadowMap(OpenGLPipeline* pipe);
     void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale);
     
     btVector3 getViewDirection();
+    btVector3 getDirection();
     GLfloat getAngle();
     
 private:
-    btVector3 reldir;
     btVector3 dir;
     GLfloat coneAngle;
     

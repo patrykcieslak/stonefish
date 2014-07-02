@@ -30,5 +30,5 @@ btPairCachingGhostObject* GhostEntity::getGhost()
 
 void GhostEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
-    world->addCollisionObject(ghost);
+    world->addCollisionObject(ghost, MASK_NONCOLLIDING);
 }

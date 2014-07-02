@@ -284,7 +284,6 @@ void IMGUI::Begin()
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glLineWidth(1.f);
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ); //for OGLFT
     
     glScissor(0, 0, windowW, windowH);

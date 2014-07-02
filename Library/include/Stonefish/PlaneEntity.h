@@ -19,6 +19,7 @@ public:
     PlaneEntity(std::string uniqueName, btScalar size, Material* mat, Look l, const btTransform& worldTransform);
     ~PlaneEntity();
     
+    void GetAABB(btVector3& min, btVector3& max);
     StaticEntityType getStaticType();
     
 private:

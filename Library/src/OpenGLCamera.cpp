@@ -85,7 +85,7 @@ btVector3 OpenGLCamera::GetEyePosition()
 {
     if(holdingEntity != NULL)
     {
-        btVector3 newEye =  holdingEntity->getTransform() * eye;
+        btVector3 newEye =  holdingEntity->getTransform().getBasis() * eye + holdingEntity->getTransform().getOrigin();
         return newEye;
     }
     else
@@ -105,7 +105,13 @@ btVector3 OpenGLCamera::GetLookingDirection()
 
 btVector3 OpenGLCamera::GetUpDirection()
 {
-    return up;
+    if(holdingEntity != NULL)
+    {
+        btVector3 newUp = holdingEntity->getTransform().getBasis() * up;
+        return newUp.normalized();
+    }
+    else
+        return up;
 }
 
 void OpenGLCamera::GlueToEntity(SolidEntity *ent)

@@ -201,9 +201,9 @@ void CableEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
     for(int i=0; i<cableParts.size(); i++)
     {
         if(selfCollision)
-            world->addRigidBody(cableParts[i], i % 2 == 0 ? CABLE_EVEN : CABLE_ODD, (i % 2 == 0 ? CABLE_EVEN : CABLE_ODD) | DEFAULT | STATIC);
+            world->addRigidBody(cableParts[i], i % 2 == 0 ? MASK_CABLE_EVEN : MASK_CABLE_ODD, (i % 2 == 0 ? MASK_CABLE_EVEN : MASK_CABLE_ODD) | MASK_DEFAULT | MASK_STATIC);
         else
-            world->addRigidBody(cableParts[i], CABLE_EVEN, DEFAULT | STATIC);
+            world->addRigidBody(cableParts[i], MASK_CABLE_EVEN, MASK_DEFAULT | MASK_STATIC);
     }
     
     for(int i=0; i<links.size(); i++)

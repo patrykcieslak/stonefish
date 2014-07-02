@@ -18,6 +18,7 @@
 #include "OpenGLLight.h"
 #include "Console.h"
 
+#pragma mark Static
 OpenGLPipeline* OpenGLPipeline::instance = NULL;
 
 OpenGLPipeline* OpenGLPipeline::getInstance()
@@ -28,10 +29,15 @@ OpenGLPipeline* OpenGLPipeline::getInstance()
     return instance;
 }
 
+#pragma mark - Constructors
 OpenGLPipeline::OpenGLPipeline()
 {
+    renderSky = renderShadows = renderFluid = renderSAO = false;
+    showCoordSys = showJoints = showActuators = showSensors = false;
+    showStickers = showLightMeshes = showCameraFrustums = false;
 }
 
+#pragma mark - Destructor
 OpenGLPipeline::~OpenGLPipeline()
 {
     OpenGLSolids::Destroy();
@@ -41,6 +47,31 @@ OpenGLPipeline::~OpenGLPipeline()
     
     glDeleteTextures(1, &displayTexture);
     glDeleteFramebuffers(1, &displayFBO);
+}
+
+#pragma mark - Accessors
+void OpenGLPipeline::setRenderingEffects(bool sky, bool shadows, bool fluid, bool ssao)
+{
+    renderSky = sky;
+    renderShadows = shadows;
+    renderFluid = fluid;
+    renderSAO = ssao;
+}
+
+void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers, bool lights, bool cameras)
+{
+    showCoordSys = coordSystems;
+    showJoints = joints;
+    showActuators = actuators;
+    showSensors = sensors;
+    showStickers = stickers;
+    showLightMeshes = lights;
+    showCameraFrustums = cameras;
+}
+
+void OpenGLPipeline::setDebugSimulation(bool enabled)
+{
+    drawDebug = enabled;
 }
 
 bool OpenGLPipeline::isFluidRendered()
@@ -58,6 +89,7 @@ GLuint OpenGLPipeline::getDisplayTexture()
     return displayTexture;
 }
 
+#pragma mark - Methods
 void OpenGLPipeline::Initialize(SimulationManager* sim, GLint windowWidth, GLint windowHeight)
 {
     simulation = sim;
@@ -79,8 +111,9 @@ void OpenGLPipeline::Initialize(SimulationManager* sim, GLint windowWidth, GLint
     
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");
-    SetRenderingEffects(true, true, true, true);
-    SetVisibleElements(true, true, true, true, false);
+    setRenderingEffects(true, true, true, true);
+    setVisibleHelpers(false, false, false, false, false, false, false);
+    setDebugSimulation(false);
     
     //OpenGL flags and params
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -90,7 +123,7 @@ void OpenGLPipeline::Initialize(SimulationManager* sim, GLint windowWidth, GLint
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glPointSize(5.f);
-    glLineWidth(2.0f);
+    glLineWidth(1.0f);
     glLineStipple(3, 0xE4E4);
     
     //Create display framebuffer
@@ -113,23 +146,6 @@ void OpenGLPipeline::Initialize(SimulationManager* sim, GLint windowWidth, GLint
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     cInfo("OpenGL pipeline initialized.");
-}
-
-void OpenGLPipeline::SetRenderingEffects(bool sky, bool shadows, bool fluid, bool ssao)
-{
-    renderSky = sky;
-    renderShadows = shadows;
-    renderFluid = fluid;
-    renderSAO = ssao;
-}
-
-void OpenGLPipeline::SetVisibleElements(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers)
-{
-    showCoordSys = coordSystems;
-    showJoints = joints;
-    showActuators = actuators;
-    showSensors = sensors;
-    showStickers = stickers;
 }
 
 void OpenGLPipeline::DrawDisplay()
@@ -161,14 +177,10 @@ void OpenGLPipeline::Render()
     glClear(GL_COLOR_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    //Move lights attached to rigid bodies
-    for(int i=0; i<simulation->lights.size(); i++)
-    {
-        simulation->lights[i]->UpdateLight();
-        
-        if(renderShadows)
+    //Render shadow maps (these do not change depending on camera)
+    if(renderShadows)
+        for(int i=0; i<simulation->lights.size(); i++)
             simulation->lights[i]->RenderShadowMap(this);
-    }
     
     //Render all camera views
     for(int i=0; i<simulation->views.size(); i++)
@@ -180,7 +192,7 @@ void OpenGLPipeline::Render()
             //Setup and initialize lighting
             OpenGLSun::getInstance()->SetCamera(simulation->views[i]);
             if(renderShadows)
-                OpenGLSun::getInstance()->RenderShadowMaps(this);
+                OpenGLSun::getInstance()->RenderShadowMaps(this); //This shadow depends on camera frustum
             OpenGLLight::SetCamera(simulation->views[i]);
             
             //Setup viewport
@@ -961,11 +973,15 @@ void OpenGLPipeline::Render()
             simulation->views[i]->SetProjection();
             simulation->views[i]->SetViewTransform();
             
-            //Coordinate systems
-            OpenGLSolids::DrawCoordSystem(2.f);
+            //Bullet debug draw
+            if(drawDebug)
+                simulation->dynamicsWorld->debugDrawWorld();
             
+            //Coordinate systems
             if(showCoordSys)
             {
+                OpenGLSolids::DrawCoordSystem(2.f);
+                
                 for(int h = 0; h < simulation->entities.size(); h++)
                     if(simulation->entities[h]->getType() == ENTITY_SOLID)
                     {
@@ -1020,6 +1036,21 @@ void OpenGLPipeline::Render()
             for(int h = 0; h < simulation->pathGenerators.size(); h++)
                 if(simulation->pathGenerators[h]->isRenderable())
                     simulation->pathGenerators[h]->Render();
+            
+            //Lights
+            if(showLightMeshes)
+                for(int h = 0; h < simulation->lights.size(); h++)
+                    simulation->lights[h]->RenderDummy();
+            
+            //Cameras
+            if(showCameraFrustums)
+                for(int h = 0; h < simulation->views.size(); h++)
+                    if(i != h && simulation->views[h]->getType() == CAMERA)
+                    {
+                        OpenGLCamera* cam = (OpenGLCamera*)simulation->views[h];
+                        cam->RenderDummy();
+                    }
+            
             
             //Stickers
             glDisable(GL_DEPTH_TEST);

@@ -11,9 +11,7 @@
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {
-    reldir = UnitSystem::SetPosition(target - position);
-    reldir.normalize();
-    dir = reldir;
+    dir = UnitSystem::SetPosition(target - position).normalized();
     coneAngle = cone/180.f*M_PI;//UnitSystem::SetAngle(cone);
     lightClipSpace = glm::mat4();
     
@@ -53,26 +51,21 @@ OpenGLSpotLight::~OpenGLSpotLight()
 
 btVector3 OpenGLSpotLight::getViewDirection()
 {
-    btVector3 direction = (activeView->GetViewTransform()).getBasis() * dir;
+    btVector3 direction = (activeView->GetViewTransform()).getBasis() * getDirection();
     return direction;
+}
+
+btVector3 OpenGLSpotLight::getDirection()
+{
+    if(holdingEntity != NULL)
+        return holdingEntity->getTransform().getBasis() * dir;
+    else
+        return dir;
 }
 
 GLfloat OpenGLSpotLight::getAngle()
 {
     return coneAngle;
-}
-
-void OpenGLSpotLight::UpdateLight()
-{
-    if(holdingEntity != NULL)
-    {
-        btTransform trans;
-        trans = holdingEntity->getTransform();
-        btQuaternion rotation = trans.getRotation();
-        btTransform rotTrans(rotation, btVector3(0,0,0));
-        dir = rotTrans * reldir;
-        pos = rotTrans * relpos + trans.getOrigin();
-    }
 }
 
 void OpenGLSpotLight::Render()
@@ -112,10 +105,13 @@ void OpenGLSpotLight::RenderLightSurface()
     if(surfaceDistance > 0)
     {
         //transformation
+        btVector3 org = getPosition();
+        btVector3 left = getDirection();
+        
         btVector3 up = btVector3(0, 1.0, 0);
-        btVector3 left = dir.normalized();
-		if(fabs(left.y())>0.8)
+        if(fabs(left.y()) > 0.8)
             up = btVector3(0,0,1.0);
+        
         btVector3 front = left.cross(up);
         front.normalize();
         up = front.cross(left);
@@ -133,9 +129,9 @@ void OpenGLSpotLight::RenderLightSurface()
         openglTrans[9] = front.y();
         openglTrans[10] = front.z();
         openglTrans[11] = 0.0;
-        openglTrans[12] = pos.x();
-        openglTrans[13] = pos.y();
-        openglTrans[14] = pos.z();
+        openglTrans[12] = org.x();
+        openglTrans[13] = org.y();
+        openglTrans[14] = org.z();
         openglTrans[15] = 1.0;
         
         glPushMatrix();
@@ -163,10 +159,13 @@ void OpenGLSpotLight::RenderLightSurface()
 void OpenGLSpotLight::RenderDummy()
 {
     //transformation
+    btVector3 org = getPosition();
+    btVector3 left = getDirection();
+    
     btVector3 up = btVector3(0, 1.0, 0);
-    btVector3 left = dir.normalized();
-	if(fabs(left.y())>0.8)
+    if(fabs(left.y()) > 0.8)
         up = btVector3(0,0,1.0);
+    
     btVector3 front = left.cross(up);
     front.normalize();
     up = front.cross(left);
@@ -184,9 +183,9 @@ void OpenGLSpotLight::RenderDummy()
     openglTrans[9] = front.y();
     openglTrans[10] = front.z();
     openglTrans[11] = 0.0;
-    openglTrans[12] = pos.x();
-    openglTrans[13] = pos.y();
-    openglTrans[14] = pos.z();
+    openglTrans[12] = org.x();
+    openglTrans[13] = org.y();
+    openglTrans[14] = org.z();
     openglTrans[15] = 1.0;
     
     glPushMatrix();

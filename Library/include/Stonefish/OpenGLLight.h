@@ -34,7 +34,6 @@ public:
     virtual ~OpenGLLight();
     
     virtual void Render() = 0;
-    virtual void UpdateLight() = 0;
     virtual void RenderLightSurface() = 0;
     virtual void RenderDummy() = 0;
     virtual void RenderShadowMap(OpenGLPipeline* pipe) = 0;
@@ -62,7 +61,6 @@ public:
 protected:
     SolidEntity* holdingEntity;
     bool active;
-    btVector3 relpos;
     btVector3 pos;
     GLfloat surfaceDistance;
     glm::vec4 color;

@@ -9,6 +9,7 @@
 #include "SolidEntity.h"
 #include "OpenGLSolids.h"
 
+#pragma mark Constructors
 SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueName)
 {
     material = mat;
@@ -30,6 +31,7 @@ SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueN
     fullyImmersed = false;
 }
 
+#pragma mark - Destructor
 SolidEntity::~SolidEntity()
 {
     if(displayList != 0)
@@ -44,6 +46,7 @@ SolidEntity::~SolidEntity()
     multibodyCollider = NULL;
 }
 
+#pragma mark - Accessors
 EntityType SolidEntity::getType()
 {
     return ENTITY_SOLID;
@@ -150,8 +153,102 @@ btTransform SolidEntity::getTransform()
         rigidBody->getMotionState()->getWorldTransform(trans);
         return trans;
     }
-    
-    return btTransform::getIdentity();
+    else if(multibodyCollider != NULL)
+    {
+        return multibodyCollider->getWorldTransform();
+    }
+    else
+        return btTransform::getIdentity();
+}
+
+btVector3 SolidEntity::getLinearVelocity()
+{
+    if(rigidBody != NULL)
+    {
+        return rigidBody->getLinearVelocity();
+    }
+    else if(multibodyCollider != NULL)
+    {
+        //Get multibody and link id
+        btMultiBody* multiBody = multibodyCollider->m_multiBody;
+        int index = multibodyCollider->m_link;
+        
+        //Start with base velocity
+        btVector3 linVelocity = multiBody->getBaseVel(); //Global
+        
+        if(index >= 0) //If collider is not base
+        {
+            for(unsigned int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
+            {
+                if(multiBody->getLink(i).m_jointType == btMultibodyLink::ePrismatic) //Just add linear velocity
+                {
+                    btVector3 axis = multiBody->getLink(i).getAxisBottom(0); //Local axis
+                    btVector3 vel = multiBody->getJointVel(i) * axis; //Local velocity
+                    btVector3 gvel = multiBody->localDirToWorld(i, vel); //Global velocity
+                    linVelocity += gvel;
+                }
+                else if(multiBody->getLink(i).m_jointType == btMultibodyLink::eRevolute) //Add linear velocity due to rotation
+                {
+                    btVector3 axis = multiBody->getLink(i).getAxisBottom(0); //Local linear motion
+                    btVector3 vel = multiBody->getJointVel(i) * axis; //Local velocity
+                    btVector3 gvel = multiBody->localDirToWorld(i, vel); //Global velocity
+                    linVelocity += gvel;
+                }
+            }
+        }
+        
+        return linVelocity;
+    }
+    else
+        return btVector3(0.,0.,0.);
+}
+
+btVector3 SolidEntity::getAngularVelocity()
+{
+    if(rigidBody != NULL)
+    {
+        return rigidBody->getAngularVelocity();
+    }
+    else if(multibodyCollider != NULL)
+    {
+        //Get multibody and link id
+        btMultiBody* multiBody = multibodyCollider->m_multiBody;
+        int index = multibodyCollider->m_link;
+        
+        //Start with base velocity
+        btVector3 angVelocity = multiBody->getBaseOmega(); //Global
+        
+        if(index >= 0)
+        {
+            for(unsigned int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
+                if(multiBody->getLink(i).m_jointType == btMultibodyLink::eRevolute) //Only revolute joints can change angular velocity
+                {
+                    btVector3 axis = multiBody->getLink(i).getAxisTop(0); //Local axis
+                    btVector3 vel = multiBody->getJointVel(i) * axis; //Local velocity
+                    btVector3 gvel = multiBody->localDirToWorld(i, vel); //Global velocity
+                    angVelocity += gvel;
+                }
+        }
+        
+        return angVelocity;
+    }
+    else
+        return btVector3(0.,0.,0.);
+}
+
+
+btVector3 SolidEntity::getLinearVelocityInLocalPoint(const btVector3& relPos)
+{
+    if(rigidBody != NULL)
+    {
+        return rigidBody->getVelocityInLocalPoint(relPos);
+    }
+    else if(multibodyCollider != NULL)
+    {
+        return getLinearVelocity() + getAngularVelocity().cross(relPos);
+    }
+    else
+        return btVector3(0.,0.,0.);
 }
 
 btScalar SolidEntity::getVolume()
@@ -184,6 +281,7 @@ Material* SolidEntity::getMaterial()
     return material;
 }
 
+#pragma mark - Methods
 void SolidEntity::BuildRigidBody()
 {
     if(rigidBody == NULL)
@@ -205,6 +303,7 @@ void SolidEntity::BuildRigidBody()
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROPSCOPIC_FORCE);
+        
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
     }
@@ -221,13 +320,20 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         
         //Link
         multibodyCollider = new btMultiBodyLinkCollider(mb, child - 1);
+        multibodyCollider->setUserPointer(this);
         multibodyCollider->setCollisionShape(colShape);
-        world->addCollisionObject(multibodyCollider, DEFAULT, DEFAULT | CABLE_EVEN | CABLE_ODD);
+        multibodyCollider->setFriction(btScalar(0.));
+        multibodyCollider->setRestitution(btScalar(0.));
+        multibodyCollider->setRollingFriction(btScalar(0.));
+        multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
             mb->getLink(child - 1).m_collider = multibodyCollider;
         else
             mb->setBaseCollider(multibodyCollider);
+        
+        world->addCollisionObject(multibodyCollider, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
         
         //Graphics
         BuildDisplayList();
@@ -297,7 +403,7 @@ void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
         
         //rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
         rigidBody->setCenterOfMassTransform(localTransform * UnitSystem::SetTransform(worldTransform));
-        world->addRigidBody(rigidBody, DEFAULT, DEFAULT | STATIC | CABLE_EVEN | CABLE_ODD);
+        world->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
     }
 }
 

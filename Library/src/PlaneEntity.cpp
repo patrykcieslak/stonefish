@@ -71,6 +71,13 @@ PlaneEntity::~PlaneEntity()
 {
 }
 
+void PlaneEntity::GetAABB(btVector3 &min, btVector3 &max)
+{
+    //Plane shouldn't affect shadow calculation
+    min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+    max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+}
+
 StaticEntityType PlaneEntity::getStaticType()
 {
     return STATIC_PLANE;

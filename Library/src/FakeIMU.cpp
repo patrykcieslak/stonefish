@@ -25,22 +25,26 @@ void FakeIMU::Reset()
 void FakeIMU::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to imu frame
-    btMatrix3x3 toImuFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();
+    //btMatrix3x3 toImuFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();
+    btMatrix3x3 toImuFrame = relToSolid.getBasis().inverse() * solid->getTransform().getBasis().inverse();
     
     //get acceleration
     //inertial component
-    btVector3 actualV = solid->getRigidBody()->getVelocityInLocalPoint(relToSolid.getOrigin()); //get velocity in sensor location
+    //btVector3 actualV = solid->getRigidBody()->getVelocityInLocalPoint(relToSolid.getOrigin()); //get velocity in sensor location
+    btVector3 actualV = solid->getLinearVelocityInLocalPoint(relToSolid.getOrigin());
     actualV = toImuFrame * actualV;
     btVector3 acc = -(actualV - lastV)/dt;
     lastV = actualV;
     
     //gravity component
-    btVector3 grav = solid->getRigidBody()->getGravity();
+    //btVector3 grav = solid->getRigidBody()->getGravity();
+    btVector3 grav = btVector3(0,0,-9.81);
     grav = toImuFrame * grav;
     acc += grav;
     
     //get angular velocity
-    btVector3 av = solid->getRigidBody()->getAngularVelocity();
+    //btVector3 av = solid->getRigidBody()->getAngularVelocity();
+    btVector3 av = solid->getAngularVelocity();
     av = toImuFrame * av;
     
     //get angles

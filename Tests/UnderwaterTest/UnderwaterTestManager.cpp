@@ -23,19 +23,19 @@
 #include "PoolEntity.h"
 #include "ObstacleEntity.h"
 
-UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, false, stepsPerSecond, SEQUENTIAL_IMPULSE, STANDARD)
+UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, false, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 
 void UnderwaterTestManager::BuildScenario()
 {
     //General
-    OpenGLPipeline::getInstance()->SetRenderingEffects(true, true, true, true);
-    OpenGLPipeline::getInstance()->SetVisibleElements(false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true, true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 7.81), 0.4);
-    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.9, 0.01);
+    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.9, 0.5);
     getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 0.1, 1.55);
     
     ///////LOOKS///////////
@@ -43,8 +43,8 @@ void UnderwaterTestManager::BuildScenario()
     GetDataPath(path, 1024-32);
     strcat(path, "grid.png");
     
-    Look grey = CreateMatteLook(1.0f, 1.0f, 1.0f, 0.0f, path);
-    Look wall = CreateMatteLook(0.9f, 0.9f, 0.9f, 0.8f);
+    Look grey = CreateOpaqueLook(glm::vec3(1.0f, 1.0f, 1.0f), 0.5f, 0.3f , 1.5f, path);
+    Look wall = CreateOpaqueLook(glm::vec3(0.9f, 0.9f, 0.9f), 0.5f, 0.8f, 1.5f);
     
     ////////OBJECTS
     PlaneEntity* floor = new PlaneEntity("Floor", 1000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)));
@@ -61,7 +61,7 @@ void UnderwaterTestManager::BuildScenario()
     pool->setRenderable(true);
     SetFluidEntity(pool);
     
-    Look color = CreateGlossyLook(1.f, 0.6f, 0.2f, 0.5f, 0.1f);
+    Look color = CreateOpaqueLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
     BoxEntity* box = new BoxEntity("Box1", btVector3(0.5f,0.5f,15.0f), getMaterialManager()->getMaterial("Steel"), color);
     AddSolidEntity(box, btTransform(btQuaternion(0,0,0.1), btVector3(0,0,-5)));
     

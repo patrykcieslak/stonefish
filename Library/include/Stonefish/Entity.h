@@ -23,11 +23,11 @@ EntityType;
 
 typedef enum
 {
-    NONCOLLIDING = 0,
-    STATIC = BIT(0),
-    DEFAULT = BIT(1),
-    CABLE_EVEN = BIT(2),
-    CABLE_ODD = BIT(3)
+    MASK_NONCOLLIDING = 0,
+    MASK_STATIC = BIT(0),
+    MASK_DEFAULT = BIT(1),
+    MASK_CABLE_EVEN = BIT(2),
+    MASK_CABLE_ODD = BIT(3)
 }
 CollisionMask;
 

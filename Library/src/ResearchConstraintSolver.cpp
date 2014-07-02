@@ -189,6 +189,7 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 			btRigidBody* orgBodyB = m_tmpSolverBodyPool[sbB].m_originalBody;
             
 			numRows = i<m_tmpSolverNonContactConstraintPool.size() ? m_tmpConstraintSizesPool[c].m_numConstraintRows : numContactRows ;
+            
 			if (orgBodyA)
 			{
 				{
@@ -606,15 +607,14 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlySetup(btCollisionObjec
 
 btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollisionObject** bodies ,int numBodies,btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer)
 {
-	bool result = true;
-	{
-		BT_PROFILE("solveMLCP");
-        //		printf("m_A(%d,%d)\n", m_A.rows(),m_A.cols());
-		result = solveMLCP(infoGlobal);
-	}
+	bool result = false;
     
-	//check if solution is valid, and otherwise fallback to btSequentialImpulseConstraintSolver::solveGroupCacheFriendlyIterations
-	if (result)
+    //Try using MLCP solver
+	BT_PROFILE("solveMLCP");
+    result = solveMLCP(infoGlobal);
+    
+	//Check if solution is valid, and otherwise fallback to btSequentialImpulseConstraintSolver
+	if(result)
 	{
 		BT_PROFILE("process MLCP results");
 		for (int i=0;i<m_allConstraintPtrArray.size();i++)
@@ -646,11 +646,53 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
 				
 			}
 		}
+        
+        //Solve Featherstone non-contact constraints
+        for (int j=0;j<m_multiBodyNonContactConstraints.size();j++)
+        {
+            btMultiBodySolverConstraint& constraint = m_multiBodyNonContactConstraints[j];
+            resolveSingleConstraintRowGeneric(constraint);
+            if(constraint.m_multiBodyA)
+                constraint.m_multiBodyA->__posUpdated = false;
+            if(constraint.m_multiBodyB)
+                constraint.m_multiBodyB->__posUpdated = false;
+        }
+        
+        //Solve Featherstone normal contact
+        for (int j=0;j<m_multiBodyNormalContactConstraints.size();j++)
+        {
+            btMultiBodySolverConstraint& constraint = m_multiBodyNormalContactConstraints[j];
+            resolveSingleConstraintRowGeneric(constraint);
+            
+            if(constraint.m_multiBodyA)
+                constraint.m_multiBodyA->__posUpdated = false;
+            if(constraint.m_multiBodyB)
+                constraint.m_multiBodyB->__posUpdated = false;
+        }
+        
+        //Solve Featherstone frictional contact
+        for (int j=0;j<this->m_multiBodyFrictionContactConstraints.size();j++)
+        {
+            btMultiBodySolverConstraint& frictionConstraint = m_multiBodyFrictionContactConstraints[j];
+            btScalar totalImpulse = m_multiBodyNormalContactConstraints[frictionConstraint.m_frictionIndex].m_appliedImpulse;
+            //adjust friction limits here
+            if (totalImpulse>btScalar(0))
+            {
+                frictionConstraint.m_lowerLimit = -(frictionConstraint.m_friction*totalImpulse);
+                frictionConstraint.m_upperLimit = frictionConstraint.m_friction*totalImpulse;
+                resolveSingleConstraintRowGeneric(frictionConstraint);
+                
+                if(frictionConstraint.m_multiBodyA)
+                    frictionConstraint.m_multiBodyA->__posUpdated = false;
+                if(frictionConstraint.m_multiBodyB)
+                    frictionConstraint.m_multiBodyB->__posUpdated = false;
+            }
+        }
 	}
 	else
 	{
 		m_fallback++;
-		btSequentialImpulseConstraintSolver::solveGroupCacheFriendlyIterations(bodies ,numBodies,manifoldPtr, numManifolds,constraints,numConstraints,infoGlobal,debugDrawer);
+		btSequentialImpulseConstraintSolver::solveGroupCacheFriendlyIterations(bodies, numBodies, manifoldPtr, numManifolds, constraints, numConstraints, infoGlobal, debugDrawer);
 	}
     
 	return 0.f;

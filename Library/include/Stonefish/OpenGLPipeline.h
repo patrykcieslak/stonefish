@@ -40,17 +40,19 @@
 class SimulationManager;
 class OpenGLView;
 
-//singleton
+/*! A singleton class representing OpenGL rendering pipeline */
 class OpenGLPipeline
 {
 public:
     void Initialize(SimulationManager* sim, GLint windowWidth, GLint windowHeight);
     void DrawDisplay();
     void Render();
-    void SetRenderingEffects(bool sky, bool shadows, bool fluid, bool sao);
-    void SetVisibleElements(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers);
     void DrawStandardObjects();
+    void DrawSpecialObjects();
     
+    void setRenderingEffects(bool sky, bool shadows, bool fluid, bool sao);
+    void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers, bool lights, bool cameras);
+    void setDebugSimulation(bool enabled);
     bool isFluidRendered();
     bool isSAORendered();
     GLuint getDisplayTexture();
@@ -60,7 +62,6 @@ public:
 private:
     OpenGLPipeline();
     ~OpenGLPipeline();
-    void DrawSpecialObjects();
     
     SimulationManager* simulation;
     
@@ -69,11 +70,14 @@ private:
     bool renderFluid;
     bool renderSAO;
     
+    bool drawDebug;
     bool showCoordSys;
     bool showJoints;
     bool showActuators;
     bool showSensors;
     bool showStickers;
+    bool showLightMeshes;
+    bool showCameraFrustums;
     
     GLint windowW;
     GLint windowH;

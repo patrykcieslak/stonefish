@@ -38,6 +38,6 @@ std::string Entity::getName()
 
 void Entity::GetAABB(btVector3& min, btVector3& max)
 {
-    min.setValue(0, 0, 0);
-    max.setValue(0, 0, 0);
+    min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+    max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
 }

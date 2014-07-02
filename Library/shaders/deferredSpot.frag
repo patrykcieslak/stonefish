@@ -129,7 +129,7 @@ void main(void)
             {
                 //attenuation with distance
                 spotEffect = pow(spotEffect, 100.0);
-                float attenuation = spotEffect/(distance + distance * distance);
+                float attenuation = spotEffect/(distance * distance);
                 
                 vec3 halfVector = normalize(lightDir + eyeDir);
                 float NdotH = max(dot(normal, halfVector), 0.001);

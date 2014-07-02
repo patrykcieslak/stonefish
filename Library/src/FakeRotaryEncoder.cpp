@@ -13,15 +13,15 @@ FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* join
 {
     revolute = joint;
     multibody = NULL;
-    multibodyChild = 0;
+    multibodyJoint = 0;
     Reset();
 }
 
-FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* mb, unsigned int joint, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     revolute = NULL;
     multibody = mb;
-    multibodyChild = child;
+    multibodyJoint = joint;
     Reset();
 }
 
@@ -29,8 +29,7 @@ FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity*
 void FakeRotaryEncoder::Reset()
 {
     Sensor::Reset();
-    angle = btScalar(0.);
-    lastAngle = getRawAngle();
+    angle = lastAngle = getRawAngle();
     angularVelocity = btScalar(0.);
 }
 
@@ -82,7 +81,7 @@ btScalar FakeRotaryEncoder::getRawAngle()
     {
         btScalar angle = btScalar(0.);
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        multibody->getJointPosition(multibodyChild, angle, jt);
+        multibody->getJointPosition(multibodyJoint, angle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return UnitSystem::SetAngle(angle);
@@ -101,7 +100,7 @@ btScalar FakeRotaryEncoder::getRawAngularVelocity()
     {
         btScalar angularV = btScalar(0.);
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        multibody->getJointVelocity(multibodyChild, angularV, jt);
+        multibody->getJointVelocity(multibodyJoint, angularV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return UnitSystem::SetAngle(angularV);

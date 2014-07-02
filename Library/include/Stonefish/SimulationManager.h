@@ -11,6 +11,7 @@
 
 #include "ResearchDynamicsWorld.h"
 #include "ResearchConstraintSolver.h"
+#include "OpenGLDebugDrawer.h"
 #include "UnitSystem.h"
 #include "NameManager.h"
 #include "MaterialManager.h"
@@ -69,6 +70,7 @@ public:
 
     double getPhysicsTimeInMiliseconds();
     void setStepsPerSecond(btScalar steps);
+    void setICSolverParams(bool useGravity, btScalar timeStep = btScalar(0.001), unsigned int maxIterations = 100000, btScalar maxTime = BT_LARGE_FLOAT, btScalar linearTolerance = btScalar(1e-6), btScalar angularTolerance = btScalar(1e-6));
     btScalar getStepsPerSecond();
     void getWorldAABB(btVector3& min, btVector3& max);
     CollisionFilteringType getCollisionFilter();
@@ -125,7 +127,14 @@ private:
     SolverType solver;
     CollisionFilteringType collisionFilter;
     bool icProblemSolved;
-
+    bool icUseGravity;
+    btScalar icTimeStep;
+    unsigned int icMaxIter;
+    btScalar icMaxTime;
+    btScalar icLinTolerance;
+    btScalar icAngTolerance;
+    unsigned int mlcpFallbacks;
+    
     std::vector<Entity*> entities;
     std::vector<Joint*> joints;
     std::vector<Sensor*> sensors;
@@ -140,6 +149,7 @@ private:
     //graphics
     std::vector<OpenGLView*> views;
     std::vector<OpenGLLight*> lights;
+    OpenGLDebugDrawer* debugDrawer;
 };
 
 #endif

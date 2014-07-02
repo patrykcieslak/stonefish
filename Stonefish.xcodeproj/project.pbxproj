@@ -601,6 +601,8 @@
 		F7AE97D31956C2BF00256BC9 /* PathFollowing.h in Headers */ = {isa = PBXBuildFile; fileRef = F7AE97D21956C2BF00256BC9 /* PathFollowing.h */; };
 		F7AE97D51956C2F500256BC9 /* PathGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AE97D41956C2F500256BC9 /* PathGenerator.cpp */; };
 		F7AE97D71956C33600256BC9 /* PathFollowing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AE97D61956C33600256BC9 /* PathFollowing.cpp */; };
+		F7B9AA17195F5CC300BC793B /* OpenGLDebugDrawer.h in Headers */ = {isa = PBXBuildFile; fileRef = F7B9AA16195F5CC300BC793B /* OpenGLDebugDrawer.h */; };
+		F7B9AA19195F5D3000BC793B /* OpenGLDebugDrawer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7B9AA18195F5D3000BC793B /* OpenGLDebugDrawer.cpp */; };
 		F7C2313718CA0D3F00817B69 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
 		F7C2313818CA0D3F00817B69 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
 		F7C2313A18CA0D3F00817B69 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
@@ -1585,6 +1587,8 @@
 		F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = cubeConvolve.frag; sourceTree = "<group>"; };
 		F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = deferredOmni.frag; sourceTree = "<group>"; };
 		F7B1DC3218C40AEC001C0CE8 /* saq.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saq.vert; sourceTree = "<group>"; };
+		F7B9AA16195F5CC300BC793B /* OpenGLDebugDrawer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLDebugDrawer.h; sourceTree = "<group>"; };
+		F7B9AA18195F5D3000BC793B /* OpenGLDebugDrawer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLDebugDrawer.cpp; sourceTree = "<group>"; };
 		F7C2314E18CA0D3F00817B69 /* RollingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RollingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7C2315018CA0E1700817B69 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F7C2315118CA0E1700817B69 /* RollingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RollingTestApp.cpp; sourceTree = "<group>"; };
@@ -2268,6 +2272,7 @@
 			isa = PBXGroup;
 			children = (
 				F7A503DB18E836E400913252 /* OpenGLPipeline.h */,
+				F7B9AA16195F5CC300BC793B /* OpenGLDebugDrawer.h */,
 				F75B6E4318C3E74B0092C1A2 /* OpenGLSky.h */,
 				F7DD1C011904311600B6BF14 /* OpenGLSun.h */,
 				F75B6E3E18C3E74B0092C1A2 /* OpenGLGBuffer.h */,
@@ -2403,6 +2408,7 @@
 			isa = PBXGroup;
 			children = (
 				F7A503DD18E836FA00913252 /* OpenGLPipeline.cpp */,
+				F7B9AA18195F5D3000BC793B /* OpenGLDebugDrawer.cpp */,
 				F75B6EAD18C3EA6A0092C1A2 /* OpenGLGBuffer.cpp */,
 				F75B6EB218C3EA6A0092C1A2 /* OpenGLSky.cpp */,
 				F7DD1C031904315E00B6BF14 /* OpenGLSun.cpp */,
@@ -2885,6 +2891,7 @@
 				F75B6E8018C3E74C0092C1A2 /* Sensor.h in Headers */,
 				F7018BF1193CA74B00ADA419 /* btCapsuleShape.h in Headers */,
 				F7018C61193CA74B00ADA419 /* btConvexPenetrationDepthSolver.h in Headers */,
+				F7B9AA17195F5CC300BC793B /* OpenGLDebugDrawer.h in Headers */,
 				F7018C5E193CA74B00ADA419 /* btContinuousConvexCollision.h in Headers */,
 				F7018C72193CA74B00ADA419 /* btPolyhedralContactClipping.h in Headers */,
 				F75B6E6218C3E74C0092C1A2 /* DialogAppKit.h in Headers */,
@@ -3237,6 +3244,7 @@
 				F7018C8D193CA74B00ADA419 /* btHingeConstraint.cpp in Sources */,
 				F7018BDE193CA74B00ADA419 /* btSimulationIslandManager.cpp in Sources */,
 				F7732E301930C3660068D5A5 /* Console.cpp in Sources */,
+				F7B9AA19195F5D3000BC793B /* OpenGLDebugDrawer.cpp in Sources */,
 				F7018C4E193CA74B00ADA419 /* gim_box_set.cpp in Sources */,
 				F75B6EEB18C3EA6A0092C1A2 /* PlaneEntity.cpp in Sources */,
 				F75B6EE518C3EA6A0092C1A2 /* OpenGLSky.cpp in Sources */,

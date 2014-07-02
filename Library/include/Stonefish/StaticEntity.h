@@ -28,7 +28,7 @@ public:
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     EntityType getType();
-    void GetAABB(btVector3& min, btVector3& max);
+    virtual void GetAABB(btVector3& min, btVector3& max);
     
     Material* getMaterial();
     btRigidBody* getRigidBody();

@@ -18,7 +18,6 @@ public:
     ~OpenGLOmniLight();
     
     void Render();
-    void UpdateLight();
     void RenderLightSurface();
     void RenderDummy();
     void RenderShadowMap(OpenGLPipeline* pipe);

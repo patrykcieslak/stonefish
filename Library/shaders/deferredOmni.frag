@@ -50,7 +50,7 @@ void main(void)
     if(NdotL > 0.0)
     {
         //distance attenuation
-        float attenuation = 1.0/(distance + distance * distance);
+        float attenuation = 1.0/(distance * distance);
         
         vec3 halfVector = normalize(lightDir + eyeDir);
         float NdotH = max(dot(normal, halfVector), 0.001);

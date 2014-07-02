@@ -34,24 +34,33 @@
 #pragma mark Constructors
 SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
 {
+    //Set coordinate system
     UnitSystem::SetUnitSystem(unitSystem, false);
     zUp = zAxisUp;
+    
+    //Initialize simulation world
     setStepsPerSecond(stepsPerSecond);
+    solver = st;
+    collisionFilter = cft;
     currentTime = 0;
     physicTime = 0;
     simulationTime = 0;
-    drawLightDummies = false;
-    drawCameraDummies = false;
-    fluid = NULL;
-    icProblemSolved = false;
-    solver = st;
-    collisionFilter = cft;
+    mlcpFallbacks = 0;
     materialManager = NULL;
     dynamicsWorld = NULL;
     dwSolver = NULL;
     dwBroadphase = NULL;
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
+    fluid = NULL;
+    
+    //Set IC solver params
+    icProblemSolved = false;
+    setICSolverParams(false);
+    
+    //Misc
+    drawLightDummies = false;
+    drawCameraDummies = false;
 }
 
 #pragma mark - Destructor
@@ -339,23 +348,7 @@ void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
     for(int i = 0; i < entities.size(); i++)
     {
         btVector3 entAabbMin, entAabbMax;
-        
-        if(entities[i]->getType() == ENTITY_SOLID)
-        {
-            SolidEntity* solid = (SolidEntity*)entities[i];
-            solid->GetAABB(entAabbMin, entAabbMax);
-        }
-        else if(entities[i]->getType() == ENTITY_STATIC)
-        {
-            StaticEntity* stat = (StaticEntity*)entities[i];
-            if(stat->getStaticType() != STATIC_PLANE)
-                stat->GetAABB(entAabbMin, entAabbMax);
-            else
-                continue;
-        }
-        else
-            continue;
-        
+        entities[i]->GetAABB(entAabbMin, entAabbMax);
         if(entAabbMin.x() < min.x()) min.setX(entAabbMin.x());
         if(entAabbMin.y() < min.y()) min.setY(entAabbMin.y());
         if(entAabbMin.z() < min.z()) min.setZ(entAabbMin.z());
@@ -368,6 +361,16 @@ void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
 void SimulationManager::setGravity(btScalar gravityConstant)
 {
     g = UnitSystem::SetAcceleration(btVector3(0., 0., gravityConstant)).getZ();
+}
+
+void SimulationManager::setICSolverParams(bool useGravity, btScalar timeStep, unsigned int maxIterations, btScalar maxTime, btScalar linearTolerance, btScalar angularTolerance)
+{
+    icUseGravity = useGravity;
+    icTimeStep = timeStep > SIMD_EPSILON ? timeStep : btScalar(0.001);
+    icMaxIter = maxIterations > 0 ? maxIterations : INT_MAX;
+    icMaxTime = maxTime > SIMD_EPSILON ? maxTime : BT_LARGE_FLOAT;
+    icLinTolerance = linearTolerance > SIMD_EPSILON ? linearTolerance : btScalar(1e-6);
+    icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : btScalar(1e-6);
 }
 
 #pragma mark - Simulation
@@ -414,6 +417,7 @@ void SimulationManager::InitializeSolver()
     //Create solver
     dwSolver = new ResearchConstraintSolver(mlcp);
     dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
+    
     dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
     dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
@@ -428,11 +432,11 @@ void SimulationManager::InitializeSolver()
     
     //Collision
     dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.000001; //value close to zero needed for accurate friction
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.01; //value close to zero needed for accurate friction/too close to zero causes multibody sinking
     dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 1.0; //error reduction for rigid body angular velocity
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
     dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = -0.001;
-    dynamicsWorld->setApplySpeculativeContactRestitution(true);
+    dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
     dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = 1e30; //not used
     
     //Special forces
@@ -456,6 +460,10 @@ void SimulationManager::InitializeSolver()
     
     //Create material manager & load standard materials
     materialManager = new MaterialManager();
+    
+    //Debugging
+    debugDrawer = new OpenGLDebugDrawer(btIDebugDraw::DBG_DrawWireframe);
+    dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
 void SimulationManager::RestartScenario()
@@ -492,6 +500,7 @@ void SimulationManager::DestroyScenario()
         delete dwBroadphase;
         delete dwDispatcher;
         delete dwCollisionConfig;
+        delete debugDrawer;
     }
     
     //remove sim manager objects
@@ -543,6 +552,7 @@ bool SimulationManager::StartSimulation()
     currentTime = 0;
     physicTime = 0;
     simulationTime = 0;
+    mlcpFallbacks = 0;
     
     //Solve initial conditions problem
     if(!SolveICProblem())
@@ -559,25 +569,35 @@ bool SimulationManager::SolveICProblem()
 {
     //Solve for joint positions
     icProblemSolved = false;
-    dynamicsWorld->setGravity(btVector3(0.,0.,0.)); //disable gravity
+    
+    //Should use gravity?
+    if(icUseGravity)
+        dynamicsWorld->setGravity(btVector3(0., 0., zUp ? -g : g));
+    else
+        dynamicsWorld->setGravity(btVector3(0.,0.,0.));
+    
+    //Set IC callback
     dynamicsWorld->setInternalTickCallback(SolveICTickCallback, this, true);
     
     uint64_t icTime = GetTimeInMicroseconds();
-    
     int iterations = 0;
     
     do
     {
-        //Check iterations limit
-        if(iterations > 100000)
+        if(iterations > icMaxIter) //Check iterations limit
         {
             cError("IC problem not solved! Reached maximum interation count.");
             return false;
         }
-        iterations++;
+        else if((GetTimeInMicroseconds() - icTime)/(double)1e6 > icMaxTime) //Check time limit
+        {
+            cError("IC problem not solved! Reached maximum time.");
+            return false;
+        }
         
         //Simulate world
-        dynamicsWorld->stepSimulation(btScalar(0.001), 1, btScalar(0.001));
+        dynamicsWorld->stepSimulation(icTimeStep, 1, icTimeStep);
+        iterations++;
     }
     while(!icProblemSolved);
     
@@ -585,6 +605,7 @@ bool SimulationManager::SolveICProblem()
     
     //Synchronize body transforms
     dynamicsWorld->synchronizeMotionStates();
+    simulationTime = btScalar(0.);
 
     //Solving time
     cInfo("IC problem solved with %d iterations in %1.6lf s.", iterations, solveTime);
@@ -600,9 +621,11 @@ bool SimulationManager::SolveICProblem()
 
 void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
 {
+    //Check if initial conditions solved
     if(!icProblemSolved)
         return;
     
+    //Calculate eleapsed time
 	uint64_t deltaTime;
     if(currentTime == 0)
         deltaTime = 0.0;
@@ -612,6 +635,7 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
         deltaTime = timeInMicroseconds - currentTime;
     currentTime = timeInMicroseconds;
     
+    //Step simulation
     physicTime = GetTimeInMicroseconds();
     dynamicsWorld->stepSimulation((btScalar)deltaTime/btScalar(1000000.0), 1000000, (btScalar)ssus/btScalar(1000000.0));
     physicTime = GetTimeInMicroseconds() - physicTime;
@@ -620,9 +644,8 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
     int numFallbacks = dwSolver->getNumFallbacks();
     if(numFallbacks)
     {
-        static int totalFailures = 0;
-        totalFailures+=numFallbacks;
-        cInfo("MLCP solver failed %d times.", totalFailures);
+        mlcpFallbacks += numFallbacks;
+        cInfo("MLCP solver failed %d times.", mlcpFallbacks);
     }
     dwSolver->setNumFallbacks(0);
 }
@@ -645,17 +668,18 @@ Entity* SimulationManager::PickEntity(int x, int y)
             {
                 btCollisionWorld::ClosestRayResultCallback rayCallback(views[i]->GetEyePosition(), ray);
                 dynamicsWorld->rayTest(views[i]->GetEyePosition(), ray, rayCallback);
+                
                 if (rayCallback.hasHit())
                 {
-                    const btRigidBody* body = btRigidBody::upcast(rayCallback.m_collisionObject);
-                    if (body)
-                        return (Entity*)body->getUserPointer();
+                    Entity* ent = (Entity*)rayCallback.m_collisionObject->getUserPointer();
+                    return ent;
                 }
-                
-                return NULL;
+                else
+                    return NULL;
             }
         }
     }
+    
     return NULL;
 }
 
@@ -664,10 +688,10 @@ extern ContactAddedCallback gContactAddedCallback;
 
 bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)
 {
-    const btRigidBody* rbA = btRigidBody::upcast(colObj0Wrap->getCollisionObject());
-    const btRigidBody* rbB = btRigidBody::upcast(colObj1Wrap->getCollisionObject());
+    Entity* ent0 = (Entity*)colObj0Wrap->getCollisionObject()->getUserPointer();
+    Entity* ent1 = (Entity*)colObj1Wrap->getCollisionObject()->getUserPointer();
     
-    if(rbA == NULL || rbB == NULL)
+    if(ent0 == NULL || ent1 == NULL)
     {
         cp.m_combinedFriction = btScalar(0.);
         cp.m_combinedRollingFriction = btScalar(0.);
@@ -675,14 +699,21 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
-    Entity* entA = (Entity*)rbA->getUserPointer();
-    Material* matA;
-    if(entA->getType() == ENTITY_SOLID)
-        matA = ((SolidEntity*)entA)->getMaterial();
-    else if(entA->getType() == ENTITY_STATIC)
-        matA = ((StaticEntity*)entA)->getMaterial();
-    else if(entA->getType() == ENTITY_CABLE)
-        matA = ((CableEntity*)entA)->getMaterial();
+    Material* mat0;
+    btVector3 contactVelocity0;
+    
+    if(ent0->getType() == ENTITY_STATIC)
+    {
+        mat0 = ((StaticEntity*)ent0)->getMaterial();
+        contactVelocity0 = btVector3(0.,0.,0.);
+    }
+    else if(ent0->getType() == ENTITY_SOLID)
+    {
+        SolidEntity* sent0 = (SolidEntity*)ent0;
+        mat0 = sent0->getMaterial();
+        btVector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
+        contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
+    }
     else
     {
         cp.m_combinedFriction = btScalar(0.);
@@ -691,14 +722,21 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
-    Entity* entB = (Entity*)rbB->getUserPointer();
-    Material* matB;
-    if(entB->getType() == ENTITY_SOLID)
-        matB = ((SolidEntity*)entB)->getMaterial();
-    else if(entB->getType() == ENTITY_STATIC)
-        matB = ((StaticEntity*)entB)->getMaterial();
-    else if(entB->getType() == ENTITY_CABLE)
-        matB = ((CableEntity*)entB)->getMaterial();
+    Material* mat1;
+    btVector3 contactVelocity1;
+    
+    if(ent1->getType() == ENTITY_STATIC)
+    {
+        mat1 = ((StaticEntity*)ent1)->getMaterial();
+        contactVelocity1 = btVector3(0.,0.,0.);
+    }
+    else if(ent1->getType() == ENTITY_SOLID)
+    {
+        SolidEntity* sent1 = (SolidEntity*)ent1;
+        mat1 = sent1->getMaterial();
+        btVector3 localPoint1 = sent1->getTransform().getBasis() * cp.m_localPointB;
+        contactVelocity1 = sent1->getLinearVelocityInLocalPoint(localPoint1);
+    }
     else
     {
         cp.m_combinedFriction = btScalar(0.);
@@ -707,24 +745,25 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
-    //Calculate friction coefficient based on relative velocity
-    btVector3 relLocalVel = rbB->getVelocityInLocalPoint(rbB->getCenterOfMassTransform().getBasis() * cp.m_localPointB) - rbA->getVelocityInLocalPoint(rbA->getCenterOfMassTransform().getBasis() * cp.m_localPointA);
+    btVector3 relLocalVel = contactVelocity1 - contactVelocity0;
     btVector3 normalVel = cp.m_normalWorldOnB * cp.m_normalWorldOnB.dot(relLocalVel);
     btVector3 slipVel = relLocalVel - normalVel;
     btScalar slipVelMod = slipVel.length();
     btScalar sigma = 100;
     // f = (static - dynamic)/(sigma * v^2 + 1) + dynamic
-    cp.m_combinedFriction = (matA->staticFriction[matB->index] - matA->dynamicFriction[matB->index])/(sigma * slipVelMod * slipVelMod + btScalar(1.)) + matA->dynamicFriction[matB->index];
+    cp.m_combinedFriction = (mat0->staticFriction[mat1->index] - mat0->dynamicFriction[mat1->index])/(sigma * slipVelMod * slipVelMod + btScalar(1.)) + mat0->dynamicFriction[mat1->index];
     
     //Rolling friction not possible to generalize - needs special treatment
     cp.m_combinedRollingFriction = btScalar(0.);
     
     //Slipping
-    if(SimulationApp::getApp()->getSimulationManager()->getCollisionFilter() != STANDARD)
+    if(SimulationApp::getApp()->getSimulationManager()->getCollisionFilter() == INCLUSIVE)
         cp.m_userPersistentData = (void *)(new btVector3(slipVel));
     
     //Restitution
-    cp.m_combinedRestitution = matA->restitution * matB->restitution;
+    cp.m_combinedRestitution = mat0->restitution * mat1->restitution;
+    
+    //printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
     
     return true;
 }
@@ -736,14 +775,97 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
     //Clear all forces to ensure that no summing occurs
     world->clearForces();
     
-    //Solve for initial conditions
-    int solved = 0;
+    //Solve for objects settling
+    bool objectsSettled = true;
+    
+    if(simManager->icUseGravity)
+    {
+        //Apply gravity to bodies
+        for(int i = 0; i < simManager->entities.size(); i++)
+        {
+            if(simManager->entities[i]->getType() == ENTITY_SOLID)
+            {
+                SolidEntity* solid = (SolidEntity*)simManager->entities[i];
+                solid->ApplyGravity();
+            }
+            
+            //FeatherstoneEntity has gravity applied internally
+        }
+        
+        if(simManager->simulationTime < btScalar(0.01)) //Wait for a few cycles to ensure bodies started moving
+            objectsSettled = false;
+        else
+        {
+            //Check if objects settled
+            for(int i = 0; i < simManager->entities.size(); i++)
+            {
+                if(simManager->entities[i]->getType() == ENTITY_SOLID)
+                {
+                    SolidEntity* solid = (SolidEntity*)simManager->entities[i];
+                    if(solid->getLinearVelocity().length() > simManager->icLinTolerance * btScalar(100.) || solid->getAngularVelocity().length() > simManager->icAngTolerance * btScalar(100.))
+                    {
+                        objectsSettled = false;
+                        break;
+                    }
+                }
+                else if(simManager->entities[i]->getType() == ENTITY_FEATHERSTONE)
+                {
+                    FeatherstoneEntity* multibody = (FeatherstoneEntity*)simManager->entities[i];
+                    
+                    //Check base velocity
+                    btVector3 baseLinVel = multibody->getLinkLinearVelocity(0);
+                    btVector3 baseAngVel = multibody->getLinkAngularVelocity(0);
+                    
+                    if(baseLinVel.length() > simManager->icLinTolerance * btScalar(100.) || baseAngVel.length() > simManager->icAngTolerance * btScalar(100.0))
+                    {
+                        objectsSettled = false;
+                        break;
+                    }
+                    
+                    //Loop through all joints
+                    for(int h = 0; h < multibody->getNumOfJoints(); h++)
+                    {
+                        btScalar jVelocity;
+                        btMultibodyLink::eFeatherstoneJointType jType;
+                        multibody->getJointVelocity(h, jVelocity, jType);
+                        
+                        switch(jType)
+                        {
+                            case btMultibodyLink::eRevolute:
+                                if(UnitSystem::SetAngularVelocity(btVector3(jVelocity,0,0)).length() > simManager->icAngTolerance * btScalar(100.))
+                                    objectsSettled = false;
+                                break;
+                                
+                            case btMultibodyLink::ePrismatic:
+                                if(UnitSystem::SetVelocity(btVector3(jVelocity,0,0)).length() > simManager->icLinTolerance * btScalar(100.))
+                                    objectsSettled = false;
+                                break;
+                                
+                            default:
+                                break;
+                        }
+                        
+                        if(!objectsSettled)
+                            break;
+                    }
+                }
+            }
+        }
+    }
+    
+    //Solve for joint initial conditions
+    bool jointsICSolved = true;
     
     for(int i = 0; i < simManager->joints.size(); i++)
-        solved += (int)simManager->joints[i]->SolvePositionIC(1e-6, 1e-6);
-    
-    if(solved == simManager->joints.size())
+        if(!simManager->joints[i]->SolvePositionIC(simManager->icLinTolerance, simManager->icAngTolerance))
+            jointsICSolved = false;
+
+    //Check if everything solved
+    if(objectsSettled && jointsICSolved)
         simManager->icProblemSolved = true;
+    
+    //Update time
+    simManager->simulationTime += timeStep;
 }
 
 void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep)
@@ -774,12 +896,15 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     {
         Entity* ent = simManager->entities[i];
         
-        //apply gravity only to dynamic objects
         if(ent->getType() == ENTITY_SOLID)
         {
             SolidEntity* simple = (SolidEntity*)ent;
             simple->ApplyGravity();
-            //simple->getRigidBody()->setDamping(0, 0);
+        }
+        else if(ent->getType() == ENTITY_FEATHERSTONE)
+        {
+            FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
+            multibody->ApplyDamping();
         }
         else if(ent->getType() == ENTITY_CABLE)
         {

@@ -73,7 +73,7 @@ Material* StaticEntity::getMaterial()
 
 void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
-    world->addRigidBody(rigidBody, STATIC, DEFAULT | CABLE_EVEN | CABLE_ODD);
+    world->addRigidBody(rigidBody, MASK_STATIC, MASK_DEFAULT);
 }
 
 btRigidBody* StaticEntity::getRigidBody()
