@@ -288,9 +288,13 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     OpenGLSolids::DrawScreenAlignedQuad();
 }
 
-void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
+void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
 {
-    OpenGLSun::getInstance()->SetPosition(elevation, orientation);
+    sunElevation = elevation > 90.f ? 90.f : (elevation < -45.f ? -45.f : elevation);
+    azimuth = (azimuth/360.f - truncf(azimuth/360.f)) * 360.f; //calculate in <-360, 360> range
+    sunAzimuth = azimuth >= 0.f ? azimuth : 360.f + azimuth;   //remap to <0, 360> range
+    
+    OpenGLSun::getInstance()->SetPosition(sunElevation, sunAzimuth);
     
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_SCISSOR_TEST);
@@ -318,8 +322,8 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat orientation)
     
     //Light direction
     glm::mat4 lightMat;
-    lightMat = glm::rotate(lightMat, glm::radians(orientation), glm::vec3(0.f,1.f,0.f)); //orientation
-    lightMat = glm::rotate(lightMat, glm::radians(90.f-elevation), glm::vec3(1.f,0.f,0.f)); //elevation
+    lightMat = glm::rotate(lightMat, glm::radians(90.f - sunAzimuth), glm::vec3(0.f,1.f,0.f)); //orientation
+    lightMat = glm::rotate(lightMat, glm::radians(90.f - sunElevation), glm::vec3(1.f,0.f,0.f)); //elevation
     glm::vec4 lightDir = glm::vec4(0.f, 1.f, 0.f, 1.f);
     lightDir = lightMat * lightDir;
     

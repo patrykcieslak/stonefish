@@ -34,6 +34,11 @@ void MISOStateSpaceController::Reset()
 {
 }
 
+unsigned int MISOStateSpaceController::getNumOfInputs()
+{
+    return input->getNumOfComponents();
+}
+
 ControllerType MISOStateSpaceController::getType()
 {
     return CONTROLLER_MISO;
@@ -41,14 +46,40 @@ ControllerType MISOStateSpaceController::getType()
 
 void MISOStateSpaceController::Tick(btScalar dt)
 {
+    //Update desired values
+    btScalar* ref = NULL;
+    
+    if(referenceGen != NULL)
+    {
+        ref = new btScalar[desiredValues.size()];
+        ref[referenceInput] = referenceGen->ValueAtTime(runningTime); //set generated reference
+        for(unsigned int i = 0; i < desiredValues.size(); ++i) //fill rest of inputs with desired values vector
+            if(i != referenceInput)
+                ref[i] = desiredValues[i];
+    }
+    else if(referenceMux != NULL)
+    {
+        ref = referenceMux->ValuesAtTime(runningTime);
+    }
+    
     //Get last measurements
     btScalar* measurements = input->getLastSample();
     
     //Calculate control
     btScalar control = 0;
-    for(int i = 0; i < gains.size(); i++)
-        control += (desiredValues[i] - measurements[i]) * gains[i];
     
+    if(ref != NULL)
+    {
+        for(int i = 0; i < gains.size(); i++)
+            control += (ref[i] - measurements[i]) * gains[i];
+        
+        delete [] ref;
+    }
+    else //no signal generator hook up
+    {
+        for(int i = 0; i < gains.size(); i++)
+            control += (desiredValues[i] - measurements[i]) * gains[i];
+    }
     //Limit control
     control = control > maxOutput ? maxOutput : (control < -maxOutput ? -maxOutput : control);
     
@@ -67,4 +98,10 @@ void MISOStateSpaceController::SetDesiredValues(const std::vector<btScalar>& d)
 {
     if(d.size() == desiredValues.size())
         desiredValues = std::vector<btScalar>(d);
+}
+
+void MISOStateSpaceController::setDesiredValue(unsigned int index, btScalar d)
+{
+    if(index < desiredValues.size())
+        desiredValues[index] = d;
 }

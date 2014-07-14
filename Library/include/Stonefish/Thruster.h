@@ -16,7 +16,6 @@ class Thruster : public Actuator
 {
 public:
     //Thruster(SolidEntity* body, const btVector3& position, const btVector3& direction);
-    //~Thruster();
     
 private:
     //SolidEntity* actingBody;

@@ -8,6 +8,7 @@
 
 #include "FixedJoint.h"
 
+#pragma mark Constructor
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -19,15 +20,13 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     setConstraint(fixed);
 }
 
-FixedJoint::~FixedJoint()
-{
-}
-
+#pragma mark - Accessors
 JointType FixedJoint::getType()
 {
     return JOINT_FIXED;
 }
 
+#pragma mark - Graphics
 btVector3 FixedJoint::Render()
 {
     btTypedConstraint* fixed = getConstraint();

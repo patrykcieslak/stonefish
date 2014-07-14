@@ -9,7 +9,7 @@
 #include "ServoController.h"
 
 #pragma mark Constructors
-ServoController::ServoController(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
+ServoController::ServoController(std::string uniqueName, DCMotor* m, RotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
 {
     motor = m;
     encoder = e;
@@ -34,6 +34,11 @@ void ServoController::Reset()
     integratedError = 0.0;
 }
 
+unsigned int ServoController::getNumOfInputs()
+{
+    return 1;
+}
+
 ControllerType ServoController::getType()
 {
     return CONTROLLER_DCSERVO;
@@ -41,11 +46,15 @@ ControllerType ServoController::getType()
 
 void ServoController::Tick(btScalar dt)
 {
+    //get desired servo position
+    btScalar desiredPos = targetPos;
+    if(referenceGen != NULL) desiredPos = referenceGen->ValueAtTime(runningTime);
+    
     //get measurements
     Sample encSample = encoder->getLastSample();
     
     //calculate error
-    btScalar error = targetPos - encSample.getValue(0);
+    btScalar error = desiredPos - encSample.getValue(0);
     integratedError += error * dt;
     btScalar derivativeError = (error - lastError)/dt;
     lastError = error;

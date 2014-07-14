@@ -17,17 +17,17 @@ Mux::~Mux()
     components.clear();
 }
 
-bool Mux::AddComponent(Sensor* s, unsigned short dim)
+bool Mux::AddComponent(Sensor* s, unsigned short channel)
 {
     if(s == NULL)
         return false;
     
-    if(dim >= s->getNumOfDimensions())
+    if(channel >= s->getNumOfChannels())
         return false;
     
     MuxComponent cmp;
     cmp.sensor = s;
-    cmp.dim = dim;
+    cmp.channel = channel;
     components.push_back(cmp);
     return true;
 }
@@ -44,7 +44,7 @@ btScalar* Mux::getLastSample()
 {
     btScalar* sample = new btScalar[components.size()];
     for(int i = 0; i < components.size(); i++)
-        sample[i] = components[i].sensor->getLastSample().getValue(components[i].dim);
+        sample[i] = components[i].sensor->getLastSample().getValue(components[i].channel);
     return sample;
 }
 

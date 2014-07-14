@@ -10,6 +10,7 @@
 #include "OpenGLPipeline.h"
 #include "SolidEntity.h"
 
+#pragma mark Constructors
 Contact::Contact(Entity* entityA, Entity* entityB, size_type inclusiveHistoryLength)
 {
     A = entityA;
@@ -18,6 +19,7 @@ Contact::Contact(Entity* entityA, Entity* entityB, size_type inclusiveHistoryLen
     displayMask = CONTACT_DISPLAY_NONE;
 }
 
+#pragma mark - Destructor
 Contact::~Contact()
 {
     A = NULL;
@@ -25,6 +27,7 @@ Contact::~Contact()
     points.clear();
 }
 
+#pragma mark - Accessors
 const Entity* Contact::getEntityA()
 {
     return A;
@@ -35,6 +38,12 @@ const Entity* Contact::getEntityB()
     return B;
 }
 
+void Contact::setDisplayMask(int16_t mask)
+{
+    displayMask = mask;
+}
+
+#pragma mark - Methods
 void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped)
 {
     ContactPoint p;
@@ -86,6 +95,7 @@ void Contact::ClearHistory()
     points.clear();
 }
 
+#pragma mark - Graphics
 void Contact::Render()
 {
     if(points.size() == 0)
@@ -160,9 +170,4 @@ void Contact::Render()
         glBulletVertex(points.back().locationB - points.back().impulseA);
         glEnd();
     }
-}
-
-void Contact::setDisplayMask(int16_t mask)
-{
-    displayMask = mask;
 }

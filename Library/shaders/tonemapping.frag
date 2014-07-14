@@ -9,7 +9,6 @@ const float C = 0.10;
 const float D = 0.20;
 const float E = 0.02;
 const float F = 0.30;
-const float W = 11.2;
 
 vec3 rgb2hsv(vec3 c)
 {
@@ -30,7 +29,7 @@ vec3 hsv2rgb(vec3 c)
 
 vec3 Uncharted2Tonemap(vec3 c)
 {
-    return ((c * (A * c + vec3(C * B)) + vec3(D * E))/(c * (A * c + vec3(B)) + vec3(D*F))) - vec3(E/F);
+    return ((c * (A * c + vec3(C * B)) + vec3(D * E))/(c * (A * c + vec3(B)) + vec3(D * F))) - vec3(E / F);
 }
 
 float Uncharted2TonemapValue(float v)
@@ -41,13 +40,14 @@ float Uncharted2TonemapValue(float v)
 void main(void)
 {
     //Read textures
-    vec3 hsvAvg = texture2D(texAverage, vec2(0.5, 0.5)).rgb;
+    float lumAvg = texture2D(texAverage, vec2(0.5, 0.5)).x;
     vec3 rgbColor = texture2D(texHDR, gl_TexCoord[0].st).rgb;
     
-    //Correct exposition and tonemap
-    rgbColor = Uncharted2Tonemap(8.0 * rgbColor / pow(hsvAvg.z, 0.5));
-    vec3 whiteScale = vec3(1.0) / Uncharted2Tonemap(vec3(W));
-    rgbColor *= whiteScale;
+    //Correct exposure and tonemap
+    float exposure = 0.6/lumAvg;
+    rgbColor = Uncharted2Tonemap(exposure * rgbColor);
+    vec3 whitePoint = Uncharted2Tonemap(vec3(1.0)); //1.0 is the saturated color of sun in the sky
+    rgbColor /= whitePoint;
     
     //Increase saturation
     vec3 hsvColor = rgb2hsv(rgbColor);
@@ -55,5 +55,5 @@ void main(void)
     rgbColor = hsv2rgb(hsvColor);
     
     //Correct Gamma
-    gl_FragColor = vec4(pow(rgbColor, vec3(1.0/1.5)), 1.0);
+    gl_FragColor = vec4(pow(rgbColor, vec3(1.0/2.2)), 1.0);
 }

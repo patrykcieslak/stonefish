@@ -12,7 +12,6 @@
 #include "common.h"
 #include <SDL_thread.h>
 #include "OpenGLPrinter.h"
-#include "Sensor.h"
 
 //shortcut
 #define cInfo(format, ...)     Console::getInstance()->Print(0, format, ##__VA_ARGS__)

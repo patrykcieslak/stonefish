@@ -24,7 +24,7 @@ public:
     void ShowFrustumSplits();
     void SetCamera(OpenGLView* view);
     void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow);
-    void SetPosition(GLfloat elevation, GLfloat orientation);
+    void SetPosition(GLfloat elevation, GLfloat azimuth);
     btVector3 GetSunDirection();
     glm::vec4 GetSunColor();
     
@@ -38,7 +38,7 @@ private:
     void UpdateSplitDist(GLfloat nd, GLfloat fd);
     
     GLfloat sunElevation;
-    GLfloat sunOrientation;
+    GLfloat sunAzimuth;
     btVector3 sunDirection;
     glm::vec4 sunColor;
     GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, shadowTextureUnit;

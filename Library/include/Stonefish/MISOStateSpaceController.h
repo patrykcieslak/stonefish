@@ -22,8 +22,10 @@ public:
     
     void SetGains(const std::vector<btScalar>& g);
     void SetDesiredValues(const std::vector<btScalar>& d);
+    void setDesiredValue(unsigned int index, btScalar d);
     void Reset();
     
+    unsigned int getNumOfInputs();
     ControllerType getType();
     
 private:

@@ -14,7 +14,6 @@ GLSLShader* OpenGLGBuffer::splittingShader = NULL;
 void OpenGLGBuffer::LoadShaders()
 {
     splittingShader = new GLSLShader("gbuffer.frag", "gbuffer.vert");
-    splittingShader->AddUniform("isTextured", BOOLEAN);
     splittingShader->AddUniform("texture", INT);
     splittingShader->AddUniform("materialData", FLOAT);
 }
@@ -28,12 +27,6 @@ void OpenGLGBuffer::SetUniformMaterialData(GLfloat x)
 {
     if(splittingShader->isEnabled())
         splittingShader->SetUniform("materialData", x);
-}
-
-void OpenGLGBuffer::SetUniformIsTextured(bool x)
-{
-    if(splittingShader->isEnabled())
-        splittingShader->SetUniform("isTextured", x);
 }
 
 void OpenGLGBuffer::SetClipPlane(double* plane)

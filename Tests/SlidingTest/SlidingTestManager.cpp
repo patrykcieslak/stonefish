@@ -72,9 +72,10 @@ void SlidingTestManager::BuildScenario()
     AddSensor(traj);
     
     //////CAMERA & LIGHT//////
-    //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(0,0,1.0), OpenGLLight::ColorFromTemperature(4000, 10));
-    //omni->GlueToEntity(box);
-    //AddLight(omni);
+    OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(0,0,1.0), OpenGLLight::ColorFromTemperature(4000, 10000));
+    omni->GlueToEntity(box);
+    AddLight(omni);
+    
     //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(0,0,0.5), btVector3(1.0,0,0.0), 30, OpenGLLight::ColorFromTemperature(4000, 10));
     //spot->GlueToEntity(box);
     //AddLight(spot);
@@ -84,8 +85,8 @@ void SlidingTestManager::BuildScenario()
     trackb->Activate();
     AddView(trackb);
     
-    OpenGLCamera* cam = new OpenGLCamera(btVector3(0,0,1.0), btVector3(1.0,0.0,0.0), btVector3(0.0,0.0,1.0), 10, 10, 400, 200, 50, 100, false);
+    /*OpenGLCamera* cam = new OpenGLCamera(btVector3(0,0,1.0), btVector3(1.0,0.0,0.0), btVector3(0.0,0.0,1.0), 10, 10, 400, 200, 50, 100, false);
     cam->Activate();
     cam->GlueToEntity(box);
-    AddView(cam);
+    AddView(cam);*/
 }

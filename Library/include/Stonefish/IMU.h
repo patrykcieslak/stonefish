@@ -17,12 +17,10 @@ class IMU : public Sensor
 public:
     IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
-    void InternalUpdate(btScalar dt);
-    void Reset();
-    unsigned short getNumOfDimensions();
+    virtual void InternalUpdate(btScalar dt) = 0;
+    virtual void Reset() = 0;
     
 protected:
-    //parameters
     SolidEntity* solid;
     btTransform relToSolid;
 };

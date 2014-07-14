@@ -24,6 +24,10 @@ SimulationApp::SimulationApp(const char* name, int width, int height, Simulation
     loading = true;
     displayHUD = true;
     displayConsole = false;
+    joystick = NULL;
+    joystickAxes = NULL;
+    joystickButtons = NULL;
+    joystickHats = NULL;
     
 	fps = 0.0;
 	physics = 0.0;
@@ -44,9 +48,9 @@ SimulationApp::~SimulationApp()
 void SimulationApp::setSimulationSpeed(btScalar factor)
 {
     if(factor > 0.f)
-    simSpeedFactor = factor;
+        simSpeedFactor = factor;
     else
-    simSpeedFactor = 1;
+        simSpeedFactor = 1;
 }
 
 void SimulationApp::ShowHUD()
@@ -200,19 +204,21 @@ void SimulationApp::InitializeSDL()
     loadingThread = SDL_CreateThread(SimulationApp::RenderLoadingScreen, "loadingThread", data);
 	
     //Look for joysticks
-    joystick = NULL;
     int jcount = SDL_NumJoysticks();
+    
     if(jcount > 0)
     {
         joystick = SDL_JoystickOpen(0);
         joystickButtons = new bool[SDL_JoystickNumButtons(joystick)];
         memset(joystickButtons, 0, SDL_JoystickNumButtons(joystick));
         joystickAxes = new int16_t[SDL_JoystickNumAxes(joystick)];
-        memset(joystickAxes, 0, SDL_JoystickNumAxes(joystick)*2);
+        memset(joystickAxes, 0, SDL_JoystickNumAxes(joystick) * sizeof(int16_t));
         joystickHats = new uint8_t[SDL_JoystickNumHats(joystick)];
         memset(joystickHats, 0, SDL_JoystickNumHats(joystick));
-        printf("Joystick %s connected ", SDL_JoystickName(0));
-        printf("(%d axes, %d hats, %d buttons).\n", SDL_JoystickNumAxes(joystick), SDL_JoystickNumHats(joystick), SDL_JoystickNumButtons(joystick));
+        cInfo("Joystick %s connected (%d axes, %d hats, %d buttons)", SDL_JoystickName(joystick),
+                                                                      SDL_JoystickNumAxes(joystick),
+                                                                      SDL_JoystickNumHats(joystick),
+                                                                      SDL_JoystickNumButtons(joystick));
     }
     
     //Look for Leap
@@ -459,7 +465,7 @@ void SimulationApp::DoHUD()
     slider1.owner = 0;
     slider1.item = 3;
     slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 100.0, 5.f, 5.f, 20.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 100.0, 5.f, 5.f, 20.f, 100.0, 5000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
     //Bottom panel
     IMGUI::getInstance()->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
@@ -487,6 +493,12 @@ void SimulationApp::DoHUD()
 void SimulationApp::StartSimulation()
 {
     simulation->StartSimulation();
+    running = true;
+}
+
+void SimulationApp::ResumeSimulation()
+{
+    simulation->ResumeSimulation();
     running = true;
 }
 

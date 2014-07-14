@@ -28,11 +28,11 @@ ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 
 
 OpenGLLight::OpenGLLight(const btVector3& position, glm::vec4 c)
 {
-    color = c;
+    color = SUN_SKY_FACTOR * c / SUN_ILLUMINANCE;
     pos = UnitSystem::SetPosition(position);
     active = true;
     holdingEntity = NULL;
-    surfaceDistance = 1.f; // attenuation = 1 / distance^2 * intesity [Lum] ????
+    surfaceDistance = 1.f; // attenuation = 1 / distance^2 * intesity [Lux]
 }
 
 OpenGLLight::~OpenGLLight()

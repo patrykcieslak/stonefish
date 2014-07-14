@@ -15,7 +15,6 @@ class CylindricalJoint : public Joint
 {
 public:
     CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
-    ~CylindricalJoint();
     
     void ApplyForce(btScalar F);
     void ApplyTorque(btScalar T);

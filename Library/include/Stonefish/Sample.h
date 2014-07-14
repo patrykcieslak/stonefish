@@ -26,6 +26,7 @@ private:
     btScalar timestamp;
     unsigned short nDim;
     btScalar* data;
+    
 };
 
 #endif

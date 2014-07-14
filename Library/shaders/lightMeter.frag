@@ -15,17 +15,17 @@ vec3 rgb2hsv(vec3 c)
 
 void main(void)
 {
-    vec3 rgbSum = vec3(0.0, 0.0, 0.0);
+    float avgLuminance = 0.0;
     
-    for(int i = 0; i <= samples.x - 1; i++)
-        for(int h = 0; h <= samples.y - 1; h++)
+    for(int i = 0; i < samples.x; i++)
+        for(int h = 0; h < samples.y; h++)
         {
             vec2 texCoord = vec2(float(i)/float(samples.x - 1), float(h)/float(samples.y - 1));
-            vec3 rgbColor = texture2D(texHDR, texCoord.st).rgb;
-            rgbSum += rgbColor;
+            vec3 hsvColor = rgb2hsv(texture2D(texHDR, texCoord.st).rgb);
+            avgLuminance += log(hsvColor.z + 1.0);
         }
     
-    rgbSum /= float(samples.x * samples.y);
+    avgLuminance /= float(samples.x * samples.y);
     
-    gl_FragColor = vec4(rgb2hsv(rgbSum), 1.0);
+    gl_FragColor = vec4(avgLuminance);
 }

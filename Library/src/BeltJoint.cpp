@@ -8,6 +8,7 @@
 
 #include "BeltJoint.h"
 
+#pragma mark Constructor
 BeltJoint::BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
 {
     btVector3 newAxisB = -axisB; // Belt -> same direction of rotation
@@ -22,10 +23,7 @@ BeltJoint::BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* s
     setConstraint(gear);
 }
 
-BeltJoint::~BeltJoint()
-{
-}
-
+#pragma mark - Accessors
 JointType BeltJoint::getType()
 {
     return JOINT_BELT;
@@ -36,6 +34,7 @@ btScalar BeltJoint::getRatio()
     return gearRatio;
 }
 
+#pragma mark - Graphics
 btVector3 BeltJoint::Render()
 {
     return btVector3();

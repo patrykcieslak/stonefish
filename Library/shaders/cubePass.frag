@@ -22,5 +22,5 @@ void main(void)
 {
     vec3 normal = get_world_normal();
     vec4 color = textureCube(source, normal);
-    gl_FragColor = vec4(2.0 * color.rgb, 1.0);
+    gl_FragColor = vec4(color.rgb, 1.0);
 }

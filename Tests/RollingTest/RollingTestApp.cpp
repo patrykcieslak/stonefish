@@ -10,9 +10,48 @@
 
 #include "OpenGLTrackball.h"
 #include "NativeDialog.h"
+#include "DCMotor.h"
+#include "MISOStateSpaceController.h"
+#include "MonoWheelLateral.h"
 
 RollingTestApp::RollingTestApp(int width, int height, RollingTestManager* sim) : SimulationApp("Rolling Test", width, height, sim)
 {
+    turning = btScalar(0.);
+    speed = btScalar(0.);
+}
+
+void RollingTestApp::ProcessInputs()
+{
+    if(joystickAxes != NULL)
+    {
+        int16_t deadband = 1000;
+        
+        if(abs(joystickAxes[1]) > deadband)
+        {
+            if(joystickAxes[1] < 0)
+                speed = btScalar(joystickAxes[1]+deadband)/btScalar(INT16_MAX - deadband);
+            else
+                speed = btScalar(joystickAxes[1]-deadband)/btScalar(INT16_MAX - deadband);
+        }
+        else
+            speed = btScalar(0.);
+        
+        MISOStateSpaceController* longitudinal = (MISOStateSpaceController*)getSimulationManager()->getController("Longitudinal");
+        longitudinal->setDesiredValue(2, speed * 5.0);
+        
+        if(abs(joystickAxes[2]) > deadband)
+        {
+            if(joystickAxes[2] < 0)
+                turning = btScalar(joystickAxes[2]+deadband)/btScalar(INT16_MAX - deadband);
+            else
+                turning = btScalar(joystickAxes[2]-deadband)/btScalar(INT16_MAX - deadband);
+        }
+        else
+            turning = btScalar(0.);
+        
+        MonoWheelLateral* lateral = (MonoWheelLateral*)getSimulationManager()->getController("Lateral");
+        lateral->setDesiredTilt(turning * 0.02);
+    }
 }
 
 void RollingTestApp::MouseDown(SDL_Event* event)
@@ -49,6 +88,19 @@ void RollingTestApp::DoHUD()
 {
     SimulationApp::DoHUD();
     
+    ui_id slider;
+    slider.owner = 1;
+    slider.item = 1;
+    slider.index = 0;
+    
+    DCMotor* motorCW = (DCMotor*)getSimulationManager()->getActuator("DCXWheel");
+    IMGUI::getInstance()->DoSlider(slider, 5, 70, 100, 5, 5, 20, -1.0, 1.0, speed, "Speed");
+    
+    slider.item = 2;
+    
+    DCMotor* motorCL = (DCMotor*)getSimulationManager()->getActuator("DCXLever");
+    IMGUI::getInstance()->DoSlider(slider, 5, 120, 100, 5, 5, 20, -1.0, 1.0, turning, "Turning");
+    
     ui_id plot;
     plot.owner = 1;
     plot.item = 0;
@@ -57,30 +109,48 @@ void RollingTestApp::DoHUD()
     std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
+    dims.push_back(2);
     
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("EncoderWheel"), dims, "Enc"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("IMU"), dims, "IMU"))
     {
-         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
+        StopSimulation();
+        
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
      
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            const std::deque<Sample*>& data = getSimulationManager()->getSensor("EncoderWheel")->getHistory();
-            if(data.size() > 0)
-            {
-                FILE* fp;
-                fp = fopen(pathToFile, "wt");
-                
-                for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6f\n", data[i]->getValue(1));
-                fclose(fp);
-     
-                printf("Saved plot data to %s.\n", pathToFile);
-            }
+            getSimulationManager()->getSensor("IMU")->SaveMeasurementsToFile(pathToFile);
         }
      
-     delete [] pathToFile;
-     delete openDialog;
-     }
+        delete [] pathToFile;
+        delete openDialog;
+        
+        ResumeSimulation();
+    }
+    
+    dims.clear();
+    dims.push_back(0);
+    dims.push_back(1);
+    
+    plot.item = 3;
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor("EncoderWheel"), dims, "Wheel Encoder"))
+    {
+        StopSimulation();
+        
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
+        openDialog->Show();
+    
+        char* pathToFile;
+        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
+        {
+            getSimulationManager()->getSensor("EncoderWheel")->SaveMeasurementsToFile(pathToFile);
+        }
+    
+        delete [] pathToFile;
+        delete openDialog;
+        
+        ResumeSimulation();
+    }
 }

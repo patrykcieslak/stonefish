@@ -100,8 +100,8 @@ void AcrobotTestManager::BuildScenario()
     BoxEntity* arm1 = new BoxEntity("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), green);
     arm1->SetArbitraryPhysicalProperties(2.5, btVector3(0.015,0.015,0.015), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.03)));
     
-    BoxEntity* arm2 = new BoxEntity("Arm2", btVector3(0.03, 0.015, 0.13), getMaterialManager()->getMaterial("Rubber"), shiny);
-    arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.035)));
+    BoxEntity* arm2 = new BoxEntity("Arm2", btVector3(0.03, 0.015, 0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
+    arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.05)));
     
     FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 3, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.0)), getDynamicsWorld(), true);
     fe->setBaseRenderable(false);
@@ -113,26 +113,26 @@ void AcrobotTestManager::BuildScenario()
     //fe->setJointDamping(0, 0, 0.005);
     
     //Arm2
-    fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 0.085)), getDynamicsWorld());
+    fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 0.1)), getDynamicsWorld());
     fe->AddRevoluteJoint(1, 2, btVector3(0.0, 0.0, 0.15), btVector3(0.0, 1.0, 0.0), false);
     //fe->setJointDamping(1, 0.01, 0.005);
     
     AddEntity(fe);
     
-    FakeRotaryEncoder* enc1 = new FakeRotaryEncoder("Encoder1", fe, 0);
+    FakeRotaryEncoder* enc1 = new FakeRotaryEncoder("Encoder1", fe, 0, 1000.0);
     AddSensor(enc1);
     
-    FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Encoder2", fe, 1);
+    FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Encoder2", fe, 1, 1000.0);
     AddSensor(enc2);
     
     DCMotor* motor = new DCMotor("DCX", fe, 1, 0.212, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0000055);
     AddActuator(motor);
     
     /////// COMMON
-    FakeIMU* imu = new FakeIMU("IMU", arm1, btTransform::getIdentity(), 1000000);
+    FakeIMU* imu = new FakeIMU("IMU", arm1, btTransform::getIdentity(), 1000.0);
     AddSensor(imu);
      
-    Current* cur = new Current("Current", motor);
+    Current* cur = new Current("Current", motor, 1000.0);
     AddSensor(cur);
     
     Mux* mux = new Mux();
@@ -142,17 +142,25 @@ void AcrobotTestManager::BuildScenario()
     mux->AddComponent(enc2, 1);
     mux->AddComponent(cur, 0);
     
-    //LFcombo = -42.3737    4.7897   -5.5093    0.3535   -0.1888 [theta alpha dtheta dalpha current]
-    //Sampling: 1/1000  Theta0: 3 deg
-     
-    std::vector<btScalar> gains;
-    gains.push_back(-42.3737);
-    gains.push_back(4.7897);
-    gains.push_back(-5.5093);
-    gains.push_back(0.3535);
-    gains.push_back(-0.1888);
     
-    MISOStateSpaceController* miso = new MISOStateSpaceController("Regulator", mux, motor, 12.0, 500.0);
+    //LFcombo = -42.37441    4.78974   -5.50932    0.35351   -0.18878 [theta alpha dtheta dalpha current]
+    //Sampling: 1/1000  Theta0: 3 deg
+    //LFcombo(500Hz) =  -75.55122    8.53945   -9.82255    0.64889  -0.17052
+    
+    
+    std::vector<btScalar> gains;
+    gains.push_back(-42.37441);
+    gains.push_back(4.78974);
+    gains.push_back(-5.50932);
+    gains.push_back(0.35351);
+    gains.push_back(-0.18878);
+    /*gains.push_back(-75.55122);
+    gains.push_back(8.53945);
+    gains.push_back(-9.82255);
+    gains.push_back(0.64889);
+    gains.push_back(-0.17052);*/
+    
+    MISOStateSpaceController* miso = new MISOStateSpaceController("Regulator", mux, motor, 12.0, 1000.0);
     miso->SetGains(gains);
     AddController(miso);
     

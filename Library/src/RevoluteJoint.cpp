@@ -47,15 +47,10 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const b
     angleIC = btScalar(0.);
 }
 
-#pragma mark - Destructors
-RevoluteJoint::~RevoluteJoint()
-{
-}
-
 #pragma mark - Accessors
 void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
 {
-    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetTorque(btVector3(constantFactor,0.,0.)).x() : btScalar(0.);
+    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetTorque(constantFactor) : btScalar(0.);
     velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
 }
 
@@ -77,7 +72,7 @@ JointType RevoluteJoint::getType()
 
 btScalar RevoluteJoint::getAngle()
 {
-    return UnitSystem::GetAngle(((btHingeConstraint*)getConstraint())->getHingeAngle());
+    return ((btHingeConstraint*)getConstraint())->getHingeAngle();
 }
 
 btScalar RevoluteJoint::getAngularVelocity()
@@ -86,7 +81,7 @@ btScalar RevoluteJoint::getAngularVelocity()
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
     btVector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
     btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
-    return UnitSystem::GetAngle(relativeAV.dot(axis));
+    return relativeAV.dot(axis);
 }
 
 #pragma mark - Actions
@@ -95,6 +90,7 @@ void RevoluteJoint::ApplyTorque(btScalar T)
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
     btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    
     btVector3 torque = UnitSystem::SetTorque(axis * T);
     bodyA.applyTorque(torque);
     bodyB.applyTorque(-torque);
@@ -131,7 +127,8 @@ bool RevoluteJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTo
         return true;
     
     //Move joint
-    ApplyTorque(angleError * btScalar(1000.) - UnitSystem::SetAngle(getAngularVelocity()) * btScalar(2000.));
+    btScalar torque = angleError * btScalar(1000.) - getAngularVelocity() * btScalar(2000.0);
+    ApplyTorque(UnitSystem::GetTorque(torque));
     
     return false;
 }

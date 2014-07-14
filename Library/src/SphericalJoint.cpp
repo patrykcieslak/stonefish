@@ -8,12 +8,13 @@
 
 #include "SphericalJoint.h"
 
+#pragma mark Constructors
 SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
     btRigidBody* bodyB = solidB->getRigidBody();
-    btVector3 pivotInA = bodyA->getCenterOfMassTransform().inverse()*UnitSystem::SetPosition(pivot);
-    btVector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()*UnitSystem::SetPosition(pivot);
+    btVector3 pivotInA = bodyA->getCenterOfMassTransform().inverse() * UnitSystem::SetPosition(pivot);
+    btVector3 pivotInB = bodyB->getCenterOfMassTransform().inverse() * UnitSystem::SetPosition(pivot);
     
     btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*bodyA, *bodyB, pivotInA, pivotInB);
     setConstraint(p2p);
@@ -24,15 +25,12 @@ SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, Soli
     angleIC = btVector3(0.,0.,0.);
 }
 
-SphericalJoint::~SphericalJoint()
-{
-}
-
+#pragma mark - Accessors
 void SphericalJoint::setDamping(btVector3 constantFactor, btVector3 viscousFactor)
 {
     for(int i = 0; i < 3; i++)
     {
-        sigDamping[i] = constantFactor[i] > btScalar(0.) ? UnitSystem::SetTorque(btVector3(constantFactor[i],0.0,0.0)).x() : btScalar(0.);
+        sigDamping[i] = constantFactor[i] > btScalar(0.) ? UnitSystem::SetTorque(constantFactor[i]) : btScalar(0.);
         velDamping[i] = viscousFactor[i] > btScalar(0.) ? viscousFactor[i] : btScalar(0.);
     }
 }
@@ -47,6 +45,7 @@ JointType SphericalJoint::getType()
     return JOINT_SPHERICAL;
 }
 
+#pragma mark - Actions
 void SphericalJoint::ApplyTorque(btVector3 T)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -82,6 +81,7 @@ bool SphericalJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularT
     return true;
 }
 
+#pragma mark - Graphics
 btVector3 SphericalJoint::Render()
 {
     btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();

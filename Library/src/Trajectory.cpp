@@ -8,12 +8,17 @@
 
 #include "Trajectory.h"
 
+#pragma mark Constructors
 Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btVector3 offset, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
-    relToCOG = solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse() * UnitSystem::SetPosition(offset);
+    relToCOG = solid->getTransform().getBasis().inverse() * UnitSystem::SetPosition(offset);
+    channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));
+    channels.push_back(SensorChannel("Coordinate Y", QUANTITY_LENGTH));
+    channels.push_back(SensorChannel("Coordinate Z", QUANTITY_LENGTH));
 }
 
+#pragma mark - Methods
 void Trajectory::Reset()
 {
     Sensor::Reset();
@@ -22,21 +27,16 @@ void Trajectory::Reset()
 void Trajectory::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to imu frame
-    btVector3 cog = solid->getRigidBody()->getCenterOfMassPosition();
+    btVector3 cog = solid->getTransform().getOrigin();
     
     //add offset
     if(relToCOG.length2() > 0)
-        cog +=  solid->getRigidBody()->getWorldTransform().getBasis() * relToCOG;
+        cog +=  solid->getTransform().getBasis() * relToCOG;
     
     //save sample
     btScalar values[3] = {cog.x(), cog.y(), cog.z()};
     Sample s(3, values);
     AddSampleToHistory(s);
-}
-
-unsigned short Trajectory::getNumOfDimensions()
-{
-    return 3;
 }
 
 void Trajectory::Render()

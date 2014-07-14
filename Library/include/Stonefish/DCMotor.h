@@ -18,19 +18,19 @@ class DCMotor : public Actuator
 public:
     DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
     DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
-    ~DCMotor();
     
     void Update(btScalar dt);
     btVector3 Render();
     void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);
     
     void setVoltage(btScalar volt);
+    btScalar getVoltage();
     btScalar getTorque();
     btScalar getCurrent();
     ActuatorType getType();
     
 private:
-    btScalar getRawAngularVelocity();
+    btScalar getAngularVelocity();
     
     //output
     RevoluteJoint* revoluteOutput;
@@ -53,6 +53,9 @@ private:
     bool gearEnabled;
     btScalar gearRatio;
     btScalar gearEff;
+    
+    //integral
+    btScalar lastVoverL;
 };
 
 

@@ -8,6 +8,7 @@
 
 #include "CylindricalJoint.h"
 
+#pragma mark Constructors
 CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -44,15 +45,12 @@ CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, 
     angleIC = btScalar(0.);
 }
 
-CylindricalJoint::~CylindricalJoint()
-{
-}
-
+#pragma mark - Accessors
 void CylindricalJoint::setDamping(btScalar linearConstantFactor, btScalar linearViscousFactor, btScalar angularConstantFactor, btScalar angularViscousFactor)
 {
-    linSigDamping = linearConstantFactor > btScalar(0.) ? UnitSystem::SetForce(btVector3(linearConstantFactor,0.,0.)).x() : btScalar(0.);
+    linSigDamping = linearConstantFactor > btScalar(0.) ? UnitSystem::SetForce(linearConstantFactor) : btScalar(0.);
     linVelDamping = linearViscousFactor > btScalar(0.) ? linearViscousFactor : btScalar(0.);
-    angSigDamping = angularConstantFactor > btScalar(0.) ? UnitSystem::SetTorque(btVector3(angularConstantFactor,0.,0.)).x() : btScalar(0.);
+    angSigDamping = angularConstantFactor > btScalar(0.) ? UnitSystem::SetTorque(angularConstantFactor) : btScalar(0.);
     angVelDamping = angularViscousFactor > btScalar(0.) ? angularViscousFactor : btScalar(0.);
 }
 
@@ -76,6 +74,7 @@ JointType CylindricalJoint::getType()
     return JOINT_CYLINDRICAL;
 }
 
+#pragma mark - Actions
 void CylindricalJoint::ApplyForce(btScalar F)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -133,6 +132,7 @@ bool CylindricalJoint::SolvePositionIC(btScalar linearTolerance, btScalar angula
     return true;
 }
 
+#pragma mark - Graphics
 btVector3 CylindricalJoint::Render()
 {
     btTypedConstraint* cyli = getConstraint();

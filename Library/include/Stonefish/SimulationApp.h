@@ -30,6 +30,7 @@ public:
     void AppLoop();
     
     void StartSimulation();
+    void ResumeSimulation();
     void StopSimulation();
     
     //virtual methods

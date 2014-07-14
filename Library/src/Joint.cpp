@@ -10,6 +10,7 @@
 
 NameManager Joint::nameManager;
 
+#pragma mark Constructors
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
     name = nameManager.AddName(uniqueName);
@@ -17,11 +18,13 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
     collisionEnabled = collideLinkedEntities;
 }
 
+#pragma mark - Destructor
 Joint::~Joint(void)
 {
     nameManager.RemoveName(name);
 }
 
+#pragma mark - Accessors
 void Joint::setRenderable(bool render)
 {
     renderable = render;
@@ -47,6 +50,7 @@ void Joint::setConstraint(btTypedConstraint *constr)
     constraint = constr;
 }
 
+#pragma mark - Methods
 void Joint::AddToDynamicsWorld(btDynamicsWorld *world)
 {
     //Force feedback

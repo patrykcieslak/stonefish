@@ -19,20 +19,29 @@
 class MonoWheelLateral : public Controller
 {
 public:
-    MonoWheelLateral(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* leverEnc, Current* leverCurrent, DCMotor* leverMotor, btScalar frequency = btScalar(-1.));
+    MonoWheelLateral(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* leverEnc, FakeRotaryEncoder* wheelEnc, Current* leverCurrent, DCMotor* leverMotor, btScalar maxVoltage, btScalar frequency = btScalar(-1.));
     ~MonoWheelLateral();
     
     void Reset();
+    
+    unsigned int getNumOfInputs();
     ControllerType getType();
+    void setDesiredTilt(btScalar tilt);
     
 private:
     void Tick(btScalar dt);
     
     FakeIMU* imu;
-    FakeRotaryEncoder* enc;
+    FakeRotaryEncoder* lEnc;
+    FakeRotaryEncoder* wEnc;
     Current* current;
     DCMotor* motor;
+    btScalar tyreRadius;
+    btScalar maxV;
+    
     PolySurface* LF[5];
+    std::vector<btScalar> gains;
+    std::vector<btScalar> desiredValues;
 };
 
 #endif

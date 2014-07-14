@@ -425,3 +425,35 @@ void SolidEntity::ApplyGravity()
         rigidBody->applyGravity();
     }
 }
+
+void SolidEntity::ApplyCentralForce(const btVector3& force)
+{
+    if(rigidBody != NULL)
+        rigidBody->applyCentralForce(force);
+    else if(multibodyCollider != NULL)
+    {
+        btMultiBody* multiBody = multibodyCollider->m_multiBody;
+        int index = multibodyCollider->m_link;
+        
+        if(index == -1) //base
+            multiBody->addBaseForce(force);
+        else
+            multiBody->addLinkForce(index, force);
+    }
+}
+
+void SolidEntity::ApplyTorque(const btVector3& torque)
+{
+    if(rigidBody != NULL)
+        rigidBody->applyTorque(torque);
+    else if(multibodyCollider != NULL)
+    {
+        btMultiBody* multiBody = multibodyCollider->m_multiBody;
+        int index = multibodyCollider->m_link;
+        
+        if(index == -1) //base
+            multiBody->addBaseTorque(torque);
+        else
+            multiBody->addLinkTorque(index, torque);
+    }
+}

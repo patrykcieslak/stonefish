@@ -20,7 +20,7 @@ class OpenGLSky
 {
 public:
     void Init();
-    void Generate(GLfloat elevation, GLfloat orientation);
+    void Generate(GLfloat elevation, GLfloat azimuth);
     void Render(OpenGLView* view, const btTransform& viewTransform, bool zAxisUp);
     GLuint getSkyCubemap();
     GLuint getDiffuseCubemap();
@@ -33,6 +33,10 @@ private:
     OpenGLSky();
     ~OpenGLSky();
     void ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachment);
+    
+    //Sky params
+    GLfloat sunElevation;
+    GLfloat sunAzimuth;
     
     //Sky cubemap rendering
     //framebuffer

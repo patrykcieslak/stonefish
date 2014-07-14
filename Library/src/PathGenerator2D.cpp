@@ -134,9 +134,6 @@ void PathGenerator2D::PointAtTime(btScalar t, btVector3& point, btVector3& tange
             tangent.setX(0.);
             break;
     }
-    
-    //Convert position to external system (derivative has no unit)
-    //point = UnitSystem::GetPosition(point);
 }
 
 void PathGenerator2D::Render()

@@ -31,7 +31,6 @@ public:
     
     static void LoadShaders();
     static void DeleteShaders();
-    static void SetUniformIsTextured(bool x);
     static void SetUniformMaterialData(GLfloat x);
     
 private:

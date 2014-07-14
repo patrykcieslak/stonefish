@@ -242,8 +242,11 @@ void OpenGLSolids::DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius)
             GLfloat ry = cosf(h/24.f*M_PI*2.f) * minorRadius;
             GLfloat rx = sinf(h/24.f*M_PI*2.f) * minorRadius;
             
+            glTexCoord2f(4.f * h/24.f, 24.f * i/48.f);
             glNormal3f(sinf(h/24.f*M_PI*2.f)*cosf(alpha0), cosf(h/24.f*M_PI*2.f), sinf(h/24.f*M_PI*2.f)*sinf(alpha0));
             glVertex3f((rx + majorRadius)*cosf(alpha0), ry, (rx + majorRadius)*sinf(alpha0));
+            
+            glTexCoord2f(4.f * h/24.f, 24.f * (i+1)/48.f);
             glNormal3f(sinf(h/24.f*M_PI*2.f)*cosf(alpha1), cosf(h/24.f*M_PI*2.f), sinf(h/24.f*M_PI*2.f)*sinf(alpha1));
             glVertex3f((rx + majorRadius)*cosf(alpha1), ry, (rx + majorRadius)*sinf(alpha1));
         }

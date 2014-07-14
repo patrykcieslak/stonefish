@@ -14,7 +14,7 @@
 typedef struct
 {
     Sensor* sensor;
-    unsigned short dim;
+    unsigned short channel;
 }
 MuxComponent;
 
@@ -24,7 +24,7 @@ public:
     Mux();
     ~Mux();
     
-    bool AddComponent(Sensor* s, unsigned short dim);
+    bool AddComponent(Sensor* s, unsigned short channel);
     
     MuxComponent* getComponent(unsigned int index);
     btScalar* getLastSample();

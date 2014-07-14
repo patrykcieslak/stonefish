@@ -8,22 +8,18 @@
 
 #include "IMU.h"
 
+#pragma mark Constructors
 IMU::IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
-    relToSolid = relFrame;
-}
-
-void IMU::Reset()
-{
-    Sensor::Reset();
-}
-
-void IMU::InternalUpdate(btScalar dt)
-{
-}
-
-unsigned short IMU::getNumOfDimensions()
-{
-    return 9; //acceleration, angular velocity, tilt
+    relToSolid = UnitSystem::SetTransform(relFrame);
+    channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Pitch", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Acceleration X", QUANTITY_ACCELERATION));
+    channels.push_back(SensorChannel("Acceleration Y", QUANTITY_ACCELERATION));
+    channels.push_back(SensorChannel("Acceleration Z", QUANTITY_ACCELERATION));
 }

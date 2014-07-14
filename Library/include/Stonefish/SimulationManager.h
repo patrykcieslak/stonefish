@@ -53,6 +53,7 @@ public:
     void DestroyScenario();
     void RestartScenario();
     bool StartSimulation();
+    void ResumeSimulation();
     void AdvanceSimulation(uint64_t timeInMicroseconds);
     void StopSimulation();
 	
@@ -89,6 +90,7 @@ public:
     Controller* getController(std::string name);
     
     void setGravity(btScalar gravityConstant);
+    btVector3 getGravity();
     ResearchDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
@@ -105,6 +107,7 @@ public:
 protected:
     static void SolveICTickCallback(btDynamicsWorld* world, btScalar timeStep);
     static void SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep);
+    static void SimulationPostTickCallback(btDynamicsWorld* world, btScalar timeStep);
     static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
     
     ResearchDynamicsWorld* dynamicsWorld;

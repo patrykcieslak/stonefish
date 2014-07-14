@@ -21,13 +21,14 @@ DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motor
     Km = motorKm;
     B = friction;
     gearEnabled = false;
-    gearEff = 1.0;
-    gearRatio = 1.0;
+    gearEff = btScalar(1.);
+    gearRatio = btScalar(1.);
     
     //Internal states
-    I = btScalar(0);
-    V = btScalar(0);
-    torque = btScalar(0);
+    I = btScalar(0.);
+    V = btScalar(0.);
+    torque = btScalar(0.);
+    lastVoverL = btScalar(0.);
 }
 
 DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction) : Actuator(uniqueName)
@@ -42,18 +43,14 @@ DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int ch
     Km = motorKm;
     B = friction;
     gearEnabled = false;
-    gearEff = 1.0;
-    gearRatio = 1.0;
+    gearEff = btScalar(1.);
+    gearRatio = btScalar(1.);
     
     //Internal states
-    I = btScalar(0);
-    V = btScalar(0);
-    torque = btScalar(0);
-}
-
-#pragma mark - Destructor
-DCMotor::~DCMotor()
-{
+    I = btScalar(0.);
+    V = btScalar(0.);
+    torque = btScalar(0.);
+    lastVoverL = btScalar(0.);
 }
 
 #pragma mark - Accessors
@@ -67,9 +64,14 @@ void DCMotor::setVoltage(btScalar volt)
     V = volt;
 }
 
+btScalar DCMotor::getVoltage()
+{
+    return V;
+}
+
 btScalar DCMotor::getTorque()
 {
-    return UnitSystem::GetLength(torque);
+    return torque;
 }
 
 btScalar DCMotor::getCurrent()
@@ -77,11 +79,11 @@ btScalar DCMotor::getCurrent()
     return I;
 }
 
-btScalar DCMotor::getRawAngularVelocity()
+btScalar DCMotor::getAngularVelocity()
 {
     if(multibodyOutput == NULL)
     {
-        return UnitSystem::SetAngle(revoluteOutput->getAngularVelocity());
+        return revoluteOutput->getAngularVelocity();
     }
     else
     {
@@ -90,7 +92,7 @@ btScalar DCMotor::getRawAngularVelocity()
         multibodyOutput->getJointVelocity(multibodyChild, angularV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
-            return UnitSystem::SetAngle(angularV);
+            return angularV;
         else
             return btScalar(0.);
     }
@@ -105,26 +107,37 @@ btVector3 DCMotor::Render()
 void DCMotor::Update(btScalar dt)
 {
     //Get joint angular velocity in radians
-    btScalar aVelocity = getRawAngularVelocity();
+    btScalar aVelocity = getAngularVelocity();
     
     //Calculate internal state and output
     if(gearEnabled)
     {
         aVelocity *= gearRatio;
-        I = (V - aVelocity * Ke * 9.5493)/R;
+        btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
+        I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+        lastVoverL = VoverL;
         torque = (I * Km - aVelocity * B) * gearRatio * gearEff;
+   
+        //I = (V - aVelocity * Ke * 9.5493)/R;
+        //torque = (I * Km - aVelocity * B) * gearRatio * gearEff;
+
     }
     else
     {
-        I = (V - aVelocity * Ke * 9.5493)/R;
+        btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
+        I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+        lastVoverL = VoverL;
         torque = I * Km - aVelocity * B;
+        
+        //I = (V - aVelocity * Ke * 9.5493)/R;
+        //torque = I * Km - aVelocity * B;
     }
     
     //Drive the joint
     if(multibodyOutput == NULL)
-        revoluteOutput->ApplyTorque(UnitSystem::GetTorque(btVector3(torque,0,0)).x());
+        revoluteOutput->ApplyTorque(UnitSystem::GetTorque(torque));
     else
-        multibodyOutput->DriveJoint(multibodyChild, UnitSystem::GetTorque(btVector3(torque,0,0)).x());
+        multibodyOutput->DriveJoint(multibodyChild, UnitSystem::GetTorque(torque));
 }
 
 #pragma mark - DCMotor

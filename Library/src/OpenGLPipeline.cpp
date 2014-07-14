@@ -107,7 +107,7 @@ void OpenGLPipeline::Initialize(SimulationManager* sim, GLint windowWidth, GLint
     OpenGLLight::Init();
     
     cInfo("Generating sky...");
-    OpenGLSky::getInstance()->Generate(45.f,30.f);
+    OpenGLSky::getInstance()->Generate(40.f,300.f);
     
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");

@@ -33,6 +33,8 @@ public:
     void RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world);
 
     void ApplyGravity();
+    void ApplyCentralForce(const btVector3& force);
+    void ApplyTorque(const btVector3& torque);
     void SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia);
     void Render();
 

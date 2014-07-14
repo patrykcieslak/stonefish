@@ -129,8 +129,11 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 
 void OpenGLTrackball::MouseScroll(GLfloat s)
 {
-    radius += s;
-    if(radius < 0.5) radius = 0.5;
+    btScalar factor = pow(radius/5.0, 2.0);
+    factor = factor > 1.0 ? 1.0 : factor;
+    
+    radius += s * factor;
+    if(radius < 0.1) radius = 0.1;
     UpdateTrackballTransform();
 }
 

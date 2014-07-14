@@ -2,7 +2,7 @@
 //  RotaryEncoder.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 29/03/2014.
+//  Created by Patryk Cieslak on 05/07/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
@@ -11,25 +11,23 @@
 
 #include "Sensor.h"
 #include "RevoluteJoint.h"
+#include "FeatherstoneEntity.h"
 
 class RotaryEncoder : public Sensor
 {
 public:
-    RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
-    void InternalUpdate(btScalar dt);
-    void Reset();
-    unsigned short getNumOfDimensions();
+    virtual void InternalUpdate(btScalar dt) = 0;
+    virtual void Reset() = 0;
     
-private:
-    //params
+protected:
+    btScalar GetRawAngle();
+    
     RevoluteJoint* revolute;
-    unsigned int cpr_res;
-    unsigned int abs;
-    
-    //temporary
-    btScalar angle;
-    btScalar lastAngle;
+    FeatherstoneEntity* multibody;
+    unsigned int multibodyJoint;
 };
 
 #endif

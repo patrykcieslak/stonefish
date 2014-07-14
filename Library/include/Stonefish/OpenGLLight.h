@@ -56,7 +56,7 @@ public:
     static void RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp);
     
     //Utilities
-    static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat intensity);
+    static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat lux);
     
 protected:
     SolidEntity* holdingEntity;

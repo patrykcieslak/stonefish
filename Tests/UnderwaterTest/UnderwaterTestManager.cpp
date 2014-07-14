@@ -31,7 +31,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 7.81), 0.4);

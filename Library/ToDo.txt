@@ -94,17 +94,31 @@ x Featherstone support in filtered collisions, contact trajectories and picking
 x Choice of IC solver parameters - include gravity, time step, max iterations, max solving time
 x IC solving with gravity
 x Attaching views and lights to solids and Featherstone links
-- Mono-wheel controllers with smooth gain scheduling
+x Real world sun, sky and light intensity relations + log-average brigthness calculation + sun position with azimuth/elevation
+x Mono-wheel stabilization controllers (miso + gain scheduling) + joystick teleoperation
+x User unit system used during setup, results in user unit system obtained only through graphs, display, file saving (to remove unnecessary conversions)
+x Reading data from binary Octave files
+x Torus sliding during lateral rotation -> needs high frequency
+x Accurate restitution modification copied to multi-body constraint solver
+x Signal generator and multiplexer
+x Fixed dc motor model -> current is now integrated(mid-point method)
+x Mono-wheel longitudinal controller results exactly match ADAMS+Simulink
+x Mono-wheel lateral controller results exactly match ADAMS+Simulink
+- Damping of body spinning around contact normal -> should be relative?
+- Saving results to a binary Octave file
+- Check what happens when pausing the simulation with sim frequency higher than sensor frequency
 - Mono-wheel path following controller
-- True IMU - acc, gyro, kalman filter etc.
+- True IMU - acc, gyro, kalman filter
 - Laser scanner 2d + polar plot
+- Transparent objects(forward pipeline, OIT)
+- Omni light shadows
 
 Simulation:
+- Rolling friction and spinning reduction based on Hertz deformation
 - Laser rangefinder
 - Ultrasonic range finder
-- Camera with lens/aperture/iso + Stereo camera
+- Camera with lens/aperture/iso/stereo
 - Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
-- Joystick controller/teleoperation
 - Battery(LiIon, LiPoly, A123)
 - GPS(AHRS)
 - Linear actuator -> nut/thread, pneumatic, hydraulic
@@ -112,7 +126,7 @@ Simulation:
 - 3D path generator
 - Gimpact or convex decomposition for concave meshes
 - Cable entity
-- LiDAR
+- LiDAR (laser scanner 3d)
 - Solar panel/Light sensor (raytrace from sensor to sky/light + bounces)
 - Leap Motion support
 
@@ -123,6 +137,7 @@ Underwater:
 - Buoyancy as difference in hydrostatic pressure(?) -> calculated together with drag
 - Added mass calculation with boundary method
 - Thruster
+- Control surface
 - DVL
 - Multi-beam
 - Side-scan
@@ -131,12 +146,8 @@ Underwater:
 - Sea current
 
 Graphics:
-- Tonemapping/exposure improvement/sun color from sky cubemap/light intesities/camera exposure
 - Move to OpenGL 3.3 Core (remove deprecated stuff)
 - Remove Bullet types from OpenGL classes - use glm exclusively
 - Reflective material
-- Transparent objects(forward pipeline, OIT)
-- Omni light shadows
-- Stencil light volumes(taking into account the attenuation)
+- Stencil light volumes(taking into account the attenuation, disable shadow generation)
 - Drawing actuators, sensors and stickers(icons)
-- Lens flare with occlusion query

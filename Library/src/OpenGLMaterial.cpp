@@ -14,7 +14,7 @@
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
-Look CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName)
+Look CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName, GLfloat textureMixFactor)
 {
     Look look;
     look.color = rgbColor;
@@ -24,45 +24,21 @@ Look CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat ro
     look.data[3] = 0.f; //No reflections
     
     if(textureName != NULL)
+    {
         look.texture = LoadTexture(textureName);
+        look.textureMix = textureMixFactor; //0 - 1 -> where 1 means only texture
+    }
     else
+    {
         look.texture = 0;
+        look.textureMix = 0.f;
+    }
     
     return look;
 }
 
-/*
-Look CreateReflectiveLook(GLfloat R, GLfloat G, GLfloat B, GLfloat hFactor, GLfloat vFactor, const char* textureName)
-{
-    Look newLook = CreateBasicLook(R, G, B, textureName);
-    newLook.type = REFLECTIVE;
-    newLook.factor[0] = clamp(hFactor, 0.f, 1.f);
-    newLook.factor[1] = clamp(vFactor, 0.f, 1.f);
-    return newLook;
-}
-
-Look CreateTransparentLook(GLfloat R, GLfloat G, GLfloat B, GLfloat opacity, GLfloat shininess, const char* textureName)
-{
-    Look newLook = CreateBasicLook(R, G, B, textureName);
-    newLook.type = TRANSPARENT;
-    newLook.factor[0] = clamp(opacity, 0.f, 1.f);
-    newLook.factor[1] = clamp(shininess, 0.f, 1.f);
-    return newLook;
-}*/
-
 void UseLook(Look l)
 {
-    if(l.texture != 0)
-    {
-        glBindTexture(GL_TEXTURE_2D, l.texture);
-        OpenGLGBuffer::SetUniformIsTextured(true);
-    }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, 0);
-        OpenGLGBuffer::SetUniformIsTextured(false);
-    }
-    
     //diffuse reflectance, roughness, FO, reflection factor
     GLfloat diffuseReflectance = floor(l.data[0] * 255.f);
     GLfloat roughness = floor(l.data[1] * 255.f);
@@ -73,7 +49,8 @@ void UseLook(Look l)
                            + (F0 * 256 * 256)
                            + (reflection * 256 * 256 * 256);
     
-    glColor4f(l.color[0], l.color[1], l.color[2], 1.0); //Color + Texture mix factor
+    glBindTexture(GL_TEXTURE_2D, l.texture);
+    glColor4f(l.color[0], l.color[1], l.color[2], l.textureMix); //Color + Texture mix factor
     OpenGLGBuffer::SetUniformMaterialData(materialData);
 }
 

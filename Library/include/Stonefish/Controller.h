@@ -11,10 +11,11 @@
 
 #include "common.h"
 #include "NameManager.h"
+#include "SignalMux.h"
 
 typedef enum {CONTROLLER_DCSERVO, CONTROLLER_MISO, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} ControllerType;
 
-/*! Abstract controller base class */
+/*! Abstract base controller class */
 class Controller
 {
 public:
@@ -24,18 +25,25 @@ public:
     void Start();
     void Stop();
     void Update(btScalar dt);
-    
     virtual void Reset() = 0;
-    virtual ControllerType getType() = 0;
     
-    std::string getName();
+    void setReferenceSignalGenerator(unsigned int inputId, SignalGenerator* sg);
+    void setReferenceSignalMux(SignalMux* sm);
+    virtual ControllerType getType() = 0;
+    virtual unsigned int getNumOfInputs() = 0;
     btScalar getFrequency();
+    btScalar getRunningTime();
+    std::string getName();
     
 protected:
     virtual void Tick(btScalar dt) = 0;
-
+    
     btScalar freq;
-
+    SignalGenerator* referenceGen;
+    unsigned int referenceInput;
+    SignalMux* referenceMux;
+    btScalar runningTime;
+    
 private:
     std::string name;
     btScalar eleapsedTime;

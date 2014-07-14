@@ -2,79 +2,47 @@
 //  RotaryEncoder.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 29/03/2014.
+//  Created by Patryk Cieslak on 05/07/2014.
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
 #include "RotaryEncoder.h"
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
+#pragma mark Constructors
+RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     revolute = joint;
-    cpr_res = cpr_resolution;
-    abs = absolute;
-    
-    Reset();
+    multibody = NULL;
+    multibodyJoint = 0;
+    channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
 
-void RotaryEncoder::Reset()
+RotaryEncoder::RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
-    Sensor::Reset();
-    
-    //incremental angle
-    angle = btScalar(0);
-    lastAngle = UnitSystem::SetAngle(revolute->getAngle());
-  
-    //quantization
-    lastAngle /= FULL_ANGLE;
-    lastAngle = btScalar(trunc(lastAngle * cpr_res)) / btScalar(cpr_res) * FULL_ANGLE;
+    revolute = NULL;
+    multibody = fe;
+    multibodyJoint = joint;
+    channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
 
-void RotaryEncoder::InternalUpdate(btScalar dt)
+#pragma mark - Internal
+btScalar RotaryEncoder::GetRawAngle()
 {
-    if(abs)
+    if(multibody == NULL)
     {
-        //to positive
-        angle = UnitSystem::SetAngle(revolute->getAngle());
-        if(angle < btScalar(0))
-            angle += FULL_ANGLE;
-        
-        //quantization
-        angle /= FULL_ANGLE;
-        angle = btScalar(trunc(angle * btScalar((1 << cpr_res) - 1))) / btScalar((1 << cpr_res) - 1) * FULL_ANGLE;
+        return revolute->getAngle();
     }
     else
     {
-        //new angle
-        btScalar actualAngle = UnitSystem::SetAngle(revolute->getAngle());
+        btScalar mbAngle = btScalar(0.);
+        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
+        multibody->getJointPosition(multibodyJoint, mbAngle, jt);
         
-        //quantization
-        actualAngle /= FULL_ANGLE;
-        actualAngle = btScalar(trunc(actualAngle * cpr_res)) / btScalar(cpr_res) * FULL_ANGLE;
-        
-        //accumulate
-        if(lastAngle * actualAngle < btScalar(0))
-        {
-            if(lastAngle > M_PI_4)
-                angle += ((actualAngle + FULL_ANGLE) - lastAngle);
-            else if(lastAngle < -M_PI_4)
-                angle += (actualAngle - (lastAngle + FULL_ANGLE));
-            else
-                angle += (actualAngle-lastAngle);
-        }
+        if(jt == btMultibodyLink::eRevolute)
+            return mbAngle;
         else
-            angle += (actualAngle-lastAngle);
-        
-        lastAngle = actualAngle;
+            return btScalar(0.);
     }
-    
-    //save sample
-    btScalar extAngle = UnitSystem::GetAngle(angle);
-    Sample s(1, &extAngle);
-    AddSampleToHistory(s);
-}
-
-unsigned short RotaryEncoder::getNumOfDimensions()
-{
-    return 1;
 }

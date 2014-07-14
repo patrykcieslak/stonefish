@@ -61,12 +61,12 @@ btVector3 TorusShape::localGetSupportingVertex(const btVector3& vec)const
 	btScalar s = btSqrt(vec[0]*vec[0] + vec[2]*vec[2]);
 	btVector3 res;
 	
-	if(s != btScalar(0.0))
+	if(!btFuzzyZero(s))
 	{
 		btScalar radial = m_majorRadius + m_minorRadius * s; //s => cos(alpha)
-		res[0] = vec[0] * radial/s;
+		res[0] = vec[0]/s * radial;
 		res[1] = m_minorRadius * vec[1]; //vec[1] => sin(alpha)
-		res[2] = vec[2] * radial/s;
+		res[2] = vec[2]/s * radial;
 	}
 	else
 	{
@@ -84,12 +84,12 @@ btVector3 TorusShape::localGetSupportingVertexWithoutMargin(const btVector3& vec
 	btScalar s = btSqrt(vec[0]*vec[0] + vec[2]*vec[2]);
 	btVector3 res;
 	
-	if(s != btScalar(0.0))
+	if(!btFuzzyZero(s))
 	{
 		btScalar radial = m_majorRadius + (m_minorRadius - getMargin()) * s; //s => cos(alpha)
-		res[0] = vec[0] * radial/s;
+		res[0] = vec[0]/s * radial;
 		res[1] = (m_minorRadius - getMargin()) * vec[1]; //vec[1] => sin(alpha)
-		res[2] = vec[2] * radial/s;
+		res[2] = vec[2]/s * radial;
 	}
 	else
 	{

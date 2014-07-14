@@ -32,8 +32,8 @@ OpenGLSun::OpenGLSun()
     normalTextureUnit = 0;
     positionTextureUnit = 0;
     shadowTextureUnit = 0;
-    sunElevation = 45.f;
-    sunOrientation = 0.f;
+    sunElevation = 0.f;
+    sunAzimuth = 0.f;
     shadowmapArray = 0;
     shadowmapSplits = 4;
     shadowmapSize = 2048;
@@ -250,7 +250,7 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     sunDirEye[2] = (GLfloat)sunDirectionEye.getZ();
     
     //calculate sun color
-    sunColor = OpenGLLight::ColorFromTemperature(5000.f + 20.f*sunElevation, 10.f * sin(sunElevation / 180.0 * M_PI));
+    sunColor = OpenGLLight::ColorFromTemperature(5000.f + 20.f*sunElevation, SUN_SKY_FACTOR * sin(sunElevation / 180.0 * M_PI));
     glm::mat4 invCamView = glm::inverse(activeView->GetViewMatrix(viewTransform));
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
                    0.f, 0.5f, 0.f, 0.f,
@@ -424,10 +424,10 @@ void OpenGLSun::SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLi
     shadowTextureUnit = shadow;
 }
 
-void OpenGLSun::SetPosition(GLfloat elevation, GLfloat orientation)
+void OpenGLSun::SetPosition(GLfloat elevation, GLfloat azimuth)
 {
     sunElevation = elevation;
-    sunOrientation = orientation;
+    sunAzimuth = azimuth;
     
     //calculate sun direction
     bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
@@ -435,13 +435,13 @@ void OpenGLSun::SetPosition(GLfloat elevation, GLfloat orientation)
     sunDirection = btVector3(0.f, -1.f, 0.f);
     if(zUp)
     {
-        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f-sunElevation));
-        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(sunOrientation));
+        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f - sunElevation));
+        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(90.f - sunAzimuth));
     }
     else
     {
-        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f+sunElevation));
-        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(180.f-sunOrientation));
+        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f + sunElevation));
+        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(90.f + sunAzimuth));
     }
     sunDirection.normalize();
     

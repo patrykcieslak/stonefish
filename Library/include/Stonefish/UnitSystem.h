@@ -25,6 +25,7 @@ public:
     //external
     static void SetUnitSystem(UnitSystems unitSystem, bool useDegrees);
     static UnitSystems GetUnitSystem();
+    static std::string GetDescription();
     //internal
     static UnitSystems GetInternalUnitSystem();
     
@@ -37,15 +38,21 @@ public:
     static btScalar Volume(UnitSystems from, UnitSystems to, btScalar value);               //4
     static btScalar Area(UnitSystems from, UnitSystems to, btScalar value);                 //5
     static btScalar Pressure(UnitSystems from, UnitSystems to, btScalar value);             //6
-    static btVector3 Position(UnitSystems from, UnitSystems to, const btVector3& value);
+    static btVector3 Position(UnitSystems from, UnitSystems to, const btVector3& value);    //0
     static btVector3 Orientation(bool degToRad, const btVector3& value);
     static btTransform Transform(UnitSystems from, UnitSystems to, const btTransform& value);
     static btVector3 Velocity(UnitSystems from, UnitSystems to, const btVector3& value);
+    static btScalar Velocity(UnitSystems from, UnitSystems to, btScalar value);
     static btVector3 Acceleration(UnitSystems from, UnitSystems to, const btVector3& value);
+    static btScalar Acceleration(UnitSystems from, UnitSystems to, btScalar value);
     static btVector3 AngularVelocity(bool degToRad, const btVector3& value);
+    static btScalar AngularVelocity(bool degToRad, btScalar value);
     static btVector3 AngularAcceleration(bool degToRad, const btVector3& value);
+    static btScalar AngularAcceleration(bool degToRad, btScalar value);
     static btVector3 Force(UnitSystems from, UnitSystems to, const btVector3& value);       //7
+    static btScalar Force(UnitSystems from, UnitSystems to, btScalar value);
     static btVector3 Torque(UnitSystems from, UnitSystems to, const btVector3& value);      //8
+    static btScalar Torque(UnitSystems from, UnitSystems to, btScalar value);
     
     //from external to internal
     static btScalar SetLength(btScalar value);
@@ -60,11 +67,17 @@ public:
     static btVector3 SetOrientation(const btVector3& value);
     static btTransform SetTransform(const btTransform& value);
     static btVector3 SetVelocity(const btVector3& value);
+    static btScalar SetVelocity(btScalar value);
     static btVector3 SetAcceleration(const btVector3& value);
+    static btScalar SetAcceleration(btScalar value);
     static btVector3 SetAngularVelocity(const btVector3& value);
+    static btScalar SetAngularVelocity(btScalar value);
     static btVector3 SetAngularAcceleration(const btVector3& value);
+    static btScalar SetAngularAcceleration(btScalar value);
     static btVector3 SetForce(const btVector3& value);
+    static btScalar SetForce(btScalar value);
     static btVector3 SetTorque(const btVector3& value);
+    static btScalar SetTorque(btScalar value);
     
     //from internal to external
     static btScalar GetLength(btScalar value);
@@ -79,11 +92,17 @@ public:
     static btVector3 GetOrientation(const btVector3& value);
     static btTransform GetTransform(const btTransform& value);
     static btVector3 GetVelocity(const btVector3& value);
+    static btScalar GetVelocity(btScalar value);
     static btVector3 GetAcceleration(const btVector3& value);
+    static btScalar GetAcceleration(btScalar value);
     static btVector3 GetAngularVelocity(const btVector3& value);
+    static btScalar GetAngularVelocity(btScalar value);
     static btVector3 GetAngularAcceleration(const btVector3& value);
+    static btScalar GetAngularAcceleration(btScalar value);
     static btVector3 GetForce(const btVector3& value);
+    static btScalar GetForce(btScalar value);
     static btVector3 GetTorque(const btVector3& value);
+    static btScalar GetTorque(btScalar value);
     
 private:
     UnitSystem();

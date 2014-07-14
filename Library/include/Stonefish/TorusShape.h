@@ -41,7 +41,7 @@ public:
 
 	virtual const char*	getName()const { return "TORUS"; }
 	
-	virtual btVector3 getAnisotropicRollingFrictionDirection() const { return btVector3(0,1,1); }
+	virtual btVector3 getAnisotropicRollingFrictionDirection() const { return btVector3(0,1,0); }
 };
 
 #endif

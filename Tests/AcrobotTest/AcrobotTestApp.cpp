@@ -74,27 +74,20 @@ void AcrobotTestApp::DoHUD()
  
     if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
     {
+        StopSimulation();
+        
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
      
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            const std::deque<Sample*>& data = getSimulationManager()->getSensor("Encoder1")->getHistory();
-            if(data.size() > 0)
-            {
-                FILE* fp;
-                fp = fopen(pathToFile, "wt");
-                
-                for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6lf\t%1.6lf\t%1.6lf\n", data[i]->getTimestamp(), data[i]->getValue(0), data[i]->getValue(1));
-                fclose(fp);
-     
-                cInfo("Saved plot data to %s.\n", pathToFile);
-            }
+            getSimulationManager()->getSensor("Encoder1")->SaveMeasurementsToFile(pathToFile);
         }
      
         delete [] pathToFile;
         delete openDialog;
+        
+        ResumeSimulation();
      }
 }

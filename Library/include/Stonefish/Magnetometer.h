@@ -20,7 +20,6 @@ public:
     
     void InternalUpdate(btScalar dt);
     void Reset();
-    unsigned short getNumOfDimensions();
     
 private:
     //parameters

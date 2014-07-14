@@ -15,7 +15,7 @@
 class Polynomial
 {
 public:
-    Polynomial(btVectorXu coeffs) : c(coeffs), order(coeffs.size()-1) {}
+    Polynomial(const btVectorXu& coeffs) : c(coeffs), order(coeffs.size()-1) {}
     
     btScalar Value(btScalar x)
     {
@@ -24,7 +24,7 @@ public:
         
         for(int i = 0; i <= order; ++i)
         {
-            value += c[i] * xPower;
+            value += c[order - i] * xPower;
             xPower *= x;
         }
         
@@ -40,7 +40,7 @@ private:
 class PolySurface
 {
 public:
-    PolySurface(btMatrixXu coeffs) : C(coeffs), orderX(coeffs.cols()-1), orderY(coeffs.rows()-1) {}
+    PolySurface(const btMatrixXu& coeffs) : C(coeffs), orderX(coeffs.cols()-1), orderY(coeffs.rows()-1) {}
     
     btScalar Value(btScalar x, btScalar y)
     {
@@ -61,9 +61,9 @@ public:
             btScalar yPoly = btScalar(0.);
             
             for(int h = 0; h <= orderX; ++h)
-                yPoly += C(i,h) * xPowers[h];
+                yPoly += C(i,h) * xPowers[orderX - h];
             
-            value += yPoly * yPowers[i];
+            value += yPoly * yPowers[orderY - i];
         }
         
         return value;

@@ -8,6 +8,7 @@
 
 #include "PrismaticJoint.h"
 
+#pragma mark Constructors
 PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -40,13 +41,10 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     displacementIC = btScalar(0.);
 }
 
-PrismaticJoint::~PrismaticJoint()
-{
-}
-
+#pragma mark - Accessors
 void PrismaticJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
 {
-    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetForce(btVector3(constantFactor,0.,0.)).x() : btScalar(0.);
+    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetForce(constantFactor) : btScalar(0.);
     velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
 }
 
@@ -67,6 +65,7 @@ JointType PrismaticJoint::getType()
     return JOINT_PRISMATIC;
 }
 
+#pragma mark - Actions
 void PrismaticJoint::ApplyForce(btScalar F)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -103,6 +102,7 @@ bool PrismaticJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularT
     return true;
 }
 
+#pragma mark - Graphics
 btVector3 PrismaticJoint::Render()
 {
     btTypedConstraint* slider = getConstraint();

@@ -15,7 +15,6 @@ class PrismaticJoint : public Joint
 {
 public:
     PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities = true);
-    ~PrismaticJoint();
     
     void ApplyForce(btScalar F);
     void ApplyDamping();

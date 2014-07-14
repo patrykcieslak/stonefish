@@ -8,11 +8,14 @@
 
 #include "Current.h"
 
+#pragma mark Constructors
 Current::Current(std::string uniqueName, DCMotor* m, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     motor = m;
+    channels.push_back(SensorChannel("Current", QUANTITY_CURRENT));
 }
 
+#pragma mark - Methods
 void Current::Reset()
 {
     Sensor::Reset();
@@ -21,12 +24,7 @@ void Current::Reset()
 void Current::InternalUpdate(btScalar dt)
 {
     //save sample
-    btScalar ext = motor->getCurrent();
-    Sample s(1, &ext);
+    btScalar m = motor->getCurrent();
+    Sample s(1, &m);
     AddSampleToHistory(s);
-}
-
-unsigned short Current::getNumOfDimensions()
-{
-    return 1;
 }

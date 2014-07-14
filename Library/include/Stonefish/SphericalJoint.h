@@ -15,7 +15,6 @@ class SphericalJoint : public Joint
 {
 public:
     SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities = true);
-    ~SphericalJoint();
     
     void ApplyTorque(btVector3 T);
     void ApplyDamping();

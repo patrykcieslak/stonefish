@@ -8,6 +8,7 @@
 
 #include "GearJoint.h"
 
+#pragma mark Constructors
 GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
 {
     gearRatio = ratio;
@@ -21,10 +22,7 @@ GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* s
     setConstraint(gear);
 }
 
-GearJoint::~GearJoint()
-{
-}
-
+#pragma mark - Accessors
 JointType GearJoint::getType()
 {
     return JOINT_GEAR;
@@ -35,6 +33,7 @@ btScalar GearJoint::getRatio()
     return gearRatio;
 }
 
+#pragma mark - Graphics
 btVector3 GearJoint::Render()
 {
     btGearConstraint* gear = (btGearConstraint*)getConstraint();

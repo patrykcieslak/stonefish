@@ -33,6 +33,32 @@ UnitSystems UnitSystem::GetInternalUnitSystem()
     return internalUS;
 }
 
+std::string UnitSystem::GetDescription()
+{
+    std::string desc = "";
+    
+    switch (externalUS)
+    {
+        case CGS:
+            desc += "CGS";
+            break;
+            
+        case MKS:
+            desc += "MKS";
+            break;
+        
+        case MMKS:
+            desc += "MMKS";
+            break;
+    }
+    
+    if(externalDeg)
+        desc += ", degrees";
+    else
+        desc += ", radians";
+    
+    return desc;
+}
 
 #pragma mark - General Converters
 btScalar UnitSystem::Convert(unsigned int quantity, UnitSystems from, UnitSystems to, btScalar value)
@@ -131,7 +157,17 @@ btVector3 UnitSystem::Velocity(UnitSystems from, UnitSystems to, const btVector3
     return Convert(0, from, to, value);
 }
 
+btScalar UnitSystem::Velocity(UnitSystems from, UnitSystems to, btScalar value)
+{
+    return Convert(0, from, to, value);
+}
+
 btVector3 UnitSystem::Acceleration(UnitSystems from, UnitSystems to, const btVector3 &value)
+{
+    return Convert(0, from, to, value);
+}
+
+btScalar UnitSystem::Acceleration(UnitSystems from, UnitSystems to, btScalar value)
 {
     return Convert(0, from, to, value);
 }
@@ -141,9 +177,19 @@ btVector3 UnitSystem::AngularVelocity(bool degToRad, const btVector3 &value)
     return Orientation(degToRad, value);
 }
 
+btScalar UnitSystem::AngularVelocity(bool degToRad, btScalar value)
+{
+    return Angle(degToRad, value);
+}
+
 btVector3 UnitSystem::AngularAcceleration(bool degToRad, const btVector3 &value)
 {
     return Orientation(degToRad, value);
+}
+
+btScalar UnitSystem::AngularAcceleration(bool degToRad, btScalar value)
+{
+    return Angle(degToRad, value);
 }
 
 btVector3 UnitSystem::Force(UnitSystems from, UnitSystems to, const btVector3 &value)
@@ -151,7 +197,17 @@ btVector3 UnitSystem::Force(UnitSystems from, UnitSystems to, const btVector3 &v
     return Convert(7, from, to, value);
 }
 
+btScalar UnitSystem::Force(UnitSystems from, UnitSystems to, btScalar value)
+{
+    return Convert(7, from, to, value);
+}
+
 btVector3 UnitSystem::Torque(UnitSystems from, UnitSystems to, const btVector3 &value)
+{
+    return Convert(8, from, to, value);
+}
+
+btScalar UnitSystem::Torque(UnitSystems from, UnitSystems to, btScalar value)
 {
     return Convert(8, from, to, value);
 }
@@ -223,7 +279,17 @@ btVector3 UnitSystem::SetVelocity(const btVector3 &value)
     return Convert(0, externalUS, internalUS, value);
 }
 
+btScalar UnitSystem::SetVelocity(btScalar value)
+{
+    return Convert(0, externalUS, internalUS, value);
+}
+
 btVector3 UnitSystem::SetAcceleration(const btVector3 &value)
+{
+    return Convert(0, externalUS, internalUS, value);
+}
+
+btScalar UnitSystem::SetAcceleration(btScalar value)
 {
     return Convert(0, externalUS, internalUS, value);
 }
@@ -233,9 +299,19 @@ btVector3 UnitSystem::SetAngularVelocity(const btVector3 &value)
     return SetOrientation(value);
 }
 
+btScalar UnitSystem::SetAngularVelocity(btScalar value)
+{
+    return SetAngle(value);
+}
+
 btVector3 UnitSystem::SetAngularAcceleration(const btVector3 &value)
 {
     return SetOrientation(value);
+}
+
+btScalar UnitSystem::SetAngularAcceleration(btScalar value)
+{
+    return SetAngle(value);
 }
 
 btVector3 UnitSystem::SetForce(const btVector3 &value)
@@ -243,7 +319,17 @@ btVector3 UnitSystem::SetForce(const btVector3 &value)
     return Convert(7, externalUS, internalUS, value);
 }
 
+btScalar UnitSystem::SetForce(btScalar value)
+{
+    return Convert(7, externalUS, internalUS, value);
+}
+
 btVector3 UnitSystem::SetTorque(const btVector3 &value)
+{
+    return Convert(8, externalUS, internalUS, value);
+}
+
+btScalar UnitSystem::SetTorque(btScalar value)
 {
     return Convert(8, externalUS, internalUS, value);
 }
@@ -315,7 +401,17 @@ btVector3 UnitSystem::GetVelocity(const btVector3 &value)
     return Convert(0, internalUS, externalUS, value);
 }
 
+btScalar UnitSystem::GetVelocity(btScalar value)
+{
+    return Convert(0, internalUS, externalUS, value);
+}
+
 btVector3 UnitSystem::GetAcceleration(const btVector3 &value)
+{
+    return Convert(0, internalUS, externalUS, value);
+}
+
+btScalar UnitSystem::GetAcceleration(btScalar value)
 {
     return Convert(0, internalUS, externalUS, value);
 }
@@ -325,9 +421,19 @@ btVector3 UnitSystem::GetAngularVelocity(const btVector3 &value)
     return GetOrientation(value);
 }
 
+btScalar UnitSystem::GetAngularVelocity(btScalar value)
+{
+    return GetAngle(value);
+}
+
 btVector3 UnitSystem::GetAngularAcceleration(const btVector3 &value)
 {
     return GetOrientation(value);
+}
+
+btScalar UnitSystem::GetAngularAcceleration(btScalar value)
+{
+    return GetAngle(value);
 }
 
 btVector3 UnitSystem::GetForce(const btVector3 &value)
@@ -335,7 +441,17 @@ btVector3 UnitSystem::GetForce(const btVector3 &value)
     return Convert(7, internalUS, externalUS, value);
 }
 
+btScalar UnitSystem::GetForce(btScalar value)
+{
+    return Convert(7, internalUS, externalUS, value);
+}
+
 btVector3 UnitSystem::GetTorque(const btVector3 &value)
+{
+    return Convert(8, internalUS, externalUS, value);
+}
+
+btScalar UnitSystem::GetTorque(btScalar value)
 {
     return Convert(8, internalUS, externalUS, value);
 }

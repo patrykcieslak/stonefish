@@ -37,6 +37,9 @@
 #define glBulletVertex(V) glVertex3fv((V).m_floats)
 #endif
 
+#define SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
+#define SUN_SKY_FACTOR 10.f //Sun illuminance to sky illuminance factor (sky treated as reference)
+
 class SimulationManager;
 class OpenGLView;
 

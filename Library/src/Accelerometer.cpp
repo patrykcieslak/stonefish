@@ -7,52 +7,59 @@
 //
 
 #include "Accelerometer.h"
+#include "SimulationApp.h"
 
+#pragma mark Constructors
 Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, btScalar frequency, unsigned int historyLength):Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
     axis = senseAxis;
-    range[0] = rangeMin;
-    range[1] = rangeMax;
-    sens = sensitivity;
+    G = measuresInG;
+    
+    std::string axisName[3] = {"X", "Y", "Z"};
+    channels.push_back(SensorChannel("Acceleration " + axisName[axis], G ? QUANTITY_UNITLESS : QUANTITY_ACCELERATION));
+    
+    range[0] = G ? rangeMin : UnitSystem::SetAcceleration(rangeMin);
+    range[1] = G ? rangeMax : UnitSystem::SetAcceleration(rangeMax);
+    sens = G ? sensitivity : UnitSystem::SetAcceleration(sensitivity);
+    
     zeroV = zeroVoltage;
     this->noisePSD = noisePSD;
     this->adc = adc;
-    G = measuresInG;
-    
-    Reset();
 }
 
+#pragma mark - Methods
 void Accelerometer::Reset()
 {
+    //calculate transformation from global to acc frame
+    btMatrix3x3 toAccFrame = relToSolid.getBasis().inverse() * solid->getTransform().getBasis().inverse();
+    
+    //get velocity
+    lastV = solid->getLinearVelocityInLocalPoint(relToSolid.getOrigin());
+    lastV = toAccFrame * lastV;
+    
     Sensor::Reset();
-    lastV = btVector3(0.,0.,0.);
 }
 
 void Accelerometer::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to acc frame
-    btMatrix3x3 toAccFrame = relToSolid.getBasis().inverse() * solid->getRigidBody()->getCenterOfMassTransform().getBasis().inverse();
+    btMatrix3x3 toAccFrame = relToSolid.getBasis().inverse() * solid->getTransform().getBasis().inverse();
     
     //inertial component
-    btVector3 actualV = solid->getRigidBody()->getVelocityInLocalPoint(relToSolid.getOrigin()); //get velocity in sensor location
+    btVector3 actualV = solid->getLinearVelocityInLocalPoint(relToSolid.getOrigin()); //get velocity in sensor location
     actualV = toAccFrame * actualV;
     btVector3 accel = -(actualV - lastV)/dt;
     lastV = actualV;
     
     //gravity component
-    btVector3 grav = solid->getRigidBody()->getGravity();
-    grav = toAccFrame * grav;
-    accel += grav;
+    btVector3 gravity = SimulationApp::getApp()->getSimulationManager()->getGravity();
+    accel += toAccFrame * gravity;
     
-    //select axis and convert to external unit system or G's
+    //select axis
     btScalar acc = accel[axis];
-    
-    if(G)
-        acc /= solid->getRigidBody()->getGravity().norm();
-    else
-        acc = UnitSystem::GetLength(acc);
+    if(G) acc /= gravity.norm();
     
     //add limits/noise/nonlinearity
     acc = acc < range[0] ? range[0] : (acc > range[1] ? range[1] : acc);
@@ -63,9 +70,4 @@ void Accelerometer::InternalUpdate(btScalar dt)
     //save sample
     Sample s(1, &acc);
     AddSampleToHistory(s);
-}
-
-unsigned short Accelerometer::getNumOfDimensions()
-{
-    return 1;
 }

@@ -363,6 +363,11 @@ void SimulationManager::setGravity(btScalar gravityConstant)
     g = UnitSystem::SetAcceleration(btVector3(0., 0., gravityConstant)).getZ();
 }
 
+btVector3 SimulationManager::getGravity()
+{
+    return btVector3(0., 0., zUp ? -g : g);
+}
+
 void SimulationManager::setICSolverParams(bool useGravity, btScalar timeStep, unsigned int maxIterations, btScalar maxTime, btScalar linearTolerance, btScalar angularTolerance)
 {
     icUseGravity = useGravity;
@@ -418,7 +423,7 @@ void SimulationManager::InitializeSolver()
     dwSolver = new ResearchConstraintSolver(mlcp);
     dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     
-    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
+    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER;// | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
     dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
 
@@ -432,7 +437,7 @@ void SimulationManager::InitializeSolver()
     
     //Collision
     dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.01; //value close to zero needed for accurate friction/too close to zero causes multibody sinking
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.001; //value close to zero needed for accurate friction/too close to zero causes multibody sinking
     dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 1.0; //error reduction for rigid body angular velocity
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
     dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = -0.001;
@@ -558,11 +563,34 @@ bool SimulationManager::StartSimulation()
     if(!SolveICProblem())
         return false;
     
+    //Reset sensors
+    for(int i = 0; i < sensors.size(); i++)
+        sensors[i]->Reset();
+    
     //Turn on controllers
     for(int i = 0; i < controllers.size(); i++)
         controllers[i]->Start();
     
     return true;
+}
+
+void SimulationManager::ResumeSimulation()
+{
+    if(!icProblemSolved)
+        StartSimulation();
+    else
+    {
+        currentTime = 0;
+
+        for(int i = 0; i < controllers.size(); i++)
+            controllers[i]->Start();
+    }
+}
+
+void SimulationManager::StopSimulation()
+{
+    for(int i=0; i < controllers.size(); i++)
+        controllers[i]->Stop();
 }
 
 bool SimulationManager::SolveICProblem()
@@ -577,7 +605,8 @@ bool SimulationManager::SolveICProblem()
         dynamicsWorld->setGravity(btVector3(0.,0.,0.));
     
     //Set IC callback
-    dynamicsWorld->setInternalTickCallback(SolveICTickCallback, this, true);
+    dynamicsWorld->setInternalTickCallback(SolveICTickCallback, this, true); //Pre-tick
+    dynamicsWorld->setInternalTickCallback(NULL, this, false); //Post-tick
     
     uint64_t icTime = GetTimeInMicroseconds();
     int iterations = 0;
@@ -614,7 +643,8 @@ bool SimulationManager::SolveICProblem()
     dynamicsWorld->setGravity(btVector3(0., 0., zUp ? -g : g));
     
     //Set simulation tick
-    dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true);
+    dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true); //Pre-tick
+    dynamicsWorld->setInternalTickCallback(SimulationPostTickCallback, this, false); //Post-tick
     
     return true;
 }
@@ -648,12 +678,6 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
         cInfo("MLCP solver failed %d times.", mlcpFallbacks);
     }
     dwSolver->setNumFallbacks(0);
-}
-
-void SimulationManager::StopSimulation()
-{
-    for(int i=0; i < controllers.size(); i++)
-        controllers[i]->Stop();
 }
 
 #pragma mark - To Be Moved Somewhere
@@ -701,11 +725,13 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     
     Material* mat0;
     btVector3 contactVelocity0;
+    btScalar contactAngularVelocity0;
     
     if(ent0->getType() == ENTITY_STATIC)
     {
         mat0 = ((StaticEntity*)ent0)->getMaterial();
         contactVelocity0 = btVector3(0.,0.,0.);
+        contactAngularVelocity0 = btScalar(0.);
     }
     else if(ent0->getType() == ENTITY_SOLID)
     {
@@ -713,6 +739,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         mat0 = sent0->getMaterial();
         btVector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
         contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
+        contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
     }
     else
     {
@@ -724,11 +751,13 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     
     Material* mat1;
     btVector3 contactVelocity1;
+    btScalar contactAngularVelocity1;
     
     if(ent1->getType() == ENTITY_STATIC)
     {
         mat1 = ((StaticEntity*)ent1)->getMaterial();
         contactVelocity1 = btVector3(0.,0.,0.);
+        contactAngularVelocity1 = btScalar(0.);
     }
     else if(ent1->getType() == ENTITY_SOLID)
     {
@@ -736,6 +765,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         mat1 = sent1->getMaterial();
         btVector3 localPoint1 = sent1->getTransform().getBasis() * cp.m_localPointB;
         contactVelocity1 = sent1->getLinearVelocityInLocalPoint(localPoint1);
+        contactAngularVelocity1 = sent1->getAngularVelocity().dot(cp.m_normalWorldOnB);
     }
     else
     {
@@ -759,6 +789,21 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     //Slipping
     if(SimulationApp::getApp()->getSimulationManager()->getCollisionFilter() == INCLUSIVE)
         cp.m_userPersistentData = (void *)(new btVector3(slipVel));
+    
+    //Damping angular velocity around contact normal (reduce spinning)
+    if(!btFuzzyZero(contactAngularVelocity0))
+    {
+        SolidEntity* sent0 = (SolidEntity*)ent0;
+        btScalar T = cp.m_combinedFriction * sent0->getMass() * SimulationApp::getApp()->getSimulationManager()->getGravity().z() * 0.002;
+        sent0->ApplyTorque(-cp.m_normalWorldOnB * btFabs(contactAngularVelocity0)/contactAngularVelocity0 * T);
+    }
+    
+    if(!btFuzzyZero(contactAngularVelocity1))
+    {
+        SolidEntity* sent1 = (SolidEntity*)ent1;
+        btScalar T = cp.m_combinedFriction * sent1->getMass() * SimulationApp::getApp()->getSimulationManager()->getGravity().z() * 0.002;
+        sent1->ApplyTorque(-cp.m_normalWorldOnB * btFabs(contactAngularVelocity1)/contactAngularVelocity1 * T);
+    }
     
     //Restitution
     cp.m_combinedRestitution = mat0->restitution * mat1->restitution;
@@ -868,6 +913,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
     simManager->simulationTime += timeStep;
 }
 
+//Used to apply and accumulate forces
 void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
@@ -878,7 +924,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     //loop through all sensors -> update measurements
     for(int i = 0; i < simManager->sensors.size(); i++)
         simManager->sensors[i]->Update(timeStep);
-
+    
     //loop through all controllers
     for(int i = 0; i < simManager->controllers.size(); i++)
         simManager->controllers[i]->Update(timeStep);
@@ -942,6 +988,12 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             }
         }*/
     }
+}
+
+//Used to measure body motions and calculate controls
+void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, btScalar timeStep)
+{
+    SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
     
     //Update simulation time
     simManager->simulationTime += timeStep;

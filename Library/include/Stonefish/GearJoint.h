@@ -15,7 +15,6 @@ class GearJoint : public Joint
 {
 public:
     GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio);
-    ~GearJoint();
     
     btVector3 Render();
     

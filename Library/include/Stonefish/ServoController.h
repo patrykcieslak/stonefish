@@ -11,25 +11,26 @@
 
 #include "Controller.h"
 #include "DCMotor.h"
-#include "FakeRotaryEncoder.h"
+#include "RotaryEncoder.h"
 
 /*! DC servo controller with PID */
 class ServoController : public Controller
 {
 public:
-    ServoController(std::string uniqueName, DCMotor* m, FakeRotaryEncoder* e, btScalar maxVoltage, btScalar frequency = btScalar(-1.));
+    ServoController(std::string uniqueName, DCMotor* m, RotaryEncoder* e, btScalar maxVoltage, btScalar frequency = btScalar(-1.));
     ~ServoController();
     
     void SetPosition(btScalar pos);
     void Reset();
     void SetGains(btScalar P, btScalar I, btScalar D);
     
+    unsigned int getNumOfInputs();
     ControllerType getType();
     
 private:
     void Tick(btScalar dt);
     
-    FakeRotaryEncoder* encoder;
+    RotaryEncoder* encoder;
     DCMotor* motor;
     btScalar maxV;
     btScalar gainP;
