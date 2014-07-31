@@ -9,6 +9,7 @@
 #include "Sensor.h"
 #include "Console.h"
 #include "SimulationApp.h"
+#include "ScientificFileUtil.h"
 
 NameManager Sensor::nameManager;
 
@@ -173,52 +174,221 @@ void Sensor::ClearHistory()
     history.clear();
 }
 
-void Sensor::SaveMeasurementsToFile(const char* path, bool includeTime, unsigned int fixedPrecision)
+void Sensor::SaveMeasurementsToTextFile(const char* path, bool includeTime, unsigned int fixedPrecision)
 {
-    if(history.size() > 0)
+    if(history.size() == 0)
+        return;
+    
+    cInfo("Saving %s measurements to: %s", name.c_str(), path);
+    
+    FILE* fp = fopen(path, "wt");
+    if(fp == NULL)
     {
-        FILE* fp = fopen(path, "wt");
+        cError("File could not be opened!");
+        return;
+    }
+    
+    //Write header
+    fprintf(fp, "#Measurements from %s\n", name.c_str());
+    fprintf(fp, "#Number of channels: %ld\n", channels.size());
+    fprintf(fp, "#Number of samples: %ld\n", history.size());
+    if(freq <= btScalar(0.))
+        fprintf(fp, "#Frequency: %1.3lf Hz\n", SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+    else
+        fprintf(fp, "#Frequency: %1.3lf Hz\n", freq);
+    fprintf(fp, "#Unit system: %s\n\n", UnitSystem::GetDescription().c_str());
+    
+    //Write data header
+    if(includeTime)
+        fprintf(fp, "#Time\t");
+    else
+        fprintf(fp, "#");
+    
+    for(unsigned int i = 0; i < channels.size(); i++)
+    {
+        fprintf(fp, "%s", channels[i].name.c_str());
         
-        //Write header
-        fprintf(fp, "#Measurements from %s\n", name.c_str());
-        fprintf(fp, "#Number of channels: %ld\n", channels.size());
-        fprintf(fp, "#Number of samples: %ld\n", history.size());
-        if(freq <= btScalar(0.))
-            fprintf(fp, "#Frequency: %1.3lf Hz\n", SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+        if(i < channels.size() - 1)
+            fprintf(fp, "\t");
         else
-            fprintf(fp, "#Frequency: %1.3lf Hz\n", freq);
-        fprintf(fp, "#Unit system: %s\n\n", UnitSystem::GetDescription().c_str());
+            fprintf(fp, "\n");
+    }
+    
+    //Write data
+    std::string format = "%1." + std::to_string(fixedPrecision) + "lf";
+    
+    for(unsigned int i = 0; i < history.size(); i++)
+    {
+        Sample* s = history[i];
         
-        //Write data header
         if(includeTime)
-            fprintf(fp, "#Time\t");
-        else
-            fprintf(fp, "#");
-        
-        for(unsigned int i = 0; i < channels.size(); i++)
         {
-            fprintf(fp, "%s", channels[i].name.c_str());
+            fprintf(fp, format.c_str(), s->getTimestamp());
+            fprintf(fp, "\t");
+        }
+        
+        for(unsigned int h = 0; h < channels.size(); h++)
+        {
+            btScalar v = s->getValue(h);
             
-            if(i < channels.size() - 1)
+            switch(channels[h].type)
+            {
+                case QUANTITY_LENGTH:
+                    v = UnitSystem::GetLength(v);
+                    break;
+                    
+                case QUANTITY_ANGLE:
+                    v = UnitSystem::GetAngle(v);
+                    break;
+                    
+                case QUANTITY_VELOCITY:
+                    v = UnitSystem::GetVelocity(v);
+                    break;
+                    
+                case QUANTITY_ANGULAR_VELOCITY:
+                    v = UnitSystem::GetAngularVelocity(v);
+                    break;
+                    
+                case QUANTITY_ACCELERATION:
+                    v = UnitSystem::GetAcceleration(v);
+                    break;
+                    
+                case QUANTITY_FORCE:
+                    v = UnitSystem::GetForce(v);
+                    break;
+                    
+                case QUANTITY_TORQUE:
+                    v = UnitSystem::GetTorque(v);
+                    break;
+                    
+                case QUANTITY_PRESSURE:
+                    v =  UnitSystem::GetPressure(v);
+                    break;
+                    
+                case QUANTITY_CURRENT:
+                case QUANTITY_UNITLESS:
+                case QUANTITY_INVALID:
+                    break;
+            }
+            
+            fprintf(fp, format.c_str(), v);
+            
+            if(h < channels.size() - 1)
                 fprintf(fp, "\t");
             else
                 fprintf(fp, "\n");
         }
+    }
+    
+    fclose(fp);
+}
+
+void Sensor::SaveMeasurementsToOctaveFile(const char* path, bool includeTime, bool separateChannels)
+{
+    if(history.size() == 0)
+        return;
+    
+    //build data structure
+    ScientificData data("");
+    
+    if(separateChannels) //channels separated and saved in vecotors
+    {
+        if(includeTime) //write time vector
+        {
+            ScientificDataItem* it = new ScientificDataItem();
+            it->name = "Time";
+            it->type = DATA_VECTOR;
+            
+            btVectorXu* vector = new btVectorXu((unsigned int)history.size());
+            it->value = vector;
+            
+            for(unsigned int i = 0; i < history.size(); ++i)
+            {
+                Sample* s = history[i];
+                (*vector)[i] = s->getTimestamp();
+            }
+            
+            data.addItem(it);
+        }
         
-        //Write data
-        std::string format = "%1." + std::to_string(fixedPrecision) + "lf";
+        //write channel vectors
+        for(unsigned int i = 0; i < channels.size(); ++i)
+        {
+            ScientificDataItem* it = new ScientificDataItem();
+            it->name = channels[i].name;
+            it->type = DATA_VECTOR;
+            
+            btVectorXu* vector = new btVectorXu((unsigned int)history.size());
+            it->value = vector;
+            
+            for(unsigned int h = 0; h < history.size(); ++h)
+            {
+                Sample* s = history[h];
+                btScalar v = s->getValue(i);
+                
+                switch(channels[i].type)
+                {
+                    case QUANTITY_LENGTH:
+                        v = UnitSystem::GetLength(v);
+                        break;
+                        
+                    case QUANTITY_ANGLE:
+                        v = UnitSystem::GetAngle(v);
+                        break;
+                        
+                    case QUANTITY_VELOCITY:
+                        v = UnitSystem::GetVelocity(v);
+                        break;
+                        
+                    case QUANTITY_ANGULAR_VELOCITY:
+                        v = UnitSystem::GetAngularVelocity(v);
+                        break;
+                        
+                    case QUANTITY_ACCELERATION:
+                        v = UnitSystem::GetAcceleration(v);
+                        break;
+                        
+                    case QUANTITY_FORCE:
+                        v = UnitSystem::GetForce(v);
+                        break;
+                        
+                    case QUANTITY_TORQUE:
+                        v = UnitSystem::GetTorque(v);
+                        break;
+                        
+                    case QUANTITY_PRESSURE:
+                        v =  UnitSystem::GetPressure(v);
+                        break;
+                        
+                    case QUANTITY_CURRENT:
+                    case QUANTITY_UNITLESS:
+                    case QUANTITY_INVALID:
+                        break;
+                }
+                
+                (*vector)[h] = v;
+            }
+            
+            data.addItem(it);
+        }
+    }
+    else //channels combined in a matrix
+    {
+        ScientificDataItem* it = new ScientificDataItem();
+        it->name = name;
+        it->type = DATA_MATRIX;
         
-        for(unsigned int i = 0; i < history.size(); i++)
+        btMatrixXu* matrix = new btMatrixXu((unsigned int)history.size(), (unsigned int)channels.size() + (includeTime ? 1 : 0));
+        it->value = matrix;
+        
+        for(unsigned int i = 0; i < history.size(); ++i)
         {
             Sample* s = history[i];
             
             if(includeTime)
-            {
-                fprintf(fp, format.c_str(), s->getTimestamp());
-                fprintf(fp, "\t");
-            }
+                matrix->setElem(i, 0, s->getTimestamp());
             
-            for(unsigned int h = 0; h < channels.size(); h++)
+            for(unsigned int h = 0; h < channels.size(); ++h)
             {
                 btScalar v = s->getValue(h);
                 
@@ -261,20 +431,16 @@ void Sensor::SaveMeasurementsToFile(const char* path, bool includeTime, unsigned
                     case QUANTITY_INVALID:
                         break;
                 }
-
-                fprintf(fp, format.c_str(), v);
                 
-                if(h < channels.size() - 1)
-                    fprintf(fp, "\t");
-                else
-                    fprintf(fp, "\n");
+                matrix->setElem(i, h + (includeTime ? 1 : 0), v);
             }
         }
         
-        fclose(fp);
-        
-        cInfo("Saved %s measurements to: %s\n", name.c_str(), path);
+        data.addItem(it);
     }
+    
+    //save data structure to file
+    SaveOctaveData(path, data);
 }
 
 void Sensor::Render()

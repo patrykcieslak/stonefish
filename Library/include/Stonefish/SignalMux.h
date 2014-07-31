@@ -19,7 +19,7 @@ public:
     virtual ~SignalMux();
     
     void AddSignalGenerator(SignalGenerator* sg);
-    btScalar* ValuesAtTime(btScalar t);
+    std::vector<btScalar> ValuesAtTime(btScalar t);
     unsigned int getNumOfSignals();
     
 private:

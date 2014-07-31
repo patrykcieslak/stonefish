@@ -37,7 +37,7 @@ void RollingTestApp::ProcessInputs()
             speed = btScalar(0.);
         
         MISOStateSpaceController* longitudinal = (MISOStateSpaceController*)getSimulationManager()->getController("Longitudinal");
-        longitudinal->setDesiredValue(2, speed * 5.0);
+        longitudinal->setReferenceValue(2, speed * 5.0);
         
         if(abs(joystickAxes[2]) > deadband)
         {
@@ -121,7 +121,7 @@ void RollingTestApp::DoHUD()
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            getSimulationManager()->getSensor("IMU")->SaveMeasurementsToFile(pathToFile);
+            getSimulationManager()->getSensor("IMU")->SaveMeasurementsToTextFile(pathToFile);
         }
      
         delete [] pathToFile;
@@ -135,17 +135,17 @@ void RollingTestApp::DoHUD()
     dims.push_back(1);
     
     plot.item = 3;
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor("EncoderWheel"), dims, "Wheel Encoder"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor("EncoderLever"), dims, "Lever Encoder"))
     {
         StopSimulation();
         
-        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "oct");
         openDialog->Show();
     
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            getSimulationManager()->getSensor("EncoderWheel")->SaveMeasurementsToFile(pathToFile);
+            getSimulationManager()->getSensor("EncoderLever")->SaveMeasurementsToOctaveFile(pathToFile);
         }
     
         delete [] pathToFile;
@@ -153,4 +153,49 @@ void RollingTestApp::DoHUD()
         
         ResumeSimulation();
     }
+    
+    ui_id button;
+    button.owner = 1;
+    button.item = 4;
+    button.index = 0;
+    
+    if(IMGUI::getInstance()->DoButton(button, 5, 180, 110, 30, "Save Trajectory"))
+    {
+        StopSimulation();
+        
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save trajectory data...", "oct");
+        openDialog->Show();
+        
+        char* pathToFile;
+        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
+        {
+            getSimulationManager()->getSensor("Trajectory")->SaveMeasurementsToOctaveFile(pathToFile);
+        }
+        
+        delete [] pathToFile;
+        delete openDialog;
+        
+        ResumeSimulation();
+    }
+    
+    button.item = 5;
+    if(IMGUI::getInstance()->DoButton(button, 5, 215, 110, 30, "Save Contact"))
+    {
+        StopSimulation();
+        
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save contact data...", "oct");
+        openDialog->Show();
+        
+        char* pathToFile;
+        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
+        {
+            getSimulationManager()->getContact(0)->SaveContactDataToOctaveFile(pathToFile);
+        }
+        
+        delete [] pathToFile;
+        delete openDialog;
+        
+        ResumeSimulation();
+    }
+
 }

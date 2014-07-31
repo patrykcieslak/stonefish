@@ -12,10 +12,12 @@
 #include <fstream>
 
 #pragma mark ScientificData class
+#pragma mark -Constructors
 ScientificData::ScientificData(std::string filepath) : path(filepath)
 {
 }
 
+#pragma mark -Destructor
 ScientificData::~ScientificData()
 {
     for(unsigned int i = 0; i < items.size(); ++i)
@@ -24,13 +26,14 @@ ScientificData::~ScientificData()
     items.clear();
 }
 
+#pragma mark -Accessors
 void ScientificData::addItem(ScientificDataItem *it)
 {
     if(it != NULL && it->value != NULL)
         items.push_back(it);
 }
 
-ScientificDataItem* ScientificData::getItem(std::string name)
+const ScientificDataItem* ScientificData::getItem(std::string name) const
 {
     for(unsigned int i = 0; i < items.size(); ++i)
         if(items[i]->name == name)
@@ -39,9 +42,22 @@ ScientificDataItem* ScientificData::getItem(std::string name)
     return NULL;
 }
 
+const ScientificDataItem* ScientificData::getItem(unsigned int index) const
+{
+    if(index < items.size())
+        return items[index];
+    else
+        return NULL;
+}
+
+unsigned int ScientificData::getItemsCount() const
+{
+    return (unsigned int)items.size();
+}
+
 btScalar ScientificData::getScalar(std::string name)
 {
-    ScientificDataItem* it = getItem(name);
+    const ScientificDataItem* it = getItem(name);
     if(it != NULL && it->type == DATA_SCALAR)
         return *((btScalar*)it->value);
     else
@@ -50,7 +66,7 @@ btScalar ScientificData::getScalar(std::string name)
 
 btVectorXu ScientificData::getVector(std::string name)
 {
-    ScientificDataItem* it = getItem(name);
+    const ScientificDataItem* it = getItem(name);
     if(it != NULL && it->type == DATA_VECTOR)
         return *((btVectorXu*)it->value);
     else
@@ -59,14 +75,15 @@ btVectorXu ScientificData::getVector(std::string name)
 
 btMatrixXu ScientificData::getMatrix(std::string name)
 {
-    ScientificDataItem* it = getItem(name);
+    const ScientificDataItem* it = getItem(name);
     if(it != NULL && it->type == DATA_MATRIX)
         return *((btMatrixXu*)it->value);
     else
         return btMatrixXu();
 }
 
-#pragma mark - Octave
+#pragma mark - Octave functions
+#pragma mark -Loading
 ScientificData* LoadOctaveData(const char* path)
 {
     //Open file
@@ -364,4 +381,189 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
     }
     
     return true;
+}
+
+#pragma mark -Saving
+bool SaveOctaveData(const char* path, const ScientificData& data)
+{
+    //open file
+    cInfo("Saving scientific data to: %s", path);
+    
+    std::ofstream file;
+    file.open(path);
+    if(!file.is_open())
+    {
+        cError("File could not be opened!");
+        return false;
+    }
+    
+    //write file identifier [10 bytes]
+    file.write("Octave-1-L", 10);
+    
+    //write float format [1 byte]
+    char floatFormat = 0;
+    file.write(&floatFormat, 1);
+    
+    //write data items
+    for(unsigned int i = 0; i < data.getItemsCount(); ++i)
+    {
+        const ScientificDataItem* it = data.getItem(i);
+        
+        //write item name [4 bytes + nameLen]
+        int32_t nameLen = (int32_t)it->name.length();
+        file.write(reinterpret_cast<char*>(&nameLen), 4);
+        file.write(it->name.c_str(), nameLen);
+
+        //write empty doc [4 bytes]
+        int32_t docLen = 0;
+        file.write(reinterpret_cast<char*>(&docLen), 4);
+        
+        //write global flag [1 byte]
+        char global = 0;
+        file.write(&global, 1);
+        
+        //write data type [1 byte]
+        unsigned char dataType = 255; //new type definition
+        file.write(reinterpret_cast<char*>(&dataType), 1);
+
+        //write data
+        switch (it->type)
+        {
+            case DATA_SCALAR:
+            {
+                //write type name [4 bytes + typeLen]
+#ifdef BT_USE_DOUBLE_PRECISION
+                std::string typeName = "scalar";
+#else
+                std::string typeName = "float scalar";
+#endif
+                int32_t typeLen = (int32_t)typeName.length();
+                file.write(reinterpret_cast<char*>(&typeLen), 4);
+                file.write(typeName.c_str(), typeLen);
+                
+                //write data
+                SaveOctaveScalar(file, *it);
+            }
+                break;
+                
+            case DATA_VECTOR:
+            case DATA_MATRIX:
+            {
+                //write type name [4 bytes + typeLen]
+#ifdef BT_USE_DOUBLE_PRECISION
+                std::string typeName = "matrix";
+#else
+                std::string typeName = "float matrix";
+#endif
+                int32_t typeLen = (int32_t)typeName.length();
+                file.write(reinterpret_cast<char*>(&typeLen), 4);
+                file.write(typeName.c_str(), typeLen);
+                
+                //write data
+                SaveOctaveMatrix(file, *it);
+            }
+                break;
+        }
+    }
+    
+    return true;
+}
+
+void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it)
+{
+#ifdef BT_USE_DOUBLE_PRECISION
+    //write type identifier [1 byte]
+    char type = 7;
+    file.write(&type, 1);
+    
+    //write value
+    btScalar* scalar = (btScalar*)it.value;
+    file.write(reinterpret_cast<char*>(scalar), 8);
+#else
+    //write type identifier [1 byte]
+    char type = 6;
+    file.write(&type, 1);
+    
+    //write value
+    btScalar* scalar = (btScalar*)it.value;
+    file.write(reinterpret_cast<char*>(scalar), 4);
+#endif
+}
+
+void SaveOctaveMatrix(std::ofstream& file, const ScientificDataItem& it)
+{
+    //write number of dimensions (always 2)
+    int32_t dims = -2;
+    file.write(reinterpret_cast<char*>(&dims), 4);
+    
+    if(it.type == DATA_VECTOR) //column vector
+    {
+        btVectorXu* vector = (btVectorXu*)it.value;
+        
+        //write size [2 x 4 bytes]
+        uint32_t rows = vector->size();
+        uint32_t cols = 1;
+        file.write(reinterpret_cast<char*>(&rows), 4);
+        file.write(reinterpret_cast<char*>(&cols), 4);
+        
+#ifdef BT_USE_DOUBLE_PRECISION
+        //write type identifier [1 byte]
+        char type = 7;
+        file.write(&type, 1);
+        
+        //write value
+        for(unsigned int i = 0; i < rows; ++i)
+        {
+            double value = (*vector)[i];
+            file.write(reinterpret_cast<char*>(&value), 8);
+        }
+#else
+        //write type identifier [1 byte]
+        char type = 6;
+        file.write(&type, 1);
+        
+        //write value
+        for(unsigned int i = 0; i < rows; ++i)
+        {
+            float value = (*vector)[i];
+            file.write(reinterpret_cast<char*>(&value), 4);
+        }
+#endif
+    }
+    else //matrix
+    {
+        btMatrixXu* matrix = (btMatrixXu*)it.value;
+        
+        //write size [2 x 4 bytes]
+        uint32_t rows = matrix->rows();
+        uint32_t cols = matrix->cols();
+        file.write(reinterpret_cast<char*>(&rows), 4);
+        file.write(reinterpret_cast<char*>(&cols), 4);
+        
+#ifdef BT_USE_DOUBLE_PRECISION
+        //write type identifier [1 byte]
+        char type = 7;
+        file.write(&type, 1);
+        
+        //write value
+        for(unsigned int i = 0; i < cols; ++i)
+            for(unsigned int h = 0; h < rows; ++h)
+            {
+                double value = (*matrix)(h,i);
+                file.write(reinterpret_cast<char*>(&value), 8);
+            }
+#else
+        //write type identifier [1 byte]
+        char type = 6;
+        file.write(&type, 1);
+        
+        //write value
+        for(unsigned int i = 0; i < cols; ++i)
+            for(unsigned int h = 0; h < rows; ++h)
+            {
+                float value = (*matrix)(h, i);
+                file.write(reinterpret_cast<char*>(&value), 4);
+            }
+#endif
+    }
 }

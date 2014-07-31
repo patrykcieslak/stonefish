@@ -27,7 +27,6 @@
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
 #include "Console.h"
-#include "PathGenerator.h"
 
 typedef enum {DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
@@ -38,7 +37,10 @@ typedef struct
     btVector3 location;
 } Sticker;
 
-//abstract class
+/*! 
+    @class SimulationManager
+    An abstract class managing all of the simulated entities, solver settings and equipped with custom callbacks.
+ */
 class SimulationManager
 {
     friend class OpenGLPipeline;
@@ -63,7 +65,6 @@ public:
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
     void AddController(Controller* cntrl);
-    void AddPathGenerator(PathGenerator* pg);
     Contact* AddContact(Entity* entA, Entity* entB, size_type contactHistoryLength = 1);
     void SetFluidEntity(FluidEntity* flu);
     Entity* PickEntity(int x, int y);
@@ -77,16 +78,17 @@ public:
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
     
-    Entity* getEntity(int index);
+    Entity* getEntity(unsigned int index);
     Entity* getEntity(std::string name);
-    Joint* getJoint(int index);
+    Joint* getJoint(unsigned int index);
     Joint* getJoint(std::string name);
+    Contact* getContact(unsigned int index);
     Contact* getContact(Entity* entA, Entity* entB);
-    Actuator* getActuator(int index);
+    Actuator* getActuator(unsigned int index);
     Actuator* getActuator(std::string name);
-    Sensor* getSensor(int index);
+    Sensor* getSensor(unsigned int index);
     Sensor* getSensor(std::string name);
-    Controller* getController(int index);
+    Controller* getController(unsigned int index);
     Controller* getController(std::string name);
     
     void setGravity(btScalar gravityConstant);
@@ -143,7 +145,6 @@ private:
     std::vector<Sensor*> sensors;
     std::vector<Actuator*> actuators;
     std::vector<Controller*> controllers;
-    std::vector<PathGenerator*> pathGenerators;
     std::vector<Contact*> contacts;
     FluidEntity* fluid;
     btScalar g;

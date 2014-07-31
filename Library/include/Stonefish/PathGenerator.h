@@ -25,10 +25,11 @@ public:
     
     void MoveOnPath(btScalar distance, btVector3& point, btVector3& tangent);
     
+    void setRenderable(bool render);
     btScalar getLength();
     btScalar getTime();
     bool isRenderable();
-    void setRenderable(bool render);
+    virtual bool is3D() = 0;
     
 protected:
     btScalar time;

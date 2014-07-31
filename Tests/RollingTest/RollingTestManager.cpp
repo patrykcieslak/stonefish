@@ -29,6 +29,7 @@
 #include "MISOStateSpaceController.h"
 #include "MonoWheelLateral.h"
 #include "SignalGenerator.h"
+#include "MonoWheelPathFollowing.h"
 
 RollingTestManager::RollingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, INCLUSIVE)
 {
@@ -65,7 +66,7 @@ void RollingTestManager::BuildScenario()
     Look orange = CreateOpaqueLook(glm::vec3(0.8f, 0.5f, 0.1f), 0.5f, 0.4f, 1.5f);
     
     /////////////OBJECTS//////////////
-    PlaneEntity* floor = new PlaneEntity("Floor", 200.f, getMaterialManager()->getMaterial("Concrete"), grid, btTransform(btQuaternion(0,0,0), btVector3(0,0,-0.2)));
+    PlaneEntity* floor = new PlaneEntity("Floor", 200.f, getMaterialManager()->getMaterial("Concrete"), grid, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)));
     floor->setRenderable(true);
     AddEntity(floor);
     
@@ -116,7 +117,9 @@ void RollingTestManager::BuildScenario()
     
     //Wheel
     //SphereEntity* torus = new SphereEntity("Wheel", 0.02, getMaterialManager()->getMaterial("Rubber"), shiny);
-    TorusEntity* torus = new TorusEntity("Wheel", 0.205 - 0.015875, 0.015875, getMaterialManager()->getMaterial("Rubber"), shiny);
+    btScalar Rt = 0.205;
+    btScalar rt = 0.015875;
+    TorusEntity* torus = new TorusEntity("Wheel", Rt - rt, rt, getMaterialManager()->getMaterial("Rubber"), shiny);
     torus->SetArbitraryPhysicalProperties(0.5, btVector3(0.05, 0.05, 0.05), btTransform::getIdentity());
     
     //Cart
@@ -134,10 +137,13 @@ void RollingTestManager::BuildScenario()
     mwr->AddRevoluteJoint(0, 1, btVector3(0, 0, 0.3), btVector3(0,1,0));
     mwr->AddLink(box, btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 0.245 - 0.06)), getDynamicsWorld());
     mwr->AddRevoluteJoint(1, 2, btVector3(0, 0, 0.245), btVector3(1,0,0));
+    mwr->setJointIC(1, 0.0, 0.0);
     AddEntity(mwr);
     
     Contact* c = AddContact(torus, floor, 100000);
     c->setDisplayMask(CONTACT_DISPLAY_PATH_A);
+    
+    unsigned int sensorHistory = 5000;
     
     DCMotor* motorCW = new DCMotor("DCXWheel", mwr, 0, 0.212, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0000055);
     motorCW->SetupGearbox(true, 10.0, 1.0);
@@ -147,25 +153,25 @@ void RollingTestManager::BuildScenario()
     motorCL->SetupGearbox(true, 2.0, 1.0);
     AddActuator(motorCL);
 
-    FakeIMU* imu = new FakeIMU("IMU", cyl, btTransform::getIdentity(), -1, 5000);
+    FakeIMU* imu = new FakeIMU("IMU", cyl, btTransform::getIdentity(), -1, sensorHistory);
     AddSensor(imu);
     //0 -> Theta (Roll)
     //1 -> Psi (Pitch)
     //2 -> Phi (Yaw)
     
-    FakeRotaryEncoder* encCW = new FakeRotaryEncoder("EncoderWheel", mwr, 0, -1, 5000);
+    FakeRotaryEncoder* encCW = new FakeRotaryEncoder("EncoderWheel", mwr, 0, -1, sensorHistory);
     AddSensor(encCW);
     
-    FakeRotaryEncoder* encCL = new FakeRotaryEncoder("EncoderLever", mwr, 1, -1, 5000);
+    FakeRotaryEncoder* encCL = new FakeRotaryEncoder("EncoderLever", mwr, 1, -1, sensorHistory);
     AddSensor(encCL);
     
-    Current* curCW = new Current("CurrentWheel", motorCW, -1, 5000);
+    Current* curCW = new Current("CurrentWheel", motorCW, -1, sensorHistory);
     AddSensor(curCW);
 
-    Current* curCL = new Current("CurrentWheel", motorCL, -1, 5000);
+    Current* curCL = new Current("CurrentWheel", motorCL, -1, sensorHistory);
     AddSensor(curCL);
 
-    Trajectory* traj = new Trajectory("Trajectory", torus, btVector3(0, 0, 0.1), -1, 10000);
+    Trajectory* traj = new Trajectory("Trajectory", cyl, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), -1, sensorHistory);
     traj->setRenderable(true);
     AddSensor(traj);
     
@@ -185,15 +191,27 @@ void RollingTestManager::BuildScenario()
     gains.push_back(20.0);
     gains.push_back(-0.01);
     
-    /*std::vector<btScalar> desired;
-    desired.push_back(0.0);
-    desired.push_back(0.0);
-    desired.push_back(0.0);
-    desired.push_back(0.0);
-    desired.push_back(0.0);*/
+    //0.0  2.6337e+03   3.3972e+00   1.8717e+02  -1.1620e-01
+    //0.0  4.4261e+03   3.3675e+01   1.2448e+01  -1.1244e-01
+    /*gains.push_back(0.0);
+    gains.push_back(4.4261e+03);
+    gains.push_back(3.3675e+01);
+    gains.push_back(1.2448e+01);
+    gains.push_back(-1.1244e-01);*/
     
+    MISOStateSpaceController* longitudinal = new MISOStateSpaceController("Longitudinal", longSensors, motorCW, 12.0, 300.0);
+    longitudinal->SetGains(gains);
+    
+    MonoWheelLateral* lateral = new MonoWheelLateral("Lateral", imu, encCL, encCW, curCL, motorCL, 12.0, 300.0);
+    
+    ////////////PRESCRIBED MOTION
+    //Longitudinal
     SignalGenerator* forwardSg = new SignalGenerator();
     PwlSignal* forwardPwlSig = new PwlSignal(0.);
+    
+    //forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -180.0), 1.0);
+    //forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -180.0), 50.0);
+    
     /*forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -360.0), 3.0);
     forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -360.0), 12.0);
     forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -180.0), 14.0);
@@ -202,24 +220,21 @@ void RollingTestManager::BuildScenario()
     forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -170.0), 65.0);
     forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -180.0), 14.0);
     forwardPwlSig->AddValueAtTime(0., 72.0);*/
-    
-    forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -180.0), 1.0);
-    forwardPwlSig->AddValueAtTime(UnitSystem::AngularVelocity(true, -180.0), 50.0);
-    
     forwardSg->AddComponent(forwardPwlSig);
     
-    MISOStateSpaceController* longitudinal = new MISOStateSpaceController("Longitudinal", longSensors, motorCW, 12.0, 300.0);
-    longitudinal->SetGains(gains);
     longitudinal->setReferenceSignalGenerator(2, forwardSg);
-    //longitudinal->SetDesiredValues(desired);
     AddController(longitudinal);
     
-    //Lateral stabilization
+    //Lateral
     SignalGenerator* lateralSg = new SignalGenerator();
     PwlSignal* lateralPwlSig = new PwlSignal(0.);
+    
     lateralPwlSig->AddValueAtTime(0., 2.0);
-    lateralPwlSig->AddValueAtTime(UnitSystem::Angle(true, 8.0), 10.0);
-    lateralPwlSig->AddValueAtTime(UnitSystem::Angle(true, 8.0), 50.0);
+    lateralPwlSig->AddValueAtTime(UnitSystem::Angle(true, 2.0), 2.0);
+    
+    //lateralPwlSig->AddValueAtTime(0., 2.0);
+    //lateralPwlSig->AddValueAtTime(UnitSystem::Angle(true, 8.0), 10.0);
+    //lateralPwlSig->AddValueAtTime(UnitSystem::Angle(true, 8.0), 50.0);
     
     /*lateralPwlSig->AddValueAtTime(0., 4.0);
     lateralPwlSig->AddValueAtTime(UnitSystem::Angle(true, 2.0), 4.0);
@@ -231,51 +246,31 @@ void RollingTestManager::BuildScenario()
     lateralPwlSig->AddValueAtTime(0., 70.0);*/
     lateralSg->AddComponent(lateralPwlSig);
     
-    MonoWheelLateral* lateral = new MonoWheelLateral("Lateral", imu, encCL, encCW, curCL, motorCL, 12.0, 300.0);
     lateral->setReferenceSignalGenerator(0, lateralSg);
     AddController(lateral);
     
-    //Lateral stabilization without gain scheduling
-    /*Mux* latSensors = new Mux();
-    latSensors->AddComponent(imu, 0);
-    latSensors->AddComponent(encCL, 0);
-    latSensors->AddComponent(imu, 3);
-    latSensors->AddComponent(encCL, 1);
-    latSensors->AddComponent(curCL, 0);
-    
-    std::vector<btScalar> gains2;
-    gains2.push_back(-42.37441);
-    gains2.push_back(4.78974);
-    gains2.push_back(-5.50932);
-    gains2.push_back(0.35351);
-    gains2.push_back(-0.18878);
-    
-    MISOStateSpaceController* lateral2 = new MISOStateSpaceController("Lateral2", latSensors, motorCL, 12.0, 1000.0);
-    lateral2->SetGains(gains2);
-    lateral2->setReferenceSignalGenerator(0, lateralSg);
-    AddController(lateral2);*/
-    
-    //Path generation
+    ////////////PRESCRIBED PATH
     /*PathGenerator2D* pg2d = new PathGenerator2D(PLANE_XY);
     pg2d->setRenderable(true);
-    AddPathGenerator(pg2d);
     
-    Pwl2D* pwl1 = new Pwl2D(Point2D(1000.0, 1000.0));
-    pwl1->AddLineToPoint(Point2D(2000.0, 1000.0));
-    pwl1->AddLineToPoint(Point2D(3000.0, 2000.0));
+    Pwl2D* pwl1 = new Pwl2D(Point2D(0.0, 0.0));
+    pwl1->AddLineToPoint(Point2D(2.0, 0.0));
+    pwl1->AddLineToPoint(Point2D(10.0, 1.0));
     pg2d->AddSubPath(pwl1);
     
-    Arc2D* arc1 = new Arc2D(Point2D(4000.0, 2500.0), 1000.0, 0, M_PI * 0.8);
-    pg2d->AddSubPath(arc1);
+    //Arc2D* arc1 = new Arc2D(Point2D(0.0, -8.0), 8.0, SIMD_HALF_PI, -SIMD_HALF_PI);
+    //pg2d->AddSubPath(arc1);
     
-    Bezier2D* bez1 = new Bezier2D(Point2D(4000.0, 1000.0), Point2D(2000.0, -4000.0), Point2D(5000.0, 0.0), Point2D(1000.0, - 500.0), false);
-    pg2d->AddSubPath(bez1, false);
-    */
-    //Path following
+    //Bezier2D* bez1 = new Bezier2D(Point2D(4.0, 1.0), Point2D(2.0, -4.0), Point2D(5.0, 0.0), Point2D(1.0, -0.5), false);
+    //pg2d->AddSubPath(bez1, false);
     
+    MonoWheelPathFollowing* pathFollowing = new MonoWheelPathFollowing("PathFollowing", pg2d, traj, encCW, lateral, longitudinal, 100.0);
     
-    
-    
+    //Order is important!!!
+    AddController(pathFollowing);
+    AddController(lateral);
+    AddController(longitudinal);
+   */
     //////CAMERA & LIGHT//////
     OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5), 2.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 100.f, false);
     trackb->Activate();

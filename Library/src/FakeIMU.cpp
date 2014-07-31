@@ -50,11 +50,8 @@ void FakeIMU::InternalUpdate(btScalar dt)
     
     //get angles
     btScalar yaw, pitch, roll;
-    solid->getTransform().getBasis().getEulerYPR(yaw, pitch, roll);
-    //toImuFrame.getEulerYPR(yaw, pitch, roll);
-    /*roll = -roll;
-    pitch = -pitch;
-    yaw = - yaw;*/
+    btMatrix3x3 globalFrame = solid->getTransform().getBasis() * relToSolid.getBasis();
+    globalFrame.getEulerYPR(yaw, pitch, roll);
     
     //save sample
     btScalar values[9] = {roll, pitch, yaw, av.x(), av.y(), av.z(), acc.x(), acc.y(), acc.z()};

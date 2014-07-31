@@ -17,6 +17,8 @@
 #include "OpenGLSun.h"
 #include "OpenGLLight.h"
 #include "Console.h"
+#include "PathGenerator.h"
+#include "PathFollowingController.h"
 
 #pragma mark Static
 OpenGLPipeline* OpenGLPipeline::instance = NULL;
@@ -1033,10 +1035,10 @@ void OpenGLPipeline::Render()
                     simulation->sensors[h]->Render();
             
             //Paths
-            for(int h = 0; h < simulation->pathGenerators.size(); h++)
-                if(simulation->pathGenerators[h]->isRenderable())
-                    simulation->pathGenerators[h]->Render();
-            
+            for(int h = 0; h < simulation->controllers.size(); h++)
+                if(simulation->controllers[h]->getType() == CONTROLLER_PATHFOLLOWING)
+                    ((PathFollowingController*)simulation->controllers[h])->RenderPath();
+
             //Lights
             if(showLightMeshes)
                 for(int h = 0; h < simulation->lights.size(); h++)

@@ -9,7 +9,7 @@
 #include "ServoController.h"
 
 #pragma mark Constructors
-ServoController::ServoController(std::string uniqueName, DCMotor* m, RotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
+ServoController::ServoController(std::string uniqueName, DCMotor* m, RotaryEncoder* e, btScalar maxVoltage, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
     motor = m;
     encoder = e;
@@ -26,35 +26,37 @@ ServoController::~ServoController()
 {
 }
 
-#pragma mark - Controller
+#pragma mark - Accessors
+void ServoController::SetPosition(btScalar pos)
+{
+    setReferenceValue(0, UnitSystem::SetAngle(pos));
+}
+
+void ServoController::SetGains(btScalar P, btScalar I, btScalar D)
+{
+    gainP = P;
+    gainI = I;
+    gainD = D;
+}
+
+#pragma mark - Methods
 void ServoController::Reset()
 {
-    targetPos = 0.0;
-    lastError = 0.0;
-    integratedError = 0.0;
-}
-
-unsigned int ServoController::getNumOfInputs()
-{
-    return 1;
-}
-
-ControllerType ServoController::getType()
-{
-    return CONTROLLER_DCSERVO;
+    setReferenceValue(0, btScalar(0.));
+    lastError = btScalar(0.);
+    integratedError = btScalar(0.);
 }
 
 void ServoController::Tick(btScalar dt)
 {
     //get desired servo position
-    btScalar desiredPos = targetPos;
-    if(referenceGen != NULL) desiredPos = referenceGen->ValueAtTime(runningTime);
+    std::vector<btScalar> ref = getReferenceValues();
     
     //get measurements
     Sample encSample = encoder->getLastSample();
     
     //calculate error
-    btScalar error = desiredPos - encSample.getValue(0);
+    btScalar error = ref[0] - encSample.getValue(0);
     integratedError += error * dt;
     btScalar derivativeError = (error - lastError)/dt;
     lastError = error;
@@ -63,17 +65,4 @@ void ServoController::Tick(btScalar dt)
     btScalar control = gainP * error + gainI * integratedError + gainD * derivativeError;
     control = control > maxV ? maxV : (control < -maxV ? -maxV : control);
     motor->setVoltage(control);
-}
-
-#pragma mark - Servo
-void ServoController::SetPosition(btScalar pos)
-{
-    targetPos = UnitSystem::SetAngle(pos);
-}
-
-void ServoController::SetGains(btScalar P, btScalar I, btScalar D)
-{
-    gainP = P;
-    gainI = I;
-    gainD = D;
 }

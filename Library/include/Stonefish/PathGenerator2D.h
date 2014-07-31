@@ -158,6 +158,9 @@ public:
     void PointAtTime(btScalar t, btVector3& point, btVector3& tangent);
     void Render();
     
+    PlaneType getPlane();
+    bool is3D();
+    
 private:
     PlaneType plane;
     std::vector<Path2D*> subPaths;

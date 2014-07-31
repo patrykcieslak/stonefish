@@ -533,6 +533,9 @@
 		F75D00691928B54D00AF3DFE /* GLSLShader.h in Headers */ = {isa = PBXBuildFile; fileRef = F75D00681928B54D00AF3DFE /* GLSLShader.h */; };
 		F75D006B1928B64700AF3DFE /* GLSLShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F75D006A1928B64700AF3DFE /* GLSLShader.cpp */; };
 		F76A068F196B42CD008299CD /* SignalGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = F76A068E196B42CD008299CD /* SignalGenerator.h */; };
+		F76F2B381979C283002B2C50 /* FeedbackController.h in Headers */ = {isa = PBXBuildFile; fileRef = F76F2B371979C283002B2C50 /* FeedbackController.h */; };
+		F76F2B3A1979C2A7002B2C50 /* FeedbackController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F76F2B391979C2A7002B2C50 /* FeedbackController.cpp */; };
+		F76F2B3D1979D5D7002B2C50 /* MonoWheelPathFollowing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F76F2B3B1979D5D7002B2C50 /* MonoWheelPathFollowing.cpp */; };
 		F7732E1C1930A8320068D5A5 /* terrain.obj in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7732E1B1930A81D0068D5A5 /* terrain.obj */; };
 		F7732E1E1930A9F80068D5A5 /* StaticEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7732E1D1930A9F80068D5A5 /* StaticEntity.cpp */; };
 		F7732E201930AAD30068D5A5 /* StaticEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = F7732E1F1930AACA0068D5A5 /* StaticEntity.h */; };
@@ -606,9 +609,9 @@
 		F7AE7ACE1957824800CE960B /* PathGenerator2D.h in Headers */ = {isa = PBXBuildFile; fileRef = F7AE7ACA19575B9100CE960B /* PathGenerator2D.h */; };
 		F7AE7AD0195888ED00CE960B /* Polynomials.h in Headers */ = {isa = PBXBuildFile; fileRef = F7AE7ACF195888ED00CE960B /* Polynomials.h */; };
 		F7AE97D11956C2A500256BC9 /* PathGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = F7AE97D01956C2A500256BC9 /* PathGenerator.h */; };
-		F7AE97D31956C2BF00256BC9 /* PathFollowing.h in Headers */ = {isa = PBXBuildFile; fileRef = F7AE97D21956C2BF00256BC9 /* PathFollowing.h */; };
+		F7AE97D31956C2BF00256BC9 /* PathFollowingController.h in Headers */ = {isa = PBXBuildFile; fileRef = F7AE97D21956C2BF00256BC9 /* PathFollowingController.h */; };
 		F7AE97D51956C2F500256BC9 /* PathGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AE97D41956C2F500256BC9 /* PathGenerator.cpp */; };
-		F7AE97D71956C33600256BC9 /* PathFollowing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AE97D61956C33600256BC9 /* PathFollowing.cpp */; };
+		F7AE97D71956C33600256BC9 /* PathFollowingController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AE97D61956C33600256BC9 /* PathFollowingController.cpp */; };
 		F7B9AA17195F5CC300BC793B /* OpenGLDebugDrawer.h in Headers */ = {isa = PBXBuildFile; fileRef = F7B9AA16195F5CC300BC793B /* OpenGLDebugDrawer.h */; };
 		F7B9AA19195F5D3000BC793B /* OpenGLDebugDrawer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7B9AA18195F5D3000BC793B /* OpenGLDebugDrawer.cpp */; };
 		F7C2313718CA0D3F00817B69 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
@@ -1539,6 +1542,10 @@
 		F75D00681928B54D00AF3DFE /* GLSLShader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLSLShader.h; sourceTree = "<group>"; };
 		F75D006A1928B64700AF3DFE /* GLSLShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GLSLShader.cpp; sourceTree = "<group>"; };
 		F76A068E196B42CD008299CD /* SignalGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalGenerator.h; sourceTree = "<group>"; };
+		F76F2B371979C283002B2C50 /* FeedbackController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeedbackController.h; sourceTree = "<group>"; };
+		F76F2B391979C2A7002B2C50 /* FeedbackController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FeedbackController.cpp; sourceTree = "<group>"; };
+		F76F2B3B1979D5D7002B2C50 /* MonoWheelPathFollowing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonoWheelPathFollowing.cpp; sourceTree = "<group>"; };
+		F76F2B3C1979D5D7002B2C50 /* MonoWheelPathFollowing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonoWheelPathFollowing.h; sourceTree = "<group>"; };
 		F770ACDE194CA2DB00664AD2 /* HowBulletWorks.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = HowBulletWorks.txt; sourceTree = "<group>"; };
 		F7732E1B1930A81D0068D5A5 /* terrain.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = terrain.obj; sourceTree = "<group>"; };
 		F7732E1D1930A9F80068D5A5 /* StaticEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StaticEntity.cpp; sourceTree = "<group>"; };
@@ -1587,9 +1594,9 @@
 		F7AE7ACC19575BCD00CE960B /* PathGenerator2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PathGenerator2D.cpp; sourceTree = "<group>"; };
 		F7AE7ACF195888ED00CE960B /* Polynomials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Polynomials.h; sourceTree = "<group>"; };
 		F7AE97D01956C2A500256BC9 /* PathGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathGenerator.h; sourceTree = "<group>"; };
-		F7AE97D21956C2BF00256BC9 /* PathFollowing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathFollowing.h; sourceTree = "<group>"; };
+		F7AE97D21956C2BF00256BC9 /* PathFollowingController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathFollowingController.h; sourceTree = "<group>"; };
 		F7AE97D41956C2F500256BC9 /* PathGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PathGenerator.cpp; sourceTree = "<group>"; };
-		F7AE97D61956C33600256BC9 /* PathFollowing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PathFollowing.cpp; sourceTree = "<group>"; };
+		F7AE97D61956C33600256BC9 /* PathFollowingController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PathFollowingController.cpp; sourceTree = "<group>"; };
 		F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = fluidBorder.frag; sourceTree = "<group>"; };
 		F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = fluidVolume.frag; sourceTree = "<group>"; };
 		F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = belowFluidSurface.frag; sourceTree = "<group>"; };
@@ -2659,6 +2666,8 @@
 				F7C2315418CA0E1700817B69 /* RollingTestManager.h */,
 				F7EAEB4819561430006613AE /* MonoWheelLateral.cpp */,
 				F7EAEB4919561430006613AE /* MonoWheelLateral.h */,
+				F76F2B3B1979D5D7002B2C50 /* MonoWheelPathFollowing.cpp */,
+				F76F2B3C1979D5D7002B2C50 /* MonoWheelPathFollowing.h */,
 			);
 			path = RollingTest;
 			sourceTree = "<group>";
@@ -2705,9 +2714,10 @@
 				F76A068E196B42CD008299CD /* SignalGenerator.h */,
 				F700ACFC1971CCBF00A95AB7 /* SignalMux.h */,
 				F75B6E2918C3E74B0092C1A2 /* Controller.h */,
+				F76F2B371979C283002B2C50 /* FeedbackController.h */,
+				F7AE97D21956C2BF00256BC9 /* PathFollowingController.h */,
 				F7FDACAC191FB28A00471370 /* ServoController.h */,
 				F7732E251930C0F20068D5A5 /* MISOStateSpaceController.h */,
-				F7AE97D21956C2BF00256BC9 /* PathFollowing.h */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -2720,9 +2730,10 @@
 				F700ACFA19715A1200A95AB7 /* SignalGenerator.cpp */,
 				F700ACFE1971CCDE00A95AB7 /* SignalMux.cpp */,
 				F75B6E9918C3EA6A0092C1A2 /* Controller.cpp */,
+				F76F2B391979C2A7002B2C50 /* FeedbackController.cpp */,
+				F7AE97D61956C33600256BC9 /* PathFollowingController.cpp */,
 				F7FDACAE191FB2AF00471370 /* ServoController.cpp */,
 				F7732E291930C13E0068D5A5 /* MISOStateSpaceController.cpp */,
-				F7AE97D61956C33600256BC9 /* PathFollowing.cpp */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -2783,7 +2794,7 @@
 				F7018AC1193CA74B00ADA419 /* btBulletDynamicsCommon.h in Headers */,
 				F7018C74193CA74B00ADA419 /* btRaycastCallback.h in Headers */,
 				F7018C02193CA74B00ADA419 /* btConvexPointCloudShape.h in Headers */,
-				F7AE97D31956C2BF00256BC9 /* PathFollowing.h in Headers */,
+				F7AE97D31956C2BF00256BC9 /* PathFollowingController.h in Headers */,
 				F7018C95193CA74B00ADA419 /* btSequentialImpulseConstraintSolver.h in Headers */,
 				F7018C42193CA74B00ADA419 /* btGImpactMassUtil.h in Headers */,
 				F7018C97193CA74B00ADA419 /* btSliderConstraint.h in Headers */,
@@ -2933,6 +2944,7 @@
 				F7018BF4193CA74B00ADA419 /* btCollisionShape.h in Headers */,
 				F7AE97D11956C2A500256BC9 /* PathGenerator.h in Headers */,
 				F7018C25193CA74B00ADA419 /* btTetrahedronShape.h in Headers */,
+				F76F2B381979C283002B2C50 /* FeedbackController.h in Headers */,
 				F7732E201930AAD30068D5A5 /* StaticEntity.h in Headers */,
 				F7018CB5193CA74B00ADA419 /* btMultiBodyLinkCollider.h in Headers */,
 				F7018D03193CA74B00ADA419 /* btVector3.h in Headers */,
@@ -3341,6 +3353,7 @@
 				F7A503DE18E836FA00913252 /* OpenGLPipeline.cpp in Sources */,
 				F75B6EEC18C3EA6A0092C1A2 /* PoolEntity.cpp in Sources */,
 				F75B6EE918C3EA6A0092C1A2 /* SystemUtil.cpp in Sources */,
+				F76F2B3A1979C2A7002B2C50 /* FeedbackController.cpp in Sources */,
 				F7018BE4193CA74B00ADA419 /* btSphereTriangleCollisionAlgorithm.cpp in Sources */,
 				F7018C16193CA74B00ADA419 /* btOptimizedBvh.cpp in Sources */,
 				F75B6EE118C3EA6A0092C1A2 /* OpenGLLight.cpp in Sources */,
@@ -3371,7 +3384,7 @@
 				F7018C6C193CA74B00ADA419 /* btMinkowskiPenetrationDepthSolver.cpp in Sources */,
 				F7018C1E193CA74B00ADA419 /* btSphereShape.cpp in Sources */,
 				F75B6ECF18C3EA6A0092C1A2 /* CylinderEntity.cpp in Sources */,
-				F7AE97D71956C33600256BC9 /* PathFollowing.cpp in Sources */,
+				F7AE97D71956C33600256BC9 /* PathFollowingController.cpp in Sources */,
 				F7018C0D193CA74B00ADA419 /* btHeightfieldTerrainShape.cpp in Sources */,
 				F7018C8B193CA74B00ADA419 /* btHinge2Constraint.cpp in Sources */,
 				F7018C31193CA74B00ADA419 /* btTriangleMeshShape.cpp in Sources */,
@@ -3482,6 +3495,7 @@
 				F7C2315A18CA0E3900817B69 /* main.cpp in Sources */,
 				F7C2315B18CA0E3900817B69 /* RollingTestApp.cpp in Sources */,
 				F7EAEB4A19561430006613AE /* MonoWheelLateral.cpp in Sources */,
+				F76F2B3D1979D5D7002B2C50 /* MonoWheelPathFollowing.cpp in Sources */,
 				F7C2315C18CA0E3900817B69 /* RollingTestManager.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

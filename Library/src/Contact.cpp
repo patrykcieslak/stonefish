@@ -9,9 +9,11 @@
 #include "Contact.h"
 #include "OpenGLPipeline.h"
 #include "SolidEntity.h"
+#include "ScientificFileUtil.h"
+#include "SimulationApp.h"
 
 #pragma mark Constructors
-Contact::Contact(Entity* entityA, Entity* entityB, size_type inclusiveHistoryLength)
+Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
     A = entityA;
     B = entityB;
@@ -76,7 +78,7 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
         p.locationA = swapped ? mp->getPositionWorldOnB() : mp->getPositionWorldOnA();
         p.locationB = swapped ? mp->getPositionWorldOnA() : mp->getPositionWorldOnB();
         p.slippingVelocityA = (swapped ? btScalar(-1.) : btScalar(1.)) * btVector3(*((btVector3*)mp->m_userPersistentData));
-        p.impulseA = (swapped ? btScalar(1.) : btScalar(-1.)) * mp->m_normalWorldOnB * mp->m_appliedImpulse;
+        p.normalForceA = (swapped ? btScalar(1.) : btScalar(-1.)) * mp->m_normalWorldOnB * mp->m_appliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
         AddContactPoint(p);
     }
 }
@@ -87,12 +89,52 @@ void Contact::AddContactPoint(ContactPoint p)
     if(historyLen > 0 && points.size() == historyLen)
         points.pop_front();
     
+    p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
     points.push_back(p);
 }
 
 void Contact::ClearHistory()
 {
     points.clear();
+}
+
+void Contact::SaveContactDataToOctaveFile(const char* path, bool includeTime)
+{
+    if(points.size() == 0)
+        return;
+    
+    //build data structure
+    ScientificData data("");
+    
+    ScientificDataItem* it = new ScientificDataItem();
+    it->name = A->getName() + "_" + B->getName();
+    it->type = DATA_MATRIX;
+    
+    btMatrixXu* matrix = new btMatrixXu((unsigned int)points.size(), includeTime ? 10 : 9);
+    it->value = matrix;
+    
+    int offset = includeTime ? 1 : 0;
+    
+    for(unsigned int i = 0; i < points.size(); ++i)
+    {
+        if(includeTime)
+            matrix->setElem(i, 0, points[i].timeStamp);
+        
+        matrix->setElem(i, offset, UnitSystem::GetLength(points[i].locationA.x()));
+        matrix->setElem(i, offset + 1, UnitSystem::GetLength(points[i].locationA.y()));
+        matrix->setElem(i, offset + 2, UnitSystem::GetLength(points[i].locationA.z()));
+        matrix->setElem(i, offset + 3, UnitSystem::GetVelocity(points[i].slippingVelocityA.x()));
+        matrix->setElem(i, offset + 4, UnitSystem::GetVelocity(points[i].slippingVelocityA.y()));
+        matrix->setElem(i, offset + 5, UnitSystem::GetVelocity(points[i].slippingVelocityA.z()));
+        matrix->setElem(i, offset + 6, UnitSystem::GetForce(points[i].normalForceA.x()));
+        matrix->setElem(i, offset + 7, UnitSystem::GetForce(points[i].normalForceA.y()));
+        matrix->setElem(i, offset + 8, UnitSystem::GetForce(points[i].normalForceA.z()));
+    }
+    
+    data.addItem(it);
+    
+    //save data structure to file
+    SaveOctaveData(path, data);
 }
 
 #pragma mark - Graphics
@@ -153,21 +195,21 @@ void Contact::Render()
         glEnd();
     }
     
-    if(displayMask & CONTACT_DISPLAY_IMPULSE_A)
+    if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_A)
     {
         glContactColor();
         glBegin(GL_LINES);
         glBulletVertex(points.back().locationA);
-        glBulletVertex(points.back().locationA + points.back().impulseA);
+        glBulletVertex(points.back().locationA + points.back().normalForceA);
         glEnd();
     }
     
-    if(displayMask & CONTACT_DISPLAY_IMPULSE_B)
+    if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_B)
     {
         glContactColor();
         glBegin(GL_LINES);
         glBulletVertex(points.back().locationB);
-        glBulletVertex(points.back().locationB - points.back().impulseA);
+        glBulletVertex(points.back().locationB - points.back().normalForceA);
         glEnd();
     }
 }

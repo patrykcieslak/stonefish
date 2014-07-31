@@ -9,14 +9,14 @@
 #ifndef __Stonefish__MonoWheelLateral__
 #define __Stonefish__MonoWheelLateral__
 
-#include "Controller.h"
+#include "FeedbackController.h"
 #include "FakeIMU.h"
 #include "FakeRotaryEncoder.h"
 #include "Current.h"
 #include "DCMotor.h"
 #include "Polynomials.h"
 
-class MonoWheelLateral : public Controller
+class MonoWheelLateral : public FeedbackController
 {
 public:
     MonoWheelLateral(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* leverEnc, FakeRotaryEncoder* wheelEnc, Current* leverCurrent, DCMotor* leverMotor, btScalar maxVoltage, btScalar frequency = btScalar(-1.));
@@ -24,8 +24,6 @@ public:
     
     void Reset();
     
-    unsigned int getNumOfInputs();
-    ControllerType getType();
     void setDesiredTilt(btScalar tilt);
     
 private:
@@ -41,7 +39,6 @@ private:
     
     PolySurface* LF[5];
     std::vector<btScalar> gains;
-    std::vector<btScalar> desiredValues;
 };
 
 #endif

@@ -9,13 +9,16 @@
 #include "Trajectory.h"
 
 #pragma mark Constructors
-Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btVector3 offset, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
+Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransform relativeFrame, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
-    relToCOG = solid->getTransform().getBasis().inverse() * UnitSystem::SetPosition(offset);
+    relToSolid = UnitSystem::SetTransform(relativeFrame);
     channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Coordinate Y", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Coordinate Z", QUANTITY_LENGTH));
+    channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Pitch", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
 }
 
 #pragma mark - Methods
@@ -27,15 +30,15 @@ void Trajectory::Reset()
 void Trajectory::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to imu frame
-    btVector3 cog = solid->getTransform().getOrigin();
+    btTransform globalFrame = solid->getTransform() * relToSolid;
     
-    //add offset
-    if(relToCOG.length2() > 0)
-        cog +=  solid->getTransform().getBasis() * relToCOG;
+    //angles
+    btScalar yaw, pitch, roll;
+    globalFrame.getBasis().getEulerYPR(yaw, pitch, roll);
     
     //save sample
-    btScalar values[3] = {cog.x(), cog.y(), cog.z()};
-    Sample s(3, values);
+    btScalar values[6] = {globalFrame.getOrigin().x(), globalFrame.getOrigin().y(), globalFrame.getOrigin().z(), roll, pitch, yaw};
+    Sample s(6, values);
     AddSampleToHistory(s);
 }
 

@@ -112,12 +112,6 @@ void SimulationManager::AddController(Controller *cntrl)
         controllers.push_back(cntrl);
 }
 
-void SimulationManager::AddPathGenerator(PathGenerator *pg)
-{
-    if(pg != NULL)
-        pathGenerators.push_back(pg);
-}
-
 void SimulationManager::AddJoint(Joint *jnt)
 {
     if(jnt != NULL)
@@ -183,6 +177,14 @@ Contact* SimulationManager::getContact(Entity* entA, Entity* entB)
     return NULL;
 }
 
+Contact* SimulationManager::getContact(unsigned int index)
+{
+    if(index < contacts.size())
+        return contacts[index];
+    else
+        return NULL;
+}
+
 CollisionFilteringType SimulationManager::getCollisionFilter()
 {
     return collisionFilter;
@@ -193,7 +195,7 @@ SolverType SimulationManager::getSolverType()
     return solver;
 }
 
-Entity* SimulationManager::getEntity(int index)
+Entity* SimulationManager::getEntity(unsigned int index)
 {
     if(index < entities.size())
         return entities[index];
@@ -210,7 +212,7 @@ Entity* SimulationManager::getEntity(std::string name)
     return NULL;
 }
 
-Joint* SimulationManager::getJoint(int index)
+Joint* SimulationManager::getJoint(unsigned int index)
 {
     if(index < joints.size())
         return joints[index];
@@ -227,7 +229,7 @@ Joint* SimulationManager::getJoint(std::string name)
     return NULL;
 }
 
-Actuator* SimulationManager::getActuator(int index)
+Actuator* SimulationManager::getActuator(unsigned int index)
 {
     if(index < actuators.size())
         return actuators[index];
@@ -244,7 +246,7 @@ Actuator* SimulationManager::getActuator(std::string name)
     return NULL;
 }
 
-Sensor* SimulationManager::getSensor(int index)
+Sensor* SimulationManager::getSensor(unsigned int index)
 {
     if(index < sensors.size())
         return sensors[index];
@@ -261,7 +263,7 @@ Sensor* SimulationManager::getSensor(std::string name)
     return NULL;
 }
 
-Controller* SimulationManager::getController(int index)
+Controller* SimulationManager::getController(unsigned int index)
 {
     if(index < controllers.size())
         return controllers[index];
@@ -536,10 +538,6 @@ void SimulationManager::DestroyScenario()
         delete controllers[i];
     controllers.clear();
     
-    for(int i=0; i<pathGenerators.size(); i++)
-        delete pathGenerators[i];
-    pathGenerators.clear();
-    
     for(int i=0; i<views.size(); i++)
         delete views[i];
     views.clear();
@@ -562,6 +560,10 @@ bool SimulationManager::StartSimulation()
     //Solve initial conditions problem
     if(!SolveICProblem())
         return false;
+    
+    //Reset contacts
+    for(int i = 0; i < contacts.size(); i++)
+        contacts[i]->ClearHistory();
     
     //Reset sensors
     for(int i = 0; i < sensors.size(); i++)
@@ -791,19 +793,20 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         cp.m_userPersistentData = (void *)(new btVector3(slipVel));
     
     //Damping angular velocity around contact normal (reduce spinning)
-    if(!btFuzzyZero(contactAngularVelocity0))
-    {
-        SolidEntity* sent0 = (SolidEntity*)ent0;
-        btScalar T = cp.m_combinedFriction * sent0->getMass() * SimulationApp::getApp()->getSimulationManager()->getGravity().z() * 0.002;
-        sent0->ApplyTorque(-cp.m_normalWorldOnB * btFabs(contactAngularVelocity0)/contactAngularVelocity0 * T);
-    }
+    //calculate relative angular velocity
+    btScalar relAngularVelocity01 = contactAngularVelocity0 - contactAngularVelocity1;
+    btScalar relAngularVelocity10 = contactAngularVelocity1 - contactAngularVelocity0;
     
-    if(!btFuzzyZero(contactAngularVelocity1))
-    {
-        SolidEntity* sent1 = (SolidEntity*)ent1;
-        btScalar T = cp.m_combinedFriction * sent1->getMass() * SimulationApp::getApp()->getSimulationManager()->getGravity().z() * 0.002;
-        sent1->ApplyTorque(-cp.m_normalWorldOnB * btFabs(contactAngularVelocity1)/contactAngularVelocity1 * T);
-    }
+    //calculate contact normal force and friction torque
+    btScalar normalForce = cp.m_appliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
+    btScalar T = cp.m_combinedFriction * normalForce * 0.002;
+
+    //apply damping torque
+    if(ent0->getType() == ENTITY_SOLID && !btFuzzyZero(relAngularVelocity01))
+        ((SolidEntity*)ent0)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity01/btFabs(relAngularVelocity01) * T);
+    
+    if(ent1->getType() == ENTITY_SOLID && !btFuzzyZero(relAngularVelocity10))
+        ((SolidEntity*)ent1)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity10/btFabs(relAngularVelocity10) * T);
     
     //Restitution
     cp.m_combinedRestitution = mat0->restitution * mat1->restitution;

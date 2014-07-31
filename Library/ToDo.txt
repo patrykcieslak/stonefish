@@ -104,17 +104,17 @@ x Signal generator and multiplexer
 x Fixed dc motor model -> current is now integrated(mid-point method)
 x Mono-wheel longitudinal controller results exactly match ADAMS+Simulink
 x Mono-wheel lateral controller results exactly match ADAMS+Simulink
-- Damping of body spinning around contact normal -> should be relative?
-- Saving results to a binary Octave file
+x Saving sensor measurements and contact data to a binary Octave file
+x Damping of body spinning around contact normal
+x General path following controller
+x Mono-wheel path following controller (pursuit)
+- Fix sideways drift of torus when tilted
 - Check what happens when pausing the simulation with sim frequency higher than sensor frequency
-- Mono-wheel path following controller
+- Rolling friction and spinning reduction based on Hertz deformation
 - True IMU - acc, gyro, kalman filter
 - Laser scanner 2d + polar plot
-- Transparent objects(forward pipeline, OIT)
-- Omni light shadows
 
 Simulation:
-- Rolling friction and spinning reduction based on Hertz deformation
 - Laser rangefinder
 - Ultrasonic range finder
 - Camera with lens/aperture/iso/stereo
@@ -125,7 +125,6 @@ Simulation:
 - Linear encoder
 - 3D path generator
 - Gimpact or convex decomposition for concave meshes
-- Cable entity
 - LiDAR (laser scanner 3d)
 - Solar panel/Light sensor (raytrace from sensor to sky/light + bounces)
 - Leap Motion support
@@ -136,18 +135,19 @@ Underwater:
 - Account for localTransform in buoyancy calculation
 - Buoyancy as difference in hydrostatic pressure(?) -> calculated together with drag
 - Added mass calculation with boundary method
+- Tether entity
 - Thruster
 - Control surface
 - DVL
 - Multi-beam
 - Side-scan
 - SVS
-- Acoustic modem
 - Sea current
 
 Graphics:
 - Move to OpenGL 3.3 Core (remove deprecated stuff)
-- Remove Bullet types from OpenGL classes - use glm exclusively
+- Transparent objects(forward pipeline, OIT)
+- Omni light shadows
 - Reflective material
 - Stencil light volumes(taking into account the attenuation, disable shadow generation)
 - Drawing actuators, sensors and stickers(icons)

@@ -16,6 +16,10 @@
 #include "Console.h"
 #include "SimulationManager.h"
 
+/*!
+    @class SimulationApp
+    A class that defines an application interface combined with a simulation manager.
+ */
 class SimulationApp
 {
 public:

@@ -9,23 +9,21 @@
 #ifndef __Stonefish_ServoController__
 #define __Stonefish_ServoController__
 
-#include "Controller.h"
+#include "FeedbackController.h"
 #include "DCMotor.h"
 #include "RotaryEncoder.h"
 
 /*! DC servo controller with PID */
-class ServoController : public Controller
+class ServoController : public FeedbackController
 {
 public:
     ServoController(std::string uniqueName, DCMotor* m, RotaryEncoder* e, btScalar maxVoltage, btScalar frequency = btScalar(-1.));
     ~ServoController();
     
-    void SetPosition(btScalar pos);
     void Reset();
-    void SetGains(btScalar P, btScalar I, btScalar D);
     
-    unsigned int getNumOfInputs();
-    ControllerType getType();
+    void SetPosition(btScalar pos);
+    void SetGains(btScalar P, btScalar I, btScalar D);
     
 private:
     void Tick(btScalar dt);

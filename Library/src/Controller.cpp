@@ -18,73 +18,15 @@ Controller::Controller(std::string uniqueName, btScalar frequency)
     eleapsedTime = btScalar(0.);
     runningTime = btScalar(0.);
     running = false;
-    referenceGen = NULL;
-    referenceInput = 0;
-    referenceMux = NULL;
 }
 
 #pragma mark - Destructor
 Controller::~Controller()
 {
     nameManager.RemoveName(name);
-    
-    if(referenceGen != NULL)
-        delete referenceGen;
-    
-    if(referenceMux != NULL)
-        delete referenceMux;
 }
 
 #pragma mark - Accessors
-void Controller::setReferenceSignalGenerator(unsigned int inputId, SignalGenerator* sg)
-{
-    if(sg != NULL && inputId < getNumOfInputs())
-    {
-        if(referenceMux != NULL)
-        {
-            delete referenceMux;
-            referenceMux = NULL;
-        }
-        
-        if(referenceGen != NULL)
-            delete referenceGen;
-        
-        referenceGen = sg;
-        referenceInput = inputId;
-    }
-    else if(sg == NULL)
-    {
-        if(referenceGen != NULL)
-            delete referenceGen;
-        
-        referenceGen = NULL;
-    }
-}
-
-void Controller::setReferenceSignalMux(SignalMux* sm)
-{
-    if(sm != NULL && getNumOfInputs() > 1 && sm->getNumOfSignals() == getNumOfInputs())
-    {
-        if(referenceGen != NULL)
-        {
-            delete referenceGen;
-            referenceGen = NULL;
-        }
-        
-        if(referenceMux != NULL)
-            delete referenceMux;
-        
-        referenceMux = sm;
-    }
-    else if(sm == NULL)
-    {
-        if(referenceMux != NULL)
-            delete referenceMux;
-        
-        referenceMux = NULL;
-    }
-}
-
 btScalar Controller::getFrequency()
 {
     return freq;

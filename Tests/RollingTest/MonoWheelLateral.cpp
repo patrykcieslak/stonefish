@@ -11,7 +11,7 @@
 #include "SystemUtil.h"
 
 #pragma mark Constructors
-MonoWheelLateral::MonoWheelLateral(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* leverEnc, FakeRotaryEncoder* wheelEnc, Current* leverCurrent, DCMotor* leverMotor, btScalar maxVoltage, btScalar frequency) : Controller(uniqueName, frequency)
+MonoWheelLateral::MonoWheelLateral(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* leverEnc, FakeRotaryEncoder* wheelEnc, Current* leverCurrent, DCMotor* leverMotor, btScalar maxVoltage, btScalar frequency) : FeedbackController(uniqueName, 5, frequency)
 {
     imu = cartImu;
     lEnc = leverEnc;
@@ -45,12 +45,6 @@ MonoWheelLateral::MonoWheelLateral(std::string uniqueName, FakeIMU* cartImu, Fak
     gains.push_back(btScalar(0.));
     gains.push_back(btScalar(0.));
     gains.push_back(btScalar(0.));
-    
-    desiredValues.push_back(btScalar(0.));
-    desiredValues.push_back(btScalar(0.));
-    desiredValues.push_back(btScalar(0.));
-    desiredValues.push_back(btScalar(0.));
-    desiredValues.push_back(btScalar(0.));
 }
 
 #pragma mark - Destructor
@@ -60,23 +54,12 @@ MonoWheelLateral::~MonoWheelLateral()
         delete LF[i];
     
     gains.clear();
-    desiredValues.clear();
 }
 
 #pragma mark - Accessors
-unsigned int MonoWheelLateral::getNumOfInputs()
-{
-    return 5;
-}
-
-ControllerType MonoWheelLateral::getType()
-{
-    return CONTROLLER_CUSTOM;
-}
-
 void MonoWheelLateral::setDesiredTilt(btScalar tilt)
 {
-    desiredValues[0] = UnitSystem::SetAngle(tilt);
+    setReferenceValue(0, UnitSystem::SetAngle(tilt));
 }
 
 #pragma mark - Methods
@@ -87,21 +70,8 @@ void MonoWheelLateral::Reset()
 void MonoWheelLateral::Tick(btScalar dt)
 {
     //Update desired values
-    btScalar* ref = NULL;
+    std::vector<btScalar> ref = getReferenceValues();
     
-    if(referenceGen != NULL)
-    {
-        ref = new btScalar[desiredValues.size()];
-        ref[referenceInput] = referenceGen->ValueAtTime(runningTime); //set generated reference
-        for(unsigned int i = 0; i < desiredValues.size(); ++i) //fill rest of inputs with desired values vector
-            if(i != referenceInput)
-                ref[i] = desiredValues[i];
-    }
-    else if(referenceMux != NULL)
-    {
-        ref = referenceMux->ValuesAtTime(runningTime);
-    }
-
     //Read sensors
     std::vector<btScalar> measurements;
     measurements.push_back(imu->getLastSample().getValue(0)); //theta
@@ -112,38 +82,53 @@ void MonoWheelLateral::Tick(btScalar dt)
     
     btScalar dGamma = wEnc->getLastSample().getValue(1);
     btScalar dPhi = imu->getLastSample().getValue(5);
-    
-    //Calculate gains
-    btScalar centrifugalAcc = dPhi * dGamma * tyreRadius;
-    
+    btScalar centrifugalAcc = dPhi * dGamma * tyreRadius; //this is simplified - this formula works for COG of robot
     //printf("Centrifugal: %1.5lf\n", centrifugalAcc);
     
-    for(unsigned int i = 0; i < 5; i++)
+    //Find stable alpha with iterative solution (not possible to derive direct solution)
+    btScalar l = 0.15;
+    btScalar r1 = 0.15;
+    btScalar r2 = 0.12;
+    btScalar m1 = 1.5;
+    btScalar m2 = 0.5;
+    btScalar g = 9.81;
+    btScalar equality = 0.0;
+    unsigned int iter = 0;
+    
+    do
     {
-        gains[i] = LF[i]->Value(btFabs(centrifugalAcc), btFabs(dGamma));
+        //It works because the angles change in the same direction and monotonically -> have to show it!
+        equality = -btSin(ref[0]+ref[1])-(m2 * r2 * centrifugalAcc * btCos(ref[0]+ref[1]) + m2*(-g*l*btSin(ref[0]) - centrifugalAcc*l*btCos(ref[0])) + m1*r1*(centrifugalAcc*btCos(ref[0])-g*btSin(ref[0])))/(m2*r2*g);
+        ref[1] += equality * 0.01;
+        iter++;
+    }
+    while(btFabs(equality) > 0.001);
+    
+    ref[1] = 0.0;
+    
+    //ref[1] = btAsin(l * btSin(ref[0])/r2 + m1*r1*btSin(ref[0])/(m2*r2))-ref[0]; //without centrifugal acceleration
+    //printf("Theta: %1.5lf Alpha: %1.5lf Equality: %1.5f Iterations: %d\n", ref[0], ref[1], equality, iter);
+    
+    btScalar cgains[5] = {-4.6624e+02, 9.2232e+01,  -1.1031e+02,   1.1482e+01,   2.2862e-02};
+    
+    for(unsigned int i = 0; i < 5; ++i)
+    {
+        gains[i] = cgains[i];
+        //gains[i] = LF[i]->Value(btFabs(centrifugalAcc), btFabs(dGamma));
         //printf("Gain %d: %1.8lf\n", i, gains[i]);
         //printf("Sensor %d: %1.8lf\n", i, measurements[i]);
     }
     
     //Calculate control
     btScalar control = 0;
+    //btScalar Nx[5] = {0.012957, 0.072613, 0.500000, 0.499983, 1.074444};
+    //btScalar Nu = 0.251187;
+    //btScalar N = Nu + gains[0] * Nx[0] + gains[1] * Nx[1] + gains[2] * Nx[2] + gains[3] * Nx[3] + gains[4] * Nx[4];
     
-    if(ref != NULL)
-    {
-        for(int i = 0; i < gains.size(); i++)
-            control += (ref[i] - measurements[i]) * gains[i];
+    for(unsigned int i = 0; i < 5; ++i)
+        //control += - measurements[i] * gains[i] + N * ref[i];
+        control += -gains[i] * (measurements[i] - ref[i]);
         
-        delete [] ref;
-    }
-    else //no signal generator hook up
-    {
-        for(int i = 0; i < gains.size(); i++)
-            control += (desiredValues[i] - measurements[i]) * gains[i];
-    }
-    
-    //for(int i = 0; i < 5; i++)
-    //    control += (desiredValues[i] - measurements[i]) * gains[i];
-    
     //Limit control
     control = control > maxV ? maxV : (control < - maxV ? - maxV : control);
     

@@ -51,7 +51,9 @@ public:
     virtual ~ScientificData();
     
     void addItem(ScientificDataItem* it);
-    ScientificDataItem* getItem(std::string name);
+    const ScientificDataItem* getItem(std::string name) const;
+    const ScientificDataItem* getItem(unsigned int index) const;
+    unsigned int getItemsCount() const;
     btScalar getScalar(std::string name);
     btVectorXu getVector(std::string name);
     btMatrixXu getMatrix(std::string name);
@@ -65,4 +67,7 @@ ScientificData* LoadOctaveData(const char* path);
 bool LoadOctaveScalar(std::ifstream& file, ScientificDataItem* it, bool isFloat = false);
 bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat = false);
 
+bool SaveOctaveData(const char* path, const ScientificData& data);
+void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it);
+void SaveOctaveMatrix(std::ofstream& file, const ScientificDataItem& it);
 #endif

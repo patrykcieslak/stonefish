@@ -36,7 +36,8 @@ public:
     virtual void Render();
     void Update(btScalar dt);
     void ClearHistory();
-    void SaveMeasurementsToFile(const char* path, bool includeTime = true, unsigned int fixedPrecision = 6);
+    void SaveMeasurementsToTextFile(const char* path, bool includeTime = true, unsigned int fixedPrecision = 6);
+    void SaveMeasurementsToOctaveFile(const char* path, bool includeTime = true, bool separateChannels = false);
     
     unsigned short getNumOfChannels();
     bool isRenderable();

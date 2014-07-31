@@ -22,6 +22,17 @@ PathGenerator2D::~PathGenerator2D()
         delete subPaths[i];
 }
 
+#pragma mark -Accessors
+PlaneType PathGenerator2D::getPlane()
+{
+    return plane;
+}
+
+bool PathGenerator2D::is3D()
+{
+    return false;
+}
+
 #pragma mark -Methods
 void PathGenerator2D::AddSubPath(Path2D* sp, bool smoothConnection)
 {
@@ -114,6 +125,7 @@ void PathGenerator2D::PointAtTime(btScalar t, btVector3& point, btVector3& tange
             tangent.setX(derivOnSubpath.x);
             tangent.setY(derivOnSubpath.y);
             tangent.setZ(0.);
+            tangent.normalize();
             break;
             
         case PLANE_XZ:
@@ -123,6 +135,7 @@ void PathGenerator2D::PointAtTime(btScalar t, btVector3& point, btVector3& tange
             tangent.setX(derivOnSubpath.x);
             tangent.setZ(derivOnSubpath.y);
             tangent.setY(0.);
+            tangent.normalize();
             break;
             
         case PLANE_YZ:
@@ -132,6 +145,7 @@ void PathGenerator2D::PointAtTime(btScalar t, btVector3& point, btVector3& tange
             tangent.setY(derivOnSubpath.x);
             tangent.setZ(derivOnSubpath.y);
             tangent.setX(0.);
+            tangent.normalize();
             break;
     }
 }
