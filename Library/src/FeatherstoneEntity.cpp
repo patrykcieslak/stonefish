@@ -323,8 +323,10 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     btQuaternion ornParentToChild = getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
     btVector3 parentComToChildComOffset = getLinkTransform(child).getOrigin() - getLinkTransform(parent).getOrigin();
     
+    //Check if pivot offset is ok!
     multiBody->setupPrismatic(child - 1, links[child].solid->getMass(), links[child].solid->getMomentsOfInertia(), parent - 1,
-                              ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToChildComOffset);
+                              ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToChildComOffset, btVector3(0.0,0.0,0.0), !collide);
+    
     
     multiBody->setJointPos(child - 1, btScalar(0.));
     multiBody->setJointVel(child - 1, btScalar(0.));

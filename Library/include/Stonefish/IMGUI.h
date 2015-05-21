@@ -10,7 +10,7 @@
 #define __Stonefish_IMGUI__
 
 #include "common.h"
-#include <SDL_keyboard.h>
+#include <SDL2/SDL_keyboard.h>
 #include "OpenGLPipeline.h"
 #include "OpenGLPrinter.h"
 #include "GLSLShader.h"

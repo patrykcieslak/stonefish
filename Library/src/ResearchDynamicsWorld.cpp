@@ -7,12 +7,12 @@
 //
 
 #include "ResearchDynamicsWorld.h"
-#include "btMultiBodyConstraintSolver.h"
-#include "btMultiBody.h"
-#include "btMultiBodyLinkCollider.h"
+#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
+#include <BulletDynamics/Featherstone/btMultiBody.h>
+#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "BulletCollision/CollisionDispatch/btSimulationIslandManager.h"
 #include "LinearMath/btQuickprof.h"
-#include "btMultiBodyConstraint.h"
+#include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
 
 ResearchDynamicsWorld::ResearchDynamicsWorld(btDispatcher* dispatcher, btBroadphaseInterface* pairCache, ResearchConstraintSolver* constraintSolver, btCollisionConfiguration* collisionConfiguration) : btMultiBodyDynamicsWorld(dispatcher, pairCache, constraintSolver, collisionConfiguration)
 {

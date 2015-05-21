@@ -13,7 +13,7 @@
 
 //OpenGL 2.1 Compatibility
 #define GL_GLEXT_PROTOTYPES
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include <OpenGL/glu.h>
 
 //OpenGL 3.3 Core

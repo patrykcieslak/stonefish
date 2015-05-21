@@ -10,7 +10,7 @@
 #define __Stonefish_Console__
 
 #include "common.h"
-#include <SDL_thread.h>
+#include <SDL2/SDL_thread.h>
 #include "OpenGLPrinter.h"
 
 //shortcut

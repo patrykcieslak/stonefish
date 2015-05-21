@@ -169,7 +169,7 @@ void AcrobotTestManager::BuildScenario()
     //omni->GlueToEntity(arm2);
     //AddLight(omni);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.2f), 1.5f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 50.f, false);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.2f), 1.5f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 50.f, true);
     trackb->Rotate(btQuaternion(M_PI - M_PI/8.0, 0.0, 0.0));
     trackb->Activate();
     AddView(trackb);

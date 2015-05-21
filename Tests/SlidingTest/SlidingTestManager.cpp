@@ -67,7 +67,7 @@ void SlidingTestManager::BuildScenario()
     BoxEntity* box = new BoxEntity("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Steel"), color);
     AddSolidEntity(box, btTransform(btQuaternion(0,angle,0), btVector3(0, 0, 0.052)));
     
-    Trajectory* traj = new Trajectory("Trajectory", box, btVector3(0,0,0));
+    Trajectory* traj = new Trajectory("Trajectory", box, btTransform::getIdentity());
     traj->setRenderable(true);
     AddSensor(traj);
     

@@ -82,7 +82,7 @@ void AcrobotTestApp::DoHUD()
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            getSimulationManager()->getSensor("Encoder1")->SaveMeasurementsToFile(pathToFile);
+            getSimulationManager()->getSensor("Encoder1")->SaveMeasurementsToTextFile(pathToFile);
         }
      
         delete [] pathToFile;

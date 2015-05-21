@@ -302,7 +302,7 @@ void SolidEntity::BuildRigidBody()
         rigidBody->setUserPointer(this);
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
-        rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROPSCOPIC_FORCE);
+        rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
         
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);

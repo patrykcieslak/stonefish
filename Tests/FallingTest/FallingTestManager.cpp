@@ -30,7 +30,7 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
@@ -67,7 +67,7 @@ void FallingTestManager::BuildScenario()
     sphere->setRenderable(true);
     AddSolidEntity(sphere, btTransform(btQuaternion(0,0,0), btVector3(0.f, 0.f, 5.f)));
     
-    Trajectory* traj = new Trajectory("Trajectory", sphere, btVector3(0,0,0));
+    Trajectory* traj = new Trajectory("Trajectory", sphere, btTransform::getIdentity());
     traj->setRenderable(true);
     AddSensor(traj);
     

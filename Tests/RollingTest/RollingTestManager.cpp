@@ -272,7 +272,7 @@ void RollingTestManager::BuildScenario()
     AddController(longitudinal);
    */
     //////CAMERA & LIGHT//////
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5), 2.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 100.f, false);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5), 2.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 100.f, true);
     trackb->Activate();
     trackb->GlueToEntity(cyl);
     trackb->Rotate(btQuaternion(-M_PI_2, 0.0, 0.0));

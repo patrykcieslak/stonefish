@@ -26,7 +26,7 @@
 #include "ResearchConstraintSolver.h"
 #include "LinearMath/btMatrixX.h"
 #include "LinearMath/btQuickprof.h"
-#include "btSolveProjectedGaussSeidel.h"
+#include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
 
 ResearchConstraintSolver::ResearchConstraintSolver(btMLCPSolverInterface* mlcp) : btMultiBodyConstraintSolver()
 {
@@ -653,9 +653,9 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
             btMultiBodySolverConstraint& constraint = m_multiBodyNonContactConstraints[j];
             resolveSingleConstraintRowGeneric(constraint);
             if(constraint.m_multiBodyA)
-                constraint.m_multiBodyA->__posUpdated = false;
+                constraint.m_multiBodyA->setPosUpdated(false);
             if(constraint.m_multiBodyB)
-                constraint.m_multiBodyB->__posUpdated = false;
+                constraint.m_multiBodyB->setPosUpdated(false);
         }
         
         //Solve Featherstone normal contact
@@ -665,9 +665,9 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
             resolveSingleConstraintRowGeneric(constraint);
             
             if(constraint.m_multiBodyA)
-                constraint.m_multiBodyA->__posUpdated = false;
+                constraint.m_multiBodyA->setPosUpdated(false);
             if(constraint.m_multiBodyB)
-                constraint.m_multiBodyB->__posUpdated = false;
+                constraint.m_multiBodyB->setPosUpdated(false);
         }
         
         //Solve Featherstone frictional contact
@@ -683,9 +683,9 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
                 resolveSingleConstraintRowGeneric(frictionConstraint);
                 
                 if(frictionConstraint.m_multiBodyA)
-                    frictionConstraint.m_multiBodyA->__posUpdated = false;
+                    frictionConstraint.m_multiBodyA->setPosUpdated(false);
                 if(frictionConstraint.m_multiBodyB)
-                    frictionConstraint.m_multiBodyB->__posUpdated = false;
+                    frictionConstraint.m_multiBodyB->setPosUpdated(false);
             }
         }
 	}

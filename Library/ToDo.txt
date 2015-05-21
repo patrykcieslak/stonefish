@@ -108,6 +108,7 @@ x Saving sensor measurements and contact data to a binary Octave file
 x Damping of body spinning around contact normal
 x General path following controller
 x Mono-wheel path following controller (pursuit)
+- Implement advanced friction model (GMS)
 - Fix sideways drift of torus when tilted
 - Check what happens when pausing the simulation with sim frequency higher than sensor frequency
 - Rolling friction and spinning reduction based on Hertz deformation

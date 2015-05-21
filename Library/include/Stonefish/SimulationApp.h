@@ -10,7 +10,7 @@
 #define __Stonefish_SimulationApp__
 
 #include "common.h"
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include "OpenGLPipeline.h"
 #include "IMGUI.h"
 #include "Console.h"
