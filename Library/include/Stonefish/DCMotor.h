@@ -16,8 +16,8 @@
 class DCMotor : public Actuator
 {
 public:
-    DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
-    DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction);
+    DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
+    DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
     
     void Update(btScalar dt);
     btVector3 Render();
@@ -28,6 +28,10 @@ public:
     btScalar getTorque();
     btScalar getCurrent();
     ActuatorType getType();
+    
+    btScalar getKe();
+    btScalar getKt();
+    btScalar getGearRatio();
     
 private:
     btScalar getAngularVelocity();
@@ -48,7 +52,7 @@ private:
     btScalar R;
     btScalar L;
     btScalar Ke;
-    btScalar Km;
+    btScalar Kt;
     btScalar B;
     bool gearEnabled;
     btScalar gearRatio;

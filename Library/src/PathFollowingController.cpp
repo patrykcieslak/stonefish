@@ -8,6 +8,7 @@
 
 #include "PathFollowingController.h"
 #include "PathGenerator2D.h"
+#include "OpenGLSolids.h"
 
 #pragma mark Constructors
 PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency) : Controller(uniqueName, frequency)
@@ -40,7 +41,27 @@ ControllerType PathFollowingController::getType()
 void PathFollowingController::RenderPath()
 {
     if(inputPath->isRenderable())
+    {
         inputPath->Render();
+        
+        btVector3 point;
+        btVector3 tangent;
+        inputPath->PointAtTime(inputPath->getTime(), point, tangent);
+        
+        btTransform trans = btTransform(btQuaternion::getIdentity(), point);
+        btScalar openglTrans[16];
+        trans.getOpenGLMatrix(openglTrans);
+        
+        glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+        glMultMatrixd(openglTrans);
+#else
+        glMultMatrixf(openglTrans);
+#endif
+        OpenGLSolids::DrawPoint(0.1f);
+        
+        glPopMatrix();
+    }
 }
 
 void PathFollowingController::Reset()
@@ -53,6 +74,8 @@ void PathFollowingController::Tick(btScalar dt)
     btVector3 desiredPoint;
     btVector3 desiredTangent;
     inputPath->MoveOnPath(VelocityOnPath() * dt, desiredPoint, desiredTangent);
+    printf("%1.5f\t%1.5f\n", desiredPoint.x(), desiredPoint.y());
+    
     
     if(inputPath->getTime() >= btScalar(1.0)) //End of path reached
         PathEnd();

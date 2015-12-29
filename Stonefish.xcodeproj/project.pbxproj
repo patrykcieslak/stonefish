@@ -372,6 +372,58 @@
 		F7DE5F73193E7899007FEE22 /* SlidingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F6E193E7899007FEE22 /* SlidingTestApp.cpp */; };
 		F7DE5F74193E7899007FEE22 /* SlidingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F70193E7899007FEE22 /* SlidingTestManager.cpp */; };
 		F7DE5F75193E7899007FEE22 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F72193E7899007FEE22 /* main.cpp */; };
+		F7DE69671BA74CFF006B2630 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F7DE69691BA74CFF006B2630 /* lightMeter.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7F0ED30192FF14700EA89F9 /* lightMeter.frag */; };
+		F7DE696A1BA74CFF006B2630 /* tonemapping.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7F0ED2A192FD7C500EA89F9 /* tonemapping.frag */; };
+		F7DE696B1BA74CFF006B2630 /* saoDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F77512F91922C83200C3AD9E /* saoDownsample.frag */; };
+		F7DE696C1BA74CFF006B2630 /* sao.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D96019111D6C00E0703F /* sao.frag */; };
+		F7DE696D1BA74CFF006B2630 /* saoBlur.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F791D9621918327600E0703F /* saoBlur.frag */; };
+		F7DE696E1BA74CFF006B2630 /* cascadedShadowMap.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DE34331907C49000D21981 /* cascadedShadowMap.frag */; };
+		F7DE696F1BA74CFF006B2630 /* deferredSun.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DD1C051904466800B6BF14 /* deferredSun.frag */; };
+		F7DE69701BA74CFF006B2630 /* cubeDownsample.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2E18C40AEC001C0CE8 /* cubeDownsample.frag */; };
+		F7DE69711BA74CFF006B2630 /* cubeConvolve.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2F18C40AEC001C0CE8 /* cubeConvolve.frag */; };
+		F7DE69721BA74CFF006B2630 /* deferredOmni.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3118C40AEC001C0CE8 /* deferredOmni.frag */; };
+		F7DE69731BA74CFF006B2630 /* saq.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC3218C40AEC001C0CE8 /* saq.vert */; };
+		F7DE69741BA74CFF006B2630 /* fluidBorder.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2018C40AEC001C0CE8 /* fluidBorder.frag */; };
+		F7DE69751BA74CFF006B2630 /* fluidVolume.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2118C40AEC001C0CE8 /* fluidVolume.frag */; };
+		F7DE69761BA74CFF006B2630 /* belowFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2218C40AEC001C0CE8 /* belowFluidSurface.frag */; };
+		F7DE69771BA74CFF006B2630 /* fluidSurface.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2318C40AEC001C0CE8 /* fluidSurface.vert */; };
+		F7DE69781BA74CFF006B2630 /* aboveFluidSurface.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2418C40AEC001C0CE8 /* aboveFluidSurface.frag */; };
+		F7DE69791BA74CFF006B2630 /* gbuffer.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2518C40AEC001C0CE8 /* gbuffer.frag */; };
+		F7DE697A1BA74CFF006B2630 /* gbuffer.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2618C40AEC001C0CE8 /* gbuffer.vert */; };
+		F7DE697B1BA74CFF006B2630 /* deferredAmbient.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2718C40AEC001C0CE8 /* deferredAmbient.frag */; };
+		F7DE697C1BA74CFF006B2630 /* deferredSpot.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2818C40AEC001C0CE8 /* deferredSpot.frag */; };
+		F7DE697D1BA74CFF006B2630 /* cubeSky.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2918C40AEC001C0CE8 /* cubeSky.frag */; };
+		F7DE697E1BA74CFF006B2630 /* cubePass.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2B18C40AEC001C0CE8 /* cubePass.frag */; };
+		F7DE69801BA74CFF006B2630 /* gainfit.oct in CopyFiles */ = {isa = PBXBuildFile; fileRef = F74168FE1969C2DF000944BF /* gainfit.oct */; };
+		F7DE69811BA74CFF006B2630 /* checker.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F77F31CA19649BDB00AD7E0B /* checker.png */; };
+		F7DE69821BA74CFF006B2630 /* water.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7CAD32C192946B6004FBECF /* water.jpg */; };
+		F7DE69831BA74CFF006B2630 /* logo_color.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7CBFD9B1934039F001568FC /* logo_color.png */; };
+		F7DE69841BA74CFF006B2630 /* logo_gray.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7CBFD991933F2F5001568FC /* logo_gray.png */; };
+		F7DE69851BA74CFF006B2630 /* grid.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7DD1BFE19041AF300B6BF14 /* grid.png */; };
+		F7DE69861BA74CFF006B2630 /* noise.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = F7B1DC2D18C40AEC001C0CE8 /* noise.png */; };
+		F7DE69951BA74DAA006B2630 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE698C1BA74DAA006B2630 /* main.cpp */; };
+		F7DE69961BA74DAA006B2630 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE698C1BA74DAA006B2630 /* main.cpp */; };
+		F7DE69971BA74DAA006B2630 /* AcroverTiltController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE698D1BA74DAA006B2630 /* AcroverTiltController.cpp */; };
+		F7DE69981BA74DAA006B2630 /* AcroverTiltController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE698D1BA74DAA006B2630 /* AcroverTiltController.cpp */; };
+		F7DE69991BA74DAA006B2630 /* AcroverTiltController.h in Headers */ = {isa = PBXBuildFile; fileRef = F7DE698E1BA74DAA006B2630 /* AcroverTiltController.h */; };
+		F7DE699A1BA74DAA006B2630 /* AcroverPathFollowingController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE698F1BA74DAA006B2630 /* AcroverPathFollowingController.cpp */; };
+		F7DE699B1BA74DAA006B2630 /* AcroverPathFollowingController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE698F1BA74DAA006B2630 /* AcroverPathFollowingController.cpp */; };
+		F7DE699C1BA74DAA006B2630 /* AcroverPathFollowingController.h in Headers */ = {isa = PBXBuildFile; fileRef = F7DE69901BA74DAA006B2630 /* AcroverPathFollowingController.h */; };
+		F7DE699D1BA74DAA006B2630 /* AcroverSimApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE69911BA74DAA006B2630 /* AcroverSimApp.cpp */; };
+		F7DE699E1BA74DAA006B2630 /* AcroverSimApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE69911BA74DAA006B2630 /* AcroverSimApp.cpp */; };
+		F7DE699F1BA74DAA006B2630 /* AcroverSimApp.h in Headers */ = {isa = PBXBuildFile; fileRef = F7DE69921BA74DAA006B2630 /* AcroverSimApp.h */; };
+		F7DE69A01BA74DAA006B2630 /* AcroverSimManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE69931BA74DAA006B2630 /* AcroverSimManager.cpp */; };
+		F7DE69A11BA74DAA006B2630 /* AcroverSimManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE69931BA74DAA006B2630 /* AcroverSimManager.cpp */; };
+		F7DE69A21BA74DAA006B2630 /* AcroverSimManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F7DE69941BA74DAA006B2630 /* AcroverSimManager.h */; };
+		F7E5A8F91BA7869B002E1F0F /* Motor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E5A8F71BA7869B002E1F0F /* Motor.cpp */; };
+		F7E5A8FA1BA7869B002E1F0F /* Motor.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E5A8F81BA7869B002E1F0F /* Motor.h */; };
+		F7E5A9021BA81880002E1F0F /* AcroverDriveController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E5A9001BA81880002E1F0F /* AcroverDriveController.cpp */; };
+		F7E5A9031BA81880002E1F0F /* AcroverDriveController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E5A9001BA81880002E1F0F /* AcroverDriveController.cpp */; };
+		F7E5A9041BA81880002E1F0F /* AcroverDriveController.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E5A9011BA81880002E1F0F /* AcroverDriveController.h */; };
+		F7E5AB6F1BA861FD002E1F0F /* AcroverSpeedController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E5AB6D1BA861FD002E1F0F /* AcroverSpeedController.cpp */; };
+		F7E5AB701BA861FD002E1F0F /* AcroverSpeedController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E5AB6D1BA861FD002E1F0F /* AcroverSpeedController.cpp */; };
+		F7E5AB711BA861FD002E1F0F /* AcroverSpeedController.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E5AB6E1BA861FD002E1F0F /* AcroverSpeedController.h */; };
 		F7E6FFE0191BCE08004C99F6 /* OGLFT.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E6FFDF191BCE08004C99F6 /* OGLFT.h */; };
 		F7E6FFE2191BCE1A004C99F6 /* OGLFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E6FFE1191BCE1A004C99F6 /* OGLFT.cpp */; };
 		F7EAEB4A19561430006613AE /* MonoWheelLateral.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7EAEB4819561430006613AE /* MonoWheelLateral.cpp */; };
@@ -439,6 +491,13 @@
 			remoteInfo = Stonefish;
 		};
 		F7DE5F3B193E7830007FEE22 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
+			remoteInfo = Stonefish;
+		};
+		F7DE695F1BA74CFF006B2630 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
 			proxyType = 1;
@@ -730,6 +789,53 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F7DE69681BA74CFF006B2630 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = Shaders;
+			dstSubfolderSpec = 16;
+			files = (
+				F7DE69691BA74CFF006B2630 /* lightMeter.frag in CopyFiles */,
+				F7DE696A1BA74CFF006B2630 /* tonemapping.frag in CopyFiles */,
+				F7DE696B1BA74CFF006B2630 /* saoDownsample.frag in CopyFiles */,
+				F7DE696C1BA74CFF006B2630 /* sao.frag in CopyFiles */,
+				F7DE696D1BA74CFF006B2630 /* saoBlur.frag in CopyFiles */,
+				F7DE696E1BA74CFF006B2630 /* cascadedShadowMap.frag in CopyFiles */,
+				F7DE696F1BA74CFF006B2630 /* deferredSun.frag in CopyFiles */,
+				F7DE69701BA74CFF006B2630 /* cubeDownsample.frag in CopyFiles */,
+				F7DE69711BA74CFF006B2630 /* cubeConvolve.frag in CopyFiles */,
+				F7DE69721BA74CFF006B2630 /* deferredOmni.frag in CopyFiles */,
+				F7DE69731BA74CFF006B2630 /* saq.vert in CopyFiles */,
+				F7DE69741BA74CFF006B2630 /* fluidBorder.frag in CopyFiles */,
+				F7DE69751BA74CFF006B2630 /* fluidVolume.frag in CopyFiles */,
+				F7DE69761BA74CFF006B2630 /* belowFluidSurface.frag in CopyFiles */,
+				F7DE69771BA74CFF006B2630 /* fluidSurface.vert in CopyFiles */,
+				F7DE69781BA74CFF006B2630 /* aboveFluidSurface.frag in CopyFiles */,
+				F7DE69791BA74CFF006B2630 /* gbuffer.frag in CopyFiles */,
+				F7DE697A1BA74CFF006B2630 /* gbuffer.vert in CopyFiles */,
+				F7DE697B1BA74CFF006B2630 /* deferredAmbient.frag in CopyFiles */,
+				F7DE697C1BA74CFF006B2630 /* deferredSpot.frag in CopyFiles */,
+				F7DE697D1BA74CFF006B2630 /* cubeSky.frag in CopyFiles */,
+				F7DE697E1BA74CFF006B2630 /* cubePass.frag in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F7DE697F1BA74CFF006B2630 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Data;
+			dstSubfolderSpec = 16;
+			files = (
+				F7DE69801BA74CFF006B2630 /* gainfit.oct in CopyFiles */,
+				F7DE69811BA74CFF006B2630 /* checker.png in CopyFiles */,
+				F7DE69821BA74CFF006B2630 /* water.jpg in CopyFiles */,
+				F7DE69831BA74CFF006B2630 /* logo_color.png in CopyFiles */,
+				F7DE69841BA74CFF006B2630 /* logo_gray.png in CopyFiles */,
+				F7DE69851BA74CFF006B2630 /* grid.png in CopyFiles */,
+				F7DE69861BA74CFF006B2630 /* noise.png in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -988,6 +1094,22 @@
 		F7DE5F70193E7899007FEE22 /* SlidingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SlidingTestManager.cpp; sourceTree = "<group>"; };
 		F7DE5F71193E7899007FEE22 /* SlidingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlidingTestManager.h; sourceTree = "<group>"; };
 		F7DE5F72193E7899007FEE22 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F7DE698A1BA74CFF006B2630 /* Acrover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Acrover; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7DE698C1BA74DAA006B2630 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F7DE698D1BA74DAA006B2630 /* AcroverTiltController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverTiltController.cpp; sourceTree = "<group>"; };
+		F7DE698E1BA74DAA006B2630 /* AcroverTiltController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverTiltController.h; sourceTree = "<group>"; };
+		F7DE698F1BA74DAA006B2630 /* AcroverPathFollowingController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverPathFollowingController.cpp; sourceTree = "<group>"; };
+		F7DE69901BA74DAA006B2630 /* AcroverPathFollowingController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverPathFollowingController.h; sourceTree = "<group>"; };
+		F7DE69911BA74DAA006B2630 /* AcroverSimApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverSimApp.cpp; sourceTree = "<group>"; };
+		F7DE69921BA74DAA006B2630 /* AcroverSimApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverSimApp.h; sourceTree = "<group>"; };
+		F7DE69931BA74DAA006B2630 /* AcroverSimManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverSimManager.cpp; sourceTree = "<group>"; };
+		F7DE69941BA74DAA006B2630 /* AcroverSimManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverSimManager.h; sourceTree = "<group>"; };
+		F7E5A8F71BA7869B002E1F0F /* Motor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Motor.cpp; sourceTree = "<group>"; };
+		F7E5A8F81BA7869B002E1F0F /* Motor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Motor.h; sourceTree = "<group>"; };
+		F7E5A9001BA81880002E1F0F /* AcroverDriveController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverDriveController.cpp; sourceTree = "<group>"; };
+		F7E5A9011BA81880002E1F0F /* AcroverDriveController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverDriveController.h; sourceTree = "<group>"; };
+		F7E5AB6D1BA861FD002E1F0F /* AcroverSpeedController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverSpeedController.cpp; sourceTree = "<group>"; };
+		F7E5AB6E1BA861FD002E1F0F /* AcroverSpeedController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverSpeedController.h; sourceTree = "<group>"; };
 		F7E6FFDF191BCE08004C99F6 /* OGLFT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OGLFT.h; sourceTree = "<group>"; };
 		F7E6FFE1191BCE1A004C99F6 /* OGLFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OGLFT.cpp; sourceTree = "<group>"; };
 		F7EAEB4819561430006613AE /* MonoWheelLateral.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonoWheelLateral.cpp; sourceTree = "<group>"; };
@@ -1078,6 +1200,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F7DE69661BA74CFF006B2630 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7DE69671BA74CFF006B2630 /* libStonefish.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -1143,6 +1273,7 @@
 			isa = PBXGroup;
 			children = (
 				F75B6E2418C3E74B0092C1A2 /* Actuator.h */,
+				F7E5A8F81BA7869B002E1F0F /* Motor.h */,
 				F75B6E2D18C3E74B0092C1A2 /* DCMotor.h */,
 				F75B6E5518C3E74C0092C1A2 /* Thruster.h */,
 			);
@@ -1313,6 +1444,7 @@
 				F75B6E9518C3EA6A0092C1A2 /* Actuator.cpp */,
 				F75B6E9D18C3EA6A0092C1A2 /* DCMotor.cpp */,
 				F75B6EC318C3EA6A0092C1A2 /* Thruster.cpp */,
+				F7E5A8F71BA7869B002E1F0F /* Motor.cpp */,
 			);
 			name = Actuators;
 			sourceTree = "<group>";
@@ -1445,6 +1577,7 @@
 				F7037CE9191AA86A00A1FA98 /* AcrobotTest */,
 				F776649C19213D6500996CF3 /* UnderwaterTest */,
 				F7DE5F64193E7830007FEE22 /* SlidingTest */,
+				F7DE698A1BA74CFF006B2630 /* Acrover */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1452,6 +1585,7 @@
 		F7AB71BE18C3DC950077F07D /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F7DE698B1BA74DAA006B2630 /* Acrover */,
 				F7AB71CC18C3E19D0077F07D /* FallingTest */,
 				F7DE5F6D193E7899007FEE22 /* SlidingTest */,
 				F7C2314F18CA0E1700817B69 /* RollingTest */,
@@ -1616,6 +1750,26 @@
 			path = SlidingTest;
 			sourceTree = "<group>";
 		};
+		F7DE698B1BA74DAA006B2630 /* Acrover */ = {
+			isa = PBXGroup;
+			children = (
+				F7DE698C1BA74DAA006B2630 /* main.cpp */,
+				F7DE69931BA74DAA006B2630 /* AcroverSimManager.cpp */,
+				F7DE69941BA74DAA006B2630 /* AcroverSimManager.h */,
+				F7E5A9001BA81880002E1F0F /* AcroverDriveController.cpp */,
+				F7E5A9011BA81880002E1F0F /* AcroverDriveController.h */,
+				F7E5AB6D1BA861FD002E1F0F /* AcroverSpeedController.cpp */,
+				F7E5AB6E1BA861FD002E1F0F /* AcroverSpeedController.h */,
+				F7DE698D1BA74DAA006B2630 /* AcroverTiltController.cpp */,
+				F7DE698E1BA74DAA006B2630 /* AcroverTiltController.h */,
+				F7DE698F1BA74DAA006B2630 /* AcroverPathFollowingController.cpp */,
+				F7DE69901BA74DAA006B2630 /* AcroverPathFollowingController.h */,
+				F7DE69911BA74DAA006B2630 /* AcroverSimApp.cpp */,
+				F7DE69921BA74DAA006B2630 /* AcroverSimApp.h */,
+			);
+			path = Acrover;
+			sourceTree = "<group>";
+		};
 		F7FDACA4191F92DA00471370 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
@@ -1707,8 +1861,10 @@
 				F75B6E5918C3E74C0092C1A2 /* BoxEntity.h in Headers */,
 				F75B6E7E18C3E74C0092C1A2 /* PoolEntity.h in Headers */,
 				F7EB93DA19196432006504F0 /* FakeIMU.h in Headers */,
+				F7DE69A21BA74DAA006B2630 /* AcroverSimManager.h in Headers */,
 				F7732E221930AC3E0068D5A5 /* ObstacleEntity.h in Headers */,
 				F75B6E6518C3E74C0092C1A2 /* FluidEntity.h in Headers */,
+				F7DE699F1BA74DAA006B2630 /* AcroverSimApp.h in Headers */,
 				F75D00691928B54D00AF3DFE /* GLSLShader.h in Headers */,
 				F7FDACAD191FB28A00471370 /* ServoController.h in Headers */,
 				F75B6E8818C3E74C0092C1A2 /* TerrainEntity.h in Headers */,
@@ -1730,6 +1886,7 @@
 				F75B6E6F18C3E74C0092C1A2 /* MeshEntity.h in Headers */,
 				F75B6E6618C3E74C0092C1A2 /* GeometryFileUtil.h in Headers */,
 				F75B6E7818C3E74C0092C1A2 /* OpenGLSolids.h in Headers */,
+				F7DE69991BA74DAA006B2630 /* AcroverTiltController.h in Headers */,
 				F75B6E7518C3E74C0092C1A2 /* OpenGLOmniLight.h in Headers */,
 				F7FDACB519201D7900471370 /* Contact.h in Headers */,
 				F75B6E8218C3E74C0092C1A2 /* SimulationManager.h in Headers */,
@@ -1739,12 +1896,15 @@
 				F7CA236318C7DA5E009439F3 /* TorusEntity.h in Headers */,
 				F7AE7ACE1957824800CE960B /* PathGenerator2D.h in Headers */,
 				F75B6E5D18C3E74C0092C1A2 /* Controller.h in Headers */,
+				F7DE699C1BA74DAA006B2630 /* AcroverPathFollowingController.h in Headers */,
 				F75B6E7318C3E74C0092C1A2 /* OpenGLLight.h in Headers */,
 				F75B6E7218C3E74C0092C1A2 /* OpenGLGBuffer.h in Headers */,
 				F75B6E5B18C3E74C0092C1A2 /* common.h in Headers */,
+				F7E5AB711BA861FD002E1F0F /* AcroverSpeedController.h in Headers */,
 				F726FBA819463E5C00DE17F9 /* Current.h in Headers */,
 				F75599A618DF2615009A7983 /* Accelerometer.h in Headers */,
 				F75B6E7018C3E74C0092C1A2 /* NativeDialog.h in Headers */,
+				F7E5A8FA1BA7869B002E1F0F /* Motor.h in Headers */,
 				F700ACFD1971CCBF00A95AB7 /* SignalMux.h in Headers */,
 				F75B6E7418C3E74C0092C1A2 /* OpenGLMaterial.h in Headers */,
 				F75B6E8518C3E74C0092C1A2 /* SphericalJoint.h in Headers */,
@@ -1759,6 +1919,7 @@
 				F75B6E7718C3E74C0092C1A2 /* OpenGLSky.h in Headers */,
 				F7DD1C021904311600B6BF14 /* OpenGLSun.h in Headers */,
 				F75B6E7B18C3E74C0092C1A2 /* SystemUtil.h in Headers */,
+				F7E5A9041BA81880002E1F0F /* AcroverDriveController.h in Headers */,
 				F7E6FFE0191BCE08004C99F6 /* OGLFT.h in Headers */,
 				F75B6E8618C3E74C0092C1A2 /* stb_image.h in Headers */,
 				F75B6E6318C3E74C0092C1A2 /* Entity.h in Headers */,
@@ -1899,6 +2060,25 @@
 			productReference = F7DE5F64193E7830007FEE22 /* SlidingTest */;
 			productType = "com.apple.product-type.tool";
 		};
+		F7DE695D1BA74CFF006B2630 /* Acrover */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7DE69871BA74CFF006B2630 /* Build configuration list for PBXNativeTarget "Acrover" */;
+			buildPhases = (
+				F7DE69601BA74CFF006B2630 /* Sources */,
+				F7DE69661BA74CFF006B2630 /* Frameworks */,
+				F7DE69681BA74CFF006B2630 /* CopyFiles */,
+				F7DE697F1BA74CFF006B2630 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F7DE695E1BA74CFF006B2630 /* PBXTargetDependency */,
+			);
+			name = Acrover;
+			productName = FallingTest;
+			productReference = F7DE698A1BA74CFF006B2630 /* Acrover */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1927,6 +2107,7 @@
 				F74CEBED18E56EEB00D0C42D /* JointsTest */,
 				F7037CC2191AA86A00A1FA98 /* AcrobotTest */,
 				F776647919213D6500996CF3 /* UnderwaterTest */,
+				F7DE695D1BA74CFF006B2630 /* Acrover */,
 			);
 		};
 /* End PBXProject section */
@@ -1970,6 +2151,7 @@
 				F75B6ECA18C3EA6A0092C1A2 /* CableEntity.cpp in Sources */,
 				F7526650191EB54D00FFC736 /* FakeRotaryEncoder.cpp in Sources */,
 				F75B6EF218C3EA6A0092C1A2 /* SphereEntity.cpp in Sources */,
+				F7DE69951BA74DAA006B2630 /* main.cpp in Sources */,
 				F75B6EDF18C3EA6A0092C1A2 /* OpenGLCamera.cpp in Sources */,
 				F75B6EF318C3EA6A0092C1A2 /* SphericalJoint.cpp in Sources */,
 				F74CEC2318E5C60B00D0C42D /* BeltJoint.cpp in Sources */,
@@ -1981,6 +2163,7 @@
 				F75B6EEB18C3EA6A0092C1A2 /* PlaneEntity.cpp in Sources */,
 				F75B6EE518C3EA6A0092C1A2 /* OpenGLSky.cpp in Sources */,
 				F79BE8F21932610C0096688F /* Trajectory.cpp in Sources */,
+				F7DE699A1BA74DAA006B2630 /* AcroverPathFollowingController.cpp in Sources */,
 				F743043D193C8AD3008FD77C /* FilteredCollisionDispatcher.cpp in Sources */,
 				F75B6ED618C3EA6A0092C1A2 /* GhostEntity.cpp in Sources */,
 				F75B6EEF18C3EA6A0092C1A2 /* SimulationApp.cpp in Sources */,
@@ -2014,23 +2197,29 @@
 				F75B6EC718C3EA6A0092C1A2 /* stb_image.c in Sources */,
 				F7EB93DC191964B8006504F0 /* IMU.cpp in Sources */,
 				F7AE7ACD19575BCD00CE960B /* PathGenerator2D.cpp in Sources */,
+				F7E5AB6F1BA861FD002E1F0F /* AcroverSpeedController.cpp in Sources */,
 				F75B6EE618C3EA6A0092C1A2 /* OpenGLSolids.cpp in Sources */,
 				F75B6ECF18C3EA6A0092C1A2 /* CylinderEntity.cpp in Sources */,
 				F7AE97D71956C33600256BC9 /* PathFollowingController.cpp in Sources */,
+				F7DE69971BA74DAA006B2630 /* AcroverTiltController.cpp in Sources */,
 				F70B12B31968792C00D497FE /* RotaryEncoder.cpp in Sources */,
 				F75B6EF618C3EA6A0092C1A2 /* Thruster.cpp in Sources */,
 				F75B6EE018C3EA6A0092C1A2 /* OpenGLGBuffer.cpp in Sources */,
 				F7732E2C1930C1530068D5A5 /* Mux.cpp in Sources */,
 				F7A503DA18E70A5900913252 /* Magnetometer.cpp in Sources */,
+				F7DE699D1BA74DAA006B2630 /* AcroverSimApp.cpp in Sources */,
 				F7FDACAF191FB2AF00471370 /* ServoController.cpp in Sources */,
 				F7A503CE18E7014600913252 /* Gyroscope.cpp in Sources */,
 				F7906DCF1951FC970089E86A /* ResearchConstraintSolver.cpp in Sources */,
 				F75B6EF518C3EA6A0092C1A2 /* TerrainEntity.cpp in Sources */,
 				F74168FB19696E72000944BF /* ScientificFileUtil.cpp in Sources */,
+				F7E5A8F91BA7869B002E1F0F /* Motor.cpp in Sources */,
 				F75B6EF018C3EA6A0092C1A2 /* SimulationManager.cpp in Sources */,
 				F75B6EDE18C3EA6A0092C1A2 /* NativeDialog.cpp in Sources */,
 				F7DD1C041904315E00B6BF14 /* OpenGLSun.cpp in Sources */,
+				F7DE69A01BA74DAA006B2630 /* AcroverSimManager.cpp in Sources */,
 				F7AE97D51956C2F500256BC9 /* PathGenerator.cpp in Sources */,
+				F7E5A9021BA81880002E1F0F /* AcroverDriveController.cpp in Sources */,
 				F7FDACB719201EA500471370 /* Contact.cpp in Sources */,
 				F7A503D218E706CC00913252 /* TrueRotaryEncoder.cpp in Sources */,
 				F74CEC2818E5D49300D0C42D /* CylindricalJoint.cpp in Sources */,
@@ -2089,6 +2278,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F7DE69601BA74CFF006B2630 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7DE69961BA74DAA006B2630 /* main.cpp in Sources */,
+				F7DE69981BA74DAA006B2630 /* AcroverTiltController.cpp in Sources */,
+				F7DE69A11BA74DAA006B2630 /* AcroverSimManager.cpp in Sources */,
+				F7E5A9031BA81880002E1F0F /* AcroverDriveController.cpp in Sources */,
+				F7DE699E1BA74DAA006B2630 /* AcroverSimApp.cpp in Sources */,
+				F7E5AB701BA861FD002E1F0F /* AcroverSpeedController.cpp in Sources */,
+				F7DE699B1BA74DAA006B2630 /* AcroverPathFollowingController.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -2121,6 +2324,11 @@
 			isa = PBXTargetDependency;
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
 			targetProxy = F7DE5F3B193E7830007FEE22 /* PBXContainerItemProxy */;
+		};
+		F7DE695E1BA74CFF006B2630 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
+			targetProxy = F7DE695F1BA74CFF006B2630 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2237,7 +2445,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -2261,6 +2469,7 @@
 					/Users/zbuffer/Documents/Programming/Libs/Repos/bullet3/src,
 					/usr/local/include,
 					/usr/local/include/freetype2,
+					/Users/zbuffer/Documents/Programming/Libs/eigen3,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2287,7 +2496,7 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BT_EULER_DEFAULT_ZYX,
@@ -2306,6 +2515,7 @@
 					/Users/zbuffer/Documents/Programming/Libs/Repos/bullet3/src,
 					/usr/local/include,
 					/usr/local/include/freetype2,
+					/Users/zbuffer/Documents/Programming/Libs/eigen3,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
@@ -2462,6 +2672,40 @@
 			};
 			name = Release;
 		};
+		F7DE69881BA74CFF006B2630 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = Acrover;
+			};
+			name = Debug;
+		};
+		F7DE69891BA74CFF006B2630 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Library/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PRODUCT_NAME = Acrover;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2533,6 +2777,15 @@
 			buildConfigurations = (
 				F7DE5F62193E7830007FEE22 /* Debug */,
 				F7DE5F63193E7830007FEE22 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F7DE69871BA74CFF006B2630 /* Build configuration list for PBXNativeTarget "Acrover" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F7DE69881BA74CFF006B2630 /* Debug */,
+				F7DE69891BA74CFF006B2630 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

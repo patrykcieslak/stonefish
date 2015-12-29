@@ -9,7 +9,7 @@
 #include "DCMotor.h"
 
 #pragma mark Constructors
-DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction) : Actuator(uniqueName)
+DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Actuator(uniqueName)
 {
     //Params
     revoluteOutput = revolute;
@@ -18,7 +18,7 @@ DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motor
     R = motorR;
     L = motorL;
     Ke = motorKe;
-    Km = motorKm;
+    Kt = motorKt;
     B = friction;
     gearEnabled = false;
     gearEff = btScalar(1.);
@@ -31,7 +31,7 @@ DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motor
     lastVoverL = btScalar(0.);
 }
 
-DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKm, btScalar friction) : Actuator(uniqueName)
+DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Actuator(uniqueName)
 {
     //Params
     revoluteOutput = NULL;
@@ -40,7 +40,7 @@ DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int ch
     R = motorR;
     L = motorL;
     Ke = motorKe;
-    Km = motorKm;
+    Kt = motorKt;
     B = friction;
     gearEnabled = false;
     gearEff = btScalar(1.);
@@ -56,7 +56,22 @@ DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int ch
 #pragma mark - Accessors
 ActuatorType DCMotor::getType()
 {
-    return ACTUATOR_DCMOTOR;
+    return ACTUATOR_MOTOR;
+}
+
+btScalar DCMotor::getKe()
+{
+    return Ke;
+}
+
+btScalar DCMotor::getKt()
+{
+    return Kt;
+}
+
+btScalar DCMotor::getGearRatio()
+{
+    return gearRatio;
 }
 
 void DCMotor::setVoltage(btScalar volt)
@@ -112,12 +127,13 @@ void DCMotor::Update(btScalar dt)
     //Calculate internal state and output
     if(gearEnabled)
     {
-        aVelocity *= gearRatio;
-        btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
-        I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+        torque = (I * Kt - aVelocity * gearRatio * B) * gearRatio * gearEff;
+    
+        btScalar VoverL = (V - aVelocity * gearRatio * Ke * 9.5493 - I * R)/L;
+        //I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+        I += VoverL * dt;
         lastVoverL = VoverL;
-        torque = (I * Km - aVelocity * B) * gearRatio * gearEff;
-   
+        
         //I = (V - aVelocity * Ke * 9.5493)/R;
         //torque = (I * Km - aVelocity * B) * gearRatio * gearEff;
 
@@ -127,7 +143,7 @@ void DCMotor::Update(btScalar dt)
         btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
         I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
         lastVoverL = VoverL;
-        torque = I * Km - aVelocity * B;
+        torque = I * Kt - aVelocity * B;
         
         //I = (V - aVelocity * Ke * 9.5493)/R;
         //torque = I * Km - aVelocity * B;
