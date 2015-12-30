@@ -12,7 +12,7 @@
 int main(int argc, const char * argv[])
 {
     AcroverSimManager* simulationManager = new AcroverSimManager(5000.0);
-    AcroverSimApp app(1100, 700, simulationManager);
+    AcroverSimApp app(1600, 1000, simulationManager);
     app.Init("Data", "Shaders");
     app.EventLoop();
     app.CleanUp();

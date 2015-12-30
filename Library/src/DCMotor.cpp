@@ -69,6 +69,11 @@ btScalar DCMotor::getKt()
     return Kt;
 }
 
+btScalar DCMotor::getR()
+{
+    return R;
+}
+
 btScalar DCMotor::getGearRatio()
 {
     return gearRatio;

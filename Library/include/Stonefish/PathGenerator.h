@@ -24,6 +24,7 @@ public:
     virtual void Render() = 0;
     
     void MoveOnPath(btScalar distance, btVector3& point, btVector3& tangent);
+    void SavePathToTextFile(const char* path, unsigned int numOfPoints, unsigned int fixedPrecision = 6);
     
     void setRenderable(bool render);
     btScalar getLength();

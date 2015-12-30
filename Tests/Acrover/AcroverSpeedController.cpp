@@ -14,9 +14,10 @@ AcroverSpeedController::AcroverSpeedController(std::string uniqueName, FakeIMU* 
     imu = cartImu;
     enc = wheelEnc;
     drive = wheelDrive;
- 
+    maxSpeed = 20; //rad/s
+    
     gains = Eigen::VectorXd(4);
-    gains << -109.5851,  -11.8287 ,  13.5276  ,  3.1623;
+    gains <<  -20.6219, -3.6803, 5.1075, -0.3162;
     
     Reset();
 }
@@ -30,6 +31,7 @@ AcroverSpeedController::~AcroverSpeedController()
 #pragma mark - Accessors
 void AcroverSpeedController::setDesiredSpeed(btScalar speed)
 {
+    speed = btFabs(speed) > maxSpeed ? (speed > btScalar(0.) ? maxSpeed : -maxSpeed) : speed;
     setReferenceValue(2, UnitSystem::SetAngularVelocity(speed));
 }
 
@@ -52,20 +54,19 @@ void AcroverSpeedController::Tick(btScalar dt)
     measurements.push_back(errorIntegral); //integral
     
     //Calculate error integral
-    errorIntegral += (measurements[2]-ref[2])*dt;
-   // errorIntegral = errorIntegral > 1.0 ? 1.0 : (errorIntegral < -1.0 ? -1.0 : errorIntegral);
+    errorIntegral += (ref[2]-measurements[2])*dt;
+    errorIntegral = errorIntegral > 1.0 ? 1.0 : (errorIntegral < -1.0 ? -1.0 : errorIntegral);
     
     //Calculate control
     btScalar control = 0;
     
     for(unsigned int i = 0; i < 4; ++i)
-        control += (measurements[i]-ref[i]) * gains(i);
+        control += (ref[i]-measurements[i]) * gains(i);
     
-    //printf("Int: %1.5f dGamma: %1.5f Psi: %1.5f refdGamma: %1.5f refPsi: %1.5f Control: %1.5f\n", errorIntegral, measurements[2], measurements[0], ref[2], ref[0], control);
-    
-    //printf("Psi_ref: %1.5f dGamma_ref: %1.5f ", ref[0], ref[2]);
+    //printf("Ref: %1.5f Psi: %1.5f dPsi: %1.5f dGamma: %1.5f Integral: %1.5f Control: %1.5f\n", ref[2], measurements[0], measurements[1], measurements[2], measurements[3], control);
+    //printf("1: %1.5f 2: %1.5f 3: %1.5f\n", imu->getLastSample().getValue(3), imu->getLastSample().getValue(4), imu->getLastSample().getValue(5));
     
     //Apply control
-    drive->setTorque(control);
+    drive->setTorque(-control);
     
 }

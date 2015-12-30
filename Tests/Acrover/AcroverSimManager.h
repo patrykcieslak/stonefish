@@ -10,6 +10,7 @@
 #define __Stonefish__AcroverSimManager__
 
 #include "SimulationManager.h"
+#include "PathGenerator.h"
 
 class AcroverSimManager : public SimulationManager
 {
@@ -17,6 +18,7 @@ public:
     AcroverSimManager(btScalar stepsPerSecond);
     
     void BuildScenario();
+    PathGenerator* getPath();
 };
 
 #endif

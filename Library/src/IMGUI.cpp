@@ -922,7 +922,7 @@ void IMGUI::DoGauge(GLfloat x, GLfloat y, GLfloat diameter, btScalar value, btSc
     glEnd();
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2], unsigned int historyLength)
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, bool plottingEnabled, btScalar fixedRange[2], unsigned int historyLength)
 {
     bool result = false;
     
@@ -953,7 +953,8 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sen
     
     //data
     const std::deque<Sample*>& data = sens->getHistory();
-    if(data.size() > 1)
+    
+    if(plottingEnabled && data.size() > 1)
     {
         //autoscale
         btScalar minValue = 1000;

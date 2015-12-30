@@ -31,6 +31,7 @@ private:
     FakeIMU* imu;
     FakeRotaryEncoder* enc;
     AcroverDriveController* drive;
+    btScalar maxSpeed;
     
     Eigen::VectorXd gains;
     btScalar errorIntegral;

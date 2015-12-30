@@ -32,6 +32,7 @@
 #include "AcroverSpeedController.h"
 #include "AcroverTiltController.h"
 #include "AcroverPathFollowingController.h"
+#include "AcroverP2PController.h"
 
 AcroverSimManager::AcroverSimManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, INCLUSIVE)
 {
@@ -78,15 +79,15 @@ void AcroverSimManager::BuildScenario()
     btScalar Rt = 0.240;
     btScalar rt = 0.015;
     TorusEntity* torus = new TorusEntity("Wheel", Rt - rt, rt, getMaterialManager()->getMaterial("Rubber"), shiny);
-    torus->SetArbitraryPhysicalProperties(0.577, btVector3(0.013, 0.025, 0.013), btTransform::getIdentity());
+    torus->SetArbitraryPhysicalProperties(0.8, btVector3(0.018, 0.036, 0.018), btTransform::getIdentity());
     
     //Cart
     CylinderEntity* cyl = new CylinderEntity("Cart", 0.2, 0.01, getMaterialManager()->getMaterial("Concrete"), grey);
-    cyl->SetArbitraryPhysicalProperties(3.668, btVector3(0.029, 0.067, 0.04), btTransform(btQuaternion::getIdentity(), btVector3(0.0, 0.0, -0.026)));
+    cyl->SetArbitraryPhysicalProperties(3.89, btVector3(0.028, 0.075, 0.05), btTransform(btQuaternion::getIdentity(), btVector3(0.0, 0.0, -0.037)));
     
     //Lever
     BoxEntity* box = new BoxEntity("Lever", btVector3(0.1, 0.03, 0.2), getMaterialManager()->getMaterial("Concrete"), orange);
-    box->SetArbitraryPhysicalProperties(1.361, btVector3(0.005, 0.006, 0.003), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.028)));
+    box->SetArbitraryPhysicalProperties(1.72, btVector3(0.005, 0.006, 0.003), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.040)));
     
     //Robot
     FeatherstoneEntity* mwr = new FeatherstoneEntity("Mono-wheel robot", 3, torus, btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 0.3)), getDynamicsWorld(), false);
@@ -97,22 +98,22 @@ void AcroverSimManager::BuildScenario()
     mwr->AddRevoluteJoint(1, 2, btVector3(0, 0, 0.3 + 0.014), btVector3(1,0,0));
     
     mwr->setJointIC(1, 0.0, 0.0);
-    mwr->setJointDamping(1, 0.0, 0.01);
+    mwr->setJointDamping(1, 0.01, 0.01);
     mwr->setJointDamping(0, 0.01, 0.01);
     AddEntity(mwr);
     
-    Contact* c = AddContact(torus, floor, 1000000);
+    Contact* c = AddContact(torus, floor, 10000000);
     c->setDisplayMask(CONTACT_DISPLAY_PATH_A);
     
-    unsigned int sensorHistory = 1000000;
+    unsigned int sensorHistory = 10000000;
     
     //DRIVES
-    DCMotor* motor1 = new DCMotor("MotorWheel", mwr, 0, 0.165, 0.0525e-3, 1.0/490.0, 19.5e-3, 0.0);
-    motor1->SetupGearbox(true, 22.44, 1.0);
+    DCMotor* motor1 = new DCMotor("MotorWheel", mwr, 0, 0.365, 0.0525e-3, 1.0/490.0, 19.5e-3, 0.0);
+    motor1->SetupGearbox(true, 16.4953, 1.0);
     AddActuator(motor1);
     
-    DCMotor* motor2 = new DCMotor("MotorPendulum", mwr, 1, 0.212, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0000055);
-    motor2->SetupGearbox(true, (48.0/12.0)*(44.0/15.0), 1.0); //11.73
+    DCMotor* motor2 = new DCMotor("MotorPendulum", mwr, 1, 0.330, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0);
+    motor2->SetupGearbox(true, 11.73333, 1.0);
     AddActuator(motor2);
     
     //SENSORS
@@ -134,37 +135,46 @@ void AcroverSimManager::BuildScenario()
     
     //////////////CONTROL///////////////
     //--------Longitudinal---------
-    AcroverDriveController* drive1 = new AcroverDriveController("Drive1", motor1, enc1, 2.0, 16.5, 500.0);
-    drive1->SetGains(0.5, 150.0);
+    AcroverDriveController* drive1 = new AcroverDriveController("Drive1", motor1, enc1, 3.0, 16.5, 1600.0);
+    //drive1->SetGains(0.5, 150.0);
     
-    AcroverSpeedController* longitudinal = new AcroverSpeedController("SpeedController", imu, enc1, drive1, 250.0);
+    AcroverSpeedController* longitudinal = new AcroverSpeedController("SpeedController", imu, enc1, drive1, 1600.0);
     
     //-----------Lateral------------
-    AcroverDriveController* drive2 = new AcroverDriveController("Drive2", motor2, enc2, 5.0, 16.5, 500.0);
-    drive2->SetGains(0.5, 150.0);
+    AcroverDriveController* drive2 = new AcroverDriveController("Drive2", motor2, enc2, 3.0, 16.5, 1600.0);
+    //drive2->SetGains(0.5, 150.0);
     
-    AcroverTiltController* lateral = new AcroverTiltController("TiltController", imu, enc2, enc1, drive2, 250.0);
+    AcroverTiltController* lateral = new AcroverTiltController("TiltController", imu, enc2, enc1, drive2, 1600.0);
     
     ////////////PRESCRIBED PATH
     PathGenerator2D* pg2d = new PathGenerator2D(PLANE_XY);
     pg2d->setRenderable(true);
     
-    /*Pwl2D* pwl1 = new Pwl2D(Point2D(0.0, 0.0));
+    Pwl2D* pwl1 = new Pwl2D(Point2D(0.0, 0.0));
     pwl1->AddLineToPoint(Point2D(2.0, 0.0));
     pwl1->AddLineToPoint(Point2D(8.0, 3.0));
-    pwl1->AddLineToPoint(Point2D(20.0, 3.0));
-    pg2d->AddSubPath(pwl1);*/
+    pwl1->AddLineToPoint(Point2D(15.0, 3.0));
+    pg2d->AddSubPath(pwl1);
     
     //Arc2D* arc1 = new Arc2D(Point2D(2.0, -3.0), 3.0, SIMD_HALF_PI, -SIMD_HALF_PI);
     //pg2d->AddSubPath(arc1);
     
-    Bezier2D* bez1 = new Bezier2D(Point2D(0.0, 0.0), Point2D(8, -3.0), Point2D(4.0, 0), Point2D(4.0,-3.0), false);
-    pg2d->AddSubPath(bez1, true);
+    //Bezier2D* bez1 = new Bezier2D(Point2D(0.0, 0.0), Point2D(8, -3.0), Point2D(4.0, 0), Point2D(4.0,-3.0), false);
+    //pg2d->AddSubPath(bez1, true);
     
-    AcroverPathFollowingController* pathFollowing = new AcroverPathFollowingController("PathFollowing", pg2d, traj, enc1, longitudinal, lateral, 100.0);
+    //Bezier2D* bez2 = new Bezier2D(Point2D(6.0, -4.0), Point2D(0.0, 4.0), Point2D(5.0, 3.0), Point2D(4.0, 6.0), false);
+    //pg2d->AddSubPath(bez2, true);
+    
+    
+    AcroverPathFollowingController* pathFollowing = new AcroverPathFollowingController("PathFollowing", pg2d, traj, enc1, longitudinal, lateral, 50.0);
+    
+    AcroverP2PController* p2p = new AcroverP2PController("Point2point", traj, enc1, longitudinal, lateral, 50.0);
+    p2p->setGains(0.5, 0.5);
+    p2p->setDesiredPosition(0, 1);
     
     //Order is important!!!
     AddController(pathFollowing);
+    //AddController(p2p);
     AddController(longitudinal);
     AddController(lateral);
     AddController(drive1);
@@ -176,4 +186,13 @@ void AcroverSimManager::BuildScenario()
     trackb->GlueToEntity(cyl);
     trackb->Rotate(btQuaternion(-M_PI_2, 0.0, 0.0));
     AddView(trackb);
+}
+
+PathGenerator* AcroverSimManager::getPath()
+{
+    AcroverPathFollowingController* pathFollowing;
+    if((pathFollowing = (AcroverPathFollowingController*)getController("PathFollowing"))!= NULL)
+        return pathFollowing->getPath();
+    
+    return NULL;
 }

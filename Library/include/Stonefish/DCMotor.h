@@ -32,6 +32,7 @@ public:
     btScalar getKe();
     btScalar getKt();
     btScalar getGearRatio();
+    btScalar getR();
     
 private:
     btScalar getAngularVelocity();

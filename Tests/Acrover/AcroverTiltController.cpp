@@ -13,42 +13,58 @@
 #include <iostream>
 
 #pragma mark Constructors
-AcroverTiltController::AcroverTiltController(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* pendulumEnc, FakeRotaryEncoder* wheelEnc, AcroverDriveController* pendulumDrive, btScalar frequency) : FeedbackController(uniqueName, 4, frequency)
+AcroverTiltController::AcroverTiltController(std::string uniqueName, FakeIMU* cartImu, FakeRotaryEncoder* pendulumEnc, FakeRotaryEncoder* wheelEnc, AcroverDriveController* pendulumDrive, btScalar frequency) : FeedbackController(uniqueName, 5, frequency)
 {
     imu = cartImu;
     lEnc = pendulumEnc;
     wEnc = wheelEnc;
     drive = pendulumDrive;
     tyreRadius = 0.240;
-    maxTilt = 7.0/180.0*M_PI;
+    maxTilt = 6.0/180.0*M_PI;
+    errorIntegral = 0.;
  
     //Initialise gain calculation
-    L1 = Eigen::VectorXd(4);
-    L1 << -0.000158038099130146, 0.00184509192257782, -0.00410056190334906, -0.101271867292741;
+    L1 = Eigen::VectorXd(5);
+    L1 << 0.0885136145868993,
+         -1.63552704630421,
+         -0.323900602370817,
+         20.8108677907447,
+          0.0127491299974888;
 
-    L2 = Eigen::VectorXd(4);
-    L2 <<  -0.000225644945955055, 0.000803980628878505, 0.0140514758834186, -0.0499868613968714;
+    L2 = Eigen::VectorXd(5);
+    L2 <<  -0.0597933721328918,
+            0.991324386701120,
+           -2.10196686508270,
+          -11.4554539251081,
+           -0.0361192048919866;
 
-    L3 = Eigen::VectorXd(4);
-    L3 <<  0.000908508273857669, -0.00227118386982964, -0.000318471764552071, -0.0144395761382475;
+    L3 = Eigen::VectorXd(5);
+    L3 <<  -0.161173778170190,
+           -0.146097344668172,
+            2.41837625867793,
+           -2.50366568125538,
+           -0.0267150533065005;
     
-    X1 = Eigen::MatrixXd(4,4);
-    X1 << 3.60329239399578e-05,	-4.41748924441640e-06,	-0.000209433980135972,	0.000185011348612678,
-         -4.41748924441640e-06,	0.000735396937275931,	0.000257399165075062,	-0.00476783663148970,
-         -0.000209433980135972,	0.000257399165075062,	0.00158103295368960,	0.00173804942006893,
-         0.000185011348612678,	-0.00476783663148970,	0.00173804942006893,	0.0955902749680996;
+    X1 = Eigen::MatrixXd(5,5);
+    X1 << 0.252510498433865,	-0.0462648910896191,	-1.50780782545596,	0.865536329676082,	0.0416384933283826,
+        -0.0462648910896191,	0.748091279767409,	0.767311702871523,	-2.64442867651827,	-0.00812214483025762,
+        -1.50780782545596,	0.767311702871523,	9.83056422459848,	-2.40331358059471,	-0.233840540028238,
+        0.865536329676082,	-2.64442867651827,	-2.40331358059471,	52.2041658263613,	0.233017264000652,
+        0.0416384933283826,	-0.00812214483025762,	-0.233840540028238,	0.233017264000652,	0.0651410879292080;
     
-    X2 = Eigen::MatrixXd(4,4);
-    X2 << 0.000140958520175255,	-0.000182202347190216,	-0.000917174780085937,	0.00100573995387221,
-         -0.000182202347190216,	0.00171851510479154,	0.00166480893805223,	-0.0109686560402013,
-         -0.000917174780085937,	0.00166480893805223,	0.00486445286288715,	-0.0184135843920922,
-           0.00100573995387221,	-0.0109686560402013,	-0.0184135843920922,	0.0901140433984319;
+    X2 = Eigen::MatrixXd(5,5);
+    X2 << 0.0199465678371572,	0.0620355872387174,	-0.0604306767107088,	-0.171719793984670,	0.00804085762777010,
+          0.0620355872387174,   0.428369247015940,	0.0101400351896518,	1.63834699055254,	0.0323941865816221,
+         -0.0604306767107088,	0.0101400351896518,	-1.14873386464247,	-5.72733731882222,	-0.0318066814828746,
+         -0.171719793984670,	1.63834699055254,	-5.72733731882222,	-27.9788668273641,	-0.115806774017337,
+         0.00804085762777010,	0.0323941865816221,	-0.0318066814828746,	-0.115806774017337,	0.00227154476711275;
     
-    X3 = Eigen::MatrixXd(4,4);
-    X3 << -0.000140511078456246,	0.000186839467924737,	0.000921767167983697,	-0.00117140349572639,
-           0.000186839467924737,	-0.00200190867396858,	-0.00148601016869729,	0.0108522895047943,
-           0.000921767167983697,	-0.00148601016869729,	-0.00462074319665384,	0.00752970674969309,
-           -0.00117140349572639,	0.0108522895047943,	0.00752970674969309,	-0.0559888725121177;
+    X3 = Eigen::MatrixXd(5,5);
+    X3 << -0.237003470609880,	0.0302615740694970,	1.36541348840279,	-0.815020056535542,	-0.0407594506663631,
+          0.0302615740694970,	0.00397812639405796,	-0.628555034604906,	-0.749161204700090,	0.00250507329275335,
+          1.36541348840279,	-0.628555034604906,	-7.26824283323871,	7.08495657296374,	0.229834833041495,
+         -0.815020056535542,	-0.749161204700090,	7.08495657296374,	12.4997251221770,	-0.116634858989935,
+        -0.0407594506663631,	0.00250507329275335,	0.229834833041495,	-0.116634858989935,	-0.00659387112452618;
 }
 
 #pragma mark - Destructor
@@ -66,6 +82,7 @@ void AcroverTiltController::setDesiredTilt(btScalar tilt)
 #pragma mark - Methods
 void AcroverTiltController::Reset()
 {
+    errorIntegral = 0.;
 }
 
 void AcroverTiltController::Tick(btScalar dt)
@@ -79,6 +96,11 @@ void AcroverTiltController::Tick(btScalar dt)
     measurements.push_back(lEnc->getLastSample().getValue(0)); //alpha
     measurements.push_back(imu->getLastSample().getValue(3)); //dtheta
     measurements.push_back(lEnc->getLastSample().getValue(1)); //dalpha
+    measurements.push_back(errorIntegral);
+    
+    //Calculate error integral
+    errorIntegral += (ref[0]-measurements[0])*dt;
+    errorIntegral = errorIntegral > 1.0 ? 1.0 : (errorIntegral < -1.0 ? -1.0 : errorIntegral);
     
     btScalar dGamma = wEnc->getLastSample().getValue(1);
     btScalar dPhi = imu->getLastSample().getValue(5);
@@ -86,11 +108,11 @@ void AcroverTiltController::Tick(btScalar dt)
     
     //Find stable alpha with iterative solution (not possible to derive direct solution)
     btScalar l = 0.254;
-    btScalar r1 = 0.214;
-    btScalar r2 = 0.128;
+    btScalar r1 = 0.210;
+    btScalar r2 = 0.140;
     btScalar rt = 0.015;
-    btScalar m1 = 4.245;
-    btScalar m2 = 1.361;
+    btScalar m1 = 4.74;
+    btScalar m2 = 1.72;
     btScalar g = 9.81;
     btScalar equality = 0.0;
     unsigned int iter = 0;
@@ -106,7 +128,9 @@ void AcroverTiltController::Tick(btScalar dt)
     }
     while(btFabs(equality) > 0.001);
     
+    
     //ref[1] = btAsin((m1*(r1-rt)*sin(ref[0]))/(m2*r2) + ((l-rt)*sin(ref[0]))/r2)-ref[0]; //without centrifugal acceleration
+    
     //printf("Theta: %1.5lf Alpha: %1.5lf Equality: %1.5f Iterations: %d\n", ref[0], ref[1], equality, iter);
     //btScalar alpha_e = btAsin((m1*(r1-rt)*sin(measurements[0]))/(m2*r2) + ((l-rt)*sin(measurements[0]))/r2)-measurements[0];
     
@@ -125,8 +149,8 @@ void AcroverTiltController::Tick(btScalar dt)
     //Calculate control
     btScalar control = 0;
     
-    for(unsigned int i = 0; i < 4; ++i)
-        control += (measurements[i]-ref[i]) * K(i);
+    for(unsigned int i = 0; i < 5; ++i)
+        control += (ref[i]-measurements[i]) * K(i);
     
     btScalar control_e = m2*g*sin(ref[0]+ref[1])*r2;
     control += control_e;

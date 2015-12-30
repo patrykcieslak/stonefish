@@ -206,6 +206,9 @@
 		F7643A6E1B0907A400E8127E /* libBulletDynamics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F7643A6D1B0907A400E8127E /* libBulletDynamics.a */; };
 		F7643A701B0907B300E8127E /* libBulletCollision.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F7643A6F1B0907B300E8127E /* libBulletCollision.a */; };
 		F7643A721B0907BF00E8127E /* libBulletSoftBody.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F7643A711B0907BF00E8127E /* libBulletSoftBody.a */; };
+		F765521E1C32D34B009E720F /* AcroverP2PController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F765521C1C32D34A009E720F /* AcroverP2PController.cpp */; };
+		F765521F1C32DE68009E720F /* AcroverP2PController.h in Headers */ = {isa = PBXBuildFile; fileRef = F765521D1C32D34B009E720F /* AcroverP2PController.h */; };
+		F76552201C32DE73009E720F /* AcroverP2PController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F765521C1C32D34A009E720F /* AcroverP2PController.cpp */; };
 		F76A068F196B42CD008299CD /* SignalGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = F76A068E196B42CD008299CD /* SignalGenerator.h */; };
 		F76F2B381979C283002B2C50 /* FeedbackController.h in Headers */ = {isa = PBXBuildFile; fileRef = F76F2B371979C283002B2C50 /* FeedbackController.h */; };
 		F76F2B3A1979C2A7002B2C50 /* FeedbackController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F76F2B391979C2A7002B2C50 /* FeedbackController.cpp */; };
@@ -995,6 +998,8 @@
 		F7643A6D1B0907A400E8127E /* libBulletDynamics.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletDynamics.a; path = ../../../Libs/Repos/bullet3/build/src/BulletDynamics/Debug/libBulletDynamics.a; sourceTree = "<group>"; };
 		F7643A6F1B0907B300E8127E /* libBulletCollision.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletCollision.a; path = ../../../Libs/Repos/bullet3/build/src/BulletCollision/Debug/libBulletCollision.a; sourceTree = "<group>"; };
 		F7643A711B0907BF00E8127E /* libBulletSoftBody.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBulletSoftBody.a; path = ../../../Libs/Repos/bullet3/build/src/BulletSoftBody/Debug/libBulletSoftBody.a; sourceTree = "<group>"; };
+		F765521C1C32D34A009E720F /* AcroverP2PController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcroverP2PController.cpp; sourceTree = "<group>"; };
+		F765521D1C32D34B009E720F /* AcroverP2PController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcroverP2PController.h; sourceTree = "<group>"; };
 		F76A068E196B42CD008299CD /* SignalGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalGenerator.h; sourceTree = "<group>"; };
 		F76F2B371979C283002B2C50 /* FeedbackController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeedbackController.h; sourceTree = "<group>"; };
 		F76F2B391979C2A7002B2C50 /* FeedbackController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FeedbackController.cpp; sourceTree = "<group>"; };
@@ -1764,6 +1769,8 @@
 				F7DE698E1BA74DAA006B2630 /* AcroverTiltController.h */,
 				F7DE698F1BA74DAA006B2630 /* AcroverPathFollowingController.cpp */,
 				F7DE69901BA74DAA006B2630 /* AcroverPathFollowingController.h */,
+				F765521C1C32D34A009E720F /* AcroverP2PController.cpp */,
+				F765521D1C32D34B009E720F /* AcroverP2PController.h */,
 				F7DE69911BA74DAA006B2630 /* AcroverSimApp.cpp */,
 				F7DE69921BA74DAA006B2630 /* AcroverSimApp.h */,
 			);
@@ -1836,6 +1843,7 @@
 				F74CEC2518E5C7D500D0C42D /* CylindricalJoint.h in Headers */,
 				F74CEC2118E5C5AC00D0C42D /* BeltJoint.h in Headers */,
 				F75B6E6818C3E74C0092C1A2 /* GhostEntity.h in Headers */,
+				F765521F1C32DE68009E720F /* AcroverP2PController.h in Headers */,
 				F7AE97D31956C2BF00256BC9 /* PathFollowingController.h in Headers */,
 				F75B6E8418C3E74C0092C1A2 /* SphereEntity.h in Headers */,
 				F75B6E6118C3E74C0092C1A2 /* DCMotor.h in Headers */,
@@ -2191,6 +2199,7 @@
 				F76F2B3A1979C2A7002B2C50 /* FeedbackController.cpp in Sources */,
 				F75B6EE118C3EA6A0092C1A2 /* OpenGLLight.cpp in Sources */,
 				F75B6ED518C3EA6A0092C1A2 /* GeometryUtil.cpp in Sources */,
+				F76552201C32DE73009E720F /* AcroverP2PController.cpp in Sources */,
 				F7732E2A1930C13E0068D5A5 /* MISOStateSpaceController.cpp in Sources */,
 				F75B6ED718C3EA6A0092C1A2 /* IMGUI.cpp in Sources */,
 				F75B6EC818C3EA6A0092C1A2 /* Actuator.cpp in Sources */,
@@ -2283,6 +2292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7DE69961BA74DAA006B2630 /* main.cpp in Sources */,
+				F765521E1C32D34B009E720F /* AcroverP2PController.cpp in Sources */,
 				F7DE69981BA74DAA006B2630 /* AcroverTiltController.cpp in Sources */,
 				F7DE69A11BA74DAA006B2630 /* AcroverSimManager.cpp in Sources */,
 				F7E5A9031BA81880002E1F0F /* AcroverDriveController.cpp in Sources */,

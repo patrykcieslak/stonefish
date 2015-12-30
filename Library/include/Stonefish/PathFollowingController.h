@@ -22,6 +22,7 @@ public:
     
     void RenderPath();
     virtual void Reset();
+    PathGenerator* getPath();
     ControllerType getType();
     
 protected:

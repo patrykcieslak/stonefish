@@ -28,6 +28,7 @@ public:
 private:
     btScalar turning;
     btScalar speed;
+    bool plottingEnabled;
 };
 
 #endif

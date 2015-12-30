@@ -82,7 +82,7 @@ public:
     btScalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat railW, GLfloat railH, GLfloat sliderW, GLfloat sliderH, btScalar min, btScalar max, btScalar value, const char* title);
     bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
     unsigned short DoRadioGroup(ui_id ID, GLfloat x, GLfloat y, unsigned short selection, std::vector<std::string>& items, const char* title);
-    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2] = NULL, unsigned int historyLength = 0);
+    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sens, std::vector<unsigned short>& dims, const char* title, bool plottingEnabled = true, btScalar fixedRange[2] = NULL, unsigned int historyLength = 0);
     bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sensor* sensX, unsigned short dimX, Sensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength = 0);
     
     static IMGUI* getInstance();

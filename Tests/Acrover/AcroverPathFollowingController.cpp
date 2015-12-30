@@ -28,7 +28,7 @@ btScalar AcroverPathFollowingController::VelocityOnPath()
 void AcroverPathFollowingController::ControlTick(btScalar dt)
 {
     //Orientation
-    btScalar omega = -wheelEnc->getLastSample().getValue(1);
+    btScalar dGamma = -wheelEnc->getLastSample().getValue(1);
     std::vector<btScalar> measured = measuredTraj->getLastSample().getData();
     
     btScalar actualOrientation = measured[5]; //Yaw
@@ -38,18 +38,20 @@ void AcroverPathFollowingController::ControlTick(btScalar dt)
     //printf("Dot: %1.5f\n", dir);
     
     //Forward control signal (PI)
-    btScalar positionError = btSqrt(error[0] * error[0] + error[1] * error[1]);
-    if(omega != 0.0)
-        positionError = dir*omega > 0 ? -positionError : positionError;
-    else
-        positionError = dir > 0 ? positionError : -positionError;
+    btScalar positionError = btSqrt(error[0] * error[0] + error[1] * error[1]) - 0.2;
+   // if(dGamma != 0.0)
+   //     positionError = dir*dGamma > 0 ? positionError : -positionError;
+   // else
+   //     positionError = dir > 0 ? positionError : -positionError;
     
-    btScalar speedControl = 5.0 * positionError + 0.0 * positionErrorIntegral;
+    
+    btScalar speedControl = 5.0 * positionError + 0.1 * positionErrorIntegral;
     positionErrorIntegral += positionError * dt;
+    positionErrorIntegral = positionErrorIntegral > 1.0 ? 1.0 : (positionErrorIntegral < -1.0 ? -1.0 : positionErrorIntegral);
     
     //Tilt control signal (P + PI)
     
-    btScalar tiltControl = btAtan2(-(30.0 * error[3] + 20.0 * error[2] + 5.0 * distanceErrorIntegral) * omega * 0.240, 9.81);
+    btScalar tiltControl = btAtan2(-(30.0 * error[3] + 15.0 * error[2] + 2.0 * distanceErrorIntegral) * dGamma * 0.240, 9.81);
     distanceErrorIntegral += error[2] * dt;
     
     //printf("Speed: %1.5f  Tilt: %1.5f\n", -speedControl, tiltControl);
@@ -64,8 +66,8 @@ void AcroverPathFollowingController::ControlTick(btScalar dt)
 void AcroverPathFollowingController::PathEnd()
 {
     AcroverSpeedController* longitudinal = (AcroverSpeedController*)outputControllers[0];
-    longitudinal->setDesiredSpeed(0);
+    longitudinal->setDesiredSpeed(0.0);
     
     AcroverTiltController* lateral = (AcroverTiltController*)outputControllers[1];
-    lateral->setDesiredTilt(0);
+    lateral->setDesiredTilt(0.0);
 }

@@ -34,6 +34,7 @@ private:
     AcroverDriveController* drive;
     btScalar tyreRadius;
     btScalar maxTilt;
+    btScalar errorIntegral;
     
     Eigen::VectorXd L1; //1
     Eigen::VectorXd L2; //rho

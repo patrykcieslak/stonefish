@@ -32,6 +32,11 @@ PathFollowingController::~PathFollowingController()
 }
 
 #pragma mark - Accessors
+PathGenerator* PathFollowingController::getPath()
+{
+    return inputPath;
+}
+
 ControllerType PathFollowingController::getType()
 {
     return CONTROLLER_PATHFOLLOWING;
@@ -74,7 +79,7 @@ void PathFollowingController::Tick(btScalar dt)
     btVector3 desiredPoint;
     btVector3 desiredTangent;
     inputPath->MoveOnPath(VelocityOnPath() * dt, desiredPoint, desiredTangent);
-    printf("%1.5f\t%1.5f\n", desiredPoint.x(), desiredPoint.y());
+    //printf("%1.5f\t%1.5f\n", desiredPoint.x(), desiredPoint.y());
     
     
     if(inputPath->getTime() >= btScalar(1.0)) //End of path reached
@@ -106,7 +111,9 @@ void PathFollowingController::Tick(btScalar dt)
                     error[0] = positionDifference.x(); //difference in x
                     error[1] = positionDifference.y(); //difference in y
                     error[2] = positionDifference.dot(normalToPath); //distance to path
+                    
                     error[3] = desiredOrientation - actualOrientation;
+                    error[3] = error[3] >= M_PI ? -(2*M_PI-error[3]) : (error[3] < -M_PI ? 2*M_PI + error[3] : error[3]); // error in [-pi,pi)
                 }
                     break;
                     

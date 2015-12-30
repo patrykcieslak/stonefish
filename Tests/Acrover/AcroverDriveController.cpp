@@ -49,28 +49,43 @@ void AcroverDriveController::Reset()
 
 void AcroverDriveController::Tick(btScalar dt)
 {
-    //get desired servo position
-    std::vector<btScalar> ref = getReferenceValues();
+//    //get desired servo position
+//    std::vector<btScalar> ref = getReferenceValues();
+//    
+//    //get measurements
+//    Sample encSample = encoder->getLastSample();
+//    
+//    //estimate generated torque
+//    btScalar torque = motor->getTorque();//motor->getKt() * motor->getGearRatio() * motor->getCurrent();
+//    
+//    //calculate error
+//    btScalar error = ref[0] - torque;
+//    integratedError += error * dt;
+//    lastError = error;
+//    
+//    //calculate feedforward term
+//    btScalar ff = 9.5493 * motor->getKe() * motor->getGearRatio() * encSample.getValue(1);
+//    
+//    //calculate and apply control
+//    btScalar control = gainP * error + gainI * integratedError + ff;
+//    control = control > maxV ? maxV : (control < -maxV ? -maxV : control);
+//    
+//    //printf("Torque: %1.5f FF: %1.5f Error: %1.5f Control: %1.5f\n", torque, ff, error, control);
+//    
+//    motor->setVoltage(control);
     
+    //get desired torque
+    std::vector<btScalar> ref = getReferenceValues();
+
     //get measurements
     Sample encSample = encoder->getLastSample();
-    
-    //estimate generated torque
-    btScalar torque = motor->getTorque();//motor->getKt() * motor->getGearRatio() * motor->getCurrent();
-    
-    //calculate error
-    btScalar error = ref[0] - torque;
-    integratedError += error * dt;
-    lastError = error;
     
     //calculate feedforward term
     btScalar ff = 9.5493 * motor->getKe() * motor->getGearRatio() * encSample.getValue(1);
     
-    //calculate and apply control
-    btScalar control = gainP * error + gainI * integratedError + ff;
+    // calculate and apply control
+    btScalar control = ref[0] * motor->getR() / (motor->getKt() * motor->getGearRatio()) + ff;
     control = control > maxV ? maxV : (control < -maxV ? -maxV : control);
-    
-    //printf("Torque: %1.5f FF: %1.5f Error: %1.5f Control: %1.5f\n", torque, ff, error, control);
-    
+
     motor->setVoltage(control);
 }

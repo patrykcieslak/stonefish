@@ -19,6 +19,11 @@
 			<key>orderHint</key>
 			<integer>9</integer>
 		</dict>
+		<key>Acrover Release.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>10</integer>
+		</dict>
 		<key>FallingTest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>

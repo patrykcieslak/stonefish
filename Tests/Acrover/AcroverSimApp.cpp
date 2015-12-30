@@ -18,6 +18,7 @@ AcroverSimApp::AcroverSimApp(int width, int height, AcroverSimManager* sim) : Si
 {
     turning = btScalar(0.);
     speed = btScalar(0.);
+    plottingEnabled = false;
 }
 
 void AcroverSimApp::ProcessInputs()
@@ -111,7 +112,7 @@ void AcroverSimApp::DoHUD()
     dims.push_back(1);
     dims.push_back(2);
     
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("AHRS"), dims, "AHRS"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("AHRS"), dims, "AHRS", plottingEnabled))
     {
         StopSimulation();
         
@@ -135,7 +136,7 @@ void AcroverSimApp::DoHUD()
     dims.push_back(1);
     
     plot.item = 3;
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor("EncoderPendulum"), dims, "Pendulum Encoder"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 220, 300, 200, getSimulationManager()->getSensor("EncoderPendulum"), dims, "Pendulum Encoder", plottingEnabled))
     {
         StopSimulation();
         
@@ -155,7 +156,7 @@ void AcroverSimApp::DoHUD()
     }
     
     plot.item = 4;
-    if(IMGUI::getInstance()->DoTimePlot(plot, 20, 300, 300, 200, getSimulationManager()->getSensor("EncoderWheel"), dims, "Wheel Encoder"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 430, 300, 200, getSimulationManager()->getSensor("EncoderWheel"), dims, "Wheel Encoder", plottingEnabled))
     {
         StopSimulation();
         
@@ -176,14 +177,14 @@ void AcroverSimApp::DoHUD()
 
     ui_id button;
     button.owner = 1;
-    button.item = 4;
+    button.item = 5;
     button.index = 0;
     
-    if(IMGUI::getInstance()->DoButton(button, 5, 180, 110, 30, "Save Trajectory"))
+    if(IMGUI::getInstance()->DoButton(button, 5, 70, 110, 30, "Save Trajectory"))
     {
         StopSimulation();
         
-        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save trajectory data...", "oct");
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save trajectory data...", "txt");
         openDialog->Show();
         
         char* pathToFile;
@@ -198,8 +199,8 @@ void AcroverSimApp::DoHUD()
         ResumeSimulation();
     }
     
-    button.item = 5;
-    if(IMGUI::getInstance()->DoButton(button, 5, 215, 110, 30, "Save Contact"))
+    button.item = 6;
+    if(IMGUI::getInstance()->DoButton(button, 5, 110, 110, 30, "Save Contact"))
     {
         StopSimulation();
         
@@ -217,5 +218,30 @@ void AcroverSimApp::DoHUD()
         
         ResumeSimulation();
     }
+    
+    button.item = 7;
+    if(IMGUI::getInstance()->DoButton(button, 5, 150, 110, 30, "Save Path"))
+    {
+        StopSimulation();
+        
+        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save path data...", "txt");
+        openDialog->Show();
+        
+        char* pathToFile;
+        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
+        {
+            ((AcroverSimManager*)getSimulationManager())->getPath()->SavePathToTextFile(pathToFile, 10000);
+        }
+        
+        delete [] pathToFile;
+        delete openDialog;
+        
+        ResumeSimulation();
+    }
 
+    button.item = 8;
+    if(IMGUI::getInstance()->DoButton(button, 5, 190, 110, 30, plottingEnabled ? "Hide Plots" : "Show Plots"))
+    {
+        plottingEnabled = !plottingEnabled;
+    }
 }
