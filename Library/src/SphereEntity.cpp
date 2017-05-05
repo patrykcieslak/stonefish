@@ -148,7 +148,7 @@ void SphereEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVec
         submergedVolume = volume;
         drag = localFluidV*localFluidV.length()*0.5*0.5*M_PI*radius*radius;
     }
-    else if(fabsf(d) < radius) //partially submerged
+    else if(btFabs(d) < radius) //partially submerged
     {
         btScalar h = radius - d;
         submergedVolume = M_PI*h*h/3.0*(3*radius-h);

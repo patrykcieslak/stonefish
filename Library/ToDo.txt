@@ -114,6 +114,7 @@ x Mono-wheel path following controller (pursuit)
 - Rolling friction and spinning reduction based on Hertz deformation
 - True IMU - acc, gyro, kalman filter
 - Laser scanner 2d + polar plot
+- Doxygen comments!
 
 Simulation:
 - Laser rangefinder

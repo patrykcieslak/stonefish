@@ -20,8 +20,8 @@ SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueN
     volume = 0;
     dragCoeff = btVector3(0,0,0);
     centerOfBuoyancy = btVector3(0,0,0);
-    addInertia = btVector3(0,0,0);
-    addMass = btVector3(0,0,0);
+    addedMass = btVector3(0,0,0);
+    addedInertia = btVector3(0,0,0);
     
     rigidBody = NULL;
     multibodyCollider = NULL;
@@ -52,11 +52,11 @@ EntityType SolidEntity::getType()
     return ENTITY_SOLID;
 }
 
-void SolidEntity::SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia)
+void SolidEntity::SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 aMass, btVector3 aInertia)
 {
     dragCoeff = dragCoefficients;
-    addMass = addedMass;
-    addInertia = addedInertia;
+    addedMass = aMass;
+    addedInertia = aInertia;
 }
 
 void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform)

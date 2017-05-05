@@ -38,7 +38,7 @@ void AcroverPathFollowingController::ControlTick(btScalar dt)
     //printf("Dot: %1.5f\n", dir);
     
     //Forward control signal (PI)
-    btScalar positionError = btSqrt(error[0] * error[0] + error[1] * error[1]) - 0.2;
+    btScalar positionError = btSqrt(error[0] * error[0] + error[1] * error[1]);// - 0.2;
    // if(dGamma != 0.0)
    //     positionError = dir*dGamma > 0 ? positionError : -positionError;
    // else

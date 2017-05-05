@@ -90,13 +90,13 @@ bool PoolEntity::IsInsideFluid(const btVector3 &point)
         btVector3 circle = localPoint;
         circle.setZ(0);
         
-        if((circle.length() <= halfExtents.getX()) && (fabsf(localPoint.z()) <= halfExtents.getZ()))
+        if((circle.length() <= halfExtents.getX()) && (btFabs(localPoint.z()) <= halfExtents.getZ()))
             return true;
     }
     else //box
     {
         btVector3 halfExtents = ((btBoxShape*)ghost->getCollisionShape())->getHalfExtentsWithMargin();
-        if((fabsf(localPoint.x()) <= halfExtents.x()) && (fabsf(localPoint.y()) <= halfExtents.y()) && (fabsf(localPoint.z()) <= halfExtents.z()))
+        if((btFabs(localPoint.x()) <= halfExtents.x()) && (btFabs(localPoint.y()) <= halfExtents.y()) && (btFabs(localPoint.z()) <= halfExtents.z()))
            return true;
     }
     

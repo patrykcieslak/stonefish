@@ -234,7 +234,7 @@ void CableEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVect
     {
         submergedVolume = partVolume;
     }
-    else if((fabsf(d1) <= diameter/2.0) && (fabsf(d2) <= diameter/2.0)) //partially submerged, approx horizontal
+    else if((btFabs(d1) <= diameter/2.0) && (btFabs(d2) <= diameter/2.0)) //partially submerged, approx horizontal
     {
         //full equation is V = L*(R^2*acos((R-h)/R)-(R-h)*sqrt(2*R*h-h^2))
         //linearized V = (pi*R*L/2)*h
@@ -261,7 +261,7 @@ void CableEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVect
     //    submergedVolume = partVolume;
     //}
     
-    drag =  btVector3(localFluidV.x()*fabsf(localFluidV.x())*partLength*diameter*0.5*fluid->density, localFluidV.y()*partLength*fluid->viscousity, localFluidV.z()*fabsf(localFluidV.z())*partLength*diameter*0.5*fluid->density);
+    drag =  btVector3(localFluidV.x()*btFabs(localFluidV.x())*partLength*diameter*0.5*fluid->density, localFluidV.y()*partLength*fluid->viscousity, localFluidV.z()*btFabs(localFluidV.z())*partLength*diameter*0.5*fluid->density);
     drag = worldTransform.getBasis()*drag;
     angularDrag = worldTransform.getBasis()*(fluid->viscousity*localAngularV);
     cob = worldTransform.getBasis() * cob;

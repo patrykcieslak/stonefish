@@ -77,19 +77,22 @@ protected:
     virtual void BuildCollisionList() = 0;
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
     
-    Material* material;
     btRigidBody* rigidBody;
     btMultiBodyLinkCollider* multibodyCollider;
-    btScalar mass;
-    btVector3 Ipri;  //principal moments of inertia
-    btTransform localTransform;
     
+    //Properties
+    Material* material;
+    btScalar mass;
+    btVector3 Ipri;  //Principal moments of inertia
+    btScalar thickness;
     btScalar volume;
     btVector3 centerOfBuoyancy;
     btVector3 dragCoeff;
-    btVector3 addMass;
-    btVector3 addInertia;
+    btVector3 addedMass;
+    btVector3 addedInertia;
+    btTransform localTransform;
     
+    //Display
     Look look;
     GLint displayList;
     GLint collisionList;
