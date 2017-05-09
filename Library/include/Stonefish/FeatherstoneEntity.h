@@ -50,6 +50,7 @@ public:
     int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collide = false);
   
     void DriveJoint(unsigned int index, btScalar forceTorque);
+    void ApplyGravity(const btVector3& g);
     void ApplyDamping();
     
     void setBaseRenderable(bool render);

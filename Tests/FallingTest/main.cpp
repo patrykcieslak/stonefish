@@ -13,7 +13,7 @@ int main(int argc, const char * argv[])
 {
     FallingTestManager* simulationManager = new FallingTestManager(100.0);
     FallingTestApp app(1000, 700, simulationManager);
-    app.Init("Data", "Shaders");
+    app.Init("../../../../Library/data", "../../../../Library/shaders");
     app.EventLoop();
     app.CleanUp();
     

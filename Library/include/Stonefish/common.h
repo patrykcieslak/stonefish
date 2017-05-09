@@ -27,9 +27,16 @@
 #define OGLFT_NO_QT
 
 //Font
-#define FONT_NAME "/Library/Fonts/Arial.ttf"
-#define FONT_SIZE 12
-#define FONT_BASELINE 9
+#ifdef __linux__
+    #define FONT_NAME "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf"
+    #define FONT_SIZE 12
+    #define FONT_BASELINE 9
+#elif __APPLE__
+    #define FONT_NAME "/Library/Fonts/Arial.ttf"
+    #define FONT_SIZE 12
+    #define FONT_BASELINE 9
+#endif
+
 #define SCREEN_DPI 72
 
 #endif

@@ -425,36 +425,39 @@ void SimulationManager::InitializeSolver()
     dwSolver = new ResearchConstraintSolver(mlcp);
     dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     
+    //Basic configuration
     dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER;// | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
-    dynamicsWorld->getSolverInfo().m_warmstartingFactor = 1.0;
+    dynamicsWorld->getSolverInfo().m_warmstartingFactor = btScalar(1.);
     dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
-
+    
     //Quality/stability
-    dynamicsWorld->getSolverInfo().m_tau = 1.0;  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = 0.5;  //constraint error reduction in one step
-    dynamicsWorld->getSolverInfo().m_erp2 = 1.0; //constraint error reduction in one step for split impulse
+    dynamicsWorld->getSolverInfo().m_tau = btScalar(1.);  //mass factor
+    dynamicsWorld->getSolverInfo().m_erp = btScalar(1.);  //non-contact constraint error reduction
+    dynamicsWorld->getSolverInfo().m_erp2 = btScalar(1.); //contact constraint error reduction
+    dynamicsWorld->getSolverInfo().m_frictionERP = btScalar(1.); //friction constraint error reduction
     dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
-    dynamicsWorld->getSolverInfo().m_sor = 0; //not used
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = 0; //not used
+    dynamicsWorld->getSolverInfo().m_sor = btScalar(1.); //not used
+    dynamicsWorld->getSolverInfo().m_maxErrorReduction = btScalar(0.); //not used
     
     //Collision
     dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = -0.001; //value close to zero needed for accurate friction/too close to zero causes multibody sinking
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = 1.0; //error reduction for rigid body angular velocity
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = btScalar(-0.001); //value close to zero needed for accurate friction/too close to zero causes multibody sinking
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = btScalar(1.); //error reduction for rigid body angular velocity
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
-    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = -0.001;
+    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = btScalar(-0.001);
     dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
-    dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = 1e30; //not used
+    dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = INT_MAX; //not used
     
     //Special forces
-    dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = 1e30; //gyroscopic effect
+    dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = btScalar(1e30); //gyroscopic effect
     
     //Unrealistic components
-    dynamicsWorld->getSolverInfo().m_globalCfm = 0.0; //global constraint force mixing factor
-    dynamicsWorld->getSolverInfo().m_damping = 0.0; //global damping
-    dynamicsWorld->getSolverInfo().m_friction = 0.0; //global friction
-    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = 1e30; //single axis rolling velocity threshold
-    dynamicsWorld->getSolverInfo().m_linearSlop = 0.0; //position bias
+    dynamicsWorld->getSolverInfo().m_globalCfm = btScalar(0.); //global constraint force mixing factor
+    dynamicsWorld->getSolverInfo().m_damping = btScalar(0.); //global damping
+    dynamicsWorld->getSolverInfo().m_friction = btScalar(0.); //global friction
+    dynamicsWorld->getSolverInfo().m_frictionCFM = btScalar(0.); //friction constraint force mixing factor
+    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = btScalar(1e30); //single axis rolling velocity threshold
+    dynamicsWorld->getSolverInfo().m_linearSlop = btScalar(0.); //position bias
     
     //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
@@ -819,9 +822,10 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
 void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
+    ResearchDynamicsWorld* researchWorld = (ResearchDynamicsWorld*)world;
     
     //Clear all forces to ensure that no summing occurs
-    world->clearForces();
+    researchWorld->clearForces(); //Includes clearing of multibody forces!
     
     //Solve for objects settling
     bool objectsSettled = true;
@@ -836,8 +840,11 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
                 SolidEntity* solid = (SolidEntity*)simManager->entities[i];
                 solid->ApplyGravity();
             }
-            
-            //FeatherstoneEntity has gravity applied internally
+            else if(simManager->entities[i]->getType() == ENTITY_FEATHERSTONE)
+            {
+                FeatherstoneEntity* feather = (FeatherstoneEntity*)simManager->entities[i];
+                feather->ApplyGravity(world->getGravity());
+            }
         }
         
         if(simManager->simulationTime < btScalar(0.01)) //Wait for a few cycles to ensure bodies started moving
@@ -920,9 +927,10 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
 void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
+    ResearchDynamicsWorld* researchWorld = (ResearchDynamicsWorld*)world;
     
-    //clear all forces to ensure that no summing occurs
-    world->clearForces();
+    //Clear all forces to ensure that no summing occurs
+    researchWorld->clearForces(); //Includes clearing of multibody forces!
     
     //loop through all sensors -> update measurements
     for(int i = 0; i < simManager->sensors.size(); i++)
@@ -953,6 +961,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
         else if(ent->getType() == ENTITY_FEATHERSTONE)
         {
             FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
+            multibody->ApplyGravity(researchWorld->getGravity());
             multibody->ApplyDamping();
         }
         else if(ent->getType() == ENTITY_CABLE)

@@ -16,11 +16,8 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     
     multiBody = new btMultiBody(totalNumOfLinks - 1, baseSolid->getMass(), baseSolid->getMomentsOfInertia(), fixedBase, true);
     btTransform trans = baseSolid->getLocalTransform() * UnitSystem::SetTransform(transform);
-    multiBody->setBasePos(trans.getOrigin());
-    multiBody->setWorldToBaseRot(trans.getRotation().inverse());
     
-    multiBody->setBaseVel(btVector3(0.,0.,0.));
-    multiBody->setBaseOmega(btVector3(0.,0.,0.));
+    multiBody->setBaseWorldTransform(trans);
     multiBody->setUseGyroTerm(true);
     multiBody->setAngularDamping(0.0);
     multiBody->setLinearDamping(0.0);
@@ -119,6 +116,8 @@ void FeatherstoneEntity::Render()
 
 void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
 {
+    multiBody->setBaseVel(btVector3(0,0,0));
+    multiBody->setBaseOmega(btVector3(0,0,0));
     world->addMultiBody(multiBody);
 }
 
@@ -300,6 +299,8 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
     multiBody->setupRevolute(child - 1, links[child].solid->getMass(), links[child].solid->getMomentsOfInertia(), parent - 1,
                              ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToPivotOffset, pivotToChildComOffset, !collide);
     
+    multiBody->finalizeMultiDof();
+    
     multiBody->setJointPos(child - 1, btScalar(0.));
     multiBody->setJointVel(child - 1, btScalar(0.));
     
@@ -327,6 +328,7 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     multiBody->setupPrismatic(child - 1, links[child].solid->getMass(), links[child].solid->getMomentsOfInertia(), parent - 1,
                               ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToChildComOffset, btVector3(0.0,0.0,0.0), !collide);
     
+    multiBody->finalizeMultiDof();
     
     multiBody->setJointPos(child - 1, btScalar(0.));
     multiBody->setJointVel(child - 1, btScalar(0.));
@@ -354,6 +356,28 @@ void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
             
         default:
             break;
+    }
+}
+
+void FeatherstoneEntity::ApplyGravity(const btVector3& g)
+{
+    bool isSleeping = false;
+			
+    if(multiBody->getBaseCollider() && multiBody->getBaseCollider()->getActivationState() == ISLAND_SLEEPING)
+        isSleeping = true;
+    
+    for(int i=0; i<multiBody->getNumLinks(); ++i)
+    {
+        if(multiBody->getLink(i).m_collider && multiBody->getLink(i).m_collider->getActivationState() == ISLAND_SLEEPING)
+            isSleeping = true;
+    } 
+
+    if(!isSleeping)
+    {
+        multiBody->addBaseForce(g * multiBody->getBaseMass());
+
+        for(int i=0; i<multiBody->getNumLinks(); ++i) 
+            multiBody->addLinkForce(i, g *multiBody->getLinkMass(i));
     }
 }
 

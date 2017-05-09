@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include "OpenGLPipeline.h"
 
-uint64_t GetTimeInMicroseconds();
+int64_t GetTimeInMicroseconds();
 void GetCWD(char* buffer,int length);
 void GetShaderPath(char* path, int len);
 void GetDataPath(char* path, int len);

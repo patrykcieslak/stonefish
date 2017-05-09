@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Project Name="libStonefish" Version="10.0.0" InternalType="Library">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="src">
+    <File Name="src/Accelerometer.cpp"/>
+    <File Name="src/Actuator.cpp"/>
+    <File Name="src/ADC.cpp"/>
+    <File Name="src/Battery.cpp"/>
+    <File Name="src/BeltJoint.cpp"/>
+    <File Name="src/BoxEntity.cpp"/>
+    <File Name="src/CableEntity.cpp"/>
+    <File Name="src/CompoundEntity.cpp"/>
+    <File Name="src/Console.cpp"/>
+    <File Name="src/Contact.cpp"/>
+    <File Name="src/Controller.cpp"/>
+    <File Name="src/Current.cpp"/>
+    <File Name="src/CylinderEntity.cpp"/>
+    <File Name="src/CylindricalJoint.cpp"/>
+    <File Name="src/DCMotor.cpp"/>
+    <File Name="src/Entity.cpp"/>
+    <File Name="src/FakeIMU.cpp"/>
+    <File Name="src/FakeRotaryEncoder.cpp"/>
+    <File Name="src/FeatherstoneEntity.cpp"/>
+    <File Name="src/FeedbackController.cpp"/>
+    <File Name="src/FilteredCollisionDispatcher.cpp"/>
+    <File Name="src/FixedJoint.cpp"/>
+    <File Name="src/FluidEntity.cpp"/>
+    <File Name="src/GearJoint.cpp"/>
+    <File Name="src/GeometryFileUtil.cpp"/>
+    <File Name="src/GeometryUtil.cpp"/>
+    <File Name="src/GhostEntity.cpp"/>
+    <File Name="src/GLSLShader.cpp"/>
+    <File Name="src/Gyroscope.cpp"/>
+    <File Name="src/IMGUI.cpp"/>
+    <File Name="src/IMU.cpp"/>
+    <File Name="src/Joint.cpp"/>
+    <File Name="src/LinearEncoder.cpp"/>
+    <File Name="src/Magnetometer.cpp"/>
+    <File Name="src/MaterialManager.cpp"/>
+    <File Name="src/MeshEntity.cpp"/>
+    <File Name="src/MISOStateSpaceController.cpp"/>
+    <File Name="src/Motor.cpp"/>
+    <File Name="src/Mux.cpp"/>
+    <File Name="src/NameManager.cpp"/>
+    <File Name="src/ObstacleEntity.cpp"/>
+    <File Name="src/OpenGLCamera.cpp"/>
+    <File Name="src/OpenGLDebugDrawer.cpp"/>
+    <File Name="src/OpenGLGBuffer.cpp"/>
+    <File Name="src/OpenGLLight.cpp"/>
+    <File Name="src/OpenGLMaterial.cpp"/>
+    <File Name="src/OpenGLOmniLight.cpp"/>
+    <File Name="src/OpenGLPipeline.cpp"/>
+    <File Name="src/OpenGLPrinter.cpp"/>
+    <File Name="src/OpenGLSky.cpp"/>
+    <File Name="src/OpenGLSolids.cpp"/>
+    <File Name="src/OpenGLSpotLight.cpp"/>
+    <File Name="src/OpenGLSun.cpp"/>
+    <File Name="src/OpenGLTrackball.cpp"/>
+    <File Name="src/OpenGLView.cpp"/>
+    <File Name="src/PathFollowingController.cpp"/>
+    <File Name="src/PathGenerator.cpp"/>
+    <File Name="src/PathGenerator2D.cpp"/>
+    <File Name="src/PlaneEntity.cpp"/>
+    <File Name="src/PoolEntity.cpp"/>
+    <File Name="src/PrismaticJoint.cpp"/>
+    <File Name="src/ResearchConstraintSolver.cpp"/>
+    <File Name="src/ResearchDynamicsWorld.cpp"/>
+    <File Name="src/RevoluteJoint.cpp"/>
+    <File Name="src/RotaryEncoder.cpp"/>
+    <File Name="src/Sample.cpp"/>
+    <File Name="src/ScientificFileUtil.cpp"/>
+    <File Name="src/Sensor.cpp"/>
+    <File Name="src/ServoController.cpp"/>
+    <File Name="src/SignalGenerator.cpp"/>
+    <File Name="src/SignalMux.cpp"/>
+    <File Name="src/SimulationApp.cpp"/>
+    <File Name="src/SimulationManager.cpp"/>
+    <File Name="src/SolidEntity.cpp"/>
+    <File Name="src/SphereEntity.cpp"/>
+    <File Name="src/SphericalJoint.cpp"/>
+    <File Name="src/StaticEntity.cpp"/>
+    <File Name="src/SystemUtil.cpp"/>
+    <File Name="src/TerrainEntity.cpp"/>
+    <File Name="src/Thruster.cpp"/>
+    <File Name="src/TorusEntity.cpp"/>
+    <File Name="src/TorusShape.cpp"/>
+    <File Name="src/Trajectory.cpp"/>
+    <File Name="src/TrueRotaryEncoder.cpp"/>
+    <File Name="src/UnitSystem.cpp"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="include">
+    <File Name="include/Stonefish/Accelerometer.h"/>
+    <File Name="include/Stonefish/Actuator.h"/>
+    <File Name="include/Stonefish/ADC.h"/>
+    <File Name="include/Stonefish/Battery.h"/>
+    <File Name="include/Stonefish/BeltJoint.h"/>
+    <File Name="include/Stonefish/BoxEntity.h"/>
+    <File Name="include/Stonefish/CableEntity.h"/>
+    <File Name="include/Stonefish/common.h"/>
+    <File Name="include/Stonefish/CompoundEntity.h"/>
+    <File Name="include/Stonefish/Console.h"/>
+    <File Name="include/Stonefish/Contact.h"/>
+    <File Name="include/Stonefish/Controller.h"/>
+    <File Name="include/Stonefish/Current.h"/>
+    <File Name="include/Stonefish/CylinderEntity.h"/>
+    <File Name="include/Stonefish/CylindricalJoint.h"/>
+    <File Name="include/Stonefish/DCMotor.h"/>
+    <File Name="include/Stonefish/Entity.h"/>
+    <File Name="include/Stonefish/FakeIMU.h"/>
+    <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
+    <File Name="include/Stonefish/FeatherstoneEntity.h"/>
+    <File Name="include/Stonefish/FeedbackController.h"/>
+    <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
+    <File Name="include/Stonefish/FixedJoint.h"/>
+    <File Name="include/Stonefish/FluidEntity.h"/>
+    <File Name="include/Stonefish/GearJoint.h"/>
+    <File Name="include/Stonefish/GeometryFileUtil.h"/>
+    <File Name="include/Stonefish/GeometryUtil.h"/>
+    <File Name="include/Stonefish/GhostEntity.h"/>
+    <File Name="include/Stonefish/GLSLShader.h"/>
+    <File Name="include/Stonefish/Gyroscope.h"/>
+    <File Name="include/Stonefish/IMGUI.h"/>
+    <File Name="include/Stonefish/IMU.h"/>
+    <File Name="include/Stonefish/Joint.h"/>
+    <File Name="include/Stonefish/LinearEncoder.h"/>
+    <File Name="include/Stonefish/Magnetometer.h"/>
+    <File Name="include/Stonefish/MaterialManager.h"/>
+    <File Name="include/Stonefish/MeshEntity.h"/>
+    <File Name="include/Stonefish/MISOStateSpaceController.h"/>
+    <File Name="include/Stonefish/Motor.h"/>
+    <File Name="include/Stonefish/Mux.h"/>
+    <File Name="include/Stonefish/NameManager.h"/>
+    <File Name="include/Stonefish/ObstacleEntity.h"/>
+    <File Name="include/Stonefish/OpenGLCamera.h"/>
+    <File Name="include/Stonefish/OpenGLDebugDrawer.h"/>
+    <File Name="include/Stonefish/OpenGLGBuffer.h"/>
+    <File Name="include/Stonefish/OpenGLLight.h"/>
+    <File Name="include/Stonefish/OpenGLMaterial.h"/>
+    <File Name="include/Stonefish/OpenGLOmniLight.h"/>
+    <File Name="include/Stonefish/OpenGLPipeline.h"/>
+    <File Name="include/Stonefish/OpenGLPrinter.h"/>
+    <File Name="include/Stonefish/OpenGLSky.h"/>
+    <File Name="include/Stonefish/OpenGLSolids.h"/>
+    <File Name="include/Stonefish/OpenGLSpotLight.h"/>
+    <File Name="include/Stonefish/OpenGLSun.h"/>
+    <File Name="include/Stonefish/OpenGLTrackball.h"/>
+    <File Name="include/Stonefish/OpenGLView.h"/>
+    <File Name="include/Stonefish/PathFollowingController.h"/>
+    <File Name="include/Stonefish/PathGenerator.h"/>
+    <File Name="include/Stonefish/PathGenerator2D.h"/>
+    <File Name="include/Stonefish/PlaneEntity.h"/>
+    <File Name="include/Stonefish/Polynomials.h"/>
+    <File Name="include/Stonefish/PoolEntity.h"/>
+    <File Name="include/Stonefish/PrismaticJoint.h"/>
+    <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
+    <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>
+    <File Name="include/Stonefish/RevoluteJoint.h"/>
+    <File Name="include/Stonefish/RotaryEncoder.h"/>
+    <File Name="include/Stonefish/Sample.h"/>
+    <File Name="include/Stonefish/ScientificFileUtil.h"/>
+    <File Name="include/Stonefish/Sensor.h"/>
+    <File Name="include/Stonefish/ServoController.h"/>
+    <File Name="include/Stonefish/SignalGenerator.h"/>
+    <File Name="include/Stonefish/SignalMux.h"/>
+    <File Name="include/Stonefish/SimulationApp.h"/>
+    <File Name="include/Stonefish/SimulationManager.h"/>
+    <File Name="include/Stonefish/SolidEntity.h"/>
+    <File Name="include/Stonefish/SphereEntity.h"/>
+    <File Name="include/Stonefish/SphericalJoint.h"/>
+    <File Name="include/Stonefish/StaticEntity.h"/>
+    <File Name="include/Stonefish/SystemUtil.h"/>
+    <File Name="include/Stonefish/TerrainEntity.h"/>
+    <File Name="include/Stonefish/Thruster.h"/>
+    <File Name="include/Stonefish/TorusEntity.h"/>
+    <File Name="include/Stonefish/TorusShape.h"/>
+    <File Name="include/Stonefish/Trajectory.h"/>
+    <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
+    <File Name="include/Stonefish/UnitSystem.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="3rdparty">
+    <File Name="3rdparty/NativeDialog.cpp"/>
+    <File Name="3rdparty/NativeDialog.h"/>
+    <File Name="3rdparty/OGLFT.cpp"/>
+    <File Name="3rdparty/OGLFT.h"/>
+    <File Name="3rdparty/rapidxml.hpp"/>
+    <File Name="3rdparty/stb_image.c"/>
+    <File Name="3rdparty/stb_image.h"/>
+  </VirtualDirectory>
+  <Settings Type="Dynamic Library">
+    <GlobalSettings>
+      <Compiler Options="-std=c++14;-fPIC" C_Options="-fPIC" Assembler="">
+        <IncludePath Value="."/>
+        <IncludePath Value="3rdparty"/>
+        <IncludePath Value="include/Stonefish"/>
+        <IncludePath Value="/usr/include/freetype2"/>
+        <IncludePath Value="/usr/include/bullet"/>
+        <IncludePath Value="../../libs/glm"/>
+        <Preprocessor Value="BT_EULER_DEFAULT_ZYX"/>
+        <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+        <LibraryPath Value="/usr/lib"/>
+        <LibraryPath Value="/usr/lib/x86_64-linux-gnu"/>
+        <Library Value="freetype"/>
+        <Library Value="SDL2"/>
+        <Library Value="LinearMath"/>
+        <Library Value="BulletCollision"/>
+        <Library Value="BulletDynamics"/>
+        <Library Value="GL"/>
+        <Library Value="GLU"/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).so" IntermediateDirectory="./build/Debug" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="yes">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName/>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no" EnableCpp14="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
+      <Linker Options="-O2" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).so" IntermediateDirectory="./build/Release" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName/>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="yes" EnableCpp14="yes">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>

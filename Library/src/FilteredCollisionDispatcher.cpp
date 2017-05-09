@@ -68,7 +68,7 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
         //dispatcher will keep algorithms persistent in the collision pair
         if (!collisionPair.m_algorithm)
         {
-            collisionPair.m_algorithm = dispatcher.findAlgorithm(&obj0Wrap,&obj1Wrap);
+            collisionPair.m_algorithm = dispatcher.findAlgorithm(&obj0Wrap,&obj1Wrap,0,BT_CONTACT_POINT_ALGORITHMS);
         }
         
         if (collisionPair.m_algorithm)

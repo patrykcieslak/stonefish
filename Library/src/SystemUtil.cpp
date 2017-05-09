@@ -13,23 +13,30 @@
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef __MACH__
-#include <mach/mach_time.h>
-#include <mach/mach.h>
-#include <unistd.h>
-#else
-#include <windows.h>
+#ifdef __linux__
+    #include <ctime>
+    #include <chrono>
+    #include <unistd.h>
+#elif __APPLE__
+    #include <mach/mach_time.h>
+    #include <mach/mach.h>
+    #include <unistd.h>
+    #include <Carbon/Carbon.h>
+#else //WINDOWS
+    #include <windows.h>
 #endif
 
-#include <Carbon/Carbon.h>
 #include "SimulationApp.h"
 
 //Precise time
-uint64_t GetTimeInMicroseconds()
+int64_t GetTimeInMicroseconds()
 {
-#ifdef __MACH__
+#ifdef __linux__
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+#elif __APPLE__
     return mach_absolute_time()/1000;
-#else
+#else //WINDOWS
     unsigned ticks;
 	LARGE_INTEGER count;
 	static bool firstTime = true;
@@ -79,8 +86,9 @@ const char* GetDataPathPrefix(const char* directory)
 {
     static char dataPathPrefix[PATH_MAX];
     
-#ifdef __APPLE__
-    
+#ifdef __linux__
+
+#elif __APPLE__    
     CFStringRef dir = CFStringCreateWithCString(CFAllocatorGetDefault(), directory, kCFStringEncodingMacRoman);
     
     CFURLRef datafilesURL = CFBundleCopyResourceURL(CFBundleGetMainBundle(), dir, 0, 0);
@@ -91,7 +99,7 @@ const char* GetDataPathPrefix(const char* directory)
         CFRelease(datafilesURL);
     
     CFRelease(dir);
-#else
+#else //WINDOWS
     char* envDataPath = 0;
     
     // get data path from environment var

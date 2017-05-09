@@ -11,9 +11,9 @@
 
 int main(int argc, const char * argv[])
 {
-    AcrobotTestManager* simulationManager = new AcrobotTestManager(1000.0);
+    AcrobotTestManager* simulationManager = new AcrobotTestManager(2000.0);
     AcrobotTestApp app(1100, 700, simulationManager);
-    app.Init("Data", "Shaders");
+    app.Init("../../../../Library/data", "../../../../Library/shaders");
     app.EventLoop();
     app.CleanUp();
     

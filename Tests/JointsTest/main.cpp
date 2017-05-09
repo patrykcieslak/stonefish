@@ -13,7 +13,7 @@ int main(int argc, const char * argv[])
 {
     JointsTestManager* simulationManager = new JointsTestManager(500.0);
     JointsTestApp app(800, 600, simulationManager);
-    app.Init("Data", "Shaders");
+    app.Init("../../../../Library/data", "../../../../Library/shaders");
     app.EventLoop();
     app.CleanUp();
     

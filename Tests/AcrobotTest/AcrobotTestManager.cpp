@@ -34,6 +34,7 @@ AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationMana
 void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, false);
     OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, true, true);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setGravity(9.81);
@@ -52,13 +53,13 @@ void AcrobotTestManager::BuildScenario()
     Look green = CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.01, 0.9, 1.2);
     
     /////// OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 20, getMaterialManager()->getMaterial("Concrete"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,-0.1)));
+    PlaneEntity* floor = new PlaneEntity("Floor", 20, getMaterialManager()->getMaterial("Concrete"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)));
     floor->setRenderable(true);
     AddEntity(floor);
     
     /////// STANDARD APPROACH
     //SphereEntity* sph = new SphereEntity("Sphere", 0.1, getMaterialManager()->getMaterial("Concrete"), grey);
-    //AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.2)));
+    //AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.5,0,0.2)));
     
     //BoxEntity* floor2 = new BoxEntity("Floor2", btVector3(1,1,0.1), getMaterialManager()->getMaterial("Concrete"), grey);
     //AddSolidEntity(floor2, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.2)));
@@ -109,13 +110,13 @@ void AcrobotTestManager::BuildScenario()
     //Arm1
     fe->AddLink(arm1, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.15)), getDynamicsWorld());
     fe->AddRevoluteJoint(0, 1, btVector3(0.0,0.0,0.0), btVector3(0.0, 1.0, 0.0), false);
-    fe->setJointIC(0, UnitSystem::Angle(true, 3.0), UnitSystem::Angle(true, 0.0));
-    //fe->setJointDamping(0, 0, 0.005);
+    fe->setJointDamping(0, 0, 0.005);
+    fe->setJointIC(0, UnitSystem::Angle(true, 1.0), UnitSystem::Angle(true, 0.0));
     
     //Arm2
     fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 0.1)), getDynamicsWorld());
     fe->AddRevoluteJoint(1, 2, btVector3(0.0, 0.0, 0.15), btVector3(0.0, 1.0, 0.0), false);
-    //fe->setJointDamping(1, 0.01, 0.005);
+    fe->setJointDamping(1, 0.01, 0.005);
     
     AddEntity(fe);
     
@@ -142,11 +143,9 @@ void AcrobotTestManager::BuildScenario()
     mux->AddComponent(enc2, 1);
     mux->AddComponent(cur, 0);
     
-    
     //LFcombo = -42.37441    4.78974   -5.50932    0.35351   -0.18878 [theta alpha dtheta dalpha current]
     //Sampling: 1/1000  Theta0: 3 deg
     //LFcombo(500Hz) =  -75.55122    8.53945   -9.82255    0.64889  -0.17052
-    
     
     std::vector<btScalar> gains;
     gains.push_back(-42.37441);

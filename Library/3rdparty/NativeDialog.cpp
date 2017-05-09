@@ -38,7 +38,6 @@ void NativeDialog::Show()
 {
     // Window implementation block
     #ifdef _WIN32
-    
         if(Type == DialogType_Notification)
         {
             MessageBox(NULL, MessageBuffer, "GLUI2 - Message", MB_ICONINFORMATION);

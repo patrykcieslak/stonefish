@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="Stonefish" Database="" Version="10.0.0">
+  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
+  <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
+  <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
+  <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="no">
+      <Environment/>
+      <Project Name="libStonefish" ConfigName="Debug"/>
+      <Project Name="FallingTest" ConfigName="Debug"/>
+      <Project Name="JointsTest" ConfigName="Debug"/>
+      <Project Name="AcrobotTest" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="libStonefish" ConfigName="Release"/>
+      <Project Name="FallingTest" ConfigName="Release"/>
+      <Project Name="JointsTest" ConfigName="Release"/>
+      <Project Name="AcrobotTest" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

@@ -72,8 +72,8 @@ void FallingTestManager::BuildScenario()
     AddSensor(traj);
     
     //sphere->SetArbitraryPhysicalProperties(100.0, btVector3(10000000.0,10000000.0,10000000.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,200.0)));
-/*
-    for(int i=0; i<10; i++)
+
+    /*for(int i=0; i<10; i++)
     {
         color = CreateOpaqueLook(glm::vec3(i/10.f + 0.2f, 1.0f - i/10.f * 0.8f, 0.1f), 0.4f, 0.1f, 1.2f);
         BoxEntity* box = new BoxEntity("Box" + std::to_string(i), btVector3(0.5f, 0.5f, 0.5f), getMaterialManager()->getMaterial("Steel"), color);

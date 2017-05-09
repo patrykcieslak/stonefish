@@ -69,13 +69,13 @@ btScalar FakeRotaryEncoder::GetRawAngularVelocity()
     }
     else
     {
-        btScalar mbAV = btScalar(0.);
+        btScalar mbAV(0);
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
         multibody->getJointVelocity(multibodyJoint, mbAV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAV;
         else
-            return btScalar(0.);
+            return btScalar(0);
     }
 }
