@@ -53,12 +53,12 @@ std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar den
     return mat.name;
 }
 
-std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscousity, btScalar IOR)
+std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscosity, btScalar IOR)
 {
     Fluid flu;
     flu.name = fluidNameManager.AddName(uniqueName);
     flu.density = UnitSystem::SetDensity(density);
-    flu.viscousity = viscousity;
+    flu.viscosity = viscosity;
     flu.IOR = IOR > 0 ? IOR : 1.0;
     fluids.push_back(flu);
     

@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "CableEntity.h"
@@ -261,8 +261,8 @@ void CableEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVect
     //    submergedVolume = partVolume;
     //}
     
-    drag =  btVector3(localFluidV.x()*btFabs(localFluidV.x())*partLength*diameter*0.5*fluid->density, localFluidV.y()*partLength*fluid->viscousity, localFluidV.z()*btFabs(localFluidV.z())*partLength*diameter*0.5*fluid->density);
+    drag =  btVector3(localFluidV.x()*btFabs(localFluidV.x())*partLength*diameter*0.5*fluid->density, localFluidV.y()*partLength*fluid->viscosity, localFluidV.z()*btFabs(localFluidV.z())*partLength*diameter*0.5*fluid->density);
     drag = worldTransform.getBasis()*drag;
-    angularDrag = worldTransform.getBasis()*(fluid->viscousity*localAngularV);
+    angularDrag = worldTransform.getBasis()*(fluid->viscosity*localAngularV);
     cob = worldTransform.getBasis() * cob;
 }

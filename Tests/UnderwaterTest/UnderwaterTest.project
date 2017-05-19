@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Project Name="AcrobotTest" Version="10.0.0" InternalType="Console">
+<CodeLite_Project Name="UnderwaterTest" Version="10.0.0" InternalType="Console">
   <Plugins>
     <Plugin Name="qmake">
       <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
@@ -8,18 +8,18 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="AcrobotTestApp.cpp"/>
-    <File Name="AcrobotTestManager.cpp"/>
     <File Name="main.cpp"/>
+    <File Name="UnderwaterTestApp.cpp"/>
+    <File Name="UnderwaterTestManager.cpp"/>
   </VirtualDirectory>
-  <VirtualDirectory Name="include">
-    <File Name="AcrobotTestApp.h"/>
-    <File Name="AcrobotTestManager.h"/>
-  </VirtualDirectory>
-  <Dependencies Name="Debug">
+  <Dependencies Name="Release">
     <Project Name="libStonefish"/>
   </Dependencies>
-  <Dependencies Name="Release">
+  <VirtualDirectory Name="include">
+    <File Name="UnderwaterTestApp.h"/>
+    <File Name="UnderwaterTestManager.h"/>
+  </VirtualDirectory>
+  <Dependencies Name="Debug">
     <Project Name="libStonefish"/>
   </Dependencies>
   <Settings Type="Executable">
@@ -56,7 +56,7 @@
         <LibraryPath Value="../../Library/build/Debug"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Debug" Command="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Debug/AcrobotTest" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Debug" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
@@ -91,18 +91,19 @@
     </Configuration>
     <Configuration Name="Release" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-O2;-Wall" C_Options="-O2;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
       <Linker Options="" Required="yes">
         <LibraryPath Value="../../Library/build/Release"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Release/AcrobotTest" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Release" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
-      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="yes">
         <DebuggerSearchPaths/>
         <PostConnectCommands/>
         <StartupCommands/>

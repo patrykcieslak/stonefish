@@ -158,10 +158,9 @@ btCollisionShape* MeshEntity::BuildCollisionShape()
         
     btConvexHullShape* convex = new btConvexHullShape();
     for(int i=0; i<mesh->vertices.size(); i++)
-        convex->addPoint(mesh->vertices[i] * 0.9); //This param has to depend on something?!
+        convex->addPoint(mesh->vertices[i] * 1.); //How to do offset?
     
     return convex;
-    
 }
 
 void calculateDrag(const btVector3& v1, const btVector3& v2, const btVector3& v3, const Fluid* fluid, const btVector3& fluidV, const btVector3& angularV, btVector3& dragForce, btVector3& dragTorque)
@@ -402,5 +401,78 @@ void MeshEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVecto
     centerOfBuoyancy = cob;
 }
 
-
-
+void MeshEntity::ApplyFluidForces(FluidEntity* fluid)
+{
+    if(rigidBody == NULL)
+        return;
+    
+    //Get body motion
+    btTransform T = rigidBody->getWorldTransform();
+    btVector3 p = T.getOrigin();
+    btVector3 v = getLinearVelocity();
+    btVector3 omega = getAngularVelocity();
+    btVector3 a = getLinearAcceleration();
+    btVector3 epsilon = getAngularAcceleration();
+        
+    //Calculate fluid dynamics forces and torques
+    btVector3 fluidForce(0,0,0);
+    btVector3 fluidTorque(0,0,0);
+    btVector3 testt(0,0,0);
+    
+    //Loop through all faces...
+    for(int i=0; i<mesh->faces.size(); ++i)
+    {
+        //Global coordinates
+        btVector3 p1 = T * mesh->vertices[mesh->faces[i].vertexIndex[0]];
+        btVector3 p2 = T * mesh->vertices[mesh->faces[i].vertexIndex[1]];
+        btVector3 p3 = T * mesh->vertices[mesh->faces[i].vertexIndex[2]];
+        
+        //Check if underwater
+        btScalar pressure = (fluid->GetPressure(p1) + fluid->GetPressure(p2) + fluid->GetPressure(p3))/btScalar(3);
+        if(pressure <= btScalar(0.))
+            continue;
+        
+        //Calculate face features
+        btVector3 fv1 = p2-p1; //One side of the face (triangle)
+        btVector3 fv2 = p3-p1; //Another side of the face (triangle)
+        btVector3 fc = (p1+p2+p3)/btScalar(3); //Face centroid
+        btVector3 fn = fv1.cross(fv2); //Normal of the face (not 1)
+        btScalar A = fn.length()/btScalar(2); //Area of the face (triangle)
+        
+        //Buoyancy force
+        btVector3 Fb = -fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure) 
+        
+        //Skin drag force
+        btVector3 vc = fluid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
+        btVector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
+        btVector3 Fds = fluid->getFluid()->viscosity * vt * A / btScalar(0.0001);
+        //btVector3 Fds = vt.safeNormalize()*btScalar(0.5)*fluid->getFluid()->density*btScalar(1.328)/1000.0*vt.length2()*fn.length()/btScalar(2);
+        
+        //Pressure drag force
+        btVector3 vn = vc - vt; //Water velocity normal to face
+        btVector3 Fdp(0,0,0);
+        if(fn.dot(vn) < btScalar(0))
+            Fdp = btScalar(0.5)*fluid->getFluid()->density * vn * vn.length() * A;
+        
+        //Added mass effect
+        btVector3 ac = -(a + epsilon.cross(fc - p)); //Water acceleration at face center (velocity of fluid is constant)
+        btVector3 Fa(0,0,0);
+        if(fn.dot(ac) < btScalar(0))
+            Fa = -fluid->getFluid()->density * fn.dot(ac)/btScalar(2) * btScalar(0.01) * ac.normalized();
+            //Fa = -fluid->getFluid()->density * btScalar(0.01) * fn.normalized().dot(ac.normalized()) * A * ac; //Non optimized
+        
+        testt+=Fa;
+        
+        //Combined forces
+        fluidForce += Fb + Fds + Fdp + Fa;
+        fluidTorque += (fc - p).cross(Fb + Fds + Fdp + Fa);
+    }
+    
+    //printf("Fluid: %1.2f, %1.2f, %1.2f\n", fluidForce.x(), fluidForce.y(), fluidForce.z());
+    //printf("Fluid Torque: %1.2f, %1.2f, %1.10f\n", fluidTorque.x(), fluidTorque.y(), fluidTorque.z());
+    //printf("Fluid: %1.2f, %1.2f, %1.2f\n", testt.x(), testt.y(), testt.z());
+    //printf("Body acc: %1.2f, %1.2f, %1.2f\n", epsilon.x(), epsilon.y(), epsilon.z());
+    
+    ApplyCentralForce(fluidForce);
+    ApplyTorque(fluidTorque);
+}

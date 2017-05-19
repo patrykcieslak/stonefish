@@ -28,7 +28,7 @@
 #include "BoxEntity.h"
 #include "StaticEntity.h"
 #include "CableEntity.h"
-#include "GhostEntity.h"
+#include "ForcefieldEntity.h"
 #include "FluidEntity.h"
 
 #pragma mark Constructors
@@ -929,6 +929,18 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
     ResearchDynamicsWorld* researchWorld = (ResearchDynamicsWorld*)world;
     
+    //Update acceleration data
+    for(int i =0 ; i < simManager->entities.size(); ++i)
+    {
+        Entity* ent = simManager->entities[i];
+            
+        if(ent->getType() == ENTITY_SOLID)
+        {
+            SolidEntity* solid = (SolidEntity*)ent;
+            solid->UpdateAcceleration();
+        }
+    }
+    
     //Clear all forces to ensure that no summing occurs
     researchWorld->clearForces(); //Includes clearing of multibody forces!
     
@@ -955,8 +967,8 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
         
         if(ent->getType() == ENTITY_SOLID)
         {
-            SolidEntity* simple = (SolidEntity*)ent;
-            simple->ApplyGravity();
+            SolidEntity* solid = (SolidEntity*)ent;
+            solid->ApplyGravity();
         }
         else if(ent->getType() == ENTITY_FEATHERSTONE)
         {
@@ -969,17 +981,20 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             CableEntity* cable = (CableEntity*)ent;
             cable->ApplyGravity();
         }
-        /*else if(simManager->entities[i]->getType() == GHOST) //ghost entities - action triggers
+        /*else if(ent->getType() == ENTITY_FORCEFIELD)
         {
             btManifoldArray manifoldArray;
-            GhostEntity* ghost = (GhostEntity*)simManager->entities[i];
-            btBroadphasePairArray& pairArray = ghost->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+            ForcefieldEntity* ff = (ForcefieldEntity*)ent;
+            
+            btBroadphasePairArray& pairArray = ff->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
             int numPairs = pairArray.size();
             
+            printf("Overlapping pairs:%d\n", numPairs);
+            /*
             //pool filled with liquid - buoyancy force
-            if(numPairs > 0 && ghost->getGhostType() == FLUID)
+            if(numPairs > 0 && ff->getForcefieldType() == FORCEFIELD_FLUID)
             {
-                FluidEntity* fluid = (FluidEntity*)simManager->entities[i];
+                FluidEntity* fluid = (FluidEntity*)ent;
                 
                 for(int h=0; h<numPairs; h++)
                 {
@@ -999,6 +1014,33 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
                 }
             }
         }*/
+    }
+    
+    if(simManager->fluid != NULL)
+    {
+        btBroadphasePairArray& pairArray = simManager->fluid->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+        int numPairs = pairArray.size();
+            
+        //printf("Overlapping pairs:%d\n", numPairs);
+        
+        if(numPairs > 0)
+        {    
+            for(int h=0; h<numPairs; h++)
+            {
+                const btBroadphasePair& pair = pairArray[h];
+                btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
+                if (!colPair)
+                    continue;
+                    
+                btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
+                btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                
+                if(co1 == simManager->fluid->getGhost())
+                    simManager->fluid->ApplyFluidForces(world, co2);
+                else if(co2 == simManager->fluid->getGhost())
+                    simManager->fluid->ApplyFluidForces(world, co1);
+            }
+        }
     }
 }
 

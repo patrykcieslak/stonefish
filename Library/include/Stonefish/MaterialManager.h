@@ -27,7 +27,7 @@ typedef struct
 {
     std::string name;
     btScalar density;
-    btScalar viscousity;
+    btScalar viscosity;
     btScalar IOR;
 }
 Fluid;
@@ -44,7 +44,7 @@ public:
     Material* getMaterial(std::string name);
     Material* getMaterial(int index);
     
-    std::string CreateFluid(std::string uniqueName, btScalar density, btScalar viscousity, btScalar IOR);
+    std::string CreateFluid(std::string uniqueName, btScalar density, btScalar viscosity, btScalar IOR);
     Fluid* getFluid(std::string name);
     Fluid* getFluid(int index);
     

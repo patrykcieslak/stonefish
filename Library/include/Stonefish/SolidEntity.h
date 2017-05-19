@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SolidEntity__
@@ -14,6 +14,7 @@
 #include "MaterialManager.h"
 #include "OpenGLMaterial.h"
 #include "GeometryUtil.h"
+#include "FluidEntity.h"
 
 typedef enum {SOLID_MESH = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidEntityType;
 
@@ -32,6 +33,7 @@ public:
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
     void RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world);
 
+    void UpdateAcceleration();
     void ApplyGravity();
     void ApplyCentralForce(const btVector3& force);
     void ApplyTorque(const btVector3& torque);
@@ -43,13 +45,11 @@ public:
     virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
     
     virtual SolidEntityType getSolidType() = 0;
+    virtual void ApplyFluidForces(FluidEntity* fluid);
     virtual void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
                                         btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                         btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
                                         const btVector3& angularVelocity = btVector3(0,0,0)) = 0;
-    
-    
-    
     
     void setDisplayCoordSys(bool enabled);
     btRigidBody* getRigidBody();
@@ -67,6 +67,8 @@ public:
     btVector3 getLinearVelocity();
     btVector3 getLinearVelocityInLocalPoint(const btVector3& relPos);
     btVector3 getAngularVelocity();
+    btVector3 getLinearAcceleration();
+    btVector3 getAngularAcceleration();
     
     bool isCoordSysVisible();
     bool fullyImmersed;
@@ -91,6 +93,10 @@ protected:
     btVector3 addedMass;
     btVector3 addedInertia;
     btTransform localTransform;
+    
+    //Motion
+    btVector3 linearAcc;
+    btVector3 angularAcc;
     
     //Display
     Look look;

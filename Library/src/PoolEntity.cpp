@@ -3,17 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "PoolEntity.h"
-#include "SolidEntity.h"
-#include "CableEntity.h"
 #include "OpenGLSolids.h"
 
-PoolEntity::PoolEntity(std::string uniqueName, btScalar extent1, btScalar extent2, btScalar ddepth, const btTransform& worldTransform, Fluid* fld) : FluidEntity(uniqueName, fld)
+PoolEntity::PoolEntity(std::string uniqueName, btScalar extent1, btScalar extent2, btScalar ddepth, const btTransform& worldTransform, Fluid* fld, Material* wallMat, Look wallLook) : FluidEntity(uniqueName, fld)
 {
-    fluidVelocity = btVector3(0,0,0);
+    material = wallMat;
+    look = wallLook;
     depth = UnitSystem::SetLength(ddepth);
     btVector3 halfExtents = btVector3(UnitSystem::SetLength(extent1/2.0), UnitSystem::SetLength(extent2/2.0), depth/2.0);
     ghost->setWorldTransform(UnitSystem::SetTransform(worldTransform));
@@ -29,17 +28,84 @@ PoolEntity::PoolEntity(std::string uniqueName, btScalar extent1, btScalar extent
     glVertex3f(halfExtents.x(), halfExtents.y(), -halfExtents.z());
     glVertex3f(halfExtents.x(), -halfExtents.y(), -halfExtents.z());
     glEnd();
+    glEndList();
     
-    //volumeDisplayList
+    float wallGrow = 1.1f;
     
+    volumeDisplayList = glGenLists(1);
+    glNewList(volumeDisplayList, GL_COMPILE);
     
+    //Bottom
+    glBegin(GL_QUADS);
+    glVertex3f(-halfExtents.x(), -halfExtents.y(), halfExtents.z());
+    glVertex3f(-halfExtents.x(), halfExtents.y(), halfExtents.z());
+    glVertex3f(halfExtents.x(), halfExtents.y(), halfExtents.z());
+    glVertex3f(halfExtents.x(), -halfExtents.y(), halfExtents.z());
     
+    glVertex3f(halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(-halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(-halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glEnd();
+    
+    //Inside
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex3f(-halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    glVertex3f(-halfExtents.x(), halfExtents.y(), halfExtents.z());
+    
+    glVertex3f(-halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    glVertex3f(-halfExtents.x(), -halfExtents.y(), halfExtents.z());
+    
+    glVertex3f(halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    glVertex3f(halfExtents.x(), -halfExtents.y(), halfExtents.z());
+    
+    glVertex3f(halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    glVertex3f(halfExtents.x(), halfExtents.y(), halfExtents.z());
+    
+    glVertex3f(-halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    glVertex3f(-halfExtents.x(), halfExtents.y(), halfExtents.z());
+    glEnd();
+    
+    //Outside
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex3f(-halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(-halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, -halfExtents.z());
+    
+    glVertex3f(-halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(-halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, -halfExtents.z());
+    
+    glVertex3f(halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, -halfExtents.z());
+    
+    glVertex3f(halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, -halfExtents.z());
+    
+    glVertex3f(-halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, halfExtents.z()*wallGrow);
+    glVertex3f(-halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, -halfExtents.z());
+    glEnd();
+    
+    //Top
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex3f(-halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, -halfExtents.z());
+    glVertex3f(-halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    
+    glVertex3f(halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, -halfExtents.z());
+    glVertex3f(halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    
+    glVertex3f(halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, -halfExtents.z());
+    glVertex3f(halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    
+    glVertex3f(-halfExtents.x()*wallGrow, halfExtents.y()*wallGrow, -halfExtents.z());
+    glVertex3f(-halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    
+    glVertex3f(-halfExtents.x()*wallGrow, -halfExtents.y()*wallGrow, -halfExtents.z());
+    glVertex3f(-halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    glEnd();
     glEndList();
 }
 
 PoolEntity::PoolEntity(std::string uniqueName, btScalar rradius, btScalar ddepth, const btTransform& worldTransform, Fluid* fld) : FluidEntity(uniqueName, fld)
 {
-    fluidVelocity = btVector3(0,0,0);
     depth = UnitSystem::SetLength(ddepth);
     btScalar radius = UnitSystem::SetLength(rradius);
     ghost->setWorldTransform(UnitSystem::SetTransform(worldTransform));
@@ -103,52 +169,30 @@ bool PoolEntity::IsInsideFluid(const btVector3 &point)
     return false;
 }
 
-void PoolEntity::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
+btScalar PoolEntity::GetPressure(const btVector3& point)
 {
-    //1.Check if object is an Entity
-    btRigidBody* rb = btRigidBody::upcast(co);
-    if(rb == NULL || rb->isStaticObject())
-        return;
+    btTransform trans = ghost->getWorldTransform();
+    btVector3 localPoint = trans.inverse()*point;
+    btScalar g = 9.81;
+    btScalar d = depth/btScalar(2)+localPoint.z();
     
-    Entity* ent = (Entity*)rb->getUserPointer();
-    if(ent == NULL) 
-        return;
+    btScalar pressure = d > btScalar(0) ? d*fluid->density*g : btScalar(0);
+    return pressure;
+}
+
+void PoolEntity::Render()
+{
+    btTransform trans = ghost->getWorldTransform();
+    btScalar openglTrans[16];
+    trans.getOpenGLMatrix(openglTrans);
     
-    //2.Determine fluid surface coordinates
-    btVector3 surfaceN, surfaceD;
-    GetSurface(surfaceN, surfaceD);
-    
-    //3.Calculate fluid forces and buoyancy center based on entity type
-    btVector3 cob;
-    btScalar submergedV = 0;
-    btVector3 dForce;
-    btVector3 adTorque;
-    
-    switch (ent->getType())
-    {
-        case ENTITY_SOLID:
-        {
-            SolidEntity* solid = (SolidEntity*)ent;
-            solid->CalculateFluidDynamics(surfaceN, surfaceD, fluidVelocity, fluid, submergedV, cob, dForce, adTorque);
-            rb->applyForce(-world->getGravity()*submergedV*fluid->density, cob);
-            rb->applyCentralForce(dForce);
-            rb->applyTorque(adTorque);
-            rb->setDamping(submergedV/solid->getVolume()*fluid->viscousity, submergedV/solid->getVolume()*fluid->viscousity);
-        }
-        break;
-    
-        case ENTITY_CABLE:
-        {
-            CableEntity* cable = (CableEntity*)ent;
-            cable->CalculateFluidDynamics(surfaceN, surfaceD, fluidVelocity, fluid, submergedV, cob, dForce, adTorque, rb->getWorldTransform(), rb->getLinearVelocity(), rb->getAngularVelocity());
-            rb->applyForce(-world->getGravity()*submergedV*fluid->density, cob);
-            rb->applyCentralForce(dForce);
-            rb->applyTorque(adTorque);
-            rb->setDamping(submergedV/cable->getPartVolume()*fluid->viscousity, submergedV/cable->getPartVolume()*fluid->viscousity);
-        }
-            break;
-            
-        default:
-            return;
-    }
+    glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+    glMultMatrixd(openglTrans);
+#else
+    glMultMatrixf(openglTrans);
+#endif
+    UseLook(look);
+    glCallList(volumeDisplayList);
+    glPopMatrix();
 }

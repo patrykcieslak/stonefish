@@ -161,10 +161,11 @@ void OpenGLPipeline::DrawDisplay()
 
 void OpenGLPipeline::DrawStandardObjects()
 {
-    for(int h=0; h<simulation->entities.size(); h++) //Render entities
-    {
+    for(int h=0; h<simulation->entities.size(); ++h)
         simulation->entities[h]->Render();
-    }
+    
+    if(renderFluid && simulation->fluid != NULL)
+        simulation->fluid->Render();
 }
 
 void OpenGLPipeline::DrawSpecialObjects()
@@ -226,6 +227,7 @@ void OpenGLPipeline::Render()
                 OpenGLView::SetTextureUnits(2, 0, 1);
                 simulation->views[i]->RenderSSAO();
             }
+            
             
             if(!renderFluid || simulation->fluid == NULL)
             /////////////////////////////// N O R M A L  P I P E L I N E //////////////////////////////
@@ -371,25 +373,137 @@ void OpenGLPipeline::Render()
                     if(inside)
             ////////////////////// U N D E R W A T E R  P I P E L I N E /////////////////////////
                     {
+                        btScalar openglTrans[16];
+                        
+                        /////////// Render normal scene with special stencil masking ////////////////
+                        {
+                        glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
+                        glDrawBuffer(SCENE_ATTACHMENT);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     
-                        
-                        
-                        
-                        
-                        
-                        
-                       
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+                        //1. Create stencil mask
+                        glEnable(GL_DEPTH_TEST);
+                        glEnable(GL_STENCIL_TEST);
+                        glEnable(GL_CULL_FACE);
+                        glCullFace(GL_BACK);
+                        glDisable(GL_BLEND);
+                    
+                        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+                        glStencilMask(0xFF);
+                        glClear(GL_STENCIL_BUFFER_BIT);
+                    
+                        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                        simulation->views[i]->SetProjection();
+                        simulation->views[i]->GetViewTransform().getOpenGLMatrix(openglTrans);
+                        glMatrixMode(GL_MODELVIEW);
+#ifdef BT_USE_DOUBLE_PRECISION
+                        glLoadMatrixd(openglTrans);
+#else
+                        glLoadMatrixf(openglTrans);
+#endif
+                        //Render normal objects and set stencil to 1
+                        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                        DrawStandardObjects();
+                        //Render fluid surface and change stencil to 2
+                        glStencilFunc(GL_ALWAYS, 2, 0xFF);
+                        simulation->fluid->RenderSurface();
+                    
+                        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                        glStencilMask(0x00);
+                    
+                        //2. Enter deferred rendering
+                        glDisable(GL_DEPTH_TEST);
+                        glDisable(GL_CULL_FACE);
+                    
+                        OpenGLSolids::SetupOrtho();
+                    
+                        //3. Draw sky where stencil = 0
+                        if(renderSky)
+                        {
+                            glStencilFunc(GL_EQUAL, 0, 0xFF);
+                            OpenGLSky::getInstance()->Render(simulation->views[i], simulation->views[i]->GetViewTransform(), simulation->zUp);
+                        }
+                    
+                        //4. Bind deferred textures to texture units
+                        glStencilFunc(GL_EQUAL, 1, 0xFF);
+                    
+                        glActiveTexture(GL_TEXTURE0);
+                        glEnable(GL_TEXTURE_2D);
+                        glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getDiffuseTexture()); //Diffuse is reused
+                    
+                        glActiveTexture(GL_TEXTURE1);
+                        glEnable(GL_TEXTURE_2D);
+                        glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getPositionTexture(0));
+                    
+                        glActiveTexture(GL_TEXTURE2);
+                        glEnable(GL_TEXTURE_2D);
+                        glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getGBuffer()->getNormalsTexture(0));
+                    
+                        glActiveTexture(GL_TEXTURE3);
+                        glEnable(GL_TEXTURE_CUBE_MAP);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
+                    
+                        glActiveTexture(GL_TEXTURE4);
+                        glEnable(GL_TEXTURE_CUBE_MAP);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getReflectionCubemap());
+                    
+                        //5. Bind SSAO texture if needed
+                        glActiveTexture(GL_TEXTURE5);
+                        glEnable(GL_TEXTURE_2D);
+                        if(renderSAO && simulation->views[i]->hasSSAO())
+                            glBindTexture(GL_TEXTURE_2D, simulation->views[i]->getSSAOTexture());
+                        else
+                            glBindTexture(GL_TEXTURE_2D, 0);
+                    
+                        OpenGLSun::getInstance()->SetTextureUnits(0, 2, 1, 6);
+                        OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5, 6);
+                    
+                        //5. Render ambient pass - sky, ssao
+                        OpenGLLight::RenderAmbientLight(simulation->views[i]->GetViewTransform(), simulation->zUp);
+                    
+                        glEnable(GL_BLEND);
+                        glBlendEquation(GL_FUNC_ADD);
+                        glBlendFunc(GL_ONE, GL_ONE); //accumulate light
+                    
+                        //6. Render lights
+                        OpenGLSun::getInstance()->Render(simulation->views[i]->GetViewTransform()); //Render sun pass
+                    
+                        for(int h=0; h<simulation->lights.size(); h++) //Render light passes
+                            simulation->lights[h]->Render();
+                    
+                        //7. Reset OpenGL
+                        glUseProgramObjectARB(0);
+                        glDisable(GL_STENCIL_TEST);
+                    
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                    
+                        glActiveTexture(GL_TEXTURE1);
+                        glDisable(GL_TEXTURE_2D);
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                    
+                        glActiveTexture(GL_TEXTURE2);
+                        glDisable(GL_TEXTURE_2D);
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                    
+                        glActiveTexture(GL_TEXTURE3);
+                        glDisable(GL_TEXTURE_CUBE_MAP);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+                    
+                        glActiveTexture(GL_TEXTURE4);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+                        glDisable(GL_TEXTURE_CUBE_MAP);
+                    
+                        glActiveTexture(GL_TEXTURE5);
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                        glDisable(GL_TEXTURE_2D);
+                    
+                        glActiveTexture(GL_TEXTURE6);
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                        glDisable(GL_TEXTURE_2D);
+                    
+                        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                        }
                         
                     }
             /////////////////////////////////////////////////////////////////////////////////////
@@ -399,7 +513,16 @@ void OpenGLPipeline::Render()
                 else
             //////////////////////// A B O V E  W A T E R  P I P E L I N E //////////////////////
                 {
+                    btScalar openglTrans[16];
+                    
+                    double surface[4];
+                    surface[0] = normal.x();
+                    surface[1] = normal.y();
+                    surface[2] = normal.z();
+                    surface[3] = -normal.dot(position);
+                    
                     /////////// Render normal scene with special stencil masking ////////////////
+                    {
                     glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(SCENE_ATTACHMENT);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -417,7 +540,6 @@ void OpenGLPipeline::Render()
                     
                     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                     simulation->views[i]->SetProjection();
-                    btScalar openglTrans[16];
                     simulation->views[i]->GetViewTransform().getOpenGLMatrix(openglTrans);
                     glMatrixMode(GL_MODELVIEW);
 #ifdef BT_USE_DOUBLE_PRECISION
@@ -527,14 +649,10 @@ void OpenGLPipeline::Render()
                     glDisable(GL_TEXTURE_2D);
                     
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                    
+                    }
+                    /////////// Render reflection
+                    {
                     //////////////// Fill reflected G-buffer ////////////////////////
-                    double surface[4];
-                    surface[0] = normal.x();
-                    surface[1] = normal.y();
-                    surface[2] = normal.z();
-                    surface[3] = -normal.dot(position);
-                    
                     simulation->views[i]->getGBuffer()->Start(1);
                     simulation->views[i]->SetProjection();
                     simulation->views[i]->SetReflectedViewTransform(simulation->fluid);
@@ -672,7 +790,9 @@ void OpenGLPipeline::Render()
                     glDisable(GL_TEXTURE_2D);
                     
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                    
+                    }
+                    /////////// Render refraction
+                    {
                     ////////////////// Fill refracted G-buffer //////////////////////////////////////
                     surface[0] = -surface[0];
                     surface[1] = -surface[1];
@@ -689,7 +809,7 @@ void OpenGLPipeline::Render()
                     glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(REFRACTION_ATTACHMENT);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    
+                   
                     //1. Create stencil mask
                     glEnable(GL_DEPTH_TEST);
                     glEnable(GL_STENCIL_TEST);
@@ -715,6 +835,7 @@ void OpenGLPipeline::Render()
                     //glEnable(GL_CLIP_PLANE0);
                     DrawStandardObjects();
                     //glDisable(GL_CLIP_PLANE0);
+                    
                     //Render fluid surface and change stencil to 1
                     glStencilFunc(GL_ALWAYS, 1, 0xFF);
                     simulation->fluid->RenderSurface();
@@ -803,7 +924,10 @@ void OpenGLPipeline::Render()
                     glDisable(GL_TEXTURE_2D);
                     
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                
+                    }
+                    
+                    ////////// Render water surface
+                    {
                     ////////////////// Render water surface using last stencil mask ////////////////
                     glBindFramebuffer(GL_FRAMEBUFFER, simulation->views[i]->getSceneFBO());
                     glDrawBuffer(SCENE_ATTACHMENT);
@@ -815,13 +939,10 @@ void OpenGLPipeline::Render()
                     simulation->views[i]->RenderFluidSurface(simulation->fluid, false);
 
                     //Accumulate light
-                    
-                    
-                    
-                    
                     glDisable(GL_STENCIL_TEST);
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+                    }
+                    
                     //////////////// Finish rendering /////////////////////////
                     finalTexture = simulation->views[i]->getSceneTexture();
                 }
@@ -829,7 +950,6 @@ void OpenGLPipeline::Render()
             }
             
             /*
-            
             //Render normal scene
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, simulation->views[i]->getSceneFBO());
             glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT); //SceneTexture
@@ -1096,8 +1216,8 @@ void OpenGLPipeline::Render()
             glDisable(GL_SCISSOR_TEST);
             
             //Debugging
-            //simulation->views[i]->ShowSceneTexture(REFLECTED, 0, 50, 300, 200);
-            //simulation->views[i]->ShowSceneTexture(REFRACTED, 0, 250, 300, 200);
+            //simulation->views[i]->ShowSceneTexture(REFLECTED, 0, 100, 300, 200);
+            //simulation->views[i]->ShowSceneTexture(REFRACTED, 0, 350, 300, 200);
             //simulation->views[i]->ShowAmbientOcclusion();
             //simulation->lights[0]->RenderShadowMap(this);
             //simulation->lights[0]->ShowShadowMap(0, 0, 0.5f);

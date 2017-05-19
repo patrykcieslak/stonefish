@@ -490,7 +490,7 @@ btTransform OpenGLView::GetRefractedViewTransform(const FluidEntity* fluid)
     btScalar beta = asin(axis.length()/fluid->getFluid()->IOR);
     axis = axis.normalize();
     
-    btQuaternion rotation = btQuaternion(axis, alpha-beta);
+    btQuaternion rotation = btQuaternion(axis, (alpha-beta));
     btTransform trans = GetViewTransform();
     
     //create reflection transform
@@ -729,7 +729,7 @@ void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
     fluid->RenderSurface();
     fluidShader[0]->Disable();
     
-    glEnable(GL_BLEND);
+    /*glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
     
     btVector3 sunDirectionEye = trans * OpenGLSun::getInstance()->GetSunDirection();
@@ -744,7 +744,7 @@ void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
     fluidShader[1]->SetUniform("time", (GLfloat)SimulationApp::getApp()->getSimulationManager()->getSimulationTime());
     fluid->RenderSurface();
     fluidShader[1]->Disable();
-    
+    */
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
@@ -847,6 +847,13 @@ void OpenGLView::Init()
     fluidShader[1]->AddUniform("lightDirection", VEC3);
     fluidShader[1]->AddUniform("lightColor", VEC4);
     fluidShader[1]->AddUniform("time", FLOAT);
+    
+    /*fluidShader[2] = new GLSLShader("belowFluidSurface.frag");
+    fluidShader[2]->AddUniform("texPosition", INT);
+    fluidShader[2]->AddUniform("texScene", INT);
+    fluidShader[2]->AddUniform("texRefraction", INT);
+    fluidShader[2]->AddUniform("texReflection", INT);*/
+
     
     /////Tonemapping//////
     lightMeterShader = new GLSLShader("lightMeter.frag");

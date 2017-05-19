@@ -3,7 +3,8 @@
   <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
   <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
   <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
-  <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="Yes"/>
+  <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="No"/>
+  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="Yes"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="no">
       <Environment/>
@@ -11,6 +12,7 @@
       <Project Name="FallingTest" ConfigName="Debug"/>
       <Project Name="JointsTest" ConfigName="Debug"/>
       <Project Name="AcrobotTest" ConfigName="Debug"/>
+      <Project Name="UnderwaterTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
@@ -18,6 +20,7 @@
       <Project Name="FallingTest" ConfigName="Release"/>
       <Project Name="JointsTest" ConfigName="Release"/>
       <Project Name="AcrobotTest" ConfigName="Release"/>
+      <Project Name="UnderwaterTest" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

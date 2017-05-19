@@ -16,12 +16,14 @@ SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueN
     localTransform = btTransform::getIdentity();
     Ipri = btVector3(0,0,0);
     mass = 0;
-    
     volume = 0;
     dragCoeff = btVector3(0,0,0);
     centerOfBuoyancy = btVector3(0,0,0);
     addedMass = btVector3(0,0,0);
     addedInertia = btVector3(0,0,0);
+    
+    linearAcc = btVector3(0,0,0);
+    angularAcc = btVector3(0,0,0);
     
     rigidBody = NULL;
     multibodyCollider = NULL;
@@ -251,6 +253,16 @@ btVector3 SolidEntity::getLinearVelocityInLocalPoint(const btVector3& relPos)
         return btVector3(0.,0.,0.);
 }
 
+btVector3 SolidEntity::getLinearAcceleration()
+{
+    return linearAcc;
+}
+
+btVector3 SolidEntity::getAngularAcceleration()
+{
+    return angularAcc;
+}
+
 btScalar SolidEntity::getVolume()
 {
     return volume;
@@ -417,11 +429,20 @@ void SolidEntity::RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world)
     }
 }
 
+void SolidEntity::UpdateAcceleration()
+{
+    if(rigidBody != NULL)
+    {
+        linearAcc = rigidBody->getTotalForce()/mass;
+        btVector3 torque = rigidBody->getTotalTorque();
+        angularAcc = btVector3(torque.x()/Ipri.x(), torque.y()/Ipri.y(), torque.z()/Ipri.z());
+    }
+}
+
 void SolidEntity::ApplyGravity()
 {
     if(rigidBody != NULL)
     {
-        ///added mass!
         rigidBody->applyGravity();
     }
 }
@@ -456,4 +477,8 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
         else
             multiBody->addLinkTorque(index, torque);
     }
+}
+
+void SolidEntity::ApplyFluidForces(FluidEntity* fluid)
+{
 }

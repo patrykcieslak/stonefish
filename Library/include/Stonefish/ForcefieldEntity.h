@@ -1,31 +1,31 @@
 //
-//  GhostEntity.h
+//  ForcefieldEntity.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/3/13.
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GhostEntity__
-#define __Stonefish_GhostEntity__
+#ifndef __Stonefish_ForcefieldEntity__
+#define __Stonefish_ForcefieldEntity__
 
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include "Entity.h"
 
-typedef enum {FLUID} GhostType;
+typedef enum {FORCEFIELD_FLUID} ForcefieldType;
 
 //pure virtual class
-class GhostEntity : public Entity
+class ForcefieldEntity : public Entity
 {
 public:
-    GhostEntity(std::string uniqueName);
-    virtual ~GhostEntity();
+    ForcefieldEntity(std::string uniqueName);
+    virtual ~ForcefieldEntity();
     
     EntityType getType();
     btPairCachingGhostObject* getGhost();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     
-    virtual GhostType getGhostType() = 0;
+    virtual ForcefieldType getForcefieldType() = 0;
     virtual void Render() = 0;
     
 protected:

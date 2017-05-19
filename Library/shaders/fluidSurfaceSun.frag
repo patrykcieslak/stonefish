@@ -11,9 +11,10 @@ const vec3 eyeDir = vec3(0.0,0.0,1.0);
 
 vec3 getFluidNormal(vec2 coord)
 {
-    vec3 waveNormal = texture2D(texWaveNormal, 10.0 * coord + 0.05 * time).rgb;
-    waveNormal.z *= sin(time) * sin(time * 0.3);
-    vec3 normal = 2.0 * waveNormal - vec3(1.0);
+    //vec3 waveNormal = texture2D(texWaveNormal, 10.0 * coord + 0.05 * time).rgb;
+    //waveNormal.z *= sin(time) * sin(time * 0.3);
+    //vec3 normal = 2.0 * waveNormal - vec3(1.0);
+    vec3 normal = vec3(0.0,0.0,1.0);
     normal = normalize(reflect(eyeSurfaceNormal, normal));
     return normal;
 }

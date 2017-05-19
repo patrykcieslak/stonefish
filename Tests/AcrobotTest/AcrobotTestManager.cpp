@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "AcrobotTestManager.h"
@@ -57,14 +57,8 @@ void AcrobotTestManager::BuildScenario()
     floor->setRenderable(true);
     AddEntity(floor);
     
+#ifndef USE_FEATHERSTONE_ALGORITHM 
     /////// STANDARD APPROACH
-    //SphereEntity* sph = new SphereEntity("Sphere", 0.1, getMaterialManager()->getMaterial("Concrete"), grey);
-    //AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.5,0,0.2)));
-    
-    //BoxEntity* floor2 = new BoxEntity("Floor2", btVector3(1,1,0.1), getMaterialManager()->getMaterial("Concrete"), grey);
-    //AddSolidEntity(floor2, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.2)));
-    
-    /*
     BoxEntity* arm1 = new BoxEntity("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), shiny);
     AddSolidEntity(arm1, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.15)));
     arm1->SetArbitraryPhysicalProperties(2.5, btVector3(0.015, 0.015, 0.015), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.03)));
@@ -76,27 +70,24 @@ void AcrobotTestManager::BuildScenario()
     RevoluteJoint* revo1 = new RevoluteJoint("Arm1Rotation", arm1, btVector3(0.0,0.0,0.0), btVector3(0.0,1.0,0.0));
     AddJoint(revo1);
     revo1->setDamping(0.0, 0.0);
-    revo1->setIC(1.0, 0.0);
+    revo1->setIC(1.0);
      
     RevoluteJoint* revo2 = new RevoluteJoint("Arm2Rotation", arm2, arm1, btVector3(0.0,0.0,0.15), btVector3(0.0,1.0,0.0), false);
     AddJoint(revo2);
     revo2->setDamping(0.0, 0.0);
-    revo2->setIC(0.0, 0.0);
+    revo2->setIC(0.0);
      
-    FakeRotaryEncoder* enc1 = new FakeRotaryEncoder("Encoder1", revo1, 100000);
+    FakeRotaryEncoder* enc1 = new FakeRotaryEncoder("Encoder1", revo1, 1000.0);
     AddSensor(enc1);
      
-    FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Encoder2", revo2, 100000);
+    FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Encoder2", revo2, 1000.0);
     AddSensor(enc2);
      
     DCMotor* motor = new DCMotor("DCX", revo2, 0.212, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0000055);
-    //AddActuator(motor);
-    */
-    
+    AddActuator(motor);
+#else
     /////// FEATHERSTONE APPROACH
     BoxEntity* base = new BoxEntity("Base", btVector3(0.5,0.5,0.05), getMaterialManager()->getMaterial("Rubber"), shiny);
-    //SphereEntity* base = new SphereEntity("Base", 0.05, getMaterialManager()->getMaterial("Rubber"), shiny);
-    //CylinderEntity* base = new CylinderEntity("Cyl", 0.05, 0.1, getMaterialManager()->getMaterial("Rubber"), shiny);
     
     BoxEntity* arm1 = new BoxEntity("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), green);
     arm1->SetArbitraryPhysicalProperties(2.5, btVector3(0.015,0.015,0.015), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.03)));
@@ -128,7 +119,8 @@ void AcrobotTestManager::BuildScenario()
     
     DCMotor* motor = new DCMotor("DCX", fe, 1, 0.212, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0000055);
     AddActuator(motor);
-    
+#endif
+
     /////// COMMON
     FakeIMU* imu = new FakeIMU("IMU", arm1, btTransform::getIdentity(), 1000.0);
     AddSensor(imu);

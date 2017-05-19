@@ -8,180 +8,224 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="src/Accelerometer.cpp"/>
-    <File Name="src/Actuator.cpp"/>
-    <File Name="src/ADC.cpp"/>
-    <File Name="src/Battery.cpp"/>
-    <File Name="src/BeltJoint.cpp"/>
-    <File Name="src/BoxEntity.cpp"/>
-    <File Name="src/CableEntity.cpp"/>
-    <File Name="src/CompoundEntity.cpp"/>
-    <File Name="src/Console.cpp"/>
-    <File Name="src/Contact.cpp"/>
-    <File Name="src/Controller.cpp"/>
-    <File Name="src/Current.cpp"/>
-    <File Name="src/CylinderEntity.cpp"/>
-    <File Name="src/CylindricalJoint.cpp"/>
-    <File Name="src/DCMotor.cpp"/>
-    <File Name="src/Entity.cpp"/>
-    <File Name="src/FakeIMU.cpp"/>
-    <File Name="src/FakeRotaryEncoder.cpp"/>
-    <File Name="src/FeatherstoneEntity.cpp"/>
-    <File Name="src/FeedbackController.cpp"/>
-    <File Name="src/FilteredCollisionDispatcher.cpp"/>
-    <File Name="src/FixedJoint.cpp"/>
-    <File Name="src/FluidEntity.cpp"/>
-    <File Name="src/GearJoint.cpp"/>
-    <File Name="src/GeometryFileUtil.cpp"/>
-    <File Name="src/GeometryUtil.cpp"/>
-    <File Name="src/GhostEntity.cpp"/>
-    <File Name="src/GLSLShader.cpp"/>
-    <File Name="src/Gyroscope.cpp"/>
-    <File Name="src/IMGUI.cpp"/>
-    <File Name="src/IMU.cpp"/>
-    <File Name="src/Joint.cpp"/>
-    <File Name="src/LinearEncoder.cpp"/>
-    <File Name="src/Magnetometer.cpp"/>
-    <File Name="src/MaterialManager.cpp"/>
-    <File Name="src/MeshEntity.cpp"/>
-    <File Name="src/MISOStateSpaceController.cpp"/>
-    <File Name="src/Motor.cpp"/>
-    <File Name="src/Mux.cpp"/>
-    <File Name="src/NameManager.cpp"/>
-    <File Name="src/ObstacleEntity.cpp"/>
-    <File Name="src/OpenGLCamera.cpp"/>
-    <File Name="src/OpenGLDebugDrawer.cpp"/>
-    <File Name="src/OpenGLGBuffer.cpp"/>
-    <File Name="src/OpenGLLight.cpp"/>
-    <File Name="src/OpenGLMaterial.cpp"/>
-    <File Name="src/OpenGLOmniLight.cpp"/>
-    <File Name="src/OpenGLPipeline.cpp"/>
-    <File Name="src/OpenGLPrinter.cpp"/>
-    <File Name="src/OpenGLSky.cpp"/>
-    <File Name="src/OpenGLSolids.cpp"/>
-    <File Name="src/OpenGLSpotLight.cpp"/>
-    <File Name="src/OpenGLSun.cpp"/>
-    <File Name="src/OpenGLTrackball.cpp"/>
-    <File Name="src/OpenGLView.cpp"/>
-    <File Name="src/PathFollowingController.cpp"/>
-    <File Name="src/PathGenerator.cpp"/>
-    <File Name="src/PathGenerator2D.cpp"/>
-    <File Name="src/PlaneEntity.cpp"/>
-    <File Name="src/PoolEntity.cpp"/>
-    <File Name="src/PrismaticJoint.cpp"/>
-    <File Name="src/ResearchConstraintSolver.cpp"/>
-    <File Name="src/ResearchDynamicsWorld.cpp"/>
-    <File Name="src/RevoluteJoint.cpp"/>
-    <File Name="src/RotaryEncoder.cpp"/>
-    <File Name="src/Sample.cpp"/>
-    <File Name="src/ScientificFileUtil.cpp"/>
-    <File Name="src/Sensor.cpp"/>
-    <File Name="src/ServoController.cpp"/>
-    <File Name="src/SignalGenerator.cpp"/>
-    <File Name="src/SignalMux.cpp"/>
-    <File Name="src/SimulationApp.cpp"/>
-    <File Name="src/SimulationManager.cpp"/>
-    <File Name="src/SolidEntity.cpp"/>
-    <File Name="src/SphereEntity.cpp"/>
-    <File Name="src/SphericalJoint.cpp"/>
-    <File Name="src/StaticEntity.cpp"/>
-    <File Name="src/SystemUtil.cpp"/>
-    <File Name="src/TerrainEntity.cpp"/>
-    <File Name="src/Thruster.cpp"/>
-    <File Name="src/TorusEntity.cpp"/>
-    <File Name="src/TorusShape.cpp"/>
-    <File Name="src/Trajectory.cpp"/>
-    <File Name="src/TrueRotaryEncoder.cpp"/>
-    <File Name="src/UnitSystem.cpp"/>
+    <VirtualDirectory Name="core">
+      <File Name="src/FilteredCollisionDispatcher.cpp"/>
+      <File Name="src/MaterialManager.cpp"/>
+      <File Name="src/NameManager.cpp"/>
+      <File Name="src/ResearchConstraintSolver.cpp"/>
+      <File Name="src/ResearchDynamicsWorld.cpp"/>
+      <File Name="src/SimulationApp.cpp"/>
+      <File Name="src/SimulationManager.cpp"/>
+      <File Name="src/TorusShape.cpp"/>
+      <File Name="src/UnitSystem.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="actuators">
+      <File Name="src/Actuator.cpp"/>
+      <File Name="src/Battery.cpp"/>
+      <File Name="src/DCMotor.cpp"/>
+      <File Name="src/Thruster.cpp"/>
+      <File Name="src/Motor.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="controllers">
+      <File Name="src/Controller.cpp"/>
+      <File Name="src/FeedbackController.cpp"/>
+      <File Name="src/MISOStateSpaceController.cpp"/>
+      <File Name="src/PathFollowingController.cpp"/>
+      <File Name="src/PathGenerator.cpp"/>
+      <File Name="src/PathGenerator2D.cpp"/>
+      <File Name="src/ServoController.cpp"/>
+      <File Name="src/SignalGenerator.cpp"/>
+      <File Name="src/SignalMux.cpp"/>
+      <File Name="src/Trajectory.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="display">
+      <File Name="src/Console.cpp"/>
+      <File Name="src/GLSLShader.cpp"/>
+      <File Name="src/IMGUI.cpp"/>
+      <File Name="src/OpenGLCamera.cpp"/>
+      <File Name="src/OpenGLDebugDrawer.cpp"/>
+      <File Name="src/OpenGLGBuffer.cpp"/>
+      <File Name="src/OpenGLLight.cpp"/>
+      <File Name="src/OpenGLMaterial.cpp"/>
+      <File Name="src/OpenGLOmniLight.cpp"/>
+      <File Name="src/OpenGLPipeline.cpp"/>
+      <File Name="src/OpenGLPrinter.cpp"/>
+      <File Name="src/OpenGLSky.cpp"/>
+      <File Name="src/OpenGLSolids.cpp"/>
+      <File Name="src/OpenGLSpotLight.cpp"/>
+      <File Name="src/OpenGLSun.cpp"/>
+      <File Name="src/OpenGLTrackball.cpp"/>
+      <File Name="src/OpenGLView.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="entities">
+      <File Name="src/BoxEntity.cpp"/>
+      <File Name="src/CableEntity.cpp"/>
+      <File Name="src/CompoundEntity.cpp"/>
+      <File Name="src/CylinderEntity.cpp"/>
+      <File Name="src/FeatherstoneEntity.cpp"/>
+      <File Name="src/FluidEntity.cpp"/>
+      <File Name="src/MeshEntity.cpp"/>
+      <File Name="src/PlaneEntity.cpp"/>
+      <File Name="src/PoolEntity.cpp"/>
+      <File Name="src/SolidEntity.cpp"/>
+      <File Name="src/SphereEntity.cpp"/>
+      <File Name="src/StaticEntity.cpp"/>
+      <File Name="src/TerrainEntity.cpp"/>
+      <File Name="src/TorusEntity.cpp"/>
+      <File Name="src/Entity.cpp"/>
+      <File Name="src/ObstacleEntity.cpp"/>
+      <File Name="src/ForcefieldEntity.cpp"/>
+      <File Name="src/SeaEntity.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="joints">
+      <File Name="src/BeltJoint.cpp"/>
+      <File Name="src/CylindricalJoint.cpp"/>
+      <File Name="src/FixedJoint.cpp"/>
+      <File Name="src/GearJoint.cpp"/>
+      <File Name="src/Joint.cpp"/>
+      <File Name="src/PrismaticJoint.cpp"/>
+      <File Name="src/RevoluteJoint.cpp"/>
+      <File Name="src/SphericalJoint.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="sensors">
+      <File Name="src/Accelerometer.cpp"/>
+      <File Name="src/ADC.cpp"/>
+      <File Name="src/Contact.cpp"/>
+      <File Name="src/Current.cpp"/>
+      <File Name="src/FakeIMU.cpp"/>
+      <File Name="src/Gyroscope.cpp"/>
+      <File Name="src/IMU.cpp"/>
+      <File Name="src/Magnetometer.cpp"/>
+      <File Name="src/Mux.cpp"/>
+      <File Name="src/RotaryEncoder.cpp"/>
+      <File Name="src/Sensor.cpp"/>
+      <File Name="src/TrueRotaryEncoder.cpp"/>
+      <File Name="src/FakeRotaryEncoder.cpp"/>
+      <File Name="src/LinearEncoder.cpp"/>
+      <File Name="src/Sample.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="utils">
+      <File Name="src/GeometryFileUtil.cpp"/>
+      <File Name="src/GeometryUtil.cpp"/>
+      <File Name="src/ScientificFileUtil.cpp"/>
+      <File Name="src/SystemUtil.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="systems">
+      <File Name="src/Manipulator.cpp"/>
+      <File Name="src/UnderwaterVehicle.cpp"/>
+      <File Name="src/Gripper.cpp"/>
+    </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
-    <File Name="include/Stonefish/Accelerometer.h"/>
-    <File Name="include/Stonefish/Actuator.h"/>
-    <File Name="include/Stonefish/ADC.h"/>
-    <File Name="include/Stonefish/Battery.h"/>
-    <File Name="include/Stonefish/BeltJoint.h"/>
-    <File Name="include/Stonefish/BoxEntity.h"/>
-    <File Name="include/Stonefish/CableEntity.h"/>
+    <VirtualDirectory Name="entities">
+      <File Name="include/Stonefish/BoxEntity.h"/>
+      <File Name="include/Stonefish/CableEntity.h"/>
+      <File Name="include/Stonefish/CompoundEntity.h"/>
+      <File Name="include/Stonefish/CylinderEntity.h"/>
+      <File Name="include/Stonefish/Entity.h"/>
+      <File Name="include/Stonefish/FeatherstoneEntity.h"/>
+      <File Name="include/Stonefish/FluidEntity.h"/>
+      <File Name="include/Stonefish/PlaneEntity.h"/>
+      <File Name="include/Stonefish/PoolEntity.h"/>
+      <File Name="include/Stonefish/SolidEntity.h"/>
+      <File Name="include/Stonefish/SphereEntity.h"/>
+      <File Name="include/Stonefish/StaticEntity.h"/>
+      <File Name="include/Stonefish/TerrainEntity.h"/>
+      <File Name="include/Stonefish/TorusEntity.h"/>
+      <File Name="include/Stonefish/MeshEntity.h"/>
+      <File Name="include/Stonefish/ObstacleEntity.h"/>
+      <File Name="include/Stonefish/ForcefieldEntity.h"/>
+      <File Name="include/Stonefish/SeaEntity.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="sensors">
+      <File Name="include/Stonefish/Accelerometer.h"/>
+      <File Name="include/Stonefish/Current.h"/>
+      <File Name="include/Stonefish/ADC.h"/>
+      <File Name="include/Stonefish/FakeIMU.h"/>
+      <File Name="include/Stonefish/Contact.h"/>
+      <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
+      <File Name="include/Stonefish/Gyroscope.h"/>
+      <File Name="include/Stonefish/IMU.h"/>
+      <File Name="include/Stonefish/LinearEncoder.h"/>
+      <File Name="include/Stonefish/Magnetometer.h"/>
+      <File Name="include/Stonefish/Mux.h"/>
+      <File Name="include/Stonefish/RotaryEncoder.h"/>
+      <File Name="include/Stonefish/Sample.h"/>
+      <File Name="include/Stonefish/Sensor.h"/>
+      <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="joints">
+      <File Name="include/Stonefish/BeltJoint.h"/>
+      <File Name="include/Stonefish/CylindricalJoint.h"/>
+      <File Name="include/Stonefish/FixedJoint.h"/>
+      <File Name="include/Stonefish/GearJoint.h"/>
+      <File Name="include/Stonefish/Joint.h"/>
+      <File Name="include/Stonefish/PrismaticJoint.h"/>
+      <File Name="include/Stonefish/RevoluteJoint.h"/>
+      <File Name="include/Stonefish/SphericalJoint.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="display">
+      <File Name="include/Stonefish/Console.h"/>
+      <File Name="include/Stonefish/GLSLShader.h"/>
+      <File Name="include/Stonefish/IMGUI.h"/>
+      <File Name="include/Stonefish/OpenGLCamera.h"/>
+      <File Name="include/Stonefish/OpenGLDebugDrawer.h"/>
+      <File Name="include/Stonefish/OpenGLGBuffer.h"/>
+      <File Name="include/Stonefish/OpenGLLight.h"/>
+      <File Name="include/Stonefish/OpenGLMaterial.h"/>
+      <File Name="include/Stonefish/OpenGLOmniLight.h"/>
+      <File Name="include/Stonefish/OpenGLPipeline.h"/>
+      <File Name="include/Stonefish/OpenGLPrinter.h"/>
+      <File Name="include/Stonefish/OpenGLSky.h"/>
+      <File Name="include/Stonefish/OpenGLSolids.h"/>
+      <File Name="include/Stonefish/OpenGLSpotLight.h"/>
+      <File Name="include/Stonefish/OpenGLSun.h"/>
+      <File Name="include/Stonefish/OpenGLTrackball.h"/>
+      <File Name="include/Stonefish/OpenGLView.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="actuators">
+      <File Name="include/Stonefish/Actuator.h"/>
+      <File Name="include/Stonefish/DCMotor.h"/>
+      <File Name="include/Stonefish/Battery.h"/>
+      <File Name="include/Stonefish/Motor.h"/>
+      <File Name="include/Stonefish/Thruster.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="controllers">
+      <File Name="include/Stonefish/Controller.h"/>
+      <File Name="include/Stonefish/FeedbackController.h"/>
+      <File Name="include/Stonefish/MISOStateSpaceController.h"/>
+      <File Name="include/Stonefish/PathFollowingController.h"/>
+      <File Name="include/Stonefish/PathGenerator.h"/>
+      <File Name="include/Stonefish/PathGenerator2D.h"/>
+      <File Name="include/Stonefish/ServoController.h"/>
+      <File Name="include/Stonefish/SignalGenerator.h"/>
+      <File Name="include/Stonefish/SignalMux.h"/>
+      <File Name="include/Stonefish/Trajectory.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="utils">
+      <File Name="include/Stonefish/GeometryFileUtil.h"/>
+      <File Name="include/Stonefish/GeometryUtil.h"/>
+      <File Name="include/Stonefish/Polynomials.h"/>
+      <File Name="include/Stonefish/ScientificFileUtil.h"/>
+      <File Name="include/Stonefish/SystemUtil.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="core">
+      <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
+      <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
+      <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>
+      <File Name="include/Stonefish/MaterialManager.h"/>
+      <File Name="include/Stonefish/NameManager.h"/>
+      <File Name="include/Stonefish/SimulationApp.h"/>
+      <File Name="include/Stonefish/SimulationManager.h"/>
+      <File Name="include/Stonefish/UnitSystem.h"/>
+      <File Name="include/Stonefish/TorusShape.h"/>
+    </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
-    <File Name="include/Stonefish/CompoundEntity.h"/>
-    <File Name="include/Stonefish/Console.h"/>
-    <File Name="include/Stonefish/Contact.h"/>
-    <File Name="include/Stonefish/Controller.h"/>
-    <File Name="include/Stonefish/Current.h"/>
-    <File Name="include/Stonefish/CylinderEntity.h"/>
-    <File Name="include/Stonefish/CylindricalJoint.h"/>
-    <File Name="include/Stonefish/DCMotor.h"/>
-    <File Name="include/Stonefish/Entity.h"/>
-    <File Name="include/Stonefish/FakeIMU.h"/>
-    <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
-    <File Name="include/Stonefish/FeatherstoneEntity.h"/>
-    <File Name="include/Stonefish/FeedbackController.h"/>
-    <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
-    <File Name="include/Stonefish/FixedJoint.h"/>
-    <File Name="include/Stonefish/FluidEntity.h"/>
-    <File Name="include/Stonefish/GearJoint.h"/>
-    <File Name="include/Stonefish/GeometryFileUtil.h"/>
-    <File Name="include/Stonefish/GeometryUtil.h"/>
-    <File Name="include/Stonefish/GhostEntity.h"/>
-    <File Name="include/Stonefish/GLSLShader.h"/>
-    <File Name="include/Stonefish/Gyroscope.h"/>
-    <File Name="include/Stonefish/IMGUI.h"/>
-    <File Name="include/Stonefish/IMU.h"/>
-    <File Name="include/Stonefish/Joint.h"/>
-    <File Name="include/Stonefish/LinearEncoder.h"/>
-    <File Name="include/Stonefish/Magnetometer.h"/>
-    <File Name="include/Stonefish/MaterialManager.h"/>
-    <File Name="include/Stonefish/MeshEntity.h"/>
-    <File Name="include/Stonefish/MISOStateSpaceController.h"/>
-    <File Name="include/Stonefish/Motor.h"/>
-    <File Name="include/Stonefish/Mux.h"/>
-    <File Name="include/Stonefish/NameManager.h"/>
-    <File Name="include/Stonefish/ObstacleEntity.h"/>
-    <File Name="include/Stonefish/OpenGLCamera.h"/>
-    <File Name="include/Stonefish/OpenGLDebugDrawer.h"/>
-    <File Name="include/Stonefish/OpenGLGBuffer.h"/>
-    <File Name="include/Stonefish/OpenGLLight.h"/>
-    <File Name="include/Stonefish/OpenGLMaterial.h"/>
-    <File Name="include/Stonefish/OpenGLOmniLight.h"/>
-    <File Name="include/Stonefish/OpenGLPipeline.h"/>
-    <File Name="include/Stonefish/OpenGLPrinter.h"/>
-    <File Name="include/Stonefish/OpenGLSky.h"/>
-    <File Name="include/Stonefish/OpenGLSolids.h"/>
-    <File Name="include/Stonefish/OpenGLSpotLight.h"/>
-    <File Name="include/Stonefish/OpenGLSun.h"/>
-    <File Name="include/Stonefish/OpenGLTrackball.h"/>
-    <File Name="include/Stonefish/OpenGLView.h"/>
-    <File Name="include/Stonefish/PathFollowingController.h"/>
-    <File Name="include/Stonefish/PathGenerator.h"/>
-    <File Name="include/Stonefish/PathGenerator2D.h"/>
-    <File Name="include/Stonefish/PlaneEntity.h"/>
-    <File Name="include/Stonefish/Polynomials.h"/>
-    <File Name="include/Stonefish/PoolEntity.h"/>
-    <File Name="include/Stonefish/PrismaticJoint.h"/>
-    <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
-    <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>
-    <File Name="include/Stonefish/RevoluteJoint.h"/>
-    <File Name="include/Stonefish/RotaryEncoder.h"/>
-    <File Name="include/Stonefish/Sample.h"/>
-    <File Name="include/Stonefish/ScientificFileUtil.h"/>
-    <File Name="include/Stonefish/Sensor.h"/>
-    <File Name="include/Stonefish/ServoController.h"/>
-    <File Name="include/Stonefish/SignalGenerator.h"/>
-    <File Name="include/Stonefish/SignalMux.h"/>
-    <File Name="include/Stonefish/SimulationApp.h"/>
-    <File Name="include/Stonefish/SimulationManager.h"/>
-    <File Name="include/Stonefish/SolidEntity.h"/>
-    <File Name="include/Stonefish/SphereEntity.h"/>
-    <File Name="include/Stonefish/SphericalJoint.h"/>
-    <File Name="include/Stonefish/StaticEntity.h"/>
-    <File Name="include/Stonefish/SystemUtil.h"/>
-    <File Name="include/Stonefish/TerrainEntity.h"/>
-    <File Name="include/Stonefish/Thruster.h"/>
-    <File Name="include/Stonefish/TorusEntity.h"/>
-    <File Name="include/Stonefish/TorusShape.h"/>
-    <File Name="include/Stonefish/Trajectory.h"/>
-    <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
-    <File Name="include/Stonefish/UnitSystem.h"/>
+    <VirtualDirectory Name="systems">
+      <File Name="include/Stonefish/UnderwaterVehicle.h"/>
+      <File Name="include/Stonefish/Manipulator.h"/>
+      <File Name="include/Stonefish/Gripper.h"/>
+    </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="3rdparty">
     <File Name="3rdparty/NativeDialog.cpp"/>
@@ -295,4 +339,32 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="shaders">
+    <File Name="shaders/aboveFluidSurface.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/belowFluidSurface.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/cascadedShadowMap.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/cubeConvolve.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/cubeDownsample.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/cubePass.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/cubeSky.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/deferredAmbient.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/deferredOmni.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/deferredSpot.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/deferredSun.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/fluidBorder.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/fluidSurface.vert" ExcludeProjConfig="Release"/>
+    <File Name="shaders/fluidSurfaceSun.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/fluidVolume.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/gaussianBlur.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/gaussianBlur.vert" ExcludeProjConfig="Release"/>
+    <File Name="shaders/gbuffer.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/gbuffer.vert" ExcludeProjConfig="Release"/>
+    <File Name="shaders/lightMeter.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/sao.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/saoBlur.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/saoDownsample.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/saq.vert" ExcludeProjConfig="Release"/>
+    <File Name="shaders/simpleDownsample.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/tonemapping.frag" ExcludeProjConfig="Release"/>
+  </VirtualDirectory>
 </CodeLite_Project>
