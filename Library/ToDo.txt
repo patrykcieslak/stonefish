@@ -123,20 +123,17 @@ Simulation:
 - Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
 - Battery(LiIon, LiPoly, A123)
 - GPS(AHRS)
-- Linear actuator -> nut/thread, pneumatic, hydraulic
+- Linear actuator -> nut/lead screw, pneumatic, hydraulic
 - Linear encoder
 - 3D path generator
 - Gimpact or convex decomposition for concave meshes
 - LiDAR (laser scanner 3d)
-- Solar panel/Light sensor (raytrace from sensor to sky/light + bounces)
-- Leap Motion support
 
 Underwater:
 - Above water surface rendering
 - Underwater rendering
-- Account for localTransform in buoyancy calculation
-- Buoyancy as difference in hydrostatic pressure(?) -> calculated together with drag
-- Added mass calculation with boundary method
+x Buoyancy as difference in hydrostatic pressure(?) -> calculated together with drag
+* Added mass calculation
 - Tether entity
 - Thruster
 - Control surface
@@ -144,11 +141,11 @@ Underwater:
 - Multi-beam
 - Side-scan
 - SVS
-- Sea current
+- Sea currents
 
 Graphics:
-- Move to OpenGL 3.3 Core (remove deprecated stuff)
-- Transparent objects(forward pipeline, OIT)
+- Move to OpenGL 3.3 Core (remove deprecated stuff, rewrite OGLFT)
+- Transparent objects(OIT - comutative blending)
 - Omni light shadows
 - Reflective material
 - Stencil light volumes(taking into account the attenuation, disable shadow generation)

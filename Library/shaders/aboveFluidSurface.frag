@@ -62,13 +62,13 @@ void main(void)
     else
     {
         eyeWaterDepth = eyeWaterDepth+0.3;
-        refraction = mix(refraction, depthColor, clamp(eyeWaterDepth/5.0, 0.0, 1.0));
+        refraction = mix(refraction, depthColor, clamp(eyeWaterDepth/extinction, 0.0, 1.0));
     }
-    //    refraction = mix(mix(refraction, depthColor, clamp(eyeWaterDepth*eyeWaterDepth/10.0, 0.0, 1.0)), 
+    
+    //    refraction = mix(mix(refraction, depthColor, clamp(eyeWaterDepth*eyeWaterDepth/10.0, 0.0, 1.0)),
     //                     bigDepthColor,
     //                     clamp(waterDepth/5.0, 0.0, 1.0));
-    //refraction = smoothstep(vec3(1.0,0.0,0.0), vec3(0.0,0.0,0.0), vec3(eyeWaterDepth*eyeWaterDepth/5.0));
-        
+    
     float fresnel = R0 + (1.0-R0)*pow(1.0-dot(-eyeNormal, eyeSurfaceNormal), 5.0);
     
     //gl_FragColor = vec4(refraction, 1.0);

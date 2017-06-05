@@ -145,7 +145,7 @@ PoolEntity::~PoolEntity()
 {
 }
 
-bool PoolEntity::IsInsideFluid(const btVector3 &point)
+bool PoolEntity::IsInsideFluid(const btVector3 &point) const
 {
     btTransform trans = ghost->getWorldTransform();
     btVector3 localPoint = trans.inverse()*point;
@@ -169,7 +169,7 @@ bool PoolEntity::IsInsideFluid(const btVector3 &point)
     return false;
 }
 
-btScalar PoolEntity::GetPressure(const btVector3& point)
+btScalar PoolEntity::GetPressure(const btVector3& point) const
 {
     btTransform trans = ghost->getWorldTransform();
     btVector3 localPoint = trans.inverse()*point;

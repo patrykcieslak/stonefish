@@ -23,8 +23,8 @@ public:
     virtual ~PoolEntity();
     
     void Render();
-    bool IsInsideFluid(const btVector3& point);
-    btScalar GetPressure(const btVector3& point);
+    bool IsInsideFluid(const btVector3& point) const;
+    btScalar GetPressure(const btVector3& point) const;
     
 private:
     //Physical

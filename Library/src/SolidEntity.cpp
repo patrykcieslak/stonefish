@@ -147,7 +147,7 @@ void SolidEntity::Render()
     }
 }
 
-btTransform SolidEntity::getTransform()
+btTransform SolidEntity::getTransform() const
 {
     if(rigidBody != NULL)
     {
@@ -414,7 +414,7 @@ void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
         BuildCollisionList();
         
         //rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
-        rigidBody->setCenterOfMassTransform(localTransform * UnitSystem::SetTransform(worldTransform));
+        rigidBody->setCenterOfMassTransform(UnitSystem::SetTransform(worldTransform)*localTransform);
         world->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
     }
 }
@@ -479,6 +479,48 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ApplyFluidForces(FluidEntity* fluid)
+void SolidEntity::ComputeFluidForces(const FluidEntity* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
 {
+    Fb.setZero();
+    Tb.setZero();
+    Fd.setZero();
+    Td.setZero();
+    Fa.setZero();
+    Ta.setZero();
+}
+
+void SolidEntity::ComputeFluidForces(const FluidEntity* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
+{
+    if(rigidBody == NULL)
+    {
+        Fb.setZero();
+        Tb.setZero();
+        Fd.setZero();
+        Td.setZero();
+        Fa.setZero();
+        Ta.setZero();
+    }
+    else
+    {
+        btTransform T = getTransform() * localTransform.inverse();
+        btVector3 v = getLinearVelocity();
+        btVector3 omega = getAngularVelocity();
+        btVector3 a = getLinearAcceleration();
+        btVector3 epsilon = getAngularAcceleration();
+        ComputeFluidForces(fluid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta, damping, addedMass);
+    }
+}
+
+void SolidEntity::ApplyFluidForces(const FluidEntity* fluid)
+{
+    btVector3 Fb;
+    btVector3 Tb;
+    btVector3 Fd;
+    btVector3 Td;
+    btVector3 Fa;
+    btVector3 Ta;
+    ComputeFluidForces(fluid, Fb, Tb, Fd, Td, Fa, Ta, true, true);
+    
+    ApplyCentralForce(Fb + Fd + Fa);
+    ApplyTorque(Tb + Td + Ta);
 }

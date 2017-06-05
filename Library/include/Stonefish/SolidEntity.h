@@ -45,12 +45,11 @@ public:
     virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
     
     virtual SolidEntityType getSolidType() = 0;
-    virtual void ApplyFluidForces(FluidEntity* fluid);
-    virtual void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
-                                        btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
-                                        btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
-                                        const btVector3& angularVelocity = btVector3(0,0,0)) = 0;
     
+    virtual void ComputeFluidForces(const FluidEntity* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
+    virtual void ComputeFluidForces(const FluidEntity* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
+    virtual void ApplyFluidForces(const FluidEntity* fluid);
+ 
     void setDisplayCoordSys(bool enabled);
     btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
@@ -62,7 +61,7 @@ public:
     Look getLook();
     GLint getDisplayList();
 
-    btTransform getTransform();
+    btTransform getTransform() const;
     btTransform getLocalTransform();
     btVector3 getLinearVelocity();
     btVector3 getLinearVelocityInLocalPoint(const btVector3& relPos);

@@ -161,8 +161,8 @@ void OpenGLPipeline::DrawDisplay()
 
 void OpenGLPipeline::DrawStandardObjects()
 {
-    for(int h=0; h<simulation->entities.size(); ++h)
-        simulation->entities[h]->Render();
+    for(int i=0; i<simulation->entities.size(); ++i)
+        simulation->entities[i]->Render();
     
     if(renderFluid && simulation->fluid != NULL)
         simulation->fluid->Render();
@@ -1125,6 +1125,22 @@ void OpenGLPipeline::Render()
                     {
                         FeatherstoneEntity* fe = (FeatherstoneEntity*)simulation->entities[h];
                         fe->RenderStructure();
+                    }
+                    else if(simulation->entities[h]->getType() == ENTITY_SYSTEM)
+                    {
+                        SystemEntity* system = (SystemEntity*)simulation->entities[h];
+                        btTransform comT = system->getTransform();
+                        btScalar oglComT[16];
+                        comT.getOpenGLMatrix(oglComT);
+                        
+                        glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+                        glMultMatrixd(oglComT);
+#else
+                        glMultMatrixf(oglComT);
+#endif
+                        OpenGLSolids::DrawCoordSystem(0.1f);
+                        glPopMatrix();
                     }
             }
             

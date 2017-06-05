@@ -9,17 +9,24 @@
 #ifndef __Stonefish_Manipulator__
 #define __Stonefish_Manipulator__
 
-#include "UnitSystem.h"
-#include "NameManager.h"
-#include "OpenGLPipeline.h"
+#include "SystemEntity.h"
 #include "FeatherstoneEntity.h"
 #include "Gripper.h"
 
-class Manipulator
+class Manipulator : public SystemEntity
 {
 public:
     Manipulator(std::string uniqueName);
     virtual ~Manipulator();
+    
+    virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform = btTransform::getIdentity());
+    
+    virtual void UpdateSensors(btScalar dt);
+    virtual void UpdateControllers(btScalar dt);
+    virtual void UpdateActuators(btScalar dt);
+    virtual void ApplyGravity();
+    virtual void ApplyFluidForces(FluidEntity* fluid);
+    virtual void Render();
     
 private:
     FeatherstoneEntity* links;

@@ -8,14 +8,51 @@
 
 #include "Manipulator.h"
 
-Manipulator::Manipulator(std::string uniqueName)
+Manipulator::Manipulator(std::string uniqueName) : SystemEntity(uniqueName)
+{
+}
+
+Manipulator::~Manipulator()
+{
+}
+
+void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
     
     
 }
 
-Manipulator::~Manipulator()
+void Manipulator::UpdateSensors(btScalar dt)
 {
     
+    
+}
+
+void Manipulator::UpdateControllers(btScalar dt)
+{
+    
+    
+}
+
+void Manipulator::UpdateActuators(btScalar dt)
+{
+
+    
+}
+
+void Manipulator::ApplyGravity()
+{
+    
+    
+}
+
+void Manipulator::ApplyFluidForces(FluidEntity* fluid)
+{
+    
+    
+}
+
+void Manipulator::Render()
+{
     
 }

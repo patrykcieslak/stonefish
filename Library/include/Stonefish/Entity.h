@@ -17,7 +17,7 @@
 
 typedef enum
 {
-    ENTITY_STATIC, ENTITY_SOLID, ENTITY_CABLE, ENTITY_FORCEFIELD, ENTITY_FEATHERSTONE
+    ENTITY_STATIC, ENTITY_SOLID, ENTITY_CABLE, ENTITY_FEATHERSTONE, ENTITY_FORCEFIELD, ENTITY_SYSTEM
 }
 EntityType;
 
@@ -46,7 +46,10 @@ public:
     virtual void Render() = 0;
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world) = 0;
     virtual void GetAABB(btVector3& min, btVector3& max);
-        
+    
+protected:
+    static btVector3 findInertiaAxis(btMatrix3x3 I, btScalar value);
+    
 private:
     bool renderable;
     std::string name;

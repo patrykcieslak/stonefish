@@ -18,8 +18,8 @@ public:
     SeaEntity(std::string uniqueName, Fluid* fld, btScalar size = btScalar(1000));
     virtual ~SeaEntity();
     
-    bool IsInsideFluid(const btVector3& point);
-    btScalar GetPressure(const btVector3& point);
+    bool IsInsideFluid(const btVector3& point) const;
+    btScalar GetPressure(const btVector3& point) const;
     
 private:
 };

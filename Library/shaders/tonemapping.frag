@@ -44,7 +44,7 @@ void main(void)
     vec3 rgbColor = texture2D(texHDR, gl_TexCoord[0].st).rgb;
     
     //Correct exposure and tonemap
-    float exposure = 0.6/lumAvg;
+    float exposure = 0.5/lumAvg;
     rgbColor = Uncharted2Tonemap(exposure * rgbColor);
     vec3 whitePoint = Uncharted2Tonemap(vec3(1.0)); //1.0 is the saturated color of sun in the sky
     rgbColor /= whitePoint;

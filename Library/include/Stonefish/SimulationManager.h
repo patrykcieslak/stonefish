@@ -9,23 +9,31 @@
 #ifndef __Stonefish_SimulationManager__
 #define __Stonefish_SimulationManager__
 
+//Engine core
 #include "ResearchDynamicsWorld.h"
 #include "ResearchConstraintSolver.h"
-#include "OpenGLDebugDrawer.h"
 #include "UnitSystem.h"
 #include "NameManager.h"
 #include "MaterialManager.h"
+
+//Entities
 #include "Entity.h"
 #include "SolidEntity.h"
 #include "FeatherstoneEntity.h"
 #include "FluidEntity.h"
+#include "SystemEntity.h"
+
+//Dynamic elements
 #include "Joint.h"
-#include "Contact.h"
 #include "Sensor.h"
+#include "Contact.h"
 #include "Actuator.h"
 #include "Controller.h"
+
+//Rendering
 #include "OpenGLLight.h"
 #include "OpenGLCamera.h"
+#include "OpenGLDebugDrawer.h"
 #include "Console.h"
 
 typedef enum {DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
@@ -61,6 +69,8 @@ public:
 	
     void AddEntity(Entity* ent);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
+    void AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform);
+    
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);

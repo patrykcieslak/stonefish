@@ -20,11 +20,8 @@ public:
     void SetLook(Look newLook);
     SolidEntityType getSolidType();
     btCollisionShape* BuildCollisionShape();
-    void ApplyFluidForces(FluidEntity* fluid);
-    void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
-                                btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
-                                btTransform* worldTransform = NULL, const btVector3& velocity = btVector3(0,0,0),
-                                const btVector3& angularVelocity = btVector3(0,0,0));
+    
+    void ComputeFluidForces(const FluidEntity* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
     
 private:
     void BuildCollisionList();

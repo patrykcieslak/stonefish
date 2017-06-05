@@ -88,6 +88,15 @@ void SimulationManager::AddSolidEntity(SolidEntity* ent, const btTransform& worl
     }
 }
 
+void SimulationManager::AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform)
+{
+    if(ent != NULL)
+    {
+        entities.push_back(ent);
+        ent->AddToDynamicsWorld(dynamicsWorld, worldTransform);
+    }
+}
+
 void SimulationManager::SetFluidEntity(FluidEntity *flu)
 {
     if(flu != NULL)
@@ -930,7 +939,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     ResearchDynamicsWorld* researchWorld = (ResearchDynamicsWorld*)world;
     
     //Update acceleration data
-    for(int i =0 ; i < simManager->entities.size(); ++i)
+    for(unsigned int i = 0 ; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];
             
@@ -945,23 +954,23 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     researchWorld->clearForces(); //Includes clearing of multibody forces!
     
     //loop through all sensors -> update measurements
-    for(int i = 0; i < simManager->sensors.size(); i++)
+    for(unsigned int i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
     
     //loop through all controllers
-    for(int i = 0; i < simManager->controllers.size(); i++)
+    for(unsigned int i = 0; i < simManager->controllers.size(); ++i)
         simManager->controllers[i]->Update(timeStep);
     
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
-    for(int i = 0; i < simManager->actuators.size(); i++)
+    for(unsigned int i = 0; i < simManager->actuators.size(); ++i)
         simManager->actuators[i]->Update(timeStep);
     
     //loop through all joints -> apply damping forces to bodies connected by joints
-    for(int i = 0; i < simManager->joints.size(); i++)
+    for(unsigned int i = 0; i < simManager->joints.size(); ++i)
         simManager->joints[i]->ApplyDamping();
     
     //loop through all entities that may need special actions
-    for(int i = 0; i < simManager->entities.size(); i++)
+    for(unsigned int i = 0; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];
         
@@ -981,47 +990,21 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             CableEntity* cable = (CableEntity*)ent;
             cable->ApplyGravity();
         }
-        /*else if(ent->getType() == ENTITY_FORCEFIELD)
+        else if(ent->getType() == ENTITY_SYSTEM)
         {
-            btManifoldArray manifoldArray;
-            ForcefieldEntity* ff = (ForcefieldEntity*)ent;
-            
-            btBroadphasePairArray& pairArray = ff->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-            int numPairs = pairArray.size();
-            
-            printf("Overlapping pairs:%d\n", numPairs);
-            /*
-            //pool filled with liquid - buoyancy force
-            if(numPairs > 0 && ff->getForcefieldType() == FORCEFIELD_FLUID)
-            {
-                FluidEntity* fluid = (FluidEntity*)ent;
-                
-                for(int h=0; h<numPairs; h++)
-                {
-                    manifoldArray.clear();
-                    const btBroadphasePair& pair = pairArray[h];
-                    btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
-                    if (!colPair)
-                        continue;
-                    
-                    btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
-                    btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
-                    
-                    if(co1 == fluid->getGhost())
-                        fluid->ApplyFluidForces(world, co2);
-                    else if(co2 == fluid->getGhost())
-                        fluid->ApplyFluidForces(world, co1);
-                }
-            }
-        }*/
+            SystemEntity* system = (SystemEntity*)ent;
+            system->UpdateSensors(timeStep);
+            system->UpdateControllers(timeStep);
+            system->UpdateActuators(timeStep);
+            system->ApplyGravity();
+        }
     }
     
+    //fluid support
     if(simManager->fluid != NULL)
     {
         btBroadphasePairArray& pairArray = simManager->fluid->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
         int numPairs = pairArray.size();
-            
-        //printf("Overlapping pairs:%d\n", numPairs);
         
         if(numPairs > 0)
         {    

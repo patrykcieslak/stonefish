@@ -775,7 +775,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
     lightMeterShader->Enable();
     lightMeterShader->SetUniform("texHDR", 0);
-    lightMeterShader->SetUniform("samples", glm::ivec2(24,16));
+    lightMeterShader->SetUniform("samples", glm::ivec2(128,128));
     OpenGLSolids::DrawScreenAlignedQuad();
     lightMeterShader->Disable();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

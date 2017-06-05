@@ -8,14 +8,10 @@
 
 #include "Gripper.h"
 
-Gripper::Gripper(std::string uniqueName)
+Gripper::Gripper()
 {
-    
-    
 }
 
 Gripper::~Gripper()
 {
-    
-    
 }

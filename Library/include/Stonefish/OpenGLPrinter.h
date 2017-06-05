@@ -9,7 +9,7 @@
 #ifndef __Stonefish_OpenGLPrinter__
 #define __Stonefish_OpenGLPrinter__
 
-#include <OGLFT.h>
+#include "OGLFT.h"
 
 class OpenGLPrinter
 {

@@ -200,10 +200,3 @@ btCollisionShape* BoxEntity::BuildCollisionShape()
     return colShape;
 }
 
-void BoxEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
-                                            btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
-                                            btTransform* worldTransform, const btVector3& velocity,
-                                            const btVector3& angularVelocity)
-{
-}
-

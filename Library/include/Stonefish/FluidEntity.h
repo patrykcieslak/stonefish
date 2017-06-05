@@ -21,7 +21,7 @@ public:
     
     //Forces
     virtual void ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co);
-    virtual btVector3 GetFluidVelocity(const btVector3& point);
+    virtual btVector3 GetFluidVelocity(const btVector3& point) const;
     void GetSurface(btVector3& normal, btVector3& position) const;
     void GetSurfaceEquation(double* plane4) const;
     
@@ -36,8 +36,8 @@ public:
     ForcefieldType getForcefieldType();
     
     //Abstract
-    virtual bool IsInsideFluid(const btVector3& point) = 0;
-    virtual btScalar GetPressure(const btVector3& point) = 0;
+    virtual bool IsInsideFluid(const btVector3& point) const = 0;
+    virtual btScalar GetPressure(const btVector3& point) const = 0;
     
 protected:
     Fluid* fluid;

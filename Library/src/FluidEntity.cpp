@@ -8,6 +8,7 @@
 
 #include "FluidEntity.h"
 #include "SolidEntity.h"
+#include "SystemEntity.h"
 
 FluidEntity::FluidEntity(std::string uniqueName, Fluid* fld) : ForcefieldEntity(uniqueName)
 {
@@ -43,7 +44,7 @@ const Fluid* FluidEntity::getFluid() const
     return fluid;
 }
 
-btVector3 FluidEntity::GetFluidVelocity(const btVector3& point)
+btVector3 FluidEntity::GetFluidVelocity(const btVector3& point) const
 {
     return btVector3(0,0,0);
 }
@@ -77,6 +78,8 @@ void FluidEntity::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co
     
     if(ent->getType() == ENTITY_SOLID)
         ((SolidEntity*)ent)->ApplyFluidForces(this);
+    else if(ent->getType() == ENTITY_SYSTEM)
+        ((SystemEntity*)ent)->ApplyFluidForces(this);
     
     /*
     //2.Determine fluid surface coordinates

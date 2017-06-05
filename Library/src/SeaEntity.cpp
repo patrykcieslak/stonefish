@@ -33,12 +33,12 @@ SeaEntity::~SeaEntity()
 {
 }
 
-bool SeaEntity::IsInsideFluid(const btVector3& point)
+bool SeaEntity::IsInsideFluid(const btVector3& point) const
 {
     return point.z() >= btScalar(0);
 }
 
-btScalar SeaEntity::GetPressure(const btVector3& point)
+btScalar SeaEntity::GetPressure(const btVector3& point) const
 {
     btScalar g = 9.81;
     btScalar d = point.z();

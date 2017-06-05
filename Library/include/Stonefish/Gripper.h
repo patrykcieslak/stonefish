@@ -14,7 +14,7 @@
 class Gripper
 {
 public:
-    Gripper(std::string uniqueName);
+    Gripper();
     virtual ~Gripper();
     
 private:

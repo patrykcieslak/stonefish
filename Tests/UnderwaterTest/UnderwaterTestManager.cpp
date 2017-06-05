@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestManager.h"
@@ -23,6 +23,7 @@
 #include "ADC.h"
 #include "SeaEntity.h"
 #include "ObstacleEntity.h"
+#include "UnderwaterVehicle.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, false, stepsPerSecond, DANTZIG, STANDARD)
 {
@@ -33,10 +34,10 @@ void UnderwaterTestManager::BuildScenario()
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true, false);
     OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
-    OpenGLPipeline::getInstance()->setDebugSimulation(false);
+    //OpenGLPipeline::getInstance()->setDebugSimulation(true);
     
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 7.81), 0.4);
+    getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 1.1), 0.4);
     getMaterialManager()->CreateMaterial("Cork", UnitSystem::Density(CGS, MKS, 0.9), 0.2);
     getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55);
     
@@ -45,27 +46,33 @@ void UnderwaterTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Cork", "Cork", 0.9, 0.7);
     
     ///////LOOKS///////////
-    //Look wall = CreateOpaqueLook(glm::vec3(0.9f, 0.9f, 0.9f), 0.5f, 0.8f, 1.5f);
-    Look color = CreateOpaqueLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
+    Look yellow = CreateOpaqueLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
+    Look green = CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.5f, 0.5f, 1.5f);
     
     ////////OBJECTS
-    //PlaneEntity* floor = new PlaneEntity("Floor", btScalar(1000.0), getMaterialManager()->getMaterial("Concrete"), wall, btTransform(btQuaternion::getIdentity(), btVector3(0,0,6.0)));
-    //AddEntity(floor);
-    
-    //PoolEntity* pool = new PoolEntity("Pool",10,10,5, btTransform(btQuaternion::getIdentity(), btVector3(0,0,2.5)), getMaterialManager()->getFluid("Water"), getMaterialManager()->getMaterial("Concrete"), wall);
     SeaEntity* sea = new SeaEntity("Sea", getMaterialManager()->getFluid("Water"));
     sea->setRenderable(true);
     SetFluidEntity(sea);
     
+    //Setup model paths
     char path[1024];
     GetDataPath(path, 1024-32);
-    strcat(path,"torus_R=1_r=025.obj");
+    strcat(path,"icosphere.obj");
     
-    MeshEntity* solid = new MeshEntity("Solid", path, btScalar(1.0), getMaterialManager()->getMaterial("Cork"), color);
-    //solid->SetArbitraryPhysicalProperties(solid->getMass(), solid->getMomentsOfInertia(), btTransform(btQuaternion::getIdentity(), btVector3(0.2,0,0)));
-    //SphereEntity* solid = new SphereEntity("Solid", 0.1, getMaterialManager()->getMaterial("Cork"), color);
-    AddSolidEntity(solid, btTransform(btQuaternion(0,0,0), btVector3(0,0,-0.2)));
+    //Reference solid
+    MeshEntity* hull1 = new MeshEntity("Solid", path, btScalar(1.), getMaterialManager()->getMaterial("Cork"), green);
+    //AddSolidEntity(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,-2.0)));
 
+    //Vehicle
+    MeshEntity* hull2 = new MeshEntity("Solid", path, btScalar(1.), getMaterialManager()->getMaterial("Concrete"), yellow);
+    
+    UnderwaterVehicle* rov = new UnderwaterVehicle("ROV");
+    rov->AddExternalPart(hull2, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1.0)));
+    rov->AddExternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,-0.7,0)));
+    rov->AddExternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,0.7,0)));
+    //rov->AddInternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,0.0,1.0)));
+    AddSystemEntity(rov, btTransform(btQuaternion(0.1,0,0), btVector3(0,0,0)));
+    
     //////CAMERA & LIGHT//////
     //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(50.f, 50.f, 50.f), OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(omni);

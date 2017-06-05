@@ -9,27 +9,58 @@
 #ifndef __Stonefish_UnderwaterVehicle__
 #define __Stonefish_UnderwaterVehicle__
 
-#include "UnitSystem.h"
-#include "NameManager.h"
-#include "OpenGLPipeline.h"
+#include "SystemEntity.h"
 #include "SolidEntity.h"
 #include "Sensor.h"
 #include "Thruster.h"
 #include "Manipulator.h"
 
-class UnderwaterVehicle
+typedef struct
+{
+    SolidEntity* solid;
+    btTransform position;
+    bool isExternal;
+} VehiclePart;
+
+class UnderwaterVehicle : public SystemEntity
 {
 public:
     UnderwaterVehicle(std::string uniqueName);
     virtual ~UnderwaterVehicle();
     
+    void AddInternalPart(SolidEntity* solid, const btTransform& position);
+    void AddExternalPart(SolidEntity* solid, const btTransform& position);
+    
+    virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+    virtual void UpdateAcceleration();
+    virtual void UpdateSensors(btScalar dt);
+    virtual void UpdateControllers(btScalar dt);
+    virtual void UpdateActuators(btScalar dt);
+    virtual void ApplyGravity();
+    virtual void ApplyFluidForces(FluidEntity* fluid);
+    
+    virtual btTransform getTransform() const;
+    
+    virtual void Render();
+    void BuildDisplayLists();
+    
 private:
-    std::vector<SolidEntity*> body;
-    std::vector<SolidEntity*> shell;
+    std::vector<VehiclePart> bodyParts; //Parts of the vehicle body
     std::vector<Sensor*> sensors;
-    std::vector<Thruster*> thrusters;
-    //TODO: fins
+    std::vector<Thruster*> thrusters; // + FINS?
     std::vector<Manipulator*> manipulators;
+    
+    btRigidBody* vehicleBody;
+    btTransform localTransform; //...of vehicle body
+    btScalar vehicleBodyMass;     //Mass of vehicle body (internal + external parts)
+    btVector3 vehicleBodyInertia; //Inertia of vehicle body (internal + external parts)
+    btVector3 linearAcc;
+    btVector3 angularAcc;
+    
+    GLint internalList;
+    GLint externalList;
+    GLint collisionList;
+    bool showInternals;
 };
 
 #endif

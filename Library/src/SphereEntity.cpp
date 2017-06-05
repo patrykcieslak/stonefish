@@ -102,6 +102,7 @@ void SphereEntity::BuildCollisionList()
     glEndList();
 }
 
+/*
 void SphereEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
                                           btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                           btTransform* worldTransform, const btVector3& velocity,
@@ -160,4 +161,4 @@ void SphereEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVec
     
     drag = solidTrans.getBasis()*drag;
     centerOfBuoyancy = cob;
-}
+}*/
