@@ -1,24 +1,44 @@
 //
-//  FluidEntity.cpp
+//  Ocean.cpp
 //  StonefishConstructor
 //
 //  Created by Patryk Cieslak on 10/13/13.
-//  Copyright(c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "FluidEntity.h"
+#include "Ocean.h"
 #include "SolidEntity.h"
 #include "SystemEntity.h"
 
-FluidEntity::FluidEntity(std::string uniqueName, Fluid* fld) : ForcefieldEntity(uniqueName)
+Ocean::Ocean(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
 {
     surfaceDisplayList = 0;
     volumeDisplayList = 0;
-    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    fluid = fld;
+    
+	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    fluid = f;
+	
+	btScalar size(10000.);
+	depth = UnitSystem::SetLength(size);
+    
+    btVector3 halfExtents = btVector3(UnitSystem::SetLength(size/btScalar(2)), UnitSystem::SetLength(size/btScalar(2)), size/btScalar(2));
+    ghost->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0,0,size/btScalar(2)))); //Surface at 0
+    ghost->setCollisionShape(new btBoxShape(halfExtents));
+    
+    surfaceDisplayList = glGenLists(1);
+    glNewList(surfaceDisplayList, GL_COMPILE);
+    glColor4f(1.f,1.f,1.f,1.f);
+    glNormal3f(0, 0, -1.f);
+    glBegin(GL_QUADS);
+    glVertex3f(-halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    glVertex3f(-halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    glVertex3f(halfExtents.x(), halfExtents.y(), -halfExtents.z());
+    glVertex3f(halfExtents.x(), -halfExtents.y(), -halfExtents.z());
+    glEnd();
+    glEndList();
 }
 
-FluidEntity::~FluidEntity()
+Ocean::~Ocean()
 {
     fluid = NULL;
     
@@ -29,33 +49,46 @@ FluidEntity::~FluidEntity()
         glDeleteLists(surfaceDisplayList, 1);
 }
 
-ForcefieldType FluidEntity::getForcefieldType()
+ForcefieldType Ocean::getForcefieldType()
 {
     return FORCEFIELD_FLUID;
 }
 
-btScalar FluidEntity::getDepth()
+btScalar Ocean::getDepth()
 {
     return depth;
 }
 
-const Fluid* FluidEntity::getFluid() const
+const Fluid* Ocean::getFluid() const
 {
     return fluid;
 }
 
-btVector3 FluidEntity::GetFluidVelocity(const btVector3& point) const
+bool Ocean::IsInsideFluid(const btVector3& point) const
+{
+    return point.z() >= btScalar(0);
+}
+
+btScalar Ocean::GetPressure(const btVector3& point) const
+{
+    btScalar g = 9.81;
+    btScalar d = point.z();
+    btScalar pressure = d > btScalar(0) ? d*fluid->density*g : btScalar(0);
+    return pressure;
+}
+
+btVector3 Ocean::GetFluidVelocity(const btVector3& point) const
 {
     return btVector3(0,0,0);
 }
 
-void FluidEntity::GetSurface(btVector3& normal, btVector3& position) const
+void Ocean::GetSurface(btVector3& normal, btVector3& position) const
 {
     normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
     position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
 }
 
-void FluidEntity::GetSurfaceEquation(double* plane4) const
+void Ocean::GetSurfaceEquation(double* plane4) const
 {
     btVector3 normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
     btVector3 position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
@@ -65,7 +98,7 @@ void FluidEntity::GetSurfaceEquation(double* plane4) const
     plane4[3] = -normal.dot(position);
 }
 
-void FluidEntity::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
+void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
 {
     //Check if object is an Entity
     btRigidBody* rb = btRigidBody::upcast(co);
@@ -122,11 +155,7 @@ void FluidEntity::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co
     }*/
 }
 
-void FluidEntity::Render()
-{
-}
-
-void FluidEntity::RenderSurface()
+void Ocean::RenderSurface()
 {
     btTransform trans = ghost->getWorldTransform();
     btScalar openglTrans[16];
@@ -142,7 +171,7 @@ void FluidEntity::RenderSurface()
     glPopMatrix();
 }
 
-void FluidEntity::RenderVolume()
+void Ocean::RenderVolume()
 {
     btTransform trans = ghost->getWorldTransform();
     btScalar openglTrans[16];

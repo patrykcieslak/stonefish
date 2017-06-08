@@ -11,7 +11,7 @@
 
 #include "UnitSystem.h"
 #include "NameManager.h"
-#include "OpenGLPipeline.h"
+#include "OpenGLContent.h"
 
 #define BIT(x) (1<<(x))
 

@@ -8,6 +8,7 @@
 
 #include "OpenGLOmniLight.h"
 #include "OpenGLSolids.h"
+#include "SimulationManager.h"
 
 OpenGLOmniLight::OpenGLOmniLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {
@@ -102,7 +103,7 @@ void OpenGLOmniLight::RenderDummy()
     glPopMatrix();
 }
 
-void OpenGLOmniLight::RenderShadowMap(OpenGLPipeline* pipe)
+void OpenGLOmniLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)
 {
     
 }

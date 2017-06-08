@@ -142,7 +142,7 @@ void SimulationApp::Init(const char* dataPath, const char* shaderPath)
     cInfo("Loading GUI...");
     IMGUI::getInstance()->Init(winWidth, winHeight);
     ShowHUD();
-    OpenGLPipeline::getInstance()->Initialize(simulation, winWidth, winHeight);
+    OpenGLPipeline::getInstance()->Initialize(winWidth, winHeight);
     
     cInfo("Initializing simulation:");
     InitializeSimulation();
@@ -188,6 +188,7 @@ void SimulationApp::InitializeSDL()
     int glVersionMajor, glVersionMinor;
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &glVersionMajor);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &glVersionMinor);
+	SDL_GL_SetSwapInterval(0);
     
     //Initialize console
     Console::getInstance()->SetRenderSize(winWidth, winHeight);
@@ -423,7 +424,7 @@ void SimulationApp::AppLoop()
     }
     
     //Rendering
-    OpenGLPipeline::getInstance()->Render();
+    OpenGLPipeline::getInstance()->Render(simulation);
     OpenGLPipeline::getInstance()->DrawDisplay();
     
     //GUI & Console

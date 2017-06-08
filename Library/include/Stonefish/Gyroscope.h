@@ -9,11 +9,11 @@
 #ifndef __Stonefish_Gyroscope__
 #define __Stonefish_Gyroscope__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "ADC.h"
 #include "SolidEntity.h"
 
-class Gyroscope : public Sensor
+class Gyroscope : public SimpleSensor
 {
 public:
     Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

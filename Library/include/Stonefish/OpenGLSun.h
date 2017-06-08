@@ -13,13 +13,15 @@
 #include "GLSLShader.h"
 #include "OpenGLView.h"
 
+class SimulationManager;
+
 //singleton
 class OpenGLSun
 {
 public:
     void Init();
     void Render(const btTransform& viewTransform);
-    void RenderShadowMaps(OpenGLPipeline* pipe);
+    void RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim);
     void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
     void ShowFrustumSplits();
     void SetCamera(OpenGLView* view);

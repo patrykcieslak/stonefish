@@ -7,48 +7,45 @@
 //
 
 #include "SolidEntity.h"
-#include "OpenGLSolids.h"
 
-#pragma mark Constructors
-SolidEntity::SolidEntity(std::string uniqueName, Material* mat) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material* mat, int _lookId) : Entity(uniqueName)
 {
-    material = mat;
-    localTransform = btTransform::getIdentity();
     Ipri = btVector3(0,0,0);
     mass = 0;
-    volume = 0;
+    material = mat;
+	volume = 0;
     dragCoeff = btVector3(0,0,0);
     centerOfBuoyancy = btVector3(0,0,0);
     addedMass = btVector3(0,0,0);
     addedInertia = btVector3(0,0,0);
-    
+    localTransform = btTransform::getIdentity();
+    	
     linearAcc = btVector3(0,0,0);
     angularAcc = btVector3(0,0,0);
     
     rigidBody = NULL;
     multibodyCollider = NULL;
-    displayList = 0;
-    collisionList = 0;
+    
+	mesh = NULL;
+	lookId = _lookId;
+	objectId = -1;
+	
     dispCoordSys = false;
-    fullyImmersed = false;
 }
 
-#pragma mark - Destructor
 SolidEntity::~SolidEntity()
 {
-    if(displayList != 0)
-        glDeleteLists(displayList, 1);
-    if(collisionList != 0)
-        glDeleteLists(collisionList, 1);
-    if(look.texture != 0)
-        glDeleteTextures(1, &look.texture);
-    
+    if(mesh != NULL)
+	{
+		delete mesh;
+		mesh = NULL;
+	}
+	
     material = NULL;
     rigidBody = NULL;
     multibodyCollider = NULL;
 }
 
-#pragma mark - Accessors
 EntityType SolidEntity::getType()
 {
     return ENTITY_SOLID;
@@ -83,12 +80,9 @@ void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3&
     }
 }
 
-void SolidEntity::SetLook(Look newLook)
+void SolidEntity::SetLook(int newLookId)
 {
-    if(look.texture != 0)
-        glDeleteTextures(1, &look.texture);
-    
-    look = newLook;
+    lookId = newLookId;
 }
 
 void SolidEntity::setDisplayCoordSys(bool enabled)
@@ -101,14 +95,14 @@ bool SolidEntity::isCoordSysVisible()
     return dispCoordSys;
 }
 
-Look SolidEntity::getLook()
+int SolidEntity::getLook()
 {
-    return look;
+    return lookId;
 }
 
-GLint SolidEntity::getDisplayList()
+int SolidEntity::getObject()
 {
-    return displayList;
+	return objectId;
 }
 
 btRigidBody* SolidEntity::getRigidBody()
@@ -128,23 +122,13 @@ void SolidEntity::GetAABB(btVector3& min, btVector3& max)
 
 void SolidEntity::Render()
 {
-    if(rigidBody != NULL && isRenderable())
-    {
-        btTransform trans =  getTransform() * localTransform.inverse();
+	if(rigidBody != NULL && objectId >= 0 && isRenderable())
+	{
+		btTransform trans =  getTransform() * localTransform.inverse();
         btScalar openglTrans[16];
         trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        UseLook(look);
-        glCallList(displayList);
-        
-        glPopMatrix();
-    }
+		OpenGLContent::getInstance()->DrawObject(objectId, lookId, openglTrans);
+	}
 }
 
 btTransform SolidEntity::getTransform() const
@@ -293,7 +277,12 @@ Material* SolidEntity::getMaterial()
     return material;
 }
 
-#pragma mark - Methods
+void SolidEntity::BuildGraphicalObject()
+{
+	if(mesh != NULL)
+		objectId = OpenGLContent::getInstance()->BuildObject(mesh);	
+}
+
 void SolidEntity::BuildRigidBody()
 {
     if(rigidBody == NULL)
@@ -348,56 +337,8 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         world->addCollisionObject(multibodyCollider, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
         
         //Graphics
-        BuildDisplayList();
-        BuildCollisionList();
+        BuildGraphicalObject();
     }
-}
-
-void SolidEntity::BuildDisplayList()
-{
-    if(displayList != 0)
-        glDeleteLists(displayList, 1);
-    
-	displayList = glGenLists(1);
-	glNewList(displayList, GL_COMPILE);
-    glBegin(GL_TRIANGLES);
-    for(int h=0; h<mesh->faces.size(); h++)
-    {
-        btVector3 v1 = mesh->vertices[mesh->faces[h].vertexIndex[0]];
-        btVector3 v2 = mesh->vertices[mesh->faces[h].vertexIndex[1]];
-        btVector3 v3 = mesh->vertices[mesh->faces[h].vertexIndex[2]];
-        OpenGLNormal n1 = mesh->glnormals[mesh->faces[h].glnormalIndex[0]];
-        OpenGLNormal n2 = mesh->glnormals[mesh->faces[h].glnormalIndex[1]];
-        OpenGLNormal n3 = mesh->glnormals[mesh->faces[h].glnormalIndex[2]];
-        
-        if(look.texture > 0 && mesh->uvs.size() > 0)
-        {
-            glNormal3f(n1.x, n1.y, n1.z);
-            glTexCoord2f(mesh->uvs[mesh->faces[h].uvIndex[0]].u, mesh->uvs[mesh->faces[h].uvIndex[0]].v);
-            glVertex3f((GLfloat)v1.x(), (GLfloat)v1.y(), (GLfloat)v1.z());
-            
-            glNormal3f(n2.x, n2.y, n2.z);
-            glTexCoord2f(mesh->uvs[mesh->faces[h].uvIndex[1]].u, mesh->uvs[mesh->faces[h].uvIndex[1]].v);
-            glVertex3f((GLfloat)v2.x(), (GLfloat)v2.y(), (GLfloat)v2.z());
-            
-            glNormal3f(n3.x, n3.y, n3.z);
-            glTexCoord2f(mesh->uvs[mesh->faces[h].uvIndex[2]].u, mesh->uvs[mesh->faces[h].uvIndex[2]*2].v);
-            glVertex3f((GLfloat)v3.x(), (GLfloat)v3.y(), (GLfloat)v3.z());
-        }
-        else
-        {
-            glNormal3f(n1.x, n1.y, n1.z);
-            glVertex3f((GLfloat)v1.x(), (GLfloat)v1.y(), (GLfloat)v1.z());
-            
-            glNormal3f(n2.x, n2.y, n2.z);
-            glVertex3f((GLfloat)v2.x(), (GLfloat)v2.y(), (GLfloat)v2.z());
-            
-            glNormal3f(n3.x, n3.y, n3.z);
-            glVertex3f((GLfloat)v3.x(), (GLfloat)v3.y(), (GLfloat)v3.z());
-        }
-    }
-    glEnd();
-    glEndList();
 }
 
 void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
@@ -410,8 +351,7 @@ void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
     if(rigidBody == NULL)
     {
         BuildRigidBody();
-        BuildDisplayList();
-        BuildCollisionList();
+		BuildGraphicalObject();
         
         //rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
         rigidBody->setCenterOfMassTransform(UnitSystem::SetTransform(worldTransform)*localTransform);
@@ -479,19 +419,93 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(const FluidEntity* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
+void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
 {
-    Fb.setZero();
-    Tb.setZero();
-    Fd.setZero();
-    Td.setZero();
-    Fa.setZero();
-    Ta.setZero();
+    //Set zeros
+	Fb.setZero();
+	Tb.setZero();
+	Fd.setZero();
+	Td.setZero();
+	Fa.setZero();
+	Ta.setZero();
+    btVector3 p = cogTransform.getOrigin();
+    
+    //Calculate fluid dynamics forces and torques
+    //Loop through all faces...
+    for(int i=0; i<mesh->faces.size(); ++i)
+    {
+        //Global coordinates
+		glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]];
+		glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]];
+		glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]];
+        btVector3 p1 = geometryTransform * btVector3(p1gl.x,p1gl.y,p1gl.z);
+        btVector3 p2 = geometryTransform * btVector3(p2gl.x,p2gl.y,p2gl.z);
+        btVector3 p3 = geometryTransform * btVector3(p3gl.x,p3gl.y,p3gl.z);
+        
+        //Check if underwater
+        btScalar pressure = (fluid->GetPressure(p1) + fluid->GetPressure(p2) + fluid->GetPressure(p3))/btScalar(3);
+        if(pressure <= btScalar(0.))
+            continue;
+        
+        //Calculate face features
+        btVector3 fv1 = p2-p1; //One side of the face (triangle)
+        btVector3 fv2 = p3-p1; //Another side of the face (triangle)
+        btVector3 fc = (p1+p2+p3)/btScalar(3); //Face centroid
+        btVector3 fn = fv1.cross(fv2); //Normal of the face (length != 1)
+        btScalar len = fn.length();
+        btVector3 fn1 = fn/len; //Normalised normal (length = 1)
+        btScalar A = len/btScalar(2); //Area of the face (triangle)
+        
+        //Buoyancy force
+        btVector3 Fbi = -fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure)
+        
+        //Accumulate
+        Fb += Fbi;
+        Tb += (fc - p).cross(Fbi);
+        
+        //Damping force
+        if(damping)
+        {
+            //Skin drag force
+            btVector3 vc = fluid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
+            btVector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
+            btVector3 Fds = fluid->getFluid()->viscosity * vt * A / btScalar(0.0001);
+            //btVector3 Fds = vt.safeNormalize()*btScalar(0.5)*fluid->getFluid()->density*btScalar(1.328)/1000.0*vt.length2()*fn.length()/btScalar(2);
+        
+            //Pressure drag force
+            btVector3 vn = vc - vt; //Water velocity normal to face
+            btVector3 Fdp(0,0,0);
+            if(fn.dot(vn) < btScalar(0))
+                Fdp = btScalar(0.5)*fluid->getFluid()->density * vn * vn.length() * A;
+            
+            //Accumulate
+            Fd += Fds + Fdp;
+            Td += (fc - p).cross(Fds + Fdp);
+        }
+        
+        //Added mass effect
+        if(addedMass)
+        {
+            btVector3 ac = -(a + epsilon.cross(fc - p)); //Water acceleration at face center (velocity of fluid is constant)
+            btVector3 Fai(0,0,0);
+            btScalar an; //acceleration normal to face
+            
+            if((an = fn1.dot(ac)) < btScalar(0))
+            {
+                btScalar d = btScalar(1.)/(-an + btScalar(1.)); //Positive thickness of affected layer of fluid
+                Fai = fluid->getFluid()->density * A * d * an * fn1; //Fa = rho V a = rho A d a
+            }
+            
+            //Accumulate
+            Fa += Fai;
+            Ta += (fc - p).cross(Fai);
+        }
+    }
 }
 
-void SolidEntity::ComputeFluidForces(const FluidEntity* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
+void SolidEntity::ComputeFluidForces(const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
 {
-    if(rigidBody == NULL)
+	if(rigidBody == NULL || mesh == NULL)
     {
         Fb.setZero();
         Tb.setZero();
@@ -511,7 +525,7 @@ void SolidEntity::ComputeFluidForces(const FluidEntity* fluid, btVector3& Fb, bt
     }
 }
 
-void SolidEntity::ApplyFluidForces(const FluidEntity* fluid)
+void SolidEntity::ApplyFluidForces(const Ocean* fluid)
 {
     btVector3 Fb;
     btVector3 Tb;

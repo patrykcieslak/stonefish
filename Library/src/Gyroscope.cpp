@@ -9,7 +9,7 @@
 #include "Gyroscope.h"
 
 #pragma mark Constructors
-Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -33,7 +33,7 @@ void Gyroscope::Reset()
 {
     accumulatedDrift = 0;
     
-    Sensor::Reset();
+    SimpleSensor::Reset();
 }
 
 void Gyroscope::InternalUpdate(btScalar dt)

@@ -81,7 +81,7 @@ void FallingTestApp::DoHUD()
     */
     
     SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
-    Look l = solid->getLook();
+    /*Look l = solid->getLook();
     
     ui_id sliderMat;
     sliderMat.owner = 1;
@@ -100,7 +100,7 @@ void FallingTestApp::DoHUD()
     l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
     
     solid->SetLook(l);
-    
+    */
     //Right side
     ui_id plot;
     plot.owner = 1;
@@ -110,7 +110,7 @@ void FallingTestApp::DoHUD()
     dims.push_back(2);
     
     
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, getSimulationManager()->getSensor(0), dims, "Height"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height"))
     {
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
         openDialog->Show();
@@ -118,7 +118,7 @@ void FallingTestApp::DoHUD()
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            const std::deque<Sample*>& data = getSimulationManager()->getSensor(0)->getHistory();
+            const std::deque<Sample*>& data = ((SimpleSensor*)getSimulationManager()->getSensor(0))->getHistory();
             if(data.size() > 0)
             {
                 FILE* fp;

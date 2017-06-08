@@ -17,7 +17,7 @@ Mux::~Mux()
     components.clear();
 }
 
-bool Mux::AddComponent(Sensor* s, unsigned short channel)
+bool Mux::AddComponent(SimpleSensor* s, unsigned short channel)
 {
     if(s == NULL)
         return false;

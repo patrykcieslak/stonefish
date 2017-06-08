@@ -10,7 +10,7 @@
 #define __Stonefish_SystemEntity__
 
 #include "Entity.h"
-#include "FluidEntity.h"
+#include "Ocean.h"
 
 class SystemEntity : public Entity
 {
@@ -29,7 +29,7 @@ public:
     virtual void UpdateControllers(btScalar dt) = 0; //Update controllers in the system and its subsystems
     virtual void UpdateActuators(btScalar dt) = 0;   //Update actuators in the system and its subsystems
     virtual void ApplyGravity() = 0;
-    virtual void ApplyFluidForces(FluidEntity* fluid) = 0;
+    virtual void ApplyFluidForces(Ocean* fluid) = 0;
     
     virtual btTransform getTransform() const = 0;
     

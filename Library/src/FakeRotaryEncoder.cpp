@@ -25,7 +25,7 @@ void FakeRotaryEncoder::Reset()
     angle = lastAngle = GetRawAngle();
     angularVelocity = GetRawAngularVelocity();
     
-    Sensor::Reset();
+    SimpleSensor::Reset();
 }
 
 void FakeRotaryEncoder::InternalUpdate(btScalar dt)

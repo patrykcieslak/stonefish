@@ -14,7 +14,7 @@
 
 typedef enum {FORCEFIELD_FLUID} ForcefieldType;
 
-//pure virtual class
+//Pure virtual class
 class ForcefieldEntity : public Entity
 {
 public:
@@ -22,11 +22,12 @@ public:
     virtual ~ForcefieldEntity();
     
     EntityType getType();
-    btPairCachingGhostObject* getGhost();
+    virtual void Render();
+	
+	btPairCachingGhostObject* getGhost();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     
     virtual ForcefieldType getForcefieldType() = 0;
-    virtual void Render() = 0;
     
 protected:
     btPairCachingGhostObject* ghost;

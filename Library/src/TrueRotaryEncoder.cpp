@@ -32,7 +32,7 @@ void TrueRotaryEncoder::Reset()
     lastAngle /= FULL_ANGLE;
     lastAngle = btScalar(trunc(lastAngle * cpr_res)) / btScalar(cpr_res) * FULL_ANGLE;
     
-    Sensor::Reset();
+    SimpleSensor::Reset();
 }
 
 void TrueRotaryEncoder::InternalUpdate(btScalar dt)

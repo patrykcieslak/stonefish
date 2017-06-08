@@ -1,3 +1,8 @@
+Short-term:
+- Fix rendering by writing a draw function in Pipeline
+- Remove display lists -> VBO
+- Remove OGLFT -> write code in OpenGLPrinter
+
 Implemented:
 x Ability to set internal unit system -> MKS as default
 x Add global coord system choice (z-up or z-down)

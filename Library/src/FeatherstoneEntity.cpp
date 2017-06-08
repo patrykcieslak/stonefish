@@ -3,11 +3,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "FeatherstoneEntity.h"
-#include "OpenGLSolids.h"
 
 #pragma mark Constructors
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, const btTransform& transform, btMultiBodyDynamicsWorld* world, bool fixedBase) : Entity(uniqueName)
@@ -70,47 +69,6 @@ void FeatherstoneEntity::GetAABB(btVector3& min, btVector3& max)
         max[0] = std::max(max[0], lmax[0]);
         max[1] = std::max(max[1], lmax[1]);
         max[2] = std::max(max[2], lmax[2]);
-    }
-}
-
-void FeatherstoneEntity::Render()
-{
-    if(baseRenderable)
-    {
-        //Draw base
-        btTransform trans = multiBody->getBaseCollider()->getWorldTransform() * links[0].solid->localTransform.inverse();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        UseLook(links[0].solid->look);
-        glCallList(links[0].solid->displayList);
-        
-        glPopMatrix();
-    }
-    
-    //Draw rest of links
-    for(unsigned int i = 0; i < multiBody->getNumLinks(); i++)
-    {
-        btMultibodyLink& link = multiBody->getLink(i);
-        btTransform trans = link.m_collider->getWorldTransform() * links[i + 1].solid->localTransform.inverse();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        UseLook(links[i + 1].solid->look);
-        glCallList(links[i + 1].solid->displayList);
-        glPopMatrix();
     }
 }
 
@@ -398,9 +356,31 @@ void FeatherstoneEntity::ApplyDamping()
     }
 }
 
+void FeatherstoneEntity::Render()
+{	
+	//Draw base
+    if(baseRenderable)
+    {
+		btTransform trans = multiBody->getBaseCollider()->getWorldTransform() * links[0].solid->localTransform.inverse();
+        btScalar openglTrans[16];
+        trans.getOpenGLMatrix(openglTrans);
+		OpenGLContent::getInstance()->DrawObject(links[0].solid->getObject(), links[0].solid->getLook(), openglTrans);
+    }
+    
+    //Draw rest of links
+    for(unsigned int i = 0; i < multiBody->getNumLinks(); ++i)
+    {
+		btMultibodyLink& link = multiBody->getLink(i);
+        btTransform trans = link.m_collider->getWorldTransform() * links[i + 1].solid->localTransform.inverse();
+        btScalar openglTrans[16];
+        trans.getOpenGLMatrix(openglTrans);
+        OpenGLContent::getInstance()->DrawObject(links[i + 1].solid->getObject(), links[i + 1].solid->getLook(), openglTrans);
+    }
+}
+
 void FeatherstoneEntity::RenderStructure()
 {
-    if(baseRenderable)
+    /*if(baseRenderable)
     {
         //Draw base coord
         btTransform trans = multiBody->getBaseCollider()->getWorldTransform();
@@ -433,5 +413,5 @@ void FeatherstoneEntity::RenderStructure()
 #endif
         OpenGLSolids::DrawCoordSystem(0.1f);
         glPopMatrix();
-    }
+    }*/
 }

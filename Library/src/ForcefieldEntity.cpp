@@ -32,3 +32,7 @@ void ForcefieldEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
     world->addCollisionObject(ghost, MASK_DEFAULT, MASK_DEFAULT);
 }
+
+void ForcefieldEntity::Render()
+{
+}

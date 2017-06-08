@@ -9,11 +9,11 @@
 #ifndef __Stonefish_LinearEncoder__
 #define __Stonefish_LinearEncoder__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "PrismaticJoint.h"
 #include "CylindricalJoint.h"
 
-class LinearEncoder : public Sensor
+class LinearEncoder : public SimpleSensor
 {
     
 };

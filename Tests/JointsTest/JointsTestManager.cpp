@@ -9,10 +9,10 @@
 #include "JointsTestManager.h"
 
 #include "JointsTestApp.h"
-#include "PlaneEntity.h"
-#include "BoxEntity.h"
-#include "SphereEntity.h"
-#include "CylinderEntity.h"
+#include "Plane.h"
+#include "Box.h"
+#include "Sphere.h"
+#include "Cylinder.h"
 #include "OpenGLOmniLight.h"
 #include "OpenGLTrackball.h"
 #include "FixedJoint.h"
@@ -39,19 +39,19 @@ void JointsTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.5, 0.2);
     
     ///////LOOKS///////////
-    Look grey = CreateOpaqueLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f, 1.5f);
-    Look orange = CreateOpaqueLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f, 1.5f);
-    Look green = CreateOpaqueLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f, 1.5f);
+    int grey = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f, 1.5f);
+    int orange = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f, 1.5f);
+    int green = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f, 1.5f);
     
     ////////OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)));
+    Plane* floor = new Plane("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)), grey);
     floor->setRenderable(true);
     AddEntity(floor);
     
     //----Fixed Joint----
-    BoxEntity* box = new BoxEntity("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
+    Box* box = new Box("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,1000.0)));
-    SphereEntity* sph = new SphereEntity("Sph1", 200.0, getMaterialManager()->getMaterial("Steel"), orange);
+    Sphere* sph = new Sphere("Sph1", 200.0, getMaterialManager()->getMaterial("Steel"), orange);
     AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-500.0,1000.0)));
     
     FixedJoint* fixed = new FixedJoint("Fix", box, sph);
@@ -59,10 +59,10 @@ void JointsTestManager::BuildScenario()
     AddJoint(fixed);
     
     //----Revolute Joint----
-    box = new BoxEntity("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
+    box = new Box("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(500.0,0.0,1000.0)));
     
-    BoxEntity* box2 = new BoxEntity("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
+    Box* box2 = new Box("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
     AddSolidEntity(box2, btTransform(btQuaternion::getIdentity(), btVector3(500.0,200.0,1000.0)));
     
     RevoluteJoint* revo = new RevoluteJoint("Revolute", box, box2, btVector3(500.0,100.0,900.0), btVector3(0,1,0), false);
@@ -70,9 +70,9 @@ void JointsTestManager::BuildScenario()
     AddJoint(revo);
     
     //----Spherical Joint----
-    sph = new SphereEntity("Sph2", 200.0, getMaterialManager()->getMaterial("Plastic"), green);
+    sph = new Sphere("Sph2", 200.0, getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.0, -2000.0,1000.0)));
-    SphereEntity* sph2 = new SphereEntity("Sph3", 150.0, getMaterialManager()->getMaterial("Plastic"), orange);
+    Sphere* sph2 = new Sphere("Sph3", 150.0, getMaterialManager()->getMaterial("Plastic"), orange);
     AddSolidEntity(sph2, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-2200.0,400.0)));
     
     SphericalJoint* spher = new SphericalJoint("Spherical", sph, sph2, btVector3(0.0, -2000.0, 600.0));
@@ -80,10 +80,10 @@ void JointsTestManager::BuildScenario()
     AddJoint(spher);
     
     //----Prismatic Joint----
-    box = new BoxEntity("Box4", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
+    box = new Box("Box4", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(1000.0,0.0,51.0)));
     
-    box2 = new BoxEntity("Box5", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
+    box2 = new Box("Box5", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
     AddSolidEntity(box2, btTransform(btQuaternion::getIdentity(), btVector3(1000.0,0.0,500.0)));
     
     PrismaticJoint* trans = new PrismaticJoint("Prismatic", box, box2, btVector3(0.5,0,1));
@@ -91,10 +91,10 @@ void JointsTestManager::BuildScenario()
     AddJoint(trans);
     
     //----Cylindrical Joint----
-    box = new BoxEntity("Box6", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
+    box = new Box("Box6", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(-1000.0,0.0,51.0)));
     
-    box2 = new BoxEntity("Box7", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
+    box2 = new Box("Box7", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), orange);
     AddSolidEntity(box2, btTransform(btQuaternion::getIdentity(), btVector3(-1000.0,0.0,500.0)));
     
     CylindricalJoint* cyli = new CylindricalJoint("Cylindrical", box, box2, btVector3(-1000.0, 50.0, 250.0), btVector3(0,0,1));
@@ -102,10 +102,10 @@ void JointsTestManager::BuildScenario()
     AddJoint(cyli);
     
     //----Gear Joint----
-    CylinderEntity* cyl = new CylinderEntity("Cyl1", 200.0, 20.0, getMaterialManager()->getMaterial("Steel"), green);
+    Cylinder* cyl = new Cylinder("Cyl1", 200.0, 20.0, getMaterialManager()->getMaterial("Steel"), green);
     AddSolidEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(0.0, 1000.0, 300.0)));
     
-    CylinderEntity* cyl2 = new CylinderEntity("Cyl2", 100.0, 20.0, getMaterialManager()->getMaterial("Steel"), orange);
+    Cylinder* cyl2 = new Cylinder("Cyl2", 100.0, 20.0, getMaterialManager()->getMaterial("Steel"), orange);
     AddSolidEntity(cyl2, btTransform(btQuaternion(0,0,M_PI_4), btVector3(0.0, 930.0, 560.0)));
     
     revo = new RevoluteJoint("GearRevolute1", box, cyl, btVector3(0.0, 1000.0, 300.0), btVector3(0,1,0), false);

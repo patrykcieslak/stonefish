@@ -11,7 +11,7 @@
 
 #include "Entity.h"
 #include "MaterialManager.h"
-#include "OpenGLMaterial.h"
+#include "OpenGLContent.h"
 
 typedef enum {STATIC_PLANE, STATIC_TERRAIN, STATIC_OBSTACLE} StaticEntityType;
 
@@ -19,11 +19,11 @@ typedef enum {STATIC_PLANE, STATIC_TERRAIN, STATIC_OBSTACLE} StaticEntityType;
 class StaticEntity : public Entity
 {
 public:
-    StaticEntity(std::string uniqueName, Material* mat, Look l);
+    StaticEntity(std::string uniqueName, Material* mat, int lookId = -1);
     ~StaticEntity();
     
     void Render();
-    void SetLook(Look newLook);
+    void SetLook(int newLookId);
     void SetWireframe(bool enabled);
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
@@ -37,11 +37,11 @@ public:
     
 protected:
     btRigidBody* rigidBody;
-    GLint displayList;
+	int objectId;
     
 private:
     Material* material;
-    Look look;
+    int lookId;
     bool wireframe;
 };
 

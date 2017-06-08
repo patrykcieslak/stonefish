@@ -12,7 +12,7 @@
 #include "OpenGLPipeline.h"
 #include "OpenGLGBuffer.h"
 #include "GLSLShader.h"
-#include "FluidEntity.h"
+#include "Ocean.h"
 #include "SolidEntity.h"
 
 #define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1_EXT
@@ -49,18 +49,18 @@ public:
     void SetViewport();
     void SetProjection();
     void SetViewTransform();
-    void SetReflectedViewTransform(FluidEntity* fluid);
-    void SetRefractedViewTransform(FluidEntity* fluid);
-    btTransform GetReflectedViewTransform(const FluidEntity* fluid);
-    btTransform GetRefractedViewTransform(const FluidEntity* fluid);
+    void SetReflectedViewTransform(Ocean* fluid);
+    void SetRefractedViewTransform(Ocean* fluid);
+    btTransform GetReflectedViewTransform(const Ocean* fluid);
+    btTransform GetRefractedViewTransform(const Ocean* fluid);
     void ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
     btVector3 Ray(GLint x, GLint y);
 
     void Activate();
     void Deactivate();
     void RenderSSAO();
-    void RenderFluidSurface(FluidEntity* fluid, bool underwater);
-    void RenderFluidVolume(FluidEntity* fluid);
+    void RenderFluidSurface(Ocean* fluid, bool underwater);
+    void RenderFluidVolume(Ocean* fluid);
     void RenderHDR(GLuint destinationFBO);
     void ShowAmbientOcclusion();
     

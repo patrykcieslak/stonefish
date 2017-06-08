@@ -1,22 +1,20 @@
 //
-//  MeshEntity.cpp
+//  Polyhedron.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
 //  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
 //
 
-#include "MeshEntity.h"
-#include "OpenGLSolids.h"
+#include "Polyhedron.h"
 #include "SystemUtil.h"
-#include "GeometryFileUtil.h"
 
-MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, Look l, bool smoothNormals) : SolidEntity(uniqueName, mat)
+Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, int lookId, bool smoothNormals) : SolidEntity(uniqueName, mat, lookId)
 {
     scale = UnitSystem::SetLength(scale);
     
     //1.Load triangle mesh from file
-    mesh = LoadModel(modelFilename, scale, smoothNormals);
+    mesh = OpenGLContent::LoadMesh(modelFilename, scale, smoothNormals);
     
     //2.Calculate mesh volume and COG
     btVector3 meshCog = btVector3(0,0,0);
@@ -25,12 +23,16 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
     for(int i=0; i<mesh->faces.size(); i++)
     {
         //triangle
-        btVector3 v1 = mesh->vertices[mesh->faces[i].vertexIndex[0]];
-        btVector3 v2 = mesh->vertices[mesh->faces[i].vertexIndex[1]];
-        btVector3 v3 = mesh->vertices[mesh->faces[i].vertexIndex[2]];
+		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]];
+		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]];
+		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]];
+		
+        btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+        btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+        btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
         
         btVector3 tetraCOG = (v1+v2+v3)/4.0;
-        btScalar tetraVolume6 = signedVolumeOfTetrahedron6(v1, v2, v3);
+        btScalar tetraVolume6 = v1.dot(v2.cross(v3));
         meshCog += tetraCOG * tetraVolume6;
         meshVolume += tetraVolume6;
     }
@@ -40,7 +42,7 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
     else
         meshCog = btVector3(0,0,0);
     
-    volume = meshVolume * 1.0/6.0;
+    volume = meshVolume * btScalar(1)/btScalar(6);
     
     //3.Move vertices so that COG is in (0,0,0)
     localTransform.setOrigin(meshCog);
@@ -51,12 +53,19 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
     for(int i=0; i<mesh->faces.size(); i++)
     {
         //Triangle verticies with respect to COG
-        btVector3 v1 = mesh->vertices[mesh->faces[i].vertexIndex[0]] - meshCog;
-        btVector3 v2 = mesh->vertices[mesh->faces[i].vertexIndex[1]] - meshCog;
-        btVector3 v3 = mesh->vertices[mesh->faces[i].vertexIndex[2]] - meshCog;
+		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]];
+		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]];
+		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]];
+		
+        btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+        btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+        btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+		v1 -= meshCog;
+        v2 -= meshCog;
+        v3 -= meshCog;
         
         //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
-        btScalar V6 = signedVolumeOfTetrahedron6(v1, v2, v3);
+        btScalar V6 = v1.dot(v2.cross(v3));
         Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
         Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
         Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
@@ -65,23 +74,23 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
         Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
     }
     
-    Pxx *= material->density / 120.0; //20 from formula and 6 from polyhedron volume
-    Pyy *= material->density / 120.0;
-    Pzz *= material->density / 120.0;
-    Pxy *= material->density / 120.0;
-    Pxz *= material->density / 120.0;
-    Pyz *= material->density / 120.0;
+    Pxx *= material->density / btScalar(120); //20 from formula and 6 from polyhedron volume
+    Pyy *= material->density / btScalar(120);
+    Pzz *= material->density / btScalar(120);
+    Pxy *= material->density / btScalar(120);
+    Pxz *= material->density / btScalar(120);
+    Pyz *= material->density / btScalar(120);
     
     btMatrix3x3 I = btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
     
     //5.Calculate principal moments of inertia
     btScalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
     btScalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
-    btScalar U = btSqrt(T*T-btScalar(3.)*II)/btScalar(3.);
-    btScalar theta = btAcos((-btScalar(2.)*T*T*T + btScalar(9.)*T*II - btScalar(27.)*I.determinant())/(btScalar(54.)*U*U*U));
-    btScalar A = T/btScalar(3.) - btScalar(2.)*U*btCos(theta/btScalar(3.));
-    btScalar B = T/btScalar(3.) - btScalar(2.)*U*btCos(theta/btScalar(3.) - btScalar(2.)*M_PI/btScalar(3.));
-    btScalar C = T/btScalar(3.) - btScalar(2.)*U*btCos(theta/btScalar(3.) + btScalar(2.)*M_PI/btScalar(3.));
+    btScalar U = btSqrt(T*T-btScalar(3)*II)/btScalar(3);
+    btScalar theta = btAcos((-btScalar(2)*T*T*T + btScalar(9)*T*II - btScalar(27)*I.determinant())/(btScalar(54)*U*U*U));
+    btScalar A = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3));
+    btScalar B = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3) - btScalar(2)*M_PI/btScalar(3));
+    btScalar C = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3) + btScalar(2)*M_PI/btScalar(3));
     Ipri = btVector3(A, B, C);
     
     //6. Calculate principal axes of inertia
@@ -97,52 +106,20 @@ MeshEntity::MeshEntity(std::string uniqueName, const char* modelFilename, btScal
     localTransform.setBasis(rotMat);
     
     //7.Calculate AABB
-    AABB(mesh, aabb[0], aabb[1]);
+    OpenGLContent::AABB(mesh, aabb[0], aabb[1]);
     mass = volume*material->density;
-    
-    //8.Graphics
-    SetLook(l);
 }
 
-MeshEntity::~MeshEntity(void)
+Polyhedron::~Polyhedron(void)
 {
-    delete mesh;
 }
 
-SolidEntityType MeshEntity::getSolidType()
+SolidEntityType Polyhedron::getSolidType()
 {
-    return SOLID_MESH;
+    return SOLID_POLYHEDRON;
 }
 
-void MeshEntity::SetLook(Look newLook)
-{
-    SolidEntity::SetLook(newLook);
-    BuildDisplayList();
-}
-
-void MeshEntity::BuildCollisionList()
-{
-    if(rigidBody != NULL)
-    {
-        if(collisionList != 0)
-            glDeleteLists(collisionList, 1);
-        
-        btConvexHullShape* shape = (btConvexHullShape*)rigidBody->getCollisionShape();
-        collisionList = glGenLists(1);
-        glNewList(collisionList, GL_COMPILE);
-        glBegin(GL_POINTS);
-        for(int i=0; i<shape->getNumVertices(); i++)
-        {
-            btVector3 v1;
-            shape->getVertex(i, v1);
-            glVertex3f((GLfloat)v1.x(), (GLfloat)v1.y(), (GLfloat)v1.z());
-        }
-        glEnd();
-        glEndList();
-    }
-}
-
-btCollisionShape* MeshEntity::BuildCollisionShape()
+btCollisionShape* Polyhedron::BuildCollisionShape()
 {
     //Build GIMPACT concave shape
     /*int* indices = new int[mesh->faces.size()*3];
@@ -162,91 +139,12 @@ btCollisionShape* MeshEntity::BuildCollisionShape()
         
     btConvexHullShape* convex = new btConvexHullShape();
     for(int i=0; i<mesh->vertices.size(); i++)
-        convex->addPoint(mesh->vertices[i]);
+	{
+		btVector3 v(mesh->vertices[i].x, mesh->vertices[i].y, mesh->vertices[i].z);
+        convex->addPoint(v);
+	}
     
     return convex;
-}
-
-void MeshEntity::ComputeFluidForces(const FluidEntity* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
-{
-    //Set zeros
-    SolidEntity::ComputeFluidForces(fluid, cogTransform, geometryTransform, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta, damping, addedMass);
-    btVector3 p = cogTransform.getOrigin();
-    
-    //Calculate fluid dynamics forces and torques
-    //Loop through all faces...
-    for(int i=0; i<mesh->faces.size(); ++i)
-    {
-        //Global coordinates
-        btVector3 p1 = geometryTransform * mesh->vertices[mesh->faces[i].vertexIndex[0]];
-        btVector3 p2 = geometryTransform * mesh->vertices[mesh->faces[i].vertexIndex[1]];
-        btVector3 p3 = geometryTransform * mesh->vertices[mesh->faces[i].vertexIndex[2]];
-        
-        //Check if underwater
-        btScalar pressure = (fluid->GetPressure(p1) + fluid->GetPressure(p2) + fluid->GetPressure(p3))/btScalar(3);
-        if(pressure <= btScalar(0.))
-            continue;
-        
-        //Calculate face features
-        btVector3 fv1 = p2-p1; //One side of the face (triangle)
-        btVector3 fv2 = p3-p1; //Another side of the face (triangle)
-        btVector3 fc = (p1+p2+p3)/btScalar(3); //Face centroid
-        btVector3 fn = fv1.cross(fv2); //Normal of the face (length != 1)
-        btScalar len = fn.length();
-        btVector3 fn1 = fn/len; //Normalised normal (length = 1)
-        btScalar A = len/btScalar(2); //Area of the face (triangle)
-        
-        //Buoyancy force
-        btVector3 Fbi = -fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure)
-        
-        //Accumulate
-        Fb += Fbi;
-        Tb += (fc - p).cross(Fbi);
-        
-        //Damping force
-        if(damping)
-        {
-            //Skin drag force
-            btVector3 vc = fluid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
-            btVector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
-            btVector3 Fds = fluid->getFluid()->viscosity * vt * A / btScalar(0.0001);
-            //btVector3 Fds = vt.safeNormalize()*btScalar(0.5)*fluid->getFluid()->density*btScalar(1.328)/1000.0*vt.length2()*fn.length()/btScalar(2);
-        
-            //Pressure drag force
-            btVector3 vn = vc - vt; //Water velocity normal to face
-            btVector3 Fdp(0,0,0);
-            if(fn.dot(vn) < btScalar(0))
-                Fdp = btScalar(0.5)*fluid->getFluid()->density * vn * vn.length() * A;
-            
-            //Accumulate
-            Fd += Fds + Fdp;
-            Td += (fc - p).cross(Fds + Fdp);
-        }
-        
-        //Added mass effect
-        if(addedMass)
-        {
-            btVector3 ac = -(a + epsilon.cross(fc - p)); //Water acceleration at face center (velocity of fluid is constant)
-            btVector3 Fai(0,0,0);
-            btScalar an; //acceleration normal to face
-            
-            if((an = fn1.dot(ac)) < btScalar(0))
-            {
-                btScalar d = btScalar(1.)/(-an + btScalar(1.)); //Positive thickness of affected layer of fluid
-                Fai = fluid->getFluid()->density * A * d * an * fn1; //Fa = rho V a = rho A d a
-            }
-            
-            //Accumulate
-            Fa += Fai;
-            Ta += (fc - p).cross(Fai);
-        }
-    }
-    
-    //printf("Fluid: %1.2f, %1.2f, %1.2f\n", fluidForce.x(), fluidForce.y(), fluidForce.z());
-    //printf("Fluid Torque: %1.2f, %1.2f, %1.10f\n", fluidTorque.x(), fluidTorque.y(), fluidTorque.z());
-    //printf("Fluid: %1.2f, %1.2f, %1.2f\n", testt.x(), testt.y(), testt.z());
-    //printf("Body acc: %1.2f, %1.2f, %1.2f\n", epsilon.x(), epsilon.y(), epsilon.z());
-
 }
 
 ////////// OLD ROUTINES /////////

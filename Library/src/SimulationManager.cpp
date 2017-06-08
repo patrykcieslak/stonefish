@@ -25,11 +25,11 @@
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "SolidEntity.h"
-#include "BoxEntity.h"
+#include "Box.h"
 #include "StaticEntity.h"
 #include "CableEntity.h"
 #include "ForcefieldEntity.h"
-#include "FluidEntity.h"
+#include "Ocean.h"
 
 #pragma mark Constructors
 SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
@@ -52,7 +52,7 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     dwBroadphase = NULL;
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
-    fluid = NULL;
+    ocean = NULL;
     
     //Set IC solver params
     icProblemSolved = false;
@@ -97,16 +97,26 @@ void SimulationManager::AddSystemEntity(SystemEntity* ent, const btTransform& wo
     }
 }
 
-void SimulationManager::SetFluidEntity(FluidEntity *flu)
+void SimulationManager::EnableOcean(Fluid* f)
 {
-    if(flu != NULL)
-    {
-        //if(fluid != NULL)
-        //remove old fluid
-        
-        fluid = flu;
-        fluid->AddToDynamicsWorld(dynamicsWorld);
-    }
+	if(ocean != NULL)
+	{
+		//TODO: Remove from dynamics world!
+		delete ocean;
+	}
+	
+	if(f != NULL)
+	{
+		ocean = new Ocean("Ocean", f);
+	}
+	else
+	{
+		std::string water = getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55); 
+		ocean = new Ocean("Ocean", getMaterialManager()->getFluid(water));
+	}	
+	
+	ocean->setRenderable(true);
+	ocean->AddToDynamicsWorld(dynamicsWorld);
 }
 
 void SimulationManager::AddSensor(Sensor *sens)
@@ -527,8 +537,11 @@ void SimulationManager::DestroyScenario()
         delete entities[i];
     entities.clear();
     
-    if(fluid != NULL)
-        delete fluid;
+    if(ocean != NULL)
+	{
+        delete ocean;
+		ocean = NULL;
+	}
     
     for(int i=0; i<joints.size(); i++)
         delete joints[i];
@@ -560,6 +573,8 @@ void SimulationManager::DestroyScenario()
     
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
+		
+	OpenGLContent::Destroy();
 }
 
 bool SimulationManager::StartSimulation()
@@ -1000,10 +1015,10 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
         }
     }
     
-    //fluid support
-    if(simManager->fluid != NULL)
+	//ocean forces
+    if(simManager->ocean != NULL)
     {
-        btBroadphasePairArray& pairArray = simManager->fluid->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+        btBroadphasePairArray& pairArray = simManager->ocean->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
@@ -1018,10 +1033,10 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
                 btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
-                if(co1 == simManager->fluid->getGhost())
-                    simManager->fluid->ApplyFluidForces(world, co2);
-                else if(co2 == simManager->fluid->getGhost())
-                    simManager->fluid->ApplyFluidForces(world, co1);
+                if(co1 == simManager->ocean->getGhost())
+                    simManager->ocean->ApplyFluidForces(world, co2);
+                else if(co2 == simManager->ocean->getGhost())
+                    simManager->ocean->ApplyFluidForces(world, co1);
             }
         }
     }

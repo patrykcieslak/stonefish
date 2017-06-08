@@ -25,7 +25,7 @@ public:
     virtual void UpdateControllers(btScalar dt);
     virtual void UpdateActuators(btScalar dt);
     virtual void ApplyGravity();
-    virtual void ApplyFluidForces(FluidEntity* fluid);
+    virtual void ApplyFluidForces(Ocean* fluid);
     virtual void Render();
     
 private:

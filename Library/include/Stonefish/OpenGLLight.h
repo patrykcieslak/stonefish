@@ -26,6 +26,8 @@ typedef struct
 }
 ColorSystem;
 
+class SimulationManager;
+
 class OpenGLLight
 {
 public:
@@ -36,7 +38,7 @@ public:
     virtual void Render() = 0;
     virtual void RenderLightSurface() = 0;
     virtual void RenderDummy() = 0;
-    virtual void RenderShadowMap(OpenGLPipeline* pipe) = 0;
+    virtual void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim) = 0;
     virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale) = 0;
     void GlueToEntity(SolidEntity* ent);
     void Activate();

@@ -169,7 +169,7 @@ void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, cons
     //Add manipulators to dynamics world
     //Add joints connecting manipulators and vehicle
     //Display
-    BuildDisplayLists();
+    BuildGraphicalObjects();
 }
 
 void UnderwaterVehicle::UpdateAcceleration()
@@ -212,7 +212,7 @@ void UnderwaterVehicle::ApplyGravity()
         vehicleBody->applyGravity();
 }
 
-void UnderwaterVehicle::ApplyFluidForces(FluidEntity* fluid)
+void UnderwaterVehicle::ApplyFluidForces(Ocean* fluid)
 {
     btVector3 Fb;
     btVector3 Tb;
@@ -233,78 +233,26 @@ void UnderwaterVehicle::ApplyFluidForces(FluidEntity* fluid)
     }
 }
 
-void UnderwaterVehicle::BuildDisplayLists()
+void UnderwaterVehicle::BuildGraphicalObjects()
 {
-    if(internalList != 0)
-        glDeleteLists(internalList, 1);
-        
-    internalList = glGenLists(1);
-    glNewList(internalList, GL_COMPILE);
-    for(unsigned int i=0; i<bodyParts.size(); ++i)
-    {
-        if(bodyParts[i].isExternal)
-            continue;
-        
-        glPushMatrix();
-        btTransform trans = bodyParts[i].position;
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        UseLook(bodyParts[i].solid->getLook());
-        glCallList(bodyParts[i].solid->getDisplayList());
-        glPopMatrix();
-    }
-    glEndList();
-    
-    if(externalList != 0)
-        glDeleteLists(externalList, 1);
-    
-    externalList = glGenLists(1);
-    glNewList(externalList, GL_COMPILE);
-    for(unsigned int i=0; i<bodyParts.size(); ++i)
-    {
-        if(!bodyParts[i].isExternal)
-            continue;
-        
-        glPushMatrix();
-        btTransform trans = bodyParts[i].position;
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        UseLook(bodyParts[i].solid->getLook());
-        glCallList(bodyParts[i].solid->getDisplayList());
-        glPopMatrix();
-    }
-    glEndList();
+	for(unsigned int i=0; i<bodyParts.size(); ++i)
+		bodyParts[i].solid->BuildGraphicalObject();
 }
 
 void UnderwaterVehicle::Render()
 {
     if(vehicleBody != NULL)
     {
-        btTransform trans;
-        vehicleBody->getMotionState()->getWorldTransform(trans);
-        trans *= localTransform.inverse();
-        
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        glCallList(externalList);
-        
-        glPopMatrix();
-    }
+		btTransform vehicleTrans;
+        vehicleBody->getMotionState()->getWorldTransform(vehicleTrans);
+        vehicleTrans *= localTransform.inverse();
+		
+		for(unsigned int i=0; i<bodyParts.size(); ++i)
+		{
+			btTransform trans = vehicleTrans * bodyParts[i].position;
+			btScalar openglTrans[16];
+			trans.getOpenGLMatrix(openglTrans);
+			OpenGLContent::getInstance()->DrawObject(bodyParts[i].solid->getObject(), bodyParts[i].solid->getLook(), openglTrans);
+		}
+	}
 }

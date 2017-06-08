@@ -10,7 +10,7 @@
 #include "SimulationApp.h"
 
 #pragma mark Constructors
-Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, btScalar frequency, unsigned int historyLength):Sensor(uniqueName, frequency, historyLength)
+Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, btScalar frequency, unsigned int historyLength):SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = relFrame;
@@ -39,7 +39,7 @@ void Accelerometer::Reset()
     lastV = solid->getLinearVelocityInLocalPoint(relToSolid.getOrigin());
     lastV = toAccFrame * lastV;
     
-    Sensor::Reset();
+    SimpleSensor::Reset();
 }
 
 void Accelerometer::InternalUpdate(btScalar dt)

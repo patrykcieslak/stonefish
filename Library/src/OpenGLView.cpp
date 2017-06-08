@@ -8,7 +8,7 @@
 
 #include "OpenGLView.h"
 #include "OpenGLSolids.h"
-#include "OpenGLMaterial.h"
+#include "OpenGLContent.h"
 #include "GeometryUtil.h"
 #include "OpenGLSun.h"
 #include "SimulationApp.h"
@@ -361,7 +361,7 @@ void OpenGLView::SetViewTransform()
 #endif
 }
 
-void OpenGLView::SetReflectedViewTransform(FluidEntity* fluid)
+void OpenGLView::SetReflectedViewTransform(Ocean* fluid)
 {
     btVector3 normal, position;
     fluid->GetSurface(normal, position);
@@ -394,7 +394,7 @@ void OpenGLView::SetReflectedViewTransform(FluidEntity* fluid)
 #endif
 }
 
-void OpenGLView::SetRefractedViewTransform(FluidEntity* fluid)
+void OpenGLView::SetRefractedViewTransform(Ocean* fluid)
 {
     btVector3 normal, position;
     fluid->GetSurface(normal, position);
@@ -429,7 +429,7 @@ void OpenGLView::SetRefractedViewTransform(FluidEntity* fluid)
 #endif
 }
 
-btTransform OpenGLView::GetReflectedViewTransform(const FluidEntity* fluid)
+btTransform OpenGLView::GetReflectedViewTransform(const Ocean* fluid)
 {
     //get plane
     btVector3 normal, position;
@@ -468,7 +468,7 @@ btTransform OpenGLView::GetReflectedViewTransform(const FluidEntity* fluid)
     return trans;
 }
 
-btTransform OpenGLView::GetRefractedViewTransform(const FluidEntity* fluid)
+btTransform OpenGLView::GetRefractedViewTransform(const Ocean* fluid)
 {
     //get plane
     btVector3 normal, position;
@@ -674,7 +674,7 @@ GLuint OpenGLView::getSSAOTexture()
         return 0;
 }
 
-void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
+void OpenGLView::RenderFluidSurface(Ocean* fluid, bool underwater)
 {
     btVector3 position;
     btVector3 normal;
@@ -758,7 +758,7 @@ void OpenGLView::RenderFluidSurface(FluidEntity* fluid, bool underwater)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void OpenGLView::RenderFluidVolume(FluidEntity* fluid)
+void OpenGLView::RenderFluidVolume(Ocean* fluid)
 {
     
 }
@@ -804,7 +804,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
 void OpenGLView::Init()
 {
     /////SAO - Screen-Space Ambient Obscurrance/////
-    randomTexture = LoadInternalTexture("noise.png");
+    randomTexture = OpenGLContent::LoadInternalTexture("noise.png");
     
     ssaoShader = new GLSLShader("sao.frag");
     ssaoShader->AddUniform("texRandom", INT);
@@ -825,7 +825,7 @@ void OpenGLView::Init()
     blurShader->AddUniform("texelOffset", VEC2);
     
     //////Fluid//////
-    waveNormalTexture = LoadInternalTexture("water.jpg");
+    waveNormalTexture = OpenGLContent::LoadInternalTexture("water.jpg");
     
     fluidShader[0] = new GLSLShader("aboveFluidSurface.frag");
     fluidShader[0]->AddUniform("texPosition", INT);

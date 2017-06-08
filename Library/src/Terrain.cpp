@@ -1,14 +1,14 @@
 //
-//  TerrainEntity.cpp
+//  Terrain.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/9/13.
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "TerrainEntity.h"
+#include "Terrain.h"
 
-TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material* mat, Look l, const btTransform& worldTransform) : StaticEntity(uniqueName, mat, l)
+Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material* mat, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, mat, lookId)
 {
     size = UnitSystem::SetLength(size);
     minHeight = UnitSystem::SetLength(minHeight);
@@ -62,7 +62,7 @@ TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btSc
     GLfloat offsetZ = ((length-1)/2.0)*size;
     GLfloat offsetY = (maxHeight-minHeight)/2.0;
 
-    displayList = glGenLists(1);
+    /*displayList = glGenLists(1);
     glNewList(displayList, GL_COMPILE);
     for(int i=0; i<length-1; i++)
     {
@@ -76,16 +76,16 @@ TerrainEntity::TerrainEntity(std::string uniqueName, int width, int length, btSc
         }
         glEnd();
     }
-    glEndList();
+    glEndList();*/
     
     delete [] terrainNormals;
 }
 
-TerrainEntity::~TerrainEntity()
+Terrain::~Terrain()
 {
 }
 
-StaticEntityType TerrainEntity::getStaticType()
+StaticEntityType Terrain::getStaticType()
 {
     return STATIC_TERRAIN;
 }

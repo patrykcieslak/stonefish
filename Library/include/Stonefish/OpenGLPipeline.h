@@ -52,26 +52,23 @@ class OpenGLView;
 class OpenGLPipeline
 {
 public:
-    void Initialize(SimulationManager* sim, GLint windowWidth, GLint windowHeight);
+    void Initialize(GLint windowWidth, GLint windowHeight);
     void DrawDisplay();
-    void Render();
-    void DrawStandardObjects();
-    void DrawSpecialObjects();
-    
+    void Render(SimulationManager* sim);
+    void DrawObjects(SimulationManager* sim);
+   
     void setRenderingEffects(bool sky, bool shadows, bool fluid, bool sao);
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers, bool lights, bool cameras);
     void setDebugSimulation(bool enabled);
     bool isFluidRendered();
     bool isSAORendered();
     GLuint getDisplayTexture();
-
+	
     static OpenGLPipeline* getInstance();
     
 private:
     OpenGLPipeline();
     ~OpenGLPipeline();
-    
-    SimulationManager* simulation;
     
     bool renderSky;
     bool renderShadows;

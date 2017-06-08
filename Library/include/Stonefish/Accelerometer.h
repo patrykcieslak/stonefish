@@ -9,11 +9,11 @@
 #ifndef __Stonefish_Accelerometer__
 #define __Stonefish_Accelerometer__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "ADC.h"
 #include "SolidEntity.h"
 
-class Accelerometer : public Sensor
+class Accelerometer : public SimpleSensor
 {
 public:
     Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG = true, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

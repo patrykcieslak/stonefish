@@ -11,7 +11,7 @@
 
 #include "SystemEntity.h"
 #include "SolidEntity.h"
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "Thruster.h"
 #include "Manipulator.h"
 
@@ -37,16 +37,16 @@ public:
     virtual void UpdateControllers(btScalar dt);
     virtual void UpdateActuators(btScalar dt);
     virtual void ApplyGravity();
-    virtual void ApplyFluidForces(FluidEntity* fluid);
+    virtual void ApplyFluidForces(Ocean* fluid);
     
     virtual btTransform getTransform() const;
     
     virtual void Render();
-    void BuildDisplayLists();
+    void BuildGraphicalObjects();
     
 private:
     std::vector<VehiclePart> bodyParts; //Parts of the vehicle body
-    std::vector<Sensor*> sensors;
+    std::vector<SimpleSensor*> sensors;
     std::vector<Thruster*> thrusters; // + FINS?
     std::vector<Manipulator*> manipulators;
     

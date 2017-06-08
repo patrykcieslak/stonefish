@@ -8,6 +8,7 @@
 
 #include "OpenGLSpotLight.h"
 #include "OpenGLSolids.h"
+#include "SimulationManager.h"
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {
@@ -232,7 +233,7 @@ void OpenGLSpotLight::RenderDummy()
     glPopMatrix();
 }
 
-void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe)
+void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)
 {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -264,7 +265,7 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe)
     glPushAttrib(GL_VIEWPORT_BIT);
     glViewport(0, 0, shadowSize, shadowSize);
     glClear(GL_DEPTH_BUFFER_BIT);
-    pipe->DrawStandardObjects();
+    pipe->DrawObjects(sim);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     glCullFace(GL_BACK);

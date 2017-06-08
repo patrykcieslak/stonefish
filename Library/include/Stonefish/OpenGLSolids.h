@@ -22,11 +22,8 @@ public:
     static void DrawScreenAlignedQuad();
     static void DrawCoordSystem(GLfloat size);
     static void DrawPoint(GLfloat size);
-    static void DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ);
     static void DrawSolidSphere(GLfloat radius);
     static void DrawPointSphere(GLfloat radius);
-    static void DrawSolidCylinder(GLfloat radius, GLfloat height);
-    static void DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius);
     
 private:
     OpenGLSolids();

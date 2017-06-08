@@ -9,10 +9,10 @@
 #ifndef __Stonefish_Current__
 #define __Stonefish_Current__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "DCMotor.h"
 
-class Current : public Sensor
+class Current : public SimpleSensor
 {
 public:
     Current(std::string uniqueName, DCMotor* m, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

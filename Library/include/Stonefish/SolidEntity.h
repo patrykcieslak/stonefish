@@ -12,11 +12,10 @@
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "Entity.h"
 #include "MaterialManager.h"
-#include "OpenGLMaterial.h"
-#include "GeometryUtil.h"
-#include "FluidEntity.h"
+#include "OpenGLContent.h"
+#include "Ocean.h"
 
-typedef enum {SOLID_MESH = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidEntityType;
+typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidEntityType;
 
 //pure virtual class
 class SolidEntity : public Entity
@@ -24,33 +23,33 @@ class SolidEntity : public Entity
     friend class FeatherstoneEntity;
     
 public:
-    SolidEntity(std::string uniqueName, Material* mat);
+    SolidEntity(std::string uniqueName, Material* mat, int lookId = -1);
     virtual ~SolidEntity();
     
     EntityType getType();
-    void GetAABB(btVector3& min, btVector3& max);
+    virtual SolidEntityType getSolidType() = 0;
+    
+	void GetAABB(btVector3& min, btVector3& max);
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
     void RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world);
-
+	virtual btCollisionShape* BuildCollisionShape() = 0;
+    
     void UpdateAcceleration();
     void ApplyGravity();
     void ApplyCentralForce(const btVector3& force);
     void ApplyTorque(const btVector3& torque);
     void SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia);
-    void Render();
-
-    virtual btCollisionShape* BuildCollisionShape() = 0;
-    virtual void SetLook(Look newLook);
-    virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
+	virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
     
-    virtual SolidEntityType getSolidType() = 0;
-    
-    virtual void ComputeFluidForces(const FluidEntity* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
-    virtual void ComputeFluidForces(const FluidEntity* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
-    virtual void ApplyFluidForces(const FluidEntity* fluid);
- 
-    void setDisplayCoordSys(bool enabled);
+    void SetLook(int newLookId);
+	void BuildGraphicalObject();
+	void Render();
+	
+    virtual void ComputeFluidForces(const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
+    virtual void ComputeFluidForces(const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
+    virtual void ApplyFluidForces(const Ocean* fluid);
+	
     btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
     btVector3 getMomentsOfInertia();
@@ -58,9 +57,6 @@ public:
     Material* getMaterial();
     btScalar getVolume();
     btVector3 getDragCoefficients();
-    Look getLook();
-    GLint getDisplayList();
-
     btTransform getTransform() const;
     btTransform getLocalTransform();
     btVector3 getLinearVelocity();
@@ -69,19 +65,20 @@ public:
     btVector3 getLinearAcceleration();
     btVector3 getAngularAcceleration();
     
+	void setDisplayCoordSys(bool enabled);
+	int getLook();
+	int getObject();
     bool isCoordSysVisible();
-    bool fullyImmersed;
     
 protected:
     virtual void BuildRigidBody();
-    virtual void BuildDisplayList();
-    virtual void BuildCollisionList() = 0;
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
     
     btRigidBody* rigidBody;
     btMultiBodyLinkCollider* multibodyCollider;
     
     //Properties
+	Mesh *mesh;
     Material* material;
     btScalar mass;
     btVector3 Ipri;  //Principal moments of inertia
@@ -98,10 +95,8 @@ protected:
     btVector3 angularAcc;
     
     //Display
-    Look look;
-    GLint displayList;
-    GLint collisionList;
-    TriangleMesh *mesh;
+    int lookId;
+	int objectId;
     bool dispCoordSys;
 };
 

@@ -9,10 +9,10 @@
 #ifndef __Stonefish_IMU__
 #define __Stonefish_IMU__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "SolidEntity.h"
 
-class IMU : public Sensor
+class IMU : public SimpleSensor
 {
 public:
     IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

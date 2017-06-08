@@ -9,7 +9,7 @@
 #include "Trajectory.h"
 
 #pragma mark Constructors
-Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransform relativeFrame, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
+Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransform relativeFrame, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = UnitSystem::SetTransform(relativeFrame);
@@ -24,7 +24,7 @@ Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransf
 #pragma mark - Methods
 void Trajectory::Reset()
 {
-    Sensor::Reset();
+    SimpleSensor::Reset();
 }
 
 void Trajectory::InternalUpdate(btScalar dt)

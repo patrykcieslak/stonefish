@@ -9,11 +9,11 @@
 #ifndef __Stonefish_Magnetometer__
 #define __Stonefish_Magnetometer__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "ADC.h"
 #include "SolidEntity.h"
 
-class Magnetometer : public Sensor
+class Magnetometer : public SimpleSensor
 {
 public:
     Magnetometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, unsigned short resolution, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

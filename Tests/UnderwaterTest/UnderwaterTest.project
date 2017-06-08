@@ -28,15 +28,16 @@
         <IncludePath Value="."/>
         <IncludePath Value="../../Library/include/Stonefish"/>
         <IncludePath Value="../../Library/3rdparty"/>
-        <IncludePath Value="../../../libs/glm"/>
         <IncludePath Value="/usr/include/freetype2"/>
-        <IncludePath Value="/usr/include/bullet"/>
+        <IncludePath Value="/usr/local/include/bullet"/>
+        <IncludePath Value="/usr/local/include/glm"/>
         <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>
         <Preprocessor Value="BT_EULER_DEFAULT_ZYX"/>
       </Compiler>
       <Linker Options="">
         <LibraryPath Value="/usr/lib"/>
         <LibraryPath Value="/usr/lib/x86_64-linux-gnu"/>
+        <LibraryPath Value="/usr/local/lib"/>
         <Library Value="Stonefish"/>
         <Library Value="BulletCollision"/>
         <Library Value="BulletDynamics"/>
@@ -57,7 +58,6 @@
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
-      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -89,7 +89,7 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Release" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Release" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-O2;-Wall" C_Options="-O2;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="NDEBUG"/>
@@ -99,7 +99,6 @@
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
-      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>

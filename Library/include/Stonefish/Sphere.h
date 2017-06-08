@@ -1,30 +1,27 @@
 //
-//  SphereEntity.h
+//  Sphere.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SphereEntity__
-#define __Stonefish_SphereEntity__
+#ifndef __Stonefish_Sphere__
+#define __Stonefish_Sphere__
 
 #include "SolidEntity.h"
 
 /*! Spherical solid entity. */
-class SphereEntity : public SolidEntity
+class Sphere : public SolidEntity
 {
 public:
-    SphereEntity(std::string uniqueName, btScalar sphereRadius, Material* mat, Look l);
-    ~SphereEntity();
+    Sphere(std::string uniqueName, btScalar sphereRadius, Material* mat, int lookId = -1);
+    ~Sphere();
     
     SolidEntityType getSolidType();
     btCollisionShape* BuildCollisionShape();
 
-private:
-    void BuildCollisionList();
-    void BuildDisplayList();
-    
+private:    
     btScalar radius;
 };
 

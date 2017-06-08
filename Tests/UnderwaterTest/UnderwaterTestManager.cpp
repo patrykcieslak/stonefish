@@ -9,20 +9,20 @@
 #include "UnderwaterTestManager.h"
 
 #include "UnderwaterTestApp.h"
-#include "PlaneEntity.h"
-#include "MeshEntity.h"
-#include "BoxEntity.h"
-#include "SphereEntity.h"
-#include "TorusEntity.h"
-#include "CylinderEntity.h"
+#include "Plane.h"
+#include "Polyhedron.h"
+#include "Box.h"
+#include "Sphere.h"
+#include "Torus.h"
+#include "Cylinder.h"
 #include "OpenGLOmniLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "SystemUtil.h"
 #include "Accelerometer.h"
 #include "ADC.h"
-#include "SeaEntity.h"
-#include "ObstacleEntity.h"
+#include "Ocean.h"
+#include "Obstacle.h"
 #include "UnderwaterVehicle.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, false, stepsPerSecond, DANTZIG, STANDARD)
@@ -32,7 +32,7 @@ UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : Simulati
 void UnderwaterTestManager::BuildScenario()
 {
     //General
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true, false);
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, false, true, false);
     OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
     //OpenGLPipeline::getInstance()->setDebugSimulation(true);
     
@@ -46,25 +46,24 @@ void UnderwaterTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Cork", "Cork", 0.9, 0.7);
     
     ///////LOOKS///////////
-    Look yellow = CreateOpaqueLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
-    Look green = CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.5f, 0.5f, 1.5f);
+    unsigned int yellow = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
+    unsigned int green = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.5f, 0.5f, 1.5f);
     
     ////////OBJECTS
-    SeaEntity* sea = new SeaEntity("Sea", getMaterialManager()->getFluid("Water"));
-    sea->setRenderable(true);
-    SetFluidEntity(sea);
+    EnableOcean(getMaterialManager()->getFluid("Water"));
     
     //Setup model paths
     char path[1024];
     GetDataPath(path, 1024-32);
-    strcat(path,"icosphere.obj");
+    strcat(path,"sphere_R=1.obj");
     
     //Reference solid
-    MeshEntity* hull1 = new MeshEntity("Solid", path, btScalar(1.), getMaterialManager()->getMaterial("Cork"), green);
-    //AddSolidEntity(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,-2.0)));
-
+    
+	Polyhedron* hull1 = new Polyhedron("Solid", path, btScalar(0.5), getMaterialManager()->getMaterial("Cork"), green, true);
+    AddSolidEntity(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,-2.0)));
+/*
     //Vehicle
-    MeshEntity* hull2 = new MeshEntity("Solid", path, btScalar(1.), getMaterialManager()->getMaterial("Concrete"), yellow);
+    Polyhedron* hull2 = new Polyhedron("Solid", path, btScalar(0.5), getMaterialManager()->getMaterial("Concrete"), yellow);
     
     UnderwaterVehicle* rov = new UnderwaterVehicle("ROV");
     rov->AddExternalPart(hull2, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1.0)));
@@ -72,7 +71,20 @@ void UnderwaterTestManager::BuildScenario()
     rov->AddExternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,0.7,0)));
     //rov->AddInternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,0.0,1.0)));
     AddSystemEntity(rov, btTransform(btQuaternion(0.1,0,0), btVector3(0,0,0)));
-    
+    */
+	
+	Box* box = new Box("Box", btVector3(1.,1.,1.), getMaterialManager()->getMaterial("Cork"), green);
+	AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+	
+	Sphere* sphere = new Sphere("Sphere", 0.5, getMaterialManager()->getMaterial("Cork"), green);
+	AddSolidEntity(sphere, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-2.)));
+	
+	Cylinder* cylinder = new Cylinder("Cylinder", 0.5, 1., getMaterialManager()->getMaterial("Cork"), green);
+	AddSolidEntity(cylinder, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-4.)));
+	
+	Torus* torus = new Torus("Torus", 1., 0.1, getMaterialManager()->getMaterial("Cork"), green);
+	AddSolidEntity(torus, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-6.)));
+	
     //////CAMERA & LIGHT//////
     //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(50.f, 50.f, 50.f), OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(omni);

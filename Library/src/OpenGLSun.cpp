@@ -297,7 +297,7 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
-void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe)
+void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
 {
     //Compute the z-distances for each split as seen in camera space
     UpdateSplitDist(activeView->GetNearClip(), activeView->GetFarClip());
@@ -338,7 +338,7 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe)
         //Draw current depth map
 		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowmapArray, 0, i);
 		glClear(GL_DEPTH_BUFFER_BIT);
-        pipe->DrawStandardObjects();
+        pipe->DrawObjects(sim);
 	}
     
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

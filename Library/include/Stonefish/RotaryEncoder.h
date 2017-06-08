@@ -9,11 +9,11 @@
 #ifndef __Stonefish_RotaryEncoder__
 #define __Stonefish_RotaryEncoder__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "RevoluteJoint.h"
 #include "FeatherstoneEntity.h"
 
-class RotaryEncoder : public Sensor
+class RotaryEncoder : public SimpleSensor
 {
 public:
     RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

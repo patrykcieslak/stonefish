@@ -72,7 +72,7 @@ void AcrobotTestApp::DoHUD()
     dims.push_back(0);
     dims.push_back(1);
  
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
+    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
     {
         StopSimulation();
         
@@ -82,7 +82,8 @@ void AcrobotTestApp::DoHUD()
         char* pathToFile;
         if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
         {
-            getSimulationManager()->getSensor("Encoder1")->SaveMeasurementsToTextFile(pathToFile);
+			SimpleSensor* sensor = (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"); 
+			sensor->SaveMeasurementsToTextFile(pathToFile);
         }
      
         delete [] pathToFile;

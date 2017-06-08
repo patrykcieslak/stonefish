@@ -149,7 +149,7 @@ void CableEntity::Render()
 {
     if(isRenderable())
     {
-        for(int i=0; i<cableParts.size(); i++)
+        /*for(int i=0; i<cableParts.size(); i++)
         {
             btTransform trans;
             btScalar openglTrans[16];
@@ -166,7 +166,7 @@ void CableEntity::Render()
             UseLook(look);
             OpenGLSolids::DrawSolidCylinder(diameter/2.f, partLength);
             glPopMatrix();
-        }
+        }*/
     }
 }
 

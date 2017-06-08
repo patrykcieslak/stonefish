@@ -9,11 +9,11 @@
 #ifndef __Stonefish_Mux__
 #define __Stonefish_Mux__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 
 typedef struct
 {
-    Sensor* sensor;
+    SimpleSensor* sensor;
     unsigned short channel;
 }
 MuxComponent;
@@ -24,7 +24,7 @@ public:
     Mux();
     ~Mux();
     
-    bool AddComponent(Sensor* s, unsigned short channel);
+    bool AddComponent(SimpleSensor* s, unsigned short channel);
     
     MuxComponent* getComponent(unsigned int index);
     btScalar* getLastSample();

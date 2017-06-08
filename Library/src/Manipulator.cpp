@@ -46,7 +46,7 @@ void Manipulator::ApplyGravity()
     
 }
 
-void Manipulator::ApplyFluidForces(FluidEntity* fluid)
+void Manipulator::ApplyFluidForces(Ocean* fluid)
 {
     
     

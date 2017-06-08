@@ -9,7 +9,7 @@
 #include "IMU.h"
 
 #pragma mark Constructors
-IMU::IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency, historyLength)
+IMU::IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
     relToSolid = UnitSystem::SetTransform(relFrame);

@@ -11,7 +11,7 @@
 
 #include "Entity.h"
 #include "MaterialManager.h"
-#include "OpenGLMaterial.h"
+#include "OpenGLContent.h"
 
 class CableEntity : public Entity
 {

@@ -20,7 +20,7 @@ public:
     void Render();
     void RenderLightSurface();
     void RenderDummy();
-    void RenderShadowMap(OpenGLPipeline* pipe);
+    void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim);
     void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale);
 };
 

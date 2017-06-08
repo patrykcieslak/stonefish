@@ -1,23 +1,23 @@
 //
-//  FluidEntity.h
+//  Ocean.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/13/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FluidEntity__
-#define __Stonefish_FluidEntity__
+#ifndef __Stonefish_Ocean__
+#define __Stonefish_Ocean__
 
 #include "ForcefieldEntity.h"
 #include "MaterialManager.h"
 
 //Abstract class
-class FluidEntity : public ForcefieldEntity
+class Ocean : public ForcefieldEntity
 {
 public:
-    FluidEntity(std::string uniqueName, Fluid* fld);
-    virtual ~FluidEntity();
+    Ocean(std::string uniqueName, Fluid* f);
+    virtual ~Ocean();
     
     //Forces
     virtual void ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co);
@@ -26,18 +26,16 @@ public:
     void GetSurfaceEquation(double* plane4) const;
     
     //Display
-    virtual void Render();
-    virtual void RenderSurface();
-    virtual void RenderVolume();
+    void RenderSurface();
+    void RenderVolume();
     
     //Getters
     btScalar getDepth();
     const Fluid* getFluid() const;
     ForcefieldType getForcefieldType();
     
-    //Abstract
-    virtual bool IsInsideFluid(const btVector3& point) const = 0;
-    virtual btScalar GetPressure(const btVector3& point) const = 0;
+    virtual bool IsInsideFluid(const btVector3& point) const;
+    virtual btScalar GetPressure(const btVector3& point) const;
     
 protected:
     Fluid* fluid;

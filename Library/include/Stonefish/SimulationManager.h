@@ -20,7 +20,7 @@
 #include "Entity.h"
 #include "SolidEntity.h"
 #include "FeatherstoneEntity.h"
-#include "FluidEntity.h"
+#include "Ocean.h"
 #include "SystemEntity.h"
 
 //Dynamic elements
@@ -67,17 +67,17 @@ public:
     void AdvanceSimulation(uint64_t timeInMicroseconds);
     void StopSimulation();
 	
-    void AddEntity(Entity* ent);
+    void EnableOcean(Fluid* f = NULL);
+	void AddEntity(Entity* ent);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
     void AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform);
-    
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
     void AddController(Controller* cntrl);
     Contact* AddContact(Entity* entA, Entity* entB, size_type contactHistoryLength = 1);
-    void SetFluidEntity(FluidEntity* flu);
-    Entity* PickEntity(int x, int y);
+    
+	Entity* PickEntity(int x, int y);
     bool CheckContact(Entity* entA, Entity* entB);
 
     double getPhysicsTimeInMiliseconds();
@@ -156,7 +156,7 @@ private:
     std::vector<Actuator*> actuators;
     std::vector<Controller*> controllers;
     std::vector<Contact*> contacts;
-    FluidEntity* fluid;
+    Ocean* ocean;
     btScalar g;
     bool zUp;
 

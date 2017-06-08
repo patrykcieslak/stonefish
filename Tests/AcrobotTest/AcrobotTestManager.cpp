@@ -9,11 +9,11 @@
 #include "AcrobotTestManager.h"
 
 #include "AcrobotTestApp.h"
-#include "PlaneEntity.h"
-#include "BoxEntity.h"
-#include "SphereEntity.h"
-#include "TorusEntity.h"
-#include "CylinderEntity.h"
+#include "Plane.h"
+#include "Box.h"
+#include "Sphere.h"
+#include "Torus.h"
+#include "Cylinder.h"
 #include "OpenGLOmniLight.h"
 #include "OpenGLTrackball.h"
 #include "FixedJoint.h"
@@ -48,22 +48,22 @@ void AcrobotTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.7, 0.5);
     
     /////// LOOKS
-    Look grey = CreateOpaqueLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.1, 0.8, 1.33);
-    Look shiny = CreateOpaqueLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.01, 0.9, 1.2);
-    Look green = CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.01, 0.9, 1.2);
+    int grey = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.1, 0.8, 1.33);
+	int shiny = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.01, 0.9, 1.2);
+    int green = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.01, 0.9, 1.2);
     
     /////// OBJECTS
-    PlaneEntity* floor = new PlaneEntity("Floor", 20, getMaterialManager()->getMaterial("Concrete"), grey, btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)));
+    Plane* floor = new Plane("Floor", 20, getMaterialManager()->getMaterial("Concrete"), btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)), grey);
     floor->setRenderable(true);
     AddEntity(floor);
     
 #ifndef USE_FEATHERSTONE_ALGORITHM 
     /////// STANDARD APPROACH
-    BoxEntity* arm1 = new BoxEntity("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* arm1 = new Box("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), shiny);
     AddSolidEntity(arm1, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.15)));
     arm1->SetArbitraryPhysicalProperties(2.5, btVector3(0.015, 0.015, 0.015), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.03)));
     
-    BoxEntity* arm2 = new BoxEntity("Arm2", btVector3(0.03, 0.015, 0.13), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* arm2 = new Box("Arm2", btVector3(0.03, 0.015, 0.13), getMaterialManager()->getMaterial("Rubber"), shiny);
     AddSolidEntity(arm2, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.085)));
     arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001, 0.001, 0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.035)));
     
@@ -87,12 +87,12 @@ void AcrobotTestManager::BuildScenario()
     AddActuator(motor);
 #else
     /////// FEATHERSTONE APPROACH
-    BoxEntity* base = new BoxEntity("Base", btVector3(0.5,0.5,0.05), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* base = new Box("Base", btVector3(0.5,0.5,0.05), getMaterialManager()->getMaterial("Rubber"), shiny);
     
-    BoxEntity* arm1 = new BoxEntity("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), green);
+    Box* arm1 = new Box("Arm1", btVector3(0.04, 0.02, 0.3), getMaterialManager()->getMaterial("Rubber"), green);
     arm1->SetArbitraryPhysicalProperties(2.5, btVector3(0.015,0.015,0.015), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.03)));
     
-    BoxEntity* arm2 = new BoxEntity("Arm2", btVector3(0.03, 0.015, 0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* arm2 = new Box("Arm2", btVector3(0.03, 0.015, 0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
     arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.05)));
     
     FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 3, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.0)), getDynamicsWorld(), true);

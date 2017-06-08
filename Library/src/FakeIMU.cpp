@@ -24,7 +24,7 @@ void FakeIMU::Reset()
     lastV = solid->getLinearVelocityInLocalPoint(relToSolid.getOrigin());
     lastV = toImuFrame * lastV;
     
-    Sensor::Reset();
+    SimpleSensor::Reset();
 }
 
 void FakeIMU::InternalUpdate(btScalar dt)

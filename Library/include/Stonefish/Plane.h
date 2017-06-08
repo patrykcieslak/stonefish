@@ -1,23 +1,23 @@
 //
-//  PlaneEntity.h
+//  Plane.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PlaneEntity__
-#define __Stonefish_PlaneEntity__
+#ifndef __Stonefish_Plane__
+#define __Stonefish_Plane__
 
 #include "StaticEntity.h"
 #include "MaterialManager.h"
-#include "OpenGLMaterial.h"
+#include "OpenGLContent.h"
 
-class PlaneEntity : public StaticEntity
+class Plane : public StaticEntity
 {
 public:
-    PlaneEntity(std::string uniqueName, btScalar size, Material* mat, Look l, const btTransform& worldTransform);
-    ~PlaneEntity();
+    Plane(std::string uniqueName, btScalar size, Material* mat, const btTransform& worldTransform, int lookId = -1);
+    ~Plane();
     
     void GetAABB(btVector3& min, btVector3& max);
     StaticEntityType getStaticType();

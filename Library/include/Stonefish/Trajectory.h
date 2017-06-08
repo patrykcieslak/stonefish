@@ -9,10 +9,10 @@
 #ifndef __Stonefish_Trajectory__
 #define __Stonefish_Trajectory__
 
-#include "Sensor.h"
+#include "SimpleSensor.h"
 #include "SolidEntity.h"
 
-class Trajectory : public Sensor
+class Trajectory : public SimpleSensor
 {
 public:
     Trajectory(std::string uniqueName, SolidEntity* attachment, btTransform relativeFrame = btTransform::getIdentity(), btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);

@@ -78,65 +78,6 @@ void OpenGLSolids::DrawPoint(GLfloat size)
     glEnd();
 }
 
-void OpenGLSolids::DrawSolidBox(GLfloat halfX, GLfloat halfY, GLfloat halfZ)
-{
-    glBegin(GL_TRIANGLES);
-    //front
-    glNormal3f(0, 0, -1);
-    glVertex3f(-halfX, -halfY, -halfZ);
-    glVertex3f(-halfX, halfY, -halfZ);
-    glVertex3f(halfX, halfY, -halfZ);
-    glVertex3f(-halfX, -halfY, -halfZ);
-    glVertex3f(halfX, halfY, -halfZ);
-    glVertex3f(halfX, -halfY, -halfZ);
-    
-    //left
-    glNormal3f(1, 0, 0);
-    glVertex3f(halfX, -halfY, -halfZ);
-    glVertex3f(halfX, halfY, -halfZ);
-    glVertex3f(halfX, halfY, halfZ);
-    glVertex3f(halfX, -halfY, -halfZ);
-    glVertex3f(halfX, halfY, halfZ);
-    glVertex3f(halfX, -halfY, halfZ);
-    
-    //right
-    glNormal3f(-1, 0, 0);
-    glVertex3f(-halfX, -halfY, halfZ);
-    glVertex3f(-halfX, halfY, halfZ);
-    glVertex3f(-halfX, halfY, -halfZ);
-    glVertex3f(-halfX, -halfY, halfZ);
-    glVertex3f(-halfX, halfY, -halfZ);
-    glVertex3f(-halfX, -halfY, -halfZ);
-    
-    //back
-    glNormal3f(0, 0, 1);
-    glVertex3f(halfX, -halfY, halfZ);
-    glVertex3f(halfX, halfY, halfZ);
-    glVertex3f(-halfX, halfY, halfZ);
-    glVertex3f(halfX, -halfY, halfZ);
-    glVertex3f(-halfX, halfY, halfZ);
-    glVertex3f(-halfX, -halfY, halfZ);
-    
-    //top
-    glNormal3f(0, 1, 0);
-    glVertex3f(halfX, halfY, halfZ);
-    glVertex3f(halfX, halfY, -halfZ);
-    glVertex3f(-halfX, halfY, -halfZ);
-    glVertex3f(halfX, halfY, halfZ);
-    glVertex3f(-halfX, halfY, -halfZ);
-    glVertex3f(-halfX, halfY, halfZ);
-    
-    //bottom
-    glNormal3f(0, -1, 0);
-    glVertex3f(halfX, -halfY, -halfZ);
-    glVertex3f(halfX, -halfY, halfZ);
-    glVertex3f(-halfX, -halfY, halfZ);
-    glVertex3f(halfX, -halfY, -halfZ);
-    glVertex3f(-halfX, -halfY, halfZ);
-    glVertex3f(-halfX, -halfY, -halfZ);
-    glEnd();
-}
-
 void OpenGLSolids::DrawSolidSphere(GLfloat radius)
 {
     for(int i = -(SPHERE_RESOLUTION/4-1); i<(SPHERE_RESOLUTION/4-1); i++)
@@ -188,67 +129,6 @@ void OpenGLSolids::DrawPointSphere(GLfloat radius)
         {
             glNormal3f(cosf(i/6.f*M_PI_2)*cosf(h/12.f*M_PI), sinf(i/6.f*M_PI_2), cosf(i/6.f*M_PI_2)*sinf(h/12.f*M_PI));
             glVertex3f(cosf(i/6.f*M_PI_2)*cosf(h/12.f*M_PI)*radius, sinf(i/6.f*M_PI_2)*radius, cosf(i/6.f*M_PI_2)*sinf(h/12.f*M_PI)*radius);
-        }
-        glEnd();
-    }
-}
-
-void OpenGLSolids::DrawSolidCylinder(GLfloat radius, GLfloat height)
-{
-    glBegin(GL_TRIANGLE_STRIP);
-    for(int i=0; i<=24; i++)
-    {
-        glNormal3f(sinf(i/24.f*M_PI*2), 0.0, cosf(i/24.f*M_PI*2));
-        glTexCoord2f(i/24.f, 0);
-        glVertex3f(sinf(i/24.f*M_PI*2)*radius, height/2.0, cosf(i/24.f*M_PI*2)*radius);
-        glTexCoord2f(i/24.f, height);
-        glVertex3f(sinf(i/24.f*M_PI*2)*radius, -height/2.0, cosf(i/24.f*M_PI*2)*radius);
-    }
-    glEnd();
-    
-    glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(0, 1.f, 0);
-    glTexCoord2f(0.5, 0.5);
-    glVertex3f(0, height/2.0, 0);
-    for(int i=0; i<=24; i++)
-    {
-        glTexCoord2f(0.5+0.5*sinf(i/24.f*M_PI*2), 0.5+0.5*cosf(i/24.f*M_PI*2));
-        glVertex3f(sinf(i/24.f*M_PI*2)*radius, height/2.0, cosf(i/24.f*M_PI*2)*radius);
-    }
-    glEnd();
-    
-    glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(0, -1.f, 0);
-    glTexCoord2f(0.5, 0.5);
-    glVertex3f(0, -height/2.0, 0);
-    for(int i=24; i>=0; i--)
-    {
-        glTexCoord2f(0.5+0.5*sinf(i/24.f*M_PI*2), 0.5+0.5*cosf(i/24.f*M_PI*2));
-        glVertex3f(sinf(i/24.f*M_PI*2)*radius, -height/2.0, cosf(i/24.f*M_PI*2)*radius);
-    }
-    glEnd();
-}
-
-void OpenGLSolids::DrawSolidTorus(GLfloat majorRadius, GLfloat minorRadius)
-{
-    for(int i=0; i<48; i++)
-    {
-        GLfloat alpha0 = i/48.f*M_PI*2.f;
-        GLfloat alpha1 = (i+1)/48.f*M_PI*2.f;
-        
-        glBegin(GL_TRIANGLE_STRIP);
-        for(int h=0; h<=24; h++)
-        {
-            GLfloat ry = cosf(h/24.f*M_PI*2.f) * minorRadius;
-            GLfloat rx = sinf(h/24.f*M_PI*2.f) * minorRadius;
-            
-            glTexCoord2f(4.f * h/24.f, 24.f * i/48.f);
-            glNormal3f(sinf(h/24.f*M_PI*2.f)*cosf(alpha0), cosf(h/24.f*M_PI*2.f), sinf(h/24.f*M_PI*2.f)*sinf(alpha0));
-            glVertex3f((rx + majorRadius)*cosf(alpha0), ry, (rx + majorRadius)*sinf(alpha0));
-            
-            glTexCoord2f(4.f * h/24.f, 24.f * (i+1)/48.f);
-            glNormal3f(sinf(h/24.f*M_PI*2.f)*cosf(alpha1), cosf(h/24.f*M_PI*2.f), sinf(h/24.f*M_PI*2.f)*sinf(alpha1));
-            glVertex3f((rx + majorRadius)*cosf(alpha1), ry, (rx + majorRadius)*sinf(alpha1));
         }
         glEnd();
     }
