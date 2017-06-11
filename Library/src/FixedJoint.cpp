@@ -3,12 +3,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "FixedJoint.h"
+#include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
 
-#pragma mark Constructor
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -20,16 +20,23 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     setConstraint(fixed);
 }
 
-#pragma mark - Accessors
+FixedJoint::FixedJoint(std::string uniqueName, btMultiBody* mb, btRigidBody* rb) : Joint(uniqueName, false)
+{
+	//btTransform frameInMB = btTransform::getIdentity();
+	btTransform frameInRB = rb->getCenterOfMassTransform().inverse() * mb->getBaseWorldTransform();
+	
+	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(mb, -1, rb, btVector3(0,0,0), frameInRB.getOrigin(), btMatrix3x3::getIdentity(), frameInRB.getBasis());
+	setConstraint(fixed);
+}
+
 JointType FixedJoint::getType()
 {
     return JOINT_FIXED;
 }
 
-#pragma mark - Graphics
 btVector3 FixedJoint::Render()
 {
-    btTypedConstraint* fixed = getConstraint();
+    /*btTypedConstraint* fixed = getConstraint();
     btVector3 A = fixed->getRigidBodyA().getCenterOfMassPosition();
     btVector3 B = fixed->getRigidBodyB().getCenterOfMassPosition();
         
@@ -39,6 +46,6 @@ btVector3 FixedJoint::Render()
     glBulletVertex(A);
     glBulletVertex(B);
     glEnd();
-    
-    return (A+B)/btScalar(2.);
+    */
+    return btVector3();//(A+B)/btScalar(2.);
 }

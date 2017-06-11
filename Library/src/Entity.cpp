@@ -70,9 +70,3 @@ std::string Entity::getName()
 {
     return name;
 }
-
-void Entity::GetAABB(btVector3& min, btVector3& max)
-{
-    min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
-    max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
-}

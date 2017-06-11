@@ -62,7 +62,7 @@ public:
     void RenderFluidSurface(Ocean* fluid, bool underwater);
     void RenderFluidVolume(Ocean* fluid);
     void RenderHDR(GLuint destinationFBO);
-    void ShowAmbientOcclusion();
+    void ShowAmbientOcclusion(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
     
     GLint* GetViewport();
     glm::mat4 GetProjectionMatrix();

@@ -7,7 +7,7 @@
 //
 
 #include "GLSLShader.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 #include "Console.h"
 
 GLhandleARB GLSLShader::saqVertexShader = NULL;

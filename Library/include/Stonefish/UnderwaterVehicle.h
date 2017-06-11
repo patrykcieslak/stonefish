@@ -32,11 +32,12 @@ public:
     void AddExternalPart(SolidEntity* solid, const btTransform& position);
     
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+	virtual void GetAABB(btVector3& min, btVector3& max);
     virtual void UpdateAcceleration();
     virtual void UpdateSensors(btScalar dt);
     virtual void UpdateControllers(btScalar dt);
     virtual void UpdateActuators(btScalar dt);
-    virtual void ApplyGravity();
+    virtual void ApplyGravity(const btVector3& g);
     virtual void ApplyFluidForces(Ocean* fluid);
     
     virtual btTransform getTransform() const;

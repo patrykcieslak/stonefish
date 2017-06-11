@@ -7,8 +7,7 @@
 //
 
 #include "OpenGLLight.h"
-#include "OpenGLSolids.h"
-#include "GeometryUtil.h"
+#include "GeometryUtil.hpp"
 
 //static variables
 OpenGLView* OpenGLLight::activeView = NULL;
@@ -169,7 +168,7 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     //ambientShader->SetUniform("texSkyReflect", skyReflectionTextureUnit);
     //ambientShader->SetUniform("inv_proj", proj);
     //ambientShader->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     ambientShader->Disable();
 }
 

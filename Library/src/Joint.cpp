@@ -10,21 +10,20 @@
 
 NameManager Joint::nameManager;
 
-#pragma mark Constructors
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
     name = nameManager.AddName(uniqueName);
     renderable = false;
     collisionEnabled = collideLinkedEntities;
+	mbConstraint = NULL;
+	constraint = NULL;
 }
 
-#pragma mark - Destructor
 Joint::~Joint(void)
 {
     nameManager.RemoveName(name);
 }
 
-#pragma mark - Accessors
 void Joint::setRenderable(bool render)
 {
     renderable = render;
@@ -45,28 +44,40 @@ std::string Joint::getName()
     return name;
 }
 
-void Joint::setConstraint(btTypedConstraint *constr)
+void Joint::setConstraint(btTypedConstraint *c)
 {
-    constraint = constr;
+    constraint = c;
 }
 
-#pragma mark - Methods
-void Joint::AddToDynamicsWorld(btDynamicsWorld *world)
+void Joint::setConstraint(btMultiBodyConstraint *c)
 {
-    //Force feedback
-    btJointFeedback* fb = new btJointFeedback();
-    constraint->enableFeedback(true);
-    constraint->setJointFeedback(fb);
+    mbConstraint = c;
+}
+
+void Joint::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
+{
+	if(constraint != NULL)
+	{
+	
+		//Force feedback
+		btJointFeedback* fb = new btJointFeedback();
+		constraint->enableFeedback(true);
+		constraint->setJointFeedback(fb);
     
-    //Joint limits damping - avoid explosion
-    if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE
-       && constraint->getConstraintType() != GEAR_CONSTRAINT_TYPE)
-    {
-        constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
-        constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
-        constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
-    }
+		//Joint limits damping - avoid explosion
+		if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE
+				&& constraint->getConstraintType() != GEAR_CONSTRAINT_TYPE)
+		{
+			constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
+			constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
+			constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
+		}
     
-    //Add joint to dynamics world
-    world->addConstraint(constraint, !collisionEnabled);
+		//Add joint to dynamics world
+		world->addConstraint(constraint, !collisionEnabled);
+	}
+	else if(mbConstraint != NULL)
+	{
+		world->addMultiBodyConstraint(mbConstraint);
+	}
 }

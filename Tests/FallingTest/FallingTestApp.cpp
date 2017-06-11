@@ -80,7 +80,7 @@ void FallingTestApp::DoHUD()
     IMGUI::getInstance()->DoGauge(5.f, 265.f, 100.f, 10.0, new btScalar[2]{0.0,100.0}, new btScalar[2]{10.0, 80.0}, "Test");
     */
     
-    SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
+    //SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
     /*Look l = solid->getLook();
     
     ui_id sliderMat;
@@ -109,7 +109,7 @@ void FallingTestApp::DoHUD()
     std::vector<unsigned short> dims;
     dims.push_back(2);
     
-    
+    /*
     if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height"))
     {
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
@@ -134,5 +134,5 @@ void FallingTestApp::DoHUD()
         
         delete [] pathToFile;
         delete openDialog;
-    }
+    }*/
 }

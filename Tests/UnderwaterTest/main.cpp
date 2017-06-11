@@ -11,7 +11,7 @@
 
 int main(int argc, const char * argv[])
 {
-    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(100.0);
+    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(200.0);
     UnderwaterTestApp app(1000, 700, simulationManager);
 #ifdef __linux__
     app.Init("../../../../Library/data", "../../../../Library/shaders");

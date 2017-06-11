@@ -7,7 +7,6 @@
 //
 
 #include "OpenGLOmniLight.h"
-#include "OpenGLSolids.h"
 #include "SimulationManager.h"
 
 OpenGLOmniLight::OpenGLOmniLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
@@ -31,36 +30,14 @@ void OpenGLOmniLight::Render()
         omniShader->SetUniform("texNormal", normalTextureUnit);
         omniShader->SetUniform("lightPosition", lpos);
         omniShader->SetUniform("lightColor", getColor());
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
         omniShader->Disable();
-    }
-}
-
-void OpenGLOmniLight::RenderLightSurface()
-{
-    if(surfaceDistance > 0)
-    {
-        //transformation
-        btTransform trans(btQuaternion::getIdentity(), getPosition());
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        //rendering
-        glColor4f(color[0], color[1], color[2], 1.0f);
-        OpenGLSolids::DrawSolidSphere(surfaceDistance);
-        
-        glPopMatrix();
     }
 }
 
 void OpenGLOmniLight::RenderDummy()
 {
+	/*
     //transformation
     btTransform trans(btQuaternion::getIdentity(), getPosition());
     btScalar openglTrans[16];
@@ -101,6 +78,7 @@ void OpenGLOmniLight::RenderDummy()
     glEnd();
     
     glPopMatrix();
+	 */
 }
 
 void OpenGLOmniLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)

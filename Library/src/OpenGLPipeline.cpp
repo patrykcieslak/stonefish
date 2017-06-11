@@ -10,8 +10,7 @@
 
 #include "SimulationManager.h"
 #include "GLSLShader.h"
-#include "GeometryUtil.h"
-#include "OpenGLSolids.h"
+#include "GeometryUtil.hpp"
 #include "OpenGLGBuffer.h"
 #include "OpenGLContent.h"
 #include "OpenGLView.h"
@@ -41,7 +40,6 @@ OpenGLPipeline::OpenGLPipeline()
 
 OpenGLPipeline::~OpenGLPipeline()
 {
-    OpenGLSolids::Destroy();
     OpenGLView::Destroy();
     OpenGLLight::Destroy();
     OpenGLGBuffer::DeleteShaders();
@@ -97,7 +95,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     
     //Load shaders and create rendering buffers
     cInfo("Loading scene shaders...");
-    OpenGLSolids::Init();
+	OpenGLContent::getInstance()->Init();
     GLSLShader::Init(); //check if shaders available!!!
     OpenGLSky::getInstance()->Init();
     OpenGLSun::getInstance()->Init();
@@ -257,7 +255,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glDisable(GL_DEPTH_TEST);
                 glDisable(GL_CULL_FACE);
                 
-                OpenGLSolids::SetupOrtho();
+                OpenGLContent::getInstance()->SetupOrtho();
                 
                 //3. Draw sky where stencil = 0
                 if(renderSky)
@@ -404,7 +402,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         glDisable(GL_DEPTH_TEST);
                         glDisable(GL_CULL_FACE);
                     
-                        OpenGLSolids::SetupOrtho();
+                        OpenGLContent::getInstance()->SetupOrtho();
                     
                         //3. Draw sky where stencil = 0
                         if(renderSky)
@@ -550,7 +548,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glDisable(GL_DEPTH_TEST);
                     glDisable(GL_CULL_FACE);
                     
-                    OpenGLSolids::SetupOrtho();
+                    OpenGLContent::getInstance()->SetupOrtho();
                     
                     //3. Draw sky where stencil = 0
                     if(renderSky)
@@ -694,7 +692,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //2. Enter deferred rendering
                     glDisable(GL_DEPTH_TEST);
                     
-                    OpenGLSolids::SetupOrtho();
+                    OpenGLContent::getInstance()->SetupOrtho();
                     
                     //3. Draw sky where stencil = 1 -> only surface rendered there
                     if(renderSky)
@@ -836,7 +834,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glDisable(GL_DEPTH_TEST);
                     glDisable(GL_CULL_FACE);
                     
-                    OpenGLSolids::SetupOrtho();
+                    OpenGLContent::getInstance()->SetupOrtho();
                     
                     //3. Bind deferred textures to texture units
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
@@ -1091,7 +1089,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             //Coordinate systems
             if(showCoordSys)
             {
-                OpenGLSolids::DrawCoordSystem(2.f);
+                OpenGLContent::getInstance()->DrawCoordSystem(2.f);
                 
                 for(int h = 0; h < sim->entities.size(); h++)
                     if(sim->entities[h]->getType() == ENTITY_SOLID)
@@ -1107,7 +1105,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 #else
                         glMultMatrixf(oglComT);
 #endif
-                        OpenGLSolids::DrawCoordSystem(0.1f);
+                        OpenGLContent::getInstance()->DrawCoordSystem(0.1f);
                         glPopMatrix();
                     }
                     else if(sim->entities[h]->getType() == ENTITY_FEATHERSTONE)
@@ -1128,7 +1126,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 #else
                         glMultMatrixf(oglComT);
 #endif
-                        OpenGLSolids::DrawCoordSystem(0.1f);
+                        OpenGLContent::getInstance()->DrawCoordSystem(0.1f);
                         glPopMatrix();
                     }
             }
@@ -1222,8 +1220,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
             //Debugging
             //sim->views[i]->ShowSceneTexture(REFLECTED, 0, 100, 300, 200);
-            //sim->views[i]->ShowSceneTexture(REFRACTED, 0, 350, 300, 200);
-            //sim->views[i]->ShowAmbientOcclusion();
+            //sim->views[i]->ShowSceneTexture(NORMAL, 0, 350, 300, 200);
+            //sim->views[i]->ShowAmbientOcclusion(0, 100, 300, 200);
             //sim->lights[0]->RenderShadowMap(this);
             //sim->lights[0]->ShowShadowMap(0, 0, 0.5f);
             //OpenGLSun::ShowShadowMaps(0, 0, 0.05);

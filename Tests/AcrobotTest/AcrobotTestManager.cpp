@@ -34,7 +34,7 @@ AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationMana
 void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, false);
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, true);
     OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, true, true);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setGravity(9.81);
@@ -96,7 +96,7 @@ void AcrobotTestManager::BuildScenario()
     arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.05)));
     
     FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 3, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.0)), getDynamicsWorld(), true);
-    fe->setBaseRenderable(false);
+    fe->setBaseRenderable(true);
     
     //Arm1
     fe->AddLink(arm1, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.15)), getDynamicsWorld());
@@ -105,7 +105,7 @@ void AcrobotTestManager::BuildScenario()
     fe->setJointIC(0, UnitSystem::Angle(true, 1.0), UnitSystem::Angle(true, 0.0));
     
     //Arm2
-    fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 0.1)), getDynamicsWorld());
+	fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 0.1)), getDynamicsWorld());
     fe->AddRevoluteJoint(1, 2, btVector3(0.0, 0.0, 0.15), btVector3(0.0, 1.0, 0.0), false);
     fe->setJointDamping(1, 0.01, 0.005);
     

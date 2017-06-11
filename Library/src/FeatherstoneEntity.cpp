@@ -8,11 +8,11 @@
 
 #include "FeatherstoneEntity.h"
 
-#pragma mark Constructors
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, const btTransform& transform, btMultiBodyDynamicsWorld* world, bool fixedBase) : Entity(uniqueName)
 {
-    baseRenderable = fixedBase ? false : true;
-    
+    //baseRenderable = fixedBase ? false : true;
+    baseRenderable = true;
+	
     multiBody = new btMultiBody(totalNumOfLinks - 1, baseSolid->getMass(), baseSolid->getMomentsOfInertia(), fixedBase, true);
     btTransform trans = baseSolid->getLocalTransform() * UnitSystem::SetTransform(transform);
     
@@ -24,13 +24,13 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody->setMaxCoordinateVelocity(10000.0);
     multiBody->useRK4Integration(true);
     multiBody->useGlobalVelocities(false);
-    multiBody->setHasSelfCollision(false);
+    multiBody->setHasSelfCollision(false); //No self collision by default
     multiBody->setCanSleep(false);
     
     AddLink(baseSolid, transform, world);
+	multiBody->finalizeMultiDof();
 }
 
-#pragma mark - Destructor
 FeatherstoneEntity::~FeatherstoneEntity()
 {
     multiBody = NULL;
@@ -42,7 +42,6 @@ FeatherstoneEntity::~FeatherstoneEntity()
     joints.clear();
 }
 
-#pragma mark - Entity
 EntityType FeatherstoneEntity::getType()
 {
     return ENTITY_FEATHERSTONE;
@@ -79,7 +78,16 @@ void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
     world->addMultiBody(multiBody);
 }
 
-#pragma mark - Accessors
+void FeatherstoneEntity::EnableSelfCollision()
+{
+	multiBody->setHasSelfCollision(true);
+}
+
+void FeatherstoneEntity::DisableSelfCollision()
+{
+	multiBody->setHasSelfCollision(false);
+}
+
 void FeatherstoneEntity::setBaseRenderable(bool render)
 {
     baseRenderable = render;
@@ -183,6 +191,16 @@ void FeatherstoneEntity::getJointVelocity(unsigned int index, btScalar &velocity
     }
 }
 
+btMultiBody* FeatherstoneEntity::getMultiBody()
+{
+	return multiBody;
+}
+
+FeatherstoneLink FeatherstoneEntity::getLink(unsigned int index)
+{
+	return links[index];
+}
+
 btTransform FeatherstoneEntity::getLinkTransform(unsigned int index)
 {
     if(index >= links.size())
@@ -217,7 +235,6 @@ unsigned int FeatherstoneEntity::getNumOfJoints()
     return (unsigned int)joints.size();
 }
 
-#pragma mark - Creators
 void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transform, btMultiBodyDynamicsWorld* world)
 {
     if(solid != NULL)
@@ -238,7 +255,7 @@ void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transfor
     }
 }
 
-int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collide)
+int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -255,7 +272,7 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
     btVector3 pivotToChildComOffset = getLinkTransform(child).getOrigin() - UnitSystem::SetPosition(pivot);
     
     multiBody->setupRevolute(child - 1, links[child].solid->getMass(), links[child].solid->getMomentsOfInertia(), parent - 1,
-                             ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToPivotOffset, pivotToChildComOffset, !collide);
+                             ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
     
     multiBody->finalizeMultiDof();
     
@@ -267,7 +284,7 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
     return (int)(joints.size() - 1);
 }
 
-int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collide)
+int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -284,7 +301,7 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     
     //Check if pivot offset is ok!
     multiBody->setupPrismatic(child - 1, links[child].solid->getMass(), links[child].solid->getMomentsOfInertia(), parent - 1,
-                              ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToChildComOffset, btVector3(0.0,0.0,0.0), !collide);
+                              ornParentToChild, quatRotate(ornParentToChild, axis.normalized()), parentComToChildComOffset, btVector3(0.0,0.0,0.0), !collisionBetweenJointLinks);
     
     multiBody->finalizeMultiDof();
     
@@ -296,7 +313,6 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     return (int)(joints.size() - 1);
 }
 
-#pragma mark - Methods
 void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
 {
     if(index >= joints.size())

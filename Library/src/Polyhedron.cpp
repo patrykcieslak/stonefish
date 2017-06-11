@@ -7,7 +7,7 @@
 //
 
 #include "Polyhedron.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 
 Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, int lookId, bool smoothNormals) : SolidEntity(uniqueName, mat, lookId)
 {
@@ -23,9 +23,9 @@ Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScal
     for(int i=0; i<mesh->faces.size(); i++)
     {
         //triangle
-		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]];
-		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]];
-		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]];
+		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
 		
         btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
         btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
@@ -53,9 +53,9 @@ Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScal
     for(int i=0; i<mesh->faces.size(); i++)
     {
         //Triangle verticies with respect to COG
-		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]];
-		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]];
-		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]];
+		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
 		
         btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
         btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
@@ -140,7 +140,7 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
     btConvexHullShape* convex = new btConvexHullShape();
     for(int i=0; i<mesh->vertices.size(); i++)
 	{
-		btVector3 v(mesh->vertices[i].x, mesh->vertices[i].y, mesh->vertices[i].z);
+		btVector3 v(mesh->vertices[i].pos.x, mesh->vertices[i].pos.y, mesh->vertices[i].pos.z);
         convex->addPoint(v);
 	}
     

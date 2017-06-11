@@ -206,7 +206,7 @@ void UnderwaterVehicle::UpdateActuators(btScalar dt)
         thrusters[i]->Update(dt);
 }
 
-void UnderwaterVehicle::ApplyGravity()
+void UnderwaterVehicle::ApplyGravity(const btVector3& g)
 {
     if(vehicleBody != NULL)
         vehicleBody->applyGravity();
@@ -255,4 +255,8 @@ void UnderwaterVehicle::Render()
 			OpenGLContent::getInstance()->DrawObject(bodyParts[i].solid->getObject(), bodyParts[i].solid->getLook(), openglTrans);
 		}
 	}
+}
+
+void UnderwaterVehicle::GetAABB(btVector3& min, btVector3& max)
+{
 }

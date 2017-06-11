@@ -7,7 +7,6 @@
 //
 
 #include "OpenGLSpotLight.h"
-#include "OpenGLSolids.h"
 #include "SimulationManager.h"
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
@@ -94,66 +93,10 @@ void OpenGLSpotLight::Render()
         spotShader->SetUniform("lightAngle", (GLfloat)cosf(getAngle()));
         spotShader->SetUniform("lightColor", getColor());
         spotShader->SetUniform("lightClipSpace", eyeToLight);
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
         spotShader->Disable();
         
         glBindTexture(GL_TEXTURE_2D, 0);
-    }
-}
-
-void OpenGLSpotLight::RenderLightSurface()
-{
-    if(surfaceDistance > 0)
-    {
-        //transformation
-        btVector3 org = getPosition();
-        btVector3 left = getDirection();
-        
-        btVector3 up = btVector3(0, 1.0, 0);
-        if(fabs(left.y()) > 0.8)
-            up = btVector3(0,0,1.0);
-        
-        btVector3 front = left.cross(up);
-        front.normalize();
-        up = front.cross(left);
-        
-        btScalar openglTrans[16];
-        openglTrans[0] = left.x();
-        openglTrans[1] = left.y();
-        openglTrans[2] = left.z();
-        openglTrans[3] = 0.0;
-        openglTrans[4] = up.x();
-        openglTrans[5] = up.y();
-        openglTrans[6] = up.z();
-        openglTrans[7] = 0.0;
-        openglTrans[8] = front.x();
-        openglTrans[9] = front.y();
-        openglTrans[10] = front.z();
-        openglTrans[11] = 0.0;
-        openglTrans[12] = org.x();
-        openglTrans[13] = org.y();
-        openglTrans[14] = org.z();
-        openglTrans[15] = 1.0;
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        
-        //rendering
-        int steps = 24;
-        glColor4f(color[0], color[1], color[2], 1.0f);
-        
-        GLfloat r = surfaceDistance*tanf(coneAngle);
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex3f(surfaceDistance,0,0);
-        for(int i=0; i<=steps; i++)
-            glVertex3f(surfaceDistance, cosf(i/(GLfloat)steps*2.f*M_PI)*r, sinf(i/(GLfloat)steps*2.f*M_PI)*r);
-        glEnd();
-        
-        glPopMatrix();
     }
 }
 
@@ -286,7 +229,7 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
     glPushAttrib(GL_VIEWPORT_BIT);
     
     //Set projection and modelview
-    OpenGLSolids::SetupOrtho();
+    OpenGLContent::getInstance()->SetupOrtho();
     
 	//Texture setup
     glActiveTexture(GL_TEXTURE0);
@@ -299,7 +242,7 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
 	//Render the shadowmap
     glViewport(x, y, shadowSize * scale, shadowSize * scale);
     glColor4f(1.f, 1.f, 1.f, 1.f);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     
 	//Reset
 	glBindTexture(GL_TEXTURE_2D, 0);

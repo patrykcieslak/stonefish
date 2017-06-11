@@ -45,7 +45,7 @@ public:
    	virtual EntityType getType() = 0;
     virtual void Render() = 0;
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world) = 0;
-    virtual void GetAABB(btVector3& min, btVector3& max);
+    virtual void GetAABB(btVector3& min, btVector3& max) = 0;
     
 protected:
     static btVector3 findInertiaAxis(btMatrix3x3 I, btScalar value);

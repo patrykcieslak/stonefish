@@ -7,7 +7,7 @@
 //
 
 #include "Console.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "IMGUI.h"
 
@@ -15,12 +15,32 @@ Console* Console::instance = NULL;
 
 Console::Console()
 {
-    windowW = 800;
+	windowW = 800;
     windowH = 600;
-    printer = new OpenGLPrinter(FONT_NAME, FONT_SIZE, SCREEN_DPI);
+    ready = false;
+}
+
+Console::~Console()
+{
+    lines.clear();
+    delete printer;
+    if(logoTexture > 0)
+        glDeleteTextures(1, &logoTexture);
+    SDL_DestroyMutex(linesMutex);
+}
+
+void Console::Init(GLuint w, GLuint h)
+{
+	if(ready)
+		return;
+	
+	OpenGLPrinter::SetWindowSize(w, h);
+	printer = new OpenGLPrinter(FONT_NAME, FONT_SIZE);
     scrollOffset = 0;
     scrollVelocity = 0;
-    
+	windowW = w;
+	windowH = h;
+
     //Load logo texture - can't use material class because it writes to the console
     char path[1024];
     int width, height, channels;
@@ -49,21 +69,7 @@ Console::Console()
         logoTexture = 0;
     
     linesMutex = SDL_CreateMutex();
-}
-
-Console::~Console()
-{
-    lines.clear();
-    delete printer;
-    if(logoTexture > 0)
-        glDeleteTextures(1, &logoTexture);
-    SDL_DestroyMutex(linesMutex);
-}
-
-void Console::SetRenderSize(GLint w, GLint h)
-{
-    windowW = w;
-    windowH = h;
+	ready = true;
 }
 
 void Console::Scroll(GLfloat amount)
@@ -170,19 +176,16 @@ void Console::Render(bool overlay, GLfloat dt)
     glVertex2f(windowW - logoMargin, windowH - logoMargin - logoSize);
     glEnd();
     
-    //Rendering params for text
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //for OGLFT
-    
     //Rendering
-    GLfloat info[4] = {1.f, 1.f, 1.f, 0.95f};
-    GLfloat warning[4] = {1.f, 1.f, 0.f, 1.f};
-    GLfloat error[4] = {1.f, 0.f, 0.f, 1.f};
-    GLfloat* colors[3] = {info, warning, error};
+    glm::vec4 info(1.f, 1.f, 1.f, 1.f);
+    glm::vec4 warning(1.f, 1.f, 0.f, 1.f);
+    glm::vec4 error(1.f, 0.f, 0.f, 1.f);
+    glm::vec4 colors[3] = {info, warning, error};
     
     for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
     {
         ConsoleMessage* msg = &lines[linesCount-1-i];
-        printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
+		printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
     }
     
     glMatrixMode(GL_MODELVIEW);
@@ -194,6 +197,9 @@ void Console::Render(bool overlay, GLfloat dt)
 
 void Console::Print(int messageType, const char *format, ...)
 {
+	if(!ready)
+		return;
+	
     va_list args;
     char buffer[4096];
     va_start(args, format);

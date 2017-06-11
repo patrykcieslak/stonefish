@@ -8,7 +8,6 @@
 
 #include "PathFollowingController.h"
 #include "PathGenerator2D.h"
-#include "OpenGLSolids.h"
 
 #pragma mark Constructors
 PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency) : Controller(uniqueName, frequency)
@@ -45,6 +44,7 @@ ControllerType PathFollowingController::getType()
 #pragma mark - Methods
 void PathFollowingController::RenderPath()
 {
+	/*
     if(inputPath->isRenderable())
     {
         inputPath->Render();
@@ -66,7 +66,7 @@ void PathFollowingController::RenderPath()
         OpenGLSolids::DrawPoint(0.1f);
         
         glPopMatrix();
-    }
+    }*/
 }
 
 void PathFollowingController::Reset()

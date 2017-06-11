@@ -18,8 +18,7 @@
 #include "FilteredCollisionDispatcher.h"
 
 #include "SimulationApp.h"
-#include "OpenGLSolids.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 #include "OpenGLSky.h"
 #include "OpenGLOmniLight.h"
 #include "OpenGLSpotLight.h"
@@ -445,15 +444,15 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     
     //Basic configuration
-    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER;// | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
+    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER; // | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = btScalar(1.);
-    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 1;
-    
+    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 256;
+	
     //Quality/stability
-    dynamicsWorld->getSolverInfo().m_tau = btScalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = btScalar(1.);  //non-contact constraint error reduction
-    dynamicsWorld->getSolverInfo().m_erp2 = btScalar(1.); //contact constraint error reduction
-    dynamicsWorld->getSolverInfo().m_frictionERP = btScalar(1.); //friction constraint error reduction
+	dynamicsWorld->getSolverInfo().m_tau = btScalar(1.);  //mass factor
+    dynamicsWorld->getSolverInfo().m_erp = btScalar(0.3);  //non-contact constraint error reduction
+    dynamicsWorld->getSolverInfo().m_erp2 = btScalar(1.0); //contact constraint error reduction
+    dynamicsWorld->getSolverInfo().m_frictionERP = btScalar(0.5); //friction constraint error reduction
     dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
     dynamicsWorld->getSolverInfo().m_sor = btScalar(1.); //not used
     dynamicsWorld->getSolverInfo().m_maxErrorReduction = btScalar(0.); //not used
@@ -574,7 +573,7 @@ void SimulationManager::DestroyScenario()
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
 		
-	OpenGLContent::Destroy();
+	OpenGLContent::getInstance()->DestroyContent();
 }
 
 bool SimulationManager::StartSimulation()
@@ -1011,7 +1010,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             system->UpdateSensors(timeStep);
             system->UpdateControllers(timeStep);
             system->UpdateActuators(timeStep);
-            system->ApplyGravity();
+            system->ApplyGravity(researchWorld->getGravity());
         }
     }
     

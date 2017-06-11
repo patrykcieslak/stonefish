@@ -36,3 +36,9 @@ void ForcefieldEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 void ForcefieldEntity::Render()
 {
 }
+
+void ForcefieldEntity::GetAABB(btVector3& min, btVector3& max)
+{
+    min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+    max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+}

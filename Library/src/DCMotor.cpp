@@ -3,18 +3,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/11/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "DCMotor.h"
 
 #pragma mark Constructors
-DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Actuator(uniqueName)
+DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName, revolute)
 {
     //Params
-    revoluteOutput = revolute;
-    multibodyOutput = NULL;
-    multibodyChild = 0;
     R = motorR;
     L = motorL;
     Ke = motorKe;
@@ -27,16 +24,12 @@ DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motor
     //Internal states
     I = btScalar(0.);
     V = btScalar(0.);
-    torque = btScalar(0.);
     lastVoverL = btScalar(0.);
 }
 
-DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Actuator(uniqueName)
+DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName, mb, child)
 {
     //Params
-    revoluteOutput = NULL;
-    multibodyOutput = mb;
-    multibodyChild = child;
     R = motorR;
     L = motorL;
     Ke = motorKe;
@@ -49,14 +42,7 @@ DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int ch
     //Internal states
     I = btScalar(0.);
     V = btScalar(0.);
-    torque = btScalar(0.);
     lastVoverL = btScalar(0.);
-}
-
-#pragma mark - Accessors
-ActuatorType DCMotor::getType()
-{
-    return ACTUATOR_MOTOR;
 }
 
 btScalar DCMotor::getKe()
@@ -79,6 +65,11 @@ btScalar DCMotor::getGearRatio()
     return gearRatio;
 }
 
+void DCMotor::setIntensity(btScalar value)
+{
+    setVoltage(value);
+}
+
 void DCMotor::setVoltage(btScalar volt)
 {
     V = volt;
@@ -99,26 +90,6 @@ btScalar DCMotor::getCurrent()
     return I;
 }
 
-btScalar DCMotor::getAngularVelocity()
-{
-    if(multibodyOutput == NULL)
-    {
-        return revoluteOutput->getAngularVelocity();
-    }
-    else
-    {
-        btScalar angularV = btScalar(0.);
-        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        multibodyOutput->getJointVelocity(multibodyChild, angularV, jt);
-        
-        if(jt == btMultibodyLink::eRevolute)
-            return angularV;
-        else
-            return btScalar(0.);
-    }
-}
-
-#pragma mark - Actuator
 btVector3 DCMotor::Render()
 {
     return btVector3(0.f,0.f,0.f);
@@ -154,14 +125,10 @@ void DCMotor::Update(btScalar dt)
         //torque = I * Km - aVelocity * B;
     }
     
-    //Drive the joint
-    if(multibodyOutput == NULL)
-        revoluteOutput->ApplyTorque(UnitSystem::GetTorque(torque));
-    else
-        multibodyOutput->DriveJoint(multibodyChild, UnitSystem::GetTorque(torque));
+	//Drive the joint
+	Motor::Update(dt);
 }
 
-#pragma mark - DCMotor
 void DCMotor::SetupGearbox(bool enable, btScalar ratio, btScalar efficiency)
 {
     gearEnabled = enable;

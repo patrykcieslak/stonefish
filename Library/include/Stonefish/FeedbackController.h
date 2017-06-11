@@ -26,11 +26,13 @@ public:
     void setReferenceValue(unsigned int inputId, btScalar value);
     void setReferenceValues(const std::vector<btScalar>& values);
     std::vector<btScalar> getReferenceValues();
+	btScalar getLastOutput();
     unsigned int getNumOfInputs();
     ControllerType getType();
     
 protected:
     virtual void Tick(btScalar dt) = 0;
+	btScalar output;
     
 private:
     std::vector<btScalar> reference;

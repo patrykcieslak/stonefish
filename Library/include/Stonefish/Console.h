@@ -29,7 +29,7 @@ ConsoleMessage;
 class Console
 {
 public:
-    void SetRenderSize(GLint w, GLint h);
+	void Init(GLuint w, GLuint h);
     void Render(bool overlay, GLfloat dt);
     void Clear();
     void Print(int messageType, const char* format, ...);
@@ -44,13 +44,14 @@ private:
     Console();
     ~Console();
     
-    GLint windowW, windowH;
+    GLuint windowW, windowH;
     std::vector<ConsoleMessage> lines;
     OpenGLPrinter* printer;
     GLuint logoTexture;
     SDL_mutex* linesMutex;
     GLfloat scrollOffset;
     GLfloat scrollVelocity;
+	bool ready;
     
     static Console* instance;
 };

@@ -7,8 +7,7 @@
 //
 
 #include "OpenGLSky.h"
-#include "GeometryUtil.h"
-#include "OpenGLSolids.h"
+#include "GeometryUtil.hpp"
 #include "OpenGLSun.h"
 #include "Console.h"
 
@@ -242,7 +241,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, cubemap, 0); //negative Y
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     
     V = glm::mat4();
     V = glm::rotate(V, glm::pi<float>()/2.f, glm::vec3(0.f,1.f,0.f));
@@ -251,7 +250,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemap, 0); //positive X
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     
     V = glm::mat4();
     V = glm::rotate(V, -glm::pi<float>()/2.f, glm::vec3(1.f,0.f,0.f));
@@ -259,7 +258,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, cubemap, 0); //negative Z
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     
     V = glm::mat4();
     V = glm::rotate(V, glm::pi<float>(), glm::vec3(0.f,1.f,0.f));
@@ -268,7 +267,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, cubemap, 0);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     
     V = glm::mat4();
     V = glm::rotate(V, glm::pi<float>()/2.f, glm::vec3(1.f,0.f,0.f));
@@ -276,7 +275,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, cubemap, 0);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     
     V = glm::mat4();
     V = glm::rotate(V, -glm::pi<float>()/2.f, glm::vec3(0.f,1.f,0.f));
@@ -285,7 +284,7 @@ void OpenGLSky::ProcessCube(GLSLShader* shader, GLuint cubemap, GLenum attachmen
     IVR = glm::inverse(IVR);
     shader->SetUniform("inv_view_rot", IVR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, cubemap, 0);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
 }
 
 void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
@@ -306,7 +305,7 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glDisable(GL_TEXTURE_2D);
     
     //Setup matrices
-    OpenGLSolids::SetupOrtho();
+    OpenGLContent::getInstance()->SetupOrtho();
    
     //Calculate projection
     glm::mat4 projection = glm::perspective(glm::radians(90.f), 1.f, 1.f, 100.f);
@@ -465,7 +464,7 @@ void OpenGLSky::Render(OpenGLView *view, const btTransform& viewTransform, bool 
     skyDrawShader->SetUniform("viewport", glm::vec2((GLfloat)(viewport[2]-viewport[0]), (GLfloat)(viewport[3]-viewport[1])));
     skyDrawShader->SetUniform("inv_proj", projection);
     skyDrawShader->SetUniform("inv_view_rot", ivr);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     skyDrawShader->Disable();
     
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);

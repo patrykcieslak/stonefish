@@ -3,51 +3,42 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/11/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_DCMotor__
 #define __Stonefish_DCMotor__
 
-#include "Actuator.h"
-#include "RevoluteJoint.h"
-#include "FeatherstoneEntity.h"
+#include "Motor.h"
 
-class DCMotor : public Actuator
+class DCMotor : public Motor
 {
 public:
     DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
     DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
     
+	//Motor
     void Update(btScalar dt);
     btVector3 Render();
-    void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);
-    
-    void setVoltage(btScalar volt);
-    btScalar getVoltage();
+	void setIntensity(btScalar value);
     btScalar getTorque();
-    btScalar getCurrent();
-    ActuatorType getType();
     
+	//DC motor
+	void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);
+	void setVoltage(btScalar volt);
+	btScalar getCurrent();
+	btScalar getVoltage();
     btScalar getKe();
     btScalar getKt();
     btScalar getGearRatio();
     btScalar getR();
     
 private:
-    btScalar getAngularVelocity();
-    
-    //output
-    RevoluteJoint* revoluteOutput;
-    FeatherstoneEntity* multibodyOutput;
-    unsigned int multibodyChild;
-    
     //inputs
     btScalar V;
     
     //states
     btScalar I;
-    btScalar torque;
     
     //motor params
     btScalar R;

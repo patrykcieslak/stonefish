@@ -435,9 +435,9 @@ void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogT
     for(int i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
-		glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]];
-		glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]];
-		glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]];
+		glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+		glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+		glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
         btVector3 p1 = geometryTransform * btVector3(p1gl.x,p1gl.y,p1gl.z);
         btVector3 p2 = geometryTransform * btVector3(p2gl.x,p2gl.y,p2gl.z);
         btVector3 p3 = geometryTransform * btVector3(p3gl.x,p3gl.y,p3gl.z);

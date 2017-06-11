@@ -23,8 +23,8 @@
 
 //OpenGL 3.3 Core
 //#define GL3_PROTOTYPES
-//#include <OpenGL/gl3.h>
-//#include <OpenGL/gl3ext.h>
+//#include <GL/gl3.h>
+//#include <GL/gl3ext.h>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>

@@ -22,9 +22,9 @@
     <VirtualDirectory Name="actuators">
       <File Name="src/Actuator.cpp"/>
       <File Name="src/Battery.cpp"/>
-      <File Name="src/DCMotor.cpp"/>
       <File Name="src/Thruster.cpp"/>
       <File Name="src/Motor.cpp"/>
+      <File Name="src/DCMotor.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
       <File Name="src/Controller.cpp"/>
@@ -33,16 +33,15 @@
       <File Name="src/PathFollowingController.cpp"/>
       <File Name="src/PathGenerator.cpp"/>
       <File Name="src/PathGenerator2D.cpp"/>
-      <File Name="src/ServoController.cpp"/>
       <File Name="src/SignalGenerator.cpp"/>
       <File Name="src/SignalMux.cpp"/>
       <File Name="src/Trajectory.cpp"/>
+      <File Name="src/ServoController.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="display">
       <File Name="src/OpenGLDebugDrawer.cpp"/>
       <File Name="src/OpenGLGBuffer.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
-      <File Name="src/OpenGLSolids.cpp"/>
       <File Name="src/OpenGLContent.cpp"/>
       <VirtualDirectory Name="gui">
         <File Name="src/Console.cpp"/>
@@ -60,8 +59,8 @@
         <File Name="src/OpenGLView.cpp"/>
         <File Name="src/OpenGLTrackball.cpp"/>
         <File Name="src/OpenGLCamera.cpp"/>
-        <File Name="src/GLSLShader.cpp"/>
       </VirtualDirectory>
+      <File Name="src/GLSLShader.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -116,7 +115,6 @@
         <File Name="src/FakeRotaryEncoder.cpp"/>
         <File Name="src/Gyroscope.cpp"/>
         <File Name="src/IMU.cpp"/>
-        <File Name="src/LinearEncoder.cpp"/>
         <File Name="src/Magnetometer.cpp"/>
         <File Name="src/RotaryEncoder.cpp"/>
         <File Name="src/TrueRotaryEncoder.cpp"/>
@@ -125,14 +123,12 @@
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
       <File Name="src/ScientificFileUtil.cpp"/>
-      <File Name="src/SystemUtil.cpp"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <VirtualDirectory Name="entities">
       <File Name="include/Stonefish/CableEntity.h"/>
       <File Name="include/Stonefish/Entity.h"/>
-      <File Name="include/Stonefish/FeatherstoneEntity.h"/>
       <File Name="include/Stonefish/SolidEntity.h"/>
       <File Name="include/Stonefish/StaticEntity.h"/>
       <File Name="include/Stonefish/ForcefieldEntity.h"/>
@@ -157,6 +153,7 @@
         <File Name="include/Stonefish/Manipulator.h"/>
         <File Name="include/Stonefish/UnderwaterVehicle.h"/>
       </VirtualDirectory>
+      <File Name="include/Stonefish/FeatherstoneEntity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="sensors">
       <File Name="include/Stonefish/Contact.h"/>
@@ -171,7 +168,6 @@
         <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
         <File Name="include/Stonefish/Gyroscope.h"/>
         <File Name="include/Stonefish/IMU.h"/>
-        <File Name="include/Stonefish/LinearEncoder.h"/>
         <File Name="include/Stonefish/Magnetometer.h"/>
         <File Name="include/Stonefish/RotaryEncoder.h"/>
         <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
@@ -211,7 +207,6 @@
         <File Name="include/Stonefish/OpenGLPrinter.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/OpenGLContent.h"/>
-      <File Name="include/Stonefish/OpenGLSolids.h"/>
       <File Name="include/Stonefish/OpenGLPipeline.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
@@ -234,29 +229,27 @@
       <File Name="include/Stonefish/Trajectory.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
-      <File Name="include/Stonefish/GeometryUtil.h"/>
-      <File Name="include/Stonefish/Polynomials.h"/>
       <File Name="include/Stonefish/ScientificFileUtil.h"/>
-      <File Name="include/Stonefish/SystemUtil.h"/>
+      <File Name="include/Stonefish/Polynomials.hpp"/>
+      <File Name="include/Stonefish/GeometryUtil.hpp"/>
+      <File Name="include/Stonefish/SystemUtil.hpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
       <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
       <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
       <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>
-      <File Name="include/Stonefish/MaterialManager.h"/>
       <File Name="include/Stonefish/NameManager.h"/>
       <File Name="include/Stonefish/SimulationApp.h"/>
       <File Name="include/Stonefish/SimulationManager.h"/>
       <File Name="include/Stonefish/UnitSystem.h"/>
       <File Name="include/Stonefish/TorusShape.h"/>
+      <File Name="include/Stonefish/MaterialManager.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="3rdparty">
     <File Name="3rdparty/NativeDialog.cpp"/>
     <File Name="3rdparty/NativeDialog.h"/>
-    <File Name="3rdparty/OGLFT.cpp"/>
-    <File Name="3rdparty/OGLFT.h"/>
     <File Name="3rdparty/rapidxml.hpp"/>
     <File Name="3rdparty/stb_image.c"/>
     <File Name="3rdparty/stb_image.h"/>
@@ -288,6 +281,9 @@
     <File Name="shaders/saq.vert" ExcludeProjConfig="Release"/>
     <File Name="shaders/simpleDownsample.frag" ExcludeProjConfig="Release"/>
     <File Name="shaders/tonemapping.frag" ExcludeProjConfig="Release"/>
+    <File Name="shaders/printer.frag"/>
+    <File Name="shaders/printer.vert"/>
+    <File Name="shaders/downsample.vert"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
@@ -319,6 +315,7 @@
     <Configuration Name="Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
+        <Preprocessor Value="DEBUG"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

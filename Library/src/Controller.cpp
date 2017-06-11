@@ -3,14 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Controller.h"
 
 NameManager Controller::nameManager;
 
-#pragma mark Constructors
 Controller::Controller(std::string uniqueName, btScalar frequency)
 {
     name = nameManager.AddName(uniqueName);
@@ -20,13 +19,11 @@ Controller::Controller(std::string uniqueName, btScalar frequency)
     running = false;
 }
 
-#pragma mark - Destructor
 Controller::~Controller()
 {
     nameManager.RemoveName(name);
 }
 
-#pragma mark - Accessors
 btScalar Controller::getFrequency()
 {
     return freq;
@@ -42,7 +39,6 @@ std::string Controller::getName()
     return name;
 }
 
-#pragma mark - Methods
 void Controller::Start()
 {
     running = true;

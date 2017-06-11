@@ -3,12 +3,11 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Motor.h"
 
-#pragma mark Constructors
 Motor::Motor(std::string uniqueName, RevoluteJoint* revolute) : Actuator(uniqueName)
 {
     //Params
@@ -31,7 +30,6 @@ Motor::Motor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child)
     torque = btScalar(0.);
 }
 
-#pragma mark - Accessors
 ActuatorType Motor::getType()
 {
     return ACTUATOR_MOTOR;
@@ -61,12 +59,11 @@ btScalar Motor::getAngularVelocity()
     }
 }
 
-void Motor::setTorque(btScalar value)
+void Motor::setIntensity(btScalar value)
 {
     torque = value;
 }
 
-#pragma mark - Actuator
 btVector3 Motor::Render()
 {
     return btVector3(0.f,0.f,0.f);
@@ -74,9 +71,6 @@ btVector3 Motor::Render()
 
 void Motor::Update(btScalar dt)
 {
-    //Get joint angular velocity in radians
-    btScalar aVelocity = getAngularVelocity();
-    
     //Drive the joint
     if(multibodyOutput == NULL)
         revoluteOutput->ApplyTorque(UnitSystem::GetTorque(torque));

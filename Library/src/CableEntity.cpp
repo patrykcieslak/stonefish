@@ -8,8 +8,7 @@
 
 #include "CableEntity.h"
 #include "Joint.h"
-#include "OpenGLSolids.h"
-#include "GeometryUtil.h"
+#include "GeometryUtil.hpp"
 
 CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const btVector3& _end2, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat) : Entity(uniqueName)
 {

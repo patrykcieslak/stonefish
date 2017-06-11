@@ -9,10 +9,10 @@
 #include "IMGUI.h"
 #include <stdio.h>
 #include <math.h>
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "Console.h"
-#include "OpenGLSolids.h"
+#include "OpenGLContent.h"
 
 IMGUI* IMGUI::instance = NULL;
 
@@ -141,8 +141,8 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
     
     //Set interface colors
     theme[PANEL_COLOR] = glm::vec4(0.98f, 0.98f, 0.98f, 1.f);
-    theme[ACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.9f);
-    theme[INACTIVE_TEXT_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
+    theme[ACTIVE_TEXT_COLOR] = glm::vec4(0.3f, 0.3f, 0.3f, 0.9f);
+    theme[INACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.5f);
     theme[ACTIVE_CONTROL_COLOR] = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);
     theme[INACTIVE_CONTROL_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
     theme[HOT_CONTROL_COLOR] = HSV2RGB(glm::vec4(hue, 0.1f, 1.0f, 1.0f));
@@ -191,7 +191,7 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
     if(firstInit)
     {
         //Create printers
-        plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE, SCREEN_DPI);
+        plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE);
         backgroundMargin = 5.f;
         
         //Load logo texture - can't use material class because it writes to the console
@@ -222,7 +222,7 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
             logoTexture = 0;
         
         //Load translucent shaders
-        downsampleShader = new GLSLShader("simpleDownsample.frag");
+        downsampleShader = new GLSLShader("simpleDownsample.frag", "downsample.vert");
         downsampleShader->AddUniform("source", INT);
         downsampleShader->AddUniform("srcViewport", VEC2);
         gaussianShader = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
@@ -233,21 +233,21 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
 
 void IMGUI::GenerateBackground()
 {
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    
     glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
-    glViewport(0, 0, windowW/4, windowH/4);
-    OpenGLSolids::SetupOrtho();
-    
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glBindTexture(GL_TEXTURE_2D, OpenGLPipeline::getInstance()->getDisplayTexture());
+    
+	glViewport(0, 0, windowW/4, windowH/4);
+    OpenGLContent::getInstance()->SetupOrtho();
+	
+	glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, OpenGLPipeline::getInstance()->getDisplayTexture());
     
     downsampleShader->Enable();
     downsampleShader->SetUniform("source", 0);
     downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
-    OpenGLSolids::DrawScreenAlignedQuad();
-    downsampleShader->Disable();
+	OpenGLContent::getInstance()->DrawSAQ();
+	downsampleShader->Disable();
     
     for(int i=0; i<3; i++)
     {
@@ -257,7 +257,7 @@ void IMGUI::GenerateBackground()
         gaussianShader->Enable();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
         gaussianShader->Disable();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -266,12 +266,12 @@ void IMGUI::GenerateBackground()
         gaussianShader->Enable();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
         gaussianShader->Disable();
     }
-    
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void IMGUI::Begin()
@@ -284,7 +284,6 @@ void IMGUI::Begin()
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ); //for OGLFT
     
     glScissor(0, 0, windowW, windowH);
     glViewport(0, 0, windowW, windowH);
@@ -329,7 +328,7 @@ void IMGUI::End()
 
 void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const char *text)
 {
-    plainPrinter->Print(glm::value_ptr(color), x, windowH - y - FONT_BASELINE, FONT_SIZE, text);
+    plainPrinter->Print(color, x, windowH - y - FONT_BASELINE, FONT_SIZE, text);
 }
 
 GLfloat IMGUI::PlainTextLength(const char* text)

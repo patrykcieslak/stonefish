@@ -36,7 +36,6 @@ public:
     virtual ~OpenGLLight();
     
     virtual void Render() = 0;
-    virtual void RenderLightSurface() = 0;
     virtual void RenderDummy() = 0;
     virtual void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim) = 0;
     virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale) = 0;

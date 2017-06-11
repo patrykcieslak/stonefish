@@ -7,9 +7,8 @@
 //
 
 #include "SimulationApp.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 
-#pragma mark Constructors
 SimulationApp::SimulationApp(const char* name, int width, int height, SimulationManager* sim)
 {
     SimulationApp::handle = this;
@@ -33,7 +32,6 @@ SimulationApp::SimulationApp(const char* name, int width, int height, Simulation
 	physics = 0.0;
 }
 
-#pragma mark - Destructor
 SimulationApp::~SimulationApp()
 {
 	if(joystick != NULL)
@@ -44,7 +42,6 @@ SimulationApp::~SimulationApp()
 	}
 }
 
-#pragma mark - Accessors
 void SimulationApp::setSimulationSpeed(btScalar factor)
 {
     if(factor > 0.f)
@@ -128,7 +125,6 @@ const char* SimulationApp::getShaderPath()
     return shaderPath;
 }
 
-#pragma mark - Initialization
 void SimulationApp::Init(const char* dataPath, const char* shaderPath)
 {
     this->dataPath = dataPath;
@@ -170,20 +166,29 @@ void SimulationApp::InitializeSDL()
                               );
     
     //Create OpenGL contexts
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-    glLoadingContext = SDL_GL_CreateContext(window);
-    glMainContext = SDL_GL_CreateContext(window);
-    
+  
+	glLoadingContext = SDL_GL_CreateContext(window);
+	if(glLoadingContext == NULL)
+	{
+		printf("SDL2: OpenGL context could not be created: %s\n", SDL_GetError());
+	}
+	
+	glMainContext = SDL_GL_CreateContext(window);
+	if(glMainContext == NULL)
+	{
+		printf("SDL2: OpenGL context could not be created: %s\n", SDL_GetError());
+	}
+	
     //Check OpenGL context version
     int glVersionMajor, glVersionMinor;
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &glVersionMajor);
@@ -191,7 +196,7 @@ void SimulationApp::InitializeSDL()
 	SDL_GL_SetSwapInterval(0);
     
     //Initialize console
-    Console::getInstance()->SetRenderSize(winWidth, winHeight);
+    Console::getInstance()->Init(winWidth, winHeight);
     cInfo("Window created. OpenGL %d.%d contexts created.", glVersionMajor, glVersionMinor);
 
 #ifdef _MSC_VER
@@ -234,8 +239,6 @@ void SimulationApp::InitializeSimulation()
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.", btGetVersion()/100, btGetVersion()%100);
 }
 
-#pragma mark - Events
-#pragma mark window
 void SimulationApp::WindowEvent(SDL_Event* event)
 {
     int w, h;
@@ -249,7 +252,6 @@ void SimulationApp::WindowEvent(SDL_Event* event)
     }
 }
 
-#pragma mark keyboard
 void SimulationApp::KeyDown(SDL_Event *event)
 {
     switch (event->key.keysym.sym)
@@ -282,7 +284,6 @@ void SimulationApp::KeyUp(SDL_Event *event)
 {
 }
 
-#pragma mark mouse
 void SimulationApp::MouseDown(SDL_Event *event)
 {
 }
@@ -299,7 +300,6 @@ void SimulationApp::MouseScroll(SDL_Event *event)
 {
 }
 
-#pragma mark joystick
 void SimulationApp::JoystickDown(SDL_Event *event)
 {
 }
@@ -312,7 +312,6 @@ void SimulationApp::ProcessInputs()
 {
 }
 
-#pragma mark loops
 void SimulationApp::EventLoop()
 {
     SDL_Event event;
@@ -457,7 +456,6 @@ void SimulationApp::AppLoop()
 	SDL_GL_SwapWindow(window);
 }
 
-#pragma mark - Basic Control
 void SimulationApp::DoHUD()
 {
     char buffer[256];
@@ -529,7 +527,6 @@ void SimulationApp::CleanUp()
     SDL_Quit();
 }
 
-#pragma mark - Statics
 SimulationApp* SimulationApp::handle = NULL;
 
 SimulationApp* SimulationApp::getApp()
@@ -543,7 +540,7 @@ int SimulationApp::RenderLoadingScreen(void* data)
     LoadingThreadData* ltdata = (LoadingThreadData*)data;
     
     //Make drawing in this thread possible
-    SDL_GL_MakeCurrent(ltdata->app->window, ltdata->app->glLoadingContext);
+    SDL_GL_MakeCurrent(ltdata->app->window, ltdata->app->glLoadingContext);  
     
     //Render loading screen
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);

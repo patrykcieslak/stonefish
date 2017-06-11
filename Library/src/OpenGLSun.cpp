@@ -9,7 +9,6 @@
 #include "OpenGLSun.h"
 #include "OpenGLSky.h"
 #include "OpenGLLight.h"
-#include "OpenGLSolids.h"
 #include "SimulationApp.h"
 #include "Console.h"
 
@@ -291,7 +290,7 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     sunShader->SetUniform("lightClipSpace[1]", lightClipSpace[1]);
     sunShader->SetUniform("lightClipSpace[2]", lightClipSpace[2]);
     sunShader->SetUniform("lightClipSpace[3]", lightClipSpace[3]);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     sunShader->Disable();
     
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
@@ -374,7 +373,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     glPushAttrib(GL_VIEWPORT_BIT);
     
     //Set projection and modelview
-    OpenGLSolids::SetupOrtho();
+    OpenGLContent::getInstance()->SetupOrtho();
     
 	//Texture setup
 	glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
@@ -391,7 +390,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
         glViewport(x + shadowmapSize * scale * i, y, shadowmapSize * scale, shadowmapSize * scale);
         shadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
         glColor4f(1.f,1.f,1.f,1.f);
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
     }
     shadowmapShader->Disable();
     

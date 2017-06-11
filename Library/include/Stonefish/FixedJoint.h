@@ -15,6 +15,7 @@ class FixedJoint : public Joint
 {
 public:
     FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
+	FixedJoint(std::string uniqueName, btMultiBody* mb, btRigidBody* rb);
     
     btVector3 Render();
     JointType getType();

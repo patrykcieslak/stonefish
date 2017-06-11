@@ -2,34 +2,46 @@
 //  OpenGLPrinter.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 10/06/2017.
+//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLPrinter__
 #define __Stonefish_OpenGLPrinter__
 
-#include "OGLFT.h"
+#include "GLSLShader.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <map>
+
+struct Character 
+{
+	GLuint texture;
+	glm::ivec2 size;
+	glm::ivec2 bearing;
+	GLuint advance;
+};
 
 class OpenGLPrinter
 {
 public:
-    OpenGLPrinter(const char* fontPath, GLint size, GLint dpi);
+    OpenGLPrinter(const char* fontPath, GLuint size);
     ~OpenGLPrinter();
+
+    void Print(glm::vec4 color, GLfloat x, GLfloat y, GLfloat size, const char* text);
+    GLuint TextLength(const char* text);
+    glm::ivec2 TextDimensions(const char* text);
     
-    void Start();
-    void Print(GLfloat* color, GLfloat x, GLfloat y, GLfloat size, const char* text);
-    GLfloat TextLength(const char* text);
-    glm::vec2 TextDimensions(const char* text);
-    void Finish();
-    
-    static void SetWindowSize(GLint width, GLint height);
+    static void SetWindowSize(GLuint width, GLuint height);
     
 private:
-    OGLFT::MonochromeTexture* font;
-    GLint lastFontSize;
-    GLfloat lastFontColor[4];
-    static GLint windowW, windowH;
+	bool initialized;
+	GLuint fontVBO;
+	GLuint nativeFontSize;
+	std::map<GLchar, Character> chars;
+	
+	static GLSLShader* printShader;
+	static GLuint windowW, windowH;
 };
 
 

@@ -2,102 +2,177 @@
 //  OpenGLPrinter.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 10/06/17.
+//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "OpenGLPrinter.h"
-
 #include <stdio.h>
 
-GLint OpenGLPrinter::windowW = 800;
-GLint OpenGLPrinter::windowH = 600;
+GLuint OpenGLPrinter::windowW = 800;
+GLuint OpenGLPrinter::windowH = 600;
+GLSLShader* OpenGLPrinter::printShader = NULL;
 
-void OpenGLPrinter::SetWindowSize(GLint width, GLint height)
+void OpenGLPrinter::SetWindowSize(GLuint width, GLuint height)
 {
     windowW = width;
     windowH = height;
 }
 
-OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLint size, GLint dpi)
+OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLuint size)
 {
-    font = new OGLFT::MonochromeTexture(fontPath, size, dpi);
-    if(font == NULL || !font->isValid())
-    {
-        printf("Could not construct font!\n");
-        font = NULL;
-    }
-    else
-    {
-        font->setCompileMode(OGLFT::Face::GlyphCompileMode::COMPILE);
-        lastFontSize = size;
-        lastFontColor[0] = lastFontColor[1] = lastFontColor[2] = 0.f;
-        lastFontColor[3] = 1.f;
-    }
+	initialized = false;
+	fontVBO = 0;
+	nativeFontSize = size;
+	
+	FT_Error error = 0;
+	FT_Library ft;
+	FT_Face face;
+	
+	//Load Freetype library and font
+	if((error = FT_Init_FreeType(&ft))) 
+		printf("Freetype: Could not init library!\n");
+	else
+	{
+		if((error = FT_New_Face(ft, fontPath, 0, &face))) 
+		{
+			printf("Freetype: Could not open font from file: %s!\n", fontPath);
+			FT_Done_FreeType(ft);
+		}
+	}
+	
+	if(!error)
+	{
+		//Load shader if not already loaded
+		if(printShader == NULL)
+		{
+			printShader = new GLSLShader("printer.frag","printer.vert");
+			printShader->AddUniform("tex", ParameterType::INT);
+			printShader->AddUniform("color", ParameterType::VEC4);
+		}
+				
+		if(printShader->isValid())
+		{
+			FT_Set_Pixel_Sizes(face, 0, nativeFontSize);
+			glActiveTexture(GL_TEXTURE1);
+			glEnable(GL_TEXTURE_2D);
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);		
+			
+			//Load all characters
+			for(GLubyte c = 0; c < 128; ++c)
+			{
+				//Load character glyph 
+				if(FT_Load_Char(face, c, FT_LOAD_RENDER))
+				{
+					printf("Freetype: Failed to load Glyph '%c'!", c);
+					continue;
+				}
+				
+				//Generate texture
+				GLuint texture;
+				glGenTextures(1, &texture);
+				glBindTexture(GL_TEXTURE_2D, texture);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+				//Set texture options
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				//Store character for later use
+				Character character = {texture,
+									   glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+									   glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+									   (GLuint)face->glyph->advance.x};
+				chars.insert(std::pair<GLchar, Character>(c, character));
+			}
+			glBindTexture(GL_TEXTURE_2D, 0);
+			
+			//Freetype not needed any more
+			FT_Done_Face(face);
+			FT_Done_FreeType(ft);
+
+			//Generate VBO for rendering textured quads
+			glGenBuffers(1, &fontVBO);
+			glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			
+			//Successfully initialized!
+			initialized = true;
+		}
+	}
 }
 
 OpenGLPrinter::~OpenGLPrinter()
 {
-    if(font != NULL)
-        delete font;
+	//Destroy all textures
+	for(auto it = chars.begin(); it != chars.end(); ++it) 
+		glDeleteTextures(1, &it->second.texture);
+		
+	if(fontVBO != 0)
+		glDeleteBuffers(1,&fontVBO);
 }
 
-void OpenGLPrinter::Start()
+void OpenGLPrinter::Print(glm::vec4 color, GLfloat x, GLfloat y, GLfloat size, const char* text)
 {
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	if(!initialized)
+		return;
+	
+	GLfloat sx = 2.f/(GLfloat)windowW;
+	GLfloat sy = 2.f/(GLfloat)windowH;
+	GLfloat scale = size/nativeFontSize;
+	
+	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glm::mat4 proj = glm::ortho(0.f, (GLfloat)windowW, 0.f, (GLfloat)windowH, -1.f, 1.f);
-	glLoadMatrixf(glm::value_ptr(proj));
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
+	printShader->Enable();
+	printShader->SetUniform("color", color);
+	printShader->SetUniform("tex", 1);
+
+	glEnableVertexAttribArray(0);
+	
+	for(const char *c = text; *c; ++c) 
+	{
+		Character ch = chars[*c];
+		
+		float x2 = (x + ch.bearing.x) * sx - 1.0f;
+		float y2 = (-y - ch.bearing.y) * sy + 1.0f;
+		float w = ch.size.x * sx * scale;
+		float h = ch.size.y * sy * scale;
+		
+		GLfloat box[4][4] = {{x2,     -y2    , 0, 0},
+							 {x2 + w, -y2    , 1, 0},
+							 {x2,     -y2 - h, 0, 1},
+							 {x2 + w, -y2 - h, 1, 1}};
+  
+		//Bind texture containing the character
+		glBindTexture(GL_TEXTURE_2D, ch.texture);
+		//Update data in VBO
+		glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		//Draw chars
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		//Advance to the next position
+		x += (ch.advance >> 6) * scale;
+	}
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisableVertexAttribArray(0);
+	printShader->Disable();
+	glActiveTexture(GL_TEXTURE0);
 }
 
-void OpenGLPrinter::Print(GLfloat *color, GLfloat x, GLfloat y, GLfloat size, const char* text)//, ...)
+GLuint OpenGLPrinter::TextLength(const char *text)
 {
-    if(font != NULL)
-    {
-        if(size != lastFontSize)
-        {
-            font->setPointSize(size);
-            lastFontSize = size;
-        }
-        if(lastFontColor[0] != color[0] || lastFontColor[1] != color[1] || lastFontColor[2] != color[2] || lastFontColor[3] != color[3])
-        {
-            font->setForegroundColor(color);
-            lastFontColor[0] = color[0];
-            lastFontColor[1] = color[1];
-            lastFontColor[2] = color[2];
-            lastFontColor[3] = color[3];
-        }
-        font->draw(x, y, text);
-    }
+	GLuint length = 0;
+	for(const char *c = text; *c; ++c) 
+		length += chars[*c].advance >> 6;
+    return length;
 }
 
-GLfloat OpenGLPrinter::TextLength(const char *text)
+glm::ivec2 OpenGLPrinter::TextDimensions(const char *text)
 {
-    OGLFT::BBox bounds = font->measure(text);
-    return bounds.x_max_ - bounds.x_min_;
-}
-
-glm::vec2 OpenGLPrinter::TextDimensions(const char *text)
-{
-    OGLFT::BBox bounds = font->measure(text);
-    return glm::vec2(bounds.x_max_ - bounds.x_min_, bounds.y_max_ - bounds.y_min_);
-}
-
-void OpenGLPrinter::Finish()
-{
-    glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-    glPopAttrib();
+    return glm::ivec2(TextLength(text), nativeFontSize);
 }

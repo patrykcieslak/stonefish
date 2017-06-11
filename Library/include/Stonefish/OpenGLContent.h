@@ -13,34 +13,52 @@
 #include <vector>
 
 //Geometry
+struct Vertex 
+{
+	glm::vec3 pos;
+	glm::vec3 normal;
+	glm::vec2 uv;
+	
+	friend bool operator==(const Vertex& lhs, const Vertex& rhs)
+	{
+		if(lhs.pos == rhs.pos && lhs.normal == rhs.normal && lhs.uv == rhs.uv)
+			return true;
+		return false;
+	};
+};
+
 struct Face
 {
     GLuint vertexID[3];
-    GLuint normalID[3];
-	GLuint uvID[3];
     
     friend bool operator==(const Face& lhs, const Face& rhs)
     {
-        if(lhs.vertexID[0] != rhs.vertexID[0] || lhs.vertexID[1] != rhs.vertexID[1] || lhs.vertexID[2] != rhs.vertexID[2])
-            return false;
-        
-        return true;
+		if(lhs.vertexID[0] == rhs.vertexID[0] && lhs.vertexID[1] == rhs.vertexID[1] && lhs.vertexID[2] == rhs.vertexID[2])
+			return true;
+        return false;
     };
 };
 
 struct Mesh
 {
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> uvs;
-	std::vector<Face> faces;
+    std::vector<Vertex> vertices;
+    std::vector<Face> faces;
+	bool hasUVs;
 	
 	glm::vec3 computeFaceNormal(unsigned int faceID)
 	{
-		glm::vec3 v12 = vertices[faces[faceID].vertexID[1]] - vertices[faces[faceID].vertexID[0]];
-		glm::vec3 v13 = vertices[faces[faceID].vertexID[2]] - vertices[faces[faceID].vertexID[0]];
+		glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
+		glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
 		return glm::normalize(glm::cross(v12,v13));
 	}
+};
+
+struct Object
+{
+	Mesh* mesh;
+	GLuint vao;
+	GLuint vboVertex;
+	GLuint vboIndex;
 };
 
 //Rendering styles
@@ -70,8 +88,19 @@ public:
 	static OpenGLContent* getInstance(); //Singleton
 	static void Destroy();
 	
-	unsigned int BuildObject(Mesh* mesh);
+	//Deprecated
+	void SetupOrtho();
+    
+	void Init();
+	void DestroyContent();
+	
+	//Draw
 	void DrawObject(int modelId, int lookId, btScalar* transform);
+	void DrawSAQ();
+	void DrawCoordSystem(GLfloat size);
+	
+	//Allocate and build content
+	unsigned int BuildObject(Mesh* mesh);
 	unsigned int CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName = NULL, GLfloat textureMixFactor = GLfloat(1.0f));
 	void UseLook(unsigned int lookId);
 	
@@ -91,8 +120,9 @@ public:
 	
 private:
 	//Data
-	std::vector<GLuint> objects; //VBAs
+	std::vector<Object> objects; //VBAs
 	std::vector<Look> looks; //OpenGL materials
+	GLuint saq; //screen-aligned quad VBO
 
 	//Singleton
 	OpenGLContent();

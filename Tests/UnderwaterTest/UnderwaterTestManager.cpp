@@ -18,7 +18,7 @@
 #include "OpenGLOmniLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 #include "Accelerometer.h"
 #include "ADC.h"
 #include "Ocean.h"
@@ -73,11 +73,15 @@ void UnderwaterTestManager::BuildScenario()
     AddSystemEntity(rov, btTransform(btQuaternion(0.1,0,0), btVector3(0,0,0)));
     */
 	
+	//////////////////////////////////////////////////////////////
+	//OBLICZANIE AABB DLA UNDERWATERVEHICLE -> POPRAWNE CIENIE!!!!
+	/////////////////////////////////////////
+	
 	Box* box = new Box("Box", btVector3(1.,1.,1.), getMaterialManager()->getMaterial("Cork"), green);
 	AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
 	
-	Sphere* sphere = new Sphere("Sphere", 0.5, getMaterialManager()->getMaterial("Cork"), green);
-	AddSolidEntity(sphere, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-2.)));
+	//Sphere* sphere = new Sphere("Sphere", 0.5, getMaterialManager()->getMaterial("Cork"), green);
+	//AddSolidEntity(sphere, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-2.)));
 	
 	Cylinder* cylinder = new Cylinder("Cylinder", 0.5, 1., getMaterialManager()->getMaterial("Cork"), green);
 	AddSolidEntity(cylinder, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-4.)));

@@ -9,10 +9,11 @@
 #include "OpenGLContent.h"
 #include "OpenGLGBuffer.h"
 #include "Console.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "SimulationApp.h"
 #include <map>
+#include <algorithm>
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
@@ -34,60 +35,122 @@ void OpenGLContent::Destroy()
 
 OpenGLContent::OpenGLContent()
 {
+	saq = 0;
 }
 
 OpenGLContent::~OpenGLContent()
 {
-	for(int i=0; i<looks.size();++i)
+	if(saq != 0)
+		glDeleteBuffers(1,&saq);
+}
+
+void OpenGLContent::DestroyContent()
+{
+	for(unsigned int i=0; i<looks.size();++i)
 		if(looks[i].texture != 0)
 			glDeleteTextures(1, &looks[i].texture);
 	looks.clear();
 			
-	for(int i=0; i<objects.size();++i)
-		//glDeleteBuffers(1, &objects[i]);
-		glDeleteLists(objects[i], 1);
+	for(unsigned int i=0; i<objects.size();++i)
+	{
+		glDeleteBuffers(1, &objects[i].vboVertex);
+		glDeleteBuffers(1, &objects[i].vboIndex);
+		glDeleteVertexArrays(1, &objects[i].vao);
+	}	
 	objects.clear();
+}
+
+void OpenGLContent::Init()
+{
+	//Build screen-aligned quad VBO
+	GLfloat saqData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
+							 { 1.f, -1.f, 1.f, 0.f},
+							 {-1.f,  1.f, 0.f, 1.f},
+							 { 1.f,  1.f, 1.f, 1.f}};
+	
+	glGenBuffers(1, &saq); 
+	glBindBuffer(GL_ARRAY_BUFFER, saq); 
+	glBufferData(GL_ARRAY_BUFFER, sizeof(saqData), saqData, GL_STATIC_DRAW); 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void OpenGLContent::DrawSAQ()
+{
+	if(saq != 0)
+	{
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, saq); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), NULL);
+ 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glDisableVertexAttribArray(0);
+	}
 }
 
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 {
-	GLuint list = glGenLists(1);
-	glNewList(list, GL_COMPILE);
-    glBegin(GL_TRIANGLES);
-    for(int h=0; h<mesh->faces.size(); h++)
-    {
-        if(mesh->uvs.size() > 0)
-        {
-			glNormal3fv(&(mesh->normals[mesh->faces[h].normalID[0]])[0]);
-            glTexCoord2fv(&(mesh->uvs[mesh->faces[h].uvID[0]])[0]);
-			glVertex3fv(&(mesh->vertices[mesh->faces[h].vertexID[0]])[0]);
-            
-			glNormal3fv(&(mesh->normals[mesh->faces[h].normalID[1]])[0]);
-            glTexCoord2fv(&(mesh->uvs[mesh->faces[h].uvID[1]])[0]);
-			glVertex3fv(&(mesh->vertices[mesh->faces[h].vertexID[1]])[0]);
-          
-			glNormal3fv(&(mesh->normals[mesh->faces[h].normalID[2]])[0]);
-            glTexCoord2fv(&(mesh->uvs[mesh->faces[h].uvID[2]])[0]);
-			glVertex3fv(&(mesh->vertices[mesh->faces[h].vertexID[2]])[0]);
-        }
-        else
-        {
-            glNormal3fv(&(mesh->normals[mesh->faces[h].normalID[0]])[0]);
-			glVertex3fv(&(mesh->vertices[mesh->faces[h].vertexID[0]])[0]);
-            
-			glNormal3fv(&(mesh->normals[mesh->faces[h].normalID[1]])[0]);
-			glVertex3fv(&(mesh->vertices[mesh->faces[h].vertexID[1]])[0]);
-          
-			glNormal3fv(&(mesh->normals[mesh->faces[h].normalID[2]])[0]);
-			glVertex3fv(&(mesh->vertices[mesh->faces[h].vertexID[2]])[0]);
-        }
-    }
-    glEnd();
-    glEndList();
+	Object obj;
+	obj.mesh = mesh;
+	GLenum error = glGetError();
 	
-	objects.push_back(list);
+	glGenVertexArrays(1, &obj.vao);
+	glGenBuffers(1, &obj.vboVertex);
+	glGenBuffers(1, &obj.vboIndex);
 	
+	glBindVertexArray(obj.vao);	
+	glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+	/*glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)0);   //The starting point of the VBO, for the vertices
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)12);   //The starting point of normals, 12 bytes away
+	glClientActiveTexture(GL_TEXTURE0);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (void*)24);   //The starting point of texcoords, 24 bytes away
+  */
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
+	glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(8);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+	glBindVertexArray(0);
+	
+	error = glGetError();
+	
+	if(error != GL_NO_ERROR)
+	{
+		printf("OpenGL: %s\n", gluErrorString(error));
+	}
+	
+	objects.push_back(obj);
 	return objects.size()-1;
+}
+
+void OpenGLContent::DrawObject(int objectId, int lookId, btScalar* transform)
+{
+	if(objectId >= 0 && objectId < objects.size()) //Check if object exists
+	{
+		glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+		glMultMatrixd(transform);
+#else
+		glMultMatrixf(transform);
+#endif
+		if(lookId >= 0 && lookId < looks.size())
+			UseLook(lookId);
+		else
+			UseStandardLook();
+	
+		glBindVertexArray(objects[objectId].vao);
+		glDrawElements(GL_TRIANGLES, 3 * objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		glPopMatrix();
+	}
 }
 
 unsigned int OpenGLContent::CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName, GLfloat textureMixFactor)
@@ -147,24 +210,31 @@ void OpenGLContent::UseStandardLook()
     OpenGLGBuffer::SetUniformMaterialData(materialData);
 }
 
-void OpenGLContent::DrawObject(int objectId, int lookId, btScalar* transform)
+void OpenGLContent::SetupOrtho()
 {
-	if(objectId >= 0 && objectId < objects.size()) //Check if object exists
-	{
-		glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-		glMultMatrixd(transform);
-#else
-		glMultMatrixf(transform);
-#endif
-		if(lookId >= 0 && lookId < looks.size())
-			UseLook(lookId);
-		else
-			UseStandardLook();
-		
-		glCallList(objects[objectId]);
-		glPopMatrix();
-	}
+    glMatrixMode(GL_PROJECTION);
+    glm::mat4 proj = glm::ortho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f);
+    glLoadMatrixf(glm::value_ptr(proj));
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+void OpenGLContent::DrawCoordSystem(GLfloat size)
+{
+    glBegin(GL_LINES);
+    glXAxisColor();
+    glVertex3f(0, 0, 0);
+    glVertex3f(size, 0, 0);
+    
+    glYAxisColor();
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, size, 0);
+    
+    glZAxisColor();
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, size);
+    glEnd();
 }
 
 //Static methods
@@ -222,26 +292,23 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
     
 	Mesh* mesh = new Mesh;
+	mesh->hasUVs = true;
     Face f;
-    glm::vec3 v;
-	glm::vec2 uv;
-    
+    Vertex vt;
+	
 	//Only one normal
-	mesh->normals.push_back(glm::vec3(0,0,(zUp ? 1.f : -1.f)));
-	f.normalID[0] = f.normalID[1] = f.normalID[2] = 0;
+	vt.normal = glm::vec3(0,0,(zUp ? 1.f : -1.f));
 			
 	for(unsigned int i=0; i<=vDiv; ++i)
     {
-        uv.y = (GLfloat)i/(GLfloat)vDiv*(GLfloat)(halfExtents*2.f);
-		v.y = -halfExtents + uv.y;
+        vt.uv.y = (GLfloat)i/(GLfloat)vDiv*(GLfloat)(halfExtents*2.f);
+		vt.pos.y = -halfExtents + vt.uv.y;
 		
         for(unsigned int h=0; h<=uDiv; ++h)
         {
-            uv.x = (GLfloat)h/(GLfloat)uDiv*(GLfloat)(halfExtents*2.f);
-            v.x = -halfExtents + uv.x;
-			
-			mesh->vertices.push_back(v);
-			mesh->uvs.push_back(uv);
+            vt.uv.x = (GLfloat)h/(GLfloat)uDiv*(GLfloat)(halfExtents*2.f);
+            vt.pos.x = -halfExtents + vt.uv.x;
+			mesh->vertices.push_back(vt);
         }
 	}
 	
@@ -253,18 +320,12 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 			f.vertexID[0] = i*(uDiv+1) + h;
 			f.vertexID[1] = i*(uDiv+1) + h + 1;
 			f.vertexID[2] = (i+1)*(uDiv+1) + h;
-			f.uvID[0] = f.vertexID[0];
-			f.uvID[1] = f.vertexID[1];
-			f.uvID[2] = f.vertexID[2];
 			mesh->faces.push_back(f);
 			
 			//Triangle 2
 			f.vertexID[0] = i*(uDiv+1) + h + 1;
 			f.vertexID[1] = (i+1)*(uDiv+1) + h + 1;
 			f.vertexID[2] = (i+1)*(uDiv+1) + h;
-			f.uvID[0] = f.vertexID[0];
-			f.uvID[1] = f.vertexID[1];
-			f.uvID[2] = f.vertexID[2];
 			mesh->faces.push_back(f);
 		}
 	}
@@ -277,116 +338,145 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
     //Build mesh
     Mesh* mesh = new Mesh();
     Face f;
-    glm::vec3 v;
-	glm::vec3 n;
-    
+    Vertex vt;
+	mesh->hasUVs = false;
+	vt.uv = glm::vec2(0,0);
+	
     /////VERTICES
-	v = glm::vec3(-halfExtents.x, -halfExtents.y, -halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(-halfExtents.x, halfExtents.y, -halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(halfExtents.x, halfExtents.y, -halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(halfExtents.x, -halfExtents.y, -halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(halfExtents.x, halfExtents.y, halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(halfExtents.x, -halfExtents.y, halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(-halfExtents.x, -halfExtents.y, halfExtents.z);
-    mesh->vertices.push_back(v);
-    v = glm::vec3(-halfExtents.x, halfExtents.y, halfExtents.z);
-    mesh->vertices.push_back(v);
+	glm::vec3 v1(-halfExtents.x, -halfExtents.y, -halfExtents.z);
+    glm::vec3 v2(-halfExtents.x, halfExtents.y, -halfExtents.z);
+    glm::vec3 v3(halfExtents.x, halfExtents.y, -halfExtents.z);
+    glm::vec3 v4(halfExtents.x, -halfExtents.y, -halfExtents.z);
+    glm::vec3 v5(halfExtents.x, halfExtents.y, halfExtents.z);
+    glm::vec3 v6(halfExtents.x, -halfExtents.y, halfExtents.z);
+	glm::vec3 v7(-halfExtents.x, -halfExtents.y, halfExtents.z);
+    glm::vec3 v8(-halfExtents.x, halfExtents.y, halfExtents.z);
     
     /////FRONT
     //normal
-    mesh->normals.push_back(glm::vec3(0,0,-1.f));
-    //faces
-    f.vertexID[0] = 0;
-    f.vertexID[1] = 1;
-    f.vertexID[2] = 2;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = 0;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 0;
-    f.vertexID[1] = 2;
-    f.vertexID[2] = 3;
+	vt.normal = glm::vec3(0,0,-1.f);
+    //vertices
+    vt.pos = v1;
+	mesh->vertices.push_back(vt); //0
+	vt.pos = v2;
+	mesh->vertices.push_back(vt); //1
+	vt.pos = v3;
+	mesh->vertices.push_back(vt); //2
+	vt.pos = v4;
+	mesh->vertices.push_back(vt); //3
+	//faces
+	f.vertexID[0] = 0;
+	f.vertexID[1] = 1;
+	f.vertexID[2] = 2;
+	mesh->faces.push_back(f);
+	f.vertexID[1] = 2;
+	f.vertexID[2] = 3;
     mesh->faces.push_back(f);
     
     /////LEFT
     //normal
-    mesh->normals.push_back(glm::vec3(1.f,0,0));
-    //faces
-    f.vertexID[0] = 3;
-    f.vertexID[1] = 2;
-    f.vertexID[2] = 4;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = 1;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 3;
-    f.vertexID[1] = 4;
-    f.vertexID[2] = 5;
-    mesh->faces.push_back(f);
-    
+	vt.normal =  glm::vec3(1.f,0,0);
+    //vertices
+	vt.pos = v4;
+	mesh->vertices.push_back(vt); //4
+	vt.pos = v3;
+	mesh->vertices.push_back(vt); //5
+	vt.pos = v5;
+	mesh->vertices.push_back(vt); //6
+	vt.pos = v6;
+	mesh->vertices.push_back(vt); //7
+	//faces
+	f.vertexID[0] = 4;
+	f.vertexID[1] = 5;
+	f.vertexID[2] = 6;
+	mesh->faces.push_back(f);
+	f.vertexID[1] = 6;
+	f.vertexID[2] = 7;
+	mesh->faces.push_back(f);
+	
     /////RIGHT
     //normal
-    mesh->normals.push_back(glm::vec3(-1.f,0,0));
-    //faces
-    f.vertexID[0] = 6;
-    f.vertexID[1] = 7;
-    f.vertexID[2] = 1;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = 2;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 6;
-    f.vertexID[1] = 1;
-    f.vertexID[2] = 0;
-    mesh->faces.push_back(f);
-    
+	vt.normal = glm::vec3(-1.f,0,0);
+	//vertices
+	vt.pos = v7;
+	mesh->vertices.push_back(vt); //8
+	vt.pos = v8;
+	mesh->vertices.push_back(vt); //9
+	vt.pos = v2;
+	mesh->vertices.push_back(vt); //10
+	vt.pos = v1;
+	mesh->vertices.push_back(vt); //11
+	//faces
+	f.vertexID[0] = 8;
+	f.vertexID[1] = 9;
+	f.vertexID[2] = 10;
+	mesh->faces.push_back(f);
+	f.vertexID[1] = 10;
+	f.vertexID[2] = 11;
+	mesh->faces.push_back(f);
+	
     /////BACK
     //normal
-    mesh->normals.push_back(glm::vec3(0,0,1.f));
-    //faces
-    f.vertexID[0] = 5;
-    f.vertexID[1] = 4;
-    f.vertexID[2] = 7;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = 3;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 5;
-    f.vertexID[1] = 7;
-    f.vertexID[2] = 6;
-    mesh->faces.push_back(f);
-    
+    vt.normal = glm::vec3(0,0,1.f);
+	//vertices
+	vt.pos = v6;
+	mesh->vertices.push_back(vt); //12
+	vt.pos = v5;
+	mesh->vertices.push_back(vt); //13
+	vt.pos = v8;
+	mesh->vertices.push_back(vt); //14
+	vt.pos = v7;
+	mesh->vertices.push_back(vt); //15
+	//faces
+	f.vertexID[0] = 12;
+	f.vertexID[1] = 13;
+	f.vertexID[2] = 14;
+	mesh->faces.push_back(f);
+	f.vertexID[1] = 14;
+	f.vertexID[2] = 15;
+	mesh->faces.push_back(f);
+	
     //////TOP
     //normal
-    mesh->normals.push_back(glm::vec3(0,1.f,0));
-    //faces
-    f.vertexID[0] = 4;
-    f.vertexID[1] = 2;
-    f.vertexID[2] = 1;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = 4;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 4;
-    f.vertexID[1] = 1;
-    f.vertexID[2] = 7;
-    mesh->faces.push_back(f);
-    
+    vt.normal = glm::vec3(0,1.f,0);
+	//vertices
+	vt.pos = v5;
+	mesh->vertices.push_back(vt); //16
+	vt.pos = v3;
+	mesh->vertices.push_back(vt); //17
+	vt.pos = v2;
+	mesh->vertices.push_back(vt); //18
+	vt.pos = v8;
+	mesh->vertices.push_back(vt); //19
+	//faces
+	f.vertexID[0] = 16;
+	f.vertexID[1] = 17;
+	f.vertexID[2] = 18;
+	mesh->faces.push_back(f);
+	f.vertexID[1] = 18;
+	f.vertexID[2] = 19;
+	mesh->faces.push_back(f);
+	
     /////BOTTOM
     //normal
-    mesh->normals.push_back(glm::vec3(0,-1.f,0));
-    //faces
-    f.vertexID[0] = 3;
-    f.vertexID[1] = 5;
-    f.vertexID[2] = 6;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = 5;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 3;
-    f.vertexID[1] = 6;
-    f.vertexID[2] = 0;
-    mesh->faces.push_back(f);
+    vt.normal = glm::vec3(0,-1.f,0);
+    //vertices
+	vt.pos = v4;
+	mesh->vertices.push_back(vt); //20
+	vt.pos = v6;
+	mesh->vertices.push_back(vt); //21
+	vt.pos = v7;
+	mesh->vertices.push_back(vt); //22
+	vt.pos = v1;
+	mesh->vertices.push_back(vt); //23
+	//faces
+	f.vertexID[0] = 20;
+	f.vertexID[1] = 21;
+	f.vertexID[2] = 22;
+	mesh->faces.push_back(f);
+	f.vertexID[1] = 22;
+	f.vertexID[2] = 23;
+	mesh->faces.push_back(f);
 	
 	for(unsigned int i=0; i<subdivisions; ++i)
 		Subdivide(mesh);
@@ -400,43 +490,55 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
 {
 	Mesh* mesh = new Mesh;
     Face f;
-    glm::vec3 v;
+    Vertex vt;
+	vt.normal = glm::vec3(1,0,0);
+	mesh->hasUVs = false;
+	vt.uv = glm::vec2(0,0);
     
     //Basuc icosahedron
 	const GLfloat X = -.525731112119133606f;
 	const GLfloat Z = -.850650808352039932f;
 	const GLfloat N = 0.f;
 	
-	v = glm::vec3(-X,N,Z);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(X,N,Z);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(-X,N,-Z);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(X,N,-Z);
-	mesh->vertices.push_back(v);
+	vt.pos = glm::vec3(-X,N,Z);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(X,N,Z);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(-X,N,-Z);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(X,N,-Z);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
 	
-    v = glm::vec3(N,Z,X);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(N,Z,-X);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(N,-Z,X);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(N,-Z,-X);
-	mesh->vertices.push_back(v);
+    vt.pos = glm::vec3(N,Z,X);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(N,Z,-X);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(N,-Z,X);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(N,-Z,-X);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
 	
-	v = glm::vec3(Z,X,N);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(-Z,X,N);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(Z,-X,N);
-	mesh->vertices.push_back(v);
-    v = glm::vec3(-Z,-X,N);
-	mesh->vertices.push_back(v);
+	vt.pos = glm::vec3(Z,X,N);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(-Z,X,N);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(Z,-X,N);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(-Z,-X,N);
+	vt.normal = vt.pos;
+	mesh->vertices.push_back(vt);
     
-	f.normalID[0] = f.normalID[1] = f.normalID[2] = 0;
-	f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-	
 	f.vertexID[0] = 0;
 	f.vertexID[1] = 4;
 	f.vertexID[2] = 1;
@@ -524,10 +626,7 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
 		
 	//Scale by radius
 	for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-		mesh->vertices[i] *= radius;
-	
-	//Generate smooth normals
-	SmoothNormals(mesh);
+		mesh->vertices[i].pos *= radius;
 	
 	return mesh;
 }
@@ -536,111 +635,109 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
 {
     Mesh* mesh = new Mesh;
     GLfloat halfHeight = height/2.f;
+	Vertex vt;
+	Face f;
 	
-    //vertices
+	mesh->hasUVs = false;
+	vt.uv = glm::vec2(0,0);
+	
+	//SIDE
+    //Side vertices
     for(unsigned int i=0; i<slices; ++i)
     {
-        glm::vec3 v(sin(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
-        mesh->vertices.push_back(v);
-		v.y = -halfHeight;
-        mesh->vertices.push_back(v);
-		
-		glm::vec3 n(sin(i/(GLfloat)slices*M_PI*2.0), 0.0, cos(i/(GLfloat)slices*M_PI*2.0));
-        mesh->normals.push_back(n);
+		vt.normal = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0), 0.0, cos(i/(GLfloat)slices*M_PI*2.0));
+		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
+        mesh->vertices.push_back(vt);
+		vt.pos.y = -halfHeight;
+        mesh->vertices.push_back(vt);
     }
     
-    //faces
-    //SIDE
+    //Side faces
     for(unsigned int i=0; i<slices-1; ++i)
     {
-        Face f;
         f.vertexID[0] = i*2;
         f.vertexID[1] = i*2+1;
         f.vertexID[2] = i*2+2;
-        f.normalID[0] = f.vertexID[0]/2;
-		f.normalID[1] = f.vertexID[1]/2;
-		f.normalID[2] = f.vertexID[2]/2;
-        f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
         mesh->faces.push_back(f);
         f.vertexID[0] = i*2+1;
         f.vertexID[1] = i*2+3;
         f.vertexID[2] = i*2+2;
-        f.normalID[0] = f.vertexID[0]/2;
-		f.normalID[1] = f.vertexID[1]/2;
-		f.normalID[2] = f.vertexID[2]/2;
         mesh->faces.push_back(f);
     }
     
-    glm::vec3 n(sin((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), 0.0, cos((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0));
-    mesh->normals.push_back(n);
-    
-    Face f;
+	//Last side
     int i = slices-1;
+	vt.normal = glm::vec3(sin((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), 0.0, cos((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0));
     f.vertexID[0] = i*2;
     f.vertexID[1] = i*2+1;
     f.vertexID[2] = 0;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = i;
-    f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
     mesh->faces.push_back(f);
     f.vertexID[0] = i*2+1;
     f.vertexID[1] = 1;
     f.vertexID[2] = 0;
     mesh->faces.push_back(f);
     
-    //CAPS
-    n = glm::vec3(0,1.f,0);
-    mesh->normals.push_back(n);
-    n = glm::vec3(0,-1.f,0);
-    mesh->normals.push_back(n);
-    int n1index = mesh->normals.size()-2;
-    int n2index = n1index+1;
-	
-    glm::vec3 v(0, halfHeight, 0);
-    mesh->vertices.push_back(v);
-    mesh->vertices.push_back(-v);
-    int v1index = mesh->vertices.size()-2;
-    int v2index = v1index+1;
-    
-    for(unsigned int i=0; i<slices-1; ++i)
+    //TOP CAP
+    vt.normal = glm::vec3(0,1.f,0);
+	vt.pos = glm::vec3(0,halfHeight,0);
+	mesh->vertices.push_back(vt);
+	unsigned int centerIndex = mesh->vertices.size()-1;
+	//vertices
+	for(unsigned int i=0; i<slices; ++i)
     {
-        Face f;
-        f.vertexID[0] = i*2;
-        f.vertexID[1] = (i+1)*2;
-        f.vertexID[2] = v1index;
-        f.normalID[0] = f.normalID[1] = f.normalID[2] = n1index;
-        f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-        mesh->faces.push_back(f);
-        f.vertexID[0] = (i+1)*2+1;
-        f.vertexID[1] = i*2+1;
-        f.vertexID[2] = v2index;
-        f.normalID[0] = f.normalID[1] = f.normalID[2] = n2index;
-        mesh->faces.push_back(f);
+		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
+        mesh->vertices.push_back(vt);
     }
-    
-    i = slices-1;
-    f.vertexID[0] = i*2;
-    f.vertexID[1] = 0;
-    f.vertexID[2] = v1index;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = n1index;
-	f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
-    mesh->faces.push_back(f);
-    f.vertexID[0] = 1;
-    f.vertexID[1] = i*2+1;
-    f.vertexID[2] = v2index;
-    f.normalID[0] = f.normalID[1] = f.normalID[2] = n2index;
-    mesh->faces.push_back(f);
+	//faces
+	for(unsigned int i=0; i<slices-1; ++i)
+	{
+		f.vertexID[0] = centerIndex;
+		f.vertexID[1] = centerIndex + i + 1;
+		f.vertexID[2] = centerIndex + i + 2;
+		mesh->faces.push_back(f);
+	}
+	//last face
+	f.vertexID[0] = centerIndex;
+	f.vertexID[1] = centerIndex + slices-1 + 1;
+	f.vertexID[2] = centerIndex + 1;
+	mesh->faces.push_back(f);
+	
+	//BOTTOM CAP
+    vt.normal = glm::vec3(0,-1.f,0);
+	vt.pos = glm::vec3(0,-halfHeight,0);
+	mesh->vertices.push_back(vt);
+	centerIndex = mesh->vertices.size()-1;
+	//vertices
+	for(unsigned int i=0; i<slices; ++i)
+    {
+		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
+        mesh->vertices.push_back(vt);
+    }
+	//faces
+	for(unsigned int i=0; i<slices-1; ++i)
+	{
+		f.vertexID[0] = centerIndex;
+		f.vertexID[1] = centerIndex+ i + 2;
+		f.vertexID[2] = centerIndex+ i + 1;
+		mesh->faces.push_back(f);
+	}
+	//last face
+	f.vertexID[0] = centerIndex;
+	f.vertexID[1] = centerIndex + 1;
+	f.vertexID[2] = centerIndex + slices-1 + 1;
+	mesh->faces.push_back(f);
 	
 	Subdivide(mesh);
 	Subdivide(mesh);
-	SmoothNormals(mesh);
-    	
 	return mesh;
 }
 
 Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices, unsigned int minorSlices)
 {
 	Mesh* mesh = new Mesh;
+	mesh->hasUVs = true;
 	Face f;
+	Vertex vt;
 
 	for(unsigned int i=0; i<majorSlices; ++i)
     {
@@ -651,35 +748,20 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
             GLfloat ry = cosf(h/(GLfloat)minorSlices*M_PI*2.f) * minorRadius;
             GLfloat rx = sinf(h/(GLfloat)minorSlices*M_PI*2.f) * minorRadius;
             
-			glm::vec3 v((rx + majorRadius)*cosf(alpha), ry, (rx + majorRadius)*sinf(alpha));
-			glm::vec3 n(sinf(h/(GLfloat)minorSlices*M_PI*2.f)*cosf(alpha), cosf(h/(GLfloat)minorSlices*M_PI*2.f), sinf(h/(GLfloat)minorSlices*M_PI*2.f)*sinf(alpha));
-			glm::vec2 uv(4.f * h/(GLfloat)minorSlices, (GLfloat)minorSlices * i/(GLfloat)majorSlices);
-			
-			mesh->vertices.push_back(v);
-			mesh->normals.push_back(n);
-			mesh->uvs.push_back(uv);
+			vt.pos = glm::vec3((rx + majorRadius)*cosf(alpha), ry, (rx + majorRadius)*sinf(alpha));
+			vt.normal = glm::vec3(sinf(h/(GLfloat)minorSlices*M_PI*2.f)*cosf(alpha), cosf(h/(GLfloat)minorSlices*M_PI*2.f), sinf(h/(GLfloat)minorSlices*M_PI*2.f)*sinf(alpha));
+			vt.uv = glm::vec2(4.f * h/(GLfloat)minorSlices, (GLfloat)minorSlices * i/(GLfloat)majorSlices);
+			mesh->vertices.push_back(vt);
 			
 			if(h<minorSlices-1 && i<majorSlices-1)
 			{
 				f.vertexID[0] = i*minorSlices + h;
 				f.vertexID[1] = (i+1)*minorSlices + h;
 				f.vertexID[2] = i*minorSlices + (h+1);
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 				f.vertexID[0] = (i+1)*minorSlices + h;
 				f.vertexID[1] = (i+1)*minorSlices + (h+1);
 				f.vertexID[2] = i*minorSlices + (h+1);
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 			}
 			else if(i<majorSlices-1) //Last patch in the middle slice of torus
@@ -687,22 +769,10 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 				f.vertexID[0] = i*minorSlices + h;
 				f.vertexID[1] = (i+1)*minorSlices + h;
 				f.vertexID[2] = i*minorSlices;
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 				f.vertexID[0] = (i+1)*minorSlices + h;
 				f.vertexID[1] = (i+1)*minorSlices;
 				f.vertexID[2] = i*minorSlices;
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 			}
 			else if(h<minorSlices-1) //Middle patch in the last slice of torus
@@ -710,22 +780,10 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 				f.vertexID[0] = i*minorSlices + h;
 				f.vertexID[1] = h;
 				f.vertexID[2] = i*minorSlices + (h+1);
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 				f.vertexID[0] = h;
 				f.vertexID[1] = h+1;
 				f.vertexID[2] = i*minorSlices + (h+1);
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 			}
 			else //Last patch in the last slice of torus
@@ -733,22 +791,10 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 				f.vertexID[0] = i*minorSlices + h;
 				f.vertexID[1] = h;
 				f.vertexID[2] = i*minorSlices;
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 				f.vertexID[0] = h;
 				f.vertexID[1] = 0;
 				f.vertexID[2] = i*minorSlices;
-				f.normalID[0] = f.vertexID[0];
-				f.normalID[1] = f.vertexID[1];
-				f.normalID[2] = f.vertexID[2];
-				f.uvID[0] = f.vertexID[0];
-				f.uvID[1] = f.vertexID[1];
-				f.uvID[2] = f.vertexID[2];
 				mesh->faces.push_back(f);
 			}
 	    }
@@ -785,7 +831,11 @@ Mesh* OpenGLContent::LoadOBJ(const char *filename, btScalar scale, bool smooth)
     char line[256];
     char c1, c2;
     Mesh* mesh = new Mesh();
-    bool normals = false, uvs = false;
+    bool hasNormals = false, hasUvs = false;
+	
+	std::vector<glm::vec3> positions;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> uvs;
     
     //Read file
     while(fgets(line, 256, file))
@@ -798,70 +848,99 @@ Mesh* OpenGLContent::LoadOBJ(const char *filename, btScalar scale, bool smooth)
                 glm::vec3 v;
                 sscanf(line, "v %f %f %f\n", &v.x, &v.y, &v.z);
                 v *= scale;
-                mesh->vertices.push_back(v);
+                positions.push_back(v);
             }
             else if(c2 == 'n')
             {
                 glm::vec3 n;
                 sscanf(line, "vn %f %f %f\n", &n.x, &n.y, &n.z);
-                mesh->normals.push_back(n);
-                normals = true;
+                normals.push_back(n);
+                hasNormals = true;
             }
             else if(c2 == 't')
             {
                 glm::vec2 uv;
                 sscanf(line, "vt %f %f\n", &uv.x, &uv.y);
-                mesh->uvs.push_back(uv);
-                uvs = true;
+                uvs.push_back(uv);
+                hasUvs = true;
             }
         }
         else if(c1 == 'f')
         {
             Face face;
-       
-            if(normals && uvs)
+			Vertex v;
+				
+            if(hasNormals && hasUvs)
             {
-                sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &face.vertexID[0], &face.uvID[0], &face.normalID[0], &face.vertexID[1], &face.uvID[1], &face.normalID[1], &face.vertexID[2], &face.uvID[2], &face.normalID[2]);
-                face.vertexID[0] -= 1;
-                face.vertexID[1] -= 1;
-                face.vertexID[2] -= 1;
-                face.uvID[0] -= 1;
-                face.uvID[1] -= 1;
-                face.uvID[2] -= 1;
-                face.normalID[0] -= 1;
-                face.normalID[1] -= 1;
-                face.normalID[2] -= 1;
+				unsigned int vID[3];
+				unsigned int uvID[3];
+				unsigned int nID[3];
+				sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
+                
+				for(short unsigned int i=0; i<3; ++i)
+				{
+					v.pos = positions[vID[i]-1];
+					v.normal = normals[nID[i]-1];
+					v.uv = uvs[uvID[i]-1];
+					
+					std::vector<Vertex>::iterator it;
+					if((it = std::find(mesh->vertices.begin(), mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
+					{
+						face.vertexID[i] = it-mesh->vertices.begin();
+					}
+					else //Create new vertex
+					{
+						mesh->vertices.push_back(v);
+						face.vertexID[i] = mesh->vertices.size()-1;
+					}
+				}
             }
-            else if(normals)
+            else if(hasNormals)
             {
-                sscanf(line, "f %u//%u %u//%u %u//%u\n", &face.vertexID[0], &face.normalID[0], &face.vertexID[1], &face.normalID[1], &face.vertexID[2], &face.normalID[2]);
-                face.vertexID[0] -= 1;
-                face.vertexID[1] -= 1;
-                face.vertexID[2] -= 1;
-                face.uvID[0] = face.uvID[1] = face.uvID[2] = 0;
-                face.normalID[0] -= 1;
-                face.normalID[1] -= 1;
-                face.normalID[2] -= 1;
+				unsigned int vID[3];
+				unsigned int nID[3];
+				v.uv = glm::vec2(0,0);
+                sscanf(line, "f %u//%u %u//%u %u//%u\n", &vID[0], &nID[0], &vID[1], &nID[1], &vID[2], &nID[2]);
+                
+				for(short unsigned int i=0; i<3; ++i)
+				{
+					v.pos = positions[vID[i]-1];
+					v.normal = normals[nID[i]-1];
+					
+					std::vector<Vertex>::iterator it;
+					if((it = std::find(mesh->vertices.begin(), mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
+					{
+						face.vertexID[i] = it-mesh->vertices.begin();
+					}
+					else //Create new vertex
+					{
+						mesh->vertices.push_back(v);
+						face.vertexID[i] = mesh->vertices.size()-1;
+					}
+				}
             }
             else
             {
-                sscanf(line, "f %u %u %u\n", &face.vertexID[0], &face.vertexID[1], &face.vertexID[2]);
-                face.vertexID[0] -= 1;
-                face.vertexID[1] -= 1;
-                face.vertexID[2] -= 1;
-                face.uvID[0] = face.uvID[1] = face.uvID[2] = 0;
+				unsigned int vID[3];
+				v.normal = glm::vec3(1,0,0);
+				v.uv = glm::vec2(0,0);
+                sscanf(line, "f %u %u %u\n", &vID[0], &vID[1], &vID[2]);
                 
-                glm::vec3 v1(mesh->vertices[face.vertexID[1]].x - mesh->vertices[face.vertexID[0]].x,
-							 mesh->vertices[face.vertexID[1]].y - mesh->vertices[face.vertexID[0]].y,
-							 mesh->vertices[face.vertexID[1]].z - mesh->vertices[face.vertexID[0]].z);
-                
-                glm::vec3 v2(mesh->vertices[face.vertexID[2]].x - mesh->vertices[face.vertexID[0]].x,
-							 mesh->vertices[face.vertexID[2]].y - mesh->vertices[face.vertexID[0]].y,
-							 mesh->vertices[face.vertexID[2]].z - mesh->vertices[face.vertexID[0]].z);
-                
-				glm::vec3 n = glm::normalize(glm::cross(v1,v2));
-                mesh->normals.push_back(n);
-                face.normalID[0] = face.normalID[1] = face.normalID[2] = mesh->normals.size()-1;
+				for(short unsigned int i=0; i<3; ++i)
+				{
+					v.pos = positions[vID[i]-1];
+					
+					std::vector<Vertex>::iterator it;
+					if((it = std::find(mesh->vertices.begin(), mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
+					{
+						face.vertexID[i] = it-mesh->vertices.begin();
+					}
+					else //Create new vertex
+					{
+						mesh->vertices.push_back(v);
+						face.vertexID[i] = mesh->vertices.size()-1;
+					}
+				}
             }
             
             mesh->faces.push_back(face);
@@ -869,6 +948,8 @@ Mesh* OpenGLContent::LoadOBJ(const char *filename, btScalar scale, bool smooth)
     }
     
     fclose(file);
+	
+	mesh->hasUVs = hasUvs;
    
     if(smooth)
 		SmoothNormals(mesh);
@@ -885,34 +966,33 @@ Mesh* OpenGLContent::LoadSTL(const char *filename, btScalar scale, bool smooth)
     char line[256];
     char keyword[10];
     Mesh *mesh = new Mesh();
+	mesh->hasUVs = false;
     
+	Vertex vt;
+	vt.uv = glm::vec2(0,0);
+	
     while(fgets(line, 256, file))
     {
         sscanf(line, "%s", keyword);
         
         if(strcmp(keyword, "facet")==0)
         {
-            glm::vec3 n;
-            sscanf(line, " facet normal %f %f %f\n", &n.x, &n.y, &n.z);
-            mesh->normals.push_back(n);
+            sscanf(line, " facet normal %f %f %f\n", &vt.normal.x, &vt.normal.y, &vt.normal.z);
         }
         else if(strcmp(keyword, "vertex")==0)
         {
-            glm::vec3 v;
-            sscanf(line, " vertex %f %f %f\n", &v.x, &v.y, &v.z);
-			v *= scale;
-            mesh->vertices.push_back(v);
+			sscanf(line, " vertex %f %f %f\n", &vt.pos.x, &vt.pos.y, &vt.pos.z);
+			vt.pos *= scale;
+            mesh->vertices.push_back(vt);
         }
         else if(strcmp(keyword, "endfacet")==0)
         {
-            Face f;
-            uint32_t lastVertexIndex = mesh->vertices.size()-1;
-            uint32_t lastNormalIndex = mesh->normals.size()-1;
-            f.vertexID[0] = lastVertexIndex-2;
-            f.vertexID[1] = lastVertexIndex-1;
-            f.vertexID[2] = lastVertexIndex;
-            f.normalID[0] = f.normalID[1] = f.normalID[2] = lastNormalIndex;
-            f.uvID[0] = f.uvID[1] = f.uvID[2] = 0;
+            unsigned int lastVertexID = mesh->vertices.size()-1;
+            
+			Face f;
+            f.vertexID[0] = lastVertexID-2;
+            f.vertexID[1] = lastVertexID-1;
+            f.vertexID[2] = lastVertexID;
             mesh->faces.push_back(f);
         }
     }
@@ -929,16 +1009,14 @@ Mesh* OpenGLContent::LoadSTL(const char *filename, btScalar scale, bool smooth)
 
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
-    mesh->normals.clear();
-		
-	//for all faces
+	//For all faces
 	for(unsigned int i=0; i<mesh->faces.size(); ++i)
 	{
 		Face thisFace = mesh->faces[i];
 		glm::vec3 thisN = mesh->computeFaceNormal(i);
 						
 		//For every vertex
-		for(uint8_t h=0; h<3; ++h)
+		for(unsigned short int h=0; h<3; ++h)
 		{
 			glm::vec3 n = thisN;
 			unsigned int contrib = 1;
@@ -951,9 +1029,9 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
 					Face thatFace = mesh->faces[j];
 					glm::vec3 thatN = mesh->computeFaceNormal(j);
                         
-					for(uint8_t k=0; k<3; k++)
+					for(unsigned short int k=0; k<3; k++)
 					{	
-						if((thatFace.vertexID[k] == thisFace.vertexID[h])&&(glm::dot(thatN,thisN) > 0.707f))
+						if((mesh->vertices[thatFace.vertexID[k]].pos == mesh->vertices[thisFace.vertexID[h]].pos)&&(glm::dot(thatN,thisN) > 0.707f))
 						{
 							n += thatN;
 							contrib++;
@@ -964,8 +1042,7 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
 			}
                 
 			n /= (GLfloat)contrib;
-			mesh->normals.push_back(n);
-			mesh->faces[i].normalID[h] = mesh->normals.size()-1;
+			mesh->vertices[mesh->faces[i].vertexID[h]].normal = n;
 		}
 	}
 }
@@ -979,10 +1056,13 @@ GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh*
 	auto inserted=lookup.insert({key, mesh->vertices.size()});
 	if(inserted.second)
 	{
-		glm::vec3 edge0 = mesh->vertices[firstID];
-		glm::vec3 edge1 = mesh->vertices[secondID];
-		glm::vec3 point = glm::normalize(edge0 + edge1);
-		mesh->vertices.push_back(point);
+		glm::vec3 edge0 = mesh->vertices[firstID].pos;
+		glm::vec3 edge1 = mesh->vertices[secondID].pos;
+		Vertex vt;
+		vt.pos =  glm::normalize(edge0 + edge1);
+		vt.normal = vt.pos;
+		vt.uv = glm::vec2(0,0);
+		mesh->vertices.push_back(vt);
 	}
 	
 	return inserted.first->second;
@@ -997,10 +1077,18 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
 	auto inserted=lookup.insert({key, mesh->vertices.size()});
 	if(inserted.second)
 	{
-		glm::vec3 edge0 = mesh->vertices[firstID];
-		glm::vec3 edge1 = mesh->vertices[secondID];
-		glm::vec3 point = (edge0 + edge1)/(GLfloat)2;
-		mesh->vertices.push_back(point);
+		glm::vec3 edge0 = mesh->vertices[firstID].pos;
+		glm::vec3 edge1 = mesh->vertices[secondID].pos;
+		glm::vec3 edge0n = mesh->vertices[firstID].normal;
+		glm::vec3 edge1n = mesh->vertices[secondID].normal;
+		glm::vec2 edge0uv = mesh->vertices[firstID].uv;
+		glm::vec2 edge1uv = mesh->vertices[secondID].uv;
+		
+		Vertex vt;
+		vt.pos = (edge0 + edge1)/(GLfloat)2;
+		vt.normal = glm::normalize(edge0n + edge1n);
+		vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
+		mesh->vertices.push_back(vt);
 	}
 	
 	return inserted.first->second;
@@ -1059,7 +1147,7 @@ void OpenGLContent::AABB(Mesh* mesh, btVector3& min, btVector3& max)
     
     for(int i=0; i<mesh->vertices.size(); i++)
     {
-        glm::vec3 vertex = mesh->vertices[i];
+        glm::vec3 vertex = mesh->vertices[i].pos;
         
         if(vertex.x > maxX)
             maxX = vertex.x;
@@ -1089,7 +1177,7 @@ void OpenGLContent::AABS(Mesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffs
     glm::vec3 tempCenter(0,0,0);
     
     for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-        tempCenter += mesh->vertices[i];
+        tempCenter += mesh->vertices[i].pos;
     
     tempCenter /= (GLfloat)mesh->vertices.size();
     
@@ -1097,7 +1185,7 @@ void OpenGLContent::AABS(Mesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffs
     
     for(unsigned int i=0; i<mesh->vertices.size(); ++i)
     {
-        glm::vec3 v = mesh->vertices[i];
+        glm::vec3 v = mesh->vertices[i].pos;
         GLfloat r = glm::length(v-tempCenter);
         if(r > radius)
             radius = r;

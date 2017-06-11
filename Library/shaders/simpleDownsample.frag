@@ -21,5 +21,5 @@ void main(void)
                     sourceSample(vec2(2.5, 0.5)) +
                     sourceSample(vec2(0.5, 2.5)) +
                     sourceSample(vec2(2.5, 2.5))) * 0.25;
-    gl_FragColor = mix(gl_FragColor, vec4(1.0), 0.33);
+	gl_FragColor = mix(gl_FragColor, vec4(1.0), 0.33);
 }

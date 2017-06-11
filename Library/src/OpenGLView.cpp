@@ -7,13 +7,11 @@
 //
 
 #include "OpenGLView.h"
-#include "OpenGLSolids.h"
-#include "OpenGLContent.h"
-#include "GeometryUtil.h"
+#include "GeometryUtil.hpp"
 #include "OpenGLSun.h"
 #include "SimulationApp.h"
 #include "Console.h"
-#include "SystemUtil.h"
+#include "SystemUtil.hpp"
 
 GLSLShader* OpenGLView::downsampleShader = NULL;
 GLSLShader* OpenGLView::ssaoShader = NULL;
@@ -572,7 +570,7 @@ void OpenGLView::RenderSSAO()
         //Draw SAO
         glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
         glViewport(0, 0, viewportWidth, viewportHeight);
-        OpenGLSolids::SetupOrtho();
+        OpenGLContent::getInstance()->SetupOrtho();
         
         btVector3 min, max;
         SimulationApp::getApp()->getSimulationManager()->getWorldAABB(min, max);
@@ -591,7 +589,7 @@ void OpenGLView::RenderSSAO()
         ssaoShader->SetUniform("projScale", projScale);
         ssaoShader->SetUniform("intensityDivR6", (GLfloat)(intensity/pow(radius, 6.0)));
         ssaoShader->SetUniform("viewportSize", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
         ssaoShader->Disable();
         
         //Blur SAO
@@ -606,7 +604,7 @@ void OpenGLView::RenderSSAO()
         downsampleShader->Enable();
         downsampleShader->SetUniform("source", randomTextureUnit);
         downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
-        OpenGLSolids::DrawScreenAlignedQuad();
+        OpenGLContent::getInstance()->DrawSAQ();
         downsampleShader->Disable();
        
         blurShader->Enable();
@@ -618,13 +616,13 @@ void OpenGLView::RenderSSAO()
             glBindTexture(GL_TEXTURE_2D, hBlurTexture);
             glDrawBuffer(GL_COLOR_ATTACHMENT1);
             blurShader->SetUniform("texelOffset", glm::vec2(0.f, 1.f/(GLfloat)(viewportHeight/ssaoSizeDiv)));
-            OpenGLSolids::DrawScreenAlignedQuad();
+            OpenGLContent::getInstance()->DrawSAQ();
             
             //Horizontal blur
             glBindTexture(GL_TEXTURE_2D, vBlurTexture);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             blurShader->SetUniform("texelOffset", glm::vec2(1.f/(GLfloat)(viewportWidth/ssaoSizeDiv), 0.f));
-            OpenGLSolids::DrawScreenAlignedQuad();
+            OpenGLContent::getInstance()->DrawSAQ();
         }
         
         blurShader->Disable();
@@ -634,42 +632,50 @@ void OpenGLView::RenderSSAO()
     }
 }
 
-void OpenGLView::ShowAmbientOcclusion()
+void OpenGLView::ShowAmbientOcclusion(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY)
 {
-    //save current state
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glPushAttrib(GL_VIEWPORT_BIT);
+	//Matrices setup
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+    glm::mat4 proj = glm::ortho(0.f, (GLfloat)viewportWidth, 0.f, (GLfloat)viewportHeight, -1.f, 1.f);
+	glLoadMatrixf(glm::value_ptr(proj));
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
     
-    //Set projection and modelview
-    OpenGLSolids::SetupOrtho();
-        
-    //Texture setup
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, getSSAOTexture());
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-        
-    //Render the texture
-    glViewport(0, 0, viewportWidth, viewportHeight);
-    glColor4f(1.f,0.f,0.f,1.f);
-    OpenGLSolids::DrawScreenAlignedQuad();
+	glBindTexture(GL_TEXTURE_2D, ssaoTexture);
     
-    //Reset
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glPopAttrib();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+	// Render the quad
+	glLoadIdentity();
+	glTranslatef(x,-y,-1.0);
+    
+	glColor3f(1,1,1);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 1);
+	glVertex3f(0.0f,(float)viewportHeight, 0.0f);
+	glTexCoord2f(0, 0);
+	glVertex3f(0.0f, viewportHeight-sizeY, 0.0f);
+	glTexCoord2f(1, 0);
+	glVertex3f(sizeX, viewportHeight-sizeY, 0.0f);
+	glTexCoord2f(1, 1);
+	glVertex3f(sizeX, (float)viewportHeight, 0.0f);
+	glEnd();
+    
+	glBindTexture(GL_TEXTURE_2D, 0);
+    
+	//Reset to the matrices
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 
 GLuint OpenGLView::getSSAOTexture()
 {
     if(ssaoSizeDiv > 0)
-        return hBlurTexture;
+        return vBlurTexture;
     else
         return 0;
 }
@@ -768,7 +774,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
     
-    OpenGLSolids::SetupOrtho();
+    OpenGLContent::getInstance()->SetupOrtho();
     glColor4f(1.f, 1.f, 1.f, 1.f);
     
     //matrix light metering
@@ -776,7 +782,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
     lightMeterShader->Enable();
     lightMeterShader->SetUniform("texHDR", 0);
     lightMeterShader->SetUniform("samples", glm::ivec2(128,128));
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     lightMeterShader->Disable();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -789,7 +795,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
     tonemapShader->Enable();
     tonemapShader->SetUniform("texHDR", 0);
     tonemapShader->SetUniform("texAverage", 1);
-    OpenGLSolids::DrawScreenAlignedQuad();
+    OpenGLContent::getInstance()->DrawSAQ();
     tonemapShader->Disable();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     

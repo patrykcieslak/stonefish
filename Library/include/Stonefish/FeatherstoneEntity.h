@@ -46,8 +46,10 @@ public:
     virtual ~FeatherstoneEntity();
     
     void AddLink(SolidEntity* solid, const btTransform& transform, btMultiBodyDynamicsWorld* world);
-    int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collide = false);
-    int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collide = false);
+    int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
+    int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
+	void EnableSelfCollision();
+	void DisableSelfCollision();
   
     void DriveJoint(unsigned int index, btScalar forceTorque);
     void ApplyGravity(const btVector3& g);
@@ -58,11 +60,13 @@ public:
     void setJointDamping(unsigned int  index, btScalar constantFactor, btScalar viscousFactor);
     void getJointPosition(unsigned int index, btScalar& position, btMultibodyLink::eFeatherstoneJointType& jointType);
     void getJointVelocity(unsigned int index, btScalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
+	FeatherstoneLink getLink(unsigned int index);
     btTransform getLinkTransform(unsigned int index);
     btVector3 getLinkLinearVelocity(unsigned int index);
     btVector3 getLinkAngularVelocity(unsigned int index);
     unsigned int getNumOfJoints();
     unsigned int getNumOfLinks();
+	btMultiBody* getMultiBody();
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void Render();

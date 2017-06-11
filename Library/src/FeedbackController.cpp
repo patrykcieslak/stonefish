@@ -14,6 +14,7 @@ FeedbackController::FeedbackController(std::string uniqueName, unsigned int numb
     referenceGen = NULL;
     referenceGenInput = 0;
     referenceMux = NULL;
+	output = 0;
     
     for(unsigned int i = 0; i < numberOfInputs; ++i)
         reference.push_back(btScalar(0.));
@@ -108,6 +109,11 @@ std::vector<btScalar> FeedbackController::getReferenceValues()
         return referenceMux->ValuesAtTime(runningTime);
     else
         return reference;
+}
+
+btScalar FeedbackController::getLastOutput()
+{
+	return output;
 }
 
 unsigned int FeedbackController::getNumOfInputs()

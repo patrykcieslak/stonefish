@@ -3,11 +3,11 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2017 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__Motor__
-#define __Stonefish__Motor__
+#ifndef __Stonefish_Motor__
+#define __Stonefish_Motor__
 
 #include "Actuator.h"
 #include "RevoluteJoint.h"
@@ -19,26 +19,26 @@ public:
     Motor(std::string uniqueName, RevoluteJoint* revolute);
     Motor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child);
     
-    void Update(btScalar dt);
-    btVector3 Render();
-    
-    void setTorque(btScalar value);
-    btScalar getTorque();
+    virtual void Update(btScalar dt);
+    virtual btVector3 Render();
+    virtual void setIntensity(btScalar value);
+	virtual btScalar getTorque();
+	
+	btScalar getAngularVelocity();
     ActuatorType getType();
     
+protected:
+	//states
+    btScalar torque;
+	
 private:
-    btScalar getAngularVelocity();
-    
     //output
     RevoluteJoint* revoluteOutput;
     FeatherstoneEntity* multibodyOutput;
     unsigned int multibodyChild;
-    
-    //states
-    btScalar torque;
 };
 
 
 
 
-#endif /* defined(__Stonefish__Motor__) */
+#endif

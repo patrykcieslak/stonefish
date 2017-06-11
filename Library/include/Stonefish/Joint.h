@@ -12,6 +12,7 @@
 #include "common.h"
 #include "NameManager.h"
 #include "SolidEntity.h"
+#include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
 
 #define CONSTRAINT_ERP 0.2
 #define CONSTRAINT_CFM 0.0
@@ -32,7 +33,7 @@ public:
     virtual btVector3 Render() = 0;
     virtual JointType getType() = 0;
     
-    void AddToDynamicsWorld(btDynamicsWorld* world);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     
     void setRenderable(bool render);
     btTypedConstraint* getConstraint();
@@ -41,13 +42,15 @@ public:
     bool isRenderable();
     
 protected:
-    void setConstraint(btTypedConstraint* constr);
+    void setConstraint(btTypedConstraint* c);
+	void setConstraint(btMultiBodyConstraint* c);
     
 private:
     std::string name;
     bool renderable;
     bool collisionEnabled;
     btTypedConstraint* constraint;
+	btMultiBodyConstraint* mbConstraint;
     
     static NameManager nameManager;
 };
