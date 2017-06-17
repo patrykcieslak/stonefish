@@ -9,7 +9,6 @@
 #include "PathGenerator.h"
 #include "Console.h"
 
-#pragma mark Constructors
 PathGenerator::PathGenerator()
 {
     time = btScalar(0.);
@@ -17,12 +16,10 @@ PathGenerator::PathGenerator()
     renderable = false;
 }
 
-#pragma mark - Destructor
 PathGenerator::~PathGenerator()
 {
 }
 
-#pragma mark - Accessors
 btScalar PathGenerator::getTime()
 {
     return time;
@@ -33,7 +30,6 @@ btScalar PathGenerator::getLength()
     return length;
 }
 
-#pragma mark - Methods
 void PathGenerator::MoveOnPath(btScalar distance, btVector3& point, btVector3& tangent)
 {
     if(length > btScalar(0.))

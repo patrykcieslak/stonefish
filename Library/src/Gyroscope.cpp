@@ -8,7 +8,6 @@
 
 #include "Gyroscope.h"
 
-#pragma mark Constructors
 Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
@@ -28,7 +27,6 @@ Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransfor
     this->adc = adc;
 }
 
-#pragma mark - Methods
 void Gyroscope::Reset()
 {
     accumulatedDrift = 0;

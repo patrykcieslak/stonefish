@@ -25,7 +25,7 @@ public:
     GLuint getSkyCubemap();
     GLuint getDiffuseCubemap();
     GLuint getReflectionCubemap();
-    void ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width, GLfloat height);
+    void ShowCubemap(SkyCubemap cmap);
     
     static OpenGLSky* getInstance();
  

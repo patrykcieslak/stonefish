@@ -25,6 +25,7 @@ OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& tar
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
     glBindTexture(GL_TEXTURE_2D, 0);
     
     //Create shadowmap framebuffer
@@ -114,143 +115,78 @@ void OpenGLSpotLight::RenderDummy()
     front.normalize();
     up = front.cross(left);
     
-    btScalar openglTrans[16];
-    openglTrans[0] = left.x();
-    openglTrans[1] = left.y();
-    openglTrans[2] = left.z();
-    openglTrans[3] = 0.0;
-    openglTrans[4] = up.x();
-    openglTrans[5] = up.y();
-    openglTrans[6] = up.z();
-    openglTrans[7] = 0.0;
-    openglTrans[8] = front.x();
-    openglTrans[9] = front.y();
-    openglTrans[10] = front.z();
-    openglTrans[11] = 0.0;
-    openglTrans[12] = org.x();
-    openglTrans[13] = org.y();
-    openglTrans[14] = org.z();
-    openglTrans[15] = 1.0;
-    
-    glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-    glMultMatrixd(openglTrans);
-#else
-    glMultMatrixf(openglTrans);
-#endif
-    
+	glm::mat4 model((GLfloat)left.x(), (GLfloat)left.y(), (GLfloat)left.z(), 0, 
+				   (GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z(), 0,
+				   (GLfloat)front.x(), (GLfloat)front.y(), (GLfloat)front.z(), 0,
+				   (GLfloat)org.x(), (GLfloat)org.y(), (GLfloat)org.z(), 1.f);
+	
     //rendering
     GLfloat iconSize = 5.f;
     int steps = 24;
     
-    glColor4f(0.f, 1.f, 0.f, 1.f);
-    
     GLfloat r = iconSize*tanf(coneAngle);
     
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(iconSize, 0 ,0);
-    glEnd();
-    
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(iconSize, r, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(iconSize, -r, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(iconSize, 0, r);
-    glVertex3f(0, 0, 0);
-    glVertex3f(iconSize, 0, -r);
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    for(int i=0; i<steps; i++)
-        glVertex3f(iconSize/2.f, cosf(i/(GLfloat)steps*2.f*M_PI)*r/2.f, sinf(i/(GLfloat)steps*2.f*M_PI)*r/2.f);
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    for(int i=0; i<steps; i++)
-        glVertex3f(iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*r, sinf(i/(GLfloat)steps*2.f*M_PI)*r);
-    glEnd();
-    
-    glPopMatrix();
+    std::vector<glm::vec3> vertices;
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(iconSize, 0, 0));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(iconSize, r, 0));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(iconSize,-r, 0));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(iconSize, 0, r));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(iconSize, 0, -r));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR, model);
+	vertices.clear();
+	
+	for(unsigned int i=0; i<=steps; ++i)
+		vertices.push_back(glm::vec3(iconSize/2.f, cosf(i/(GLfloat)steps*2.f*M_PI)*r/2.f, sinf(i/(GLfloat)steps*2.f*M_PI)*r/2.f));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	vertices.clear();
+	
+	for(unsigned int i=0; i<=steps; ++i)
+		vertices.push_back(glm::vec3(iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*r, sinf(i/(GLfloat)steps*2.f*M_PI)*r));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
 void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)
 {
-    glDisable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
     glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, 1.f, 100.f);
-    glLoadMatrixf(glm::value_ptr(proj));
-    
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    btVector3 lightPos = getPosition();
+	btVector3 lightPos = getPosition();
     btVector3 lightDir = dir;
     glm::mat4 view = glm::lookAt(glm::vec3(lightPos.x(), lightPos.y(), lightPos.z()),
                                  glm::vec3(lightPos.x() + lightDir.x(), lightPos.y() + lightDir.y(), lightPos.z() + lightDir.z()),
                                  glm::vec3(0,0,1.f));
-    
-    glLoadMatrixf(glm::value_ptr(view));
     
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
                    0.f, 0.5f, 0.f, 0.f,
                    0.f, 0.f, 0.5f, 0.f,
                    0.5f, 0.5f, 0.5f, 1.f);
     lightClipSpace = bias * (proj * view);
-    
+	
+	OpenGLContent::getInstance()->SetProjectionMatrix(proj);
+	OpenGLContent::getInstance()->SetViewMatrix(view);
+	
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glPushAttrib(GL_VIEWPORT_BIT);
     glViewport(0, 0, shadowSize, shadowSize);
     glClear(GL_DEPTH_BUFFER_BIT);
-    pipe->DrawObjects(sim);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	pipe->DrawObjects(sim);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     glCullFace(GL_BACK);
-    glPopAttrib();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
 }
 
-void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
+void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 {
-    //save current state
-    glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    glPushAttrib(GL_VIEWPORT_BIT);
-    
-    //Set projection and modelview
-    OpenGLContent::getInstance()->SetupOrtho();
-    
-	//Texture setup
-    glActiveTexture(GL_TEXTURE0);
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
+	glDisable(GL_BLEND);
+	glBindTexture(GL_TEXTURE_2D, shadowMap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-    
-	//Render the shadowmap
-    glViewport(x, y, shadowSize * scale, shadowSize * scale);
-    glColor4f(1.f, 1.f, 1.f, 1.f);
-    OpenGLContent::getInstance()->DrawSAQ();
-    
-	//Reset
-	glBindTexture(GL_TEXTURE_2D, 0);
-    glPopAttrib();
-    glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);
 }
 
 

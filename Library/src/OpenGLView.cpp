@@ -218,19 +218,7 @@ glm::mat4 OpenGLView::GetProjectionMatrix()
 
 glm::mat4 OpenGLView::GetViewMatrix(const btTransform& viewTransform)
 {
-#ifdef BT_USE_DOUBLE_PRECISION
-    double glmatrix[16];
-    viewTransform.getOpenGLMatrix(glmatrix);
-    glm::mat4 view((GLfloat)glmatrix[0],(GLfloat)glmatrix[1],(GLfloat)glmatrix[2],(GLfloat)glmatrix[3],
-                   (GLfloat)glmatrix[4],(GLfloat)glmatrix[5],(GLfloat)glmatrix[6],(GLfloat)glmatrix[7],
-                   (GLfloat)glmatrix[8],(GLfloat)glmatrix[9],(GLfloat)glmatrix[10],(GLfloat)glmatrix[11],
-                   (GLfloat)glmatrix[12],(GLfloat)glmatrix[13],(GLfloat)glmatrix[14],(GLfloat)glmatrix[15]);
-#else
-    GLfloat glmatrix[16];
-    viewTransform.getOpenGLMatrix(glmatrix);
-    glm::mat4 view = glm::make_mat4(glmatrix);
-#endif
-    return view;
+	return glMatrixFromBtTransform(viewTransform);
 }
 
 GLfloat OpenGLView::GetFOVY()
@@ -338,25 +326,12 @@ void OpenGLView::SetViewport()
 
 void OpenGLView::SetProjection()
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(glm::value_ptr(projection));
+	OpenGLContent::getInstance()->SetProjectionMatrix(projection);
 }
 
 void OpenGLView::SetViewTransform()
 {
-    btTransform trans = GetViewTransform();
-    btScalar openglTrans[16];
-    trans.getOpenGLMatrix(openglTrans);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gBuffer->SetClipPlane(NULL);
-    
-#ifdef BT_USE_DOUBLE_PRECISION
-    glLoadMatrixd(openglTrans);
-#else
-    glLoadMatrixf(openglTrans);
-#endif
+    OpenGLContent::getInstance()->SetViewMatrix(glMatrixFromBtTransform(GetViewTransform()));
 }
 
 void OpenGLView::SetReflectedViewTransform(Ocean* fluid)
@@ -377,19 +352,10 @@ void OpenGLView::SetReflectedViewTransform(Ocean* fluid)
     surface[2] = eyeNormal.z();
     surface[3] = -eyeNormal.dot(eyePosition);
     
-    btScalar openglTrans[16];
-    trans.getOpenGLMatrix(openglTrans);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    OpenGLContent::getInstance()->SetViewMatrix(glMatrixFromBtTransform(trans));
+
     //clip plane must be declared when modelview equals identity (otherwise it is transformed by inverse modelview)
     gBuffer->SetClipPlane(surface);
-    
-#ifdef BT_USE_DOUBLE_PRECISION
-    glLoadMatrixd(openglTrans);
-#else
-    glLoadMatrixf(openglTrans);
-#endif
 }
 
 void OpenGLView::SetRefractedViewTransform(Ocean* fluid)
@@ -411,20 +377,10 @@ void OpenGLView::SetRefractedViewTransform(Ocean* fluid)
     surface[3] = -eyeNormal.dot(eyePosition);
     
     btTransform shift = btTransform(btQuaternion(0,0,0), btVector3(0,0,0));
-    
-    btScalar openglTrans[16];
-    (trans * shift).getOpenGLMatrix(openglTrans);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+	OpenGLContent::getInstance()->SetViewMatrix(glMatrixFromBtTransform(trans * shift));
+
     //clip plane must be declared when modelview equals identity (otherwise it is transformed by inverse modelview)
     gBuffer->SetClipPlane(surface);
-    
-#ifdef BT_USE_DOUBLE_PRECISION
-    glLoadMatrixd(openglTrans);
-#else
-    glLoadMatrixf(openglTrans);
-#endif
 }
 
 btTransform OpenGLView::GetReflectedViewTransform(const Ocean* fluid)
@@ -520,49 +476,13 @@ void OpenGLView::ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLflo
             break;
     }
     
-    //Matrices setup
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-    glm::mat4 proj = glm::ortho(0.f, (GLfloat)viewportWidth, 0.f, (GLfloat)viewportHeight, -1.f, 1.f);
-	glLoadMatrixf(glm::value_ptr(proj));
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-	glBindTexture(GL_TEXTURE_2D, texture);
-    
-	// Render the quad
-	glLoadIdentity();
-	glTranslatef(x,-y,-1.0);
-    
-	glColor3f(1,1,1);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 1);
-	glVertex3f(0.0f,(float)viewportHeight, 0.0f);
-	glTexCoord2f(0, 0);
-	glVertex3f(0.0f, viewportHeight-sizeY, 0.0f);
-	glTexCoord2f(1, 0);
-	glVertex3f(sizeX, viewportHeight-sizeY, 0.0f);
-	glTexCoord2f(1, 1);
-	glVertex3f(sizeX, (float)viewportHeight, 0.0f);
-	glEnd();
-    
-	glBindTexture(GL_TEXTURE_2D, 0);
-    
-	//Reset to the matrices
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+    OpenGLContent::getInstance()->DrawTexturedQuad(x, y, sizeX, sizeY, texture);
 }
 
 void OpenGLView::RenderSSAO()
 {
     if(hasSSAO())
     {
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
@@ -570,7 +490,6 @@ void OpenGLView::RenderSSAO()
         //Draw SAO
         glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
         glViewport(0, 0, viewportWidth, viewportHeight);
-        OpenGLContent::getInstance()->SetupOrtho();
         
         btVector3 min, max;
         SimulationApp::getApp()->getSimulationManager()->getWorldAABB(min, max);
@@ -608,9 +527,9 @@ void OpenGLView::RenderSSAO()
         downsampleShader->Disable();
        
         blurShader->Enable();
-        blurShader->SetUniform("texSource", randomTextureUnit);
+        blurShader->SetUniform("source", randomTextureUnit);
         
-        for(int i = 0; i < 2; i++)
+        for(unsigned int i = 0; i < 2; ++i)
         {
             //Vertical blur
             glBindTexture(GL_TEXTURE_2D, hBlurTexture);
@@ -628,54 +547,20 @@ void OpenGLView::RenderSSAO()
         blurShader->Disable();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glPopAttrib();
+		
+		glViewport(0, 0, viewportWidth, viewportHeight);
     }
 }
 
 void OpenGLView::ShowAmbientOcclusion(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY)
 {
-	//Matrices setup
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-    glm::mat4 proj = glm::ortho(0.f, (GLfloat)viewportWidth, 0.f, (GLfloat)viewportHeight, -1.f, 1.f);
-	glLoadMatrixf(glm::value_ptr(proj));
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-	glBindTexture(GL_TEXTURE_2D, ssaoTexture);
-    
-	// Render the quad
-	glLoadIdentity();
-	glTranslatef(x,-y,-1.0);
-    
-	glColor3f(1,1,1);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 1);
-	glVertex3f(0.0f,(float)viewportHeight, 0.0f);
-	glTexCoord2f(0, 0);
-	glVertex3f(0.0f, viewportHeight-sizeY, 0.0f);
-	glTexCoord2f(1, 0);
-	glVertex3f(sizeX, viewportHeight-sizeY, 0.0f);
-	glTexCoord2f(1, 1);
-	glVertex3f(sizeX, (float)viewportHeight, 0.0f);
-	glEnd();
-    
-	glBindTexture(GL_TEXTURE_2D, 0);
-    
-	//Reset to the matrices
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, sizeX, sizeY, getSSAOTexture());
 }
 
 GLuint OpenGLView::getSSAOTexture()
 {
     if(ssaoSizeDiv > 0)
-        return vBlurTexture;
+        return hBlurTexture;
     else
         return 0;
 }
@@ -773,10 +658,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
-    
-    OpenGLContent::getInstance()->SetupOrtho();
-    glColor4f(1.f, 1.f, 1.f, 1.f);
-    
+	
     //matrix light metering
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
     lightMeterShader->Enable();
@@ -827,10 +709,11 @@ void OpenGLView::Init()
     downsampleShader->AddUniform("srcViewport", VEC2);
     
     blurShader = new GLSLShader("saoBlur.frag", "gaussianBlur.vert");
-    blurShader->AddUniform("texSource", INT);
+    blurShader->AddUniform("source", INT);
     blurShader->AddUniform("texelOffset", VEC2);
     
     //////Fluid//////
+	/*
     waveNormalTexture = OpenGLContent::LoadInternalTexture("water.jpg");
     
     fluidShader[0] = new GLSLShader("aboveFluidSurface.frag");
@@ -854,13 +737,12 @@ void OpenGLView::Init()
     fluidShader[1]->AddUniform("lightColor", VEC4);
     fluidShader[1]->AddUniform("time", FLOAT);
     
-    /*fluidShader[2] = new GLSLShader("belowFluidSurface.frag");
+    fluidShader[2] = new GLSLShader("belowFluidSurface.frag");
     fluidShader[2]->AddUniform("texPosition", INT);
     fluidShader[2]->AddUniform("texScene", INT);
     fluidShader[2]->AddUniform("texRefraction", INT);
     fluidShader[2]->AddUniform("texReflection", INT);*/
 
-    
     /////Tonemapping//////
     lightMeterShader = new GLSLShader("lightMeter.frag");
     lightMeterShader->AddUniform("texHDR", INT);

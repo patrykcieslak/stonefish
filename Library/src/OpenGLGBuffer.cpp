@@ -7,27 +7,8 @@
 //
 
 #include "OpenGLGBuffer.h"
+#include "OpenGLContent.h"
 #include "Console.h"
-
-GLSLShader* OpenGLGBuffer::splittingShader = NULL;
-
-void OpenGLGBuffer::LoadShaders()
-{
-    splittingShader = new GLSLShader("gbuffer.frag", "gbuffer.vert");
-    splittingShader->AddUniform("texture", INT);
-    splittingShader->AddUniform("materialData", FLOAT);
-}
-
-void OpenGLGBuffer::DeleteShaders()
-{
-    delete splittingShader;
-}
-
-void OpenGLGBuffer::SetUniformMaterialData(GLfloat x)
-{
-    if(splittingShader->isEnabled())
-        splittingShader->SetUniform("materialData", x);
-}
 
 void OpenGLGBuffer::SetClipPlane(double* plane)
 {
@@ -46,8 +27,8 @@ void OpenGLGBuffer::SetClipPlane(double* plane)
         
         std::memcpy(clipPlane, plane, sizeof(double)*4);
         
-        glEnable(GL_CLIP_PLANE0);
-        glClipPlane(GL_CLIP_PLANE0, clipPlane);
+        //glEnable(GL_CLIP_PLANE0);
+        //glClipPlane(GL_CLIP_PLANE0, clipPlane);
     }
 }
 
@@ -171,15 +152,10 @@ void OpenGLGBuffer::Start(GLuint texIndex)
     
     glDrawBuffers(3, buffers);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	
-    splittingShader->Enable();
-    splittingShader->SetUniform("texture", 0);
 }
 
 void OpenGLGBuffer::Stop()
 {
-    splittingShader->Disable();
-    
     if(clipPlane != NULL)
         glDisable(GL_CLIP_PLANE0);
         
@@ -216,42 +192,5 @@ void OpenGLGBuffer::ShowTexture(FBOComponent component, GLfloat x, GLfloat y, GL
             break;
     }
     
-	//Projection setup
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glm::mat4 proj = glm::ortho(0.f, (GLfloat)width, 0.f, (GLfloat)height, -1.f, 1.f);
-	glLoadMatrixf(glm::value_ptr(proj));
-	
-	//Model setup
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-	glBindTexture(GL_TEXTURE_2D, texture);
-    
-	// Render the quad
-	glLoadIdentity();
-	glTranslatef(x,-y,-1.0);
-    
-	glColor3f(1,1,1);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 1);
-	glVertex3f(0.0f,(float)height, 0.0f);
-	glTexCoord2f(0, 0);
-	glVertex3f(0.0f, height-sizeY, 0.0f);
-	glTexCoord2f(1, 0);
-	glVertex3f(sizeX, height-sizeY, 0.0f);
-	glTexCoord2f(1, 1);
-	glVertex3f(sizeX, (float)height, 0.0f);
-	glEnd();
-    
-	glBindTexture(GL_TEXTURE_2D, 0);
-    
-	//Reset to the matrices
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, sizeX, sizeY, texture);
 }

@@ -8,7 +8,6 @@
 
 #include "CylindricalJoint.h"
 
-#pragma mark Constructors
 CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -45,7 +44,6 @@ CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, 
     angleIC = btScalar(0.);
 }
 
-#pragma mark - Accessors
 void CylindricalJoint::setDamping(btScalar linearConstantFactor, btScalar linearViscousFactor, btScalar angularConstantFactor, btScalar angularViscousFactor)
 {
     linSigDamping = linearConstantFactor > btScalar(0.) ? UnitSystem::SetForce(linearConstantFactor) : btScalar(0.);
@@ -74,7 +72,6 @@ JointType CylindricalJoint::getType()
     return JOINT_CYLINDRICAL;
 }
 
-#pragma mark - Actions
 void CylindricalJoint::ApplyForce(btScalar F)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -132,7 +129,6 @@ bool CylindricalJoint::SolvePositionIC(btScalar linearTolerance, btScalar angula
     return true;
 }
 
-#pragma mark - Graphics
 btVector3 CylindricalJoint::Render()
 {
     btTypedConstraint* cyli = getConstraint();
@@ -147,22 +143,19 @@ btVector3 CylindricalJoint::Render()
     btVector3 C1 = pivot + e1 * axis;
     btVector3 C2 = pivot + e2 * axis;
     
-    glDummyColor();
-    //links
-    glBegin(GL_LINES);
-    glBulletVertex(A);
-    glBulletVertex(C1);
-    glBulletVertex(B);
-    glBulletVertex(C2);
-    glEnd();
-    
-    //axis
-    glEnable(GL_LINE_STIPPLE);
-    glBegin(GL_LINES);
-    glBulletVertex(C1);
-    glBulletVertex(C2);
-    glEnd();
-    glDisable(GL_LINE_STIPPLE);
+	std::vector<glm::vec3> vertices;
+	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	vertices.clear();
+	
+	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+	glEnable(GL_LINE_STIPPLE);
+    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	glDisable(GL_LINE_STIPPLE);
     
     return (C1+C2)/btScalar(2.);
 }

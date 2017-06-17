@@ -1,15 +1,16 @@
-#version 120
+#version 330 core
 
+in vec2 texcoord;
+in vec2 blurtexcoord[4];
+out vec4 fragcolor;
 uniform sampler2D source;
-varying vec2 texCoord;
-varying vec2 blurTexCoord[4];
 
 void main()
 {
-    gl_FragColor = vec4(0.0);
-    gl_FragColor += texture2D(source, blurTexCoord[0]) * 0.0702702703;
-    gl_FragColor += texture2D(source, blurTexCoord[1]) * 0.3162162162;
-    gl_FragColor += texture2D(source, texCoord) * 0.2270270270;
-    gl_FragColor += texture2D(source, blurTexCoord[2]) * 0.3162162162;
-    gl_FragColor += texture2D(source, blurTexCoord[3]) * 0.0702702703;
+    fragcolor = vec4(0.0);
+    fragcolor += texture(source, blurtexcoord[0]) * 0.0702702703;
+    fragcolor += texture(source, blurtexcoord[1]) * 0.3162162162;
+    fragcolor += texture(source, texcoord) * 0.2270270270;
+    fragcolor += texture(source, blurtexcoord[2]) * 0.3162162162;
+    fragcolor += texture(source, blurtexcoord[3]) * 0.0702702703;
 }

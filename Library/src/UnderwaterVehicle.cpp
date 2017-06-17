@@ -7,6 +7,7 @@
 //
 
 #include "UnderwaterVehicle.h"
+#include "GeometryUtil.hpp"
 
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName) : SystemEntity(uniqueName)
 {
@@ -250,9 +251,7 @@ void UnderwaterVehicle::Render()
 		for(unsigned int i=0; i<bodyParts.size(); ++i)
 		{
 			btTransform trans = vehicleTrans * bodyParts[i].position;
-			btScalar openglTrans[16];
-			trans.getOpenGLMatrix(openglTrans);
-			OpenGLContent::getInstance()->DrawObject(bodyParts[i].solid->getObject(), bodyParts[i].solid->getLook(), openglTrans);
+			OpenGLContent::getInstance()->DrawObject(bodyParts[i].solid->getObject(), bodyParts[i].solid->getLook(), glMatrixFromBtTransform(trans));
 		}
 	}
 }

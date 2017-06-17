@@ -39,12 +39,6 @@
 typedef enum {DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 
-typedef struct
-{
-    uint type;
-    btVector3 location;
-} Sticker;
-
 /*! 
     @class SimulationManager
     An abstract class managing all of the simulated entities, solver settings and equipped with custom callbacks.

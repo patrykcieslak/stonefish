@@ -20,7 +20,7 @@ public:
     void Render();
     void RenderDummy();
     void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim);
-    void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale);
+    void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
     
     btVector3 getViewDirection();
     btVector3 getDirection();

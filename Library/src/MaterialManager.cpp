@@ -8,12 +8,10 @@
 
 #include "MaterialManager.h"
 
-#pragma mark Constructors
 MaterialManager::MaterialManager()
 {
 }
 
-#pragma mark - Destructor
 MaterialManager::~MaterialManager()
 {
     ClearMaterialsAndFluids();
@@ -27,7 +25,6 @@ void MaterialManager::ClearMaterialsAndFluids()
     fluidNameManager.ClearNames();
 }
 
-#pragma mark - Creators
 std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar density, btScalar restitution)
 {
     Material mat;
@@ -80,7 +77,6 @@ bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std
     return true;
 }
 
-#pragma mark - Accessors
 int MaterialManager::getMaterialIndex(std::string name)
 {
     for(int i=0; i<materials.size(); i++)

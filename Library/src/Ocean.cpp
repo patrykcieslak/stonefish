@@ -9,12 +9,10 @@
 #include "Ocean.h"
 #include "SolidEntity.h"
 #include "SystemEntity.h"
+#include "GeometryUtil.hpp"
 
 Ocean::Ocean(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
 {
-    surfaceDisplayList = 0;
-    volumeDisplayList = 0;
-    
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     fluid = f;
 	
@@ -25,28 +23,19 @@ Ocean::Ocean(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
     ghost->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0,0,size/btScalar(2)))); //Surface at 0
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
-    surfaceDisplayList = glGenLists(1);
-    glNewList(surfaceDisplayList, GL_COMPILE);
-    glColor4f(1.f,1.f,1.f,1.f);
-    glNormal3f(0, 0, -1.f);
-    glBegin(GL_QUADS);
-    glVertex3f(-halfExtents.x(), -halfExtents.y(), -halfExtents.z());
-    glVertex3f(-halfExtents.x(), halfExtents.y(), -halfExtents.z());
-    glVertex3f(halfExtents.x(), halfExtents.y(), -halfExtents.z());
-    glVertex3f(halfExtents.x(), -halfExtents.y(), -halfExtents.z());
-    glEnd();
-    glEndList();
+	surfaceMesh = OpenGLContent::BuildPlane(size/2.f);
+	surfaceObjectId = OpenGLContent::getInstance()->BuildObject(surfaceMesh);
 }
 
 Ocean::~Ocean()
 {
     fluid = NULL;
-    
-    if(volumeDisplayList != 0)
-        glDeleteLists(volumeDisplayList, 1);
-    
-    if(surfaceDisplayList != 0)
-        glDeleteLists(surfaceDisplayList, 1);
+	
+	if(surfaceMesh != NULL)
+	{
+		delete surfaceMesh;
+		surfaceMesh = NULL;
+	}
 }
 
 ForcefieldType Ocean::getForcefieldType()
@@ -158,31 +147,9 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
 void Ocean::RenderSurface()
 {
     btTransform trans = ghost->getWorldTransform();
-    btScalar openglTrans[16];
-    trans.getOpenGLMatrix(openglTrans);
-    
-    glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-    glMultMatrixd(openglTrans);
-#else
-    glMultMatrixf(openglTrans);
-#endif
-    glCallList(surfaceDisplayList);
-    glPopMatrix();
+	OpenGLContent::getInstance()->DrawObject(surfaceObjectId, -1, glMatrixFromBtTransform(trans));
 }
 
 void Ocean::RenderVolume()
 {
-    btTransform trans = ghost->getWorldTransform();
-    btScalar openglTrans[16];
-    trans.getOpenGLMatrix(openglTrans);
-    
-    glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-    glMultMatrixd(openglTrans);
-#else
-    glMultMatrixf(openglTrans);
-#endif
-    glCallList(volumeDisplayList);
-    glPopMatrix();
 }

@@ -45,6 +45,9 @@ private:
     ~Console();
     
     GLuint windowW, windowH;
+	GLuint consoleVAO;
+	GLuint texQuadVBO;
+	GLSLShader* texQuadShader;
     std::vector<ConsoleMessage> lines;
     OpenGLPrinter* printer;
     GLuint logoTexture;

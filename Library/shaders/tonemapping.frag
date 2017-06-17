@@ -1,5 +1,7 @@
-#version 120
+#version 330 core
 
+in vec2 texcoord;
+out vec4 fragcolor;
 uniform sampler2D texHDR;
 uniform sampler2D texAverage;
 
@@ -41,7 +43,7 @@ void main(void)
 {
     //Read textures
     float lumAvg = texture2D(texAverage, vec2(0.5, 0.5)).x;
-    vec3 rgbColor = texture2D(texHDR, gl_TexCoord[0].st).rgb;
+    vec3 rgbColor = texture2D(texHDR, texcoord).rgb;
     
     //Correct exposure and tonemap
     float exposure = 0.5/lumAvg;
@@ -55,5 +57,5 @@ void main(void)
     rgbColor = hsv2rgb(hsvColor);
     
     //Correct Gamma
-    gl_FragColor = vec4(pow(rgbColor, vec3(1.0/2.2)), 1.0);
+    fragcolor = vec4(pow(rgbColor, vec3(1.0/2.2)), 1.0);
 }

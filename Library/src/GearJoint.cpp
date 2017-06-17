@@ -8,7 +8,6 @@
 
 #include "GearJoint.h"
 
-#pragma mark Constructors
 GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
 {
     gearRatio = ratio;
@@ -22,7 +21,6 @@ GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* s
     setConstraint(gear);
 }
 
-#pragma mark - Accessors
 JointType GearJoint::getType()
 {
     return JOINT_GEAR;
@@ -33,7 +31,6 @@ btScalar GearJoint::getRatio()
     return gearRatio;
 }
 
-#pragma mark - Graphics
 btVector3 GearJoint::Render()
 {
     btGearConstraint* gear = (btGearConstraint*)getConstraint();
@@ -61,17 +58,25 @@ btVector3 GearJoint::Render()
     
     rAn = rBn/gearRatio;
     
-    glDummyColor();
     //circle A
-    glBegin(GL_LINE_STRIP);
-    for(int i=0; i<=24; i++)
-        glBulletVertex(A + rA.rotate(axisA, i/btScalar(12.) * M_PI) * rAn);
-    glEnd();
+	std::vector<glm::vec3> vertices;
+	for(unsigned short i=0; i<=24; ++i)
+	{
+		btVector3 pd = A + rA.rotate(axisA, i/btScalar(12.) * M_PI) * rAn;
+		glm::vec3 p = glm::vec3((GLfloat)pd.getX(), (GLfloat)pd.getY(), (GLfloat)pd.getZ()); 
+		vertices.push_back(p);
+	}
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
+	vertices.clear();
+	
     //circle B
-    glBegin(GL_LINE_STRIP);
-    for(int i=0; i<=24; i++)
-        glBulletVertex(B + rB.rotate(axisB, i/btScalar(12.) * M_PI) * rBn);
-    glEnd();
-    
+    for(unsigned short i=0; i<=24; ++i)
+	{
+		btVector3 pd = B + rB.rotate(axisB, i/btScalar(12.) * M_PI) * rBn;
+		glm::vec3 p = glm::vec3((GLfloat)pd.getX(), (GLfloat)pd.getY(), (GLfloat)pd.getZ()); 
+		vertices.push_back(p);
+	}
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
+	
     return B + rBn*rBp;
 }

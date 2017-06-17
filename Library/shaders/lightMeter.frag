@@ -1,5 +1,7 @@
-#version 120
+#version 330 core
 
+in vec2 texcoord;
+out vec4 fragcolor;
 uniform sampler2D texHDR;
 uniform ivec2 samples;
 
@@ -21,11 +23,11 @@ void main(void)
         for(int h = 0; h < samples.y; h++)
         {
             vec2 texCoord = vec2(float(i)/float(samples.x - 1), float(h)/float(samples.y - 1));
-            vec3 hsvColor = rgb2hsv(texture2D(texHDR, texCoord.st).rgb);
+            vec3 hsvColor = rgb2hsv(texture(texHDR, texcoord).rgb);
             avgLuminance += log(hsvColor.z + 1.0);
         }
     
     avgLuminance /= float(samples.x * samples.y);
     
-    gl_FragColor = vec4(avgLuminance);
+    fragcolor = vec4(avgLuminance);
 }

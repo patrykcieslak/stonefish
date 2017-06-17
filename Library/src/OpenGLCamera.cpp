@@ -7,6 +7,7 @@
 //
 
 #include "OpenGLCamera.h"
+#include "GeometryUtil.hpp"
 
 OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao) : OpenGLView(x, y, width, height, horizon, sao)
 {
@@ -173,56 +174,41 @@ btTransform OpenGLCamera::GetViewTransform()
 
 void OpenGLCamera::RenderDummy()
 {
-    glPushMatrix();
-    
+    glm::mat4 model;
+	
     //transformation
     if(holdingEntity != NULL)
     {
         btTransform trans = holdingEntity->getTransform();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
+		model = glMatrixFromBtTransform(trans);
     }
     
-    btScalar openglTrans[16];
-    cameraRender.getOpenGLMatrix(openglTrans);
-    
-    glTranslatef((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
-#ifdef BT_USE_DOUBLE_PRECISION
-    glMultMatrixd(openglTrans);
-#else
-    glMultMatrixf(openglTrans);
-#endif        
-    
+    model = glm::translate(model, glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z()));
+	model *= glMatrixFromBtTransform(cameraRender);
+   
     //rendering
     GLfloat iconSize = 5.f;
     GLfloat x = iconSize*tanf(fovx/2.f);
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
     GLfloat y = x/aspect;
-    
-    glColor4f(1,0,0,1);
-    glBegin(GL_LINES);
-    glVertex3f(0,0,0);
-    glVertex3f(-x,y,-iconSize);
-    glVertex3f(0,0,0);
-    glVertex3f(x,y,-iconSize);
-    glVertex3f(0,0,0);
-    glVertex3f(-x,-y,-iconSize);
-    glVertex3f(0,0,0);
-    glVertex3f(x,-y,-iconSize);
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(-x,y,-iconSize);
-    glVertex3f(x,y,-iconSize);
-    glVertex3f(x,-y,-iconSize);
-    glVertex3f(-x,-y,-iconSize);
-    glEnd();
-    
-    glPopMatrix();
+	
+	std::vector<glm::vec3> vertices;
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(-x,y,-iconSize));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(x,y,-iconSize));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(-x,-y,-iconSize));
+	vertices.push_back(glm::vec3(0,0,0));
+	vertices.push_back(glm::vec3(x,-y,-iconSize));
+	
+	vertices.push_back(glm::vec3(-x,y,-iconSize));
+	vertices.push_back(glm::vec3(x,y,-iconSize));
+	vertices.push_back(glm::vec3(x,y,-iconSize));
+	vertices.push_back(glm::vec3(x,-y,-iconSize));
+	vertices.push_back(glm::vec3(x,-y,-iconSize));
+	vertices.push_back(glm::vec3(-x,-y,-iconSize));
+	vertices.push_back(glm::vec3(-x,-y,-iconSize));
+	vertices.push_back(glm::vec3(-x,y,-iconSize));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR, model);
 }

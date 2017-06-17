@@ -156,19 +156,10 @@ void SimulationApp::InitializeSDL()
 {
     SDL_Init(SDL_INIT_EVERYTHING);
     
-    //Create window
-    window = SDL_CreateWindow(appName,
-                              SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED,
-                              winWidth,
-                              winHeight,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
-                              );
-    
     //Create OpenGL contexts
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -176,17 +167,28 @@ void SimulationApp::InitializeSDL()
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+	
+	//Create window
+    window = SDL_CreateWindow(appName,
+                              SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED,
+                              winWidth,
+                              winHeight,
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+                              );
   
 	glLoadingContext = SDL_GL_CreateContext(window);
 	if(glLoadingContext == NULL)
 	{
 		printf("SDL2: OpenGL context could not be created: %s\n", SDL_GetError());
+		exit(1);
 	}
 	
 	glMainContext = SDL_GL_CreateContext(window);
 	if(glMainContext == NULL)
 	{
 		printf("SDL2: OpenGL context could not be created: %s\n", SDL_GetError());
+		exit(1);
 	}
 	
     //Check OpenGL context version
@@ -195,14 +197,23 @@ void SimulationApp::InitializeSDL()
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &glVersionMinor);
 	SDL_GL_SetSwapInterval(0);
     
-    //Initialize console
-    Console::getInstance()->Init(winWidth, winHeight);
-    cInfo("Window created. OpenGL %d.%d contexts created.", glVersionMajor, glVersionMinor);
-
-#ifdef _MSC_VER
-	glewInit();
-#endif
+	//Initialize basic drawing functions and console
+    if(glewInit() != GLEW_OK) 
+	{
+		printf("Failed to initialize GLEW!\n");
+		exit(1);
+	}
+	
+	bool shaders = GLSLShader::Init();
+	if(!shaders)
+	{
+		printf("No shader support!\n");
+		exit(1);
+	}
     
+	Console::getInstance()->Init(winWidth, winHeight);
+	cInfo("Window created. OpenGL %d.%d contexts created.", glVersionMajor, glVersionMinor);
+	
     //Create loading thread
     LoadingThreadData* data = new LoadingThreadData();
     data->app = this;
@@ -226,8 +237,6 @@ void SimulationApp::InitializeSDL()
                                                                       SDL_JoystickNumHats(joystick),
                                                                       SDL_JoystickNumButtons(joystick));
     }
-    
-    //Look for Leap
 }
 
 void SimulationApp::InitializeSimulation()
@@ -448,7 +457,7 @@ void SimulationApp::AppLoop()
             sprintf(buffer, "FPS: %1.2lf", fps);
             
             IMGUI::getInstance()->Begin();
-            IMGUI::getInstance()->DoLabel(10, getWindowHeight() - 20.f, buffer);
+            IMGUI::getInstance()->DoLabel(10, 10, buffer);
             IMGUI::getInstance()->End();
         }
     }
@@ -464,7 +473,7 @@ void SimulationApp::DoHUD()
     slider1.owner = 0;
     slider1.item = 3;
     slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 100.0, 5.f, 5.f, 20.f, 100.0, 5000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 120.f, 100.0, 5000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
     //Bottom panel
     IMGUI::getInstance()->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
@@ -544,10 +553,15 @@ int SimulationApp::RenderLoadingScreen(void* data)
     
     //Render loading screen
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    
+	
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glEnableVertexAttribArray(0);
+	
     while(ltdata->app->loading)
     {
-        glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
         
         //Lock to prevent adding lines to the console while rendering
         SDL_LockMutex(ltdata->mutex);
@@ -558,6 +572,9 @@ int SimulationApp::RenderLoadingScreen(void* data)
         glFinish();
         SDL_GL_SwapWindow(ltdata->app->window);
     }
+	
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &vao);
     
     //Detach thread from GL context
     SDL_GL_MakeCurrent(ltdata->app->window, NULL);

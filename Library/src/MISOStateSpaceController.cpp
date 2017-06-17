@@ -8,7 +8,6 @@
 
 #include "MISOStateSpaceController.h"
 
-#pragma mark Constructors
 MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, inputs->getNumOfComponents(), frequency)
 {
     this->input = inputs;
@@ -19,20 +18,17 @@ MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* 
         gains.push_back(btScalar(0.));
 }
 
-#pragma mark - Destructor
 MISOStateSpaceController::~MISOStateSpaceController()
 {
     gains.clear();
 }
 
-#pragma mark - Accessors
 void MISOStateSpaceController::SetGains(const std::vector<btScalar>& g)
 {
     if(g.size() == gains.size())
         gains = std::vector<btScalar>(g);
 }
 
-#pragma mark - Methods
 void MISOStateSpaceController::Reset()
 {
 }

@@ -8,7 +8,6 @@
 
 #include "FakeRotaryEncoder.h"
 
-#pragma mark Constructors
 FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
 {
     Reset();
@@ -19,7 +18,6 @@ FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity*
     Reset();
 }
 
-#pragma mark - Methods
 void FakeRotaryEncoder::Reset()
 {
     angle = lastAngle = GetRawAngle();
@@ -60,7 +58,6 @@ void FakeRotaryEncoder::InternalUpdate(btScalar dt)
     AddSampleToHistory(s);
 }
 
-#pragma mark - Internal
 btScalar FakeRotaryEncoder::GetRawAngularVelocity()
 {
     if(multibody == NULL)

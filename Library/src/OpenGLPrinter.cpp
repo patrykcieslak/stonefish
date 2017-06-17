@@ -56,7 +56,6 @@ OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLuint size)
 			FT_Set_Pixel_Sizes(face, 0, nativeFontSize);
 			glActiveTexture(GL_TEXTURE1);
 			glEnable(GL_TEXTURE_2D);
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);		
 			
 			//Load all characters
 			for(GLubyte c = 0; c < 128; ++c)
@@ -72,27 +71,27 @@ OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLuint size)
 				GLuint texture;
 				glGenTextures(1, &texture);
 				glBindTexture(GL_TEXTURE_2D, texture);
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
-				//Set texture options
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				//Store character for later use
+				
 				Character character = {texture,
 									   glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
 									   glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
 									   (GLuint)face->glyph->advance.x};
+				
 				chars.insert(std::pair<GLchar, Character>(c, character));
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
-			glBindTexture(GL_TEXTURE_2D, 0);
 			
 			//Freetype not needed any more
 			FT_Done_Face(face);
 			FT_Done_FreeType(ft);
 
-			//Generate VBO for rendering textured quads
-			glGenBuffers(1, &fontVBO);
+			glGenBuffers(1, &fontVBO); //Generate VBO for rendering textured quads
 			glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
 			glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -124,12 +123,11 @@ void OpenGLPrinter::Print(glm::vec4 color, GLfloat x, GLfloat y, GLfloat size, c
 	
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
+	
 	printShader->Enable();
 	printShader->SetUniform("color", color);
 	printShader->SetUniform("tex", 1);
 
-	glEnableVertexAttribArray(0);
-	
 	for(const char *c = text; *c; ++c) 
 	{
 		Character ch = chars[*c];
@@ -144,24 +142,19 @@ void OpenGLPrinter::Print(glm::vec4 color, GLfloat x, GLfloat y, GLfloat size, c
 							 {x2,     -y2 - h, 0, 1},
 							 {x2 + w, -y2 - h, 1, 1}};
   
-		//Bind texture containing the character
-		glBindTexture(GL_TEXTURE_2D, ch.texture);
-		//Update data in VBO
+		glBindTexture(GL_TEXTURE_2D, ch.texture);		
 		glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
-		//Draw chars
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		//Advance to the next position
+		
 		x += (ch.advance >> 6) * scale;
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisableVertexAttribArray(0);
 	printShader->Disable();
-	glActiveTexture(GL_TEXTURE0);
 }
 
 GLuint OpenGLPrinter::TextLength(const char *text)

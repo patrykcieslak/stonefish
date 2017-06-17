@@ -38,7 +38,7 @@ public:
     virtual void Render() = 0;
     virtual void RenderDummy() = 0;
     virtual void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim) = 0;
-    virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale) = 0;
+    virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h) = 0;
     void GlueToEntity(SolidEntity* ent);
     void Activate();
     void Deactivate();
@@ -71,7 +71,7 @@ protected:
     static GLSLShader* spotShader;
     static GLSLShader* ambientShader;
     static GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, skyDiffuseTextureUnit, skyReflectionTextureUnit, ssaoTextureUnit, shadowTextureUnit;
-    
+	
     static ColorSystem cs;
     static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
     static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);

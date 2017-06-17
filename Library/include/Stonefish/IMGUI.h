@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_IMGUI__
@@ -28,8 +28,7 @@
 #define FILLED_COLOR 8
 #define PLOT_COLOR 9                  //Plots
 #define PLOT_TEXT_COLOR 10
-#define GAUGE_SAFE_COLOR 11           //Gauge
-#define GAUGE_DANGER_COLOR 12
+#define CORNER_RADIUS 5.f
 
 struct ui_id
 {
@@ -73,15 +72,13 @@ public:
     
     //widgets
     //passive
-    void DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat radius = 0.f);
+    void DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
     void DoLabel(GLfloat x, GLfloat y, const char* text, GLfloat* color = NULL);
-    void DoProgressBar(GLfloat x, GLfloat y, GLfloat barW, GLfloat barH, btScalar progress, const char* title);
-    void DoGauge(GLfloat x, GLfloat y, GLfloat diameter, btScalar value, btScalar range[2], btScalar safeRange[2], const char* title);
+    void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, btScalar progress, const char* title);
     //active
     bool DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    btScalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat railW, GLfloat railH, GLfloat sliderW, GLfloat sliderH, btScalar min, btScalar max, btScalar value, const char* title);
-    bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, bool value, const char* title);
-    unsigned short DoRadioGroup(ui_id ID, GLfloat x, GLfloat y, unsigned short selection, std::vector<std::string>& items, const char* title);
+    btScalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, btScalar min, btScalar max, btScalar value, const char* title);
+    bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const char* title);
     bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sens, std::vector<unsigned short>& dims, const char* title, bool plottingEnabled = true, btScalar fixedRange[2] = NULL, unsigned int historyLength = 0);
     bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sensX, unsigned short dimX, SimpleSensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength = 0);
     
@@ -94,7 +91,8 @@ private:
     void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const char* text);
     GLfloat PlainTextLength(const char* text);
     glm::vec2 PlainTextDimensions(const char* text);
-    void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat radius);
+    void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
+	void DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
     
     GLint windowW,windowH;
     bool shaders;
@@ -105,14 +103,17 @@ private:
     
     OpenGLPrinter* plainPrinter;
     GLuint logoTexture;
-    glm::vec4 theme[13];
+	GLuint guiTexture;
+    glm::vec4 theme[11];
     GLfloat backgroundMargin;
     
     //Translucent background
+	GLuint guiVAO;
     GLuint translucentFBO;
     GLuint translucentTexture[2];
     GLSLShader* downsampleShader;
     GLSLShader* gaussianShader;
+	GLSLShader* guiShader[2];
     
     static IMGUI* instance;
 };

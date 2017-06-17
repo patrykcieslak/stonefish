@@ -3,12 +3,11 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "RevoluteJoint.h"
 
-#pragma mark Constructors
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -47,7 +46,6 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const b
     angleIC = btScalar(0.);
 }
 
-#pragma mark - Accessors
 void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
 {
     sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetTorque(constantFactor) : btScalar(0.);
@@ -84,7 +82,6 @@ btScalar RevoluteJoint::getAngularVelocity()
     return relativeAV.dot(axis);
 }
 
-#pragma mark - Actions
 void RevoluteJoint::ApplyTorque(btScalar T)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -120,7 +117,6 @@ void RevoluteJoint::ApplyDamping()
 bool RevoluteJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance)
 {
     btScalar angleError = angleIC - UnitSystem::SetAngle(getAngle());
-    //printf("%s: Angle error = %1.3f\n", getName().c_str(), angleError);
     
     //Check if IC reached
     if(fabs(angleError) < angularTolerance)
@@ -133,7 +129,6 @@ bool RevoluteJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTo
     return false;
 }
 
-#pragma mark - Graphics
 btVector3 RevoluteJoint::Render()
 {
     btTypedConstraint* revo = getConstraint();
@@ -148,22 +143,19 @@ btVector3 RevoluteJoint::Render()
     btVector3 C1 = pivot + e1 * axis;
     btVector3 C2 = pivot + e2 * axis;
     
-    glDummyColor();
-    //links
-    glBegin(GL_LINES);
-    glBulletVertex(A);
-    glBulletVertex(C1);
-    glBulletVertex(B);
-    glBulletVertex(C2);
-    glEnd();
-    
-    //axis
-    glEnable(GL_LINE_STIPPLE);
-    glBegin(GL_LINES);
-    glBulletVertex(C1);
-    glBulletVertex(C2);
-    glEnd();
-    glDisable(GL_LINE_STIPPLE);
+    std::vector<glm::vec3> vertices;
+	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	vertices.clear();
+	
+	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+	glEnable(GL_LINE_STIPPLE);
+    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	glDisable(GL_LINE_STIPPLE);
     
     return (C1+C2)/btScalar(2.);
 }

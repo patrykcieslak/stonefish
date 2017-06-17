@@ -53,36 +53,22 @@ void FallingTestApp::DoHUD()
     SimulationApp::DoHUD();
     
     //Left side
-    /*ui_id button;
+    ui_id button;
     button.owner = 1;
     button.item = 1;
     button.index = 0;
-    IMGUI::getInstance()->DoButton(button, 5.f, 59.f, 110.f, 30.f, "Restart");
-    
+    IMGUI::getInstance()->DoButton(button, 5.f, 59.f, 120.f, 30.f, "Restart");
+	
     ui_id check;
     check.owner = 1;
     check.item = 2;
     check.index = 0;
-    checked = IMGUI::getInstance()->DoCheckBox(check, 5.f, 95.f, checked, "Test");
+    checked = IMGUI::getInstance()->DoCheckBox(check, 5.f, 95.f, 120.f, checked, "Test");
     
-    ui_id radio;
-    radio.owner = 1;
-    radio.item = 3;
-    radio.index = 0;
-    std::vector<std::string> items;
-    items.push_back("Item1");
-    items.push_back("Item12");
-    items.push_back("Item123");
-    radioOption = IMGUI::getInstance()->DoRadioGroup(radio, 5.f, 125.f, radioOption, items, "Title");
+    IMGUI::getInstance()->DoProgressBar(5.f, 125.f, 120.f, 0.3f, "Progress");
     
-    IMGUI::getInstance()->DoProgressBar(5.f, 220.f, 100.f, 10.f, 0.3, "Test");
-    
-    IMGUI::getInstance()->DoGauge(5.f, 265.f, 100.f, 10.0, new btScalar[2]{0.0,100.0}, new btScalar[2]{10.0, 80.0}, "Test");
-    */
-    
-    //SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
-    /*Look l = solid->getLook();
-    
+	/*SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
+    Look l = solid->getLook();
     ui_id sliderMat;
     sliderMat.owner = 1;
     sliderMat.item = 10;
@@ -98,18 +84,18 @@ void FallingTestApp::DoHUD()
     sliderMat.item = 12;
     sliderMat.index = 0;
     l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
-    
     solid->SetLook(l);
     */
+	
     //Right side
-    ui_id plot;
+    /*ui_id plot;
     plot.owner = 1;
     plot.item = 0;
     plot.index = 0;
     std::vector<unsigned short> dims;
     dims.push_back(2);
+	dims.push_back(0);
     
-    /*
     if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height"))
     {
         NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");

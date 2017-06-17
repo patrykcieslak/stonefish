@@ -11,13 +11,10 @@
 #include <iostream>
 #include <fstream>
 
-#pragma mark ScientificData class
-#pragma mark -Constructors
 ScientificData::ScientificData(std::string filepath) : path(filepath)
 {
 }
 
-#pragma mark -Destructor
 ScientificData::~ScientificData()
 {
     for(unsigned int i = 0; i < items.size(); ++i)
@@ -26,7 +23,6 @@ ScientificData::~ScientificData()
     items.clear();
 }
 
-#pragma mark -Accessors
 void ScientificData::addItem(ScientificDataItem *it)
 {
     if(it != NULL && it->value != NULL)
@@ -82,8 +78,6 @@ btMatrixXu ScientificData::getMatrix(std::string name)
         return btMatrixXu();
 }
 
-#pragma mark - Octave functions
-#pragma mark -Loading
 ScientificData* LoadOctaveData(const char* path)
 {
     //Open file
@@ -383,7 +377,6 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
     return true;
 }
 
-#pragma mark -Saving
 bool SaveOctaveData(const char* path, const ScientificData& data)
 {
     //open file

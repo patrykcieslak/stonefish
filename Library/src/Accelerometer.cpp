@@ -9,7 +9,6 @@
 #include "Accelerometer.h"
 #include "SimulationApp.h"
 
-#pragma mark Constructors
 Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar noisePSD, ADC* adc, bool measuresInG, btScalar frequency, unsigned int historyLength):SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
@@ -29,7 +28,6 @@ Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, bt
     this->adc = adc;
 }
 
-#pragma mark - Methods
 void Accelerometer::Reset()
 {
     //calculate transformation from global to acc frame

@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Console.h"
@@ -18,6 +18,10 @@ Console::Console()
 	windowW = 800;
     windowH = 600;
     ready = false;
+	consoleVAO = 0;
+	texQuadVBO = 0;
+	texQuadShader = NULL;
+	linesMutex = SDL_CreateMutex();
 }
 
 Console::~Console()
@@ -26,6 +30,12 @@ Console::~Console()
     delete printer;
     if(logoTexture > 0)
         glDeleteTextures(1, &logoTexture);
+	if(consoleVAO > 0)
+		glDeleteVertexArrays(1, &consoleVAO);
+	if(texQuadVBO > 0)
+		glDeleteBuffers(1, &texQuadVBO);
+	if(texQuadShader != NULL)
+		delete texQuadShader;
     SDL_DestroyMutex(linesMutex);
 }
 
@@ -33,10 +43,10 @@ void Console::Init(GLuint w, GLuint h)
 {
 	if(ready)
 		return;
-	
-	OpenGLPrinter::SetWindowSize(w, h);
+		
 	printer = new OpenGLPrinter(FONT_NAME, FONT_SIZE);
-    scrollOffset = 0;
+    OpenGLPrinter::SetWindowSize(w, h);
+	scrollOffset = 0;
     scrollVelocity = 0;
 	windowW = w;
 	windowH = h;
@@ -45,7 +55,7 @@ void Console::Init(GLuint w, GLuint h)
     char path[1024];
     int width, height, channels;
     GetDataPath(path, 1024-32);
-    strcat(path, "logo_color.png");
+    strcat(path, "logo_color_64.png");
     
     // Allocate image; fail out on error
     unsigned char* dataBuffer = stbi_load(path, &width, &height, &channels, 4);
@@ -67,8 +77,27 @@ void Console::Init(GLuint w, GLuint h)
     }
     else
         logoTexture = 0;
-    
-    linesMutex = SDL_CreateMutex();
+		
+	glGenVertexArrays(1, &consoleVAO);
+	glBindVertexArray(consoleVAO);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+		
+	GLfloat saqData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
+							 { 1.f, -1.f, 1.f, 0.f},
+							 {-1.f,  1.f, 0.f, 1.f},
+							 { 1.f,  1.f, 1.f, 1.f}};
+	
+	glGenBuffers(1, &texQuadVBO); 
+	glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO); 
+	glBufferData(GL_ARRAY_BUFFER, sizeof(saqData), saqData, GL_STATIC_DRAW); 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
+	texQuadShader->AddUniform("rect", ParameterType::VEC4);
+	texQuadShader->AddUniform("tex", ParameterType::INT);
+	texQuadShader->AddUniform("color", ParameterType::VEC4);
+	
 	ready = true;
 }
 
@@ -94,6 +123,13 @@ void Console::Render(bool overlay, GLfloat dt)
     long int linesCount = lines.size();
     long int visibleLines = maxVisibleLines;
     long int scrolledLines = 0;
+    
+	GLfloat logoSize = 64.f;
+    GLfloat logoMargin = 10.f;
+	glm::vec4 info(1.f, 1.f, 1.f, 1.f);
+	glm::vec4 warning(1.f, 1.f, 0.f, 1.f);
+	glm::vec4 error(1.f, 0.f, 0.f, 1.f);
+	glm::vec4 colors[3] = {info, warning, error};
     
     if(linesCount < maxVisibleLines) //there is enough space to display all lines
     {
@@ -122,100 +158,103 @@ void Console::Render(bool overlay, GLfloat dt)
             scrollVelocity += (1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 1)) * (GLfloat)windowH * 5.f * dt;
     }
     
-    //Set rendering params
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
     //Setup viewport and ortho
     glScissor(0, 0, windowW, windowH);
     glViewport(0, 0, windowW, windowH);
-    glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glm::mat4 proj = glm::ortho(0.f, (GLfloat)windowW, 0.f, (GLfloat)windowH, -1.f, 1.f);
-	glLoadMatrixf(glm::value_ptr(proj));
-    
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-    
-    if(overlay)
-    {
-        //Draw background
-        glBindTexture(GL_TEXTURE_2D, IMGUI::getInstance()->getTranslucentTexture());
-        glColor4f(0.4f, 0.4f, 0.4f, 1.f);
-        glBegin(GL_TRIANGLE_STRIP);
-        glTexCoord2f(0, 0);
-        glVertex2f(0, 0);
-        glTexCoord2f(1.f, 0);
-        glVertex2f(windowW, 0);
-        glTexCoord2f(0, 1.f);
-        glVertex2f(0, windowH);
-        glTexCoord2f(1.f, 1.f);
-        glVertex2f(windowW, windowH);
-        glEnd();
-    }
-    
-    GLfloat logoSize = 64.f;
-    GLfloat logoMargin = 10.f;
-    
-    glBindTexture(GL_TEXTURE_2D, logoTexture);
-    glColor4f(1.f, 1.f, 1.f, 1.f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0, 0);
-    glVertex2f(windowW - logoSize - logoMargin, windowH - logoMargin);
-    glTexCoord2f(0, 1.f);
-    glVertex2f(windowW - logoSize - logoMargin, windowH - logoMargin - logoSize);
-    glTexCoord2f(1.f, 0);
-    glVertex2f(windowW - logoMargin, windowH - logoMargin);
-    glTexCoord2f(1.f, 1.f);
-    glVertex2f(windowW - logoMargin, windowH - logoMargin - logoSize);
-    glEnd();
-    
-    //Rendering
-    glm::vec4 info(1.f, 1.f, 1.f, 1.f);
-    glm::vec4 warning(1.f, 1.f, 0.f, 1.f);
-    glm::vec4 error(1.f, 0.f, 0.f, 1.f);
-    glm::vec4 colors[3] = {info, warning, error};
-    
-    for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
-    {
-        ConsoleMessage* msg = &lines[linesCount-1-i];
-		printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
-    }
-    
-    glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-    glPopAttrib();
+	
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	if(overlay)
+	{
+		texQuadShader->Enable();
+		texQuadShader->SetUniform("tex", 0);
+		texQuadShader->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
+		texQuadShader->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
+		
+		glActiveTexture(GL_TEXTURE0);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, IMGUI::getInstance()->getTranslucentTexture());
+		
+		glBindVertexArray(consoleVAO);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		
+		texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
+		texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
+		
+		glBindTexture(GL_TEXTURE_2D, logoTexture);
+		
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		
+		texQuadShader->Disable();
+		glBindTexture(GL_TEXTURE_2D, 0);
+	
+		//Text rendering
+		for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
+		{
+			ConsoleMessage* msg = &lines[linesCount-1-i];
+			printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
+		}
+		
+		glBindVertexArray(0);
+	}
+	else //During loading of resources (displaying in second thread -> no VAO sharing)
+	{
+		texQuadShader->Enable();
+		texQuadShader->SetUniform("tex", 0);
+		texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
+		texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
+		
+		glActiveTexture(GL_TEXTURE0);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, logoTexture);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+ 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		
+		glBindTexture(GL_TEXTURE_2D, 0);
+		texQuadShader->Disable();
+		
+		//Text rendering
+		for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
+		{
+			ConsoleMessage* msg = &lines[linesCount-1-i];
+			printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
+		}
+	}
 }
 
 void Console::Print(int messageType, const char *format, ...)
 {
-	if(!ready)
-		return;
-	
-    va_list args;
+	va_list args;
     char buffer[4096];
     va_start(args, format);
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
-    
+	
+#ifdef DEBUG
+    printf("%s\n", buffer);
+#endif
+	
+	if(!ready)
+		return;
+	
     ConsoleMessage msg;
     msg.type = messageType;
     msg.text = std::string(buffer);
     SDL_LockMutex(linesMutex);
     lines.push_back(msg);
     SDL_UnlockMutex(linesMutex);
-    
-#ifdef DEBUG
-    printf("%s\n", msg.text.c_str());
-#endif
 }
 
 void Console::Clear()

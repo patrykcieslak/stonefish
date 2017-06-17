@@ -30,7 +30,6 @@
 #include "ForcefieldEntity.h"
 #include "Ocean.h"
 
-#pragma mark Constructors
 SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
 {
     //Set coordinate system
@@ -62,13 +61,11 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     drawCameraDummies = false;
 }
 
-#pragma mark - Destructor
 SimulationManager::~SimulationManager()
 {
     DestroyScenario();
 }
 
-#pragma mark - Accessors
 void SimulationManager::AddEntity(Entity *ent)
 {
     if(ent != NULL)
@@ -398,7 +395,6 @@ void SimulationManager::setICSolverParams(bool useGravity, btScalar timeStep, un
     icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : btScalar(1e-6);
 }
 
-#pragma mark - Simulation
 void SimulationManager::InitializeSolver()
 {
     dwBroadphase = new btDbvtBroadphase();
@@ -708,7 +704,6 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
     dwSolver->setNumFallbacks(0);
 }
 
-#pragma mark - To Be Moved Somewhere
 Entity* SimulationManager::PickEntity(int x, int y)
 {
     for(int i = 0; i < views.size(); i++)
@@ -735,7 +730,6 @@ Entity* SimulationManager::PickEntity(int x, int y)
     return NULL;
 }
 
-#pragma mark - Callbacks
 extern ContactAddedCallback gContactAddedCallback;
 
 bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)

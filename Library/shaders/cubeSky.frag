@@ -1,8 +1,11 @@
-#version 120
+#version 330 core
 /*
     :copyright: 2011 by Florian Boesch <pyalot@gmail.com>.
     :license: GNU AGPL3, see LICENSE for more details.
 */
+
+out vec4 fragcolor;
+
 uniform vec2 viewport;
 uniform mat4 inv_proj;
 uniform mat3 inv_view_rot;
@@ -103,5 +106,5 @@ void main(void)
     mie_collected = (mie_collected*eye_extinction*pow(eye_depth, mie_collection_power))/float(step_count);
 
     vec3 color = vec3(spot*mie_collected + mie_factor*mie_collected + rayleigh_factor*rayleigh_collected);
-    gl_FragColor = vec4(color, 1.0);
+    fragcolor = vec4(color, 1.0);
 }

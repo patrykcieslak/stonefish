@@ -7,6 +7,7 @@
 //
 
 #include "StaticEntity.h"
+#include "GeometryUtil.hpp"
 
 StaticEntity::StaticEntity(std::string uniqueName, Material* mat, int _lookId) : Entity(uniqueName)
 {
@@ -38,10 +39,8 @@ void StaticEntity::Render()
     if(rigidBody != NULL && objectId >= 0 && isRenderable())
     {
 		btTransform trans;
-        btScalar openglTrans[16];
         rigidBody->getMotionState()->getWorldTransform(trans);
-        trans.getOpenGLMatrix(openglTrans);
-		OpenGLContent::getInstance()->DrawObject(objectId, lookId, openglTrans);
+		OpenGLContent::getInstance()->DrawObject(objectId, lookId, glMatrixFromBtTransform(trans));
     }
 }
 

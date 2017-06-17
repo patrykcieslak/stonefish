@@ -1,4 +1,8 @@
-#version 120
+#version 330 core
+
+in vec2 texcoord;
+out vec4 fragcolor;
+
 uniform sampler2D texDiffuse;
 uniform sampler2D texNormal;
 uniform sampler2D texSSAO;
@@ -11,18 +15,18 @@ uniform vec2 viewport;
 vec3 sky(samplerCube tex, vec3 srcNormal)
 {
     vec3 worldNormal = normalize(inv_view_rot*srcNormal);
-    return textureCube(tex, worldNormal).rgb;
+    return texture(tex, worldNormal).rgb;
 }
 
 void main()
 {
-    vec3 color = texture2D(texDiffuse, gl_TexCoord[0].xy).rgb;
-    vec4 normal_depth = texture2D(texNormal, gl_TexCoord[0].xy);
+    vec3 color = texture(texDiffuse, texcoord).rgb;
+    vec4 normal_depth = texture(texNormal, texcoord);
     vec3 normal = normal_depth.xyz;
     
-    float occlusion = texture2D(texSSAO, gl_TexCoord[0].xy).r;
+    float occlusion = texture(texSSAO, texcoord).r;
     vec3 diffuse_color = sky(texSkyDiff, normal);
     vec3 result = diffuse_color.rgb * color * (1.0 - occlusion);
     
-    gl_FragColor = vec4(result, 1.0);
+    fragcolor = vec4(result, 1.0);
 }

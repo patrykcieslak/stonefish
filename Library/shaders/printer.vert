@@ -1,10 +1,10 @@
-#version 120
+#version 330 core
 
-//attribute vec4 coord;
-varying vec2 texcoord;
+layout(location = 0) in vec4 vertex;
+out vec2 texcoord;
 
-void main(void) 
+void main() 
 {
-	texcoord = gl_Vertex.zw;
-	gl_Position = vec4(gl_Vertex.xy, 0, 1.0);
+	texcoord = vertex.zw;
+	gl_Position = vec4(vertex.xy, 0, 1.0);
 }

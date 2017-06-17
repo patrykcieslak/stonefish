@@ -8,13 +8,10 @@
 
 #include "SignalGenerator.h"
 
-#pragma mark SignalGenerator
-#pragma mark -Constructors
 SignalGenerator::SignalGenerator()
 {
 }
 
-#pragma mark -Destructor
 SignalGenerator::~SignalGenerator()
 {
     for(unsigned int i = 0; i < components.size(); ++i)
@@ -23,7 +20,6 @@ SignalGenerator::~SignalGenerator()
     components.clear();
 }
 
-#pragma mark -Methods
 void SignalGenerator::AddComponent(Signal* c)
 {
     if(c != NULL)
@@ -55,21 +51,16 @@ btScalar SignalGenerator::ValueAtTime(btScalar t)
     return value;
 }
 
-#pragma mark - ConstSignal
-#pragma mark -Constructors
 ConstSignal::ConstSignal(btScalar value, SignalCombineType combineOperation) : Signal(combineOperation)
 {
     val = value;
 }
 
-#pragma mark -Methods
 btScalar ConstSignal::ValueAtTime(btScalar t)
 {
     return val;
 }
 
-#pragma mark - StepSignal
-#pragma mark -Constructors
 StepSignal::StepSignal(btScalar initialValue, btScalar finalValue, btScalar stepTime, btScalar stepDuration, SignalCombineType combineOperation) : Signal(combineOperation)
 {
     val0 = initialValue;
@@ -78,7 +69,6 @@ StepSignal::StepSignal(btScalar initialValue, btScalar finalValue, btScalar step
     stepD = stepDuration < btScalar(0.) ? btScalar(0.) : stepDuration;
 }
 
-#pragma mark -Methods
 btScalar StepSignal::ValueAtTime(btScalar t)
 {
     if(t < stepT)
@@ -89,14 +79,11 @@ btScalar StepSignal::ValueAtTime(btScalar t)
         return (t - stepT)/stepD * (val1 - val0) + val0;
 }
 
-#pragma mark - PwlSignal
-#pragma mark -Constructors
 PwlSignal::PwlSignal(btScalar initialValue, SignalCombineType combineOperation)  : Signal(combineOperation)
 {
     points.push_back(Point2D(0, initialValue));
 }
 
-#pragma mark -Methods
 bool PwlSignal::AddValueAtTime(btScalar v, btScalar t)
 {
     if(t >= points.back().x)
@@ -133,8 +120,6 @@ btScalar PwlSignal::ValueAtTime(btScalar t)
     return btScalar(0.);
 }
 
-#pragma mark - SinSignal
-#pragma mark -Constructors
 SinSignal::SinSignal(btScalar frequency, btScalar amplitude, btScalar initialPhase, SignalCombineType combineOperation) : Signal(combineOperation)
 {
     freq = frequency > btScalar(0.) ? frequency : btScalar(1.); //Defaults to 1Hz
@@ -142,7 +127,6 @@ SinSignal::SinSignal(btScalar frequency, btScalar amplitude, btScalar initialPha
     phase = UnitSystem::SetAngle(initialPhase);
 }
 
-#pragma mark -Methods
 btScalar SinSignal::ValueAtTime(btScalar t)
 {
     return amp * btSin(t * freq * SIMD_2_PI + phase);

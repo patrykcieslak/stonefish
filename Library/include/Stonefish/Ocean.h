@@ -40,8 +40,7 @@ public:
 protected:
     Fluid* fluid;
     btScalar depth;
-    GLint surfaceDisplayList;
-    GLint volumeDisplayList;
+    GLuint surfaceObjectId;
+	Mesh* surfaceMesh;
 };
-
 #endif

@@ -54,6 +54,4 @@ private:
     btScalar lastVoverL;
 };
 
-
-
 #endif

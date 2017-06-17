@@ -7,6 +7,7 @@
 //
 
 #include "FeatherstoneEntity.h"
+#include "GeometryUtil.hpp"
 
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, const btTransform& transform, btMultiBodyDynamicsWorld* world, bool fixedBase) : Entity(uniqueName)
 {
@@ -378,9 +379,7 @@ void FeatherstoneEntity::Render()
     if(baseRenderable)
     {
 		btTransform trans = multiBody->getBaseCollider()->getWorldTransform() * links[0].solid->localTransform.inverse();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-		OpenGLContent::getInstance()->DrawObject(links[0].solid->getObject(), links[0].solid->getLook(), openglTrans);
+		OpenGLContent::getInstance()->DrawObject(links[0].solid->getObject(), links[0].solid->getLook(), glMatrixFromBtTransform(trans));
     }
     
     //Draw rest of links
@@ -388,29 +387,18 @@ void FeatherstoneEntity::Render()
     {
 		btMultibodyLink& link = multiBody->getLink(i);
         btTransform trans = link.m_collider->getWorldTransform() * links[i + 1].solid->localTransform.inverse();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        OpenGLContent::getInstance()->DrawObject(links[i + 1].solid->getObject(), links[i + 1].solid->getLook(), openglTrans);
+        OpenGLContent::getInstance()->DrawObject(links[i + 1].solid->getObject(), links[i + 1].solid->getLook(), glMatrixFromBtTransform(trans));
     }
 }
 
 void FeatherstoneEntity::RenderStructure()
 {
-    /*if(baseRenderable)
+    if(baseRenderable)
     {
         //Draw base coord
         btTransform trans = multiBody->getBaseCollider()->getWorldTransform();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        OpenGLSolids::DrawCoordSystem(0.1f);
-        glPopMatrix();
+        glm::mat4 M = glMatrixFromBtTransform(trans);
+		OpenGLContent::getInstance()->DrawCoordSystem(M, 0.1f);
     }
     
     //Draw rest of coords
@@ -418,16 +406,7 @@ void FeatherstoneEntity::RenderStructure()
     {
         btMultibodyLink& link = multiBody->getLink(i);
         btTransform trans = link.m_collider->getWorldTransform();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        OpenGLSolids::DrawCoordSystem(0.1f);
-        glPopMatrix();
-    }*/
+		glm::mat4 M = glMatrixFromBtTransform(trans);
+		OpenGLContent::getInstance()->DrawCoordSystem(M, 0.1f);
+    }
 }

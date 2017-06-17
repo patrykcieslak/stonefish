@@ -8,12 +8,10 @@
 
 #include "SignalMux.h"
 
-#pragma mark Constructors
 SignalMux::SignalMux()
 {
 }
 
-#pragma mark - Destructor
 SignalMux::~SignalMux()
 {
     for(unsigned int i = 0; i < signalGens.size(); ++i)
@@ -22,7 +20,6 @@ SignalMux::~SignalMux()
     signalGens.clear();
 }
 
-#pragma mark - Methods
 void SignalMux::AddSignalGenerator(SignalGenerator* sg)
 {
     if(sg != NULL)

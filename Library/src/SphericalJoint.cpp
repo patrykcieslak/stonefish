@@ -3,12 +3,11 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "SphericalJoint.h"
 
-#pragma mark Constructors
 SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
@@ -25,7 +24,6 @@ SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, Soli
     angleIC = btVector3(0.,0.,0.);
 }
 
-#pragma mark - Accessors
 void SphericalJoint::setDamping(btVector3 constantFactor, btVector3 viscousFactor)
 {
     for(int i = 0; i < 3; i++)
@@ -45,7 +43,6 @@ JointType SphericalJoint::getType()
     return JOINT_SPHERICAL;
 }
 
-#pragma mark - Actions
 void SphericalJoint::ApplyTorque(btVector3 T)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -81,7 +78,6 @@ bool SphericalJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularT
     return true;
 }
 
-#pragma mark - Graphics
 btVector3 SphericalJoint::Render()
 {
     btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
@@ -89,13 +85,12 @@ btVector3 SphericalJoint::Render()
     btVector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
     btVector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
     
-    glDummyColor();
-    glBegin(GL_LINES);
-    glBulletVertex(A);
-    glBulletVertex(pivot);
-    glBulletVertex(B);
-    glBulletVertex(pivot);
-    glEnd();
-    
+	std::vector<glm::vec3> vertices;
+	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+	vertices.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+	vertices.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	
     return pivot;
 }

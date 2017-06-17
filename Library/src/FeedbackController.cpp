@@ -8,7 +8,6 @@
 
 #include "FeedbackController.h"
 
-#pragma mark Constructors
 FeedbackController::FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency) : Controller(uniqueName, frequency)
 {
     referenceGen = NULL;
@@ -20,7 +19,6 @@ FeedbackController::FeedbackController(std::string uniqueName, unsigned int numb
         reference.push_back(btScalar(0.));
 }
 
-#pragma mark - Destructor
 FeedbackController::~FeedbackController()
 {
     if(referenceGen != NULL)
@@ -32,7 +30,6 @@ FeedbackController::~FeedbackController()
     reference.clear();
 }
 
-#pragma mark - Accessors
 void FeedbackController::setReferenceSignalGenerator(unsigned int inputId, SignalGenerator* sg)
 {
     if(sg != NULL && inputId < reference.size())

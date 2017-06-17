@@ -17,11 +17,10 @@ class CableEntity : public Entity
 {
 public:
     CableEntity(std::string uniqueName, const btVector3& end1, const btVector3& end2, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat);
-    CableEntity(std::string uniqueName, const btVector3& end1, const btVector3& end2, btVector3* midPoints, unsigned int midPointsCount, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat);
     virtual ~CableEntity();
     
     EntityType getType();
-    void SetLook(Look newLook);
+    void SetLook(int newLookId);
     void Render();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void ApplyGravity();
@@ -43,8 +42,10 @@ private:
     btScalar partLength;
     btScalar partVolume;
     
+	Mesh* partMesh;
     Material* material;
-    Look look;
+	int lookId;
+	int objectId;
 };
 
 #endif

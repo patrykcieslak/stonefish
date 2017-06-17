@@ -8,7 +8,6 @@
 
 #include "Magnetometer.h"
 
-#pragma mark Constructors
 Magnetometer::Magnetometer(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, unsigned short resolution, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
@@ -20,7 +19,6 @@ Magnetometer::Magnetometer(std::string uniqueName, SolidEntity* attachment, btTr
     channels.push_back(SensorChannel("Magnetic field " + axisName[axis], QUANTITY_UNITLESS));
 }
 
-#pragma mark - Methods
 void Magnetometer::Reset()
 {
     SimpleSensor::Reset();

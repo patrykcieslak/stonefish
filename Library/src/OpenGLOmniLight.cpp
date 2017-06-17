@@ -8,6 +8,7 @@
 
 #include "OpenGLOmniLight.h"
 #include "SimulationManager.h"
+#include "GeometryUtil.hpp"
 
 OpenGLOmniLight::OpenGLOmniLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {
@@ -37,48 +38,27 @@ void OpenGLOmniLight::Render()
 
 void OpenGLOmniLight::RenderDummy()
 {
-	/*
-    //transformation
     btTransform trans(btQuaternion::getIdentity(), getPosition());
-    btScalar openglTrans[16];
-    trans.getOpenGLMatrix(openglTrans);
-    
-    glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-    glMultMatrixd(openglTrans);
-#else
-    glMultMatrixf(openglTrans);
-#endif
-    
-    //rendering
+    glm::mat4 model = glMatrixFromBtTransform(trans);
+	
     GLfloat iconSize = surfaceDistance;
     int steps = 24;
     
-    glColor4f(0.f, 1.f, 0.f, 1.f);
-    
-    glBegin(GL_LINE_LOOP);
-    for(int i=0; i<steps; i++)
-    {
-        glVertex3f(sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize, 0.f);
-    }
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    for(int i=0; i<steps; i++)
-    {
-        glVertex3f(0.f, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize, sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize);
-    }
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    for(int i=0; i<steps; i++)
-    {
-        glVertex3f(sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize, 0.f, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize);
-    }
-    glEnd();
-    
-    glPopMatrix();
-	 */
+	std::vector<glm::vec3> vertices;
+	
+	for(unsigned int i=0; i<=steps; ++i)
+		vertices.push_back(glm::vec3(sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize, 0.f));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	vertices.clear();
+	
+	for(unsigned int i=0; i<=steps; ++i)
+		vertices.push_back(glm::vec3(0.f, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize, sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	vertices.clear();
+	
+	for(unsigned int i=0; i<=steps; ++i)
+		vertices.push_back(glm::vec3(sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize, 0.f, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize));
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
 void OpenGLOmniLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)
@@ -86,7 +66,7 @@ void OpenGLOmniLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* s
     
 }
 
-void OpenGLOmniLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat scale)
+void OpenGLOmniLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 {
     
 }

@@ -10,15 +10,15 @@
 #include "SystemUtil.hpp"
 #include "Console.h"
 
-GLhandleARB GLSLShader::saqVertexShader = NULL;
+GLuint GLSLShader::saqVertexShader = 0;
 
 GLSLShader::GLSLShader(const char* fragment, const char* vertex)
 {
     valid = false;
     enabled = false;
     GLint compiled = 0;
-    GLhandleARB vs;
-    GLhandleARB fs;
+    GLuint vs;
+    GLuint fs;
     
     if(vertex == NULL)
         vs = saqVertexShader;
@@ -27,16 +27,14 @@ GLSLShader::GLSLShader(const char* fragment, const char* vertex)
     
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, &compiled);
     
-    shader = CreateProgramObject(vs, fs);
-    LinkProgram(shader, &compiled);
-    
+    shader = CreateProgram(vs, fs);
     valid = true;
 }
 
 GLSLShader::~GLSLShader()
 {
     if(valid)
-        glDeleteObjectARB(shader);
+        glDeleteProgram(shader);
 }
 
 bool GLSLShader::isValid()
@@ -53,14 +51,14 @@ void GLSLShader::Enable()
 {
     if(valid)
     {
-        glUseProgramObjectARB(shader);
+        glUseProgram(shader);
         enabled = true;
     }
 }
 
 void GLSLShader::Disable()
 {
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
     enabled = false;
 }
 
@@ -71,7 +69,7 @@ bool GLSLShader::AddAttribute(std::string name, ParameterType type)
     att.type = type;
     
     Enable();
-    att.index = glGetAttribLocationARB(shader, name.c_str());
+    att.index = glGetAttribLocation(shader, name.c_str());
     Disable();
     
     if(att.index < 0)
@@ -88,7 +86,7 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     uni.type = type;
     
     Enable();
-    uni.location = glGetUniformLocationARB(shader, name.c_str());
+    uni.location = glGetUniformLocation(shader, name.c_str());
     Disable();
     
     if(uni.location < 0)
@@ -104,7 +102,7 @@ bool GLSLShader::SetAttribute(std::string name, GLfloat x)
     bool success = GetAttribute(name, FLOAT, index);
     
     if(success)
-        glVertexAttrib1fARB(index, x);
+        glVertexAttrib1f(index, x);
     
     return success;
 }
@@ -115,7 +113,7 @@ bool GLSLShader::SetUniform(std::string name, bool x)
     bool success = GetUniform(name, BOOLEAN, location);
   
     if(success)
-        glUniform1iARB(location, (GLint)x);
+        glUniform1i(location, (GLint)x);
     
     return success;
 }
@@ -126,7 +124,7 @@ bool GLSLShader::SetUniform(std::string name, GLfloat x)
     bool success = GetUniform(name, FLOAT, location);
     
     if(success)
-        glUniform1fARB(location, x);
+        glUniform1f(location, x);
     
     return success;
 }
@@ -137,7 +135,7 @@ bool GLSLShader::SetUniform(std::string name, glm::vec2 x)
     bool success = GetUniform(name, VEC2, location);
     
     if(success)
-        glUniform2fvARB(location, 1, glm::value_ptr(x));
+        glUniform2fv(location, 1, glm::value_ptr(x));
     
     return success;
 }
@@ -148,7 +146,7 @@ bool GLSLShader::SetUniform(std::string name, glm::vec3 x)
     bool success = GetUniform(name, VEC3, location);
     
     if(success)
-        glUniform3fvARB(location, 1, glm::value_ptr(x));
+        glUniform3fv(location, 1, glm::value_ptr(x));
     
     return success;
 }
@@ -159,7 +157,7 @@ bool GLSLShader::SetUniform(std::string name, glm::vec4 x)
     bool success = GetUniform(name, VEC4, location);
     
     if(success)
-        glUniform4fvARB(location, 1, glm::value_ptr(x));
+        glUniform4fv(location, 1, glm::value_ptr(x));
     
     return success;
 }
@@ -170,7 +168,7 @@ bool GLSLShader::SetUniform(std::string name, GLint x)
     bool success = GetUniform(name, INT, location);
     
     if(success)
-        glUniform1iARB(location, x);
+        glUniform1i(location, x);
     
     return success;
 }
@@ -181,7 +179,7 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec2 x)
     bool success = GetUniform(name, IVEC2, location);
     
     if(success)
-        glUniform2ivARB(location, 1, glm::value_ptr(x));
+        glUniform2iv(location, 1, glm::value_ptr(x));
     
     return success;
 }
@@ -192,7 +190,7 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec3 x)
     bool success = GetUniform(name, IVEC3, location);
     
     if(success)
-        glUniform3ivARB(location, 1, glm::value_ptr(x));
+        glUniform3iv(location, 1, glm::value_ptr(x));
     
     return success;
 }
@@ -203,7 +201,7 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec4 x)
     bool success = GetUniform(name, IVEC4, location);
     
     if(success)
-        glUniform4ivARB(location, 1, glm::value_ptr(x));
+        glUniform4iv(location, 1, glm::value_ptr(x));
     
     return success;
 }
@@ -214,7 +212,7 @@ bool GLSLShader::SetUniform(std::string name, glm::mat3 x)
     bool success = GetUniform(name, MAT3, location);
     
     if(success)
-        glUniformMatrix3fvARB(location, 1, GL_FALSE, glm::value_ptr(x));
+        glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(x));
     
     return success;
 }
@@ -225,7 +223,7 @@ bool GLSLShader::SetUniform(std::string name, glm::mat4 x)
     bool success = GetUniform(name, MAT4, location);
     
     if(success)
-        glUniformMatrix4fvARB(location, 1, GL_FALSE, glm::value_ptr(x));
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(x));
     
     return success;
 }
@@ -247,7 +245,7 @@ bool GLSLShader::GetUniform(std::string name, ParameterType type, GLint& locatio
             }
         }
 
-    cError("Uniform %s doesn't exist!", name.c_str());
+    //cError("Uniform %s doesn't exist!", name.c_str());
     return false;
 }
 
@@ -271,34 +269,20 @@ bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index
 //// Statics
 bool GLSLShader::Init()
 {
-    if(!CheckShadersAvailable())
-        return false;
-    
     GLint compiled;
     saqVertexShader = LoadShader(GL_VERTEX_SHADER, "saq.vert", &compiled);
-    return true;
+    return compiled;
 }
 
 void GLSLShader::Destroy()
 {
-    if(saqVertexShader != NULL)
-        glDeleteObjectARB(saqVertexShader);
+    if(saqVertexShader != 0)
+        glDeleteProgram(saqVertexShader);
 }
 
-//// Private statics
-bool GLSLShader::CheckShadersAvailable()
+GLuint GLSLShader::LoadShader(GLenum shaderType, const char *filename, GLint *shaderCompiled)
 {
-    bool exts[4];
-    exts[0] = CheckForExtension("GL_ARB_shader_objects");
-    exts[1] = CheckForExtension("GL_ARB_shading_language_100");
-    exts[2] = CheckForExtension("GL_ARB_vertex_shader");
-    exts[3] = CheckForExtension("GL_ARB_fragment_shader");
-    return exts[0] && exts[1] && exts[2] && exts[3];
-}
-
-GLhandleARB GLSLShader::LoadShader(GLenum shaderType, const char *filename, GLint *shaderCompiled)
-{
-	GLhandleARB shaderObject = NULL;
+	GLuint shader = 0;
     
     char path[1024];
     GetShaderPath(path, 1024-32);
@@ -324,30 +308,21 @@ GLhandleARB GLSLShader::LoadShader(GLenum shaderType, const char *filename, GLin
 	if(shaderSource!= NULL)
 	{
 		GLint infoLogLength = 0;
-		shaderObject = glCreateShaderObjectARB(shaderType);
+		shader = glCreateShader(shaderType);
 		
-		glShaderSourceARB(shaderObject, 1, (const GLcharARB**)&shaderSource, NULL);
-		glCompileShaderARB(shaderObject);
+		glShaderSource(shader, 1, (const GLchar**)&shaderSource, NULL);
+		glCompileShader(shader);
 		
-		glGetObjectParameterivARB(shaderObject, GL_OBJECT_INFO_LOG_LENGTH_ARB, &infoLogLength);
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
-		if( infoLogLength > 0 )
+		if(infoLogLength > 0)
 		{
-			GLcharARB *infoLog = (GLcharARB *)malloc(infoLogLength);
-			
-			if( infoLog != NULL )
-			{
-				glGetInfoLogARB(shaderObject,
-								infoLogLength,
-								&infoLogLength,
-								infoLog);
-				
-				cWarning("Shader compile log: %s", infoLog);
-				free(infoLog);
-			}
+			std::vector<char> infoLog(infoLogLength+1);
+			glGetShaderInfoLog(shader, infoLogLength, NULL, &infoLog[0]);
+			cWarning("Shader compile log: %s", &infoLog[0]);
 		}
 		
-		glGetObjectParameterivARB(shaderObject, GL_OBJECT_COMPILE_STATUS_ARB, shaderCompiled);
+		glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
 		
 		if(*shaderCompiled == 0)
 			cError("Failed to compile shader: %s", shaderSource);
@@ -355,62 +330,44 @@ GLhandleARB GLSLShader::LoadShader(GLenum shaderType, const char *filename, GLin
         free(shaderSource);
 	}
 	else
-		*shaderCompiled = 1;
+		*shaderCompiled = 0;
     
-	return shaderObject;
+	return shader;
 }
 
-void GLSLShader::LinkProgram(GLhandleARB programObject, GLint *programLinked)
-{
-	GLint infoLogLength = 0;
-	
-	glLinkProgramARB(programObject);
-	
-	glGetObjectParameterivARB(programObject, GL_OBJECT_INFO_LOG_LENGTH_ARB, &infoLogLength);
-	
-	if(infoLogLength > 0)
-	{
-		GLcharARB *infoLog = (GLcharARB *)malloc(infoLogLength);
-		
-		if( infoLog != NULL)
-		{
-			glGetInfoLogARB(programObject,
-							infoLogLength,
-							&infoLogLength,
-							infoLog);
-			
-			cWarning("Program link log: %s", infoLog);
-			free(infoLog);
-		}
-	}
-	
-	glGetObjectParameterivARB(programObject, GL_OBJECT_LINK_STATUS_ARB, programLinked);
-	
-	if(*programLinked == 0)
-    {
-		cError("Failed to link program: %s", (GLubyte *)&programObject);
-    }
-}
-
-GLhandleARB GLSLShader::CreateProgramObject(GLhandleARB vertexShader, GLhandleARB fragmentShader)
+GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint fragmentShader)
 {
 	GLint programLinked = 0;
+	GLuint program = glCreateProgram();
+	GLint infoLogLength = 0;
+		
+	glAttachShader(program, vertexShader);
+	glAttachShader(program, fragmentShader);
+	glLinkProgram(program);
 	
-	GLhandleARB programObject = glCreateProgramObjectARB();
-	
-	glAttachObjectARB(programObject, vertexShader);
-	glDeleteObjectARB(vertexShader);
-	
-	glAttachObjectARB(programObject, fragmentShader);
-	glDeleteObjectARB(fragmentShader);
-	
-	LinkProgram(programObject, &programLinked);
-	
-	if(!programLinked)
+	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+	if(infoLogLength > 0)
 	{
-		glDeleteObjectARB(programObject);
-		programObject = NULL;
+		std::vector<char> infoLog(infoLogLength+1);
+		glGetProgramInfoLog(program, infoLogLength, NULL, &infoLog[0]);
+		cWarning("Program link log: %s", &infoLog[0]);
 	}
 	
-	return programObject;
+	glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
+	
+	glDetachShader(program, vertexShader);
+	glDetachShader(program, fragmentShader);
+	
+	if(vertexShader != saqVertexShader)
+		glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	
+	if(programLinked == 0)
+    {
+		cError("Failed to link program: %s", (GLuint*)&program);
+		glDeleteProgram(program);
+		program = 0;
+	}
+	
+	return program;
 }

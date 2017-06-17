@@ -1,8 +1,10 @@
-#version 120
+#version 330 core
 /*
     :copyright: 2011 by Florian Boesch <pyalot@gmail.com>.
     :license: GNU AGPL3, see LICENSE for more details.
 */
+
+out vec4 fragcolor;
 
 uniform samplerCube source;
 uniform vec2 viewport;
@@ -41,7 +43,7 @@ vec4 sample(mat3 side, vec3 eyedir, vec3 base_ray)
     vec3 ray = side*base_ray;
     float lambert = max(0.0, dot(ray, eyedir));
     float term = pow(lambert, specularity)*base_ray.z;
-    return vec4(textureCube(source, ray).rgb*term, term);
+    return vec4(texture(source, ray).rgb*term, term);
 }
 
 void main()
@@ -63,5 +65,5 @@ void main()
         }
     }
     result /= result.w;
-    gl_FragColor = vec4(result.rgb, 1.0);
+    fragcolor = vec4(result.rgb, 1.0);
 }

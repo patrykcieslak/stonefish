@@ -8,7 +8,6 @@
 
 #include "DCMotor.h"
 
-#pragma mark Constructors
 DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName, revolute)
 {
     //Params

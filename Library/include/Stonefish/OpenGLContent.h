@@ -9,10 +9,13 @@
 #ifndef __Stonefish_OpenGLContent__
 #define __Stonefish_OpenGLContent__
 
-#include "OpenGLPipeline.h"
 #include <vector>
+#include "OpenGLPipeline.h"
+#include "GLSLShader.h"
 
 //Geometry
+typedef enum {POINTS, LINES, LINE_STRIP} PrimitiveType;
+
 struct Vertex 
 {
 	glm::vec3 pos;
@@ -87,17 +90,21 @@ class OpenGLContent
 public:
 	static OpenGLContent* getInstance(); //Singleton
 	static void Destroy();
-	
-	//Deprecated
-	void SetupOrtho();
-    
 	void Init();
 	void DestroyContent();
 	
 	//Draw
-	void DrawObject(int modelId, int lookId, btScalar* transform);
+	void SetViewportSize(unsigned int width, unsigned int height);
+	void SetProjectionMatrix(glm::mat4 P);
+	void SetViewMatrix(glm::mat4 V);
+	void SetDrawFlatObjects(bool enable);
+	
 	void DrawSAQ();
-	void DrawCoordSystem(GLfloat size);
+	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
+	void DrawCubemapCross(GLuint texture);
+	void DrawCoordSystem(glm::mat4 M, GLfloat size);
+	void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
+	void DrawObject(int modelId, int lookId, const glm::mat4& M);
 	
 	//Allocate and build content
 	unsigned int BuildObject(Mesh* mesh);
@@ -107,7 +114,7 @@ public:
 	//Static
 	static GLuint LoadTexture(const char* filename);
 	static GLuint LoadInternalTexture(const char* filename);
-	static Mesh* LoadMesh(const char* filename, btScalar scale, bool smooth);
+	static Mesh* LoadMesh(const char* filename, GLfloat scale, bool smooth);
 	static Mesh* BuildPlane(GLfloat halfExtents);
 	static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3);
 	static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
@@ -119,10 +126,27 @@ public:
 	static void AABS(Mesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffset);
 	
 private:
+	//Modes
+	bool drawFlatObjects; //For shadow casting
+
 	//Data
 	std::vector<Object> objects; //VBAs
 	std::vector<Look> looks; //OpenGL materials
-	GLuint saq; //screen-aligned quad VBO
+	glm::mat4 view; //Current view matrix;
+	glm::mat4 projection; //Current projection matrix
+	glm::mat4 viewProjection; //Current view-projection matrix
+	glm::vec2 viewportSize; //Current view-port size
+	
+	//Standard objects
+	GLuint baseVertexArray; //base VAO
+	GLuint saqBuf; //screen-aligned quad VBO
+	GLuint cubeBuf; //cubemap cross VBO
+	GLuint csBuf[2]; //vertex data for drawing coord systems 
+	GLSLShader* helperShader;
+	GLSLShader* texQuadShader;
+	GLSLShader* texCubeShader;
+	GLSLShader* flatShader;
+	GLSLShader* gbufferShader;
 
 	//Singleton
 	OpenGLContent();
@@ -133,8 +157,9 @@ private:
 	void UseStandardLook();
 	
 	//Static
-	static Mesh* LoadSTL(const char *filename, btScalar scale, bool smooth);
-	static Mesh* LoadOBJ(const char *filename, btScalar scale, bool smooth);
+	static Mesh* LoadSTL(const char *filename, GLfloat scale, bool smooth);
+	static Mesh* LoadOBJ(const char *filename, GLfloat scale, bool smooth);
+	
 };
 
 #endif

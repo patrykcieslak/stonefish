@@ -8,14 +8,12 @@
 
 #include "Current.h"
 
-#pragma mark Constructors
 Current::Current(std::string uniqueName, DCMotor* m, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     motor = m;
     channels.push_back(SensorChannel("Current", QUANTITY_CURRENT));
 }
 
-#pragma mark - Methods
 void Current::Reset()
 {
     SimpleSensor::Reset();

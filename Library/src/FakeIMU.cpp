@@ -9,12 +9,10 @@
 #include "FakeIMU.h"
 #include "SimulationApp.h"
 
-#pragma mark Constructors
 FakeIMU::FakeIMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency, unsigned int historyLength) : IMU(uniqueName, attachment, relFrame, frequency, historyLength)
 {
 }
 
-#pragma mark - Methods
 void FakeIMU::Reset()
 {
     //calculate transformation from global to imu frame

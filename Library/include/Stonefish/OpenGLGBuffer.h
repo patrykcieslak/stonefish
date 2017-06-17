@@ -29,10 +29,6 @@ public:
 	GLuint getPositionTexture(GLuint index) const { return positionTexture[index]; }
 	GLuint getNormalsTexture(GLuint index) const { return normalsTexture[index]; }
     
-    static void LoadShaders();
-    static void DeleteShaders();
-    static void SetUniformMaterialData(GLfloat x);
-    
 private:
     GLuint fbo;                // FBO handle
 	GLuint diffuseTexture;     // texture for the diffuse render target
@@ -43,8 +39,6 @@ private:
     int	width;  // FBO width
 	int	height; // FBO height
     bool rendering;
-    
-    static GLSLShader* splittingShader;
 };
 
 #endif

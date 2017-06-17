@@ -1,8 +1,9 @@
-#version 120
+#version 330 core
 #define NUM_SAMPLES (9)
 #define FAR_PLANE_Z (-100.0)
 #define NUM_SPIRAL_TURNS (7)
 
+out vec4 fragcolor;
 uniform sampler2D texPosition;
 uniform sampler2D texNormal;
 uniform sampler2D texRandom;
@@ -50,7 +51,7 @@ vec3 getOffsetPosition(ivec2 ssC, vec2 unitOffset, float ssR)
 {
     ivec2 ssP = ivec2(ssR * unitOffset) + ssC;
     vec2 ssPCoord = (2.0 * vec2(ssP) + vec2(1.0))/(2.0 * viewportSize);
-    return texture2D(texPosition, ssPCoord).xyz;
+    return texture(texPosition, ssPCoord).xyz;
 }
 
 /* Compute the occlusion due to sample with index \a i about the pixel at \a ssC that corresponds
@@ -91,25 +92,25 @@ float sampleAO(ivec2 ssC, vec3 C, vec3 n_C, float ssDiskRadius, int tapIndex, fl
     // return 2.0 * float(vv < radius * radius) * max(vn - bias, 0.0);
 }
 
-void main(void)
+void main()
 {
     // Pixel being shaded
     ivec2 ssC = ivec2(gl_FragCoord.xy);
     vec2 ssCCoord = (2.0 * vec2(ssC) + vec2(1.0))/(2.0 * viewportSize);
     
     // World space point being shaded
-    vec3 C = texture2D(texPosition, ssCCoord).xyz;
-    packKey(CSZToKey(C.z), gl_FragColor.gb);
+    vec3 C = texture(texPosition, ssCCoord).xyz;
+    packKey(CSZToKey(C.z), fragcolor.gb);
     
     // Hash function used in the HPG12 AlchemyAO paper
-    vec3 random = texture2D(texRandom, ssCCoord * viewportSize/vec2(64.0)).xyz;
+    vec3 random = texture(texRandom, ssCCoord * viewportSize/vec2(64.0)).xyz;
     float randomPatternRotationAngle = float((201.0 * random.x + ssC.x * ssC.y) * 11.0);
     //float randomPatternRotationAngle = float((3.0 * (ssC.x + ssC.y) + ssC.x * ssC.y) * 10.0);
     
     // Reconstruct normals from positions. These will lead to 1-pixel black lines
     // at depth discontinuities, however the blur will wipe those out so they are not visible
     // in the final image.
-    vec4 ND = texture2D(texNormal, ssCCoord);
+    vec4 ND = texture(texNormal, ssCCoord);
     vec3 n_C = ND.xyz;
     
     // Choose the screen-space sample radius
@@ -132,6 +133,6 @@ void main(void)
         A -= dFdy(A) * (mod(ssC.y, 2) - 0.5);
     
     //gl_FragColor = vec4(cos(randomPatternRotationAngle), sin(randomPatternRotationAngle), 0.0, 1.0);
-    gl_FragColor.r = 1.0 - A;
+    fragcolor.r = 1.0 - A;
 }
 

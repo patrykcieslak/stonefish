@@ -62,22 +62,6 @@ Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, b
     GLfloat offsetZ = ((length-1)/2.0)*size;
     GLfloat offsetY = (maxHeight-minHeight)/2.0;
 
-    /*displayList = glGenLists(1);
-    glNewList(displayList, GL_COMPILE);
-    for(int i=0; i<length-1; i++)
-    {
-        glBegin(GL_TRIANGLE_STRIP);
-        for(int h=0; h<width; h++)
-        {
-            glNormal3f(terrainNormals[i*width+h].x(), terrainNormals[i*width+h].y(), terrainNormals[i*width+h].z());
-            glVertex3f(h*size - offsetX, terrainHeight[i*width+h] - offsetY, (i)*size - offsetZ);
-            glNormal3f(terrainNormals[(i+1)*width+h].x(), terrainNormals[(i+1)*width+h].y(), terrainNormals[(i+1)*width+h].z());
-            glVertex3f(h*size - offsetX, terrainHeight[(i+1)*width+h] - offsetY, (i+1)*size - offsetZ);
-        }
-        glEnd();
-    }
-    glEndList();*/
-    
     delete [] terrainNormals;
 }
 

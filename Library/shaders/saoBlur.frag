@@ -1,10 +1,11 @@
-#version 120
+#version 330 core
 
-#define EDGE_SHARPNESS     (0.8)
+#define EDGE_SHARPNESS    0.8
 
-uniform sampler2D texSource;
-varying vec2 texCoord;
-varying vec2 blurTexCoord[4];
+in vec2 texcoord;
+in vec2 blurtexcoord[4];
+out vec4 fragcolor;
+uniform sampler2D source;
 
 const float blurWeight[4] = float[4](0.0702702703, 0.3162162162, 0.3162162162, 0.0702702703);
 
@@ -15,8 +16,8 @@ float unpackKey(vec2 p)
 
 void main()
 {
-    vec4 temp = texture2D(texSource, texCoord);
-    gl_FragColor.gb = temp.gb;
+    vec4 temp = texture(source, texcoord);
+    fragcolor.gb = temp.gb;
     
     float key = unpackKey(temp.gb);
     float sum = temp.r * 0.2270270270;
@@ -24,7 +25,7 @@ void main()
     
     for(int i = 0; i < 4; ++i)
     {
-        temp = texture2D(texSource, blurTexCoord[i]);
+        temp = texture(source, blurtexcoord[i]);
         float tapKey = unpackKey(temp.gb);
         float value  = temp.r;
         
@@ -38,5 +39,5 @@ void main()
         totalWeight += weight;
     }
     
-    gl_FragColor.r = sum/totalWeight;
+    fragcolor.r = sum/totalWeight;
 }

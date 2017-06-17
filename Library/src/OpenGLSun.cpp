@@ -302,16 +302,7 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
     UpdateSplitDist(activeView->GetNearClip(), activeView->GetFarClip());
     
     //Render maps
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT); //GL_FRONT -> no shadow acne but problems with filtering
-    
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    glLoadMatrixf(glm::value_ptr(sunModelview));
     
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glViewport(0, 0, shadowmapSize, shadowmapSize);
@@ -327,13 +318,12 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
         UpdateFrustumCorners(frustum[i], glm::vec3(camPos.x(), camPos.y(), camPos.z()), glm::vec3(camDir.x(), camDir.y(), camDir.z()), glm::vec3(camUp.x(), camUp.y(), camUp.z()));
 		
         //Adjust the view frustum of the light, so that it encloses the camera frustum slice fully.
-		//note that this function sets the projection matrix as it sees best fit
-		glMatrixMode(GL_PROJECTION);
+		//note that this function sets the projection matrix as it sees best fit		
         glm::mat4 cp = BuildCropProjMatrix(frustum[i]);
-        glLoadMatrixf(glm::value_ptr(cp));
-        glMatrixMode(GL_MODELVIEW);
         shadowCPM[i] =  cp * sunModelview;
 
+		OpenGLContent::getInstance()->SetProjectionMatrix(cp);
+		OpenGLContent::getInstance()->SetViewMatrix(sunModelview);
         //Draw current depth map
 		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowmapArray, 0, i);
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -343,39 +333,28 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glCullFace(GL_BACK);
-    glDisable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
 }
 
 void OpenGLSun::ShowFrustumSplits()
 {
-    glColor4f(1.f, 0.f, 0.f, 1.f);
-    for(int i = 0; i < shadowmapSplits; i++)
+    std::vector<glm::vec3> vertices;
+	
+	for(unsigned int i = 0; i < shadowmapSplits; ++i)
     {
-        glBegin(GL_LINE_LOOP);
-        for(int h = 4; h < 8; h++)
-            glVertex3fv(glm::value_ptr(frustum[i].corners[h]));
-        glEnd();
-    }
+    	vertices.push_back(frustum[i].corners[4]);
+		vertices.push_back(frustum[i].corners[5]);
+		vertices.push_back(frustum[i].corners[6]);
+		vertices.push_back(frustum[i].corners[7]);
+		vertices.push_back(frustum[i].corners[4]);
+        
+		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
+		vertices.clear();
+	}
 }
 
 void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
 {
-    //save current state
-    glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    glPushAttrib(GL_VIEWPORT_BIT);
-    
-    //Set projection and modelview
-    OpenGLContent::getInstance()->SetupOrtho();
-    
-	//Texture setup
+    //Texture setup
 	glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
     glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE);
@@ -389,18 +368,12 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     {
         glViewport(x + shadowmapSize * scale * i, y, shadowmapSize * scale, shadowmapSize * scale);
         shadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
-        glColor4f(1.f,1.f,1.f,1.f);
         OpenGLContent::getInstance()->DrawSAQ();
     }
     shadowmapShader->Disable();
     
 	//Reset
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    glPopAttrib();
-    glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
 }
 
 void OpenGLSun::SetCamera(OpenGLView* view)

@@ -1,5 +1,6 @@
-#version 120
+#version 330 core
 
+out vec4 fragcolor;
 uniform sampler2D source;
 uniform vec2 srcViewport;
 
@@ -27,7 +28,7 @@ vec2 sourceSample(ivec2 offset)
     ivec2 srcCoord = 2 * dstCoord + offset;
     vec2 srcTexCoord = (2.0 * vec2(srcCoord) + vec2(1.0))/(2.0 * srcViewport);
     
-    vec4 srcSample = texture2D(source, srcTexCoord);
+    vec4 srcSample = texture(source, srcTexCoord);
     return vec2(srcSample.r, unpackKey(srcSample.gb));
 }
 
@@ -38,8 +39,8 @@ void main(void)
                 sourceSample(ivec2(0,1)) +
                 sourceSample(ivec2(1,1))) * 0.25;
     
-    gl_FragColor.r = avg.x;
-    packKey(avg.y, gl_FragColor.gb);
+    fragcolor.r = avg.x;
+    packKey(avg.y, fragcolor.gb);
 }
 
 /*

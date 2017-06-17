@@ -8,7 +8,6 @@
 
 #include "TrueRotaryEncoder.h"
 
-#pragma mark Constructors
 TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
 {
     cpr_res = cpr_resolution;
@@ -21,7 +20,6 @@ TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, FeatherstoneEntity*
     abs = absolute;
 }
 
-#pragma mark - Methods
 void TrueRotaryEncoder::Reset()
 {
     //incremental angle

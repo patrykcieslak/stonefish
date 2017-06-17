@@ -304,9 +304,6 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glDisable(GL_CULL_FACE);
     glDisable(GL_TEXTURE_2D);
     
-    //Setup matrices
-    OpenGLContent::getInstance()->SetupOrtho();
-   
     //Calculate projection
     glm::mat4 projection = glm::perspective(glm::radians(90.f), 1.f, 1.f, 100.f);
     projection = glm::inverse(projection);
@@ -473,7 +470,7 @@ void OpenGLSky::Render(OpenGLView *view, const btTransform& viewTransform, bool 
     delete viewport;
 }
 
-void OpenGLSky::ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width, GLfloat height)
+void OpenGLSky::ShowCubemap(SkyCubemap cmap)
 {
     GLuint ctex = 0;
     switch (cmap)
@@ -503,85 +500,7 @@ void OpenGLSky::ShowCubemap(SkyCubemap cmap, GLfloat x, GLfloat y, GLfloat width
         break;
     }
     
-    glDisable(GL_BLEND);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    
-    glViewport(x, y, width, height);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    
-    //Projection setup
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-    glm::mat4 proj = glm::perspective(glm::radians(90.f), 1.f, 10.f, 1000000000.f);
-    glLoadMatrixf(glm::value_ptr(proj));
-	
-	//Model setup
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-    
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_CUBE_MAP);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, ctex);
-    
-	// Render the quad
-	glLoadIdentity();
-	glTranslatef(0,0,-35.f);
-    glRotatef(2.f*debugAngle, 1.0, 0, 0);
-    glRotatef(debugAngle, 0, 1.0, 0);
-	debugAngle += 1.f;
-    
-    glColor3f(1.f,1.f,1.f);
-    GLfloat d=-10;
-
-    glBegin(GL_QUADS);
-    //xNeg
-    glTexCoord3f(-1.f,  1.f, -1.f); glVertex3f(-d,  d, -d);
-    glTexCoord3f(-1.f,  1.f,  1.f); glVertex3f(-d,  d,  d);
-    glTexCoord3f(-1.f, -1.f,  1.f); glVertex3f(-d, -d,  d);
-    glTexCoord3f(-1.f, -1.f, -1.f); glVertex3f(-d, -d, -d);
-    
-    //xPos
-    glTexCoord3f(1.f,  1.f,  1.f); glVertex3f(d,  d,  d);
-    glTexCoord3f(1.f,  1.f, -1.f); glVertex3f(d,  d, -d);
-    glTexCoord3f(1.f, -1.f, -1.f); glVertex3f(d, -d, -d);
-    glTexCoord3f(1.f, -1.f,  1.f); glVertex3f(d, -d,  d);
-    
-    //zNeg
-    glTexCoord3f( 1.f,  1.f, -1.f); glVertex3f( d,  d, -d);
-    glTexCoord3f(-1.f,  1.f, -1.f); glVertex3f(-d,  d, -d);
-    glTexCoord3f(-1.f, -1.f, -1.f); glVertex3f(-d, -d, -d);
-    glTexCoord3f( 1.f, -1.f, -1.f); glVertex3f( d, -d, -d);
-    
-    //zPos
-    glTexCoord3f(-1.f,  1.f, 1.f); glVertex3f(-d,  d,  d);
-    glTexCoord3f( 1.f,  1.f, 1.f); glVertex3f( d,  d,  d);
-    glTexCoord3f( 1.f, -1.f, 1.f); glVertex3f( d, -d,  d);
-    glTexCoord3f(-1.f, -1.f, 1.f); glVertex3f(-d, -d,  d);
-    
-    //yNeg
-    glTexCoord3f(-1.f, -1.f, -1.f); glVertex3f(-d, -d, -d);
-    glTexCoord3f(-1.f, -1.f,  1.f); glVertex3f(-d, -d,  d);
-    glTexCoord3f( 1.f, -1.f,  1.f); glVertex3f( d, -d,  d);
-    glTexCoord3f( 1.f, -1.f, -1.f); glVertex3f( d, -d, -d);
-    
-    //yPos
-    glTexCoord3f( 1.f, 1.f, -1.f); glVertex3f( d,  d, -d);
-    glTexCoord3f( 1.f, 1.f,  1.f); glVertex3f( d,  d,  d);
-    glTexCoord3f(-1.f, 1.f,  1.f); glVertex3f(-d,  d,  d);
-    glTexCoord3f(-1.f, 1.f, -1.f); glVertex3f(-d,  d, -d);
-    glEnd();
-    
-    
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glDisable(GL_TEXTURE_CUBE_MAP);
-    
-	//Reset to the matrices
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+    OpenGLContent::getInstance()->DrawCubemapCross(ctex);
 }
 
 GLuint OpenGLSky::getDiffuseCubemap()

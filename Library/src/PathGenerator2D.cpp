@@ -3,26 +3,23 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/06/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "PathGenerator2D.h"
+#include "OpenGLContent.h"
 
-#pragma mark Path generator
-#pragma mark -Constructors
 PathGenerator2D::PathGenerator2D(PlaneType pathOnPlane)
 {
     plane = pathOnPlane;
 }
 
-#pragma mark -Destructor
 PathGenerator2D::~PathGenerator2D()
 {
     for(int i = 0; i < subPaths.size(); i++)
         delete subPaths[i];
 }
 
-#pragma mark -Accessors
 PlaneType PathGenerator2D::getPlane()
 {
     return plane;
@@ -33,7 +30,6 @@ bool PathGenerator2D::is3D()
     return false;
 }
 
-#pragma mark -Methods
 void PathGenerator2D::AddSubPath(Path2D* sp, bool smoothConnection)
 {
     if(sp != NULL)
@@ -154,20 +150,18 @@ void PathGenerator2D::Render()
 {
     unsigned int steps = floor(length/btScalar(0.01));
     
-    glContactColor();
-    glBegin(GL_LINE_STRIP);
-    for(unsigned int i = 0; i <= steps; i++)
+    std::vector<glm::vec3> vertices;
+		
+	for(unsigned int i = 0; i <= steps; ++i)
     {
         btVector3 point;
         btVector3 tangent;
         PointAtTime(btScalar(i)/btScalar(steps), point, tangent);
-        glBulletVertex(point);
-    }
-    glEnd();
+		vertices.push_back(glm::vec3(point.getX(), point.getY(), point.getZ()));
+	}
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
 }
 
-#pragma mark - Piecewise linear subpath
-#pragma mark -Constructors
 Pwl2D::Pwl2D(const Point2D& start)
 {
     Point2D s(UnitSystem::SetLength(start.x), UnitSystem::SetLength(start.y));
@@ -175,7 +169,6 @@ Pwl2D::Pwl2D(const Point2D& start)
     length = btScalar(0.);
 }
 
-#pragma mark -Methods
 void Pwl2D::AddLineToPoint(const Point2D& p)
 {
     //Push point
@@ -217,8 +210,6 @@ void Pwl2D::PointAtTime(btScalar t, Point2D &point, Point2D &tangent)
     }
 }
 
-#pragma mark - Arc subpath
-#pragma mark -Constructors
 Arc2D::Arc2D(const Point2D& center, btScalar radius, btScalar startAngle, btScalar endAngle)
 {
     //Set params
@@ -231,7 +222,6 @@ Arc2D::Arc2D(const Point2D& center, btScalar radius, btScalar startAngle, btScal
     length = btFabs(range.y - range.x) * r;
 }
 
-#pragma mark -Methods
 void Arc2D::FindClosestPoint(const Point2D &position, Point2D &point, Point2D &tangent)
 {
     
@@ -249,8 +239,6 @@ void Arc2D::PointAtTime(btScalar t, Point2D &point, Point2D &tangent)
     tangent *= (range.y - range.x) > btScalar(0.) ? btScalar(r) : btScalar(-r);
 }
 
-#pragma mark - Cubic Bezier subpath
-#pragma mark -Constructors
 Bezier2D::Bezier2D(const Point2D& start, const Point2D& end, const Point2D& controlOrTangent1, const Point2D& controlOrTangent2, bool useTangents)
 {
     //Set end points directly
@@ -290,7 +278,6 @@ Bezier2D::Bezier2D(const Point2D& start, const Point2D& end, const Point2D& cont
     }
 }
 
-#pragma mark -Methods
 void Bezier2D::FindClosestPoint(const Point2D &position, Point2D &point, Point2D &tangent)
 {
     

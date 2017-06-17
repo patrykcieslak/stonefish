@@ -8,7 +8,6 @@
 
 #include "RotaryEncoder.h"
 
-#pragma mark Constructors
 RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     revolute = joint;
@@ -27,7 +26,6 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, uns
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
 
-#pragma mark - Internal
 btScalar RotaryEncoder::GetRawAngle()
 {
     if(multibody == NULL)

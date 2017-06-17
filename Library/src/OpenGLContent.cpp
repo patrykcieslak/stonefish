@@ -35,13 +35,51 @@ void OpenGLContent::Destroy()
 
 OpenGLContent::OpenGLContent()
 {
-	saq = 0;
+	baseVertexArray = 0;
+	saqBuf = 0;
+	cubeBuf = 0;
+	csBuf[0] = 0;
+	csBuf[1] = 0;
+	helperShader = NULL;
+	texQuadShader = NULL;
+	texCubeShader = NULL;
+	flatShader = NULL;
+	gbufferShader = NULL;
+	viewProjection = glm::mat4();
+	view = glm::mat4();
+	projection = glm::mat4();
+	viewportSize = glm::vec2(800.f,600.f);
+	drawFlatObjects = false;
 }
 
 OpenGLContent::~OpenGLContent()
 {
-	if(saq != 0)
-		glDeleteBuffers(1,&saq);
+	if(baseVertexArray != 0)
+		glDeleteVertexArrays(1, &baseVertexArray);
+	
+	if(saqBuf != 0)
+		glDeleteBuffers(1,&saqBuf);
+		
+	if(cubeBuf != 0)
+		glDeleteBuffers(1,&cubeBuf);
+		
+	if(csBuf[0] != 0)
+		glDeleteBuffers(2,csBuf);
+		
+	if(helperShader != NULL)
+		delete helperShader;
+		
+	if(texQuadShader != NULL)
+		delete texQuadShader;
+		
+	if(texCubeShader != NULL)
+		delete texCubeShader;
+		
+	if(flatShader != NULL)
+		delete flatShader;
+		
+	if(gbufferShader != NULL)
+		delete gbufferShader;
 }
 
 void OpenGLContent::DestroyContent()
@@ -62,29 +100,331 @@ void OpenGLContent::DestroyContent()
 
 void OpenGLContent::Init()
 {
-	//Build screen-aligned quad VBO
-	GLfloat saqData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
-							 { 1.f, -1.f, 1.f, 0.f},
-							 {-1.f,  1.f, 0.f, 1.f},
-							 { 1.f,  1.f, 1.f, 1.f}};
+	glGenVertexArrays(1, &baseVertexArray);
+	glBindVertexArray(baseVertexArray);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
 	
-	glGenBuffers(1, &saq); 
-	glBindBuffer(GL_ARRAY_BUFFER, saq); 
+	//Build screen-aligned quad VBO
+	GLfloat saqData[4][4] = {
+		{-1.f, -1.f, 0.f, 0.f},
+		{-1.f,  1.f, 0.f, 1.f},
+		{ 1.f, -1.f, 1.f, 0.f},
+		{ 1.f,  1.f, 1.f, 1.f}};
+	
+	glGenBuffers(1, &saqBuf); 
+	glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(saqData), saqData, GL_STATIC_DRAW); 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//Buld cube croos VBO
+	GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
+							   {-1.f, -0.333f, -1.f,-1.f, 1.f},
+							   {-0.5f, 0.333f, -1.f, 1.f,-1.f},
+							   {-0.5f,-0.333f, -1.f,-1.f,-1.f},
+							   {-0.5f, 0.333f, -1.f, 1.f,-1.f}, //FRONT
+							   {-0.5f,-0.333f, -1.f,-1.f,-1.f},
+							   { 0.f,  0.333f,  1.f, 1.f,-1.f},
+							   { 0.f, -0.333f,  1.f,-1.f,-1.f},
+							   { 0.f,  0.333f,  1.f, 1.f,-1.f}, //RIGHT
+							   { 0.f, -0.333f,  1.f,-1.f,-1.f},
+							   { 0.5f, 0.333f,  1.f, 1.f, 1.f},
+							   { 0.5f,-0.333f,  1.f,-1.f, 1.f},
+							   { 0.5f, 0.333f,  1.f, 1.f, 1.f}, //BACK
+							   { 0.5f,-0.333f,  1.f,-1.f, 1.f},
+							   {  1.f, 0.333f, -1.f, 1.f, 1.f},
+							   {  1.f,-0.333f, -1.f,-1.f, 1.f},
+							   {-0.5f,-0.333f, -1.f,-1.f, 1.f}, //BOTTOM
+							   {-0.5f,   -1.f, -1.f,-1.f,-1.f},
+							   {    0,-0.333f,  1.f,-1.f, 1.f},
+							   {	0,   -1.f,  1.f,-1.f,-1.f},
+							   {-0.5f,    1.f, -1.f, 1.f, 1.f}, //TOP
+							   {-0.5f, 0.333f, -1.f, 1.f,-1.f},
+							   {    0,    1.f,  1.f, 1.f, 1.f},
+							   {	0, 0.333f,  1.f, 1.f,-1.f}};
+	
+	glGenBuffers(1, &cubeBuf); 
+	glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeData), cubeData, GL_STATIC_DRAW); 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//Build coord system VBO
+	GLfloat csVertex[6][3] = {{0.f, 0.f, 0.f},
+							  {1.f, 0.f, 0.f},
+							  {0.f, 0.f, 0.f},
+							  {0.f, 1.f, 0.f},
+							  {0.f, 0.f, 0.f},
+							  {0.f, 0.f, 1.f}};
+	
+	GLfloat csColor[6][4] = {{1.f, 0.f, 0.f, 1.f},
+							 {1.f, 0.f, 0.f, 1.f},
+							 {0.f, 1.f, 0.f, 1.f},
+							 {0.f, 1.f, 0.f, 1.f},
+							 {0.f, 0.f, 1.f, 1.f},
+							 {0.f, 0.f, 1.f, 1.f}};
+	
+	glGenBuffers(2, csBuf);
+	glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(csVertex), csVertex, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(csColor), csColor, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//Load shaders
+	helperShader = new GLSLShader("helpers.frag","helpers.vert");
+	helperShader->AddUniform("MVP", ParameterType::MAT4);
+	helperShader->AddUniform("scale", ParameterType::FLOAT);
+	
+	texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
+	texQuadShader->AddUniform("rect", ParameterType::VEC4);
+	texQuadShader->AddUniform("tex", ParameterType::INT);
+	texQuadShader->AddUniform("color", ParameterType::VEC4);
+	
+	texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
+	texCubeShader->AddUniform("tex", ParameterType::INT);
+	
+	flatShader = new GLSLShader("flat.frag", "flat.vert");
+	flatShader->AddUniform("MVP", ParameterType::MAT4);
+	
+	gbufferShader = new GLSLShader("gbuffer.frag", "gbuffer.vert");
+    gbufferShader->AddUniform("tex", ParameterType::INT);
+    gbufferShader->AddUniform("materialData", ParameterType::FLOAT);
+	gbufferShader->AddUniform("MV", ParameterType::MAT4);
+	gbufferShader->AddUniform("MVP", ParameterType::MAT4);
+	gbufferShader->AddUniform("color", ParameterType::VEC4);
+}
+
+void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
+{
+	viewportSize = glm::vec2(width, height);
+}
+
+void OpenGLContent::SetProjectionMatrix(glm::mat4 P)
+{
+	projection = P;
+	viewProjection = projection * view;
+}
+
+void OpenGLContent::SetViewMatrix(glm::mat4 V)
+{
+	view = V;
+	viewProjection = projection * view;
+}
+
+void OpenGLContent::SetDrawFlatObjects(bool enable)
+{
+	drawFlatObjects = enable;
 }
 
 void OpenGLContent::DrawSAQ()
 {
-	if(saq != 0)
+	if(saqBuf != 0)
 	{
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, saq); 
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), NULL);
+		glBindVertexArray(baseVertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glDisableVertexAttribArray(0);
+		glBindVertexArray(0);
 	}
+}
+
+void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
+{
+	if(saqBuf != 0 && texQuadShader != NULL)
+	{
+		y = viewportSize.y-y-height;
+		
+		texQuadShader->Enable();
+		texQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+		texQuadShader->SetUniform("tex", 0);
+		texQuadShader->SetUniform("color", color);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		
+		glBindVertexArray(baseVertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindVertexArray(0);
+		
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		texQuadShader->Disable();
+	}
+}
+
+void OpenGLContent::DrawCubemapCross(GLuint texture)
+{
+	if(cubeBuf != 0 && texCubeShader != NULL)
+	{
+		texCubeShader->Enable();
+		texCubeShader->SetUniform("tex", 0);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glEnable(GL_TEXTURE_CUBE_MAP);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+		
+		glBindVertexArray(baseVertexArray);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+ 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
+		glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
+		glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
+		
+		glBindVertexArray(0);
+		
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		glDisable(GL_TEXTURE_CUBE_MAP);
+		
+		texCubeShader->Disable();
+	}
+}
+
+void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
+{
+	if(csBuf[0] != 0 && helperShader != NULL)
+	{
+		helperShader->Enable();
+		helperShader->SetUniform("MVP", viewProjection*M);
+		helperShader->SetUniform("scale", size);
+		
+		glBindVertexArray(baseVertexArray);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		glDrawArrays(GL_LINES, 0, 6);
+		glBindVertexArray(0);
+		
+		helperShader->Disable();
+	}
+}
+
+void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
+{
+	if(helperShader != NULL && vertices.size() > 0)
+	{
+		GLuint vbo;
+		glGenBuffers(1, &vbo);
+		
+		helperShader->Enable();
+		helperShader->SetUniform("MVP", viewProjection*M);
+		helperShader->SetUniform("scale", 1.f);
+		
+		glBindVertexArray(baseVertexArray);
+		glEnableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		glVertexAttrib4fv(1, &color.r);
+		
+		switch(type)
+		{
+			case LINES:
+				glDrawArrays(GL_LINES, 0, vertices.size());
+				break;
+			
+			case LINE_STRIP:
+				glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
+				break;
+				
+			case POINTS:
+			default:
+				glDrawArrays(GL_POINTS, 0, vertices.size());
+				break;
+		}
+		glBindVertexArray(0);
+		
+		helperShader->Disable();
+		
+		glDeleteBuffers(1, &vbo);
+	}
+}
+
+void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
+{
+	if(objectId >= 0 && objectId < objects.size()) //Check if object exists
+	{
+		if(drawFlatObjects)
+		{
+			flatShader->Enable();
+			flatShader->SetUniform("MVP", viewProjection*M);
+			glBindVertexArray(objects[objectId].vao);
+			glDrawElements(GL_TRIANGLES, 3 * objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			flatShader->Disable();
+		}
+		else
+		{
+			gbufferShader->Enable();
+			gbufferShader->SetUniform("MV", view * M);
+			gbufferShader->SetUniform("MVP", viewProjection * M);
+			
+			if(lookId >= 0 && lookId < looks.size())
+				UseLook(lookId);
+			else
+				UseStandardLook();
+	
+			glBindVertexArray(objects[objectId].vao);
+			glDrawElements(GL_TRIANGLES, 3 * objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			
+			gbufferShader->Disable();
+		}
+	}
+}
+
+void OpenGLContent::UseLook(unsigned int lookId)
+{	
+    //Diffuse reflectance, roughness, FO, reflection factor
+    GLfloat diffuseReflectance = floor(looks[lookId].data[0] * 255.f);
+    GLfloat roughness = floor(looks[lookId].data[1] * 255.f);
+    GLfloat F0 = floor(powf((1.f - looks[lookId].data[2])/(1.f + looks[lookId].data[2]), 2.f) * 255.f);
+    GLfloat reflection = floor(looks[lookId].data[3] * 255.f);
+    GLfloat materialData = diffuseReflectance
+                           + (roughness * 256)
+                           + (F0 * 256 * 256)
+                           + (reflection * 256 * 256 * 256);
+    
+    glBindTexture(GL_TEXTURE_2D, looks[lookId].texture);
+	gbufferShader->SetUniform("color", glm::vec4(looks[lookId].color[0], looks[lookId].color[1], looks[lookId].color[2], looks[lookId].textureMix)); //Color + Texture mix factor
+	gbufferShader->SetUniform("tex", 0);
+	gbufferShader->SetUniform("materialData", materialData);
+}
+
+void OpenGLContent::UseStandardLook()
+{
+	GLfloat diffuseReflectance = floor(0.5f * 255.f);
+    GLfloat roughness = floor(0.2f * 255.f);
+    GLfloat F0 = floor(powf((1.f - 0.1f)/(1.f + 0.1f), 2.f) * 255.f);
+    GLfloat reflection = floor(0.f);
+    GLfloat materialData = diffuseReflectance
+                           + (roughness * 256)
+                           + (F0 * 256 * 256)
+                           + (reflection * 256 * 256 * 256);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+	gbufferShader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,0.f)); //Color + Texture mix factor	
+	gbufferShader->SetUniform("tex", 0);
+	gbufferShader->SetUniform("materialData", materialData);
 }
 
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)
@@ -100,14 +440,6 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	glBindVertexArray(obj.vao);	
 	glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-	/*glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)0);   //The starting point of the VBO, for the vertices
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)12);   //The starting point of normals, 12 bytes away
-	glClientActiveTexture(GL_TEXTURE0);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (void*)24);   //The starting point of texcoords, 24 bytes away
-  */
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
 	glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
@@ -128,29 +460,6 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	
 	objects.push_back(obj);
 	return objects.size()-1;
-}
-
-void OpenGLContent::DrawObject(int objectId, int lookId, btScalar* transform)
-{
-	if(objectId >= 0 && objectId < objects.size()) //Check if object exists
-	{
-		glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-		glMultMatrixd(transform);
-#else
-		glMultMatrixf(transform);
-#endif
-		if(lookId >= 0 && lookId < looks.size())
-			UseLook(lookId);
-		else
-			UseStandardLook();
-	
-		glBindVertexArray(objects[objectId].vao);
-		glDrawElements(GL_TRIANGLES, 3 * objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-
-		glPopMatrix();
-	}
 }
 
 unsigned int OpenGLContent::CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName, GLfloat textureMixFactor)
@@ -175,66 +484,6 @@ unsigned int OpenGLContent::CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuse
     
     looks.push_back(look);
 	return looks.size()-1;
-}
-
-void OpenGLContent::UseLook(unsigned int lookId)
-{	
-    //Diffuse reflectance, roughness, FO, reflection factor
-    GLfloat diffuseReflectance = floor(looks[lookId].data[0] * 255.f);
-    GLfloat roughness = floor(looks[lookId].data[1] * 255.f);
-    GLfloat F0 = floor(powf((1.f - looks[lookId].data[2])/(1.f + looks[lookId].data[2]), 2.f) * 255.f);
-    GLfloat reflection = floor(looks[lookId].data[3] * 255.f);
-    GLfloat materialData = diffuseReflectance
-                           + (roughness * 256)
-                           + (F0 * 256 * 256)
-                           + (reflection * 256 * 256 * 256);
-    
-    glBindTexture(GL_TEXTURE_2D, looks[lookId].texture);
-    glColor4f(looks[lookId].color[0], looks[lookId].color[1], looks[lookId].color[2], looks[lookId].textureMix); //Color + Texture mix factor
-    OpenGLGBuffer::SetUniformMaterialData(materialData);
-}
-
-void OpenGLContent::UseStandardLook()
-{
-	GLfloat diffuseReflectance = floor(0.5f * 255.f);
-    GLfloat roughness = floor(0.2f * 255.f);
-    GLfloat F0 = floor(powf((1.f - 0.1f)/(1.f + 0.1f), 2.f) * 255.f);
-    GLfloat reflection = floor(0.f);
-    GLfloat materialData = diffuseReflectance
-                           + (roughness * 256)
-                           + (F0 * 256 * 256)
-                           + (reflection * 256 * 256 * 256);
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glColor4f(0.5f, 0.5f, 0.5f, 0.f); //Color + Texture mix factor
-    OpenGLGBuffer::SetUniformMaterialData(materialData);
-}
-
-void OpenGLContent::SetupOrtho()
-{
-    glMatrixMode(GL_PROJECTION);
-    glm::mat4 proj = glm::ortho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f);
-    glLoadMatrixf(glm::value_ptr(proj));
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-
-void OpenGLContent::DrawCoordSystem(GLfloat size)
-{
-    glBegin(GL_LINES);
-    glXAxisColor();
-    glVertex3f(0, 0, 0);
-    glVertex3f(size, 0, 0);
-    
-    glYAxisColor();
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, size, 0);
-    
-    glZAxisColor();
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, size);
-    glEnd();
 }
 
 //Static methods
@@ -297,6 +546,7 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     Vertex vt;
 	
 	//Only one normal
+	vt.pos.z = 0;
 	vt.normal = glm::vec3(0,0,(zUp ? 1.f : -1.f));
 			
 	for(unsigned int i=0; i<=vDiv; ++i)
@@ -803,7 +1053,7 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 	return mesh;
 }
 
-Mesh* OpenGLContent::LoadMesh(const char* filename, btScalar scale, bool smooth)
+Mesh* OpenGLContent::LoadMesh(const char* filename, GLfloat scale, bool smooth)
 {
     std::string extension = std::string(filename).substr(strlen(filename)-3,3);
     
@@ -822,7 +1072,7 @@ Mesh* OpenGLContent::LoadMesh(const char* filename, btScalar scale, bool smooth)
     }
 }
 
-Mesh* OpenGLContent::LoadOBJ(const char *filename, btScalar scale, bool smooth)
+Mesh* OpenGLContent::LoadOBJ(const char *filename, GLfloat scale, bool smooth)
 {
     //Read OBJ data
     cInfo("Loading model from: %s", filename);
@@ -957,7 +1207,7 @@ Mesh* OpenGLContent::LoadOBJ(const char *filename, btScalar scale, bool smooth)
     return mesh;
 }
 
-Mesh* OpenGLContent::LoadSTL(const char *filename, btScalar scale, bool smooth)
+Mesh* OpenGLContent::LoadSTL(const char *filename, GLfloat scale, bool smooth)
 {
     //Read STL data
     cInfo("Loading model from: %s", filename);

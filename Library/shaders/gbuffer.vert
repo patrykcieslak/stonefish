@@ -1,23 +1,30 @@
-#version 120
-varying vec4 color;
-varying vec4 position;
-varying vec3 normal;
-varying float depth;
+#version 330 core
 
-void main(void)
+out vec4 position;
+out vec3 normal;
+out vec2 texcoord;
+out float depth;
+
+uniform mat4 MV;
+uniform mat4 MVP;
+
+layout(location = 0) in vec4 vertex;
+layout(location = 2) in vec3 n;
+layout(location = 8) in vec2 uv;
+
+void main()
 {
     //texture and material
-	gl_TexCoord[0] = gl_MultiTexCoord0;
-    color = gl_Color;
+	texcoord = uv;
    
     //in eye space
-    normal = normalize(gl_NormalMatrix * gl_Normal);
-    position = gl_ModelViewMatrix * gl_Vertex;
+    normal =   normalize(MV*vec4(n, 0.0)).xyz;
+    position = MV * vertex;
     depth = -position.z;
 
     //clipping plane in eye space
-    gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;
+    //gl_ClipVertex = MV * vertex;
     
     //transform
-    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; //ftransform();
+    gl_Position = MVP * vertex; 
 }

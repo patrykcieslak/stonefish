@@ -1,9 +1,12 @@
-#version 120
+#version 330 core
 
 #define SHADOWMAP_SIZE (2048.0)
 #define NUM_SAMPLES (32)
 #define INV_NUM_SAMPLES (1.0/32.0)
 #define NUM_SPIRAL_TURNS (7)
+
+out vec4 fragcolor;
+in vec2 texcoord;
 
 uniform sampler2D texDiffuse;
 uniform sampler2D texPosition;
@@ -47,13 +50,13 @@ float calculateShadowCoef(vec4 eyePosition, float bias)
     
     //Cheap shadow testing for all pixels (5 samples)
     int inShadow = 0;
-    inShadow += int(1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w, fragmentDepth)).r);
+    inShadow += int(1.0 -  texture(texShadow, vec3(shadowCoord.xy/shadowCoord.w, fragmentDepth)) );
     
     for(int i = NUM_SAMPLES - 5; i < NUM_SAMPLES - 1; i++)
     {
         float radiusFactor;
         vec2 offset = tapLocation(i, rnd, radiusFactor);
-        inShadow += int(1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w + (offset * radiusFactor * nominalRadius)/SHADOWMAP_SIZE, fragmentDepth)).r);
+        inShadow += int(1.0 - texture(texShadow, vec3(shadowCoord.xy/shadowCoord.w + (offset * radiusFactor * nominalRadius)/SHADOWMAP_SIZE, fragmentDepth)));
     }
     
     if(inShadow == 0) //Fully in light
@@ -68,7 +71,7 @@ float calculateShadowCoef(vec4 eyePosition, float bias)
         {
             float radiusFactor;
             vec2 offset = tapLocation(i, rnd, radiusFactor);
-            lightness -= INV_NUM_SAMPLES * (1.0 - shadow2D(texShadow, vec3(shadowCoord.xy/shadowCoord.w + (offset * radiusFactor * nominalRadius)/SHADOWMAP_SIZE, fragmentDepth)).r);
+            lightness -= INV_NUM_SAMPLES * (1.0 - texture(texShadow, vec3(shadowCoord.xy/shadowCoord.w + (offset * radiusFactor * nominalRadius)/SHADOWMAP_SIZE, fragmentDepth)));
         }
         
         return lightness;
@@ -92,13 +95,13 @@ void unpackMaterialData(float data, out float diffuse, out float roughness, out 
 
 void main(void)
 {
-    vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+    fragcolor = vec4(0.0, 0.0, 0.0, 1.0);
     
     //Color texture
-    vec3 color = texture2D(texDiffuse, gl_TexCoord[0].xy).rgb;
+    vec3 color = texture(texDiffuse,texcoord).rgb;
     
     //Position texture
-    vec4 position_material = texture2D(texPosition, gl_TexCoord[0].xy);
+    vec4 position_material = texture(texPosition, texcoord);
     vec3 position = position_material.xyz;
     float diffuseReflectance;
     float roughness;
@@ -107,7 +110,7 @@ void main(void)
     unpackMaterialData(position_material.w, diffuseReflectance, roughness, F0, reflectionCoeff);
     
     //Normal texture
-    vec4 normal_depth = texture2D(texNormal, gl_TexCoord[0].xy);
+    vec4 normal_depth = texture(texNormal, texcoord);
     vec3 normal = normalize(normal_depth.xyz);
     
     vec3 lightDir = lightPosition - position;
@@ -163,10 +166,8 @@ void main(void)
                 fresnel += F0;
                 
                 float specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14159);
-                finalColor.rgb = lightness * attenuation * lightColor.rgb * NdotL * (diffuseReflectance * color + specular * (1.0 - diffuseReflectance));
+                fragcolor.rgb = lightness * attenuation * lightColor.rgb * NdotL * (diffuseReflectance * color + specular * (1.0 - diffuseReflectance));
             }
         }
     }
-    
-    gl_FragColor = finalColor;
 }

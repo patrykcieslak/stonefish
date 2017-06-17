@@ -65,15 +65,13 @@ private:
     
     std::vector<GLSLAttribute> attributes;
     std::vector<GLSLUniform> uniforms;
-    GLhandleARB shader;
+    GLuint shader;
     bool valid;
     bool enabled;
     
-    static GLhandleARB saqVertexShader;
-    static bool CheckShadersAvailable();
-    static GLhandleARB LoadShader(GLenum shaderType, const char *filename, GLint *shaderCompiled);
-    static GLhandleARB CreateProgramObject(GLhandleARB vertexShader, GLhandleARB fragmentShader);
-    static void LinkProgram(GLhandleARB programObject, GLint *programLinked);
+    static GLuint saqVertexShader;
+    static GLuint LoadShader(GLenum shaderType, const char* filename, GLint* shaderCompiled);
+    static GLuint CreateProgram(GLuint vertexShader, GLuint fragmentShader);
 };
 
 

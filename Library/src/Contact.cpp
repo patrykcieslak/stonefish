@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Contact.h"
@@ -12,7 +12,6 @@
 #include "ScientificFileUtil.h"
 #include "SimulationApp.h"
 
-#pragma mark Constructors
 Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
     A = entityA;
@@ -21,7 +20,6 @@ Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistory
     displayMask = CONTACT_DISPLAY_NONE;
 }
 
-#pragma mark - Destructor
 Contact::~Contact()
 {
     A = NULL;
@@ -29,7 +27,6 @@ Contact::~Contact()
     points.clear();
 }
 
-#pragma mark - Accessors
 const Entity* Contact::getEntityA()
 {
     return A;
@@ -45,7 +42,6 @@ void Contact::setDisplayMask(int16_t mask)
     displayMask = mask;
 }
 
-#pragma mark - Methods
 void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped)
 {
     ContactPoint p;
@@ -137,79 +133,82 @@ void Contact::SaveContactDataToOctaveFile(const char* path, bool includeTime)
     SaveOctaveData(path, data);
 }
 
-#pragma mark - Graphics
 void Contact::Render()
 {
     if(points.size() == 0)
         return;
     
+	std::vector<glm::vec3> vertices;
+	
+	//Drawing points
     if(displayMask & CONTACT_DISPLAY_LAST_A)
-    {
-        glContactColor();
-        glBegin(GL_POINTS);
-        glBulletVertex(points.back().locationA);
-        glEnd();
-    }
+        vertices.push_back(glm::vec3((GLfloat)points.back().locationA.getX(), (GLfloat)points.back().locationA.getY(), (GLfloat)points.back().locationA.getZ()));
     
     if(displayMask & CONTACT_DISPLAY_LAST_B)
-    {
-        glContactColor();
-        glBegin(GL_POINTS);
-        glBulletVertex(points.back().locationB);
-        glEnd();
-    }
-    
-    if(displayMask & CONTACT_DISPLAY_PATH_A)
-    {
-        glContactColor();
-        glBegin(GL_LINE_STRIP);
-        for(size_type i = 0; i < points.size(); i++)
-            glBulletVertex(points[i].locationA);
-        glEnd();
-    }
-    
-    if(displayMask & CONTACT_DISPLAY_PATH_B)
-    {
-        glContactColor();
-        glBegin(GL_LINE_STRIP);
-        for(size_type i = 0; i < points.size(); i++)
-            glBulletVertex(points[i].locationB);
-        glEnd();
-    }
-    
+        vertices.push_back(glm::vec3((GLfloat)points.back().locationB.getX(), (GLfloat)points.back().locationB.getY(), (GLfloat)points.back().locationB.getZ()));
+	
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);
+	
+	//Drawing lines
+	vertices.clear();
+	
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A)
     {
-        glContactColor();
-        glBegin(GL_LINES);
-        glBulletVertex(points.back().locationA);
-        glBulletVertex(points.back().locationA + points.back().slippingVelocityA);
-        glEnd();
+		btVector3 p1 = points.back().locationA;
+		btVector3 p2 = points.back().locationA + points.back().slippingVelocityA;
+		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_B)
     {
-        glContactColor();
-        glBegin(GL_LINES);
-        glBulletVertex(points.back().locationB);
-        glBulletVertex(points.back().locationB - points.back().slippingVelocityA);
-        glEnd();
+        btVector3 p1 = points.back().locationB;
+		btVector3 p2 = points.back().locationB - points.back().slippingVelocityA;
+		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_A)
     {
-        glContactColor();
-        glBegin(GL_LINES);
-        glBulletVertex(points.back().locationA);
-        glBulletVertex(points.back().locationA + points.back().normalForceA);
-        glEnd();
+        btVector3 p1 = points.back().locationA;
+		btVector3 p2 = points.back().locationA + points.back().normalForceA;
+		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_B)
     {
-        glContactColor();
-        glBegin(GL_LINES);
-        glBulletVertex(points.back().locationB);
-        glBulletVertex(points.back().locationB - points.back().normalForceA);
-        glEnd();
+        btVector3 p1 = points.back().locationB;
+		btVector3 p2 = points.back().locationB - points.back().normalForceA;
+		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+    }
+	
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, CONTACT_COLOR);
+	
+	//Drawing line strips
+	vertices.clear();
+	
+	if(displayMask & CONTACT_DISPLAY_PATH_A)
+    {
+		for(size_type i = 0; i < points.size(); ++i)
+        {	
+			btVector3 p = points[i].locationA;
+			vertices.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+		}
+		
+		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
+		vertices.clear();
+	}
+	
+    if(displayMask & CONTACT_DISPLAY_PATH_B)
+    {
+		for(size_type i = 0; i < points.size(); ++i)
+        {	
+			btVector3 p = points[i].locationB;
+			vertices.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+		}
+		
+		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
     }
 }

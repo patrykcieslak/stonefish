@@ -7,6 +7,7 @@
 //
 
 #include "SolidEntity.h"
+#include "GeometryUtil.hpp"
 
 SolidEntity::SolidEntity(std::string uniqueName, Material* mat, int _lookId) : Entity(uniqueName)
 {
@@ -125,9 +126,7 @@ void SolidEntity::Render()
 	if(rigidBody != NULL && objectId >= 0 && isRenderable())
 	{
 		btTransform trans =  getTransform() * localTransform.inverse();
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-		OpenGLContent::getInstance()->DrawObject(objectId, lookId, openglTrans);
+        OpenGLContent::getInstance()->DrawObject(objectId, lookId, glMatrixFromBtTransform(trans));
 	}
 }
 

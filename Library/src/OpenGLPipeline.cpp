@@ -35,14 +35,13 @@ OpenGLPipeline::OpenGLPipeline()
 {
     renderSky = renderShadows = renderFluid = renderSAO = false;
     showCoordSys = showJoints = showActuators = showSensors = false;
-    showStickers = showLightMeshes = showCameraFrustums = false;
+    showLightMeshes = showCameraFrustums = false;
 }
 
 OpenGLPipeline::~OpenGLPipeline()
 {
     OpenGLView::Destroy();
     OpenGLLight::Destroy();
-    OpenGLGBuffer::DeleteShaders();
 	OpenGLContent::Destroy();
 	
     glDeleteTextures(1, &displayTexture);
@@ -57,13 +56,12 @@ void OpenGLPipeline::setRenderingEffects(bool sky, bool shadows, bool fluid, boo
     renderSAO = ssao;
 }
 
-void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool stickers, bool lights, bool cameras)
+void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras)
 {
     showCoordSys = coordSystems;
     showJoints = joints;
     showActuators = actuators;
     showSensors = sensors;
-    showStickers = stickers;
     showLightMeshes = lights;
     showCameraFrustums = cameras;
 }
@@ -96,10 +94,8 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     //Load shaders and create rendering buffers
     cInfo("Loading scene shaders...");
 	OpenGLContent::getInstance()->Init();
-    GLSLShader::Init(); //check if shaders available!!!
-    OpenGLSky::getInstance()->Init();
+	OpenGLSky::getInstance()->Init();
     OpenGLSun::getInstance()->Init();
-    OpenGLGBuffer::LoadShaders();
     OpenGLView::Init();
     OpenGLLight::Init();
     
@@ -109,7 +105,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");
     setRenderingEffects(true, true, true, true);
-    setVisibleHelpers(false, false, false, false, false, false, false);
+    setVisibleHelpers(false, false, false, false, false, false);
     setDebugSimulation(false);
     
     //OpenGL flags and params
@@ -169,8 +165,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     
     //Render shadow maps (these do not change depending on camera)
     if(renderShadows)
-        for(int i=0; i<sim->lights.size(); i++)
+	{
+		OpenGLContent::getInstance()->SetDrawFlatObjects(true);
+        for(unsigned int i=0; i<sim->lights.size(); ++i)
             sim->lights[i]->RenderShadowMap(this, sim);
+	}
     
     //Render all camera views
     for(int i=0; i<sim->views.size(); i++)
@@ -181,15 +180,21 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
             //Setup and initialize lighting
             OpenGLSun::getInstance()->SetCamera(sim->views[i]);
+			OpenGLLight::SetCamera(sim->views[i]);
+			
             if(renderShadows)
+			{
+				OpenGLContent::getInstance()->SetDrawFlatObjects(true);
                 OpenGLSun::getInstance()->RenderShadowMaps(this, sim); //This shadow depends on camera frustum
-            OpenGLLight::SetCamera(sim->views[i]);
-            
+			}
+			
             //Setup viewport
             GLint* viewport = sim->views[i]->GetViewport();
             sim->views[i]->SetViewport();
-            
+            OpenGLContent::getInstance()->SetViewportSize(viewport[2],viewport[3]);
+			
             //Fill plain G-buffer
+			OpenGLContent::getInstance()->SetDrawFlatObjects(false);
             sim->views[i]->getGBuffer()->Start(0);
             sim->views[i]->SetProjection();
             sim->views[i]->SetViewTransform();
@@ -216,7 +221,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
             
             
-            if(!renderFluid || sim->ocean == NULL)
+            //if(!renderFluid || sim->ocean == NULL)
             /////////////////////////////// N O R M A L  P I P E L I N E //////////////////////////////
             {
             normal_pipeline:
@@ -224,7 +229,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glDrawBuffer(SCENE_ATTACHMENT);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 
-                //1. Create stencil mask
+                //1. Create stencil mask - optimize rendering where occluded
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_STENCIL_TEST);
                 glEnable(GL_CULL_FACE);
@@ -237,25 +242,15 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glClear(GL_STENCIL_BUFFER_BIT);
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                 
-                sim->views[i]->SetProjection();
-                btScalar openglTrans[16];
-                sim->views[i]->GetViewTransform().getOpenGLMatrix(openglTrans);
-                glMatrixMode(GL_MODELVIEW);
-#ifdef BT_USE_DOUBLE_PRECISION
-                glLoadMatrixd(openglTrans);
-#else
-                glLoadMatrixf(openglTrans);
-#endif
+				OpenGLContent::getInstance()->SetDrawFlatObjects(true);
                 DrawObjects(sim);
-                
+				
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
                 glStencilMask(0x00);
                 
                 //2. Enter deferred rendering
                 glDisable(GL_DEPTH_TEST);
                 glDisable(GL_CULL_FACE);
-                
-                OpenGLContent::getInstance()->SetupOrtho();
                 
                 //3. Draw sky where stencil = 0
                 if(renderSky)
@@ -299,7 +294,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 OpenGLLight::SetTextureUnits(0, 2, 1, 3, 4, 5, 6);
                 
                 //5. Render ambient pass - sky, ssao
-                OpenGLLight::RenderAmbientLight(sim->views[i]->GetViewTransform(), sim->zUp);
+				if(renderSky)
+					OpenGLLight::RenderAmbientLight(sim->views[i]->GetViewTransform(), sim->zUp);
                 
                 //6. Render lights
                 glEnable(GL_BLEND);
@@ -312,7 +308,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     sim->lights[h]->Render();
                 
                 //7. Reset OpenGL
-                glUseProgramObjectARB(0);
+                glUseProgram(0);
                 glDisable(GL_STENCIL_TEST);
                 
                 glActiveTexture(GL_TEXTURE0);
@@ -345,7 +341,117 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //8. Finish rendering
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 finalTexture = sim->views[i]->getSceneTexture();
+			}
+		
+            ///////////FINAL TONEMAPPED/DISTORTED RENDER///////
+			glEnable(GL_SCISSOR_TEST);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            
+            glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            sim->views[i]->RenderHDR(displayFBO);
+           
+            /////////OVERLAY DUMMIES////////
+            glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+			glBindTexture(GL_TEXTURE_2D, 0);
+            glEnable(GL_DEPTH_TEST);
+            glClear(GL_DEPTH_BUFFER_BIT);
+			
+            glm::mat4 proj = sim->views[i]->GetProjectionMatrix();
+			glm::mat4 view = sim->views[i]->GetViewMatrix(sim->views[i]->GetViewTransform());
+			OpenGLContent::getInstance()->SetProjectionMatrix(proj);
+			OpenGLContent::getInstance()->SetViewMatrix(view);
+			
+            //Bullet debug draw
+            if(drawDebug)
+                sim->dynamicsWorld->debugDrawWorld();
+            
+            //Coordinate systems
+            if(showCoordSys)
+            {
+				OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 2.f);
+                
+                for(int h = 0; h < sim->entities.size(); h++)
+                    if(sim->entities[h]->getType() == ENTITY_SOLID)
+                    {
+						SolidEntity* solid = (SolidEntity*)sim->entities[h];
+                        btTransform comT = solid->getTransform();
+                        OpenGLContent::getInstance()->DrawCoordSystem(glMatrixFromBtTransform(comT), 0.1f);
+                    }
+                    else if(sim->entities[h]->getType() == ENTITY_FEATHERSTONE)
+                    {
+                        FeatherstoneEntity* fe = (FeatherstoneEntity*)sim->entities[h];
+                        fe->RenderStructure();
+                    }
+                    else if(sim->entities[h]->getType() == ENTITY_SYSTEM)
+                    {
+                        SystemEntity* system = (SystemEntity*)sim->entities[h];
+                        btTransform comT = system->getTransform();
+                        OpenGLContent::getInstance()->DrawCoordSystem(glMatrixFromBtTransform(comT), 0.1f);
+                    }
             }
+            
+            //Joints
+			for(int h=0; h<sim->joints.size(); h++)
+				if(sim->joints[h]->isRenderable())
+					sim->joints[h]->Render();
+            
+            //Contact points
+            for(int h = 0; h < sim->contacts.size(); h++)
+                sim->contacts[h]->Render();
+            
+            //Sensors
+            for(int h = 0; h < sim->sensors.size(); h++)
+                if(sim->sensors[h]->isRenderable())
+                    sim->sensors[h]->Render();
+            
+            //Paths
+            for(int h = 0; h < sim->controllers.size(); h++)
+                if(sim->controllers[h]->getType() == CONTROLLER_PATHFOLLOWING)
+                    ((PathFollowingController*)sim->controllers[h])->RenderPath();
+
+            //Lights
+            if(showLightMeshes)
+                for(int h = 0; h < sim->lights.size(); h++)
+                    sim->lights[h]->RenderDummy();
+            
+            //Cameras
+            if(showCameraFrustums)
+                for(int h = 0; h < sim->views.size(); h++)
+                    if(i != h && sim->views[h]->getType() == CAMERA)
+                    {
+                        OpenGLCamera* cam = (OpenGLCamera*)sim->views[h];
+                        cam->RenderDummy();
+                    }
+            
+            glDisable(GL_SCISSOR_TEST);
+            
+            //Debugging
+			//sim->views[i]->getGBuffer()->ShowTexture(DIFFUSE, 0,0,300,200); // FBO debugging
+            //sim->views[i]->getGBuffer()->ShowTexture(POSITION1,0,200,300,200); // FBO debugging
+			//sim->views[i]->getGBuffer()->ShowTexture(NORMAL1,0,400,300,200); // FBO debugging
+			
+			//sim->views[i]->ShowSceneTexture(NORMAL, 0, 600, 300, 200);
+            //sim->lights[0]->ShowShadowMap(0, 800, 300, 300);
+			
+			//OpenGLSky::getInstance()->ShowCubemap(SKY);
+ 			
+			//sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
+            
+			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.2);
+           
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            
+            delete viewport;
+        }
+    }
+}
+
+
+
+/*			
+			
             /////////////////////////////////////////////////////////////////////////////////////
             else
             {
@@ -935,304 +1041,4 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 }
             /////////////////////////////////////////////////////////////////////////////////////
             }
-            
-            /*
-            //Render normal scene
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-            glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT); //SceneTexture
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            RenderView(sim->views[i], 0, sim->views[i]->GetViewTransform());
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-            
-            finalTexture = sim->views[i]->getSceneTexture();
-            
-            //Render fluid
-            if((sim->fluid != NULL) && renderFluid)
-            {
-                btVector3 surfN, surfP;
-                sim->fluid->GetSurface(surfN, surfP);
-                bool underwater = distanceFromCenteredPlane(surfN, surfP - sim->views[i]->GetEyePosition()) >= 0;
-                
-                if(underwater) //Under the surface
-                {
-                    bool inside = sim->fluid->IsInsideFluid(sim->views[i]->GetEyePosition()
-                                                                   + sim->views[i]->GetLookingDirection() * sim->views[i]->GetNearClip());
-                    if(inside) //Inside the fluid
-                    {
-                        double surface[4];
-                        surface[0] = -surfN.x();
-                        surface[1] = -surfN.y();
-                        surface[2] = -surfN.z();
-                        surface[3] = surfN.dot(surfP);
-                        
-                        //Fill reflected G-buffer
-                        sim->views[i]->getGBuffer()->Start(1);
-                        sim->views[i]->SetProjection();
-                        sim->views[i]->SetReflectedViewTransform(sim->fluid);
-                        DrawStandardObjects();
-                        sim->views[i]->getGBuffer()->Stop();
-                        
-                        //Render reflected scene
-                        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                        glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT); //ReflectionTexture
-                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                        RenderView(sim->views[i], 1, sim->views[i]->GetReflectedViewTransform(sim->fluid), surface);
-                        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                        
-                        //Fill refracted G-buffer
-                        surface[0] = -surface[0];
-                        surface[1] = -surface[1];
-                        surface[2] = -surface[2];
-                        surface[3] = -surface[3];
-                        
-                        sim->views[i]->getGBuffer()->Start(1);
-                        sim->views[i]->SetProjection();
-                        sim->views[i]->SetRefractedViewTransform(sim->fluid);
-                        DrawStandardObjects();
-                        sim->views[i]->getGBuffer()->Stop();
-                        
-                        //Render refracted scene
-                        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                        glDrawBuffer(GL_COLOR_ATTACHMENT3_EXT); //RefractionTexture
-                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                        RenderView(sim->views[i], 1, sim->views[i]->GetRefractedViewTransform(sim->fluid), surface);
-                        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                       
-                        //Render water surface on top of scene texture
-                        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                        glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT); //SceneTexture
-                        sim->views[i]->RenderFluidSurface(sim->fluid, true);
-                        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                        
-                        //Render underwater fog
-                        ///glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                        //glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT); //ReflectionTexture
-                        //sim->views[i]->RenderFluidVolume(sim->fluid); //Fog, light shafts, volumetric lights, blur
-                        //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                        finalTexture = sim->views[i]->getSceneTexture();//sim->views[i]->getSceneReflectionTexture();
-                    }
-                    //else outside the fluid - DO NOTHING
-                }
-                else //Above the surface
-                {
-                    double surface[4];
-                    surface[0] = surfN.x();
-                    surface[1] = surfN.y();
-                    surface[2] = surfN.z();
-                    surface[3] = -surfN.dot(surfP);
-                    
-                    //Fill reflected G-buffer
-                    sim->views[i]->getGBuffer()->Start(1);
-                    sim->views[i]->SetProjection();
-                    sim->views[i]->SetReflectedViewTransform(sim->fluid);
-                    DrawStandardObjects();
-                    sim->views[i]->getGBuffer()->Stop();
-                    
-                    //Render reflected scene
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                    glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT); //ReflectionTexture
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    RenderView(sim->views[i], 1, sim->views[i]->GetReflectedViewTransform(sim->fluid), surface);
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                    
-                    //Fill refracted G-buffer
-                    surface[0] = -surface[0];
-                    surface[1] = -surface[1];
-                    surface[2] = -surface[2];
-                    surface[3] = -surface[3];
-                    
-                    sim->views[i]->getGBuffer()->Start(1);
-                    sim->views[i]->SetProjection();
-                    sim->views[i]->SetRefractedViewTransform(sim->fluid);
-                    DrawStandardObjects();
-                    sim->views[i]->getGBuffer()->Stop();
-                    
-                    //Render refracted scene
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                    glDrawBuffer(GL_COLOR_ATTACHMENT3_EXT); //RefractionTexture
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    RenderView(sim->views[i], 1, sim->views[i]->GetRefractedViewTransform(sim->fluid), surface);
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                    
-                    //Render water surface on top of scene texture
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, sim->views[i]->getSceneFBO());
-                    glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT); //SceneTexture
-                    sim->views[i]->RenderFluidSurface(sim->fluid, false);
-                    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-                    
-                    finalTexture = sim->views[i]->getSceneTexture();
-                }
-            }*/
-            
-            ///////////FINAL TONEMAPPED/DISTORTED RENDER///////
-            glEnable(GL_SCISSOR_TEST);
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
-            
-            glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            sim->views[i]->RenderHDR(displayFBO);
-            
-            /////////OVERLAY DUMMIES////////
-            glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glEnable(GL_DEPTH_TEST);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            
-            sim->views[i]->SetProjection();
-            sim->views[i]->SetViewTransform();
-            
-            //Bullet debug draw
-            if(drawDebug)
-                sim->dynamicsWorld->debugDrawWorld();
-            
-            //Coordinate systems
-            if(showCoordSys)
-            {
-                OpenGLContent::getInstance()->DrawCoordSystem(2.f);
-                
-                for(int h = 0; h < sim->entities.size(); h++)
-                    if(sim->entities[h]->getType() == ENTITY_SOLID)
-                    {
-                        SolidEntity* solid = (SolidEntity*)sim->entities[h];
-                        btTransform comT = solid->getTransform();
-                        btScalar oglComT[16];
-                        comT.getOpenGLMatrix(oglComT);
-                        
-                        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-                        glMultMatrixd(oglComT);
-#else
-                        glMultMatrixf(oglComT);
-#endif
-                        OpenGLContent::getInstance()->DrawCoordSystem(0.1f);
-                        glPopMatrix();
-                    }
-                    else if(sim->entities[h]->getType() == ENTITY_FEATHERSTONE)
-                    {
-                        FeatherstoneEntity* fe = (FeatherstoneEntity*)sim->entities[h];
-                        fe->RenderStructure();
-                    }
-                    else if(sim->entities[h]->getType() == ENTITY_SYSTEM)
-                    {
-                        SystemEntity* system = (SystemEntity*)sim->entities[h];
-                        btTransform comT = system->getTransform();
-                        btScalar oglComT[16];
-                        comT.getOpenGLMatrix(oglComT);
-                        
-                        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-                        glMultMatrixd(oglComT);
-#else
-                        glMultMatrixf(oglComT);
-#endif
-                        OpenGLContent::getInstance()->DrawCoordSystem(0.1f);
-                        glPopMatrix();
-                    }
-            }
-            
-            //Joints, sensors and actuators
-            std::vector<Sticker> stickers;
-            
-            //Joints
-            if(showJoints)
-            {
-                for(int h=0; h<sim->joints.size(); h++)
-                    if(sim->joints[h]->isRenderable())
-                    {
-                        Sticker stick;
-                        stick.type = sim->joints[h]->getType();
-                        stick.location = sim->joints[h]->Render();
-                        if(showStickers)
-                            stickers.push_back(stick);
-                    }
-            }
-            
-            //Contact points
-            for(int h = 0; h < sim->contacts.size(); h++)
-                sim->contacts[h]->Render();
-            
-            //Sensors
-            for(int h = 0; h < sim->sensors.size(); h++)
-                if(sim->sensors[h]->isRenderable())
-                    sim->sensors[h]->Render();
-            
-            //Paths
-            for(int h = 0; h < sim->controllers.size(); h++)
-                if(sim->controllers[h]->getType() == CONTROLLER_PATHFOLLOWING)
-                    ((PathFollowingController*)sim->controllers[h])->RenderPath();
-
-            //Lights
-            if(showLightMeshes)
-                for(int h = 0; h < sim->lights.size(); h++)
-                    sim->lights[h]->RenderDummy();
-            
-            //Cameras
-            if(showCameraFrustums)
-                for(int h = 0; h < sim->views.size(); h++)
-                    if(i != h && sim->views[h]->getType() == CAMERA)
-                    {
-                        OpenGLCamera* cam = (OpenGLCamera*)sim->views[h];
-                        cam->RenderDummy();
-                    }
-            
-            
-            //Stickers
-            glDisable(GL_DEPTH_TEST);
-            
-            if(showStickers)
-            {
-                glm::vec4 viewp(viewport[0], viewport[1], viewport[2], viewport[3]);
-                glm::mat4 proj = sim->views[i]->GetProjectionMatrix();
-                glm::mat4 model;
-                glGetFloatv(GL_MODELVIEW, glm::value_ptr(model));
-                
-                glMatrixMode(GL_PROJECTION);
-                glm::mat4 oproj = glm::ortho(0.f, (GLfloat)viewport[2], 0.f, (GLfloat)viewport[3], -1.f, 1.f);
-                glLoadMatrixf(glm::value_ptr(oproj));
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
-                
-                //glEnable(GL_BLEND);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                
-                glColor4f(1.f, 1.f, 1.f, 1.f);
-                glBegin(GL_TRIANGLES);
-                for(int h=0; h<stickers.size(); h++)
-                {
-                    btVector3 btobj = stickers[h].location;
-                    glm::vec3 obj(btobj.x(), btobj.y(), btobj.z());
-                    glm::vec3 point = glm::project(obj, model, proj, viewp);
-                    if(point[2] < 1.f) //disable rendering stickers behind camera
-                    {
-                        glVertex2f(point[0]-10.f, point[1]-10.f);
-                        glVertex2f(point[0]-10.f, point[1]+10.f);
-                        glVertex2f(point[0]+10.f, point[1]+10.f);
-                        glVertex2f(point[0]-10.f, point[1]-10.f);
-                        glVertex2f(point[0]+10.f, point[1]+10.f);
-                        glVertex2f(point[0]+10.f, point[1]-10.f);
-                    }
-                }
-                glEnd();
-            }
-            
-            glDisable(GL_SCISSOR_TEST);
-            
-            //Debugging
-            //sim->views[i]->ShowSceneTexture(REFLECTED, 0, 100, 300, 200);
-            //sim->views[i]->ShowSceneTexture(NORMAL, 0, 350, 300, 200);
-            //sim->views[i]->ShowAmbientOcclusion(0, 100, 300, 200);
-            //sim->lights[0]->RenderShadowMap(this);
-            //sim->lights[0]->ShowShadowMap(0, 0, 0.5f);
-            //OpenGLSun::ShowShadowMaps(0, 0, 0.05);
-            //OpenGLSky::ShowCubemap(SKY, 0, 0, 400, 400);
-            //OpenGLSky::ShowCubemap(CONVOLUTION_REFLECT, 400, 0, 400, 400);
-            //sim->views[i]->getGBuffer()->ShowTexture(POSITION2, 0,450,300,200); // FBO debugging
-            //sim->views[i]->getGBuffer()->ShowTexture(POSITION2, 0,200,250,200); // FBO debugging
-            
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            
-            delete viewport;
-        }
-    }
-}
+*/

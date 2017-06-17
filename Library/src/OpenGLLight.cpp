@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "OpenGLLight.h"
@@ -22,8 +22,6 @@ GLint OpenGLLight::skyReflectionTextureUnit = 0;
 GLint OpenGLLight::shadowTextureUnit = 0;
 GLint OpenGLLight::ssaoTextureUnit = 0;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
-////////////////////
-
 
 OpenGLLight::OpenGLLight(const btVector3& position, glm::vec4 c)
 {
@@ -149,8 +147,6 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     glm::mat4 proj = activeView->GetProjectionMatrix();
     proj = glm::inverse(proj);
     
-    //GLint* viewport = activeView->GetViewport();
-    
     btMatrix3x3 flip;
     flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
     flip = flip * (viewTransform.getBasis().inverse());
@@ -165,9 +161,6 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     ambientShader->SetUniform("texSkyDiff", skyDiffuseTextureUnit);
     ambientShader->SetUniform("texSSAO", ssaoTextureUnit);
     ambientShader->SetUniform("inv_view_rot", ivr);
-    //ambientShader->SetUniform("texSkyReflect", skyReflectionTextureUnit);
-    //ambientShader->SetUniform("inv_proj", proj);
-    //ambientShader->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     OpenGLContent::getInstance()->DrawSAQ();
     ambientShader->Disable();
 }

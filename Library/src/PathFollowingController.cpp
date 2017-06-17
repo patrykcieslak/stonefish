@@ -3,13 +3,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/06/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "PathFollowingController.h"
 #include "PathGenerator2D.h"
 
-#pragma mark Constructors
 PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency) : Controller(uniqueName, frequency)
 {
     inputPath = pathGenerator;
@@ -21,7 +20,6 @@ PathFollowingController::PathFollowingController(std::string uniqueName, PathGen
         error.resize(4);
 }
 
-#pragma mark - Destructor
 PathFollowingController::~PathFollowingController()
 {
     delete inputPath;
@@ -30,7 +28,6 @@ PathFollowingController::~PathFollowingController()
     error.clear();
 }
 
-#pragma mark - Accessors
 PathGenerator* PathFollowingController::getPath()
 {
     return inputPath;
@@ -41,10 +38,8 @@ ControllerType PathFollowingController::getType()
     return CONTROLLER_PATHFOLLOWING;
 }
 
-#pragma mark - Methods
 void PathFollowingController::RenderPath()
 {
-	/*
     if(inputPath->isRenderable())
     {
         inputPath->Render();
@@ -52,21 +47,10 @@ void PathFollowingController::RenderPath()
         btVector3 point;
         btVector3 tangent;
         inputPath->PointAtTime(inputPath->getTime(), point, tangent);
-        
-        btTransform trans = btTransform(btQuaternion::getIdentity(), point);
-        btScalar openglTrans[16];
-        trans.getOpenGLMatrix(openglTrans);
-        
-        glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-        glMultMatrixd(openglTrans);
-#else
-        glMultMatrixf(openglTrans);
-#endif
-        OpenGLSolids::DrawPoint(0.1f);
-        
-        glPopMatrix();
-    }*/
+        std::vector<glm::vec3> vertices;
+		vertices.push_back(glm::vec3(point.getX(), point.getY(), point.getZ()));
+		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);
+	}
 }
 
 void PathFollowingController::Reset()

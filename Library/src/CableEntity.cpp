@@ -113,15 +113,9 @@ CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const b
         constr->setParam(BT_CONSTRAINT_STOP_CFM, CONSTRAINT_STOP_CFM, 5);
         links.push_back(constr);
     }
-}
-
-CableEntity::CableEntity(std::string uniqueName, const btVector3& end1, const btVector3& end2, btVector3* midPoints, unsigned int midPointsCount, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat) : Entity(uniqueName)
-{
-    selfCollision = selfCollidable;
-    
-    
-    
-    
+	
+	partMesh = OpenGLContent::BuildCylinder(diameter/2.f, partLength);
+	lookId = -1;
 }
 
 CableEntity::~CableEntity()
@@ -129,6 +123,15 @@ CableEntity::~CableEntity()
     cableParts.clear();
     links.clear();
     material = NULL;
+	
+	if(partMesh != NULL)
+	{
+		delete partMesh;
+		partMesh = NULL;
+	}
+	
+	objectId = -1;
+	lookId = -1;
 }
 
 EntityType CableEntity::getType()
@@ -136,36 +139,21 @@ EntityType CableEntity::getType()
     return ENTITY_CABLE;
 }
 
-void CableEntity::SetLook(Look newLook)
+void CableEntity::SetLook(int newLookId)
 {
-    if(look.texture != 0)
-        glDeleteTextures(1, &look.texture);
-    
-    look = newLook;
+	lookId = newLookId;
 }
 
 void CableEntity::Render()
 {
     if(isRenderable())
     {
-        /*for(int i=0; i<cableParts.size(); i++)
+		for(unsigned int i=0; i<cableParts.size(); ++i)
         {
             btTransform trans;
-            btScalar openglTrans[16];
             cableParts[i]->getMotionState()->getWorldTransform(trans);
-            trans.getOpenGLMatrix(openglTrans);
-            
-            glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-            glMultMatrixd(openglTrans);
-#else
-            glMultMatrixf(openglTrans);
-#endif
-            glBindTexture(GL_TEXTURE_2D, 0);
-            UseLook(look);
-            OpenGLSolids::DrawSolidCylinder(diameter/2.f, partLength);
-            glPopMatrix();
-        }*/
+            OpenGLContent::getInstance()->DrawObject(objectId, lookId, glMatrixFromBtTransform(trans));
+        }
     }
 }
 
@@ -207,6 +195,9 @@ void CableEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
     
     for(int i=0; i<links.size(); i++)
         world->addConstraint(links[i]);
+		
+	//Generate graphical object
+	objectId = OpenGLContent::getInstance()->BuildObject(partMesh);
 }
 
 

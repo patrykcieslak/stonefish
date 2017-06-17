@@ -4,20 +4,19 @@
     + texture coordinates precomputed in vertex shader.
  */
 
-#version 120
+#version 330 core
 
+layout(location = 0) in vec4 vertex;
+out vec2 texcoord;
+out vec2 blurtexcoord[4];
 uniform vec2 texelOffset;
-varying vec2 texCoord;
-varying vec2 blurTexCoord[4];
 
-void main(void)
+void main()
 {
-	//gl_TexCoord[0] = vec4(gl_Vertex.zw,0,0);
-    gl_Position = vec4(gl_Vertex.xy,0,1.0);
-    
-    texCoord = gl_Vertex.zw;
-    blurTexCoord[0] = texCoord + texelOffset * 3.2307692308;
-    blurTexCoord[1] = texCoord + texelOffset * 1.3846153846;
-    blurTexCoord[2] = texCoord - texelOffset * 1.3846153846;
-    blurTexCoord[3] = texCoord - texelOffset * 3.2307692308;
+	texcoord = vertex.zw;
+    blurtexcoord[0] = texcoord + texelOffset * 3.2307692308;
+    blurtexcoord[1] = texcoord + texelOffset * 1.3846153846;
+    blurtexcoord[2] = texcoord - texelOffset * 1.3846153846;
+    blurtexcoord[3] = texcoord - texelOffset * 3.2307692308;
+	gl_Position = vec4(vertex.xy,0,1.0);
 }

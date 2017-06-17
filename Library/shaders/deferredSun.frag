@@ -1,10 +1,13 @@
-#version 120
+#version 330 core
 #extension GL_EXT_texture_array : enable
 
 #define SHADOWMAP_SIZE (2048.0)
 #define NUM_SAMPLES (32)
 #define INV_NUM_SAMPLES (1.0/32.0)
 #define NUM_SPIRAL_TURNS (7)
+
+in vec2 texcoord;
+out vec4 fragcolor;
 
 uniform sampler2D texDiffuse;
 uniform sampler2D texPosition;
@@ -112,13 +115,13 @@ void unpackMaterialData(float data, out float diffuse, out float roughness, out 
 
 void main(void)
 {
-    vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+    fragcolor = vec4(0.0, 0.0, 0.0, 1.0);
     
     //Color texture
-    vec3 color = texture2D(texDiffuse, gl_TexCoord[0].xy).rgb;
+    vec3 color = texture(texDiffuse, texcoord).rgb;
     
     //Position texture
-    vec4 position_material = texture2D(texPosition, gl_TexCoord[0].xy);
+    vec4 position_material = texture(texPosition,  texcoord);
     float diffuseReflectance;
     float roughness;
     float F0;
@@ -126,7 +129,7 @@ void main(void)
     unpackMaterialData(position_material.w, diffuseReflectance, roughness, F0, reflectionCoeff);
     
     //Normal texture
-    vec4 normal_depth = texture2D(texNormal, gl_TexCoord[0].xy);
+    vec4 normal_depth = texture(texNormal, texcoord);
     vec3 normal = normalize(normal_depth.xyz);
     float depth = normal_depth.w;
     
@@ -175,9 +178,7 @@ void main(void)
             fresnel += F0;
             
             float specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14159);
-            finalColor.rgb = lightness * lightColor.rgb * NdotL * (diffuseReflectance * color + specular * (1.0 - diffuseReflectance));
+            fragcolor.rgb = lightness * lightColor.rgb * NdotL * (diffuseReflectance * color + specular * (1.0 - diffuseReflectance));
         }
     }
-    
-    gl_FragColor = finalColor;
 }

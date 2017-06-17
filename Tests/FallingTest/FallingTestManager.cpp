@@ -21,10 +21,10 @@
 #include "OpenGLTrackball.h"
 #include "OpenGLContent.h"
 #include "SystemUtil.hpp"
-#include "Accelerometer.h"
-#include "ADC.h"
+#include "FakeIMU.h"
 #include "Trajectory.h"
 #include "Manipulator.h"
+#include "OpenGLSun.h"
 
 FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, STANDARD)
 {
@@ -32,9 +32,11 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, false);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
+	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, true);
     setICSolverParams(false);
+	
+	//OpenGLSun::getInstance()->SetPosition(0,0);
 	
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
@@ -68,7 +70,10 @@ void FallingTestManager::BuildScenario()
 	manip->AddRotLinkDH(link2, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
 	manip->AddRotLinkDH(link3, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
 	AddEntity(manip);
-
+	
+	FakeIMU* imu = new FakeIMU("IMU", vehicle, btTransform::getIdentity());
+	AddSensor(imu);
+	
     /*for(int i=0; i<10; i++)
     {
         color = CreateOpaqueLook(glm::vec3(i/10.f + 0.2f, 1.0f - i/10.f * 0.8f, 0.1f), 0.4f, 0.1f, 1.2f);
@@ -80,12 +85,12 @@ void FallingTestManager::BuildScenario()
     //////CAMERA & LIGHT//////
     //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(5.f, 5.f, 10.f), OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(omni);
-    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(5.f, 5.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000));
-    //AddLight(spot);
+    OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(10.f, 10.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 10000000));
+    AddLight(spot);
     //spot = new OpenGLSpotLight(btVector3(10000.f, -12000.f, 5000.f), btVector3(5000.f,-5000.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(5600, 500));
     //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 100.f, false);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 100.f, true);
     trackb->Rotate(btQuaternion(M_PI, 0, M_PI/8.0));
     trackb->Activate();
     AddView(trackb);

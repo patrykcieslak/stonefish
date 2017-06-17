@@ -3,12 +3,11 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Trajectory.h"
 
-#pragma mark Constructors
 Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransform relativeFrame, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     solid = attachment;
@@ -21,7 +20,6 @@ Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransf
     channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
 }
 
-#pragma mark - Methods
 void Trajectory::Reset()
 {
     SimpleSensor::Reset();
@@ -45,15 +43,13 @@ void Trajectory::InternalUpdate(btScalar dt)
 void Trajectory::Render()
 {
     if(history.size() > 1)
-    {
-        glContactColor();
-        glBegin(GL_LINE_STRIP);
-        for(int i = 0; i < history.size(); i++)
-        {
-            btVector3 p(history[i]->getValue(0), history[i]->getValue(1), history[i]->getValue(2));
-            glBulletVertex(p);
-        }
-        glEnd();
-    }
+	{
+		std::vector<glm::vec3> vertices;
+		
+		for(unsigned int i = 0; i < history.size(); ++i)
+            vertices.push_back(glm::vec3(history[i]->getValue(0), history[i]->getValue(1), history[i]->getValue(2)));
+    
+		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
+	}
 }
 
