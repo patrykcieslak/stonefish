@@ -297,8 +297,6 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_SCISSOR_TEST);
-	glDisable(GL_POLYGON_SMOOTH);
-	glDisable(GL_LINE_SMOOTH);
 	glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -323,7 +321,7 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glm::vec4 lightDir = glm::vec4(0.f, 1.f, 0.f, 1.f);
     lightDir = lightMat * lightDir;
     
-    skyCubeShader->Enable();
+    skyCubeShader->Use();
     skyCubeShader->SetUniform("Kr", glm::vec3(0.18867780436772762f, 0.38f, 0.65f)); //skyCubeShader->SetUniform("Kr", glm::vec3(0.18867780436772762f, 0.4978442963618773f, 0.6616065586417131f));
     skyCubeShader->SetUniform("rayleigh_brightness", 33.f/10.f); //skyCubeShader->SetUniform("rayleigh_brightness", 33.f/10.f);
     skyCubeShader->SetUniform("rayleigh_strength", 139.f/1000.f);
@@ -338,7 +336,6 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     skyCubeShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize, (GLfloat)skyCubeSize));
     skyCubeShader->SetUniform("inv_proj", projection);
     ProcessCube(skyCubeShader, skyCubemap, GL_COLOR_ATTACHMENT0);
-    skyCubeShader->Disable();
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -353,12 +350,11 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glViewport(0, 0, skyCubeSize/2, skyCubeSize/2);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    dsShader->Enable();
+    dsShader->Use();
     dsShader->SetUniform("source", 0);
     dsShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/2, (GLfloat)skyCubeSize/2));
     dsShader->SetUniform("inv_proj", projection);
     ProcessCube(dsShader, ds2Cubemap, GL_COLOR_ATTACHMENT0);
-    dsShader->Disable();
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -372,12 +368,11 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glViewport(0, 0, skyCubeSize/4, skyCubeSize/4);
     glClear(GL_COLOR_BUFFER_BIT);
    
-    dsShader->Enable();
+    dsShader->Use();
     dsShader->SetUniform("source", 0);
     dsShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/4, (GLfloat)skyCubeSize/4));
     dsShader->SetUniform("inv_proj", projection);
     ProcessCube(dsShader, ds4Cubemap, GL_COLOR_ATTACHMENT0);
-    dsShader->Disable();
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -391,12 +386,11 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glViewport(0, 0, skyCubeSize/8, skyCubeSize/8);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    dsShader->Enable();
+    dsShader->Use();
     dsShader->SetUniform("source", 0);
     dsShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/8, (GLfloat)skyCubeSize/8));
     dsShader->SetUniform("inv_proj", projection);
     ProcessCube(dsShader, ds8Cubemap, GL_COLOR_ATTACHMENT0);
-    dsShader->Disable();
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -410,59 +404,52 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     glViewport(0, 0, skyCubeSize/8, skyCubeSize/8);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    convolveShader->Enable();
+    convolveShader->Use();
     convolveShader->SetUniform("source", 0);
     convolveShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/8, (GLfloat)skyCubeSize/8));
     convolveShader->SetUniform("inv_proj", projection);
     convolveShader->SetUniform("specularity", 1.f);
     ProcessCube(convolveShader, convolveDiffuseCubemap, GL_COLOR_ATTACHMENT0);
-    convolveShader->Disable();
     
     glDrawBuffer(GL_COLOR_ATTACHMENT1);
     glViewport(0, 0, skyCubeSize/8, skyCubeSize/8);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    convolveShader->Enable();
+    convolveShader->Use();
     convolveShader->SetUniform("source", 0);
     convolveShader->SetUniform("viewport", glm::vec2((GLfloat)skyCubeSize/8, (GLfloat)skyCubeSize/8));
     convolveShader->SetUniform("inv_proj", projection);
     convolveShader->SetUniform("specularity", 100.f);
     ProcessCube(convolveShader, convolveReflectionCubemap, GL_COLOR_ATTACHMENT1);
-    convolveShader->Disable();
     
+	glUseProgram(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     ////////////////////////
-    
-    glPopAttrib();
 }
 
-void OpenGLSky::Render(OpenGLView *view, const btTransform& viewTransform, bool zAxisUp)
+void OpenGLSky::Render(OpenGLView *view, bool zAxisUp)
 {
     GLint* viewport = view->GetViewport();
-    
-    glm::mat4 projection = glm::perspective(view->GetFOVY(), (GLfloat)viewport[2]/(GLfloat)viewport[3], 0.1f, 100.f);
-    projection = glm::inverse(projection);
-    
-    btMatrix3x3 flip;
-    flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
-    flip = flip * viewTransform.getBasis().inverse();
-    
-    GLfloat IVRMatrix[9];
-    SetFloatvFromMat(flip, IVRMatrix);
-    glm::mat3 ivr = glm::make_mat3(IVRMatrix);
-    
+    glm::mat4 viewTransform = view->GetViewTransform();
+	glm::mat4 projection = glm::perspective(view->GetFOVY(), (GLfloat)viewport[2]/(GLfloat)viewport[3], 0.1f, 100.f);
+    glm::mat3 ivr = glm::mat3(glm::eulerAngleX(zAxisUp ? -M_PI_2 : M_PI_2)) * glm::inverse(glm::mat3(viewTransform)); 
+	
+    //btMatrix3x3 flip;
+    //flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
+    //flip = flip * viewTransform.getBasis().inverse();
+	
     glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_CUBE_MAP);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyCubemap);
     
-    skyDrawShader->Enable();
+    skyDrawShader->Use();
     skyDrawShader->SetUniform("source", 0);
     skyDrawShader->SetUniform("viewport", glm::vec2((GLfloat)(viewport[2]-viewport[0]), (GLfloat)(viewport[3]-viewport[1])));
-    skyDrawShader->SetUniform("inv_proj", projection);
+    skyDrawShader->SetUniform("inv_proj", glm::inverse(projection));
     skyDrawShader->SetUniform("inv_view_rot", ivr);
     OpenGLContent::getInstance()->DrawSAQ();
-    skyDrawShader->Disable();
+    glUseProgram(0);
     
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     glDisable(GL_TEXTURE_CUBE_MAP);

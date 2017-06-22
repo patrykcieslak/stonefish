@@ -11,12 +11,15 @@
 
 OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao) : OpenGLView(x, y, width, height, horizon, sao)
 {
-    eye = UnitSystem::SetPosition(eyePosition);
-    dir = UnitSystem::SetPosition(targetPosition - eyePosition);
-    dir.normalize();
+    btVector3 _eye = UnitSystem::SetPosition(eyePosition);
+	btVector3 _dir = UnitSystem::SetPosition(targetPosition - eyePosition);
+	
+	eye = glm::vec3((GLfloat)_eye.getX(), (GLfloat)_eye.getY(), (GLfloat)_eye.getZ());
+    dir = glm::normalize(glm::vec3((GLfloat)_dir.getX(), (GLfloat)_dir.getY(), (GLfloat)_dir.getZ()));
+	up = glm::normalize(glm::vec3((GLfloat)cameraUp.getX(), (GLfloat)cameraUp.getY(), (GLfloat)cameraUp.getZ()));
     lookingDir = dir;
-    up = cameraUp.normalized();
-    pan = 0;
+    
+	pan = 0;
     tilt = 0;
     fovx = UnitSystem::SetAngle(fov);
     
@@ -41,7 +44,8 @@ ViewType OpenGLCamera::getType()
 
 void OpenGLCamera::MoveCamera(const btVector3& move)
 {
-    eye = eye + UnitSystem::SetPosition(move);
+	btVector3 _move = UnitSystem::SetPosition(move);
+    eye = eye + glm::vec3((GLfloat)_move.getX(), (GLfloat)_move.getY(), (GLfloat)_move.getZ());  
     SetupCamera();
 }
 
@@ -82,34 +86,34 @@ GLfloat OpenGLCamera::getTiltAngle()
     return UnitSystem::GetAngle(tilt);
 }
 
-btVector3 OpenGLCamera::GetEyePosition()
+glm::vec3 OpenGLCamera::GetEyePosition()
 {
     if(holdingEntity != NULL)
     {
-        btVector3 newEye =  holdingEntity->getTransform().getBasis() * eye + holdingEntity->getTransform().getOrigin();
-        return newEye;
+		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform());
+        return glm::vec3(trans * glm::vec4(eye,1.f));
     }
     else
         return eye;
 }
 
-btVector3 OpenGLCamera::GetLookingDirection()
+glm::vec3 OpenGLCamera::GetLookingDirection()
 {
     if(holdingEntity != NULL)
     {
-        btVector3 newDir =  holdingEntity->getTransform().getBasis() * lookingDir;
-        return newDir.normalized();
+		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform());
+        return glm::normalize(glm::mat3(trans) * lookingDir);
     }
     else
         return lookingDir;
 }
 
-btVector3 OpenGLCamera::GetUpDirection()
+glm::vec3 OpenGLCamera::GetUpDirection()
 {
     if(holdingEntity != NULL)
     {
-        btVector3 newUp = holdingEntity->getTransform().getBasis() * up;
-        return newUp.normalized();
+		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform());
+        return glm::normalize(glm::mat3(trans) * up);
     }
     else
         return up;
@@ -125,51 +129,38 @@ void OpenGLCamera::SetupCamera()
     lookingDir = dir;
     
     //additional camera rotation
-    btVector3 tiltAxis = dir.cross(up);
-    tiltAxis = tiltAxis.normalize();
-    
-    btVector3 panAxis = tiltAxis.cross(dir);
-    panAxis = panAxis.normalize();
+    glm::vec3 tiltAxis = glm::normalize(glm::cross(dir, up));
+    glm::vec3 panAxis = glm::normalize(glm::cross(tiltAxis, dir));
     
     //rotate
-    lookingDir = lookingDir.rotate(tiltAxis, tilt);
-    lookingDir = lookingDir.rotate(panAxis, pan);
-    lookingDir = lookingDir.normalize();
+	lookingDir = glm::rotate(lookingDir, tilt, tiltAxis);
+	lookingDir = glm::rotate(lookingDir, pan, panAxis);
+    lookingDir = glm::normalize(lookingDir);
     
-    btVector3 newUp = panAxis.rotate(tiltAxis, tilt);
-    newUp = newUp.rotate(panAxis, pan);
-    newUp = newUp.normalize();
+    glm::vec3 newUp = glm::rotate(panAxis, tilt, tiltAxis);
+    newUp = glm::rotate(newUp, pan, panAxis);
+	newUp = glm::normalize(newUp);
     
-#ifdef BT_USE_DOUBLE_PRECISION
-    glm::dvec3 eyeV(eye.x(), eye.y(), eye.z());
-    glm::dvec3 dirV(lookingDir.x(), lookingDir.y(), lookingDir.z());
-    glm::dvec3 upV(newUp.x(), newUp.y(), newUp.z());
-    glm::dmat4x4 cameraM = glm::lookAt(eyeV, eyeV+dirV, upV);
-#else
-    glm::vec3 eyeV(eye.x(), eye.y(), eye.z());
-    glm::vec3 dirV(lookingDir.x(), lookingDir.y(), lookingDir.z());
-    glm::vec3 upV(newUp.x(), newUp.y(), newUp.z());
-    glm::mat4x4 cameraM = glm::lookAt(eyeV, eyeV+dirV, upV);
-#endif
-    cameraTransform.setFromOpenGLMatrix(glm::value_ptr(cameraM));
-    cameraRender = cameraTransform.inverse();
+	cameraTransform = glm::lookAt(eye, eye+lookingDir, newUp);
+	cameraRender = glm::inverse(cameraTransform);
 }
 
-btTransform OpenGLCamera::GetViewTransform()
+glm::mat4 OpenGLCamera::GetViewTransform()
 {
     if(holdingEntity != NULL)
     {
-        btTransform entTrans = holdingEntity->getTransform();
-        btTransform trans =  cameraTransform * entTrans.inverse();
+		/////CHECK AND FIX////////////
+        //btTransform entTrans = holdingEntity->getTransform();
+        /*btTransform trans =  cameraTransform * entTrans.inverse();
         btVector3 translate = entTrans.getBasis() * eye;
         trans.getOrigin() = trans.getOrigin() - translate;
-        return trans;
+        return trans;*/
+		glm::mat4 entTrans = glMatrixFromBtTransform(holdingEntity->getTransform());
+		glm::mat4 trans = cameraTransform * glm::inverse(entTrans);
+		return trans * glm::translate(eye);
     }
     else
-    {
-        btTransform trans = cameraTransform;
-        return trans;
-    }
+        return cameraTransform;
 }
 
 void OpenGLCamera::RenderDummy()
@@ -183,8 +174,8 @@ void OpenGLCamera::RenderDummy()
 		model = glMatrixFromBtTransform(trans);
     }
     
-    model = glm::translate(model, glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z()));
-	model *= glMatrixFromBtTransform(cameraRender);
+    model = glm::translate(model, eye);
+	model *= cameraRender;
    
     //rendering
     GLfloat iconSize = 5.f;

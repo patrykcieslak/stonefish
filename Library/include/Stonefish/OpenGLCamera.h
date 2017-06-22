@@ -17,10 +17,10 @@ public:
     OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao = false);
     ~OpenGLCamera();
     
-    btTransform GetViewTransform();
-    btVector3 GetEyePosition();
-    btVector3 GetLookingDirection();
-    btVector3 GetUpDirection();
+    glm::mat4 GetViewTransform();
+    glm::vec3 GetEyePosition();
+    glm::vec3 GetLookingDirection();
+    glm::vec3 GetUpDirection();
     ViewType getType();
     
     void SetupCamera();
@@ -36,16 +36,16 @@ public:
     GLfloat getTiltAngle();
     
 private:
-    btTransform cameraTransform;
-    btTransform cameraRender;
-    btVector3 eye;
-    btVector3 dir;
-    btVector3 up;
+    glm::mat4 cameraTransform;
+    glm::mat4 cameraRender;
+    glm::vec3 eye;
+    glm::vec3 dir;
+    glm::vec3 up;
     
     SolidEntity* holdingEntity;
     GLfloat pan;
     GLfloat tilt;
-    btVector3 lookingDir;
+    glm::vec3 lookingDir;
 };
 
 

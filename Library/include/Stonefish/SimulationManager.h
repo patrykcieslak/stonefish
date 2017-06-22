@@ -30,9 +30,7 @@
 #include "Actuator.h"
 #include "Controller.h"
 
-//Rendering
-#include "OpenGLLight.h"
-#include "OpenGLCamera.h"
+//Debugging and logging
 #include "OpenGLDebugDrawer.h"
 #include "Console.h"
 
@@ -102,12 +100,7 @@ public:
     MaterialManager* getMaterialManager();
     bool isZAxisUp();
     
-    void AddView(OpenGLView* view);
-    OpenGLView* getView(int index);
     bool drawCameraDummies;
-    
-    void AddLight(OpenGLLight* light);
-    OpenGLLight* getLight(int index);
     bool drawLightDummies;
     
 protected:
@@ -155,8 +148,6 @@ private:
     bool zUp;
 
     //graphics
-    std::vector<OpenGLView*> views;
-    std::vector<OpenGLLight*> lights;
     OpenGLDebugDrawer* debugDrawer;
 };
 

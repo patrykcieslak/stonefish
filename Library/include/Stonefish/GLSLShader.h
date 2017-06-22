@@ -33,8 +33,7 @@ public:
     GLSLShader(const char* fragment, const char* vertex = NULL); //NULL means standard SAQ
     ~GLSLShader();
     
-    void Enable();
-    void Disable();
+    void Use();
     
     bool AddAttribute(std::string name, ParameterType type);
     bool AddUniform(std::string name, ParameterType type);
@@ -54,7 +53,6 @@ public:
     bool SetUniform(std::string name, glm::mat4 x);
     
     bool isValid();
-    bool isEnabled();
     
     static bool Init();
     static void Destroy();
@@ -67,7 +65,6 @@ private:
     std::vector<GLSLUniform> uniforms;
     GLuint shader;
     bool valid;
-    bool enabled;
     
     static GLuint saqVertexShader;
     static GLuint LoadShader(GLenum shaderType, const char* filename, GLint* shaderCompiled);

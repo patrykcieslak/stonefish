@@ -39,7 +39,6 @@
     </VirtualDirectory>
     <VirtualDirectory Name="display">
       <File Name="src/OpenGLDebugDrawer.cpp"/>
-      <File Name="src/OpenGLGBuffer.cpp"/>
       <VirtualDirectory Name="gui">
         <File Name="src/Console.cpp"/>
         <File Name="src/OpenGLPrinter.cpp"/>
@@ -50,7 +49,7 @@
         <File Name="src/OpenGLSun.cpp"/>
         <File Name="src/OpenGLSpotLight.cpp"/>
         <File Name="src/OpenGLSky.cpp"/>
-        <File Name="src/OpenGLOmniLight.cpp"/>
+        <File Name="src/OpenGLPointLight.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="src/OpenGLTrackball.cpp"/>
@@ -187,13 +186,13 @@
     <VirtualDirectory Name="display">
       <File Name="include/Stonefish/GLSLShader.h"/>
       <File Name="include/Stonefish/OpenGLDebugDrawer.h"/>
-      <File Name="include/Stonefish/OpenGLGBuffer.h"/>
       <VirtualDirectory Name="lights">
-        <File Name="include/Stonefish/OpenGLOmniLight.h"/>
         <File Name="include/Stonefish/OpenGLSpotLight.h"/>
         <File Name="include/Stonefish/OpenGLLight.h"/>
         <File Name="include/Stonefish/OpenGLSun.h"/>
         <File Name="include/Stonefish/OpenGLSky.h"/>
+        <File Name="include/Stonefish/OpenGLPointLight.h"/>
+        <File Name="shaders/blinnPhong.frag"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="include/Stonefish/OpenGLCamera.h"/>
@@ -284,17 +283,11 @@
       <File Name="shaders/cubeDownsample.frag"/>
       <File Name="shaders/cubePass.frag"/>
       <File Name="shaders/cubeSky.frag"/>
-      <File Name="shaders/deferredAmbient.frag"/>
-      <File Name="shaders/deferredOmni.frag"/>
-      <File Name="shaders/deferredSpot.frag"/>
-      <File Name="shaders/deferredSun.frag"/>
       <File Name="shaders/downsample.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
       <File Name="shaders/flat.frag"/>
       <File Name="shaders/flat.vert"/>
-      <File Name="shaders/gbuffer.frag"/>
-      <File Name="shaders/gbuffer.vert"/>
       <File Name="shaders/helpers.frag"/>
       <File Name="shaders/helpers.vert"/>
       <File Name="shaders/saq.vert"/>
@@ -303,7 +296,15 @@
       <File Name="shaders/texCube.vert"/>
       <File Name="shaders/texQuad.frag"/>
       <File Name="shaders/texQuad.vert"/>
+      <File Name="shaders/object.vert"/>
     </VirtualDirectory>
+    <VirtualDirectory Name="deferred">
+      <File Name="shaders/deferredAmbient.frag"/>
+      <File Name="shaders/deferredOmni.frag"/>
+      <File Name="shaders/deferredSpot.frag"/>
+      <File Name="shaders/deferredSun.frag"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="materials"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

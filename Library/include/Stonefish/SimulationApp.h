@@ -65,7 +65,7 @@ public:
     SimulationManager* getSimulationManager();
     btScalar getSimulationSpeed();
     SDL_Joystick* getJoystick();
-    double getFPS();
+	double getDrawingTime();
     double getPhysicsTime();
     int getWindowWidth();
     int getWindowHeight();
@@ -100,8 +100,8 @@ private:
     bool finished;
     bool running;
     bool loading;
-    double fps;
-    double physics;
+	double drawingTime;
+    double physicsTime;
     uint64_t startTime;
     bool displayHUD;
     bool displayConsole;

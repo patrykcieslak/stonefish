@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestManager.h"
@@ -16,7 +16,7 @@
 #include "Sphere.h"
 #include "Torus.h"
 #include "Cylinder.h"
-#include "OpenGLOmniLight.h"
+#include "OpenGLPointLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "OpenGLContent.h"
@@ -32,11 +32,9 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, true);
+	OpenGLPipeline::getInstance()->setRenderingEffects(true, false, false);
     OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, true);
     setICSolverParams(false);
-	
-	//OpenGLSun::getInstance()->SetPosition(0,0);
 	
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
@@ -50,8 +48,8 @@ void FallingTestManager::BuildScenario()
     GetDataPath(path, 1024-32);
     strcat(path, "grid.png");
     
-    int grey = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(1.f, 1.f, 1.f), 0.2f, 0.5f, 1.2f);
-    int color = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(1.f, 0.5f, 0.1f), 0.5f, 0.9f, 1.5f);
+    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f);
+    int color = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 0.5f, 0.1f), 0.5f, 1.f);
     
 	////////OBJECTS
     Plane* floor = new Plane("Floor", 100.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), grey);
@@ -86,12 +84,12 @@ void FallingTestManager::BuildScenario()
     //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(5.f, 5.f, 10.f), OpenGLLight::ColorFromTemperature(4500, 1000));
     //AddLight(omni);
     OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(10.f, 10.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 10000000));
-    AddLight(spot);
+    OpenGLContent::getInstance()->AddLight(spot);
     //spot = new OpenGLSpotLight(btVector3(10000.f, -12000.f, 5000.f), btVector3(5000.f,-5000.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(5600, 500));
     //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 100.f, true);
-    trackb->Rotate(btQuaternion(M_PI, 0, M_PI/8.0));
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 100.f, false);
+    trackb->Rotate(btQuaternion(0.5, 0, 0));
     trackb->Activate();
-    AddView(trackb);
+    OpenGLContent::getInstance()->AddView(trackb);
 }

@@ -124,7 +124,7 @@ void OpenGLPrinter::Print(glm::vec4 color, GLfloat x, GLfloat y, GLfloat size, c
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
 	
-	printShader->Enable();
+	printShader->Use();
 	printShader->SetUniform("color", color);
 	printShader->SetUniform("tex", 1);
 
@@ -154,7 +154,7 @@ void OpenGLPrinter::Print(glm::vec4 color, GLfloat x, GLfloat y, GLfloat size, c
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-	printShader->Disable();
+	glUseProgram(0);
 }
 
 GLuint OpenGLPrinter::TextLength(const char *text)

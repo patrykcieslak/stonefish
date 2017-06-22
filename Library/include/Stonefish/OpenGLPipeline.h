@@ -14,14 +14,24 @@
 #include <GL/glew.h>
 
 #define GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
 
 #define SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
 #define SUN_SKY_FACTOR 10.f //Sun illuminance to sky illuminance factor (sky treated as reference)
+
+#define MAX_POINT_LIGHTS 	8
+#define MAX_SPOT_LIGHTS 	8
+
+#define TEX_BASE			((GLint)0)
+#define TEX_SKY_DIFFUSE 	((GLint)1)
+#define TEX_SKY_REFLECTION 	((GLint)2)
+#define TEX_AO				((GLint)3)
 
 class SimulationManager;
 class OpenGLView;
@@ -35,7 +45,7 @@ public:
     void Render(SimulationManager* sim);
     void DrawObjects(SimulationManager* sim);
    
-    void setRenderingEffects(bool sky, bool shadows, bool fluid, bool sao);
+    void setRenderingEffects(bool shadows, bool fluid, bool sao);
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras);
     void setDebugSimulation(bool enabled);
     bool isFluidRendered();
@@ -48,7 +58,6 @@ private:
     OpenGLPipeline();
     ~OpenGLPipeline();
     
-    bool renderSky;
     bool renderShadows;
     bool renderFluid;
     bool renderSAO;

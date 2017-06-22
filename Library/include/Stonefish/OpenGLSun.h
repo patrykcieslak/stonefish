@@ -20,14 +20,14 @@ class OpenGLSun
 {
 public:
     void Init();
-    void Render(const btTransform& viewTransform);
+    //void Render(const btTransform& viewTransform);
     void RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim);
     void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
     void ShowFrustumSplits();
     void SetCamera(OpenGLView* view);
     void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow);
     void SetPosition(GLfloat elevation, GLfloat azimuth);
-    btVector3 GetSunDirection();
+    glm::vec3 GetSunDirection();
     glm::vec4 GetSunColor();
     
     static OpenGLSun* getInstance();

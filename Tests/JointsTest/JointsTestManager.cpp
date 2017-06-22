@@ -13,7 +13,7 @@
 #include "Box.h"
 #include "Sphere.h"
 #include "Cylinder.h"
-#include "OpenGLOmniLight.h"
+#include "OpenGLPointLight.h"
 #include "OpenGLTrackball.h"
 #include "FixedJoint.h"
 #include "SphericalJoint.h"
@@ -39,9 +39,9 @@ void JointsTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.5, 0.2);
     
     ///////LOOKS///////////
-    int grey = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f, 1.5f);
-    int orange = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f, 1.5f);
-    int green = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f, 1.5f);
+    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f, 1.5f);
+    int orange = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f, 1.5f);
+    int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f, 1.5f);
     
     ////////OBJECTS
     Plane* floor = new Plane("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)), grey);

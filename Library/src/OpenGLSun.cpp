@@ -101,9 +101,9 @@ void OpenGLSun::Init()
     shadowCPM = new glm::mat4x4[shadowmapSplits];
 }
 
-btVector3 OpenGLSun::GetSunDirection()
+glm::vec3 OpenGLSun::GetSunDirection()
 {
-    return sunDirection;
+    return glm::vec3(sunDirection.getX(), sunDirection.getY(), sunDirection.getZ());
 }
 
 glm::vec4 OpenGLSun::GetSunColor()
@@ -237,7 +237,7 @@ glm::mat4 OpenGLSun::BuildCropProjMatrix(ViewFrustum &f)
 	return shad_crop_proj;
 }
 
-void OpenGLSun::Render(const btTransform& viewTransform)
+/*void OpenGLSun::Render(const btTransform& viewTransform)
 {
     //Rendering is done in screen space! (camera eye space)
     
@@ -250,7 +250,7 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     
     //calculate sun color
     sunColor = OpenGLLight::ColorFromTemperature(5000.f + 20.f*sunElevation, SUN_SKY_FACTOR * sin(sunElevation / 180.0 * M_PI));
-    glm::mat4 invCamView = glm::inverse(activeView->GetViewMatrix(viewTransform));
+    glm::mat4 invCamView = glm::inverse(activeView->GetViewMatrix());
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
                    0.f, 0.5f, 0.f, 0.f,
                    0.f, 0.f, 0.5f, 0.f,
@@ -278,7 +278,7 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
     
-    sunShader->Enable();
+    sunShader->Use();
     sunShader->SetUniform("texDiffuse", diffuseTextureUnit);
     sunShader->SetUniform("texPosition", positionTextureUnit);
     sunShader->SetUniform("texNormal", normalTextureUnit);
@@ -291,10 +291,10 @@ void OpenGLSun::Render(const btTransform& viewTransform)
     sunShader->SetUniform("lightClipSpace[2]", lightClipSpace[2]);
     sunShader->SetUniform("lightClipSpace[3]", lightClipSpace[3]);
     OpenGLContent::getInstance()->DrawSAQ();
-    sunShader->Disable();
+    glUseProgram(0);
     
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-}
+}*/
 
 void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
 {
@@ -307,15 +307,15 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glViewport(0, 0, shadowmapSize, shadowmapSize);
     
-    btVector3 camPos = activeView->GetEyePosition();
-    btVector3 camDir = activeView->GetLookingDirection();
-    btVector3 camUp = activeView->GetUpDirection();
+    glm::vec3 camPos = activeView->GetEyePosition();
+    glm::vec3 camDir = activeView->GetLookingDirection();
+    glm::vec3 camUp = activeView->GetUpDirection();
     
 	// for all shadow splits
 	for(int i = 0; i < shadowmapSplits; i++)
 	{
 		//Compute the camera frustum slice boundary points in world space
-        UpdateFrustumCorners(frustum[i], glm::vec3(camPos.x(), camPos.y(), camPos.z()), glm::vec3(camDir.x(), camDir.y(), camDir.z()), glm::vec3(camUp.x(), camUp.y(), camUp.z()));
+        UpdateFrustumCorners(frustum[i], camPos, camDir, camUp);
 		
         //Adjust the view frustum of the light, so that it encloses the camera frustum slice fully.
 		//note that this function sets the projection matrix as it sees best fit		
@@ -362,7 +362,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     glDisable(GL_DEPTH_TEST);
     
 	//Render the shadowmaps
-    shadowmapShader->Enable();
+    shadowmapShader->Use();
     shadowmapShader->SetUniform("shadowmapArray", shadowTextureUnit);
     for(int i = 0; i < shadowmapSplits; i++)
     {
@@ -370,7 +370,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
         shadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
         OpenGLContent::getInstance()->DrawSAQ();
     }
-    shadowmapShader->Disable();
+    glUseProgram(0);
     
 	//Reset
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);

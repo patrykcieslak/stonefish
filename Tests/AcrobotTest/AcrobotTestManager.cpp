@@ -14,7 +14,7 @@
 #include "Sphere.h"
 #include "Torus.h"
 #include "Cylinder.h"
-#include "OpenGLOmniLight.h"
+#include "OpenGLPointLight.h"
 #include "OpenGLTrackball.h"
 #include "FixedJoint.h"
 #include "RevoluteJoint.h"
@@ -48,9 +48,9 @@ void AcrobotTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.7, 0.5);
     
     /////// LOOKS
-    int grey = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.1, 0.8, 1.33);
-	int shiny = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.01, 0.9, 1.2);
-    int green = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.01, 0.9, 1.2);
+    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.1, 0.8, 1.33);
+	int shiny = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.01, 0.9, 1.2);
+    int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.01, 0.9, 1.2);
     
     /////// OBJECTS
     Plane* floor = new Plane("Floor", 20, getMaterialManager()->getMaterial("Concrete"), btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)), grey);

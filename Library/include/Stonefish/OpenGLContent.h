@@ -65,25 +65,26 @@ struct Object
 };
 
 //Rendering styles
-typedef enum {OPAQUE, REFLECTIVE, TRANSPARENT} LookType;
+typedef enum {SIMPLE, PHYSICAL, METAL, MIRROR, TRANSPARENT} LookType;
 
 struct Look
 {
     LookType type;
     glm::vec3 color;
-    glm::vec4 data;
-    GLuint texture;
-    GLfloat textureMix;
+    std::vector<GLfloat> params;
+    std::vector<GLuint> textures;
     
     Look()
     {
-        type = OPAQUE;
-        color = glm::vec3(1.f,1.f,1.f);
-        data = glm::vec4(0.2f, 1.33f, 0.2f, 0.0f);
-        texture = 0;
-        textureMix = 0.f;
+        type = LookType::SIMPLE;
+        color = glm::vec3(0.5f,0.5f,0.5f);
+        params.push_back(0);
+		params.push_back(0);
     }
 };
+
+class OpenGLView;
+class OpenGLLight;
 
 class OpenGLContent
 {
@@ -98,6 +99,7 @@ public:
 	void SetProjectionMatrix(glm::mat4 P);
 	void SetViewMatrix(glm::mat4 V);
 	void SetDrawFlatObjects(bool enable);
+	void SetCurrentView(OpenGLView* v);
 	
 	void DrawSAQ();
 	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
@@ -107,9 +109,17 @@ public:
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
 	
 	//Allocate and build content
+	void AddView(OpenGLView* view);
+    void AddLight(OpenGLLight* light);
 	unsigned int BuildObject(Mesh* mesh);
-	unsigned int CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName = NULL, GLfloat textureMixFactor = GLfloat(1.0f));
-	void UseLook(unsigned int lookId);
+	unsigned int CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, const char* textureName = NULL);
+	unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName = NULL);
+	void UseLook(unsigned int lookId, const glm::mat4& M);
+	
+	OpenGLView* getView(unsigned int id);
+	unsigned int getViewsCount();
+	OpenGLLight* getLight(unsigned int id);
+	unsigned int getLightsCount();
 	
 	//Static
 	static GLuint LoadTexture(const char* filename);
@@ -130,12 +140,16 @@ private:
 	bool drawFlatObjects; //For shadow casting
 
 	//Data
+	std::vector<OpenGLView*> views;
+    std::vector<OpenGLLight*> lights;
 	std::vector<Object> objects; //VBAs
 	std::vector<Look> looks; //OpenGL materials
+	glm::vec3 eye;
 	glm::mat4 view; //Current view matrix;
 	glm::mat4 projection; //Current projection matrix
 	glm::mat4 viewProjection; //Current view-projection matrix
 	glm::vec2 viewportSize; //Current view-port size
+	
 	
 	//Standard objects
 	GLuint baseVertexArray; //base VAO
@@ -146,7 +160,7 @@ private:
 	GLSLShader* texQuadShader;
 	GLSLShader* texCubeShader;
 	GLSLShader* flatShader;
-	GLSLShader* gbufferShader;
+	std::vector<GLSLShader*> materialShaders;
 
 	//Singleton
 	OpenGLContent();
@@ -154,7 +168,8 @@ private:
 	static OpenGLContent* instance;
 	
 	//Methods
-	void UseStandardLook();
+	void UseStandardLook(const glm::mat4& M);
+	void SetupLights(GLSLShader* shader);
 	
 	//Static
 	static Mesh* LoadSTL(const char *filename, GLfloat scale, bool smooth);

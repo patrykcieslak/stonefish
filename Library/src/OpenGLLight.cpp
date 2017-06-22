@@ -23,10 +23,11 @@ GLint OpenGLLight::shadowTextureUnit = 0;
 GLint OpenGLLight::ssaoTextureUnit = 0;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 
-OpenGLLight::OpenGLLight(const btVector3& position, glm::vec4 c)
+OpenGLLight::OpenGLLight(const btVector3& _position, glm::vec4 c)
 {
-    color = SUN_SKY_FACTOR * c / SUN_ILLUMINANCE;
-    pos = UnitSystem::SetPosition(position);
+    btVector3 p = UnitSystem::SetPosition(_position);
+    position = glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ());
+	color = SUN_SKY_FACTOR * c / SUN_ILLUMINANCE;
     active = true;
     holdingEntity = NULL;
     surfaceDistance = 1.f; // attenuation = 1 / distance^2 * intesity [Lux]
@@ -62,24 +63,20 @@ void OpenGLLight::setLightSurfaceDistance(GLfloat dist)
     surfaceDistance = UnitSystem::SetLength(dist);
 }
 
-glm::vec4 OpenGLLight::getColor()
+glm::vec3 OpenGLLight::getColor()
 {
-    return color;
+    return glm::vec3(color.r, color.g, color.b);
 }
 
-btVector3 OpenGLLight::getViewPosition()
-{
-    //transform to eye space
-    btVector3 esPos = activeView->GetViewTransform() * getPosition();
-    return esPos;
-}
-
-btVector3 OpenGLLight::getPosition()
+glm::vec3 OpenGLLight::getPosition()
 {
     if(holdingEntity != NULL)
-        return holdingEntity->getTransform().getOrigin() + holdingEntity->getTransform().getBasis() * pos;
-    else
-        return pos;
+	{
+        glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform()); //holdingEntity->getTransform().getOrigin() + holdingEntity->getTransform().getBasis()
+		return glm::vec3(trans * glm::vec4(position,1.f));
+	}
+	else
+        return position;
 }
 
 SolidEntity* OpenGLLight::getHoldingEntity()
@@ -155,14 +152,14 @@ void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxi
     SetFloatvFromMat(flip, IVRMatrix);
     glm::mat3 ivr = glm::make_mat3(IVRMatrix);
     
-    ambientShader->Enable();
+    ambientShader->Use();
     ambientShader->SetUniform("texDiffuse", diffuseTextureUnit);
     ambientShader->SetUniform("texNormal", normalTextureUnit);
     ambientShader->SetUniform("texSkyDiff", skyDiffuseTextureUnit);
     ambientShader->SetUniform("texSSAO", ssaoTextureUnit);
     ambientShader->SetUniform("inv_view_rot", ivr);
     OpenGLContent::getInstance()->DrawSAQ();
-    ambientShader->Disable();
+    glUseProgram(0);
 }
 
 glm::vec4 OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intensity)

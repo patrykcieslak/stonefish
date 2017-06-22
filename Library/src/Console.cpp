@@ -170,7 +170,7 @@ void Console::Render(bool overlay, GLfloat dt)
 	
 	if(overlay)
 	{
-		texQuadShader->Enable();
+		texQuadShader->Use();
 		texQuadShader->SetUniform("tex", 0);
 		texQuadShader->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
 		texQuadShader->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
@@ -193,7 +193,7 @@ void Console::Render(bool overlay, GLfloat dt)
 		
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		
-		texQuadShader->Disable();
+		glUseProgram(0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	
 		//Text rendering
@@ -207,7 +207,7 @@ void Console::Render(bool overlay, GLfloat dt)
 	}
 	else //During loading of resources (displaying in second thread -> no VAO sharing)
 	{
-		texQuadShader->Enable();
+		texQuadShader->Use();
 		texQuadShader->SetUniform("tex", 0);
 		texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
 		texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
@@ -223,7 +223,7 @@ void Console::Render(bool overlay, GLfloat dt)
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		
 		glBindTexture(GL_TEXTURE_2D, 0);
-		texQuadShader->Disable();
+		glUseProgram(0);
 		
 		//Text rendering
 		for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)

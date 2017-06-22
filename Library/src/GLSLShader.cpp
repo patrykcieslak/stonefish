@@ -15,7 +15,6 @@ GLuint GLSLShader::saqVertexShader = 0;
 GLSLShader::GLSLShader(const char* fragment, const char* vertex)
 {
     valid = false;
-    enabled = false;
     GLint compiled = 0;
     GLuint vs;
     GLuint fs;
@@ -42,24 +41,10 @@ bool GLSLShader::isValid()
     return valid;
 }
 
-bool GLSLShader::isEnabled()
-{
-    return enabled;
-}
-
-void GLSLShader::Enable()
+void GLSLShader::Use()
 {
     if(valid)
-    {
         glUseProgram(shader);
-        enabled = true;
-    }
-}
-
-void GLSLShader::Disable()
-{
-    glUseProgram(0);
-    enabled = false;
 }
 
 bool GLSLShader::AddAttribute(std::string name, ParameterType type)
@@ -68,9 +53,9 @@ bool GLSLShader::AddAttribute(std::string name, ParameterType type)
     att.name = name;
     att.type = type;
     
-    Enable();
+    Use();
     att.index = glGetAttribLocation(shader, name.c_str());
-    Disable();
+    glUseProgram(0);
     
     if(att.index < 0)
         return false;
@@ -85,12 +70,15 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     uni.name = name;
     uni.type = type;
     
-    Enable();
+    Use();
     uni.location = glGetUniformLocation(shader, name.c_str());
-    Disable();
+	glUseProgram(0);
     
     if(uni.location < 0)
+	{
+		cError("Uniform '%s' doesn't exist!", name.c_str());
         return false;
+	}
     
     uniforms.push_back(uni);
     return true;

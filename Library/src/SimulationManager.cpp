@@ -20,9 +20,6 @@
 #include "SimulationApp.h"
 #include "SystemUtil.hpp"
 #include "OpenGLSky.h"
-#include "OpenGLOmniLight.h"
-#include "OpenGLSpotLight.h"
-#include "OpenGLTrackball.h"
 #include "SolidEntity.h"
 #include "Box.h"
 #include "StaticEntity.h"
@@ -331,32 +328,6 @@ double SimulationManager::getPhysicsTimeInMiliseconds()
     return (double)physicTime/1000.0;
 }
 
-void SimulationManager::AddView(OpenGLView* view)
-{
-    views.push_back(view);
-}
-
-OpenGLView* SimulationManager::getView(int index)
-{
-    if(index < views.size())
-        return views[index];
-    else
-        return NULL;
-}
-
-void SimulationManager::AddLight(OpenGLLight* light)
-{
-    lights.push_back(light);
-}
-
-OpenGLLight* SimulationManager::getLight(int index)
-{
-    if(index < lights.size())
-        return lights[index];
-    else
-        return NULL;
-}
-
 void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
 {
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
@@ -557,15 +528,7 @@ void SimulationManager::DestroyScenario()
     for(int i=0; i<controllers.size(); i++)
         delete controllers[i];
     controllers.clear();
-    
-    for(int i=0; i<views.size(); i++)
-        delete views[i];
-    views.clear();
-    
-    for(int i=0; i<lights.size(); i++)
-        delete lights[i];
-    lights.clear();
-    
+	
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
 		
@@ -706,6 +669,7 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
 
 Entity* SimulationManager::PickEntity(int x, int y)
 {
+	/*
     for(int i = 0; i < views.size(); i++)
     {
         if(views[i]->isActive())
@@ -726,7 +690,7 @@ Entity* SimulationManager::PickEntity(int x, int y)
             }
         }
     }
-    
+    */
     return NULL;
 }
 

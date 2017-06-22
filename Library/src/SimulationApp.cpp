@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "SimulationApp.h"
@@ -28,8 +28,8 @@ SimulationApp::SimulationApp(const char* name, int width, int height, Simulation
     joystickButtons = NULL;
     joystickHats = NULL;
     
-	fps = 0.0;
-	physics = 0.0;
+	drawingTime = 0.0;
+	physicsTime = 0.0;
 }
 
 SimulationApp::~SimulationApp()
@@ -85,14 +85,14 @@ SDL_Joystick* SimulationApp::getJoystick()
     return joystick;
 }
 
-double SimulationApp::getFPS()
+double SimulationApp::getDrawingTime()
 {
-    return fps;
+    return drawingTime;
 }
 
 double SimulationApp::getPhysicsTime()
 {
-    return physics;
+    return physicsTime;
 }
 
 int SimulationApp::getWindowWidth()
@@ -418,28 +418,23 @@ void SimulationApp::EventLoop()
 
 void SimulationApp::AppLoop()
 {
-    //FPS update
-    uint64_t endTime = GetTimeInMicroseconds();
-    double eleapsed = (endTime - startTime)/1000000.0;
-    fps = 1.0/eleapsed;
-    startTime = endTime;
-    
     //Simulation
     if(running)
     {
         simulation->AdvanceSimulation(GetTimeInMicroseconds()*simSpeedFactor);
-        physics = simulation->getPhysicsTimeInMiliseconds();
-    }
-    
+        physicsTime = simulation->getPhysicsTimeInMiliseconds();
+	}
+    	
     //Rendering
-    OpenGLPipeline::getInstance()->Render(simulation);
+    uint64_t startTime = GetTimeInMicroseconds();
+	OpenGLPipeline::getInstance()->Render(simulation);
     OpenGLPipeline::getInstance()->DrawDisplay();
     
     //GUI & Console
     if(displayConsole)
     {
         IMGUI::getInstance()->GenerateBackground();
-        Console::getInstance()->Render(true, eleapsed);
+        Console::getInstance()->Render(true, getPhysicsTime()+getDrawingTime());
     }
     else
     {
@@ -452,16 +447,17 @@ void SimulationApp::AppLoop()
         }
         else
         {
-            char buffer[16];
-            double fps = getFPS();
-            sprintf(buffer, "FPS: %1.2lf", fps);
+            char buffer[24];
+            sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());
             
             IMGUI::getInstance()->Begin();
             IMGUI::getInstance()->DoLabel(10, 10, buffer);
             IMGUI::getInstance()->End();
         }
     }
-    
+
+	glFlush();
+	drawingTime = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
 	SDL_GL_SwapWindow(window);
 }
 
@@ -478,23 +474,22 @@ void SimulationApp::DoHUD()
     //Bottom panel
     IMGUI::getInstance()->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
     
-	double fps = getFPS();
-    sprintf(buffer, "FPS: %1.2lf", fps);
+	sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());
     IMGUI::getInstance()->DoLabel(10, getWindowHeight() - 20.f, buffer);
     
-    sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", getPhysicsTime()/(10.0/fps), getPhysicsTime());
-    IMGUI::getInstance()->DoLabel(100, getWindowHeight() - 20.f, buffer);
+    sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", getPhysicsTime()/(getDrawingTime()+getPhysicsTime()), getPhysicsTime());
+    IMGUI::getInstance()->DoLabel(170, getWindowHeight() - 20.f, buffer);
     
     sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
-    IMGUI::getInstance()->DoLabel(300, getWindowHeight() - 20.f, buffer);
+    IMGUI::getInstance()->DoLabel(360, getWindowHeight() - 20.f, buffer);
     
     sprintf(buffer, "Simulation time: %1.2f s", getSimulationManager()->getSimulationTime());
-    IMGUI::getInstance()->DoLabel(470, getWindowHeight() - 20.f, buffer);
+    IMGUI::getInstance()->DoLabel(520, getWindowHeight() - 20.f, buffer);
     
     if(lastPicked != NULL)
     {
         sprintf(buffer, "Last picked entity: %s", lastPicked->getName().c_str());
-        IMGUI::getInstance()->DoLabel(630, getWindowHeight() - 20.f, buffer);
+        IMGUI::getInstance()->DoLabel(660, getWindowHeight() - 20.f, buffer);
     }
 }
 
@@ -513,7 +508,7 @@ void SimulationApp::ResumeSimulation()
 void SimulationApp::StopSimulation()
 {
     running = false;
-    physics = 0.f;
+    physicsTime = 0.f;
     simulation->StopSimulation();
 }
 

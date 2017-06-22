@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLSpotLight__
@@ -17,17 +17,17 @@ public:
     OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color);
     ~OpenGLSpotLight();
     
-    void Render();
+	void SetupShader(GLSLShader* shader, unsigned int lightId);
     void RenderDummy();
     void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim);
     void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
-    
-    btVector3 getViewDirection();
-    btVector3 getDirection();
+    LightType getType();
+	
+    glm::vec3 getDirection();
     GLfloat getAngle();
     
 private:
-    btVector3 dir;
+    glm::vec3 direction;
     GLfloat coneAngle;
     
     GLuint shadowMap;

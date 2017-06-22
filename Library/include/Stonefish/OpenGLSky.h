@@ -21,7 +21,7 @@ class OpenGLSky
 public:
     void Init();
     void Generate(GLfloat elevation, GLfloat azimuth);
-    void Render(OpenGLView* view, const btTransform& viewTransform, bool zAxisUp);
+    void Render(OpenGLView* view, bool zAxisUp);
     GLuint getSkyCubemap();
     GLuint getDiffuseCubemap();
     GLuint getReflectionCubemap();

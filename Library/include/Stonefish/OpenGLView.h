@@ -3,14 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLView__
 #define __Stonefish_OpenGLView__
 
 #include "OpenGLPipeline.h"
-#include "OpenGLGBuffer.h"
 #include "GLSLShader.h"
 #include "Ocean.h"
 #include "SolidEntity.h"
@@ -39,20 +38,20 @@ public:
     OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, bool sao);
     virtual ~OpenGLView(void);
     
-    virtual btTransform GetViewTransform() = 0;
-    virtual btVector3 GetEyePosition() = 0;
-    virtual btVector3 GetLookingDirection() = 0;
-    virtual btVector3 GetUpDirection() = 0;
+    virtual glm::mat4 GetViewTransform() = 0;
+    virtual glm::vec3 GetEyePosition() = 0;
+    virtual glm::vec3 GetLookingDirection() = 0;
+    virtual glm::vec3 GetUpDirection() = 0;
     virtual ViewType getType() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
     void SetViewport();
     void SetProjection();
     void SetViewTransform();
-    void SetReflectedViewTransform(Ocean* fluid);
-    void SetRefractedViewTransform(Ocean* fluid);
-    btTransform GetReflectedViewTransform(const Ocean* fluid);
-    btTransform GetRefractedViewTransform(const Ocean* fluid);
+    //void SetReflectedViewTransform(Ocean* fluid);
+    //void SetRefractedViewTransform(Ocean* fluid);
+    //btTransform GetReflectedViewTransform(const Ocean* fluid);
+    //btTransform GetRefractedViewTransform(const Ocean* fluid);
     void ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
     btVector3 Ray(GLint x, GLint y);
 
@@ -66,7 +65,7 @@ public:
     
     GLint* GetViewport();
     glm::mat4 GetProjectionMatrix();
-    glm::mat4 GetViewMatrix(const btTransform& viewTransform);
+    glm::mat4 GetViewMatrix();
     GLfloat GetFOVY();
     GLfloat GetNearClip();
     GLfloat GetFarClip();
@@ -79,16 +78,13 @@ public:
     GLuint getSSAOTexture();
     bool isActive();
     bool hasSSAO();
-    OpenGLGBuffer* getGBuffer();
-    
+        
     static void Init();
     static void Destroy();
     static void SetTextureUnits(GLint position, GLint normal, GLint random);
     static GLuint getRandomTexture();
     
 protected:
-    OpenGLGBuffer* gBuffer;
-    
     GLuint sceneFBO;
     GLuint finalTexture;
     GLuint sceneTexture;

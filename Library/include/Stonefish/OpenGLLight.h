@@ -16,6 +16,8 @@
 
 #define Max(a, b)   (((a) > (b)) ? (a) : (b))
 
+typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
+
 typedef struct
 {
     GLfloat xRed, yRed,	    /* Red x, y */
@@ -35,18 +37,19 @@ public:
     OpenGLLight(const btVector3& position, glm::vec4 color);
     virtual ~OpenGLLight();
     
-    virtual void Render() = 0;
+    virtual void SetupShader(GLSLShader* shader, unsigned int lightId) = 0;
     virtual void RenderDummy() = 0;
     virtual void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim) = 0;
     virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h) = 0;
+	virtual LightType getType() = 0;
+	
     void GlueToEntity(SolidEntity* ent);
     void Activate();
     void Deactivate();
     bool isActive();
     void setLightSurfaceDistance(GLfloat dist);
-    glm::vec4 getColor();
-    btVector3 getViewPosition();
-    btVector3 getPosition();
+    glm::vec3 getColor();
+    glm::vec3 getPosition();
     SolidEntity* getHoldingEntity();
     
     //Ambient light and shaders
@@ -61,10 +64,11 @@ public:
     
 protected:
     SolidEntity* holdingEntity;
-    bool active;
-    btVector3 pos;
-    GLfloat surfaceDistance;
+    
+	bool active;
+    glm::vec3 position;
     glm::vec4 color;
+    GLfloat surfaceDistance;
     
     static OpenGLView* activeView;
     static GLSLShader* omniShader;

@@ -8,10 +8,13 @@
 
 #include "OpenGLSpotLight.h"
 #include "SimulationManager.h"
+#include "GeometryUtil.hpp"
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {
-    dir = UnitSystem::SetPosition(target - position).normalized();
+    btVector3 dir = UnitSystem::SetPosition(target - position).normalized();
+	direction = glm::vec3((GLfloat)dir.getX(), (GLfloat)dir.getY(), (GLfloat)dir.getZ());
+	
     coneAngle = cone/180.f*M_PI;//UnitSystem::SetAngle(cone);
     lightClipSpace = glm::mat4();
     
@@ -50,18 +53,20 @@ OpenGLSpotLight::~OpenGLSpotLight()
         glDeleteFramebuffers(1, &shadowFBO);
 }
 
-btVector3 OpenGLSpotLight::getViewDirection()
+LightType OpenGLSpotLight::getType()
 {
-    btVector3 direction = (activeView->GetViewTransform()).getBasis() * getDirection();
-    return direction;
+	return SPOT_LIGHT;
 }
 
-btVector3 OpenGLSpotLight::getDirection()
+glm::vec3 OpenGLSpotLight::getDirection()
 {
     if(holdingEntity != NULL)
-        return holdingEntity->getTransform().getBasis() * dir;
-    else
-        return dir;
+	{
+		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform());
+        return glm::mat3(trans) * direction;
+	}
+	else
+        return direction;
 }
 
 GLfloat OpenGLSpotLight::getAngle()
@@ -69,56 +74,39 @@ GLfloat OpenGLSpotLight::getAngle()
     return coneAngle;
 }
 
-void OpenGLSpotLight::Render()
+void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
-    if(isActive())
-    {
-        btVector3 lightPos = getViewPosition();
-        glm::vec3 lposition((GLfloat)lightPos.getX(), (GLfloat)lightPos.getY(), (GLfloat)lightPos.getZ());
-        btVector3 lightDir = getViewDirection();
-        glm::vec3 ldirection((GLfloat)lightDir.getX(), (GLfloat)lightDir.getY(), (GLfloat)lightDir.getZ());
-        glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix(activeView->GetViewTransform()));
-
-        glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, shadowMap);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-        
-        spotShader->Enable();
-        spotShader->SetUniform("texDiffuse", diffuseTextureUnit);
-        spotShader->SetUniform("texPosition", positionTextureUnit);
-        spotShader->SetUniform("texNormal", normalTextureUnit);
-        spotShader->SetUniform("texShadow", shadowTextureUnit);
-        spotShader->SetUniform("lightPosition", lposition);
-        spotShader->SetUniform("lightDirection", ldirection);
-        spotShader->SetUniform("lightAngle", (GLfloat)cosf(getAngle()));
-        spotShader->SetUniform("lightColor", getColor());
-        spotShader->SetUniform("lightClipSpace", eyeToLight);
-        OpenGLContent::getInstance()->DrawSAQ();
-        spotShader->Disable();
-        
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
+	std::string lightUni = "spotLights[" + std::to_string(lightId) + "].";
+	shader->SetUniform(lightUni + "position", getPosition());
+	shader->SetUniform(lightUni + "color", getColor());
+	shader->SetUniform(lightUni + "direction", getDirection());
+	shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()));
+	
+	//SHADOW
+	/*glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
+	glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+	glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix(activeView->GetViewTransform()));
+	*/
 }
 
 void OpenGLSpotLight::RenderDummy()
 {
     //transformation
-    btVector3 org = getPosition();
-    btVector3 left = getDirection();
+	glm::vec3 org = getPosition();
+	glm::vec3 left = getDirection();
+	glm::vec3 up(0,1,0);
+	if(fabsf(left.y) > 0.8f)
+		up = glm::vec3(0,0,1);
+	
+    glm::vec3 front = glm::normalize(glm::cross(left, up));
+    up = glm::cross(front, left);
     
-    btVector3 up = btVector3(0, 1.0, 0);
-    if(fabs(left.y()) > 0.8)
-        up = btVector3(0,0,1.0);
-    
-    btVector3 front = left.cross(up);
-    front.normalize();
-    up = front.cross(left);
-    
-	glm::mat4 model((GLfloat)left.x(), (GLfloat)left.y(), (GLfloat)left.z(), 0, 
-				   (GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z(), 0,
-				   (GLfloat)front.x(), (GLfloat)front.y(), (GLfloat)front.z(), 0,
-				   (GLfloat)org.x(), (GLfloat)org.y(), (GLfloat)org.z(), 1.f);
+	glm::mat4 model(left.x, left.y, left.z, 0, 
+				    up.x, up.y, up.z, 0,
+				    front.x, front.y, front.z, 0,
+				    org.x, org.y, org.z, 1);
 	
     //rendering
     GLfloat iconSize = 5.f;
@@ -157,10 +145,8 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* s
     glCullFace(GL_FRONT);
 
     glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, 1.f, 100.f);
-	btVector3 lightPos = getPosition();
-    btVector3 lightDir = dir;
-    glm::mat4 view = glm::lookAt(glm::vec3(lightPos.x(), lightPos.y(), lightPos.z()),
-                                 glm::vec3(lightPos.x() + lightDir.x(), lightPos.y() + lightDir.y(), lightPos.z() + lightDir.z()),
+    glm::mat4 view = glm::lookAt(getPosition(),
+                                 getPosition() + getDirection(),
                                  glm::vec3(0,0,1.f));
     
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,

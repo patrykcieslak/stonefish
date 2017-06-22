@@ -297,31 +297,31 @@ void IMGUI::GenerateBackground()
     glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, OpenGLPipeline::getInstance()->getDisplayTexture());
     
-    downsampleShader->Enable();
+    downsampleShader->Use();
     downsampleShader->SetUniform("source", 0);
     downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
 	OpenGLContent::getInstance()->DrawSAQ();
-	downsampleShader->Disable();
+	glUseProgram(0);
     
     for(int i=0; i<3; i++)
     {
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         glBindTexture(GL_TEXTURE_2D, translucentTexture[0]);
         
-        gaussianShader->Enable();
+        gaussianShader->Use();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
         OpenGLContent::getInstance()->DrawSAQ();
-        gaussianShader->Disable();
+        glUseProgram(0);
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         glBindTexture(GL_TEXTURE_2D, translucentTexture[1]);
         
-        gaussianShader->Enable();
+        gaussianShader->Use();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
         OpenGLContent::getInstance()->DrawSAQ();
-        gaussianShader->Disable();
+        glUseProgram(0);
     }
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -437,7 +437,7 @@ void IMGUI::DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 		
-	guiShader[0]->Enable();
+	guiShader[0]->Use();
 	guiShader[0]->SetUniform("color", color);
 		
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -446,7 +446,7 @@ void IMGUI::DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	
-	guiShader[0]->Disable();
+	glUseProgram(0);
 	glDeleteBuffers(1, &vbo);
 }
 
@@ -501,7 +501,7 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 		
-	guiShader[1]->Enable();
+	guiShader[1]->Use();
 	guiShader[1]->SetUniform("tex", 0);
 	guiShader[1]->SetUniform("backTex", 1);
 	guiShader[1]->SetUniform("color", color);
@@ -514,7 +514,7 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
 	glDrawArrays(GL_TRIANGLE_STRIP, 8, 8);
 	glDrawArrays(GL_TRIANGLE_STRIP, 16, 8);
 	
-	guiShader[1]->Disable();
+	glUseProgram(0);
 	glDeleteBuffers(1, &vbo);
 }
 
@@ -788,7 +788,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
 			GLuint vbo;
 			glGenBuffers(1, &vbo);
 		
-			guiShader[0]->Enable();
+			guiShader[0]->Use();
 			guiShader[0]->SetUniform("color", color);
 		
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -798,7 +798,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
 		
 			glDrawArrays(GL_LINE_STRIP, 0, points.size());
 			
-			guiShader[0]->Disable();
+			glUseProgram(0);
 			glDeleteBuffers(1, &vbo);
 			
 			//legend
@@ -814,7 +814,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
 			GLuint vbo;
 			glGenBuffers(1, &vbo);
 		
-			guiShader[0]->Enable();
+			guiShader[0]->Use();
 			guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
 		
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -824,7 +824,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
 		
 			glDrawArrays(GL_LINES, 0, 2);
 			
-			guiShader[0]->Disable();
+			glUseProgram(0);
 			glDeleteBuffers(1, &vbo);
 		}
         
@@ -946,7 +946,7 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Simpl
 		GLuint vbo;
 		glGenBuffers(1, &vbo);
 		
-		guiShader[0]->Enable();
+		guiShader[0]->Use();
 		guiShader[0]->SetUniform("color", theme[FILLED_COLOR]);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -956,7 +956,7 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Simpl
 		
 		glDrawArrays(GL_LINE_STRIP, 0, points.size());
 		
-		guiShader[0]->Disable();
+		glUseProgram(0);
 		glDeleteBuffers(1, &vbo);
 		
 		//draw axes
@@ -979,7 +979,7 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Simpl
 			GLuint vbo;
 			glGenBuffers(1, &vbo);
 		
-			guiShader[0]->Enable();
+			guiShader[0]->Use();
 			guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
 		
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -989,7 +989,7 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Simpl
 		
 			glDrawArrays(GL_LINES, 0, axes.size());
 			
-			guiShader[0]->Disable();
+			glUseProgram(0);
 			glDeleteBuffers(1, &vbo);
 		}
     }

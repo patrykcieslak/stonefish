@@ -15,7 +15,7 @@
 #include "Sphere.h"
 #include "Torus.h"
 #include "Cylinder.h"
-#include "OpenGLOmniLight.h"
+#include "OpenGLPointLight.h"
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "SystemUtil.hpp"
@@ -46,8 +46,8 @@ void UnderwaterTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Cork", "Cork", 0.9, 0.7);
     
     ///////LOOKS///////////
-    unsigned int yellow = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
-    unsigned int green = OpenGLContent::getInstance()->CreateOpaqueLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.5f, 0.5f, 1.5f);
+    unsigned int yellow = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.5f, 1.5f);
+    unsigned int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.5f, 0.5f, 1.5f);
     
     ////////OBJECTS
     EnableOcean(getMaterialManager()->getFluid("Water"));

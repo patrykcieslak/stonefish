@@ -7,8 +7,10 @@
 //
 
 #include "OpenGLContent.h"
-#include "OpenGLGBuffer.h"
+#include "OpenGLSun.h"
 #include "Console.h"
+#include "OpenGLView.h"
+#include "OpenGLLight.h"
 #include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "SimulationApp.h"
@@ -44,7 +46,7 @@ OpenGLContent::OpenGLContent()
 	texQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
-	gbufferShader = NULL;
+	eye = glm::vec3(0);
 	viewProjection = glm::mat4();
 	view = glm::mat4();
 	projection = glm::mat4();
@@ -78,24 +80,35 @@ OpenGLContent::~OpenGLContent()
 	if(flatShader != NULL)
 		delete flatShader;
 		
-	if(gbufferShader != NULL)
-		delete gbufferShader;
+	for(unsigned int i=0; i<materialShaders.size(); ++i)
+		delete materialShaders[i];
+	materialShaders.clear();
 }
 
 void OpenGLContent::DestroyContent()
 {
-	for(unsigned int i=0; i<looks.size();++i)
-		if(looks[i].texture != 0)
-			glDeleteTextures(1, &looks[i].texture);
+	for(unsigned int i=0; i<looks.size(); ++i)
+	{
+		for(unsigned int h=0; h<looks[i].textures.size(); ++h)
+			glDeleteTextures(1, &looks[i].textures[h]);
+	}
 	looks.clear();
 			
-	for(unsigned int i=0; i<objects.size();++i)
+	for(unsigned int i=0; i<objects.size(); ++i)
 	{
 		glDeleteBuffers(1, &objects[i].vboVertex);
 		glDeleteBuffers(1, &objects[i].vboIndex);
 		glDeleteVertexArrays(1, &objects[i].vao);
 	}	
 	objects.clear();
+	
+	for(unsigned int i=0; i<views.size(); ++i)
+        delete views[i];
+    views.clear();
+    
+    for(unsigned int i=0; i<lights.size(); ++i)
+        delete lights[i];
+    lights.clear();
 }
 
 void OpenGLContent::Init()
@@ -186,12 +199,37 @@ void OpenGLContent::Init()
 	flatShader = new GLSLShader("flat.frag", "flat.vert");
 	flatShader->AddUniform("MVP", ParameterType::MAT4);
 	
-	gbufferShader = new GLSLShader("gbuffer.frag", "gbuffer.vert");
-    gbufferShader->AddUniform("tex", ParameterType::INT);
-    gbufferShader->AddUniform("materialData", ParameterType::FLOAT);
-	gbufferShader->AddUniform("MV", ParameterType::MAT4);
-	gbufferShader->AddUniform("MVP", ParameterType::MAT4);
-	gbufferShader->AddUniform("color", ParameterType::VEC4);
+	//Materials
+	GLSLShader* blinnPhong = new GLSLShader("blinnPhong.frag", "object.vert");
+	blinnPhong->AddUniform("MVP", ParameterType::MAT4);
+	blinnPhong->AddUniform("M", ParameterType::MAT4);
+	blinnPhong->AddUniform("N", ParameterType::MAT3);
+	blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
+	blinnPhong->AddUniform("color", ParameterType::VEC4);
+	blinnPhong->AddUniform("tex", ParameterType::INT);
+	blinnPhong->AddUniform("texSkyDiffuse", ParameterType::INT);
+	blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
+	blinnPhong->AddUniform("sunColor", ParameterType::VEC4);
+	blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
+	blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
+	
+	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+	{
+		std::string lightUni = "pointLights[" + std::to_string(i) + "].";
+		blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+		blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+	}
+	
+	for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+	{
+		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
+		blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+		blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+		blinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
+		blinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+	}
+	
+	materialShaders.push_back(blinnPhong);
 }
 
 void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
@@ -208,6 +246,14 @@ void OpenGLContent::SetProjectionMatrix(glm::mat4 P)
 void OpenGLContent::SetViewMatrix(glm::mat4 V)
 {
 	view = V;
+	viewProjection = projection * view;
+}
+
+void OpenGLContent::SetCurrentView(OpenGLView* v)
+{
+	eye = v->GetEyePosition();
+	view = v->GetViewMatrix();
+	projection = v->GetProjectionMatrix();
 	viewProjection = projection * view;
 }
 
@@ -234,12 +280,12 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 	{
 		y = viewportSize.y-y-height;
 		
-		texQuadShader->Enable();
+		texQuadShader->Use();
 		texQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-		texQuadShader->SetUniform("tex", 0);
+		texQuadShader->SetUniform("tex", TEX_BASE);
 		texQuadShader->SetUniform("color", color);
 		
-		glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		
@@ -251,8 +297,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glBindVertexArray(0);
 		
 		glBindTexture(GL_TEXTURE_2D, 0);
-		
-		texQuadShader->Disable();
+		glUseProgram(0);
 	}
 }
 
@@ -260,10 +305,10 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
 	if(cubeBuf != 0 && texCubeShader != NULL)
 	{
-		texCubeShader->Enable();
-		texCubeShader->SetUniform("tex", 0);
+		texCubeShader->Use();
+		texCubeShader->SetUniform("tex", TEX_BASE);
 		
-		glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 		glEnable(GL_TEXTURE_CUBE_MAP);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 		
@@ -284,8 +329,7 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 		
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		glDisable(GL_TEXTURE_CUBE_MAP);
-		
-		texCubeShader->Disable();
+		glUseProgram(0);
 	}
 }
 
@@ -293,7 +337,7 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 {
 	if(csBuf[0] != 0 && helperShader != NULL)
 	{
-		helperShader->Enable();
+		helperShader->Use();
 		helperShader->SetUniform("MVP", viewProjection*M);
 		helperShader->SetUniform("scale", size);
 		
@@ -309,8 +353,7 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 		
 		glDrawArrays(GL_LINES, 0, 6);
 		glBindVertexArray(0);
-		
-		helperShader->Disable();
+		glUseProgram(0);
 	}
 }
 
@@ -321,7 +364,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 		GLuint vbo;
 		glGenBuffers(1, &vbo);
 		
-		helperShader->Enable();
+		helperShader->Use();
 		helperShader->SetUniform("MVP", viewProjection*M);
 		helperShader->SetUniform("scale", 1.f);
 		
@@ -352,8 +395,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 				break;
 		}
 		glBindVertexArray(0);
-		
-		helperShader->Disable();
+		glUseProgram(0);
 		
 		glDeleteBuffers(1, &vbo);
 	}
@@ -365,66 +407,106 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 	{
 		if(drawFlatObjects)
 		{
-			flatShader->Enable();
+			flatShader->Use();
 			flatShader->SetUniform("MVP", viewProjection*M);
 			glBindVertexArray(objects[objectId].vao);
 			glDrawElements(GL_TRIANGLES, 3 * objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
-			flatShader->Disable();
+			glUseProgram(0);
 		}
 		else
 		{
-			gbufferShader->Enable();
-			gbufferShader->SetUniform("MV", view * M);
-			gbufferShader->SetUniform("MVP", viewProjection * M);
-			
 			if(lookId >= 0 && lookId < looks.size())
-				UseLook(lookId);
+				UseLook(lookId, M);
 			else
-				UseStandardLook();
+				UseStandardLook(M);
 	
 			glBindVertexArray(objects[objectId].vao);
 			glDrawElements(GL_TRIANGLES, 3 * objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
-			
-			gbufferShader->Disable();
+			glUseProgram(0);
 		}
 	}
 }
 
-void OpenGLContent::UseLook(unsigned int lookId)
-{	
-    //Diffuse reflectance, roughness, FO, reflection factor
-    GLfloat diffuseReflectance = floor(looks[lookId].data[0] * 255.f);
-    GLfloat roughness = floor(looks[lookId].data[1] * 255.f);
-    GLfloat F0 = floor(powf((1.f - looks[lookId].data[2])/(1.f + looks[lookId].data[2]), 2.f) * 255.f);
-    GLfloat reflection = floor(looks[lookId].data[3] * 255.f);
-    GLfloat materialData = diffuseReflectance
-                           + (roughness * 256)
-                           + (F0 * 256 * 256)
-                           + (reflection * 256 * 256 * 256);
-    
-    glBindTexture(GL_TEXTURE_2D, looks[lookId].texture);
-	gbufferShader->SetUniform("color", glm::vec4(looks[lookId].color[0], looks[lookId].color[1], looks[lookId].color[2], looks[lookId].textureMix)); //Color + Texture mix factor
-	gbufferShader->SetUniform("tex", 0);
-	gbufferShader->SetUniform("materialData", materialData);
+void OpenGLContent::SetupLights(GLSLShader* shader)
+{
+	unsigned int pointId = 0;
+	unsigned int spotId = 0;
+	
+	for(unsigned int i=0; i<lights.size(); ++i)
+	{
+		if(lights[i]->getType() == POINT_LIGHT)
+		{
+			lights[i]->SetupShader(shader, pointId);
+			++pointId;
+		}
+		else
+		{
+			lights[i]->SetupShader(shader, spotId);
+			++spotId;
+		}
+	}
 }
 
-void OpenGLContent::UseStandardLook()
+void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
+{	
+    Look& l = looks[lookId];
+	GLSLShader* shader;
+	
+	switch(l.type)
+	{		
+		case SIMPLE: //Blinn-Phong
+		{
+			shader = materialShaders[0];
+			shader->Use();
+			shader->SetUniform("MVP", viewProjection*M);
+			shader->SetUniform("M", M);
+			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+			shader->SetUniform("eyePos", glm::vec3(0));
+			shader->SetUniform("color", glm::vec4(l.color,1.f));
+			shader->SetUniform("specularStrength", l.params[0]);
+			shader->SetUniform("shininess", l.params[1]);
+			shader->SetUniform("tex", TEX_BASE);
+			shader->SetUniform("texSkyDiffuse", TEX_SKY_DIFFUSE);
+			shader->SetUniform("sunDirection", OpenGLSun::getInstance()->GetSunDirection());
+			shader->SetUniform("sunColor", OpenGLSun::getInstance()->GetSunColor());
+			
+			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+			glEnable(GL_TEXTURE_2D);
+			if(l.textures.size() > 0)
+				glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+			else
+				glBindTexture(GL_TEXTURE_2D, 0);
+		}
+			break;
+			
+		default:
+			break;
+	}
+	
+	SetupLights(shader);
+}
+
+void OpenGLContent::UseStandardLook(const glm::mat4& M)
 {
-	GLfloat diffuseReflectance = floor(0.5f * 255.f);
-    GLfloat roughness = floor(0.2f * 255.f);
-    GLfloat F0 = floor(powf((1.f - 0.1f)/(1.f + 0.1f), 2.f) * 255.f);
-    GLfloat reflection = floor(0.f);
-    GLfloat materialData = diffuseReflectance
-                           + (roughness * 256)
-                           + (F0 * 256 * 256)
-                           + (reflection * 256 * 256 * 256);
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
-	gbufferShader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,0.f)); //Color + Texture mix factor	
-	gbufferShader->SetUniform("tex", 0);
-	gbufferShader->SetUniform("materialData", materialData);
+	GLSLShader* shader = materialShaders[0];
+	shader->Use();
+	shader->SetUniform("MVP", viewProjection*M);
+	shader->SetUniform("M", M);
+	shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+	shader->SetUniform("eyePos", view[3]);
+	shader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,1.f));
+	shader->SetUniform("shininess", 0.5f);
+	shader->SetUniform("specularStrength", 0.1f);
+	shader->SetUniform("tex", TEX_BASE);
+	shader->SetUniform("texSkyDiffuse", TEX_SKY_DIFFUSE);
+	
+	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	SetupLights(shader);
 }
 
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)
@@ -438,14 +520,16 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	glGenBuffers(1, &obj.vboIndex);
 	
 	glBindVertexArray(obj.vao);	
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	
 	glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
-	glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(8);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
@@ -462,30 +546,61 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	return objects.size()-1;
 }
 
-unsigned int OpenGLContent::CreateOpaqueLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName, GLfloat textureMixFactor)
+unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, const char* textureName)
 {
     Look look;
     look.color = rgbColor;
-    look.data[0] = diffuseReflectance;
-    look.data[1] = roughness;
-    look.data[2] = IOR;
-    look.data[3] = 0.f; //No reflections
+	look.params.push_back(specular);
+	look.params.push_back(shininess);
     
-    if(textureName != NULL)
-    {
-        look.texture = LoadTexture(textureName);
-        look.textureMix = textureMixFactor; //0 - 1 -> where 1 means only texture
-    }
-    else
-    {
-        look.texture = 0;
-        look.textureMix = 0.f;
-    }
+	if(textureName != NULL) 
+		look.textures.push_back(LoadTexture(textureName));
     
-    looks.push_back(look);
+	looks.push_back(look);
+	
 	return looks.size()-1;
 }
 
+unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName)
+{
+}
+
+void OpenGLContent::AddView(OpenGLView* view)
+{
+    views.push_back(view);
+}
+
+OpenGLView* OpenGLContent::getView(unsigned int id)
+{
+    if(id < views.size())
+        return views[id];
+    else
+        return NULL;
+}
+
+unsigned int OpenGLContent::getViewsCount()
+{
+	return views.size();
+}
+
+void OpenGLContent::AddLight(OpenGLLight* light)
+{
+    lights.push_back(light);
+}
+
+OpenGLLight* OpenGLContent::getLight(unsigned int id)
+{
+    if(id < lights.size())
+        return lights[id];
+    else
+        return NULL;
+}
+
+unsigned int OpenGLContent::getLightsCount()
+{
+	return lights.size();
+}
+	
 //Static methods
 GLuint OpenGLContent::LoadTexture(const char* filename)
 {
