@@ -81,17 +81,17 @@ void FallingTestManager::BuildScenario()
     //////CAMERA & LIGHT//////
     //OpenGLPointLight* omni = new OpenGLPointLight(btVector3(-10.f, 10.f, 10.f), OpenGLLight::ColorFromTemperature(4500, 10000));
     //OpenGLContent::getInstance()->AddLight(omni);
-    OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(-10.f, 10.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 10000));
-    OpenGLContent::getInstance()->AddLight(spot);
+    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(-10.f, 10.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 10000));
+    //OpenGLContent::getInstance()->AddLight(spot);
     //spot = new OpenGLSpotLight(btVector3(10000.f, -12000.f, 5000.f), btVector3(5000.f,-5000.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(5600, 500));
     //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 1000.f, false);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5), 20, btVector3(0,0,1), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 1000.f, false);
     trackb->Rotate(btQuaternion(0.5, 0, 0));
     trackb->Activate();
     OpenGLContent::getInstance()->AddView(trackb);
 	
-	OpenGLCamera* camera = new OpenGLCamera(btVector3(5,5,2), btVector3(0,0,1), btVector3(0,0,1), 0, 0, 300, 200, 45.f, 1000.f, false);
+	OpenGLCamera* camera = new OpenGLCamera(btVector3(0,-18,7.0), btVector3(0,0,0.5), btVector3(0,0,1), 0, 0, FallingTestApp::getApp()->getWindowWidth()/3, FallingTestApp::getApp()->getWindowHeight()/3, 60.f, 1000.f, false);
 	camera->Activate();
 	OpenGLContent::getInstance()->AddView(camera);
 }

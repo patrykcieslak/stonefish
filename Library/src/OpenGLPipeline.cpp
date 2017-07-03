@@ -99,7 +99,6 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
-	glDisable(GL_STENCIL_TEST);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glPointSize(5.f);
@@ -164,10 +163,6 @@ void OpenGLPipeline::DrawObjects(SimulationManager* sim)
 
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
-    //==============Clear display framebuffer====================
-    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
 	{
@@ -176,40 +171,45 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             OpenGLContent::getInstance()->getLight(i)->RenderShadowMap(this, sim);
 	}
     
+    //==============Clear display framebuffer====================
+    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+    glClear(GL_COLOR_BUFFER_BIT);
+    
     //==================Loop through all views==========================
     for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
     {
 		OpenGLView* view = OpenGLContent::getInstance()->getView(i);
-		
+        
         if(view->isActive())
         {
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
+            
             //=================Apply view properties======================
-            OpenGLSun::getInstance()->SetCamera(view);
-			OpenGLLight::SetCamera(view);
+            OpenGLLight::SetCamera(view);
 			GLint* viewport = view->GetViewport();
             OpenGLContent::getInstance()->SetViewportSize(viewport[2],viewport[3]);
 			
-			//=================Bake sun shadows========================
+            //=================Bake sun shadows========================
             if(renderShadows)
 			{
-				OpenGLContent::getInstance()->SetDrawFlatObjects(true);
-                OpenGLSun::getInstance()->RenderShadowMaps(this, sim);
+                OpenGLContent::getInstance()->SetDrawFlatObjects(true);
+                OpenGLSun::getInstance()->RenderShadowMaps(this, view, sim);
 			}
 			
             //================Setup rendering scene======================
 			glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-			//glDrawBuffer(SCENE_ATTACHMENT);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			//================Draw precomputed sky=======================
 			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
+            glDisable(GL_CULL_FACE);
 			OpenGLSky::getInstance()->Render(view, sim->zUp);
-			
-			//=================Draw objects===============================
-			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
-			
+            glEnable(GL_DEPTH_TEST);
+            
+			//=================Draw objects===============================
 			//Bind standard textures
 			glActiveTexture(GL_TEXTURE0 + TEX_SKY_DIFFUSE);
 			glEnable(GL_TEXTURE_CUBE_MAP);
@@ -220,14 +220,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			OpenGLContent::getInstance()->SetCurrentView(view);
 			OpenGLContent::getInstance()->SetDrawFlatObjects(false);
 			DrawObjects(sim);
-			
-            //================Tonemapping================================
-			glEnable(GL_SCISSOR_TEST);
-            glDisable(GL_DEPTH_TEST);
+            
+            //================Post-processing=============================
+			glDisable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
 			glDisable(GL_CULL_FACE);
             
-            glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
             view->RenderHDR(screenFBO);
            
@@ -306,8 +304,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         cam->RenderDummy();
                     }
 				}
-            glDisable(GL_SCISSOR_TEST);
-            
+                        
             //Debugging
 			//sim->views[i]->getGBuffer()->ShowTexture(DIFFUSE, 0,0,300,200); // FBO debugging
             //sim->views[i]->getGBuffer()->ShowTexture(POSITION1,0,200,300,200); // FBO debugging
@@ -320,7 +317,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
  			
 			//sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
             
-			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.1);
+			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.05);
            
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             

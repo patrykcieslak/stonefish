@@ -17,14 +17,17 @@ OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& target
 	eye = glm::vec3((GLfloat)_eye.getX(), (GLfloat)_eye.getY(), (GLfloat)_eye.getZ());
     dir = glm::normalize(glm::vec3((GLfloat)_dir.getX(), (GLfloat)_dir.getY(), (GLfloat)_dir.getZ()));
 	up = glm::normalize(glm::vec3((GLfloat)cameraUp.getX(), (GLfloat)cameraUp.getY(), (GLfloat)cameraUp.getZ()));
-    lookingDir = dir;
+    glm::vec3 right = glm::normalize(glm::cross(dir, up));
+    up = glm::normalize(glm::cross(right, dir));
     
+    lookingDir = dir;
+    currentUp = up;
 	pan = 0;
     tilt = 0;
-    fovx = UnitSystem::SetAngle(fov);
-    
     holdingEntity = NULL;
     
+    //Setup projection
+    fovx = fov/180.f*M_PI;
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
     GLfloat fovy = fovx/aspect;
     projection = glm::perspective(fovy, aspect, near, far);
@@ -113,10 +116,10 @@ glm::vec3 OpenGLCamera::GetUpDirection()
     if(holdingEntity != NULL)
     {
 		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform());
-        return glm::normalize(glm::mat3(trans) * up);
+        return glm::normalize(glm::mat3(trans) * currentUp);
     }
     else
-        return up;
+        return currentUp;
 }
 
 void OpenGLCamera::GlueToEntity(SolidEntity *ent)
@@ -127,6 +130,7 @@ void OpenGLCamera::GlueToEntity(SolidEntity *ent)
 void OpenGLCamera::SetupCamera()
 {
     lookingDir = dir;
+    currentUp = up;
     
     //additional camera rotation
     glm::vec3 tiltAxis = glm::normalize(glm::cross(dir, up));
@@ -137,11 +141,11 @@ void OpenGLCamera::SetupCamera()
 	lookingDir = glm::rotate(lookingDir, pan, panAxis);
     lookingDir = glm::normalize(lookingDir);
     
-    glm::vec3 newUp = glm::rotate(panAxis, tilt, tiltAxis);
-    newUp = glm::rotate(newUp, pan, panAxis);
-	newUp = glm::normalize(newUp);
+    currentUp = glm::rotate(currentUp, tilt, tiltAxis);
+    currentUp = glm::rotate(currentUp, pan, panAxis);
+	currentUp = glm::normalize(currentUp);
     
-	cameraTransform = glm::lookAt(eye, eye+lookingDir, newUp);
+	cameraTransform = glm::lookAt(eye, eye+lookingDir, currentUp);
 	cameraRender = glm::inverse(cameraTransform);
 }
 
@@ -178,7 +182,7 @@ void OpenGLCamera::RenderDummy()
 	model *= cameraRender;
    
     //rendering
-    GLfloat iconSize = 5.f;
+    GLfloat iconSize = 3.f;
     GLfloat x = iconSize*tanf(fovx/2.f);
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
     GLfloat y = x/aspect;

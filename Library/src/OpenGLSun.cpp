@@ -24,7 +24,6 @@ OpenGLSun* OpenGLSun::getInstance()
 
 OpenGLSun::OpenGLSun()
 {
-    activeView = NULL;
     shadowmapShader = NULL;
     shadowTextureUnit = 0;
     sunElevation = 0.f;
@@ -261,10 +260,19 @@ void OpenGLSun::SetupShader(GLSLShader* shader)
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 }
 
-void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
+void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, OpenGLView* view, SimulationManager* sim)
 {
+    //Pre-set splits
+    for(int i = 0; i < shadowmapSplits; ++i)
+    {
+        frustum[i].fov = view->GetFOVY() + 0.2f; //avoid artifacts in the borders
+        GLint* viewport = view->GetViewport();
+        frustum[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
+        delete [] viewport;
+    }
+    
     //Compute the z-distances for each split as seen in camera space
-    UpdateSplitDist(activeView->GetNearClip(), activeView->GetFarClip());
+    UpdateSplitDist(view->GetNearClip(), view->GetFarClip());
     
     //Render maps
     glCullFace(GL_FRONT); //GL_FRONT -> no shadow acne but problems with filtering
@@ -272,9 +280,9 @@ void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glViewport(0, 0, shadowmapSize, shadowmapSize);
     
-    glm::vec3 camPos = activeView->GetEyePosition();
-    glm::vec3 camDir = activeView->GetLookingDirection();
-    glm::vec3 camUp = activeView->GetUpDirection();
+    glm::vec3 camPos = view->GetEyePosition();
+    glm::vec3 camDir = view->GetLookingDirection();
+    glm::vec3 camUp = view->GetUpDirection();
     
 	// for all shadow splits
 	for(int i = 0; i < shadowmapSplits; i++)
@@ -320,7 +328,7 @@ void OpenGLSun::ShowFrustumSplits()
 void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
 {
     //Texture setup
-	glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
+	glActiveTexture(GL_TEXTURE0 + TEX_SUN_SHADOW);
     glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     glDisable(GL_BLEND);
@@ -328,7 +336,7 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     
 	//Render the shadowmaps
     shadowmapShader->Use();
-    shadowmapShader->SetUniform("shadowmapArray", shadowTextureUnit);
+    shadowmapShader->SetUniform("shadowmapArray", TEX_SUN_SHADOW);
     for(int i = 0; i < shadowmapSplits; i++)
     {
         glViewport(x + shadowmapSize * scale * i, y, shadowmapSize * scale, shadowmapSize * scale);
@@ -339,18 +347,6 @@ void OpenGLSun::ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale)
     
 	//Reset
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-}
-
-void OpenGLSun::SetCamera(OpenGLView* view)
-{
-    activeView = view;
-    for(int i = 0; i < shadowmapSplits; i++)
-    {
-        frustum[i].fov = view->GetFOVY() + 0.2f; //avoid artifacts in the borders
-        GLint* viewport = view->GetViewport();
-        frustum[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
-        delete [] viewport;
-    }
 }
 
 void OpenGLSun::SetPosition(GLfloat elevation, GLfloat azimuth)

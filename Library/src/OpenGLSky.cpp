@@ -80,7 +80,7 @@ void OpenGLSky::Init()
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     for(int i=0; i<6; i++)
     {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, skyCubeSize, skyCubeSize, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, skyCubeSize, skyCubeSize, 0, GL_RGB, GL_FLOAT, NULL);
     }
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, skyCubemap, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -441,7 +441,7 @@ void OpenGLSky::Render(OpenGLView *view, bool zAxisUp)
     
     skyDrawShader->Use();
     skyDrawShader->SetUniform("source", 0);
-    skyDrawShader->SetUniform("viewport", glm::vec2((GLfloat)(viewport[2]-viewport[0]), (GLfloat)(viewport[3]-viewport[1])));
+    skyDrawShader->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     skyDrawShader->SetUniform("inv_proj", glm::inverse(projection));
     skyDrawShader->SetUniform("inv_view_rot", ivr);
     OpenGLContent::getInstance()->DrawSAQ();

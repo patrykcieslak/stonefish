@@ -46,6 +46,7 @@ private:
     GLfloat pan;
     GLfloat tilt;
     glm::vec3 lookingDir;
+    glm::vec3 currentUp;
 };
 
 

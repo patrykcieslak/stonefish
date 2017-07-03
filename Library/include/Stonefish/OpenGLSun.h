@@ -21,10 +21,9 @@ class OpenGLSun
 public:
     void Init();
 	void SetupShader(GLSLShader* shader);
-    void RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim);
+    void RenderShadowMaps(OpenGLPipeline* pipe, OpenGLView* view, SimulationManager* sim);
     void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
     void ShowFrustumSplits();
-    void SetCamera(OpenGLView* view);
     void SetPosition(GLfloat elevation, GLfloat azimuth);
     glm::vec3 GetSunDirection();
     glm::vec4 GetSunColor();
@@ -43,7 +42,6 @@ private:
     btVector3 sunDirection;
     glm::vec4 sunColor;
     GLint shadowTextureUnit;
-    OpenGLView* activeView;
     
     GLuint shadowmapArray;
     GLuint shadowmapSplits;
