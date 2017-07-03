@@ -52,13 +52,11 @@ void Console::Init(GLuint w, GLuint h)
 	windowH = h;
 
     //Load logo texture - can't use material class because it writes to the console
-    char path[1024];
     int width, height, channels;
-    GetDataPath(path, 1024-32);
-    strcat(path, "logo_color_64.png");
+    std::string path = GetDataPath() + "logo_color_64.png";
     
     // Allocate image; fail out on error
-    unsigned char* dataBuffer = stbi_load(path, &width, &height, &channels, 4);
+    unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
     if(dataBuffer != NULL)
     {
         // Allocate an OpenGL texture

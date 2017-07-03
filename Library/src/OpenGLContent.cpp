@@ -46,7 +46,8 @@ OpenGLContent::OpenGLContent()
 	texQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
-	eye = glm::vec3(0);
+	eyePos = glm::vec3();
+	viewDir = glm::vec3(1.f,0,0);
 	viewProjection = glm::mat4();
 	view = glm::mat4();
 	projection = glm::mat4();
@@ -205,13 +206,14 @@ void OpenGLContent::Init()
 	blinnPhong->AddUniform("M", ParameterType::MAT4);
 	blinnPhong->AddUniform("N", ParameterType::MAT3);
 	blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
+	blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
 	blinnPhong->AddUniform("color", ParameterType::VEC4);
 	blinnPhong->AddUniform("tex", ParameterType::INT);
-	blinnPhong->AddUniform("texSkyDiffuse", ParameterType::INT);
-	blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
-	blinnPhong->AddUniform("sunColor", ParameterType::VEC4);
 	blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
 	blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
+	
+	blinnPhong->AddUniform("numPointLights", ParameterType::INT);
+	blinnPhong->AddUniform("numSpotLights", ParameterType::INT);
 	
 	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
 	{
@@ -227,7 +229,19 @@ void OpenGLContent::Init()
 		blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
 		blinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
 		blinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+		blinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
+		blinnPhong->AddUniform(lightUni + "shadowMap", ParameterType::INT);
 	}
+	
+	blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
+	blinnPhong->AddUniform("sunColor", ParameterType::VEC4);
+	blinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
+	blinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
+	blinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
+	blinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
+	blinnPhong->AddUniform("sunFrustumFar", ParameterType::VEC4);
+	blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
+	blinnPhong->AddUniform("texSkyDiffuse", ParameterType::INT);
 	
 	materialShaders.push_back(blinnPhong);
 }
@@ -251,7 +265,8 @@ void OpenGLContent::SetViewMatrix(glm::mat4 V)
 
 void OpenGLContent::SetCurrentView(OpenGLView* v)
 {
-	eye = v->GetEyePosition();
+	eyePos = v->GetEyePosition();
+	viewDir = v->GetLookingDirection();
 	view = v->GetViewMatrix();
 	projection = v->GetProjectionMatrix();
 	viewProjection = projection * view;
@@ -431,10 +446,10 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 
 void OpenGLContent::SetupLights(GLSLShader* shader)
 {
-	unsigned int pointId = 0;
-	unsigned int spotId = 0;
+	int pointId = 0;
+	int spotId = 0;
 	
-	for(unsigned int i=0; i<lights.size(); ++i)
+	for(int i=0; i<lights.size(); ++i)
 	{
 		if(lights[i]->getType() == POINT_LIGHT)
 		{
@@ -447,6 +462,11 @@ void OpenGLContent::SetupLights(GLSLShader* shader)
 			++spotId;
 		}
 	}
+	
+	shader->SetUniform("numPointLights", pointId);
+	shader->SetUniform("numSpotLights", spotId);
+	shader->SetUniform("texSkyDiffuse", TEX_SKY_DIFFUSE);
+	OpenGLSun::getInstance()->SetupShader(shader);
 }
 
 void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
@@ -463,21 +483,24 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("MVP", viewProjection*M);
 			shader->SetUniform("M", M);
 			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-			shader->SetUniform("eyePos", glm::vec3(0));
-			shader->SetUniform("color", glm::vec4(l.color,1.f));
+			shader->SetUniform("eyePos", eyePos);
+			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("specularStrength", l.params[0]);
 			shader->SetUniform("shininess", l.params[1]);
 			shader->SetUniform("tex", TEX_BASE);
-			shader->SetUniform("texSkyDiffuse", TEX_SKY_DIFFUSE);
-			shader->SetUniform("sunDirection", OpenGLSun::getInstance()->GetSunDirection());
-			shader->SetUniform("sunColor", OpenGLSun::getInstance()->GetSunColor());
 			
 			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 			glEnable(GL_TEXTURE_2D);
 			if(l.textures.size() > 0)
+			{
 				glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+				shader->SetUniform("color", glm::vec4(l.color, 1.f));
+			}
 			else
+			{
 				glBindTexture(GL_TEXTURE_2D, 0);
+				shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+			}
 		}
 			break;
 			
@@ -495,12 +518,12 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
 	shader->SetUniform("MVP", viewProjection*M);
 	shader->SetUniform("M", M);
 	shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-	shader->SetUniform("eyePos", view[3]);
-	shader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,1.f));
+	shader->SetUniform("eyePos", eyePos);
+	shader->SetUniform("viewDir", viewDir);
+	shader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,0.f));
 	shader->SetUniform("shininess", 0.5f);
 	shader->SetUniform("specularStrength", 0.1f);
 	shader->SetUniform("tex", TEX_BASE);
-	shader->SetUniform("texSkyDiffuse", TEX_SKY_DIFFUSE);
 	
 	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 	glEnable(GL_TEXTURE_2D);
@@ -546,14 +569,14 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	return objects.size()-1;
 }
 
-unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, const char* textureName)
+unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, std::string textureName)
 {
     Look look;
     look.color = rgbColor;
 	look.params.push_back(specular);
 	look.params.push_back(shininess);
     
-	if(textureName != NULL) 
+	if(textureName != "") 
 		look.textures.push_back(LoadTexture(textureName));
     
 	looks.push_back(look);
@@ -561,7 +584,7 @@ unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specula
 	return looks.size()-1;
 }
 
-unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName)
+unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, std::string textureName)
 {
 }
 
@@ -602,15 +625,15 @@ unsigned int OpenGLContent::getLightsCount()
 }
 	
 //Static methods
-GLuint OpenGLContent::LoadTexture(const char* filename)
+GLuint OpenGLContent::LoadTexture(std::string filename)
 {
     int width, height, channels;
     GLuint texture;
     
     // Allocate image; fail out on error
-    cInfo("Loading texture from: %s", filename);
+    cInfo("Loading texture from: %s", filename.c_str());
     
-    unsigned char* dataBuffer = stbi_load(filename, &width, &height, &channels, 3);
+    unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, 3);
     if(dataBuffer == NULL)
     {
         cError("Failed to load texture!");
@@ -639,18 +662,15 @@ GLuint OpenGLContent::LoadTexture(const char* filename)
     return texture;
 }
 
-GLuint OpenGLContent::LoadInternalTexture(const char* filename)
+GLuint OpenGLContent::LoadInternalTexture(std::string filename)
 {
-    char path[1024];
-    GetDataPath(path, 1024-32);
-    strcat(path, filename);
-    return LoadTexture(path);
+    return LoadTexture(GetDataPath() + filename);
 }
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 {
-    int uDiv = (int)floor(2.f*halfExtents)/10;
-    int vDiv = (int)floor(2.f*halfExtents)/10;
+    int uDiv = (int)floor(2.f*halfExtents)/100;
+    int vDiv = (int)floor(2.f*halfExtents)/100;
     if(uDiv < 1) uDiv = 1;
     if(vDiv < 1) vDiv = 1;
     bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
@@ -1168,9 +1188,9 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 	return mesh;
 }
 
-Mesh* OpenGLContent::LoadMesh(const char* filename, GLfloat scale, bool smooth)
+Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
-    std::string extension = std::string(filename).substr(strlen(filename)-3,3);
+    std::string extension = filename.substr(filename.length()-3,3);
     
     if(extension == "stl" || extension == "STL")
     {
@@ -1187,12 +1207,12 @@ Mesh* OpenGLContent::LoadMesh(const char* filename, GLfloat scale, bool smooth)
     }
 }
 
-Mesh* OpenGLContent::LoadOBJ(const char *filename, GLfloat scale, bool smooth)
+Mesh* OpenGLContent::LoadOBJ(std::string filename, GLfloat scale, bool smooth)
 {
     //Read OBJ data
-    cInfo("Loading model from: %s", filename);
+    cInfo("Loading model from: %s", filename.c_str());
     
-	FILE* file = fopen(filename, "rb");
+	FILE* file = fopen(filename.c_str(), "rb");
     char line[256];
     char c1, c2;
     Mesh* mesh = new Mesh();
@@ -1322,12 +1342,12 @@ Mesh* OpenGLContent::LoadOBJ(const char *filename, GLfloat scale, bool smooth)
     return mesh;
 }
 
-Mesh* OpenGLContent::LoadSTL(const char *filename, GLfloat scale, bool smooth)
+Mesh* OpenGLContent::LoadSTL(std::string filename, GLfloat scale, bool smooth)
 {
     //Read STL data
-    cInfo("Loading model from: %s", filename);
+    cInfo("Loading model from: %s", filename.c_str());
     
-	FILE* file = fopen(filename, "rb");
+	FILE* file = fopen(filename.c_str(), "rb");
     char line[256];
     char keyword[10];
     Mesh *mesh = new Mesh();

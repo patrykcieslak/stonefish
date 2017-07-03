@@ -9,7 +9,7 @@
 #include "SimulationApp.h"
 #include "SystemUtil.hpp"
 
-SimulationApp::SimulationApp(const char* name, int width, int height, SimulationManager* sim)
+SimulationApp::SimulationApp(std::string name, int width, int height, SimulationManager* sim)
 {
     SimulationApp::handle = this;
 	appName = name;
@@ -115,17 +115,17 @@ bool SimulationApp::isLoading()
     return loading;
 }
 
-const char* SimulationApp::getDataPath()
+std::string SimulationApp::getDataPath()
 {
     return dataPath;
 }
 
-const char* SimulationApp::getShaderPath()
+std::string SimulationApp::getShaderPath()
 {
     return shaderPath;
 }
 
-void SimulationApp::Init(const char* dataPath, const char* shaderPath)
+void SimulationApp::Init(std::string dataPath, std::string shaderPath)
 {
     this->dataPath = dataPath;
     this->shaderPath = shaderPath;
@@ -169,7 +169,7 @@ void SimulationApp::InitializeSDL()
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 	
 	//Create window
-    window = SDL_CreateWindow(appName,
+    window = SDL_CreateWindow(appName.c_str(),
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
                               winWidth,

@@ -213,13 +213,11 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
         backgroundMargin = 5.f;
         
         //Load logo texture - can't use material class because it writes to the console
-        char path[1024];
         int width, height, channels;
-        GetDataPath(path, 1024-32);
-        strcat(path, "logo_gray_64.png");
+        std::string path = GetDataPath() + "logo_gray_64.png";
         
         // Allocate image; fail out on error
-        unsigned char* dataBuffer = stbi_load(path, &width, &height, &channels, 4);
+        unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
         if(dataBuffer != NULL)
         {
             // Allocate an OpenGL texture
@@ -240,11 +238,10 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
             logoTexture = 0;
         
 		//Load corner texture
-		GetDataPath(path, 1024-32);
-        strcat(path, "gui.png");
+		path = GetDataPath() + "gui.png";
         
         // Allocate image; fail out on error
-        dataBuffer = stbi_load(path, &width, &height, &channels, 4);
+        dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
         if(dataBuffer != NULL)
         {
             // Allocate an OpenGL texture
@@ -295,7 +292,7 @@ void IMGUI::GenerateBackground()
     
 	glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, OpenGLPipeline::getInstance()->getDisplayTexture());
+	glBindTexture(GL_TEXTURE_2D, OpenGLPipeline::getInstance()->getScreenTexture());
     
     downsampleShader->Use();
     downsampleShader->SetUniform("source", 0);

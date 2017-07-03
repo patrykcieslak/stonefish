@@ -3,23 +3,24 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "GLSLShader.h"
+#include <fstream>
 #include "SystemUtil.hpp"
 #include "Console.h"
 
 GLuint GLSLShader::saqVertexShader = 0;
 
-GLSLShader::GLSLShader(const char* fragment, const char* vertex)
+GLSLShader::GLSLShader(std::string fragment, std::string vertex)
 {
     valid = false;
     GLint compiled = 0;
     GLuint vs;
     GLuint fs;
     
-    if(vertex == NULL)
+    if(vertex == "")
         vs = saqVertexShader;
     else
         vs = LoadShader(GL_VERTEX_SHADER, vertex, &compiled);
@@ -268,32 +269,50 @@ void GLSLShader::Destroy()
         glDeleteProgram(saqVertexShader);
 }
 
-GLuint GLSLShader::LoadShader(GLenum shaderType, const char *filename, GLint *shaderCompiled)
+GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, GLint *shaderCompiled)
 {
 	GLuint shader = 0;
     
-    char path[1024];
-    GetShaderPath(path, 1024-32);
-    strcat(path, filename);
+	std::string basePath = GetShaderPath();
+	std::string sourcePath = basePath + filename;
+	std::ifstream sourceFile(sourcePath);
+	std::string source;
+	std::string line;
+	
+	cInfo("Loading shader from: %s", sourcePath.c_str());
     
-    cInfo("Loading shader from: %s", path);
-    
-    FILE *fp = fopen(path, "rb");
-	if(fp == NULL)
-		return 0;
-    
-    fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    char* shaderSource = new char[size+1];
-	long readsize = fread(shaderSource, sizeof(char), size, fp);
-    if(readsize != size)
-		return 0;
-    
-    shaderSource[size] = '\0';
-	fclose(fp);
-    
-	if(shaderSource!= NULL)
+	while(!sourceFile.eof())
+	{
+		std::getline(sourceFile, line);
+		
+		if(line.find("#inject") == std::string::npos)
+			source.append(line + "\n");
+		else //inject code from another source file
+		{
+			size_t pos1 = line.find("\"");
+			size_t pos2 = line.find("\"", pos1+1);
+			
+			if(pos1 > 0 && pos2 > pos1)
+			{
+				std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
+				std::ifstream injectedFile(injectedPath);
+					
+				cInfo("--> Injecting source from: %s", injectedPath.c_str());
+				
+				while(!injectedFile.eof())
+				{
+					std::getline(injectedFile, line);
+					source.append(line + "\n");
+				}
+				injectedFile.close();
+			}
+		}
+	}
+	sourceFile.close();
+	
+	const char* shaderSource = source.c_str();
+	
+	if(shaderSource != NULL)
 	{
 		GLint infoLogLength = 0;
 		shader = glCreateShader(shaderType);
@@ -314,8 +333,6 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, const char *filename, GLint *sh
 		
 		if(*shaderCompiled == 0)
 			cError("Failed to compile shader: %s", shaderSource);
-        
-        free(shaderSource);
 	}
 	else
 		*shaderCompiled = 0;

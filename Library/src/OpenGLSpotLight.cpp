@@ -16,19 +16,19 @@ OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& tar
 	direction = glm::vec3((GLfloat)dir.getX(), (GLfloat)dir.getY(), (GLfloat)dir.getZ());
 	
     coneAngle = cone/180.f*M_PI;//UnitSystem::SetAngle(cone);
-    lightClipSpace = glm::mat4();
+    clipSpace = glm::mat4();
     
     //Create shadowmap texture
     shadowSize = 2048;
     glGenTextures(1, &shadowMap);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
     glBindTexture(GL_TEXTURE_2D, 0);
     
     //Create shadowmap framebuffer
@@ -74,6 +74,11 @@ GLfloat OpenGLSpotLight::getAngle()
     return coneAngle;
 }
 
+glm::mat4 OpenGLSpotLight::getClipSpace()
+{
+	return clipSpace;
+}
+
 void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
 	std::string lightUni = "spotLights[" + std::to_string(lightId) + "].";
@@ -81,14 +86,13 @@ void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 	shader->SetUniform(lightUni + "color", getColor());
 	shader->SetUniform(lightUni + "direction", getDirection());
 	shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()));
+	shader->SetUniform(lightUni + "clipSpace", getClipSpace());
+	shader->SetUniform(lightUni + "shadowMap", TEX_SHADOW_START + (int)lightId);
 	
-	//SHADOW
-	/*glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
+	glActiveTexture(GL_TEXTURE0 + TEX_SHADOW_START + lightId);
 	glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-	glm::mat4 eyeToLight = lightClipSpace * glm::inverse(activeView->GetViewMatrix(activeView->GetViewTransform()));
-	*/
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 }
 
 void OpenGLSpotLight::RenderDummy()
@@ -153,7 +157,7 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* s
                    0.f, 0.5f, 0.f, 0.f,
                    0.f, 0.f, 0.5f, 0.f,
                    0.5f, 0.5f, 0.5f, 1.f);
-    lightClipSpace = bias * (proj * view);
+    clipSpace = bias * (proj * view);
 	
 	OpenGLContent::getInstance()->SetProjectionMatrix(proj);
 	OpenGLContent::getInstance()->SetViewMatrix(view);
@@ -163,8 +167,6 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* s
     glClear(GL_DEPTH_BUFFER_BIT);
 	pipe->DrawObjects(sim);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    glCullFace(GL_BACK);
 }
 
 void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)

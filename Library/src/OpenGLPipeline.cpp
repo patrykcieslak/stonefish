@@ -43,8 +43,8 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLLight::Destroy();
 	OpenGLContent::Destroy();
 	
-    glDeleteTextures(1, &displayTexture);
-    glDeleteFramebuffers(1, &displayFBO);
+    glDeleteTextures(1, &screenTex);
+    glDeleteFramebuffers(1, &screenFBO);
 }
 
 void OpenGLPipeline::setRenderingEffects(bool shadows, bool fluid, bool ssao)
@@ -79,26 +79,15 @@ bool OpenGLPipeline::isSAORendered()
     return renderSAO;
 }
 
-GLuint OpenGLPipeline::getDisplayTexture()
+GLuint OpenGLPipeline::getScreenTexture()
 {
-    return displayTexture;
+    return screenTex;
 }
 
 void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 {
     windowW = windowWidth;
     windowH = windowHeight;
-    
-    //Load shaders and create rendering buffers
-    cInfo("Loading scene shaders...");
-	OpenGLContent::getInstance()->Init();
-	OpenGLSky::getInstance()->Init();
-    OpenGLSun::getInstance()->Init();
-    OpenGLView::Init();
-    OpenGLLight::Init();
-    
-    cInfo("Generating sky...");
-    OpenGLSky::getInstance()->Generate(40.f,300.f);
     
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");
@@ -117,18 +106,39 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     glLineWidth(1.0f);
     glLineStipple(3, 0xE4E4);
     
-    //Create display framebuffer
-    glGenFramebuffers(1, &displayFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+	GLint texUnits;
+	GLint maxTexLayers;
+	GLint maxUniforms;
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
+	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTexLayers);
+	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniforms);
+	cInfo("%d texture units available.", texUnits);
+	cInfo("%d texture layers allowed.", maxTexLayers);
+	cInfo("%d uniforms in fragment shader allowed.", maxUniforms);
+	
+	//Load shaders and create rendering buffers
+    cInfo("Loading shaders...");
+	OpenGLContent::getInstance()->Init();
+	OpenGLSky::getInstance()->Init();
+    OpenGLSun::getInstance()->Init();
+    OpenGLView::Init();
+    OpenGLLight::Init();
     
-    glGenTextures(1, &displayTexture);
-    glBindTexture(GL_TEXTURE_2D, displayTexture);
+    cInfo("Generating sky...");
+    OpenGLSky::getInstance()->Generate(40.f,300.f);
+    
+    //Create display framebuffer
+    glGenFramebuffers(1, &screenFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+    
+    glGenTextures(1, &screenTex);
+    glBindTexture(GL_TEXTURE_2D, screenTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW, windowH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Cheaper/better gaussian blur for GUI background
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //Cheaper/better gaussian blur for GUI background 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex, 0);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
@@ -141,7 +151,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 
 void OpenGLPipeline::DrawDisplay()
 {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, displayFBO);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, windowW, windowH, 0, 0, windowW, windowH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
@@ -155,7 +165,7 @@ void OpenGLPipeline::DrawObjects(SimulationManager* sim)
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
     //==============Clear display framebuffer====================
-    glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
     glClear(GL_COLOR_BUFFER_BIT);
     
     //==============Bake shadow maps (independent of view)================
@@ -187,8 +197,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			}
 			
             //================Setup rendering scene======================
-			glBindFramebuffer(GL_FRAMEBUFFER, view->getSceneFBO());
-			glDrawBuffer(SCENE_ATTACHMENT);
+			glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+			//glDrawBuffer(SCENE_ATTACHMENT);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			//================Draw precomputed sky=======================
@@ -219,10 +229,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
             glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            view->RenderHDR(displayFBO);
+            view->RenderHDR(screenFBO);
            
             //================Helper objects===================
-            glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+            glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
 			glBindTexture(GL_TEXTURE_2D, 0);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -310,7 +320,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
  			
 			//sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
             
-			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.2);
+			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.1);
            
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             

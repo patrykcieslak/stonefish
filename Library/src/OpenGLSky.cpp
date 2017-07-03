@@ -435,10 +435,6 @@ void OpenGLSky::Render(OpenGLView *view, bool zAxisUp)
 	glm::mat4 projection = glm::perspective(view->GetFOVY(), (GLfloat)viewport[2]/(GLfloat)viewport[3], 0.1f, 100.f);
     glm::mat3 ivr = glm::mat3(glm::eulerAngleX(zAxisUp ? -M_PI_2 : M_PI_2)) * glm::inverse(glm::mat3(viewTransform)); 
 	
-    //btMatrix3x3 flip;
-    //flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
-    //flip = flip * viewTransform.getBasis().inverse();
-	
     glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_CUBE_MAP);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyCubemap);

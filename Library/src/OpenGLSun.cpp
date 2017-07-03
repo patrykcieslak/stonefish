@@ -25,17 +25,13 @@ OpenGLSun* OpenGLSun::getInstance()
 OpenGLSun::OpenGLSun()
 {
     activeView = NULL;
-    sunShader = NULL;
     shadowmapShader = NULL;
-    diffuseTextureUnit = 0;
-    normalTextureUnit = 0;
-    positionTextureUnit = 0;
     shadowTextureUnit = 0;
     sunElevation = 0.f;
     sunAzimuth = 0.f;
     shadowmapArray = 0;
     shadowmapSplits = 4;
-    shadowmapSize = 2048;
+    shadowmapSize = 4096;
     shadowFBO = 0;
     sunDirection = btVector3(0.,0.,1.);
     sunColor = glm::vec4(1.0,1.0,1.0,1.0);
@@ -48,27 +44,12 @@ OpenGLSun::~OpenGLSun()
 {
     glDeleteTextures(1, &shadowmapArray);
     glDeleteFramebuffers(1, &shadowFBO);
-    
-    delete sunShader;
     delete shadowmapShader;
 }
 
 void OpenGLSun::Init()
 {
-    //load shaders
-    sunShader = new GLSLShader("deferredSun.frag");
-    sunShader->AddUniform("texDiffuse", INT);
-    sunShader->AddUniform("texPosition", INT);
-    sunShader->AddUniform("texNormal", INT);
-    sunShader->AddUniform("lightDirection", VEC3);
-    sunShader->AddUniform("lightColor", VEC4);
-    sunShader->AddUniform("texShadowArray", INT);
-    sunShader->AddUniform("frustumFar", VEC4);
-    sunShader->AddUniform("lightClipSpace[0]", MAT4);
-    sunShader->AddUniform("lightClipSpace[1]", MAT4);
-    sunShader->AddUniform("lightClipSpace[2]", MAT4);
-    sunShader->AddUniform("lightClipSpace[3]", MAT4);
-    
+    //Load shader
     shadowmapShader = new GLSLShader("cascadedShadowMap.frag");
     shadowmapShader->AddUniform("shadowmapArray", INT);
     shadowmapShader->AddUniform("shadowmapLayer", FLOAT);
@@ -76,12 +57,13 @@ void OpenGLSun::Init()
     //Create shadowmap texture array
     glGenTextures(1, &shadowmapArray);
     glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT24, shadowmapSize, shadowmapSize, shadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     
     //Create shadowmap framebuffer
@@ -237,64 +219,47 @@ glm::mat4 OpenGLSun::BuildCropProjMatrix(ViewFrustum &f)
 	return shad_crop_proj;
 }
 
-/*void OpenGLSun::Render(const btTransform& viewTransform)
-{
-    //Rendering is done in screen space! (camera eye space)
-    
-    //calculate eye space sun direction
-    btVector3 sunDirectionEye = viewTransform.getBasis() * sunDirection;
-    glm::vec3 sunDirEye;
-    sunDirEye[0] = (GLfloat)sunDirectionEye.getX();
-    sunDirEye[1] = (GLfloat)sunDirectionEye.getY();
-    sunDirEye[2] = (GLfloat)sunDirectionEye.getZ();
-    
-    //calculate sun color
+void OpenGLSun::SetupShader(GLSLShader* shader)
+{	
+	//Calculate sun color
     sunColor = OpenGLLight::ColorFromTemperature(5000.f + 20.f*sunElevation, SUN_SKY_FACTOR * sin(sunElevation / 180.0 * M_PI));
-    glm::mat4 invCamView = glm::inverse(activeView->GetViewMatrix());
-    glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
+    
+	//Calculate shadow splits
+	glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
                    0.f, 0.5f, 0.f, 0.f,
                    0.f, 0.f, 0.5f, 0.f,
                    0.5f, 0.5f, 0.5f, 1.f);
     glm::vec4 frustumFar;
     glm::mat4 lightClipSpace[4];
     
-    for(int i = shadowmapSplits; i < 4; i++)
+	//For every inactive split
+    for(int i=shadowmapSplits; i < 4; ++i)
     {
 		frustumFar[i] = 0;
         lightClipSpace[i] = glm::mat4();
     }
     
-	// for every active split
-	for(int i = 0; i < shadowmapSplits; i++)
+	//For every active split
+	for(int i=0; i<shadowmapSplits; ++i)
 	{
 		frustumFar[i] = frustum[i].far;
-        
-		// compute a matrix that transforms from camera eye space to light clip space
-		lightClipSpace[i] = (bias * shadowCPM[i]) * invCamView;
+		lightClipSpace[i] = (bias * shadowCPM[i]); // compute a matrix that transforms from world space to light clip space
 	}
-    
-    //use sun shader
-    glActiveTexture(GL_TEXTURE0 + shadowTextureUnit);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-    
-    sunShader->Use();
-    sunShader->SetUniform("texDiffuse", diffuseTextureUnit);
-    sunShader->SetUniform("texPosition", positionTextureUnit);
-    sunShader->SetUniform("texNormal", normalTextureUnit);
-    sunShader->SetUniform("lightDirection", sunDirEye);
-    sunShader->SetUniform("lightColor", sunColor);
-    sunShader->SetUniform("texShadowArray", shadowTextureUnit);
-    sunShader->SetUniform("frustumFar", frustumFar);
-    sunShader->SetUniform("lightClipSpace[0]", lightClipSpace[0]);
-    sunShader->SetUniform("lightClipSpace[1]", lightClipSpace[1]);
-    sunShader->SetUniform("lightClipSpace[2]", lightClipSpace[2]);
-    sunShader->SetUniform("lightClipSpace[3]", lightClipSpace[3]);
-    OpenGLContent::getInstance()->DrawSAQ();
-    glUseProgram(0);
-    
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-}*/
+	
+	shader->SetUniform("sunDirection", GetSunDirection());
+	shader->SetUniform("sunColor", sunColor);
+	shader->SetUniform("sunFrustumFar", frustumFar);
+	shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
+	shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
+	shader->SetUniform("sunClipSpace[2]", lightClipSpace[2]);
+	shader->SetUniform("sunClipSpace[3]", lightClipSpace[3]);
+	shader->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+
+	glActiveTexture(GL_TEXTURE0 + TEX_SUN_SHADOW);
+    glEnable(GL_TEXTURE_2D_ARRAY);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmapArray);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+}
 
 void OpenGLSun::RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim)
 {
@@ -386,14 +351,6 @@ void OpenGLSun::SetCamera(OpenGLView* view)
         frustum[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
         delete [] viewport;
     }
-}
-
-void OpenGLSun::SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow)
-{
-    diffuseTextureUnit = diffuse;
-    normalTextureUnit = normal;
-    positionTextureUnit = position;
-    shadowTextureUnit = shadow;
 }
 
 void OpenGLSun::SetPosition(GLfloat elevation, GLfloat azimuth)

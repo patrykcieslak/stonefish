@@ -16,12 +16,10 @@
 GLSLShader* OpenGLView::downsampleShader = NULL;
 GLSLShader* OpenGLView::ssaoShader = NULL;
 GLSLShader* OpenGLView::blurShader = NULL;
-GLSLShader* OpenGLView::fluidShader[] = {NULL, NULL, NULL, NULL};
 GLSLShader* OpenGLView::lightMeterShader = NULL;
 GLSLShader* OpenGLView::tonemapShader = NULL;
 GLint OpenGLView::randomTextureUnit = -1;
 GLuint OpenGLView::randomTexture = 0;
-GLuint OpenGLView::waveNormalTexture = 0;
 GLint OpenGLView::positionTextureUnit = -1;
 GLint OpenGLView::normalTextureUnit = -1;
 
@@ -36,79 +34,76 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     ssaoSizeDiv = sao ? 2 : 0;
     far = UnitSystem::SetLength(horizon);
     near = 0.1f;
+	activePostprocessTexture = 0;
     
-    glGenFramebuffers(1, &sceneFBO);
-    glGenRenderbuffers(1, &sceneDepthBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
+	int samples = 4;
+	
+	//----Multisampled rendering----
+    glGenFramebuffers(1, &renderFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
     
-    glBindRenderbuffer(GL_RENDERBUFFER, sceneDepthBuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, sceneDepthBuffer);
+	glGenRenderbuffers(1, &renderDepthStencil);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderDepthStencil);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderDepthStencil);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
-    glGenTextures(1, &finalTexture);
-    glBindTexture(GL_TEXTURE_2D, finalTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, FINAL_ATTACHMENT, GL_TEXTURE_2D, finalTexture, 0);
-    
-    glGenTextures(1, &sceneTexture);
-    glBindTexture(GL_TEXTURE_2D, sceneTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, SCENE_ATTACHMENT, GL_TEXTURE_2D, sceneTexture, 0);
-    
-    if(OpenGLPipeline::getInstance()->isFluidRendered())
-    {
-        glGenTextures(1, &sceneReflectionTexture);
-        glBindTexture(GL_TEXTURE_2D, sceneReflectionTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, REFLECTION_ATTACHMENT, GL_TEXTURE_2D, sceneReflectionTexture, 0);
-        
-        glGenTextures(1, &sceneRefractionTexture);
-        glBindTexture(GL_TEXTURE_2D, sceneRefractionTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, REFRACTION_ATTACHMENT, GL_TEXTURE_2D, sceneRefractionTexture, 0);
-    }
+    glGenTextures(1, &renderColorTex);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderColorTex);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB16F, viewportWidth, viewportHeight, GL_TRUE); //0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, renderColorTex, 0);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
-        cError("Scene FBO initialization failed!");
+        cError("Render FBO initialization failed!");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+	//----Light metering (automatic exposure)----
     glGenFramebuffers(1, &lightMeterFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
     
-    glGenTextures(1, &lightMeterTexture);
-    glBindTexture(GL_TEXTURE_2D, lightMeterTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1, 1, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glGenTextures(1, &lightMeterTex);
+    glBindTexture(GL_TEXTURE_2D, lightMeterTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 2, 2, 0, GL_RGB, GL_FLOAT, NULL); //Distribute work to 4 parallel threads
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Use hardware linear interpolation
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightMeterTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightMeterTex, 0);
     
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Light meter FBO initialization failed!");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//----Non-multisampled postprocessing----
+	glGenFramebuffers(1, &postprocessFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, postprocessFBO);
+	
+	glGenTextures(2, postprocessTex);
+    glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessTex[0], 0);
+	
+	glBindTexture(GL_TEXTURE_2D, postprocessTex[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex[1], 0);
+	
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+        cError("Postprocess FBO initialization failed!");
     
+	//----SSAO----
     if(ssaoSizeDiv > 0)
     {
         glGenFramebuffers(1, &ssaoFBO);
@@ -125,9 +120,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
-            cError("SAO FBO initialization failed!");
-    
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            cError("SSAO FBO initialization failed!");
     
         glGenFramebuffers(1, &blurFBO);
         glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
@@ -152,32 +145,28 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     
         status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
-            cError("SAO vertical blur FBO initialization failed!");
-    
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            cError("SSAO blur FBO initialization failed!");
     }
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 OpenGLView::~OpenGLView()
 {
-    glDeleteRenderbuffers(1, &sceneDepthBuffer);
-    glDeleteTextures(1, &finalTexture);
-    glDeleteTextures(1, &sceneTexture);
-    if(OpenGLPipeline::getInstance()->isFluidRendered())
-    {
-        glDeleteTextures(1, &sceneReflectionTexture);
-        glDeleteTextures(1, &sceneRefractionTexture);
-    }
-    glDeleteFramebuffers(1, &sceneFBO);
-    glDeleteTextures(1, &lightMeterTexture);
-    glDeleteFramebuffers(1, &lightMeterFBO);
+    glDeleteRenderbuffers(1, &renderDepthStencil);
+    glDeleteTextures(2, postprocessTex);
+    glDeleteTextures(1, &renderColorTex);
+    glDeleteTextures(1, &lightMeterTex);
+	glDeleteFramebuffers(1, &renderFBO);
+    glDeleteFramebuffers(1, &postprocessFBO);
+	glDeleteFramebuffers(1, &lightMeterFBO);
     
     if(ssaoSizeDiv > 0)
     {
         glDeleteTextures(1, &ssaoTexture);
         glDeleteTextures(1, &hBlurTexture);
         glDeleteTextures(1, &vBlurTexture);
-        glDeleteFramebuffers(1, &sceneFBO);
+        glDeleteFramebuffers(1, &renderFBO);
         glDeleteFramebuffers(1, &ssaoFBO);
         glDeleteFramebuffers(1, &blurFBO);
     }
@@ -273,29 +262,14 @@ btVector3 OpenGLView::Ray(GLint x, GLint y)
     return rayTo;
 }
 
-GLuint OpenGLView::getSceneFBO()
+GLuint OpenGLView::getRenderFBO()
 {
-    return sceneFBO;
+    return renderFBO;
 }
 
 GLuint OpenGLView::getFinalTexture()
 {
-    return finalTexture;
-}
-
-GLuint OpenGLView::getSceneTexture()
-{
-    return sceneTexture;
-}
-
-GLuint OpenGLView::getSceneReflectionTexture()
-{
-    return sceneReflectionTexture;
-}
-
-GLuint OpenGLView::getSceneRefractionTexture()
-{
-    return sceneRefractionTexture;
+    return postprocessTex[activePostprocessTexture];
 }
 
 bool OpenGLView::hasSSAO()
@@ -327,139 +301,15 @@ void OpenGLView::SetViewTransform()
     OpenGLContent::getInstance()->SetViewMatrix(GetViewTransform());
 }
 
-/*void OpenGLView::SetReflectedViewTransform(Ocean* fluid)
-{
-    btVector3 normal, position;
-    fluid->GetSurface(normal, position);
-    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
-    if(eyeDepth >= 0)
-        normal = -normal;
-    
-    btTransform trans = GetReflectedViewTransform(fluid);
-    btVector3 eyePosition = trans * position;
-    btVector3 eyeNormal = trans.getBasis() * normal;
-    
-    double surface[4];
-    surface[0] = eyeNormal.x();
-    surface[1] = eyeNormal.y();
-    surface[2] = eyeNormal.z();
-    surface[3] = -eyeNormal.dot(eyePosition);
-    
-    OpenGLContent::getInstance()->SetViewMatrix(glMatrixFromBtTransform(trans));
-}
-
-void OpenGLView::SetRefractedViewTransform(Ocean* fluid)
-{
-    btVector3 normal, position;
-    fluid->GetSurface(normal, position);
-    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
-    if(eyeDepth >= 0)
-        normal = -normal;
-    
-    btTransform trans = GetRefractedViewTransform(fluid);
-    btVector3 eyeNormal = trans.getBasis() * -normal;
-    btVector3 eyePosition = trans * position;
-    
-    double surface[4];
-    surface[0] = eyeNormal.x();
-    surface[1] = eyeNormal.y();
-    surface[2] = eyeNormal.z();
-    surface[3] = -eyeNormal.dot(eyePosition);
-    
-    btTransform shift = btTransform(btQuaternion(0,0,0), btVector3(0,0,0));
-	OpenGLContent::getInstance()->SetViewMatrix(glMatrixFromBtTransform(trans * shift));
-}*/
-
-/*btTransform OpenGLView::GetReflectedViewTransform(const Ocean* fluid)
-{
-    //get plane
-    btVector3 normal, position;
-    fluid->GetSurface(normal, position);
-    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
-    if(eyeDepth >= 0)
-        normal = -normal;
-    
-    //get camera transform
-    btTransform trans = GetViewTransform();
-    
-    GLfloat planeEq[4];
-    planeEq[0] = normal.x();
-    planeEq[1] = normal.y();
-    planeEq[2] = normal.z();
-    planeEq[3] = -normal.dot(position);
-    
-    //create reflection transform
-    btTransform reflection = btTransform::getIdentity();
-    btMatrix3x3 rotation = btMatrix3x3(1.0-2.0*planeEq[0]*planeEq[0], -2.0*planeEq[0]*planeEq[1], -2.0*planeEq[0]*planeEq[2],
-                                       -2.0*planeEq[0]*planeEq[1], 1.0-2.0*planeEq[1]*planeEq[1], -2.0*planeEq[1]*planeEq[2],
-                                       -2.0*planeEq[0]*planeEq[2], -2.0*planeEq[1]*planeEq[2], 1.0-2.0*planeEq[2]*planeEq[2]);
-    
-    reflection.setBasis(rotation);
-    reflection.setOrigin(-2.0*planeEq[3]*btVector3(planeEq[0], planeEq[1], planeEq[2]));
-    
-    //create flipping transform
-    btTransform flip = btTransform::getIdentity();
-    rotation = btMatrix3x3(1.0, 0.0, 0.0,
-                           0.0, -1.0, 0.0,
-                           0.0, 0.0, 1.0);
-    flip.setBasis(rotation);
-    
-    //combine transforms
-    trans = flip * trans * reflection;
-    return trans;
-}*/
-
-/*btTransform OpenGLView::GetRefractedViewTransform(const Ocean* fluid)
-{
-    //get plane
-    btVector3 normal, position;
-    fluid->GetSurface(normal, position);
-    btScalar eyeDepth = distanceFromCenteredPlane(normal, position - GetEyePosition());
-    if(eyeDepth >= 0)
-        normal = -normal;
-    
-    GLfloat planeEq[4];
-    planeEq[0] = normal.x();
-    planeEq[1] = normal.y();
-    planeEq[2] = normal.z();
-    planeEq[3] = -normal.dot(position);
-    
-    //get camera transform
-    btVector3 dir = GetLookingDirection().normalize();
-    btVector3 axis = dir.cross(normal);
-    btScalar alpha = acos(normal.dot(-dir));
-    btScalar beta = asin(axis.length()/fluid->getFluid()->IOR);
-    axis = axis.normalize();
-    
-    btQuaternion rotation = btQuaternion(axis, (alpha-beta));
-    btTransform trans = GetViewTransform();
-    
-    //create reflection transform
-    btTransform refraction = btTransform::getIdentity();
-    refraction.setBasis(btMatrix3x3(rotation));
-    
-    //combine transforms
-    trans = trans * refraction;
-    
-    return GetViewTransform();//trans;
-}*/
-
 void OpenGLView::ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY)
 {
     GLuint texture;
     
     switch (sc)
     {
+		default:
         case NORMAL:
-            texture = sceneTexture;
-            break;
-            
-        case REFLECTED:
-            texture = sceneReflectionTexture;
-            break;
-            
-        case REFRACTED:
-            texture = sceneRefractionTexture;
+            texture = renderColorTex;
             break;
     }
     
@@ -550,18 +400,15 @@ GLuint OpenGLView::getSSAOTexture()
         return 0;
 }
 
-void OpenGLView::RenderFluidSurface(Ocean* fluid, bool underwater)
-{
-}
-
-void OpenGLView::RenderFluidVolume(Ocean* fluid)
-{
-}
-
 void OpenGLView::RenderHDR(GLuint destinationFBO)
 {
+	//Blit multisampled to non-multisampled texture
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postprocessFBO);
+	glBlitFramebuffer(0, 0, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, sceneTexture);
+    glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
 	
     //matrix light metering
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
@@ -574,7 +421,7 @@ void OpenGLView::RenderHDR(GLuint destinationFBO)
     //hdr drawing
     glActiveTexture(GL_TEXTURE1);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, lightMeterTexture);
+    glBindTexture(GL_TEXTURE_2D, lightMeterTex);
     
     glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
     tonemapShader->Use();
@@ -643,18 +490,6 @@ void OpenGLView::Destroy()
     
     if(tonemapShader != NULL)
         delete tonemapShader;
-    
-    if(fluidShader[0] != NULL)
-        delete fluidShader[0];
-    
-    if(fluidShader[1] != NULL)
-        delete fluidShader[1];
-    
-    if(fluidShader[2] != NULL)
-        delete fluidShader[2];
-    
-    if(fluidShader[3] != NULL)
-        delete fluidShader[3];
 }
 
 void OpenGLView::SetTextureUnits(GLint position, GLint normal, GLint random)

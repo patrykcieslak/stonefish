@@ -16,11 +16,19 @@ StaticEntity::StaticEntity(std::string uniqueName, Material* mat, int _lookId) :
     lookId = _lookId;
     wireframe = false;
 	rigidBody = NULL;
+	mesh = NULL;
 }
 
 StaticEntity::~StaticEntity()
 {
+	if(mesh != NULL)
+	{
+		delete mesh;
+		mesh = NULL;
+	}
+	
     material = NULL;
+    rigidBody = NULL;
 }
 
 EntityType StaticEntity::getType()

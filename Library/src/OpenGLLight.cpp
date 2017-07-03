@@ -11,16 +11,6 @@
 
 //static variables
 OpenGLView* OpenGLLight::activeView = NULL;
-GLSLShader* OpenGLLight::spotShader = NULL;
-GLSLShader* OpenGLLight::omniShader = NULL;
-GLSLShader* OpenGLLight::ambientShader = NULL;
-GLint OpenGLLight::diffuseTextureUnit = 0;
-GLint OpenGLLight::normalTextureUnit = 0;
-GLint OpenGLLight::positionTextureUnit = 0;
-GLint OpenGLLight::skyDiffuseTextureUnit = 0;
-GLint OpenGLLight::skyReflectionTextureUnit = 0;
-GLint OpenGLLight::shadowTextureUnit = 0;
-GLint OpenGLLight::ssaoTextureUnit = 0;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 
 OpenGLLight::OpenGLLight(const btVector3& _position, glm::vec4 c)
@@ -87,79 +77,15 @@ SolidEntity* OpenGLLight::getHoldingEntity()
 //////////////////static//////////////////////////////
 void OpenGLLight::Init()
 {
-    //AMBIENT
-    ambientShader = new GLSLShader("deferredAmbient.frag");
-    ambientShader->AddUniform("texDiffuse", INT);
-    ambientShader->AddUniform("texNormal", INT);
-    ambientShader->AddUniform("texSSAO", INT);
-    ambientShader->AddUniform("texSkyDiff", INT);
-    ambientShader->AddUniform("inv_view_rot", MAT3);
-    
-    //OMNI
-    omniShader = new GLSLShader("deferredOmni.frag");
-    omniShader->AddUniform("texDiffuse", INT);
-    omniShader->AddUniform("texPosition", INT);
-    omniShader->AddUniform("texNormal", INT);
-    omniShader->AddUniform("lightPosition", VEC3);
-    omniShader->AddUniform("lightColor", VEC4);
-  
-    //SPOT
-    spotShader = new GLSLShader("deferredSpot.frag");
-    spotShader->AddUniform("texDiffuse", INT);
-    spotShader->AddUniform("texPosition", INT);
-    spotShader->AddUniform("texNormal", INT);
-    spotShader->AddUniform("lightPosition", VEC3);
-    spotShader->AddUniform("lightDirection", VEC3);
-    spotShader->AddUniform("lightAngle", FLOAT);
-    spotShader->AddUniform("lightColor", VEC4);
-    spotShader->AddUniform("texShadow", INT);
-    spotShader->AddUniform("lightClipSpace", MAT4);
 }
 
 void OpenGLLight::Destroy()
 {
-    delete ambientShader;
-    delete omniShader;
-    delete spotShader;
-}
-
-void OpenGLLight::SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao, GLint shadow)
-{
-    diffuseTextureUnit = diffuse;
-    normalTextureUnit = normal;
-    positionTextureUnit = position;
-    skyDiffuseTextureUnit = skyDiffuse;
-    skyReflectionTextureUnit = skyReflection;
-    ssaoTextureUnit = ssao;
-    shadowTextureUnit = shadow;
 }
 
 void OpenGLLight::SetCamera(OpenGLView* view)
 {
     activeView = view;
-}
-
-void OpenGLLight::RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp)
-{
-    glm::mat4 proj = activeView->GetProjectionMatrix();
-    proj = glm::inverse(proj);
-    
-    btMatrix3x3 flip;
-    flip.setEulerZYX(zAxisUp ? -M_PI_2 : M_PI_2, 0, 0);
-    flip = flip * (viewTransform.getBasis().inverse());
-    
-    GLfloat IVRMatrix[9];
-    SetFloatvFromMat(flip, IVRMatrix);
-    glm::mat3 ivr = glm::make_mat3(IVRMatrix);
-    
-    ambientShader->Use();
-    ambientShader->SetUniform("texDiffuse", diffuseTextureUnit);
-    ambientShader->SetUniform("texNormal", normalTextureUnit);
-    ambientShader->SetUniform("texSkyDiff", skyDiffuseTextureUnit);
-    ambientShader->SetUniform("texSSAO", ssaoTextureUnit);
-    ambientShader->SetUniform("inv_view_rot", ivr);
-    OpenGLContent::getInstance()->DrawSAQ();
-    glUseProgram(0);
 }
 
 glm::vec4 OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intensity)

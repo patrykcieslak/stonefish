@@ -57,8 +57,8 @@
         <File Name="src/OpenGLView.cpp"/>
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
-      <File Name="src/OpenGLContent.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
+      <File Name="src/OpenGLContent.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -192,7 +192,6 @@
         <File Name="include/Stonefish/OpenGLSun.h"/>
         <File Name="include/Stonefish/OpenGLSky.h"/>
         <File Name="include/Stonefish/OpenGLPointLight.h"/>
-        <File Name="shaders/blinnPhong.frag"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="include/Stonefish/OpenGLCamera.h"/>
@@ -284,6 +283,7 @@
       <File Name="shaders/cubePass.frag"/>
       <File Name="shaders/cubeSky.frag"/>
       <File Name="shaders/downsample.vert"/>
+      <File Name="shaders/commonLights.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
       <File Name="shaders/flat.frag"/>
@@ -304,7 +304,10 @@
       <File Name="shaders/deferredSpot.frag"/>
       <File Name="shaders/deferredSun.frag"/>
     </VirtualDirectory>
-    <VirtualDirectory Name="materials"/>
+    <VirtualDirectory Name="materials">
+      <File Name="shaders/blinnPhong.frag"/>
+      <File Name="shaders/cookTorrance.frag"/>
+    </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

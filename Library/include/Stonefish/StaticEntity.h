@@ -38,6 +38,7 @@ public:
 protected:
     btRigidBody* rigidBody;
 	int objectId;
+	Mesh* mesh;
     
 private:
     Material* material;

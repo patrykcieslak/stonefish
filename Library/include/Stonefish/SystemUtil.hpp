@@ -69,20 +69,22 @@ inline void GetCWD(char* buffer, int length)
 #endif
 }
 
-inline void GetShaderPath(char* path, int len)
+inline std::string GetShaderPath()
 {
-    GetCWD(path, len-64);
-    strcat(path, "/");
-    strcat(path, SimulationApp::getApp()->getShaderPath());
-    strcat(path, "/");
+	char cwd[1024];
+    GetCWD(cwd, 1024);
+    std::string path(cwd);
+	path += "/" + SimulationApp::getApp()->getShaderPath() + "/";
+	return path;
 }
 
-inline void GetDataPath(char* path, int len)
+inline std::string GetDataPath()
 {
-    GetCWD(path, len-64);
-    strcat(path, "/");
-    strcat(path, SimulationApp::getApp()->getDataPath());
-    strcat(path, "/");
+    char cwd[1024];
+	GetCWD(cwd, 1024);
+    std::string path(cwd);
+	path += "/" + SimulationApp::getApp()->getDataPath() + "/";
+	return path;
 }
 
 inline const char* GetDataPathPrefix(const char* directory)

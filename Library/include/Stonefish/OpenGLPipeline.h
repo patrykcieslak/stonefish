@@ -3,16 +3,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLPipeline__
 #define __Stonefish_OpenGLPipeline__
 
 #include "common.h"
-
 #include <GL/glew.h>
-
 #define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -31,7 +29,9 @@
 #define TEX_BASE			((GLint)0)
 #define TEX_SKY_DIFFUSE 	((GLint)1)
 #define TEX_SKY_REFLECTION 	((GLint)2)
-#define TEX_AO				((GLint)3)
+#define TEX_SUN_SHADOW		((GLint)3)
+#define TEX_AO				((GLint)4)
+#define TEX_SHADOW_START	((GLint)16)
 
 class SimulationManager;
 class OpenGLView;
@@ -50,7 +50,7 @@ public:
     void setDebugSimulation(bool enabled);
     bool isFluidRendered();
     bool isSAORendered();
-    GLuint getDisplayTexture();
+    GLuint getScreenTexture();
 	
     static OpenGLPipeline* getInstance();
     
@@ -73,8 +73,8 @@ private:
     GLint windowW;
     GLint windowH;
     
-    GLuint displayFBO;
-    GLuint displayTexture;
+    GLuint screenFBO;
+    GLuint screenTex;
     
     static OpenGLPipeline* instance;
 };

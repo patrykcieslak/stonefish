@@ -112,8 +112,8 @@ public:
 	void AddView(OpenGLView* view);
     void AddLight(OpenGLLight* light);
 	unsigned int BuildObject(Mesh* mesh);
-	unsigned int CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, const char* textureName = NULL);
-	unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, const char* textureName = NULL);
+	unsigned int CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, std::string textureName = "");
+	unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, std::string textureName = "");
 	void UseLook(unsigned int lookId, const glm::mat4& M);
 	
 	OpenGLView* getView(unsigned int id);
@@ -122,9 +122,9 @@ public:
 	unsigned int getLightsCount();
 	
 	//Static
-	static GLuint LoadTexture(const char* filename);
-	static GLuint LoadInternalTexture(const char* filename);
-	static Mesh* LoadMesh(const char* filename, GLfloat scale, bool smooth);
+	static GLuint LoadTexture(std::string filename);
+	static GLuint LoadInternalTexture(std::string filename);
+	static Mesh* LoadMesh(std::string filename, GLfloat scale, bool smooth);
 	static Mesh* BuildPlane(GLfloat halfExtents);
 	static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3);
 	static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
@@ -144,7 +144,8 @@ private:
     std::vector<OpenGLLight*> lights;
 	std::vector<Object> objects; //VBAs
 	std::vector<Look> looks; //OpenGL materials
-	glm::vec3 eye;
+	glm::vec3 eyePos;
+	glm::vec3 viewDir;
 	glm::mat4 view; //Current view matrix;
 	glm::mat4 projection; //Current projection matrix
 	glm::mat4 viewProjection; //Current view-projection matrix
@@ -172,8 +173,8 @@ private:
 	void SetupLights(GLSLShader* shader);
 	
 	//Static
-	static Mesh* LoadSTL(const char *filename, GLfloat scale, bool smooth);
-	static Mesh* LoadOBJ(const char *filename, GLfloat scale, bool smooth);
+	static Mesh* LoadSTL(std::string filename, GLfloat scale, bool smooth);
+	static Mesh* LoadOBJ(std::string filename, GLfloat scale, bool smooth);
 	
 };
 

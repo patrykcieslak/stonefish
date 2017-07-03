@@ -20,12 +20,11 @@ class OpenGLSun
 {
 public:
     void Init();
-    //void Render(const btTransform& viewTransform);
+	void SetupShader(GLSLShader* shader);
     void RenderShadowMaps(OpenGLPipeline* pipe, SimulationManager* sim);
     void ShowShadowMaps(GLfloat x, GLfloat y, GLfloat scale);
     void ShowFrustumSplits();
     void SetCamera(OpenGLView* view);
-    void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint shadow);
     void SetPosition(GLfloat elevation, GLfloat azimuth);
     glm::vec3 GetSunDirection();
     glm::vec4 GetSunColor();
@@ -43,7 +42,7 @@ private:
     GLfloat sunAzimuth;
     btVector3 sunDirection;
     glm::vec4 sunColor;
-    GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, shadowTextureUnit;
+    GLint shadowTextureUnit;
     OpenGLView* activeView;
     
     GLuint shadowmapArray;
@@ -54,7 +53,6 @@ private:
     ViewFrustum* frustum;
     GLuint shadowFBO;
     
-    GLSLShader* sunShader; //sun light with shadow
     GLSLShader* shadowmapShader; //debug draw shadowmap
     
     static OpenGLSun* instance;

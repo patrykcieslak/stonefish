@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationApp__
@@ -23,10 +23,10 @@
 class SimulationApp
 {
 public:
-    SimulationApp(const char* name, int width, int height, SimulationManager* sim);
+    SimulationApp(std::string name, int width, int height, SimulationManager* sim);
     virtual ~SimulationApp();
     
-    void Init(const char* dataPath, const char* shaderPath);
+    void Init(std::string dataPath, std::string shaderPath);
     void CleanUp();
     void Quit();
     
@@ -71,8 +71,8 @@ public:
     int getWindowHeight();
 	bool isRunning();
     bool isLoading();
-    const char* getShaderPath();
-    const char* getDataPath();
+	std::string getShaderPath();
+    std::string getDataPath();
 
     //statics
     static SimulationApp* getApp();
@@ -92,9 +92,9 @@ private:
     btScalar simSpeedFactor;
     Entity* lastPicked;
     
-    const char* appName;
-    const char* shaderPath;
-    const char* dataPath;
+    std::string appName;
+    std::string shaderPath;
+    std::string dataPath;
     int winWidth;
     int winHeight;
     bool finished;

@@ -44,18 +44,16 @@ void FallingTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
     ///////LOOKS///////////
-    char path[1024];
-    GetDataPath(path, 1024-32);
-    strcat(path, "grid.png");
+    std::string path = GetDataPath() + "grid.png";
     
-    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f);
+    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
     int color = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 0.5f, 0.1f), 0.5f, 1.f);
     
 	////////OBJECTS
-    Plane* floor = new Plane("Floor", 100.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), grey);
+    Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), grey);
     AddEntity(floor);
     
-	Box* vehicle = new Box("Vehicle", btVector3(2.,2.,2.), getMaterialManager()->getMaterial("Steel"), color);
+	Sphere* vehicle = new Sphere("Vehicle", 1., getMaterialManager()->getMaterial("Steel"), color);
 	AddSolidEntity(vehicle, btTransform(btQuaternion::getIdentity(), btVector3(0,0,1)));
 	
     Sphere* sphere = new Sphere("Sphere", 0.1f, getMaterialManager()->getMaterial("Steel"), color);
@@ -81,15 +79,19 @@ void FallingTestManager::BuildScenario()
     }*/
     
     //////CAMERA & LIGHT//////
-    //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(5.f, 5.f, 10.f), OpenGLLight::ColorFromTemperature(4500, 1000));
-    //AddLight(omni);
-    OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(10.f, 10.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 10000000));
+    //OpenGLPointLight* omni = new OpenGLPointLight(btVector3(-10.f, 10.f, 10.f), OpenGLLight::ColorFromTemperature(4500, 10000));
+    //OpenGLContent::getInstance()->AddLight(omni);
+    OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(-10.f, 10.f, 10.f), btVector3(0.f,0.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 10000));
     OpenGLContent::getInstance()->AddLight(spot);
     //spot = new OpenGLSpotLight(btVector3(10000.f, -12000.f, 5000.f), btVector3(5000.f,-5000.f,0.f), 30.f, OpenGLLight::ColorFromTemperature(5600, 500));
     //AddLight(spot);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 100.f, false);
+    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 0, 0.5f), 20.f, btVector3(0,0,1.f), 0, 0, FallingTestApp::getApp()->getWindowWidth(), FallingTestApp::getApp()->getWindowHeight(), 60.f, 1000.f, false);
     trackb->Rotate(btQuaternion(0.5, 0, 0));
     trackb->Activate();
     OpenGLContent::getInstance()->AddView(trackb);
+	
+	OpenGLCamera* camera = new OpenGLCamera(btVector3(5,5,2), btVector3(0,0,1), btVector3(0,0,1), 0, 0, 300, 200, 45.f, 1000.f, false);
+	camera->Activate();
+	OpenGLContent::getInstance()->AddView(camera);
 }

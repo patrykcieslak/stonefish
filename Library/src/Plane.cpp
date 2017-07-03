@@ -23,9 +23,8 @@ Plane::Plane(std::string uniqueName, btScalar planeSize, Material* mat, const bt
     rigidBody->setUserPointer(this);
     rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     
-	Mesh* mesh = OpenGLContent::BuildPlane(size/(GLfloat)2);
+	mesh = OpenGLContent::BuildPlane(size/(GLfloat)2);
 	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
-	delete mesh;
 }
 
 Plane::~Plane()

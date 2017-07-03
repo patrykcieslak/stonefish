@@ -24,6 +24,7 @@ public:
     LightType getType();
 	
     glm::vec3 getDirection();
+	glm::mat4 getClipSpace();
     GLfloat getAngle();
     
 private:
@@ -33,7 +34,7 @@ private:
     GLuint shadowMap;
     GLuint shadowFBO;
     GLuint shadowSize;
-    glm::mat4 lightClipSpace;
+    glm::mat4 clipSpace;
 };
 
 #endif

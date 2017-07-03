@@ -11,13 +11,10 @@
 
 #include "OpenGLPipeline.h"
 #include "GLSLShader.h"
-#include "Ocean.h"
 #include "SolidEntity.h"
 
-#define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1_EXT
-#define REFLECTION_ATTACHMENT   GL_COLOR_ATTACHMENT2_EXT
-#define REFRACTION_ATTACHMENT   GL_COLOR_ATTACHMENT3_EXT
-#define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0_EXT
+#define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1
+#define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0
 
 typedef struct
 {
@@ -48,18 +45,12 @@ public:
     void SetViewport();
     void SetProjection();
     void SetViewTransform();
-    //void SetReflectedViewTransform(Ocean* fluid);
-    //void SetRefractedViewTransform(Ocean* fluid);
-    //btTransform GetReflectedViewTransform(const Ocean* fluid);
-    //btTransform GetRefractedViewTransform(const Ocean* fluid);
     void ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
     btVector3 Ray(GLint x, GLint y);
 
     void Activate();
     void Deactivate();
     void RenderSSAO();
-    void RenderFluidSurface(Ocean* fluid, bool underwater);
-    void RenderFluidVolume(Ocean* fluid);
     void RenderHDR(GLuint destinationFBO);
     void ShowAmbientOcclusion(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
     
@@ -70,11 +61,8 @@ public:
     GLfloat GetNearClip();
     GLfloat GetFarClip();
     
-    GLuint getSceneFBO();
-    GLuint getFinalTexture();
-    GLuint getSceneTexture();
-    GLuint getSceneReflectionTexture();
-    GLuint getSceneRefractionTexture();
+    GLuint getRenderFBO();
+	GLuint getFinalTexture();
     GLuint getSSAOTexture();
     bool isActive();
     bool hasSSAO();
@@ -85,23 +73,27 @@ public:
     static GLuint getRandomTexture();
     
 protected:
-    GLuint sceneFBO;
-    GLuint finalTexture;
-    GLuint sceneTexture;
-    GLuint sceneReflectionTexture;
-    GLuint sceneRefractionTexture;
-    GLuint sceneDepthBuffer;
-    
+	//Multisampled float textures
+    GLuint renderFBO;
+    GLuint renderDepthStencil;
+    GLuint renderColorTex;
+	
+	//Float texture
+	GLuint lightMeterFBO;
+    GLuint lightMeterTex;
+	
+	//RGB8 textures
+	GLuint postprocessFBO;
+	GLuint postprocessTex[2];
+	int activePostprocessTexture;
+
     GLuint ssaoFBO;
     GLuint ssaoTexture;
     
     GLuint blurFBO;
     GLuint hBlurTexture;
     GLuint vBlurTexture;
-    
-    GLuint lightMeterFBO;
-    GLuint lightMeterTexture;
-    
+	
     GLint originX;
     GLint originY;
     GLint viewportWidth;
@@ -123,11 +115,7 @@ protected:
     static GLint normalTextureUnit;
     static GLint randomTextureUnit;
     static GLuint randomTexture;
-    
-    //fluid
-    static GLSLShader* fluidShader[4];
-    static GLuint waveNormalTexture;
-    
+  
     //tonemapping
     static GLSLShader* lightMeterShader;
     static GLSLShader* tonemapShader;

@@ -55,7 +55,6 @@ public:
     //Ambient light and shaders
     static void Init();
     static void Destroy();
-    static void SetTextureUnits(GLint diffuse, GLint normal, GLint position, GLint skyDiffuse, GLint skyReflection, GLint ssao, GLint shadow);
     static void SetCamera(OpenGLView* view);
     static void RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp);
     
@@ -71,11 +70,6 @@ protected:
     GLfloat surfaceDistance;
     
     static OpenGLView* activeView;
-    static GLSLShader* omniShader;
-    static GLSLShader* spotShader;
-    static GLSLShader* ambientShader;
-    static GLint diffuseTextureUnit, normalTextureUnit, positionTextureUnit, skyDiffuseTextureUnit, skyReflectionTextureUnit, ssaoTextureUnit, shadowTextureUnit;
-	
     static ColorSystem cs;
     static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
     static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);

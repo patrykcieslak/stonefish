@@ -42,7 +42,7 @@ float Uncharted2TonemapValue(float v)
 void main(void)
 {
     //Read textures
-    float lumAvg = 0.5;// texture2D(texAverage, vec2(0.5, 0.5)).x;
+    float lumAvg = 1.0;// texture2D(texAverage, vec2(0.5, 0.5)).x;
     vec3 rgbColor = texture2D(texHDR, texcoord).rgb;
     
     //Correct exposure and tonemap

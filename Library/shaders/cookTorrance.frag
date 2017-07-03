@@ -1,5 +1,5 @@
 /*
- * Implementation of a Blinn-Phong shading model
+ * Implementation of a Cook-Torrance shading model
  * 
  * Author: Patryk Cieslak
  * Copyright (c) 2017

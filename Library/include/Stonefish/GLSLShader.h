@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GLSLShader__
@@ -30,7 +30,7 @@ struct GLSLAttribute
 class GLSLShader
 {
 public:
-    GLSLShader(const char* fragment, const char* vertex = NULL); //NULL means standard SAQ
+    GLSLShader(std::string fragment, std::string vertex = ""); //NULL means standard SAQ
     ~GLSLShader();
     
     void Use();
@@ -67,7 +67,7 @@ private:
     bool valid;
     
     static GLuint saqVertexShader;
-    static GLuint LoadShader(GLenum shaderType, const char* filename, GLint* shaderCompiled);
+    static GLuint LoadShader(GLenum shaderType, std::string filename, GLint* shaderCompiled);
     static GLuint CreateProgram(GLuint vertexShader, GLuint fragmentShader);
 };
 
