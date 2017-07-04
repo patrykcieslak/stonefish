@@ -22,6 +22,7 @@
 #include "FeatherstoneEntity.h"
 #include "Ocean.h"
 #include "SystemEntity.h"
+#include "OpenGLTrackball.h"
 
 //Dynamic elements
 #include "Joint.h"
@@ -36,6 +37,7 @@
 
 typedef enum {DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
+typedef enum {TERRESTIAL, MARINE, CUSTOM} SimulationType;
 
 /*! 
     @class SimulationManager
@@ -46,7 +48,7 @@ class SimulationManager
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st = DANTZIG, CollisionFilteringType cft = STANDARD);
+    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = DANTZIG, CollisionFilteringType cft = STANDARD);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -118,8 +120,8 @@ protected:
     MaterialManager* materialManager;
     
 private:
-    //physics
     void InitializeSolver();
+    void InitializeScenario();
     
     btScalar sps;
     btScalar simulationTime;
@@ -146,8 +148,10 @@ private:
     Ocean* ocean;
     btScalar g;
     bool zUp;
+    SimulationType simType;
 
     //graphics
+    OpenGLTrackball* trackball;
     OpenGLDebugDrawer* debugDrawer;
 };
 

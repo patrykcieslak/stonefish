@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "SimulationManager.h"
@@ -20,18 +20,21 @@
 #include "SimulationApp.h"
 #include "SystemUtil.hpp"
 #include "OpenGLSky.h"
+#include "OpenGLTrackball.h"
 #include "SolidEntity.h"
 #include "Box.h"
 #include "StaticEntity.h"
 #include "CableEntity.h"
 #include "ForcefieldEntity.h"
 #include "Ocean.h"
+#include "Plane.h"
 
-SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
+SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
 {
     //Set coordinate system
     UnitSystem::SetUnitSystem(unitSystem, false);
-    zUp = zAxisUp;
+    simType = t;
+    zUp = simType == SimulationType::MARINE ? false : true;
     
     //Initialize simulation world
     setStepsPerSecond(stepsPerSecond);
@@ -48,6 +51,7 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
     ocean = NULL;
+    trackball = NULL;
     
     //Set IC solver params
     icProblemSolved = false;
@@ -461,10 +465,45 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
+void SimulationManager::InitializeScenario()
+{
+    switch(simType)
+    {
+        default:
+        case TERRESTIAL:
+        {
+            //Plane
+            getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
+            std::string path = GetDataPath() + "grid.png";
+            int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
+            
+            Plane* floor = new Plane("Ground", 1000.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), grid);
+            AddEntity(floor);
+        }
+            break;
+        
+        case MARINE:
+        {
+            //Ocean
+        }
+            break;
+            
+        case CUSTOM:
+            break;
+    }
+    
+    //Standard trackball
+    trackball = new OpenGLTrackball(btVector3(0,0,0), 10.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, false);
+    trackball->Rotate(btQuaternion(0.5, 0, 0));
+    trackball->Activate();
+    OpenGLContent::getInstance()->AddView(trackball);
+}
+
 void SimulationManager::RestartScenario()
 {
     DestroyScenario();
     InitializeSolver();
+    InitializeScenario();
     BuildScenario();
 }
 

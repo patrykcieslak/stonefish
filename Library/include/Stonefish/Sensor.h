@@ -12,7 +12,7 @@
 #include "UnitSystem.h"
 #include "NameManager.h"
 
-typedef enum {SENSOR_SIMPLE} SensorType;
+typedef enum {SENSOR_SIMPLE, SENSOR_CAMERA, SENSOR_LIGHT} SensorType;
 
 //Abstract class
 class Sensor

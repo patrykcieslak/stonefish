@@ -24,6 +24,7 @@
       <File Name="src/Thruster.cpp"/>
       <File Name="src/Motor.cpp"/>
       <File Name="src/DCMotor.cpp"/>
+      <File Name="src/Light.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
       <File Name="src/Controller.cpp"/>
@@ -117,7 +118,9 @@
         <File Name="src/RotaryEncoder.cpp"/>
         <File Name="src/TrueRotaryEncoder.cpp"/>
       </VirtualDirectory>
-      <VirtualDirectory Name="advanced"/>
+      <VirtualDirectory Name="advanced">
+        <File Name="src/Camera.cpp"/>
+      </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
       <File Name="src/ScientificFileUtil.cpp"/>
@@ -157,7 +160,9 @@
       <File Name="include/Stonefish/Contact.h"/>
       <File Name="include/Stonefish/Mux.h"/>
       <File Name="include/Stonefish/Sample.h"/>
-      <VirtualDirectory Name="advanced"/>
+      <VirtualDirectory Name="advanced">
+        <File Name="include/Stonefish/Camera.h"/>
+      </VirtualDirectory>
       <VirtualDirectory Name="simple">
         <File Name="include/Stonefish/Accelerometer.h"/>
         <File Name="include/Stonefish/ADC.h"/>
@@ -211,6 +216,7 @@
       <File Name="include/Stonefish/DCMotor.h"/>
       <File Name="include/Stonefish/Motor.h"/>
       <File Name="include/Stonefish/Thruster.h"/>
+      <File Name="include/Stonefish/Light.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
       <File Name="include/Stonefish/Controller.h"/>
@@ -236,10 +242,10 @@
       <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>
       <File Name="include/Stonefish/NameManager.h"/>
       <File Name="include/Stonefish/SimulationApp.h"/>
-      <File Name="include/Stonefish/SimulationManager.h"/>
       <File Name="include/Stonefish/UnitSystem.h"/>
       <File Name="include/Stonefish/TorusShape.h"/>
       <File Name="include/Stonefish/MaterialManager.h"/>
+      <File Name="include/Stonefish/SimulationManager.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>

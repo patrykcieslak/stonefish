@@ -86,7 +86,7 @@ void main(void)
     vec3 eye_position = vec3(0.0, surface_height, 0.0);
     float eye_depth = atmospheric_depth(eye_position, eyedir);
     float step_length = eye_depth/float(step_count);
-    float eye_extinction = horizon_extinction(eye_position, eyedir, surface_height-0.05);
+    float eye_extinction = horizon_extinction(eye_position, eyedir, surface_height-0.01);
         
     vec3 rayleigh_collected = vec3(0.0, 0.0, 0.0);
     vec3 mie_collected = vec3(0.0, 0.0, 0.0);
@@ -95,7 +95,7 @@ void main(void)
     {
         float sample_distance = step_length*float(i);
         vec3 position = eye_position + eyedir*sample_distance;
-        float extinction = horizon_extinction(position, lightdir, surface_height-0.05);
+        float extinction = horizon_extinction(position, lightdir, surface_height-0.01);
         float sample_depth = atmospheric_depth(position, lightdir);
         vec3 influx = absorb(sample_depth, vec3(intensity), scatter_strength)*extinction;
         rayleigh_collected += absorb(sample_distance, Kr*influx, rayleigh_strength);

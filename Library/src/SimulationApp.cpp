@@ -357,25 +357,56 @@ void SimulationApp::EventLoop()
                 }
                     
                 case SDL_MOUSEBUTTONDOWN:
+                {
                     IMGUI::getInstance()->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
                     mouseWasDown = true;
+                }
                     break;
                     
                 case SDL_MOUSEBUTTONUP:
+                {
+                    //GUI
                     IMGUI::getInstance()->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
+                    
+                    //Trackball
+                    OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+                    trackball->MouseUp();
+                    
+                    //Pass
                     MouseUp(&event);
+                }
                     break;
                     
                 case SDL_MOUSEMOTION:
+                {
+                    //GUI
                     IMGUI::getInstance()->MouseMove(event.motion.x, event.motion.y);
+                    
+                    //Trackball
+                    GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+                    GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+                    OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+                    trackball->MouseMove(xPos, yPos);
+    
+                    //Pass
                     MouseMove(&event);
+                }
                     break;
                     
                 case SDL_MOUSEWHEEL:
-                    if(displayConsole)
+                {
+                    if(displayConsole) //GUI
                         Console::getInstance()->Scroll((GLfloat)-event.wheel.y);
                     else
+                    {
+                        //Trackball
+                        OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+                        trackball->MouseScroll(event.wheel.y * -1.f);
+                        
+                        //Pass
                         MouseScroll(&event);
+                    }
+                }
                     break;
                     
                 case SDL_JOYBUTTONDOWN:
@@ -410,6 +441,14 @@ void SimulationApp::EventLoop()
         if(mouseWasDown && !IMGUI::getInstance()->isAnyActive())
         {
             lastPicked = simulation->PickEntity(event.button.x, event.button.y);
+            
+            //Trackball
+            GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+            GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+            OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            trackball->MouseDown(xPos, yPos);
+            
+            //Pass
             MouseDown(&event);
         }
         mouseWasDown = false;
