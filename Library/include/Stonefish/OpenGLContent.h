@@ -73,14 +73,6 @@ struct Look
     glm::vec3 color;
     std::vector<GLfloat> params;
     std::vector<GLuint> textures;
-    
-    Look()
-    {
-        type = LookType::SIMPLE;
-        color = glm::vec3(0.5f,0.5f,0.5f);
-        params.push_back(0);
-		params.push_back(0);
-    }
 };
 
 class OpenGLView;

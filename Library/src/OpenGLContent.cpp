@@ -253,8 +253,8 @@ void OpenGLContent::Init()
 	cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
 	cookTorrance->AddUniform("color", ParameterType::VEC4);
 	cookTorrance->AddUniform("tex", ParameterType::INT);
-	cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
 	cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
+    cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
 	
 	cookTorrance->AddUniform("numPointLights", ParameterType::INT);
 	cookTorrance->AddUniform("numSpotLights", ParameterType::INT);

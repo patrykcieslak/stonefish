@@ -25,7 +25,7 @@ vec3 shadingModel(vec3 toEye, vec3 toLight, vec3 albedo)
 {
 	vec3 halfway = normalize(toEye + toLight);
 	float diffuse = max(dot(normal, toLight), 0.0);
-	float specular = pow(max(dot(normal, halfway), 0.0), shininess+1.0) * specularStrength;
+	float specular = pow(max(dot(normal, halfway), 0.0), shininess) * specularStrength;
 	return (diffuse+specular)*albedo;
 }
 
