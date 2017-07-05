@@ -318,7 +318,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			//sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
             
 			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.05);
-           
+			//OpenGLSun::getInstance()->ShowFrustumSplits();
+		   
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             
             delete viewport;

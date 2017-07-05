@@ -95,7 +95,7 @@ glm::vec4 OpenGLSun::GetSunColor()
 //Computes the near and far distances for every frustum slice in camera eye space
 void OpenGLSun::UpdateSplitDist(GLfloat nd, GLfloat fd)
 {
-	GLfloat lambda = 0.8f;
+	GLfloat lambda = 0.95f;
 	GLfloat ratio = fd/nd;
 	frustum[0].near = nd;
     
@@ -108,7 +108,6 @@ void OpenGLSun::UpdateSplitDist(GLfloat nd, GLfloat fd)
 	}
     
 	frustum[shadowmapSplits-1].far = fd;
-    
     //for(int i=0; i<shadowmapSplits; i++) printf("Frustum%d Near: %f Far: %f\n", i, frustum[i].near, frustum[i].far);
 }
 

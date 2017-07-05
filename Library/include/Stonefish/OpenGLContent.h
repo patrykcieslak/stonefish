@@ -65,7 +65,7 @@ struct Object
 };
 
 //Rendering styles
-typedef enum {SIMPLE, PHYSICAL, METAL, MIRROR, TRANSPARENT} LookType;
+typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
 
 struct Look
 {
@@ -113,7 +113,7 @@ public:
     void AddLight(OpenGLLight* light);
 	unsigned int BuildObject(Mesh* mesh);
 	unsigned int CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, std::string textureName = "");
-	unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, std::string textureName = "");
+	unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metallic = 0.f, std::string textureName = "");
 	void UseLook(unsigned int lookId, const glm::mat4& M);
 	
 	OpenGLView* getView(unsigned int id);

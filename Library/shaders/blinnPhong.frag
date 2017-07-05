@@ -16,17 +16,17 @@ uniform vec3 eyePos;
 uniform vec3 viewDir;
 uniform vec4 color;
 uniform sampler2D tex;
+
+//Blinn-Phong model
 uniform float shininess;
 uniform float specularStrength;
 
-float modelDiffuse(vec3 toLight)
+vec3 shadingModel(vec3 toEye, vec3 toLight, vec3 albedo)
 {
-	return max(dot(normal, toLight), 0.0);
-}
-
-float modelSpecular(vec3 halfwayDir)
-{
-	return pow(max(dot(normal, halfwayDir), 0.0), shininess+1.0) * specularStrength;
+	vec3 halfway = normalize(toEye + toLight);
+	float diffuse = max(dot(normal, toLight), 0.0);
+	float specular = pow(max(dot(normal, halfway), 0.0), shininess+1.0) * specularStrength;
+	return (diffuse+specular)*albedo;
 }
 
 #inject "commonLights.frag"
@@ -35,22 +35,22 @@ void main()
 {	
 	//Common
 	vec3 toEye = normalize(eyePos - fragPos);
-	//Ambient
-	vec3 irradiance = texture(texSkyDiffuse, vec3(normal.x, normal.z, -normal.y)).rgb;
-	//Sun
-	irradiance += calcSunContribution(toEye);
-	//Point lights
-	for(int i=0; i<numPointLights; ++i)
-		irradiance += calcPointLightContribution(i, toEye);
-	//Spot lights
-	for(int i=0; i<numSpotLights; ++i)
-		irradiance += calcSpotLightContribution(i, toEye);
-	//Final composition	
+	
+	vec3 albedo = color.rgb;
 	if(color.a > 0.0)
 	{
 		vec4 texColor = texture(tex, texCoord);
-		fragColor = irradiance * mix(color.rgb, texColor.rgb, color.a*texColor.a);
+		albedo = mix(color.rgb, texColor.rgb, color.a*texColor.a);
 	}
-	else
-		fragColor = irradiance * color.rgb;
+	
+	//Ambient
+	fragColor = texture(texSkyDiffuse, vec3(normal.x, normal.z, -normal.y)).rgb * albedo;
+	//Sun
+	fragColor += calcSunContribution(toEye, albedo);
+	//Point lights
+	for(int i=0; i<numPointLights; ++i)
+		fragColor += calcPointLightContribution(i, toEye, albedo);
+	//Spot lights
+	for(int i=0; i<numSpotLights; ++i)
+		fragColor += calcSpotLightContribution(i, toEye, albedo);
 }

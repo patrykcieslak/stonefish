@@ -244,6 +244,50 @@ void OpenGLContent::Init()
 	blinnPhong->AddUniform("texSkyDiffuse", ParameterType::INT);
 	
 	materialShaders.push_back(blinnPhong);
+	
+	GLSLShader* cookTorrance = new GLSLShader("cookTorrance.frag", "object.vert");
+	cookTorrance->AddUniform("MVP", ParameterType::MAT4);
+	cookTorrance->AddUniform("M", ParameterType::MAT4);
+	cookTorrance->AddUniform("N", ParameterType::MAT3);
+	cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
+	cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
+	cookTorrance->AddUniform("color", ParameterType::VEC4);
+	cookTorrance->AddUniform("tex", ParameterType::INT);
+	cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
+	cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
+	
+	cookTorrance->AddUniform("numPointLights", ParameterType::INT);
+	cookTorrance->AddUniform("numSpotLights", ParameterType::INT);
+	
+	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+	{
+		std::string lightUni = "pointLights[" + std::to_string(i) + "].";
+		cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+		cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
+	}
+	
+	for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+	{
+		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
+		cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+		cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
+		cookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
+		cookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+		cookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
+		cookTorrance->AddUniform(lightUni + "shadowMap", ParameterType::INT);
+	}
+	
+	cookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
+	cookTorrance->AddUniform("sunColor", ParameterType::VEC4);
+	cookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
+	cookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
+	cookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
+	cookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
+	cookTorrance->AddUniform("sunFrustumFar", ParameterType::VEC4);
+	cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
+	cookTorrance->AddUniform("texSkyDiffuse", ParameterType::INT);
+	
+	materialShaders.push_back(cookTorrance);
 }
 
 void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
@@ -504,6 +548,34 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 		}
 			break;
 			
+		case PHYSICAL: //Cook-Torrance
+		{
+			shader = materialShaders[1];
+			shader->Use();
+			shader->SetUniform("MVP", viewProjection*M);
+			shader->SetUniform("M", M);
+			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+			shader->SetUniform("eyePos", eyePos);
+			shader->SetUniform("viewDir", viewDir);
+			shader->SetUniform("roughness", l.params[0]);
+			shader->SetUniform("metallic", l.params[1]);
+			shader->SetUniform("tex", TEX_BASE);
+			
+			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+			glEnable(GL_TEXTURE_2D);
+			if(l.textures.size() > 0)
+			{
+				glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+				shader->SetUniform("color", glm::vec4(l.color, 1.f));
+			}
+			else
+			{
+				glBindTexture(GL_TEXTURE_2D, 0);
+				shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+			}
+		}
+			break;
+			
 		default:
 			break;
 	}
@@ -572,6 +644,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, std::string textureName)
 {
     Look look;
+	look.type = LookType::SIMPLE;
     look.color = rgbColor;
 	look.params.push_back(specular);
 	look.params.push_back(shininess);
@@ -584,8 +657,20 @@ unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specula
 	return looks.size()-1;
 }
 
-unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat diffuseReflectance, GLfloat roughness, GLfloat IOR, std::string textureName)
+unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metallic, std::string textureName)
 {
+	Look look;
+	look.type = LookType::PHYSICAL;
+	look.color = rgbColor;
+	look.params.push_back(roughness);
+	look.params.push_back(metallic);
+	
+	if(textureName != "")
+		look.textures.push_back(LoadTexture(textureName));
+		
+	looks.push_back(look);
+	
+	return looks.size()-1;
 }
 
 void OpenGLContent::AddView(OpenGLView* view)

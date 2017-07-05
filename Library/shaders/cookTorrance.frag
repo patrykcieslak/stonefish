@@ -16,17 +16,74 @@ uniform vec3 eyePos;
 uniform vec3 viewDir;
 uniform vec4 color;
 uniform sampler2D tex;
-uniform float shininess;
-uniform float specularStrength;
 
-float modelDiffuse(vec3 toLight)
+//Cook-Torrance model
+uniform float metallic;
+uniform float roughness;
+
+const float PI = 3.14159265359;
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
-	return max(dot(normal, toLight), 0.0);
+	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-float modelSpecular(vec3 halfwayDir)
+float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-	return pow(max(dot(normal, halfwayDir), 0.0), shininess+1.0) * specularStrength;
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+	
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+	
+    return nom / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+	
+    return nom / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+	
+    return ggx1 * ggx2;
+}
+
+vec3 shadingModel(vec3 toEye, vec3 toLight, vec3 albedo)
+{
+	vec3 halfway = normalize(toEye + toLight);
+	
+	vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+	
+	float NDF = DistributionGGX(normal, halfway, roughness);        
+	float G = GeometrySmith(normal, toEye, toLight, roughness);      
+	vec3 F = fresnelSchlick(max(dot(halfway, toEye), 0.0), F0);       
+        
+	vec3 kS = F;
+	vec3 kD = vec3(1.0) - kS;
+	kD *= 1.0 - metallic;	  
+        
+	vec3 nominator = NDF * G * F;
+	float NdotL = max(dot(normal, toLight), 0.0);                
+	float denominator = 4 * max(dot(normal, toEye), 0.0) * NdotL + 0.001; 
+	vec3 specular = nominator/denominator;
+            
+    return (kD * albedo / PI + specular) * NdotL;
 }
 
 #inject "commonLights.frag"
@@ -35,22 +92,22 @@ void main()
 {	
 	//Common
 	vec3 toEye = normalize(eyePos - fragPos);
-	//Ambient
-	vec3 irradiance = texture(texSkyDiffuse, vec3(normal.x, normal.z, -normal.y)).rgb;
-	//Sun
-	irradiance += calcSunContribution(toEye);
-	//Point lights
-	for(int i=0; i<numPointLights; ++i)
-		irradiance += calcPointLightContribution(i, toEye);
-	//Spot lights
-	for(int i=0; i<numSpotLights; ++i)
-		irradiance += calcSpotLightContribution(i, toEye);
-	//Final composition	
+	
+	vec3 albedo = color.rgb;
 	if(color.a > 0.0)
 	{
 		vec4 texColor = texture(tex, texCoord);
-		fragColor = irradiance * mix(color.rgb, texColor.rgb, color.a*texColor.a);
+		albedo = mix(color.rgb, texColor.rgb, color.a*texColor.a);
 	}
-	else
-		fragColor = irradiance * color.rgb;
+	
+	//Ambient
+	fragColor = texture(texSkyDiffuse, vec3(normal.x, normal.z, -normal.y)).rgb * albedo;
+	//Sun
+	fragColor += calcSunContribution(toEye, albedo);
+	//Point lights
+	for(int i=0; i<numPointLights; ++i)
+		fragColor += calcPointLightContribution(i, toEye, albedo);
+	//Spot lights
+	for(int i=0; i<numSpotLights; ++i)
+		fragColor += calcSpotLightContribution(i, toEye, albedo);
 }
