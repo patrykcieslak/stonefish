@@ -14,7 +14,7 @@
 class Obstacle : public StaticEntity
 {
 public:
-    Obstacle(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, const btTransform& worldTransform, int lookId = -1, bool smoothNormals = false);
+    Obstacle(std::string uniqueName, const char* modelFilename, btScalar scale, Material m, const btTransform& worldTransform, int lookId = -1, bool smoothNormals = false);
     ~Obstacle();
     
     StaticEntityType getStaticType();

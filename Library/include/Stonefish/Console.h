@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Console__
@@ -30,7 +30,7 @@ class Console
 {
 public:
 	void Init(GLuint w, GLuint h);
-    void Render(bool overlay, GLfloat dt);
+    void Render(bool overlay);
     void Clear();
     void Print(int messageType, const char* format, ...);
     void Scroll(GLfloat amount);
@@ -55,6 +55,7 @@ private:
     GLfloat scrollOffset;
     GLfloat scrollVelocity;
 	bool ready;
+	int64_t lastTime;
     
     static Console* instance;
 };

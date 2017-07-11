@@ -23,7 +23,7 @@ class SolidEntity : public Entity
     friend class FeatherstoneEntity;
     
 public:
-    SolidEntity(std::string uniqueName, Material* mat, int lookId = -1);
+    SolidEntity(std::string uniqueName, Material m, int lookId = -1);
     virtual ~SolidEntity();
     
     EntityType getType();
@@ -54,7 +54,7 @@ public:
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
     btVector3 getMomentsOfInertia();
     btScalar getMass();
-    Material* getMaterial();
+    Material getMaterial();
     btScalar getVolume();
     btVector3 getDragCoefficients();
     btTransform getTransform() const;
@@ -79,7 +79,7 @@ protected:
     
     //Properties
 	Mesh *mesh;
-    Material* material;
+    Material mat;
     btScalar mass;
     btVector3 Ipri;  //Principal moments of inertia
     btScalar thickness;

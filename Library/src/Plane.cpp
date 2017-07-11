@@ -10,7 +10,7 @@
 
 #include "SimulationApp.h"
 
-Plane::Plane(std::string uniqueName, btScalar planeSize, Material* mat, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, mat, lookId)
+Plane::Plane(std::string uniqueName, btScalar planeSize, Material m, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     size = UnitSystem::SetLength(planeSize);
     

@@ -14,7 +14,7 @@
 class Polyhedron : public SolidEntity
 {
 public:
-    Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, int lookId = -1, bool smoothNormals = true);
+    Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material m, int lookId = -1, bool smoothNormals = true);
 	~Polyhedron();
     
     SolidEntityType getSolidType();

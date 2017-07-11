@@ -9,11 +9,11 @@
 #include "SolidEntity.h"
 #include "GeometryUtil.hpp"
 
-SolidEntity::SolidEntity(std::string uniqueName, Material* mat, int _lookId) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
     Ipri = btVector3(0,0,0);
     mass = 0;
-    material = mat;
+    mat = m;
 	volume = 0;
     dragCoeff = btVector3(0,0,0);
     centerOfBuoyancy = btVector3(0,0,0);
@@ -42,7 +42,6 @@ SolidEntity::~SolidEntity()
 		mesh = NULL;
 	}
 	
-    material = NULL;
     rigidBody = NULL;
     multibodyCollider = NULL;
 }
@@ -271,9 +270,9 @@ btScalar SolidEntity::getMass()
     return mass;
 }
 
-Material* SolidEntity::getMaterial()
+Material SolidEntity::getMaterial()
 {
-    return material;
+    return mat;
 }
 
 void SolidEntity::BuildGraphicalObject()

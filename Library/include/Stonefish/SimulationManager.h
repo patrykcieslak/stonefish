@@ -101,7 +101,7 @@ public:
     btScalar getSimulationTime();
     MaterialManager* getMaterialManager();
     bool isZAxisUp();
-    
+    bool isSimulationFresh();
     bool drawCameraDummies;
     bool drawLightDummies;
     
@@ -122,7 +122,7 @@ protected:
 private:
     void InitializeSolver();
     void InitializeScenario();
-    
+	
     btScalar sps;
     btScalar simulationTime;
     uint64_t currentTime;
@@ -130,14 +130,17 @@ private:
     uint64_t ssus;
     SolverType solver;
     CollisionFilteringType collisionFilter;
-    bool icProblemSolved;
-    bool icUseGravity;
-    btScalar icTimeStep;
+    
+	bool icUseGravity;
+	btScalar icTimeStep;
     unsigned int icMaxIter;
     btScalar icMaxTime;
     btScalar icLinTolerance;
     btScalar icAngTolerance;
     unsigned int mlcpFallbacks;
+    
+	bool icProblemSolved;
+	bool simulationFresh;
     
     std::vector<Entity*> entities;
     std::vector<Joint*> joints;

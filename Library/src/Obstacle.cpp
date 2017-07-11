@@ -8,7 +8,7 @@
 
 #include "Obstacle.h"
 
-Obstacle::Obstacle(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, const btTransform& worldTransform, int lookId, bool smoothNormals) : StaticEntity(uniqueName, mat, lookId)
+Obstacle::Obstacle(std::string uniqueName, const char* modelFilename, btScalar scale, Material m, const btTransform& worldTransform, int lookId, bool smoothNormals) : StaticEntity(uniqueName, m, lookId)
 {
     //Load mesh
     scale = UnitSystem::SetLength(scale);

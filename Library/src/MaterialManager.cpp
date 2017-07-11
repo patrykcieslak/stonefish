@@ -3,10 +3,11 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "MaterialManager.h"
+#include "Console.h"
 
 MaterialManager::MaterialManager()
 {
@@ -21,32 +22,40 @@ void MaterialManager::ClearMaterialsAndFluids()
 {
     materials.clear();
     fluids.clear();
+	interactions.clear();
     materialNameManager.ClearNames();
     fluidNameManager.ClearNames();
 }
 
 std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar density, btScalar restitution)
 {
+	//Create and add new material
     Material mat;
-    mat.index = (int)materials.size();
     mat.name = materialNameManager.AddName(uniqueName);
     mat.density = UnitSystem::SetDensity(density);
     mat.restitution = restitution;
-    
-    for(int i = 0; i <= mat.index; i++)
-    {
-        mat.staticFriction.push_back(btScalar(1.));
-        mat.dynamicFriction.push_back(btScalar(1.));
-    }
-    
-    for(int i = 0; i < mat.index; i++)
-    {
-        materials[i].staticFriction.push_back(btScalar(1.));
-        materials[i].dynamicFriction.push_back(btScalar(1.));
-    }
-    
     materials.push_back(mat);
+	
+	cInfo("Material %s (%d) created.", mat.name.c_str(), materials.size()-1);
     
+	//Set initial friction coefficients
+	Friction f;
+	f.fStatic = btScalar(1);
+	f.fDynamic = btScalar(1);
+	
+	MaterialPair p;
+	p.mat1Id = materials.size()-1;
+	
+	for(unsigned int i=0; i < materials.size(); ++i)
+	{
+		p.mat2Id = i;
+		interactions.insert({p,f});
+	}
+	
+	//Display interactions
+	//for(std::pair<MaterialPair, Friction> element : interactions)
+	//	std::cout << "(" << element.first.mat1Id << "," << element.first.mat2Id << ")" << std::endl;
+
     return mat.name;
 }
 
@@ -64,53 +73,86 @@ std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar densit
 
 bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, btScalar staticFricCoeff, btScalar dynamicFricCoeff)
 {
-    int index1 = getMaterialIndex(firstMaterialName);
-    int index2 = getMaterialIndex(secondMaterialName);
-    
-    if(index1 < 0 || index2 < 0)
-        return false;
-    
-    materials[index1].staticFriction[index2] = staticFricCoeff;
-    materials[index2].staticFriction[index1] = staticFricCoeff;
-    materials[index1].dynamicFriction[index2] = dynamicFricCoeff;
-    materials[index2].dynamicFriction[index1] = dynamicFricCoeff;
-    return true;
+    MaterialPair p;
+	p.mat1Id = getMaterialIndex(firstMaterialName);
+	p.mat2Id = getMaterialIndex(secondMaterialName);
+	
+	Friction f;
+	f.fStatic = staticFricCoeff;
+	f.fDynamic = dynamicFricCoeff;
+	
+	try
+	{
+		interactions.at(p) = f;
+		return true;
+	}
+	catch(const std::out_of_range& e)
+	{
+		cError("Material pair (%s,%s) not found!", firstMaterialName.c_str(), secondMaterialName.c_str());
+		return false;
+	}
+}
+
+Friction MaterialManager::GetMaterialsInteraction(int mat1Index, int mat2Index)
+{
+	MaterialPair p;
+	p.mat1Id = mat1Index;
+	p.mat2Id = mat2Index;
+		
+	try
+	{
+		Friction f = interactions.at(p);
+		return f;
+	}
+	catch(const std::out_of_range& e)
+	{
+		cError("Material pair (%d,%d) not found!", mat1Index, mat2Index);
+		
+		Friction f;
+		f.fStatic = btScalar(1);
+		f.fDynamic = btScalar(2);
+		
+		return f;
+	}
+}
+
+Friction MaterialManager::GetMaterialsInteraction(std::string mat1Name, std::string mat2Name)
+{
+	return GetMaterialsInteraction(getMaterialIndex(mat1Name), getMaterialIndex(mat2Name));
 }
 
 int MaterialManager::getMaterialIndex(std::string name)
 {
-    for(int i=0; i<materials.size(); i++)
-        if(materials[i].name.compare(name) == 0)
+    for(unsigned int i=0; i<materials.size(); ++i)
+        if(materials[i].name == name)
             return i;
     
+	cError("Wrong material name %s!", name.c_str());
     return -1;
 }
 
-Material* MaterialManager::getMaterial(std::string name)
+Material MaterialManager::getMaterial(std::string name)
 {
-    int index = getMaterialIndex(name);
+	for(unsigned int i=0; i<materials.size(); ++i)
+        if(materials[i].name == name)
+			return materials[i];
     
-    if(index >= 0)
-        return &materials[index];
-    else
-        return NULL;
+	return materials[0];
 }
 
-Material* MaterialManager::getMaterial(int index)
+Material MaterialManager::getMaterial(int index)
 {
-    if(index >= 0 && index < materials.size())
-        return &materials[index];
+	if(index >= 0 && index < materials.size())
+        return materials[index];
     else
-        return NULL;
+        return materials[0];
 }
 
 Fluid* MaterialManager::getFluid(std::string name)
 {
-    for(int i=0; i<fluids.size(); i++)
-    {
-        if(fluids[i].name.compare(name) == 0)
+    for(unsigned int i=0; i<fluids.size(); ++i)
+        if(fluids[i].name == name)
             return &fluids[i];
-    }
     
     return NULL;
 }

@@ -22,6 +22,7 @@ Console::Console()
 	texQuadVBO = 0;
 	texQuadShader = NULL;
 	linesMutex = SDL_CreateMutex();
+	lastTime = 0;
 }
 
 Console::~Console()
@@ -97,12 +98,12 @@ void Console::Init(GLuint w, GLuint h)
 	texQuadShader->AddUniform("color", ParameterType::VEC4);
 	
 	ready = true;
+	lastTime = GetTimeInMicroseconds();
 }
 
 void Console::Scroll(GLfloat amount)
 {
-    scrollOffset += 1.f * amount;
-    scrollVelocity = 25.f * amount;
+    scrollVelocity += 25.f * amount;
 }
 
 void Console::ResetScroll()
@@ -111,8 +112,12 @@ void Console::ResetScroll()
     scrollVelocity = 0.f;
 }
 
-void Console::Render(bool overlay, GLfloat dt)
+void Console::Render(bool overlay)
 {
+	int64_t now = GetTimeInMicroseconds();
+	GLfloat dt = (lastTime-now)/1000000.f;
+	lastTime = now;
+	
     if(lines.size() == 0)
         return;
     
@@ -145,15 +150,27 @@ void Console::Render(bool overlay, GLfloat dt)
         if(scrollVelocity != 0.f) //velocity damping (momentum effect)
         {
             scrollOffset += scrollVelocity * dt;
-            GLfloat dampingAcc = -scrollVelocity * 3.f;
+            GLfloat dampingAcc = scrollVelocity * 1.f;
             scrollVelocity += dampingAcc * dt;
         }
         
         //springy effect
         if(scrollOffset > 0.f) //the list is scrolled up too much
-            scrollVelocity -= scrollOffset * 5.f * dt;
+		{
+			GLfloat newVelocity = scrollVelocity - scrollOffset * 10.f * dt;
+            if(newVelocity > 0.f)
+				scrollVelocity = scrollOffset * 2.f;
+			else
+				scrollVelocity = newVelocity;
+		}
         else if(visibleLines < (maxVisibleLines - 1)) //the list is scrolled down too much
-            scrollVelocity += (1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 1)) * (GLfloat)windowH * 5.f * dt;
+		{
+			GLfloat newVelocity = scrollVelocity + (1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 2)) * (GLfloat)windowH * 10.f * dt;
+			if(newVelocity < 0.f)
+				scrollVelocity = -((1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 1)) * (GLfloat)windowH) * 2.f; 
+			else
+				scrollVelocity = newVelocity;
+		}
     }
     
     //Setup viewport and ortho

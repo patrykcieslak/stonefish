@@ -36,13 +36,19 @@ void FallingTestManager::BuildScenario()
     setICSolverParams(false);
 	
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Steel", 1000.0, 0.5);
+	getMaterialManager()->CreateMaterial("Steel", 1000.0, 0.5);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
     ///////LOOKS///////////
-    /*int color = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 0.5f, 0.1f), 0.1f, 0.1f);
+	//std::string path = GetDataPath() + "grid.png";
+    //int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
+            
+    //Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), grid);
+    //AddEntity(floor);
+	
+	/*int color = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 0.5f, 0.1f), 0.1f, 0.1f);
     
 	////////OBJECTS
 	Sphere* vehicle = new Sphere("Vehicle", 1., getMaterialManager()->getMaterial("Steel"), color);
@@ -59,7 +65,7 @@ void FallingTestManager::BuildScenario()
 	manip->AddRotLinkDH(link3, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
 	AddEntity(manip);*/
 	
-    for(int i=0; i<=10; ++i)
+    for(int i=0; i<=5; ++i)
     {
         int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(i/10.f,1.f,0.f), i/10.f, 0.0f);
         Sphere* sph = new Sphere("Sph" + std::to_string(i), 0.25, getMaterialManager()->getMaterial("Steel"), lookId);

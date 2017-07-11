@@ -19,7 +19,7 @@ typedef enum {STATIC_PLANE, STATIC_TERRAIN, STATIC_OBSTACLE} StaticEntityType;
 class StaticEntity : public Entity
 {
 public:
-    StaticEntity(std::string uniqueName, Material* mat, int lookId = -1);
+    StaticEntity(std::string uniqueName, Material m, int lookId = -1);
     ~StaticEntity();
     
     void Render();
@@ -30,7 +30,7 @@ public:
     EntityType getType();
     virtual void GetAABB(btVector3& min, btVector3& max);
     
-    Material* getMaterial();
+    Material getMaterial();
     btRigidBody* getRigidBody();
     
     virtual StaticEntityType getStaticType() = 0;
@@ -41,7 +41,7 @@ protected:
 	Mesh* mesh;
     
 private:
-    Material* material;
+    Material mat;
     int lookId;
     bool wireframe;
 };

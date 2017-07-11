@@ -9,7 +9,7 @@
 #include "Polyhedron.h"
 #include "SystemUtil.hpp"
 
-Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material* mat, int lookId, bool smoothNormals) : SolidEntity(uniqueName, mat, lookId)
+Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : SolidEntity(uniqueName, m, lookId)
 {
     scale = UnitSystem::SetLength(scale);
     
@@ -74,12 +74,12 @@ Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScal
         Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
     }
     
-    Pxx *= material->density / btScalar(120); //20 from formula and 6 from polyhedron volume
-    Pyy *= material->density / btScalar(120);
-    Pzz *= material->density / btScalar(120);
-    Pxy *= material->density / btScalar(120);
-    Pxz *= material->density / btScalar(120);
-    Pyz *= material->density / btScalar(120);
+    Pxx *= mat.density / btScalar(120); //20 from formula and 6 from polyhedron volume
+    Pyy *= mat.density / btScalar(120);
+    Pzz *= mat.density / btScalar(120);
+    Pxy *= mat.density / btScalar(120);
+    Pxz *= mat.density / btScalar(120);
+    Pyz *= mat.density / btScalar(120);
     
     btMatrix3x3 I = btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
     
@@ -107,7 +107,7 @@ Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScal
     
     //7.Calculate AABB
     OpenGLContent::AABB(mesh, aabb[0], aabb[1]);
-    mass = volume*material->density;
+    mass = volume*mat.density;
 }
 
 Polyhedron::~Polyhedron(void)

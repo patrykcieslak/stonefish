@@ -271,7 +271,8 @@ void SimulationApp::KeyDown(SDL_Event *event)
             
         case SDLK_SPACE:
             lastPicked = NULL;
-            getSimulationManager()->RestartScenario();
+			if(!getSimulationManager()->isSimulationFresh())
+				getSimulationManager()->RestartScenario();
             StartSimulation();
             break;
             
@@ -473,7 +474,7 @@ void SimulationApp::AppLoop()
     if(displayConsole)
     {
         IMGUI::getInstance()->GenerateBackground();
-        Console::getInstance()->Render(true, getPhysicsTime()+getDrawingTime());
+        Console::getInstance()->Render(true);
     }
     else
     {
@@ -599,7 +600,7 @@ int SimulationApp::RenderLoadingScreen(void* data)
         
         //Lock to prevent adding lines to the console while rendering
         SDL_LockMutex(ltdata->mutex);
-        Console::getInstance()->Render(false, 0);
+        Console::getInstance()->Render(false);
         SDL_UnlockMutex(ltdata->mutex);
         
         glFlush();

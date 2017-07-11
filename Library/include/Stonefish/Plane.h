@@ -16,7 +16,7 @@
 class Plane : public StaticEntity
 {
 public:
-    Plane(std::string uniqueName, btScalar size, Material* mat, const btTransform& worldTransform, int lookId = -1);
+    Plane(std::string uniqueName, btScalar size, Material m, const btTransform& worldTransform, int lookId = -1);
     ~Plane();
     
     void GetAABB(btVector3& min, btVector3& max);

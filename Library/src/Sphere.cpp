@@ -15,14 +15,14 @@
  *  \param mat pointer to a physical material
  *  \param l rendering style
  */
-Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material* mat, int lookId) : SolidEntity(uniqueName, mat, lookId)
+Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId) : SolidEntity(uniqueName, m, lookId)
 {
     radius = UnitSystem::SetLength(sphereRadius);
     
     //Calculate physical properties
     volume = btScalar(4)/btScalar(3)*M_PI*radius*radius*radius;
     dragCoeff = btVector3(btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius);
-    mass = volume * material->density;
+    mass = volume * mat.density;
     Ipri = btVector3(btScalar(2)/btScalar(5)*mass*radius*radius,
                      btScalar(2)/btScalar(5)*mass*radius*radius,
                      btScalar(2)/btScalar(5)*mass*radius*radius);

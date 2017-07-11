@@ -9,9 +9,9 @@
 #include "StaticEntity.h"
 #include "GeometryUtil.hpp"
 
-StaticEntity::StaticEntity(std::string uniqueName, Material* mat, int _lookId) : Entity(uniqueName)
+StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
-    material = mat;
+    mat = m;
 	objectId = -1;
     lookId = _lookId;
     wireframe = false;
@@ -27,7 +27,6 @@ StaticEntity::~StaticEntity()
 		mesh = NULL;
 	}
 	
-    material = NULL;
     rigidBody = NULL;
 }
 
@@ -52,9 +51,9 @@ void StaticEntity::Render()
     }
 }
 
-Material* StaticEntity::getMaterial()
+Material StaticEntity::getMaterial()
 {
-    return material;
+    return mat;
 }
 
 void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)

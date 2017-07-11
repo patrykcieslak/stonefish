@@ -8,7 +8,7 @@
 
 #include "Terrain.h"
 
-Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material* mat, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, mat, lookId)
+Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     size = UnitSystem::SetLength(size);
     minHeight = UnitSystem::SetLength(minHeight);

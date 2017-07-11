@@ -9,16 +9,15 @@
 #include "Torus.h"
 #include "TorusShape.h"
 
-Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material* mat, int lookId) : SolidEntity(uniqueName, mat, lookId)
+Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material m, int lookId) : SolidEntity(uniqueName, m, lookId)
 {
     majorRadius = UnitSystem::SetLength(torusMajorRadius);
     minorRadius = UnitSystem::SetLength(torusMinorRadius);
-    material = mat;
     
     //Calculate physical properties
     dragCoeff = btVector3(0.5, 0.5, 0.5);//btVector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
     volume = M_PI*minorRadius*minorRadius*btScalar(0.5*2)*M_PI*majorRadius;
-    mass = volume * material->density;
+    mass = volume * mat.density;
     btScalar idiam, ivert;
 	idiam = btScalar(1)/btScalar(8)*(btScalar(4)*majorRadius*majorRadius + btScalar(5)*minorRadius*minorRadius)*mass;
 	ivert = (majorRadius*majorRadius + btScalar(3)/btScalar(4)*minorRadius*minorRadius)*mass;

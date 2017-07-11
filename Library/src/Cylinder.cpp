@@ -8,16 +8,15 @@
 
 #include "Cylinder.h"
 
-Cylinder::Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material* mat, int lookId) : SolidEntity(uniqueName, mat, lookId)
+Cylinder::Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId) : SolidEntity(uniqueName, m, lookId)
 {
     radius = UnitSystem::SetLength(cylinderRadius);
     halfHeight = UnitSystem::SetLength(cylinderHeight/btScalar(2));
-    material = mat;
     
     //Calculate physical properties
     dragCoeff = btVector3(radius*halfHeight*btScalar(4*0.5), M_PI*radius*radius*btScalar(0.9), radius*halfHeight*btScalar(4*0.5));
     volume = M_PI*radius*radius*halfHeight*btScalar(2);
-    mass = volume * material->density;
+    mass = volume * mat.density;
     Ipri = btVector3(btScalar(0.25)*mass*radius*radius + btScalar(1)/btScalar(12)*mass*(halfHeight*btScalar(2))*(halfHeight*btScalar(2)),
                      btScalar(0.5)*mass*radius*radius,
                      btScalar(0.25)*mass*radius*radius + btScalar(1)/btScalar(12)*mass*(halfHeight*btScalar(2))*(halfHeight*btScalar(2)));

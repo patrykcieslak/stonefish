@@ -56,6 +56,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     //Set IC solver params
     icProblemSolved = false;
     setICSolverParams(false);
+	simulationFresh = false;
     
     //Misc
     drawLightDummies = false;
@@ -306,6 +307,11 @@ bool SimulationManager::isZAxisUp()
     return zUp;
 }
 
+bool SimulationManager::isSimulationFresh()
+{
+	return simulationFresh;
+}
+
 btScalar SimulationManager::getSimulationTime()
 {
     return simulationTime;
@@ -469,7 +475,6 @@ void SimulationManager::InitializeScenario()
 {
     switch(simType)
     {
-        default:
         case TERRESTIAL:
         {
             //Plane
@@ -479,7 +484,7 @@ void SimulationManager::InitializeScenario()
             
             Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), grid);
             AddEntity(floor);
-        }
+		}
             break;
         
         case MARINE:
@@ -490,6 +495,9 @@ void SimulationManager::InitializeScenario()
             
         case CUSTOM:
             break;
+			
+		default:
+			break;
     }
     
     //Standard trackball
@@ -505,6 +513,7 @@ void SimulationManager::RestartScenario()
     InitializeSolver();
     InitializeScenario();
     BuildScenario();
+	simulationFresh = true;
 }
 
 void SimulationManager::DestroyScenario()
@@ -576,6 +585,7 @@ void SimulationManager::DestroyScenario()
 
 bool SimulationManager::StartSimulation()
 {
+	simulationFresh = false;
     currentTime = 0;
     physicTime = 0;
     simulationTime = 0;
@@ -748,13 +758,16 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
-    Material* mat0;
+	MaterialManager* mm = SimulationApp::getApp()->getSimulationManager()->getMaterialManager();
+	
+    Material mat0;
     btVector3 contactVelocity0;
     btScalar contactAngularVelocity0;
     
     if(ent0->getType() == ENTITY_STATIC)
     {
-        mat0 = ((StaticEntity*)ent0)->getMaterial();
+		StaticEntity* sent0 = (StaticEntity*)ent0;
+        mat0 = sent0->getMaterial();
         contactVelocity0 = btVector3(0.,0.,0.);
         contactAngularVelocity0 = btScalar(0.);
     }
@@ -774,13 +787,14 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
-    Material* mat1;
+    Material mat1;
     btVector3 contactVelocity1;
     btScalar contactAngularVelocity1;
     
     if(ent1->getType() == ENTITY_STATIC)
     {
-        mat1 = ((StaticEntity*)ent1)->getMaterial();
+		StaticEntity* sent1 = (StaticEntity*)ent1;
+        mat1 = sent1->getMaterial();
         contactVelocity1 = btVector3(0.,0.,0.);
         contactAngularVelocity1 = btScalar(0.);
     }
@@ -806,8 +820,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     btScalar slipVelMod = slipVel.length();
     btScalar sigma = 100;
     // f = (static - dynamic)/(sigma * v^2 + 1) + dynamic
-    cp.m_combinedFriction = (mat0->staticFriction[mat1->index] - mat0->dynamicFriction[mat1->index])/(sigma * slipVelMod * slipVelMod + btScalar(1.)) + mat0->dynamicFriction[mat1->index];
-    
+	Friction f = mm->GetMaterialsInteraction(mat0.name, mat1.name);
+	cp.m_combinedFriction = (f.fStatic - f.fDynamic)/(sigma * slipVelMod * slipVelMod + btScalar(1)) + f.fDynamic;
+	
     //Rolling friction not possible to generalize - needs special treatment
     cp.m_combinedRollingFriction = btScalar(0.);
     
@@ -832,7 +847,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         ((SolidEntity*)ent1)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity10/btFabs(relAngularVelocity10) * T);
     
     //Restitution
-    cp.m_combinedRestitution = mat0->restitution * mat1->restitution;
+    cp.m_combinedRestitution = mat0.restitution * mat1.restitution;
     
     //printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
     
