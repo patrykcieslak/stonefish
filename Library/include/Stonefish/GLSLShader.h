@@ -30,7 +30,7 @@ struct GLSLAttribute
 class GLSLShader
 {
 public:
-    GLSLShader(std::string fragment, std::string vertex = ""); //NULL means standard SAQ
+    GLSLShader(std::string fragment, std::string vertex = "", std::string geometry = ""); //empty means standard SAQ shader and no geometry shader
     ~GLSLShader();
     
     void Use();
@@ -68,7 +68,7 @@ private:
     
     static GLuint saqVertexShader;
     static GLuint LoadShader(GLenum shaderType, std::string filename, GLint* shaderCompiled);
-    static GLuint CreateProgram(GLuint vertexShader, GLuint fragmentShader);
+    static GLuint CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader);
 };
 
 

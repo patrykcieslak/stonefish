@@ -501,7 +501,7 @@ void SimulationManager::InitializeScenario()
     }
     
     //Standard trackball
-    trackball = new OpenGLTrackball(btVector3(0,0,0), 10.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, false);
+    trackball = new OpenGLTrackball(btVector3(0,0,0), 10.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
     trackball->Rotate(btQuaternion(0.5, 0, 0));
     trackball->Activate();
     OpenGLContent::getInstance()->AddView(trackball);

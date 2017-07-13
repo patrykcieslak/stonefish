@@ -55,7 +55,6 @@
       <VirtualDirectory Name="views">
         <File Name="src/OpenGLTrackball.cpp"/>
         <File Name="src/OpenGLCamera.cpp"/>
-        <File Name="src/OpenGLView.cpp"/>
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
@@ -255,6 +254,7 @@
     <File Name="3rdparty/rapidxml.hpp"/>
     <File Name="3rdparty/stb_image.c"/>
     <File Name="3rdparty/stb_image.h"/>
+    <File Name="3rdparty/MersenneTwister.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">
@@ -273,7 +273,7 @@
       <File Name="shaders/printer.frag"/>
       <File Name="shaders/printer.vert"/>
     </VirtualDirectory>
-    <VirtualDirectory Name="effects">
+    <VirtualDirectory Name="postprocessing">
       <File Name="shaders/gaussianBlur.frag"/>
       <File Name="shaders/gaussianBlur.vert"/>
       <File Name="shaders/lightMeter.frag"/>
@@ -281,6 +281,16 @@
       <File Name="shaders/saoBlur.frag"/>
       <File Name="shaders/saoDownsample.frag"/>
       <File Name="shaders/tonemapping.frag"/>
+      <File Name="shaders/depthLinearizeMSAA.frag"/>
+      <File Name="shaders/depthLinearize.frag"/>
+      <File Name="shaders/viewNormal.frag"/>
+      <File Name="shaders/hbaoDeinterleave.frag"/>
+      <File Name="shaders/hbaoSaq.geom"/>
+      <File Name="shaders/hbaoSaq.vert"/>
+      <File Name="shaders/hbaoCalc.frag"/>
+      <File Name="shaders/hbaoReinterleave.frag"/>
+      <File Name="shaders/hbaoBlur.frag"/>
+      <File Name="shaders/hbaoBlur2.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="lights">
       <File Name="shaders/cascadedShadowMap.frag"/>
@@ -303,12 +313,7 @@
       <File Name="shaders/texQuad.frag"/>
       <File Name="shaders/texQuad.vert"/>
       <File Name="shaders/object.vert"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="deferred">
-      <File Name="shaders/deferredAmbient.frag"/>
-      <File Name="shaders/deferredOmni.frag"/>
-      <File Name="shaders/deferredSpot.frag"/>
-      <File Name="shaders/deferredSun.frag"/>
+      <File Name="shaders/texLayerQuad.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="materials">
       <File Name="shaders/blinnPhong.frag"/>

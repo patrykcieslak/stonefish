@@ -10,7 +10,7 @@
 #include "SimulationApp.h"
 #include "GeometryUtil.hpp"
 
-OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao) : OpenGLView(x, y, width, height, horizon, sao)
+OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLView(x, y, width, height, horizon, spp, sao)
 {
 	this->up = glm::normalize(glm::vec3((GLfloat)up.getX(), (GLfloat)up.getY(), (GLfloat)up.getZ()));
     rotation = glm::rotation(this->up, SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? glm::vec3(0,0,1.f) : glm::vec3(0,0,-1.f));

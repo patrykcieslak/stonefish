@@ -47,11 +47,11 @@ OpenGLPipeline::~OpenGLPipeline()
     glDeleteFramebuffers(1, &screenFBO);
 }
 
-void OpenGLPipeline::setRenderingEffects(bool shadows, bool fluid, bool ssao)
+void OpenGLPipeline::setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion)
 {
     renderShadows = shadows;
     renderFluid = fluid;
-    renderSAO = ssao;
+    renderSAO = ambientOcclusion;
 }
 
 void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras)
@@ -227,7 +227,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			glDisable(GL_CULL_FACE);
             
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            view->RenderHDR(screenFBO);
+            view->DrawHDR(screenFBO);
+			view->DrawAO(screenFBO);
            
             //================Helper objects===================
             glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
@@ -306,6 +307,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				}
                         
             //Debugging
+			view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
+			view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
+			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
+			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
+			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
+			//view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
+			view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
+			
 			//sim->views[i]->getGBuffer()->ShowTexture(DIFFUSE, 0,0,300,200); // FBO debugging
             //sim->views[i]->getGBuffer()->ShowTexture(POSITION1,0,200,300,200); // FBO debugging
 			//sim->views[i]->getGBuffer()->ShowTexture(NORMAL1,0,400,300,200); // FBO debugging

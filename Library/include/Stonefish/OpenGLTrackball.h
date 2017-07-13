@@ -14,7 +14,7 @@
 class OpenGLTrackball : public OpenGLView
 {
 public:
-    OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao = false);
+    OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp = 1, bool ao = false);
     ~OpenGLTrackball();
     
 	void Rotate(const btQuaternion& rot);

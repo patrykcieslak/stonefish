@@ -30,7 +30,10 @@
 #define TEX_SKY_DIFFUSE 	((GLint)1)
 #define TEX_SKY_REFLECTION 	((GLint)2)
 #define TEX_SUN_SHADOW		((GLint)3)
-#define TEX_AO				((GLint)4)
+#define TEX_POSTPROCESS1	((GLint)4)
+#define TEX_POSTPROCESS2	((GLint)5)
+#define TEX_POSTPROCESS3	((GLint)6)
+#define TEX_POSTPROCESS4	((GLint)7)
 #define TEX_SHADOW_START	((GLint)16)
 
 class SimulationManager;
@@ -45,7 +48,7 @@ public:
     void Render(SimulationManager* sim);
     void DrawObjects(SimulationManager* sim);
    
-    void setRenderingEffects(bool shadows, bool fluid, bool sao);
+    void setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion);
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras);
     void setDebugSimulation(bool enabled);
     bool isFluidRendered();

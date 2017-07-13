@@ -31,12 +31,12 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-	OpenGLPipeline::getInstance()->setRenderingEffects(true, false, false);
+	OpenGLPipeline::getInstance()->setRenderingEffects(true, false, true);
     OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, true, false);
     setICSolverParams(false);
 	
     ///////MATERIALS////////
-	getMaterialManager()->CreateMaterial("Steel", 1000.0, 0.5);
+	getMaterialManager()->CreateMaterial("Steel", 100.0, 0.5);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
@@ -65,12 +65,21 @@ void FallingTestManager::BuildScenario()
 	manip->AddRotLinkDH(link3, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
 	AddEntity(manip);*/
 	
-    for(int i=0; i<=5; ++i)
+    /*for(int i=0; i<=5; ++i)
     {
         int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(i/10.f,1.f,0.f), i/10.f, 0.0f);
         Sphere* sph = new Sphere("Sph" + std::to_string(i), 0.25, getMaterialManager()->getMaterial("Steel"), lookId);
-        AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.0, 0.0, 1.0+i/1.5)));
-    }
+        AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0., 0.0, 1.0+i/1.5)));
+    }*/
+	
+	int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.5f,0.5f,0.5f), 0.5f, 0.0f);
+	
+	for(int i=0; i<5; ++i)
+		for(int h=0; h<5; ++h)
+		{
+			Box* box = new Box("Box" + std::to_string(i*10+h), btVector3(0.5,0.5,0.5), getMaterialManager()->getMaterial("Steel"), lookId);
+			AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(-5.0+h, sinf(h/M_PI), i*0.6+0.5)));				
+		}
     
     ////////SENSORS AND ACTUATORS
 	//FakeIMU* imu = new FakeIMU("IMU", vehicle, btTransform::getIdentity());

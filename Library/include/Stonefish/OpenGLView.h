@@ -15,6 +15,11 @@
 
 #define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1
 #define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0
+#define AO_RANDOMTEX_SIZE		4
+#define HBAO_RANDOM_SIZE		AO_RANDOMTEX_SIZE
+#define HBAO_RANDOM_ELEMENTS	(HBAO_RANDOM_SIZE*HBAO_RANDOM_SIZE)
+#define NUM_MRT					8
+#define MAX_SAMPLES				8
 
 typedef struct
 {
@@ -26,13 +31,38 @@ typedef struct
 }
 ViewFrustum;
 
+typedef struct
+{
+	GLfloat RadiusToScreen; 
+	GLfloat R2;     		
+	GLfloat NegInvR2;
+	GLfloat NDotVBias;
+ 
+	glm::vec2 InvFullResolution;
+	glm::vec2 InvQuarterResolution;
+  
+	GLfloat AOMultiplier;
+	GLfloat PowExponent;
+	glm::vec2 _pad0;
+  
+	glm::vec4 projInfo;
+	glm::vec2 projScale;
+	glm::vec2 _pad1;
+	//GLint     projOrtho;
+	//GLint     _pad1;
+  
+	glm::vec4 float2Offsets[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
+	glm::vec4 jitters[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
+}
+AOData;
+
 typedef enum {CAMERA, TRACKBALL} ViewType;
 typedef enum {NORMAL, REFLECTED, REFRACTED} SceneComponent;
 
 class OpenGLView
 {
 public:
-    OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, bool sao);
+    OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
     virtual ~OpenGLView(void);
     
     virtual glm::mat4 GetViewTransform() = 0;
@@ -45,15 +75,21 @@ public:
     void SetViewport();
     void SetProjection();
     void SetViewTransform();
-    void ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
-    btVector3 Ray(GLint x, GLint y);
+    void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
+	btVector3 Ray(GLint x, GLint y);
 
     void Activate();
     void Deactivate();
-    void RenderSSAO();
-    void RenderHDR(GLuint destinationFBO);
-    void ShowAmbientOcclusion(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
     
+    void DrawHDR(GLuint destinationFBO);
+	void DrawAO(GLuint destinationFBO);
+	
+	void ShowLinearDepthTexture(glm::vec4 rect);
+	void ShowViewNormalTexture(glm::vec4 rect);
+	void ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index);
+	void ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index);
+    void ShowAmbientOcclusion(glm::vec4 rect);
+	
     GLint* GetViewport();
     glm::mat4 GetProjectionMatrix();
     glm::mat4 GetViewMatrix();
@@ -63,62 +99,70 @@ public:
     
     GLuint getRenderFBO();
 	GLuint getFinalTexture();
-    GLuint getSSAOTexture();
+    GLuint getAOTexture();
     bool isActive();
-    bool hasSSAO();
+    bool hasAO();
         
     static void Init();
     static void Destroy();
-    static void SetTextureUnits(GLint position, GLint normal, GLint random);
     static GLuint getRandomTexture();
     
 protected:
 	//Multisampled float textures
     GLuint renderFBO;
-    GLuint renderDepthStencil;
     GLuint renderColorTex;
+	GLuint renderDepthStencilTex;
 	
 	//Float texture
 	GLuint lightMeterFBO;
     GLuint lightMeterTex;
 	
-	//RGB8 textures
+	//Postprocessing
 	GLuint postprocessFBO;
 	GLuint postprocessTex[2];
 	int activePostprocessTexture;
 
-    GLuint ssaoFBO;
-    GLuint ssaoTexture;
-    
-    GLuint blurFBO;
-    GLuint hBlurTexture;
-    GLuint vBlurTexture;
+	GLuint linearDepthFBO;
+	GLuint linearDepthTex;
+	GLuint viewNormalFBO;
+	GLuint viewNormalTex;
 	
+	//HBAO Cache-aware (NVIDIA designworks)
+	GLuint aoBlurTex;
+	GLuint aoResultTex;
+	GLuint aoDepthArrayTex;
+	GLuint aoResultArrayTex;
+	GLuint aoDepthViewTex[HBAO_RANDOM_ELEMENTS];
+	GLuint aoFinalFBO;
+	GLuint aoDeinterleaveFBO;
+	GLuint aoCalcFBO;
+	GLuint aoDataUBO;
+	AOData aoData;
+	
+	static GLuint randomTexture;
+	
+	//Data
     GLint originX;
     GLint originY;
     GLint viewportWidth;
     GLint viewportHeight;
-    GLuint ssaoSizeDiv;
+    GLuint aoFactor;
+	GLuint samples;
     GLfloat fovx;
     GLfloat near;
     GLfloat far;
     glm::mat4 projection;
     bool active;
     
-    //downsample
-    static GLSLShader* downsampleShader;
-    
-    //ssao
-    static GLSLShader* ssaoShader;
-    static GLSLShader* blurShader;
-    static GLint positionTextureUnit;
-    static GLint normalTextureUnit;
-    static GLint randomTextureUnit;
-    static GLuint randomTexture;
-  
-    //tonemapping
+    //Shaders
     static GLSLShader* lightMeterShader;
     static GLSLShader* tonemapShader;
+	static GLSLShader** depthLinearizeShader; //two shaders -> no msaa/msaa
+	static GLSLShader* viewNormalShader; 
+	static GLSLShader* aoDeinterleaveShader;
+	static GLSLShader* aoCalcShader;
+	static GLSLShader* aoReinterleaveShader;
+	static GLSLShader** aoBlurShader;
 };
 
 #endif

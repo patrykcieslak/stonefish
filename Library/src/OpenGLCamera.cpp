@@ -9,7 +9,7 @@
 #include "OpenGLCamera.h"
 #include "GeometryUtil.hpp"
 
-OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, bool sao) : OpenGLView(x, y, width, height, horizon, sao)
+OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLView(x, y, width, height, horizon, spp, sao)
 {
     btVector3 _eye = UnitSystem::SetPosition(eyePosition);
 	btVector3 _dir = UnitSystem::SetPosition(targetPosition - eyePosition);

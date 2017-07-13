@@ -44,6 +44,7 @@ OpenGLContent::OpenGLContent()
 	csBuf[1] = 0;
 	helperShader = NULL;
 	texQuadShader = NULL;
+	texLayerQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
 	eyePos = glm::vec3();
@@ -74,6 +75,9 @@ OpenGLContent::~OpenGLContent()
 		
 	if(texQuadShader != NULL)
 		delete texQuadShader;
+		
+	if(texLayerQuadShader != NULL)
+		delete texLayerQuadShader;
 		
 	if(texCubeShader != NULL)
 		delete texCubeShader;
@@ -193,6 +197,11 @@ void OpenGLContent::Init()
 	texQuadShader->AddUniform("rect", ParameterType::VEC4);
 	texQuadShader->AddUniform("tex", ParameterType::INT);
 	texQuadShader->AddUniform("color", ParameterType::VEC4);
+	
+	texLayerQuadShader = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
+	texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
+	texLayerQuadShader->AddUniform("tex", ParameterType::INT);
+	texLayerQuadShader->AddUniform("layer", ParameterType::INT);
 	
 	texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
 	texCubeShader->AddUniform("tex", ParameterType::INT);
@@ -321,6 +330,11 @@ void OpenGLContent::SetDrawFlatObjects(bool enable)
 	drawFlatObjects = enable;
 }
 
+void OpenGLContent::BindBaseVertexArray()
+{
+	glBindVertexArray(baseVertexArray);
+}
+
 void OpenGLContent::DrawSAQ()
 {
 	if(saqBuf != 0)
@@ -356,6 +370,33 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glBindVertexArray(0);
 		
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glUseProgram(0);
+	}
+}
+
+void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLuint layer)
+{
+	if(saqBuf != 0 && texQuadShader != NULL)
+	{
+		y = viewportSize.y-y-height;
+		
+		texLayerQuadShader->Use();
+		texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+		texLayerQuadShader->SetUniform("tex", TEX_BASE);
+		texLayerQuadShader->SetUniform("layer", (GLint)layer);
+		
+		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+		glEnable(GL_TEXTURE_2D_ARRAY);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+		
+		glBindVertexArray(baseVertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindVertexArray(0);
+		
+		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 		glUseProgram(0);
 	}
 }

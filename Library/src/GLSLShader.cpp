@@ -13,21 +13,28 @@
 
 GLuint GLSLShader::saqVertexShader = 0;
 
-GLSLShader::GLSLShader(std::string fragment, std::string vertex)
+GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geometry)
 {
     valid = false;
     GLint compiled = 0;
     GLuint vs;
-    GLuint fs;
+    GLuint gs;
+	GLuint fs;
     
     if(vertex == "")
         vs = saqVertexShader;
     else
         vs = LoadShader(GL_VERTEX_SHADER, vertex, &compiled);
     
+	if(geometry == "")
+		gs = 0;
+	else
+		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, &compiled);
+	
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, &compiled);
     
-    shader = CreateProgram(vs, fs);
+	shader = CreateProgram(vs, gs, fs);
+		
     valid = true;
 }
 
@@ -340,13 +347,14 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, GLint *sh
 	return shader;
 }
 
-GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint fragmentShader)
+GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader)
 {
 	GLint programLinked = 0;
 	GLuint program = glCreateProgram();
 	GLint infoLogLength = 0;
 		
 	glAttachShader(program, vertexShader);
+	if(geometryShader > 0) glAttachShader(program, geometryShader);
 	glAttachShader(program, fragmentShader);
 	glLinkProgram(program);
 	
@@ -361,10 +369,13 @@ GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint fragmentShader)
 	glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
 	
 	glDetachShader(program, vertexShader);
+	if(geometryShader > 0) glDetachShader(program, geometryShader);
 	glDetachShader(program, fragmentShader);
 	
 	if(vertexShader != saqVertexShader)
 		glDeleteShader(vertexShader);
+	if(geometryShader > 0)
+		glDeleteShader(geometryShader);
 	glDeleteShader(fragmentShader);
 	
 	if(programLinked == 0)

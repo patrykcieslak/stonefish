@@ -92,9 +92,11 @@ public:
 	void SetViewMatrix(glm::mat4 V);
 	void SetDrawFlatObjects(bool enable);
 	void SetCurrentView(OpenGLView* v);
+	void BindBaseVertexArray();
 	
 	void DrawSAQ();
 	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
+	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLuint layer);
 	void DrawCubemapCross(GLuint texture);
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
 	void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
@@ -118,7 +120,7 @@ public:
 	static GLuint LoadInternalTexture(std::string filename);
 	static Mesh* LoadMesh(std::string filename, GLfloat scale, bool smooth);
 	static Mesh* BuildPlane(GLfloat halfExtents);
-	static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3);
+	static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 0);
 	static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
 	static Mesh* BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
 	static Mesh* BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices = 48, unsigned int minorSlices = 24);
@@ -151,6 +153,7 @@ private:
 	GLuint csBuf[2]; //vertex data for drawing coord systems 
 	GLSLShader* helperShader;
 	GLSLShader* texQuadShader;
+	GLSLShader* texLayerQuadShader;
 	GLSLShader* texCubeShader;
 	GLSLShader* flatShader;
 	std::vector<GLSLShader*> materialShaders;

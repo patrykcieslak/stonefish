@@ -12,18 +12,19 @@
 #include "SimulationApp.h"
 #include "Console.h"
 #include "SystemUtil.hpp"
+#include "MersenneTwister.hpp"
 
-GLSLShader* OpenGLView::downsampleShader = NULL;
-GLSLShader* OpenGLView::ssaoShader = NULL;
-GLSLShader* OpenGLView::blurShader = NULL;
 GLSLShader* OpenGLView::lightMeterShader = NULL;
 GLSLShader* OpenGLView::tonemapShader = NULL;
-GLint OpenGLView::randomTextureUnit = -1;
+GLSLShader** OpenGLView::depthLinearizeShader = NULL;
+GLSLShader* OpenGLView::viewNormalShader = NULL;
+GLSLShader* OpenGLView::aoDeinterleaveShader = NULL;
+GLSLShader* OpenGLView::aoCalcShader = NULL;
+GLSLShader* OpenGLView::aoReinterleaveShader = NULL;
+GLSLShader** OpenGLView::aoBlurShader = NULL;
 GLuint OpenGLView::randomTexture = 0;
-GLint OpenGLView::positionTextureUnit = -1;
-GLint OpenGLView::normalTextureUnit = -1;
 
-OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat horizon, bool sao)
+OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao)
 {
     viewportWidth = width;
     viewportHeight = height;
@@ -31,32 +32,45 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     originY = y;
     fovx = 0.785f;
     active = false;
-    ssaoSizeDiv = sao ? 2 : 0;
+    aoFactor = ao ? 1 : 0;
+	samples = spp < 1 ? 1 : (spp > 8 ? 8 : spp);
     far = UnitSystem::SetLength(horizon);
     near = 0.1f;
 	activePostprocessTexture = 0;
     
-	int samples = 4;
+	samples = 1;
 	
-	//----Multisampled rendering----
-    glGenFramebuffers(1, &renderFBO);
+	//----Geometry rendering----
+	if(samples > 1) //MSAA
+	{
+		glGenTextures(1, &renderColorTex);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderColorTex);
+		glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB16F, viewportWidth, viewportHeight, GL_FALSE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+		glGenTextures(1, &renderDepthStencilTex);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderDepthStencilTex);
+		glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight, GL_FALSE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+	}
+	else
+	{
+		glGenTextures(1, &renderColorTex);
+		glBindTexture(GL_TEXTURE_2D, renderColorTex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB16F, viewportWidth, viewportHeight);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glGenTextures(1, &renderDepthStencilTex);
+		glBindTexture(GL_TEXTURE_2D, renderDepthStencilTex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	
+	glGenFramebuffers(1, &renderFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
-    
-	glGenRenderbuffers(1, &renderDepthStencil);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderDepthStencil);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderDepthStencil);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    
-    glGenTextures(1, &renderColorTex);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderColorTex);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB16F, viewportWidth, viewportHeight, GL_TRUE); //0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, renderColorTex, 0);
-    
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderColorTex, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, renderDepthStencilTex, 0);
+	
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Render FBO initialization failed!");
@@ -103,72 +117,175 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Postprocess FBO initialization failed!");
     
-	//----SSAO----
-    if(ssaoSizeDiv > 0)
-    {
-        glGenFramebuffers(1, &ssaoFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
-    
-        glGenTextures(1, &ssaoTexture);
-        glBindTexture(GL_TEXTURE_2D, ssaoTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoTexture, 0);
-    
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if(status != GL_FRAMEBUFFER_COMPLETE)
-            cError("SSAO FBO initialization failed!");
-    
-        glGenFramebuffers(1, &blurFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
-    
-        glGenTextures(1, &hBlurTexture);
-        glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hBlurTexture, 0);
-    
-        glGenTextures(1, &vBlurTexture);
-        glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, vBlurTexture, 0);
-    
-        status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if(status != GL_FRAMEBUFFER_COMPLETE)
-            cError("SSAO blur FBO initialization failed!");
-    }
-	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+	//----HBAO----
+    if(aoFactor > 0)
+    {
+		//Linear depth
+		glGenTextures(1, &linearDepthTex);
+		glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, viewportWidth, viewportHeight);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture (GL_TEXTURE_2D, 0);
+
+		glGenFramebuffers(1, &linearDepthFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex, 0);
+		
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE)
+			cError("LinearDepth FBO initialization failed!");
+		
+		//Normals
+		glGenTextures(1, &viewNormalTex);
+		glBindTexture(GL_TEXTURE_2D, viewNormalTex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, viewportWidth, viewportHeight);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glGenFramebuffers(1, &viewNormalFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, viewNormalFBO);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, viewNormalTex, 0);
+		
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE)
+			cError("ViewNormal FBO initialization failed!");
+			
+		//Deinterleaved results
+		GLint swizzle[4] = {GL_RED,GL_GREEN,GL_ZERO,GL_ZERO};
+		
+		glGenTextures(1, &aoResultTex);
+		glBindTexture(GL_TEXTURE_2D, aoResultTex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth, viewportHeight);
+		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glGenTextures(1, &aoBlurTex);
+		glBindTexture(GL_TEXTURE_2D, aoBlurTex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth, viewportHeight);
+		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glGenFramebuffers(1, &aoFinalFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, aoFinalFBO);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultTex, 0);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, aoBlurTex, 0);
+		
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE)
+			cError("AOFinal FBO initialization failed!");
+		
+		//Interleaved rendering
+		int quarterWidth  = ((viewportWidth+3)/4);
+		int quarterHeight = ((viewportHeight+3)/4);
+
+		glGenTextures(1, &aoDepthArrayTex);
+		glBindTexture (GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
+		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+		glGenTextures(HBAO_RANDOM_ELEMENTS, aoDepthViewTex);
+		for(int i=0; i<HBAO_RANDOM_ELEMENTS; ++i)
+		{
+			glTextureView(aoDepthViewTex[i], GL_TEXTURE_2D, aoDepthArrayTex, GL_R32F, 0, 1, i, 1);
+			glBindTexture(GL_TEXTURE_2D, aoDepthViewTex[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+		
+		glGenTextures(1, &aoResultArrayTex);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
+		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG16F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+		GLenum drawbuffers[NUM_MRT];
+		for(int layer = 0; layer < NUM_MRT; ++layer)
+			drawbuffers[layer] = GL_COLOR_ATTACHMENT0 + layer;
+
+		glGenFramebuffers(1, &aoDeinterleaveFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, aoDeinterleaveFBO);
+		glDrawBuffers(NUM_MRT, drawbuffers);
+		
+		glGenFramebuffers(1, &aoCalcFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, aoCalcFBO);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultArrayTex, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		glGenBuffers(1, &aoDataUBO);
+		glNamedBufferStorageEXT(aoDataUBO, sizeof(AOData), NULL, GL_DYNAMIC_STORAGE_BIT);
+		
+		//Generate random data
+		MTRand rng;
+		float numDir = 8; // keep in sync to glsl
+		rng.seed((unsigned)0);
+
+		for(int i=0; i<HBAO_RANDOM_ELEMENTS; ++i)
+		{
+			float Rand1 = rng.randExc();
+			float Rand2 = rng.randExc();
+
+			//Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
+			float Angle = 2.f * M_PI * Rand1 / numDir;
+			aoData.jitters[i].x = cosf(Angle);
+			aoData.jitters[i].y = sinf(Angle);
+			aoData.jitters[i].z = Rand2;
+			aoData.jitters[i].w = 0;
+			
+			aoData.float2Offsets[i] = glm::vec4((GLfloat)(i%4) + 0.5f, (GLfloat)(i/4) + 0.5f, 0.0, 0.0);
+		}
+    }
 }
 
 OpenGLView::~OpenGLView()
 {
-    glDeleteRenderbuffers(1, &renderDepthStencil);
     glDeleteTextures(2, postprocessTex);
-    glDeleteTextures(1, &renderColorTex);
+	glDeleteTextures(1, &renderColorTex);
+	glDeleteTextures(1, &renderDepthStencilTex);
     glDeleteTextures(1, &lightMeterTex);
+	
 	glDeleteFramebuffers(1, &renderFBO);
     glDeleteFramebuffers(1, &postprocessFBO);
 	glDeleteFramebuffers(1, &lightMeterFBO);
     
-    if(ssaoSizeDiv > 0)
+    if(aoFactor > 0)
     {
-        glDeleteTextures(1, &ssaoTexture);
-        glDeleteTextures(1, &hBlurTexture);
-        glDeleteTextures(1, &vBlurTexture);
-        glDeleteFramebuffers(1, &renderFBO);
-        glDeleteFramebuffers(1, &ssaoFBO);
-        glDeleteFramebuffers(1, &blurFBO);
+		glDeleteTextures(1, &linearDepthTex);
+		glDeleteTextures(1, &viewNormalTex);
+		glDeleteTextures(1, &aoResultTex);
+		glDeleteTextures(1, &aoBlurTex);
+		glDeleteTextures(1, &aoDepthArrayTex);
+		glDeleteTextures(1, &aoResultArrayTex);
+		glDeleteTextures(HBAO_RANDOM_ELEMENTS, aoDepthViewTex);
+	
+		glDeleteFramebuffers(1, &linearDepthFBO);
+		glDeleteFramebuffers(1, &viewNormalFBO);
+		glDeleteFramebuffers(1, &aoFinalFBO);
+		glDeleteFramebuffers(1, &aoDeinterleaveFBO);
+		glDeleteFramebuffers(1, &aoCalcFBO);
+		
+		glDeleteBuffers(1, &aoDataUBO);
     }
 }
 
@@ -272,9 +389,9 @@ GLuint OpenGLView::getFinalTexture()
     return postprocessTex[activePostprocessTexture];
 }
 
-bool OpenGLView::hasSSAO()
+bool OpenGLView::hasAO()
 {
-    return ssaoSizeDiv > 0;
+    return aoFactor > 0;
 }
 
 void OpenGLView::SetupViewport(GLint x, GLint y, GLint width)
@@ -301,7 +418,7 @@ void OpenGLView::SetViewTransform()
     OpenGLContent::getInstance()->SetViewMatrix(GetViewTransform());
 }
 
-void OpenGLView::ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY)
+void OpenGLView::ShowSceneTexture(SceneComponent sc, glm::vec4 rect)
 {
     GLuint texture;
     
@@ -313,94 +430,200 @@ void OpenGLView::ShowSceneTexture(SceneComponent sc, GLfloat x, GLfloat y, GLflo
             break;
     }
     
-    OpenGLContent::getInstance()->DrawTexturedQuad(x, y, sizeX, sizeY, texture);
+    OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, texture);
 }
 
-void OpenGLView::RenderSSAO()
+void OpenGLView::ShowLinearDepthTexture(glm::vec4 rect)
 {
-    if(hasSSAO())
+	if(hasAO())
+		OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, linearDepthTex);
+}
+
+void OpenGLView::ShowViewNormalTexture(glm::vec4 rect)
+{
+	if(hasAO())
+		OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, viewNormalTex);
+}
+
+void OpenGLView::ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index)
+{
+	if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
+		OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoDepthArrayTex, index);
+}
+
+void OpenGLView::ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index)
+{
+	if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
+		OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex, index);
+}
+
+void OpenGLView::DrawAO(GLuint destinationFBO)
+{
+    if(hasAO())
     {
-        glDisable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        
-        //Draw SAO
-        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
-        glViewport(0, 0, viewportWidth, viewportHeight);
-        
-        btVector3 min, max;
-        SimulationApp::getApp()->getSimulationManager()->getWorldAABB(min, max);
-        GLfloat meanDimension = ((max[0] - min[0]) + (max[1] - min[1]) + (max[2] - min[2]))/3.f;
-        GLfloat radius = meanDimension * 0.2;
-        GLfloat intensity = 1.0;
-        GLfloat projScale = 1.f/tanf(fovx/2.f)*(viewportWidth)/2.f;
-        
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        ssaoShader->Use();
-        ssaoShader->SetUniform("texRandom", randomTextureUnit);
-        ssaoShader->SetUniform("texPosition", positionTextureUnit);
-        ssaoShader->SetUniform("texNormal", normalTextureUnit);
-        ssaoShader->SetUniform("radius", radius);
-        ssaoShader->SetUniform("bias", 0.012f);
-        ssaoShader->SetUniform("projScale", projScale);
-        ssaoShader->SetUniform("intensityDivR6", (GLfloat)(intensity/pow(radius, 6.0)));
-        ssaoShader->SetUniform("viewportSize", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
-        OpenGLContent::getInstance()->DrawSAQ();
-        
-        //Blur SAO
-        glActiveTexture(GL_TEXTURE0 + randomTextureUnit);
-        glBindTexture(GL_TEXTURE_2D, ssaoTexture);
-        
-        //Downsample SA0
-        glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
-        glViewport(0, 0, viewportWidth/ssaoSizeDiv, viewportHeight/ssaoSizeDiv);
-        
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        downsampleShader->Use();
-        downsampleShader->SetUniform("source", randomTextureUnit);
-        downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)viewportWidth, (GLfloat)viewportHeight));
-        OpenGLContent::getInstance()->DrawSAQ();
-       
-        blurShader->Use();
-        blurShader->SetUniform("source", randomTextureUnit);
-        
-        for(unsigned int i = 0; i < 2; ++i)
-        {
-            //Vertical blur
-            glBindTexture(GL_TEXTURE_2D, hBlurTexture);
-            glDrawBuffer(GL_COLOR_ATTACHMENT1);
-            blurShader->SetUniform("texelOffset", glm::vec2(0.f, 1.f/(GLfloat)(viewportHeight/ssaoSizeDiv)));
-            OpenGLContent::getInstance()->DrawSAQ();
-            
-            //Horizontal blur
-            glBindTexture(GL_TEXTURE_2D, vBlurTexture);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0);
-            blurShader->SetUniform("texelOffset", glm::vec2(1.f/(GLfloat)(viewportWidth/ssaoSizeDiv), 0.f));
-            OpenGLContent::getInstance()->DrawSAQ();
-        }
-        
-        glUseProgram(0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
+		//Prepare data
+		int quarterWidth  = ((viewportWidth+3)/4);
+		int quarterHeight = ((viewportHeight+3)/4);
+		glm::mat4 proj = GetProjectionMatrix();
+		/*glm::vec4 projInfo(
+						  2.0f/(proj[0][0]),       		 // (x) * (R - L)/N
+						  2.0f/(proj[1][1]),       		 // (y) * (T - B)/N
+						  -(1.0f-proj[2][0])/proj[0][0], // L/N
+						  -(1.0f+proj[2][1])/proj[1][1]  // B/N
+						  );*/
+		glm::vec4 projInfo(
+							2.0f/proj[0].x,
+							2.0f/proj[1].y,
+							-(1.f-proj[0].z)/proj[0].x,
+							-(1.f+proj[1].z)/proj[1].y
+							);
+						  
+		glm::vec2 invFullRes(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight);
+		glm::vec2 invQuarterRes(1.f/(GLfloat)quarterWidth, 1.f/(GLfloat)quarterHeight);
+		GLfloat projScale = (GLfloat)viewportHeight/(tanf(fovx * 0.5f) * 2.0f);
+		GLfloat R = 0.1f;
 		
+		aoData.projInfo = projInfo;
+		aoData.R2 = R * R;
+		aoData.NegInvR2 = -1.f/aoData.R2;
+		aoData.RadiusToScreen = R * 0.5f * projScale;
+		aoData.PowExponent = 1.5f; //intensity
+		aoData.NDotVBias = 0.f;  //<0,1>
+		aoData.AOMultiplier = 1.f; //1.f/(1.f-aoData.NDotVBias);
+		aoData.InvQuarterResolution = invQuarterRes;
+		aoData.InvFullResolution = invFullRes;
+		
+		//Draw linear depth buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+
+		if(samples > 1)
+		{
+			depthLinearizeShader[1]->Use();
+			depthLinearizeShader[1]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
+			depthLinearizeShader[1]->SetUniform("sampleIndex", 0);
+			depthLinearizeShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
+			
+			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, renderDepthStencilTex);
+			OpenGLContent::getInstance()->DrawSAQ();
+			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, 0);
+		}
+		else
+		{
+			depthLinearizeShader[0]->Use();
+			depthLinearizeShader[0]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
+			depthLinearizeShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
+			
+			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthStencilTex);
+			OpenGLContent::getInstance()->DrawSAQ();
+			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+		}
+		
+		//Draw viewspace normals
+		glBindFramebuffer(GL_FRAMEBUFFER, viewNormalFBO);
+		viewNormalShader->Use();
+		viewNormalShader->SetUniform("projInfo", projInfo);
+		viewNormalShader->SetUniform("invFullResolution", invFullRes);
+		viewNormalShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex);
+		OpenGLContent::getInstance()->DrawSAQ();
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+		
+		//Deinterleave
+		glBindFramebuffer(GL_FRAMEBUFFER, aoDeinterleaveFBO);
+		glViewport(0, 0, quarterWidth, quarterHeight);
+
+		aoDeinterleaveShader->Use();
+		aoDeinterleaveShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex);
+		for(int i=0; i<HBAO_RANDOM_ELEMENTS; i+=NUM_MRT)
+		{
+			aoDeinterleaveShader->SetUniform("info", glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, invFullRes.x, invFullRes.y));
+			
+			for(int layer = 0; layer < NUM_MRT; ++layer)
+				glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthViewTex[i+layer], 0);
+			
+			OpenGLContent::getInstance()->DrawSAQ();
+        }
+		
+		//Calculate HBAO
+		glBindFramebuffer(GL_FRAMEBUFFER, aoCalcFBO);
+		glViewport(0, 0, quarterWidth, quarterHeight);
+		aoCalcShader->Use();
+		aoCalcShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+		aoCalcShader->SetUniform("texViewNormal", TEX_POSTPROCESS2);
+		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, viewNormalTex);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, aoDataUBO);
+		glNamedBufferSubDataEXT(aoDataUBO, 0, sizeof(AOData), &aoData);
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
+		
+		OpenGLContent::getInstance()->BindBaseVertexArray();
+		glDrawArrays(GL_TRIANGLES, 0, 3 * HBAO_RANDOM_ELEMENTS);
+		glBindVertexArray(0);
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, viewportWidth, viewportHeight);
-    }
+		
+		//Reinterleave
+		glBindFramebuffer(GL_FRAMEBUFFER, aoFinalFBO);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		glViewport(0, 0, viewportWidth, viewportHeight);
+		aoReinterleaveShader->Use();
+		aoReinterleaveShader->SetUniform("texResultArray", TEX_POSTPROCESS1);
+		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
+		OpenGLContent::getInstance()->DrawSAQ();
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+		
+		//Blur
+		GLfloat blurSharpness = 40.0f;
+		
+		glDrawBuffer(GL_COLOR_ATTACHMENT1);
+		aoBlurShader[0]->Use();
+		aoBlurShader[0]->SetUniform("sharpness", blurSharpness);
+		aoBlurShader[0]->SetUniform("invResolutionDirection", glm::vec2(1.f/(GLfloat)viewportWidth, 0));
+		aoBlurShader[0]->SetUniform("texSource", TEX_POSTPROCESS1);
+		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, aoResultTex);
+		OpenGLContent::getInstance()->DrawSAQ();
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+
+		//Final output to main fbo
+		glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+    
+		aoBlurShader[1]->Use();
+		aoBlurShader[1]->SetUniform("sharpness", blurSharpness);
+		aoBlurShader[1]->SetUniform("invResolutionDirection", glm::vec2(0, 1.f/(GLfloat)viewportHeight));
+		aoBlurShader[1]->SetUniform("texSource", TEX_POSTPROCESS1);
+		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, aoBlurTex);
+		OpenGLContent::getInstance()->DrawSAQ();
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+	
+		glUseProgram(0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		glDisable(GL_BLEND);
+	}
 }
 
-void OpenGLView::ShowAmbientOcclusion(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY)
+void OpenGLView::ShowAmbientOcclusion(glm::vec4 rect)
 {
-	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, sizeX, sizeY, getSSAOTexture());
+	if(hasAO())
+		OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, getAOTexture());
 }
 
-GLuint OpenGLView::getSSAOTexture()
+GLuint OpenGLView::getAOTexture()
 {
-    if(ssaoSizeDiv > 0)
-        return hBlurTexture;
-    else
-        return 0;
+    return aoBlurTex;
 }
 
-void OpenGLView::RenderHDR(GLuint destinationFBO)
+void OpenGLView::DrawHDR(GLuint destinationFBO)
 {
 	//Blit multisampled to non-multisampled texture
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderFBO);
@@ -444,59 +667,66 @@ void OpenGLView::Init()
     /////SAO - Screen-Space Ambient Obscurrance/////
     randomTexture = OpenGLContent::LoadInternalTexture("noise.png");
     
-    ssaoShader = new GLSLShader("sao.frag");
-    ssaoShader->AddUniform("texRandom", INT);
-    ssaoShader->AddUniform("texPosition", INT);
-    ssaoShader->AddUniform("texNormal", INT);
-    ssaoShader->AddUniform("radius", FLOAT);
-    ssaoShader->AddUniform("bias", FLOAT);
-    ssaoShader->AddUniform("projScale", FLOAT);
-    ssaoShader->AddUniform("intensityDivR6", FLOAT);
-    ssaoShader->AddUniform("viewportSize", VEC2);
-    
-    downsampleShader = new GLSLShader("saoDownsample.frag");
-    downsampleShader->AddUniform("source", INT);
-    downsampleShader->AddUniform("srcViewport", VEC2);
-    
-    blurShader = new GLSLShader("saoBlur.frag", "gaussianBlur.vert");
-    blurShader->AddUniform("source", INT);
-    blurShader->AddUniform("texelOffset", VEC2);
-    
     /////Tonemapping//////
     lightMeterShader = new GLSLShader("lightMeter.frag");
-    lightMeterShader->AddUniform("texHDR", INT);
-    lightMeterShader->AddUniform("samples", IVEC2);
+    lightMeterShader->AddUniform("texHDR", ParameterType::INT);
+    lightMeterShader->AddUniform("samples", ParameterType::IVEC2);
     
     tonemapShader = new GLSLShader("tonemapping.frag");
-    tonemapShader->AddUniform("texHDR", INT);
-    tonemapShader->AddUniform("texAverage", INT);
+    tonemapShader->AddUniform("texHDR", ParameterType::INT);
+    tonemapShader->AddUniform("texAverage", ParameterType::INT);
+	
+	/////AO//////////////
+	depthLinearizeShader = new GLSLShader*[2];
+	depthLinearizeShader[0] = new GLSLShader("depthLinearize.frag");
+	depthLinearizeShader[0]->AddUniform("clipInfo", ParameterType::VEC4);
+	depthLinearizeShader[0]->AddUniform("texDepth", ParameterType::INT);
+	depthLinearizeShader[1] = new GLSLShader("depthLinearizeMSAA.frag");
+	depthLinearizeShader[1]->AddUniform("clipInfo", ParameterType::VEC4);
+	depthLinearizeShader[1]->AddUniform("sampleIndex", ParameterType::INT);
+	depthLinearizeShader[1]->AddUniform("texDepth", ParameterType::INT);
+	
+	viewNormalShader = new GLSLShader("viewNormal.frag");
+	viewNormalShader->AddUniform("projInfo", ParameterType::VEC4);
+	viewNormalShader->AddUniform("invFullResolution", ParameterType::VEC2);
+	viewNormalShader->AddUniform("texLinearDepth", ParameterType::INT);
+	
+	aoDeinterleaveShader = new GLSLShader("hbaoDeinterleave.frag");
+	aoDeinterleaveShader->AddUniform("info", ParameterType::VEC4);
+	aoDeinterleaveShader->AddUniform("texLinearDepth", ParameterType::INT);
+	
+	aoCalcShader = new GLSLShader("hbaoCalc.frag", "hbaoSaq.vert", "hbaoSaq.geom");
+	aoCalcShader->AddUniform("texLinearDepth", ParameterType::INT);
+	aoCalcShader->AddUniform("texViewNormal", ParameterType::INT);
+	
+	aoReinterleaveShader = new GLSLShader("hbaoReinterleave.frag");
+	aoReinterleaveShader->AddUniform("texResultArray", ParameterType::INT);
+	
+	aoBlurShader = new GLSLShader*[2];
+	aoBlurShader[0] = new GLSLShader("hbaoBlur.frag");
+	aoBlurShader[0]->AddUniform("sharpness", ParameterType::FLOAT);
+	aoBlurShader[0]->AddUniform("invResolutionDirection", ParameterType::VEC2);
+	aoBlurShader[0]->AddUniform("texSource", ParameterType::INT);
+	aoBlurShader[1] = new GLSLShader("hbaoBlur2.frag");
+	aoBlurShader[1]->AddUniform("sharpness", ParameterType::FLOAT);
+	aoBlurShader[1]->AddUniform("invResolutionDirection", ParameterType::VEC2);
+	aoBlurShader[1]->AddUniform("texSource", ParameterType::INT);
 }
 
 void OpenGLView::Destroy()
 {
     glDeleteTextures(1, &randomTexture);
     
-    if(ssaoShader != NULL)
-        delete ssaoShader;
-    
-    if(blurShader != NULL)
-        delete blurShader;
-    
-    if(downsampleShader != NULL)
-        delete downsampleShader;
-    
-    if(lightMeterShader != NULL)
-        delete lightMeterShader;
-    
-    if(tonemapShader != NULL)
-        delete tonemapShader;
-}
-
-void OpenGLView::SetTextureUnits(GLint position, GLint normal, GLint random)
-{
-    positionTextureUnit = position;
-    normalTextureUnit = normal;
-    randomTextureUnit = random;
+    if(lightMeterShader != NULL) delete lightMeterShader;
+    if(tonemapShader != NULL) delete tonemapShader;
+	if(depthLinearizeShader[0] != NULL) delete depthLinearizeShader[0];
+	if(depthLinearizeShader[1] != NULL) delete depthLinearizeShader[1];
+	if(viewNormalShader != NULL) delete viewNormalShader;
+	if(aoDeinterleaveShader != NULL) delete aoDeinterleaveShader;
+	if(aoCalcShader != NULL) delete aoCalcShader;
+	if(aoReinterleaveShader != NULL) delete aoReinterleaveShader;
+	if(aoBlurShader[0] != NULL) delete aoBlurShader[0];
+	if(aoBlurShader[1] != NULL) delete aoBlurShader[1];
 }
 
 GLuint OpenGLView::getRandomTexture()

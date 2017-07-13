@@ -12,7 +12,7 @@
 int main(int argc, const char * argv[])
 {
     FallingTestManager* simulationManager = new FallingTestManager(100.0);
-    FallingTestApp app(1000, 700, simulationManager);
+    FallingTestApp app(1200, 900, simulationManager);
 #ifdef __linux__
     app.Init("../../../../Library/data", "../../../../Library/shaders");
 #else
