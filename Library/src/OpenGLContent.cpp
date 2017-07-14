@@ -44,6 +44,7 @@ OpenGLContent::OpenGLContent()
 	csBuf[1] = 0;
 	helperShader = NULL;
 	texQuadShader = NULL;
+	texQuadMSShader = NULL;
 	texLayerQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
@@ -75,6 +76,9 @@ OpenGLContent::~OpenGLContent()
 		
 	if(texQuadShader != NULL)
 		delete texQuadShader;
+	
+	if(texQuadMSShader != NULL)
+		delete texQuadMSShader;
 		
 	if(texLayerQuadShader != NULL)
 		delete texLayerQuadShader;
@@ -198,6 +202,11 @@ void OpenGLContent::Init()
 	texQuadShader->AddUniform("tex", ParameterType::INT);
 	texQuadShader->AddUniform("color", ParameterType::VEC4);
 	
+	texQuadMSShader = new GLSLShader("texQuadMS.frag","texQuad.vert");
+	texQuadMSShader->AddUniform("rect", ParameterType::VEC4);
+	texQuadMSShader->AddUniform("tex", ParameterType::INT);
+	texQuadMSShader->AddUniform("texSize", ParameterType::IVEC2);
+	
 	texLayerQuadShader = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
 	texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
 	texLayerQuadShader->AddUniform("tex", ParameterType::INT);
@@ -214,6 +223,7 @@ void OpenGLContent::Init()
 	blinnPhong->AddUniform("MVP", ParameterType::MAT4);
 	blinnPhong->AddUniform("M", ParameterType::MAT4);
 	blinnPhong->AddUniform("N", ParameterType::MAT3);
+	blinnPhong->AddUniform("MV", ParameterType::MAT3);
 	blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
 	blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
 	blinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -258,6 +268,7 @@ void OpenGLContent::Init()
 	cookTorrance->AddUniform("MVP", ParameterType::MAT4);
 	cookTorrance->AddUniform("M", ParameterType::MAT4);
 	cookTorrance->AddUniform("N", ParameterType::MAT3);
+	cookTorrance->AddUniform("MV", ParameterType::MAT3);
 	cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
 	cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
 	cookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -374,9 +385,9 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 	}
 }
 
-void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLuint layer)
+void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureArray, GLuint layer)
 {
-	if(saqBuf != 0 && texQuadShader != NULL)
+	if(saqBuf != 0 && texLayerQuadShader != NULL)
 	{
 		y = viewportSize.y-y-height;
 		
@@ -387,7 +398,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		
 		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 		glEnable(GL_TEXTURE_2D_ARRAY);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
 		
 		glBindVertexArray(baseVertexArray);
 		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
@@ -400,6 +411,33 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glUseProgram(0);
 	}
 }
+
+void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize)
+{
+	if(saqBuf != 0 && texQuadMSShader != NULL)
+	{
+		y = viewportSize.y-y-height;
+		
+		texQuadMSShader->Use();
+		texQuadMSShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+		texQuadMSShader->SetUniform("tex", TEX_BASE);
+		texQuadMSShader->SetUniform("texSize", texSize);
+		
+		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+		glEnable(GL_TEXTURE_2D_MULTISAMPLE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
+		
+		glBindVertexArray(baseVertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindVertexArray(0);
+		
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+		glUseProgram(0);
+	}
+}	
 
 void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
@@ -568,6 +606,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("MVP", viewProjection*M);
 			shader->SetUniform("M", M);
 			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+			shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
 			shader->SetUniform("eyePos", eyePos);
 			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("specularStrength", l.params[0]);
@@ -596,6 +635,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("MVP", viewProjection*M);
 			shader->SetUniform("M", M);
 			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+			shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
 			shader->SetUniform("eyePos", eyePos);
 			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("roughness", l.params[0]);

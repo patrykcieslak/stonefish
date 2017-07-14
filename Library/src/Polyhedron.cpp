@@ -9,7 +9,7 @@
 #include "Polyhedron.h"
 #include "SystemUtil.hpp"
 
-Polyhedron::Polyhedron(std::string uniqueName, const char* modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : SolidEntity(uniqueName, m, lookId)
+Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : SolidEntity(uniqueName, m, lookId)
 {
     scale = UnitSystem::SetLength(scale);
     

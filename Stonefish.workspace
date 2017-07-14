@@ -6,8 +6,8 @@
     <Include Path="/usr/include"/>
     <Include Path="/usr/include/bullet"/>
   </WorkspaceParserPaths>
-  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="Yes"/>
-  <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
+  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
+  <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="Yes"/>
   <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
   <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="No"/>
   <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="No"/>

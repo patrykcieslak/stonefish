@@ -55,6 +55,7 @@
       <VirtualDirectory Name="views">
         <File Name="src/OpenGLTrackball.cpp"/>
         <File Name="src/OpenGLCamera.cpp"/>
+        <File Name="src/OpenGLView.cpp"/>
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
@@ -272,18 +273,14 @@
       <File Name="shaders/guiTex.vert"/>
       <File Name="shaders/printer.frag"/>
       <File Name="shaders/printer.vert"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="postprocessing">
       <File Name="shaders/gaussianBlur.frag"/>
       <File Name="shaders/gaussianBlur.vert"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="postprocessing">
       <File Name="shaders/lightMeter.frag"/>
-      <File Name="shaders/sao.frag"/>
-      <File Name="shaders/saoBlur.frag"/>
-      <File Name="shaders/saoDownsample.frag"/>
       <File Name="shaders/tonemapping.frag"/>
       <File Name="shaders/depthLinearizeMSAA.frag"/>
       <File Name="shaders/depthLinearize.frag"/>
-      <File Name="shaders/viewNormal.frag"/>
       <File Name="shaders/hbaoDeinterleave.frag"/>
       <File Name="shaders/hbaoSaq.geom"/>
       <File Name="shaders/hbaoSaq.vert"/>
@@ -291,6 +288,7 @@
       <File Name="shaders/hbaoReinterleave.frag"/>
       <File Name="shaders/hbaoBlur.frag"/>
       <File Name="shaders/hbaoBlur2.frag"/>
+      <File Name="shaders/hbaoCalcMSAA.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="lights">
       <File Name="shaders/cascadedShadowMap.frag"/>
@@ -314,6 +312,7 @@
       <File Name="shaders/texQuad.vert"/>
       <File Name="shaders/object.vert"/>
       <File Name="shaders/texLayerQuad.frag"/>
+      <File Name="shaders/texQuadMS.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="materials">
       <File Name="shaders/blinnPhong.frag"/>

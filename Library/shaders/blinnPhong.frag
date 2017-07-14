@@ -10,7 +10,10 @@
 in vec3 normal;
 in vec2 texCoord;
 in vec3 fragPos;
-out vec3 fragColor;
+in vec3 eyeSpaceNormal;
+
+layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec3 viewNormal;
 
 uniform vec3 eyePos;
 uniform vec3 viewDir;
@@ -53,4 +56,7 @@ void main()
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
 		fragColor += calcSpotLightContribution(i, toEye, albedo);
+		
+	//Normal
+	viewNormal = eyeSpaceNormal * 0.5 + 0.5;
 }

@@ -72,14 +72,19 @@ void FallingTestManager::BuildScenario()
         AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0., 0.0, 1.0+i/1.5)));
     }*/
 	
-	int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.5f,0.5f,0.5f), 0.5f, 0.0f);
+	int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.0f,1.0f,1.0f), 0.5f, 0.0f);
+	std::string path = GetDataPath() + "dragon.obj";
+	Polyhedron* poly = new Polyhedron("Dragon", path, 0.5f, getMaterialManager()->getMaterial("Steel"), lookId, false);
+	btQuaternion quat;
+	quat.setEulerZYX(0,-M_PI_2,0);
+	AddSolidEntity(poly, btTransform(quat, btVector3(0,0,1.0)));
 	
-	for(int i=0; i<5; ++i)
+	/*for(int i=0; i<5; ++i)
 		for(int h=0; h<5; ++h)
 		{
 			Box* box = new Box("Box" + std::to_string(i*10+h), btVector3(0.5,0.5,0.5), getMaterialManager()->getMaterial("Steel"), lookId);
 			AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(-5.0+h, sinf(h/M_PI), i*0.6+0.5)));				
-		}
+		}*/
     
     ////////SENSORS AND ACTUATORS
 	//FakeIMU* imu = new FakeIMU("IMU", vehicle, btTransform::getIdentity());

@@ -52,8 +52,9 @@ layout(std140,binding=0) uniform controlBuffer
 vec2 g_Float2Offset = control.float2Offsets[gl_PrimitiveID].xy;
 vec4 g_Jitter       = control.jitters[gl_PrimitiveID];
   
+layout(location=1) uniform int sampleIndex;
 layout(binding=0) uniform sampler2DArray texLinearDepth;
-layout(binding=1) uniform sampler2D texViewNormal;
+layout(binding=1) uniform sampler2DMS texViewNormal;
 layout(location=0,index=0) out vec4 fragColor;
 
 vec3 getQuarterCoord(vec2 UV)
@@ -144,7 +145,7 @@ void main()
     vec2 uv = base * (control.InvQuarterResolution / 4.0);
 
     vec3 ViewPosition = FetchQuarterResViewPos(uv);
-    vec4 NormalAndAO =  texelFetch(texViewNormal, ivec2(base), 0);
+    vec4 NormalAndAO =  texelFetch(texViewNormal, ivec2(base), sampleIndex);
     vec3 ViewNormal = NormalAndAO.xyz * 2.0 - 1.0;
 	ViewNormal.z = -ViewNormal.z;
 

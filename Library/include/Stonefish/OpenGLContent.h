@@ -96,7 +96,9 @@ public:
 	
 	void DrawSAQ();
 	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
-	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLuint layer);
+	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureArray, GLuint layer);
+	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize);
+	
 	void DrawCubemapCross(GLuint texture);
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
 	void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
@@ -153,6 +155,7 @@ private:
 	GLuint csBuf[2]; //vertex data for drawing coord systems 
 	GLSLShader* helperShader;
 	GLSLShader* texQuadShader;
+	GLSLShader* texQuadMSShader;
 	GLSLShader* texLayerQuadShader;
 	GLSLShader* texCubeShader;
 	GLSLShader* flatShader;

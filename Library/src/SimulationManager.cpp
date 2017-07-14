@@ -427,8 +427,8 @@ void SimulationManager::InitializeSolver()
 	
     //Quality/stability
 	dynamicsWorld->getSolverInfo().m_tau = btScalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = btScalar(0.3);  //non-contact constraint error reduction
-    dynamicsWorld->getSolverInfo().m_erp2 = btScalar(1.0); //contact constraint error reduction
+    dynamicsWorld->getSolverInfo().m_erp = btScalar(0.25);  //non-contact constraint error reduction
+    dynamicsWorld->getSolverInfo().m_erp2 = btScalar(0.75); //contact constraint error reduction
     dynamicsWorld->getSolverInfo().m_frictionERP = btScalar(0.5); //friction constraint error reduction
     dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
     dynamicsWorld->getSolverInfo().m_sor = btScalar(1.); //not used

@@ -124,7 +124,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     OpenGLLight::Init();
     
     cInfo("Generating sky...");
-    OpenGLSky::getInstance()->Generate(40.f,300.f);
+    OpenGLSky::getInstance()->Generate(40.f,90.f);
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
@@ -200,11 +200,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
             //================Setup rendering scene======================
 			glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+			GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+			glDrawBuffers(2, renderBuffs);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			//================Draw precomputed sky=======================
 			glDisable(GL_DEPTH_TEST);
             glDisable(GL_CULL_FACE);
+			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			OpenGLSky::getInstance()->Render(view, sim->zUp);
 			glEnable(GL_CULL_FACE);
             glEnable(GL_DEPTH_TEST);
@@ -219,16 +222,17 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			view->SetViewport();
 			OpenGLContent::getInstance()->SetCurrentView(view);
 			OpenGLContent::getInstance()->SetDrawFlatObjects(false);
+			glDrawBuffers(2, renderBuffs);
 			DrawObjects(sim);
             
-            //================Post-processing=============================
+			//Ambient occlusion
 			glDisable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
 			glDisable(GL_CULL_FACE);
-            
+			view->DrawAO();
+			
+            //================Post-processing=============================
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
             view->DrawHDR(screenFBO);
-			view->DrawAO(screenFBO);
            
             //================Helper objects===================
             glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
@@ -307,13 +311,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				}
                         
             //Debugging
-			view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
-			view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
+			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
+			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
 			//view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
-			view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
+			//view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
 			
 			//sim->views[i]->getGBuffer()->ShowTexture(DIFFUSE, 0,0,300,200); // FBO debugging
             //sim->views[i]->getGBuffer()->ShowTexture(POSITION1,0,200,300,200); // FBO debugging

@@ -81,8 +81,8 @@ public:
     void Activate();
     void Deactivate();
     
-    void DrawHDR(GLuint destinationFBO);
-	void DrawAO(GLuint destinationFBO);
+    void DrawAO();
+	void DrawHDR(GLuint destinationFBO);
 	
 	void ShowLinearDepthTexture(glm::vec4 rect);
 	void ShowViewNormalTexture(glm::vec4 rect);
@@ -105,12 +105,12 @@ public:
         
     static void Init();
     static void Destroy();
-    static GLuint getRandomTexture();
     
 protected:
 	//Multisampled float textures
     GLuint renderFBO;
     GLuint renderColorTex;
+	GLuint renderViewNormalTex;
 	GLuint renderDepthStencilTex;
 	
 	//Float texture
@@ -124,8 +124,6 @@ protected:
 
 	GLuint linearDepthFBO;
 	GLuint linearDepthTex;
-	GLuint viewNormalFBO;
-	GLuint viewNormalTex;
 	
 	//HBAO Cache-aware (NVIDIA designworks)
 	GLuint aoBlurTex;
@@ -138,8 +136,6 @@ protected:
 	GLuint aoCalcFBO;
 	GLuint aoDataUBO;
 	AOData aoData;
-	
-	static GLuint randomTexture;
 	
 	//Data
     GLint originX;
@@ -157,12 +153,11 @@ protected:
     //Shaders
     static GLSLShader* lightMeterShader;
     static GLSLShader* tonemapShader;
-	static GLSLShader** depthLinearizeShader; //two shaders -> no msaa/msaa
-	static GLSLShader* viewNormalShader; 
+	static GLSLShader** depthLinearizeShader; //Two shaders -> no msaa/msaa
 	static GLSLShader* aoDeinterleaveShader;
-	static GLSLShader* aoCalcShader;
+	static GLSLShader** aoCalcShader;         //Two shaders -> no msaa/msaa
 	static GLSLShader* aoReinterleaveShader;
-	static GLSLShader** aoBlurShader;
+	static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
 };
 
 #endif
