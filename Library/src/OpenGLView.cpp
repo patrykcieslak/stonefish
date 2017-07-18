@@ -36,8 +36,6 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     near = 0.1f;
 	activePostprocessTexture = 0;
     
-	samples = 4;
-	
 	//----Geometry rendering----
 	if(samples > 1) //MSAA
 	{

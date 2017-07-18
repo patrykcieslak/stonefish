@@ -16,36 +16,6 @@ UnderwaterTestApp::UnderwaterTestApp(int width, int height, UnderwaterTestManage
     setSimulationSpeed(1.0);
 }
 
-void UnderwaterTestApp::MouseDown(SDL_Event* event)
-{
-    GLfloat xPos = (GLfloat)(event->motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    GLfloat yPos = -(GLfloat)(event->motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseDown(xPos, yPos);
-}
-
-void UnderwaterTestApp::MouseUp(SDL_Event* event)
-{
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseUp();
-}
-
-void UnderwaterTestApp::MouseMove(SDL_Event* event)
-{
-    GLfloat xPos = (GLfloat)(event->motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    GLfloat yPos = -(GLfloat)(event->motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseMove(xPos, yPos);
-}
-
-void UnderwaterTestApp::MouseScroll(SDL_Event* event)
-{
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseScroll(event->wheel.y * -1.f);
-}
-
 void UnderwaterTestApp::DoHUD()
 {
     SimulationApp::DoHUD();

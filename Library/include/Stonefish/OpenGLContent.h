@@ -22,6 +22,13 @@ struct Vertex
 	glm::vec3 normal;
 	glm::vec2 uv;
 	
+	Vertex()
+	{
+		pos = glm::vec3(0.f);
+		normal = glm::vec3(0.f);
+		uv = glm::vec3(-1.f);
+	}
+	
 	friend bool operator==(const Vertex& lhs, const Vertex& rhs)
 	{
 		if(lhs.pos == rhs.pos && lhs.normal == rhs.normal && lhs.uv == rhs.uv)
@@ -64,6 +71,86 @@ struct Object
 	GLuint vboIndex;
 };
 
+
+struct QuadTree;
+
+struct QuadTreeNode
+{
+	unsigned int level;
+	glm::vec3 origin;
+	glm::vec2 size;
+	glm::vec4 edgeFactors;
+	
+	bool leaf;
+	QuadTreeNode* parent;
+	QuadTreeNode* child[4];
+	QuadTree* tree;
+	
+	QuadTreeNode(glm::vec3 _origin, glm::vec2 _size, QuadTreeNode* _parent, QuadTree* _tree)
+	{
+		if(_parent != NULL)
+			level = _parent->level+1;
+		else
+			level = 0;
+			
+		origin = _origin;
+		size = _size;
+		edgeFactors = glm::vec4(1);
+	
+		leaf = true;
+		parent = _parent;
+		child[0] = NULL;
+		child[1] = NULL;
+		child[2] = NULL;
+		child[3] = NULL;
+		tree = _tree;
+	}
+	
+	~QuadTreeNode()
+	{
+		if(!leaf)
+		{
+			delete child[0];
+			delete child[1];
+			delete child[2];
+			delete child[3];
+		}
+	}
+		
+	void Grow(glm::vec3 p, glm::mat4 VP);
+};
+
+struct QuadTree
+{
+	QuadTreeNode root;
+	std::vector<QuadTreeNode*> leafs;
+	unsigned int maxLvl;
+	
+	GLuint vao;
+	GLuint vboVertex;
+	GLuint vboEdgeDiv;
+	
+	QuadTree() : root(glm::vec3(0), glm::vec2(1.f), NULL, this)
+	{
+		maxLvl = 16;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glBindVertexArray(0);
+	}
+	
+	~QuadTree()
+	{
+		glDeleteVertexArrays(1, &vao);
+	}
+	
+	void Grow(glm::vec3 eye, glm::mat4 VP)
+	{
+		root.Grow(eye, VP);
+	}
+};
+
 //Rendering styles
 typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
 
@@ -77,6 +164,7 @@ struct Look
 
 class OpenGLView;
 class OpenGLLight;
+class Ocean;
 
 class OpenGLContent
 {
@@ -103,6 +191,7 @@ public:
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
 	void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
+	void DrawOceanSurface(Ocean* ocean);
 	
 	//Allocate and build content
 	void AddView(OpenGLView* view);
@@ -122,7 +211,7 @@ public:
 	static GLuint LoadInternalTexture(std::string filename);
 	static Mesh* LoadMesh(std::string filename, GLfloat scale, bool smooth);
 	static Mesh* BuildPlane(GLfloat halfExtents);
-	static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 0);
+	static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3);
 	static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
 	static Mesh* BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
 	static Mesh* BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices = 48, unsigned int minorSlices = 24);
@@ -147,7 +236,6 @@ private:
 	glm::mat4 viewProjection; //Current view-projection matrix
 	glm::vec2 viewportSize; //Current view-port size
 	
-	
 	//Standard objects
 	GLuint baseVertexArray; //base VAO
 	GLuint saqBuf; //screen-aligned quad VBO
@@ -159,6 +247,8 @@ private:
 	GLSLShader* texLayerQuadShader;
 	GLSLShader* texCubeShader;
 	GLSLShader* flatShader;
+	GLSLShader* terrainShader; //Quad tree terrain
+	GLSLShader* oceanShaders[3]; //Quad tree ocean + fftx + ffty
 	std::vector<GLSLShader*> materialShaders;
 
 	//Singleton

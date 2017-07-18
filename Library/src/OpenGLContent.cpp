@@ -11,6 +11,7 @@
 #include "Console.h"
 #include "OpenGLView.h"
 #include "OpenGLLight.h"
+#include "Ocean.h"
 #include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "SimulationApp.h"
@@ -19,6 +20,86 @@
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
+//////////////////////////////////////////////////////
+void QuadTreeNode::Grow(glm::vec3 p, glm::mat4 VP)
+{
+	glm::vec2 half = size/2.f;
+	GLfloat distance = glm::length(origin - p);
+	GLfloat ratio = (half.x + half.y)/(distance + 0.01f);
+	
+	if(ratio > 0.25f)
+	{
+		bool visible = true;
+		
+		//Clips space coordinates
+		glm::vec4 corners[4];
+		corners[0] = VP * glm::vec4(origin + glm::vec3(half, 0.f), 1.f);
+		corners[1] = VP * glm::vec4(origin + glm::vec3(half.x, -half.y, 0.f), 1.f);
+		corners[2] = VP * glm::vec4(origin + glm::vec3(-half, 0.f), 1.f);
+		corners[3] = VP * glm::vec4(origin + glm::vec3(-half.x, half.y, 0.f), 1.f);
+		
+		//Secure margin accounting for later displacement
+		corners[0].w *= 1.1f;
+		corners[1].w *= 1.1f;
+		corners[2].w *= 1.1f;
+		corners[3].w *= 1.1f;
+		
+		//Check if quad visible
+		if(corners[0].z < -corners[0].w && corners[1].z < -corners[1].w && corners[2].z < -corners[2].w && corners[3].z < -corners[3].w) //Behind camera
+			visible = false;
+		else if(corners[0].x < -corners[0].w && corners[1].x < -corners[1].w && corners[2].x < -corners[2].w && corners[3].x < -corners[3].w) //Left of frustum
+			visible = false;
+		else if(corners[0].x > corners[0].w && corners[1].x > corners[1].w && corners[2].x > corners[2].w && corners[3].x > corners[3].w) //Right of frustum
+			visible = false;
+		else if(corners[0].y < -corners[0].w && corners[1].y < -corners[1].w && corners[2].y < -corners[2].w && corners[3].y < -corners[3].w) //Bottom of frustum
+			visible = false;
+		else if(corners[0].y > corners[0].w && corners[1].y > corners[1].w && corners[2].y > corners[2].w && corners[3].y > corners[3].w) //Top of frustum
+			visible = false;
+		else if(corners[0].z > corners[0].w && corners[1].z > corners[1].w && corners[2].z > corners[2].w && corners[3].z > corners[3].w) //Further than far plane
+			visible = false;
+		
+		//Grow tree
+		if(visible)
+		{	
+			leaf = false;
+			
+			//Create new nodes
+			child[0] = new QuadTreeNode(origin + glm::vec3(half/2.f,0.f), half, this, tree);
+			child[1] = new QuadTreeNode(origin + glm::vec3(half.x/2.f, -half.y/2.f, 0.f), half, this, tree);
+			child[2] = new QuadTreeNode(origin + glm::vec3(-half/2.f, 0.f), half, this, tree);
+			child[3] = new QuadTreeNode(origin + glm::vec3(-half.x/2.f, half.y/2.f, 0.f), half, this, tree);
+			
+			//Grow tree
+			child[0]->Grow(p, VP);
+			child[1]->Grow(p, VP);
+			child[2]->Grow(p, VP);
+			child[3]->Grow(p, VP);
+			return;
+		}
+	}
+	
+	//Corrent edge divisions
+	distance = glm::length(origin + glm::vec3(0, size.y, 0) - p);
+	ratio = (half.x + half.y)/(distance + 0.01f);
+	edgeFactors[0] = ratio > 0.25f ? 2.f : 1.f;
+	
+	distance = glm::length(origin + glm::vec3(size.x, 0, 0) - p);
+	ratio = (half.x + half.y)/(distance + 0.01f);
+	edgeFactors[1] = ratio > 0.25f ? 2.f : 1.f;
+	
+	distance = glm::length(origin + glm::vec3(0, -size.y, 0) - p);
+	ratio = (half.x + half.y)/(distance + 0.01f);
+	edgeFactors[2] = ratio > 0.25f ? 2.f : 1.f;
+	
+	distance = glm::length(origin + glm::vec3(-size.x, 0, 0) - p);
+	ratio = (half.x + half.y)/(distance + 0.01f);
+	edgeFactors[3] = ratio > 0.25f ? 2.f : 1.f;
+	
+	leaf = true;
+	tree->leafs.push_back(this);
+}
+
+////////////////////////////////////////////////////
 OpenGLContent* OpenGLContent::instance = NULL;
 
 OpenGLContent* OpenGLContent::getInstance()
@@ -48,6 +129,10 @@ OpenGLContent::OpenGLContent()
 	texLayerQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
+	terrainShader = NULL;
+	oceanShaders[0] = NULL;
+	oceanShaders[1] = NULL;
+	oceanShaders[2] = NULL;
 	eyePos = glm::vec3();
 	viewDir = glm::vec3(1.f,0,0);
 	viewProjection = glm::mat4();
@@ -59,36 +144,23 @@ OpenGLContent::OpenGLContent()
 
 OpenGLContent::~OpenGLContent()
 {
-	if(baseVertexArray != 0)
-		glDeleteVertexArrays(1, &baseVertexArray);
+	//Base shaders
+	if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
+	if(saqBuf != 0) glDeleteBuffers(1,&saqBuf);
+	if(cubeBuf != 0) glDeleteBuffers(1,&cubeBuf);
+	if(csBuf[0] != 0) glDeleteBuffers(2,csBuf);
+	if(helperShader != NULL) delete helperShader;
+	if(texQuadShader != NULL) delete texQuadShader;
+	if(texQuadMSShader != NULL) delete texQuadMSShader;
+	if(texLayerQuadShader != NULL) delete texLayerQuadShader;
+	if(texCubeShader != NULL) delete texCubeShader;
+	if(flatShader != NULL) delete flatShader;
+	if(terrainShader != NULL) delete terrainShader;
+	if(oceanShaders[0] != NULL) delete oceanShaders[0];
+	if(oceanShaders[1] != NULL) delete oceanShaders[1];
+	if(oceanShaders[2] != NULL) delete oceanShaders[2];
 	
-	if(saqBuf != 0)
-		glDeleteBuffers(1,&saqBuf);
-		
-	if(cubeBuf != 0)
-		glDeleteBuffers(1,&cubeBuf);
-		
-	if(csBuf[0] != 0)
-		glDeleteBuffers(2,csBuf);
-		
-	if(helperShader != NULL)
-		delete helperShader;
-		
-	if(texQuadShader != NULL)
-		delete texQuadShader;
-	
-	if(texQuadMSShader != NULL)
-		delete texQuadMSShader;
-		
-	if(texLayerQuadShader != NULL)
-		delete texLayerQuadShader;
-		
-	if(texCubeShader != NULL)
-		delete texCubeShader;
-		
-	if(flatShader != NULL)
-		delete flatShader;
-		
+	//Material shaders
 	for(unsigned int i=0; i<materialShaders.size(); ++i)
 		delete materialShaders[i];
 	materialShaders.clear();
@@ -217,6 +289,9 @@ void OpenGLContent::Init()
 	
 	flatShader = new GLSLShader("flat.frag", "flat.vert");
 	flatShader->AddUniform("MVP", ParameterType::MAT4);
+	
+	oceanShaders[0] = new GLSLShader("flat.frag", "flat.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));  
+	oceanShaders[0]->AddUniform("MVP", ParameterType::MAT4);
 	
 	//Materials
 	GLSLShader* blinnPhong = new GLSLShader("blinnPhong.frag", "object.vert");
@@ -565,6 +640,80 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 			glUseProgram(0);
 		}
 	}
+}
+
+void OpenGLContent::DrawOceanSurface(Ocean* ocean)
+{
+	QuadTree& qt = ocean->getSurfaceMesh();
+	
+	//Delete old tree
+	qt.leafs.clear();
+	if(!qt.root.leaf)
+	{
+		delete qt.root.child[0];
+		delete qt.root.child[1];
+		delete qt.root.child[2];
+		delete qt.root.child[3];
+	}
+	
+	//Build quad tree
+	qt.maxLvl = 12;
+	
+	int64_t start = GetTimeInMicroseconds();
+	qt.Grow(eyePos, viewProjection);
+	int64_t end = GetTimeInMicroseconds();
+	
+	//Build mesh
+	if(qt.vboVertex > 0)
+	{
+		glDeleteBuffers(1, &qt.vboVertex);
+		glDeleteBuffers(1, &qt.vboEdgeDiv);
+	}
+	
+	std::vector<glm::vec3> data;
+	std::vector<glm::vec4> data2;
+	for(unsigned int i=0; i < qt.leafs.size(); ++i)
+	{
+		glm::vec3 origin = qt.leafs[i]->origin;
+		glm::vec2 half = qt.leafs[i]->size/2.f;
+		data.push_back(origin + glm::vec3(half, 0.f));
+		data.push_back(origin + glm::vec3(half.x, -half.y, 0.f));
+		data.push_back(origin + glm::vec3(-half, 0.f));
+		data.push_back(origin + glm::vec3(-half.x, half.y, 0.f));
+		data2.push_back(qt.leafs[i]->edgeFactors);
+	}
+	
+	glGenBuffers(1, &qt.vboVertex);
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboVertex);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*data.size(), &data[0].x, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glGenBuffers(1, &qt.vboEdgeDiv);
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboEdgeDiv);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4)*data2.size(), &data2[0].x, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//Draw mesh
+	oceanShaders[0]->Use();
+	oceanShaders[0]->SetUniform("MVP", viewProjection);
+	
+	glBindVertexArray(qt.vao);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboVertex);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboEdgeDiv);
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glDrawArrays(GL_PATCHES, 0, data.size());
+	
+	glBindVertexArray(0);
+	
+	glUseProgram(0);
+	
+	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
 }
 
 void OpenGLContent::SetupLights(GLSLShader* shader)
@@ -1379,129 +1528,162 @@ Mesh* OpenGLContent::LoadOBJ(std::string filename, GLfloat scale, bool smooth)
     cInfo("Loading model from: %s", filename.c_str());
     
 	FILE* file = fopen(filename.c_str(), "rb");
-    char line[256];
-    char c1, c2;
+    char line[128];
     Mesh* mesh = new Mesh();
-    bool hasNormals = false, hasUvs = false;
-	
-	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> uvs;
+	bool hasNormals = false;
+	size_t genVStart = 0;
     
-    //Read file
-    while(fgets(line, 256, file))
-    {
-        sscanf(line, "%c%c", &c1, &c2);
-        if(c1 == 'v')
-        {
-            if(c2 == ' ')
+	int64_t start = GetTimeInMicroseconds();
+	
+    //Read vertices
+	while(fgets(line, 128, file))
+	{
+		if(line[0] == 'v')
+		{
+			if(line[1] == ' ')
             {
-                glm::vec3 v;
-                sscanf(line, "v %f %f %f\n", &v.x, &v.y, &v.z);
-                v *= scale;
-                positions.push_back(v);
+                Vertex v;
+                sscanf(line, "v %f %f %f\n", &v.pos.x, &v.pos.y, &v.pos.z);
+				v.pos *= scale; //Scaling
+                mesh->vertices.push_back(v);
             }
-            else if(c2 == 'n')
+            else if(line[1] == 'n')
             {
                 glm::vec3 n;
                 sscanf(line, "vn %f %f %f\n", &n.x, &n.y, &n.z);
                 normals.push_back(n);
-                hasNormals = true;
             }
-            else if(c2 == 't')
+            else if(line[1] == 't')
             {
                 glm::vec2 uv;
                 sscanf(line, "vt %f %f\n", &uv.x, &uv.y);
                 uvs.push_back(uv);
-                hasUvs = true;
             }
-        }
-        else if(c1 == 'f')
-        {
-            Face face;
-			Vertex v;
+		}
+		else if(line[0] == 'f')
+		{
+			break;
+		}
+	}
+		
+	genVStart = mesh->vertices.size();
+	hasNormals = normals.size() > 0;
+	mesh->hasUVs = uvs.size() > 0;
+   
+#ifdef DEBUG
+	printf("Vertices: %ld Normals: %ld\n", genVStart, normals.size());
+#endif
+	
+	//Read faces
+	do
+	{
+		if(line[0] != 'f')
+			break;
+		
+	    Face face;
 				
-            if(hasNormals && hasUvs)
-            {
-				unsigned int vID[3];
-				unsigned int uvID[3];
-				unsigned int nID[3];
-				sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
+		if(mesh->hasUVs && hasNormals)
+		{
+			unsigned int vID[3];
+			unsigned int uvID[3];
+			unsigned int nID[3];
+			sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
                 
-				for(short unsigned int i=0; i<3; ++i)
+			for(short unsigned int i=0; i<3; ++i)
+			{
+				Vertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
+				
+				if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
 				{
-					v.pos = positions[vID[i]-1];
+					mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
+					mesh->vertices[vID[i]-1].uv = uvs[uvID[i]-1];
+					face.vertexID[i] = vID[i]-1;
+				}
+				else if((v.normal == normals[nID[i]-1]) && (v.uv == uvs[uvID[i]-1])) //Does it have the same normal and UV?
+				{
+					face.vertexID[i] = vID[i]-1;
+				}
+				else //Otherwise search the generated pool
+				{
 					v.normal = normals[nID[i]-1];
 					v.uv = uvs[uvID[i]-1];
 					
 					std::vector<Vertex>::iterator it;
-					if((it = std::find(mesh->vertices.begin(), mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
+					if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
 					{
-						face.vertexID[i] = it-mesh->vertices.begin();
+						face.vertexID[i] = it - mesh->vertices.begin();
 					}
-					else //Create new vertex
+					else
 					{
 						mesh->vertices.push_back(v);
 						face.vertexID[i] = mesh->vertices.size()-1;
 					}
 				}
-            }
-            else if(hasNormals)
-            {
-				unsigned int vID[3];
-				unsigned int nID[3];
-				v.uv = glm::vec2(0,0);
-                sscanf(line, "f %u//%u %u//%u %u//%u\n", &vID[0], &nID[0], &vID[1], &nID[1], &vID[2], &nID[2]);
-                
-				for(short unsigned int i=0; i<3; ++i)
+			}
+		}
+		else if(hasNormals)
+		{
+			unsigned int vID[3];
+			unsigned int nID[3];
+			sscanf(line, "f %u//%u %u//%u %u//%u\n", &vID[0], &nID[0], &vID[1], &nID[1], &vID[2], &nID[2]);
+			
+			for(short unsigned int i=0; i<3; ++i)
+			{
+				Vertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
+				
+				if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
 				{
-					v.pos = positions[vID[i]-1];
+					mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
+					face.vertexID[i] = vID[i]-1;
+				}
+				else if(v.normal == normals[nID[i]-1]) //Does it have the same normal?
+				{
+					face.vertexID[i] = vID[i]-1;
+				}
+				else //Otherwise search the generated pool
+				{
 					v.normal = normals[nID[i]-1];
 					
 					std::vector<Vertex>::iterator it;
-					if((it = std::find(mesh->vertices.begin(), mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
+					if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
 					{
-						face.vertexID[i] = it-mesh->vertices.begin();
+						face.vertexID[i] = it - mesh->vertices.begin();
 					}
-					else //Create new vertex
+					else
 					{
 						mesh->vertices.push_back(v);
 						face.vertexID[i] = mesh->vertices.size()-1;
 					}
 				}
-            }
-            else
-            {
-				unsigned int vID[3];
-				v.normal = glm::vec3(1,0,0);
-				v.uv = glm::vec2(0,0);
-                sscanf(line, "f %u %u %u\n", &vID[0], &vID[1], &vID[2]);
+			}
+		}
+		else
+		{
+			unsigned int vID[3];
+			sscanf(line, "f %u %u %u\n", &vID[0], &vID[1], &vID[2]);
                 
-				for(short unsigned int i=0; i<3; ++i)
-				{
-					v.pos = positions[vID[i]-1];
-					
-					std::vector<Vertex>::iterator it;
-					if((it = std::find(mesh->vertices.begin(), mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
-					{
-						face.vertexID[i] = it-mesh->vertices.begin();
-					}
-					else //Create new vertex
-					{
-						mesh->vertices.push_back(v);
-						face.vertexID[i] = mesh->vertices.size()-1;
-					}
-				}
-            }
+			face.vertexID[0] = vID[0]-1;
+			face.vertexID[1] = vID[1]-1;
+			face.vertexID[2] = vID[2]-1;
+		}
             
-            mesh->faces.push_back(face);
-        }
-    }
-    
-    fclose(file);
+		mesh->faces.push_back(face);
+	}
+    while(fgets(line, 128, file));
 	
-	mesh->hasUVs = hasUvs;
-   
+	fclose(file);
+	
+	int64_t end = GetTimeInMicroseconds();
+	
+#ifdef DEBUG
+	printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->vertices.size()-genVStart);
+	printf("Total time: %ld\n", end-start);
+#endif	
+	
+	cInfo("Loaded mesh with %ld faces in %ld ms.", mesh->faces.size(), (end-start)/1000);
+	
     if(smooth)
 		SmoothNormals(mesh);
     
@@ -1514,27 +1696,26 @@ Mesh* OpenGLContent::LoadSTL(std::string filename, GLfloat scale, bool smooth)
     cInfo("Loading model from: %s", filename.c_str());
     
 	FILE* file = fopen(filename.c_str(), "rb");
-    char line[256];
+    char line[128];
     char keyword[10];
     Mesh *mesh = new Mesh();
 	mesh->hasUVs = false;
     
-	Vertex vt;
-	vt.uv = glm::vec2(0,0);
+	Vertex v;
 	
-    while(fgets(line, 256, file))
+    while(fgets(line, 128, file))
     {
         sscanf(line, "%s", keyword);
         
         if(strcmp(keyword, "facet")==0)
         {
-            sscanf(line, " facet normal %f %f %f\n", &vt.normal.x, &vt.normal.y, &vt.normal.z);
+            sscanf(line, " facet normal %f %f %f\n", &v.normal.x, &v.normal.y, &v.normal.z);
         }
         else if(strcmp(keyword, "vertex")==0)
         {
-			sscanf(line, " vertex %f %f %f\n", &vt.pos.x, &vt.pos.y, &vt.pos.z);
-			vt.pos *= scale;
-            mesh->vertices.push_back(vt);
+			sscanf(line, " vertex %f %f %f\n", &v.pos.x, &v.pos.y, &v.pos.z);
+			v.pos *= scale;
+            mesh->vertices.push_back(v);
         }
         else if(strcmp(keyword, "endfacet")==0)
         {

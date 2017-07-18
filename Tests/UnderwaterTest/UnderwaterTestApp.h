@@ -16,12 +16,6 @@ class UnderwaterTestApp : public SimulationApp
 {
 public:
     UnderwaterTestApp(int width, int height, UnderwaterTestManager* sim);
-    
-    void MouseDown(SDL_Event* event);
-    void MouseUp(SDL_Event* event);
-    void MouseMove(SDL_Event* event);
-    void MouseScroll(SDL_Event* event);
-    
     void DoHUD();
 };
 

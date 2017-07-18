@@ -99,11 +99,15 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
+	glEnable(GL_MULTISAMPLE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glPointSize(5.f);
     glLineWidth(1.0f);
     glLineStipple(3, 0xE4E4);
+	glPatchParameteri(GL_PATCH_VERTICES, 4);
+	glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
+	glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, new GLfloat[4]{1,1,1,1});
     
 	GLint texUnits;
 	GLint maxTexLayers;
@@ -204,34 +208,82 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			glDrawBuffers(2, renderBuffs);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
-			//================Draw precomputed sky=======================
-			glDisable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
-			glDrawBuffer(GL_COLOR_ATTACHMENT0);
-			OpenGLSky::getInstance()->Render(view, sim->zUp);
-			glEnable(GL_CULL_FACE);
-            glEnable(GL_DEPTH_TEST);
-            
-			//=================Draw objects===============================
-			//Bind standard textures
-			glActiveTexture(GL_TEXTURE0 + TEX_SKY_DIFFUSE);
-			glEnable(GL_TEXTURE_CUBE_MAP);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
+			Ocean* ocean = sim->getOcean();
+			if(ocean != NULL)
+			{
+				//================Draw precomputed sky=======================
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_CULL_FACE);
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				OpenGLSky::getInstance()->Render(view, sim->zUp);
+				glEnable(GL_CULL_FACE);
+				glEnable(GL_DEPTH_TEST);
+				
+				//=================Draw objects===============================
+				//Bind standard textures
+				glActiveTexture(GL_TEXTURE0 + TEX_SKY_DIFFUSE);
+				glEnable(GL_TEXTURE_CUBE_MAP);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
 			
-			//Render all objects
-			view->SetViewport();
-			OpenGLContent::getInstance()->SetCurrentView(view);
-			OpenGLContent::getInstance()->SetDrawFlatObjects(false);
-			glDrawBuffers(2, renderBuffs);
-			DrawObjects(sim);
+				//Render all objects
+				view->SetViewport();
+				OpenGLContent::getInstance()->SetCurrentView(view);
+				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
+				glDrawBuffers(2, renderBuffs);
+				DrawObjects(sim);
             
-			//Ambient occlusion
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-			view->DrawAO();
+				//Ambient occlusion
+				//glDisable(GL_DEPTH_TEST);
+				//glDisable(GL_CULL_FACE);
+				//view->DrawAO();
+				
+				//Draw ocean surface
+				//glDisable(GL_CULL_FACE);
+				
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				OpenGLContent::getInstance()->DrawOceanSurface(ocean);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				
+				/*glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				glEnable(GL_DEPTH_TEST);
+				glEnable(GL_CULL_FACE);
+				
+				*/
+			}
+			else
+			{
+				//================Draw precomputed sky=======================
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_CULL_FACE);
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				OpenGLSky::getInstance()->Render(view, sim->zUp);
+				glEnable(GL_CULL_FACE);
+				glEnable(GL_DEPTH_TEST);
+            
+				//=================Draw objects===============================
+				//Bind standard textures
+				glActiveTexture(GL_TEXTURE0 + TEX_SKY_DIFFUSE);
+				glEnable(GL_TEXTURE_CUBE_MAP);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
+			
+				//Render all objects
+				view->SetViewport();
+				OpenGLContent::getInstance()->SetCurrentView(view);
+				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
+				glDrawBuffers(2, renderBuffs);
+				DrawObjects(sim);
+            
+				//Ambient occlusion
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_CULL_FACE);
+				view->DrawAO();
+			}
 			
             //================Post-processing=============================
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
             view->DrawHDR(screenFBO);
            
             //================Helper objects===================

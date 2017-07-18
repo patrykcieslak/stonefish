@@ -212,6 +212,11 @@ SolverType SimulationManager::getSolverType()
     return solver;
 }
 
+SimulationType SimulationManager::getSimulationType()
+{
+	return simType;
+}
+
 Entity* SimulationManager::getEntity(unsigned int index)
 {
     if(index < entities.size())
@@ -295,6 +300,14 @@ Controller* SimulationManager::getController(std::string name)
             return controllers[i];
     
     return NULL;
+}
+
+Ocean* SimulationManager::getOcean()
+{
+	if(simType == MARINE)
+		return ocean;
+	else
+		return NULL;
 }
 
 ResearchDynamicsWorld* SimulationManager::getDynamicsWorld()
@@ -490,6 +503,7 @@ void SimulationManager::InitializeScenario()
         case MARINE:
         {
             //Ocean
+			EnableOcean();
         }
             break;
             
@@ -501,8 +515,8 @@ void SimulationManager::InitializeScenario()
     }
     
     //Standard trackball
-    trackball = new OpenGLTrackball(btVector3(0,0,0), 10.0, btVector3(0,0,1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
-    trackball->Rotate(btQuaternion(0.5, 0, 0));
+    trackball = new OpenGLTrackball(btVector3(0,0,0), 10.0, btVector3(0,0, zUp ? 1.0 : -1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
+    trackball->Rotate(btQuaternion(zUp ? 0.25 : -0.25, 0, 0));
     trackball->Activate();
     OpenGLContent::getInstance()->AddView(trackball);
 }

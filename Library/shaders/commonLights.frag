@@ -155,46 +155,46 @@ float calcSunShadow(float bias)
 }
 
 //Calculate contribution of different light types
-vec3 calcPointLightContribution(int id, vec3 toEye, vec3 albedo)
+vec3 calcPointLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 {
 	vec3 toLight = pointLights[id].position - fragPos;
 	float distance = length(toLight);
 	toLight /= distance;
 	
 	float attenuation = 1.0/(distance*distance);
-	return shadingModel(toEye, toLight, albedo) * pointLights[id].color * attenuation;
+	return shadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation;
 }
 
-vec3 calcSpotLightContribution(int id, vec3 toEye, vec3 albedo)
+vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 {	
 	vec3 toLight = spotLights[id].position - fragPos;
 	float distance = length(toLight);
 	toLight /= distance;
 	
 	float spotEffect = dot(spotLights[id].direction, -toLight);
-	float NdotL = dot(normal, -spotLights[id].direction);
+	float NdotL = dot(N, -spotLights[id].direction);
         
 	if(spotEffect > spotLights[id].angle && NdotL > 0.0)
 	{
 		float attenuation = 1.0/(distance*distance);
 		float bias = 0.0005 * tan(acos(NdotL));
 		bias = clamp(bias, 0, 0.005);
-		return shadingModel(toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id, bias) * pow(spotEffect, 10.0) * attenuation;
+		return shadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id, bias) * pow(spotEffect, 10.0) * attenuation;
 	}
 	else
 		return vec3(0.0);
 }
 
-vec3 calcSunContribution(vec3 toEye, vec3 albedo)
+vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo)
 {
-	float NdotL = dot(normal, -sunDirection);
+	float NdotL = dot(N, -sunDirection);
 	
 	if(NdotL > 0.0)
 	{	
 		//float bias = 0.001 * tan(acos(NdotL));
 		//bias = clamp(bias, 0, 0.01);
 		float bias = 0.001;
-		return shadingModel(toEye, -sunDirection, albedo) * sunColor.rgb * calcSunShadow(bias);
+		return shadingModel(N, toEye, -sunDirection, albedo) * sunColor.rgb * calcSunShadow(bias);
 	}
 	else
 		return vec3(0.0);

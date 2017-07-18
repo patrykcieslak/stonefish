@@ -265,6 +265,7 @@
       <File Name="shaders/fluidSurface.vert"/>
       <File Name="shaders/fluidSurfaceSun.frag"/>
       <File Name="shaders/fluidVolume.frag"/>
+      <File Name="shaders/oceanSurface.tes"/>
     </VirtualDirectory>
     <VirtualDirectory Name="gui">
       <File Name="shaders/guiFlat.frag"/>
@@ -313,6 +314,7 @@
       <File Name="shaders/object.vert"/>
       <File Name="shaders/texLayerQuad.frag"/>
       <File Name="shaders/texQuadMS.frag"/>
+      <File Name="shaders/quadTree.tcs"/>
     </VirtualDirectory>
     <VirtualDirectory Name="materials">
       <File Name="shaders/blinnPhong.frag"/>

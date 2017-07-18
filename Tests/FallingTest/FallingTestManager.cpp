@@ -36,9 +36,9 @@ void FallingTestManager::BuildScenario()
     setICSolverParams(false);
 	
     ///////MATERIALS////////
-	getMaterialManager()->CreateMaterial("Steel", 100.0, 0.5);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
+	getMaterialManager()->CreateMaterial("Steel", 100.0, 0.7);
+    //getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
+    //getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
     ///////LOOKS///////////
@@ -65,19 +65,19 @@ void FallingTestManager::BuildScenario()
 	manip->AddRotLinkDH(link3, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
 	AddEntity(manip);*/
 	
-    /*for(int i=0; i<=5; ++i)
+    /*for(int i=0; i<=10; ++i)
     {
-        int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(i/10.f,1.f,0.f), i/10.f, 0.0f);
+        int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(i/10.f,1.f-i/10.f,0.f), i*0.05f+0.05f, 0.f);
         Sphere* sph = new Sphere("Sph" + std::to_string(i), 0.25, getMaterialManager()->getMaterial("Steel"), lookId);
         AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0., 0.0, 1.0+i/1.5)));
     }*/
 	
-	int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.0f,1.0f,1.0f), 0.5f, 0.0f);
+	int lookId = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.0f,1.0f,1.0f), 0.1f, 0.0f);
 	std::string path = GetDataPath() + "dragon.obj";
 	Polyhedron* poly = new Polyhedron("Dragon", path, 0.5f, getMaterialManager()->getMaterial("Steel"), lookId, false);
 	btQuaternion quat;
 	quat.setEulerZYX(0,-M_PI_2,0);
-	AddSolidEntity(poly, btTransform(quat, btVector3(0,0,1.0)));
+	AddSolidEntity(poly, btTransform(quat, btVector3(0,0,0.0)));
 	
 	/*for(int i=0; i<5; ++i)
 		for(int h=0; h<5; ++h)

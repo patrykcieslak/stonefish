@@ -22,20 +22,13 @@ Ocean::Ocean(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
     btVector3 halfExtents = btVector3(UnitSystem::SetLength(size/btScalar(2)), UnitSystem::SetLength(size/btScalar(2)), size/btScalar(2));
     ghost->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0,0,size/btScalar(2)))); //Surface at 0
     ghost->setCollisionShape(new btBoxShape(halfExtents));
-    
-	surfaceMesh = OpenGLContent::BuildPlane(size/2.f);
-	surfaceObjectId = OpenGLContent::getInstance()->BuildObject(surfaceMesh);
+	
+	surfaceMesh.root.size = glm::vec2((GLfloat)halfExtents.getX(), (GLfloat)halfExtents.getY()) * 2.f;
 }
 
 Ocean::~Ocean()
 {
     fluid = NULL;
-	
-	if(surfaceMesh != NULL)
-	{
-		delete surfaceMesh;
-		surfaceMesh = NULL;
-	}
 }
 
 ForcefieldType Ocean::getForcefieldType()
@@ -51,6 +44,11 @@ btScalar Ocean::getDepth()
 const Fluid* Ocean::getFluid() const
 {
     return fluid;
+}
+
+QuadTree& Ocean::getSurfaceMesh()
+{
+	return surfaceMesh;
 }
 
 bool Ocean::IsInsideFluid(const btVector3& point) const
@@ -142,14 +140,4 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
         default:
             return;
     }*/
-}
-
-void Ocean::RenderSurface()
-{
-    btTransform trans = ghost->getWorldTransform();
-	OpenGLContent::getInstance()->DrawObject(surfaceObjectId, -1, glMatrixFromBtTransform(trans));
-}
-
-void Ocean::RenderVolume()
-{
 }

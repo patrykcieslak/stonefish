@@ -81,6 +81,7 @@ public:
     void getWorldAABB(btVector3& min, btVector3& max);
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
+	SimulationType getSimulationType();
     
     Entity* getEntity(unsigned int index);
     Entity* getEntity(std::string name);
@@ -94,6 +95,7 @@ public:
     Sensor* getSensor(std::string name);
     Controller* getController(unsigned int index);
     Controller* getController(std::string name);
+	Ocean* getOcean();
     
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();

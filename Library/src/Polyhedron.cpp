@@ -133,8 +133,8 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
     triangleArray = new btTriangleIndexVertexArray(mesh->faces.size(), indices, 3*sizeof(int),
                                                        mesh->vertices.size(), (btScalar*)&mesh->vertices[0].x(), sizeof(btVector3));
         
-    */
-    /*btGImpactMeshShape * trimesh = new btGImpactMeshShape(triangleArray);
+    
+    btGImpactMeshShape * trimesh = new btGImpactMeshShape(triangleArray);
     trimesh->updateBound();*/
         
     btConvexHullShape* convex = new btConvexHullShape();

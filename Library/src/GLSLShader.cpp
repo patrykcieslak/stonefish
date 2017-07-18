@@ -13,11 +13,13 @@
 
 GLuint GLSLShader::saqVertexShader = 0;
 
-GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geometry)
+GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geometry, std::pair<std::string, std::string> tesselation)
 {
     valid = false;
     GLint compiled = 0;
     GLuint vs;
+	GLuint tcs;
+	GLuint tes;
     GLuint gs;
 	GLuint fs;
     
@@ -26,6 +28,17 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
     else
         vs = LoadShader(GL_VERTEX_SHADER, vertex, &compiled);
     
+	if(tesselation.first == "" || tesselation.second == "")
+	{
+		tcs = 0;
+		tes = 0;
+	}
+	else
+	{
+		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, &compiled);
+		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, &compiled);
+	}
+	
 	if(geometry == "")
 		gs = 0;
 	else
@@ -33,7 +46,7 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
 	
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, &compiled);
     
-	shader = CreateProgram(vs, gs, fs);
+	shader = CreateProgram(vs, gs, fs, tcs, tes);
 		
     valid = true;
 }
@@ -347,13 +360,15 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, GLint *sh
 	return shader;
 }
 
-GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader)
+GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader)
 {
 	GLint programLinked = 0;
 	GLuint program = glCreateProgram();
 	GLint infoLogLength = 0;
 		
 	glAttachShader(program, vertexShader);
+	if(tessControlShader > 0) glAttachShader(program, tessControlShader);
+	if(tessEvalShader > 0) glAttachShader(program, tessEvalShader);
 	if(geometryShader > 0) glAttachShader(program, geometryShader);
 	glAttachShader(program, fragmentShader);
 	glLinkProgram(program);
@@ -369,13 +384,15 @@ GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint geometryShader, GLu
 	glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
 	
 	glDetachShader(program, vertexShader);
+	if(tessControlShader > 0) glDetachShader(program, tessControlShader);
+	if(tessEvalShader > 0) glDetachShader(program, tessEvalShader);
 	if(geometryShader > 0) glDetachShader(program, geometryShader);
 	glDetachShader(program, fragmentShader);
 	
-	if(vertexShader != saqVertexShader)
-		glDeleteShader(vertexShader);
-	if(geometryShader > 0)
-		glDeleteShader(geometryShader);
+	if(vertexShader != saqVertexShader) glDeleteShader(vertexShader);
+	if(tessControlShader > 0) glDeleteShader(tessControlShader);
+	if(tessEvalShader > 0) glDeleteShader(tessEvalShader);
+	if(geometryShader > 0) glDeleteShader(geometryShader);
 	glDeleteShader(fragmentShader);
 	
 	if(programLinked == 0)

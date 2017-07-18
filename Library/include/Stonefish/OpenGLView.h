@@ -75,7 +75,6 @@ public:
     void SetViewport();
     void SetProjection();
     void SetViewTransform();
-    void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
 	btVector3 Ray(GLint x, GLint y);
 
     void Activate();
@@ -84,6 +83,7 @@ public:
     void DrawAO();
 	void DrawHDR(GLuint destinationFBO);
 	
+	void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
 	void ShowLinearDepthTexture(glm::vec4 rect);
 	void ShowViewNormalTexture(glm::vec4 rect);
 	void ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index);
@@ -138,7 +138,8 @@ protected:
 	AOData aoData;
 	
 	//Data
-    GLint originX;
+    bool active;
+	GLint originX;
     GLint originY;
     GLint viewportWidth;
     GLint viewportHeight;
@@ -148,7 +149,6 @@ protected:
     GLfloat near;
     GLfloat far;
     glm::mat4 projection;
-    bool active;
     
     //Shaders
     static GLSLShader* lightMeterShader;

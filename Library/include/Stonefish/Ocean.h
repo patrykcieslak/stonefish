@@ -25,14 +25,11 @@ public:
     void GetSurface(btVector3& normal, btVector3& position) const;
     void GetSurfaceEquation(double* plane4) const;
     
-    //Display
-    void RenderSurface();
-    void RenderVolume();
-    
     //Getters
     btScalar getDepth();
     const Fluid* getFluid() const;
     ForcefieldType getForcefieldType();
+	QuadTree& getSurfaceMesh();
     
     virtual bool IsInsideFluid(const btVector3& point) const;
     virtual btScalar GetPressure(const btVector3& point) const;
@@ -40,7 +37,6 @@ public:
 protected:
     Fluid* fluid;
     btScalar depth;
-    GLuint surfaceObjectId;
-	Mesh* surfaceMesh;
+    QuadTree surfaceMesh;
 };
 #endif

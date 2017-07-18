@@ -10,6 +10,7 @@
 #define __Stonefish_GLSLShader__
 
 #include "OpenGLPipeline.h"
+#include <utility>
 
 typedef enum {BOOLEAN, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, MAT3, MAT4} ParameterType;
 
@@ -30,7 +31,7 @@ struct GLSLAttribute
 class GLSLShader
 {
 public:
-    GLSLShader(std::string fragment, std::string vertex = "", std::string geometry = ""); //empty means standard SAQ shader and no geometry shader
+    GLSLShader(std::string fragment, std::string vertex = "", std::string geometry = "", std::pair<std::string, std::string> tesselation = std::make_pair("","")); //empty means standard SAQ shader and no geometry shader
     ~GLSLShader();
     
     void Use();
@@ -68,7 +69,7 @@ private:
     
     static GLuint saqVertexShader;
     static GLuint LoadShader(GLenum shaderType, std::string filename, GLint* shaderCompiled);
-    static GLuint CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader);
+    static GLuint CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader);
 };
 
 
