@@ -71,7 +71,6 @@ struct Object
 	GLuint vboIndex;
 };
 
-
 struct QuadTree;
 
 struct QuadTreeNode
@@ -162,9 +161,9 @@ struct Look
     std::vector<GLuint> textures;
 };
 
+//Class
 class OpenGLView;
 class OpenGLLight;
-class Ocean;
 
 class OpenGLContent
 {
@@ -191,7 +190,6 @@ public:
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
 	void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
-	void DrawOceanSurface(Ocean* ocean);
 	
 	//Allocate and build content
 	void AddView(OpenGLView* view);
@@ -247,8 +245,6 @@ private:
 	GLSLShader* texLayerQuadShader;
 	GLSLShader* texCubeShader;
 	GLSLShader* flatShader;
-	GLSLShader* terrainShader; //Quad tree terrain
-	GLSLShader* oceanShaders[3]; //Quad tree ocean + fftx + ffty
 	std::vector<GLSLShader*> materialShaders;
 
 	//Singleton
@@ -263,7 +259,7 @@ private:
 	//Static
 	static Mesh* LoadSTL(std::string filename, GLfloat scale, bool smooth);
 	static Mesh* LoadOBJ(std::string filename, GLfloat scale, bool smooth);
-	
+	//TODO: Implement support for PLY
 };
 
 #endif

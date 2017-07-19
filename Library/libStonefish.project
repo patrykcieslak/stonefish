@@ -60,6 +60,7 @@
       <File Name="src/GLSLShader.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
       <File Name="src/OpenGLContent.cpp"/>
+      <File Name="src/OpenGLOcean.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -210,6 +211,7 @@
       </VirtualDirectory>
       <File Name="include/Stonefish/OpenGLContent.h"/>
       <File Name="include/Stonefish/OpenGLPipeline.h"/>
+      <File Name="include/Stonefish/OpenGLOcean.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="include/Stonefish/Actuator.h"/>
@@ -259,13 +261,14 @@
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">
-      <File Name="shaders/aboveFluidSurface.frag"/>
-      <File Name="shaders/belowFluidSurface.frag"/>
-      <File Name="shaders/fluidBorder.frag"/>
-      <File Name="shaders/fluidSurface.vert"/>
-      <File Name="shaders/fluidSurfaceSun.frag"/>
       <File Name="shaders/fluidVolume.frag"/>
       <File Name="shaders/oceanSurface.tes"/>
+      <File Name="shaders/oceanFFTX.frag"/>
+      <File Name="shaders/oceanFFTY.frag"/>
+      <File Name="shaders/oceanInit.frag"/>
+      <File Name="shaders/oceanFFT.geom"/>
+      <File Name="shaders/oceanVariance.frag"/>
+      <File Name="shaders/oceanSpectrum.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="gui">
       <File Name="shaders/guiFlat.frag"/>

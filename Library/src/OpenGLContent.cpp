@@ -11,7 +11,6 @@
 #include "Console.h"
 #include "OpenGLView.h"
 #include "OpenGLLight.h"
-#include "Ocean.h"
 #include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "SimulationApp.h"
@@ -129,10 +128,6 @@ OpenGLContent::OpenGLContent()
 	texLayerQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
-	terrainShader = NULL;
-	oceanShaders[0] = NULL;
-	oceanShaders[1] = NULL;
-	oceanShaders[2] = NULL;
 	eyePos = glm::vec3();
 	viewDir = glm::vec3(1.f,0,0);
 	viewProjection = glm::mat4();
@@ -155,10 +150,6 @@ OpenGLContent::~OpenGLContent()
 	if(texLayerQuadShader != NULL) delete texLayerQuadShader;
 	if(texCubeShader != NULL) delete texCubeShader;
 	if(flatShader != NULL) delete flatShader;
-	if(terrainShader != NULL) delete terrainShader;
-	if(oceanShaders[0] != NULL) delete oceanShaders[0];
-	if(oceanShaders[1] != NULL) delete oceanShaders[1];
-	if(oceanShaders[2] != NULL) delete oceanShaders[2];
 	
 	//Material shaders
 	for(unsigned int i=0; i<materialShaders.size(); ++i)
@@ -265,6 +256,7 @@ void OpenGLContent::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 	//Load shaders
+	//Basic
 	helperShader = new GLSLShader("helpers.frag","helpers.vert");
 	helperShader->AddUniform("MVP", ParameterType::MAT4);
 	helperShader->AddUniform("scale", ParameterType::FLOAT);
@@ -289,9 +281,6 @@ void OpenGLContent::Init()
 	
 	flatShader = new GLSLShader("flat.frag", "flat.vert");
 	flatShader->AddUniform("MVP", ParameterType::MAT4);
-	
-	oceanShaders[0] = new GLSLShader("flat.frag", "flat.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));  
-	oceanShaders[0]->AddUniform("MVP", ParameterType::MAT4);
 	
 	//Materials
 	GLSLShader* blinnPhong = new GLSLShader("blinnPhong.frag", "object.vert");
@@ -640,80 +629,6 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 			glUseProgram(0);
 		}
 	}
-}
-
-void OpenGLContent::DrawOceanSurface(Ocean* ocean)
-{
-	QuadTree& qt = ocean->getSurfaceMesh();
-	
-	//Delete old tree
-	qt.leafs.clear();
-	if(!qt.root.leaf)
-	{
-		delete qt.root.child[0];
-		delete qt.root.child[1];
-		delete qt.root.child[2];
-		delete qt.root.child[3];
-	}
-	
-	//Build quad tree
-	qt.maxLvl = 12;
-	
-	int64_t start = GetTimeInMicroseconds();
-	qt.Grow(eyePos, viewProjection);
-	int64_t end = GetTimeInMicroseconds();
-	
-	//Build mesh
-	if(qt.vboVertex > 0)
-	{
-		glDeleteBuffers(1, &qt.vboVertex);
-		glDeleteBuffers(1, &qt.vboEdgeDiv);
-	}
-	
-	std::vector<glm::vec3> data;
-	std::vector<glm::vec4> data2;
-	for(unsigned int i=0; i < qt.leafs.size(); ++i)
-	{
-		glm::vec3 origin = qt.leafs[i]->origin;
-		glm::vec2 half = qt.leafs[i]->size/2.f;
-		data.push_back(origin + glm::vec3(half, 0.f));
-		data.push_back(origin + glm::vec3(half.x, -half.y, 0.f));
-		data.push_back(origin + glm::vec3(-half, 0.f));
-		data.push_back(origin + glm::vec3(-half.x, half.y, 0.f));
-		data2.push_back(qt.leafs[i]->edgeFactors);
-	}
-	
-	glGenBuffers(1, &qt.vboVertex);
-	glBindBuffer(GL_ARRAY_BUFFER, qt.vboVertex);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*data.size(), &data[0].x, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glGenBuffers(1, &qt.vboEdgeDiv);
-	glBindBuffer(GL_ARRAY_BUFFER, qt.vboEdgeDiv);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4)*data2.size(), &data2[0].x, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	//Draw mesh
-	oceanShaders[0]->Use();
-	oceanShaders[0]->SetUniform("MVP", viewProjection);
-	
-	glBindVertexArray(qt.vao);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, qt.vboVertex);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, qt.vboEdgeDiv);
-	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glDrawArrays(GL_PATCHES, 0, data.size());
-	
-	glBindVertexArray(0);
-	
-	glUseProgram(0);
-	
-	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
 }
 
 void OpenGLContent::SetupLights(GLSLShader* shader)

@@ -10,6 +10,8 @@
 #include "SolidEntity.h"
 #include "SystemEntity.h"
 #include "GeometryUtil.hpp"
+#include "SystemUtil.hpp"
+#include <algorithm>
 
 Ocean::Ocean(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
 {
@@ -22,8 +24,6 @@ Ocean::Ocean(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
     btVector3 halfExtents = btVector3(UnitSystem::SetLength(size/btScalar(2)), UnitSystem::SetLength(size/btScalar(2)), size/btScalar(2));
     ghost->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0,0,size/btScalar(2)))); //Surface at 0
     ghost->setCollisionShape(new btBoxShape(halfExtents));
-	
-	surfaceMesh.root.size = glm::vec2((GLfloat)halfExtents.getX(), (GLfloat)halfExtents.getY()) * 2.f;
 }
 
 Ocean::~Ocean()
@@ -46,9 +46,9 @@ const Fluid* Ocean::getFluid() const
     return fluid;
 }
 
-QuadTree& Ocean::getSurfaceMesh()
+OpenGLOcean& Ocean::getOpenGLOcean()
 {
-	return surfaceMesh;
+	return glOcean;
 }
 
 bool Ocean::IsInsideFluid(const btVector3& point) const

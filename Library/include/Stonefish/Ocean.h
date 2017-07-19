@@ -11,6 +11,7 @@
 
 #include "ForcefieldEntity.h"
 #include "MaterialManager.h"
+#include "OpenGLOcean.h"
 
 //Abstract class
 class Ocean : public ForcefieldEntity
@@ -29,14 +30,13 @@ public:
     btScalar getDepth();
     const Fluid* getFluid() const;
     ForcefieldType getForcefieldType();
-	QuadTree& getSurfaceMesh();
-    
-    virtual bool IsInsideFluid(const btVector3& point) const;
+	OpenGLOcean& getOpenGLOcean();
+	virtual bool IsInsideFluid(const btVector3& point) const;
     virtual btScalar GetPressure(const btVector3& point) const;
-    
-protected:
+	
+private:	
     Fluid* fluid;
     btScalar depth;
-    QuadTree surfaceMesh;
+    OpenGLOcean glOcean;
 };
 #endif

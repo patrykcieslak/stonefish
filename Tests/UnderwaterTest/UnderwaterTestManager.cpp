@@ -39,8 +39,6 @@ void UnderwaterTestManager::BuildScenario()
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 1.1), 0.4);
     getMaterialManager()->CreateMaterial("Cork", UnitSystem::Density(CGS, MKS, 0.9), 0.2);
-    getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55);
-    
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.9, 0.5);
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Cork", 0.9, 0.7);
     getMaterialManager()->SetMaterialsInteraction("Cork", "Cork", 0.9, 0.7);
@@ -48,10 +46,8 @@ void UnderwaterTestManager::BuildScenario()
     ///////LOOKS///////////
     int yellow = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 0.6f, 0.2f), 0.5f, 0.f);
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.5f, 0.f);
-    
+	
     ////////OBJECTS
-    EnableOcean(getMaterialManager()->getFluid("Water"));
-    
     //Setup model paths
     std::string path = GetDataPath() + "sphere_R=1.obj";
 	

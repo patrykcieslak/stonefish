@@ -98,10 +98,7 @@ void SimulationManager::AddSystemEntity(SystemEntity* ent, const btTransform& wo
 void SimulationManager::EnableOcean(Fluid* f)
 {
 	if(ocean != NULL)
-	{
-		//TODO: Remove from dynamics world!
-		delete ocean;
-	}
+		return;
 	
 	if(f != NULL)
 	{
@@ -115,6 +112,7 @@ void SimulationManager::EnableOcean(Fluid* f)
 	
 	ocean->setRenderable(true);
 	ocean->AddToDynamicsWorld(dynamicsWorld);
+	ocean->getOpenGLOcean().InitOcean();
 }
 
 void SimulationManager::AddSensor(Sensor *sens)
