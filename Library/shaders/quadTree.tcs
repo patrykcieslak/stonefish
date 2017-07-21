@@ -2,32 +2,17 @@
 
 layout(vertices = 4) out;
 in float edgeDiv[];
+uniform float tessDiv;
 
 void main(void)
 {
-	vec2 pos0 = gl_in[0].gl_Position.xy/gl_in[0].gl_Position.w;
-	vec2 pos1 = gl_in[1].gl_Position.xy/gl_in[1].gl_Position.w;
-	vec2 pos2 = gl_in[2].gl_Position.xy/gl_in[2].gl_Position.w;
-	vec2 pos3 = gl_in[3].gl_Position.xy/gl_in[3].gl_Position.w;
+	gl_TessLevelOuter[0] = tessDiv * edgeDiv[0];
+	gl_TessLevelOuter[1] = tessDiv * edgeDiv[1];
+	gl_TessLevelOuter[2] = tessDiv * edgeDiv[2];
+	gl_TessLevelOuter[3] = tessDiv * edgeDiv[3];
 	
-	float screenSize = 0.02;
-	
-	gl_TessLevelOuter[1] = clamp(length(pos1-pos0)/screenSize, 1, 16) * edgeDiv[1];
-	gl_TessLevelOuter[2] = clamp(length(pos2-pos1)/screenSize, 1, 16) * edgeDiv[2];
-	gl_TessLevelOuter[3] = clamp(length(pos3-pos2)/screenSize, 1, 16) * edgeDiv[3];
-	gl_TessLevelOuter[0] = clamp(length(pos0-pos3)/screenSize, 1, 16) * edgeDiv[0];
-
-	gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2])/2.0;
 	gl_TessLevelInner[0] = (gl_TessLevelOuter[1] + gl_TessLevelOuter[3])/2.0;
-	
-	/*
-	gl_TessLevelOuter[0] = edgeDiv[0];
-	gl_TessLevelOuter[1] = edgeDiv[1];
-	gl_TessLevelOuter[2] = edgeDiv[2];
-	gl_TessLevelOuter[3] = edgeDiv[3];
-	
-	gl_TessLevelInner[0] = 1.0;
-	gl_TessLevelInner[1] = 1.0;*/
+	gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2])/2.0;
 	
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 }

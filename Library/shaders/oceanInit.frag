@@ -1,12 +1,12 @@
 #version 430 core
+layout(location = 0,index=0) out vec4 fragColor[8];
+in vec2 texcoord;
+
 uniform sampler2D texSpectrum12;
 uniform sampler2D texSpectrum34;
-uniform float fftSize;
 uniform vec4 inverseGridSizes;
+uniform float fftSize;
 uniform float t;
-
-in vec2 texcoord;
-out vec4 fragColor[8];
 
 // h(k,t), complex number
 vec2 getSpectrum(float k, vec2 s0, vec2 s0c) 

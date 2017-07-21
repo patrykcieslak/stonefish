@@ -118,7 +118,7 @@ void OpenGLContent::Destroy()
 OpenGLContent::OpenGLContent()
 {
 	baseVertexArray = 0;
-	saqBuf = 0;
+	quadBuf = 0;
 	cubeBuf = 0;
 	csBuf[0] = 0;
 	csBuf[1] = 0;
@@ -141,9 +141,9 @@ OpenGLContent::~OpenGLContent()
 {
 	//Base shaders
 	if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
-	if(saqBuf != 0) glDeleteBuffers(1,&saqBuf);
-	if(cubeBuf != 0) glDeleteBuffers(1,&cubeBuf);
-	if(csBuf[0] != 0) glDeleteBuffers(2,csBuf);
+	if(quadBuf != 0) glDeleteBuffers(1, &quadBuf);
+	if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
+	if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
 	if(helperShader != NULL) delete helperShader;
 	if(texQuadShader != NULL) delete texQuadShader;
 	if(texQuadMSShader != NULL) delete texQuadMSShader;
@@ -186,23 +186,19 @@ void OpenGLContent::DestroyContent()
 void OpenGLContent::Init()
 {
 	glGenVertexArrays(1, &baseVertexArray);
-	glBindVertexArray(baseVertexArray);
-	glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
 	
-	//Build screen-aligned quad VBO
-	GLfloat saqData[4][4] = {
-		{-1.f, -1.f, 0.f, 0.f},
-		{-1.f,  1.f, 0.f, 1.f},
-		{ 1.f, -1.f, 1.f, 0.f},
-		{ 1.f,  1.f, 1.f, 1.f}};
-	
-	glGenBuffers(1, &saqBuf); 
-	glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(saqData), saqData, GL_STATIC_DRAW); 
+	//Build quad texture VBO
+	GLfloat quadData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
+							  {-1.f,  1.f, 0.f, 1.f},
+							  { 1.f, -1.f, 1.f, 0.f},
+							  { 1.f,  1.f, 1.f, 1.f}};
+							  
+	glGenBuffers(1, &quadBuf); 
+	glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW); 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	//Buld cube croos VBO
+	//Build cube croos VBO
 	GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
 							   {-1.f, -0.333f, -1.f,-1.f, 1.f},
 							   {-0.5f, 0.333f, -1.f, 1.f,-1.f},
@@ -412,19 +408,14 @@ void OpenGLContent::BindBaseVertexArray()
 
 void OpenGLContent::DrawSAQ()
 {
-	if(saqBuf != 0)
-	{
-		glBindVertexArray(baseVertexArray);
-		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
- 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glBindVertexArray(0);
-	}
+	glBindVertexArray(baseVertexArray);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glBindVertexArray(0);
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
 {
-	if(saqBuf != 0 && texQuadShader != NULL)
+	if(texQuadShader != NULL)
 	{
 		y = viewportSize.y-y-height;
 		
@@ -438,10 +429,12 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glBindTexture(GL_TEXTURE_2D, texture);
 		
 		glBindVertexArray(baseVertexArray);
-		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDisableVertexAttribArray(0);
 		glBindVertexArray(0);
 		
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -451,7 +444,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureArray, GLuint layer)
 {
-	if(saqBuf != 0 && texLayerQuadShader != NULL)
+	if(texLayerQuadShader != NULL)
 	{
 		y = viewportSize.y-y-height;
 		
@@ -465,10 +458,12 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
 		
 		glBindVertexArray(baseVertexArray);
-		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDisableVertexAttribArray(0);
 		glBindVertexArray(0);
 		
 		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
@@ -478,7 +473,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize)
 {
-	if(saqBuf != 0 && texQuadMSShader != NULL)
+	if(texQuadMSShader != NULL)
 	{
 		y = viewportSize.y-y-height;
 		
@@ -492,10 +487,12 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
 		
 		glBindVertexArray(baseVertexArray);
-		glBindBuffer(GL_ARRAY_BUFFER, saqBuf); 
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDisableVertexAttribArray(0);
 		glBindVertexArray(0);
 		
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
@@ -528,7 +525,8 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 		glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 		
 		glBindVertexArray(0);
-		
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		glDisable(GL_TEXTURE_CUBE_MAP);
 		glUseProgram(0);
@@ -555,6 +553,9 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 		
 		glDrawArrays(GL_LINES, 0, 6);
 		glBindVertexArray(0);
+		
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 		glUseProgram(0);
 	}
 }
@@ -572,7 +573,6 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 		
 		glBindVertexArray(baseVertexArray);
 		glEnableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
@@ -597,6 +597,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 				break;
 		}
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(0);
 		glUseProgram(0);
 		
 		glDeleteBuffers(1, &vbo);

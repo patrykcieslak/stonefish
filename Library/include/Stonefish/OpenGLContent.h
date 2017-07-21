@@ -236,7 +236,7 @@ private:
 	
 	//Standard objects
 	GLuint baseVertexArray; //base VAO
-	GLuint saqBuf; //screen-aligned quad VBO
+	GLuint quadBuf; //quad for debugging textures
 	GLuint cubeBuf; //cubemap cross VBO
 	GLuint csBuf[2]; //vertex data for drawing coord systems 
 	GLSLShader* helperShader;

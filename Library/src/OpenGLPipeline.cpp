@@ -169,7 +169,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 {
 	Ocean* ocean = sim->getOcean();
 	if(ocean != NULL)
-		ocean->getOpenGLOcean().SimulateOcean(0.01f);
+		ocean->getOpenGLOcean().SimulateOcean();
 	
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
@@ -235,17 +235,15 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				glDrawBuffers(2, renderBuffs);
 				DrawObjects(sim);
             
+				//Draw ocean surface
+				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetProjectionMatrix() * view->GetViewMatrix());
+				//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				
 				//Ambient occlusion
 				//glDisable(GL_DEPTH_TEST);
 				//glDisable(GL_CULL_FACE);
 				//view->DrawAO();
-				
-				//Draw ocean surface
-				//glDisable(GL_CULL_FACE);
-				
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetProjectionMatrix() * view->GetViewMatrix());
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				
 				/*glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
 				glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -366,7 +364,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				}
                         
             //Debugging
-			ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec4(0,200,300,300));
+			if(ocean != NULL)
+			{	
+				//ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
+				//ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
+			}
 			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
 			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);

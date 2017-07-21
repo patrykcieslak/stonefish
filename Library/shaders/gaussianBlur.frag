@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 in vec2 texcoord;
 in vec2 blurtexcoord[4];

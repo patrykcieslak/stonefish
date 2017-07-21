@@ -268,7 +268,7 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
 		glBindVertexArray(0);
 		
         //Load translucent shaders
-        downsampleShader = new GLSLShader("simpleDownsample.frag", "downsample.vert");
+        downsampleShader = new GLSLShader("simpleDownsample.frag");
         downsampleShader->AddUniform("source", INT);
         downsampleShader->AddUniform("srcViewport", VEC2);
         gaussianShader = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");

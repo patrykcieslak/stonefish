@@ -265,10 +265,10 @@
       <File Name="shaders/oceanSurface.tes"/>
       <File Name="shaders/oceanFFTX.frag"/>
       <File Name="shaders/oceanFFTY.frag"/>
-      <File Name="shaders/oceanInit.frag"/>
-      <File Name="shaders/oceanFFT.geom"/>
       <File Name="shaders/oceanVariance.frag"/>
       <File Name="shaders/oceanSpectrum.frag"/>
+      <File Name="shaders/oceanSurface.frag"/>
+      <File Name="shaders/oceanInit.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="gui">
       <File Name="shaders/guiFlat.frag"/>
@@ -287,7 +287,6 @@
       <File Name="shaders/depthLinearize.frag"/>
       <File Name="shaders/hbaoDeinterleave.frag"/>
       <File Name="shaders/hbaoSaq.geom"/>
-      <File Name="shaders/hbaoSaq.vert"/>
       <File Name="shaders/hbaoCalc.frag"/>
       <File Name="shaders/hbaoReinterleave.frag"/>
       <File Name="shaders/hbaoBlur.frag"/>
@@ -300,7 +299,6 @@
       <File Name="shaders/cubeDownsample.frag"/>
       <File Name="shaders/cubePass.frag"/>
       <File Name="shaders/cubeSky.frag"/>
-      <File Name="shaders/downsample.vert"/>
       <File Name="shaders/commonLights.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
@@ -309,7 +307,6 @@
       <File Name="shaders/helpers.frag"/>
       <File Name="shaders/helpers.vert"/>
       <File Name="shaders/saq.vert"/>
-      <File Name="shaders/simpleDownsample.frag"/>
       <File Name="shaders/texCube.frag"/>
       <File Name="shaders/texCube.vert"/>
       <File Name="shaders/texQuad.frag"/>
@@ -318,6 +315,8 @@
       <File Name="shaders/texLayerQuad.frag"/>
       <File Name="shaders/texQuadMS.frag"/>
       <File Name="shaders/quadTree.tcs"/>
+      <File Name="shaders/quadTree.vert"/>
+      <File Name="shaders/simpleDownsample.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="materials">
       <File Name="shaders/blinnPhong.frag"/>

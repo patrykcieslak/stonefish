@@ -1,4 +1,6 @@
-#version 330 core
+#version 430 core
+
+uniform vec3 eyePos;
 
 out vec4 fragColor;
 

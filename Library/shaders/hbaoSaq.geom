@@ -1,9 +1,9 @@
-#version 430
+#version 430 core
 
 layout(triangles) in;
 layout(triangle_strip,max_vertices=3) out;
 
-#extension GL_NV_geometry_shader_passthrough : enable
+/*#extension GL_NV_geometry_shader_passthrough : enable
 
 #if GL_NV_geometry_shader_passthrough
 layout(passthrough) in gl_PerVertex 
@@ -13,7 +13,7 @@ layout(passthrough) in gl_PerVertex
   
 layout(passthrough) in Inputs 
 {
-	vec2 texCoord;
+	vec2 texcoord;
 };
   
 void main()
@@ -23,26 +23,27 @@ void main()
 }
 
 #else
-in Inputs 
+/*in Inputs 
 {
 	vec2 texcoord;
 } 
-IN[];
- 
-out vec2 texcoord;
+IN[];*/
+
+in vec2 texcoord[];
+out vec2 gTexcoord;
 
 void main()
 {
-	for (int i = 0; i < 3; i++)
+	for(int i = 0; i < 3; ++i)
 	{
-		texcoord = IN[i].texcoord;
+		gTexcoord = texcoord[i];
 		gl_Layer = gl_PrimitiveIDIn;
 		gl_PrimitiveID = gl_PrimitiveIDIn;
 		gl_Position = gl_in[i].gl_Position;
 		EmitVertex();
 	}
 }
-#endif
+//#endif
 
 /*-----------------------------------------------------------------------
   Copyright (c) 2014-2015, NVIDIA. All rights reserved.

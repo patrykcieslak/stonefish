@@ -19,8 +19,7 @@ struct OceanParams
 	glm::vec4 gridSizes;
 	float* spectrum12;
 	float* spectrum34;
-	
-	bool choppy;
+	glm::vec4 choppyFactor;
 	bool propagate;
 	float wind;
 	float omega;
@@ -37,9 +36,10 @@ public:
 	~OpenGLOcean();
 	
 	void InitOcean();
-	void SimulateOcean(float dt);
+	void SimulateOcean();
 	void DrawOceanSurface(glm::vec3 eyePos, glm::mat4 viewProjection);
-	void ShowOceanSpectrum(glm::vec4 rect);
+	void ShowOceanSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
+	void ShowOceanTexture(int id, glm::vec4 rect);
 
 private:	
 	GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
@@ -56,9 +56,11 @@ private:
 	GLSLShader* oceanShaders[8]; //surface, volume, init, fftx, ffty, variance, choppy, show spectrum
 	GLuint oceanFBOs[3];
 	GLuint oceanTextures[7]; //spectrum12, spectrum34, slope, fft ping, fft pong, butterfly, gaussz
+	GLuint oceanViewTextures[8];
 	
 	OceanParams params;
 	QuadTree qt;
+	int64_t lastTime;
 };
 
 #endif

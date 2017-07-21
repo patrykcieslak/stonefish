@@ -693,10 +693,10 @@ void OpenGLView::Init()
 	aoDeinterleaveShader->AddUniform("texLinearDepth", ParameterType::INT);
 	
 	aoCalcShader = new GLSLShader*[2];
-	aoCalcShader[0] = new GLSLShader("hbaoCalc.frag", "hbaoSaq.vert", "hbaoSaq.geom");
+	aoCalcShader[0] = new GLSLShader("hbaoCalc.frag", "", "hbaoSaq.geom");
 	aoCalcShader[0]->AddUniform("texLinearDepth", ParameterType::INT);
 	aoCalcShader[0]->AddUniform("texViewNormal", ParameterType::INT);
-	aoCalcShader[1] = new GLSLShader("hbaoCalcMSAA.frag", "hbaoSaq.vert", "hbaoSaq.geom");
+	aoCalcShader[1] = new GLSLShader("hbaoCalcMSAA.frag", "", "hbaoSaq.geom");
 	aoCalcShader[1]->AddUniform("texLinearDepth", ParameterType::INT);
 	aoCalcShader[1]->AddUniform("texViewNormal", ParameterType::INT);
 	aoCalcShader[1]->AddUniform("sampleIndex", ParameterType::INT);
