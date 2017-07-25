@@ -24,10 +24,10 @@ public:
     void MouseUp();
     void MouseScroll(GLfloat s);
     
-    glm::mat4 GetViewTransform();
-    glm::vec3 GetEyePosition();
-    glm::vec3 GetLookingDirection();
-    glm::vec3 GetUpDirection();
+    glm::mat4 GetViewTransform() const;
+    glm::vec3 GetEyePosition() const;
+    glm::vec3 GetLookingDirection() const;
+    glm::vec3 GetUpDirection() const;
     ViewType getType();
     
 private:

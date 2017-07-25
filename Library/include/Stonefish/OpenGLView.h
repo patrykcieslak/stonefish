@@ -65,10 +65,10 @@ public:
     OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
     virtual ~OpenGLView(void);
     
-    virtual glm::mat4 GetViewTransform() = 0;
-    virtual glm::vec3 GetEyePosition() = 0;
-    virtual glm::vec3 GetLookingDirection() = 0;
-    virtual glm::vec3 GetUpDirection() = 0;
+    virtual glm::mat4 GetViewTransform() const = 0;
+    virtual glm::vec3 GetEyePosition() const = 0;
+    virtual glm::vec3 GetLookingDirection() const = 0;
+    virtual glm::vec3 GetUpDirection() const = 0;
     virtual ViewType getType() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
@@ -90,10 +90,11 @@ public:
 	void ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index);
     void ShowAmbientOcclusion(glm::vec4 rect);
 	
-    GLint* GetViewport();
-    glm::mat4 GetProjectionMatrix();
-    glm::mat4 GetViewMatrix();
-    GLfloat GetFOVY();
+    GLint* GetViewport() const;
+    glm::mat4 GetProjectionMatrix() const;
+    glm::mat4 GetViewMatrix() const;
+	GLfloat GetFOVX() const;
+    GLfloat GetFOVY() const;
     GLfloat GetNearClip();
     GLfloat GetFarClip();
     

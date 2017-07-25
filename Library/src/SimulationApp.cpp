@@ -332,7 +332,7 @@ void SimulationApp::EventLoop()
     {
         SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
 
-        if(SDL_PollEvent(&event))
+        while(SDL_PollEvent(&event))
         {
             switch(event.type)
             {
@@ -437,7 +437,7 @@ void SimulationApp::EventLoop()
         
         ProcessInputs();
         AppLoop();
-        
+		
         //workaround for checking if IMGUI is being manipulated
         if(mouseWasDown && !IMGUI::getInstance()->isAnyActive())
         {
@@ -464,7 +464,10 @@ void SimulationApp::AppLoop()
         simulation->AdvanceSimulation(GetTimeInMicroseconds()*simSpeedFactor);
         physicsTime = simulation->getPhysicsTimeInMiliseconds();
 	}
-    	
+    
+	//Update drawing queue
+	simulation->UpdateDrawingQueue();
+	
     //Rendering
     uint64_t startTime = GetTimeInMicroseconds();
 	OpenGLPipeline::getInstance()->Render(simulation);
@@ -495,10 +498,9 @@ void SimulationApp::AppLoop()
             IMGUI::getInstance()->End();
         }
     }
-
-	glFlush();
-	drawingTime = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
+	
 	SDL_GL_SwapWindow(window);
+	drawingTime = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
 }
 
 void SimulationApp::DoHUD()
@@ -517,7 +519,7 @@ void SimulationApp::DoHUD()
 	sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());
     IMGUI::getInstance()->DoLabel(10, getWindowHeight() - 20.f, buffer);
     
-    sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", getPhysicsTime()/(getDrawingTime()+getPhysicsTime()), getPhysicsTime());
+    sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", 100.f*getPhysicsTime()/(16.666f-getDrawingTime()), getPhysicsTime());
     IMGUI::getInstance()->DoLabel(170, getWindowHeight() - 20.f, buffer);
     
     sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
@@ -603,8 +605,6 @@ int SimulationApp::RenderLoadingScreen(void* data)
         Console::getInstance()->Render(false);
         SDL_UnlockMutex(ltdata->mutex);
         
-        glFlush();
-        glFinish();
         SDL_GL_SwapWindow(ltdata->app->window);
     }
 	

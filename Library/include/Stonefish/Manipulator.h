@@ -38,7 +38,7 @@ public:
     void ApplyGravity(const btVector3& g);
     void ApplyFluidForces(Ocean* fluid);
     btTransform getTransform() const;
-    virtual void Render();
+    virtual std::vector<Renderable> Render();
     
 private:
     FeatherstoneEntity* chain;

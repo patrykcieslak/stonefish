@@ -22,7 +22,6 @@
 #include "FeatherstoneEntity.h"
 #include "Ocean.h"
 #include "SystemEntity.h"
-#include "OpenGLTrackball.h"
 
 //Dynamic elements
 #include "Joint.h"
@@ -31,7 +30,9 @@
 #include "Actuator.h"
 #include "Controller.h"
 
-//Debugging and logging
+//Graphics, debugging and logging
+#include "OpenGLTrackball.h"
+#include "OpenGLAtmosphere.h"
 #include "OpenGLDebugDrawer.h"
 #include "Console.h"
 
@@ -60,6 +61,7 @@ public:
     void ResumeSimulation();
     void AdvanceSimulation(uint64_t timeInMicroseconds);
     void StopSimulation();
+	void UpdateDrawingQueue();
 	
     void EnableOcean(Fluid* f = NULL);
 	void AddEntity(Entity* ent);
@@ -96,6 +98,7 @@ public:
     Controller* getController(unsigned int index);
     Controller* getController(std::string name);
 	Ocean* getOcean();
+	OpenGLAtmosphere* getAtmosphere();
     
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();
@@ -157,6 +160,7 @@ private:
 
     //graphics
     OpenGLTrackball* trackball;
+	OpenGLAtmosphere* atmosphere;
     OpenGLDebugDrawer* debugDrawer;
 };
 

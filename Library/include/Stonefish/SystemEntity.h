@@ -34,7 +34,7 @@ public:
     
     virtual btTransform getTransform() const = 0;
     
-    virtual void Render() = 0;
+    virtual std::vector<Renderable> Render() = 0;
 };
 
 #endif

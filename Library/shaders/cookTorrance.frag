@@ -89,7 +89,7 @@ vec3 shadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
     return (kD * albedo / PI + specular) * NdotL;
 }
 
-#inject "commonLights.frag"
+#inject "commonLights.glsl"
 
 void main()
 {	
@@ -114,7 +114,6 @@ void main()
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
 		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
-
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }

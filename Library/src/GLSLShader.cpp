@@ -12,6 +12,7 @@
 #include "Console.h"
 
 GLuint GLSLShader::saqVertexShader = 0;
+bool GLSLShader::verbose = true;
 
 GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geometry, std::pair<std::string, std::string> tesselation)
 {
@@ -22,11 +23,12 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
 	GLuint tes;
     GLuint gs;
 	GLuint fs;
+	std::string emptyHeader = "";
     
     if(vertex == "")
         vs = saqVertexShader;
     else
-        vs = LoadShader(GL_VERTEX_SHADER, vertex, &compiled);
+        vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
     
 	if(tesselation.first == "" || tesselation.second == "")
 	{
@@ -35,21 +37,61 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
 	}
 	else
 	{
-		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, &compiled);
-		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, &compiled);
+		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
+		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
 	}
 	
 	if(geometry == "")
 		gs = 0;
 	else
-		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, &compiled);
+		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
 	
-    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, &compiled);
+    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
     
 	shader = CreateProgram(vs, gs, fs, tcs, tes);
 		
     valid = true;
 }
+
+GLSLShader::GLSLShader(GLSLHeader& header, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
+{
+	valid = false;
+    GLint compiled = 0;
+    GLuint vs;
+	GLuint tcs;
+	GLuint tes;
+    GLuint gs;
+	GLuint fs;
+	std::string emptyHeader = "";
+    
+    if(vertex == "")
+        vs = saqVertexShader;
+    else
+        vs = LoadShader(GL_VERTEX_SHADER, vertex, header.useInVertex ? header.code : emptyHeader, &compiled);
+    
+	if(tesselation.first == "" || tesselation.second == "")
+	{
+		tcs = 0;
+		tes = 0;
+	}
+	else
+	{
+		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, header.useInTessCtrl ? header.code : emptyHeader, &compiled);
+		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, header.useInTessEval ? header.code : emptyHeader, &compiled);
+	}
+	
+	if(geometry == "")
+		gs = 0;
+	else
+		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
+	
+    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
+    
+	shader = CreateProgram(vs, gs, fs, tcs, tes);
+		
+    valid = true;
+}
+
 
 GLSLShader::~GLSLShader()
 {
@@ -279,7 +321,8 @@ bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index
 bool GLSLShader::Init()
 {
     GLint compiled;
-    saqVertexShader = LoadShader(GL_VERTEX_SHADER, "saq.vert", &compiled);
+	std::string emptyHeader = "";
+    saqVertexShader = LoadShader(GL_VERTEX_SHADER, "saq.vert", emptyHeader, &compiled);
     return compiled;
 }
 
@@ -289,17 +332,28 @@ void GLSLShader::Destroy()
         glDeleteProgram(saqVertexShader);
 }
 
-GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, GLint *shaderCompiled)
+void GLSLShader::Silent()
+{
+	verbose = false;
+}
+
+void GLSLShader::Verbose()
+{
+	verbose = true;
+}
+
+GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint *shaderCompiled)
 {
 	GLuint shader = 0;
     
 	std::string basePath = GetShaderPath();
 	std::string sourcePath = basePath + filename;
 	std::ifstream sourceFile(sourcePath);
-	std::string source;
+	std::string source = header + "\n";
 	std::string line;
 	
-	cInfo("Loading shader from: %s", sourcePath.c_str());
+	if(verbose)
+		cInfo("Loading shader from: %s", sourcePath.c_str());
     
 	while(!sourceFile.eof())
 	{
@@ -316,9 +370,10 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, GLint *sh
 			{
 				std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
 				std::ifstream injectedFile(injectedPath);
-					
-				cInfo("--> Injecting source from: %s", injectedPath.c_str());
 				
+				if(verbose)
+					cInfo("--> Injecting source from: %s", injectedPath.c_str());
+
 				while(!injectedFile.eof())
 				{
 					std::getline(injectedFile, line);

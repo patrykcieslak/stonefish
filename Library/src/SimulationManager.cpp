@@ -51,6 +51,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
     ocean = NULL;
+	atmosphere = NULL;
     trackball = NULL;
     
     //Set IC solver params
@@ -66,6 +67,8 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
 SimulationManager::~SimulationManager()
 {
     DestroyScenario();
+	delete atmosphere;
+	delete ocean;
 }
 
 void SimulationManager::AddEntity(Entity *ent)
@@ -308,6 +311,11 @@ Ocean* SimulationManager::getOcean()
 		return NULL;
 }
 
+OpenGLAtmosphere* SimulationManager::getAtmosphere()
+{
+	return atmosphere;
+}
+
 ResearchDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
@@ -478,7 +486,7 @@ void SimulationManager::InitializeSolver()
     materialManager = new MaterialManager();
     
     //Debugging
-    debugDrawer = new OpenGLDebugDrawer(btIDebugDraw::DBG_DrawWireframe);
+    debugDrawer = new OpenGLDebugDrawer(btIDebugDraw::DBG_DrawWireframe, zUp);
     dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
@@ -513,10 +521,13 @@ void SimulationManager::InitializeScenario()
     }
     
     //Standard trackball
-    trackball = new OpenGLTrackball(btVector3(0,0,0), 10.0, btVector3(0,0, zUp ? 1.0 : -1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
-    trackball->Rotate(btQuaternion(zUp ? 0.25 : -0.25, 0, 0));
-    trackball->Activate();
+    trackball = new OpenGLTrackball(btVector3(0,0,10.0), 10.0, btVector3(0,0, 1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
+	trackball->Rotate(btQuaternion(0.25, 0.0, 0.0));
+	trackball->Activate();
     OpenGLContent::getInstance()->AddView(trackball);
+	
+	//Standard atmosphere
+	atmosphere = new OpenGLAtmosphere();
 }
 
 void SimulationManager::RestartScenario()
@@ -726,6 +737,28 @@ void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
         cInfo("MLCP solver failed %d times.", mlcpFallbacks);
     }
     dwSolver->setNumFallbacks(0);
+}
+
+void SimulationManager::UpdateDrawingQueue()
+{
+	//Clear old items
+	OpenGLPipeline::getInstance()->ClearDrawingQueue();
+	
+	//Build new drawing queue
+	for(unsigned int i=0; i<entities.size(); ++i)
+	{
+		std::vector<Renderable> items = entities[i]->Render();
+		for(unsigned int h=0; h<items.size(); ++h)
+		{
+			if(!zUp)
+			{
+				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
+				items[h].csModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].csModel;
+			}
+			
+			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
+		}
+	}
 }
 
 Entity* SimulationManager::PickEntity(int x, int y)

@@ -183,7 +183,7 @@ public:
 	
 	void DrawSAQ();
 	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
-	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureArray, GLuint layer);
+	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array = true);
 	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize);
 	
 	void DrawCubemapCross(GLuint texture);
@@ -243,6 +243,7 @@ private:
 	GLSLShader* texQuadShader;
 	GLSLShader* texQuadMSShader;
 	GLSLShader* texLayerQuadShader;
+	GLSLShader* texLevelQuadShader;
 	GLSLShader* texCubeShader;
 	GLSLShader* flatShader;
 	std::vector<GLSLShader*> materialShaders;

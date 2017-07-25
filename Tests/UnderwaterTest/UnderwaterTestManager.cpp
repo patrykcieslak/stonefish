@@ -33,8 +33,8 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, true, false);
-    //OpenGLPipeline::getInstance()->setDebugSimulation(true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, false);
+    OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 1.1), 0.4);

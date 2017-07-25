@@ -7,7 +7,7 @@
 //
 
 #include "OpenGLCamera.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 OpenGLCamera::OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLView(x, y, width, height, horizon, spp, sao)
 {
@@ -89,7 +89,7 @@ GLfloat OpenGLCamera::getTiltAngle()
     return UnitSystem::GetAngle(tilt);
 }
 
-glm::vec3 OpenGLCamera::GetEyePosition()
+glm::vec3 OpenGLCamera::GetEyePosition() const
 {
     if(holdingEntity != NULL)
     {
@@ -100,7 +100,7 @@ glm::vec3 OpenGLCamera::GetEyePosition()
         return eye;
 }
 
-glm::vec3 OpenGLCamera::GetLookingDirection()
+glm::vec3 OpenGLCamera::GetLookingDirection() const
 {
     if(holdingEntity != NULL)
     {
@@ -111,7 +111,7 @@ glm::vec3 OpenGLCamera::GetLookingDirection()
         return lookingDir;
 }
 
-glm::vec3 OpenGLCamera::GetUpDirection()
+glm::vec3 OpenGLCamera::GetUpDirection() const
 {
     if(holdingEntity != NULL)
     {
@@ -149,7 +149,7 @@ void OpenGLCamera::SetupCamera()
 	cameraRender = glm::inverse(cameraTransform);
 }
 
-glm::mat4 OpenGLCamera::GetViewTransform()
+glm::mat4 OpenGLCamera::GetViewTransform() const
 {
     if(holdingEntity != NULL)
     {

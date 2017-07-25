@@ -33,8 +33,9 @@ void ForcefieldEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
     world->addCollisionObject(ghost, MASK_DEFAULT, MASK_DEFAULT);
 }
 
-void ForcefieldEntity::Render()
+std::vector<Renderable> ForcefieldEntity::Render()
 {
+	return std::vector<Renderable>(0);
 }
 
 void ForcefieldEntity::GetAABB(btVector3& min, btVector3& max)

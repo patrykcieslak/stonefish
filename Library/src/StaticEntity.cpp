@@ -7,7 +7,7 @@
 //
 
 #include "StaticEntity.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
@@ -41,14 +41,24 @@ void StaticEntity::GetAABB(btVector3& min, btVector3& max)
 		rigidBody->getAabb(min, max);
 }
 
-void StaticEntity::Render()
+std::vector<Renderable> StaticEntity::Render()
 {
+	std::vector<Renderable> items(0);
+	
     if(rigidBody != NULL && objectId >= 0 && isRenderable())
     {
 		btTransform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
-		OpenGLContent::getInstance()->DrawObject(objectId, lookId, glMatrixFromBtTransform(trans));
+		
+		Renderable item;
+		item.objectId = objectId;
+		item.lookId = lookId;
+		item.dispCoordSys = false;
+		item.model = item.csModel = glMatrixFromBtTransform(trans);
+		items.push_back(item);
     }
+	
+	return items;
 }
 
 Material StaticEntity::getMaterial()

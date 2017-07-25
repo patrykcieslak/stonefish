@@ -33,9 +33,9 @@ void QuadTreeNode::Grow(glm::vec3 p, glm::mat4 VP)
 		//Clips space coordinates
 		glm::vec4 corners[4];
 		corners[0] = VP * glm::vec4(origin + glm::vec3(half, 0.f), 1.f);
-		corners[1] = VP * glm::vec4(origin + glm::vec3(half.x, -half.y, 0.f), 1.f);
+		corners[1] = VP * glm::vec4(origin + glm::vec3(-half.x, half.y, 0.f), 1.f);
 		corners[2] = VP * glm::vec4(origin + glm::vec3(-half, 0.f), 1.f);
-		corners[3] = VP * glm::vec4(origin + glm::vec3(-half.x, half.y, 0.f), 1.f);
+		corners[3] = VP * glm::vec4(origin + glm::vec3(half.x, -half.y, 0.f), 1.f);
 		
 		//Secure margin accounting for later displacement
 		corners[0].w *= 1.1f;
@@ -64,9 +64,9 @@ void QuadTreeNode::Grow(glm::vec3 p, glm::mat4 VP)
 			
 			//Create new nodes
 			child[0] = new QuadTreeNode(origin + glm::vec3(half/2.f,0.f), half, this, tree);
-			child[1] = new QuadTreeNode(origin + glm::vec3(half.x/2.f, -half.y/2.f, 0.f), half, this, tree);
+			child[1] = new QuadTreeNode(origin + glm::vec3(-half.x/2.f, half.y/2.f, 0.f), half, this, tree);
 			child[2] = new QuadTreeNode(origin + glm::vec3(-half/2.f, 0.f), half, this, tree);
-			child[3] = new QuadTreeNode(origin + glm::vec3(-half.x/2.f, half.y/2.f, 0.f), half, this, tree);
+			child[3] = new QuadTreeNode(origin + glm::vec3(half.x/2.f, -half.y/2.f, 0.f), half, this, tree);
 			
 			//Grow tree
 			child[0]->Grow(p, VP);
@@ -78,19 +78,19 @@ void QuadTreeNode::Grow(glm::vec3 p, glm::mat4 VP)
 	}
 	
 	//Corrent edge divisions
-	distance = glm::length(origin + glm::vec3(0, size.y, 0) - p);
+	distance = glm::length(origin + glm::vec3(size.x, 0, 0) - p);
 	ratio = (half.x + half.y)/(distance + 0.01f);
 	edgeFactors[0] = ratio > 0.25f ? 2.f : 1.f;
 	
-	distance = glm::length(origin + glm::vec3(size.x, 0, 0) - p);
+	distance = glm::length(origin + glm::vec3(0, size.y, 0) - p);
 	ratio = (half.x + half.y)/(distance + 0.01f);
 	edgeFactors[1] = ratio > 0.25f ? 2.f : 1.f;
 	
-	distance = glm::length(origin + glm::vec3(0, -size.y, 0) - p);
+	distance = glm::length(origin + glm::vec3(-size.x, 0, 0) - p);
 	ratio = (half.x + half.y)/(distance + 0.01f);
 	edgeFactors[2] = ratio > 0.25f ? 2.f : 1.f;
 	
-	distance = glm::length(origin + glm::vec3(-size.x, 0, 0) - p);
+	distance = glm::length(origin + glm::vec3(0, -size.y, 0) - p);
 	ratio = (half.x + half.y)/(distance + 0.01f);
 	edgeFactors[3] = ratio > 0.25f ? 2.f : 1.f;
 	
@@ -126,6 +126,7 @@ OpenGLContent::OpenGLContent()
 	texQuadShader = NULL;
 	texQuadMSShader = NULL;
 	texLayerQuadShader = NULL;
+	texLevelQuadShader = NULL;
 	texCubeShader = NULL;
 	flatShader = NULL;
 	eyePos = glm::vec3();
@@ -148,6 +149,7 @@ OpenGLContent::~OpenGLContent()
 	if(texQuadShader != NULL) delete texQuadShader;
 	if(texQuadMSShader != NULL) delete texQuadMSShader;
 	if(texLayerQuadShader != NULL) delete texLayerQuadShader;
+	if(texLevelQuadShader != NULL) delete texLevelQuadShader;
 	if(texCubeShader != NULL) delete texCubeShader;
 	if(flatShader != NULL) delete flatShader;
 	
@@ -271,6 +273,11 @@ void OpenGLContent::Init()
 	texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
 	texLayerQuadShader->AddUniform("tex", ParameterType::INT);
 	texLayerQuadShader->AddUniform("layer", ParameterType::INT);
+	
+	texLevelQuadShader = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
+	texLevelQuadShader->AddUniform("rect", ParameterType::VEC4);
+	texLevelQuadShader->AddUniform("tex", ParameterType::INT);
+	texLevelQuadShader->AddUniform("level", ParameterType::INT);
 	
 	texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
 	texCubeShader->AddUniform("tex", ParameterType::INT);
@@ -442,20 +449,30 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 	}
 }
 
-void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureArray, GLuint layer)
+void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
 {
-	if(texLayerQuadShader != NULL)
+	if((array && texLayerQuadShader != NULL)||(!array && texLevelQuadShader != NULL))
 	{
 		y = viewportSize.y-y-height;
 		
-		texLayerQuadShader->Use();
-		texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-		texLayerQuadShader->SetUniform("tex", TEX_BASE);
-		texLayerQuadShader->SetUniform("layer", (GLint)layer);
+		if(array)
+		{
+			texLayerQuadShader->Use();
+			texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+			texLayerQuadShader->SetUniform("tex", TEX_BASE);
+			texLayerQuadShader->SetUniform("layer", z);
+		}
+		else
+		{
+			texLevelQuadShader->Use();
+			texLevelQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+			texLevelQuadShader->SetUniform("tex", TEX_BASE);
+			texLevelQuadShader->SetUniform("level", z);
+		}
 		
 		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		glEnable(GL_TEXTURE_2D_ARRAY);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
+		glEnable(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D);
+		glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
 		
 		glBindVertexArray(baseVertexArray);
 		glEnableVertexAttribArray(0);
@@ -466,7 +483,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		glDisableVertexAttribArray(0);
 		glBindVertexArray(0);
 		
-		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+		glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, 0);
 		glUseProgram(0);
 	}
 }

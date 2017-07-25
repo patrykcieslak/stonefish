@@ -42,7 +42,7 @@ public:
     
     virtual btTransform getTransform() const;
     
-    virtual void Render();
+    virtual std::vector<Renderable> Render();
     void BuildGraphicalObjects();
     
 private:

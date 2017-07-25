@@ -8,12 +8,12 @@
 
 #include "OpenGLTrackball.h"
 #include "SimulationApp.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLView(x, y, width, height, horizon, spp, sao)
 {
 	this->up = glm::normalize(glm::vec3((GLfloat)up.getX(), (GLfloat)up.getY(), (GLfloat)up.getZ()));
-    rotation = glm::rotation(this->up, SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? glm::vec3(0,0,1.f) : glm::vec3(0,0,-1.f));
+    rotation = glm::rotation(this->up, glm::vec3(0,0,1.f));
 	
     btVector3 _center = UnitSystem::SetPosition(centerPosition);
 	center = glm::vec3((GLfloat)_center.getX(), (GLfloat)_center.getY(), (GLfloat)_center.getZ());
@@ -39,24 +39,30 @@ ViewType OpenGLTrackball::getType()
     return TRACKBALL;
 }
 
-glm::vec3 OpenGLTrackball::GetEyePosition()
+glm::vec3 OpenGLTrackball::GetEyePosition() const
 {
     return center - radius * GetLookingDirection();
 }
 
-glm::vec3 OpenGLTrackball::GetLookingDirection()
+glm::vec3 OpenGLTrackball::GetLookingDirection() const
 {
     return glm::normalize(glm::vec3(glm::rotate(glm::inverse(rotation), glm::vec4(0,-1.f,0,1.f))));
 }
 
-glm::vec3 OpenGLTrackball::GetUpDirection()
+glm::vec3 OpenGLTrackball::GetUpDirection() const
 {
-	glm::vec3 localUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? glm::vec3(0,0,1.f) : glm::vec3(0,0,-1.f);	
+	glm::vec3 localUp = glm::vec3(0,0,1.f);	
     return glm::normalize(glm::vec3(glm::rotate(glm::inverse(rotation), glm::vec4(localUp, 1.f))));
 }
 
 void OpenGLTrackball::UpdateTrackballTransform()
 {
+	if(holdingEntity != NULL)
+    {
+		glm::mat4 solidTrans = glMatrixFromBtTransform(holdingEntity->getTransform());
+        center = glm::vec3(solidTrans[3]);
+	}
+	
 	trackballTransform = glm::lookAt(GetEyePosition(), center, GetUpDirection());
 }
 
@@ -86,9 +92,8 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 {
     if(dragging)
     {
-        bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
         GLfloat z = calculateZ(x, y);
-		glm::quat rotation_new = glm::rotation(glm::normalize(glm::vec3(-x_start, z_start * (zUp ? 1.0 : -1.0), y_start)), glm::normalize(glm::vec3(-x, z * (zUp ? 1.0 : -1.0), y)));
+		glm::quat rotation_new = glm::rotation(glm::normalize(glm::vec3(-x_start, z_start, y_start)), glm::normalize(glm::vec3(-x, z, y)));
         rotation = rotation_new * rotation_start;
         UpdateTrackballTransform();
     }
@@ -104,23 +109,15 @@ void OpenGLTrackball::MouseScroll(GLfloat s)
     UpdateTrackballTransform();
 }
 
-glm::mat4 OpenGLTrackball::GetViewTransform()
+glm::mat4 OpenGLTrackball::GetViewTransform() const
 {
-    if(holdingEntity != NULL)
-    {
-		glm::mat4 solidTrans = glMatrixFromBtTransform(holdingEntity->getTransform());
-        center = glm::vec3(solidTrans[3]);
-        UpdateTrackballTransform();
-		return trackballTransform;
-    }
-    else
-        return trackballTransform;
+	return trackballTransform;
 }
 
 void OpenGLTrackball::Rotate(const btQuaternion& rot)
 {
 	glm::quat _rot((GLfloat)rot[0], (GLfloat)rot[1], (GLfloat)rot[2], (GLfloat)rot[3]);
-	rotation = glm::rotation(this->up, SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? glm::vec3(0,0,1.f) : glm::vec3(0,0,-1.f)) * _rot;
+	rotation = glm::rotation(this->up,  glm::vec3(0,0,1.f)) * _rot;
     UpdateTrackballTransform();
 }
 

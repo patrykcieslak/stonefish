@@ -22,7 +22,7 @@ public:
     StaticEntity(std::string uniqueName, Material m, int lookId = -1);
     ~StaticEntity();
     
-    void Render();
+    std::vector<Renderable> Render();
     void SetLook(int newLookId);
     void SetWireframe(bool enabled);
     

@@ -69,7 +69,7 @@ public:
 	btMultiBody* getMultiBody();
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
-    void Render();
+    std::vector<Renderable> Render();
     void RenderStructure();
     EntityType getType();
     void GetAABB(btVector3& min, btVector3& max);

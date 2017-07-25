@@ -22,7 +22,7 @@ public:
     virtual ~ForcefieldEntity();
     
     EntityType getType();
-    virtual void Render();
+    virtual std::vector<Renderable> Render();
 	
 	btPairCachingGhostObject* getGhost();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);

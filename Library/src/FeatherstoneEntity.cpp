@@ -7,7 +7,7 @@
 //
 
 #include "FeatherstoneEntity.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, const btTransform& transform, btMultiBodyDynamicsWorld* world, bool fixedBase) : Entity(uniqueName)
 {
@@ -373,22 +373,41 @@ void FeatherstoneEntity::ApplyDamping()
     }
 }
 
-void FeatherstoneEntity::Render()
+std::vector<Renderable> FeatherstoneEntity::Render()
 {	
+	std::vector<Renderable> items(0);
 	//Draw base
     if(baseRenderable)
     {
-		btTransform trans = multiBody->getBaseCollider()->getWorldTransform() * links[0].solid->localTransform.inverse();
-		OpenGLContent::getInstance()->DrawObject(links[0].solid->getObject(), links[0].solid->getLook(), glMatrixFromBtTransform(trans));
+		btTransform cgTrans = multiBody->getBaseCollider()->getWorldTransform();
+		btTransform oTrans = multiBody->getBaseCollider()->getWorldTransform() * links[0].solid->localTransform.inverse();
+		
+		Renderable item;
+		item.objectId = links[0].solid->getObject();
+		item.lookId = links[0].solid->getLook();
+		item.dispCoordSys = false;
+		item.model = glMatrixFromBtTransform(oTrans);
+		item.csModel = glMatrixFromBtTransform(cgTrans);
+		items.push_back(item);
     }
     
     //Draw rest of links
     for(unsigned int i = 0; i < multiBody->getNumLinks(); ++i)
     {
 		btMultibodyLink& link = multiBody->getLink(i);
-        btTransform trans = link.m_collider->getWorldTransform() * links[i + 1].solid->localTransform.inverse();
-        OpenGLContent::getInstance()->DrawObject(links[i + 1].solid->getObject(), links[i + 1].solid->getLook(), glMatrixFromBtTransform(trans));
+		btTransform cgTrans = link.m_collider->getWorldTransform();
+        btTransform oTrans = link.m_collider->getWorldTransform() * links[i + 1].solid->localTransform.inverse();
+	
+		Renderable item;
+		item.objectId = links[i + 1].solid->getObject();
+		item.lookId = links[i + 1].solid->getLook();
+		item.dispCoordSys = false;
+		item.model = glMatrixFromBtTransform(oTrans);
+		item.csModel = glMatrixFromBtTransform(cgTrans);
+		items.push_back(item);
     }
+	
+	return items;
 }
 
 void FeatherstoneEntity::RenderStructure()

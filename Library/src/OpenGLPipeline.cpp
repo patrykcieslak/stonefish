@@ -10,11 +10,12 @@
 
 #include "SimulationManager.h"
 #include "GLSLShader.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 #include "OpenGLContent.h"
 #include "OpenGLView.h"
 #include "OpenGLSky.h"
 #include "OpenGLSun.h"
+#include "OpenGLAtmosphere.h"
 #include "OpenGLLight.h"
 #include "Console.h"
 #include "PathGenerator.h"
@@ -152,6 +153,16 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     cInfo("OpenGL pipeline initialized.");
 }
 
+void OpenGLPipeline::AddToDrawingQueue(Renderable r)
+{
+	drawingQueue.push_back(r);
+}
+
+void OpenGLPipeline::ClearDrawingQueue()
+{
+	drawingQueue.clear();
+}
+
 void OpenGLPipeline::DrawDisplay()
 {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
@@ -161,13 +172,15 @@ void OpenGLPipeline::DrawDisplay()
 
 void OpenGLPipeline::DrawObjects(SimulationManager* sim)
 {
-    for(int i=0; i<sim->entities.size(); ++i)
-        sim->entities[i]->Render();
+	for(unsigned int i=0; i<drawingQueue.size(); ++i)
+		OpenGLContent::getInstance()->DrawObject(drawingQueue[i].objectId, drawingQueue[i].lookId, drawingQueue[i].model);
 }
 
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
 	Ocean* ocean = sim->getOcean();
+	OpenGLAtmosphere* atm = sim->getAtmosphere();
+	
 	if(ocean != NULL)
 		ocean->getOpenGLOcean().SimulateOcean();
 	
@@ -218,7 +231,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				glDisable(GL_DEPTH_TEST);
 				glDisable(GL_CULL_FACE);
 				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				OpenGLSky::getInstance()->Render(view, sim->zUp);
+				//OpenGLSky::getInstance()->Render(view);
+				atm->DrawSkyAndSun(view);
 				glEnable(GL_CULL_FACE);
 				glEnable(GL_DEPTH_TEST);
 				
@@ -235,22 +249,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				glDrawBuffers(2, renderBuffs);
 				DrawObjects(sim);
             
-				//Draw ocean surface
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetProjectionMatrix() * view->GetViewMatrix());
+				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				
 				//Ambient occlusion
-				//glDisable(GL_DEPTH_TEST);
-				//glDisable(GL_CULL_FACE);
-				//view->DrawAO();
-				
-				/*glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				glEnable(GL_DEPTH_TEST);
-				glEnable(GL_CULL_FACE);
-				
-				*/
+				glDisable(GL_CULL_FACE);
+				glDisable(GL_DEPTH_TEST);
+				view->DrawAO();
 			}
 			else
 			{
@@ -258,7 +264,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				glDisable(GL_DEPTH_TEST);
 				glDisable(GL_CULL_FACE);
 				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				OpenGLSky::getInstance()->Render(view, sim->zUp);
+				//OpenGLSky::getInstance()->Render(view);
+				atm->DrawSkyAndSun(view);
 				glEnable(GL_CULL_FACE);
 				glEnable(GL_DEPTH_TEST);
             
@@ -305,28 +312,18 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             //Coordinate systems
             if(showCoordSys)
             {
-				OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 2.f);
+				if(sim->isZAxisUp())
+					OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 2.f);
+				else
+					OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 2.f);
                 
-                for(int h = 0; h < sim->entities.size(); h++)
-                    if(sim->entities[h]->getType() == ENTITY_SOLID)
-                    {
-						SolidEntity* solid = (SolidEntity*)sim->entities[h];
-                        btTransform comT = solid->getTransform();
-                        OpenGLContent::getInstance()->DrawCoordSystem(glMatrixFromBtTransform(comT), 0.1f);
-                    }
-                    else if(sim->entities[h]->getType() == ENTITY_FEATHERSTONE)
-                    {
-                        FeatherstoneEntity* fe = (FeatherstoneEntity*)sim->entities[h];
-                        fe->RenderStructure();
-                    }
-                    else if(sim->entities[h]->getType() == ENTITY_SYSTEM)
-                    {
-                        SystemEntity* system = (SystemEntity*)sim->entities[h];
-                        btTransform comT = system->getTransform();
-                        OpenGLContent::getInstance()->DrawCoordSystem(glMatrixFromBtTransform(comT), 0.1f);
-                    }
+				for(unsigned int h=0; h<drawingQueue.size(); ++h)
+				{
+					OpenGLContent::getInstance()->DrawCoordSystem(drawingQueue[h].csModel, 0.5f);
+				}
             }
             
+			//TODO: Correct debug drawing of following items
             //Joints
 			for(int h=0; h<sim->joints.size(); h++)
 				if(sim->joints[h]->isRenderable())
@@ -368,6 +365,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			{	
 				//ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
 				//ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
+			}
+			
+			if(atm != NULL)
+			{
+				//atm->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
+				//atm->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
+				//atm->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
 			}
 			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
 			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));

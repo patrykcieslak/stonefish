@@ -6,6 +6,10 @@ uniform sampler2DArray texWaveFFT;
 uniform mat4 MVP;
 uniform vec4 gridSizes;
 uniform vec4 choppyFactor;
+uniform float tessDiv;
+
+out vec2 waveCoord;
+out vec3 fragPos;
 
 vec4 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
 {
@@ -16,17 +20,28 @@ vec4 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
 
 void main()
 {
-	vec4 pos = interpolate(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position); 
+	//Interpolate positions
+	vec4 P = interpolate(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position); 
 	
-	pos.z += texture(texWaveFFT, vec3(pos.xy / gridSizes.x, 0.0)).x;
-	pos.z += texture(texWaveFFT, vec3(pos.xy / gridSizes.y, 0.0)).y;
-	pos.z += texture(texWaveFFT, vec3(pos.xy / gridSizes.z, 0.0)).z;
-	pos.z += texture(texWaveFFT, vec3(pos.xy / gridSizes.w, 0.0)).w;
+	//Calculate derivatives of position
+	vec2 dy = (gl_in[1].gl_Position.xy - gl_in[0].gl_Position.xy)/tessDiv;
+	vec2 dx = (gl_in[3].gl_Position.xy - gl_in[0].gl_Position.xy)/tessDiv;
 	
-	pos.xy += choppyFactor.x * texture(texWaveFFT, vec3(pos.xy / gridSizes.x, 3.0)).xy;
-	pos.xy += choppyFactor.y * texture(texWaveFFT, vec3(pos.xy / gridSizes.y, 3.0)).zw;
-	pos.xy += choppyFactor.z * texture(texWaveFFT, vec3(pos.xy / gridSizes.z, 4.0)).xy;
-	pos.xy += choppyFactor.w * texture(texWaveFFT, vec3(pos.xy / gridSizes.w, 4.0)).zw;
-	
-	gl_Position = MVP * pos;
+	vec3 dP = vec3(0.0);
+	//Basic wave height (layer 0)
+    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0), dx/gridSizes.x, dy/gridSizes.x).x;
+    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0), dx/gridSizes.y, dy/gridSizes.y).y;
+    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0), dx/gridSizes.z, dy/gridSizes.z).z;
+    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0), dx/gridSizes.w, dy/gridSizes.w).w;
+
+    //Choppy waves (layers 3,4)
+	dP.xy += choppyFactor.x*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.x, 3.0), dx/gridSizes.x, dy/gridSizes.x).xy;
+	dP.xy += choppyFactor.y*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.y, 3.0), dx/gridSizes.y, dy/gridSizes.y).zw;
+	dP.xy += choppyFactor.z*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.z, 4.0), dx/gridSizes.z, dy/gridSizes.z).xy;
+	dP.xy += choppyFactor.w*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 4.0), dx/gridSizes.w, dy/gridSizes.w).zw;
+    
+	waveCoord = P.xy; //Horizontal coordinates used to compute dP, in world space
+	P.xyz += dP; 	  //Grid deformation
+	fragPos = P.xyz;  //Position of deformed vertex in world space
+	gl_Position = MVP * P; //Screen space position
 }

@@ -17,10 +17,10 @@ public:
     OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp = 1, bool ao = false);
     ~OpenGLCamera();
     
-    glm::mat4 GetViewTransform();
-    glm::vec3 GetEyePosition();
-    glm::vec3 GetLookingDirection();
-    glm::vec3 GetUpDirection();
+    glm::mat4 GetViewTransform() const;
+    glm::vec3 GetEyePosition() const;
+    glm::vec3 GetLookingDirection() const;
+    glm::vec3 GetUpDirection() const;
     ViewType getType();
     
     void SetupCamera();

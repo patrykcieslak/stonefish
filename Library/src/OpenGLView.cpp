@@ -7,7 +7,7 @@
 //
 
 #include "OpenGLView.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 #include "OpenGLSun.h"
 #include "SimulationApp.h"
 #include "Console.h"
@@ -236,9 +236,9 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 			float Rand2 = rng.randExc();
 
 			//Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
-			float Angle = 2.f * M_PI * Rand1 / numDir;
-			aoData.jitters[i].x = cosf(Angle);
-			aoData.jitters[i].y = sinf(Angle);
+			float angle = 2.f * M_PI * Rand1 / numDir;
+			aoData.jitters[i].x = cosf(angle);
+			aoData.jitters[i].y = sinf(angle);
 			aoData.jitters[i].z = Rand2;
 			aoData.jitters[i].w = 0;
 			
@@ -292,7 +292,7 @@ bool OpenGLView::isActive()
     return active;
 }
 
-GLint* OpenGLView::GetViewport()
+GLint* OpenGLView::GetViewport() const
 {
 	GLint* view = new GLint[4];
 	view[0] = originX;
@@ -302,17 +302,22 @@ GLint* OpenGLView::GetViewport()
     return view;
 }
 
-glm::mat4 OpenGLView::GetProjectionMatrix()
+glm::mat4 OpenGLView::GetProjectionMatrix() const
 {
     return projection;
 }
 
-glm::mat4 OpenGLView::GetViewMatrix()
+glm::mat4 OpenGLView::GetViewMatrix() const
 {
 	return GetViewTransform();
 }
 
-GLfloat OpenGLView::GetFOVY()
+GLfloat OpenGLView::GetFOVX() const
+{
+	return fovx;
+}
+
+GLfloat OpenGLView::GetFOVY() const
 {
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
     return fovx/aspect;
@@ -480,11 +485,13 @@ void OpenGLView::DrawAO()
 		GLfloat blurSharpness = 40.0f;
 		
 		//For all samples
+		OpenGLContent::getInstance()->BindBaseVertexArray();
+		
 		for(int n=0; n<samples; ++n)
 		{
 			//Draw linear depth buffer
 			glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-
+			
 			if(samples>1)
 			{
 				depthLinearizeShader[1]->Use();
@@ -493,7 +500,7 @@ void OpenGLView::DrawAO()
 				depthLinearizeShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
 			
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, renderDepthStencilTex);
-				OpenGLContent::getInstance()->DrawSAQ();
+				glDrawArrays(GL_TRIANGLES, 0, 3);
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, 0);
 			}
 			else
@@ -503,7 +510,7 @@ void OpenGLView::DrawAO()
 				depthLinearizeShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
 			
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthStencilTex);
-				OpenGLContent::getInstance()->DrawSAQ();
+				glDrawArrays(GL_TRIANGLES, 0, 3);
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 			}
 		
@@ -522,9 +529,10 @@ void OpenGLView::DrawAO()
 				for(int layer = 0; layer < NUM_MRT; ++layer)
 					glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthViewTex[i+layer], 0);
 			
-				OpenGLContent::getInstance()->DrawSAQ();
+				glDrawArrays(GL_TRIANGLES, 0, 3);
 			}
-		
+			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+			
 			//Calculate HBAO
 			glBindFramebuffer(GL_FRAMEBUFFER, aoCalcFBO);
 			glViewport(0, 0, quarterWidth, quarterHeight);
@@ -541,9 +549,10 @@ void OpenGLView::DrawAO()
 				glNamedBufferSubDataEXT(aoDataUBO, 0, sizeof(AOData), &aoData);
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
 		
-				OpenGLContent::getInstance()->BindBaseVertexArray();
 				glDrawArrays(GL_TRIANGLES, 0, 3 * HBAO_RANDOM_ELEMENTS);
-				glBindVertexArray(0);
+				
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D_MULTISAMPLE, 0);
 			}
 			else
 			{
@@ -556,9 +565,10 @@ void OpenGLView::DrawAO()
 				glNamedBufferSubDataEXT(aoDataUBO, 0, sizeof(AOData), &aoData);
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
 		
-				OpenGLContent::getInstance()->BindBaseVertexArray();
 				glDrawArrays(GL_TRIANGLES, 0, 3 * HBAO_RANDOM_ELEMENTS);
-				glBindVertexArray(0);
+				
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, 0);
 			}
 			
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -572,7 +582,7 @@ void OpenGLView::DrawAO()
 			aoReinterleaveShader->SetUniform("texResultArray", TEX_POSTPROCESS1);
 		
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
-			OpenGLContent::getInstance()->DrawSAQ();
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
 		
 			//Blur
@@ -583,7 +593,7 @@ void OpenGLView::DrawAO()
 			aoBlurShader[0]->SetUniform("texSource", TEX_POSTPROCESS1);
 		
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, aoResultTex);
-			OpenGLContent::getInstance()->DrawSAQ();
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 
 			//Final output to main fbo
@@ -604,14 +614,14 @@ void OpenGLView::DrawAO()
 			aoBlurShader[1]->SetUniform("texSource", TEX_POSTPROCESS1);
 		
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, aoBlurTex);
-			OpenGLContent::getInstance()->DrawSAQ();
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 		
 			glDisable(GL_BLEND);
 			glDisable(GL_SAMPLE_MASK);
 			glSampleMaski(0, ~0);
 		}
-		
+		glBindVertexArray(0);
 		glUseProgram(0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}

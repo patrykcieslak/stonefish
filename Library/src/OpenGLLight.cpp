@@ -7,7 +7,7 @@
 //
 
 #include "OpenGLLight.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 //static variables
 OpenGLView* OpenGLLight::activeView = NULL;

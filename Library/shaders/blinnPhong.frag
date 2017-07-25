@@ -32,7 +32,7 @@ vec3 shadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
 	return (diffuse+specular)*albedo;
 }
 
-#inject "commonLights.frag"
+#inject "commonLights.glsl"
 
 void main()
 {	

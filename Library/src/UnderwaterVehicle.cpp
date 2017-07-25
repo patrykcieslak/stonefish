@@ -7,7 +7,7 @@
 //
 
 #include "UnderwaterVehicle.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName) : SystemEntity(uniqueName)
 {
@@ -240,20 +240,32 @@ void UnderwaterVehicle::BuildGraphicalObjects()
 		bodyParts[i].solid->BuildGraphicalObject();
 }
 
-void UnderwaterVehicle::Render()
+std::vector<Renderable> UnderwaterVehicle::Render()
 {
+	std::vector<Renderable> items(0);
+	
     if(vehicleBody != NULL)
     {
-		btTransform vehicleTrans;
-        vehicleBody->getMotionState()->getWorldTransform(vehicleTrans);
-        vehicleTrans *= localTransform.inverse();
+		btTransform cgVehicleTrans;
+        vehicleBody->getMotionState()->getWorldTransform(cgVehicleTrans);
+		btTransform oVehicleTrans = cgVehicleTrans * localTransform.inverse();
 		
 		for(unsigned int i=0; i<bodyParts.size(); ++i)
 		{
-			btTransform trans = vehicleTrans * bodyParts[i].position;
-			OpenGLContent::getInstance()->DrawObject(bodyParts[i].solid->getObject(), bodyParts[i].solid->getLook(), glMatrixFromBtTransform(trans));
+			btTransform cgTrans = cgVehicleTrans * bodyParts[i].position;
+			btTransform oTrans = oVehicleTrans * bodyParts[i].position;
+			
+			Renderable item;
+			item.objectId = bodyParts[i].solid->getObject();
+			item.lookId = bodyParts[i].solid->getLook();
+			item.dispCoordSys = false;
+			item.model = glMatrixFromBtTransform(oTrans);
+			item.csModel = glMatrixFromBtTransform(cgTrans);
+			items.push_back(item);
 		}
 	}
+	
+	return items;
 }
 
 void UnderwaterVehicle::GetAABB(btVector3& min, btVector3& max)

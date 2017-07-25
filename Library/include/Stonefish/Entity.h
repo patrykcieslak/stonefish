@@ -43,7 +43,7 @@ public:
     std::string getName();
     
    	virtual EntityType getType() = 0;
-    virtual void Render() = 0;
+    virtual std::vector<Renderable> Render() = 0;
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world) = 0;
     virtual void GetAABB(btVector3& min, btVector3& max) = 0;
     

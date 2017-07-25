@@ -29,12 +29,25 @@
 #define TEX_BASE			((GLint)0)
 #define TEX_SKY_DIFFUSE 	((GLint)1)
 #define TEX_SKY_REFLECTION 	((GLint)2)
-#define TEX_SUN_SHADOW		((GLint)3)
+
 #define TEX_POSTPROCESS1	((GLint)4)
 #define TEX_POSTPROCESS2	((GLint)5)
 #define TEX_POSTPROCESS3	((GLint)6)
 #define TEX_POSTPROCESS4	((GLint)7)
+#define TEX_POSTPROCESS5	((GLint)8)
+
+#define TEX_SUN_SHADOW		((GLint)15)
 #define TEX_SHADOW_START	((GLint)16)
+
+
+typedef struct
+{
+	int lookId;
+	int objectId;
+    bool dispCoordSys;
+	glm::mat4 model;
+	glm::mat4 csModel;
+} Renderable;
 
 class SimulationManager;
 class OpenGLView;
@@ -44,7 +57,9 @@ class OpenGLPipeline
 {
 public:
     void Initialize(GLint windowWidth, GLint windowHeight);
-    void DrawDisplay();
+	void AddToDrawingQueue(Renderable r);
+	void ClearDrawingQueue();
+	void DrawDisplay();
     void Render(SimulationManager* sim);
     void DrawObjects(SimulationManager* sim);
    
@@ -61,6 +76,8 @@ private:
     OpenGLPipeline();
     ~OpenGLPipeline();
     
+	std::vector<Renderable> drawingQueue;
+	
     bool renderShadows;
     bool renderFluid;
     bool renderSAO;

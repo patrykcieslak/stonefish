@@ -7,7 +7,7 @@
 //
 
 #include "OpenGLSky.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 #include "OpenGLSun.h"
 #include "Console.h"
 
@@ -428,12 +428,12 @@ void OpenGLSky::Generate(GLfloat elevation, GLfloat azimuth)
     ////////////////////////
 }
 
-void OpenGLSky::Render(OpenGLView *view, bool zAxisUp)
+void OpenGLSky::Render(OpenGLView *view)
 {
     GLint* viewport = view->GetViewport();
     glm::mat4 viewTransform = view->GetViewTransform();
 	glm::mat4 projection = glm::perspective(view->GetFOVY(), (GLfloat)viewport[2]/(GLfloat)viewport[3], 0.1f, 100.f);
-    glm::mat3 ivr = glm::mat3(glm::eulerAngleX(zAxisUp ? -M_PI_2 : M_PI_2)) * glm::inverse(glm::mat3(viewTransform)); 
+    glm::mat3 ivr = glm::mat3(glm::eulerAngleX(-M_PI_2)) * glm::inverse(glm::mat3(viewTransform)); 
 	
     glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_CUBE_MAP);

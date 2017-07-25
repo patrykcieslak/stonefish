@@ -8,7 +8,7 @@
 
 #include "OpenGLPointLight.h"
 #include "SimulationManager.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 OpenGLPointLight::OpenGLPointLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {

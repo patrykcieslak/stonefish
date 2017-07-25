@@ -28,11 +28,29 @@ struct GLSLAttribute
     GLint index;
 };
 
+struct GLSLHeader
+{
+	std::string code;
+	bool useInVertex;
+	bool useInTessCtrl;
+	bool useInTessEval;
+	bool useInGeometry;
+	bool useInFragment;
+};
+
 class GLSLShader
 {
 public:
-    GLSLShader(std::string fragment, std::string vertex = "", std::string geometry = "", std::pair<std::string, std::string> tesselation = std::make_pair("","")); //empty means standard SAQ shader and no geometry shader
-    ~GLSLShader();
+    GLSLShader(std::string fragment,     //Obligatory
+			   std::string vertex = "",  //Optional
+			   std::string geometry = "", 
+			   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
+    GLSLShader(GLSLHeader& header, 
+			   std::string fragment, 
+			   std::string vertex = "", 
+			   std::string geometry = "", 
+			   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
+	~GLSLShader();
     
     void Use();
     
@@ -57,6 +75,8 @@ public:
     
     static bool Init();
     static void Destroy();
+	static void Silent();
+	static void Verbose();
     
 private:
     bool GetAttribute(std::string name, ParameterType type, GLint& index);
@@ -68,8 +88,9 @@ private:
     bool valid;
     
     static GLuint saqVertexShader;
-    static GLuint LoadShader(GLenum shaderType, std::string filename, GLint* shaderCompiled);
+    static GLuint LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint* shaderCompiled);
     static GLuint CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader);
+	static bool verbose;
 };
 
 

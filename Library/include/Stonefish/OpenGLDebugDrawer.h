@@ -15,7 +15,7 @@
 class OpenGLDebugDrawer : public btIDebugDraw
 {
 public:
-    OpenGLDebugDrawer(int debugMode);
+    OpenGLDebugDrawer(int debugMode, bool zUp);
     
     void drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
     void drawLine(const btVector3& from,const btVector3& to, const btVector3& fromColor, const btVector3& toColor);
@@ -28,6 +28,7 @@ public:
     
 private:
     int mode;
+	bool zAxisUp;
 };
 
 

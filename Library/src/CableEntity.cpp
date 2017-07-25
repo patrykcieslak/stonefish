@@ -8,7 +8,7 @@
 
 #include "CableEntity.h"
 #include "Joint.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const btVector3& _end2, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat) : Entity(uniqueName)
 {
@@ -144,17 +144,27 @@ void CableEntity::SetLook(int newLookId)
 	lookId = newLookId;
 }
 
-void CableEntity::Render()
+std::vector<Renderable> CableEntity::Render()
 {
+	std::vector<Renderable> items(0);
+	
     if(isRenderable())
     {
 		for(unsigned int i=0; i<cableParts.size(); ++i)
         {
             btTransform trans;
             cableParts[i]->getMotionState()->getWorldTransform(trans);
-            OpenGLContent::getInstance()->DrawObject(objectId, lookId, glMatrixFromBtTransform(trans));
+            
+			Renderable item;
+			item.objectId = objectId;
+			item.lookId = lookId;
+			item.dispCoordSys = false;
+			item.model = item.csModel = glMatrixFromBtTransform(trans);
+			items.push_back(item);
         }
     }
+	
+	return items;
 }
 
 Material* CableEntity::getMaterial()

@@ -53,7 +53,7 @@ void main(void)
     
     //Increase saturation
     vec3 hsvColor = rgb2hsv(rgbColor);
-    hsvColor.y *= 1.2;
+    hsvColor.y *= 1.0;
     rgbColor = hsv2rgb(hsvColor);
     
     //Correct Gamma

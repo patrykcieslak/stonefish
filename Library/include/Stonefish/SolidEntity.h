@@ -44,7 +44,7 @@ public:
     
     void SetLook(int newLookId);
 	void BuildGraphicalObject();
-	void Render();
+	std::vector<Renderable> Render();
 	
     virtual void ComputeFluidForces(const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
     virtual void ComputeFluidForces(const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);

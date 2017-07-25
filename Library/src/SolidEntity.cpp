@@ -7,7 +7,7 @@
 //
 
 #include "SolidEntity.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
@@ -120,13 +120,24 @@ void SolidEntity::GetAABB(btVector3& min, btVector3& max)
     rigidBody->getAabb(min, max);
 }
 
-void SolidEntity::Render()
+std::vector<Renderable> SolidEntity::Render()
 {
+	std::vector<Renderable> items(0);
+	
 	if(rigidBody != NULL && objectId >= 0 && isRenderable())
 	{
-		btTransform trans =  getTransform() * localTransform.inverse();
-        OpenGLContent::getInstance()->DrawObject(objectId, lookId, glMatrixFromBtTransform(trans));
+		btTransform oTrans =  getTransform() * localTransform.inverse();
+		
+		Renderable item;
+		item.objectId = objectId;
+		item.lookId = lookId;
+		item.dispCoordSys = dispCoordSys;
+		item.model = glMatrixFromBtTransform(oTrans);
+		item.csModel = glMatrixFromBtTransform(getTransform());
+        items.push_back(item);
 	}
+	
+	return items;
 }
 
 btTransform SolidEntity::getTransform() const

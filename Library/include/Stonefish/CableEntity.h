@@ -21,7 +21,7 @@ public:
     
     EntityType getType();
     void SetLook(int newLookId);
-    void Render();
+    std::vector<Renderable> Render();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void ApplyGravity();
     void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,

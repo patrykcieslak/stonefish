@@ -133,9 +133,9 @@ btTransform Manipulator::getTransform() const
 	return chain->getMultiBody()->getBaseWorldTransform();
 }
 
-void Manipulator::Render()
+std::vector<Renderable> Manipulator::Render()
 {
-    chain->Render();
+    return chain->Render();
 }
 
 void Manipulator::GetAABB(btVector3& min, btVector3& max)

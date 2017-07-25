@@ -9,7 +9,7 @@
 #include "Ocean.h"
 #include "SolidEntity.h"
 #include "SystemEntity.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 #include "SystemUtil.hpp"
 #include <algorithm>
 

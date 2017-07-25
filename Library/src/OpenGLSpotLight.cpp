@@ -8,7 +8,7 @@
 
 #include "OpenGLSpotLight.h"
 #include "SimulationManager.h"
-#include "GeometryUtil.hpp"
+#include "MathsUtil.hpp"
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {

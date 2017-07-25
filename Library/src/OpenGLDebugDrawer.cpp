@@ -10,8 +10,9 @@
 #include "OpenGLContent.h"
 #include "Console.h"
 
-OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode)
+OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode, bool zUp)
 {
+	zAxisUp = zUp;
     setDebugMode(debugMode);
 }
 
@@ -30,6 +31,13 @@ void OpenGLDebugDrawer::drawLine(const btVector3& from, const btVector3& to, con
 	std::vector<glm::vec3> vertices;
 	vertices.push_back(glm::vec3(from.getX(), from.getY(), from.getZ()));
 	vertices.push_back(glm::vec3(to.getX(), to.getY(), to.getZ()));
+	
+	if(!zAxisUp)
+	{
+		vertices[0] = glm::vec3(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(vertices[0], 1.f));
+		vertices[1] = glm::vec3(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(vertices[1], 1.f));
+	}
+	
 	glm::vec4 glcolor(color[0], color[1], color[2], 1.f);
 	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, glcolor);
 }

@@ -354,24 +354,15 @@ void OpenGLSun::SetPosition(GLfloat elevation, GLfloat azimuth)
     sunAzimuth = azimuth;
     
     //calculate sun direction
-    bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
 
     sunDirection = btVector3(0.f, -1.f, 0.f);
-    if(zUp)
-    {
-        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f - sunElevation));
-        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(90.f - sunAzimuth));
-    }
-    else
-    {
-        sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f + sunElevation));
-        sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(90.f + sunAzimuth));
-    }
+	sunDirection = sunDirection.rotate(btVector3(1.f,0.f,0.f), glm::radians(180.f - sunElevation));
+	sunDirection = sunDirection.rotate(btVector3(0.f,0.f,1.f), glm::radians(90.f - sunAzimuth));
     sunDirection.normalize();
     
     //build sun modelview
     glm::vec3 dir(sunDirection.x(), sunDirection.y(), sunDirection.z());
-    glm::vec3 up(0.f, 0.f, zUp ? 1.f : -1.f);
+    glm::vec3 up(0.f, 0.f, 1.f);
     glm::vec3 right = glm::cross(dir, up);
 	right = glm::normalize(right);
 	up = glm::normalize(glm::cross(right, dir));

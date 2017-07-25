@@ -26,5 +26,5 @@ void main(void)
 {
     vec3 normal = get_world_normal();
     vec4 color = texture(source, normal);
-    fragcolor = vec4(color.rgb, 1.0);
+    fragcolor = vec4(normal, 1.0);//vec4(color.rgb, 1.0);
 }
