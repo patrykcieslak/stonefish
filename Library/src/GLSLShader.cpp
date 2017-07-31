@@ -48,7 +48,7 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
 	
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
     
-	shader = CreateProgram(vs, gs, fs, tcs, tes);
+	shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
 		
     valid = true;
 }
@@ -87,12 +87,56 @@ GLSLShader::GLSLShader(GLSLHeader& header, std::string fragment, std::string ver
 	
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
     
-	shader = CreateProgram(vs, gs, fs, tcs, tes);
+	shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
 		
     valid = true;
 }
 
-
+GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
+{
+	valid = false;
+    GLint compiled = 0;
+    GLuint vs;
+	GLuint tcs;
+	GLuint tes;
+    GLuint gs;
+	GLuint fs;
+	std::string emptyHeader = "";
+    
+    if(vertex == "")
+		vs = 0;
+	else
+		vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
+    
+	if(tesselation.first == "" || tesselation.second == "")
+	{
+		tcs = 0;
+		tes = 0;
+	}
+	else
+	{
+		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
+		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
+	}
+	
+	if(geometry == "")
+		gs = 0;
+	else
+		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
+	
+    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
+    
+	std::vector<GLuint> cShaders = compiledShaders;
+	cShaders.push_back(vs);
+	cShaders.push_back(gs);
+	cShaders.push_back(fs);
+	cShaders.push_back(tcs);
+	cShaders.push_back(tes);	
+	shader = CreateProgram(cShaders, vs == saqVertexShader ? compiledShaders.size() + 1 : compiledShaders.size());
+		
+    valid = true;
+}
+	
 GLSLShader::~GLSLShader()
 {
     if(valid)
@@ -415,17 +459,16 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::stri
 	return shader;
 }
 
-GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader)
+GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, unsigned int doNotDeleteNFirstShaders)
 {
 	GLint programLinked = 0;
 	GLuint program = glCreateProgram();
 	GLint infoLogLength = 0;
-		
-	glAttachShader(program, vertexShader);
-	if(tessControlShader > 0) glAttachShader(program, tessControlShader);
-	if(tessEvalShader > 0) glAttachShader(program, tessEvalShader);
-	if(geometryShader > 0) glAttachShader(program, geometryShader);
-	glAttachShader(program, fragmentShader);
+	
+	for(unsigned int i=0; i<compiledShaders.size(); ++i)
+		if(compiledShaders[i] > 0)
+			glAttachShader(program, compiledShaders[i]);
+	
 	glLinkProgram(program);
 	
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
@@ -435,20 +478,17 @@ GLuint GLSLShader::CreateProgram(GLuint vertexShader, GLuint geometryShader, GLu
 		glGetProgramInfoLog(program, infoLogLength, NULL, &infoLog[0]);
 		cWarning("Program link log: %s", &infoLog[0]);
 	}
-	
 	glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
 	
-	glDetachShader(program, vertexShader);
-	if(tessControlShader > 0) glDetachShader(program, tessControlShader);
-	if(tessEvalShader > 0) glDetachShader(program, tessEvalShader);
-	if(geometryShader > 0) glDetachShader(program, geometryShader);
-	glDetachShader(program, fragmentShader);
-	
-	if(vertexShader != saqVertexShader) glDeleteShader(vertexShader);
-	if(tessControlShader > 0) glDeleteShader(tessControlShader);
-	if(tessEvalShader > 0) glDeleteShader(tessEvalShader);
-	if(geometryShader > 0) glDeleteShader(geometryShader);
-	glDeleteShader(fragmentShader);
+	for(unsigned int i=0; i<compiledShaders.size(); ++i)
+	{
+		if(compiledShaders[i] > 0)
+		{
+			glDetachShader(program, compiledShaders[i]);
+			if(i > doNotDeleteNFirstShaders-1)
+				glDeleteShader(compiledShaders[i]);
+		}
+	}
 	
 	if(programLinked == 0)
     {

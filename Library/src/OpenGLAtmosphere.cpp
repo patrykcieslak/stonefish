@@ -35,16 +35,31 @@ constexpr double kLambdaG = 550.0;
 constexpr double kLambdaB = 440.0;
 constexpr double kLengthUnitInMeters = 1.0; //Length unit used in OpenGL
 
-OpenGLAtmosphere::OpenGLAtmosphere(unsigned int numOfPrecomputedWavelengths, unsigned int numOfScatteringOrders)
+OpenGLAtmosphere* OpenGLAtmosphere::instance = NULL;
+
+OpenGLAtmosphere* OpenGLAtmosphere::getInstance()
+{
+    if(instance == NULL)
+        instance = new OpenGLAtmosphere();
+    
+    return instance;
+}
+
+OpenGLAtmosphere::OpenGLAtmosphere()
 {
 	//Initialize sun position
 	sunAzimuth = 0.f;
-	sunElevation = 45.f;
+	sunElevation = 25.f;
+	whitePoint = glm::vec3(1.f);
 
 	//Prepare for rendering
 	for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures[i] = 0;
-	skySunShader = NULL;
-	
+	skySunShader = NULL;	
+	atmosphereAPI = 0;
+}
+
+void OpenGLAtmosphere::Init(unsigned int numOfPrecomputedWavelengths, unsigned int numOfScatteringOrders)
+{	
 	//Read base shader code
 	std::ifstream defsCode(GetShaderPath() + "atmosphereDef.glsl");
 	std::stringstream defsBuffer;
@@ -61,18 +76,30 @@ OpenGLAtmosphere::OpenGLAtmosphere(unsigned int numOfPrecomputedWavelengths, uns
 	nScatteringOrders = numOfScatteringOrders;
 	Precompute();
 	
+	//Permanently bind atmosphere textures
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_TRANSMITTANCE, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_SCATTERING, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_IRRADIANCE, GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
+	
+	//Build atmosphere API shader
+	GLint compiled;
+	std::string additionalDefs = numOfPrecomputedWavelengths > 3 ? "" : "#define RADIANCE_API_ENABLED\n";
+	additionalDefs = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB)) + additionalDefs;
+	atmosphereAPI = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "atmosphereApi.glsl", additionalDefs, &compiled);
+	
 	//Build rendering shaders
-	GLSLHeader header;
-	header.useInFragment = true;
-	header.useInGeometry = header.useInVertex = header.useInTessCtrl = header.useInTessEval = false;
-	header.code = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB));
-	skySunShader = new GLSLShader(header, "atmosphereSkySun.frag", "atmosphereSkySun.vert");
-	skySunShader->AddUniform("texTransmittance", ParameterType::INT);
-	skySunShader->AddUniform("texScattering", ParameterType::INT);
+	std::vector<GLuint> compiledShaders;
+	compiledShaders.push_back(atmosphereAPI);
+	skySunShader = new GLSLShader(compiledShaders, "atmosphereSkySun.frag", "atmosphereSkySun.vert");
+	skySunShader->AddUniform("transmittance_texture", ParameterType::INT);
+	skySunShader->AddUniform("scattering_texture", ParameterType::INT);
 	skySunShader->AddUniform("eyePos", ParameterType::VEC3);
 	skySunShader->AddUniform("sunDir", ParameterType::VEC3);
-    skySunShader->AddUniform("invView", ParameterType::MAT4);
-	skySunShader->AddUniform("invClip", ParameterType::MAT4);
+    skySunShader->AddUniform("invView", ParameterType::MAT3);
+	skySunShader->AddUniform("invProj", ParameterType::MAT4);
+	skySunShader->AddUniform("viewport", ParameterType::VEC2);
+	skySunShader->AddUniform("whitePoint", ParameterType::VEC3);
+	skySunShader->AddUniform("cosSunSize", ParameterType::FLOAT);
 }
 
 OpenGLAtmosphere::~OpenGLAtmosphere()
@@ -81,6 +108,7 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
 		if(textures[i] != 0) glDeleteTextures(1, &textures[i]);
 		
 	if(skySunShader != NULL) delete skySunShader;
+	if(atmosphereAPI > 0) glDeleteShader(atmosphereAPI);
 }
 
 void OpenGLAtmosphere::SetSunPosition(float azimuthDeg, float elevationDeg)
@@ -94,24 +122,38 @@ void OpenGLAtmosphere::SetSunPosition(float latitude, float longitude, Time utc)
 {
 }
 
+GLuint OpenGLAtmosphere::getAtmosphereAPI()
+{
+	return atmosphereAPI;
+}
+
+GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
+{
+	return textures[id];
+}
+
 void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLView* view)
 {
 	glm::mat4 viewMatrix = view->GetViewMatrix();
 	glm::mat4 projection = view->GetProjectionMatrix();
+	GLint* viewport = view->GetViewport();
    
 	float sunAzimuthAngle = sunAzimuth/180.0*M_PI;
 	float sunZenithAngle =  (90.f - sunElevation)/180.f*M_PI;
 	glm::vec3 sunDirection(cos(sunAzimuthAngle) * sin(sunZenithAngle), sin(sunAzimuthAngle) * sin(sunZenithAngle), cos(sunZenithAngle));
 	
     skySunShader->Use();
-    skySunShader->SetUniform("texTransmittance", TEX_POSTPROCESS1);
-	skySunShader->SetUniform("texScattering", TEX_POSTPROCESS2);
+    skySunShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+	skySunShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
 	skySunShader->SetUniform("eyePos", view->GetEyePosition());
 	skySunShader->SetUniform("sunDir", glm::normalize(sunDirection));
-	skySunShader->SetUniform("invView", glm::inverse(viewMatrix));
-    skySunShader->SetUniform("invClip", glm::inverse(projection));
-	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
+	skySunShader->SetUniform("invProj", glm::inverse(projection));
+	skySunShader->SetUniform("invView", glm::mat3(glm::inverse(viewMatrix)));
+    skySunShader->SetUniform("viewport", glm::vec2(viewport[2], viewport[3]));
+	skySunShader->SetUniform("whitePoint", whitePoint);
+	skySunShader->SetUniform("cosSunSize", (GLfloat)cos(0.00935/2.0));
+	//glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
+	//glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
 	OpenGLContent::getInstance()->DrawSAQ();
     glUseProgram(0);
 }
@@ -205,8 +247,11 @@ void OpenGLAtmosphere::Precompute()
 	
 	//Create temporary framebuffer
 	GLuint fbo;
+	GLuint vao;
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 	
 	// The actual precomputations depend on whether we want to store precomputed
 	// irradiance or illuminance values.
@@ -270,7 +315,9 @@ void OpenGLAtmosphere::Precompute()
 	
 	//Destroy temporary OpenGL resources
 	glUseProgram(0);
+	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDeleteVertexArrays(1, &vao);
 	glDeleteFramebuffers(1, &fbo);
 	glDeleteTextures(1, &delta_scattering_density_texture);
 	glDeleteTextures(1, &delta_mie_scattering_texture);
@@ -518,6 +565,15 @@ std::string OpenGLAtmosphere::EarthsAtmosphere(const glm::dvec3& lambdas)
 		ground_albedo.push_back(kGroundAlbedo);
 	}
 	
+	//Compute white balance
+	double white_point_r = 1.0;
+	double white_point_g = 1.0;
+	double white_point_b = 1.0;
+    ConvertSpectrumToLinearSrgb(wavelengths, solar_irradiance, &white_point_r, &white_point_g, &white_point_b);
+    double white_point = (white_point_r + white_point_g + white_point_b) / 3.0;
+	whitePoint = glm::vec3(white_point_r/white_point, white_point_g/white_point, white_point_b/white_point);
+	
+	//C++ Lambdas
 	auto to_string = [&wavelengths](const std::vector<double>& v, const glm::dvec3& lambdas, double scale) 
 	{
 		double r = Interpolate(wavelengths, v, lambdas[0]) * scale;
@@ -662,7 +718,7 @@ void OpenGLAtmosphere::DrawBlendedSAQ(const std::vector<bool>& enableBlend)
 		if(enableBlend[i]) 
 			glEnablei(GL_BLEND, i);
 	
-	OpenGLContent::getInstance()->DrawSAQ();
+	glDrawArrays(GL_TRIANGLES, 0, 3);
   
 	for(unsigned int i = 0; i<enableBlend.size(); ++i) 
 		glDisablei(GL_BLEND, i);

@@ -51,8 +51,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
     ocean = NULL;
-	atmosphere = NULL;
-    trackball = NULL;
+	trackball = NULL;
     
     //Set IC solver params
     icProblemSolved = false;
@@ -67,7 +66,6 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
 SimulationManager::~SimulationManager()
 {
     DestroyScenario();
-	delete atmosphere;
 	delete ocean;
 }
 
@@ -311,11 +309,6 @@ Ocean* SimulationManager::getOcean()
 		return NULL;
 }
 
-OpenGLAtmosphere* SimulationManager::getAtmosphere()
-{
-	return atmosphere;
-}
-
 ResearchDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
@@ -521,13 +514,10 @@ void SimulationManager::InitializeScenario()
     }
     
     //Standard trackball
-    trackball = new OpenGLTrackball(btVector3(0,0,10.0), 10.0, btVector3(0,0, 1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
+    trackball = new OpenGLTrackball(btVector3(0,0,1.0), 10.0, btVector3(0,0, 1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
 	trackball->Rotate(btQuaternion(0.25, 0.0, 0.0));
 	trackball->Activate();
     OpenGLContent::getInstance()->AddView(trackball);
-	
-	//Standard atmosphere
-	atmosphere = new OpenGLAtmosphere();
 }
 
 void SimulationManager::RestartScenario()

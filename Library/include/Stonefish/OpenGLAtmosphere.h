@@ -52,15 +52,20 @@ enum AtmosphereTextures
 class OpenGLAtmosphere 
 {
 public: 
-	OpenGLAtmosphere(unsigned int numOfPrecomputedWavelengths = 15, unsigned int numOfScatteringOrders = 4);
-	~OpenGLAtmosphere();
-	
+	void Init(unsigned int numOfPrecomputedWavelengths = 15, unsigned int numOfScatteringOrders = 4);
 	void DrawSkyAndSun(const OpenGLView* view);
 	void ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 rect);
 	void SetSunPosition(float azimuthDeg, float elevationDeg);
-	void SetSunPosition(float latitude, float longitude, Time utc);                            
+	void SetSunPosition(float latitude, float longitude, Time utc);   
+	GLuint getAtmosphereAPI();
+	GLuint getAtmosphereTexture(AtmosphereTextures id);
+	
+	static OpenGLAtmosphere* getInstance();                         
 	
 private:
+	OpenGLAtmosphere();
+	~OpenGLAtmosphere();
+	
 	//Precomputation
 	std::string EarthsAtmosphere(const glm::dvec3& lambdas);
 	void Precompute();
@@ -84,7 +89,12 @@ private:
 	float sunAzimuth;
 	float sunElevation;
 	GLSLShader* skySunShader;
+	GLuint atmosphereAPI;
 	GLuint textures[AtmosphereTextures::TEXTURE_COUNT];
+	glm::vec3 whitePoint;
+	
+	//Static
+	static OpenGLAtmosphere* instance;
 };
 
 #endif

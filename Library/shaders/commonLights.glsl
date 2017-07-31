@@ -38,6 +38,21 @@ uniform sampler2DArrayShadow sunShadowMap;
 uniform samplerCube texSkyDiffuse;
 
 //---------------Functions-------------------
+vec3 GetSolarLuminance();
+vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
+vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
+vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
+
+vec3 getWorldNormal(mat4 invProj, mat3 invViewRot, vec2 viewportSize)
+{
+    vec2 fragPos = gl_FragCoord.xy/viewportSize;
+    fragPos = (fragPos-0.5)*2.0;
+    vec4 deviceNormal = vec4(fragPos, 0.0, 1.0);
+    vec3 eyeNormal = normalize((invProj * deviceNormal).xyz);
+    vec3 worldNormal = normalize(invViewRot * eyeNormal);
+    return worldNormal;
+}
+
 //Generate random numbers
 float random(vec3 seed, int i)
 {

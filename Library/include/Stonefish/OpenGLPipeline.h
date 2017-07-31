@@ -27,15 +27,17 @@
 #define MAX_SPOT_LIGHTS 	8
 
 #define TEX_BASE			((GLint)0)
-#define TEX_SKY_DIFFUSE 	((GLint)1)
-#define TEX_SKY_REFLECTION 	((GLint)2)
+#define TEX_NORMALMAP		((GLint)1)
+#define TEX_ROUGHNESS		((GLint)2)
 
-#define TEX_POSTPROCESS1	((GLint)4)
-#define TEX_POSTPROCESS2	((GLint)5)
-#define TEX_POSTPROCESS3	((GLint)6)
-#define TEX_POSTPROCESS4	((GLint)7)
-#define TEX_POSTPROCESS5	((GLint)8)
-
+#define TEX_ATM_TRANSMITTANCE	((GLint)7)
+#define TEX_ATM_SCATTERING 		((GLint)8)
+#define TEX_ATM_IRRADIANCE 		((GLint)9)
+#define TEX_POSTPROCESS1	((GLint)10)
+#define TEX_POSTPROCESS2	((GLint)11)
+#define TEX_POSTPROCESS3	((GLint)12)
+#define TEX_POSTPROCESS4	((GLint)13)
+#define TEX_POSTPROCESS5	((GLint)14)
 #define TEX_SUN_SHADOW		((GLint)15)
 #define TEX_SHADOW_START	((GLint)16)
 

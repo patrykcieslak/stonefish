@@ -286,7 +286,13 @@ void OpenGLContent::Init()
 	flatShader->AddUniform("MVP", ParameterType::MAT4);
 	
 	//Materials
-	GLSLShader* blinnPhong = new GLSLShader("blinnPhong.frag", "object.vert");
+	std::vector<GLuint> atmosphere;
+	atmosphere.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
+	
+	GLSLShader* blinnPhong = new GLSLShader(atmosphere, "blinnPhong.frag", "object.vert");
+	blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
+	blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
+	blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
 	blinnPhong->AddUniform("MVP", ParameterType::MAT4);
 	blinnPhong->AddUniform("M", ParameterType::MAT4);
 	blinnPhong->AddUniform("N", ParameterType::MAT3);
@@ -331,7 +337,10 @@ void OpenGLContent::Init()
 	
 	materialShaders.push_back(blinnPhong);
 	
-	GLSLShader* cookTorrance = new GLSLShader("cookTorrance.frag", "object.vert");
+	GLSLShader* cookTorrance = new GLSLShader(atmosphere, "cookTorrance.frag", "object.vert");
+	cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
+	cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
+	cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
 	cookTorrance->AddUniform("MVP", ParameterType::MAT4);
 	cookTorrance->AddUniform("M", ParameterType::MAT4);
 	cookTorrance->AddUniform("N", ParameterType::MAT3);
@@ -670,7 +679,12 @@ void OpenGLContent::SetupLights(GLSLShader* shader)
 	
 	shader->SetUniform("numPointLights", pointId);
 	shader->SetUniform("numSpotLights", spotId);
-	shader->SetUniform("texSkyDiffuse", TEX_SKY_DIFFUSE);
+	shader->SetUniform("texSkyDiffuse", TEX_ATM_SCATTERING);
+	
+	shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+	shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+	shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+	
 	OpenGLSun::getInstance()->SetupShader(shader);
 }
 

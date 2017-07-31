@@ -50,6 +50,11 @@ public:
 			   std::string vertex = "", 
 			   std::string geometry = "", 
 			   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
+	GLSLShader(std::vector<GLuint> compiledShaders,
+			   std::string fragment = "",     
+			   std::string vertex = "",
+			   std::string geometry = "", 
+			   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
 	~GLSLShader();
     
     void Use();
@@ -78,6 +83,8 @@ public:
 	static void Silent();
 	static void Verbose();
     
+	static GLuint LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint* shaderCompiled);
+	
 private:
     bool GetAttribute(std::string name, ParameterType type, GLint& index);
     bool GetUniform(std::string name, ParameterType type, GLint& location);
@@ -88,9 +95,8 @@ private:
     bool valid;
     
     static GLuint saqVertexShader;
-    static GLuint LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint* shaderCompiled);
-    static GLuint CreateProgram(GLuint vertexShader, GLuint geometryShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader);
-	static bool verbose;
+    static bool verbose;
+	static GLuint CreateProgram(const std::vector<GLuint>& compiledShaders, unsigned int doNotDeleteNFirstShaders = 0);
 };
 
 

@@ -25,6 +25,7 @@ uniform float metallic;
 uniform float roughness;
 
 const float PI = 3.14159265359;
+const vec3 center = vec3(0, 0, -6360000.0);
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
@@ -105,15 +106,20 @@ void main()
 	}
 	
 	//Ambient
-	fragColor = texture(texSkyDiffuse, vec3(N.x, N.z, -N.y)).rgb * albedo;
+	vec3 skyIlluminance;
+	vec3 sunIlluminance = GetSunAndSkyIlluminance(fragPos - center, N, -sunDirection, skyIlluminance);
+	vec3 transmittance;
+	skyIlluminance = GetSkyLuminanceToPoint(eyePos - center, fragPos - center, 0.f, sunDirection, transmittance);
+	
+	fragColor = skyIlluminance/1000.0;// + sunIlluminance/100.0;// + sunIlluminance;// * albedo + sunIlluminance*0.000001;  //texture(texSkyDiffuse, vec3(N.x, N.z, -N.y)).rgb * albedo;
 	//Sun
-	fragColor += calcSunContribution(N, toEye, albedo);
+	/*fragColor += calcSunContribution(N, toEye, albedo);
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
 		fragColor += calcPointLightContribution(i, N, toEye, albedo);
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
-		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
+		fragColor += calcSpotLightContribution(i, N, toEye, albedo);*/
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }

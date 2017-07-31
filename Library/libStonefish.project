@@ -337,6 +337,7 @@
       <File Name="shaders/atmosphere.geom"/>
       <File Name="shaders/atmosphereSkySun.frag"/>
       <File Name="shaders/atmosphereSkySun.vert"/>
+      <File Name="shaders/atmosphereApi.glsl"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">

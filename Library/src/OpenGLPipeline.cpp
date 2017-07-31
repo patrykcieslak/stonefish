@@ -122,14 +122,15 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 	
 	//Load shaders and create rendering buffers
     cInfo("Loading shaders...");
+	OpenGLAtmosphere::getInstance()->Init();
 	OpenGLContent::getInstance()->Init();
-	OpenGLSky::getInstance()->Init();
+	//OpenGLSky::getInstance()->Init();
     OpenGLSun::getInstance()->Init();
     OpenGLView::Init();
     OpenGLLight::Init();
     
-    cInfo("Generating sky...");
-    OpenGLSky::getInstance()->Generate(40.f,90.f);
+    //cInfo("Generating sky...");
+    //OpenGLSky::getInstance()->Generate(40.f,90.f);
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
@@ -179,7 +180,6 @@ void OpenGLPipeline::DrawObjects(SimulationManager* sim)
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
 	Ocean* ocean = sim->getOcean();
-	OpenGLAtmosphere* atm = sim->getAtmosphere();
 	
 	if(ocean != NULL)
 		ocean->getOpenGLOcean().SimulateOcean();
@@ -227,18 +227,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
 			if(ocean != NULL)
 			{
-				//================Draw precomputed sky=======================
-				glDisable(GL_DEPTH_TEST);
-				glDisable(GL_CULL_FACE);
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				//OpenGLSky::getInstance()->Render(view);
-				atm->DrawSkyAndSun(view);
-				glEnable(GL_CULL_FACE);
-				glEnable(GL_DEPTH_TEST);
-				
-				//=================Draw objects===============================
 				//Bind standard textures
-				glActiveTexture(GL_TEXTURE0 + TEX_SKY_DIFFUSE);
+				glActiveTexture(GL_TEXTURE0 + TEX_ATM_SCATTERING);
 				glEnable(GL_TEXTURE_CUBE_MAP);
 				glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
 			
@@ -249,42 +239,41 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				glDrawBuffers(2, renderBuffs);
 				DrawObjects(sim);
             
+				//Draw ocean
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				
+				//Draw sky
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+				
 				//Ambient occlusion
-				glDisable(GL_CULL_FACE);
-				glDisable(GL_DEPTH_TEST);
 				view->DrawAO();
 			}
 			else
 			{
-				//================Draw precomputed sky=======================
-				glDisable(GL_DEPTH_TEST);
-				glDisable(GL_CULL_FACE);
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				//OpenGLSky::getInstance()->Render(view);
-				atm->DrawSkyAndSun(view);
-				glEnable(GL_CULL_FACE);
-				glEnable(GL_DEPTH_TEST);
-            
-				//=================Draw objects===============================
 				//Bind standard textures
-				glActiveTexture(GL_TEXTURE0 + TEX_SKY_DIFFUSE);
-				glEnable(GL_TEXTURE_CUBE_MAP);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
+				//glActiveTexture(GL_TEXTURE0 + TEX_ATM_SCATTERING);
+				//glEnable(GL_TEXTURE_CUBE_MAP);
+				//glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
 			
 				//Render all objects
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_TRANSMITTANCE, GL_TEXTURE_2D, OpenGLAtmosphere::getInstance()->getAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE));
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_SCATTERING, GL_TEXTURE_3D, OpenGLAtmosphere::getInstance()->getAtmosphereTexture(AtmosphereTextures::SCATTERING));
+				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_IRRADIANCE, GL_TEXTURE_2D, OpenGLAtmosphere::getInstance()->getAtmosphereTexture(AtmosphereTextures::IRRADIANCE));
+				
 				view->SetViewport();
 				OpenGLContent::getInstance()->SetCurrentView(view);
 				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
 				glDrawBuffers(2, renderBuffs);
 				DrawObjects(sim);
             
+				//Render sky
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+			
 				//Ambient occlusion
-				glDisable(GL_DEPTH_TEST);
-				glDisable(GL_CULL_FACE);
 				view->DrawAO();
 			}
 			
@@ -367,12 +356,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				//ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
 			}
 			
-			if(atm != NULL)
-			{
-				//atm->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
-				//atm->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
-				//atm->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
-			}
+			//atm->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
+			//atm->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
+			//atm->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
+			
 			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
 			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);

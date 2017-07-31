@@ -98,7 +98,6 @@ public:
     Controller* getController(unsigned int index);
     Controller* getController(std::string name);
 	Ocean* getOcean();
-	OpenGLAtmosphere* getAtmosphere();
     
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();
@@ -160,7 +159,6 @@ private:
 
     //graphics
     OpenGLTrackball* trackball;
-	OpenGLAtmosphere* atmosphere;
     OpenGLDebugDrawer* debugDrawer;
 };
 
