@@ -47,10 +47,9 @@
       </VirtualDirectory>
       <VirtualDirectory Name="lights">
         <File Name="src/OpenGLLight.cpp"/>
-        <File Name="src/OpenGLSun.cpp"/>
         <File Name="src/OpenGLSpotLight.cpp"/>
-        <File Name="src/OpenGLSky.cpp"/>
         <File Name="src/OpenGLPointLight.cpp"/>
+        <File Name="src/OpenGLAtmosphere.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="src/OpenGLTrackball.cpp"/>
@@ -61,7 +60,6 @@
       <File Name="src/OpenGLPipeline.cpp"/>
       <File Name="src/OpenGLContent.cpp"/>
       <File Name="src/OpenGLOcean.cpp"/>
-      <File Name="src/OpenGLAtmosphere.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -196,9 +194,8 @@
       <VirtualDirectory Name="lights">
         <File Name="include/Stonefish/OpenGLSpotLight.h"/>
         <File Name="include/Stonefish/OpenGLLight.h"/>
-        <File Name="include/Stonefish/OpenGLSun.h"/>
-        <File Name="include/Stonefish/OpenGLSky.h"/>
         <File Name="include/Stonefish/OpenGLPointLight.h"/>
+        <File Name="include/Stonefish/OpenGLAtmosphere.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="include/Stonefish/OpenGLCamera.h"/>
@@ -213,7 +210,6 @@
       <File Name="include/Stonefish/OpenGLContent.h"/>
       <File Name="include/Stonefish/OpenGLPipeline.h"/>
       <File Name="include/Stonefish/OpenGLOcean.h"/>
-      <File Name="include/Stonefish/OpenGLAtmosphere.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="include/Stonefish/Actuator.h"/>
@@ -296,14 +292,6 @@
       <File Name="shaders/gaussianBlur.vert"/>
       <File Name="shaders/simpleDownsample.frag"/>
     </VirtualDirectory>
-    <VirtualDirectory Name="lights">
-      <File Name="shaders/cascadedShadowMap.frag"/>
-      <File Name="shaders/cubeConvolve.frag"/>
-      <File Name="shaders/cubeDownsample.frag"/>
-      <File Name="shaders/cubePass.frag"/>
-      <File Name="shaders/cubeSky.frag"/>
-      <File Name="shaders/commonLights.glsl"/>
-    </VirtualDirectory>
     <VirtualDirectory Name="base">
       <File Name="shaders/flat.frag"/>
       <File Name="shaders/flat.vert"/>
@@ -314,7 +302,6 @@
       <File Name="shaders/texCube.vert"/>
       <File Name="shaders/texQuad.frag"/>
       <File Name="shaders/texQuad.vert"/>
-      <File Name="shaders/object.vert"/>
       <File Name="shaders/texLayerQuad.frag"/>
       <File Name="shaders/texQuadMS.frag"/>
       <File Name="shaders/quadTree.tcs"/>
@@ -324,6 +311,8 @@
     <VirtualDirectory Name="materials">
       <File Name="shaders/blinnPhong.frag"/>
       <File Name="shaders/cookTorrance.frag"/>
+      <File Name="shaders/material.frag"/>
+      <File Name="shaders/material.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="atmosphere">
       <File Name="shaders/atmosphereDef.glsl"/>
@@ -338,6 +327,7 @@
       <File Name="shaders/atmosphereSkySun.frag"/>
       <File Name="shaders/atmosphereSkySun.vert"/>
       <File Name="shaders/atmosphereApi.glsl"/>
+      <File Name="shaders/sunCSM.frag"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">

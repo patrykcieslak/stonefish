@@ -1,3 +1,5 @@
+#version 330 core
+
 //---------------Definitions--------------------
 #define MAX_POINT_LIGHTS 	8
 #define MAX_SPOT_LIGHTS 	8
@@ -24,24 +26,36 @@ struct SpotLight
 	sampler2DShadow shadowMap;
 };
 
+in vec3 normal;
+in vec2 texCoord;
+in vec3 fragPos;
+in vec3 eyeSpaceNormal;
+
+layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec3 fragNormal;
+
+uniform vec3 eyePos;
+uniform vec3 viewDir;
+uniform vec4 color;
+uniform sampler2D tex;
+
 uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 uniform int numPointLights;
 uniform int numSpotLights;
 
 uniform vec3 sunDirection;
-uniform vec4 sunColor;
 uniform mat4 sunClipSpace[4];
 uniform vec4 sunFrustumFar;
 uniform sampler2DArrayShadow sunShadowMap;
-
-uniform samplerCube texSkyDiffuse;
+uniform float planetRadius;
 
 //---------------Functions-------------------
 vec3 GetSolarLuminance();
 vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
+vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo);
 
 vec3 getWorldNormal(mat4 invProj, mat3 invViewRot, vec2 viewportSize)
 {
@@ -177,7 +191,7 @@ vec3 calcPointLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 	toLight /= distance;
 	
 	float attenuation = 1.0/(distance*distance);
-	return shadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation;
+	return ShadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation;
 }
 
 vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
@@ -194,23 +208,55 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 		float attenuation = 1.0/(distance*distance);
 		float bias = 0.0005 * tan(acos(NdotL));
 		bias = clamp(bias, 0, 0.005);
-		return shadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id, bias) * pow(spotEffect, 10.0) * attenuation;
+		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id, bias) * pow(spotEffect, 10.0) * attenuation;
 	}
 	else
 		return vec3(0.0);
 }
 
-vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo)
+vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 {
-	float NdotL = dot(N, -sunDirection);
+	float NdotL = dot(N, sunDirection);
 	
 	if(NdotL > 0.0)
 	{	
 		//float bias = 0.001 * tan(acos(NdotL));
 		//bias = clamp(bias, 0, 0.01);
 		float bias = 0.001;
-		return shadingModel(N, toEye, -sunDirection, albedo) * sunColor.rgb * calcSunShadow(bias);
+		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow(bias);
 	}
 	else
 		return vec3(0.0);
+}
+
+void main()
+{	
+	//Common
+	vec3 N = normalize(normal);
+	vec3 toEye = normalize(eyePos - fragPos);
+	vec3 center = vec3(0,0,-planetRadius);
+	vec3 albedo = color.rgb;
+	
+	if(color.a > 0.0)
+	{
+		vec4 texColor = texture(tex, texCoord);
+		albedo = mix(color.rgb, texColor.rgb, color.a*texColor.a);
+	}
+	
+	//Ambient
+	vec3 skyIlluminance;
+    vec3 sunIlluminance = GetSunAndSkyIlluminance(fragPos - center, N, sunDirection, skyIlluminance);
+    fragColor =  albedo * skyIlluminance / 30000.0;
+	
+	//Sun
+	fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance / 30000.0);
+	//Point lights
+	for(int i=0; i<numPointLights; ++i)
+		fragColor += calcPointLightContribution(i, N, toEye, albedo);
+	//Spot lights
+	for(int i=0; i<numSpotLights; ++i)
+		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
+		
+	//Normal
+	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }

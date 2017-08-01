@@ -21,7 +21,6 @@
 #include "FakeIMU.h"
 #include "Trajectory.h"
 #include "Manipulator.h"
-#include "OpenGLSun.h"
 #include "Light.h"
 #include "Camera.h"
 
@@ -31,8 +30,8 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-	OpenGLPipeline::getInstance()->setRenderingEffects(true, false, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, false);
+	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, true, false);
     setICSolverParams(false);
 	
     ///////MATERIALS////////
@@ -94,6 +93,6 @@ void FallingTestManager::BuildScenario()
     //AddActuator(omni);
     //Light* spot = new Light("Spot", btVector3(5.f, 5.f, 5.f), btVector3(-1.f,-1.f,-1.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 1000000));
     //AddActuator(spot);
-    //Camera* cam = new Camera("Camera", btVector3(-10,0,1), btVector3(0,0,0), btVector3(0,0,1.), 0, 0, FallingTestApp::getApp()->getWindowWidth()/3, FallingTestApp::getApp()->getWindowHeight()/3, 60.f);
-    //AddSensor(cam);
+    Camera* cam = new Camera("Camera", btVector3(10,0,10000000), btVector3(0,0,0), btVector3(0,0,1.), 0, 0, FallingTestApp::getApp()->getWindowWidth()/3, FallingTestApp::getApp()->getWindowHeight()/3, 60.f);
+    AddSensor(cam);
 }

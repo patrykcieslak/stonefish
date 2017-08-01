@@ -12,6 +12,7 @@
 #include <functional>
 #include "OpenGLPipeline.h"
 #include "GLSLShader.h"
+#include "OpenGLView.h"
 
 // An atmosphere layer of width 'width', and whose density is defined as
 // 'exp_term' * exp('exp_scale' * h) + 'linear_term' * h + 'constant_term',
@@ -54,11 +55,20 @@ class OpenGLAtmosphere
 public: 
 	void Init(unsigned int numOfPrecomputedWavelengths = 15, unsigned int numOfScatteringOrders = 4);
 	void DrawSkyAndSun(const OpenGLView* view);
-	void ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 rect);
-	void SetSunPosition(float azimuthDeg, float elevationDeg);
-	void SetSunPosition(float latitude, float longitude, Time utc);   
+	void BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view);
+	void SetupMaterialShader(GLSLShader* shader);
+	
+	void SetSunPosition(GLfloat azimuthDeg, GLfloat elevationDeg);
+	void SetSunPosition(GLfloat latitude, GLfloat longitude, Time utc);   
+	void GetSunPosition(GLfloat& azimuthDeg, GLfloat& elevationDeg);
 	GLuint getAtmosphereAPI();
 	GLuint getAtmosphereTexture(AtmosphereTextures id);
+	glm::vec3 GetSunDirection();
+	GLfloat getAtmosphereBottomRadius();
+	
+	//Debugging
+	void ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 rect);
+	void ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale);
 	
 	static OpenGLAtmosphere* getInstance();                         
 	
@@ -85,9 +95,24 @@ private:
 	std::string glslDefinitions;
 	std::string glslFunctions;
 	
+	//Shadows
+	glm::mat4 BuildCropProjMatrix(ViewFrustum &f);
+    void UpdateFrustumCorners(ViewFrustum &f, glm::vec3 center, glm::vec3 dir, glm::vec3 up);
+    void UpdateSplitDist(GLfloat nd, GLfloat fd);
+	GLuint sunShadowmapArray;
+    GLuint sunShadowmapSplits;
+    GLuint sunShadowmapSize;
+	glm::vec3 sunDirection;
+    glm::mat4x4* sunShadowCPM;
+    glm::mat4x4 sunModelView;
+    ViewFrustum* sunShadowFrustum;
+    GLuint sunShadowFBO;
+    GLSLShader* sunShadowmapShader; //debug draw shadowmap
+	
 	//Rendering
-	float sunAzimuth;
-	float sunElevation;
+	GLfloat sunAzimuth;
+	GLfloat sunElevation;
+	GLfloat atmBottomRadius; 
 	GLSLShader* skySunShader;
 	GLuint atmosphereAPI;
 	GLuint textures[AtmosphereTextures::TEXTURE_COUNT];

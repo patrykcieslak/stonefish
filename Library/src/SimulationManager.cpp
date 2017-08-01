@@ -19,7 +19,6 @@
 
 #include "SimulationApp.h"
 #include "SystemUtil.hpp"
-#include "OpenGLSky.h"
 #include "OpenGLTrackball.h"
 #include "SolidEntity.h"
 #include "Box.h"

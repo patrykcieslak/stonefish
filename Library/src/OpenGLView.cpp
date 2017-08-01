@@ -8,7 +8,6 @@
 
 #include "OpenGLView.h"
 #include "MathsUtil.hpp"
-#include "OpenGLSun.h"
 #include "SimulationApp.h"
 #include "Console.h"
 #include "SystemUtil.hpp"

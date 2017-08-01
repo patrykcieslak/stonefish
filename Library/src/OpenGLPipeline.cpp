@@ -13,8 +13,6 @@
 #include "MathsUtil.hpp"
 #include "OpenGLContent.h"
 #include "OpenGLView.h"
-#include "OpenGLSky.h"
-#include "OpenGLSun.h"
 #include "OpenGLAtmosphere.h"
 #include "OpenGLLight.h"
 #include "Console.h"
@@ -121,16 +119,10 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 	cInfo("%d uniforms in fragment shader allowed.", maxUniforms);
 	
 	//Load shaders and create rendering buffers
-    cInfo("Loading shaders...");
 	OpenGLAtmosphere::getInstance()->Init();
 	OpenGLContent::getInstance()->Init();
-	//OpenGLSky::getInstance()->Init();
-    OpenGLSun::getInstance()->Init();
     OpenGLView::Init();
     OpenGLLight::Init();
-    
-    //cInfo("Generating sky...");
-    //OpenGLSky::getInstance()->Generate(40.f,90.f);
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
@@ -171,7 +163,7 @@ void OpenGLPipeline::DrawDisplay()
     glBlitFramebuffer(0, 0, windowW, windowH, 0, 0, windowW, windowH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
-void OpenGLPipeline::DrawObjects(SimulationManager* sim)
+void OpenGLPipeline::DrawObjects()
 {
 	for(unsigned int i=0; i<drawingQueue.size(); ++i)
 		OpenGLContent::getInstance()->DrawObject(drawingQueue[i].objectId, drawingQueue[i].lookId, drawingQueue[i].model);
@@ -183,13 +175,19 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 	
 	if(ocean != NULL)
 		ocean->getOpenGLOcean().SimulateOcean();
+		
+	GLfloat az,elev;
+	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
+	az += 0.05f;
+	elev = sin(az/180.f*M_PI) * 45.f+35.f;
+	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);
 	
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
 	{
 		OpenGLContent::getInstance()->SetDrawFlatObjects(true);
         for(unsigned int i=0; i<OpenGLContent::getInstance()->getLightsCount(); ++i)
-            OpenGLContent::getInstance()->getLight(i)->RenderShadowMap(this, sim);
+            OpenGLContent::getInstance()->getLight(i)->BakeShadowmap(this);
 	}
     
     //==============Clear display framebuffer====================
@@ -216,7 +214,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             if(renderShadows)
 			{
                 OpenGLContent::getInstance()->SetDrawFlatObjects(true);
-                OpenGLSun::getInstance()->RenderShadowMaps(this, view, sim);
+                OpenGLAtmosphere::getInstance()->BakeShadowmaps(this, view);
 			}
 			
             //================Setup rendering scene======================
@@ -227,17 +225,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
 			if(ocean != NULL)
 			{
-				//Bind standard textures
-				glActiveTexture(GL_TEXTURE0 + TEX_ATM_SCATTERING);
-				glEnable(GL_TEXTURE_CUBE_MAP);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
-			
 				//Render all objects
 				view->SetViewport();
 				OpenGLContent::getInstance()->SetCurrentView(view);
 				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
 				glDrawBuffers(2, renderBuffs);
-				DrawObjects(sim);
+				DrawObjects();
             
 				//Draw ocean
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -253,21 +246,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			}
 			else
 			{
-				//Bind standard textures
-				//glActiveTexture(GL_TEXTURE0 + TEX_ATM_SCATTERING);
-				//glEnable(GL_TEXTURE_CUBE_MAP);
-				//glBindTexture(GL_TEXTURE_CUBE_MAP, OpenGLSky::getInstance()->getDiffuseCubemap());
-			
 				//Render all objects
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_TRANSMITTANCE, GL_TEXTURE_2D, OpenGLAtmosphere::getInstance()->getAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE));
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_SCATTERING, GL_TEXTURE_3D, OpenGLAtmosphere::getInstance()->getAtmosphereTexture(AtmosphereTextures::SCATTERING));
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_ATM_IRRADIANCE, GL_TEXTURE_2D, OpenGLAtmosphere::getInstance()->getAtmosphereTexture(AtmosphereTextures::IRRADIANCE));
-				
 				view->SetViewport();
 				OpenGLContent::getInstance()->SetCurrentView(view);
 				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
 				glDrawBuffers(2, renderBuffs);
-				DrawObjects(sim);
+				DrawObjects();
             
 				//Render sky
 				glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -356,9 +340,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				//ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
 			}
 			
-			//atm->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
-			//atm->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
-			//atm->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
+			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
+			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
+			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
+			//OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
 			
 			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
 			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
@@ -375,13 +360,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			//sim->views[i]->ShowSceneTexture(NORMAL, 0, 600, 300, 200);
             //sim->lights[0]->ShowShadowMap(0, 800, 300, 300);
 			
-			//OpenGLSky::getInstance()->ShowCubemap(SKY);
- 			
 			//sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
             
-			//OpenGLSun::getInstance()->ShowShadowMaps(0, 0, 0.05);
-			//OpenGLSun::getInstance()->ShowFrustumSplits();
-		   
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             
             delete viewport;

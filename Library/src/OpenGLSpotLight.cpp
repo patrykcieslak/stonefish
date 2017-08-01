@@ -142,7 +142,7 @@ void OpenGLSpotLight::RenderDummy()
 	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
-void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)
+void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -165,7 +165,7 @@ void OpenGLSpotLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* s
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
     glViewport(0, 0, shadowSize, shadowSize);
     glClear(GL_DEPTH_BUFFER_BIT);
-	pipe->DrawObjects(sim);
+	pipe->DrawObjects();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

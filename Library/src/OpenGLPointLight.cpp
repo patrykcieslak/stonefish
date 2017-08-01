@@ -53,7 +53,7 @@ void OpenGLPointLight::RenderDummy()
 	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
-void OpenGLPointLight::RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim)
+void OpenGLPointLight::BakeShadowmap(OpenGLPipeline* pipe)
 {
     
 }

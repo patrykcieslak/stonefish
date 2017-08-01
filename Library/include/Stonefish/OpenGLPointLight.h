@@ -18,9 +18,12 @@ public:
     ~OpenGLPointLight();
     
 	void SetupShader(GLSLShader* shader, unsigned int lightId);
-    void RenderDummy();
-    void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim);
-    void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
+    void BakeShadowmap(OpenGLPipeline* pipe);
+    
+	//Debugging
+	void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
+	void RenderDummy();
+    
 	LightType getType();
 };
 

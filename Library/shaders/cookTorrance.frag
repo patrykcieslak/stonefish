@@ -7,25 +7,10 @@
 
 #version 330 core
 
-in vec3 normal;
-in vec2 texCoord;
-in vec3 fragPos;
-in vec3 eyeSpaceNormal;
-
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec3 fragNormal;
-
-uniform vec3 eyePos;
-uniform vec3 viewDir;
-uniform vec4 color;
-uniform sampler2D tex;
-
 //Cook-Torrance model
 uniform float metallic;
 uniform float roughness;
-
 const float PI = 3.14159265359;
-const vec3 center = vec3(0, 0, -6360000.0);
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
@@ -67,7 +52,7 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-vec3 shadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
+vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
 {
 	vec3 halfway = normalize(toEye + toLight);
 	
@@ -88,38 +73,4 @@ vec3 shadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
 	kD *= 1.0 - metallic;	  
         
     return (kD * albedo / PI + specular) * NdotL;
-}
-
-#inject "commonLights.glsl"
-
-void main()
-{	
-	//Common
-	vec3 N = normalize(normal);
-	vec3 toEye = normalize(eyePos - fragPos);
-	
-	vec3 albedo = color.rgb;
-	if(color.a > 0.0)
-	{
-		vec4 texColor = texture(tex, texCoord);
-		albedo = mix(color.rgb, texColor.rgb, color.a*texColor.a);
-	}
-	
-	//Ambient
-	vec3 skyIlluminance;
-	vec3 sunIlluminance = GetSunAndSkyIlluminance(fragPos - center, N, -sunDirection, skyIlluminance);
-	vec3 transmittance;
-	skyIlluminance = GetSkyLuminanceToPoint(eyePos - center, fragPos - center, 0.f, sunDirection, transmittance);
-	
-	fragColor = skyIlluminance/1000.0;// + sunIlluminance/100.0;// + sunIlluminance;// * albedo + sunIlluminance*0.000001;  //texture(texSkyDiffuse, vec3(N.x, N.z, -N.y)).rgb * albedo;
-	//Sun
-	/*fragColor += calcSunContribution(N, toEye, albedo);
-	//Point lights
-	for(int i=0; i<numPointLights; ++i)
-		fragColor += calcPointLightContribution(i, N, toEye, albedo);
-	//Spot lights
-	for(int i=0; i<numSpotLights; ++i)
-		fragColor += calcSpotLightContribution(i, N, toEye, albedo);*/
-	//Normal
-	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }

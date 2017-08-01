@@ -38,9 +38,10 @@ public:
     virtual ~OpenGLLight();
     
     virtual void SetupShader(GLSLShader* shader, unsigned int lightId) = 0;
-    virtual void RenderDummy() = 0;
-    virtual void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim) = 0;
-    virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h) = 0;
+    virtual void BakeShadowmap(OpenGLPipeline* pipe) = 0;
+    
+	virtual void RenderDummy() = 0;
+	virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h) = 0;
 	virtual LightType getType() = 0;
 	
     void GlueToEntity(SolidEntity* ent);

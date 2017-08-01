@@ -63,7 +63,7 @@ public:
 	void ClearDrawingQueue();
 	void DrawDisplay();
     void Render(SimulationManager* sim);
-    void DrawObjects(SimulationManager* sim);
+    void DrawObjects();
    
     void setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion);
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras);

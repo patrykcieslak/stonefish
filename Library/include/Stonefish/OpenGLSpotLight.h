@@ -19,7 +19,7 @@ public:
     
 	void SetupShader(GLSLShader* shader, unsigned int lightId);
     void RenderDummy();
-    void RenderShadowMap(OpenGLPipeline* pipe, SimulationManager* sim);
+    void BakeShadowmap(OpenGLPipeline* pipe);
     void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
     LightType getType();
 	

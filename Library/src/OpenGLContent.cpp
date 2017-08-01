@@ -7,7 +7,6 @@
 //
 
 #include "OpenGLContent.h"
-#include "OpenGLSun.h"
 #include "Console.h"
 #include "OpenGLView.h"
 #include "OpenGLLight.h"
@@ -187,6 +186,7 @@ void OpenGLContent::DestroyContent()
 
 void OpenGLContent::Init()
 {
+	cInfo("Loading shaders...");
 	glGenVertexArrays(1, &baseVertexArray);
 	
 	//Build quad texture VBO
@@ -286,13 +286,16 @@ void OpenGLContent::Init()
 	flatShader->AddUniform("MVP", ParameterType::MAT4);
 	
 	//Materials
-	std::vector<GLuint> atmosphere;
-	atmosphere.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
+	GLint compiled;
+	std::string header = "";
+	std::vector<GLuint> commonMaterialShaders;
+	commonMaterialShaders.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
 	
-	GLSLShader* blinnPhong = new GLSLShader(atmosphere, "blinnPhong.frag", "object.vert");
-	blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-	blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-	blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
+	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header, &compiled);
+	commonMaterialShaders.push_back(materialFragment);
+	
+	//Blinn-Phong shader
+	GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
 	blinnPhong->AddUniform("MVP", ParameterType::MAT4);
 	blinnPhong->AddUniform("M", ParameterType::MAT4);
 	blinnPhong->AddUniform("N", ParameterType::MAT3);
@@ -326,21 +329,21 @@ void OpenGLContent::Init()
 	}
 	
 	blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
-	blinnPhong->AddUniform("sunColor", ParameterType::VEC4);
 	blinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
 	blinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
 	blinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
 	blinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
 	blinnPhong->AddUniform("sunFrustumFar", ParameterType::VEC4);
 	blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-	blinnPhong->AddUniform("texSkyDiffuse", ParameterType::INT);
+	blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
+	blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
+	blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
+	blinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
 	
 	materialShaders.push_back(blinnPhong);
 	
-	GLSLShader* cookTorrance = new GLSLShader(atmosphere, "cookTorrance.frag", "object.vert");
-	cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-	cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-	cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
+	//Cook-Torrance shader
+	GLSLShader* cookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
 	cookTorrance->AddUniform("MVP", ParameterType::MAT4);
 	cookTorrance->AddUniform("M", ParameterType::MAT4);
 	cookTorrance->AddUniform("N", ParameterType::MAT3);
@@ -374,16 +377,20 @@ void OpenGLContent::Init()
 	}
 	
 	cookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
-	cookTorrance->AddUniform("sunColor", ParameterType::VEC4);
 	cookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
 	cookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
 	cookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
 	cookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
 	cookTorrance->AddUniform("sunFrustumFar", ParameterType::VEC4);
 	cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-	cookTorrance->AddUniform("texSkyDiffuse", ParameterType::INT);
+	cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
+	cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
+	cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
+	cookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
 	
 	materialShaders.push_back(cookTorrance);
+	
+	glDeleteShader(materialFragment);
 }
 
 void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
@@ -679,13 +686,8 @@ void OpenGLContent::SetupLights(GLSLShader* shader)
 	
 	shader->SetUniform("numPointLights", pointId);
 	shader->SetUniform("numSpotLights", spotId);
-	shader->SetUniform("texSkyDiffuse", TEX_ATM_SCATTERING);
 	
-	shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-	shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-	shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-	
-	OpenGLSun::getInstance()->SetupShader(shader);
+	OpenGLAtmosphere::getInstance()->SetupMaterialShader(shader);
 }
 
 void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)

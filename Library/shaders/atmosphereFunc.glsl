@@ -927,7 +927,7 @@ approximation:
 
 IrradianceSpectrum GetSunAndSkyIrradiance(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture,
 											IrradianceTexture irradiance_texture, Position point, Direction normal, Direction sun_direction,
-											IrradianceSpectrum sky_irradiance) 
+											out IrradianceSpectrum sky_irradiance) 
 {
 	Length r = length(point);
 	Number mu_s = dot(point, sun_direction) / r;
