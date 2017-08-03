@@ -171,6 +171,7 @@ public:
 	static OpenGLContent* getInstance(); //Singleton
 	static void Destroy();
 	void Init();
+	void Finalize();
 	void DestroyContent();
 	
 	//Draw

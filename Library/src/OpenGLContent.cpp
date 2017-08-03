@@ -158,32 +158,6 @@ OpenGLContent::~OpenGLContent()
 	materialShaders.clear();
 }
 
-void OpenGLContent::DestroyContent()
-{
-	for(unsigned int i=0; i<looks.size(); ++i)
-	{
-		for(unsigned int h=0; h<looks[i].textures.size(); ++h)
-			glDeleteTextures(1, &looks[i].textures[h]);
-	}
-	looks.clear();
-			
-	for(unsigned int i=0; i<objects.size(); ++i)
-	{
-		glDeleteBuffers(1, &objects[i].vboVertex);
-		glDeleteBuffers(1, &objects[i].vboIndex);
-		glDeleteVertexArrays(1, &objects[i].vao);
-	}	
-	objects.clear();
-	
-	for(unsigned int i=0; i<views.size(); ++i)
-        delete views[i];
-    views.clear();
-    
-    for(unsigned int i=0; i<lights.size(); ++i)
-        delete lights[i];
-    lights.clear();
-}
-
 void OpenGLContent::Init()
 {
 	cInfo("Loading shaders...");
@@ -309,6 +283,8 @@ void OpenGLContent::Init()
 	
 	blinnPhong->AddUniform("numPointLights", ParameterType::INT);
 	blinnPhong->AddUniform("numSpotLights", ParameterType::INT);
+	blinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
+	blinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
 	
 	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
 	{
@@ -321,11 +297,13 @@ void OpenGLContent::Init()
 	{
 		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
 		blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+		blinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
 		blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
 		blinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
 		blinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
 		blinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-		blinnPhong->AddUniform(lightUni + "shadowMap", ParameterType::INT);
+		blinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
+		blinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
 	}
 	
 	blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
@@ -333,8 +311,16 @@ void OpenGLContent::Init()
 	blinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
 	blinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
 	blinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-	blinnPhong->AddUniform("sunFrustumFar", ParameterType::VEC4);
+	blinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
+	blinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
 	blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
+	blinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
 	blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
 	blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
 	blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
@@ -357,6 +343,8 @@ void OpenGLContent::Init()
 	
 	cookTorrance->AddUniform("numPointLights", ParameterType::INT);
 	cookTorrance->AddUniform("numSpotLights", ParameterType::INT);
+	cookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
+	cookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
 	
 	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
 	{
@@ -369,11 +357,13 @@ void OpenGLContent::Init()
 	{
 		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
 		cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+		cookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
 		cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
 		cookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
 		cookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
 		cookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-		cookTorrance->AddUniform(lightUni + "shadowMap", ParameterType::INT);
+		cookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
+		cookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
 	}
 	
 	cookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
@@ -381,8 +371,16 @@ void OpenGLContent::Init()
 	cookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
 	cookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
 	cookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-	cookTorrance->AddUniform("sunFrustumFar", ParameterType::VEC4);
+	cookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
+	cookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
 	cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
+	cookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
 	cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
 	cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
 	cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
@@ -391,6 +389,39 @@ void OpenGLContent::Init()
 	materialShaders.push_back(cookTorrance);
 	
 	glDeleteShader(materialFragment);
+}
+
+void OpenGLContent::Finalize()
+{
+	cInfo("Finalizing OpenGL rendering pipeline...");
+	OpenGLLight::Init(lights);
+}
+
+void OpenGLContent::DestroyContent()
+{
+	for(unsigned int i=0; i<looks.size(); ++i)
+	{
+		for(unsigned int h=0; h<looks[i].textures.size(); ++h)
+			glDeleteTextures(1, &looks[i].textures[h]);
+	}
+	looks.clear();
+			
+	for(unsigned int i=0; i<objects.size(); ++i)
+	{
+		glDeleteBuffers(1, &objects[i].vboVertex);
+		glDeleteBuffers(1, &objects[i].vboIndex);
+		glDeleteVertexArrays(1, &objects[i].vao);
+	}	
+	objects.clear();
+	
+	for(unsigned int i=0; i<views.size(); ++i)
+        delete views[i];
+    views.clear();
+    
+    for(unsigned int i=0; i<lights.size(); ++i)
+        delete lights[i];
+    lights.clear();
+	OpenGLLight::Destroy();
 }
 
 void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
@@ -686,7 +717,7 @@ void OpenGLContent::SetupLights(GLSLShader* shader)
 	
 	shader->SetUniform("numPointLights", pointId);
 	shader->SetUniform("numSpotLights", spotId);
-	
+	OpenGLLight::SetupShader(shader);
 	OpenGLAtmosphere::getInstance()->SetupMaterialShader(shader);
 }
 

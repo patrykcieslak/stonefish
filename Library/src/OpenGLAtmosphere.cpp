@@ -57,6 +57,8 @@ OpenGLAtmosphere::OpenGLAtmosphere()
 	//Init shadow baking
 	sunShadowmapShader = NULL;
     sunShadowmapArray = 0;
+	sunDepthSampler = 0;
+	sunShadowSampler = 0;
     sunShadowmapSplits = 4;
     sunShadowmapSize = 4096;
     sunShadowFBO = 0;
@@ -116,17 +118,26 @@ void OpenGLAtmosphere::Init(unsigned int numOfPrecomputedWavelengths, unsigned i
     sunShadowmapShader->AddUniform("shadowmapArray", ParameterType::INT);
     sunShadowmapShader->AddUniform("shadowmapLayer", ParameterType::FLOAT);
     
-    //Create shadowmap texture array
-    glGenTextures(1, &sunShadowmapArray);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT24, sunShadowmapSize, sunShadowmapSize, sunShadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	//Generate shadowmap array
+	glGenTextures(1, &sunShadowmapArray);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32F, sunShadowmapSize, sunShadowmapSize, sunShadowmapSplits);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	
+	//Generate samplers
+	glGenSamplers(1, &sunDepthSampler);
+	glSamplerParameteri(sunDepthSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(sunDepthSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(sunDepthSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(sunDepthSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glGenSamplers(1, &sunShadowSampler);
+	glSamplerParameteri(sunShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(sunShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(sunShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(sunShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(sunShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glSamplerParameteri(sunShadowSampler, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     
     //Create shadowmap framebuffer
     glGenFramebuffers(1, &sunShadowFBO);
@@ -154,6 +165,8 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
 	if(atmosphereAPI > 0) glDeleteShader(atmosphereAPI);
 	
 	glDeleteTextures(1, &sunShadowmapArray);
+	glDeleteSamplers(1, &sunDepthSampler);
+	glDeleteSamplers(1, &sunShadowSampler);
     glDeleteFramebuffers(1, &sunShadowFBO);
     delete sunShadowmapShader;
 }
@@ -407,37 +420,56 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
                    0.f, 0.5f, 0.f, 0.f,
                    0.f, 0.f, 0.5f, 0.f,
                    0.5f, 0.5f, 0.5f, 1.f);
-    glm::vec4 frustumFar;
+    GLfloat frustumFar[4];
+	GLfloat frustumNear[4];
     glm::mat4 lightClipSpace[4];
     
 	//For every inactive split
     for(unsigned int i = sunShadowmapSplits; i<4; ++i)
     {
+		frustumNear[i] = 0;
 		frustumFar[i] = 0;
-        lightClipSpace[i] = glm::mat4();
+		lightClipSpace[i] = glm::mat4();
     }
     
 	//For every active split
 	for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
 	{
+		frustumNear[i] = sunShadowFrustum[i].near;
 		frustumFar[i] = sunShadowFrustum[i].far;
 		lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
 	}
 	
 	shader->SetUniform("planetRadius", atmBottomRadius);
 	shader->SetUniform("sunDirection", GetSunDirection());
-	shader->SetUniform("sunFrustumFar", frustumFar);
 	shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
 	shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
 	shader->SetUniform("sunClipSpace[2]", lightClipSpace[2]);
 	shader->SetUniform("sunClipSpace[3]", lightClipSpace[3]);
+	shader->SetUniform("sunFrustumNear[0]", frustumNear[0]);
+	shader->SetUniform("sunFrustumNear[1]", frustumNear[1]);
+	shader->SetUniform("sunFrustumNear[2]", frustumNear[2]);
+	shader->SetUniform("sunFrustumNear[3]", frustumNear[3]);
+	shader->SetUniform("sunFrustumFar[0]", frustumFar[0]);
+	shader->SetUniform("sunFrustumFar[1]", frustumFar[1]);
+	shader->SetUniform("sunFrustumFar[2]", frustumFar[2]);
+	shader->SetUniform("sunFrustumFar[3]", frustumFar[3]);
+	shader->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
 	shader->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
 	shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
 	//shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
 	shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
 
-	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	//glBindMultiTextureEXT(GL_TEXTURE0 + TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+    //glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	//Bind textures and samplers
+	glActiveTexture(GL_TEXTURE0 + TEX_SUN_SHADOW);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+	glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
+	
+	glActiveTexture(GL_TEXTURE0 + TEX_SUN_DEPTH);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+	glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
 }
 
 void OpenGLAtmosphere::Precompute()

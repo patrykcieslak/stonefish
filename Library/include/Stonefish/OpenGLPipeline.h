@@ -23,24 +23,24 @@
 #define SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
 #define SUN_SKY_FACTOR 10.f //Sun illuminance to sky illuminance factor (sky treated as reference)
 
-#define MAX_POINT_LIGHTS 	8
-#define MAX_SPOT_LIGHTS 	8
+#define TEX_BASE				((GLint)0)
 
-#define TEX_BASE			((GLint)0)
-#define TEX_NORMALMAP		((GLint)1)
-#define TEX_ROUGHNESS		((GLint)2)
+#define TEX_ATM_TRANSMITTANCE	((GLint)3)
+#define TEX_ATM_SCATTERING 		((GLint)4)
+#define TEX_ATM_IRRADIANCE 		((GLint)5)
 
-#define TEX_ATM_TRANSMITTANCE	((GLint)7)
-#define TEX_ATM_SCATTERING 		((GLint)8)
-#define TEX_ATM_IRRADIANCE 		((GLint)9)
-#define TEX_POSTPROCESS1	((GLint)10)
-#define TEX_POSTPROCESS2	((GLint)11)
-#define TEX_POSTPROCESS3	((GLint)12)
-#define TEX_POSTPROCESS4	((GLint)13)
-#define TEX_POSTPROCESS5	((GLint)14)
-#define TEX_SUN_SHADOW		((GLint)15)
-#define TEX_SHADOW_START	((GLint)16)
+#define TEX_POSTPROCESS1		((GLint)6)
+#define TEX_POSTPROCESS2		((GLint)7)
+#define TEX_POSTPROCESS3		((GLint)8)
+#define TEX_POSTPROCESS4		((GLint)9)
+#define TEX_POSTPROCESS5		((GLint)10)
 
+#define TEX_SUN_SHADOW			((GLint)11)
+#define TEX_SUN_DEPTH			((GLint)12)
+#define TEX_POINT_SHADOW		((GLint)13) //Not used
+#define TEX_POINT_DEPTH			((GLint)14) //Not used
+#define TEX_SPOT_SHADOW			((GLint)15)
+#define TEX_SPOT_DEPTH			((GLint)16)
 
 typedef struct
 {

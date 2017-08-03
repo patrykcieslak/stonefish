@@ -17,24 +17,21 @@ OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& tar
 	
     coneAngle = cone/180.f*M_PI;//UnitSystem::SetAngle(cone);
     clipSpace = glm::mat4();
-    
-    //Create shadowmap texture
-    shadowSize = 2048;
-    glGenTextures(1, &shadowMap);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    //Create shadowmap framebuffer
+	zNear = 0.1f;
+	zFar = 100.f;
+}
+
+OpenGLSpotLight::~OpenGLSpotLight()
+{
+    if(shadowFBO != 0) glDeleteFramebuffers(1, &shadowFBO);
+}
+
+void OpenGLSpotLight::InitShadowmap(GLint shadowmapLayer)
+{
+	//Create shadowmap framebuffer
     glGenFramebuffers(1, &shadowFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, spotShadowArrayTex, 0, shadowmapLayer);
     glReadBuffer(GL_NONE);
     glDrawBuffer(GL_NONE);
     
@@ -43,14 +40,6 @@ OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& tar
         printf("FBO initialization failed.\n");
     
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-OpenGLSpotLight::~OpenGLSpotLight()
-{
-    if(shadowMap != 0)
-        glDeleteTextures(1, &shadowMap);
-    if(shadowFBO != 0)
-        glDeleteFramebuffers(1, &shadowFBO);
 }
 
 LightType OpenGLSpotLight::getType()
@@ -83,16 +72,13 @@ void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
 	std::string lightUni = "spotLights[" + std::to_string(lightId) + "].";
 	shader->SetUniform(lightUni + "position", getPosition());
+	shader->SetUniform(lightUni + "radius", glm::vec2(0.01f,0.01f));
 	shader->SetUniform(lightUni + "color", getColor());
 	shader->SetUniform(lightUni + "direction", getDirection());
 	shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()));
 	shader->SetUniform(lightUni + "clipSpace", getClipSpace());
-	shader->SetUniform(lightUni + "shadowMap", TEX_SHADOW_START + (int)lightId);
-	
-	glActiveTexture(GL_TEXTURE0 + TEX_SHADOW_START + lightId);
-	glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	shader->SetUniform(lightUni + "zNear", zNear);
+	shader->SetUniform(lightUni + "zFar", zFar);
 }
 
 void OpenGLSpotLight::RenderDummy()
@@ -148,7 +134,7 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
-    glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, 1.f, 100.f);
+    glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, zNear, zFar);
     glm::mat4 view = glm::lookAt(getPosition(),
                                  getPosition() + getDirection(),
                                  glm::vec3(0,0,1.f));
@@ -163,18 +149,21 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 	OpenGLContent::getInstance()->SetViewMatrix(view);
 	
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glViewport(0, 0, shadowSize, shadowSize);
+    glViewport(0, 0, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE);
     glClear(GL_DEPTH_BUFFER_BIT);
+	//glEnable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(4.0f, 32.0f);
 	pipe->DrawObjects();
+	//glDisable(GL_POLYGON_OFFSET_FILL);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 {
-	glDisable(GL_BLEND);
+	/*glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D, shadowMap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);
+	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);*/
 }
 
 

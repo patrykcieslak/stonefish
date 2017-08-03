@@ -1,13 +1,115 @@
 #version 330 core
 
 //---------------Definitions--------------------
-#define MAX_POINT_LIGHTS 	8
-#define MAX_SPOT_LIGHTS 	8
+#define MAX_POINT_LIGHTS 	32
+#define MAX_SPOT_LIGHTS 	32
 #define SHADOWMAP_SIZE 		2048.0
 #define SUN_SHADOWMAP_SIZE	4096.0
 #define NUM_SAMPLES 		32
 #define INV_NUM_SAMPLES 	(1.0/32.0)
 #define NUM_SPIRAL_TURNS 	7
+
+const vec2 Poisson32[32] = vec2[](
+    vec2(-0.975402, -0.0711386),
+    vec2(-0.920347, -0.41142),
+    vec2(-0.883908, 0.217872),
+    vec2(-0.884518, 0.568041),
+    vec2(-0.811945, 0.90521),
+    vec2(-0.792474, -0.779962),
+    vec2(-0.614856, 0.386578),
+    vec2(-0.580859, -0.208777),
+    vec2(-0.53795, 0.716666),
+    vec2(-0.515427, 0.0899991),
+    vec2(-0.454634, -0.707938),
+    vec2(-0.420942, 0.991272),
+    vec2(-0.261147, 0.588488),
+    vec2(-0.211219, 0.114841),
+    vec2(-0.146336, -0.259194),
+    vec2(-0.139439, -0.888668),
+    vec2(0.0116886, 0.326395),
+    vec2(0.0380566, 0.625477),
+    vec2(0.0625935, -0.50853),
+    vec2(0.125584, 0.0469069),
+    vec2(0.169469, -0.997253),
+    vec2(0.320597, 0.291055),
+    vec2(0.359172, -0.633717),
+    vec2(0.435713, -0.250832),
+    vec2(0.507797, -0.916562),
+    vec2(0.545763, 0.730216),
+    vec2(0.56859, 0.11655),
+    vec2(0.743156, -0.505173),
+    vec2(0.736442, -0.189734),
+    vec2(0.843562, 0.357036),
+    vec2(0.865413, 0.763726),
+    vec2(0.872005, -0.927)
+);
+
+const vec2 Poisson64[64] = vec2[](
+    vec2(-0.934812, 0.366741),
+    vec2(-0.918943, -0.0941496),
+    vec2(-0.873226, 0.62389),
+    vec2(-0.8352, 0.937803),
+    vec2(-0.822138, -0.281655),
+    vec2(-0.812983, 0.10416),
+    vec2(-0.786126, -0.767632),
+    vec2(-0.739494, -0.535813),
+    vec2(-0.681692, 0.284707),
+    vec2(-0.61742, -0.234535),
+    vec2(-0.601184, 0.562426),
+    vec2(-0.607105, 0.847591),
+    vec2(-0.581835, -0.00485244),
+    vec2(-0.554247, -0.771111),
+    vec2(-0.483383, -0.976928),
+    vec2(-0.476669, -0.395672),
+    vec2(-0.439802, 0.362407),
+    vec2(-0.409772, -0.175695),
+    vec2(-0.367534, 0.102451),
+    vec2(-0.35313, 0.58153),
+    vec2(-0.341594, -0.737541),
+    vec2(-0.275979, 0.981567),
+    vec2(-0.230811, 0.305094),
+    vec2(-0.221656, 0.751152),
+    vec2(-0.214393, -0.0592364),
+    vec2(-0.204932, -0.483566),
+    vec2(-0.183569, -0.266274),
+    vec2(-0.123936, -0.754448),
+    vec2(-0.0859096, 0.118625),
+    vec2(-0.0610675, 0.460555),
+    vec2(-0.0234687, -0.962523),
+    vec2(-0.00485244, -0.373394),
+    vec2(0.0213324, 0.760247),
+    vec2(0.0359813, -0.0834071),
+    vec2(0.0877407, -0.730766),
+    vec2(0.14597, 0.281045),
+    vec2(0.18186, -0.529649),
+    vec2(0.188208, -0.289529),
+    vec2(0.212928, 0.063509),
+    vec2(0.23661, 0.566027),
+    vec2(0.266579, 0.867061),
+    vec2(0.320597, -0.883358),
+    vec2(0.353557, 0.322733),
+    vec2(0.404157, -0.651479),
+    vec2(0.410443, -0.413068),
+    vec2(0.413556, 0.123325),
+    vec2(0.46556, -0.176183),
+    vec2(0.49266, 0.55388),
+    vec2(0.506333, 0.876888),
+    vec2(0.535875, -0.885556),
+    vec2(0.615894, 0.0703452),
+    vec2(0.637135, -0.637623),
+    vec2(0.677236, -0.174291),
+    vec2(0.67626, 0.7116),
+    vec2(0.686331, -0.389935),
+    vec2(0.691031, 0.330729),
+    vec2(0.715629, 0.999939),
+    vec2(0.8493, -0.0485549),
+    vec2(0.863582, -0.85229),
+    vec2(0.890622, 0.850581),
+    vec2(0.898068, 0.633778),
+    vec2(0.92053, -0.355693),
+    vec2(0.933348, -0.62981),
+    vec2(0.95294, 0.156896)
+);
 
 //---------------Data structures-----------------
 struct PointLight 
@@ -23,7 +125,9 @@ struct SpotLight
 	vec3 color;
 	float angle;
 	mat4 clipSpace;
-	sampler2DShadow shadowMap;
+	float zNear;
+	float zFar;
+	vec2 radius;
 };
 
 in vec3 normal;
@@ -43,10 +147,14 @@ uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 uniform int numPointLights;
 uniform int numSpotLights;
+uniform sampler2DArray spotLightsDepthMap;
+uniform sampler2DArrayShadow spotLightsShadowMap;
 
 uniform vec3 sunDirection;
 uniform mat4 sunClipSpace[4];
-uniform vec4 sunFrustumFar;
+uniform float sunFrustumNear[4];
+uniform float sunFrustumFar[4];
+uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
 uniform float planetRadius;
 
@@ -57,130 +165,143 @@ vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 s
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
 vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo);
 
-vec3 getWorldNormal(mat4 invProj, mat3 invViewRot, vec2 viewportSize)
+// Derivatives of light-space depth with respect to texture2D coordinates
+vec2 depthGradient(vec2 uv, float z)
 {
-    vec2 fragPos = gl_FragCoord.xy/viewportSize;
-    fragPos = (fragPos-0.5)*2.0;
-    vec4 deviceNormal = vec4(fragPos, 0.0, 1.0);
-    vec3 eyeNormal = normalize((invProj * deviceNormal).xyz);
-    vec3 worldNormal = normalize(invViewRot * eyeNormal);
-    return worldNormal;
+    vec2 dz_duv = vec2(0.0, 0.0);
+
+    vec3 duvdist_dx = dFdx(vec3(uv,z));
+    vec3 duvdist_dy = dFdy(vec3(uv,z));
+
+    dz_duv.x = duvdist_dy.y * duvdist_dx.z;
+    dz_duv.x -= duvdist_dx.y * duvdist_dy.z;
+
+    dz_duv.y = duvdist_dx.x * duvdist_dy.z;
+    dz_duv.y -= duvdist_dy.x * duvdist_dx.z;
+
+    float det = (duvdist_dx.x * duvdist_dy.y) - (duvdist_dx.y * duvdist_dy.x);
+    dz_duv /= det;
+
+    return dz_duv;
 }
 
-//Generate random numbers
-float random(vec3 seed, int i)
+float biasedZ(float z0, vec2 dz_duv, vec2 offset)
 {
-	vec4 seed4 = vec4(seed,i);
-	float dot_product = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
-	return fract(sin(dot_product) * 43758.5453);
+    return z0 + dot(dz_duv, offset);
 }
 
-//Generate sample location based on a spiral curve
-vec2 tapLocation(int sampleNumber, float spinAngle, out float radius)
+//Sample depth from multilayer depth texture (works for sun and spot lights)
+float borderDepthTexture(int layer, sampler2DArray tex, vec2 uv)
 {
-    float alpha = (float(sampleNumber) + 0.5) * INV_NUM_SAMPLES;
-    float angle = alpha * (float(NUM_SPIRAL_TURNS) * 6.28) + spinAngle;
-    radius = alpha;
-    return vec2(cos(angle), sin(angle));
+	return ((uv.x <= 1.0) && (uv.y <= 1.0) && (uv.x >= 0.0) && (uv.y >= 0.0)) ? textureLod(tex, vec3(uv, float(layer)), 0.0).z : 1.0;
+}
+
+//Sample shadow from multilayer shadow texture (works for sun and spot lights)
+float borderPCFTexture(int layer, sampler2DArrayShadow tex, vec3 uvz)
+{
+	return ((uvz.x <= 1.0) && (uvz.y <= 1.0) && (uvz.x >= 0.0) && (uvz.y >= 0.0)) ? texture(tex, vec4(uvz.xy, float(layer), uvz.z)) : ((uvz.z <= 1.0) ? 1.0 : 0.0);
+}
+
+// Returns average blocker depth in the search region, as well as the number of found blockers.
+// Blockers are defined as shadow-map samples between the surface point and the light.
+void findBlocker(int layer, sampler2DArray tex, out float accumBlockerDepth, out float numBlockers, out float maxBlockers,
+					vec2 uv, float z0, vec2 dz_duv, vec2 searchRegionRadiusUV)
+{
+    accumBlockerDepth = 0.0;
+    numBlockers = 0.0;
+	maxBlockers = 32.0;
+	
+    for (int i = 0; i < 32; ++i)
+    {
+		vec2 offset = Poisson32[i] * searchRegionRadiusUV;
+        float shadowMapDepth = borderDepthTexture(layer, tex, uv + offset);
+        float z = biasedZ(z0, dz_duv, offset);
+        
+		if (shadowMapDepth < z)
+        {
+			accumBlockerDepth += shadowMapDepth;
+            numBlockers++;
+		}
+	}
+}
+
+// Performs PCF filtering on the shadow map using multiple taps in the filter region.
+float pcfFilter(int layer, sampler2DArrayShadow tex, vec2 uv, float z0, vec2 dz_duv, vec2 filterRadiusUV)
+{
+	float sum = 0.0;
+
+	for (int i = 0; i < 64; ++i)
+	{
+		vec2 offset = Poisson64[i] * filterRadiusUV;
+        float z = biasedZ(z0, dz_duv, offset);
+        sum += borderPCFTexture(layer, tex, vec3(uv + offset, z));
+	}
+    return sum / 64.0;
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float calcSpotShadow(int id, float bias)
+float calcSpotShadow(int id)
 {
 	vec4 fragPosLight = spotLights[id].clipSpace * vec4(fragPos, 1.0);
 	vec3 shadowCoord = fragPosLight.xyz/fragPosLight.w;
-	float fragDepth = shadowCoord.z + bias/fragPosLight.w;
+	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
 	
-	float nominalRadius = SHADOWMAP_SIZE/400.0;
-    float rnd = random(fragPos, 0) * 10.0;
-	
-    //Cheap shadow testing of outward pixels (5 samples)
-    float inShadow = texture(spotLights[id].shadowMap, vec3(shadowCoord.xy, fragDepth));
-		
-    for(int i = NUM_SAMPLES - 5; i < NUM_SAMPLES - 1; ++i)
-    {
-        float radiusFactor;
-        vec2 offset = tapLocation(i, rnd, radiusFactor);
-        inShadow += texture(spotLights[id].shadowMap, vec3(shadowCoord.xy + (offset*radiusFactor*nominalRadius)/SHADOWMAP_SIZE, fragDepth));
-	}
-    
-    if(inShadow > 4.0) //Fully in light 5*0.75
+    // STEP 1: blocker search
+    float accumBlockerDepth, numBlockers, maxBlockers;
+    vec2 searchRegionRadiusUV = spotLights[id].radius * (shadowCoord.z - spotLights[id].zNear) / shadowCoord.z;
+    findBlocker(id, spotLightsDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
+
+    // Early out if not in the penumbra
+    if (numBlockers == 0.0)
         return 1.0;
-    else if(inShadow < 0.75) //Fully in shadow
-        return 0.0;
-    else //Precise sampling for the shadow edges
-    {
-        inShadow = inShadow * INV_NUM_SAMPLES;
-        for(int i = 0; i < NUM_SAMPLES - 5; ++i)
-        {
-            float radiusFactor;
-            vec2 offset = tapLocation(i, rnd, radiusFactor);
-            inShadow += INV_NUM_SAMPLES * texture(spotLights[id].shadowMap, vec3(shadowCoord.xy + (offset*radiusFactor*nominalRadius)/SHADOWMAP_SIZE, fragDepth));
-        }
-        
-        return inShadow;
-    }
+
+    // STEP 2: penumbra size
+    float avgBlockerDepth = accumBlockerDepth / numBlockers;
+    float avgBlockerDepthWorld = spotLights[id].zFar * spotLights[id].zNear / (spotLights[id].zFar - avgBlockerDepth * (spotLights[id].zFar - spotLights[id].zNear));
+    vec2 penumbraRadius = spotLights[id].radius * (shadowCoord.z - avgBlockerDepthWorld) / avgBlockerDepthWorld;
+    vec2 filterRadius = penumbraRadius * spotLights[id].zNear / shadowCoord.z;
+
+    // STEP 3: filtering
+    return pcfFilter(id, spotLightsShadowMap, shadowCoord.xy, shadowCoord.z, dz_duv, filterRadius);
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float calcSunShadow(float bias)
+float calcSunShadow()
 {
 	float depth = dot(fragPos-eyePos, viewDir); 
 	
 	//Find the appropriate depth map to look up in based on the depth of this fragment
     int index = 3;
-	float ff = sunFrustumFar.w;
-    
-	if(depth < sunFrustumFar.x)
-    {
+	if(depth < sunFrustumFar[0])
 		index = 0;
-        ff = sunFrustumFar.x;
-    }
-	else if(depth < sunFrustumFar.y)
-    {
-		index = 1;
-        ff = sunFrustumFar.y;
-    }
-	else if(depth < sunFrustumFar.z)
-    {
+	else if(depth < sunFrustumFar[1])
+    	index = 1;
+    else if(depth < sunFrustumFar[2])
 		index = 2;
-        ff = sunFrustumFar.z;
-    }
     
-	//Transform this fragment's position from view space to scaled light clip space such that the xy coordinates are in [0;1]
-	//Note: there is no need to divide by w for othogonal light sources
-    vec4 shadowCoord =  sunClipSpace[index] * vec4(fragPos, 1.0);
-    float fragDepth = shadowCoord.z + bias;
-    
-	float nominalRadius = SUN_SHADOWMAP_SIZE/400.0 * sunFrustumFar.x/ff;
-    float rnd = random(fragPos, 0);
-    
-    //Cheap shadow testing for all pixels (5 samples)
-	float inShadow = texture(sunShadowMap, vec4(shadowCoord.xy, float(index), fragDepth));
-    
-	for(int i = NUM_SAMPLES - 5; i < NUM_SAMPLES - 1; ++i)
-    {
-        float radiusFactor;
-		vec2 offset = tapLocation(i, rnd, radiusFactor);
-        inShadow += texture(sunShadowMap, vec4(shadowCoord.xy + (offset*radiusFactor*nominalRadius)/SUN_SHADOWMAP_SIZE, float(index), fragDepth));
-    }
-    
-	if(inShadow == 5.0) //Fully in light
+	vec4 fragPosLight = sunClipSpace[index] * vec4(fragPos, 1.0);
+	vec3 shadowCoord = fragPosLight.xyz/fragPosLight.w;
+	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
+	
+	vec2 radiusUV = vec2(0.001) * sunFrustumFar[0]/sunFrustumFar[index];
+	
+	// STEP 1: blocker search
+    float accumBlockerDepth, numBlockers, maxBlockers;
+    vec2 searchRegionRadiusUV = radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
+    findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
+
+    // Early out if not in the penumbra
+    if (numBlockers == 0.0)
         return 1.0;
-    else if(inShadow == 0.0) //Fully in shadow
-        return 0.0;
-    else //Precise sampling for the shadow border pixels
-    {
-        inShadow *= INV_NUM_SAMPLES;
-        for(int i = 0; i < NUM_SAMPLES - 5; ++i)
-        {
-            float radiusFactor;
-			vec2 offset = tapLocation(i, rnd, radiusFactor);
-            inShadow += INV_NUM_SAMPLES * texture(sunShadowMap, vec4(shadowCoord.xy + (offset*radiusFactor*nominalRadius)/SUN_SHADOWMAP_SIZE, float(index), fragDepth));
-        }
-        
-        return inShadow;
-    }
+
+    // STEP 2: penumbra size
+    float avgBlockerDepth = accumBlockerDepth / numBlockers;
+    float avgBlockerDepthWorld = sunFrustumFar[index] * sunFrustumNear[index] / (sunFrustumFar[index] - avgBlockerDepth * (sunFrustumFar[index] - sunFrustumNear[index]));
+    vec2 penumbraRadius = radiusUV * (shadowCoord.z - avgBlockerDepthWorld) / avgBlockerDepthWorld;
+    vec2 filterRadius = penumbraRadius * sunFrustumNear[index] / shadowCoord.z;
+
+    // STEP 3: filtering
+    return pcfFilter(index, sunShadowMap, shadowCoord.xy, shadowCoord.z, dz_duv, filterRadius);
 }
 
 //Calculate contribution of different light types
@@ -206,9 +327,7 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 	if(spotEffect > spotLights[id].angle && NdotL > 0.0)
 	{
 		float attenuation = 1.0/(distance*distance);
-		float bias = 0.0005 * tan(acos(NdotL));
-		bias = clamp(bias, 0, 0.005);
-		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id, bias) * pow(spotEffect, 10.0) * attenuation;
+		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id) * pow(spotEffect, 10.0) * attenuation;
 	}
 	else
 		return vec3(0.0);
@@ -220,10 +339,7 @@ vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 	
 	if(NdotL > 0.0)
 	{	
-		//float bias = 0.001 * tan(acos(NdotL));
-		//bias = clamp(bias, 0, 0.01);
-		float bias = 0.001;
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow(bias);
+		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow();
 	}
 	else
 		return vec3(0.0);

@@ -10,6 +10,9 @@
 #include "MathsUtil.hpp"
 
 //static variables
+GLuint OpenGLLight::spotShadowArrayTex = 0;
+GLuint OpenGLLight::spotDepthSampler = 0;
+GLuint OpenGLLight::spotShadowSampler = 0;
 OpenGLView* OpenGLLight::activeView = NULL;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 
@@ -75,17 +78,68 @@ SolidEntity* OpenGLLight::getHoldingEntity()
 }
 
 //////////////////static//////////////////////////////
-void OpenGLLight::Init()
+void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 {
+	if(lights.size() == 0)
+		return;
+	
+	//Count spotlights
+	unsigned int numOfSpotLights = 0;
+	for(unsigned int i=0; i < lights.size(); ++i)
+		if(lights[i]->getType() == LightType::SPOT_LIGHT) ++numOfSpotLights;
+		
+	//Generate shadowmap array
+	glGenTextures(1, &spotShadowArrayTex);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32F, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE, numOfSpotLights);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	
+	//Generate samplers
+	glGenSamplers(1, &spotDepthSampler);
+	glSamplerParameteri(spotDepthSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(spotDepthSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(spotDepthSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(spotDepthSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glGenSamplers(1, &spotShadowSampler);
+	glSamplerParameteri(spotShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(spotShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(spotShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(spotShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(spotShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glSamplerParameteri(spotShadowSampler, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	
+	//Initialize lights shadow FBOs
+	numOfSpotLights = 0;
+	for(unsigned int i=0; i < lights.size(); ++i)
+		if(lights[i]->getType() == LightType::SPOT_LIGHT) lights[i]->InitShadowmap(numOfSpotLights++);		
+		
+	//Bind textures and samplers
+	glActiveTexture(GL_TEXTURE0 + TEX_SPOT_SHADOW);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
+	glBindSampler(TEX_SPOT_SHADOW, spotShadowSampler);
+	
+	glActiveTexture(GL_TEXTURE0 + TEX_SPOT_DEPTH);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
+	glBindSampler(TEX_SPOT_DEPTH, spotDepthSampler);
 }
 
 void OpenGLLight::Destroy()
 {
+	if(spotShadowArrayTex != 0) glDeleteTextures(1, &spotShadowArrayTex);
+	if(spotDepthSampler != 0) glDeleteSamplers(1, &spotDepthSampler);
+	if(spotShadowSampler != 0) glDeleteSamplers(1, &spotShadowSampler);
 }
 
 void OpenGLLight::SetCamera(OpenGLView* view)
 {
     activeView = view;
+}
+
+void OpenGLLight::SetupShader(GLSLShader* shader)
+{
+	shader->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+	shader->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
 }
 
 glm::vec4 OpenGLLight::ColorFromTemperature(GLfloat temperatureK, GLfloat intensity)

@@ -16,6 +16,10 @@
 
 #define Max(a, b)   (((a) > (b)) ? (a) : (b))
 
+#define MAX_POINT_LIGHTS 	32
+#define MAX_SPOT_LIGHTS 	32
+#define SPOT_LIGHT_SHADOWMAP_SIZE	2048
+
 typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
 
 typedef struct
@@ -37,6 +41,7 @@ public:
     OpenGLLight(const btVector3& position, glm::vec4 color);
     virtual ~OpenGLLight();
     
+	virtual void InitShadowmap(GLint shadowmapLayer) = 0;
     virtual void SetupShader(GLSLShader* shader, unsigned int lightId) = 0;
     virtual void BakeShadowmap(OpenGLPipeline* pipe) = 0;
     
@@ -53,11 +58,11 @@ public:
     glm::vec3 getPosition();
     SolidEntity* getHoldingEntity();
     
-    //Ambient light and shaders
-    static void Init();
+    //Static methods
+    static void Init(std::vector<OpenGLLight*>& lights);
     static void Destroy();
-    static void SetCamera(OpenGLView* view);
-    static void RenderAmbientLight(const btTransform& viewTransform, bool zAxisUp);
+    static void SetupShader(GLSLShader* shader);
+	static void SetCamera(OpenGLView* view);
     
     //Utilities
     static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat lux);
@@ -69,9 +74,13 @@ protected:
     glm::vec3 position;
     glm::vec4 color;
     GLfloat surfaceDistance;
-    
+	
+    static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
+	static GLuint spotShadowSampler;
+	static GLuint spotDepthSampler;
     static OpenGLView* activeView;
     static ColorSystem cs;
+	
     static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
     static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
     static void xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b);

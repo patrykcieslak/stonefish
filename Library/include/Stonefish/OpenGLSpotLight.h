@@ -17,12 +17,17 @@ public:
     OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color);
     ~OpenGLSpotLight();
     
-	void SetupShader(GLSLShader* shader, unsigned int lightId);
-    void RenderDummy();
-    void BakeShadowmap(OpenGLPipeline* pipe);
-    void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
-    LightType getType();
+	//Rendering
+	void InitShadowmap(GLint shadowmapLayer);
+	void BakeShadowmap(OpenGLPipeline* pipe);
+    void SetupShader(GLSLShader* shader, unsigned int lightId);
+    
+	//Debugging
+	void RenderDummy();
+	void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
 	
+	//Field access
+    LightType getType();
     glm::vec3 getDirection();
 	glm::mat4 getClipSpace();
     GLfloat getAngle();
@@ -30,11 +35,10 @@ public:
 private:
     glm::vec3 direction;
     GLfloat coneAngle;
-    
-    GLuint shadowMap;
-    GLuint shadowFBO;
-    GLuint shadowSize;
+	GLfloat zNear;
+	GLfloat zFar;
     glm::mat4 clipSpace;
+	GLuint shadowFBO;
 };
 
 #endif

@@ -23,6 +23,10 @@ LightType OpenGLPointLight::getType()
 	return POINT_LIGHT;
 }
 
+void OpenGLPointLight::InitShadowmap(GLint shadowmapLayer)
+{
+}
+
 void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
 	std::string lightUni = "pointLights[" + std::to_string(lightId) + "].";

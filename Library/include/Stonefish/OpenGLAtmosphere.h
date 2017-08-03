@@ -100,6 +100,8 @@ private:
     void UpdateFrustumCorners(ViewFrustum &f, glm::vec3 center, glm::vec3 dir, glm::vec3 up);
     void UpdateSplitDist(GLfloat nd, GLfloat fd);
 	GLuint sunShadowmapArray;
+	GLuint sunDepthSampler;
+	GLuint sunShadowSampler;
     GLuint sunShadowmapSplits;
     GLuint sunShadowmapSize;
 	glm::vec3 sunDirection;

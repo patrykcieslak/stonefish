@@ -524,7 +524,9 @@ void SimulationManager::RestartScenario()
     DestroyScenario();
     InitializeSolver();
     InitializeScenario();
-    BuildScenario();
+    BuildScenario(); //Defined by specific application
+	OpenGLContent::getInstance()->Finalize();
+	
 	simulationFresh = true;
 }
 

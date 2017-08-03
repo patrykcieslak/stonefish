@@ -17,13 +17,16 @@ public:
     OpenGLPointLight(const btVector3& position, glm::vec4 color);
     ~OpenGLPointLight();
     
-	void SetupShader(GLSLShader* shader, unsigned int lightId);
-    void BakeShadowmap(OpenGLPipeline* pipe);
+	//Rendering
+	void InitShadowmap(GLint shadowmapLayer); //NOT YET IMPLEMENTED
+	void BakeShadowmap(OpenGLPipeline* pipe); //NOT YET IMPLEMENTED
+    void SetupShader(GLSLShader* shader, unsigned int lightId);
     
 	//Debugging
 	void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
 	void RenderDummy();
     
+	//Field access
 	LightType getType();
 };
 
