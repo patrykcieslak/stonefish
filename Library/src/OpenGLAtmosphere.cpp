@@ -304,7 +304,7 @@ void OpenGLAtmosphere::UpdateSplitDist(GLfloat nd, GLfloat fd)
 	}
     
 	sunShadowFrustum[sunShadowmapSplits-1].far = fd;
-    //for(int i=0; i<shadowmapSplits; i++) printf("Frustum%d Near: %f Far: %f\n", i, frustum[i].near, frustum[i].far);
+    //for(int i=0; i<sunShadowmapSplits; i++) printf("Frustum%d Near: %f Far: %f\n", i, sunShadowFrustum[i].near, sunShadowFrustum[i].far);
 }
 
 //Computes the 8 corner points of the current view frustum
@@ -470,6 +470,15 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
 	glActiveTexture(GL_TEXTURE0 + TEX_SUN_DEPTH);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
 	glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
+}
+
+void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
+{
+	shader->SetUniform("planetRadius", atmBottomRadius);
+	shader->SetUniform("sunDirection", GetSunDirection());
+	shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+	shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+	shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
 }
 
 void OpenGLAtmosphere::Precompute()

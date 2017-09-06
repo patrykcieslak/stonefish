@@ -76,7 +76,14 @@ void FallingTestManager::BuildScenario()
 	Polyhedron* poly = new Polyhedron("Dragon", path, 0.5f, getMaterialManager()->getMaterial("Steel"), lookId, false);
 	btQuaternion quat;
 	quat.setEulerZYX(0,-M_PI_2,0);
-	AddSolidEntity(poly, btTransform(quat, btVector3(0,0,0.0)));
+	AddSolidEntity(poly, btTransform(quat, btVector3(0,0,1.0)));
+	
+	
+	/*for(int i=0; i<10; ++i)
+	{
+		Box* box = new Box("Box" + std::to_string(i), btVector3(0.5,0.5,5.0), getMaterialManager()->getMaterial("Steel"), lookId);
+		AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0, i*4.0, 2.5)));				
+	}*/
 	
 	/*for(int i=0; i<5; ++i)
 		for(int h=0; h<5; ++h)
@@ -95,4 +102,5 @@ void FallingTestManager::BuildScenario()
     //AddActuator(spot);
     //Camera* cam = new Camera("Camera", btVector3(10,0,10000000), btVector3(0,0,0), btVector3(0,0,1.), 0, 0, FallingTestApp::getApp()->getWindowWidth()/3, FallingTestApp::getApp()->getWindowHeight()/3, 60.f);
     //AddSensor(cam);
+	//OpenGLAtmosphere::getInstance()->SetSunPosition(0,-10.f);
 }

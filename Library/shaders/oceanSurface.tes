@@ -41,7 +41,6 @@ void main()
 	dP.xy += choppyFactor.w*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 4.0), dx/gridSizes.w, dy/gridSizes.w).zw;
     
 	waveCoord = P.xy; //Horizontal coordinates used to compute dP, in world space
-	P.xyz += dP; 	  //Grid deformation
-	fragPos = P.xyz;  //Position of deformed vertex in world space
-	gl_Position = MVP * P; //Screen space position
+	fragPos = vec3(waveCoord + dP.xy, dP.z); //Position of deformed vertex in world space
+	gl_Position = MVP * vec4(fragPos, 1.0); //Screen space position
 }

@@ -8,7 +8,7 @@ uniform float slopeVarianceDelta;
 uniform float c;
 
 in vec2 texcoord;
-out vec4 fragColor;
+out vec2 fragColor;
 
 #define M_PI 3.14159265
 
@@ -49,5 +49,5 @@ void main()
             slopeVariances += getSlopeVariances(k / gridSizes.w, A, B, C, spectrum34.zw);
         }
     }
-    fragColor = slopeVariances.xxxy;
+    fragColor = slopeVariances;
 }

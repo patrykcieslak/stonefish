@@ -86,7 +86,7 @@ void OpenGLOcean::InitOcean()
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE_ALPHA16F_ARB, params.slopeVarianceSize, params.slopeVarianceSize, params.slopeVarianceSize, 0, GL_LUMINANCE_ALPHA, GL_FLOAT, NULL);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RG16F, params.slopeVarianceSize, params.slopeVarianceSize, params.slopeVarianceSize, 0, GL_RG, GL_FLOAT, NULL);
 	glBindTexture(GL_TEXTURE_3D, 0);
 	
 	glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
@@ -148,7 +148,10 @@ void OpenGLOcean::InitOcean()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	//---shaders
-	oceanShaders[0] = new GLSLShader("oceanSurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
+	std::vector<GLuint> precompiled;
+	precompiled.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
+	
+	oceanShaders[0] = new GLSLShader(precompiled, "oceanSurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
 	oceanShaders[0]->AddUniform("tessDiv", ParameterType::FLOAT);
 	oceanShaders[0]->AddUniform("texWaveFFT", ParameterType::INT);
 	oceanShaders[0]->AddUniform("texSlopeVariance", ParameterType::INT);
@@ -157,6 +160,11 @@ void OpenGLOcean::InitOcean()
 	oceanShaders[0]->AddUniform("eyePos", ParameterType::VEC3);
 	oceanShaders[0]->AddUniform("choppyFactor", ParameterType::VEC4);
 	oceanShaders[0]->AddUniform("MV", ParameterType::MAT3);
+	oceanShaders[0]->AddUniform("transmittance_texture", ParameterType::INT);
+	oceanShaders[0]->AddUniform("scattering_texture", ParameterType::INT);
+	oceanShaders[0]->AddUniform("irradiance_texture", ParameterType::INT);
+	oceanShaders[0]->AddUniform("planetRadius", ParameterType::FLOAT);
+	oceanShaders[0]->AddUniform("sunDirection", ParameterType::VEC3);
 	
 	oceanShaders[2] = new GLSLShader("oceanInit.frag"); //Using saq vertex shader
 	oceanShaders[2]->AddUniform("texSpectrum12", ParameterType::INT);
@@ -198,7 +206,7 @@ void OpenGLOcean::InitOcean()
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, oceanFBOs[2]);
     glViewport(0, 0, params.slopeVarianceSize, params.slopeVarianceSize);
-
+	
     oceanShaders[5]->Use();
 	oceanShaders[5]->SetUniform("texSpectrum12", TEX_POSTPROCESS1);
 	oceanShaders[5]->SetUniform("texSpectrum34", TEX_POSTPROCESS2);
@@ -607,6 +615,7 @@ void OpenGLOcean::DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 p
 	oceanShaders[0]->SetUniform("choppyFactor", params.choppyFactor);
 	oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
 	oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
+	OpenGLAtmosphere::getInstance()->SetupOceanShader(oceanShaders[0]);
 	
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);

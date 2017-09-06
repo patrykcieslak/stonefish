@@ -57,6 +57,7 @@ public:
 	void DrawSkyAndSun(const OpenGLView* view);
 	void BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view);
 	void SetupMaterialShader(GLSLShader* shader);
+	void SetupOceanShader(GLSLShader* shader);
 	
 	void SetSunPosition(GLfloat azimuthDeg, GLfloat elevationDeg);
 	void SetSunPosition(GLfloat latitude, GLfloat longitude, Time utc);   

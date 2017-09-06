@@ -276,14 +276,15 @@ float calcSunShadow()
 		index = 0;
 	else if(depth < sunFrustumFar[1])
     	index = 1;
-    else if(depth < sunFrustumFar[2])
+	else if(depth < sunFrustumFar[2])
 		index = 2;
-    
+	
 	vec4 fragPosLight = sunClipSpace[index] * vec4(fragPos, 1.0);
-	vec3 shadowCoord = fragPosLight.xyz/fragPosLight.w;
+	vec3 shadowCoord = fragPosLight.xyz; //Orthographic projection doesn't need division by w
+	shadowCoord.z += 0.001; //Bias
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
 	
-	vec2 radiusUV = vec2(0.001) * sunFrustumFar[0]/sunFrustumFar[index];
+	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
 	
 	// STEP 1: blocker search
     float accumBlockerDepth, numBlockers, maxBlockers;
@@ -294,14 +295,15 @@ float calcSunShadow()
     if (numBlockers == 0.0)
         return 1.0;
 
-    // STEP 2: penumbra size
-    float avgBlockerDepth = accumBlockerDepth / numBlockers;
-    float avgBlockerDepthWorld = sunFrustumFar[index] * sunFrustumNear[index] / (sunFrustumFar[index] - avgBlockerDepth * (sunFrustumFar[index] - sunFrustumNear[index]));
-    vec2 penumbraRadius = radiusUV * (shadowCoord.z - avgBlockerDepthWorld) / avgBlockerDepthWorld;
-    vec2 filterRadius = penumbraRadius * sunFrustumNear[index] / shadowCoord.z;
+	//Constant penumbra for now!!!!
+    //STEP: penumbra size
+    //float avgBlockerDepth = accumBlockerDepth / numBlockers;
+    //float avgBlockerDepthWorld = sunFrustumFar[index] * sunFrustumNear[index] / (sunFrustumFar[index] - avgBlockerDepth * (sunFrustumFar[index] - sunFrustumNear[index]));
+    //vec2 penumbraRadius = radiusUV * (shadowCoord.z - avgBlockerDepthWorld) / avgBlockerDepthWorld;
+    //vec2 filterRadius = penumbraRadius * sunFrustumNear[index] / shadowCoord.z;
 
-    // STEP 3: filtering
-    return pcfFilter(index, sunShadowMap, shadowCoord.xy, shadowCoord.z, dz_duv, filterRadius);
+    // STEP 2: filtering
+    return pcfFilter(index, sunShadowMap, shadowCoord.xy, shadowCoord.z, dz_duv, radiusUV);
 }
 
 //Calculate contribution of different light types

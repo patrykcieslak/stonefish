@@ -173,13 +173,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 	if(ocean != NULL)
 		ocean->getOpenGLOcean().SimulateOcean();
 		
-	/*
+	
 	GLfloat az,elev;
 	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
 	az += 0.05f;
 	elev = sin(az/180.f*M_PI) * 45.f+35.f;
 	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);
-	*/
+	
 	
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
