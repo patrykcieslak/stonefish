@@ -10,12 +10,13 @@
 #define __Stonefish_FixedJoint__
 
 #include "Joint.h"
+#include "FeatherstoneEntity.h"
 
 class FixedJoint : public Joint
 {
 public:
     FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
-	FixedJoint(std::string uniqueName, btMultiBody* mb, btRigidBody* rb);
+	FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA = -1, int linkIdB = -1);
     
     btVector3 Render();
     JointType getType();

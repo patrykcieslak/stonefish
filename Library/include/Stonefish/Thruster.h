@@ -2,23 +2,59 @@
 //  Thruster.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 8/21/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 16/09/17.
+//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Thruster__
 #define __Stonefish_Thruster__
 
-#include "Actuator.h"
+#include "SystemEntity.h"
 #include "SolidEntity.h"
+#include "FeatherstoneEntity.h"
+#include "Motor.h"
+#include "FakeRotaryEncoder.h"
+#include "SpeedController.h"
 
-class Thruster : public Actuator
+class UnderwaterVehicle;
+
+class Thruster : public SystemEntity
 {
 public:
-    //Thruster(SolidEntity* body, const btVector3& position, const btVector3& direction);
+	//Thruster(std::string uniqueName, SolidEntity* solid, SolidEntity* duct, SolidEntity* propeller, const btTransform& location, btScalar propDiameter, btScalar thrustCoeff);
+	Thruster(std::string uniqueName, UnderwaterVehicle* vehicle, SolidEntity* duct, SolidEntity* propeller, btScalar propDiameter, btScalar thrustCoeff);
+	~Thruster();
+	
+	void SetDesiredSpeed(btScalar s);
+	
+	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+	void UpdateAcceleration(btScalar dt);
+    void UpdateSensors(btScalar dt);
+    void UpdateControllers(btScalar dt);
+    void UpdateActuators(btScalar dt);
+    void ApplyGravity(const btVector3& g);
+	void ApplyDamping();
     
+	btTransform getTransform() const;
+    void GetAABB(btVector3& min, btVector3& max);
+	std::vector<Renderable> Render();
+	
 private:
-    //SolidEntity* actingBody;
+	//Components of system
+	btTransform propLocation;
+	UnderwaterVehicle* actuatedVehicle;
+	FeatherstoneEntity* thruster;
+	SolidEntity* ductSolid;
+    SolidEntity* propSolid;
+	RevoluteJoint* propRev;
+	Motor* motor;
+	FakeRotaryEncoder* enc;
+	SpeedController* ctrl;
+	
+	//Parameters of hydrodynamic model
+	btScalar D;
+	btScalar KT;
+	btScalar KQ;
 };
 
 #endif

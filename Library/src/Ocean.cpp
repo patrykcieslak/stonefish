@@ -85,59 +85,33 @@ void Ocean::GetSurfaceEquation(double* plane4) const
     plane4[3] = -normal.dot(position);
 }
 
-void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co)
+void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co)
 {
-    //Check if object is an Entity
-    btRigidBody* rb = btRigidBody::upcast(co);
-    if(rb == NULL || rb->isStaticObject())
-        return;
-    
-    Entity* ent = (Entity*)rb->getUserPointer();
-    if(ent == NULL) 
-        return;
-    
+    Entity* ent;
+	btRigidBody* rb = btRigidBody::upcast(co);
+	btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
+	
+	if(rb != 0)
+	{
+		if(rb->isStaticOrKinematicObject())
+			return;
+		else
+			ent = (Entity*)rb->getUserPointer();
+	}
+	else if(mbl != 0)
+	{
+		if(mbl->isStaticOrKinematicObject())
+			return;
+		else
+			ent = (Entity*)mbl->getUserPointer();
+	}
+	
+	HydrodynamicsSettings settings;
+	settings.algorithm = ht;
+	settings.addedMassForces = true;
+	settings.dampingForces = true;
+	settings.reallisticBuoyancy = true;
+	
     if(ent->getType() == ENTITY_SOLID)
-        ((SolidEntity*)ent)->ApplyFluidForces(this);
-    else if(ent->getType() == ENTITY_SYSTEM)
-        ((SystemEntity*)ent)->ApplyFluidForces(this);
-    
-    /*
-    //2.Determine fluid surface coordinates
-    btVector3 surfaceN, surfaceD;
-    GetSurface(surfaceN, surfaceD);
-    
-    //3.Calculate fluid forces and buoyancy center based on entity type
-    btVector3 cob;
-    btScalar submergedV = 0;
-    btVector3 dForce;
-    btVector3 adTorque;
-    btVector3 fluidVelocity(0,0,0);
-    
-    switch (ent->getType())
-    {
-        case ENTITY_SOLID:
-        {
-            SolidEntity* solid = (SolidEntity*)ent;
-            solid->CalculateFluidDynamics(surfaceN, surfaceD, fluidVelocity, fluid, submergedV, cob, dForce, adTorque);
-            rb->applyForce(-world->getGravity()*submergedV*fluid->density, cob);
-            rb->applyCentralForce(dForce);
-            rb->applyTorque(adTorque);
-            rb->setDamping(submergedV/solid->getVolume()*fluid->viscousity, submergedV/solid->getVolume()*fluid->viscousity);
-        }
-        break;
-    
-        case ENTITY_CABLE:
-        {
-            CableEntity* cable = (CableEntity*)ent;
-            cable->CalculateFluidDynamics(surfaceN, surfaceD, fluidVelocity, fluid, submergedV, cob, dForce, adTorque, rb->getWorldTransform(), rb->getLinearVelocity(), rb->getAngularVelocity());
-            rb->applyForce(-world->getGravity()*submergedV*fluid->density, cob);
-            rb->applyCentralForce(dForce);
-            rb->applyTorque(adTorque);
-            rb->setDamping(submergedV/cable->getPartVolume()*fluid->viscousity, submergedV/cable->getPartVolume()*fluid->viscousity);
-        }
-            break;
-
-        default:
-            return;
-    }*/
+        ((SolidEntity*)ent)->ApplyFluidForces(settings, this);
 }

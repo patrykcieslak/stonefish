@@ -16,36 +16,6 @@ AcrobotTestApp::AcrobotTestApp(int width, int height, AcrobotTestManager* sim) :
 {
 }
 
-void AcrobotTestApp::MouseDown(SDL_Event* event)
-{
-    GLfloat xPos = (GLfloat)(event->motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    GLfloat yPos = -(GLfloat)(event->motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseDown(xPos, yPos);
-}
-
-void AcrobotTestApp::MouseUp(SDL_Event* event)
-{
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseUp();
-}
-
-void AcrobotTestApp::MouseMove(SDL_Event* event)
-{
-    GLfloat xPos = (GLfloat)(event->motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    GLfloat yPos = -(GLfloat)(event->motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-    
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseMove(xPos, yPos);
-}
-
-void AcrobotTestApp::MouseScroll(SDL_Event* event)
-{
-    OpenGLTrackball* trackball = (OpenGLTrackball*)getSimulationManager()->getView(0);
-    trackball->MouseScroll(event->wheel.y * -1.f);
-}
-
 void AcrobotTestApp::DoHUD()
 {
     SimulationApp::DoHUD();

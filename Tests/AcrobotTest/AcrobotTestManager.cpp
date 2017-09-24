@@ -27,15 +27,15 @@
 #include "Current.h"
 #include "FeatherstoneEntity.h"
 
-AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(MKS, true, stepsPerSecond, DANTZIG, STANDARD)
+AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, MKS, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 
 void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, false, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, true, true);
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setGravity(9.81);
     setICSolverParams(false);
@@ -48,9 +48,9 @@ void AcrobotTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.7, 0.5);
     
     /////// LOOKS
-    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.1, 0.8, 1.33);
-	int shiny = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.01, 0.9, 1.2);
-    int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.01, 0.9, 1.2);
+    int grey = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.5, 0.0);
+	int shiny = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.3, 0.0);
+    int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.1, 0.0);
     
     /////// OBJECTS
     Plane* floor = new Plane("Floor", 20, getMaterialManager()->getMaterial("Concrete"), btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)), grey);
@@ -160,8 +160,8 @@ void AcrobotTestManager::BuildScenario()
     //omni->GlueToEntity(arm2);
     //AddLight(omni);
     
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.2f), 1.5f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 50.f, true);
-    trackb->Rotate(btQuaternion(M_PI - M_PI/8.0, 0.0, 0.0));
-    trackb->Activate();
-    AddView(trackb);
+    //OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0.0f, 0.0f, 0.2f), 1.5f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 50.f, true);
+    //trackb->Rotate(btQuaternion(M_PI - M_PI/8.0, 0.0, 0.0));
+    //trackb->Activate();
+    //AddView(trackb);
 }

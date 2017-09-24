@@ -55,6 +55,7 @@ public:
     void ApplyGravity(const btVector3& g);
     void ApplyDamping();
     
+	void setBaseTransform(const btTransform& trans);
     void setBaseRenderable(bool render);
     void setJointIC(unsigned int index, btScalar position, btScalar velocity);
     void setJointDamping(unsigned int  index, btScalar constantFactor, btScalar viscousFactor);

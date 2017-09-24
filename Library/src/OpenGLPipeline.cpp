@@ -173,13 +173,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 	if(ocean != NULL)
 		ocean->getOpenGLOcean().SimulateOcean();
 		
-	
-	GLfloat az,elev;
+	/*GLfloat az,elev;
 	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
 	az += 0.05f;
 	elev = sin(az/180.f*M_PI) * 45.f+35.f;
-	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);
-	
+	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);*/
 	
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
@@ -233,7 +231,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
 				//Draw ocean
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+				//ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				
 				//Draw sky
@@ -241,7 +239,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
 				
 				//Ambient occlusion
-				view->DrawAO();
+				//view->DrawAO();
 			}
 			else
 			{

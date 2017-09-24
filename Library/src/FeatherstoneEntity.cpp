@@ -21,10 +21,10 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody->setUseGyroTerm(true);
     multiBody->setAngularDamping(0.0);
     multiBody->setLinearDamping(0.0);
-    multiBody->setMaxAppliedImpulse(10000.0);
-    multiBody->setMaxCoordinateVelocity(10000.0);
+    multiBody->setMaxAppliedImpulse(BT_LARGE_FLOAT);
+    multiBody->setMaxCoordinateVelocity(BT_LARGE_FLOAT);
     multiBody->useRK4Integration(true);
-    multiBody->useGlobalVelocities(false);
+    multiBody->useGlobalVelocities(true);
     multiBody->setHasSelfCollision(false); //No self collision by default
     multiBody->setCanSleep(false);
     
@@ -92,6 +92,18 @@ void FeatherstoneEntity::DisableSelfCollision()
 void FeatherstoneEntity::setBaseRenderable(bool render)
 {
     baseRenderable = render;
+}
+
+void FeatherstoneEntity::setBaseTransform(const btTransform& trans)
+{
+	multiBody->getBaseCollider()->setWorldTransform(trans);
+	multiBody->setBaseWorldTransform(trans);
+	
+	for(int i=1; i<links.size(); ++i)
+	{
+		btTransform tr = links[i].solid->getMultibodyLinkCollider()->getWorldTransform();
+		links[i].solid->getMultibodyLinkCollider()->setWorldTransform(trans * tr);
+	}
 }
 
 void FeatherstoneEntity::setJointIC(unsigned int index, btScalar position, btScalar velocity)
@@ -344,7 +356,10 @@ void FeatherstoneEntity::ApplyGravity(const btVector3& g)
     for(int i=0; i<multiBody->getNumLinks(); ++i)
     {
         if(multiBody->getLink(i).m_collider && multiBody->getLink(i).m_collider->getActivationState() == ISLAND_SLEEPING)
+		{
             isSleeping = true;
+			break;
+		}
     } 
 
     if(!isSleeping)
@@ -352,7 +367,9 @@ void FeatherstoneEntity::ApplyGravity(const btVector3& g)
         multiBody->addBaseForce(g * multiBody->getBaseMass());
 
         for(int i=0; i<multiBody->getNumLinks(); ++i) 
+		{
             multiBody->addLinkForce(i, g *multiBody->getLinkMass(i));
+		}
     }
 }
 
@@ -367,7 +384,7 @@ void FeatherstoneEntity::ApplyDamping()
             if(btFabs(velocity) >= SIMD_EPSILON) //If velocity higher than zero
             {
                 btScalar damping = - velocity/btFabs(velocity) * joints[i].sigDamping - velocity * joints[i].velDamping;
-                multiBody->addJointTorque(joints[i].child - 1, damping);
+				multiBody->addJointTorque(joints[i].child - 1, damping);
             }
         }
     }
@@ -379,32 +396,15 @@ std::vector<Renderable> FeatherstoneEntity::Render()
 	//Draw base
     if(baseRenderable)
     {
-		btTransform cgTrans = multiBody->getBaseCollider()->getWorldTransform();
-		btTransform oTrans = multiBody->getBaseCollider()->getWorldTransform() * links[0].solid->localTransform.inverse();
-		
-		Renderable item;
-		item.objectId = links[0].solid->getObject();
-		item.lookId = links[0].solid->getLook();
-		item.dispCoordSys = false;
-		item.model = glMatrixFromBtTransform(oTrans);
-		item.csModel = glMatrixFromBtTransform(cgTrans);
-		items.push_back(item);
+		std::vector<Renderable> _base = links[0].solid->Render();
+		items.insert(items.end(), _base.begin(), _base.end());
     }
     
     //Draw rest of links
     for(unsigned int i = 0; i < multiBody->getNumLinks(); ++i)
     {
-		btMultibodyLink& link = multiBody->getLink(i);
-		btTransform cgTrans = link.m_collider->getWorldTransform();
-        btTransform oTrans = link.m_collider->getWorldTransform() * links[i + 1].solid->localTransform.inverse();
-	
-		Renderable item;
-		item.objectId = links[i + 1].solid->getObject();
-		item.lookId = links[i + 1].solid->getLook();
-		item.dispCoordSys = false;
-		item.model = glMatrixFromBtTransform(oTrans);
-		item.csModel = glMatrixFromBtTransform(cgTrans);
-		items.push_back(item);
+		std::vector<Renderable> _link = links[i+1].solid->Render();
+		items.insert(items.end(), _link.begin(), _link.end());
     }
 	
 	return items;

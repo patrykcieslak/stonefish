@@ -8,25 +8,9 @@
 
 #include "RevoluteJoint.h"
 
-RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
+RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : 
+		RevoluteJoint(uniqueName, solidA->getRigidBody(), solidB->getRigidBody(), pivot, axis, collideLinkedEntities)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
-    btVector3 hingeAxis = axis.normalized();
-    axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
-    btVector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
-    pivotInA = bodyA->getCenterOfMassTransform().inverse()(UnitSystem::SetPosition(pivot));
-    btVector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(UnitSystem::SetPosition(pivot));
-    
-    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
-    hinge->setLimit(1.0, -1.0); //no limit (min > max)
-    hinge->enableMotor(false);
-    setConstraint(hinge);
-    
-    sigDamping = btScalar(0.);
-    velDamping = btScalar(0.);
-    
-    angleIC = btScalar(0.);
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const btVector3& pivot, const btVector3& axis) : Joint(uniqueName, false)
@@ -45,6 +29,25 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const b
     
     angleIC = btScalar(0.);
 }
+
+RevoluteJoint::RevoluteJoint(std::string uniqueName, btRigidBody* bodyA, btRigidBody* bodyB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
+{
+	btVector3 hingeAxis = axis.normalized();
+    axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
+    btVector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
+    pivotInA = bodyA->getCenterOfMassTransform().inverse()(UnitSystem::SetPosition(pivot));
+    btVector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(UnitSystem::SetPosition(pivot));
+    
+    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
+    hinge->setLimit(1.0, -1.0); //no limit (min > max)
+    hinge->enableMotor(false);
+    setConstraint(hinge);
+    
+    sigDamping = btScalar(0.);
+    velDamping = btScalar(0.);
+    
+    angleIC = btScalar(0.);
+}	
 
 void RevoluteJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
 {

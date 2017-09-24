@@ -61,9 +61,7 @@ public:
     virtual void JoystickUp(SDL_Event* event);
     
     //accessors
-    void setSimulationSpeed(btScalar factor);
     SimulationManager* getSimulationManager();
-    btScalar getSimulationSpeed();
     SDL_Joystick* getJoystick();
 	double getDrawingTime();
     double getPhysicsTime();
@@ -89,7 +87,6 @@ private:
     SDL_Joystick* joystick;
     
     SimulationManager* simulation;
-    btScalar simSpeedFactor;
     Entity* lastPicked;
     
     std::string appName;

@@ -21,7 +21,7 @@ Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lo
     
     //Calculate physical properties
     volume = btScalar(4)/btScalar(3)*M_PI*radius*radius*radius;
-    dragCoeff = btVector3(btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius);
+    //dragCoeff = btVector3(btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius);
     mass = volume * mat.density;
     Ipri = btVector3(btScalar(2)/btScalar(5)*mass*radius*radius,
                      btScalar(2)/btScalar(5)*mass*radius*radius,

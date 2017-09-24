@@ -10,10 +10,11 @@
 #define __Stonefish_SolidEntity__
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
+#include <LinearMath/btMatrixX.h>
 #include "Entity.h"
+#include "Ocean.h"
 #include "MaterialManager.h"
 #include "OpenGLContent.h"
-#include "Ocean.h"
 
 typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidEntityType;
 
@@ -29,34 +30,35 @@ public:
     EntityType getType();
     virtual SolidEntityType getSolidType() = 0;
     
-	void GetAABB(btVector3& min, btVector3& max);
-    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
+	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
     void RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world);
 	virtual btCollisionShape* BuildCollisionShape() = 0;
-    
+    virtual void BuildGraphicalObject();
+	
+	//Computation
     void UpdateAcceleration();
-    void ApplyGravity();
-    void ApplyCentralForce(const btVector3& force);
-    void ApplyTorque(const btVector3& torque);
-    void SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 addedMass, btVector3 addedInertia);
-	virtual void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
+    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, 
+									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta);
+    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta);
     
-    void SetLook(int newLookId);
-	void BuildGraphicalObject();
-	std::vector<Renderable> Render();
+	//Applying forces
+	void ApplyCentralForce(const btVector3& force);
+    void ApplyTorque(const btVector3& torque);
+    void ApplyGravity();
+	virtual void ApplyFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid);
 	
-    virtual void ComputeFluidForces(const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
-    virtual void ComputeFluidForces(const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping = true, bool addedMass = true);
-    virtual void ApplyFluidForces(const Ocean* fluid);
+	//Rigid body
+	void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
+	void SetHydrodynamicProperties(const btMatrixXu& addedMass, const btMatrixXu& dampingCoefficients, const btTransform& cobTransform);
+	void setComputeHydrodynamics(bool flag);
 	
-    btRigidBody* getRigidBody();
+	btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
     btVector3 getMomentsOfInertia();
     btScalar getMass();
     Material getMaterial();
     btScalar getVolume();
-    btVector3 getDragCoefficients();
     btTransform getTransform() const;
     btTransform getLocalTransform();
     btVector3 getLinearVelocity();
@@ -65,31 +67,37 @@ public:
     btVector3 getLinearAcceleration();
     btVector3 getAngularAcceleration();
     
+	//Rendering
+	virtual std::vector<Renderable> Render();
+	void GetAABB(btVector3& min, btVector3& max);
+	void SetLook(int newLookId);
 	void setDisplayCoordSys(bool enabled);
 	int getLook();
 	int getObject();
     bool isCoordSysVisible();
-    
+	
 protected:
     virtual void BuildRigidBody();
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
     
+	//Rigid body
     btRigidBody* rigidBody;
     btMultiBodyLinkCollider* multibodyCollider;
     
-    //Properties
-	Mesh *mesh;
+    Mesh *mesh;
     Material mat;
-    btScalar mass;
-    btVector3 Ipri;  //Principal moments of inertia
     btScalar thickness;
     btScalar volume;
-    btVector3 centerOfBuoyancy;
-    btVector3 dragCoeff;
-    btVector3 addedMass;
-    btVector3 addedInertia;
-    btTransform localTransform;
-    
+	
+	btScalar mass;  //Mass of solid
+	btVector3 Ipri; //Principal moments of inertia
+    btTransform localTransform; //Transform between graphical center and calculated mass center
+	
+    btMatrixXu aMass; //Hydrodynamic added mass matrix (6x6)
+	btMatrixXu dCoeff; //Hydrodynamic damping coefficients (6x6)
+    btVector3 CoB; //Center of Buoyancy (in CoG frame)
+	bool computeHydro;
+	
     //Motion
     btVector3 linearAcc;
     btVector3 angularAcc;

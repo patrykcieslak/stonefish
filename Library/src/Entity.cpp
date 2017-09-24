@@ -13,6 +13,15 @@ NameManager Entity::nameManager;
 
 btVector3 Entity::findInertiaAxis(btMatrix3x3 I, btScalar value)
 {
+	//Check if not I matrix already diagonal
+	if(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
+		&& btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
+		&& btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY()))
+		{
+			return btVector3(0,0,0);
+		}
+	
+	//Diagonalize
     btMatrix3x3 L;
     btVector3 candidates[3];
     btVector3 axis;

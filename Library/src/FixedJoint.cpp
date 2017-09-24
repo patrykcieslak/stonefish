@@ -14,17 +14,20 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     btRigidBody* bodyA = solidA->getRigidBody();
     btRigidBody* bodyB = solidB->getRigidBody();
     btTransform frameInA = btTransform::getIdentity();
-    btTransform frameInB = bodyB->getCenterOfMassTransform().inverse() * bodyA->getCenterOfMassTransform();
+    btTransform frameInB = bodyB->getCenterOfMassTransform().inverse() * bodyA->getCenterOfMassTransform(); //CHECK IT!!!!!!!!!!
     
     btFixedConstraint* fixed = new btFixedConstraint(*bodyA, *bodyB, frameInA, frameInB);
     setConstraint(fixed);
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, btMultiBody* mb, btRigidBody* rb) : Joint(uniqueName, false)
+FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB) : Joint(uniqueName, false)
 {
-	btTransform frameInRB = rb->getCenterOfMassTransform().inverse() * mb->getBaseWorldTransform();
+	btMultiBody* mbA = feA->getMultiBody();
+	btMultiBody* mbB = feB->getMultiBody();
+	btVector3 pivotInB = mbB->getBaseWorldTransform().inverse() * (mbA->getBaseWorldTransform() * btVector3(0,0,0));
+	btMatrix3x3 frameInB = mbB->getBaseWorldTransform().getBasis().inverse() * mbA->getBaseWorldTransform().getBasis();	
 	
-	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(mb, -1, rb, btVector3(0,0,0), frameInRB.getOrigin(), btMatrix3x3::getIdentity(), frameInRB.getBasis());
+	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(mbA, linkIdA, mbB, linkIdB, btVector3(0,0,0), pivotInB, btMatrix3x3::getIdentity(), frameInB);
 	setConstraint(fixed);
 }
 

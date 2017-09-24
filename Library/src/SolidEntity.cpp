@@ -8,18 +8,20 @@
 
 #include "SolidEntity.h"
 #include "MathsUtil.hpp"
+#include "Ocean.h"
 
 SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
-    Ipri = btVector3(0,0,0);
-    mass = 0;
-    mat = m;
-	volume = 0;
-    dragCoeff = btVector3(0,0,0);
-    centerOfBuoyancy = btVector3(0,0,0);
-    addedMass = btVector3(0,0,0);
-    addedInertia = btVector3(0,0,0);
-    localTransform = btTransform::getIdentity();
+	mat = m;
+    mass = btScalar(0);
+	Ipri = btVector3(0,0,0);
+    volume = btScalar(0);
+	thickness = btScalar(0);
+	//aMass = btVector3(0,0,0);
+    //dragCoeff = btVector3(0,0,0);
+    CoB = btVector3(0,0,0);
+    localTransform = btTransform::getIdentity(); //CoG = (0,0,0)
+	computeHydro = true;
     	
     linearAcc = btVector3(0,0,0);
     angularAcc = btVector3(0,0,0);
@@ -51,11 +53,8 @@ EntityType SolidEntity::getType()
     return ENTITY_SOLID;
 }
 
-void SolidEntity::SetHydrodynamicProperties(btVector3 dragCoefficients, btVector3 aMass, btVector3 aInertia)
+void SolidEntity::SetHydrodynamicProperties(const btMatrixXu& addedMass, const btMatrixXu& dampingCoefficients, const btTransform& cobTransform)
 {
-    dragCoeff = dragCoefficients;
-    addedMass = aMass;
-    addedInertia = aInertia;
 }
 
 void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform)
@@ -78,6 +77,11 @@ void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3&
         Ipri = UnitSystem::SetInertia(inertia);
         localTransform = UnitSystem::SetTransform(cogTransform);
     }
+}
+
+void SolidEntity::setComputeHydrodynamics(bool flag)
+{
+	computeHydro = flag;
 }
 
 void SolidEntity::SetLook(int newLookId)
@@ -124,7 +128,7 @@ std::vector<Renderable> SolidEntity::Render()
 {
 	std::vector<Renderable> items(0);
 	
-	if(rigidBody != NULL && objectId >= 0 && isRenderable())
+	if((rigidBody != NULL || multibodyCollider != NULL) && objectId >= 0 && isRenderable())
 	{
 		btTransform oTrans =  getTransform() * localTransform.inverse();
 		
@@ -261,11 +265,6 @@ btScalar SolidEntity::getVolume()
     return volume;
 }
 
-btVector3 SolidEntity::getDragCoefficients()
-{
-    return dragCoeff;
-}
-
 btTransform SolidEntity::getLocalTransform()
 {
     return localTransform;
@@ -305,7 +304,7 @@ void SolidEntity::BuildRigidBody()
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, colShape, Ipri);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.); //not used
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = btScalar(0.); //not used
-        rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = btScalar(0.); //not used
+		rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = btScalar(0.); //not used
         rigidBodyCI.m_additionalDamping = false;
         
         rigidBody = new btRigidBody(rigidBodyCI);
@@ -335,7 +334,7 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         multibodyCollider->setRestitution(btScalar(0.));
         multibodyCollider->setRollingFriction(btScalar(0.));
         multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-        multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
+		multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
             mb->getLink(child - 1).m_collider = multibodyCollider;
@@ -362,7 +361,7 @@ void SolidEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
 		BuildGraphicalObject();
         
         //rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
-        rigidBody->setCenterOfMassTransform(UnitSystem::SetTransform(worldTransform)*localTransform);
+        rigidBody->setCenterOfMassTransform(UnitSystem::SetTransform(worldTransform) * localTransform);
         world->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
     }
 }
@@ -427,7 +426,7 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
+void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
 {
     //Set zeros
 	Fb.setZero();
@@ -436,10 +435,14 @@ void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogT
 	Td.setZero();
 	Fa.setZero();
 	Ta.setZero();
+	
+	if(!computeHydro || mesh == NULL)
+		return;
+    
+	//Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
     
-    //Calculate fluid dynamics forces and torques
-    //Loop through all faces...
+	//Loop through all faces...
     for(int i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
@@ -472,8 +475,8 @@ void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogT
         Tb += (fc - p).cross(Fbi);
         
         //Damping force
-        if(damping)
-        {
+        if(settings.dampingForces)
+		{
             //Skin drag force
             btVector3 vc = fluid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
             btVector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
@@ -492,7 +495,7 @@ void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogT
         }
         
         //Added mass effect
-        if(addedMass)
+		if(settings.addedMassForces)
         {
             btVector3 ac = -(a + epsilon.cross(fc - p)); //Water acceleration at face center (velocity of fluid is constant)
             btVector3 Fai(0,0,0);
@@ -511,29 +514,17 @@ void SolidEntity::ComputeFluidForces(const Ocean* fluid, const btTransform& cogT
     }
 }
 
-void SolidEntity::ComputeFluidForces(const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta, bool damping, bool addedMass)
+void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
 {
-	if(rigidBody == NULL || mesh == NULL)
-    {
-        Fb.setZero();
-        Tb.setZero();
-        Fd.setZero();
-        Td.setZero();
-        Fa.setZero();
-        Ta.setZero();
-    }
-    else
-    {
-        btTransform T = getTransform() * localTransform.inverse();
-        btVector3 v = getLinearVelocity();
-        btVector3 omega = getAngularVelocity();
-        btVector3 a = getLinearAcceleration();
-        btVector3 epsilon = getAngularAcceleration();
-        ComputeFluidForces(fluid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta, damping, addedMass);
-    }
+    btTransform T = getTransform() * localTransform.inverse();
+    btVector3 v = getLinearVelocity();
+    btVector3 omega = getAngularVelocity();
+	btVector3 a = getLinearAcceleration();
+    btVector3 epsilon = getAngularAcceleration();
+	ComputeFluidForces(settings, fluid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
 }
 
-void SolidEntity::ApplyFluidForces(const Ocean* fluid)
+void SolidEntity::ApplyFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid)
 {
     btVector3 Fb;
     btVector3 Tb;
@@ -541,7 +532,7 @@ void SolidEntity::ApplyFluidForces(const Ocean* fluid)
     btVector3 Td;
     btVector3 Fa;
     btVector3 Ta;
-    ComputeFluidForces(fluid, Fb, Tb, Fd, Td, Fa, Ta, true, true);
+    ComputeFluidForces(settings, fluid, Fb, Tb, Fd, Td, Fa, Ta);
     
     ApplyCentralForce(Fb + Fd + Fa);
     ApplyTorque(Tb + Td + Ta);

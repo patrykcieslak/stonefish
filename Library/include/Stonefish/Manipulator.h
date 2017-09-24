@@ -20,23 +20,26 @@
 class Manipulator : public SystemEntity
 {
 public:
-    Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& worldTrans); //Fixed base maniupulator
-	Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& worldTrans, btRigidBody* attachment); //Attached to a rigid body
+    Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink); //Fixed base maniupulator
+	Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, FeatherstoneEntity* attachment); //Attached to base of multibody
     virtual ~Manipulator();
     
 	//Manipulator
 	void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha);
 	//void AddTransLinkDH(SolidEntity* link, btScalar theta, btScalar a, btScalar alpha); //There should be two solids changing distance
+	btScalar getJointPosition(unsigned int jointId);
+	btScalar getDesiredJointPosition(unsigned int jointId);
+	void setDesiredJointPosition(unsigned int jointId, btScalar position);
 	
 	//System
 	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
 	void GetAABB(btVector3& min, btVector3& max);
-    void UpdateAcceleration();
+    void UpdateAcceleration(btScalar dt);
     void UpdateSensors(btScalar dt);
     void UpdateControllers(btScalar dt);
     void UpdateActuators(btScalar dt);
     void ApplyGravity(const btVector3& g);
-    void ApplyFluidForces(Ocean* fluid);
+	void ApplyDamping();
     btTransform getTransform() const;
     virtual std::vector<Renderable> Render();
     
@@ -50,7 +53,7 @@ private:
 	unsigned int nTotalLinks;
 	
 	btTransform lastDHTrans; //Temp used while creating the structure
-	btRigidBody* attach;
+	FeatherstoneEntity* attach;
 };
 
 #endif

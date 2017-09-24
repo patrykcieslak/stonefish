@@ -13,7 +13,6 @@
 
 UnderwaterTestApp::UnderwaterTestApp(int width, int height, UnderwaterTestManager* sim) : SimulationApp("Underwater Test", width, height, sim)
 {
-    setSimulationSpeed(1.0);
 }
 
 void UnderwaterTestApp::DoHUD()

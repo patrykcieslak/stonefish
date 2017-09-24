@@ -36,7 +36,8 @@
 #include "OpenGLDebugDrawer.h"
 #include "Console.h"
 
-typedef enum {DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
+//Simulation algorithm settings
+typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
 typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 typedef enum {TERRESTIAL, MARINE, CUSTOM} SimulationType;
 
@@ -49,7 +50,7 @@ class SimulationManager
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = DANTZIG, CollisionFilteringType cft = STANDARD);
+    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = STANDARD, HydrodynamicsType ht = TRIFOLD_SYMMETRY);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -59,7 +60,7 @@ public:
     void RestartScenario();
     bool StartSimulation();
     void ResumeSimulation();
-    void AdvanceSimulation(uint64_t timeInMicroseconds);
+    void AdvanceSimulation();
     void StopSimulation();
 	void UpdateDrawingQueue();
 	
@@ -76,7 +77,7 @@ public:
 	Entity* PickEntity(int x, int y);
     bool CheckContact(Entity* entA, Entity* entB);
 
-    double getPhysicsTimeInMiliseconds();
+    btScalar getPhysicsTimeInMiliseconds();
     void setStepsPerSecond(btScalar steps);
     void setICSolverParams(bool useGravity, btScalar timeStep = btScalar(0.001), unsigned int maxIterations = 100000, btScalar maxTime = BT_LARGE_FLOAT, btScalar linearTolerance = btScalar(1e-6), btScalar angularTolerance = btScalar(1e-6));
     btScalar getStepsPerSecond();
@@ -84,6 +85,7 @@ public:
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
 	SimulationType getSimulationType();
+	HydrodynamicsType getHydrodynamicsType();
     
     Entity* getEntity(unsigned int index);
     Entity* getEntity(std::string name);
@@ -101,8 +103,9 @@ public:
     
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();
-    ResearchDynamicsWorld* getDynamicsWorld();
+    btMultiBodyDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
+	btScalar getRealtimeFactor();
     MaterialManager* getMaterialManager();
     bool isZAxisUp();
     bool isSimulationFresh();
@@ -115,8 +118,8 @@ protected:
     static void SimulationPostTickCallback(btDynamicsWorld* world, btScalar timeStep);
     static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
     
-    ResearchDynamicsWorld* dynamicsWorld;
-    ResearchConstraintSolver* dwSolver;
+    btMultiBodyDynamicsWorld* dynamicsWorld;
+	btMultiBodyConstraintSolver* dwSolver;
     btCollisionDispatcher* dwDispatcher;
     btBroadphaseInterface* dwBroadphase;
     btDefaultCollisionConfiguration* dwCollisionConfig;
@@ -127,14 +130,17 @@ private:
     void InitializeSolver();
     void InitializeScenario();
 	
-    btScalar sps;
-    btScalar simulationTime;
-    uint64_t currentTime;
-    uint64_t physicTime;
-    uint64_t ssus;
-    SolverType solver;
+	SolverType solver;
     CollisionFilteringType collisionFilter;
+	SimulationType simType;
+	HydrodynamicsType hydroType;
+	btScalar sps;
+	btScalar realtimeFactor;
     
+	btScalar simulationTime;
+    uint64_t currentTime;
+    uint64_t physicsTime;
+    uint64_t ssus;
 	bool icUseGravity;
 	btScalar icTimeStep;
     unsigned int icMaxIter;
@@ -142,8 +148,7 @@ private:
     btScalar icLinTolerance;
     btScalar icAngTolerance;
     unsigned int mlcpFallbacks;
-    
-	bool icProblemSolved;
+    bool icProblemSolved;
 	bool simulationFresh;
     
     std::vector<Entity*> entities;
@@ -155,7 +160,6 @@ private:
     Ocean* ocean;
     btScalar g;
     bool zUp;
-    SimulationType simType;
 
     //graphics
     OpenGLTrackball* trackball;

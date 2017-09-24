@@ -8,12 +8,11 @@
 
 #include "FallingTestApp.h"
 
-#include "OpenGLTrackball.h"
+#include "Manipulator.h"
 #include "NativeDialog.h"
 
 FallingTestApp::FallingTestApp(int width, int height, FallingTestManager* sim) : SimulationApp("Falling Test", width, height, sim)
 {
-    setSimulationSpeed(1.0);
     checked = false;
 }
 
@@ -22,7 +21,7 @@ void FallingTestApp::DoHUD()
     SimulationApp::DoHUD();
     
     //Left side
-    ui_id button;
+    /*ui_id button;
     button.owner = 1;
     button.item = 1;
     button.index = 0;
@@ -35,27 +34,29 @@ void FallingTestApp::DoHUD()
     checked = IMGUI::getInstance()->DoCheckBox(check, 5.f, 95.f, 120.f, checked, "Test");
     
     IMGUI::getInstance()->DoProgressBar(5.f, 125.f, 120.f, 0.3f, "Progress");
-    
-	/*SolidEntity* solid = (SolidEntity*)getSimulationManager()->getEntity("Sphere");
-    Look l = solid->getLook();
-    ui_id sliderMat;
-    sliderMat.owner = 1;
-    sliderMat.item = 10;
-    sliderMat.index = 0;
-    l.data[0] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 55.f, 100.0, 5.f, 5.f, 20.f, 0.0, 1.0, l.data[0], "Diffuse");
-    
-    sliderMat.owner = 1;
-    sliderMat.item = 11;
-    sliderMat.index = 0;
-    l.data[1] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 105.f, 100.0, 5.f, 5.f, 20.f, 0.0, 1.0, l.data[1], "Roughness");
-    
-    sliderMat.owner = 1;
-    sliderMat.item = 12;
-    sliderMat.index = 0;
-    l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
-    solid->SetLook(l);
     */
 	
+	
+	/*Manipulator* manipA = (Manipulator*)getSimulationManager()->getEntity("ArmA");
+    ui_id slider;
+    
+	slider.owner = 1;
+    slider.index = 0;
+    
+	slider.item = 1;
+	manipA->setDesiredJointPosition(0, IMGUI::getInstance()->DoSlider(slider, 5.f, 55.f, 100.0, -10.f, 10.f, manipA->getDesiredJointPosition(0), "Joint 0"));
+    */
+	
+    /*
+	 * Look l = solid->getLook();
+    
+	 * sliderMat.item = 2;
+	l.data[1] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 105.f, 100.0, 5.f, 5.f, 20.f, 0.0, 1.0, l.data[1], "Roughness");
+    
+    sliderMat.item = 3;
+    l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
+    
+	*/
     //Right side
     /*ui_id plot;
     plot.owner = 1;

@@ -28,7 +28,7 @@
 #include "Ocean.h"
 #include "Plane.h"
 
-SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
+SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
 {
     //Set coordinate system
     UnitSystem::SetUnitSystem(unitSystem, false);
@@ -37,10 +37,12 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     
     //Initialize simulation world
     setStepsPerSecond(stepsPerSecond);
+	realtimeFactor = btScalar(1);
     solver = st;
     collisionFilter = cft;
+	hydroType = ht;
     currentTime = 0;
-    physicTime = 0;
+    physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
     materialManager = NULL;
@@ -215,6 +217,11 @@ SimulationType SimulationManager::getSimulationType()
 	return simType;
 }
 
+HydrodynamicsType SimulationManager::getHydrodynamicsType()
+{
+	return hydroType;
+}
+
 Entity* SimulationManager::getEntity(unsigned int index)
 {
     if(index < entities.size())
@@ -308,7 +315,7 @@ Ocean* SimulationManager::getOcean()
 		return NULL;
 }
 
-ResearchDynamicsWorld* SimulationManager::getDynamicsWorld()
+btMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
 }
@@ -344,9 +351,14 @@ btScalar SimulationManager::getStepsPerSecond()
     return sps;
 }
 
-double SimulationManager::getPhysicsTimeInMiliseconds()
+btScalar SimulationManager::getPhysicsTimeInMiliseconds()
 {
-    return (double)physicTime/1000.0;
+    return (btScalar)physicsTime/btScalar(1000);
+}
+
+btScalar SimulationManager::getRealtimeFactor()
+{
+	return realtimeFactor;
 }
 
 void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
@@ -409,27 +421,36 @@ void SimulationManager::InitializeSolver()
     }
     
     //Choose constraint solver
-    btMLCPSolverInterface* mlcp;
+    if(solver == SolverType::SI)
+	{
+		//Create solver and world
+		dwSolver = new btMultiBodyConstraintSolver();
+		dynamicsWorld = new btMultiBodyDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
+	}
+	else
+	{
+		btMLCPSolverInterface* mlcp;
     
-    switch(solver)
-    {
-        case DANTZIG:
-            mlcp = new btDantzigSolver();
-            break;
+		switch(solver)
+		{
+			case SolverType::DANTZIG:
+				mlcp = new btDantzigSolver();
+				break;
             
-        case PROJ_GAUSS_SIEDEL:
-            mlcp = new btSolveProjectedGaussSeidel();
-            break;
+			case SolverType::PROJ_GAUSS_SIEDEL:
+				mlcp = new btSolveProjectedGaussSeidel();
+				break;
             
-        case LEMKE:
-            mlcp = new btLemkeSolver();
-            //((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
-            break;
-    }
-    
-    //Create solver
-    dwSolver = new ResearchConstraintSolver(mlcp);
-    dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
+			case SolverType::LEMKE:
+				mlcp = new btLemkeSolver();
+				//((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
+				break;
+		}
+		
+		//Create solver and world
+		dwSolver = new ResearchConstraintSolver(mlcp);
+		dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, (ResearchConstraintSolver*)dwSolver, dwCollisionConfig);
+	}
     
     //Basic configuration
     dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER; // | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
@@ -442,7 +463,7 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->getSolverInfo().m_erp2 = btScalar(0.75); //contact constraint error reduction
     dynamicsWorld->getSolverInfo().m_frictionERP = btScalar(0.5); //friction constraint error reduction
     dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
-    dynamicsWorld->getSolverInfo().m_sor = btScalar(1.); //not used
+    dynamicsWorld->getSolverInfo().m_sor = btScalar(1.0); //not used
     dynamicsWorld->getSolverInfo().m_maxErrorReduction = btScalar(0.); //not used
     
     //Collision
@@ -601,7 +622,7 @@ bool SimulationManager::StartSimulation()
 {
 	simulationFresh = false;
     currentTime = 0;
-    physicTime = 0;
+    physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
     
@@ -695,39 +716,59 @@ bool SimulationManager::SolveICProblem()
     //Set simulation tick
     dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true); //Pre-tick
     dynamicsWorld->setInternalTickCallback(SimulationPostTickCallback, this, false); //Post-tick
-    
     return true;
 }
 
-void SimulationManager::AdvanceSimulation(uint64_t timeInMicroseconds)
+void SimulationManager::AdvanceSimulation()
 {
     //Check if initial conditions solved
     if(!icProblemSolved)
         return;
-    
+		
     //Calculate eleapsed time
+	uint64_t timeInMicroseconds = GetTimeInMicroseconds();
 	uint64_t deltaTime;
     if(currentTime == 0)
+	{
         deltaTime = 0.0;
+		currentTime = timeInMicroseconds;
+		return;
+	}
     else if(timeInMicroseconds < currentTime)
-        deltaTime = timeInMicroseconds + (UINT64_MAX - currentTime);
+	{    
+		deltaTime = timeInMicroseconds + (UINT64_MAX - currentTime);
+		currentTime = timeInMicroseconds;
+	}
     else
+	{
         deltaTime = timeInMicroseconds - currentTime;
-    currentTime = timeInMicroseconds;
+		currentTime = timeInMicroseconds;
+	}
     
     //Step simulation
-    physicTime = GetTimeInMicroseconds();
-    dynamicsWorld->stepSimulation((btScalar)deltaTime/btScalar(1000000.0), 1000000, (btScalar)ssus/btScalar(1000000.0));
-    physicTime = GetTimeInMicroseconds() - physicTime;
-    
+    physicsTime = GetTimeInMicroseconds();
+    dynamicsWorld->stepSimulation((btScalar)deltaTime * realtimeFactor/btScalar(1000000.0), 1000000, (btScalar)ssus/btScalar(1000000.0));
+    physicsTime = GetTimeInMicroseconds() - physicsTime;
+	
+	//if(physicsTime > deltaTime)
+	{
+		btScalar factor1 = (btScalar)deltaTime/(btScalar)physicsTime;
+		btScalar factor2 = btScalar(1000000.0/60.0)/(btScalar)physicsTime;
+		realtimeFactor *=  factor1*factor2;
+		realtimeFactor = realtimeFactor < btScalar(0.05) ? btScalar(0.05) : (realtimeFactor > btScalar(1) ? btScalar(1) : realtimeFactor);
+	}
+	
     //Inform about MLCP failures
-    int numFallbacks = dwSolver->getNumFallbacks();
-    if(numFallbacks)
-    {
-        mlcpFallbacks += numFallbacks;
-        cInfo("MLCP solver failed %d times.", mlcpFallbacks);
-    }
-    dwSolver->setNumFallbacks(0);
+	if(solver != SolverType::SI)
+	{
+		int numFallbacks = ((ResearchConstraintSolver*)dwSolver)->getNumFallbacks();
+		if(numFallbacks)
+		{
+			mlcpFallbacks += numFallbacks;
+			//cInfo("MLCP solver failed %d times.", mlcpFallbacks);
+		}
+		((ResearchConstraintSolver*)dwSolver)->setNumFallbacks(0);
+	}
 }
 
 void SimulationManager::UpdateDrawingQueue()
@@ -893,7 +934,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
 void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    ResearchDynamicsWorld* researchWorld = (ResearchDynamicsWorld*)world;
+    btMultiBodyDynamicsWorld* researchWorld = (btMultiBodyDynamicsWorld*)world;
     
     //Clear all forces to ensure that no summing occurs
     researchWorld->clearForces(); //Includes clearing of multibody forces!
@@ -998,30 +1039,10 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
 void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    ResearchDynamicsWorld* researchWorld = (ResearchDynamicsWorld*)world;
-    
-    //Update acceleration data
-    for(unsigned int i = 0 ; i < simManager->entities.size(); ++i)
-    {
-        Entity* ent = simManager->entities[i];
-            
-        if(ent->getType() == ENTITY_SOLID)
-        {
-            SolidEntity* solid = (SolidEntity*)ent;
-            solid->UpdateAcceleration();
-        }
-    }
-    
+    btMultiBodyDynamicsWorld* mbDynamicsWorld = (btMultiBodyDynamicsWorld*)world;
+    	
     //Clear all forces to ensure that no summing occurs
-    researchWorld->clearForces(); //Includes clearing of multibody forces!
-    
-    //loop through all sensors -> update measurements
-    for(unsigned int i = 0; i < simManager->sensors.size(); ++i)
-        simManager->sensors[i]->Update(timeStep);
-    
-    //loop through all controllers
-    for(unsigned int i = 0; i < simManager->controllers.size(); ++i)
-        simManager->controllers[i]->Update(timeStep);
+    mbDynamicsWorld->clearForces(); //Includes clearing of multibody forces!
     
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
     for(unsigned int i = 0; i < simManager->actuators.size(); ++i)
@@ -1044,7 +1065,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
         else if(ent->getType() == ENTITY_FEATHERSTONE)
         {
             FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
-            multibody->ApplyGravity(researchWorld->getGravity());
+            multibody->ApplyGravity(mbDynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
         else if(ent->getType() == ENTITY_CABLE)
@@ -1055,10 +1076,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
         else if(ent->getType() == ENTITY_SYSTEM)
         {
             SystemEntity* system = (SystemEntity*)ent;
-            system->UpdateSensors(timeStep);
-            system->UpdateControllers(timeStep);
             system->UpdateActuators(timeStep);
-            system->ApplyGravity(researchWorld->getGravity());
+            system->ApplyGravity(mbDynamicsWorld->getGravity());
+			system->ApplyDamping();
         }
     }
     
@@ -1081,9 +1101,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
                 if(co1 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(world, co2);
+                    simManager->ocean->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co2);
                 else if(co2 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(world, co1);
+                    simManager->ocean->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co1);
             }
         }
     }
@@ -1093,7 +1113,45 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
 void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
+	
+	//Update acceleration data
+    for(unsigned int i = 0 ; i < simManager->entities.size(); ++i)
+    {
+        Entity* ent = simManager->entities[i];
+            
+        if(ent->getType() == ENTITY_SOLID)
+        {
+            SolidEntity* solid = (SolidEntity*)ent;
+            solid->UpdateAcceleration();
+        }
+		else if(ent->getType() == ENTITY_SYSTEM)
+		{
+			SystemEntity* sys = (SystemEntity*)ent;
+			sys->UpdateAcceleration(timeStep);
+		}
+    }
+	
+	//loop through all sensors -> update measurements
+    for(unsigned int i = 0; i < simManager->sensors.size(); ++i)
+        simManager->sensors[i]->Update(timeStep);
     
+    //loop through all controllers
+    for(unsigned int i = 0; i < simManager->controllers.size(); ++i)
+        simManager->controllers[i]->Update(timeStep);
+    
+	//loop through all entities that may need special actions
+    for(unsigned int i = 0; i < simManager->entities.size(); ++i)
+    {
+        Entity* ent = simManager->entities[i];
+        
+        if(ent->getType() == ENTITY_SYSTEM)
+        {
+            SystemEntity* system = (SystemEntity*)ent;
+            system->UpdateSensors(timeStep);
+            system->UpdateControllers(timeStep);
+        }
+    }
+	
     //Update simulation time
     simManager->simulationTime += timeStep;
 }

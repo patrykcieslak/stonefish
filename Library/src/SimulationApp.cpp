@@ -18,7 +18,6 @@ SimulationApp::SimulationApp(std::string name, int width, int height, Simulation
     finished = false;
     running = false;
     simulation = sim;
-    simSpeedFactor = 1;
     lastPicked = NULL;
     loading = true;
     displayHUD = true;
@@ -42,14 +41,6 @@ SimulationApp::~SimulationApp()
 	}
 }
 
-void SimulationApp::setSimulationSpeed(btScalar factor)
-{
-    if(factor > 0.f)
-        simSpeedFactor = factor;
-    else
-        simSpeedFactor = 1;
-}
-
 void SimulationApp::ShowHUD()
 {
     displayHUD = true;
@@ -68,11 +59,6 @@ void SimulationApp::ShowConsole()
 void SimulationApp::HideConsole()
 {
     displayConsole = false;
-}
-
-btScalar SimulationApp::getSimulationSpeed()
-{
-    return simSpeedFactor;
 }
 
 SimulationManager* SimulationApp::getSimulationManager()
@@ -461,7 +447,7 @@ void SimulationApp::AppLoop()
     //Simulation
     if(running)
     {
-        simulation->AdvanceSimulation(GetTimeInMicroseconds()*simSpeedFactor);
+        simulation->AdvanceSimulation();
         physicsTime = simulation->getPhysicsTimeInMiliseconds();
 	}
     
@@ -519,10 +505,10 @@ void SimulationApp::DoHUD()
 	sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());
     IMGUI::getInstance()->DoLabel(10, getWindowHeight() - 20.f, buffer);
     
-    sprintf(buffer, "Physics time: %1.1lf%% (%1.2lf ms)", 100.f*getPhysicsTime()/(16.666f-getDrawingTime()), getPhysicsTime());
+    sprintf(buffer, "Physics time: %1.2lf ms", getPhysicsTime());
     IMGUI::getInstance()->DoLabel(170, getWindowHeight() - 20.f, buffer);
     
-    sprintf(buffer, "Simulation speed: %1.2fx", getSimulationSpeed());
+    sprintf(buffer, "Realtime: %1.2fx", getSimulationManager()->getRealtimeFactor());
     IMGUI::getInstance()->DoLabel(360, getWindowHeight() - 20.f, buffer);
     
     sprintf(buffer, "Simulation time: %1.2f s", getSimulationManager()->getSimulationTime());

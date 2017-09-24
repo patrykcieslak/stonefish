@@ -16,7 +16,8 @@ class RevoluteJoint : public Joint
 public:
     RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
     RevoluteJoint(std::string uniqueName, SolidEntity* solid, const btVector3& pivot, const btVector3& axis);
-    
+    RevoluteJoint(std::string uniqueName, btRigidBody* bodyA, btRigidBody* bodyB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
+	
     void ApplyTorque(btScalar T);
     void ApplyDamping();
     bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);

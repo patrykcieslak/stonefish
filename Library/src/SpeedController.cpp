@@ -1,14 +1,14 @@
 //
-//  ServoController.cpp
+//  SpeedController.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 16/09/2017.
+//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "ServoController.h"
+#include "SpeedController.h"
 
-ServoController::ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
+SpeedController::SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
     motor = m;
     encoder = e;
@@ -20,16 +20,16 @@ ServoController::ServoController(std::string uniqueName, Motor* m, RotaryEncoder
     Reset();
 }
 
-ServoController::~ServoController()
+SpeedController::~SpeedController()
 {
 }
 
-void ServoController::SetPosition(btScalar pos)
+void SpeedController::SetSpeed(btScalar speed)
 {
-    setReferenceValue(0, UnitSystem::SetAngle(pos));
+    setReferenceValue(0, UnitSystem::SetAngularVelocity(speed));
 }
 
-void ServoController::SetGains(btScalar P, btScalar I, btScalar D, btScalar ILimit)
+void SpeedController::SetGains(btScalar P, btScalar I, btScalar D, btScalar ILimit)
 {
     gainP = P;
     gainI = I;
@@ -37,14 +37,14 @@ void ServoController::SetGains(btScalar P, btScalar I, btScalar D, btScalar ILim
 	limitI = ILimit;
 }
 
-void ServoController::Reset()
+void SpeedController::Reset()
 {
     setReferenceValue(0, btScalar(0.));
     lastError = btScalar(0.);
     integratedError = btScalar(0.);
 }
 
-void ServoController::Tick(btScalar dt)
+void SpeedController::Tick(btScalar dt)
 {
     //get desired servo position
     std::vector<btScalar> ref = getReferenceValues();
@@ -53,7 +53,7 @@ void ServoController::Tick(btScalar dt)
     Sample encSample = encoder->getLastSample();
     
     //calculate error
-    btScalar error = ref[0] - encSample.getValue(0);
+    btScalar error = ref[0] - encSample.getValue(1);
     
 	//integrate and limit
 	integratedError += error * dt;
@@ -66,8 +66,6 @@ void ServoController::Tick(btScalar dt)
     btScalar control = gainP * error + gainI * integratedError + gainD * derivativeError;
     control = control > maxCtrl ? maxCtrl : (control < -maxCtrl ? -maxCtrl : control);
 	output = control;
-	
-	//std::cout << error << std::endl;
 	
     motor->setIntensity(output);
 }

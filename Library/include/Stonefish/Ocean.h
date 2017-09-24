@@ -13,6 +13,16 @@
 #include "MaterialManager.h"
 #include "OpenGLOcean.h"
 
+typedef enum {TRIFOLD_SYMMETRY, FULLY_COUPLED, GEOMETRY_BASED} HydrodynamicsType;
+
+typedef struct
+{
+	HydrodynamicsType algorithm;
+	bool addedMassForces;
+	bool dampingForces;
+	bool reallisticBuoyancy;
+} HydrodynamicsSettings;
+
 //Abstract class
 class Ocean : public ForcefieldEntity
 {
@@ -21,7 +31,7 @@ public:
     virtual ~Ocean();
     
     //Forces
-    virtual void ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co);
+    virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co);
     virtual btVector3 GetFluidVelocity(const btVector3& point) const;
     void GetSurface(btVector3& normal, btVector3& position) const;
     void GetSurfaceEquation(double* plane4) const;

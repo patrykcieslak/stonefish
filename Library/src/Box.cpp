@@ -14,7 +14,7 @@ Box::Box(std::string uniqueName, const btVector3& dimensions, Material m, int lo
     
     //Calculate physical properties
     volume = halfExtents.x()*halfExtents.y()*halfExtents.z()*btScalar(8);
-    dragCoeff = btVector3(halfExtents.y()*halfExtents.z()*btScalar(4*1.05), halfExtents.x()*halfExtents.z()*btScalar(4*1.05), halfExtents.y()*halfExtents.x()*btScalar(4*1.05));
+    //dragCoeff = btVector3(halfExtents.y()*halfExtents.z()*btScalar(4*1.05), halfExtents.x()*halfExtents.z()*btScalar(4*1.05), halfExtents.y()*halfExtents.x()*btScalar(4*1.05));
     mass = volume * mat.density;
     Ipri = btVector3(btScalar(1)/btScalar(12)*mass*((halfExtents.y()*btScalar(2))*(halfExtents.y()*btScalar(2))+(halfExtents.z()*btScalar(2))*(halfExtents.z()*btScalar(2))),
                      btScalar(1)/btScalar(12)*mass*((halfExtents.x()*btScalar(2))*(halfExtents.x()*btScalar(2))+(halfExtents.z()*btScalar(2))*(halfExtents.z()*btScalar(2))),

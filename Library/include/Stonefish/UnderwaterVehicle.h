@@ -15,52 +15,48 @@
 #include "Thruster.h"
 #include "Manipulator.h"
 
-typedef struct
-{
-    SolidEntity* solid;
-    btTransform position;
-    bool isExternal;
-} VehiclePart;
-
 class UnderwaterVehicle : public SystemEntity
 {
 public:
-    UnderwaterVehicle(std::string uniqueName);
+    UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid, const btTransform& worldTrans);
     virtual ~UnderwaterVehicle();
-    
-    void AddInternalPart(SolidEntity* solid, const btTransform& position);
-    void AddExternalPart(SolidEntity* solid, const btTransform& position);
     
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
 	virtual void GetAABB(btVector3& min, btVector3& max);
-    virtual void UpdateAcceleration();
+    virtual void UpdateAcceleration(btScalar dt);
     virtual void UpdateSensors(btScalar dt);
     virtual void UpdateControllers(btScalar dt);
     virtual void UpdateActuators(btScalar dt);
     virtual void ApplyGravity(const btVector3& g);
-    virtual void ApplyFluidForces(Ocean* fluid);
+	virtual void ApplyDamping();
     
     virtual btTransform getTransform() const;
+	FeatherstoneEntity* getVehicleBody();
     
     virtual std::vector<Renderable> Render();
-    void BuildGraphicalObjects();
     
 private:
-    std::vector<VehiclePart> bodyParts; //Parts of the vehicle body
-    std::vector<SimpleSensor*> sensors;
+    //Subsystems
+	std::vector<SimpleSensor*> sensors;
     std::vector<Thruster*> thrusters; // + FINS?
     std::vector<Manipulator*> manipulators;
     
-    btRigidBody* vehicleBody;
-    btTransform localTransform; //...of vehicle body
-    btScalar vehicleBodyMass;     //Mass of vehicle body (internal + external parts)
+	//Vehicle body
+    FeatherstoneEntity* vehicleBody;
+	btScalar vehicleBodyMass;     //Mass of vehicle body (internal + external parts)
     btVector3 vehicleBodyInertia; //Inertia of vehicle body (internal + external parts)
+	btTransform localTransform; //...of vehicle body (CoG)
+    btMatrixXu aMass;
+	btMatrixXu dCoeff;
+	btVector3 CoB;
+	
+	//Motion
+	btVector3 lastLinearVel;
+	btVector3 lastAngularVel;
     btVector3 linearAcc;
     btVector3 angularAcc;
     
-    GLint internalList;
-    GLint externalList;
-    GLint collisionList;
+	//Rendering
     bool showInternals;
 };
 

@@ -83,29 +83,38 @@ Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScal
     
     btMatrix3x3 I = btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
     
-    //5.Calculate principal moments of inertia
-    btScalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
-    btScalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
-    btScalar U = btSqrt(T*T-btScalar(3)*II)/btScalar(3);
-    btScalar theta = btAcos((-btScalar(2)*T*T*T + btScalar(9)*T*II - btScalar(27)*I.determinant())/(btScalar(54)*U*U*U));
-    btScalar A = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3));
-    btScalar B = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3) - btScalar(2)*M_PI/btScalar(3));
-    btScalar C = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3) + btScalar(2)*M_PI/btScalar(3));
-    Ipri = btVector3(A, B, C);
+	//5. Find primary moments of inertia
+	Ipri = btVector3(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
+	
+	//Check if inertia matrix is not diagonal
+	if(!(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
+	     && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
+	     && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY())))
+	{
+		//5.1. Calculate principal moments of inertia
+		btScalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
+		btScalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
+		btScalar U = btSqrt(T*T-btScalar(3)*II)/btScalar(3);
+		btScalar theta = btAcos((-btScalar(2)*T*T*T + btScalar(9)*T*II - btScalar(27)*I.determinant())/(btScalar(54)*U*U*U));
+		btScalar A = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3));
+		btScalar B = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3) - btScalar(2)*M_PI/btScalar(3));
+		btScalar C = T/btScalar(3) - btScalar(2)*U*btCos(theta/btScalar(3) + btScalar(2)*M_PI/btScalar(3));
+		Ipri = btVector3(A, B, C);
     
-    //6. Calculate principal axes of inertia
-    btMatrix3x3 L;
-    btVector3 axis1,axis2,axis3;
-    axis1 = findInertiaAxis(I, A);
-    axis2 = findInertiaAxis(I, B);
-    axis3 = axis1.cross(axis2);
-    axis2 = axis3.cross(axis1);
+		//5.2. Calculate principal axes of inertia
+		btMatrix3x3 L;
+		btVector3 axis1,axis2,axis3;
+		axis1 = findInertiaAxis(I, A);
+		axis2 = findInertiaAxis(I, B);
+		axis3 = axis1.cross(axis2);
+		axis2 = axis3.cross(axis1);
     
-    //6.Rotate body so that principal axes are parallel to (x,y,z) system
-    btMatrix3x3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-    localTransform.setBasis(rotMat);
-    
-    //7.Calculate AABB
+		//5.3. Rotate body so that principal axes are parallel to (x,y,z) system
+		btMatrix3x3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
+		localTransform.setBasis(rotMat);
+	}
+ 
+    //6.Calculate AABB
     OpenGLContent::AABB(mesh, aabb[0], aabb[1]);
     mass = volume*mat.density;
 }
@@ -143,8 +152,10 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
 		btVector3 v(mesh->vertices[i].pos.x, mesh->vertices[i].pos.y, mesh->vertices[i].pos.z);
         convex->addPoint(v);
 	}
-    
-    return convex;
+	
+	convex->optimizeConvexHull();
+    convex->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
+	return convex;
 }
 
 ////////// OLD ROUTINES /////////

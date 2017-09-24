@@ -21,7 +21,6 @@
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="src/Actuator.cpp"/>
-      <File Name="src/Thruster.cpp"/>
       <File Name="src/Motor.cpp"/>
       <File Name="src/DCMotor.cpp"/>
       <File Name="src/Light.cpp"/>
@@ -37,6 +36,7 @@
       <File Name="src/SignalMux.cpp"/>
       <File Name="src/Trajectory.cpp"/>
       <File Name="src/ServoController.cpp"/>
+      <File Name="src/SpeedController.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="display">
       <File Name="src/OpenGLDebugDrawer.cpp"/>
@@ -57,9 +57,9 @@
         <File Name="src/OpenGLView.cpp"/>
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
-      <File Name="src/OpenGLPipeline.cpp"/>
       <File Name="src/OpenGLContent.cpp"/>
       <File Name="src/OpenGLOcean.cpp"/>
+      <File Name="src/OpenGLPipeline.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -74,6 +74,7 @@
         <File Name="src/Torus.cpp"/>
         <File Name="src/Sphere.cpp"/>
         <File Name="src/Polyhedron.cpp"/>
+        <File Name="src/Compound.cpp"/>
       </VirtualDirectory>
       <File Name="src/CableEntity.cpp"/>
       <VirtualDirectory Name="static">
@@ -86,8 +87,9 @@
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="src/Gripper.cpp"/>
-        <File Name="src/Manipulator.cpp"/>
         <File Name="src/UnderwaterVehicle.cpp"/>
+        <File Name="src/Manipulator.cpp"/>
+        <File Name="src/Thruster.cpp"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
@@ -140,6 +142,7 @@
         <File Name="include/Stonefish/Sphere.h"/>
         <File Name="include/Stonefish/Torus.h"/>
         <File Name="include/Stonefish/Polyhedron.h"/>
+        <File Name="include/Stonefish/Compound.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="static">
         <File Name="include/Stonefish/Plane.h"/>
@@ -153,6 +156,7 @@
         <File Name="include/Stonefish/Gripper.h"/>
         <File Name="include/Stonefish/Manipulator.h"/>
         <File Name="include/Stonefish/UnderwaterVehicle.h"/>
+        <File Name="include/Stonefish/Thruster.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/FeatherstoneEntity.h"/>
     </VirtualDirectory>
@@ -215,7 +219,6 @@
       <File Name="include/Stonefish/Actuator.h"/>
       <File Name="include/Stonefish/DCMotor.h"/>
       <File Name="include/Stonefish/Motor.h"/>
-      <File Name="include/Stonefish/Thruster.h"/>
       <File Name="include/Stonefish/Light.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
@@ -229,6 +232,7 @@
       <File Name="include/Stonefish/SignalGenerator.h"/>
       <File Name="include/Stonefish/SignalMux.h"/>
       <File Name="include/Stonefish/Trajectory.h"/>
+      <File Name="include/Stonefish/SpeedController.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
       <File Name="include/Stonefish/ScientificFileUtil.h"/>

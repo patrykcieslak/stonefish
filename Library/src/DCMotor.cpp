@@ -103,25 +103,28 @@ void DCMotor::Update(btScalar dt)
     if(gearEnabled)
     {
         torque = (I * Kt - aVelocity * gearRatio * B) * gearRatio * gearEff;
-    
         btScalar VoverL = (V - aVelocity * gearRatio * Ke * 9.5493 - I * R)/L;
-        //I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
-        I += VoverL * dt;
-        lastVoverL = VoverL;
+		I += VoverL * dt;
+	
+		//Hack to avoid system blowup when the motor starts (shortcut)
+		if((btFabs(I) > btFabs(V/R)) && (I*V > btScalar(0)))
+			I = V/R;
         
-        //I = (V - aVelocity * Ke * 9.5493)/R;
-        //torque = (I * Km - aVelocity * B) * gearRatio * gearEff;
-
+		//I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+        //lastVoverL = VoverL;
     }
     else
     {
-        btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
-        I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
-        lastVoverL = VoverL;
-        torque = I * Kt - aVelocity * B;
-        
-        //I = (V - aVelocity * Ke * 9.5493)/R;
-        //torque = I * Km - aVelocity * B;
+        torque = I * Kt - aVelocity * gearRatio * B;
+		btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
+		I += VoverL * dt;
+		
+		//Hack to avoid system blowup when the motor starts (shortcut)
+		if((btFabs(I) > btFabs(V/R)) && (I*V > btScalar(0)))
+			I = V/R;
+			
+	    //I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+        //lastVoverL = VoverL;
     }
     
 	//Drive the joint

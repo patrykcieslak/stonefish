@@ -10,7 +10,6 @@
 #define __Stonefish_SystemEntity__
 
 #include "Entity.h"
-#include "Ocean.h"
 
 class SystemEntity : public Entity
 {
@@ -24,16 +23,15 @@ public:
 
     //Pure virtual methods
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform) = 0;
-	virtual void GetAABB(btVector3& min, btVector3& max) = 0;
-    virtual void UpdateAcceleration() = 0;
+	virtual void UpdateAcceleration(btScalar dt) = 0;
     virtual void UpdateSensors(btScalar dt) = 0;     //Update sensors in the system and its subsystems
     virtual void UpdateControllers(btScalar dt) = 0; //Update controllers in the system and its subsystems
     virtual void UpdateActuators(btScalar dt) = 0;   //Update actuators in the system and its subsystems
     virtual void ApplyGravity(const btVector3& g) = 0;
-    virtual void ApplyFluidForces(Ocean* fluid) = 0;
+	virtual void ApplyDamping() = 0;
     
     virtual btTransform getTransform() const = 0;
-    
+	virtual void GetAABB(btVector3& min, btVector3& max) = 0;
     virtual std::vector<Renderable> Render() = 0;
 };
 
