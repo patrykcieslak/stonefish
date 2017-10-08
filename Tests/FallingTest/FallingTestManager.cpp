@@ -64,12 +64,12 @@ void FallingTestManager::BuildScenario()
 	UnderwaterVehicle* vehicle = new UnderwaterVehicle("AUV", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
 	AddSystemEntity(vehicle, btTransform::getIdentity());
 	
-	Torus* duct = new Torus("Duct", 0.15,0.02, getMaterialManager()->getMaterial("Steel"), green); 
+	/*Torus* duct = new Torus("Duct", 0.15,0.02, getMaterialManager()->getMaterial("Steel"), green); 
 	Box* prop = new Box("Propeller", btVector3(0.05,0.2,0.01), getMaterialManager()->getMaterial("Steel"), green);
 	Thruster* th = new Thruster("Thruster", vehicle, duct, prop, btTransform(btQuaternion::getIdentity(), btVector3(0.0, 0.0, 2.35)), 0.5, 1.0);
 	AddSystemEntity(th, btTransform::getIdentity());
 	
-	th->SetDesiredSpeed(5000);
+	th->SetDesiredSpeed(5000);*/
 	
     Box* link1A = new Box("Link1A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
 	Box* link2A = new Box("Link2A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);

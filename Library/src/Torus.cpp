@@ -24,6 +24,7 @@ Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMi
 	Ipri = btVector3(ivert, idiam, ivert);
 	
 	mesh = OpenGLContent::BuildTorus(majorRadius, minorRadius);
+	ComputeEquivEllipsoid();
 }
 
 Torus::~Torus()

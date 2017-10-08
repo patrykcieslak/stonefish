@@ -341,6 +341,7 @@
         <IncludePath Value="3rdparty"/>
         <IncludePath Value="include/Stonefish"/>
         <IncludePath Value="/usr/include/freetype2"/>
+        <IncludePath Value="/usr/include/eigen3"/>
         <IncludePath Value="/usr/local/include/bullet"/>
         <IncludePath Value="/usr/local/include/glm"/>
         <Preprocessor Value="BT_EULER_DEFAULT_ZYX"/>

@@ -24,7 +24,7 @@
 #include "BeltJoint.h"
 #include "DCMotor.h"
 
-JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(MMKS, true, stepsPerSecond, DANTZIG, STANDARD)
+JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MMKS, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 
@@ -39,15 +39,11 @@ void JointsTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.5, 0.2);
     
     ///////LOOKS///////////
-    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f, 1.5f);
-    int orange = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f, 1.5f);
-    int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f, 1.5f);
+    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f);
+    int orange = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f);
+    int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f);
     
     ////////OBJECTS
-    Plane* floor = new Plane("Floor", 1000000.f, getMaterialManager()->getMaterial("Steel"), btTransform(btQuaternion(0,0,0), btVector3(0,0,0.f)), grey);
-    floor->setRenderable(true);
-    AddEntity(floor);
-    
     //----Fixed Joint----
     Box* box = new Box("Box", btVector3(100.0,100.0,100.0), getMaterialManager()->getMaterial("Plastic"), green);
     AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,1000.0)));
@@ -123,10 +119,4 @@ void JointsTestManager::BuildScenario()
     DCMotor* motor = new DCMotor("DCMotor", revo, 0.212, 0.0774e-3, 1.f/408.f, 23.4e-3, 0.0000055f);
     AddActuator(motor);
     motor->setVoltage(0.1f);
-    
-    //////CAMERA & LIGHT//////
-    OpenGLTrackball* trackb = new OpenGLTrackball(btVector3(0, 200.f, 500.f), 2000.f, btVector3(0,0,1.f), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 60.f, 100000.f, true);
-    trackb->Rotate(btQuaternion(M_PI+M_PI_4, 0.0, 0.0));
-    trackb->Activate();
-    AddView(trackb);
 }

@@ -117,6 +117,9 @@ Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScal
     //6.Calculate AABB
     OpenGLContent::AABB(mesh, aabb[0], aabb[1]);
     mass = volume*mat.density;
+	
+	//7.Calculate equivalent ellipsoid for hydrodynamic force computation
+	ComputeEquivEllipsoid();
 }
 
 Polyhedron::~Polyhedron(void)

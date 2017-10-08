@@ -25,8 +25,9 @@
         <IncludePath Value="."/>
         <IncludePath Value="../../Library/include/Stonefish"/>
         <IncludePath Value="../../Library/3rdparty"/>
-        <IncludePath Value="/usr/include/glm"/>
+        <IncludePath Value="/usr/include/eigen3"/>
         <IncludePath Value="/usr/include/freetype2"/>
+        <IncludePath Value="/usr/local/include/glm"/>
         <IncludePath Value="/usr/local/include/bullet"/>
         <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>
         <Preprocessor Value="BT_EULER_DEFAULT_ZYX"/>

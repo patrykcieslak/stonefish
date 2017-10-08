@@ -72,7 +72,7 @@ void UnderwaterTestManager::BuildScenario()
 	manipA->AddRotLinkDH(link3A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
 	AddSystemEntity(manipA, btTransform(btQuaternion(M_PI_2, 0, M_PI_2), btVector3(0.1,0.75,2.5)));
 	
-	Sphere* duct = new Sphere("Duct", 0.05, getMaterialManager()->getMaterial("Plastic"), green); 
+	/*Sphere* duct = new Sphere("Duct", 0.05, getMaterialManager()->getMaterial("Plastic"), green); 
 	Box* prop = new Box("Propeller", btVector3(0.05,0.2,0.01), getMaterialManager()->getMaterial("Plastic"), green);
 	Thruster* th = new Thruster("Thruster", vehicle, duct, prop, 0.2, 0.2);
 	AddSystemEntity(th, btTransform(btQuaternion::getIdentity(), btVector3(0.0, 0.0, 1.65)));
@@ -85,7 +85,7 @@ void UnderwaterTestManager::BuildScenario()
 	AddSystemEntity(th2, btTransform(btQuaternion(M_PI_2,0,0), btVector3(0.0, -0.6, 1.65)));
 	
 	th2->SetDesiredSpeed(10);
-	
+	*/
     //Setup model paths
     /*std::string path = GetDataPath() + "sphere_R=1.obj";
 	

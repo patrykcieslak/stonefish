@@ -10,7 +10,6 @@
 #define __Stonefish_SolidEntity__
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
-#include <LinearMath/btMatrixX.h>
 #include "Entity.h"
 #include "Ocean.h"
 #include "MaterialManager.h"
@@ -50,7 +49,7 @@ public:
 	
 	//Rigid body
 	void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
-	void SetHydrodynamicProperties(const btMatrixXu& addedMass, const btMatrixXu& dampingCoefficients, const btTransform& cobTransform);
+	void SetHydrodynamicProperties(const eigMatrix6x6& addedMass, const eigMatrix6x6& damping, const btTransform& cobTransform);
 	void setComputeHydrodynamics(bool flag);
 	
 	btRigidBody* getRigidBody();
@@ -77,6 +76,7 @@ public:
     bool isCoordSysVisible();
 	
 protected:
+	void ComputeEquivEllipsoid();
     virtual void BuildRigidBody();
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
     
@@ -93,8 +93,8 @@ protected:
 	btVector3 Ipri; //Principal moments of inertia
     btTransform localTransform; //Transform between graphical center and calculated mass center
 	
-    btMatrixXu aMass; //Hydrodynamic added mass matrix (6x6)
-	btMatrixXu dCoeff; //Hydrodynamic damping coefficients (6x6)
+    eigMatrix6x6 aMass; //Hydrodynamic added mass matrix
+	eigMatrix6x6 dCS; //Hydrodynamic damping coefficients multiplied by cross sections
     btVector3 CoB; //Center of Buoyancy (in CoG frame)
 	bool computeHydro;
 	

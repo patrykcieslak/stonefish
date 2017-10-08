@@ -19,6 +19,17 @@
 #include <btBulletCollisionCommon.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 
+//Eigen matrix library
+#include <Eigen/Dense>
+
+#ifdef BT_USE_DOUBLE_PRECISION
+	#define eigMatrix 	 Eigen::MatrixXd
+	#define eigMatrix6x6 Eigen::Matrix<double, 6, 6>
+#else
+	#define eigMatrix 	 Eigen::MatrixXf
+	#define eigMatrix6x6 Eigen::Matrix<float, 6, 6>
+#endif
+
 //Font
 #ifdef __linux__
     #define FONT_NAME "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf"

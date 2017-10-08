@@ -46,8 +46,8 @@ private:
 	btScalar vehicleBodyMass;     //Mass of vehicle body (internal + external parts)
     btVector3 vehicleBodyInertia; //Inertia of vehicle body (internal + external parts)
 	btTransform localTransform; //...of vehicle body (CoG)
-    btMatrixXu aMass;
-	btMatrixXu dCoeff;
+    eigMatrix6x6 aMass;
+	eigMatrix6x6 dCS;
 	btVector3 CoB;
 	
 	//Motion

@@ -22,6 +22,7 @@ Cylinder::Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cyl
                      btScalar(0.25)*mass*radius*radius + btScalar(1)/btScalar(12)*mass*(halfHeight*btScalar(2))*(halfHeight*btScalar(2)));
     
 	mesh = OpenGLContent::BuildCylinder(radius, halfHeight*(GLfloat)2);
+	ComputeEquivEllipsoid();
 }
 
 Cylinder::~Cylinder()

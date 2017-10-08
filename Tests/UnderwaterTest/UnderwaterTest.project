@@ -29,6 +29,7 @@
         <IncludePath Value="../../Library/include/Stonefish"/>
         <IncludePath Value="../../Library/3rdparty"/>
         <IncludePath Value="/usr/include/freetype2"/>
+        <IncludePath Value="/usr/include/eigen3"/>
         <IncludePath Value="/usr/local/include/bullet"/>
         <IncludePath Value="/usr/local/include/glm"/>
         <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>

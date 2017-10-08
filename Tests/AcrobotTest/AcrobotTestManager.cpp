@@ -27,7 +27,7 @@
 #include "Current.h"
 #include "FeatherstoneEntity.h"
 
-AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, MKS, stepsPerSecond, DANTZIG, STANDARD)
+AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG, STANDARD)
 {
 }
 

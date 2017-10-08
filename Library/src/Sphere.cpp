@@ -28,6 +28,7 @@ Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lo
                      btScalar(2)/btScalar(5)*mass*radius*radius);
 					 
 	mesh = OpenGLContent::BuildSphere(radius);
+	ComputeEquivEllipsoid();
 }
 
 Sphere::~Sphere()
