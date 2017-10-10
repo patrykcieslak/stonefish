@@ -48,7 +48,9 @@ typedef struct
 	int objectId;
     bool dispCoordSys;
 	glm::mat4 model;
-	glm::mat4 csModel;
+	glm::mat4 csModel; //coordinate system (unified size)
+    glm::mat4 eModel;  //fluid dynamics ellipse (sized by radii)
+    glm::vec3 eRadii;
 } Renderable;
 
 class SimulationManager;
@@ -66,7 +68,7 @@ public:
     void DrawObjects();
    
     void setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion);
-    void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras);
+    void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics);
     void setDebugSimulation(bool enabled);
     bool isFluidRendered();
     bool isSAORendered();
@@ -91,6 +93,7 @@ private:
     bool showSensors;
 	bool showLightMeshes;
     bool showCameraFrustums;
+    bool showFluidDynamics;
     
     GLint windowW;
     GLint windowH;

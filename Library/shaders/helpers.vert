@@ -3,7 +3,7 @@
 layout(location = 0) in vec3 vertex;
 layout(location = 1) in vec4 vcolor;
 uniform mat4 MVP;
-uniform float scale;
+uniform vec3 scale;
 out vec4 color;
 
 void main()

@@ -35,7 +35,7 @@ void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setGravity(9.81);
     setICSolverParams(false);

@@ -24,6 +24,7 @@
       <File Name="src/Motor.cpp"/>
       <File Name="src/DCMotor.cpp"/>
       <File Name="src/Light.cpp"/>
+      <File Name="src/Thruster.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
       <File Name="src/Controller.cpp"/>
@@ -89,7 +90,7 @@
         <File Name="src/Gripper.cpp"/>
         <File Name="src/UnderwaterVehicle.cpp"/>
         <File Name="src/Manipulator.cpp"/>
-        <File Name="src/Thruster.cpp"/>
+        <File Name="src/DynamicThruster.cpp"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
@@ -156,7 +157,7 @@
         <File Name="include/Stonefish/Gripper.h"/>
         <File Name="include/Stonefish/Manipulator.h"/>
         <File Name="include/Stonefish/UnderwaterVehicle.h"/>
-        <File Name="include/Stonefish/Thruster.h"/>
+        <File Name="include/Stonefish/DynamicThruster.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/FeatherstoneEntity.h"/>
     </VirtualDirectory>
@@ -220,6 +221,7 @@
       <File Name="include/Stonefish/DCMotor.h"/>
       <File Name="include/Stonefish/Motor.h"/>
       <File Name="include/Stonefish/Light.h"/>
+      <File Name="include/Stonefish/Thruster.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
       <File Name="include/Stonefish/Controller.h"/>
@@ -363,7 +365,7 @@
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Debug" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
@@ -371,6 +373,7 @@
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName).so" IntermediateDirectory="./build/Debug" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -395,7 +398,7 @@
         <CustomPostBuild/>
         <CustomPreBuild/>
       </AdditionalRules>
-      <Completion EnableCpp11="no" EnableCpp14="no">
+      <Completion EnableCpp11="yes" EnableCpp14="yes">
         <ClangCmpFlagsC/>
         <ClangCmpFlags/>
         <ClangPP/>
@@ -407,6 +410,7 @@
       <Linker Options="-O2" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName).so" IntermediateDirectory="./build/Release" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>

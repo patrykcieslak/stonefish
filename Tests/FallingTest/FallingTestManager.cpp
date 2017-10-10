@@ -24,7 +24,7 @@
 #include "Light.h"
 #include "Camera.h"
 #include "UnderwaterVehicle.h"
-#include "Thruster.h"
+#include "DynamicThruster.h"
 #include "Compound.h"
 
 FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG, STANDARD)

@@ -2,9 +2,10 @@
 <CodeLite_Workspace Name="Stonefish" Database="" Version="10.0.0" SWTLW="Yes">
   <WorkspaceParserMacros/>
   <WorkspaceParserPaths>
-    <Include Path="/usr/local/include"/>
-    <Include Path="/usr/include"/>
-    <Include Path="/usr/include/bullet"/>
+    <Include Path="/usr/include/eigen3/"/>
+    <Include Path="/usr/local/include/bullet/"/>
+    <Include Path="/usr/include/"/>
+    <Include Path="/usr/local/include/"/>
   </WorkspaceParserPaths>
   <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
   <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>

@@ -64,11 +64,6 @@ void Motor::setIntensity(btScalar value)
     torque = value;
 }
 
-btVector3 Motor::Render()
-{
-    return btVector3(0.f,0.f,0.f);
-}
-
 void Motor::Update(btScalar dt)
 {
     //Drive the joint

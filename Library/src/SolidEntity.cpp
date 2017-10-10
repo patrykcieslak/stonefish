@@ -22,6 +22,8 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Enti
     //dragCoeff = btVector3(0,0,0);
     CoB = btVector3(0,0,0);
     localTransform = btTransform::getIdentity(); //CoG = (0,0,0)
+    ellipsoidR = btVector3(0,0,0);
+    ellipsoidTransform = btTransform::getIdentity();
 	computeHydro = true;
     	
     linearAcc = btVector3(0,0,0);
@@ -139,6 +141,8 @@ std::vector<Renderable> SolidEntity::Render()
 		item.dispCoordSys = dispCoordSys;
 		item.model = glMatrixFromBtTransform(oTrans);
 		item.csModel = glMatrixFromBtTransform(getTransform());
+        item.eModel = glMatrixFromBtTransform(oTrans * ellipsoidTransform);
+        item.eRadii = glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]);
         items.push_back(item);
 	}
 	
@@ -286,29 +290,34 @@ Material SolidEntity::getMaterial()
     return mat;
 }
 
-void SolidEntity::BuildGraphicalObject()
+std::vector<Vertex>* SolidEntity::getMeshVertices()
 {
-	if(mesh == NULL)
-		return;
-		
-	objectId = OpenGLContent::getInstance()->BuildObject(mesh);	
+    std::vector<Vertex>* pVert = new std::vector<Vertex>(0);
+    
+    if(mesh != NULL)
+        pVert->insert(pVert->end(), mesh->vertices.begin(), mesh->vertices.end());
+        
+    return pVert;
 }
 
 void SolidEntity::ComputeEquivEllipsoid()
 {
-	if(mesh == NULL)
-		return;
-	
-	if(mesh->vertices.size() < 9) //Need at least 9 vertices to fit unique ellipsoid in 3D
-		return;
-	
+    //Get vertices of solid
+	std::vector<Vertex>* vertices = getMeshVertices();
+    if(vertices->size() < 9)
+    {
+        delete vertices;
+        return;
+    }
+    
 	//Fill points matrix
-	eigMatrix P(mesh->vertices.size(), 3);
-	for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-		P.row(i) << mesh->vertices[i].pos.x, mesh->vertices[i].pos.y, mesh->vertices[i].pos.z;
-	
+	eigMatrix P(vertices->size(), 3);
+	for(unsigned int i=0; i<vertices->size(); ++i)
+		P.row(i) << (*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z;
+    delete vertices;
+    
 	//Compute contraints
-	eigMatrix A(mesh->vertices.size(), 9);
+	eigMatrix A(P.rows(), 9);
 	A.col(0) = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() - 2 * P.col(2).array() * P.col(2).array();
 	A.col(1) = P.col(0).array() * P.col(0).array() + P.col(2).array() * P.col(2).array() - 2 * P.col(1).array() * P.col(1).array();
 	A.col(2) = 2 * P.col(0).array() * P.col(1).array();
@@ -317,17 +326,17 @@ void SolidEntity::ComputeEquivEllipsoid()
 	A.col(5) = 2 * P.col(0);
 	A.col(6) = 2 * P.col(1);
 	A.col(7) = 2 * P.col(2);
-	A.col(8) = eigMatrix::Ones(mesh->vertices.size(), 1);
+	A.col(8) = eigMatrix::Ones(P.rows(), 1);
 	
 	//Solve Least-Squares problem Ax=b
-	eigMatrix b(mesh->vertices.size(), 1);
+	eigMatrix b(P.rows(), 1);
 	eigMatrix x(9, 1);	
 	//squared norm
 	b = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() + P.col(2).array() * P.col(2).array();
 	//solution
 	//x = (A.transpose() * A).ldlt().solve(A.transpose() * b); //normal equations
 	x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b); 
-	
+    
 	//Find ellipsoid parameters
 	eigMatrix p(10, 1);
 	p(0) = x(0) + x(1) - 1;
@@ -350,10 +359,9 @@ void SolidEntity::ComputeEquivEllipsoid()
 	//Compute center
 	eigMatrix c(3, 1);
 	c = -E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
-	std::cout << "Center: " << c << std::endl;
 	
 	//Compute transform matrix
-	eigMatrix T(4, 4);
+	eigMatrix4x4 T;
 	T.setIdentity();
 	T.block(3, 0, 1, 3) = c.transpose();
 	T = T * E * T.transpose();
@@ -366,13 +374,26 @@ void SolidEntity::ComputeEquivEllipsoid()
 		return;
 	}
 	
+    //Ellipsoid radii
 	eigMatrix r(3, 1);
 	r = Eigen::sqrt(1/Eigen::abs(eigenSolver.eigenvalues().array()));
-	std::cout << "Radii: " << r << std::endl;
+    ellipsoidR = btVector3(r(0), r(1), r(2));
+    std::cout << getName() << " radii: " << r << std::endl; 
 	
+    //Ellipsoid axes
 	eigMatrix axes(3, 3);
 	axes = eigenSolver.eigenvectors().array();
-	std::cout << "Axes: " << axes << std::endl;
+    ellipsoidTransform.setIdentity();
+    ellipsoidTransform.setOrigin(btVector3(c(0), c(1), c(2)));
+    ellipsoidTransform.setBasis(btMatrix3x3(axes(0,0), axes(0,1), axes(0,2), axes(1,0), axes(1,1), axes(1,2), axes(2,0), axes(2,1), axes(2,2)));
+}
+
+void SolidEntity::BuildGraphicalObject()
+{
+	if(mesh == NULL)
+		return;
+		
+	objectId = OpenGLContent::getInstance()->BuildObject(mesh);	
 }
 
 void SolidEntity::BuildRigidBody()

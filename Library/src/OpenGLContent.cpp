@@ -121,6 +121,7 @@ OpenGLContent::OpenGLContent()
 	cubeBuf = 0;
 	csBuf[0] = 0;
 	csBuf[1] = 0;
+    ellipsoid.mesh = NULL;
 	helperShader = NULL;
 	texQuadShader = NULL;
 	texQuadMSShader = NULL;
@@ -227,11 +228,30 @@ void OpenGLContent::Init()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(csColor), csColor, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
+    //Ellipsoid helper
+    ellipsoid.mesh = BuildSphere(1.f, 3);
+    
+	glGenVertexArrays(1, &ellipsoid.vao);
+	glGenBuffers(1, &ellipsoid.vboVertex);
+	glGenBuffers(1, &ellipsoid.vboIndex);
+	
+	glBindVertexArray(ellipsoid.vao);	
+	glEnableVertexAttribArray(0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*ellipsoid.mesh->vertices.size(), &ellipsoid.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*ellipsoid.mesh->faces.size(), &ellipsoid.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+	glBindVertexArray(0);
+    
 	//Load shaders
 	//Basic
 	helperShader = new GLSLShader("helpers.frag","helpers.vert");
 	helperShader->AddUniform("MVP", ParameterType::MAT4);
-	helperShader->AddUniform("scale", ParameterType::FLOAT);
+	helperShader->AddUniform("scale", ParameterType::VEC3);
 	
 	texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
 	texQuadShader->AddUniform("rect", ParameterType::VEC4);
@@ -603,7 +623,7 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 	{
 		helperShader->Use();
 		helperShader->SetUniform("MVP", viewProjection*M);
-		helperShader->SetUniform("scale", size);
+		helperShader->SetUniform("scale", glm::vec3(size));
 		
 		glBindVertexArray(baseVertexArray);
 		glEnableVertexAttribArray(0);
@@ -624,6 +644,24 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 	}
 }
 
+void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii)
+{
+    if(helperShader != NULL && ellipsoid.mesh != NULL)
+    {
+        glm::vec4 color(0.2f, 0.5f, 1.f, 1.f);
+        
+        helperShader->Use();
+		helperShader->SetUniform("MVP", viewProjection*M);
+		helperShader->SetUniform("scale", radii);
+		
+        glBindVertexArray(ellipsoid.vao);
+        glVertexAttrib4fv(1, &color.r);
+        glDrawElements(GL_TRIANGLES, 3 * ellipsoid.mesh->faces.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+    }
+}
+
 void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
 {
 	if(helperShader != NULL && vertices.size() > 0)
@@ -633,7 +671,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 		
 		helperShader->Use();
 		helperShader->SetUniform("MVP", viewProjection*M);
-		helperShader->SetUniform("scale", 1.f);
+		helperShader->SetUniform("scale", glm::vec3(1.f));
 		
 		glBindVertexArray(baseVertexArray);
 		glEnableVertexAttribArray(0);

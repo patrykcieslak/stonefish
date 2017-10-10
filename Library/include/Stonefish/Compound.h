@@ -30,13 +30,14 @@ public:
     void ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta);
 	
     SolidEntityType getSolidType();
+    std::vector<Vertex>* getMeshVertices();
     btCollisionShape* BuildCollisionShape();
 	void BuildGraphicalObject();
 	
 	std::vector<Renderable> Render();
 
 private:
-	std::vector<Part> parts; //Parts of the compound solid
+    std::vector<Part> parts; //Parts of the compound solid
 };
 
 #endif

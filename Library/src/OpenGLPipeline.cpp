@@ -53,7 +53,7 @@ void OpenGLPipeline::setRenderingEffects(bool shadows, bool fluid, bool ambientO
     renderSAO = ambientOcclusion;
 }
 
-void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras)
+void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics)
 {
     showCoordSys = coordSystems;
     showJoints = joints;
@@ -61,6 +61,7 @@ void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actu
     showSensors = sensors;
     showLightMeshes = lights;
     showCameraFrustums = cameras;
+    showFluidDynamics = fluidDynamics;
 }
 
 void OpenGLPipeline::setDebugSimulation(bool enabled)
@@ -91,7 +92,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
     //Set default options
     cInfo("Setting up basic OpenGL parameters...");
     setRenderingEffects(true, true, true);
-    setVisibleHelpers(false, false, false, false, false, false);
+    setVisibleHelpers(false, false, false, false, false, false, false);
     setDebugSimulation(false);
     
     //OpenGL flags and params
@@ -329,7 +330,18 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         cam->RenderDummy();
                     }
 				}
-                        
+                
+            //Fluid dynamics
+            if(showFluidDynamics)
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                
+                for(unsigned int h=0; h<drawingQueue.size(); ++h)
+					OpenGLContent::getInstance()->DrawEllipsoid(drawingQueue[h].eModel, drawingQueue[h].eRadii);
+                
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+                
             //Debugging
 			if(ocean != NULL)
 			{	

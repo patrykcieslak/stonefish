@@ -11,6 +11,7 @@
 
 #include "common.h"
 #include "NameManager.h"
+#include "OpenGLContent.h"
 
 typedef enum {ACTUATOR_MOTOR, ACTUATOR_THRUSTER, ACTUATOR_LIGHT} ActuatorType;
 
@@ -22,18 +23,13 @@ public:
     virtual ~Actuator();
     
     virtual void Update(btScalar dt) = 0;
-    virtual btVector3 Render() = 0;
+    virtual std::vector<Renderable> Render();
     
-    void setRenderable(bool render);
     virtual ActuatorType getType() = 0;
     std::string getName();
     
-    bool isRenderable();
-    
 private:
     std::string name;
-    bool renderable;
-    
     static NameManager nameManager;
 };
 

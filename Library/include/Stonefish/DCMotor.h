@@ -19,7 +19,6 @@ public:
     
 	//Motor
     void Update(btScalar dt);
-    btVector3 Render();
 	void setIntensity(btScalar value);
     btScalar getTorque();
     

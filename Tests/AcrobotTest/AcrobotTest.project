@@ -59,6 +59,7 @@
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Debug" Command="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Debug/AcrobotTest" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Debug" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -99,6 +100,7 @@
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Release/AcrobotTest" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Release" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>

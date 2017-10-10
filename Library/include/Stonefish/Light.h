@@ -20,7 +20,6 @@ public:
     virtual ~Light();
     
     void Update(btScalar dt);
-    btVector3 Render();
     ActuatorType getType();
 
 private:

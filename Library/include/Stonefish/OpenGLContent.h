@@ -189,7 +189,8 @@ public:
 	
 	void DrawCubemapCross(GLuint texture);
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
-	void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
+	void DrawEllipsoid(glm::mat4 M, glm::vec3 radii);
+    void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
 	
 	//Allocate and build content
@@ -240,6 +241,9 @@ private:
 	GLuint quadBuf; //quad for debugging textures
 	GLuint cubeBuf; //cubemap cross VBO
 	GLuint csBuf[2]; //vertex data for drawing coord systems 
+    Object ellipsoid; //used for approximating fluid dynamics coefficients
+    
+    //Shaders
 	GLSLShader* helperShader;
 	GLSLShader* texQuadShader;
 	GLSLShader* texQuadMSShader;

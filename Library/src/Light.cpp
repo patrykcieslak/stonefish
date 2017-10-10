@@ -30,11 +30,6 @@ Light::~Light()
 void Light::Update(btScalar dt)
 {
 }
-
-btVector3 Light::Render()
-{
-    return btVector3(0,0,0);
-}
     
 ActuatorType Light::getType()
 {

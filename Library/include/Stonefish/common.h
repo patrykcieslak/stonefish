@@ -24,9 +24,13 @@
 
 #ifdef BT_USE_DOUBLE_PRECISION
 	#define eigMatrix 	 Eigen::MatrixXd
+    #define eigMatrix3x3 Eigen::Matrix3d
+    #define eigMatrix4x4 Eigen::Matrix4d
 	#define eigMatrix6x6 Eigen::Matrix<double, 6, 6>
 #else
 	#define eigMatrix 	 Eigen::MatrixXf
+    #define eigMatrix3x3 Eigen::Matrix3f
+    #define eigMatrix4x4 Eigen::Matrix4f
 	#define eigMatrix6x6 Eigen::Matrix<float, 6, 6>
 #endif
 

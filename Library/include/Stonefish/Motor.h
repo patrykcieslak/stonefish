@@ -20,7 +20,6 @@ public:
     Motor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child);
     
     virtual void Update(btScalar dt);
-    virtual btVector3 Render();
     virtual void setIntensity(btScalar value);
 	virtual btScalar getTorque();
 	

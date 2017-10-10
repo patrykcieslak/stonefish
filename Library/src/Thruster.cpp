@@ -2,122 +2,122 @@
 //  Thruster.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 16/09/17.
+//  Created by Patryk Cieslak on 10/10/2017.
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Thruster.h"
-#include "UnderwaterVehicle.h"
-#include "DCMotor.h"
+#include "OpenGLContent.h"
+#include "Ocean.h"
+#include "MathsUtil.hpp"
 
-Thruster::Thruster(std::string uniqueName, UnderwaterVehicle* vehicle, SolidEntity* duct, SolidEntity* propeller, btScalar propDiameter, btScalar thrustCoeff) : SystemEntity(uniqueName)
+Thruster::Thruster(std::string uniqueName, btScalar diameter, btScalar inertia, btScalar thrustCoeff, btScalar torqueCoeff, btScalar gainP, btScalar gainI, 
+                   std::string propellerModelPath, btScalar scale, bool smooth, int look) : Actuator(uniqueName)
 {
-	//Set parameters
-	propLocation = btTransform::getIdentity();//UnitSystem::SetTransform(location);
-	actuatedVehicle = vehicle;
-	ductSolid = duct;
-	propSolid = propeller;
-	D = UnitSystem::SetLength(propDiameter);
-	KT = thrustCoeff;
-	thruster = NULL;
-	
-	ductSolid->setComputeHydrodynamics(false);
-	propSolid->setComputeHydrodynamics(false);
-}	
+    D = UnitSystem::SetLength(diameter);
+    I = inertia; //Needs proper unit system calculation!
+    kT = thrustCoeff;
+    kQ = torqueCoeff;
+    kp = gainP;
+    ki = gainI;
+    
+    theta = btScalar(0);
+    omega = btScalar(0);
+    setpoint = btScalar(0);
+    
+    objectId = OpenGLContent::getInstance()->BuildObject(OpenGLContent::LoadMesh(propellerModelPath, scale, smooth));	
+    lookId = look;
+    
+    attach = NULL;
+    attachFE = NULL;
+    linkId = 0;
+    pos.setIdentity();
+}
 
 Thruster::~Thruster()
 {
-	//Delete components
-	delete thruster;
-	delete motor;
-	delete enc;
-	delete ctrl;
 }
 
-void Thruster::SetDesiredSpeed(btScalar s)
+ActuatorType Thruster::getType()
 {
-	ctrl->SetSpeed(s);
+    return ACTUATOR_THRUSTER;
 }
 
-void Thruster::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
+void Thruster::AttachToSolid(SolidEntity* solid, const btTransform& position)
 {
-	if(thruster != NULL)
-		return;
-	
-	//Build thruster
-	thruster = new FeatherstoneEntity(getName() + "/FE", 2, ductSolid, propLocation, world, false);
-	thruster->AddLink(propSolid, propLocation, world);
-	thruster->AddRevoluteJoint(0, 1, propLocation.getOrigin(), propLocation.getBasis().getColumn(0)); //Revolve always around local X axis, no collision between joint links
-	thruster->setJointDamping(0, 0, 0);
-	thruster->setBaseTransform(worldTransform);
-	thruster->AddToDynamicsWorld(world);
-	
-	FixedJoint* fixed = new FixedJoint(getName() + "/Fix", actuatedVehicle->getVehicleBody(), thruster);
-	fixed->AddToDynamicsWorld(world);
-	
-	DCMotor* dc = new DCMotor(getName() + "/Motor", thruster, 0, 0.3, 0.0744e-3, 1.0/408.0, 23.4e-3, 0); //new Motor(getName() + "/Motor", thruster, 0);
-	dc->SetupGearbox(true, 5.0, 0.9);
-	motor = dc;
-	
-	enc = new FakeRotaryEncoder(getName() + "/Encoder", thruster, 0);
-	
-	ctrl = new SpeedController(getName() + "/Controller", motor, enc, 12.0);
-	ctrl->SetGains(1.0,0.5,0,100.0);
-	ctrl->Start();
+    attach = solid;
+    pos = position;
 }
 
-void Thruster::UpdateAcceleration(btScalar dt) 
+void Thruster::AttachToSolid(FeatherstoneEntity* fe, unsigned int link, const btTransform& position)
 {
+    attachFE = fe;
+    linkId = link;
+    pos = position;
 }
 
-void Thruster::UpdateSensors(btScalar dt)
-{
-	enc->Update(dt);
-	//std::cout << "Speed: " << enc->getLastSample().getValue(1) << std::endl;
-}
-    
-void Thruster::UpdateControllers(btScalar dt)
-{
-	ctrl->Update(dt);
-}
-    
-void Thruster::UpdateActuators(btScalar dt)
-{
-	motor->Update(dt);
-	
-	//Calculate and apply thrust
-	btScalar omega = enc->getLastSample().getValue(1);
-	btScalar thrust = KT*1000.0*omega*omega*D*D*D*D;
-	
-	btTransform thTrans = thruster->getLinkTransform(0);
-	btTransform vTrans = actuatedVehicle->getTransform();
-	btVector3 F = thTrans.getBasis().getColumn(0) * thrust;
-	
-	actuatedVehicle->getVehicleBody()->getMultiBody()->addBaseForce(F);
-	actuatedVehicle->getVehicleBody()->getMultiBody()->addBaseTorque((thTrans.getOrigin() - vTrans.getOrigin()).cross(F));
-}
-    
-void Thruster::ApplyGravity(const btVector3& g)
-{
-	thruster->ApplyGravity(g);
-}
-
-void Thruster::ApplyDamping()
-{
-	thruster->ApplyDamping();
-}
-    
-btTransform Thruster::getTransform() const
-{
-	return thruster->getMultiBody()->getBaseWorldTransform();
-}
-    
 std::vector<Renderable> Thruster::Render()
 {
-	return thruster->Render();
+    std::vector<Renderable> items(0);
+    btTransform thrustTrans = btTransform::getIdentity();
+    
+    if(attach != NULL)
+    {
+        thrustTrans = attach->getTransform() * attach->getLocalTransform().inverse() * pos;
+    }
+    else if(attachFE != NULL)
+    {
+        FeatherstoneLink link = attachFE->getLink(linkId);
+        thrustTrans = link.solid->getTransform() * link.solid->getLocalTransform().inverse() * pos;
+    }
+    else
+    {
+        return items;
+    }
+    
+    //Add renderable
+    Renderable item;
+    item.objectId = objectId;
+    item.lookId = lookId;
+	item.dispCoordSys = false;
+	item.model = glMatrixFromBtTransform(thrustTrans);
+    item.csModel = item.model;
+	items.push_back(item);
+    return items;
 }
-	
-void Thruster::GetAABB(btVector3& min, btVector3& max)
+
+void Thruster::Setpoint(btScalar value)
 {
-	thruster->GetAABB(min, max);
+    setpoint = value < btScalar(-1) ? btScalar(-1) : (value > btScalar(1) ? btScalar(1) : value);
+}
+
+void Thruster::Update(btScalar dt)
+{
+    omega = setpoint;
+    
+    btScalar thrust = omega*1000.0;
+    btScalar torque = omega*0.0;
+    
+    btVector3 thrustV(thrust, 0, 0);
+    btVector3 torqueV(torque, 0, 0);
+    
+    if(attach != NULL)
+    {
+        btTransform solidTrans = attach->getTransform() * attach->getLocalTransform().inverse();
+        btTransform thrustTrans = solidTrans * pos;
+        
+        attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
+        attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+        attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+    }
+    else if(attachFE != NULL)
+    {
+        FeatherstoneLink link = attachFE->getLink(linkId);
+        btTransform linkTrans = link.solid->getTransform() * link.solid->getLocalTransform().inverse();
+        btTransform thrustTrans = linkTrans * pos;
+        
+        attachFE->AddLinkForce(linkId, thrustTrans.getBasis() * thrustV);
+        attachFE->AddLinkTorque(linkId, (thrustTrans.getOrigin() - linkTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+        attachFE->AddLinkTorque(linkId, thrustTrans.getBasis() * torqueV);
+    }
 }

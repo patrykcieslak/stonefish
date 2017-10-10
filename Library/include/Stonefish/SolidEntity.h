@@ -58,6 +58,8 @@ public:
     btScalar getMass();
     Material getMaterial();
     btScalar getVolume();
+    virtual std::vector<Vertex>* getMeshVertices(); //Copy of vertices, must be deleted manually!!!
+	
     btTransform getTransform() const;
     btTransform getLocalTransform();
     btVector3 getLinearVelocity();
@@ -76,7 +78,7 @@ public:
     bool isCoordSysVisible();
 	
 protected:
-	void ComputeEquivEllipsoid();
+    void ComputeEquivEllipsoid();
     virtual void BuildRigidBody();
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
     
@@ -96,6 +98,8 @@ protected:
     eigMatrix6x6 aMass; //Hydrodynamic added mass matrix
 	eigMatrix6x6 dCS; //Hydrodynamic damping coefficients multiplied by cross sections
     btVector3 CoB; //Center of Buoyancy (in CoG frame)
+    btVector3 ellipsoidR; //Radii of hydrodynamic proxy ellipsoid
+    btTransform ellipsoidTransform; //Transform of the ellipsoid
 	bool computeHydro;
 	
     //Motion

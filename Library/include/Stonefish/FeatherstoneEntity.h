@@ -54,6 +54,8 @@ public:
     void DriveJoint(unsigned int index, btScalar forceTorque);
     void ApplyGravity(const btVector3& g);
     void ApplyDamping();
+    void AddLinkForce(unsigned int index, const btVector3& F);
+    void AddLinkTorque(unsigned int index, const btVector3& tau);
     
 	void setBaseTransform(const btTransform& trans);
     void setBaseRenderable(bool render);

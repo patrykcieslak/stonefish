@@ -89,11 +89,6 @@ btScalar DCMotor::getCurrent()
     return I;
 }
 
-btVector3 DCMotor::Render()
-{
-    return btVector3(0.f,0.f,0.f);
-}
-
 void DCMotor::Update(btScalar dt)
 {
     //Get joint angular velocity in radians

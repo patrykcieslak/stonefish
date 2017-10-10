@@ -390,6 +390,28 @@ void FeatherstoneEntity::ApplyDamping()
     }
 }
 
+void FeatherstoneEntity::AddLinkForce(unsigned int index, const btVector3& F)
+{
+    if(index >= links.size())
+        return;
+    
+    if(index == 0)
+        multiBody->addBaseForce(F);
+    else
+        multiBody->addLinkForce(index-1, F);
+}
+ 
+void FeatherstoneEntity::AddLinkTorque(unsigned int index, const btVector3& tau)
+{
+    if(index >= links.size())
+        return;
+        
+    if(index == 0)
+        multiBody->addBaseTorque(tau);
+    else
+        multiBody->addLinkTorque(index-1, tau);
+}
+
 std::vector<Renderable> FeatherstoneEntity::Render()
 {	
 	std::vector<Renderable> items(0);

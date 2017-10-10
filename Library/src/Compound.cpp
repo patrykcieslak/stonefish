@@ -27,6 +27,32 @@ SolidEntityType Compound::getSolidType()
     return SOLID_COMPOUND;
 }
 
+std::vector<Vertex>* Compound::getMeshVertices()
+{
+    std::vector<Vertex>* pVert = new std::vector<Vertex>(0);
+    
+    for(unsigned int i=0; i<parts.size(); ++i)
+    {
+        if(parts[i].isExternal)
+        {
+            std::vector<Vertex>* pPartVert = parts[i].solid->getMeshVertices();
+            
+            for(unsigned int h=0; h < pPartVert->size(); ++h)
+            {
+                glm::mat4 trans = glMatrixFromBtTransform(parts[i].position);
+                glm::vec4 vTrans = trans * glm::vec4((*pPartVert)[h].pos, 1.f);
+                Vertex v;
+                v.pos = glm::vec3(vTrans);
+                pVert->push_back(v);
+            }
+            
+            delete pPartVert;
+        }
+    }
+    
+    return pVert;
+}
+
 void Compound::AddInternalPart(SolidEntity* solid, const btTransform& position)
 {
     if(solid != NULL)
@@ -139,6 +165,8 @@ void Compound::RecalculatePhysicalProperties()
 	mass = compoundMass;
 	volume = compoundVolume;
 	Ipri = compoundPriInertia;
+    
+    ComputeEquivEllipsoid();
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
@@ -230,6 +258,8 @@ std::vector<Renderable> Compound::Render()
 			item.dispCoordSys = false;
 			item.model = glMatrixFromBtTransform(oTrans);
 			item.csModel = glMatrixFromBtTransform(cgTrans);
+            item.eModel = glMatrixFromBtTransform(oCompoundTrans * ellipsoidTransform);
+            item.eRadii = glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]);
 			items.push_back(item);
 		}
 	}

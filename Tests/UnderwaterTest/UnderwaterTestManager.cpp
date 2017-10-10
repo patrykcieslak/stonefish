@@ -25,6 +25,7 @@
 #include "Ocean.h"
 #include "Obstacle.h"
 #include "UnderwaterVehicle.h"
+#include "DynamicThruster.h"
 #include "Thruster.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::MARINE, UnitSystems::MKS, stepsPerSecond, DANTZIG, STANDARD)
@@ -35,7 +36,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, true);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -67,11 +68,18 @@ void UnderwaterTestManager::BuildScenario()
 	
 	Sphere* baseA = new Sphere("BaseA", 0.1f, getMaterialManager()->getMaterial("Cork"), green);
 	Manipulator* manipA = new Manipulator("ArmA", 3, baseA, vehicle->getVehicleBody());
-	manipA->AddRotLinkDH(link1A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	manipA->AddRotLinkDH(link2A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	manipA->AddRotLinkDH(link3A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	manipA->AddRotLinkDH(link1A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	manipA->AddRotLinkDH(link2A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	manipA->AddRotLinkDH(link3A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
 	AddSystemEntity(manipA, btTransform(btQuaternion(M_PI_2, 0, M_PI_2), btVector3(0.1,0.75,2.5)));
 	
+    std::string path = GetDataPath() + "sphere_R=1.obj";
+    
+    Thruster* th1 = new Thruster("TH1", 0.2, 0.01, 0.5, 0.05, 10, 1, path, 0.5, true, green);
+    th1->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion::getIdentity(), btVector3(0,0.2,0.0)));
+    th1->Setpoint(0.5);
+    AddActuator(th1);
+    
 	/*Sphere* duct = new Sphere("Duct", 0.05, getMaterialManager()->getMaterial("Plastic"), green); 
 	Box* prop = new Box("Propeller", btVector3(0.05,0.2,0.01), getMaterialManager()->getMaterial("Plastic"), green);
 	Thruster* th = new Thruster("Thruster", vehicle, duct, prop, 0.2, 0.2);

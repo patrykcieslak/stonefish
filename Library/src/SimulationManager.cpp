@@ -445,6 +445,9 @@ void SimulationManager::InitializeSolver()
 				mlcp = new btLemkeSolver();
 				//((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
 				break;
+            
+            case SolverType::SI: //Never happens, warning suppression
+                break;
 		}
 		
 		//Create solver and world
@@ -777,6 +780,7 @@ void SimulationManager::UpdateDrawingQueue()
 	OpenGLPipeline::getInstance()->ClearDrawingQueue();
 	
 	//Build new drawing queue
+    //Solids, manipulators, systems....
 	for(unsigned int i=0; i<entities.size(); ++i)
 	{
 		std::vector<Renderable> items = entities[i]->Render();
@@ -786,11 +790,28 @@ void SimulationManager::UpdateDrawingQueue()
 			{
 				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 				items[h].csModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].csModel;
+                items[h].eModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].eModel;
 			}
 			
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
 	}
+    
+    //Motors, thrusters, propellers, fins....
+    for(unsigned int i=0; i<actuators.size(); ++i)
+    {
+        std::vector<Renderable> items = actuators[i]->Render();
+		for(unsigned int h=0; h<items.size(); ++h)
+		{
+			if(!zUp)
+            {
+				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
+                items[h].csModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].csModel;
+			}
+			
+			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
+		}
+    }
 }
 
 Entity* SimulationManager::PickEntity(int x, int y)
