@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <SDL2/SDL_thread.h>
 
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
@@ -66,6 +67,7 @@ public:
 	void DrawDisplay();
     void Render(SimulationManager* sim);
     void DrawObjects();
+    SDL_mutex* getDrawingQueueMutex();
    
     void setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion);
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics);
@@ -81,7 +83,9 @@ private:
     ~OpenGLPipeline();
     
 	std::vector<Renderable> drawingQueue;
-	
+    std::vector<Renderable> drawingQueueCopy;
+	SDL_mutex* drawingQueueMutex;
+    
     bool renderShadows;
     bool renderFluid;
     bool renderSAO;

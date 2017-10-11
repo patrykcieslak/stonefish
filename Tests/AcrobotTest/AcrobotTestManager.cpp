@@ -70,7 +70,7 @@ void AcrobotTestManager::BuildScenario()
     RevoluteJoint* revo1 = new RevoluteJoint("Arm1Rotation", arm1, btVector3(0.0,0.0,0.0), btVector3(0.0,1.0,0.0));
     AddJoint(revo1);
     revo1->setDamping(0.0, 0.0);
-    revo1->setIC(1.0);
+    revo1->setIC(0.0);
      
     RevoluteJoint* revo2 = new RevoluteJoint("Arm2Rotation", arm2, arm1, btVector3(0.0,0.0,0.15), btVector3(0.0,1.0,0.0), false);
     AddJoint(revo2);
@@ -95,18 +95,18 @@ void AcrobotTestManager::BuildScenario()
     Box* arm2 = new Box("Arm2", btVector3(0.03, 0.015, 0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
     arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.05)));
     
-    FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 3, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.0)), getDynamicsWorld(), true);
+    FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 3, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,1.0)), getDynamicsWorld(), true);
     fe->setBaseRenderable(true);
     
     //Arm1
-    fe->AddLink(arm1, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,0.15)), getDynamicsWorld());
-    fe->AddRevoluteJoint(0, 1, btVector3(0.0,0.0,0.0), btVector3(0.0, 1.0, 0.0), false);
+    fe->AddLink(arm1, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,1.15)), getDynamicsWorld());
+    fe->AddRevoluteJoint(0, 1, btVector3(0.0,0.0,1.0), btVector3(0.0, 1.0, 0.0), false);
     fe->setJointDamping(0, 0, 0.005);
     fe->setJointIC(0, UnitSystem::Angle(true, 1.0), UnitSystem::Angle(true, 0.0));
     
     //Arm2
-	fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 0.1)), getDynamicsWorld());
-    fe->AddRevoluteJoint(1, 2, btVector3(0.0, 0.0, 0.15), btVector3(0.0, 1.0, 0.0), false);
+	fe->AddLink(arm2, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 1.1)), getDynamicsWorld());
+    fe->AddRevoluteJoint(1, 2, btVector3(0.0, 0.0, 1.15), btVector3(0.0, 1.0, 0.0), false);
     fe->setJointDamping(1, 0.01, 0.005);
     
     AddEntity(fe);

@@ -8,6 +8,7 @@
 
 #include "SolidEntity.h"
 #include "MathsUtil.hpp"
+#include "SystemUtil.hpp"
 #include "Console.h"
 #include "Ocean.h"
 
@@ -378,8 +379,7 @@ void SolidEntity::ComputeEquivEllipsoid()
 	eigMatrix r(3, 1);
 	r = Eigen::sqrt(1/Eigen::abs(eigenSolver.eigenvalues().array()));
     ellipsoidR = btVector3(r(0), r(1), r(2));
-    std::cout << getName() << " radii: " << r << std::endl; 
-	
+    
     //Ellipsoid axes
 	eigMatrix axes(3, 3);
 	axes = eigenSolver.eigenvectors().array();
@@ -543,7 +543,7 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
 	
 	if(!computeHydro || mesh == NULL)
 		return;
-    
+        
 	//Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
     

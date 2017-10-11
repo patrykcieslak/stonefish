@@ -34,7 +34,7 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 void FallingTestManager::BuildScenario()
 {
 	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, false, false);
 	OpenGLPipeline::getInstance()->setDebugSimulation(true);
     setICSolverParams(false);
 	

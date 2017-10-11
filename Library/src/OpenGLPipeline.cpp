@@ -34,6 +34,7 @@ OpenGLPipeline::OpenGLPipeline()
 	renderShadows = renderFluid = renderSAO = false;
     showCoordSys = showJoints = showActuators = showSensors = false;
     showLightMeshes = showCameraFrustums = false;
+    drawingQueueMutex = SDL_CreateMutex();
 }
 
 OpenGLPipeline::~OpenGLPipeline()
@@ -44,6 +45,7 @@ OpenGLPipeline::~OpenGLPipeline()
 	
     glDeleteTextures(1, &screenTex);
     glDeleteFramebuffers(1, &screenFBO);
+    SDL_DestroyMutex(drawingQueueMutex);
 }
 
 void OpenGLPipeline::setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion)
@@ -82,6 +84,11 @@ bool OpenGLPipeline::isSAORendered()
 GLuint OpenGLPipeline::getScreenTexture()
 {
     return screenTex;
+}
+
+SDL_mutex* OpenGLPipeline::getDrawingQueueMutex()
+{
+    return drawingQueueMutex;
 }
 
 void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
@@ -163,12 +170,19 @@ void OpenGLPipeline::DrawDisplay()
 
 void OpenGLPipeline::DrawObjects()
 {
-	for(unsigned int i=0; i<drawingQueue.size(); ++i)
-		OpenGLContent::getInstance()->DrawObject(drawingQueue[i].objectId, drawingQueue[i].lookId, drawingQueue[i].model);
+    for(unsigned int i=0; i<drawingQueueCopy.size(); ++i)
+        OpenGLContent::getInstance()->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
 }
 
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
+    //Copy drawing queue -> double buffering to enable threading
+    drawingQueueCopy.clear();
+    SDL_LockMutex(drawingQueueMutex);
+    drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
+    SDL_UnlockMutex(drawingQueueMutex);
+    
+    //Simulate ocean
 	Ocean* ocean = sim->getOcean();
 	
 	if(ocean != NULL)
@@ -288,9 +302,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				else
 					OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 2.f);
                 
-				for(unsigned int h=0; h<drawingQueue.size(); ++h)
+				for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
 				{
-					OpenGLContent::getInstance()->DrawCoordSystem(drawingQueue[h].csModel, 0.5f);
+					OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].csModel, 0.5f);
 				}
             }
             
@@ -336,8 +350,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 
-                for(unsigned int h=0; h<drawingQueue.size(); ++h)
-					OpenGLContent::getInstance()->DrawEllipsoid(drawingQueue[h].eModel, drawingQueue[h].eRadii);
+                for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+					OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].eModel, drawingQueueCopy[h].eRadii);
                 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }

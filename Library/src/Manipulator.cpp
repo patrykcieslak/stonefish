@@ -79,7 +79,7 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 		ServoController* ctrl = new ServoController(getName() + "/Controller" + std::to_string(nLinks), motor, enc, btScalar(100));
 		ctrl->SetPosition(0.0);
 		ctrl->SetGains(btScalar(200), btScalar(10), btScalar(0.1), btScalar(100));
-		//ctrl->Start();
+		ctrl->Start();
 		controllers.push_back(ctrl);
 		
 		//Link successfully created

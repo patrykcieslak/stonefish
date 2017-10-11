@@ -50,7 +50,7 @@ class SimulationManager
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = STANDARD, HydrodynamicsType ht = TRIFOLD_SYMMETRY);
+    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = STANDARD, HydrodynamicsType ht = GEOMETRY_BASED);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -136,6 +136,8 @@ private:
 	HydrodynamicsType hydroType;
 	btScalar sps;
 	btScalar realtimeFactor;
+    SDL_mutex* simSettingsMutex;
+    SDL_mutex* simInfoMutex;
     
 	btScalar simulationTime;
     uint64_t currentTime;

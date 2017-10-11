@@ -8,6 +8,8 @@
 
 #include "SimulationManager.h"
 
+#include <chrono>
+#include <thread>
 #include <BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.h>
 #include <BulletDynamics/MLCPSolvers/btDantzigSolver.h>
 #include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
@@ -53,6 +55,8 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     dwDispatcher = NULL;
     ocean = NULL;
 	trackball = NULL;
+    simSettingsMutex = SDL_CreateMutex();
+    simInfoMutex = SDL_CreateMutex();
     
     //Set IC solver params
     icProblemSolved = false;
@@ -68,6 +72,8 @@ SimulationManager::~SimulationManager()
 {
     DestroyScenario();
 	delete ocean;
+    SDL_DestroyMutex(simSettingsMutex);
+    SDL_DestroyMutex(simInfoMutex);
 }
 
 void SimulationManager::AddEntity(Entity *ent)
@@ -332,7 +338,10 @@ bool SimulationManager::isSimulationFresh()
 
 btScalar SimulationManager::getSimulationTime()
 {
-    return simulationTime;
+    SDL_LockMutex(simInfoMutex);
+    btScalar st = simulationTime;
+    SDL_UnlockMutex(simInfoMutex);
+    return st;
 }
 
 MaterialManager* SimulationManager::getMaterialManager()
@@ -342,8 +351,13 @@ MaterialManager* SimulationManager::getMaterialManager()
 
 void SimulationManager::setStepsPerSecond(btScalar steps)
 {
+    if(sps == steps)
+        return;
+    
+    SDL_LockMutex(simSettingsMutex);
     sps = steps;
     ssus = (uint64_t)(1000000.0/steps);
+    SDL_UnlockMutex(simSettingsMutex);
 }
 
 btScalar SimulationManager::getStepsPerSecond()
@@ -353,12 +367,18 @@ btScalar SimulationManager::getStepsPerSecond()
 
 btScalar SimulationManager::getPhysicsTimeInMiliseconds()
 {
-    return (btScalar)physicsTime/btScalar(1000);
+    SDL_LockMutex(simInfoMutex);
+    btScalar t = (btScalar)physicsTime/btScalar(1000);
+    SDL_UnlockMutex(simInfoMutex);
+    return t;
 }
 
 btScalar SimulationManager::getRealtimeFactor()
 {
-	return realtimeFactor;
+    SDL_LockMutex(simInfoMutex);
+    btScalar rf = realtimeFactor;
+    SDL_UnlockMutex(simInfoMutex);
+	return rf;
 }
 
 void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
@@ -731,35 +751,41 @@ void SimulationManager::AdvanceSimulation()
     //Calculate eleapsed time
 	uint64_t timeInMicroseconds = GetTimeInMicroseconds();
 	uint64_t deltaTime;
+    
+    //Start of simulation
     if(currentTime == 0)
 	{
         deltaTime = 0.0;
 		currentTime = timeInMicroseconds;
 		return;
 	}
-    else if(timeInMicroseconds < currentTime)
-	{    
-		deltaTime = timeInMicroseconds + (UINT64_MAX - currentTime);
-		currentTime = timeInMicroseconds;
-	}
-    else
-	{
-        deltaTime = timeInMicroseconds - currentTime;
-		currentTime = timeInMicroseconds;
-	}
+    
+    //Calculate and adjust delta
+    deltaTime = timeInMicroseconds - currentTime;
+    currentTime = timeInMicroseconds;
+	
+    if(deltaTime < ssus)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(ssus - deltaTime));
+        timeInMicroseconds = GetTimeInMicroseconds();
+        deltaTime = timeInMicroseconds - (currentTime - deltaTime);
+        currentTime = timeInMicroseconds;
+    }
     
     //Step simulation
-    physicsTime = GetTimeInMicroseconds();
+    SDL_LockMutex(simSettingsMutex);
+    uint64_t physicsStart = GetTimeInMicroseconds();
     dynamicsWorld->stepSimulation((btScalar)deltaTime * realtimeFactor/btScalar(1000000.0), 1000000, (btScalar)ssus/btScalar(1000000.0));
-    physicsTime = GetTimeInMicroseconds() - physicsTime;
-	
-	//if(physicsTime > deltaTime)
-	{
-		btScalar factor1 = (btScalar)deltaTime/(btScalar)physicsTime;
-		btScalar factor2 = btScalar(1000000.0/60.0)/(btScalar)physicsTime;
-		realtimeFactor *=  factor1*factor2;
-		realtimeFactor = realtimeFactor < btScalar(0.05) ? btScalar(0.05) : (realtimeFactor > btScalar(1) ? btScalar(1) : realtimeFactor);
-	}
+    uint64_t physicsEnd = GetTimeInMicroseconds();
+    SDL_UnlockMutex(simSettingsMutex);
+    
+    SDL_LockMutex(simInfoMutex);
+    physicsTime = physicsEnd - physicsStart;
+    
+    btScalar factor1 = (btScalar)deltaTime/(btScalar)physicsTime;
+    btScalar factor2 = btScalar(1000000.0/60.0)/(btScalar)physicsTime;
+    realtimeFactor *=  factor1*factor2;
+    realtimeFactor = realtimeFactor < btScalar(0.05) ? btScalar(0.05) : (realtimeFactor > btScalar(1) ? btScalar(1) : realtimeFactor);
 	
     //Inform about MLCP failures
 	if(solver != SolverType::SI)
@@ -772,6 +798,8 @@ void SimulationManager::AdvanceSimulation()
 		}
 		((ResearchConstraintSolver*)dwSolver)->setNumFallbacks(0);
 	}
+    
+    SDL_UnlockMutex(simInfoMutex);
 }
 
 void SimulationManager::UpdateDrawingQueue()

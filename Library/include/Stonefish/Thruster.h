@@ -16,11 +16,14 @@
 class Thruster : public Actuator
 {
 public:
-    Thruster(std::string uniqueName, btScalar diameter, btScalar inertia, btScalar thrustCoeff, btScalar torqueCoeff, btScalar gainP, btScalar gainI, 
-             std::string propellerModelPath, btScalar scale, bool smooth, int look);
+    Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar omegaMax);
     virtual ~Thruster();
 
-    void Setpoint(btScalar value);
+    void setSetpoint(btScalar value);
+    btScalar getSetpoint();
+    btScalar getThrust();
+    btScalar getOmega();
+    
     void Update(btScalar dt);
     std::vector<Renderable> Render();
     ActuatorType getType();
@@ -36,6 +39,9 @@ private:
     btScalar kQ;
     btScalar kp;
     btScalar ki;
+    btScalar iLim;
+    btScalar omegaLim;
+    SolidEntity* prop;
     SolidEntity* attach;
     FeatherstoneEntity* attachFE; 
     unsigned int linkId;
@@ -44,11 +50,10 @@ private:
     //States
     btScalar theta;
     btScalar omega;
+    btScalar thrust;
+    btScalar torque;
     btScalar setpoint;
-
-    //Rendering
-    int objectId;
-    int lookId;
+    btScalar iError;
 };
 
 #endif

@@ -23,10 +23,10 @@
 class SimulationApp
 {
 public:
-    SimulationApp(std::string name, int width, int height, SimulationManager* sim);
+    SimulationApp(std::string name, std::string dataDirPath, std::string shaderDirPath, int windowWidth, int windowHeight, SimulationManager* sim);
     virtual ~SimulationApp();
     
-    void Init(std::string dataPath, std::string shaderPath);
+    virtual void Init();
     void CleanUp();
     void Quit();
     
@@ -83,6 +83,7 @@ private:
     SDL_GLContext glMainContext;
     SDL_GLContext glLoadingContext;
     SDL_Thread* loadingThread;
+    SDL_Thread* simulationThread;
     SDL_Window* window;
     SDL_Joystick* joystick;
     
@@ -99,11 +100,11 @@ private:
     bool loading;
 	double drawingTime;
     double physicsTime;
-    uint64_t startTime;
     bool displayHUD;
     bool displayConsole;
   
-    static int RenderLoadingScreen(void* app);
+    static int RenderLoadingScreen(void* data);
+    static int RunSimulation(void* data);
     static SimulationApp* handle;
 };
 
@@ -113,5 +114,12 @@ typedef struct
     SDL_mutex* mutex;
 }
 LoadingThreadData;
+
+typedef struct
+{
+    SimulationApp* app;
+    SDL_mutex* drawMutex;
+}
+SimulationThreadData;
 
 #endif

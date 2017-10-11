@@ -35,7 +35,7 @@
 inline int64_t GetTimeInMicroseconds()
 {
 #ifdef __linux__
-    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
 #elif __APPLE__
     return mach_absolute_time()/1000;

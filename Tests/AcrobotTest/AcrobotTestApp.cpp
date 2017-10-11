@@ -12,7 +12,7 @@
 #include "DCMotor.h"
 #include "NativeDialog.h"
 
-AcrobotTestApp::AcrobotTestApp(int width, int height, AcrobotTestManager* sim) : SimulationApp("Acrobot Test", width, height, sim)
+AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, AcrobotTestManager* sim) : SimulationApp("Acrobot Test", dataDirPath, shaderDirPath, width, height, sim)
 {
 }
 

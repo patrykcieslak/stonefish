@@ -11,7 +11,8 @@
 #include "Manipulator.h"
 #include "NativeDialog.h"
 
-FallingTestApp::FallingTestApp(int width, int height, FallingTestManager* sim) : SimulationApp("Falling Test", width, height, sim)
+FallingTestApp::FallingTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, FallingTestManager* sim) 
+    : SimulationApp("Falling Test", dataDirPath, shaderDirPath, width, height, sim)
 {
     checked = false;
 }

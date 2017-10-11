@@ -11,7 +11,8 @@
 #include "OpenGLTrackball.h"
 #include "NativeDialog.h"
 
-UnderwaterTestApp::UnderwaterTestApp(int width, int height, UnderwaterTestManager* sim) : SimulationApp("Underwater Test", width, height, sim)
+UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, UnderwaterTestManager* sim) 
+    : SimulationApp("Underwater Test", dataDirPath, shaderDirPath, width, height, sim)
 {
 }
 

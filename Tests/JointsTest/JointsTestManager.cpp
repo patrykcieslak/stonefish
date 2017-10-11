@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "JointsTestManager.h"
@@ -39,7 +39,6 @@ void JointsTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.5, 0.2);
     
     ///////LOOKS///////////
-    int grey = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.7f,0.7f,0.7f), 0.5f, 0.5f);
     int orange = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.0f,0.6f,0.3f), 0.3f, 0.1f);
     int green = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(0.5f,1.0f,0.4f), 0.5f, 0.9f);
     

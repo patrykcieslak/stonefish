@@ -7,27 +7,29 @@
 //
 
 #include "Thruster.h"
+#include "SimulationApp.h"
 #include "OpenGLContent.h"
-#include "Ocean.h"
 #include "MathsUtil.hpp"
 
-Thruster::Thruster(std::string uniqueName, btScalar diameter, btScalar inertia, btScalar thrustCoeff, btScalar torqueCoeff, btScalar gainP, btScalar gainI, 
-                   std::string propellerModelPath, btScalar scale, bool smooth, int look) : Actuator(uniqueName)
+Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar omegaMax) : Actuator(uniqueName)
 {
     D = UnitSystem::SetLength(diameter);
-    I = inertia; //Needs proper unit system calculation!
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = gainP;
-    ki = gainI;
+    kp = btScalar(10.0);
+    ki = btScalar(1.0);
+    iLim = btScalar(1.0);
+    omegaLim = omegaMax;
     
     theta = btScalar(0);
     omega = btScalar(0);
+    thrust = btScalar(0);
+    torque = btScalar(0);
     setpoint = btScalar(0);
+    iError = btScalar(0);
     
-    objectId = OpenGLContent::getInstance()->BuildObject(OpenGLContent::LoadMesh(propellerModelPath, scale, smooth));	
-    lookId = look;
-    
+    prop = propeller;
+    prop->BuildGraphicalObject();
     attach = NULL;
     attachFE = NULL;
     linkId = 0;
@@ -36,11 +38,33 @@ Thruster::Thruster(std::string uniqueName, btScalar diameter, btScalar inertia, 
 
 Thruster::~Thruster()
 {
+    delete prop;
 }
 
 ActuatorType Thruster::getType()
 {
     return ACTUATOR_THRUSTER;
+}
+
+
+void Thruster::setSetpoint(btScalar value)
+{
+    setpoint = value < btScalar(-1) ? btScalar(-1) : (value > btScalar(1) ? btScalar(1) : value);
+}
+
+btScalar Thruster::getSetpoint()
+{
+    return setpoint;
+}
+
+btScalar Thruster::getOmega()
+{
+    return omega;
+}
+
+btScalar Thruster::getThrust()
+{
+    return thrust;
 }
 
 void Thruster::AttachToSolid(SolidEntity* solid, const btTransform& position)
@@ -75,10 +99,13 @@ std::vector<Renderable> Thruster::Render()
         return items;
     }
     
+    //Rotate propeller
+    thrustTrans *= btTransform(btQuaternion(0, 0, theta), btVector3(0,0,0));
+    
     //Add renderable
     Renderable item;
-    item.objectId = objectId;
-    item.lookId = lookId;
+    item.objectId = prop->getObject();
+    item.lookId = prop->getLook();
 	item.dispCoordSys = false;
 	item.model = glMatrixFromBtTransform(thrustTrans);
     item.csModel = item.model;
@@ -86,21 +113,26 @@ std::vector<Renderable> Thruster::Render()
     return items;
 }
 
-void Thruster::Setpoint(btScalar value)
-{
-    setpoint = value < btScalar(-1) ? btScalar(-1) : (value > btScalar(1) ? btScalar(1) : value);
-}
-
 void Thruster::Update(btScalar dt)
 {
-    omega = setpoint;
+    //Update thruster velocity
+    btScalar error = setpoint*omegaLim - omega;
+    btScalar epsilon = error*kp + iError*ki;
+    iError += error*dt;
+    iError = iError > iLim ? iLim : iError;
     
-    btScalar thrust = omega*1000.0;
-    btScalar torque = omega*0.0;
-    
+    omega += epsilon*dt;
+    theta += omega*dt;
+        
+    //Calculate thrust
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    btScalar omega1overS = omega/(2.0*M_PI); 
+    thrust = ocean->getFluid()->density * kT * btFabs(omega1overS)*omega1overS * D*D*D*D;
+    torque = ocean->getFluid()->density * kQ * btFabs(omega1overS)*omega1overS * D*D*D*D*D;
     btVector3 thrustV(thrust, 0, 0);
     btVector3 torqueV(torque, 0, 0);
     
+    //Apply forces and torques
     if(attach != NULL)
     {
         btTransform solidTrans = attach->getTransform() * attach->getLocalTransform().inverse();

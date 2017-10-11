@@ -8,13 +8,17 @@
 
 #include "SimulationApp.h"
 #include "SystemUtil.hpp"
+#include <chrono>
+#include <thread>
 
-SimulationApp::SimulationApp(std::string name, int width, int height, SimulationManager* sim)
+SimulationApp::SimulationApp(std::string name, std::string dataDirPath, std::string shaderDirPath, int windowWidth, int windowHeight, SimulationManager* sim)
 {
     SimulationApp::handle = this;
 	appName = name;
-    winWidth = width;
-    winHeight = height;
+    dataPath = dataDirPath;
+    shaderPath = shaderDirPath;
+    winWidth = windowWidth;
+    winHeight = windowHeight;
     finished = false;
     running = false;
     simulation = sim;
@@ -26,6 +30,8 @@ SimulationApp::SimulationApp(std::string name, int width, int height, Simulation
     joystickAxes = NULL;
     joystickButtons = NULL;
     joystickHats = NULL;
+    simulationThread = NULL;
+    loadingThread = NULL;
     
 	drawingTime = 0.0;
 	physicsTime = 0.0;
@@ -111,11 +117,8 @@ std::string SimulationApp::getShaderPath()
     return shaderPath;
 }
 
-void SimulationApp::Init(std::string dataPath, std::string shaderPath)
+void SimulationApp::Init()
 {
-    this->dataPath = dataPath;
-    this->shaderPath = shaderPath;
-    
     //Basics
     InitializeSDL(); //Window initialization + loading thread
     
@@ -181,7 +184,9 @@ void SimulationApp::InitializeSDL()
     int glVersionMajor, glVersionMinor;
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &glVersionMajor);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &glVersionMinor);
-	SDL_GL_SetSwapInterval(0);
+	
+    //Disnable vertical synchronization --> use framerate limitting instead (e.g. max 60 FPS)
+    SDL_GL_SetSwapInterval(0);
     
 	//Initialize basic drawing functions and console
     if(glewInit() != GLEW_OK) 
@@ -258,7 +263,10 @@ void SimulationApp::KeyDown(SDL_Event *event)
         case SDLK_SPACE:
             lastPicked = NULL;
 			if(!getSimulationManager()->isSimulationFresh())
-				getSimulationManager()->RestartScenario();
+            {
+				StopSimulation();
+                getSimulationManager()->RestartScenario();
+            }
             StartSimulation();
             break;
             
@@ -312,7 +320,8 @@ void SimulationApp::EventLoop()
 {
     SDL_Event event;
     bool mouseWasDown = false;
-    startTime = GetTimeInMicroseconds();
+    
+    uint64_t startTime = GetTimeInMicroseconds();
     
     while(!finished)
     {
@@ -407,7 +416,12 @@ void SimulationApp::EventLoop()
                     break;
                     
                 case SDL_QUIT:
+                {
+                    if(running)
+                        StopSimulation();
+                        
                     finished = true;
+                }   
                     break;
             }
         }
@@ -439,20 +453,21 @@ void SimulationApp::EventLoop()
             MouseDown(&event);
         }
         mouseWasDown = false;
+        
+        //Framerate limitting
+        uint64_t elapsedTime = GetTimeInMicroseconds() - startTime;
+        if(elapsedTime < 16500) std::this_thread::sleep_for(std::chrono::microseconds(16500 - elapsedTime));
+        startTime = GetTimeInMicroseconds();
     }
 }
 
 void SimulationApp::AppLoop()
 {
-    //Simulation
-    if(running)
+    //Do some updates
+    if(!running)
     {
-        simulation->AdvanceSimulation();
-        physicsTime = simulation->getPhysicsTimeInMiliseconds();
-	}
-    
-	//Update drawing queue
-	simulation->UpdateDrawingQueue();
+        simulation->UpdateDrawingQueue();
+    }
 	
     //Rendering
     uint64_t startTime = GetTimeInMicroseconds();
@@ -505,14 +520,11 @@ void SimulationApp::DoHUD()
 	sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());
     IMGUI::getInstance()->DoLabel(10, getWindowHeight() - 20.f, buffer);
     
-    sprintf(buffer, "Physics time: %1.2lf ms", getPhysicsTime());
+    sprintf(buffer, "Realtime: %1.2fx", getSimulationManager()->getRealtimeFactor());
     IMGUI::getInstance()->DoLabel(170, getWindowHeight() - 20.f, buffer);
     
-    sprintf(buffer, "Realtime: %1.2fx", getSimulationManager()->getRealtimeFactor());
-    IMGUI::getInstance()->DoLabel(360, getWindowHeight() - 20.f, buffer);
-    
     sprintf(buffer, "Simulation time: %1.2f s", getSimulationManager()->getSimulationTime());
-    IMGUI::getInstance()->DoLabel(520, getWindowHeight() - 20.f, buffer);
+    IMGUI::getInstance()->DoLabel(290, getWindowHeight() - 20.f, buffer);
     
     if(lastPicked != NULL)
     {
@@ -525,18 +537,31 @@ void SimulationApp::StartSimulation()
 {
     simulation->StartSimulation();
     running = true;
+    
+    SimulationThreadData* data = new SimulationThreadData();
+    data->app = this;
+    data->drawMutex = OpenGLPipeline::getInstance()->getDrawingQueueMutex();
+    simulationThread = SDL_CreateThread(SimulationApp::RunSimulation, "simulationThread", data);
 }
 
 void SimulationApp::ResumeSimulation()
 {
     simulation->ResumeSimulation();
     running = true;
+    
+    SimulationThreadData* data = new SimulationThreadData();
+    data->app = this;
+    data->drawMutex = OpenGLPipeline::getInstance()->getDrawingQueueMutex();
+    simulationThread = SDL_CreateThread(SimulationApp::RunSimulation, "simulationThread", data);
 }
 
 void SimulationApp::StopSimulation()
 {
+    int status;
     running = false;
     physicsTime = 0.f;
+    SDL_WaitThread(simulationThread, &status);
+    simulationThread = NULL;
     simulation->StopSimulation();
 }
 
@@ -603,4 +628,18 @@ int SimulationApp::RenderLoadingScreen(void* data)
     return 0;
 }
 
-
+int SimulationApp::RunSimulation(void* data)
+{
+    SimulationThreadData* stdata = (SimulationThreadData*)data;
+    SimulationManager* sim = stdata->app->getSimulationManager();
+    
+    while(stdata->app->isRunning())
+    {
+        sim->AdvanceSimulation();
+        SDL_LockMutex(stdata->drawMutex);
+        sim->UpdateDrawingQueue();
+        SDL_UnlockMutex(stdata->drawMutex);
+	}
+    
+    return 0;
+}

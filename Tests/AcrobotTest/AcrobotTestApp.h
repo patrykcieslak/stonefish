@@ -15,7 +15,7 @@
 class AcrobotTestApp : public SimulationApp
 {
 public:
-    AcrobotTestApp(int width, int height, AcrobotTestManager* sim);
+    AcrobotTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, AcrobotTestManager* sim);
 
     void DoHUD();
 };

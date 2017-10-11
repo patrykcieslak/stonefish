@@ -18,6 +18,8 @@
       <File Name="src/SimulationManager.cpp"/>
       <File Name="src/TorusShape.cpp"/>
       <File Name="src/UnitSystem.cpp"/>
+      <File Name="src/XMLSimulationApp.cpp"/>
+      <File Name="src/XMLSimulationManager.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="src/Actuator.cpp"/>
@@ -252,6 +254,8 @@
       <File Name="include/Stonefish/TorusShape.h"/>
       <File Name="include/Stonefish/MaterialManager.h"/>
       <File Name="include/Stonefish/SimulationManager.h"/>
+      <File Name="include/Stonefish/XMLSimulationApp.h"/>
+      <File Name="include/Stonefish/XMLSimulationManager.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>

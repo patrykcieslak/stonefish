@@ -36,7 +36,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -49,7 +49,8 @@ void UnderwaterTestManager::BuildScenario()
     ///////LOOKS///////////
     int yellow = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 0.6f, 0.2f), 0.2f, 0.f);
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
-	
+	int red = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.0f, 0.2f, 0.2f), 0.2f, 0.f);
+    
     ////////OBJECTS
 	Cylinder* hull = new Cylinder("Hull", 0.15, 1.5, getMaterialManager()->getMaterial("Cork"), yellow);
 	Cylinder* hullB = new Cylinder("HullB", 0.15, 1.5, getMaterialManager()->getMaterial("Plastic"), yellow);
@@ -73,11 +74,11 @@ void UnderwaterTestManager::BuildScenario()
 	manipA->AddRotLinkDH(link3A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
 	AddSystemEntity(manipA, btTransform(btQuaternion(M_PI_2, 0, M_PI_2), btVector3(0.1,0.75,2.5)));
 	
-    std::string path = GetDataPath() + "sphere_R=1.obj";
     
-    Thruster* th1 = new Thruster("TH1", 0.2, 0.01, 0.5, 0.05, 10, 1, path, 0.5, true, green);
-    th1->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion::getIdentity(), btVector3(0,0.2,0.0)));
-    th1->Setpoint(0.5);
+    Box* propeller = new Box("Propeller", btVector3(0.05, 0.18, 0.02), getMaterialManager()->getMaterial("Plastic"), red);
+    Thruster* th1 = new Thruster("TH1", propeller, 0.18, 0.48, 0.05, 100.0);
+    th1->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,-0.3)));
+    th1->setSetpoint(1.0);
     AddActuator(th1);
     
 	/*Sphere* duct = new Sphere("Duct", 0.05, getMaterialManager()->getMaterial("Plastic"), green); 
