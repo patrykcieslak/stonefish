@@ -278,6 +278,42 @@ void SimulationApp::KeyDown(SDL_Event *event)
             displayConsole = !displayConsole;
             Console::getInstance()->ResetScroll();
             break;
+			
+		case SDLK_LEFT:
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            
+			
+			
+		}
+			break;
+			
+		case SDLK_RIGHT:
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            
+			
+			
+		}
+			break;
+			
+		case SDLK_UP:
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+                   
+
+			
+		}
+			break;
+			
+		case SDLK_DOWN:
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            
+			
+			
+		}
+			break;
             
         default:
             break;

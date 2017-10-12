@@ -38,6 +38,7 @@ public:
 	void InitOcean();
 	void SimulateOcean();
 	void DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+	void DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
 	void ShowOceanSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
 	void ShowOceanTexture(int id, glm::vec4 rect);
 

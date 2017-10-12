@@ -166,6 +166,21 @@ void OpenGLOcean::InitOcean()
 	oceanShaders[0]->AddUniform("planetRadius", ParameterType::FLOAT);
 	oceanShaders[0]->AddUniform("sunDirection", ParameterType::VEC3);
 	
+	oceanShaders[1] = new GLSLShader(precompiled, "oceanBacksurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
+	oceanShaders[1]->AddUniform("tessDiv", ParameterType::FLOAT);
+	oceanShaders[1]->AddUniform("texWaveFFT", ParameterType::INT);
+	oceanShaders[1]->AddUniform("texSlopeVariance", ParameterType::INT);
+	oceanShaders[1]->AddUniform("MVP", ParameterType::MAT4);
+	oceanShaders[1]->AddUniform("gridSizes", ParameterType::VEC4);
+	oceanShaders[1]->AddUniform("eyePos", ParameterType::VEC3);
+	oceanShaders[1]->AddUniform("choppyFactor", ParameterType::VEC4);
+	oceanShaders[1]->AddUniform("MV", ParameterType::MAT3);
+	oceanShaders[1]->AddUniform("transmittance_texture", ParameterType::INT);
+	oceanShaders[1]->AddUniform("scattering_texture", ParameterType::INT);
+	oceanShaders[1]->AddUniform("irradiance_texture", ParameterType::INT);
+	oceanShaders[1]->AddUniform("planetRadius", ParameterType::FLOAT);
+	oceanShaders[1]->AddUniform("sunDirection", ParameterType::VEC3);
+	
 	oceanShaders[2] = new GLSLShader("oceanInit.frag"); //Using saq vertex shader
 	oceanShaders[2]->AddUniform("texSpectrum12", ParameterType::INT);
 	oceanShaders[2]->AddUniform("texSpectrum34", ParameterType::INT);
@@ -638,6 +653,95 @@ void OpenGLOcean::DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 p
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, 0);
 	glUseProgram(0);
 	
+	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
+}
+
+void OpenGLOcean::DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
+{
+	//Delete old tree
+	qt.leafs.clear();
+	if(!qt.root.leaf)
+	{
+		delete qt.root.child[0];
+		delete qt.root.child[1];
+		delete qt.root.child[2];
+		delete qt.root.child[3];
+	}
+	
+	//Build quad tree
+	qt.maxLvl = 12;
+	
+	int64_t start = GetTimeInMicroseconds();
+	qt.Grow(eyePos, projection * view);
+	int64_t end = GetTimeInMicroseconds();
+	
+	//Build mesh
+	if(qt.vboVertex > 0)
+	{
+		glDeleteBuffers(1, &qt.vboVertex);
+		glDeleteBuffers(1, &qt.vboEdgeDiv);
+	}
+	
+	std::vector<glm::vec3> data;
+	std::vector<glm::vec4> data2;
+	for(unsigned int i=0; i < qt.leafs.size(); ++i)
+	{
+		glm::vec3 origin = qt.leafs[i]->origin;
+		glm::vec2 half = qt.leafs[i]->size/2.f;
+		data.push_back(origin + glm::vec3(half, 0.f));
+		data.push_back(origin + glm::vec3(-half.x, half.y, 0.f));
+		data.push_back(origin + glm::vec3(-half, 0.f));
+		data.push_back(origin + glm::vec3(half.x, -half.y, 0.f));
+		
+		data2.push_back(qt.leafs[i]->edgeFactors);
+	}
+	
+	glGenBuffers(1, &qt.vboVertex);
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboVertex);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*data.size(), &data[0].x, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glGenBuffers(1, &qt.vboEdgeDiv);
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboEdgeDiv);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4)*data2.size(), &data2[0].x, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//Draw mesh
+	glCullFace(GL_FRONT);
+	
+	oceanShaders[1]->Use();
+	oceanShaders[1]->SetUniform("MVP", projection * view);
+	oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
+	oceanShaders[1]->SetUniform("eyePos", eyePos);
+	oceanShaders[1]->SetUniform("tessDiv", 8.f);
+	oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
+	oceanShaders[1]->SetUniform("choppyFactor", params.choppyFactor);
+	oceanShaders[1]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+	oceanShaders[1]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
+	OpenGLAtmosphere::getInstance()->SetupOceanShader(oceanShaders[1]);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+	
+	glBindVertexArray(qt.vao);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboVertex);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, qt.vboEdgeDiv);
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glDrawArrays(GL_PATCHES, 0, data.size());
+	
+	glBindVertexArray(0);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, 0);
+	glUseProgram(0);
+	
+	glCullFace(GL_BACK);
 	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
 }
 

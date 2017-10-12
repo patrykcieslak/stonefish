@@ -1,3 +1,29 @@
+#version 330 core
+uniform vec3 eyePos;
+uniform mat4 invProj;
+uniform mat3 invView;
+uniform vec2 viewport;
+
+out vec3 fragColor;
+
+vec3 getWorldNormal()
+{
+    vec2 fragPos = gl_FragCoord.xy/viewport;
+    fragPos = (fragPos-0.5)*2.0;
+    vec4 deviceNormal = vec4(fragPos, 0.0, 1.0);
+    vec3 eyeNormal = normalize((invProj * deviceNormal).xyz);
+    vec3 worldNormal = normalize(invView * eyeNormal);
+    return worldNormal;
+}
+
+void main()
+{
+	//Fragment ray
+	vec3 viewDir = getWorldNormal();
+	fragColor = vec3(0.0);
+}
+
+/*
 #version 120
 uniform sampler2D texPosition;
 uniform sampler2D texScene;
@@ -34,3 +60,4 @@ void main(void)
     
     gl_FragColor =  vec4(refraction, 1.0);
 }
+*/

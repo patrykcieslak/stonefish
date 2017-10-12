@@ -598,6 +598,7 @@ void OpenGLView::DrawAO()
 			//Final output to main fbo
 			glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
+			glDepthMask(GL_FALSE);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
     
@@ -617,12 +618,13 @@ void OpenGLView::DrawAO()
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 		
 			glDisable(GL_BLEND);
+			glDepthMask(GL_TRUE);
 			glDisable(GL_SAMPLE_MASK);
 			glSampleMaski(0, ~0);
 		}
 		glBindVertexArray(0);
 		glUseProgram(0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
 	}
 }
 

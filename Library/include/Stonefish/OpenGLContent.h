@@ -152,6 +152,7 @@ struct QuadTree
 
 //Rendering styles
 typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
+typedef enum {FLAT, FULL, UNDERWATER} DrawingMode;
 
 struct Look
 {
@@ -178,7 +179,7 @@ public:
 	void SetViewportSize(unsigned int width, unsigned int height);
 	void SetProjectionMatrix(glm::mat4 P);
 	void SetViewMatrix(glm::mat4 V);
-	void SetDrawFlatObjects(bool enable);
+	void SetDrawingMode(DrawingMode m);
 	void SetCurrentView(OpenGLView* v);
 	void BindBaseVertexArray();
 	
@@ -222,8 +223,8 @@ public:
 	
 private:
 	//Modes
-	bool drawFlatObjects; //For shadow casting
-
+	DrawingMode mode;
+	
 	//Data
 	std::vector<OpenGLView*> views;
     std::vector<OpenGLLight*> lights;

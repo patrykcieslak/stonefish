@@ -269,7 +269,6 @@
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">
-      <File Name="shaders/fluidVolume.frag"/>
       <File Name="shaders/oceanSurface.tes"/>
       <File Name="shaders/oceanFFTX.frag"/>
       <File Name="shaders/oceanFFTY.frag"/>
@@ -277,6 +276,8 @@
       <File Name="shaders/oceanSpectrum.frag"/>
       <File Name="shaders/oceanInit.frag"/>
       <File Name="shaders/oceanSurface.frag"/>
+      <File Name="shaders/oceanBacksurface.frag"/>
+      <File Name="shaders/oceanVolume.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="gui">
       <File Name="shaders/guiFlat.frag"/>
@@ -323,6 +324,7 @@
       <File Name="shaders/cookTorrance.frag"/>
       <File Name="shaders/material.vert"/>
       <File Name="shaders/material.frag"/>
+      <File Name="shaders/underwaterMaterial.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="atmosphere">
       <File Name="shaders/atmosphereDef.glsl"/>

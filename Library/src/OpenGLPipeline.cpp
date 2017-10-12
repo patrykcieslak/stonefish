@@ -197,7 +197,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
 	{
-		OpenGLContent::getInstance()->SetDrawFlatObjects(true);
+		OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FLAT);
         for(unsigned int i=0; i<OpenGLContent::getInstance()->getLightsCount(); ++i)
             OpenGLContent::getInstance()->getLight(i)->BakeShadowmap(this);
 	}
@@ -225,7 +225,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             //=================Bake sun shadows========================
             if(renderShadows)
 			{
-                OpenGLContent::getInstance()->SetDrawFlatObjects(true);
+                OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FLAT);
                 OpenGLAtmosphere::getInstance()->BakeShadowmaps(this, view);
 			}
 			
@@ -237,40 +237,61 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
 			if(ocean != NULL)
 			{
-				//Render all objects
-				view->SetViewport();
-				OpenGLContent::getInstance()->SetCurrentView(view);
-				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
+				if(view->GetEyePosition().z >= 0.f)
+				{
+					//Render all objects
+					view->SetViewport();
+					OpenGLContent::getInstance()->SetCurrentView(view);
+					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+					glDrawBuffers(2, renderBuffs);
+					DrawObjects();
             
-				//Draw ocean
-				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				//ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
-				//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					//Ambient occlusion
+					view->DrawAO();
+			
+					//Draw ocean surface
+					//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+					//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				
-				//Draw sky
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-				
-				//Ambient occlusion
-				//view->DrawAO();
+					//Draw sky
+					glDrawBuffer(GL_COLOR_ATTACHMENT0);
+					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+				}
+				else
+				{
+					//Render all objects
+					view->SetViewport();
+					OpenGLContent::getInstance()->SetCurrentView(view);
+					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+					glDrawBuffers(2, renderBuffs);
+					DrawObjects();
+					
+					//Ambient occlusion
+					view->DrawAO();
+					
+					//Draw ocean surface
+					ocean->getOpenGLOcean().DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+					
+					//Draw ocean volume
+					
+				}
 			}
 			else
 			{
 				//Render all objects
 				view->SetViewport();
 				OpenGLContent::getInstance()->SetCurrentView(view);
-				OpenGLContent::getInstance()->SetDrawFlatObjects(false);
+				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
 				glDrawBuffers(2, renderBuffs);
 				DrawObjects();
             
+				//Ambient occlusion
+				view->DrawAO();
+			
 				//Render sky
 				glDrawBuffer(GL_COLOR_ATTACHMENT0);
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-			
-				//Ambient occlusion
-				view->DrawAO();
 			}
 			
             //================Post-processing=============================
