@@ -121,6 +121,12 @@ void OpenGLTrackball::Rotate(const btQuaternion& rot)
     UpdateTrackballTransform();
 }
 
+void OpenGLTrackball::MoveCenter(const glm::vec3& step)
+{
+    center += step;
+    UpdateTrackballTransform();
+}
+
 void OpenGLTrackball::GlueToEntity(SolidEntity* solid)
 {
     holdingEntity = solid;

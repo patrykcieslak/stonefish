@@ -18,11 +18,13 @@ public:
     ~OpenGLTrackball();
     
 	void Rotate(const btQuaternion& rot);
+    void MoveCenter(const glm::vec3& step);
     void GlueToEntity(SolidEntity* solid);
 	void MouseDown(GLfloat x, GLfloat y);
     void MouseMove(GLfloat x, GLfloat y);
     void MouseUp();
     void MouseScroll(GLfloat s);
+    
     
     glm::mat4 GetViewTransform() const;
     glm::vec3 GetEyePosition() const;

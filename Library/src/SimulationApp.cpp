@@ -279,41 +279,49 @@ void SimulationApp::KeyDown(SDL_Event *event)
             Console::getInstance()->ResetScroll();
             break;
 			
-		case SDLK_LEFT:
+		case SDLK_w: //Forward
 		{
 			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            trackball->MoveCenter(trackball->GetLookingDirection() * 0.1);
+		}
+			break;
+			
+		case SDLK_s: //Backward
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1);
+		}
+			break;
+			
+		case SDLK_a: //Left
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
+            trackball->MoveCenter(-axis * 0.1);
+		}
+			break;
+			
+		case SDLK_d: //Right
+		{
+			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
+            trackball->MoveCenter(axis * 0.1);
+		}
+			break;
             
-			
-			
-		}
-			break;
-			
-		case SDLK_RIGHT:
-		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+        case SDLK_q: //Up
+        {
+            OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            trackball->MoveCenter(glm::vec3(0,0,0.1));
+        }
+            break;
             
-			
-			
-		}
-			break;
-			
-		case SDLK_UP:
-		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-                   
-
-			
-		}
-			break;
-			
-		case SDLK_DOWN:
-		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-            
-			
-			
-		}
-			break;
+        case SDLK_z: //Down
+        {
+            OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            trackball->MoveCenter(glm::vec3(0,0,-0.1));
+        }
+            break;
             
         default:
             break;
