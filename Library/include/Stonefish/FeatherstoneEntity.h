@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_FeatherstoneEntity__
@@ -13,6 +13,7 @@
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLink.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
+#include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
 #include "Entity.h"
 #include "SolidEntity.h"
@@ -38,7 +39,10 @@ struct FeatherstoneJoint
     btScalar velDamping;
 };
 
-/*! Featherstone multi-body */
+//! Featherstone multi-body dynamics class.
+/*!
+	Class implements simplified creation of multi-body trees, using Roy Featherstone algorithm. 
+ */
 class FeatherstoneEntity : public Entity
 {
 public:
@@ -48,6 +52,7 @@ public:
     void AddLink(SolidEntity* solid, const btTransform& transform, btMultiBodyDynamicsWorld* world);
     int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
     int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
+	int AddFixedJoint(unsigned int parent, unsigned int child, const btVector3& pivot);
 	void EnableSelfCollision();
 	void DisableSelfCollision();
   
@@ -63,6 +68,7 @@ public:
     void setJointDamping(unsigned int  index, btScalar constantFactor, btScalar viscousFactor);
     void getJointPosition(unsigned int index, btScalar& position, btMultibodyLink::eFeatherstoneJointType& jointType);
     void getJointVelocity(unsigned int index, btScalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
+	void getJointFeedback(unsigned int index, btVector3& force, btVector3& torque);
 	FeatherstoneLink getLink(unsigned int index);
     btTransform getLinkTransform(unsigned int index);
     btVector3 getLinkLinearVelocity(unsigned int index);
@@ -81,6 +87,7 @@ private:
     btMultiBody* multiBody;
     std::vector<FeatherstoneLink> links;
     std::vector<FeatherstoneJoint> joints;
+	btAlignedObjectArray<btMultiBodyJointFeedback*> jointFeedbacks;
     bool baseRenderable;
 };
 

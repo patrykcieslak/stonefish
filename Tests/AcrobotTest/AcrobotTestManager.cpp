@@ -35,7 +35,7 @@ void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setGravity(9.81);
     setICSolverParams(false);
@@ -95,7 +95,10 @@ void AcrobotTestManager::BuildScenario()
     Box* arm2 = new Box("Arm2", btVector3(0.03, 0.015, 0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
     arm2->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.05)));
     
-    FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 3, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,1.0)), getDynamicsWorld(), true);
+	Box* arm3 = new Box("Arm3", btVector3(0.03, 0.015, 0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
+    arm3->SetArbitraryPhysicalProperties(0.5, btVector3(0.001,0.001,0.001), btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.05)));
+    
+    FeatherstoneEntity* fe = new FeatherstoneEntity("FE", 4, base, btTransform(btQuaternion(0.0,0.0,0.0), btVector3(0.0,0.0,1.0)), getDynamicsWorld(), true);
     fe->setBaseRenderable(true);
     
     //Arm1
@@ -109,12 +112,17 @@ void AcrobotTestManager::BuildScenario()
     fe->AddRevoluteJoint(1, 2, btVector3(0.0, 0.0, 1.15), btVector3(0.0, 1.0, 0.0), false);
     fe->setJointDamping(1, 0.01, 0.005);
     
+	//Arm3
+	fe->AddLink(arm3, btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0.0, -0.02, 1.2)), getDynamicsWorld());
+    //fe->AddRevoluteJoint(1, 3, btVector3(0.0, 0.0, 1.15), btVector3(0.0, 1.0, 0.0), false);
+    fe->AddFixedJoint(2, 3, btVector3(0.0, 0.0, 1.15));
+	
     AddEntity(fe);
     
     FakeRotaryEncoder* enc1 = new FakeRotaryEncoder("Encoder1", fe, 0, 1000.0);
     AddSensor(enc1);
     
-    FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Encoder2", fe, 1, 1000.0);
+    FakeRotaryEncoder* enc2 = new FakeRotaryEncoder("Encoder2", fe, 0, 1000.0);
     AddSensor(enc2);
     
     DCMotor* motor = new DCMotor("DCX", fe, 1, 0.212, 0.0774e-3, 1.0/408.0, 23.4e-3, 0.0000055);
@@ -153,7 +161,7 @@ void AcrobotTestManager::BuildScenario()
     
     MISOStateSpaceController* miso = new MISOStateSpaceController("Regulator", mux, motor, 12.0, 1000.0);
     miso->SetGains(gains);
-    AddController(miso);
+	//AddController(miso);
     
     //////CAMERA & LIGHT//////
     //OpenGLOmniLight* omni = new OpenGLOmniLight(btVector3(0,0,0), OpenGLLight::ColorFromTemperature(4000, 10));

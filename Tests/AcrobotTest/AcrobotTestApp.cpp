@@ -61,4 +61,9 @@ void AcrobotTestApp::DoHUD()
         
         ResumeSimulation();
      }
+	 
+	 FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("FE");
+	 btVector3 f, tau;
+	 fe->getJointFeedback(2, f, tau);
+	 std::cout << "Force=(" << f.x() << "," << f.y() << "," << f.z() << ") Torque=(" << tau.x() << "," << tau.y() << "," << tau.z() << ")" << std::endl;	 
 }

@@ -39,6 +39,7 @@ public:
 	void SimulateOcean();
 	void DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
 	void DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+	void DrawOceanVolumeMask(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
 	void ShowOceanSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
 	void ShowOceanTexture(int id, glm::vec4 rect);
 
@@ -54,7 +55,7 @@ private:
 	float omega(float k);
 	float sqr(float x);
 
-	GLSLShader* oceanShaders[8]; //surface, volume, init, fftx, ffty, variance, choppy, show spectrum
+	GLSLShader* oceanShaders[9]; //surface, volume, init, fftx, ffty, variance, choppy, show spectrum, volume mask
 	GLuint oceanFBOs[3];
 	GLuint oceanTextures[7]; //spectrum12, spectrum34, slope, fft ping, fft pong, butterfly, gaussz
 	GLuint oceanViewTextures[8];

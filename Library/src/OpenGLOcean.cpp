@@ -23,7 +23,7 @@ OpenGLOcean::OpenGLOcean()
 OpenGLOcean::~OpenGLOcean()
 {
 	for(unsigned short i=0; i<3; ++i) if(oceanFBOs[i] != 0) glDeleteFramebuffers(1, &oceanFBOs[i]);
-	for(unsigned short i=0; i<8; ++i) if(oceanShaders[i] != NULL) delete oceanShaders[i];
+	for(unsigned short i=0; i<9; ++i) if(oceanShaders[i] != NULL) delete oceanShaders[i];
 	for(unsigned short i=0; i<7; ++i) if(oceanTextures[i] != 0) glDeleteTextures(1, &oceanTextures[i]);
 	for(unsigned short i=0; i<8; ++i) if(oceanViewTextures[i] != 0) glDeleteTextures(1, &oceanViewTextures[i]);
 	if(params.spectrum12 != NULL) delete[] params.spectrum12;
@@ -215,6 +215,14 @@ void OpenGLOcean::InitOcean()
 	oceanShaders[7]->AddUniform("zoom", ParameterType::FLOAT);
 	oceanShaders[7]->AddUniform("linear", ParameterType::FLOAT);
 	oceanShaders[7]->AddUniform("rect", ParameterType::VEC4);
+	
+	oceanShaders[8] = new GLSLShader("flat.frag", "pass.vert", "oceanVolume.geom");
+	oceanShaders[8]->AddUniform("axis", ParameterType::VEC2);
+	oceanShaders[8]->AddUniform("cellSize", ParameterType::VEC2);
+	oceanShaders[8]->AddUniform("MVP", ParameterType::MAT4);
+	oceanShaders[8]->AddUniform("texWaveFFT", ParameterType::INT);
+	oceanShaders[8]->AddUniform("gridSizes", ParameterType::VEC4);
+	oceanShaders[8]->AddUniform("choppyFactor", ParameterType::VEC4);
 	
 	//---generate variances
 	float slopeVarianceDelta = ComputeSlopeVariance();
@@ -743,6 +751,31 @@ void OpenGLOcean::DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::ma
 	
 	glCullFace(GL_BACK);
 	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
+}
+
+void OpenGLOcean::DrawOceanVolumeMask(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
+{
+	//Generate grid around camera near plane
+	
+	
+	
+	
+	//Draw ocean volume
+	oceanShaders[8]->Use();
+	oceanShaders[8]->SetUniform("MVP", projection * view);
+	oceanShaders[8]->SetUniform("gridSizes", params.gridSizes);
+	oceanShaders[8]->SetUniform("choppyFactor", params.choppyFactor);
+	oceanShaders[8]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+	OpenGLAtmosphere::getInstance()->SetupOceanShader(oceanShaders[1]);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
+	
+	
+	//glDrawArrays()
+	
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+	glUseProgram(0);
 }
 
 void OpenGLOcean::ShowOceanSpectrum(glm::vec2 viewportSize, glm::vec4 rect)
