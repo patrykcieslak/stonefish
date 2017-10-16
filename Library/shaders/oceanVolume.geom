@@ -1,7 +1,7 @@
 #version 430 core
 
 layout(points) in;
-layout(triangle_strip,max_vertices=4) out;
+layout(triangle_strip, max_vertices=6) out;
 
 //Computation grid params
 uniform vec2 axis;
@@ -34,19 +34,27 @@ void main()
 {
 	vec3 basePos = gl_in[0].gl_Position.xyz;
 	
-	//First wave surface vertex
+	vec3 ws01 = getWaveSurfaceVertex(basePos + vec3(-axis.y,axis.x, 0.0) * cellSize.y);
+	gl_Position = MVP * vec4(ws01.xy, ws01.z - 0.005, 1.0);
+	EmitVertex();
+	
+	vec3 ws02 = getWaveSurfaceVertex(basePos + vec3(axis, 0.0) * cellSize.x + vec3(-axis.y,axis.x, 0.0) * cellSize.y);
+	gl_Position = MVP * vec4(ws02.xy, ws02.z - 0.005, 1.0);
+	EmitVertex();
+	
 	vec3 ws1 = getWaveSurfaceVertex(basePos);
-	gl_Position = MVP * vec4(ws1, 1.0);
+	gl_Position = MVP * vec4(ws1.xy, ws1.z - 0.005, 1.0);
 	EmitVertex();
 	
-	//Second wave surface vertex
-	vec3 ws2 = getWaveSurfaceVertex(basePos + vec3(axis * cellSize.x, 0.0));
-	gl_Position = MVP * vec4(ws2, 1.0);
+	vec3 ws2 = getWaveSurfaceVertex(basePos + vec3(axis, 0.0) * cellSize.x);
+	gl_Position = MVP * vec4(ws2.xy, ws2.z - 0.005, 1.0);
 	EmitVertex();
 	
-	//Two vertices extending deep down
-	gl_Position = MVP * vec4(ws1.xy, -100.0, 1.0);
+	gl_Position = MVP * vec4(ws1.xy, ws1.z - 100.0, 1.0);
 	EmitVertex();
-	gl_Position = MVP * vec4(ws2.xy, -100.0, 1.0);
+	
+	gl_Position = MVP * vec4(ws2.xy, ws2.z - 100.0, 1.0);
 	EmitVertex();
+	
+	EndPrimitive();
 }

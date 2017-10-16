@@ -237,43 +237,55 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
 			if(ocean != NULL)
 			{
-				if(view->GetEyePosition().z >= 0.f)
-				{
-					//Render all objects
-					view->SetViewport();
-					OpenGLContent::getInstance()->SetCurrentView(view);
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-					glDrawBuffers(2, renderBuffs);
-					DrawObjects();
-            
-					//Ambient occlusion
-					view->DrawAO();
-			
-					//Draw ocean surface
-					//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
-					//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				view->SetViewport();
 				
-					//Draw sky
-					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-				}
-				else
-				{
-					//Render all objects
-					view->SetViewport();
-					OpenGLContent::getInstance()->SetCurrentView(view);
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-					glDrawBuffers(2, renderBuffs);
-					DrawObjects();
+				//Draw ocean surface
+				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+				
+				//Draw stencil mask
+				glEnable(GL_STENCIL_TEST);
+				
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+				glStencilMask(0xFF);
+				glClear(GL_STENCIL_BUFFER_BIT);
+				glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+				glDepthMask(GL_FALSE);
+				
+				ocean->getOpenGLOcean().DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());				
+				
+				glStencilFunc(GL_EQUAL, 0, 0xFF);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+				glStencilMask(0x00);
+				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+				glDepthMask(GL_TRUE);
+				
+				//Render all objects above ocean surface
+				OpenGLContent::getInstance()->SetCurrentView(view);
+				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+				glDrawBuffers(2, renderBuffs);
+				DrawObjects();
+            
+				//Ambient occlusion
+				//view->DrawAO();
+				
+				//Draw sky
+				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+				
+				glStencilFunc(GL_EQUAL, 1, 0xFF);
+				
+				//Render all objects below ocean surface
+				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+				glDrawBuffers(2, renderBuffs);
+				DrawObjects();
 					
-					//Ambient occlusion
-					view->DrawAO();
+				//Ambient occlusion
+				//view->DrawAO();
 					
-					//Draw ocean surface
-					ocean->getOpenGLOcean().DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
-					
-					//Draw ocean volume
-				}
+				//Draw ocean surface from below
+				ocean->getOpenGLOcean().DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+				
+				glDisable(GL_STENCIL_TEST);
 			}
 			else
 			{

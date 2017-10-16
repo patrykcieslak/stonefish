@@ -39,7 +39,7 @@ public:
 	void SimulateOcean();
 	void DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
 	void DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
-	void DrawOceanVolumeMask(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+	void DrawOceanVolumeMask(glm::vec3 eyePos, glm::vec3 lookingDir, glm::mat4 view, glm::mat4 projection);
 	void ShowOceanSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
 	void ShowOceanTexture(int id, glm::vec4 rect);
 
@@ -63,6 +63,8 @@ private:
 	OceanParams params;
 	QuadTree qt;
 	int64_t lastTime;
+	GLuint vaoMask;
+	GLuint vboMask;
 };
 
 #endif
