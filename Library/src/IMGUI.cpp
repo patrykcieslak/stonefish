@@ -286,8 +286,6 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
 void IMGUI::GenerateBackground()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    
 	glViewport(0, 0, windowW/4, windowH/4);
     
 	glActiveTexture(GL_TEXTURE0);

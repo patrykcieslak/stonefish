@@ -19,6 +19,13 @@ UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, std::string shader
 void UnderwaterTestApp::DoHUD()
 {
     SimulationApp::DoHUD();
+    
+    ui_id slider1;
+    slider1.owner = 0;
+    slider1.item = 3;
+    slider1.index = 0;
+    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    
     /*
     ui_id plot;
     plot.owner = 1;

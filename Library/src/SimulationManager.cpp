@@ -802,6 +802,10 @@ void SimulationManager::AdvanceSimulation()
     SDL_UnlockMutex(simInfoMutex);
 }
 
+void SimulationManager::SimulationStepCompleted()
+{
+}
+
 void SimulationManager::UpdateDrawingQueue()
 {
 	//Clear old items
@@ -1203,4 +1207,7 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, btSca
 	
     //Update simulation time
     simManager->simulationTime += timeStep;
+    
+    //Optional method to update some post simulation data (like ROS messages...)
+    simManager->SimulationStepCompleted();
 }

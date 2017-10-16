@@ -247,6 +247,8 @@ void Console::Render(bool overlay)
 			printer->Print(colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE, msg->text.c_str());
 		}
 	}
+    
+    glDisable(GL_BLEND);
 }
 
 void Console::Print(int messageType, const char *format, ...)

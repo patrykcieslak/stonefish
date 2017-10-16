@@ -552,12 +552,6 @@ void SimulationApp::DoHUD()
 {
     char buffer[256];
     
-    ui_id slider1;
-    slider1.owner = 0;
-    slider1.item = 3;
-    slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 120.f, 100.0, 5000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
-    
     //Bottom panel
     IMGUI::getInstance()->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
     

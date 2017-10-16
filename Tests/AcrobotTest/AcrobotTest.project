@@ -39,7 +39,6 @@
         <LibraryPath Value="/usr/lib"/>
         <LibraryPath Value="/usr/local/lib"/>
         <LibraryPath Value="/usr/lib/x86_64-linux-gnu"/>
-        <Library Value="Stonefish"/>
         <Library Value="BulletCollision"/>
         <Library Value="BulletDynamics"/>
         <Library Value="LinearMath"/>
@@ -56,6 +55,7 @@
       </Compiler>
       <Linker Options="" Required="yes">
         <LibraryPath Value="../../Library/build/Debug"/>
+        <Library Value="Stonefish_debug"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
@@ -97,6 +97,7 @@
       </Compiler>
       <Linker Options="" Required="yes">
         <LibraryPath Value="../../Library/build/Release"/>
+        <Library Value="Stonefish"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Release/AcrobotTest" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/zbuffer/Documents/stonefish/Tests/AcrobotTest/build/Release" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

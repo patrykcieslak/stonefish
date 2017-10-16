@@ -255,7 +255,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				
 					//Draw sky
-					glDrawBuffer(GL_COLOR_ATTACHMENT0);
 					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
 				}
 				else
@@ -274,7 +273,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					ocean->getOpenGLOcean().DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 					
 					//Draw ocean volume
-					
 				}
 			}
 			else
@@ -290,7 +288,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				view->DrawAO();
 			
 				//Render sky
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
 			}
 			

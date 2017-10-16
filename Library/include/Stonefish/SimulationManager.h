@@ -60,9 +60,11 @@ public:
     void RestartScenario();
     bool StartSimulation();
     void ResumeSimulation();
-    void AdvanceSimulation();
     void StopSimulation();
+    void AdvanceSimulation();
+    virtual void SimulationStepCompleted();
 	void UpdateDrawingQueue();
+    
 	
     void EnableOcean(Fluid* f = NULL);
 	void AddEntity(Entity* ent);
