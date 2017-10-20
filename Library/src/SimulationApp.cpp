@@ -409,8 +409,11 @@ void SimulationApp::EventLoop()
                     IMGUI::getInstance()->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
                     
                     //Trackball
-                    OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-                    trackball->MouseUp();
+                    if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
+                    {
+                        OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+                        trackball->MouseUp();
+                    }
                     
                     //Pass
                     MouseUp(&event);
@@ -422,12 +425,11 @@ void SimulationApp::EventLoop()
                     //GUI
                     IMGUI::getInstance()->MouseMove(event.motion.x, event.motion.y);
                     
-                    //Trackball
                     GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
                     GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
                     OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
                     trackball->MouseMove(xPos, yPos);
-    
+                        
                     //Pass
                     MouseMove(&event);
                 }
@@ -488,10 +490,13 @@ void SimulationApp::EventLoop()
             lastPicked = simulation->PickEntity(event.button.x, event.button.y);
             
             //Trackball
-            GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-            GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-            OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-            trackball->MouseDown(xPos, yPos);
+            if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
+            {
+                GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+                GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+                OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+                trackball->MouseDown(xPos, yPos, event.button.button == SDL_BUTTON_MIDDLE);
+            }
             
             //Pass
             MouseDown(&event);

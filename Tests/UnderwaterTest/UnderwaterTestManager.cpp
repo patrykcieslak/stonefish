@@ -25,10 +25,9 @@
 #include "Ocean.h"
 #include "Obstacle.h"
 #include "UnderwaterVehicle.h"
-#include "DynamicThruster.h"
 #include "Thruster.h"
 
-UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::MARINE, UnitSystems::MKS, stepsPerSecond, DANTZIG, STANDARD)
+UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, DANTZIG)
 {
 }
 
@@ -36,105 +35,95 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Plastic", UnitSystem::Density(CGS, MKS, 1.5), 0.4);
+    getMaterialManager()->CreateMaterial("Plastic", UnitSystem::Density(CGS, MKS, 1.0), 0.4);
     getMaterialManager()->CreateMaterial("Cork", UnitSystem::Density(CGS, MKS, 0.7), 0.2);
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Plastic", 0.9, 0.5);
     getMaterialManager()->SetMaterialsInteraction("Plastic", "Cork", 0.9, 0.7);
     getMaterialManager()->SetMaterialsInteraction("Cork", "Cork", 0.9, 0.7);
     
     ///////LOOKS///////////
-    int yellow = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 0.6f, 0.2f), 0.2f, 0.f);
+    int yellow = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 0.9f, 0.f), 0.3f, 0.f);
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
-	int red = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.0f, 0.2f, 0.2f), 0.2f, 0.f);
+	int grey = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.4f, 0.5f);
+    int propLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 1.f, 1.f), 0.3f, 0.f, GetDataPath() + "propeller_tex.png");
+    int ductLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 1.f, 1.f), 0.4f, 0.5f, GetDataPath() + "duct_tex.png");
+    int manipLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.2f, 0.15f, 0.1f), 0.6f, 0.8f);
     
-    ////////OBJECTS
-	Cylinder* hull = new Cylinder("Hull", 0.15, 1.5, getMaterialManager()->getMaterial("Cork"), yellow);
-	Cylinder* hullB = new Cylinder("HullB", 0.15, 1.5, getMaterialManager()->getMaterial("Plastic"), yellow);
+    ////////OBJECTS    
+	//Create underwater vehicle body
+    Polyhedron* hullP = new Polyhedron("HullPort", GetDataPath() + "hull_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Cork"), yellow, false);
+    Polyhedron* hullS = new Polyhedron("HullStarboard", GetDataPath() + "hull_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Cork"), yellow, false);
+    Polyhedron* hullB = new Polyhedron("HullBottom", GetDataPath() + "hull_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), yellow, false);
+    Polyhedron* vBarStern = new Polyhedron("VBarStern", GetDataPath() + "vbar_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), grey, false);
+    Polyhedron* vBarBow = new Polyhedron("VBarBow", GetDataPath() + "vbar_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), grey, false);
+    Polyhedron* ductSway = new Polyhedron("DuctSway", GetDataPath() + "duct_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), ductLook, false);
+    Polyhedron* ductSurgeP = new Polyhedron("DuctSurgePort", GetDataPath() + "duct_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), ductLook, false);
+    Polyhedron* ductSurgeS = new Polyhedron("DuctSurgeStarboard", GetDataPath() + "duct_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), ductLook, false);
+    Polyhedron* ductHeaveS = new Polyhedron("DuctHeaveStern", GetDataPath() + "duct_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), ductLook, false);
+    Polyhedron* ductHeaveB = new Polyhedron("DuctHeaveBow", GetDataPath() + "duct_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), ductLook, false);
+    
+    Compound* comp = new Compound("Compound", hullB, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)));
+	comp->AddExternalPart(hullP, btTransform(btQuaternion(0,0,0), btVector3(0,-0.35,-0.7)));
+	comp->AddExternalPart(hullS, btTransform(btQuaternion(0,0,0), btVector3(0,0.35,-0.7)));
+    comp->AddExternalPart(vBarStern, btTransform(btQuaternion::getIdentity(), btVector3(-0.25,0.0,-0.15)));
+    comp->AddExternalPart(vBarBow, btTransform(btQuaternion::getIdentity(), btVector3(0.30,0.0,-0.15)));
+    comp->AddExternalPart(ductSway, btTransform(btQuaternion(M_PI_2,0,0), btVector3(-0.0137, -0.0307, -0.38)));
+    comp->AddExternalPart(ductSurgeP, btTransform(btQuaternion(0,0,M_PI), btVector3(-0.2807,-0.2587,-0.38)));
+    comp->AddExternalPart(ductSurgeS, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));
+    comp->AddExternalPart(ductHeaveS, btTransform(btQuaternion(M_PI_2,-M_PI_2,0), btVector3(-0.5337,0.0,-0.6747)));
+    comp->AddExternalPart(ductHeaveB, btTransform(btQuaternion(-M_PI_2,-M_PI_2,0), btVector3(0.5837,0.0,-0.6747)));
 	
-	//Vehicle body
-	Compound* comp = new Compound("Compound", hullB, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-	comp->AddExternalPart(hull, btTransform(btQuaternion::getIdentity(), btVector3(0.35,0,-0.7)));
-	comp->AddExternalPart(hull, btTransform(btQuaternion::getIdentity(), btVector3(-0.35,0,-0.7)));
+    //Create underwater vehicle
+	UnderwaterVehicle* vehicle = new UnderwaterVehicle("AUV", comp);
+	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,-2)));
 	
-	UnderwaterVehicle* vehicle = new UnderwaterVehicle("AUV", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
-	AddSystemEntity(vehicle, btTransform::getIdentity());
-	
-	Box* link1A = new Box("Link1A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
+    //Create thrusters
+    Polyhedron* propSway = new Polyhedron("PropellerSway", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), propLook, false);
+    Thruster* thSway = new Thruster("ThrusterSway", propSway, 0.18, 0.48, 0.05, 100.0);
+    thSway->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion(M_PI_2,0,0), btVector3(-0.0137, -0.0307, -0.38)));
+    thSway->setSetpoint(0.0);
+    AddActuator(thSway);
+    
+    Polyhedron* propSurgeP = new Polyhedron("PropellerSurgePort", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), propLook, false);
+    Thruster* thSurgeP = new Thruster("ThrusterSurgePort", propSurgeP, 0.18, 0.48, 0.05, 100.0);
+    thSurgeP->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,-0.2587,-0.38)));
+    thSurgeP->setSetpoint(1.0);
+    AddActuator(thSurgeP);
+    
+    Polyhedron* propSurgeS = new Polyhedron("PropellerSurgeStarboard", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), propLook, false);
+    Thruster* thSurgeS = new Thruster("ThrusterSurgeStarboard", propSurgeS, 0.18, 0.48, 0.05, 100.0);
+    thSurgeS->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));
+    thSurgeS->setSetpoint(0.0);
+    AddActuator(thSurgeS);
+    
+    Polyhedron* propHeaveS = new Polyhedron("PropellerHeaveStern", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), propLook, false);
+    Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", propHeaveS, 0.18, 0.48, 0.05, 100.0);
+    thHeaveS->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion(0,-M_PI_2,0), btVector3(-0.5337,0.0,-0.6747)));
+    thHeaveS->setSetpoint(0.0);
+    AddActuator(thHeaveS);
+    
+    Polyhedron* propHeaveB = new Polyhedron("PropellerHeaveBow", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), propLook, false);
+    Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", propHeaveB, 0.18, 0.48, 0.05, 100.0);
+    thHeaveB->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion(0,-M_PI_2,0), btVector3(0.5837,0.0,-0.6747)));
+    thHeaveB->setSetpoint(0.0);
+    AddActuator(thHeaveB);
+    
+    //Create manipulator
+    Polyhedron* baseLink = new Polyhedron("ArmBaseLink", GetDataPath() + "baseLink_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), manipLook, false);
+    Polyhedron* baseLink2 = new Polyhedron("ArmBaseLink", GetDataPath() + "baseLink_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), manipLook, false);
+    Polyhedron* baseLink3 = new Polyhedron("ArmBaseLink", GetDataPath() + "baseLink_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Plastic"), manipLook, false);
+    
+    Box* link1A = new Box("Link1A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
 	Box* link2A = new Box("Link2A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
 	Box* link3A = new Box("Link3A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
 	
-	Sphere* baseA = new Sphere("BaseA", 0.1f, getMaterialManager()->getMaterial("Cork"), green);
-	Manipulator* manipA = new Manipulator("ArmA", 3, baseA, vehicle->getVehicleBody());
-	manipA->AddRotLinkDH(link1A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	manipA->AddRotLinkDH(link2A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	manipA->AddRotLinkDH(link3A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	AddSystemEntity(manipA, btTransform(btQuaternion(M_PI_2, 0, M_PI_2), btVector3(0.1,0.75,2.5)));
-	
-    
-    Box* propeller = new Box("Propeller", btVector3(0.05, 0.18, 0.02), getMaterialManager()->getMaterial("Plastic"), red);
-    Thruster* th1 = new Thruster("TH1", propeller, 0.18, 0.48, 0.05, 100.0);
-    th1->AttachToSolid(vehicle->getVehicleBody(), 0, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,-0.3)));
-    th1->setSetpoint(1.0);
-    AddActuator(th1);
-    
-	/*Sphere* duct = new Sphere("Duct", 0.05, getMaterialManager()->getMaterial("Plastic"), green); 
-	Box* prop = new Box("Propeller", btVector3(0.05,0.2,0.01), getMaterialManager()->getMaterial("Plastic"), green);
-	Thruster* th = new Thruster("Thruster", vehicle, duct, prop, 0.2, 0.2);
-	AddSystemEntity(th, btTransform(btQuaternion::getIdentity(), btVector3(0.0, 0.0, 1.65)));
-	
-	th->SetDesiredSpeed(10);
-	
-	Sphere* duct2 = new Sphere("Duct2", 0.05, getMaterialManager()->getMaterial("Plastic"), green); 
-	Box* prop2 = new Box("Propeller2", btVector3(0.05,0.2,0.01), getMaterialManager()->getMaterial("Plastic"), green);
-	Thruster* th2 = new Thruster("Thruster2", vehicle, duct2, prop2, 0.2, 0.2);
-	AddSystemEntity(th2, btTransform(btQuaternion(M_PI_2,0,0), btVector3(0.0, -0.6, 1.65)));
-	
-	th2->SetDesiredSpeed(10);
-	*/
-    //Setup model paths
-    /*std::string path = GetDataPath() + "sphere_R=1.obj";
-	
-    //Reference solid
-	Polyhedron* hull1 = new Polyhedron("Solid", path, btScalar(0.5), getMaterialManager()->getMaterial("Cork"), green, true);
-    //AddSolidEntity(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,-2.0)));
-
-    //Vehicle
-    Polyhedron* hull2 = new Polyhedron("Solid", path, btScalar(0.5), getMaterialManager()->getMaterial("Concrete"), yellow, true);
-    
-    UnderwaterVehicle* rov = new UnderwaterVehicle("ROV");
-    rov->AddExternalPart(hull2, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1.0)));
-    rov->AddExternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,-0.7,0)));
-    rov->AddExternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,0.7,0)));
-    //rov->AddInternalPart(hull1, btTransform(btQuaternion::getIdentity(), btVector3(0,0.0,1.0)));
-    AddSystemEntity(rov, btTransform(btQuaternion(0.1,0,0), btVector3(0,0,0)));
-	
-	//Box* vehicle = new Box("Box", btVector3(1.,1.,1.), getMaterialManager()->getMaterial("Cork"), yellow);
-	//AddSolidEntity(vehicle, btTransform(btQuaternion::getIdentity(), btVector3(0,0,1)));
-	
-    Box* link1 = new Box("Link1", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
-	Box* link2 = new Box("Link2", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
-	Box* link3 = new Box("Link3", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Cork"), green);
-	
-	Sphere* base = new Sphere("Sphere", 0.1f, getMaterialManager()->getMaterial("Cork"), green);
-	Manipulator* manip = new Manipulator("Arm", 3, base, btTransform(btQuaternion::btQuaternion(btVector3(1,0,0), M_PI_2), btVector3(0,0,1)), rov->getRigidBody());
-	manip->AddRotLinkDH(link1, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
-	manip->AddRotLinkDH(link2, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
-	manip->AddRotLinkDH(link3, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.6f, 0);
-	AddEntity(manip);*/
-	
-	//Box* box = new Box("Box", btVector3(1.,1.,1.), getMaterialManager()->getMaterial("Cork"), green);
-	//AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-	
-	//Sphere* sphere = new Sphere("Sphere", 0.5, getMaterialManager()->getMaterial("Cork"), green);
-	//AddSolidEntity(sphere, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-2.)));
-	
-	//Cylinder* cylinder = new Cylinder("Cylinder", 0.5, 1., getMaterialManager()->getMaterial("Cork"), green);
-	//AddSolidEntity(cylinder, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-4.)));
-	
-	//Torus* torus = new Torus("Torus", 1., 0.1, getMaterialManager()->getMaterial("Cork"), yellow);
-	//AddSolidEntity(torus, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-6.)));
+	Manipulator* arm = new Manipulator("Arm", 2, baseLink, btTransform(btQuaternion::getIdentity(), btVector3(0.255,-0.02,0)), vehicle->getVehicleBody());
+	arm->AddRotLinkDH(baseLink2, btTransform(btQuaternion(0,0,0), btVector3(-0.5,0,0)), 0, 1.0, 0.5*M_PI_2);
+	arm->AddRotLinkDH(baseLink3, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0, 0.5, 0);
+	//arm->AddRotLinkDH(link3A, btTransform(btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	AddSystemEntity(arm, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0.0,0.0,-1.5)));
 }

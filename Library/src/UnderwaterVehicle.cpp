@@ -9,9 +9,9 @@
 #include "UnderwaterVehicle.h"
 #include "SimulationApp.h"
 
-UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid, const btTransform& worldTrans) : SystemEntity(uniqueName)
+UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid) : SystemEntity(uniqueName)
 {
-    vehicleBody = new FeatherstoneEntity(uniqueName + "/FE", 1, bodySolid, worldTrans, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
+    vehicleBody = new FeatherstoneEntity(uniqueName + "/FE", 1, bodySolid, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
     showInternals = false;
     lastLinearVel = btVector3(0,0,0);
     lastAngularVel = btVector3(0,0,0);
@@ -22,6 +22,11 @@ UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySo
 UnderwaterVehicle::~UnderwaterVehicle()
 {
     //Destroy subsystems......
+}
+
+SystemType UnderwaterVehicle::getSystemType()
+{
+    return SYSTEM_UNDERWATER_VEHICLE;
 }
 
 btTransform UnderwaterVehicle::getTransform() const
@@ -40,7 +45,9 @@ FeatherstoneEntity* UnderwaterVehicle::getVehicleBody()
 void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
 	if(vehicleBody != NULL)
-		vehicleBody->AddToDynamicsWorld(world);
+    {
+        vehicleBody->AddToDynamicsWorld(world, worldTransform);
+    }
 }
 
 void UnderwaterVehicle::UpdateAcceleration(btScalar dt)

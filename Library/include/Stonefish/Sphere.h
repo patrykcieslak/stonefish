@@ -18,7 +18,7 @@ public:
     Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId = -1);
     ~Sphere();
     
-    SolidEntityType getSolidType();
+    SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
 
 private:    

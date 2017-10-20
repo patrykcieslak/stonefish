@@ -17,11 +17,13 @@
 #include "ServoController.h"
 #include "FixedJoint.h"
 
+//First link must be designed so that Z axis is the rotation axis of first joint
+
 class Manipulator : public SystemEntity
 {
 public:
-    Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink); //Fixed base maniupulator
-	Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, FeatherstoneEntity* attachment); //Attached to base of multibody
+    Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint); //Fixed base maniupulator
+	Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint, FeatherstoneEntity* attachment); //Attached to base of multibody
     virtual ~Manipulator();
     
 	//Manipulator
@@ -40,7 +42,10 @@ public:
     void UpdateActuators(btScalar dt);
     void ApplyGravity(const btVector3& g);
 	void ApplyDamping();
+    
+    SystemType getSystemType();
     btTransform getTransform() const;
+    const std::vector<btTransform>& getDH();
     virtual std::vector<Renderable> Render();
     
 private:
@@ -52,7 +57,7 @@ private:
 	unsigned int nLinks;
 	unsigned int nTotalLinks;
 	
-	btTransform lastDHTrans; //Temp used while creating the structure
+	std::vector<btTransform> DH; //Succesive transforms from D-H notation (multiplied) 
 	FeatherstoneEntity* attach;
 };
 

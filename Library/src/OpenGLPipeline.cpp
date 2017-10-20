@@ -18,6 +18,8 @@
 #include "Console.h"
 #include "PathGenerator.h"
 #include "PathFollowingController.h"
+#include "Ocean.h"
+#include "Manipulator.h"
 
 OpenGLPipeline* OpenGLPipeline::instance = NULL;
 
@@ -182,11 +184,23 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
     SDL_UnlockMutex(drawingQueueMutex);
     
+    unsigned int renderMode = 0;
+    
     //Simulate ocean
-	Ocean* ocean = sim->getOcean();
-	
-	if(ocean != NULL)
-		ocean->getOpenGLOcean().SimulateOcean();
+	Liquid* liquid = sim->getLiquid();
+    
+    if(liquid != NULL)
+    {
+        if(liquid->getForcefieldType() == ForcefieldType::FORCEFIELD_OCEAN)
+        {
+            renderMode = 2;
+            ((Ocean*)liquid)->getOpenGLOcean().SimulateOcean();
+        }
+        else //POOL
+        {
+            renderMode = 1;
+        }
+    }
 		
 	/*GLfloat az,elev;
 	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
@@ -235,8 +249,24 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			glDrawBuffers(2, renderBuffs);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
-			if(ocean != NULL)
+            if(renderMode == 0 || renderMode == 1)
+            {
+                //Render all objects
+				view->SetViewport();
+				OpenGLContent::getInstance()->SetCurrentView(view);
+				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+				glDrawBuffers(2, renderBuffs);
+				DrawObjects();
+            
+				//Ambient occlusion
+				view->DrawAO();
+			
+				//Render sky
+				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+            }
+			else if(renderMode == 2)
 			{
+                Ocean* ocean = (Ocean*)liquid;
 				view->SetViewport();
 				
 				//Draw ocean surface
@@ -287,21 +317,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				
 				glDisable(GL_STENCIL_TEST);
 			}
-			else
-			{
-				//Render all objects
-				view->SetViewport();
-				OpenGLContent::getInstance()->SetCurrentView(view);
-				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
-            
-				//Ambient occlusion
-				view->DrawAO();
-			
-				//Render sky
-				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-			}
 			
             //================Post-processing=============================
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -336,11 +351,30 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				{
 					OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].csModel, 0.5f);
 				}
+                
+                /*for(unsigned int h=0; h<sim->entities.size(); ++h)
+                {
+                    if(sim->entities[h]->getType() == ENTITY_SYSTEM)
+                    {
+                        SystemEntity* sys = (SystemEntity*)sim->entities[h];
+                        
+                        if(sys->getSystemType() == SYSTEM_MANIPULATOR)
+                        {
+                            Manipulator* manip = (Manipulator*)sys;
+                            const std::vector<btTransform>& DH = manip->getDH();
+                            for(unsigned int k=0; k<DH.size(); ++k)
+                            {
+                                OpenGLContent::getInstance()->DrawCoordSystem(glMatrixFromBtTransform(DH[k]), 0.3f);
+                            }
+                        }
+                    }
+                }
+                */
             }
             
 			//TODO: Correct debug drawing of following items
             //Joints
-			for(int h=0; h<sim->joints.size(); h++)
+			/*for(int h=0; h<sim->joints.size(); h++)
 				if(sim->joints[h]->isRenderable())
 					sim->joints[h]->Render();
             
@@ -374,7 +408,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         cam->RenderDummy();
                     }
 				}
-                
+            */  
+            
             //Fluid dynamics
             if(showFluidDynamics)
             {
@@ -387,11 +422,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
                 
             //Debugging
-			if(ocean != NULL)
-			{	
+			//if(ocean != NULL)
+			//{	
 				//ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
 				//ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
-			}
+			//}
 			
 			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
 			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));

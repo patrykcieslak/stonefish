@@ -31,7 +31,7 @@ Torus::~Torus()
 {
 }
 
-SolidEntityType Torus::getSolidType()
+SolidType Torus::getSolidType()
 {
     return SOLID_TORUS;
 }

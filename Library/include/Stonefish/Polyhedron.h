@@ -17,7 +17,7 @@ public:
     Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId = -1, bool smoothNormals = true);
 	~Polyhedron();
     
-    SolidEntityType getSolidType();
+    SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
 	
 private:

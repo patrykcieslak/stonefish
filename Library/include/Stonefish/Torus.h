@@ -17,7 +17,7 @@ public:
     Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material m, int lookId = -1);
     ~Torus();
     
-    SolidEntityType getSolidType();
+    SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
     
 private:	

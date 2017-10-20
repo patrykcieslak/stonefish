@@ -29,7 +29,7 @@ Box::~Box()
 {
 }
 
-SolidEntityType Box::getSolidType()
+SolidType Box::getSolidType()
 {
     return SOLID_BOX;
 }

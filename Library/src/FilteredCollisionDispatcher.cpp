@@ -31,8 +31,7 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
         if(ent1 == NULL)
             return false;
         
-        //check if there exists a contact joint
-        return SimulationApp::getApp()->getSimulationManager()->CheckContact(ent0, ent1);
+        return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
     }
     else //exclusive
     {
@@ -48,7 +47,7 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
             if(ent1 == NULL)
                 return true;
             
-            return !SimulationApp::getApp()->getSimulationManager()->CheckContact(ent0, ent1);
+            return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
         }
         else
             return false;

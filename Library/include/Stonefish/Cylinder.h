@@ -17,7 +17,7 @@ public:
     Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId = -1);
     ~Cylinder();
     
-    SolidEntityType getSolidType();
+    SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
 
 private:

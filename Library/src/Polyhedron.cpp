@@ -126,7 +126,7 @@ Polyhedron::~Polyhedron(void)
 {
 }
 
-SolidEntityType Polyhedron::getSolidType()
+SolidType Polyhedron::getSolidType()
 {
     return SOLID_POLYHEDRON;
 }

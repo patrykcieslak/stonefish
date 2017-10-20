@@ -10,22 +10,22 @@
 #include "SimulationApp.h"
 #include "FakeRotaryEncoder.h"
 
-Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink) : SystemEntity(uniqueName)
+Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint) : SystemEntity(uniqueName)
 {
-	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, btTransform::getIdentity(), SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), true);
+	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), true);
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
-	lastDHTrans = btTransform::getIdentity();
+    DH.push_back(geomToJoint);
 	chain->EnableSelfCollision(); //Enable collision between links
 	attach = NULL;
 }
 
-Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, FeatherstoneEntity* attachment) : SystemEntity(uniqueName)
+Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint, FeatherstoneEntity* attachment) : SystemEntity(uniqueName)
 {
-	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, btTransform::getIdentity(), SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
+	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
-	lastDHTrans = btTransform::getIdentity();
+	DH.push_back(geomToJoint);
 	chain->EnableSelfCollision(); //Enable collision between links
 	attach = attachment;
 }
@@ -52,20 +52,20 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 		btMultiBodyDynamicsWorld* world = SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld();
 		
 		//Link connected with parent in joint 
-		btTransform trans = lastDHTrans * geomToJoint.inverse() * link->getLocalTransform();
+		btTransform trans = DH.back() * geomToJoint.inverse();
 		
 		//Rotary joint around Z axis
-		btVector3 pivot = lastDHTrans.getOrigin();
+		btVector3 pivot = DH.back().getOrigin();
 		
 		//Update Featherstone chain
 		chain->AddLink(link, trans, world);
-		chain->AddRevoluteJoint(nLinks-1, nLinks, pivot, btVector3(0,0,1)); //Revolve always around local Z axis, no collision between joint links
+		chain->AddRevoluteJoint(nLinks-1, nLinks, pivot, DH.back().getBasis().getColumn(2)); //Revolve always around local Z axis, no collision between joint links
 		chain->setJointDamping(nLinks-1, 0, 0.5);
 		
 		//Update trasformation matrix
 		btTransform t1(btQuaternion::getIdentity(), btVector3(0,0,d));
 		btTransform t2(btQuaternion(btVector3(1,0,0), alpha), btVector3(a,0,0));
-		lastDHTrans *= t1 * t2;
+		DH.push_back(DH.back() * t1 * t2);
 		
 		//Add motor
 		Motor* motor = new Motor(getName() + "/Motor" + std::to_string(nLinks), chain, nLinks-1);
@@ -79,7 +79,7 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 		ServoController* ctrl = new ServoController(getName() + "/Controller" + std::to_string(nLinks), motor, enc, btScalar(100));
 		ctrl->SetPosition(0.0);
 		ctrl->SetGains(btScalar(200), btScalar(10), btScalar(0.1), btScalar(100));
-		ctrl->Start();
+		//ctrl->Start();
 		controllers.push_back(ctrl);
 		
 		//Link successfully created
@@ -89,8 +89,7 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 
 void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
-	chain->setBaseTransform(worldTransform);// Doesn't work - moves base properly but explodes with motion
-	chain->AddToDynamicsWorld(world);
+	chain->AddToDynamicsWorld(world, worldTransform);
 	
 	if(attach != NULL)
 	{
@@ -140,6 +139,11 @@ void Manipulator::ApplyDamping()
 	chain->ApplyDamping();
 }
 
+SystemType Manipulator::getSystemType()
+{
+    return SYSTEM_MANIPULATOR;
+}
+
 btTransform Manipulator::getTransform() const
 {
 	return chain->getMultiBody()->getBaseWorldTransform();
@@ -177,4 +181,9 @@ void Manipulator::setDesiredJointPosition(unsigned int jointId, btScalar positio
 		return;
 		
 	controllers[jointId]->SetPosition(position);
+}
+
+const std::vector<btTransform>& Manipulator::getDH()
+{
+    return DH;
 }

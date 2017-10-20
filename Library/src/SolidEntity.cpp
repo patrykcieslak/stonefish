@@ -166,6 +166,18 @@ btTransform SolidEntity::getTransform() const
         return btTransform::getIdentity();
 }
 
+void SolidEntity::setTransform(const btTransform& trans)
+{
+    if(rigidBody != NULL)
+    {
+        rigidBody->getMotionState()->setWorldTransform(trans);
+    }
+    else if(multibodyCollider != NULL)
+    {
+        multibodyCollider->setWorldTransform(trans);
+    }
+}
+
 btVector3 SolidEntity::getLinearVelocity()
 {
     if(rigidBody != NULL)
@@ -531,7 +543,7 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
+void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
 {
     //Set zeros
 	Fb.setZero();
@@ -559,40 +571,176 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
         btVector3 p3 = geometryTransform * btVector3(p3gl.x,p3gl.y,p3gl.z);
         
         //Check if underwater
-        btScalar pressure = (fluid->GetPressure(p1) + fluid->GetPressure(p2) + fluid->GetPressure(p3))/btScalar(3);
-        if(pressure <= btScalar(0.))
+        btScalar depth[3];
+        depth[0] = liquid->GetDepth(p1);
+        depth[1] = liquid->GetDepth(p2);
+        depth[2] = liquid->GetDepth(p3);
+        
+        if(depth[0] < btScalar(0.) && depth[1] < btScalar(0.) && depth[2] < btScalar(0.))
             continue;
         
-        //Calculate face features
-        btVector3 fv1 = p2-p1; //One side of the face (triangle)
-        btVector3 fv2 = p3-p1; //Another side of the face (triangle)
-        btVector3 fc = (p1+p2+p3)/btScalar(3); //Face centroid
-        btVector3 fn = fv1.cross(fv2); //Normal of the face (length != 1)
-        btScalar len = fn.length();
-        btVector3 fn1 = fn/len; //Normalised normal (length = 1)
-        btScalar A = len/btScalar(2); //Area of the face (triangle)
+        //Calculate face properties
+        btVector3 fc;
+        btVector3 fn;
+        btVector3 fn1;
+        btScalar A;
+        
+        if(depth[0] < btScalar(0.))
+        {
+            if(depth[1] < btScalar(0.))
+            {
+                p1 = p3 + (p1-p3) * (depth[2]/(btFabs(depth[0]) + depth[2]));
+                p2 = p3 + (p2-p3) * (depth[2]/(btFabs(depth[1]) + depth[2]));
+                //p3 without change
+                
+                //Calculate
+                btVector3 fv1 = p2-p1; //One side of the face (triangle)
+                btVector3 fv2 = p3-p1; //Another side of the face (triangle)
+                fc = (p1+p2+p3)/btScalar(3); //Face centroid
+        
+                fn = fv1.cross(fv2); //Normal of the face (length != 1)
+                btScalar len = fn.length();
+                fn1 = fn/len; //Normalised normal (length = 1)
+                A = len/btScalar(2); //Area of the face (triangle)
+            }
+            else if(depth[2] < btScalar(0.))
+            {
+                p1 = p2 + (p1-p2) * (depth[1]/(btFabs(depth[0]) + depth[1]));
+                //p2 withour change
+                p3 = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
+                
+                //Calculate
+                btVector3 fv1 = p2-p1; //One side of the face (triangle)
+                btVector3 fv2 = p3-p1; //Another side of the face (triangle)
+                fc = (p1+p2+p3)/btScalar(3); //Face centroid
+        
+                fn = fv1.cross(fv2); //Normal of the face (length != 1)
+                btScalar len = fn.length();
+                fn1 = fn/len; //Normalised normal (length = 1)
+                A = len/btScalar(2); //Area of the face (triangle)
+            }
+            else //depth[1] >= 0 && depth[2] >= 0
+            {
+                //Quad!!!!
+                btVector3 p1temp = p2 + (p1-p2) * (depth[1]/(btFabs(depth[0]) + depth[1]));
+                //p2 without change
+                //p3 without change
+                btVector3 p4 = p3 + (p1-p3) * (depth[2]/(btFabs(depth[0]) + depth[2]));
+                p1 = p1temp;
+                
+                //Calculate
+                btVector3 fv1 = p2-p1;
+                btVector3 fv2 = p3-p1;
+                btVector3 fv3 = p4-p1;
+                
+                fc = (p1 + p2 + p3 + p4)/btScalar(4);
+                fn = fv1.cross(fv2);
+                btScalar len = fn.length();
+                fn1 = fn/len;
+                A = len + fv2.cross(fv3).length();
+                fn = fn1 * A;
+            }
+        }
+        else if(depth[1] < btScalar(0.))
+        {
+            if(depth[2] < btScalar(0.))
+            {
+                //p1 without change
+                p2 = p1 + (p2-p1) * (depth[0]/(btFabs(depth[1]) + depth[0]));
+                p3 = p1 + (p3-p1) * (depth[0]/(btFabs(depth[2]) + depth[0]));
+                
+                //Calculate
+                btVector3 fv1 = p2-p1; //One side of the face (triangle)
+                btVector3 fv2 = p3-p1; //Another side of the face (triangle)
+                fc = (p1+p2+p3)/btScalar(3); //Face centroid
+        
+                fn = fv1.cross(fv2); //Normal of the face (length != 1)
+                btScalar len = fn.length();
+                fn1 = fn/len; //Normalised normal (length = 1)
+                A = len/btScalar(2); //Area of the face (triangle)
+            }
+            else
+            {
+                //Quad!!!!
+                btVector3 p2temp = p1 + (p2-p1) * (depth[0]/(btFabs(depth[1]) + depth[0]));
+                //p2 without change
+                //p3 without change
+                btVector3 p4 = p3 + (p2-p3) * (depth[2]/(btFabs(depth[1]) + depth[2]));
+                p2 = p2temp;
+                
+                //Calculate
+                btVector3 fv1 = p2-p1;
+                btVector3 fv2 = p3-p1;
+                btVector3 fv3 = p4-p1;
+                
+                fc = (p1 + p2 + p3 + p4)/btScalar(4);
+                fn = fv1.cross(fv2);
+                btScalar len = fn.length();
+                fn1 = fn/len;
+                A = len + fv2.cross(fv3).length();
+                fn = fn1 * A;
+            }
+        }
+        else if(depth[2] < btScalar(0.))
+        {
+            
+            //Quad!!!!
+            btVector3 p3temp = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
+            //p2 without change
+            //p3 without change
+            btVector3 p4 = p1 + (p3-p1) * (depth[0]/(btFabs(depth[2]) + depth[0]));
+            p3 = p3temp;
+                
+            //Calculate
+            btVector3 fv1 = p2-p1;
+            btVector3 fv2 = p3-p1;
+            btVector3 fv3 = p4-p1;
+                
+            fc = (p1 + p2 + p3 + p4)/btScalar(4);
+            fn = fv1.cross(fv2);
+            btScalar len = fn.length();
+            fn1 = fn/len;
+            A = len + fv2.cross(fv3).length();
+            fn = fn1 * A;
+        }
+        else //All underwater
+        {
+            btVector3 fv1 = p2-p1; //One side of the face (triangle)
+            btVector3 fv2 = p3-p1; //Another side of the face (triangle)
+            fc = (p1+p2+p3)/btScalar(3); //Face centroid
+        
+            fn = fv1.cross(fv2); //Normal of the face (length != 1)
+            btScalar len = fn.length();
+            fn1 = fn/len; //Normalised normal (length = 1)
+            A = len/btScalar(2); //Area of the face (triangle)
+        }
+        
+        btScalar pressure = liquid->GetPressure(fc);   //(liquid->GetPressure(p1) + liquid->GetPressure(p2) + liquid->GetPressure(p3))/btScalar(3);
         
         //Buoyancy force
-        btVector3 Fbi = -fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure)
-        
-        //Accumulate
-        Fb += Fbi;
-        Tb += (fc - p).cross(Fbi);
+        if(settings.reallisticBuoyancy)
+        {
+            btVector3 Fbi = -fn1 * A * pressure;  //-fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure)
+            
+            //Accumulate
+            Fb += Fbi;
+            Tb += (fc - p).cross(Fbi);
+        }
         
         //Damping force
         if(settings.dampingForces)
 		{
             //Skin drag force
-            btVector3 vc = fluid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
+            btVector3 vc = liquid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
             btVector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
-            btVector3 Fds = fluid->getFluid()->viscosity * vt * A / btScalar(0.0001);
+            btVector3 Fds = liquid->getFluid()->viscosity * vt * A / btScalar(0.0001);
             //btVector3 Fds = vt.safeNormalize()*btScalar(0.5)*fluid->getFluid()->density*btScalar(1.328)/1000.0*vt.length2()*fn.length()/btScalar(2);
         
             //Pressure drag force
             btVector3 vn = vc - vt; //Water velocity normal to face
             btVector3 Fdp(0,0,0);
             if(fn.dot(vn) < btScalar(0))
-                Fdp = btScalar(0.5)*fluid->getFluid()->density * vn * vn.length() * A;
+                Fdp = btScalar(0.5)*liquid->getFluid()->density * vn * vn.length() * A;
             
             //Accumulate
             Fd += Fds + Fdp;
@@ -609,7 +757,7 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
             if((an = fn1.dot(ac)) < btScalar(0))
             {
                 btScalar d = btScalar(1.)/(-an + btScalar(1.)); //Positive thickness of affected layer of fluid
-                Fai = fluid->getFluid()->density * A * d * an * fn1; //Fa = rho V a = rho A d a
+                Fai = liquid->getFluid()->density * A * d * an * fn1; //Fa = rho V a = rho A d a
             }
             
             //Accumulate
@@ -617,19 +765,21 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
             Ta += (fc - p).cross(Fai);
         }
     }
+    
+    //std::cout << "Tb: " << Tb.x() << ", " << Tb.y() << ", " << Tb.z() << std::endl; 
 }
 
-void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
+void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
 {
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();
     btVector3 omega = getAngularVelocity();
 	btVector3 a = getLinearAcceleration();
     btVector3 epsilon = getAngularAcceleration();
-	ComputeFluidForces(settings, fluid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
+	ComputeFluidForces(settings, liquid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
 }
 
-void SolidEntity::ApplyFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid)
+void SolidEntity::ApplyFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid)
 {
     btVector3 Fb;
     btVector3 Tb;
@@ -637,7 +787,7 @@ void SolidEntity::ApplyFluidForces(const HydrodynamicsSettings& settings, const 
     btVector3 Td;
     btVector3 Fa;
     btVector3 Ta;
-    ComputeFluidForces(settings, fluid, Fb, Tb, Fd, Td, Fa, Ta);
+    ComputeFluidForces(settings, liquid, Fb, Tb, Fd, Td, Fa, Ta);
     
     ApplyCentralForce(Fb + Fd + Fa);
     ApplyTorque(Tb + Td + Ta);

@@ -29,7 +29,7 @@ Cylinder::~Cylinder()
 {
 }
 
-SolidEntityType Cylinder::getSolidType()
+SolidType Cylinder::getSolidType()
 {
     return SOLID_CYLINDER;
 }

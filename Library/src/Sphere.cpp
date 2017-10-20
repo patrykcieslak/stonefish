@@ -35,7 +35,7 @@ Sphere::~Sphere()
 {
 }
 
-SolidEntityType Sphere::getSolidType()
+SolidType Sphere::getSolidType()
 {
     return SOLID_SPHERE;
 }

@@ -11,11 +11,11 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "Entity.h"
-#include "Ocean.h"
+#include "Liquid.h"
 #include "MaterialManager.h"
 #include "OpenGLContent.h"
 
-typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidEntityType;
+typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidType;
 
 //pure virtual class
 class SolidEntity : public Entity
@@ -27,7 +27,7 @@ public:
     virtual ~SolidEntity();
     
     EntityType getType();
-    virtual SolidEntityType getSolidType() = 0;
+    virtual SolidType getSolidType() = 0;
     
 	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
@@ -37,20 +37,21 @@ public:
 	
 	//Computation
     void UpdateAcceleration();
-    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, const btTransform& cogTransform, const btTransform& geometryTransform, 
+    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
 									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta);
-    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta);
+    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta);
     
 	//Applying forces
 	void ApplyCentralForce(const btVector3& force);
     void ApplyTorque(const btVector3& torque);
     void ApplyGravity();
-	virtual void ApplyFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid);
+	virtual void ApplyFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid);
 	
 	//Rigid body
 	void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform);
 	void SetHydrodynamicProperties(const eigMatrix6x6& addedMass, const eigMatrix6x6& damping, const btTransform& cobTransform);
 	void setComputeHydrodynamics(bool flag);
+    void setTransform(const btTransform& trans);
 	
 	btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();

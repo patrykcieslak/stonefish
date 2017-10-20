@@ -17,7 +17,7 @@ public:
     Box(std::string uniqueName, const btVector3& dimensions, Material m, int lookId = -1);
     ~Box();
     
-    SolidEntityType getSolidType();
+    SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
 
 private:

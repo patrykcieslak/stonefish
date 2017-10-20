@@ -20,7 +20,7 @@ public:
 	void Rotate(const btQuaternion& rot);
     void MoveCenter(const glm::vec3& step);
     void GlueToEntity(SolidEntity* solid);
-	void MouseDown(GLfloat x, GLfloat y);
+	void MouseDown(GLfloat x, GLfloat y, bool translate);
     void MouseMove(GLfloat x, GLfloat y);
     void MouseUp();
     void MouseScroll(GLfloat s);
@@ -47,7 +47,9 @@ private:
 	//Mouse interaction
 	GLfloat x_start, y_start, z_start;
 	glm::quat rotation_start;
+    glm::vec3 translation_start;
 	bool dragging;
+    bool transMode;
 };
 
 

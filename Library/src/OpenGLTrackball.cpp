@@ -25,6 +25,7 @@ OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbit
     projection = glm::perspective(fovy, aspect, near, far);
     
 	dragging = false;
+    transMode = false;
     holdingEntity = NULL;
     
     UpdateTrackballTransform();
@@ -74,12 +75,23 @@ GLfloat OpenGLTrackball::calculateZ(GLfloat x, GLfloat y)
         return 0.5f/sqrtf(x*x+y*y);
 }
 
-void OpenGLTrackball::MouseDown(GLfloat x, GLfloat y)
+void OpenGLTrackball::MouseDown(GLfloat x, GLfloat y, bool translate)
 {
     x_start = x;
     y_start = y;
-    z_start = calculateZ(x_start, y_start);
-    rotation_start = rotation;
+    
+    if(translate)
+    {
+        transMode = true;
+        translation_start = center;
+    }
+    else
+    {
+        transMode = false;
+        z_start = calculateZ(x_start, y_start);
+        rotation_start = rotation;
+    }
+    
     dragging = true;
 }
 
@@ -92,9 +104,18 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 {
     if(dragging)
     {
-        GLfloat z = calculateZ(x, y);
-		glm::quat rotation_new = glm::rotation(glm::normalize(glm::vec3(-x_start, z_start, y_start)), glm::normalize(glm::vec3(-x, z, y)));
-        rotation = rotation_new * rotation_start;
+        if(transMode)
+        {
+            glm::vec3 right = glm::normalize(glm::cross(GetLookingDirection(), GetUpDirection()));
+            center = translation_start + GetUpDirection() * (y-y_start) * -0.5f + right * (x-x_start) * -0.5f; 
+        }
+        else //rotate
+        {
+            GLfloat z = calculateZ(x, y);
+            glm::quat rotation_new = glm::rotation(glm::normalize(glm::vec3(-x_start, z_start, y_start)), glm::normalize(glm::vec3(-x, z, y)));
+            rotation = rotation_new * rotation_start;
+        }
+        
         UpdateTrackballTransform();
     }
 }

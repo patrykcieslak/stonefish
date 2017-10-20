@@ -38,7 +38,8 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diam
 
 Thruster::~Thruster()
 {
-    delete prop;
+    if(prop != NULL)
+        delete prop;
 }
 
 ActuatorType Thruster::getType()
@@ -123,33 +124,48 @@ void Thruster::Update(btScalar dt)
     
     omega += epsilon*dt;
     theta += omega*dt;
-        
-    //Calculate thrust
-    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    btScalar omega1overS = omega/(2.0*M_PI); 
-    thrust = ocean->getFluid()->density * kT * btFabs(omega1overS)*omega1overS * D*D*D*D;
-    torque = ocean->getFluid()->density * kQ * btFabs(omega1overS)*omega1overS * D*D*D*D*D;
-    btVector3 thrustV(thrust, 0, 0);
-    btVector3 torqueV(torque, 0, 0);
+       
+    //Get transforms
+    btTransform solidTrans;
+    btTransform thrustTrans;
     
-    //Apply forces and torques
     if(attach != NULL)
     {
-        btTransform solidTrans = attach->getTransform() * attach->getLocalTransform().inverse();
-        btTransform thrustTrans = solidTrans * pos;
-        
-        attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
-        attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
-        attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+        solidTrans = attach->getTransform() * attach->getLocalTransform().inverse();
+        thrustTrans = solidTrans * pos;
     }
     else if(attachFE != NULL)
     {
         FeatherstoneLink link = attachFE->getLink(linkId);
-        btTransform linkTrans = link.solid->getTransform() * link.solid->getLocalTransform().inverse();
-        btTransform thrustTrans = linkTrans * pos;
-        
-        attachFE->AddLinkForce(linkId, thrustTrans.getBasis() * thrustV);
-        attachFE->AddLinkTorque(linkId, (thrustTrans.getOrigin() - linkTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
-        attachFE->AddLinkTorque(linkId, thrustTrans.getBasis() * torqueV);
+        solidTrans = link.solid->getTransform() * link.solid->getLocalTransform().inverse();
+        thrustTrans = solidTrans * pos;
+    }
+    else 
+        return;
+
+    //Calculate thrust
+    Liquid* liquid = SimulationApp::getApp()->getSimulationManager()->getLiquid();
+    
+    if(liquid->IsInsideFluid(thrustTrans.getOrigin()))
+    {
+        btScalar omega1overS = omega/(2.0*M_PI); 
+        thrust = liquid->getFluid()->density * kT * btFabs(omega1overS)*omega1overS * D*D*D*D;
+        torque = liquid->getFluid()->density * kQ * btFabs(omega1overS)*omega1overS * D*D*D*D*D;
+        btVector3 thrustV(thrust, 0, 0);
+        btVector3 torqueV(torque, 0, 0);
+    
+        //Apply forces and torques
+        if(attach != NULL)
+        {
+            attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
+            attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+            attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+        }
+        else
+        {
+            attachFE->AddLinkForce(linkId, thrustTrans.getBasis() * thrustV);
+            attachFE->AddLinkTorque(linkId, (thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+            attachFE->AddLinkTorque(linkId, thrustTrans.getBasis() * torqueV);
+        }
     }
 }

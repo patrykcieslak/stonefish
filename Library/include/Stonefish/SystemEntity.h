@@ -11,6 +11,8 @@
 
 #include "Entity.h"
 
+typedef enum {SYSTEM_MANIPULATOR, SYSTEM_UNDERWATER_VEHICLE} SystemType;
+
 class SystemEntity : public Entity
 {
 public:
@@ -19,6 +21,7 @@ public:
     
     //Base methods
     EntityType getType();
+    virtual SystemType getSystemType() = 0;
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
 
     //Pure virtual methods

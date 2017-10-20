@@ -22,7 +22,7 @@ Compound::~Compound()
 {
 }
 
-SolidEntityType Compound::getSolidType()
+SolidType Compound::getSolidType()
 {
     return SOLID_COMPOUND;
 }
@@ -186,7 +186,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 	return colShape;
 }
 
-void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const Ocean* fluid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
+void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
 {
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();
@@ -212,7 +212,7 @@ void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const O
 	{
 		if(parts[i].isExternal)
 		{
-			parts[i].solid->ComputeFluidForces(settings, fluid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdp, Tdp, Fap, Tap);
+			parts[i].solid->ComputeFluidForces(settings, liquid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdp, Tdp, Fap, Tap);
 			Fb += Fbp;
 			Tb += Tbp;
 			Fd += Fdp;
@@ -225,7 +225,7 @@ void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const O
 			HydrodynamicsSettings iSettings = settings;
 			iSettings.addedMassForces = false;
 			iSettings.dampingForces = false;
-			parts[i].solid->ComputeFluidForces(iSettings, fluid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdp, Tdp, Fap, Tap);
+			parts[i].solid->ComputeFluidForces(iSettings, liquid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdp, Tdp, Fap, Tap);
 			Fb += Fbp;
 			Tb += Tbp;
 		}

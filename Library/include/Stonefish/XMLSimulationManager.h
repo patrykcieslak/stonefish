@@ -14,7 +14,7 @@
 class XMLSimulationManager : public SimulationManager
 {
 public:
-    XMLSimulationManager(std::string xmlPath, SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = STANDARD, HydrodynamicsType ht = HydrodynamicsType::GEOMETRY_BASED);
+    XMLSimulationManager(std::string xmlPath, SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
     
     void BuildScenario();
 

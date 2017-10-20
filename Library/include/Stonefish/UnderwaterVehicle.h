@@ -18,7 +18,7 @@
 class UnderwaterVehicle : public SystemEntity
 {
 public:
-    UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid, const btTransform& worldTrans);
+    UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid);
     virtual ~UnderwaterVehicle();
     
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
@@ -30,6 +30,7 @@ public:
     virtual void ApplyGravity(const btVector3& g);
 	virtual void ApplyDamping();
     
+    SystemType getSystemType();
     virtual btTransform getTransform() const;
 	FeatherstoneEntity* getVehicleBody();
     

@@ -61,8 +61,11 @@
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
       <File Name="src/OpenGLContent.cpp"/>
-      <File Name="src/OpenGLOcean.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
+      <VirtualDirectory Name="specials">
+        <File Name="src/OpenGLOcean.cpp"/>
+        <File Name="src/OpenGLPool.cpp"/>
+      </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -87,12 +90,13 @@
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
         <File Name="src/Ocean.cpp"/>
+        <File Name="src/Liquid.cpp"/>
+        <File Name="src/Pool.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="src/Gripper.cpp"/>
         <File Name="src/UnderwaterVehicle.cpp"/>
         <File Name="src/Manipulator.cpp"/>
-        <File Name="src/DynamicThruster.cpp"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
@@ -154,12 +158,13 @@
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
         <File Name="include/Stonefish/Ocean.h"/>
+        <File Name="include/Stonefish/Liquid.h"/>
+        <File Name="include/Stonefish/Pool.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="include/Stonefish/Gripper.h"/>
         <File Name="include/Stonefish/Manipulator.h"/>
         <File Name="include/Stonefish/UnderwaterVehicle.h"/>
-        <File Name="include/Stonefish/DynamicThruster.h"/>
         <VirtualDirectory Name="grippers"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/FeatherstoneEntity.h"/>
@@ -182,6 +187,9 @@
         <File Name="include/Stonefish/Magnetometer.h"/>
         <File Name="include/Stonefish/RotaryEncoder.h"/>
         <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
+        <File Name="include/Stonefish/ForceTorque.h"/>
+        <File Name="include/Stonefish/DVL.h"/>
+        <File Name="include/Stonefish/GPS.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/SimpleSensor.h"/>
       <File Name="include/Stonefish/Sensor.h"/>
@@ -217,7 +225,10 @@
       </VirtualDirectory>
       <File Name="include/Stonefish/OpenGLContent.h"/>
       <File Name="include/Stonefish/OpenGLPipeline.h"/>
-      <File Name="include/Stonefish/OpenGLOcean.h"/>
+      <VirtualDirectory Name="specials">
+        <File Name="include/Stonefish/OpenGLOcean.h"/>
+        <File Name="include/Stonefish/OpenGLPool.h"/>
+      </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="include/Stonefish/Actuator.h"/>
@@ -344,6 +355,7 @@
       <File Name="shaders/atmosphereApi.glsl"/>
       <File Name="shaders/sunCSM.frag"/>
     </VirtualDirectory>
+    <VirtualDirectory Name="pool"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

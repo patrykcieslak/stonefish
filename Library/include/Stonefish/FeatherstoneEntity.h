@@ -21,10 +21,10 @@
 
 struct FeatherstoneLink
 {
-    FeatherstoneLink(SolidEntity* s, const btTransform& t) : solid(s), transform(t) {}
+    FeatherstoneLink(SolidEntity* s, const btTransform& t) : solid(s), trans(t) {}
     
     SolidEntity* solid;
-    btTransform transform;
+    btTransform trans;
 };
 
 struct FeatherstoneJoint
@@ -46,13 +46,13 @@ struct FeatherstoneJoint
 class FeatherstoneEntity : public Entity
 {
 public:
-    FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, const btTransform& transform, btMultiBodyDynamicsWorld* world, bool fixedBase = false);
+    FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, btMultiBodyDynamicsWorld* world, bool fixedBase = false);
     virtual ~FeatherstoneEntity();
     
     void AddLink(SolidEntity* solid, const btTransform& transform, btMultiBodyDynamicsWorld* world);
     int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
     int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
-	int AddFixedJoint(unsigned int parent, unsigned int child, const btVector3& pivot);
+	int AddFixedJoint(unsigned int parent, unsigned int child);
 	void EnableSelfCollision();
 	void DisableSelfCollision();
   
@@ -78,8 +78,9 @@ public:
 	btMultiBody* getMultiBody();
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+    
     std::vector<Renderable> Render();
-    void RenderStructure();
     EntityType getType();
     void GetAABB(btVector3& min, btVector3& max);
     

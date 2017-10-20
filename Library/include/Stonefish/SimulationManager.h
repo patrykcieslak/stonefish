@@ -20,7 +20,7 @@
 #include "Entity.h"
 #include "SolidEntity.h"
 #include "FeatherstoneEntity.h"
-#include "Ocean.h"
+#include "Liquid.h"
 #include "SystemEntity.h"
 
 //Dynamic elements
@@ -38,8 +38,15 @@
 
 //Simulation algorithm settings
 typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
-typedef enum {STANDARD, INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
-typedef enum {TERRESTIAL, MARINE, CUSTOM} SimulationType;
+typedef enum {INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
+typedef enum {TERRESTIAL, MARINE, POOL, CUSTOM} SimulationType;
+
+typedef struct 
+{
+    Entity* A;
+    Entity* B;
+}
+Collision;
 
 /*! 
     @class SimulationManager
@@ -50,7 +57,7 @@ class SimulationManager
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = STANDARD, HydrodynamicsType ht = GEOMETRY_BASED);
+    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -66,18 +73,21 @@ public:
 	void UpdateDrawingQueue();
     
 	
-    void EnableOcean(Fluid* f = NULL);
+    void EnableLiquid(Fluid* f = NULL);
 	void AddEntity(Entity* ent);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
+    void AddFeatherstoneEntity(FeatherstoneEntity* ent, const btTransform& worldTransform);
     void AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform);
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
     void AddController(Controller* cntrl);
     Contact* AddContact(Entity* entA, Entity* entB, size_type contactHistoryLength = 1);
+    void EnableCollision(Entity* entA, Entity* entB);
+    void DisableCollision(Entity* entA, Entity* entB);
     
 	Entity* PickEntity(int x, int y);
-    bool CheckContact(Entity* entA, Entity* entB);
+    int CheckCollision(Entity* entA, Entity* entB);
 
     btScalar getPhysicsTimeInMiliseconds();
     void setStepsPerSecond(btScalar steps);
@@ -101,7 +111,7 @@ public:
     Sensor* getSensor(std::string name);
     Controller* getController(unsigned int index);
     Controller* getController(std::string name);
-	Ocean* getOcean();
+	Liquid* getLiquid();
     
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();
@@ -161,7 +171,8 @@ private:
     std::vector<Actuator*> actuators;
     std::vector<Controller*> controllers;
     std::vector<Contact*> contacts;
-    Ocean* ocean;
+    std::vector<Collision> collisions;
+    Liquid* liquid;
     btScalar g;
     bool zUp;
 
