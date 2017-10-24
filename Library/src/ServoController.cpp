@@ -66,8 +66,6 @@ void ServoController::Tick(btScalar dt)
     btScalar control = gainP * error + gainI * integratedError + gainD * derivativeError;
     control = control > maxCtrl ? maxCtrl : (control < -maxCtrl ? -maxCtrl : control);
 	output = control;
-	
-	//std::cout << error << std::endl;
-	
+		
     motor->setIntensity(output);
 }

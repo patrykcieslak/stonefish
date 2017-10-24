@@ -45,7 +45,7 @@ Manipulator::~Manipulator()
 	controllers.clear();
 }
 
-void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha)
+void Manipulator::AddRotLinkDH(SolidEntity* link, Motor* motor, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit, btScalar upperLimit)
 {
 	if(nLinks < nTotalLinks)
 	{
@@ -60,6 +60,9 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 		//Update Featherstone chain
 		chain->AddLink(link, trans, world);
 		chain->AddRevoluteJoint(nLinks-1, nLinks, pivot, DH.back().getBasis().getColumn(2)); //Revolve always around local Z axis, no collision between joint links
+        
+        if(lowerLimit < upperLimit)
+            chain->AddJointLimit(nLinks-1, lowerLimit, upperLimit);
 		chain->setJointDamping(nLinks-1, 0, 0.5);
 		
 		//Update trasformation matrix
@@ -68,23 +71,30 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 		DH.push_back(DH.back() * t1 * t2);
 		
 		//Add motor
-		Motor* motor = new Motor(getName() + "/Motor" + std::to_string(nLinks), chain, nLinks-1);
+        motor->AttachToJoint(chain, nLinks-1);
 		motors.push_back(motor);
 		
 		//Add encoder
-		FakeRotaryEncoder* enc = new FakeRotaryEncoder(getName() + "/Encoder" + std::to_string(nLinks), chain, nLinks-1);
+		FakeRotaryEncoder* enc = new FakeRotaryEncoder(getName() + "/Encoder" + std::to_string(nLinks), motor);
 		encoders.push_back(enc);
 		
 		//Add servo controller
-		ServoController* ctrl = new ServoController(getName() + "/Controller" + std::to_string(nLinks), motor, enc, btScalar(100));
+		ServoController* ctrl = new ServoController(getName() + "/Controller" + std::to_string(nLinks), motor, enc, btScalar(24.0));
 		ctrl->SetPosition(0.0);
-		ctrl->SetGains(btScalar(200), btScalar(10), btScalar(0.1), btScalar(100));
-		//ctrl->Start();
+		ctrl->SetGains(10,1,0.1,10);
+		ctrl->Start();
 		controllers.push_back(ctrl);
-		
+        
 		//Link successfully created
 		++nLinks;
 	}
+}
+
+void Manipulator::AddTransformDH(btScalar d, btScalar a, btScalar alpha)
+{
+    btTransform t1(btQuaternion::getIdentity(), btVector3(0,0,d));
+    btTransform t2(btQuaternion(btVector3(1,0,0), alpha), btVector3(a,0,0));
+    DH.push_back(DH.back() * t1 * t2);
 }
 
 void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)

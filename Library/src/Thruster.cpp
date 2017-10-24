@@ -88,12 +88,12 @@ std::vector<Renderable> Thruster::Render()
     
     if(attach != NULL)
     {
-        thrustTrans = attach->getTransform() * attach->getLocalTransform().inverse() * pos;
+        thrustTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * pos;
     }
     else if(attachFE != NULL)
     {
         FeatherstoneLink link = attachFE->getLink(linkId);
-        thrustTrans = link.solid->getTransform() * link.solid->getLocalTransform().inverse() * pos;
+        thrustTrans = link.solid->getTransform() * link.solid->getGeomToCOGTransform().inverse() * pos;
     }
     else
     {
@@ -131,13 +131,13 @@ void Thruster::Update(btScalar dt)
     
     if(attach != NULL)
     {
-        solidTrans = attach->getTransform() * attach->getLocalTransform().inverse();
+        solidTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse();
         thrustTrans = solidTrans * pos;
     }
     else if(attachFE != NULL)
     {
         FeatherstoneLink link = attachFE->getLink(linkId);
-        solidTrans = link.solid->getTransform() * link.solid->getLocalTransform().inverse();
+        solidTrans = link.solid->getTransform() * link.solid->getGeomToCOGTransform().inverse();
         thrustTrans = solidTrans * pos;
     }
     else 

@@ -14,13 +14,14 @@
 class DCMotor : public Motor
 {
 public:
-    DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
-    DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
+    DCMotor(std::string uniqueName, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
     
 	//Motor
     void Update(btScalar dt);
 	void setIntensity(btScalar value);
     btScalar getTorque();
+    btScalar getAngle();
+	btScalar getAngularVelocity();
     
 	//DC motor
 	void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);

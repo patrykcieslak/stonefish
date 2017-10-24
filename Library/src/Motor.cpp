@@ -8,24 +8,11 @@
 
 #include "Motor.h"
 
-Motor::Motor(std::string uniqueName, RevoluteJoint* revolute) : Actuator(uniqueName)
+Motor::Motor(std::string uniqueName) : Actuator(uniqueName)
 {
-    //Params
-    revoluteOutput = revolute;
-    multibodyOutput = NULL;
-    multibodyChild = 0;
-    
-    //Internal states
-    torque = btScalar(0.);
-}
-
-Motor::Motor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child) : Actuator(uniqueName)
-{
-    //Params
     revoluteOutput = NULL;
-    multibodyOutput = mb;
-    multibodyChild = child;
-    
+    multibodyOutput = NULL;
+    multibodyJoint = 0;
     //Internal states
     torque = btScalar(0.);
 }
@@ -40,23 +27,50 @@ btScalar Motor::getTorque()
     return torque;
 }
 
-btScalar Motor::getAngularVelocity()
+btScalar Motor::getAngle()
 {
-    if(multibodyOutput == NULL)
-    {
-        return revoluteOutput->getAngularVelocity();
+    if(revoluteOutput != NULL)
+    {    
+        return revoluteOutput->getAngle();
     }
-    else
+    else if(multibodyOutput != NULL)
     {
-        btScalar angularV = btScalar(0.);
+        btScalar angle = btScalar(0);
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        multibodyOutput->getJointVelocity(multibodyChild, angularV, jt);
+        multibodyOutput->getJointPosition(multibodyJoint, angle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
-            return angularV;
+            return angle;
         else
-            return btScalar(0.);
+            return btScalar(0);
     }
+    else
+        return btScalar(0);
+}
+
+btScalar Motor::getAngularVelocity()
+{
+    btScalar angularV;
+    
+    if(revoluteOutput != NULL)
+    {
+        angularV = revoluteOutput->getAngularVelocity();
+    }
+    else if(multibodyOutput != NULL)
+    {
+        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
+        multibodyOutput->getJointVelocity(multibodyJoint, angularV, jt);
+        
+        if(jt != btMultibodyLink::eRevolute)
+            return btScalar(0);
+    }
+    else 
+        return btScalar(0);
+        
+  /*  if(btFabs(angularV) < 1e-6)
+        return btScalar(0);
+    else*/
+    return angularV;
 }
 
 void Motor::setIntensity(btScalar value)
@@ -64,11 +78,25 @@ void Motor::setIntensity(btScalar value)
     torque = value;
 }
 
+void Motor::AttachToJoint(RevoluteJoint* revolute)
+{
+    revoluteOutput = revolute;
+    multibodyOutput = NULL;
+    multibodyJoint = 0;
+}
+
+void Motor::AttachToJoint(FeatherstoneEntity* mb, unsigned int jointId)
+{
+    revoluteOutput = NULL;
+    multibodyOutput = mb;
+    multibodyJoint = jointId;
+}
+
 void Motor::Update(btScalar dt)
 {
     //Drive the joint
-    if(multibodyOutput == NULL)
+    if(revoluteOutput != NULL)
         revoluteOutput->ApplyTorque(UnitSystem::GetTorque(torque));
-    else
-        multibodyOutput->DriveJoint(multibodyChild, UnitSystem::GetTorque(torque));
+    else if(multibodyOutput != NULL)
+        multibodyOutput->DriveJoint(multibodyJoint, UnitSystem::GetTorque(torque));
 }

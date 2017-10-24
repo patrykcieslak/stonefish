@@ -18,6 +18,11 @@ FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity*
     Reset();
 }
 
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, m, frequency, historyLength)
+{
+    Reset();
+}
+
 void FakeRotaryEncoder::Reset()
 {
     angle = lastAngle = GetRawAngle();
@@ -60,11 +65,11 @@ void FakeRotaryEncoder::InternalUpdate(btScalar dt)
 
 btScalar FakeRotaryEncoder::GetRawAngularVelocity()
 {
-    if(multibody == NULL)
+    if(revolute != NULL)
     {
         return revolute->getAngularVelocity();
     }
-    else
+    else if(multibody != NULL)
     {
         btScalar mbAV(0);
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -74,5 +79,9 @@ btScalar FakeRotaryEncoder::GetRawAngularVelocity()
             return mbAV;
         else
             return btScalar(0);
+    }
+    else if(motor != NULL)
+    {
+        return motor->getAngularVelocity();
     }
 }

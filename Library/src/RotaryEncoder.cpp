@@ -13,6 +13,7 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btSca
     revolute = joint;
     multibody = NULL;
     multibodyJoint = 0;
+    motor = NULL;
     channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
@@ -22,17 +23,29 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, uns
     revolute = NULL;
     multibody = fe;
     multibodyJoint = joint;
+    motor = NULL;
     channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
 
+RotaryEncoder::RotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+{
+    revolute = NULL;
+    multibody = NULL;
+    multibodyJoint = 0;
+    motor = m;
+    channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
+}
+
+
 btScalar RotaryEncoder::GetRawAngle()
 {
-    if(multibody == NULL)
+    if(revolute != NULL)
     {
         return revolute->getAngle();
     }
-    else
+    else if(multibody != NULL)
     {
         btScalar mbAngle = btScalar(0.);
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -42,5 +55,9 @@ btScalar RotaryEncoder::GetRawAngle()
             return mbAngle;
         else
             return btScalar(0.);
+    }
+    else if(motor != NULL)
+    {
+        return motor->getAngle();
     }
 }

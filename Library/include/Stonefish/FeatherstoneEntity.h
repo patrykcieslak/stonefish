@@ -53,15 +53,18 @@ public:
     int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
     int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
 	int AddFixedJoint(unsigned int parent, unsigned int child);
-	void EnableSelfCollision();
-	void DisableSelfCollision();
-  
+    void AddJointMotor(unsigned int index);
+    void AddJointLimit(unsigned int index, btScalar lower, btScalar upper);
+	
     void DriveJoint(unsigned int index, btScalar forceTorque);
     void ApplyGravity(const btVector3& g);
     void ApplyDamping();
     void AddLinkForce(unsigned int index, const btVector3& F);
     void AddLinkTorque(unsigned int index, const btVector3& tau);
     
+    void EnableSelfCollision();
+	void DisableSelfCollision();
+  
 	void setBaseTransform(const btTransform& trans);
     void setBaseRenderable(bool render);
     void setJointIC(unsigned int index, btScalar position, btScalar velocity);
@@ -88,7 +91,9 @@ private:
     btMultiBody* multiBody;
     std::vector<FeatherstoneLink> links;
     std::vector<FeatherstoneJoint> joints;
-	btAlignedObjectArray<btMultiBodyJointFeedback*> jointFeedbacks;
+	std::vector<btMultiBodyJointFeedback*> jointFeedbacks;
+    std::vector<btMultiBodyJointMotor*> jointMotors;
+    std::vector<btMultiBodyJointLimitConstraint*> jointLimits;
     bool baseRenderable;
 };
 

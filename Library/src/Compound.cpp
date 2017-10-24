@@ -102,7 +102,7 @@ void Compound::RecalculatePhysicalProperties()
         compoundMass += parts[i].solid->getMass();
         compoundVolume += parts[i].solid->getVolume();
 		//compoundCOG += (bodyParts[i].position.getOrigin() + bodyParts[i].solid->getLocalTransform().getOrigin())*bodyParts[i].solid->getMass();
-        compoundCOG += (parts[i].position*parts[i].solid->getLocalTransform().getOrigin())*parts[i].solid->getMass();
+        compoundCOG += (parts[i].position*parts[i].solid->getGeomToCOGTransform().getOrigin())*parts[i].solid->getMass();
     }
     
     compoundCOG /= compoundMass;
@@ -118,11 +118,11 @@ void Compound::RecalculatePhysicalProperties()
         btMatrix3x3 solidInertia = btMatrix3x3(solidPriInertia.x(), 0, 0, 0, solidPriInertia.y(), 0, 0, 0, solidPriInertia.z());
             
         //Rotate inertia tensor from local to global
-        btMatrix3x3 rotation = parts[i].position.getBasis()*parts[i].solid->getLocalTransform().getBasis();
+        btMatrix3x3 rotation = parts[i].position.getBasis()*parts[i].solid->getGeomToCOGTransform().getBasis();
         solidInertia = rotation * solidInertia * rotation.transpose();
             
         //Translate inertia tensor from local COG to global COG
-        btVector3 translation = parts[i].position.getOrigin()+parts[i].solid->getLocalTransform().getOrigin()-compoundCOG;
+        btVector3 translation = parts[i].position.getOrigin()+parts[i].solid->getGeomToCOGTransform().getOrigin()-compoundCOG;
         solidInertia = solidInertia +  btMatrix3x3(translation.y()*translation.y()+translation.z()*translation.z(), -translation.x()*translation.y(), -translation.x()*translation.z(),
                                                     -translation.y()*translation.x(), translation.x()*translation.x()+translation.z()*translation.z(), -translation.y()*translation.z(),
                                                     -translation.z()*translation.x(), -translation.z()*translation.y(), translation.x()*translation.x()+translation.y()*translation.y()).scaled(btVector3(parts[i].solid->getMass(), parts[i].solid->getMass(), parts[i].solid->getMass()));
@@ -167,6 +167,8 @@ void Compound::RecalculatePhysicalProperties()
 	Ipri = compoundPriInertia;
     
     ComputeEquivEllipsoid();
+    
+    CoB = localTransform.getOrigin();
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
@@ -186,7 +188,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 	return colShape;
 }
 
-void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
+void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid)
 {
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();

@@ -148,6 +148,8 @@ private:
 	HydrodynamicsType hydroType;
 	btScalar sps;
 	btScalar realtimeFactor;
+    unsigned int hydroPrescaler;
+    unsigned int hydroCounter;
     SDL_mutex* simSettingsMutex;
     SDL_mutex* simInfoMutex;
     

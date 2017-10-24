@@ -17,8 +17,13 @@
 #include "ServoController.h"
 #include "FixedJoint.h"
 
-//First link must be designed so that Z axis is the rotation axis of first joint
-
+//! A dynamical model of an electric manipulator
+/*! 
+ * This class implements a dynamical model of a rigid body manipulator, equipped with servo motors. 
+ * The manipulator can be controlled in position or velocity. It has force feedback on all joints.
+ * It can be equipped with a gripper (Gripper class). 
+ * The model is constructed from solids, using the Denavit-Hartenberg notation.
+ */
 class Manipulator : public SystemEntity
 {
 public:
@@ -27,8 +32,8 @@ public:
     virtual ~Manipulator();
     
 	//Manipulator
-	void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha);
-	//void AddTransLinkDH(SolidEntity* link, btScalar theta, btScalar a, btScalar alpha); //There should be two solids changing distance
+	void AddRotLinkDH(SolidEntity* link, Motor* motor, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0));
+    void AddTransformDH(btScalar d, btScalar a, btScalar alpha);
 	btScalar getJointPosition(unsigned int jointId);
 	btScalar getDesiredJointPosition(unsigned int jointId);
 	void setDesiredJointPosition(unsigned int jointId, btScalar position);
@@ -57,7 +62,7 @@ private:
 	unsigned int nLinks;
 	unsigned int nTotalLinks;
 	
-	std::vector<btTransform> DH; //Succesive transforms from D-H notation (multiplied) 
+	std::vector<btTransform> DH; //Succesive transforms from DH notation (multiplied) 
 	FeatherstoneEntity* attach;
 };
 

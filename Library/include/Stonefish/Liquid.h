@@ -31,7 +31,7 @@ public:
     virtual ~Liquid();
     
     //Forces
-    virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co);
+    virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
     virtual btVector3 GetFluidVelocity(const btVector3& point) const;
     void GetSurface(btVector3& normal, btVector3& position) const;
     void GetSurfaceEquation(double* plane4) const;

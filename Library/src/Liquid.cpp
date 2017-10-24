@@ -18,7 +18,7 @@ Liquid::Liquid(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     fluid = f;
     
-	btScalar size(10000.);
+	btScalar size(10000);
 	depth = UnitSystem::SetLength(size);
     
     btVector3 halfExtents = btVector3(UnitSystem::SetLength(size/btScalar(2)), UnitSystem::SetLength(size/btScalar(2)), size/btScalar(2));
@@ -75,7 +75,7 @@ void Liquid::GetSurfaceEquation(double* plane4) const
     plane4[3] = -normal.dot(position);
 }
 
-void Liquid::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co)
+void Liquid::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
 	btRigidBody* rb = btRigidBody::upcast(co);
@@ -103,5 +103,10 @@ void Liquid::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world
 	settings.reallisticBuoyancy = true;
 	
     if(ent->getType() == ENTITY_SOLID)
-        ((SolidEntity*)ent)->ApplyFluidForces(settings, this);
+    {
+        if(recompute) 
+            ((SolidEntity*)ent)->ComputeFluidForces(settings, this);
+        
+        ((SolidEntity*)ent)->ApplyFluidForces();
+    }
 }

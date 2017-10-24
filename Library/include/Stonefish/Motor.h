@@ -16,14 +16,16 @@
 class Motor : public Actuator
 {
 public:
-    Motor(std::string uniqueName, RevoluteJoint* revolute);
-    Motor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child);
+    Motor(std::string uniqueName);
+    
+    void AttachToJoint(RevoluteJoint* revolute);
+    void AttachToJoint(FeatherstoneEntity* mb, unsigned int jointId);
     
     virtual void Update(btScalar dt);
     virtual void setIntensity(btScalar value);
 	virtual btScalar getTorque();
-	
-	btScalar getAngularVelocity();
+    virtual btScalar getAngle();
+	virtual btScalar getAngularVelocity();
     ActuatorType getType();
     
 protected:
@@ -34,7 +36,7 @@ private:
     //output
     RevoluteJoint* revoluteOutput;
     FeatherstoneEntity* multibodyOutput;
-    unsigned int multibodyChild;
+    unsigned int multibodyJoint;
 };
 
 

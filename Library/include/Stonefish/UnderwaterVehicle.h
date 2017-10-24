@@ -15,6 +15,11 @@
 #include "Thruster.h"
 #include "Manipulator.h"
 
+//! A dynamical model of a fully equipped underwater vehicle
+/*!
+ * This class implements a dynamical model of an underwater vehicle, equipped with thrusters, navigation sensors and manipulators.  
+ * The navigation sensors include GPS, DVL and IMU. There can be any number of manipulators attached to the vehicle.
+ */
 class UnderwaterVehicle : public SystemEntity
 {
 public:

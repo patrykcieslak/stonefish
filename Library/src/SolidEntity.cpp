@@ -26,6 +26,12 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Enti
     ellipsoidR = btVector3(0,0,0);
     ellipsoidTransform = btTransform::getIdentity();
 	computeHydro = true;
+    Fb = btVector3(0,0,0);
+    Tb = btVector3(0,0,0); 
+    Fd = btVector3(0,0,0);
+    Td = btVector3(0,0,0); 
+    Fa = btVector3(0,0,0); 
+    Ta = btVector3(0,0,0);
     	
     linearAcc = btVector3(0,0,0);
     angularAcc = btVector3(0,0,0);
@@ -57,8 +63,21 @@ EntityType SolidEntity::getType()
     return ENTITY_SOLID;
 }
 
-void SolidEntity::SetHydrodynamicProperties(const eigMatrix6x6& addedMass, const eigMatrix6x6& damping, const btTransform& cobTransform)
+void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(btScalar mass)
 {
+    if(rigidBody != NULL)
+    {
+        btScalar oldMass = this->mass;
+        this->mass = UnitSystem::SetMass(mass);
+        Ipri *= this->mass/oldMass;
+        rigidBody->setMassProps(this->mass, Ipri);
+    }
+    else if(multibodyCollider == NULL) 
+    {
+        btScalar oldMass = this->mass;
+        this->mass = UnitSystem::SetMass(mass);
+        Ipri *= this->mass/oldMass;        
+    }
 }
 
 void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& cogTransform)
@@ -75,12 +94,16 @@ void SolidEntity::SetArbitraryPhysicalProperties(btScalar mass, const btVector3&
         rigidBody->setCenterOfMassTransform(oldLocalTransform.inverse() * localTransform * rigidBody->getCenterOfMassTransform());
         colShape->updateChildTransform(0, localTransform.inverse());
     }
-    else if(rigidBody == NULL && multibodyCollider == NULL)
+    else if(multibodyCollider == NULL) // && rigidBody == NULL
     {
         this->mass = UnitSystem::SetMass(mass);
         Ipri = UnitSystem::SetInertia(inertia);
         localTransform = UnitSystem::SetTransform(cogTransform);
     }
+}
+
+void SolidEntity::SetHydrodynamicProperties(const eigMatrix6x6& addedMass, const eigMatrix6x6& damping, const btTransform& cobTransform)
+{
 }
 
 void SolidEntity::setComputeHydrodynamics(bool flag)
@@ -283,9 +306,14 @@ btScalar SolidEntity::getVolume()
     return volume;
 }
 
-btTransform SolidEntity::getLocalTransform()
+btTransform SolidEntity::getGeomToCOGTransform()
 {
     return localTransform;
+}
+
+btVector3 SolidEntity::getCOBInGeomFrame()
+{
+    return CoB;
 }
 
 btVector3 SolidEntity::getMomentsOfInertia()
@@ -543,19 +571,21 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
+void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta)
 {
     //Set zeros
-	Fb.setZero();
-	Tb.setZero();
-	Fd.setZero();
-	Td.setZero();
-	Fa.setZero();
-	Ta.setZero();
+	_Fb.setZero();
+	_Tb.setZero();
+	_Fd.setZero();
+	_Td.setZero();
+	_Fa.setZero();
+	_Ta.setZero();
 	
 	if(!computeHydro || mesh == NULL)
 		return;
-        
+    
+    uint64_t start = GetTimeInMicroseconds();
+    
 	//Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
     
@@ -723,8 +753,8 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
             btVector3 Fbi = -fn1 * A * pressure;  //-fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure)
             
             //Accumulate
-            Fb += Fbi;
-            Tb += (fc - p).cross(Fbi);
+            _Fb += Fbi;
+            _Tb += (fc - p).cross(Fbi);
         }
         
         //Damping force
@@ -743,8 +773,8 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
                 Fdp = btScalar(0.5)*liquid->getFluid()->density * vn * vn.length() * A;
             
             //Accumulate
-            Fd += Fds + Fdp;
-            Td += (fc - p).cross(Fds + Fdp);
+            _Fd += Fds + Fdp;
+            _Td += (fc - p).cross(Fds + Fdp);
         }
         
         //Added mass effect
@@ -761,15 +791,17 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
             }
             
             //Accumulate
-            Fa += Fai;
-            Ta += (fc - p).cross(Fai);
+            _Fa += Fai;
+            _Ta += (fc - p).cross(Fai);
         }
     }
     
-    //std::cout << "Tb: " << Tb.x() << ", " << Tb.y() << ", " << Tb.z() << std::endl; 
+    uint64_t elapsed = GetTimeInMicroseconds() - start;
+    
+    //std::cout << getName() << ": " <<  elapsed << std::endl; 
 }
 
-void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, btVector3& Fb, btVector3& Tb, btVector3& Fd, btVector3& Td, btVector3& Fa, btVector3& Ta)
+void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid)
 {
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();
@@ -779,16 +811,9 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
 	ComputeFluidForces(settings, liquid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
 }
 
-void SolidEntity::ApplyFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid)
+void SolidEntity::ApplyFluidForces()
 {
-    btVector3 Fb;
-    btVector3 Tb;
-    btVector3 Fd;
-    btVector3 Td;
-    btVector3 Fa;
-    btVector3 Ta;
-    ComputeFluidForces(settings, liquid, Fb, Tb, Fd, Td, Fa, Ta);
-    
+    //std::cout << getName() << " " << getMass() << " " << Fb.x() << " " << Fb.y() << " " << Fb.z() << std::endl;
     ApplyCentralForce(Fb + Fd + Fa);
     ApplyTorque(Tb + Td + Ta);
 }

@@ -12,12 +12,14 @@
 #include "SimpleSensor.h"
 #include "RevoluteJoint.h"
 #include "FeatherstoneEntity.h"
+#include "Motor.h"
 
 class RotaryEncoder : public SimpleSensor
 {
 public:
     RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    RotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     virtual void InternalUpdate(btScalar dt) = 0;
     virtual void Reset() = 0;
@@ -28,6 +30,7 @@ protected:
     RevoluteJoint* revolute;
     FeatherstoneEntity* multibody;
     unsigned int multibodyJoint;
+    Motor* motor;
 };
 
 #endif

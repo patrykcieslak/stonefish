@@ -8,25 +8,7 @@
 
 #include "DCMotor.h"
 
-DCMotor::DCMotor(std::string uniqueName, RevoluteJoint* revolute, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName, revolute)
-{
-    //Params
-    R = motorR;
-    L = motorL;
-    Ke = motorKe;
-    Kt = motorKt;
-    B = friction;
-    gearEnabled = false;
-    gearEff = btScalar(1.);
-    gearRatio = btScalar(1.);
-    
-    //Internal states
-    I = btScalar(0.);
-    V = btScalar(0.);
-    lastVoverL = btScalar(0.);
-}
-
-DCMotor::DCMotor(std::string uniqueName, FeatherstoneEntity* mb, unsigned int child, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName, mb, child)
+DCMotor::DCMotor(std::string uniqueName, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName)
 {
     //Params
     R = motorR;
@@ -89,41 +71,37 @@ btScalar DCMotor::getCurrent()
     return I;
 }
 
+btScalar DCMotor::getAngle()
+{
+    btScalar angle = Motor::getAngle();
+    return angle * gearRatio;
+}
+
+btScalar DCMotor::getAngularVelocity()
+{
+    btScalar angularV = Motor::getAngularVelocity();
+    return angularV * gearRatio;
+}
+
 void DCMotor::Update(btScalar dt)
 {
     //Get joint angular velocity in radians
     btScalar aVelocity = getAngularVelocity();
     
     //Calculate internal state and output
-    if(gearEnabled)
-    {
-        torque = (I * Kt - aVelocity * gearRatio * B) * gearRatio * gearEff;
-        btScalar VoverL = (V - aVelocity * gearRatio * Ke * 9.5493 - I * R)/L;
-		I += VoverL * dt;
+    torque = (I * Kt - aVelocity * B) * gearRatio * gearEff;
+    btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
+	I += VoverL * dt;
 	
-		//Hack to avoid system blowup when the motor starts (shortcut)
-		if((btFabs(I) > btFabs(V/R)) && (I*V > btScalar(0)))
-			I = V/R;
+	//Hack to avoid system blowup when the motor starts (shortcut)
+	if((btFabs(I) > btFabs(V/R)) && (I*V > btScalar(0)))
+		I = V/R;
         
-		//I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
-        //lastVoverL = VoverL;
-    }
-    else
-    {
-        torque = I * Kt - aVelocity * gearRatio * B;
-		btScalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
-		I += VoverL * dt;
-		
-		//Hack to avoid system blowup when the motor starts (shortcut)
-		if((btFabs(I) > btFabs(V/R)) && (I*V > btScalar(0)))
-			I = V/R;
-			
-	    //I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
-        //lastVoverL = VoverL;
-    }
+	//I += btScalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
+    //lastVoverL = VoverL;
     
 	//Drive the joint
-	Motor::Update(dt);
+    Motor::Update(dt);
 }
 
 void DCMotor::SetupGearbox(bool enable, btScalar ratio, btScalar efficiency)

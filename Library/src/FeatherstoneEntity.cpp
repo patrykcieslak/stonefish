@@ -17,16 +17,16 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody = new btMultiBody(totalNumOfLinks - 1, baseSolid->getMass(), baseSolid->getMomentsOfInertia(), fixedBase, true);
     
     multiBody->setBaseWorldTransform(btTransform::getIdentity());
-    multiBody->setUseGyroTerm(true);
     multiBody->setAngularDamping(0.0);
     multiBody->setLinearDamping(0.0);
-    multiBody->setMaxAppliedImpulse(BT_LARGE_FLOAT);
-    multiBody->setMaxCoordinateVelocity(BT_LARGE_FLOAT);
-    multiBody->useRK4Integration(true);
-    multiBody->useGlobalVelocities(true);
+    multiBody->setMaxAppliedImpulse(100.0);
+    multiBody->setMaxCoordinateVelocity(10000.0);
+    multiBody->useRK4Integration(false); //Enabling RK4 causes unreallistic energy accumulation (strange motions in 0 gravity)
+    multiBody->useGlobalVelocities(false); //See previous comment
     multiBody->setHasSelfCollision(false); //No self collision by default
-    multiBody->setCanSleep(false);
-    
+    multiBody->setUseGyroTerm(true);
+    multiBody->setCanSleep(true);
+   
     AddLink(baseSolid, btTransform::getIdentity(), world);
 	multiBody->finalizeMultiDof();
 }
@@ -83,6 +83,12 @@ void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, con
     multiBody->setBaseVel(btVector3(0,0,0));
     multiBody->setBaseOmega(btVector3(0,0,0));
     world->addMultiBody(multiBody);
+    
+    for(unsigned int i=0; i<jointLimits.size(); ++i)
+        world->addMultiBodyConstraint(jointLimits[i]);
+        
+    for(unsigned int i=0; i<jointMotors.size(); ++i)
+        world->addMultiBodyConstraint(jointMotors[i]);
 }
 
 void FeatherstoneEntity::EnableSelfCollision()
@@ -102,7 +108,7 @@ void FeatherstoneEntity::setBaseRenderable(bool render)
 
 void FeatherstoneEntity::setBaseTransform(const btTransform& trans)
 {
-	btTransform T0 = trans * links[0].solid->getLocalTransform(); 
+	btTransform T0 = trans * links[0].solid->getGeomToCOGTransform(); 
     multiBody->getBaseCollider()->setWorldTransform(T0);
 	multiBody->setBaseWorldTransform(T0);
     
@@ -288,7 +294,7 @@ void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transfor
         
         if(links.size() > 1) //If not base link
         {
-            btTransform trans =  UnitSystem::SetTransform(transform) * links[links.size()-1].solid->getLocalTransform();
+            btTransform trans =  UnitSystem::SetTransform(transform) * links[links.size()-1].solid->getGeomToCOGTransform();
             links.back().solid->setTransform(trans);
             
 			btMultiBodyJointFeedback* fb = new btMultiBodyJointFeedback();
@@ -297,7 +303,7 @@ void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transfor
         }
         else
         {
-            btTransform trans = UnitSystem::SetTransform(transform) * links[0].solid->getLocalTransform();
+            btTransform trans = UnitSystem::SetTransform(transform) * links[0].solid->getGeomToCOGTransform();
             links[0].solid->setTransform(trans);
             multiBody->setBaseWorldTransform(trans);
         }
@@ -388,11 +394,29 @@ int FeatherstoneEntity::AddFixedJoint(unsigned int parent, unsigned int child)
 	return ((int)joints.size() - 1);
 }
 
-void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
+void FeatherstoneEntity::AddJointLimit(unsigned int index, btScalar lower, btScalar upper)
+{
+    if(index >= joints.size())
+        return;
+        
+    btMultiBodyJointLimitConstraint* jlc = new btMultiBodyJointLimitConstraint(multiBody, index, lower, upper);
+    jointLimits.push_back(jlc);
+}
+
+void FeatherstoneEntity::AddJointMotor(unsigned int index)
 {
     if(index >= joints.size())
         return;
     
+    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0.), 1.0);
+    jointMotors.push_back(jmc);
+}
+
+void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
+{
+    if(index >= joints.size())
+        return;
+        
     switch (joints[index].type)
     {
         case btMultibodyLink::eRevolute:
@@ -411,7 +435,7 @@ void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
 void FeatherstoneEntity::ApplyGravity(const btVector3& g)
 {
     bool isSleeping = false;
-			
+    
     if(multiBody->getBaseCollider() && multiBody->getBaseCollider()->getActivationState() == ISLAND_SLEEPING)
         isSleeping = true;
     

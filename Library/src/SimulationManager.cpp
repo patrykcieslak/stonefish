@@ -44,6 +44,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     solver = st;
     collisionFilter = cft;
     hydroType = ht;
+    hydroCounter = 0;
     currentTime = 0;
     physicsTime = 0;
     simulationTime = 0;
@@ -399,6 +400,7 @@ void SimulationManager::setStepsPerSecond(btScalar steps)
     SDL_LockMutex(simSettingsMutex);
     sps = steps;
     ssus = (uint64_t)(1000000.0/steps);
+    hydroPrescaler = (unsigned int)round(sps/btScalar(50));
     SDL_UnlockMutex(simSettingsMutex);
 }
 
@@ -686,6 +688,7 @@ bool SimulationManager::StartSimulation()
     physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
+    hydroCounter = 0;
     
     //Solve initial conditions problem
     if(!SolveICProblem())
@@ -1192,10 +1195,12 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
                 if(co1 == simManager->liquid->getGhost())
-                    simManager->liquid->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co2);
+                    simManager->liquid->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co2, simManager->hydroCounter % simManager->hydroPrescaler == 0);
                 else if(co2 == simManager->liquid->getGhost())
-                    simManager->liquid->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co1);
+                    simManager->liquid->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co1, simManager->hydroCounter % simManager->hydroPrescaler == 0);
             }
+            
+            ++simManager->hydroCounter;
         }
     }
 }

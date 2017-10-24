@@ -120,6 +120,9 @@ Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScal
 	
 	//7.Calculate equivalent ellipsoid for hydrodynamic force computation
 	ComputeEquivEllipsoid();
+    
+    //8. Set hydrodynamic properties
+    CoB = localTransform.getOrigin();
 }
 
 Polyhedron::~Polyhedron(void)
