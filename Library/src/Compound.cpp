@@ -8,6 +8,7 @@
 
 #include "Compound.h"
 #include "MathsUtil.hpp"
+#include "SimulationApp.h"
 
 Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const btTransform& position) : SolidEntity(uniqueName, firstExternalPart->getMaterial(), firstExternalPart->getLook())
 {
@@ -20,6 +21,10 @@ Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const
 
 Compound::~Compound()
 {
+    for(unsigned int i=0; i<parts.size(); ++i)
+        delete parts[i].solid;
+    
+    parts.clear();
 }
 
 SolidType Compound::getSolidType()
@@ -92,7 +97,8 @@ void Compound::RecalculatePhysicalProperties()
     */
      
     //1. Calculate compound mass and COG
-    btVector3 compoundCOG = btVector3(0,0,0);
+    btVector3 compoundCOG(0,0,0);
+    btVector3 compoundCOB(0,0,0);
     btScalar compoundMass = 0;
 	btScalar compoundVolume = 0;
     localTransform = btTransform::getIdentity();
@@ -100,12 +106,18 @@ void Compound::RecalculatePhysicalProperties()
     for(unsigned int i=0; i<parts.size(); ++i)
     {
         compoundMass += parts[i].solid->getMass();
-        compoundVolume += parts[i].solid->getVolume();
-		//compoundCOG += (bodyParts[i].position.getOrigin() + bodyParts[i].solid->getLocalTransform().getOrigin())*bodyParts[i].solid->getMass();
+        //compoundCOG += (bodyParts[i].position.getOrigin() + bodyParts[i].solid->getLocalTransform().getOrigin())*bodyParts[i].solid->getMass();
         compoundCOG += (parts[i].position*parts[i].solid->getGeomToCOGTransform().getOrigin())*parts[i].solid->getMass();
+        
+        if(parts[i].solid->isBuoyant())
+        {
+            compoundVolume += parts[i].solid->getVolume();
+            compoundCOB += (parts[i].position*parts[i].solid->getCOBInGeomFrame())*parts[i].solid->getVolume();
+        }
     }
     
     compoundCOG /= compoundMass;
+    CoB = compoundCOB / compoundVolume;
     localTransform.setOrigin(compoundCOG);
         
     //2. Calculate compound inertia matrix
@@ -167,8 +179,6 @@ void Compound::RecalculatePhysicalProperties()
 	Ipri = compoundPriInertia;
     
     ComputeEquivEllipsoid();
-    
-    CoB = localTransform.getOrigin();
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
@@ -188,7 +198,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 	return colShape;
 }
 
-void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid)
+void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid)
 {
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();
@@ -203,13 +213,23 @@ void Compound::ComputeFluidForces(const HydrodynamicsSettings& settings, const L
 	Fa.setZero();
 	Ta.setZero();
 	
-	btVector3 Fbp;
-	btVector3 Tbp;
-	btVector3 Fdp;
-	btVector3 Tdp;
-	btVector3 Fap;
-	btVector3 Tap;
+	btVector3 Fbp(0,0,0);
+	btVector3 Tbp(0,0,0);
+	btVector3 Fdp(0,0,0);
+	btVector3 Tdp(0,0,0);
+	btVector3 Fap(0,0,0);
+	btVector3 Tap(0,0,0);
 	
+    btVector3 aabbMin, aabbMax;
+    GetAABB(aabbMin, aabbMax);
+    
+    if(liquid->GetDepth(aabbMin) > btScalar(0) && liquid->GetDepth(aabbMax) > btScalar(0))
+    {
+        Fb = -volume*liquid->getFluid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+        Tb = (T*CoB - getTransform().getOrigin()).cross(Fb);
+        settings.reallisticBuoyancy = false; //disable buoyancy calculation
+    }
+    
 	for(unsigned int i=0; i<parts.size(); ++i)
 	{
 		if(parts[i].isExternal)
@@ -251,9 +271,10 @@ std::vector<Renderable> Compound::Render()
 	
 		for(unsigned int i=0; i<parts.size(); ++i)
 		{
-			btTransform cgTrans = cgCompoundTrans; //* parts[i].position;// * parts[i].solid->getLocalTransform(); //Multiple rendering of the same coordinate system!!!!!
 			btTransform oTrans = oCompoundTrans * parts[i].position;
-			
+			btTransform cgTrans = cgCompoundTrans; //Multiple rendering of the same coordinate system!!!!!
+			//btTransform cgTrans = oTrans * parts[i].solid->getGeomToCOGTransform();
+            
 			Renderable item;
 			item.objectId = parts[i].solid->getObject();
 			item.lookId = parts[i].solid->getLook();

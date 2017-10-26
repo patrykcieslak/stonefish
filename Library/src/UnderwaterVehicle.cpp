@@ -21,7 +21,7 @@ UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySo
 
 UnderwaterVehicle::~UnderwaterVehicle()
 {
-    //Destroy subsystems......
+    delete vehicleBody;
 }
 
 SystemType UnderwaterVehicle::getSystemType()

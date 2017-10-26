@@ -355,7 +355,9 @@
       <File Name="shaders/atmosphereApi.glsl"/>
       <File Name="shaders/sunCSM.frag"/>
     </VirtualDirectory>
-    <VirtualDirectory Name="pool"/>
+    <VirtualDirectory Name="pool">
+      <File Name="shaders/poolSurface.frag"/>
+    </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

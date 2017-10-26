@@ -17,10 +17,10 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody = new btMultiBody(totalNumOfLinks - 1, baseSolid->getMass(), baseSolid->getMomentsOfInertia(), fixedBase, true);
     
     multiBody->setBaseWorldTransform(btTransform::getIdentity());
-    multiBody->setAngularDamping(0.0);
-    multiBody->setLinearDamping(0.0);
-    multiBody->setMaxAppliedImpulse(100.0);
-    multiBody->setMaxCoordinateVelocity(10000.0);
+    multiBody->setAngularDamping(btScalar(0));
+    multiBody->setLinearDamping(btScalar(0));
+    multiBody->setMaxAppliedImpulse(btScalar(100));
+    multiBody->setMaxCoordinateVelocity(btScalar(1000));
     multiBody->useRK4Integration(false); //Enabling RK4 causes unreallistic energy accumulation (strange motions in 0 gravity)
     multiBody->useGlobalVelocities(false); //See previous comment
     multiBody->setHasSelfCollision(false); //No self collision by default
@@ -35,12 +35,11 @@ FeatherstoneEntity::~FeatherstoneEntity()
 {
     multiBody = NULL;
     
-    for(int i=0; i<links.size(); i++)
+    for(unsigned int i=0; i<links.size(); ++i)
         delete links[i].solid;
     
     links.clear();
     joints.clear();
-	jointFeedbacks.clear();
 }
 
 EntityType FeatherstoneEntity::getType()
@@ -84,11 +83,13 @@ void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, con
     multiBody->setBaseOmega(btVector3(0,0,0));
     world->addMultiBody(multiBody);
     
-    for(unsigned int i=0; i<jointLimits.size(); ++i)
-        world->addMultiBodyConstraint(jointLimits[i]);
-        
-    for(unsigned int i=0; i<jointMotors.size(); ++i)
-        world->addMultiBodyConstraint(jointMotors[i]);
+    for(unsigned int i=0; i<joints.size(); ++i)
+    {
+        if(joints[i].limit != NULL)
+            world->addMultiBodyConstraint(joints[i].limit);
+        if(joints[i].motor != NULL)
+            world->addMultiBodyConstraint(joints[i].motor);
+    }
 }
 
 void FeatherstoneEntity::EnableSelfCollision()
@@ -226,13 +227,13 @@ void FeatherstoneEntity::getJointFeedback(unsigned int index, btVector3& force, 
 	}
 	else
 	{
-		force = btVector3(jointFeedbacks[index]->m_reactionForces.m_topVec[0],
-						  jointFeedbacks[index]->m_reactionForces.m_topVec[1],
-						  jointFeedbacks[index]->m_reactionForces.m_topVec[2]);
+		force = btVector3(joints[index].feedback->m_reactionForces.m_topVec[0],
+						  joints[index].feedback->m_reactionForces.m_topVec[1],
+						  joints[index].feedback->m_reactionForces.m_topVec[2]);
 						  
-		torque = btVector3(jointFeedbacks[index]->m_reactionForces.m_bottomVec[0],
-						   jointFeedbacks[index]->m_reactionForces.m_bottomVec[1],
-						   jointFeedbacks[index]->m_reactionForces.m_bottomVec[2]);
+		torque = btVector3(joints[index].feedback->m_reactionForces.m_bottomVec[0],
+						   joints[index].feedback->m_reactionForces.m_bottomVec[1],
+						   joints[index].feedback->m_reactionForces.m_bottomVec[2]);
 	}
 }
 
@@ -296,10 +297,6 @@ void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transfor
         {
             btTransform trans =  UnitSystem::SetTransform(transform) * links[links.size()-1].solid->getGeomToCOGTransform();
             links.back().solid->setTransform(trans);
-            
-			btMultiBodyJointFeedback* fb = new btMultiBodyJointFeedback();
-			multiBody->getLink((int)links.size() - 2).m_jointFeedback = fb;
-			jointFeedbacks.push_back(fb);
         }
         else
         {
@@ -331,11 +328,14 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
     
     multiBody->finalizeMultiDof();
     
-    multiBody->setJointPos(child - 1, btScalar(0.));
-    multiBody->setJointVel(child - 1, btScalar(0.));
+    multiBody->setJointPos((int)child - 1, btScalar(0));
+    multiBody->setJointVel((int)child - 1, btScalar(0));
     
     FeatherstoneJoint joint(btMultibodyLink::eRevolute, parent, child);
+    joint.feedback = new btMultiBodyJointFeedback();
+    multiBody->getLink((int)child - 1).m_jointFeedback = joint.feedback;
     joints.push_back(joint);
+    
     return ((int)joints.size() - 1);
 }
 
@@ -365,7 +365,10 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     multiBody->setJointVel(child - 1, btScalar(0.));
     
     FeatherstoneJoint joint(btMultibodyLink::ePrismatic, parent, child);
+    joint.feedback = new btMultiBodyJointFeedback();
+    multiBody->getLink((int)child - 1).m_jointFeedback = joint.feedback;
     joints.push_back(joint);
+    
     return ((int)joints.size() - 1);
 }
 
@@ -399,8 +402,11 @@ void FeatherstoneEntity::AddJointLimit(unsigned int index, btScalar lower, btSca
     if(index >= joints.size())
         return;
         
+    if(joints[index].limit != NULL)
+        return;
+        
     btMultiBodyJointLimitConstraint* jlc = new btMultiBodyJointLimitConstraint(multiBody, index, lower, upper);
-    jointLimits.push_back(jlc);
+    joints[index].limit = jlc;
 }
 
 void FeatherstoneEntity::AddJointMotor(unsigned int index)
@@ -408,8 +414,33 @@ void FeatherstoneEntity::AddJointMotor(unsigned int index)
     if(index >= joints.size())
         return;
     
-    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0.), 1.0);
-    jointMotors.push_back(jmc);
+    if(joints[index].motor != NULL)
+        return;
+    
+    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0), btScalar(1));
+    joints[index].motor = jmc;
+}
+
+void FeatherstoneEntity::SetMotorPosition(unsigned int index, btScalar pos, btScalar kp)
+{
+    if(index >= joints.size())
+        return;
+        
+    if(joints[index].motor == NULL)
+        return;
+        
+    joints[index].motor->setPositionTarget(pos, kp);
+}
+
+void FeatherstoneEntity::SetMotorVelocity(unsigned int index, btScalar vel, btScalar kd)
+{
+    if(index >= joints.size())
+        return;
+        
+    if(joints[index].motor == NULL)
+        return;
+        
+    joints[index].motor->setVelocityTarget(vel, kd);
 }
 
 void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)

@@ -30,16 +30,16 @@ void UnderwaterTestApp::DoHUD()
     
     Manipulator* manip = (Manipulator*)getSimulationManager()->getEntity("Arm");
     slider.item = 1;
-    manip->setDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 100.f, 200.f, -1000.0, 1000.0, manip->getDesiredJointPosition(0), "Joint1"));
+    manip->SetDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 100.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(0), "Joint1"));
     
     slider.item = 2;
-    manip->setDesiredJointPosition(1 , IMGUI::getInstance()->DoSlider(slider, 5.f, 155.f, 200.f, -1000.0, 1000.0, manip->getDesiredJointPosition(1), "Joint2"));
+    manip->SetDesiredJointPosition(1 , IMGUI::getInstance()->DoSlider(slider, 5.f, 155.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(1), "Joint2"));
     
     slider.item = 3;
-    manip->setDesiredJointPosition(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 210.f, 200.f, -1000.0, 1000.0, manip->getDesiredJointPosition(2), "Joint3"));
+    manip->SetDesiredJointPosition(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 210.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(2), "Joint3"));
     
     slider.item = 4;
-    manip->setDesiredJointPosition(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 265.f, 200.f, -1000.0, 1000.0, manip->getDesiredJointPosition(3), "Joint4"));
+    manip->SetDesiredJointPosition(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 265.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(3), "Joint4"));
     
     slider.item = 5;
     Thruster* th = (Thruster*)getSimulationManager()->getActuator("ThrusterSway");

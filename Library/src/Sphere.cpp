@@ -15,19 +15,31 @@
  *  \param mat pointer to a physical material
  *  \param l rendering style
  */
-Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId) : SolidEntity(uniqueName, m, lookId)
+Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     radius = UnitSystem::SetLength(sphereRadius);
     
     //Calculate physical properties
-    volume = btScalar(4)/btScalar(3)*M_PI*radius*radius*radius;
+    if(thick > btScalar(0) && thick/btScalar(2) < radius)
+    {
+        btScalar r1 = radius - thick/btScalar(2);
+        btScalar r2 = radius + thick/btScalar(2);
+        volume = btScalar(4)/btScalar(3)*M_PI*(r2*r2*r2 - r1*r1*r1);
+        mass = volume * mat.density;
+        btScalar I = btScalar(2)/btScalar(5)*mass*((r2*r2*r2*r2*r2 - r1*r1*r1*r1*r1)/(r2*r2*r2 - r1*r1*r1));
+        Ipri = btVector3(I,I,I);
+    }    
+    else
+    {
+        volume = btScalar(4)/btScalar(3)*M_PI*radius*radius*radius;
+        mass = volume * mat.density;
+        btScalar I = btScalar(2)/btScalar(5)*mass*radius*radius;
+        Ipri = btVector3(I,I,I);
+    }
+    
     //dragCoeff = btVector3(btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius);
-    mass = volume * mat.density;
-    Ipri = btVector3(btScalar(2)/btScalar(5)*mass*radius*radius,
-                     btScalar(2)/btScalar(5)*mass*radius*radius,
-                     btScalar(2)/btScalar(5)*mass*radius*radius);
-					 
-	mesh = OpenGLContent::BuildSphere(radius);
+    
+    mesh = OpenGLContent::BuildSphere(radius);
 	ComputeEquivEllipsoid();
 }
 

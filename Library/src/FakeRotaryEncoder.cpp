@@ -84,4 +84,6 @@ btScalar FakeRotaryEncoder::GetRawAngularVelocity()
     {
         return motor->getAngularVelocity();
     }
+    else
+        return btScalar(0);
 }

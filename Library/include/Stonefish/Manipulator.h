@@ -19,7 +19,7 @@
 
 //! A dynamical model of an electric manipulator
 /*! 
- * This class implements a dynamical model of a rigid body manipulator, equipped with servo motors. 
+ * This class implements a dynamical model of a rigid body manipulator. 
  * The manipulator can be controlled in position or velocity. It has force feedback on all joints.
  * It can be equipped with a gripper (Gripper class). 
  * The model is constructed from solids, using the Denavit-Hartenberg notation.
@@ -32,32 +32,34 @@ public:
     virtual ~Manipulator();
     
 	//Manipulator
-	void AddRotLinkDH(SolidEntity* link, Motor* motor, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0));
+	void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0));
     void AddTransformDH(btScalar d, btScalar a, btScalar alpha);
-	btScalar getJointPosition(unsigned int jointId);
-	btScalar getDesiredJointPosition(unsigned int jointId);
-	void setDesiredJointPosition(unsigned int jointId, btScalar position);
 	
+	void SetDesiredJointPosition(unsigned int jointId, btScalar position);
+    void SetDesiredJointVelocity(unsigned int jointId, btScalar position);
+    //void setDesiredJointForce() ???
+    
+    btScalar GetJointPosition(unsigned int jointId);
+    btScalar GetDesiredJointPosition(unsigned int jointId);
+    btScalar GetDesiredJointVelocity(unsigned int jointId);
+    const std::vector<btTransform>& getDH();
+    
 	//System
 	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
 	void GetAABB(btVector3& min, btVector3& max);
     void UpdateAcceleration(btScalar dt);
-    void UpdateSensors(btScalar dt);
-    void UpdateControllers(btScalar dt);
-    void UpdateActuators(btScalar dt);
     void ApplyGravity(const btVector3& g);
 	void ApplyDamping();
-    
     SystemType getSystemType();
-    btTransform getTransform() const;
-    const std::vector<btTransform>& getDH();
+    
+    //Entity
     virtual std::vector<Renderable> Render();
+    btTransform getTransform() const;
     
 private:
     FeatherstoneEntity* chain;
-	std::vector<Motor*> motors;
-	std::vector<RotaryEncoder*> encoders;
-	std::vector<ServoController*> controllers;
+	std::vector<btScalar> desiredPos;
+    std::vector<btScalar> desiredVel;
     Gripper* gripper;
 	unsigned int nLinks;
 	unsigned int nTotalLinks;

@@ -60,4 +60,6 @@ btScalar RotaryEncoder::GetRawAngle()
     {
         return motor->getAngle();
     }
+    else 
+        return btScalar(0);
 }

@@ -12,13 +12,13 @@
 #include "Console.h"
 #include "Ocean.h"
 
-SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScalar thickness, bool isBuoyant) : Entity(uniqueName)
 {
 	mat = m;
     mass = btScalar(0);
 	Ipri = btVector3(0,0,0);
     volume = btScalar(0);
-	thickness = btScalar(0);
+	thick = UnitSystem::SetLength(thickness);
 	//aMass = btVector3(0,0,0);
     //dragCoeff = btVector3(0,0,0);
     CoB = btVector3(0,0,0);
@@ -26,6 +26,7 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId) : Enti
     ellipsoidR = btVector3(0,0,0);
     ellipsoidTransform = btTransform::getIdentity();
 	computeHydro = true;
+    buoyant = isBuoyant;
     Fb = btVector3(0,0,0);
     Tb = btVector3(0,0,0); 
     Fd = btVector3(0,0,0);
@@ -146,9 +147,17 @@ btMultiBodyLinkCollider* SolidEntity::getMultibodyLinkCollider()
     return multibodyCollider;
 }
 
+bool SolidEntity::isBuoyant()
+{
+    return buoyant;
+}
+
 void SolidEntity::GetAABB(btVector3& min, btVector3& max)
 {
-    rigidBody->getAabb(min, max);
+    if(rigidBody != NULL)
+        rigidBody->getAabb(min, max);
+    else if(multibodyCollider != NULL)
+        multibodyCollider->getCollisionShape()->getAabb(getTransform(), min, max);
 }
 
 std::vector<Renderable> SolidEntity::Render()
@@ -571,24 +580,31 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta)
+void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta)
 {
-    //Set zeros
-	_Fb.setZero();
-	_Tb.setZero();
+    if(settings.reallisticBuoyancy)
+    {
+        _Fb.setZero();
+        _Tb.setZero();
+    }
+	
 	_Fd.setZero();
 	_Td.setZero();
 	_Fa.setZero();
 	_Ta.setZero();
-	
-	if(!computeHydro || mesh == NULL)
+    
+    //Set zeros
+	if(mesh == NULL)
 		return;
-    
+        
     uint64_t start = GetTimeInMicroseconds();
+   
+    std::cout << getName() << " " << a.x() << "," << a.y() << "," << a.z() << std::endl; 
     
-	//Calculate fluid dynamics forces and torques
+   
+    //Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
-    
+ 
 	//Loop through all faces...
     for(int i=0; i<mesh->faces.size(); ++i)
     {
@@ -748,7 +764,7 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
         btScalar pressure = liquid->GetPressure(fc);   //(liquid->GetPressure(p1) + liquid->GetPressure(p2) + liquid->GetPressure(p3))/btScalar(3);
         
         //Buoyancy force
-        if(settings.reallisticBuoyancy)
+        if(settings.reallisticBuoyancy && buoyant)
         {
             btVector3 Fbi = -fn1 * A * pressure;  //-fn/btScalar(2)*pressure; //Buoyancy force per face (based on pressure)
             
@@ -801,19 +817,33 @@ void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, cons
     //std::cout << getName() << ": " <<  elapsed << std::endl; 
 }
 
-void SolidEntity::ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid)
+void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid)
 {
+    if(!computeHydro)
+        return;
+    
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();
     btVector3 omega = getAngularVelocity();
 	btVector3 a = getLinearAcceleration();
     btVector3 epsilon = getAngularAcceleration();
+    
+    //Check if fully submerged --> simplifies buoyancy calculation
+    btVector3 aabbMin, aabbMax;
+    GetAABB(aabbMin, aabbMax);
+    
+    if(liquid->GetDepth(aabbMin) > btScalar(0) && liquid->GetDepth(aabbMax) > btScalar(0))
+    {
+        Fb = -volume*liquid->getFluid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+        Tb = (T*CoB - getTransform().getOrigin()).cross(Fb);
+        settings.reallisticBuoyancy = false; //disable buoyancy calculation
+    }
+    
 	ComputeFluidForces(settings, liquid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
 }
 
 void SolidEntity::ApplyFluidForces()
 {
-    //std::cout << getName() << " " << getMass() << " " << Fb.x() << " " << Fb.y() << " " << Fb.z() << std::endl;
     ApplyCentralForce(Fb + Fd + Fa);
     ApplyTorque(Tb + Td + Ta);
 }

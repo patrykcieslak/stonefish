@@ -19,9 +19,11 @@ public:
     ~OpenGLPool();
     
     void InitPool();
-    
+    void DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
     
 private:    
+    GLuint vao;
+    GLuint vbo;
     GLSLShader* poolShaders[3]; //Surface, backsurface, volume
 };
 

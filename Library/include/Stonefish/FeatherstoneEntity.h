@@ -30,9 +30,13 @@ struct FeatherstoneLink
 struct FeatherstoneJoint
 {
     FeatherstoneJoint(btMultibodyLink::eFeatherstoneJointType t, unsigned int p, unsigned int c)
-                        : type(t), parent(p), child(c), sigDamping(btScalar(0.)), velDamping(btScalar(0.)) {}
+                        : type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(btScalar(0)), velDamping(btScalar(0))  {}
     
     btMultibodyLink::eFeatherstoneJointType type;
+    btMultiBodyJointFeedback* feedback;
+    btMultiBodyJointLimitConstraint* limit;
+    btMultiBodyJointMotor* motor;
+    
     unsigned int parent;
     unsigned int child;
     btScalar sigDamping;
@@ -56,6 +60,8 @@ public:
     void AddJointMotor(unsigned int index);
     void AddJointLimit(unsigned int index, btScalar lower, btScalar upper);
 	
+    void SetMotorPosition(unsigned int index, btScalar pos, btScalar kp);
+    void SetMotorVelocity(unsigned int index, btScalar vel, btScalar kd);
     void DriveJoint(unsigned int index, btScalar forceTorque);
     void ApplyGravity(const btVector3& g);
     void ApplyDamping();
@@ -91,10 +97,7 @@ private:
     btMultiBody* multiBody;
     std::vector<FeatherstoneLink> links;
     std::vector<FeatherstoneJoint> joints;
-	std::vector<btMultiBodyJointFeedback*> jointFeedbacks;
-    std::vector<btMultiBodyJointMotor*> jointMotors;
-    std::vector<btMultiBodyJointLimitConstraint*> jointLimits;
-    bool baseRenderable;
+	bool baseRenderable;
 };
 
 #endif

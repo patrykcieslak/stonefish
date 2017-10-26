@@ -25,3 +25,16 @@ void SystemEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
 {
 	AddToDynamicsWorld(world, btTransform::getIdentity());
 }
+
+void SystemEntity::UpdateSensors(btScalar dt)
+{    
+}
+
+void SystemEntity::UpdateControllers(btScalar dt)
+{
+}
+ 
+void SystemEntity::UpdateActuators(btScalar dt)
+{
+}
+  

@@ -9,79 +9,208 @@
 #include "Polyhedron.h"
 #include "SystemUtil.hpp"
 
-Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : SolidEntity(uniqueName, m, lookId)
+Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     scale = UnitSystem::SetLength(scale);
     
     //1.Load triangle mesh from file
     mesh = OpenGLContent::LoadMesh(modelFilename, scale, smoothNormals);
     
-    //2.Calculate mesh volume and COG
-    btVector3 meshCog = btVector3(0,0,0);
-    btScalar meshVolume = 0;
+    //2.Calculate mesh volume and COG    
+    btVector3 meshCog(0,0,0);
     
-    for(int i=0; i<mesh->faces.size(); i++)
+    if(thick > btScalar(0))
     {
-        //triangle
-		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
-		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
-		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
-		
-        btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
-        btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
-        btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+        btScalar meshVolume = 0;
         
-        btVector3 tetraCOG = (v1+v2+v3)/4.0;
-        btScalar tetraVolume6 = v1.dot(v2.cross(v3));
-        meshCog += tetraCOG * tetraVolume6;
-        meshVolume += tetraVolume6;
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //triangle
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+		
+            btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+        
+            btScalar A = (v2-v1).cross(v3-v1).length()/btScalar(2);
+            btVector3 triCOG = (v1+v2+v3)/btScalar(3);
+            btScalar triVolume = A * thick;
+            meshCog += triCOG * triVolume;
+            meshVolume += triVolume;
+        }
+        
+        if(meshVolume > btScalar(0))
+            meshCog /= meshVolume;
+        else
+            meshCog = btVector3(0,0,0);
+        
+        volume = meshVolume;
     }
-    
-    if(meshVolume > 0.0)
-        meshCog /= meshVolume;
     else
-        meshCog = btVector3(0,0,0);
+    {
+        btScalar meshVolume = 0;
     
-    volume = meshVolume * btScalar(1)/btScalar(6);
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //triangle
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+		
+            btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+        
+            btVector3 tetraCOG = (v1+v2+v3)/btScalar(4);
+            btScalar tetraVolume6 = v1.dot(v2.cross(v3));
+            meshCog += tetraCOG * tetraVolume6;
+            meshVolume += tetraVolume6;
+        }
+    
+        if(meshVolume > 0.0)
+            meshCog /= meshVolume;
+        else
+            meshCog = btVector3(0,0,0);
+    
+        volume = meshVolume * btScalar(1)/btScalar(6);
+    }
     
     //3.Move vertices so that COG is in (0,0,0)
     localTransform.setOrigin(meshCog);
     
     //4.Calculate moments of inertia for local coordinate system located in COG (not necessarily principal)
-    btScalar Pxx = 0.0, Pyy = 0.0, Pzz = 0.0, Pxy = 0.0, Pxz = 0.0, Pyz = 0.0; //products of inertia
+    btMatrix3x3 I;
     
-    for(int i=0; i<mesh->faces.size(); i++)
+    if(thick > btScalar(0))
     {
-        //Triangle verticies with respect to COG
-		glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
-		glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
-		glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+        //External
+        btScalar Pxx = btScalar(0);
+        btScalar Pyy = btScalar(0);
+        btScalar Pzz = btScalar(0);
+        btScalar Pxy = btScalar(0);
+        btScalar Pxz = btScalar(0);
+        btScalar Pyz = btScalar(0);
+    
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to COG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
 		
-        btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
-        btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
-        btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
-		v1 -= meshCog;
-        v2 -= meshCog;
-        v3 -= meshCog;
+            btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            btVector3 n = (v2-v1).cross(v3-v1).normalize();
+            v1 = v1 + n*thick/btScalar(2) - meshCog;
+            v2 = v2 + n*thick/btScalar(2) - meshCog;
+            v3 = v3 + n*thick/btScalar(2) - meshCog;
         
-        //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
-        btScalar V6 = v1.dot(v2.cross(v3));
-        Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
-        Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
-        Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
-        Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
-        Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
-        Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            btScalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+    
+        Pxx *= mat.density / btScalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= mat.density / btScalar(120);
+        Pzz *= mat.density / btScalar(120);
+        Pxy *= mat.density / btScalar(120);
+        Pxz *= mat.density / btScalar(120);
+        Pyz *= mat.density / btScalar(120);
+    
+        I = btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+            
+        //Internal
+        Pxx = btScalar(0);
+        Pyy = btScalar(0);
+        Pzz = btScalar(0);
+        Pxy = btScalar(0);
+        Pxz = btScalar(0);
+        Pyz = btScalar(0); //products of inertia
+    
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to COG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+		
+            btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            btVector3 n = (v2-v1).cross(v3-v1).normalize();
+            v1 = v1 - n*thick/btScalar(2) - meshCog;
+            v2 = v2 - n*thick/btScalar(2) - meshCog;
+            v3 = v3 - n*thick/btScalar(2) - meshCog;
+        
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            btScalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+    
+        Pxx *= mat.density / btScalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= mat.density / btScalar(120);
+        Pzz *= mat.density / btScalar(120);
+        Pxy *= mat.density / btScalar(120);
+        Pxz *= mat.density / btScalar(120);
+        Pyz *= mat.density / btScalar(120);
+    
+        I -= btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
     }
+    else
+    {
+        btScalar Pxx = btScalar(0);
+        btScalar Pyy = btScalar(0);
+        btScalar Pzz = btScalar(0);
+        btScalar Pxy = btScalar(0);
+        btScalar Pxz = btScalar(0);
+        btScalar Pyz = btScalar(0);
     
-    Pxx *= mat.density / btScalar(120); //20 from formula and 6 from polyhedron volume
-    Pyy *= mat.density / btScalar(120);
-    Pzz *= mat.density / btScalar(120);
-    Pxy *= mat.density / btScalar(120);
-    Pxz *= mat.density / btScalar(120);
-    Pyz *= mat.density / btScalar(120);
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to COG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+		
+            btVector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            btVector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            btVector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            v1 -= meshCog;
+            v2 -= meshCog;
+            v3 -= meshCog;
+        
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            btScalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
     
-    btMatrix3x3 I = btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+        Pxx *= mat.density / btScalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= mat.density / btScalar(120);
+        Pzz *= mat.density / btScalar(120);
+        Pxy *= mat.density / btScalar(120);
+        Pxz *= mat.density / btScalar(120);
+        Pyz *= mat.density / btScalar(120);
+    
+        I = btMatrix3x3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+    }
     
 	//5. Find primary moments of inertia
 	Ipri = btVector3(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
@@ -123,6 +252,10 @@ Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScal
     
     //8. Set hydrodynamic properties
     CoB = localTransform.getOrigin();
+    
+#ifdef DEBUG
+    std::cout << getName() << " m:" << mass << " I:" << Ipri.x() << "," << Ipri.y() << "," << Ipri.z() << std::endl;
+#endif
 }
 
 Polyhedron::~Polyhedron(void)

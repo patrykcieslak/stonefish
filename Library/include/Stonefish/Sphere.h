@@ -15,7 +15,7 @@
 class Sphere : public SolidEntity
 {
 public:
-    Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId = -1);
+    Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     ~Sphere();
     
     SolidType getSolidType();

@@ -23,7 +23,7 @@ class SolidEntity : public Entity
     friend class FeatherstoneEntity;
     
 public:
-    SolidEntity(std::string uniqueName, Material m, int lookId = -1);
+    SolidEntity(std::string uniqueName, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     virtual ~SolidEntity();
     
     EntityType getType();
@@ -37,9 +37,9 @@ public:
 	
 	//Computation
     void UpdateAcceleration();
-    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
+    virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
 									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta);
-    virtual void ComputeFluidForces(const HydrodynamicsSettings& settings, const Liquid* liquid);
+    virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid);
     
 	//Applying forces
 	void ApplyCentralForce(const btVector3& force);
@@ -61,6 +61,7 @@ public:
     Material getMaterial();
     btScalar getVolume();
     virtual std::vector<Vertex>* getMeshVertices(); //Copy of vertices, must be deleted manually!!!
+    bool isBuoyant();
 	
     btTransform getTransform() const;
     btTransform getGeomToCOGTransform();
@@ -91,7 +92,7 @@ protected:
     
     Mesh *mesh;
     Material mat;
-    btScalar thickness;
+    btScalar thick;
     btScalar volume;
 	
 	btScalar mass;  //Mass of solid
@@ -104,6 +105,7 @@ protected:
     btVector3 ellipsoidR; //Radii of hydrodynamic proxy ellipsoid
     btTransform ellipsoidTransform; //Transform of the ellipsoid
 	bool computeHydro;
+    bool buoyant;
     btVector3 Fb;
     btVector3 Tb; 
     btVector3 Fd; 

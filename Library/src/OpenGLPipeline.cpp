@@ -19,6 +19,7 @@
 #include "PathGenerator.h"
 #include "PathFollowingController.h"
 #include "Ocean.h"
+#include "Pool.h"
 #include "Manipulator.h"
 
 OpenGLPipeline* OpenGLPipeline::instance = NULL;
@@ -249,7 +250,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			glDrawBuffers(2, renderBuffs);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
-            if(renderMode == 0 || renderMode == 1)
+            if(renderMode == 0)
             {
                 //Render all objects
 				view->SetViewport();
@@ -261,6 +262,26 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				//Ambient occlusion
 				view->DrawAO();
 			
+				//Render sky
+				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+            }
+            else if(renderMode == 1)
+            {
+                OpenGLPool& glPool = ((Pool*)liquid)->getOpenGLPool();
+                
+                //Render all objects
+				view->SetViewport();
+				OpenGLContent::getInstance()->SetCurrentView(view);
+				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+				glDrawBuffers(2, renderBuffs);
+				DrawObjects();
+            
+				//Ambient occlusion
+				view->DrawAO();
+			
+                //Draw water surface
+                glPool.DrawPoolSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+            
 				//Render sky
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
             }

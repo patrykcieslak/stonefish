@@ -14,7 +14,7 @@
 class Cylinder : public SolidEntity
 {
 public:
-    Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId = -1);
+    Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     ~Cylinder();
     
     SolidType getSolidType();

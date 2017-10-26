@@ -14,7 +14,7 @@
 class Box : public SolidEntity
 {
 public:
-    Box(std::string uniqueName, const btVector3& dimensions, Material m, int lookId = -1);
+    Box(std::string uniqueName, const btVector3& dimensions, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     ~Box();
     
     SolidType getSolidType();
