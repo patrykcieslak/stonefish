@@ -3,32 +3,21 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "Plane.h"
-
 #include "SimulationApp.h"
 
-Plane::Plane(std::string uniqueName, btScalar planeSize, Material m, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, m, lookId)
+Plane::Plane(std::string uniqueName, btScalar planeSize, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
-    size = UnitSystem::SetLength(planeSize);
+    btScalar size = UnitSystem::SetLength(planeSize);
     
-    btDefaultMotionState* motionState = new btDefaultMotionState(UnitSystem::SetTransform(worldTransform));
-    btCollisionShape* shape = new btStaticPlaneShape(SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? btVector3(0,0,1.) : btVector3(0,0,-1.),0);
+    btCollisionShape* shape = new btStaticPlaneShape(SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? btVector3(0,0,1) : btVector3(0,0,-1),0);
+    BuildRigidBody(shape);
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0.,0.,0.));
-    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0); //not used
-    rigidBody = new btRigidBody(rigidBodyCI);
-    rigidBody->setUserPointer(this);
-    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-    
-	mesh = OpenGLContent::BuildPlane(size/(GLfloat)2);
+	mesh = OpenGLContent::BuildPlane(size/2.f);
 	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
-}
-
-Plane::~Plane()
-{
 }
 
 void Plane::GetAABB(btVector3 &min, btVector3 &max)

@@ -8,7 +8,7 @@
 
 #include "Terrain.h"
 
-Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, const btTransform& worldTransform, int lookId) : StaticEntity(uniqueName, m, lookId)
+Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     size = UnitSystem::SetLength(size);
     minHeight = UnitSystem::SetLength(minHeight);
@@ -45,17 +45,13 @@ Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, b
         }
     
     //rigid body creation
-    btDefaultMotionState* motionState = new btDefaultMotionState(UnitSystem::SetTransform(worldTransform));
     int upAxis = 1;
     btHeightfieldTerrainShape* shape = new btHeightfieldTerrainShape(width, length, terrainHeight, 1.0, minHeight, maxHeight, upAxis, PHY_FLOAT, false);
     btVector3 localScaling = btVector3(size, 1.0, size);
 	shape->setLocalScaling(localScaling);
     shape->setUseDiamondSubdivision(true);
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0,0,0));
-    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(1.); //not used
-    rigidBody = new btRigidBody(rigidBodyCI);
-    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+    BuildRigidBody(shape);
     
     //rendering mesh
     GLfloat offsetX = ((width-1)/2.0)*size;
@@ -63,10 +59,6 @@ Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, b
     GLfloat offsetY = (maxHeight-minHeight)/2.0;
 
     delete [] terrainNormals;
-}
-
-Terrain::~Terrain()
-{
 }
 
 StaticEntityType Terrain::getStaticType()

@@ -9,6 +9,7 @@
 #include "AcrobotTestManager.h"
 
 #include "AcrobotTestApp.h"
+#include "SystemUtil.hpp"
 #include "Plane.h"
 #include "Box.h"
 #include "Sphere.h"
@@ -26,8 +27,10 @@
 #include "MISOStateSpaceController.h"
 #include "Current.h"
 #include "FeatherstoneEntity.h"
+#include "Manipulator.h"
+#include "Obstacle.h"
 
-AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG, STANDARD)
+AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG)
 {
 }
 
@@ -42,7 +45,7 @@ void AcrobotTestManager::BuildScenario()
     
     /////// MATERIALS
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 4.0), 0.7);
-    getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MKS, 2.0), 0.3);
+    getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MKS, 1.0), 0.3);
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.9, 0.5);
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.9, 0.7);
     getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.7, 0.5);
@@ -53,7 +56,33 @@ void AcrobotTestManager::BuildScenario()
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.1, 0.0);
     
     /////// OBJECTS
-    Plane* floor = new Plane("Floor", 20, getMaterialManager()->getMaterial("Concrete"), btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)), grey);
+    Box* baseLink = new Box("BaseLink", btVector3(0.2,0.2,0.2), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* link1 = new Box("Link1", btVector3(0.1,0.1,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
+    link1->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    Box* link2 = new Box("Link1", btVector3(0.1,0.1,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
+    link2->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    Box* link3 = new Box("Link1", btVector3(0.1,0.1,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
+    link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    
+    Manipulator* manip = new Manipulator("Manipulator", 3, baseLink, btTransform::getIdentity());
+    manip->AddRotLinkDH(link1, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
+    manip->AddRotLinkDH(link2, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
+    manip->AddRotLinkDH(link3, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.25)), 0, -1.0, 0.0);
+    AddSystemEntity(manip, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.5)));
+    manip->SetDesiredJointPosition(0, 0);
+    manip->SetDesiredJointPosition(1, 0.1);
+    manip->SetDesiredJointPosition(2, -0.1);
+    
+    Obstacle* tri = new Obstacle("Mesh", GetDataPath() + "hull_hydro.obj", 1.0, getMaterialManager()->getMaterial("Rubber"), shiny, false);
+    AddStaticEntity(tri, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3)));
+    
+    //Obstacle* sph = new Obstacle("Sphere", 1.0, getMaterialManager()->getMaterial("Concrete"), grey);
+    //AddStaticEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0,0,10)));
+    
+    //manip->SetDesiredJointVelocity(0,-0.1);
+    
+    
+  /*  Plane* floor = new Plane("Floor", 20, getMaterialManager()->getMaterial("Concrete"), btTransform(btQuaternion(0,0,0), btVector3(0,0,-1.0)), grey);
     floor->setRenderable(true);
     AddEntity(floor);
     
@@ -159,8 +188,8 @@ void AcrobotTestManager::BuildScenario()
     gains.push_back(0.64889);
     gains.push_back(-0.17052);*/
     
-    MISOStateSpaceController* miso = new MISOStateSpaceController("Regulator", mux, motor, 12.0, 1000.0);
-    miso->SetGains(gains);
+    //MISOStateSpaceController* miso = new MISOStateSpaceController("Regulator", mux, motor, 12.0, 1000.0);
+    //miso->SetGains(gains);
 	//AddController(miso);
     
     //////CAMERA & LIGHT//////
@@ -172,4 +201,5 @@ void AcrobotTestManager::BuildScenario()
     //trackb->Rotate(btQuaternion(M_PI - M_PI/8.0, 0.0, 0.0));
     //trackb->Activate();
     //AddView(trackb);
+    
 }

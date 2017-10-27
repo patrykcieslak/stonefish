@@ -16,14 +16,10 @@
 class Plane : public StaticEntity
 {
 public:
-    Plane(std::string uniqueName, btScalar size, Material m, const btTransform& worldTransform, int lookId = -1);
-    ~Plane();
+    Plane(std::string uniqueName, btScalar size, Material m, int lookId = -1);
     
     void GetAABB(btVector3& min, btVector3& max);
     StaticEntityType getStaticType();
-    
-private:
-    btScalar size;
 };
 
 #endif

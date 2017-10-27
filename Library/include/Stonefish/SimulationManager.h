@@ -75,6 +75,7 @@ public:
 	
     void EnableLiquid(Fluid* f = NULL);
 	void AddEntity(Entity* ent);
+    void AddStaticEntity(StaticEntity* ent, const btTransform& worldTransform);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
     void AddFeatherstoneEntity(FeatherstoneEntity* ent, const btTransform& worldTransform);
     void AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform);

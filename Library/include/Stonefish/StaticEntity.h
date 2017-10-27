@@ -27,6 +27,7 @@ public:
     void SetWireframe(bool enabled);
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
     EntityType getType();
     virtual void GetAABB(btVector3& min, btVector3& max);
     
@@ -36,12 +37,12 @@ public:
     virtual StaticEntityType getStaticType() = 0;
     
 protected:
+    void BuildRigidBody(btCollisionShape* shape);
     btRigidBody* rigidBody;
-	int objectId;
-	Mesh* mesh;
+	Material mat;
+    Mesh* mesh;
     
-private:
-    Material mat;
+    int objectId;
     int lookId;
     bool wireframe;
 };

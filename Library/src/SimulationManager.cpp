@@ -87,6 +87,15 @@ void SimulationManager::AddEntity(Entity *ent)
     }
 }
 
+void SimulationManager::AddStaticEntity(StaticEntity* ent, const btTransform& worldTransform)
+{
+    if(ent != NULL)
+    {
+        entities.push_back(ent);
+        ent->AddToDynamicsWorld(dynamicsWorld, worldTransform);
+    }
+}
+
 void SimulationManager::AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform)
 {
     if(ent != NULL)
@@ -577,8 +586,8 @@ void SimulationManager::InitializeScenario()
             std::string path = GetDataPath() + "grid.png";
             int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
             
-            Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), btTransform(btQuaternion(0,0,0), btVector3(0,0,-0.1)), grid);
-            AddEntity(floor);
+            Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
+            AddStaticEntity(floor, btTransform::getIdentity());
 		}
             break;
         

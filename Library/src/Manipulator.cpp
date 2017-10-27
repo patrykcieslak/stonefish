@@ -16,7 +16,7 @@ Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidE
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
     DH.push_back(geomToJoint);
-	chain->EnableSelfCollision(); //Enable collision between links
+	chain->setSelfCollision(true); //Enable collision between links
 	attach = NULL;
 }
 
@@ -26,7 +26,7 @@ Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidE
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
 	DH.push_back(geomToJoint);
-	chain->EnableSelfCollision(); //Enable collision between links
+	chain->setSelfCollision(true); //Enable collision between links
 	attach = attachment;
 }
 
@@ -88,6 +88,15 @@ void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
 
 void Manipulator::UpdateAcceleration(btScalar dt)
 {	
+    for(unsigned int i=0; i<nLinks-1; ++i)
+    {
+        btScalar torque = chain->getJointTorque(i);
+        btVector3 torque2;
+        btVector3 force;
+        chain->getJointFeedback(i, force, torque2);
+        
+        std::cout << "Joint" << i << ": F:" << force.x() << ", " << force.y() << ", " << force.z()  << " T:" << torque2.x() << ", " << torque2.y() << ", " << torque2.z() << " tau:" << torque << std::endl;
+    }
 }
 
 void Manipulator::ApplyGravity(const btVector3& g)
@@ -126,7 +135,7 @@ void Manipulator::SetDesiredJointPosition(unsigned int jointId, btScalar positio
 		return;
 	
     desiredPos[jointId] = position;
-    chain->SetMotorPosition(jointId, position, btScalar(0.1));
+    chain->MotorPositionSetpoint(jointId, position, btScalar(0.1));
 }
 
 void Manipulator::SetDesiredJointVelocity(unsigned int jointId, btScalar velocity)
@@ -135,7 +144,7 @@ void Manipulator::SetDesiredJointVelocity(unsigned int jointId, btScalar velocit
 		return;
 	
     desiredVel[jointId] = velocity;
-    chain->SetMotorVelocity(jointId, velocity, btScalar(0.1));
+    chain->MotorVelocitySetpoint(jointId, velocity, btScalar(1.0));
 }
 
 btScalar Manipulator::GetJointPosition(unsigned int jointId)
@@ -147,6 +156,11 @@ btScalar Manipulator::GetJointPosition(unsigned int jointId)
     btMultibodyLink::eFeatherstoneJointType link;
     chain->getJointPosition(jointId, pos, link);    
     return pos; 
+}
+
+btScalar Manipulator::GetJointTorque(unsigned int jointId)
+{
+    return btScalar(0);
 }
 
 btScalar Manipulator::GetDesiredJointPosition(unsigned int jointId)

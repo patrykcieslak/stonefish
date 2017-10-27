@@ -19,7 +19,7 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody->setBaseWorldTransform(btTransform::getIdentity());
     multiBody->setAngularDamping(btScalar(0));
     multiBody->setLinearDamping(btScalar(0));
-    multiBody->setMaxAppliedImpulse(btScalar(100));
+    multiBody->setMaxAppliedImpulse(btScalar(1000));
     multiBody->setMaxCoordinateVelocity(btScalar(1000));
     multiBody->useRK4Integration(false); //Enabling RK4 causes unreallistic energy accumulation (strange motions in 0 gravity)
     multiBody->useGlobalVelocities(false); //See previous comment
@@ -92,14 +92,9 @@ void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, con
     }
 }
 
-void FeatherstoneEntity::EnableSelfCollision()
+void FeatherstoneEntity::setSelfCollision(bool enabled)
 {
-	multiBody->setHasSelfCollision(true);
-}
-
-void FeatherstoneEntity::DisableSelfCollision()
-{
-	multiBody->setHasSelfCollision(false);
+	multiBody->setHasSelfCollision(enabled);
 }
 
 void FeatherstoneEntity::setBaseRenderable(bool render)
@@ -216,6 +211,14 @@ void FeatherstoneEntity::getJointVelocity(unsigned int index, btScalar &velocity
                 break;
         }
     }
+}
+
+btScalar FeatherstoneEntity::getJointTorque(unsigned int index)
+{
+    if(index >= joints.size())
+        return btScalar(0);
+    else
+        return multiBody->getJointTorque(joints[index].child - 1);
 }
 
 void FeatherstoneEntity::getJointFeedback(unsigned int index, btVector3& force, btVector3& torque)
@@ -417,11 +420,11 @@ void FeatherstoneEntity::AddJointMotor(unsigned int index)
     if(joints[index].motor != NULL)
         return;
     
-    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0), btScalar(1));
+    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0), btScalar(1000));
     joints[index].motor = jmc;
 }
 
-void FeatherstoneEntity::SetMotorPosition(unsigned int index, btScalar pos, btScalar kp)
+void FeatherstoneEntity::MotorPositionSetpoint(unsigned int index, btScalar pos, btScalar kp)
 {
     if(index >= joints.size())
         return;
@@ -432,7 +435,7 @@ void FeatherstoneEntity::SetMotorPosition(unsigned int index, btScalar pos, btSc
     joints[index].motor->setPositionTarget(pos, kp);
 }
 
-void FeatherstoneEntity::SetMotorVelocity(unsigned int index, btScalar vel, btScalar kd)
+void FeatherstoneEntity::MotorVelocitySetpoint(unsigned int index, btScalar vel, btScalar kd)
 {
     if(index >= joints.size())
         return;

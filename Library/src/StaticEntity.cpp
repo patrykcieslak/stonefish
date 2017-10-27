@@ -16,17 +16,14 @@ StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : En
     lookId = _lookId;
     wireframe = false;
 	rigidBody = NULL;
-	mesh = NULL;
+    mesh = NULL;
 }
 
 StaticEntity::~StaticEntity()
 {
-	if(mesh != NULL)
-	{
-		delete mesh;
-		mesh = NULL;
-	}
-	
+    if(mesh != NULL)
+        delete mesh;
+    
     rigidBody = NULL;
 }
 
@@ -66,9 +63,34 @@ Material StaticEntity::getMaterial()
     return mat;
 }
 
+void StaticEntity::BuildRigidBody(btCollisionShape* shape)
+{
+    btDefaultMotionState* motionState = new btDefaultMotionState();
+    
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(btScalar(0), motionState, shape, btVector3(0,0,0));
+    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0); //not used
+    rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = btScalar(0); //not used
+	rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = btScalar(0); //not used
+    rigidBodyCI.m_additionalDamping = false;
+    
+    rigidBody = new btRigidBody(rigidBodyCI);
+    rigidBody->setUserPointer(this);
+    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+}
+
 void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
-    world->addRigidBody(rigidBody, MASK_STATIC, MASK_DEFAULT);
+    AddToDynamicsWorld(world, btTransform::getIdentity());
+}
+
+void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
+{
+    if(rigidBody != NULL)
+    {
+        btDefaultMotionState* motionState = new btDefaultMotionState(UnitSystem::SetTransform(worldTransform));
+        rigidBody->setMotionState(motionState);
+        world->addRigidBody(rigidBody, MASK_STATIC, MASK_DEFAULT);
+    }
 }
 
 btRigidBody* StaticEntity::getRigidBody()
