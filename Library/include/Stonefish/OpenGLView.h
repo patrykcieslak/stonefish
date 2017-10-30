@@ -76,10 +76,14 @@ public:
     void SetProjection();
     void SetViewTransform();
 	btVector3 Ray(GLint x, GLint y);
-
+	void SetReflectionViewport();
+	
     void Activate();
     void Deactivate();
     
+	void GenerateLinearDepth(int sampleId);
+	void GenerateBlurArray();
+	void EnterPostprocessing();
     void DrawAO();
 	void DrawHDR(GLuint destinationFBO);
 	
@@ -97,10 +101,14 @@ public:
     GLfloat GetFOVY() const;
     GLfloat GetNearClip();
     GLfloat GetFarClip();
-    
+	
     GLuint getRenderFBO();
+	GLuint getReflectionFBO();
+	GLuint getReflectionTexture();
 	GLuint getFinalTexture();
     GLuint getAOTexture();
+	GLuint getLinearDepthTexture();
+	GLuint getPostprocessTexture(unsigned int id);
     bool isActive();
     bool hasAO();
         
@@ -114,13 +122,18 @@ protected:
 	GLuint renderViewNormalTex;
 	GLuint renderDepthStencilTex;
 	
+	//Non-multisampled reflection textures
+	GLuint reflectionFBO;
+	GLuint reflectionColorTex;
+	GLuint reflectionDepthStencilTex;
+	
 	//Float texture
 	GLuint lightMeterFBO;
     GLuint lightMeterTex;
 	
 	//Postprocessing
 	GLuint postprocessFBO;
-	GLuint postprocessTex[2];
+	GLuint postprocessTex[3];
 	int activePostprocessTexture;
 
 	GLuint linearDepthFBO;
@@ -152,6 +165,7 @@ protected:
     glm::mat4 projection;
     
     //Shaders
+	static GLSLShader** depthAwareBlurShader;
     static GLSLShader* lightMeterShader;
     static GLSLShader* tonemapShader;
 	static GLSLShader** depthLinearizeShader; //Two shaders -> no msaa/msaa

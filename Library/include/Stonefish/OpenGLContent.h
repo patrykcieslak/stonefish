@@ -180,8 +180,10 @@ public:
 	void SetProjectionMatrix(glm::mat4 P);
 	void SetViewMatrix(glm::mat4 V);
 	void SetDrawingMode(DrawingMode m);
-	void SetCurrentView(OpenGLView* v);
+	void SetCurrentView(OpenGLView* v, bool mirror = false);
 	void BindBaseVertexArray();
+	void EnableClipPlane(glm::vec4 clipPlaneCoeff);
+	void DisableClipPlane();
 	
 	void DrawSAQ();
 	void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
@@ -236,6 +238,7 @@ private:
 	glm::mat4 projection; //Current projection matrix
 	glm::mat4 viewProjection; //Current view-projection matrix
 	glm::vec2 viewportSize; //Current view-port size
+	glm::vec4 clipPlane;
 	
 	//Standard objects
 	GLuint baseVertexArray; //base VAO

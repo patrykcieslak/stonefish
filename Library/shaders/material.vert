@@ -13,6 +13,7 @@ uniform mat4 MVP;
 uniform mat4 M;
 uniform mat3 N;
 uniform mat3 MV;
+uniform vec4 clipPlane;
 
 void main()
 {
@@ -20,5 +21,7 @@ void main()
 	eyeSpaceNormal = normalize(MV * n);
 	texCoord = uv;
 	fragPos = vec3(M * vec4(vt, 1.0));
+	
+	gl_ClipDistance[0] = dot(clipPlane, vec4(fragPos, 1.0));
 	gl_Position = MVP * vec4(vt, 1.0); 
 }

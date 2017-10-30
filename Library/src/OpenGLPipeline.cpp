@@ -245,13 +245,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			}
 			
             //================Setup rendering scene======================
-			glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-			GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-			glDrawBuffers(2, renderBuffs);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
             if(renderMode == 0)
             {
+				glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+				GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+				glDrawBuffers(2, renderBuffs);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
                 //Render all objects
 				view->SetViewport();
 				OpenGLContent::getInstance()->SetCurrentView(view);
@@ -264,32 +264,112 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
 				//Render sky
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+				
+				//Go to postprocessing stage
+				view->EnterPostprocessing();
             }
             else if(renderMode == 1)
             {
-                OpenGLPool& glPool = ((Pool*)liquid)->getOpenGLPool();
+				OpenGLPool& glPool = ((Pool*)liquid)->getOpenGLPool();
                 
-                //Render all objects
-				view->SetViewport();
-				OpenGLContent::getInstance()->SetCurrentView(view);
-				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
-            
-				//Ambient occlusion
-				view->DrawAO();
+				if(view->GetEyePosition().z >= 0.f)
+				{
+					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+					GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+					glDrawBuffers(2, renderBuffs);
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+					view->SetViewport();
+					OpenGLContent::getInstance()->SetCurrentView(view);
+					
+					//Render all objects
+					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
+					DrawObjects();
+					OpenGLContent::getInstance()->DisableClipPlane();
+					
+					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
+					DrawObjects();
+					OpenGLContent::getInstance()->DisableClipPlane();
+					
+					//Ambient occlusion
+					view->DrawAO();
 			
-                //Draw water surface
-                glPool.DrawPoolSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+					//Generate reflection texture
+					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());
+					glDrawBuffer(GL_COLOR_ATTACHMENT0);
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+					view->SetReflectionViewport();
+					OpenGLContent::getInstance()->SetCurrentView(view, true);
+					
+					//Render all objects
+					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
+					glCullFace(GL_FRONT);
+					DrawObjects();
+					glCullFace(GL_BACK);
+					OpenGLContent::getInstance()->DisableClipPlane();
+					
+					//Draw surface
+					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+					glDrawBuffers(2, renderBuffs);
+					view->SetViewport();
+					OpenGLContent::getInstance()->SetCurrentView(view);
+					
+					//Draw water surface
+					glPool.DrawPoolSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix(), view->getReflectionTexture());
+		
+					//Render sky
+					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+					
+					//Go to postprocessing stage
+					view->EnterPostprocessing();
+				}
+				else //Underwater
+				{
+					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+					GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+					glDrawBuffers(2, renderBuffs);
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
+					//Render all objects
+					view->SetViewport();
+					OpenGLContent::getInstance()->SetCurrentView(view);
+					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+					glDrawBuffers(2, renderBuffs);
+					DrawObjects();
             
-				//Render sky
-				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+					//Ambient occlusion
+					view->DrawAO();
+					
+					//Draw water surface
+					glPool.DrawPoolBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+					
+					view->GenerateLinearDepth(0);
+					
+					//Go to postprocessing stage
+					view->EnterPostprocessing();
+					
+					view->GenerateBlurArray();
+					
+					//Draw water volume
+					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+					glPool.DrawPoolVolume(view->getPostprocessTexture(2), view->getLinearDepthTexture());
+					
+					//Go to postprocessing again
+					view->EnterPostprocessing();
+				}
             }
 			else if(renderMode == 2)
 			{
-                Ocean* ocean = (Ocean*)liquid;
+                /*Ocean* ocean = (Ocean*)liquid;
 				view->SetViewport();
 				
+				glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+				GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+				glDrawBuffers(2, renderBuffs);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
 				//Draw ocean surface
 				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 				
@@ -337,6 +417,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				ocean->getOpenGLOcean().DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 				
 				glDisable(GL_STENCIL_TEST);
+				
+				//Go to postprocessing stage
+				view->EnterPostprocessing();*/
 			}
 			
             //================Post-processing=============================
@@ -454,6 +537,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
 			//OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
 			
+			view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
 			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
 			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);

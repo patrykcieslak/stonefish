@@ -398,10 +398,11 @@ void main()
 		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
 		
 	//Absorption of light emitted from object surface (reflected)
-	float distance = length(eyePos - fragPos);
+	/*float distance = length(eyePos - fragPos);
 	fragColor *= vec3(pow(waterAbsorption.r, distance), pow(waterAbsorption.g, distance), pow(waterAbsorption.b, distance));
 	float eyeDepth = -eyePos.z;
 	fragColor += clamp(distance/30.0, 0.0, 1.0) * skyIlluminance/50000.0 * vec3(pow(waterAbsorption.r, eyeDepth), pow(waterAbsorption.g, eyeDepth), pow(waterAbsorption.b, eyeDepth));
+	*/
 	
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;

@@ -19,7 +19,9 @@ public:
     ~OpenGLPool();
     
     void InitPool();
-    void DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+    void DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture);
+	void DrawPoolBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+	void DrawPoolVolume(GLuint sceneTexture, GLuint linearDepthTex);
     
 private:    
     GLuint vao;

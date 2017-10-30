@@ -13,6 +13,7 @@
 #include "SystemUtil.hpp"
 #include "MersenneTwister.hpp"
 
+GLSLShader** OpenGLView::depthAwareBlurShader = NULL;
 GLSLShader* OpenGLView::lightMeterShader = NULL;
 GLSLShader* OpenGLView::tonemapShader = NULL;
 GLSLShader** OpenGLView::depthLinearizeShader = NULL;
@@ -36,6 +37,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 	activePostprocessTexture = 0;
     
 	//----Geometry rendering----
+	//Normal render buffer
 	if(samples > 1) //MSAA
 	{
 		glGenTextures(1, &renderColorTex);
@@ -80,6 +82,26 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Render FBO initialization failed!");
+		
+	//Planar reflection render buffer (half-size, no multisampling)
+	glGenTextures(1, &reflectionColorTex);
+	glBindTexture(GL_TEXTURE_2D, reflectionColorTex);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, viewportWidth/2, viewportHeight/2);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glGenTextures(1, &reflectionDepthStencilTex);
+	glBindTexture(GL_TEXTURE_2D, reflectionDepthStencilTex);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, viewportWidth/2, viewportHeight/2);
+	glBindTexture(GL_TEXTURE_2D, 0);
+		
+	glGenFramebuffers(1, &reflectionFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, reflectionFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, reflectionColorTex, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, reflectionDepthStencilTex, 0);
+		
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+        cError("Planar reflection FBO initialization failed!");
     
 	//----Light metering (automatic exposure)----
     glGenFramebuffers(1, &lightMeterFBO);
@@ -102,9 +124,9 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 	glGenFramebuffers(1, &postprocessFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, postprocessFBO);
 	
-	glGenTextures(2, postprocessTex);
+	glGenTextures(3, postprocessTex);
     glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, viewportWidth, viewportHeight, 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -119,33 +141,41 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex[1], 0);
 	
+	glBindTexture(GL_TEXTURE_2D_ARRAY, postprocessTex[2]);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB16F, viewportWidth, viewportHeight, 5);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
 	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Postprocess FBO initialization failed!");
     
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
+	//Linear depth
+	glGenTextures(1, &linearDepthTex);
+	glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, viewportWidth, viewportHeight);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture (GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &linearDepthFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex, 0);
+		
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+		cError("LinearDepth FBO initialization failed!");
+	
 	//----HBAO----
     if(aoFactor > 0)
     {
-		//Linear depth
-		glGenTextures(1, &linearDepthTex);
-		glBindTexture(GL_TEXTURE_2D, linearDepthTex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, viewportWidth, viewportHeight);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glBindTexture (GL_TEXTURE_2D, 0);
-
-		glGenFramebuffers(1, &linearDepthFBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex, 0);
-		
-		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-			cError("LinearDepth FBO initialization failed!");
-			
 		//Deinterleaved results
 		GLint swizzle[4] = {GL_RED,GL_GREEN,GL_ZERO,GL_ZERO};
 		
@@ -248,19 +278,22 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 
 OpenGLView::~OpenGLView()
 {
-    glDeleteTextures(2, postprocessTex);
+    glDeleteTextures(3, postprocessTex);
 	glDeleteTextures(1, &renderColorTex);
 	glDeleteTextures(1, &renderViewNormalTex);
 	glDeleteTextures(1, &renderDepthStencilTex);
+	glDeleteTextures(1, &reflectionColorTex);
+	glDeleteTextures(1, &reflectionDepthStencilTex);
     glDeleteTextures(1, &lightMeterTex);
+	glDeleteTextures(1, &linearDepthTex);
 	
 	glDeleteFramebuffers(1, &renderFBO);
+	glDeleteFramebuffers(1, &reflectionFBO);
     glDeleteFramebuffers(1, &postprocessFBO);
 	glDeleteFramebuffers(1, &lightMeterFBO);
     
     if(aoFactor > 0)
     {
-		glDeleteTextures(1, &linearDepthTex);
 		glDeleteTextures(1, &aoResultTex);
 		glDeleteTextures(1, &aoBlurTex);
 		glDeleteTextures(1, &aoDepthArrayTex);
@@ -376,9 +409,19 @@ GLuint OpenGLView::getRenderFBO()
     return renderFBO;
 }
 
+GLuint OpenGLView::getReflectionFBO()
+{
+	return reflectionFBO;
+}
+
 GLuint OpenGLView::getFinalTexture()
 {
     return postprocessTex[activePostprocessTexture];
+}
+
+GLuint OpenGLView::getReflectionTexture()
+{
+	return reflectionColorTex;
 }
 
 bool OpenGLView::hasAO()
@@ -398,6 +441,11 @@ void OpenGLView::SetupViewport(GLint x, GLint y, GLint width)
 void OpenGLView::SetViewport()
 {
     glViewport(0, 0, viewportWidth, viewportHeight);
+}
+
+void OpenGLView::SetReflectionViewport()
+{
+	glViewport(0, 0, viewportWidth/2, viewportHeight/2);
 }
 
 void OpenGLView::SetProjection()
@@ -420,6 +468,10 @@ void OpenGLView::ShowSceneTexture(SceneComponent sc, glm::vec4 rect)
         case NORMAL:
             texture = renderColorTex;
             break;
+			
+		case REFLECTED:
+			texture = reflectionColorTex;
+			break;
     }
     
     OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, texture);
@@ -449,6 +501,84 @@ void OpenGLView::ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index)
 {
 	if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
 		OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex, index);
+}
+
+void OpenGLView::GenerateBlurArray()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, postprocessFBO);
+	glViewport(0,0,viewportWidth,viewportHeight);
+	OpenGLContent::getInstance()->BindBaseVertexArray();
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, getLinearDepthTexture()); //Always attached
+	
+	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[2], 0, 0); //First layer
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, postprocessTex[0]); //Initial texture to use as source
+	
+	depthAwareBlurShader[0]->Use();
+	depthAwareBlurShader[0]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+	depthAwareBlurShader[0]->SetUniform("texSource", TEX_POSTPROCESS2);
+	depthAwareBlurShader[0]->SetUniform("texelOffset", glm::vec2(1.f/(GLfloat)viewportWidth, 0.f)); //Horizontal blur
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glUseProgram(0);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, 0);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D_ARRAY, postprocessTex[2]); //Attach blur array
+	
+	depthAwareBlurShader[1]->Use();
+	depthAwareBlurShader[1]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+	depthAwareBlurShader[1]->SetUniform("texSource", TEX_POSTPROCESS2);
+	
+	for(int i=1; i<8; ++i)
+	{
+		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[2], 0, i%2 == 0 ? 0 : i/2+1); //First layer
+		depthAwareBlurShader[1]->SetUniform("texelOffset", i%2 == 0 ? glm::vec2(1.f/(GLfloat)viewportWidth, 0.f) : glm::vec2(0.f, ((GLfloat)viewportHeight/(GLfloat)viewportWidth)/(GLfloat)viewportWidth));
+		depthAwareBlurShader[1]->SetUniform("sourceLayer", i%2 == 0 ? i/2 : 0);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+    
+	glUseProgram(0);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D_ARRAY, 0);
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void OpenGLView::GenerateLinearDepth(int sampleId)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+	glViewport(0, 0, viewportWidth, viewportHeight);
+	OpenGLContent::getInstance()->BindBaseVertexArray();
+	
+	if(samples>1)
+	{
+		depthLinearizeShader[1]->Use();
+		depthLinearizeShader[1]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
+		depthLinearizeShader[1]->SetUniform("sampleIndex", sampleId);
+		depthLinearizeShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
+			
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, renderDepthStencilTex);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, 0);
+	}
+	else
+	{
+		depthLinearizeShader[0]->Use();
+		depthLinearizeShader[0]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
+		depthLinearizeShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
+		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthStencilTex);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+	}
+	
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint OpenGLView::getLinearDepthTexture()
+{
+	return linearDepthTex;
 }
 
 void OpenGLView::DrawAO()
@@ -484,34 +614,10 @@ void OpenGLView::DrawAO()
 		GLfloat blurSharpness = 40.0f;
 		
 		//For all samples
-		OpenGLContent::getInstance()->BindBaseVertexArray();
-		
 		for(int n=0; n<samples; ++n)
 		{
-			//Draw linear depth buffer
-			glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-			
-			if(samples>1)
-			{
-				depthLinearizeShader[1]->Use();
-				depthLinearizeShader[1]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
-				depthLinearizeShader[1]->SetUniform("sampleIndex", n);
-				depthLinearizeShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
-			
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, renderDepthStencilTex);
-				glDrawArrays(GL_TRIANGLES, 0, 3);
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, 0);
-			}
-			else
-			{
-				depthLinearizeShader[0]->Use();
-				depthLinearizeShader[0]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
-				depthLinearizeShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
-			
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthStencilTex);
-				glDrawArrays(GL_TRIANGLES, 0, 3);
-				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
-			}
+			GenerateLinearDepth(n);
+			OpenGLContent::getInstance()->BindBaseVertexArray(); //Previous function unbinds vertex array
 		
 			//Deinterleave
 			glBindFramebuffer(GL_FRAMEBUFFER, aoDeinterleaveFBO);
@@ -639,33 +745,45 @@ GLuint OpenGLView::getAOTexture()
     return aoBlurTex;
 }
 
-void OpenGLView::DrawHDR(GLuint destinationFBO)
+void OpenGLView::EnterPostprocessing()
 {
 	//Blit multisampled to non-multisampled texture
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderFBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postprocessFBO);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[0], 0);
 	glBlitFramebuffer(0, 0, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	
-    glActiveTexture(GL_TEXTURE0);
+}
+
+GLuint OpenGLView::getPostprocessTexture(unsigned int id)
+{
+	if(id < 3)
+		return postprocessTex[id];
+	else
+		return 0;
+}
+
+void OpenGLView::DrawHDR(GLuint destinationFBO)
+{
+    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
 	
     //matrix light metering
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
     lightMeterShader->Use();
-    lightMeterShader->SetUniform("texHDR", 0);
+    lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
     lightMeterShader->SetUniform("samples", glm::ivec2(128,128));
     OpenGLContent::getInstance()->DrawSAQ();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     //hdr drawing
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, lightMeterTex);
     
     glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
     tonemapShader->Use();
-    tonemapShader->SetUniform("texHDR", 0);
-    tonemapShader->SetUniform("texAverage", 1);
+    tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
+    tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
     OpenGLContent::getInstance()->DrawSAQ();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -681,6 +799,18 @@ void OpenGLView::DrawHDR(GLuint destinationFBO)
 void OpenGLView::Init()
 {
     /////Tonemapping//////
+	depthAwareBlurShader = new GLSLShader*[2];
+	depthAwareBlurShader[0] = new GLSLShader("depthAwareBlur.frag", "gaussianBlur.vert");
+	depthAwareBlurShader[0]->AddUniform("texSource", ParameterType::INT);
+	depthAwareBlurShader[0]->AddUniform("texLinearDepth", ParameterType::INT);
+	depthAwareBlurShader[0]->AddUniform("texelOffset", ParameterType::VEC2);
+		
+	depthAwareBlurShader[1] = new GLSLShader("depthAwareBlur2.frag", "gaussianBlur.vert");
+	depthAwareBlurShader[1]->AddUniform("texSource", ParameterType::INT);
+	depthAwareBlurShader[1]->AddUniform("texLinearDepth", ParameterType::INT);
+	depthAwareBlurShader[1]->AddUniform("texelOffset", ParameterType::VEC2);
+	depthAwareBlurShader[1]->AddUniform("sourceLayer", ParameterType::INT);
+		
     lightMeterShader = new GLSLShader("lightMeter.frag");
     lightMeterShader->AddUniform("texHDR", ParameterType::INT);
     lightMeterShader->AddUniform("samples", ParameterType::IVEC2);

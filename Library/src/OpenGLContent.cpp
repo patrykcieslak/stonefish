@@ -136,6 +136,7 @@ OpenGLContent::OpenGLContent()
 	projection = glm::mat4();
 	viewportSize = glm::vec2(800.f,600.f);
 	mode = DrawingMode::FULL;
+	clipPlane = glm::vec4();
 }
 
 OpenGLContent::~OpenGLContent()
@@ -294,6 +295,7 @@ void OpenGLContent::Init()
 	blinnPhong->AddUniform("M", ParameterType::MAT4);
 	blinnPhong->AddUniform("N", ParameterType::MAT3);
 	blinnPhong->AddUniform("MV", ParameterType::MAT3);
+	blinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
 	blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
 	blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
 	blinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -354,6 +356,7 @@ void OpenGLContent::Init()
 	cookTorrance->AddUniform("M", ParameterType::MAT4);
 	cookTorrance->AddUniform("N", ParameterType::MAT3);
 	cookTorrance->AddUniform("MV", ParameterType::MAT3);
+	cookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
 	cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
 	cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
 	cookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -423,6 +426,7 @@ void OpenGLContent::Init()
 	uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
 	uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
 	uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
+	uwBlinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
 	uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
 	uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
 	uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -483,6 +487,7 @@ void OpenGLContent::Init()
 	uwCookTorrance->AddUniform("M", ParameterType::MAT4);
 	uwCookTorrance->AddUniform("N", ParameterType::MAT3);
 	uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
+	uwCookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
 	uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
 	uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
 	uwCookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -589,11 +594,37 @@ void OpenGLContent::SetViewMatrix(glm::mat4 V)
 	viewProjection = projection * view;
 }
 
-void OpenGLContent::SetCurrentView(OpenGLView* v)
+void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
 {
-	eyePos = v->GetEyePosition();
-	viewDir = v->GetLookingDirection();
-	view = v->GetViewMatrix();
+	if(mirror)
+	{
+		glm::vec3 n(0,0,-1.f);
+		GLfloat D = 0;
+		glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, -2.f*n.x*D,
+										-2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, -2.f*n.y*D,
+										-2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, -2.f*n.z*D,
+													0,			  0,			   0,		   1);
+													
+		/*glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, 0,
+										 -2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, 0,
+										 -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, 0,
+										 -2.f*n.x*D,   -2.f*n.y*D,   -2.f*n.z*D,      1);*/									
+													
+		//glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
+		
+		eyePos = v->GetEyePosition();
+		eyePos.z = -eyePos.z;
+		viewDir = v->GetLookingDirection();
+		viewDir.z = -viewDir.z;
+		view = v->GetViewMatrix() * reflection;// * reflection;// * glm::transpose(flip);
+	}
+	else
+	{
+		eyePos = v->GetEyePosition();
+		viewDir = v->GetLookingDirection();
+		view = v->GetViewMatrix();
+	}
+	
 	projection = v->GetProjectionMatrix();
 	viewProjection = projection * view;
 }
@@ -601,6 +632,18 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
 void OpenGLContent::SetDrawingMode(DrawingMode m)
 {
 	mode = m;
+}
+
+void OpenGLContent::EnableClipPlane(glm::vec4 clipPlaneCoeff)
+{
+	clipPlane = clipPlaneCoeff;
+	glEnable(GL_CLIP_DISTANCE0);
+}
+
+void OpenGLContent::DisableClipPlane()
+{
+	clipPlane = glm::vec4();
+	glDisable(GL_CLIP_DISTANCE0);
 }
 
 void OpenGLContent::BindBaseVertexArray()
@@ -902,6 +945,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("M", M);
 			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
 			shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+			shader->SetUniform("clipPlane", clipPlane);
 			shader->SetUniform("eyePos", eyePos);
 			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("specularStrength", l.params[0]);
@@ -931,6 +975,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("M", M);
 			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
 			shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+			shader->SetUniform("clipPlane", clipPlane);
 			shader->SetUniform("eyePos", eyePos);
 			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("roughness", l.params[0]);
@@ -975,6 +1020,7 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
 	shader->SetUniform("MVP", viewProjection*M);
 	shader->SetUniform("M", M);
 	shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+	shader->SetUniform("clipPlane", clipPlane);
 	shader->SetUniform("eyePos", eyePos);
 	shader->SetUniform("viewDir", viewDir);
 	shader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,0.f));

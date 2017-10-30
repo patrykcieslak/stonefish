@@ -60,12 +60,12 @@
         <File Name="src/OpenGLView.cpp"/>
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
-      <File Name="src/OpenGLContent.cpp"/>
-      <File Name="src/OpenGLPipeline.cpp"/>
       <VirtualDirectory Name="specials">
         <File Name="src/OpenGLOcean.cpp"/>
         <File Name="src/OpenGLPool.cpp"/>
       </VirtualDirectory>
+      <File Name="src/OpenGLPipeline.cpp"/>
+      <File Name="src/OpenGLContent.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -315,6 +315,8 @@
       <File Name="shaders/gaussianBlur.vert"/>
       <File Name="shaders/simpleDownsample.frag"/>
       <File Name="shaders/hbaoCalcMSAA.frag"/>
+      <File Name="shaders/depthAwareBlur.frag"/>
+      <File Name="shaders/depthAwareBlur2.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
       <File Name="shaders/flat.frag"/>
@@ -357,6 +359,7 @@
     </VirtualDirectory>
     <VirtualDirectory Name="pool">
       <File Name="shaders/poolSurface.frag"/>
+      <File Name="shaders/poolVolume.frag"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">

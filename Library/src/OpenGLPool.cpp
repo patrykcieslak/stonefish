@@ -51,13 +51,20 @@ void OpenGLPool::InitPool()
     //Load shaders
     poolShaders[0] = new GLSLShader("poolSurface.frag", "flat.vert");
 	poolShaders[0]->AddUniform("MVP", ParameterType::MAT4);
-}
+	poolShaders[0]->AddUniform("texReflection", ParameterType::INT);
+	
+	poolShaders[1] = new GLSLShader("poolVolume.frag");
+	poolShaders[1]->AddUniform("texScene", ParameterType::INT);
+	poolShaders[1]->AddUniform("texLinearDepth", ParameterType::INT);
+}	
 
-void OpenGLPool::DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
+void OpenGLPool::DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture)
 {
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, reflectionTexture);
+	
     poolShaders[0]->Use();
     poolShaders[0]->SetUniform("MVP", projection*view);
-    
+    poolShaders[0]->SetUniform("texReflection", TEX_POSTPROCESS1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
@@ -68,5 +75,29 @@ void OpenGLPool::DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pro
     glDisable(GL_BLEND);
     
     glUseProgram(0);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 }
 
+void OpenGLPool::DrawPoolBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
+{
+	glDisable(GL_CULL_FACE);
+	//DrawPoolSurface(eyePos, view, projection);
+	glEnable(GL_CULL_FACE);
+}
+
+void OpenGLPool::DrawPoolVolume(GLuint sceneTexture, GLuint linearDepthTex)
+{
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, sceneTexture);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, linearDepthTex);
+	
+	poolShaders[1]->Use();
+	poolShaders[1]->SetUniform("texScene", TEX_POSTPROCESS1);
+	poolShaders[1]->SetUniform("texLinearDepth", TEX_POSTPROCESS2);
+	OpenGLContent::getInstance()->DrawSAQ();
+	glUseProgram(0);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, 0);
+	
+}
