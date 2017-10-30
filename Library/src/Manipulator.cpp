@@ -183,3 +183,13 @@ const std::vector<btTransform>& Manipulator::getDH()
 {
     return DH;
 }
+
+FeatherstoneEntity* Manipulator::getChain()
+{
+    return chain;
+}
+
+unsigned int Manipulator::getNumOfLinks()
+{
+    return nLinks;
+}

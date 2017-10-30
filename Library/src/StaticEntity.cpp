@@ -75,7 +75,7 @@ void StaticEntity::BuildRigidBody(btCollisionShape* shape)
     
     rigidBody = new btRigidBody(rigidBodyCI);
     rigidBody->setUserPointer(this);
-    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK | btCollisionObject::CF_STATIC_OBJECT);
 }
 
 void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
@@ -89,7 +89,7 @@ void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btT
     {
         btDefaultMotionState* motionState = new btDefaultMotionState(UnitSystem::SetTransform(worldTransform));
         rigidBody->setMotionState(motionState);
-        world->addRigidBody(rigidBody, MASK_STATIC, MASK_DEFAULT);
+        world->addRigidBody(rigidBody, MASK_STATIC, MASK_STATIC | MASK_DEFAULT);
     }
 }
 

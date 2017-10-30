@@ -11,7 +11,7 @@
 #include "OpenGLTrackball.h"
 #include "NativeDialog.h"
 #include "Manipulator.h"
-#include "Thruster.h"
+#include "UnderwaterVehicle.h"
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, UnderwaterTestManager* sim) 
     : SimulationApp("Underwater Test", dataDirPath, shaderDirPath, width, height, sim)
@@ -41,29 +41,21 @@ void UnderwaterTestApp::DoHUD()
     slider.item = 4;
     manip->SetDesiredJointPosition(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 265.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(3), "Joint4"));
     
+    UnderwaterVehicle* vehicle = (UnderwaterVehicle*)getSimulationManager()->getEntity("AUV");
     slider.item = 5;
-    Thruster* th = (Thruster*)getSimulationManager()->getActuator("ThrusterSway");
-    th->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, th->getSetpoint(), "Sway"));
+    vehicle->SetThrusterSetpoint(0, IMGUI::getInstance()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(0), "Sway"));
     
     slider.item = 6;
-    th = (Thruster*)getSimulationManager()->getActuator("ThrusterSurgePort");
-    th->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, th->getSetpoint(), "Surge port"));
+    vehicle->SetThrusterSetpoint(1, IMGUI::getInstance()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(1), "Surge port"));
     
-    slider.item = 7;
-    th = (Thruster*)getSimulationManager()->getActuator("ThrusterSurgeStarboard");
-    th->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, th->getSetpoint(), "Surge starboard"));
+    slider.item = 7;    
+    vehicle->SetThrusterSetpoint(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(2), "Surge starboard"));
     
     slider.item = 8;
-    th = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveStern");
-    th->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, th->getSetpoint(), "Heave stern"));
+    vehicle->SetThrusterSetpoint(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(3), "Heave stern"));
     
     slider.item = 9;
-    th = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveBow");
-    th->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, th->getSetpoint(), "Heave bow"));
-    
-    //slider.item = 2;
-    //manip->setDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 60.f, 200.f, -1000.0, 1000.0, manip->getDesiredJointPosition(0), "Joint1"));
-    
+    vehicle->SetThrusterSetpoint(4, IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(4), "Heave bow"));
     
     /*
     ui_id plot;

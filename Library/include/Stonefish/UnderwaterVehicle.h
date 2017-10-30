@@ -11,7 +11,7 @@
 
 #include "SystemEntity.h"
 #include "SolidEntity.h"
-#include "SimpleSensor.h"
+#include "Sensor.h"
 #include "Thruster.h"
 #include "Manipulator.h"
 
@@ -26,14 +26,24 @@ public:
     UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid);
     virtual ~UnderwaterVehicle();
     
-    virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
-	virtual void GetAABB(btVector3& min, btVector3& max);
-    virtual void UpdateAcceleration(btScalar dt);
-    virtual void UpdateSensors(btScalar dt);
-    virtual void UpdateControllers(btScalar dt);
-    virtual void UpdateActuators(btScalar dt);
-    virtual void ApplyGravity(const btVector3& g);
-	virtual void ApplyDamping();
+    //Underwater vehicle
+    void AddThruster(Thruster* thruster, const btTransform& location); //Location in the body geometry frame
+    void AddDVL(const btTransform& location); 
+    void AddFOG(const btTransform& location);
+    void AddGPS(const btTransform& location);
+    void AddCompass(const btTransform& location);
+    void SetThrusterSetpoint(unsigned int index, btScalar s);
+    btScalar GetThrusterSetpoint(unsigned int index);
+    
+    //System
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+	void GetAABB(btVector3& min, btVector3& max);
+    void UpdateAcceleration(btScalar dt);
+    void UpdateSensors(btScalar dt);
+    void UpdateControllers(btScalar dt);
+    void UpdateActuators(btScalar dt);
+    void ApplyGravity(const btVector3& g);
+	void ApplyDamping();
     
     SystemType getSystemType();
     virtual btTransform getTransform() const;
@@ -43,9 +53,8 @@ public:
     
 private:
     //Subsystems
-	std::vector<SimpleSensor*> sensors;
-    std::vector<Thruster*> thrusters; // + FINS?
-    std::vector<Manipulator*> manipulators;
+	std::vector<Thruster*> thrusters; // + FINS?
+    std::vector<Sensor*> sensors;
     
 	//Vehicle body
     FeatherstoneEntity* vehicleBody;

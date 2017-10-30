@@ -1185,53 +1185,57 @@ GLuint OpenGLContent::LoadInternalTexture(std::string filename)
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 {
-    int uDiv = (int)floor(2.f*halfExtents)/100;
-    int vDiv = (int)floor(2.f*halfExtents)/100;
-    if(uDiv < 1) uDiv = 1;
-    if(vDiv < 1) vDiv = 1;
     bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
     
-	Mesh* mesh = new Mesh;
+    Mesh* mesh = new Mesh;
 	mesh->hasUVs = true;
     Face f;
     Vertex vt;
 	
 	//Only one normal
 	vt.pos.z = 0;
-	vt.normal = glm::vec3(0,0,(zUp ? 1.f : -1.f));
-			
-	for(unsigned int i=0; i<=vDiv; ++i)
+    vt.normal = glm::vec3(0,0, zUp ? 1.f : -1.f);
+	
+    vt.pos.x = -halfExtents;
+    vt.pos.y = -halfExtents;
+    vt.uv.x = 0;
+    vt.uv.y = 0;
+    mesh->vertices.push_back(vt);
+    
+    vt.pos.x = halfExtents;
+    vt.uv.x = halfExtents*2.f;
+    mesh->vertices.push_back(vt);
+        
+    vt.pos.y = halfExtents;
+    vt.uv.y = halfExtents*2.f;
+    mesh->vertices.push_back(vt);
+        
+    vt.pos.x = -halfExtents;
+    vt.uv.x = 0;
+    mesh->vertices.push_back(vt);
+    
+    if(zUp)
     {
-        vt.uv.y = (GLfloat)i/(GLfloat)vDiv*(GLfloat)(halfExtents*2.f);
-		vt.pos.y = -halfExtents + vt.uv.y;
-		
-        for(unsigned int h=0; h<=uDiv; ++h)
-        {
-            vt.uv.x = (GLfloat)h/(GLfloat)uDiv*(GLfloat)(halfExtents*2.f);
-            vt.pos.x = -halfExtents + vt.uv.x;
-			mesh->vertices.push_back(vt);
-        }
-	}
-	
-	for(unsigned int i=0; i<vDiv; ++i)
-	{
-		for(unsigned int h=0; h<uDiv; ++h)
-		{
-			//Triangle 1
-			f.vertexID[0] = i*(uDiv+1) + h;
-			f.vertexID[1] = i*(uDiv+1) + h + 1;
-			f.vertexID[2] = (i+1)*(uDiv+1) + h;
-			mesh->faces.push_back(f);
-			
-			//Triangle 2
-			f.vertexID[0] = i*(uDiv+1) + h + 1;
-			f.vertexID[1] = (i+1)*(uDiv+1) + h + 1;
-			f.vertexID[2] = (i+1)*(uDiv+1) + h;
-			mesh->faces.push_back(f);
-		}
-	}
-	
-	return mesh;
+        f.vertexID[0] = 0;
+        f.vertexID[1] = 1;
+        f.vertexID[2] = 2;
+        mesh->faces.push_back(f);
+        f.vertexID[1] = 2;
+        f.vertexID[2] = 3;
+        mesh->faces.push_back(f);
+    }
+    else
+    {
+        f.vertexID[0] = 0;
+        f.vertexID[1] = 2;
+        f.vertexID[2] = 1;
+        mesh->faces.push_back(f);
+        f.vertexID[1] = 3;
+        f.vertexID[2] = 2;
+        mesh->faces.push_back(f);
+    }
+    
+    return mesh;
 }
 
 Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)

@@ -34,6 +34,11 @@ bool Joint::isRenderable()
     return renderable;
 }
 
+bool Joint::isMultibodyJoint()
+{
+    return (constraint == NULL) && (mbConstraint != NULL);
+}
+
 btTypedConstraint* Joint::getConstraint()
 {
     return constraint;
@@ -54,11 +59,31 @@ void Joint::setConstraint(btMultiBodyConstraint *c)
     mbConstraint = c;
 }
 
+btScalar Joint::getFeedback(unsigned int dof)
+{
+    if(dof > 5)
+        return btScalar(0);
+    
+    if(constraint != NULL)
+    {
+        btJointFeedback* fb = constraint->getJointFeedback();
+        if(dof < 3)
+            return fb->m_appliedForceBodyA[dof];
+        else
+            return fb->m_appliedTorqueBodyA[dof-3];
+    }
+    else if(mbConstraint != NULL)
+    {
+        return mbConstraint->getAppliedImpulse(dof);
+    }
+    else
+        return btScalar(0);
+}
+
 void Joint::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
 	if(constraint != NULL)
 	{
-	
 		//Force feedback
 		btJointFeedback* fb = new btJointFeedback();
 		constraint->enableFeedback(true);

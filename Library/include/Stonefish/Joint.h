@@ -37,9 +37,12 @@ public:
     
     void setRenderable(bool render);
     btTypedConstraint* getConstraint();
+    btScalar getFeedback(unsigned int dof);
+    
     std::string getName();
     
     bool isRenderable();
+    bool isMultibodyJoint();
     
 protected:
     void setConstraint(btTypedConstraint* c);

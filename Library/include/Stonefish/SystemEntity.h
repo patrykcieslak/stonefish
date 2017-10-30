@@ -11,7 +11,7 @@
 
 #include "Entity.h"
 
-typedef enum {SYSTEM_MANIPULATOR, SYSTEM_UNDERWATER_VEHICLE} SystemType;
+typedef enum {SYSTEM_MANIPULATOR, SYSTEM_GRIPPER, SYSTEM_UNDERWATER_VEHICLE} SystemType;
 
 class SystemEntity : public Entity
 {
@@ -21,10 +21,9 @@ public:
     
     //Base methods
     EntityType getType();
-    virtual SystemType getSystemType() = 0;
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
 
-    //Pure virtual methods
+    //Pure virtual methods    
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform) = 0;
 	virtual void UpdateAcceleration(btScalar dt) = 0;
     virtual void UpdateSensors(btScalar dt);     //Update sensors in the system and its subsystems
@@ -33,6 +32,7 @@ public:
     virtual void ApplyGravity(const btVector3& g) = 0;
 	virtual void ApplyDamping() = 0;
     
+    virtual SystemType getSystemType() = 0;
     virtual btTransform getTransform() const = 0;
 	virtual void GetAABB(btVector3& min, btVector3& max) = 0;
     virtual std::vector<Renderable> Render() = 0;

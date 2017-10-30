@@ -8,6 +8,7 @@
 
 #include "UnderwaterVehicle.h"
 #include "SimulationApp.h"
+#include "DVL.h"
 
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid) : SystemEntity(uniqueName)
 {
@@ -22,6 +23,15 @@ UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySo
 UnderwaterVehicle::~UnderwaterVehicle()
 {
     delete vehicleBody;
+    
+    for(unsigned int i=0; i<thrusters.size(); ++i)
+        delete thrusters[i];
+    
+    for(unsigned int i=0; i<sensors.size(); ++i)
+        delete sensors[i];
+        
+    thrusters.clear();
+    sensors.clear();
 }
 
 SystemType UnderwaterVehicle::getSystemType()
@@ -31,10 +41,7 @@ SystemType UnderwaterVehicle::getSystemType()
 
 btTransform UnderwaterVehicle::getTransform() const
 {
-    if(vehicleBody != NULL)
-        return vehicleBody->getLinkTransform(0);
-    else
-        return btTransform::getIdentity();
+    return vehicleBody->getLinkTransform(0);
 }
 
 FeatherstoneEntity* UnderwaterVehicle::getVehicleBody()
@@ -42,58 +49,71 @@ FeatherstoneEntity* UnderwaterVehicle::getVehicleBody()
 	return vehicleBody;
 }
 
+void UnderwaterVehicle::AddThruster(Thruster* thruster, const btTransform& location)
+{
+    thruster->AttachToSolid(vehicleBody, 0, location);
+    thruster->setSetpoint(0.0);
+    thrusters.push_back(thruster);
+}
+
+void UnderwaterVehicle::AddDVL(const btTransform& location)
+{
+    DVL* dvl = new DVL(getName() + "DVL", vehicleBody->getLink(0).solid, location);
+    sensors.push_back(dvl);
+}
+
+void UnderwaterVehicle::AddFOG(const btTransform& location)
+{
+    
+}
+
+void UnderwaterVehicle::AddCompass(const btTransform& location)
+{
+    
+}
+
+void UnderwaterVehicle::AddGPS(const btTransform& location)
+{
+    
+}
+
 void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
-	if(vehicleBody != NULL)
-    {
-        vehicleBody->AddToDynamicsWorld(world, worldTransform);
-    }
+    vehicleBody->AddToDynamicsWorld(world, worldTransform);
 }
 
 void UnderwaterVehicle::UpdateAcceleration(btScalar dt)
 {
-    if(vehicleBody != NULL)
-    {
-		btVector3 linearVel = vehicleBody->getLinkLinearVelocity(0);
-		linearAcc = (linearVel - lastLinearVel)/dt;
-		lastLinearVel = linearVel;
+   	btVector3 linearVel = vehicleBody->getLinkLinearVelocity(0);
+	linearAcc = (linearVel - lastLinearVel)/dt;
+	lastLinearVel = linearVel;
 		
-		btVector3 angularVel = vehicleBody->getLinkAngularVelocity(0);
-		angularAcc = (angularVel - lastAngularVel)/dt;
-		lastAngularVel = angularVel;
+	btVector3 angularVel = vehicleBody->getLinkAngularVelocity(0);
+	angularAcc = (angularVel - lastAngularVel)/dt;
+	lastAngularVel = angularVel;
 		
-		//std::cout << "Acc: " << linearAcc.x() << ", " << linearAcc.y() << ", " << linearAcc.z() << std::endl;
-    }
+	//std::cout << "Acc: " << linearAcc.x() << ", " << linearAcc.y() << ", " << linearAcc.z() << std::endl;
 }
 
 void UnderwaterVehicle::UpdateSensors(btScalar dt)
 {
-    for(unsigned int i=0; i<manipulators.size(); ++i)
-        manipulators[i]->UpdateSensors(dt);
-    
     for(unsigned int i=0; i<sensors.size(); ++i)
         sensors[i]->Update(dt);
 }
 
 void UnderwaterVehicle::UpdateControllers(btScalar dt)
 {
-    for(unsigned int i=0; i<manipulators.size(); ++i)
-        manipulators[i]->UpdateControllers(dt);
 }
 
 void UnderwaterVehicle::UpdateActuators(btScalar dt)
 {
-    for(unsigned int i=0; i<manipulators.size(); ++i)
-        manipulators[i]->UpdateActuators(dt);
-    
-    //for(unsigned int i=0; i<thrusters.size(); ++i)
-    //    thrusters[i]->Update(dt);
+    for(unsigned int i=0; i<thrusters.size(); ++i)
+        thrusters[i]->Update(dt);
 }
 
 void UnderwaterVehicle::ApplyGravity(const btVector3& g)
 {
-    if(vehicleBody != NULL)
-			vehicleBody->ApplyGravity(g);
+    vehicleBody->ApplyGravity(g);
 }
 
 void UnderwaterVehicle::ApplyDamping()
@@ -102,22 +122,32 @@ void UnderwaterVehicle::ApplyDamping()
 
 std::vector<Renderable> UnderwaterVehicle::Render()
 {
-	if(vehicleBody != NULL)
-		return vehicleBody->Render();
-	else
-	{
-		std::vector<Renderable> items(0);
-		return items;
-	}
+    std::vector<Renderable> items = vehicleBody->Render();
+    
+    for(unsigned int i=0; i<thrusters.size(); ++i)
+    {
+        std::vector<Renderable> th = thrusters[i]->Render();
+        items.insert(items.end(), th.begin(), th.end());
+    }
+    
+    return items;
 }
 
 void UnderwaterVehicle::GetAABB(btVector3& min, btVector3& max)
 {
-	if(vehicleBody != NULL)
-		vehicleBody->GetAABB(min, max);
-	else
-	{
-		min = btVector3(0,0,0);
-		max = btVector3(0,0,0);
-	}
+    vehicleBody->GetAABB(min, max);
+}
+
+void UnderwaterVehicle::SetThrusterSetpoint(unsigned int index, btScalar s)
+{
+    if(index < thrusters.size())
+        thrusters[index]->setSetpoint(s);
+}
+
+btScalar UnderwaterVehicle::GetThrusterSetpoint(unsigned int index)
+{
+    if(index < thrusters.size())
+        return thrusters[index]->getSetpoint();
+    else
+        return btScalar(0);
 }

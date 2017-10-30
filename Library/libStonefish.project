@@ -97,6 +97,9 @@
         <File Name="src/Gripper.cpp"/>
         <File Name="src/UnderwaterVehicle.cpp"/>
         <File Name="src/Manipulator.cpp"/>
+        <VirtualDirectory Name="grippers">
+          <File Name="src/FixedGripper.cpp"/>
+        </VirtualDirectory>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
@@ -116,15 +119,17 @@
       <File Name="src/SimpleSensor.cpp"/>
       <File Name="src/Sensor.cpp"/>
       <VirtualDirectory Name="simple">
-        <File Name="src/Accelerometer.cpp"/>
-        <File Name="src/ADC.cpp"/>
         <File Name="src/Current.cpp"/>
         <File Name="src/FakeIMU.cpp"/>
         <File Name="src/FakeRotaryEncoder.cpp"/>
-        <File Name="src/Gyroscope.cpp"/>
         <File Name="src/IMU.cpp"/>
         <File Name="src/Magnetometer.cpp"/>
         <File Name="src/RotaryEncoder.cpp"/>
+        <File Name="src/ForceTorque.cpp"/>
+        <File Name="src/DVL.cpp"/>
+        <File Name="src/Accelerometer.cpp"/>
+        <File Name="src/ADC.cpp"/>
+        <File Name="src/Gyroscope.cpp"/>
         <File Name="src/TrueRotaryEncoder.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="advanced">
@@ -165,7 +170,9 @@
         <File Name="include/Stonefish/Gripper.h"/>
         <File Name="include/Stonefish/Manipulator.h"/>
         <File Name="include/Stonefish/UnderwaterVehicle.h"/>
-        <VirtualDirectory Name="grippers"/>
+        <VirtualDirectory Name="grippers">
+          <File Name="include/Stonefish/FixedGripper.h"/>
+        </VirtualDirectory>
       </VirtualDirectory>
       <File Name="include/Stonefish/FeatherstoneEntity.h"/>
     </VirtualDirectory>
@@ -177,19 +184,19 @@
         <File Name="include/Stonefish/Camera.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="simple">
-        <File Name="include/Stonefish/Accelerometer.h"/>
-        <File Name="include/Stonefish/ADC.h"/>
         <File Name="include/Stonefish/Current.h"/>
         <File Name="include/Stonefish/FakeIMU.h"/>
         <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
-        <File Name="include/Stonefish/Gyroscope.h"/>
         <File Name="include/Stonefish/IMU.h"/>
         <File Name="include/Stonefish/Magnetometer.h"/>
         <File Name="include/Stonefish/RotaryEncoder.h"/>
-        <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
         <File Name="include/Stonefish/ForceTorque.h"/>
-        <File Name="include/Stonefish/DVL.h"/>
         <File Name="include/Stonefish/GPS.h"/>
+        <File Name="include/Stonefish/DVL.h"/>
+        <File Name="include/Stonefish/ADC.h"/>
+        <File Name="include/Stonefish/Gyroscope.h"/>
+        <File Name="include/Stonefish/Accelerometer.h"/>
+        <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/SimpleSensor.h"/>
       <File Name="include/Stonefish/Sensor.h"/>

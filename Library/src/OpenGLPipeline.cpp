@@ -199,7 +199,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         }
         else //POOL
         {
-            renderMode = 1;
+            //renderMode = 1;
         }
     }
 		
@@ -537,7 +537,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
 			//OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
 			
-			view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
+			//view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
 			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
 			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
 			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);

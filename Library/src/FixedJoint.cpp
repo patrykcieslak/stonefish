@@ -23,14 +23,14 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
 
 FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB) : Joint(uniqueName, false)
 {
-	btMultiBody* mbA = feA->getMultiBody();
-	btMultiBody* mbB = feB->getMultiBody();
-	btVector3 pivotInB = mbB->getBaseWorldTransform().inverse() * (mbA->getBaseWorldTransform() * btVector3(0,0,0));
-	btMatrix3x3 frameInB = mbB->getBaseWorldTransform().getBasis().inverse() * mbA->getBaseWorldTransform().getBasis();	
+    btTransform linkATransform = feA->getLinkTransform(linkIdA+1);
+    btTransform linkBTransform = feB->getLinkTransform(linkIdB+1);
+    btVector3 pivotInB = linkBTransform.inverse() * (linkATransform * btVector3(0,0,0));
+    btMatrix3x3 frameInB = linkBTransform.getBasis().inverse() * linkATransform.getBasis();	
 	
-	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(mbA, linkIdA, mbB, linkIdB, btVector3(0,0,0), pivotInB, btMatrix3x3::getIdentity(), frameInB);
+	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, btVector3(0,0,0), pivotInB, btMatrix3x3::getIdentity(), frameInB);
 	setConstraint(fixed);
-    
+
     //Disable collision
     SimulationApp::getApp()->getSimulationManager()->DisableCollision(feA->getLink(linkIdA+1).solid, feB->getLink(linkIdB+1).solid);
 }

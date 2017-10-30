@@ -11,7 +11,6 @@
 
 #include "SystemEntity.h"
 #include "FeatherstoneEntity.h"
-#include "Gripper.h"
 #include "Motor.h"
 #include "RotaryEncoder.h"
 #include "ServoController.h"
@@ -44,6 +43,8 @@ public:
     btScalar GetDesiredJointPosition(unsigned int jointId);
     btScalar GetDesiredJointVelocity(unsigned int jointId);
     const std::vector<btTransform>& getDH();
+    FeatherstoneEntity* getChain();
+    unsigned int getNumOfLinks();
     
 	//System
 	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
@@ -61,7 +62,6 @@ private:
     FeatherstoneEntity* chain;
 	std::vector<btScalar> desiredPos;
     std::vector<btScalar> desiredVel;
-    Gripper* gripper;
 	unsigned int nLinks;
 	unsigned int nTotalLinks;
 	
