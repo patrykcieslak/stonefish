@@ -38,7 +38,7 @@ void UnderwaterTestManager::BuildScenario()
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
     OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
-    OpenGLPipeline::getInstance()->setDebugSimulation(true);
+    OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Dummy", UnitSystem::Density(CGS, MKS, 1.0), 0.5);

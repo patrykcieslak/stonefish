@@ -16,6 +16,7 @@ DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geo
     g2s = UnitSystem::SetTransform(geomToSensor);
     channels.push_back(SensorChannel("Velocity X", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QUANTITY_VELOCITY));
+    channels.push_back(SensorChannel("Velocity Z", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Altitude", QUANTITY_LENGTH));
 }    
     
@@ -37,14 +38,14 @@ void DVL::InternalUpdate(btScalar dt)
     }
     
     //Get velocity
-    btVector3 v = dvlTrans.getBasis() * attach->getLinearVelocity();
+    btVector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocity();
     
     //Record sample
-    btScalar data[3] = {v.x(),v.y(),altitude};
-    Sample s(3, data);
+    btScalar data[4] = {v.x(),v.y(),v.z(),altitude};
+    Sample s(4, data);
     AddSampleToHistory(s);
     
-    std::cout << "DVL: " << data[0] << ", " << data[1] << ", " << data[2] << std::endl;
+    std::cout << "DVL: " << data[0] << ", " << data[1] << ", " << data[2] << ", " << data[3] << std::endl;
 }
     
 void DVL::Reset()
