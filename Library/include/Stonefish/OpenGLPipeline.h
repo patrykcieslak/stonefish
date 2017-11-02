@@ -43,15 +43,15 @@
 #define TEX_SPOT_SHADOW			((GLint)15)
 #define TEX_SPOT_DEPTH			((GLint)16)
 
+typedef enum {SOLID, SOLID_CS, HYDRO, HYDRO_CS, SENSOR} RenderableType;   
+
 typedef struct
 {
-	int lookId;
-	int objectId;
-    bool dispCoordSys;
-	glm::mat4 model;
-	glm::mat4 csModel; //coordinate system (unified size)
-    glm::mat4 eModel;  //fluid dynamics ellipse (sized by radii)
-    glm::vec3 eRadii;
+    RenderableType type;
+    int lookId;
+    int objectId;
+    glm::mat4 model;
+    std::vector<glm::vec3> points;
 } Renderable;
 
 class SimulationManager;

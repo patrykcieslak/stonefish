@@ -122,6 +122,12 @@ void SimpleSensor::AddSampleToHistory(const Sample& s)
         history.pop_front();
     }
     
+    //Add noise
+    for(unsigned int i=0; i<s.nDim; ++i)
+        if(channels[i].stdDev > btScalar(0))
+            s.data[i] += channels[i].noise(randomGenerator);
+    
+    //Add to history
     history.push_back(new Sample(s));
 }
 
@@ -400,8 +406,4 @@ void SimpleSensor::SaveMeasurementsToOctaveFile(const char* path, bool includeTi
     
     //save data structure to file
     SaveOctaveData(path, data);
-}
-
-void SimpleSensor::Render()
-{
 }

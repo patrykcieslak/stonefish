@@ -269,6 +269,17 @@ std::vector<Renderable> Compound::Render()
 		btTransform cgCompoundTrans = getTransform();
 		btTransform oCompoundTrans =  getTransform() * localTransform.inverse();
 	
+        Renderable item;
+        item.type = RenderableType::SOLID_CS;
+        item.model = glMatrixFromBtTransform(cgCompoundTrans);
+        items.push_back(item);
+        
+        btVector3 cobWorld = oCompoundTrans * CoB;
+        item.type = RenderableType::HYDRO_CS;
+        item.model = glMatrixFromBtTransform(btTransform(btQuaternion::getIdentity(), cobWorld));
+        item.points.push_back(glm::vec3(volume, volume, volume));
+        items.push_back(item);
+    
 		for(unsigned int i=0; i<parts.size(); ++i)
 		{
 			btTransform oTrans = oCompoundTrans * parts[i].position;
@@ -276,13 +287,15 @@ std::vector<Renderable> Compound::Render()
 			//btTransform cgTrans = oTrans * parts[i].solid->getGeomToCOGTransform();
             
 			Renderable item;
+            item.type = RenderableType::SOLID;
 			item.objectId = parts[i].solid->getObject();
 			item.lookId = parts[i].solid->getLook();
-			item.dispCoordSys = false;
 			item.model = glMatrixFromBtTransform(oTrans);
-			item.csModel = glMatrixFromBtTransform(cgTrans);
-            item.eModel = glMatrixFromBtTransform(oCompoundTrans * ellipsoidTransform);
-            item.eRadii = glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]);
+			items.push_back(item);
+            
+            item.type = RenderableType::HYDRO;
+            item.model = glMatrixFromBtTransform(oCompoundTrans * ellipsoidTransform);
+            item.points.push_back(glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]));
 			items.push_back(item);
 		}
 	}

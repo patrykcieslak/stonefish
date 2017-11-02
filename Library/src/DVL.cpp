@@ -9,6 +9,7 @@
 #include "DVL.h"
 #include "SimulationApp.h"
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include "MathsUtil.hpp"
 
 DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
@@ -44,11 +45,20 @@ void DVL::InternalUpdate(btScalar dt)
     btScalar data[4] = {v.x(),v.y(),v.z(),altitude};
     Sample s(4, data);
     AddSampleToHistory(s);
-    
-    std::cout << "DVL: " << data[0] << ", " << data[1] << ", " << data[2] << ", " << data[3] << std::endl;
 }
-    
-void DVL::Reset()
+
+std::vector<Renderable> DVL::Render()
 {
-}
+    std::vector<Renderable> items(0);
     
+    btTransform dvlTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+    
+    Renderable item;
+    item.type = RenderableType::SENSOR;
+    item.model = glMatrixFromBtTransform(dvlTrans);
+    item.points.push_back(glm::vec3(0,0,0));
+    item.points.push_back(glm::vec3(0,0, getLastSample().getData()[3]));
+    items.push_back(item);
+
+    return items;
+}

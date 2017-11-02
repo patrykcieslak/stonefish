@@ -845,7 +845,8 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 		helperShader->SetUniform("scale", glm::vec3(1.f));
 		
 		glBindVertexArray(baseVertexArray);
-		glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);

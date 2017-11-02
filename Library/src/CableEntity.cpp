@@ -158,8 +158,7 @@ std::vector<Renderable> CableEntity::Render()
 			Renderable item;
 			item.objectId = objectId;
 			item.lookId = lookId;
-			item.dispCoordSys = false;
-			item.model = item.csModel = glMatrixFromBtTransform(trans);
+			item.model = glMatrixFromBtTransform(trans);
 			items.push_back(item);
         }
     }

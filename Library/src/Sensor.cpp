@@ -12,6 +12,8 @@
 #include "ScientificFileUtil.h"
 
 NameManager Sensor::nameManager;
+std::random_device Sensor::randomDevice;
+std::mt19937 Sensor::randomGenerator(randomDevice());
 
 Sensor::Sensor(std::string uniqueName, btScalar frequency)
 {
@@ -64,4 +66,10 @@ void Sensor::Update(btScalar dt)
             eleapsedTime -= invFreq;
         }
     }
+}
+
+std::vector<Renderable> Sensor::Render()
+{
+    std::vector<Renderable> items(0);
+    return items;
 }

@@ -37,7 +37,6 @@
       <File Name="src/PathGenerator2D.cpp"/>
       <File Name="src/SignalGenerator.cpp"/>
       <File Name="src/SignalMux.cpp"/>
-      <File Name="src/Trajectory.cpp"/>
       <File Name="src/ServoController.cpp"/>
       <File Name="src/SpeedController.cpp"/>
     </VirtualDirectory>
@@ -120,21 +119,22 @@
       <File Name="src/Sensor.cpp"/>
       <VirtualDirectory Name="simple">
         <File Name="src/Current.cpp"/>
-        <File Name="src/FakeIMU.cpp"/>
         <File Name="src/FakeRotaryEncoder.cpp"/>
         <File Name="src/IMU.cpp"/>
-        <File Name="src/Magnetometer.cpp"/>
         <File Name="src/RotaryEncoder.cpp"/>
         <File Name="src/ForceTorque.cpp"/>
         <File Name="src/DVL.cpp"/>
-        <File Name="src/Accelerometer.cpp"/>
-        <File Name="src/ADC.cpp"/>
         <File Name="src/Gyroscope.cpp"/>
         <File Name="src/TrueRotaryEncoder.cpp"/>
+        <File Name="src/Trajectory.cpp"/>
+        <File Name="src/Pressure.cpp"/>
+        <File Name="src/FOG.cpp"/>
+        <File Name="src/GPS.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="advanced">
         <File Name="src/Camera.cpp"/>
       </VirtualDirectory>
+      <File Name="src/ADC.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
       <File Name="src/ScientificFileUtil.cpp"/>
@@ -185,21 +185,21 @@
       </VirtualDirectory>
       <VirtualDirectory Name="simple">
         <File Name="include/Stonefish/Current.h"/>
-        <File Name="include/Stonefish/FakeIMU.h"/>
         <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
         <File Name="include/Stonefish/IMU.h"/>
-        <File Name="include/Stonefish/Magnetometer.h"/>
         <File Name="include/Stonefish/RotaryEncoder.h"/>
         <File Name="include/Stonefish/ForceTorque.h"/>
         <File Name="include/Stonefish/GPS.h"/>
         <File Name="include/Stonefish/DVL.h"/>
-        <File Name="include/Stonefish/ADC.h"/>
         <File Name="include/Stonefish/Gyroscope.h"/>
-        <File Name="include/Stonefish/Accelerometer.h"/>
         <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
+        <File Name="include/Stonefish/Trajectory.h"/>
+        <File Name="include/Stonefish/Pressure.h"/>
+        <File Name="include/Stonefish/FOG.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/SimpleSensor.h"/>
       <File Name="include/Stonefish/Sensor.h"/>
+      <File Name="include/Stonefish/ADC.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
       <File Name="include/Stonefish/BeltJoint.h"/>
@@ -254,7 +254,6 @@
       <File Name="include/Stonefish/ServoController.h"/>
       <File Name="include/Stonefish/SignalGenerator.h"/>
       <File Name="include/Stonefish/SignalMux.h"/>
-      <File Name="include/Stonefish/Trajectory.h"/>
       <File Name="include/Stonefish/SpeedController.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">

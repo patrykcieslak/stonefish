@@ -48,10 +48,10 @@ std::vector<Renderable> StaticEntity::Render()
         rigidBody->getMotionState()->getWorldTransform(trans);
 		
 		Renderable item;
+        item.type = RenderableType::SOLID;
 		item.objectId = objectId;
 		item.lookId = lookId;
-		item.dispCoordSys = false;
-		item.model = item.csModel = glMatrixFromBtTransform(trans);
+		item.model = glMatrixFromBtTransform(trans);
 		items.push_back(item);
     }
 	

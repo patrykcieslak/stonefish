@@ -169,13 +169,25 @@ std::vector<Renderable> SolidEntity::Render()
 		btTransform oTrans =  getTransform() * localTransform.inverse();
 		
 		Renderable item;
-		item.objectId = objectId;
+		item.type = RenderableType::SOLID;
+        item.objectId = objectId;
 		item.lookId = lookId;
-		item.dispCoordSys = dispCoordSys;
 		item.model = glMatrixFromBtTransform(oTrans);
-		item.csModel = glMatrixFromBtTransform(getTransform());
-        item.eModel = glMatrixFromBtTransform(oTrans * ellipsoidTransform);
-        item.eRadii = glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]);
+		items.push_back(item);
+        
+        item.type = RenderableType::SOLID_CS;
+        item.model = glMatrixFromBtTransform(getTransform());
+        items.push_back(item);
+        
+        item.type = RenderableType::HYDRO;
+        item.model = glMatrixFromBtTransform(oTrans * ellipsoidTransform);
+        item.points.push_back(glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]));
+        items.push_back(item);
+        
+        btVector3 cobWorld = oTrans * CoB;
+        item.type = RenderableType::HYDRO_CS;
+        item.model = glMatrixFromBtTransform(btTransform(btQuaternion::getIdentity(), cobWorld));
+        item.points.push_back(glm::vec3(volume, volume, volume));
         items.push_back(item);
 	}
 	

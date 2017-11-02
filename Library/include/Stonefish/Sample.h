@@ -22,11 +22,9 @@ public:
     btScalar getValue(unsigned short dimension);
     std::vector<btScalar> getData();
     
-private:
     btScalar timestamp;
     unsigned short nDim;
     btScalar* data;
-    
 };
 
 #endif

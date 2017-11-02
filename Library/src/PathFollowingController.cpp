@@ -40,7 +40,7 @@ ControllerType PathFollowingController::getType()
 
 void PathFollowingController::RenderPath()
 {
-    if(inputPath->isRenderable())
+    /*if(inputPath->isRenderable())
     {
         inputPath->Render();
         
@@ -50,7 +50,7 @@ void PathFollowingController::RenderPath()
         std::vector<glm::vec3> vertices;
 		vertices.push_back(glm::vec3(point.getX(), point.getY(), point.getZ()));
 		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);
-	}
+	}*/
 }
 
 void PathFollowingController::Reset()

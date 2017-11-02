@@ -25,8 +25,10 @@ void Camera::InternalUpdate(btScalar dt)
 {
 }
 
-void Camera::Render()
+std::vector<Renderable> Camera::Render()
 {
+    std::vector<Renderable> items(0);
+    return items;
 }
 
 SensorType Camera::getType()

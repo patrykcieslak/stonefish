@@ -105,12 +105,15 @@ std::vector<Renderable> Thruster::Render()
     
     //Add renderable
     Renderable item;
+    item.type = RenderableType::SOLID;
     item.objectId = prop->getObject();
     item.lookId = prop->getLook();
-	item.dispCoordSys = false;
 	item.model = glMatrixFromBtTransform(thrustTrans);
-    item.csModel = item.model;
-	items.push_back(item);
+    items.push_back(item);
+    
+    item.type = RenderableType::SOLID_CS;
+    items.push_back(item);
+    
     return items;
 }
 

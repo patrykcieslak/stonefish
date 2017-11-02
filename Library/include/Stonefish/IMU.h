@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_IMU__
@@ -15,14 +15,13 @@
 class IMU : public SimpleSensor
 {
 public:
-    IMU(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
-    virtual void InternalUpdate(btScalar dt) = 0;
-    virtual void Reset() = 0;
+    void InternalUpdate(btScalar dt);
     
 protected:
-    SolidEntity* solid;
-    btTransform relToSolid;
+    SolidEntity* attach;
+    btTransform g2s;
 };
 
 #endif

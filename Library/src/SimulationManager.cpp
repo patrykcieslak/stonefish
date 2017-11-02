@@ -871,8 +871,6 @@ void SimulationManager::UpdateDrawingQueue()
 			if(!zUp)
 			{
 				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-				items[h].csModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].csModel;
-                items[h].eModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].eModel;
 			}
 			
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
@@ -888,7 +886,21 @@ void SimulationManager::UpdateDrawingQueue()
 			if(!zUp)
             {
 				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-                items[h].csModel = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].csModel;
+			}
+			
+			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
+		}
+    }
+    
+    //Sensors
+    for(unsigned int i=0; i<sensors.size(); ++i)
+    {
+        std::vector<Renderable> items = sensors[i]->Render();
+		for(unsigned int h=0; h<items.size(); ++h)
+		{
+			if(!zUp)
+            {
+				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			}
 			
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);

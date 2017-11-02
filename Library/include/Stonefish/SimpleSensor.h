@@ -21,8 +21,14 @@ struct SensorChannel
 {
     std::string name;
     QuantityType type;
+    btScalar stdDev;
+    std::normal_distribution<btScalar> noise;
     
-    SensorChannel(std::string name_, QuantityType type_) : name(name_), type(type_) {}
+    SensorChannel(std::string name_, QuantityType type_, btScalar stdDev_ = btScalar(0)) : name(name_), type(type_), stdDev(stdDev_) 
+    {
+        if(stdDev > btScalar(0))
+            noise = std::normal_distribution<btScalar>(btScalar(0), stdDev);
+    }
 };
 
 //Abstract class
@@ -32,7 +38,6 @@ public:
     SimpleSensor(std::string uniqueName, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     virtual ~SimpleSensor();
     
-	virtual void Render();
 	virtual void Reset();
     void ClearHistory();
     void SaveMeasurementsToTextFile(const char* path, bool includeTime = true, unsigned int fixedPrecision = 6);

@@ -19,7 +19,7 @@ public:
     
     void InternalUpdate(btScalar dt);
     void Reset();
-    void Render();
+    virtual std::vector<Renderable> Render();
     
 private:
     //parameters

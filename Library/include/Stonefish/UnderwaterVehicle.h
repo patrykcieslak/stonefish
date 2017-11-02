@@ -28,10 +28,11 @@ public:
     
     //Underwater vehicle
     void AddThruster(Thruster* thruster, const btTransform& location); //Location in the body geometry frame
-    void AddDVL(const btTransform& location); 
-    void AddFOG(const btTransform& location);
-    void AddGPS(const btTransform& location);
-    void AddCompass(const btTransform& location);
+    void AddPressureSensor(const btTransform& location, btScalar updateFrequency = btScalar(-1));
+    void AddDVL(const btTransform& location, btScalar updateFrequency = btScalar(-1)); 
+    void AddFOG(const btTransform& location, btScalar updateFrequency = btScalar(-1));
+    void AddIMU(const btTransform& location, btScalar updateFrequency = btScalar(-1));
+    void AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency = btScalar(-1));
     void SetThrusterSetpoint(unsigned int index, btScalar s);
     btScalar GetThrusterSetpoint(unsigned int index);
     

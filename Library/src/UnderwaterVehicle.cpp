@@ -8,7 +8,11 @@
 
 #include "UnderwaterVehicle.h"
 #include "SimulationApp.h"
+#include "Pressure.h"
 #include "DVL.h"
+#include "FOG.h"
+#include "IMU.h"
+#include "GPS.h"
 
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid) : SystemEntity(uniqueName)
 {
@@ -56,25 +60,34 @@ void UnderwaterVehicle::AddThruster(Thruster* thruster, const btTransform& locat
     thrusters.push_back(thruster);
 }
 
-void UnderwaterVehicle::AddDVL(const btTransform& location)
+void UnderwaterVehicle::AddPressureSensor(const btTransform& location, btScalar updateFrequency)
 {
-    DVL* dvl = new DVL(getName() + "DVL", vehicleBody->getLink(0).solid, location);
+    Pressure* press = new Pressure(getName() + "Pressure", vehicleBody->getLink(0).solid, location, updateFrequency);
+    sensors.push_back(press);
+}
+
+void UnderwaterVehicle::AddDVL(const btTransform& location, btScalar updateFrequency)
+{
+    DVL* dvl = new DVL(getName() + "DVL", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(dvl);
 }
 
-void UnderwaterVehicle::AddFOG(const btTransform& location)
+void UnderwaterVehicle::AddFOG(const btTransform& location, btScalar updateFrequency)
 {
-    
+    FOG* fog = new FOG(getName() + "FOG", vehicleBody->getLink(0).solid, location, updateFrequency);
+    sensors.push_back(fog);
 }
 
-void UnderwaterVehicle::AddCompass(const btTransform& location)
+void UnderwaterVehicle::AddIMU(const btTransform& location, btScalar updateFrequency)
 {
-    
+    IMU* imu = new IMU(getName() + "IMU", vehicleBody->getLink(0).solid, location, updateFrequency);
+    sensors.push_back(imu);
 }
 
-void UnderwaterVehicle::AddGPS(const btTransform& location)
+void UnderwaterVehicle::AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency)
 {
-    
+    GPS* gps = new GPS(getName() + "GPS", homeLatitude, homeLongitude, vehicleBody->getLink(0).solid, location, updateFrequency);
+    sensors.push_back(gps);
 }
 
 void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
@@ -128,6 +141,12 @@ std::vector<Renderable> UnderwaterVehicle::Render()
     {
         std::vector<Renderable> th = thrusters[i]->Render();
         items.insert(items.end(), th.begin(), th.end());
+    }
+    
+    for(unsigned int i=0; i<sensors.size(); ++i)
+    {
+        std::vector<Renderable> sens = sensors[i]->Render();
+        items.insert(items.end(), sens.begin(), sens.end());
     }
     
     return items;

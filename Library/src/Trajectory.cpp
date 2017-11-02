@@ -40,9 +40,11 @@ void Trajectory::InternalUpdate(btScalar dt)
     AddSampleToHistory(s);
 }
 
-void Trajectory::Render()
+std::vector<Renderable> Trajectory::Render()
 {
-    if(history.size() > 1)
+    std::vector<Renderable> items(0);
+    
+    /*if(history.size() > 1)
 	{
 		std::vector<glm::vec3> vertices;
 		
@@ -50,6 +52,8 @@ void Trajectory::Render()
             vertices.push_back(glm::vec3(history[i]->getValue(0), history[i]->getValue(1), history[i]->getValue(2)));
     
 		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
-	}
+	}*/
+    
+    return items;
 }
 

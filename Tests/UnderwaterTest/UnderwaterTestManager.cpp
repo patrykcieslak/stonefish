@@ -20,8 +20,6 @@
 #include "OpenGLSpotLight.h"
 #include "OpenGLTrackball.h"
 #include "SystemUtil.hpp"
-#include "Accelerometer.h"
-#include "ADC.h"
 #include "Ocean.h"
 #include "Obstacle.h"
 #include "UnderwaterVehicle.h"
@@ -112,15 +110,23 @@ void UnderwaterTestManager::BuildScenario()
 	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
     
     //Add sensors
+    vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
     vehicle->AddDVL(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-	
+    vehicle->AddIMU(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    vehicle->AddFOG(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    vehicle->AddGPS(btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1)), UnitSystem::Angle(true, 50), UnitSystem::Angle(true, 20));
+    
     //Create and attach thrusters
-    Polyhedron* propeller = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
-    Thruster* thSway = new Thruster("ThrusterSway", propeller, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thSurgeP = new Thruster("ThrusterSurgePort", propeller, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thSurgeS = new Thruster("ThrusterSurgeStarboard", propeller, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", propeller, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", propeller, 0.18, 0.48, 0.05, 100.0);
+    Polyhedron* prop1 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
+    Polyhedron* prop2 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
+    Polyhedron* prop3 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
+    Polyhedron* prop4 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
+    Polyhedron* prop5 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
+    Thruster* thSway = new Thruster("ThrusterSway", prop1, 0.18, 0.48, 0.05, 100.0);
+    Thruster* thSurgeP = new Thruster("ThrusterSurgePort", prop2, 0.18, 0.48, 0.05, 100.0);
+    Thruster* thSurgeS = new Thruster("ThrusterSurgeStarboard", prop3, 0.18, 0.48, 0.05, 100.0);
+    Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", prop4, 0.18, 0.48, 0.05, 100.0);
+    Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", prop5, 0.18, 0.48, 0.05, 100.0);
     vehicle->AddThruster(thSway, btTransform(btQuaternion(M_PI_2,0,0), btVector3(-0.0137, -0.0307, -0.38)));
     vehicle->AddThruster(thSurgeP, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,-0.2587,-0.38)));
     vehicle->AddThruster(thSurgeS, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));

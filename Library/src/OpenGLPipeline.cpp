@@ -174,7 +174,10 @@ void OpenGLPipeline::DrawDisplay()
 void OpenGLPipeline::DrawObjects()
 {
     for(unsigned int i=0; i<drawingQueueCopy.size(); ++i)
-        OpenGLContent::getInstance()->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
+    {
+        if(drawingQueueCopy[i].type == RenderableType::SOLID)
+            OpenGLContent::getInstance()->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
+    }
 }
 
 void OpenGLPipeline::Render(SimulationManager* sim)
@@ -453,7 +456,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 
 				for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
 				{
-					OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].csModel, 0.5f);
+					if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
+                        OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
 				}
                 
                 /*for(unsigned int h=0; h<sim->entities.size(); ++h)
@@ -514,15 +518,30 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				}
             */  
             
+            //Sensors
+            //if(showSensors)
+            {
+                for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                {
+                    if(drawingQueueCopy[h].type == RenderableType::SENSOR)
+                        OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0,1.f,0,1.f), drawingQueueCopy[h].model);
+                }
+            }
+            
+            
+            
             //Fluid dynamics
             if(showFluidDynamics)
             {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 
                 for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
-					OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].eModel, drawingQueueCopy[h].eRadii);
+                {
+                    if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
+                        OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f));//drawingQueueCopy[h].scale*2.f);
+                }
                 
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+               // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
                 
             //Debugging

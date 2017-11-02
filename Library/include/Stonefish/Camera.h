@@ -20,7 +20,7 @@ public:
     virtual ~Camera();
     
 	virtual void InternalUpdate(btScalar dt);
-    virtual void Render();
+    virtual std::vector<Renderable> Render();
 	virtual SensorType getType();
 
 private:
