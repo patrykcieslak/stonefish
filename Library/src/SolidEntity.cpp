@@ -480,6 +480,8 @@ void SolidEntity::BuildRigidBody()
         //rigidBody->setActivationState(DISABLE_DEACTIVATION);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
+        
+        std::cout << getName() << " mass: " << mass << std::endl;
     }
 }
 
@@ -511,6 +513,8 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         
         //Graphics
         BuildGraphicalObject();
+        
+        std::cout << getName() << " mass: " << mass << std::endl;
     }
 }
 

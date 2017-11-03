@@ -47,7 +47,7 @@ void Gripper::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransf
     fix = new FixedJoint(getName() + "/Fix", mechanism, manipulator->getChain(), -1, manipulator->getNumOfLinks()-2);
     fix->AddToDynamicsWorld(world);
     
-    ft = new ForceTorque(getName() + "/FT", fix);
+    ft = new ForceTorque(getName() + "/FT", fix, mechanism->getLink(0).solid, btTransform::getIdentity());
 }
 
 void Gripper::UpdateAcceleration(btScalar dt)

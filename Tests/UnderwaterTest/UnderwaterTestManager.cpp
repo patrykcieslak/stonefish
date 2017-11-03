@@ -25,6 +25,11 @@
 #include "UnderwaterVehicle.h"
 #include "Thruster.h"
 #include "FixedGripper.h"
+#include "Pressure.h"
+#include "DVL.h"
+#include "FOG.h"
+#include "IMU.h"
+#include "GPS.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::DANTZIG, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -110,11 +115,16 @@ void UnderwaterTestManager::BuildScenario()
 	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
     
     //Add sensors
-    vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-    vehicle->AddDVL(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-    vehicle->AddIMU(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-    vehicle->AddFOG(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-    vehicle->AddGPS(btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1)), UnitSystem::Angle(true, 50), UnitSystem::Angle(true, 20));
+    Pressure* press = vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    press->SetNoise(1.0);
+    DVL* dvl = vehicle->AddDVL(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    dvl->SetNoise(0.02, 0.05);
+    IMU* imu = vehicle->AddIMU(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    imu->SetNoise(0.01, 0.05);
+    FOG* fog = vehicle->AddFOG(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    fog->SetNoise(0.001);
+    GPS* gps = vehicle->AddGPS(btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1)), UnitSystem::Angle(true, 50), UnitSystem::Angle(true, 20));
+    gps->SetNoise(0.000001, 0.000001);
     
     //Create and attach thrusters
     Polyhedron* prop1 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);

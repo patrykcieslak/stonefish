@@ -37,3 +37,23 @@ void IMU::InternalUpdate(btScalar dt)
     Sample s(6, values);
     AddSampleToHistory(s);
 }
+
+void IMU::SetRange(btScalar angularVelocityMax)
+{
+    channels[3].rangeMin = -angularVelocityMax;
+    channels[4].rangeMin = -angularVelocityMax;
+    channels[5].rangeMin = -angularVelocityMax;
+    channels[3].rangeMax = angularVelocityMax;
+    channels[4].rangeMax = angularVelocityMax;
+    channels[5].rangeMax = angularVelocityMax;
+}
+    
+void IMU::SetNoise(btScalar angleStdDev, btScalar angularVelocityStdDev)
+{
+    channels[0].setStdDev(angleStdDev);
+    channels[1].setStdDev(angleStdDev);
+    channels[2].setStdDev(angleStdDev);
+    channels[3].setStdDev(angularVelocityStdDev);
+    channels[4].setStdDev(angularVelocityStdDev);
+    channels[5].setStdDev(angularVelocityStdDev);
+}

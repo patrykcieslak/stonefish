@@ -20,6 +20,9 @@ public:
     void InternalUpdate(btScalar dt);
     std::vector<Renderable> Render();
     
+    void SetRange(const btVector3& velocityMax, btScalar altitudeMin, btScalar altitudeMax);
+    void SetNoise(btScalar velocityStdDev, btScalar altitudeStdDev);
+    
 private:
     SolidEntity* attach;
     btTransform g2s;

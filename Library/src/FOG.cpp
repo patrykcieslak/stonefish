@@ -27,3 +27,8 @@ void FOG::InternalUpdate(btScalar dt)
     Sample s(1, &yaw);
     AddSampleToHistory(s);
 }
+
+void FOG::SetNoise(btScalar headingStdDev)
+{
+    channels[0].setStdDev(headingStdDev);
+}

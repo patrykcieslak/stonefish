@@ -23,11 +23,20 @@ struct SensorChannel
     QuantityType type;
     btScalar stdDev;
     std::normal_distribution<btScalar> noise;
+    btScalar rangeMin;
+    btScalar rangeMax;
     
-    SensorChannel(std::string name_, QuantityType type_, btScalar stdDev_ = btScalar(0)) : name(name_), type(type_), stdDev(stdDev_) 
+    SensorChannel(std::string name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT)
     {
-        if(stdDev > btScalar(0))
+    }    
+        
+    void setStdDev(btScalar sd)
+    {
+        if(sd > btScalar(0))
+        {
+            stdDev = sd;
             noise = std::normal_distribution<btScalar>(btScalar(0), stdDev);
+        }
     }
 };
 

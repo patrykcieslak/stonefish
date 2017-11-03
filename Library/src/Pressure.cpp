@@ -29,3 +29,14 @@ void Pressure::InternalUpdate(btScalar dt)
     Sample s(1, &data);
     AddSampleToHistory(s);
 }
+
+void Pressure::SetRange(btScalar max)
+{
+    channels[0].rangeMin = btScalar(0);
+    channels[0].rangeMax = max;
+}
+    
+void Pressure::SetNoise(btScalar pressureStdDev)
+{
+    channels[0].setStdDev(pressureStdDev);
+}

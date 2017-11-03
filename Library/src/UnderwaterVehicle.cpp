@@ -8,11 +8,6 @@
 
 #include "UnderwaterVehicle.h"
 #include "SimulationApp.h"
-#include "Pressure.h"
-#include "DVL.h"
-#include "FOG.h"
-#include "IMU.h"
-#include "GPS.h"
 
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid) : SystemEntity(uniqueName)
 {
@@ -60,34 +55,39 @@ void UnderwaterVehicle::AddThruster(Thruster* thruster, const btTransform& locat
     thrusters.push_back(thruster);
 }
 
-void UnderwaterVehicle::AddPressureSensor(const btTransform& location, btScalar updateFrequency)
+Pressure* UnderwaterVehicle::AddPressureSensor(const btTransform& location, btScalar updateFrequency)
 {
     Pressure* press = new Pressure(getName() + "Pressure", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(press);
+    return press;
 }
 
-void UnderwaterVehicle::AddDVL(const btTransform& location, btScalar updateFrequency)
+DVL* UnderwaterVehicle::AddDVL(const btTransform& location, btScalar updateFrequency)
 {
     DVL* dvl = new DVL(getName() + "DVL", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(dvl);
+    return dvl;
 }
 
-void UnderwaterVehicle::AddFOG(const btTransform& location, btScalar updateFrequency)
+FOG* UnderwaterVehicle::AddFOG(const btTransform& location, btScalar updateFrequency)
 {
     FOG* fog = new FOG(getName() + "FOG", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(fog);
+    return fog;
 }
 
-void UnderwaterVehicle::AddIMU(const btTransform& location, btScalar updateFrequency)
+IMU* UnderwaterVehicle::AddIMU(const btTransform& location, btScalar updateFrequency)
 {
     IMU* imu = new IMU(getName() + "IMU", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(imu);
+    return imu;
 }
 
-void UnderwaterVehicle::AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency)
+GPS* UnderwaterVehicle::AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency)
 {
     GPS* gps = new GPS(getName() + "GPS", homeLatitude, homeLongitude, vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(gps);
+    return gps;
 }
 
 void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)

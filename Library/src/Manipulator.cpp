@@ -35,7 +35,7 @@ Manipulator::~Manipulator()
 	delete chain;
 }
 
-void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit, btScalar upperLimit)
+void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit, btScalar upperLimit, btScalar maxTorque)
 {
 	if(nLinks < nTotalLinks)
 	{
@@ -53,10 +53,13 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
         
         if(lowerLimit < upperLimit)
             chain->AddJointLimit(nLinks-1, lowerLimit, upperLimit);
-		chain->AddJointMotor(nLinks-1);
+		
+        chain->AddJointMotor(nLinks-1, maxTorque/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
         //chain->setJointDamping(nLinks-1, 0, 0.5);
-		desiredPos.push_back(0);
+		
+        desiredPos.push_back(0);
         desiredVel.push_back(0);
+        motorTorque.push_back(0);
         
 		//Update trasformation matrix
 		btTransform t1(btQuaternion::getIdentity(), btVector3(0,0,d));
@@ -89,14 +92,13 @@ void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
 void Manipulator::UpdateAcceleration(btScalar dt)
 {	
     for(unsigned int i=0; i<nLinks-1; ++i)
-    {
-        btScalar torque = chain->getJointTorque(i);
-        btVector3 torque2;
-        btVector3 force;
-        chain->getJointFeedback(i, force, torque2);
-        
-        std::cout << "Joint" << i << ": F:" << force.x() << ", " << force.y() << ", " << force.z()  << " T:" << torque2.x() << ", " << torque2.y() << ", " << torque2.z() << " tau:" << torque << std::endl;
-    }
+        std::cout << "Motor " << i << " torque: " << motorTorque[i] << std::endl;
+}
+
+void Manipulator::UpdateSensors(btScalar dt)
+{
+    for(unsigned int i=0; i<nLinks-1; ++i)
+        motorTorque[i] = chain->getMotorImpulse(i)/dt;
 }
 
 void Manipulator::ApplyGravity(const btVector3& g)
@@ -135,7 +137,7 @@ void Manipulator::SetDesiredJointPosition(unsigned int jointId, btScalar positio
 		return;
 	
     desiredPos[jointId] = position;
-    chain->MotorPositionSetpoint(jointId, position, btScalar(0.1));
+    chain->MotorPositionSetpoint(jointId, position, btScalar(1.0));
 }
 
 void Manipulator::SetDesiredJointVelocity(unsigned int jointId, btScalar velocity)

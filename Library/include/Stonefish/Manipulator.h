@@ -31,7 +31,8 @@ public:
     virtual ~Manipulator();
     
 	//Manipulator
-	void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0));
+	void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, 
+                      btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0), btScalar maxTorque = btScalar(1000.0));
     void AddTransformDH(btScalar d, btScalar a, btScalar alpha);
 	
 	void SetDesiredJointPosition(unsigned int jointId, btScalar position);
@@ -50,6 +51,7 @@ public:
 	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
 	void GetAABB(btVector3& min, btVector3& max);
     void UpdateAcceleration(btScalar dt);
+    void UpdateSensors(btScalar dt);
     void ApplyGravity(const btVector3& g);
 	void ApplyDamping();
     SystemType getSystemType();
@@ -62,6 +64,7 @@ private:
     FeatherstoneEntity* chain;
 	std::vector<btScalar> desiredPos;
     std::vector<btScalar> desiredVel;
+    std::vector<btScalar> motorTorque;
 	unsigned int nLinks;
 	unsigned int nTotalLinks;
 	

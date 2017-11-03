@@ -19,7 +19,6 @@
 #include "OpenGLTrackball.h"
 #include "FixedJoint.h"
 #include "RevoluteJoint.h"
-#include "FakeIMU.h"
 #include "DCMotor.h"
 #include "RotaryEncoder.h"
 #include "FakeRotaryEncoder.h"
@@ -29,6 +28,7 @@
 #include "FeatherstoneEntity.h"
 #include "Manipulator.h"
 #include "Obstacle.h"
+#include "ForceTorque.h"
 
 AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG)
 {
@@ -56,25 +56,38 @@ void AcrobotTestManager::BuildScenario()
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.1, 0.0);
     
     /////// OBJECTS
-    Box* baseLink = new Box("BaseLink", btVector3(0.2,0.2,0.2), getMaterialManager()->getMaterial("Rubber"), shiny);
-    Box* link1 = new Box("Link1", btVector3(0.1,0.1,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
+    /*Box* box1 = new Box("B1", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* box2 = new Box("B2", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Concrete"), shiny);
+    
+    FeatherstoneEntity* fe1 = new FeatherstoneEntity("FE1", 1, box1, getDynamicsWorld(), false);
+    FeatherstoneEntity* fe2 = new FeatherstoneEntity("FE2", 1, box2, getDynamicsWorld(), false);
+    AddFeatherstoneEntity(fe1, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.5)));
+    AddFeatherstoneEntity(fe2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.6)));
+    
+    FixedJoint* fix = new FixedJoint("Fix", fe1, fe2);
+    AddJoint(fix);
+    
+    ForceTorque* ft = new ForceTorque("FT", fix, fe2->getLink(0).solid, btTransform::getIdentity());
+    AddSensor(ft);*/
+    
+    Box* baseLink = new Box("BaseLink", btVector3(0.01,0.01,0.01), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* link1 = new Box("Link1", btVector3(0.01,0.01,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
     link1->ScalePhysicalPropertiesToArbitraryMass(1.0);
     Box* link2 = new Box("Link1", btVector3(0.1,0.1,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
     link2->ScalePhysicalPropertiesToArbitraryMass(1.0);
     Box* link3 = new Box("Link1", btVector3(0.1,0.1,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
     link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
     
-    Manipulator* manip = new Manipulator("Manipulator", 3, baseLink, btTransform::getIdentity());
-    manip->AddRotLinkDH(link1, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
-    manip->AddRotLinkDH(link2, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
-    manip->AddRotLinkDH(link3, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.25)), 0, -1.0, 0.0);
-    AddSystemEntity(manip, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.5)));
-    manip->SetDesiredJointPosition(0, 0);
-    manip->SetDesiredJointPosition(1, 0.1);
-    manip->SetDesiredJointPosition(2, -0.1);
+    Manipulator* manip = new Manipulator("Manipulator", 1, baseLink, btTransform::getIdentity());
+    manip->AddRotLinkDH(link1, btTransform(btQuaternion(0,M_PI_2,1.5*M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0, 1,-1, 10);
+    //manip->AddRotLinkDH(link2, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
+    //manip->AddRotLinkDH(link3, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.25)), 0, -1.0, 0.0);
+    AddSystemEntity(manip, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.01)));
+    manip->SetDesiredJointVelocity(0, -0.5);
+    //manip->SetDesiredJointPosition(0, 1.0);
+    //manip->SetDesiredJointVelocity(2, -0.1);
+
     
-    Obstacle* tri = new Obstacle("Mesh", GetDataPath() + "hull_hydro.obj", 1.0, getMaterialManager()->getMaterial("Rubber"), shiny, false);
-    AddStaticEntity(tri, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3)));
     
     //Obstacle* sph = new Obstacle("Sphere", 1.0, getMaterialManager()->getMaterial("Concrete"), grey);
     //AddStaticEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0,0,10)));

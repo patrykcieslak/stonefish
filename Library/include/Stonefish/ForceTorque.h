@@ -15,13 +15,17 @@
 class ForceTorque : public SimpleSensor
 {
 public:
-    ForceTorque(std::string uniqueName, Joint* j, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& location, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     void InternalUpdate(btScalar dt);
     void Reset();
+    void SetRange(const btVector3& forceMax, const btVector3& torqueMax);
+    void SetNoise(btScalar forceStdDev, btScalar torqueStdDev);
     
 private:
     Joint* joint;
+    SolidEntity* attach;
+    btTransform g2s;
 };
 
 #endif

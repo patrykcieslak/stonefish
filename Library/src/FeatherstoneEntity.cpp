@@ -221,6 +221,14 @@ btScalar FeatherstoneEntity::getJointTorque(unsigned int index)
         return multiBody->getJointTorque(joints[index].child - 1);
 }
 
+btScalar FeatherstoneEntity::getMotorImpulse(unsigned int index)
+{
+    if(index >= joints.size() || joints[index].motor == NULL)
+        return btScalar(0);
+    else
+        return joints[index].motor->getAppliedImpulse(0);
+}
+
 void FeatherstoneEntity::getJointFeedback(unsigned int index, btVector3& force, btVector3& torque)
 {
 	if(index >= joints.size())
@@ -412,7 +420,7 @@ void FeatherstoneEntity::AddJointLimit(unsigned int index, btScalar lower, btSca
     joints[index].limit = jlc;
 }
 
-void FeatherstoneEntity::AddJointMotor(unsigned int index)
+void FeatherstoneEntity::AddJointMotor(unsigned int index, btScalar maxImpulse)
 {
     if(index >= joints.size())
         return;
@@ -420,7 +428,7 @@ void FeatherstoneEntity::AddJointMotor(unsigned int index)
     if(joints[index].motor != NULL)
         return;
     
-    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0), btScalar(1000));
+    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0), maxImpulse);
     joints[index].motor = jmc;
 }
 

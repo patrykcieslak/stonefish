@@ -62,3 +62,26 @@ std::vector<Renderable> DVL::Render()
 
     return items;
 }
+
+void DVL::SetRange(const btVector3& velocityMax, btScalar altitudeMin, btScalar altitudeMax)
+{
+    channels[0].rangeMin = -velocityMax.getX();
+    channels[1].rangeMin = -velocityMax.getY();
+    channels[2].rangeMin = -velocityMax.getZ();
+    
+    channels[0].rangeMax = velocityMax.getX();
+    channels[1].rangeMax = velocityMax.getY();
+    channels[2].rangeMax = velocityMax.getZ();
+    
+    channels[3].rangeMin = altitudeMin;
+    channels[3].rangeMax = altitudeMax;
+}
+
+void DVL::SetNoise(btScalar velocityStdDev, btScalar altitudeStdDev)
+{
+    channels[0].setStdDev(velocityStdDev);
+    channels[1].setStdDev(velocityStdDev);
+    channels[2].setStdDev(velocityStdDev);
+    channels[3].setStdDev(altitudeStdDev);
+}
+    

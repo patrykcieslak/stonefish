@@ -14,6 +14,11 @@
 #include "Sensor.h"
 #include "Thruster.h"
 #include "Manipulator.h"
+#include "Pressure.h"
+#include "DVL.h"
+#include "FOG.h"
+#include "IMU.h"
+#include "GPS.h"
 
 //! A dynamical model of a fully equipped underwater vehicle
 /*!
@@ -28,11 +33,11 @@ public:
     
     //Underwater vehicle
     void AddThruster(Thruster* thruster, const btTransform& location); //Location in the body geometry frame
-    void AddPressureSensor(const btTransform& location, btScalar updateFrequency = btScalar(-1));
-    void AddDVL(const btTransform& location, btScalar updateFrequency = btScalar(-1)); 
-    void AddFOG(const btTransform& location, btScalar updateFrequency = btScalar(-1));
-    void AddIMU(const btTransform& location, btScalar updateFrequency = btScalar(-1));
-    void AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency = btScalar(-1));
+    Pressure* AddPressureSensor(const btTransform& location, btScalar updateFrequency = btScalar(-1));
+    DVL* AddDVL(const btTransform& location, btScalar updateFrequency = btScalar(-1)); 
+    FOG* AddFOG(const btTransform& location, btScalar updateFrequency = btScalar(-1));
+    IMU* AddIMU(const btTransform& location, btScalar updateFrequency = btScalar(-1));
+    GPS* AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency = btScalar(-1));
     void SetThrusterSetpoint(unsigned int index, btScalar s);
     btScalar GetThrusterSetpoint(unsigned int index);
     

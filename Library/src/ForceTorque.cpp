@@ -8,9 +8,11 @@
 
 #include "ForceTorque.h"
 
-ForceTorque::ForceTorque(std::string uniqueName, Joint* j, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& location, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
 {
     joint = j;
+    attach = attachment;
+    g2s = location;
     
     channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
     channels.push_back(SensorChannel("Force Y", QUANTITY_FORCE));
@@ -27,26 +29,50 @@ void ForceTorque::Reset()
 
 void ForceTorque::InternalUpdate(btScalar dt)
 {
-    btScalar Fx = joint->getFeedback(0);
-    btScalar Fy = joint->getFeedback(1);
-    btScalar Fz = joint->getFeedback(2);
-    btScalar Tx = joint->getFeedback(3);
-    btScalar Ty = joint->getFeedback(4);
-    btScalar Tz = joint->getFeedback(5);
+    btVector3 force(joint->getFeedback(0), joint->getFeedback(1), joint->getFeedback(2));
+    btVector3 torque(joint->getFeedback(3), joint->getFeedback(4), joint->getFeedback(5));
     
     if(joint->isMultibodyJoint())
     {
-        Fx /= dt;
-        Fy /= dt;
-        Fz /= dt;
-        Tx /= dt;
-        Ty /= dt;
-        Tz /= dt;
+        force /= dt;
+        torque /= dt;
     }
     
-    std::cout << "FT: " << Fx << "," << Fy << "," << Fz << std::endl;
+    btTransform ftTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+    force = ftTrans.getBasis().inverse() * force;
+    torque = ftTrans.getBasis().inverse() * torque;
     
-    btScalar values[6] = {Fx,Fy,Fz,Tx,Ty,Tz};
+    std::cout << "FT: " << force.getX() << "," << force.getY() << "," << force.getZ() << std::endl;
+    
+    btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
     Sample s(6, values);
     AddSampleToHistory(s);
 }
+
+void ForceTorque::SetRange(const btVector3& forceMax, const btVector3& torqueMax)
+{
+    channels[0].rangeMin = -forceMax.getX();
+    channels[1].rangeMin = -forceMax.getY();
+    channels[2].rangeMin = -forceMax.getZ();
+    channels[0].rangeMax = forceMax.getX();
+    channels[1].rangeMax = forceMax.getY();
+    channels[2].rangeMax = forceMax.getZ();
+    
+    channels[3].rangeMin = -torqueMax.getX();
+    channels[4].rangeMin = -torqueMax.getY();
+    channels[5].rangeMin = -torqueMax.getZ();
+    channels[3].rangeMax = torqueMax.getX();
+    channels[4].rangeMax = torqueMax.getY();
+    channels[5].rangeMax = torqueMax.getZ();
+}
+    
+void ForceTorque::SetNoise(btScalar forceStdDev, btScalar torqueStdDev)
+{
+    channels[0].setStdDev(forceStdDev);
+    channels[1].setStdDev(forceStdDev);
+    channels[2].setStdDev(forceStdDev);
+    channels[3].setStdDev(torqueStdDev);
+    channels[4].setStdDev(torqueStdDev);
+    channels[5].setStdDev(torqueStdDev);
+}
+    

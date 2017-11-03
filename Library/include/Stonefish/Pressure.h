@@ -18,6 +18,8 @@ public:
     Pressure(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     void InternalUpdate(btScalar dt);
+    void SetRange(btScalar max);
+    void SetNoise(btScalar pressureStdDev);
     
 private:
     SolidEntity* attach;

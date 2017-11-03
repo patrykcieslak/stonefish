@@ -18,6 +18,8 @@ public:
     IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     void InternalUpdate(btScalar dt);
+    void SetRange(btScalar angularVelocityMax);
+    void SetNoise(btScalar angleStdDev, btScalar angularVelocityStdDev);
     
 protected:
     SolidEntity* attach;

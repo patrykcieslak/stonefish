@@ -37,6 +37,8 @@ public:
     
     void setRenderable(bool render);
     btTypedConstraint* getConstraint();
+    
+    //In the world frame
     btScalar getFeedback(unsigned int dof);
     
     std::string getName();

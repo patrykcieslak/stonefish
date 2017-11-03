@@ -40,3 +40,9 @@ void GPS::InternalUpdate(btScalar dt)
     Sample s(2, data);
     AddSampleToHistory(s);
 }
+
+void GPS::SetNoise(btScalar latDev, btScalar longDev)
+{
+    channels[0].setStdDev(latDev);
+    channels[1].setStdDev(longDev);
+}

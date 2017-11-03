@@ -122,10 +122,18 @@ void SimpleSensor::AddSampleToHistory(const Sample& s)
         history.pop_front();
     }
     
-    //Add noise
     for(unsigned int i=0; i<s.nDim; ++i)
+    {
+        //Add noise
         if(channels[i].stdDev > btScalar(0))
             s.data[i] += channels[i].noise(randomGenerator);
+    
+        //Limit readings
+        if(s.data[i] > channels[i].rangeMax)
+            s.data[i] = channels[i].rangeMax;
+        else if(s.data[i] < channels[i].rangeMin)
+            s.data[i] = channels[i].rangeMin;
+    }
     
     //Add to history
     history.push_back(new Sample(s));
