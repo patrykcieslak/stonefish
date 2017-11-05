@@ -86,12 +86,12 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 	//Planar reflection render buffer (half-size, no multisampling)
 	glGenTextures(1, &reflectionColorTex);
 	glBindTexture(GL_TEXTURE_2D, reflectionColorTex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, viewportWidth/2, viewportHeight/2);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, viewportWidth, viewportHeight);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	glGenTextures(1, &reflectionDepthStencilTex);
 	glBindTexture(GL_TEXTURE_2D, reflectionDepthStencilTex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, viewportWidth/2, viewportHeight/2);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight);
 	glBindTexture(GL_TEXTURE_2D, 0);
 		
 	glGenFramebuffers(1, &reflectionFBO);
@@ -339,6 +339,21 @@ glm::mat4 OpenGLView::GetProjectionMatrix() const
     return projection;
 }
 
+glm::mat4 OpenGLView::GetInfiniteProjectionMatrix() const
+{
+	GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
+    GLfloat fovy = fovx/aspect;
+	GLfloat tanHalfFovy = tan(fovy/2.f);
+	
+	glm::mat4 infProj(0);
+	infProj[0][0] = 1.f/(aspect * tanHalfFovy);
+	infProj[1][1] = 1.f/tanHalfFovy;
+	infProj[2][2] = -1.f;
+	infProj[2][3] = -1.f;
+	infProj[3][2] = -2.f*near;
+	return infProj;
+}
+
 glm::mat4 OpenGLView::GetViewMatrix() const
 {
 	return GetViewTransform();
@@ -445,7 +460,7 @@ void OpenGLView::SetViewport()
 
 void OpenGLView::SetReflectionViewport()
 {
-	glViewport(0, 0, viewportWidth/2, viewportHeight/2);
+	glViewport(0, 0, viewportWidth, viewportHeight);
 }
 
 void OpenGLView::SetProjection()
@@ -705,6 +720,7 @@ void OpenGLView::DrawAO()
 			glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			glDepthMask(GL_FALSE);
+			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
     
@@ -723,6 +739,7 @@ void OpenGLView::DrawAO()
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 		
+			glEnable(GL_DEPTH_TEST);
 			glDisable(GL_BLEND);
 			glDepthMask(GL_TRUE);
 			glDisable(GL_SAMPLE_MASK);

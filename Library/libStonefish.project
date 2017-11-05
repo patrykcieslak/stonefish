@@ -63,8 +63,8 @@
         <File Name="src/OpenGLOcean.cpp"/>
         <File Name="src/OpenGLPool.cpp"/>
       </VirtualDirectory>
-      <File Name="src/OpenGLPipeline.cpp"/>
       <File Name="src/OpenGLContent.cpp"/>
+      <File Name="src/OpenGLPipeline.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/FeatherstoneEntity.cpp"/>
@@ -364,8 +364,11 @@
       <File Name="shaders/sunCSM.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="pool">
-      <File Name="shaders/poolSurface.frag"/>
       <File Name="shaders/poolVolume.frag"/>
+      <File Name="shaders/poolSurface.vert"/>
+      <File Name="shaders/poolSurface.frag"/>
+      <File Name="shaders/poolBackground.frag"/>
+      <File Name="shaders/poolBacksurface.frag"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">

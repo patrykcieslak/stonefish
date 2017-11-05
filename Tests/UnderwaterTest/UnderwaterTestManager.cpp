@@ -40,7 +40,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -67,11 +67,14 @@ void UnderwaterTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
     Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,4.0)));    
+    AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,10.0)));    
     
     Obstacle* cyl = new Obstacle("Rock", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.75)));    
     
+    Obstacle* cyl2 = new Obstacle("Rock2", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
+    AddStaticEntity(cyl2, btTransform(btQuaternion::getIdentity(), btVector3(2,2,6)));
+	
     //Box* box = new Box("Test", btVector3(1.0,1.0,0.5), getMaterialManager()->getMaterial("Rock"), seabed);
     //AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.0)));
     

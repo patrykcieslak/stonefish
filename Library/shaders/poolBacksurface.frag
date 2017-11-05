@@ -1,6 +1,6 @@
 #version 430 core
 
-out vec4 fragColor;
+out vec3 fragColor;
 in vec4 fragPos;
 
 uniform sampler2D texReflection; 
@@ -12,6 +12,9 @@ uniform vec3 sunDirection;
 uniform float planetRadius;
 uniform vec3 whitePoint;
 uniform float cosSunSize;
+const vec3 waterAbsorption = vec3(0.3,0.08,0.07);
+
+const float w2a = 1.33/1.0;
 
 //Atmosphere
 vec3 GetSolarLuminance();
@@ -72,7 +75,8 @@ void main()
 	vec3 toEye = normalize(eyePos - pos);
 	vec3 center = vec3(0, 0, -planetRadius);
 	vec3 P = -center;
-	vec3 normal = vec3(0,0,1.0);
+	vec3 normal = vec3(0,0,-1.0);
+	float distance = length(eyePos - pos);
 	
 	vec2 st = pos.xy * 5.0;
 	vec2 q = vec2(0.);
@@ -88,29 +92,33 @@ void main()
     vec2 dn = mix( vec2(-0.34,0.54), vec2(0.67,0.14), clamp((f*f)*4.0,0.0,1.0) );
 	dn *= (f*f*f+0.6*f*f+0.5*f);
 	
-	normal.xy += dn*0.1;
+	normal.xy -= dn*0.1;
 	normal = normalize(normal);
-
-	//Sky contribution
-	vec3 Isky;
-	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
 	
-	//Sky reflection
-	vec3 ray = reflect(-toEye, normal);
-	if(ray.z < 0.0)
-		ray.z = -ray.z;
-		
-	vec3 trans;
-	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
-	Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/1000.0;
+	//Sky refraction
+	vec3 Lsky = vec3(0.);
+	vec3 ray = refract(-toEye, normal, w2a);
+	if(ray.z > 0.0)
+	{
+		vec3 trans;
+		Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
+		Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/1000.0;
+	}
 	
 	//Reflected objects
-	vec4 reflectedColor = texture(texReflection, vec2(gl_FragCoord.x/viewport.x + dn.x*0.01, gl_FragCoord.y/viewport.y + min(-0.001, dn.y*0.01)));
+	vec4 reflectedColor = texture(texReflection, vec2(gl_FragCoord.x/viewport.x, gl_FragCoord.y/viewport.y) + dn*0.01);
 	
 	//Reflection/Refraction ratio
 	float fresn = fresnel(dot(toEye,normal));
-	reflectedColor = vec4(mix(Lsky/whitePoint/10000.0, reflectedColor.rgb, reflectedColor.a), 1.0);
-	
+
 	//Final color
-	fragColor =  fresn * reflectedColor + (1.0-fresn) * vec4(0.0, 0.3, 0.3, 0.5) * vec4(Isky/whitePoint/10000.0, 1.0);
+	fragColor = fresn * reflectedColor.rgb + (1.0-fresn) * Lsky/whitePoint/10000.0;
+	
+	//Absorption
+	fragColor *= exp(-waterAbsorption*distance);
+	
+	//Inscatter
+	vec3 Isky;
+	vec3 Isun = GetSunAndSkyIlluminance(P, vec3(0,0,1.0), sunDirection, Isky);
+	fragColor += Isky/whitePoint/1000000.0 * exp(-waterAbsorption * -eyePos.z) * ( exp((-toEye.z - 1.0)*waterAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*waterAbsorption );
 }

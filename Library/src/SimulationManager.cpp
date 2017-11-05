@@ -142,7 +142,7 @@ void SimulationManager::EnableLiquid(Fluid* f)
     else //POOL
     {
         liquid = new Pool("Pool", f);
-        ((Pool*)liquid)->getOpenGLPool().InitPool();
+        ((Pool*)liquid)->getOpenGLPool().Init();
 	}
 	
 	liquid->setRenderable(true);

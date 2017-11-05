@@ -135,7 +135,7 @@ in vec2 texCoord;
 in vec3 fragPos;
 in vec3 eyeSpaceNormal;
 
-layout(location = 0) out vec3 fragColor;
+layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec3 fragNormal;
 
 uniform vec3 eyePos;
@@ -157,8 +157,9 @@ uniform float sunFrustumFar[4];
 uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
 uniform float planetRadius;
+uniform vec3 whitePoint;
 
-const vec3 waterAbsorption = vec3(0.8,0.97,0.99);
+const vec3 waterAbsorption = vec3(0.3,0.08,0.07);
 const float water2Air = 1.33/1.0;
 
 //---------------Functions-------------------
@@ -269,7 +270,7 @@ float calcSpotShadow(int id)
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float calcSunShadow()
+float calcSunShadow(float waterDepth)
 {
 	float depth = dot(fragPos-eyePos, viewDir); 
 	
@@ -287,7 +288,7 @@ float calcSunShadow()
 	shadowCoord.z += 0.001; //Bias
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
 	
-	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
+	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]) * exp(waterDepth/5.0);
 	
 	// STEP 1: blocker search
     float accumBlockerDepth, numBlockers, maxBlockers;
@@ -338,13 +339,13 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 		return vec3(0.0);
 }
 
-vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
+vec3 calcSunContribution(vec3 N, vec3 toEye, float waterDepth, vec3 albedo, vec3 illuminance)
 {
 	float NdotL = dot(N, sunDirection);
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow();
+		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow(waterDepth);
 	}
 	else
 		return vec3(0.0);
@@ -353,7 +354,7 @@ vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 void main()
 {	
 	//Common
-	fragColor = vec3(0.0);
+	fragColor = vec4(0.0,0.0,0.0,1.0);
 	vec3 N = normalize(normal);
 	vec3 toEye = normalize(eyePos - fragPos);
 	vec3 center = vec3(0,0,-planetRadius);
@@ -367,42 +368,34 @@ void main()
 	
 	//Water is assumed to be a flat plane so... 
 	float depth = -min(0.0,fragPos.z);
-	vec3 toSky = refract(N, vec3(0,0,-1.0), water2Air);
+	float distance = length(eyePos - fragPos);
+	vec3 toSky = N;//refract(N, vec3(0,0,-1.0), water2Air);
 	vec3 skyIlluminance;
 	vec3 sunIlluminance;
 	
-	if(N.z > 0.0 && toSky != vec3(0.0))
+	//if(N.z > 0.0 && toSky != vec3(0.0))
 	{
 		//Ambient
 		sunIlluminance = GetSunAndSkyIlluminance(vec3(fragPos.xy, 0.0) - center, toSky, sunDirection, skyIlluminance);
-		fragColor += albedo * skyIlluminance / 30000.0;
+		fragColor.rgb += albedo * skyIlluminance / 30000.0;
 	
 		//Sun
-		fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance / 30000.0);
+		fragColor.rgb += calcSunContribution(N, toEye, depth, albedo, sunIlluminance / 30000.0);
 		
-		//Soften border
-		float waterPath = depth;
-		fragColor *= vec3(pow(waterAbsorption.r, waterPath), pow(waterAbsorption.g, waterPath), pow(waterAbsorption.b, waterPath));
-		fragColor *= toSky.z;
+		//Attenuation
+		fragColor.rgb *= exp(-waterAbsorption*(depth + distance));
 	}
-	
-	//Sunlight scattering --> light absorbed and emitted by water
-	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-	//fragColor += (dot(N, vec3(0,0,1.0)) * 0.5 + 0.5) * albedo * (skyIlluminance / 30000.0) * vec3(pow(waterAbsorption.r, depth), pow(waterAbsorption.g, depth), pow(waterAbsorption.b, depth));
-	
+		
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
-		fragColor += calcPointLightContribution(i, N, toEye, albedo);
+		fragColor.rgb += calcPointLightContribution(i, N, toEye, albedo);
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
-		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
+		fragColor.rgb += calcSpotLightContribution(i, N, toEye, albedo);
 		
-	//Absorption of light emitted from object surface (reflected)
-	/*float distance = length(eyePos - fragPos);
-	fragColor *= vec3(pow(waterAbsorption.r, distance), pow(waterAbsorption.g, distance), pow(waterAbsorption.b, distance));
-	float eyeDepth = -eyePos.z;
-	fragColor += clamp(distance/30.0, 0.0, 1.0) * skyIlluminance/50000.0 * vec3(pow(waterAbsorption.r, eyeDepth), pow(waterAbsorption.g, eyeDepth), pow(waterAbsorption.b, eyeDepth));
-	*/
+	//Inscatter
+	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
+	fragColor.rgb += skyIlluminance/whitePoint/1000000.0 * exp(-waterAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*waterAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*waterAbsorption );	
 	
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;

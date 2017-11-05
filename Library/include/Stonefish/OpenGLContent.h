@@ -179,6 +179,7 @@ public:
 	void SetViewportSize(unsigned int width, unsigned int height);
 	void SetProjectionMatrix(glm::mat4 P);
 	void SetViewMatrix(glm::mat4 V);
+	glm::mat4 GetViewMatrix();
 	void SetDrawingMode(DrawingMode m);
 	void SetCurrentView(OpenGLView* v, bool mirror = false);
 	void BindBaseVertexArray();

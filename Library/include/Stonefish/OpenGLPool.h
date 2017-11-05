@@ -18,15 +18,17 @@ public:
     OpenGLPool();
     ~OpenGLPool();
     
-    void InitPool();
-    void DrawPoolSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture);
-	void DrawPoolBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
-	void DrawPoolVolume(GLuint sceneTexture, GLuint linearDepthTex);
+    void Init();
+    void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture);
+	void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture);
+	void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+	void DrawVolume(GLuint sceneTexture, GLuint linearDepthTex);
     
 private:    
     GLuint vao;
     GLuint vbo;
-    GLSLShader* poolShaders[3]; //Surface, backsurface, volume
+    GLSLShader* poolShaders[4]; //Surface, backsurface, background, volume
+	GLfloat t;
 };
 
 #endif

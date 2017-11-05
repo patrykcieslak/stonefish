@@ -96,6 +96,7 @@ public:
 	
     GLint* GetViewport() const;
     glm::mat4 GetProjectionMatrix() const;
+	glm::mat4 GetInfiniteProjectionMatrix() const;
     glm::mat4 GetViewMatrix() const;
 	GLfloat GetFOVX() const;
     GLfloat GetFOVY() const;

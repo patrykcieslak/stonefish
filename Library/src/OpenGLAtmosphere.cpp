@@ -459,7 +459,8 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
 	shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
 	//shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
 	shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-
+	shader->SetUniform("whitePoint", whitePoint);
+	
 	//glBindMultiTextureEXT(GL_TEXTURE0 + TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
     //glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	//Bind textures and samplers
@@ -479,6 +480,8 @@ void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
 	shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
 	shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
 	shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+	shader->SetUniform("whitePoint", whitePoint);
+	shader->SetUniform("cosSunSize", (GLfloat)cos(0.00935/2.0));
 }
 
 void OpenGLAtmosphere::Precompute()

@@ -347,6 +347,7 @@ void OpenGLContent::Init()
 	blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
 	blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
 	blinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
+	blinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
 	
 	materialShaders.push_back(blinnPhong);
 	
@@ -408,6 +409,7 @@ void OpenGLContent::Init()
 	cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
 	cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
 	cookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
+	cookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
 	
 	materialShaders.push_back(cookTorrance);
 	glDeleteShader(materialFragment);
@@ -478,6 +480,7 @@ void OpenGLContent::Init()
 	uwBlinnPhong->AddUniform("scattering_texture", ParameterType::INT);
 	uwBlinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
 	uwBlinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
+	uwBlinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
 	
 	materialShaders.push_back(uwBlinnPhong);
 	
@@ -539,6 +542,7 @@ void OpenGLContent::Init()
 	uwCookTorrance->AddUniform("scattering_texture", ParameterType::INT);
 	uwCookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
 	uwCookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
+	uwCookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
 	
 	materialShaders.push_back(uwCookTorrance);
 	glDeleteShader(materialFragment);
@@ -594,6 +598,11 @@ void OpenGLContent::SetViewMatrix(glm::mat4 V)
 	viewProjection = projection * view;
 }
 
+glm::mat4 OpenGLContent::GetViewMatrix()
+{
+	return view;
+}
+
 void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
 {
 	if(mirror)
@@ -610,13 +619,13 @@ void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
 										 -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, 0,
 										 -2.f*n.x*D,   -2.f*n.y*D,   -2.f*n.z*D,      1);*/									
 													
-		//glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
+		glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
 		
 		eyePos = v->GetEyePosition();
 		eyePos.z = -eyePos.z;
 		viewDir = v->GetLookingDirection();
 		viewDir.z = -viewDir.z;
-		view = v->GetViewMatrix() * reflection;// * reflection;// * glm::transpose(flip);
+		view = v->GetViewMatrix() * reflection;// * flip;// * reflection;// * glm::transpose(flip);
 	}
 	else
 	{

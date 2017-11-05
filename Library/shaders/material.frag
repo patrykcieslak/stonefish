@@ -157,6 +157,7 @@ uniform float sunFrustumFar[4];
 uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
 uniform float planetRadius;
+uniform vec3 whitePoint;
 
 //---------------Functions-------------------
 vec3 GetSolarLuminance();
@@ -364,10 +365,10 @@ void main()
 	//Ambient
 	vec3 skyIlluminance;
     vec3 sunIlluminance = GetSunAndSkyIlluminance(fragPos - center, N, sunDirection, skyIlluminance);
-    vec3 outColor =  albedo * skyIlluminance / 30000.0;
+    vec3 outColor =  albedo * skyIlluminance/whitePoint/30000.0;
 	
 	//Sun
-	outColor += calcSunContribution(N, toEye, albedo, sunIlluminance / 30000.0);
+	outColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/30000.0);
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
 		outColor += calcPointLightContribution(i, N, toEye, albedo);
