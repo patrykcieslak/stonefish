@@ -19,7 +19,7 @@ vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_d
 vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
 
-float random (in vec2 st) 
+float random(in vec2 st) 
 { 
     return fract(sin(dot(st, vec2(12.9898,78.233)))* 43758.5453123);
 }
@@ -74,11 +74,12 @@ void main()
 	vec3 P = -center;
 	vec3 normal = vec3(0,0,1.0);
 	
+    //Brownian noise to simulate ripples of the water surface
 	vec2 st = pos.xy * 5.0;
 	vec2 q = vec2(0.);
 	q.x = fbm(st);
 	q.y = fbm(st + vec2(1.0));
-	
+    
 	vec2 r = vec2(0.);
 	r.x = fbm(st + q + vec2(1.7,9.2)+ 5.1 * time);
     r.y = fbm(st + q + vec2(5.3,2.8)+ 2.3 * time);
@@ -88,12 +89,9 @@ void main()
     vec2 dn = mix( vec2(-0.34,0.54), vec2(0.67,0.14), clamp((f*f)*4.0,0.0,1.0) );
 	dn *= (f*f*f+0.6*f*f+0.5*f);
 	
+    //Normal
 	normal.xy += dn*0.1;
 	normal = normalize(normal);
-
-	//Sky contribution
-	vec3 Isky;
-	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
 	
 	//Sky reflection
 	vec3 ray = reflect(-toEye, normal);
@@ -105,12 +103,9 @@ void main()
 	Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/1000.0;
 	
 	//Reflected objects
-	vec4 reflectedColor = texture(texReflection, vec2(gl_FragCoord.x/viewport.x + dn.x*0.01, gl_FragCoord.y/viewport.y + min(-0.001, dn.y*0.01)));
+	fragColor = texture(texReflection, vec2(gl_FragCoord.x/viewport.x + dn.x*0.01, gl_FragCoord.y/viewport.y + min(-0.001, dn.y*0.01)));
 	
 	//Reflection/Refraction ratio
 	float fresn = fresnel(dot(toEye,normal));
-	reflectedColor = vec4(mix(Lsky/whitePoint/10000.0, reflectedColor.rgb, reflectedColor.a), 1.0);
-	
-	//Final color
-	fragColor =  fresn * reflectedColor + (1.0-fresn) * vec4(0.0, 0.3, 0.3, 0.5) * vec4(Isky/whitePoint/10000.0, 1.0);
+	fragColor = vec4(mix(Lsky/whitePoint/10000.0, fragColor.rgb, fragColor.a), fresn);
 }

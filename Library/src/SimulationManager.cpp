@@ -906,6 +906,21 @@ void SimulationManager::UpdateDrawingQueue()
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
     }
+    
+    //Contacts
+    for(unsigned int i=0; i<contacts.size(); ++i)
+    {
+        std::vector<Renderable> items = contacts[i]->Render();
+		for(unsigned int h=0; h<items.size(); ++h)
+		{
+			if(!zUp)
+            {
+				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
+			}
+			
+			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
+		}
+    }
 }
 
 Entity* SimulationManager::PickEntity(int x, int y)
@@ -1019,8 +1034,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     cp.m_combinedRollingFriction = btScalar(0.);
     
     //Slipping
-    if(SimulationApp::getApp()->getSimulationManager()->getCollisionFilter() == INCLUSIVE)
-        cp.m_userPersistentData = (void *)(new btVector3(slipVel));
+    cp.m_userPersistentData = (void *)(new btVector3(slipVel));
     
     //Damping angular velocity around contact normal (reduce spinning)
     //calculate relative angular velocity

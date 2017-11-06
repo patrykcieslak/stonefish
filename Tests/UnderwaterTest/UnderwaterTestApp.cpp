@@ -12,6 +12,7 @@
 #include "NativeDialog.h"
 #include "Manipulator.h"
 #include "UnderwaterVehicle.h"
+#include "Pool.h"
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, UnderwaterTestManager* sim) 
     : SimulationApp("Underwater Test", dataDirPath, shaderDirPath, width, height, sim)
@@ -56,6 +57,15 @@ void UnderwaterTestApp::DoHUD()
     
     slider.item = 9;
     vehicle->SetThrusterSetpoint(4, IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(4), "Heave bow"));
+    
+    
+    Pool* pool = (Pool*)getSimulationManager()->getLiquid();
+    
+    slider.item = 10;
+    pool->setAlgeaBloomFactor(IMGUI::getInstance()->DoSlider(slider, 5.f, 625.f, 200.f, 0.0, 1.0, pool->getAlgeaBloomFactor(), "Algea bloom"));
+    
+    slider.item = 11;
+    pool->setTurbidity(IMGUI::getInstance()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, pool->getTurbidity(), "Turbidity"));
     
     /*
     ui_id plot;

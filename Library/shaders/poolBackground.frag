@@ -9,7 +9,7 @@ uniform mat3 invView;
 uniform vec3 sunDirection;
 uniform float planetRadius;
 uniform vec3 whitePoint;
-const vec3 waterAbsorption = vec3(0.3,0.08,0.07);
+uniform vec3 lightAbsorption;
 
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
 
@@ -31,6 +31,6 @@ void main()
 	
 	vec3 skyIlluminance;
 	vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 color = skyIlluminance/whitePoint/1000000.0 * exp(-waterAbsorption * -eyePos.z) * ( exp((-toEye.z - 1.0)*waterAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*waterAbsorption );
+    vec3 color = skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -eyePos.z) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );
 	fragColor = vec4(color, 1.0);
 }

@@ -801,8 +801,11 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
             //Pressure drag force
             btVector3 vn = vc - vt; //Water velocity normal to face
             btVector3 Fdp(0,0,0);
+            
             if(fn.dot(vn) < btScalar(0))
-                Fdp = btScalar(0.5)*liquid->getFluid()->density * vn * vn.length() * A;
+            {
+                Fdp = btScalar(0.5) * liquid->getFluid()->density * vn * vn.length() * A;
+            }
             
             //Accumulate
             _Fd += Fds + Fdp;
@@ -856,6 +859,16 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
     }
     
 	ComputeFluidForces(settings, liquid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
+    
+    //Correct drag based on ellipsoid approximation of shape
+    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
+    btVector3 eFd = eTrans.getBasis().inverse() * Fd;
+    //btVector3 eTd = eTrans.getBasis().inverse() * Td;
+    btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
+    btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+    Cd /= maxCd;
+    eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
+    Fd = eTrans.getBasis() * eFd;
 }
 
 void SolidEntity::ApplyFluidForces()

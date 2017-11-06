@@ -13,6 +13,7 @@
 #include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "SimulationApp.h"
+#include "Pool.h"
 #include <map>
 #include <algorithm>
 
@@ -435,6 +436,7 @@ void OpenGLContent::Init()
 	uwBlinnPhong->AddUniform("tex", ParameterType::INT);
 	uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
 	uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("lightAbsorption", ParameterType::VEC3);
 	
 	uwBlinnPhong->AddUniform("numPointLights", ParameterType::INT);
 	uwBlinnPhong->AddUniform("numSpotLights", ParameterType::INT);
@@ -497,7 +499,8 @@ void OpenGLContent::Init()
 	uwCookTorrance->AddUniform("tex", ParameterType::INT);
 	uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-	
+	uwCookTorrance->AddUniform("lightAbsorption", ParameterType::VEC3);
+    
 	uwCookTorrance->AddUniform("numPointLights", ParameterType::INT);
 	uwCookTorrance->AddUniform("numSpotLights", ParameterType::INT);
 	uwCookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
@@ -961,7 +964,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("specularStrength", l.params[0]);
 			shader->SetUniform("shininess", l.params[1]);
 			shader->SetUniform("tex", TEX_BASE);
-			
+            
 			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 			glEnable(GL_TEXTURE_2D);
 			if(l.textures.size() > 0)
@@ -1013,11 +1016,11 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 	
 	if(mode == DrawingMode::UNDERWATER)
 	{
-		//Set water properties
-		
-		
-		
-		
+		if(SimulationApp::getApp()->getSimulationManager()->getLiquid()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
+        {
+            Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getLiquid();
+            shader->SetUniform("lightAbsorption", pool->getOpenGLPool().getLightAbsorptionCoeff());
+        }
 	}
 	
 	SetupLights(shader);

@@ -252,6 +252,16 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* 
 			Tb += Tbp;
 		}
 	}
+    
+    //Correct drag based on ellipsoid approximation of shape
+    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
+    btVector3 eFd = eTrans.getBasis().inverse() * Fd;
+    //btVector3 eTd = eTrans.getBasis().inverse() * Td;
+    btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
+    btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+    Cd /= maxCd;
+    eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
+    Fd = eTrans.getBasis() * eFd;
 }
 
 void Compound::BuildGraphicalObject()

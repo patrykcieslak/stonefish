@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "OpenGLPipeline.h"
@@ -197,12 +197,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     {
         if(liquid->getForcefieldType() == ForcefieldType::FORCEFIELD_OCEAN)
         {
-            renderMode = 2;
             ((Ocean*)liquid)->getOpenGLOcean().SimulateOcean();
+            renderMode = renderFluid ? 2 : 0;
         }
         else //POOL
         {
-            renderMode = 1;
+            renderMode = renderFluid ? 1 : 0;
         }
     }
 		
@@ -495,89 +495,34 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
                         OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
 				}
-                
-                /*for(unsigned int h=0; h<sim->entities.size(); ++h)
-                {
-                    if(sim->entities[h]->getType() == ENTITY_SYSTEM)
-                    {
-                        SystemEntity* sys = (SystemEntity*)sim->entities[h];
-                        
-                        if(sys->getSystemType() == SYSTEM_MANIPULATOR)
-                        {
-                            Manipulator* manip = (Manipulator*)sys;
-                            const std::vector<btTransform>& DH = manip->getDH();
-                            for(unsigned int k=0; k<DH.size(); ++k)
-                            {
-                                OpenGLContent::getInstance()->DrawCoordSystem(glMatrixFromBtTransform(DH[k]), 0.3f);
-                            }
-                        }
-                    }
-                }
-                */
             }
             
-			//TODO: Correct debug drawing of following items
-            //Joints
-			/*for(int h=0; h<sim->joints.size(); h++)
-				if(sim->joints[h]->isRenderable())
-					sim->joints[h]->Render();
-            
-            //Contact points
-            for(int h = 0; h < sim->contacts.size(); h++)
-                sim->contacts[h]->Render();
-            
             //Sensors
-            for(int h = 0; h < sim->sensors.size(); h++)
-                if(sim->sensors[h]->isRenderable())
-                    sim->sensors[h]->Render();
-            
-            //Paths
-            for(int h = 0; h < sim->controllers.size(); h++)
-                if(sim->controllers[h]->getType() == CONTROLLER_PATHFOLLOWING)
-                    ((PathFollowingController*)sim->controllers[h])->RenderPath();
-
-            //Lights
-            if(showLightMeshes)
-                for(unsigned int h = 0; h < OpenGLContent::getInstance()->getLightsCount(); ++h)
-                    OpenGLContent::getInstance()->getLight(h)->RenderDummy();
-            
-            //Cameras
-            if(showCameraFrustums)
-                for(unsigned int h = 0; h < OpenGLContent::getInstance()->getViewsCount(); ++h)
-				{
-					OpenGLView* otherView = OpenGLContent::getInstance()->getView(h);
-					if(i != h && otherView->getType() == CAMERA)
-                    {
-                        OpenGLCamera* cam = (OpenGLCamera*)otherView;
-                        cam->RenderDummy();
-                    }
-				}
-            */  
-            
-            //Sensors
-            //if(showSensors)
+            if(showSensors)
             {
                 for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
                 {
-                    if(drawingQueueCopy[h].type == RenderableType::SENSOR)
+                    if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
                         OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0,1.f,0,1.f), drawingQueueCopy[h].model);
+                    else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
+                        OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(0,1.f,0,1.f), drawingQueueCopy[h].model);
                 }
             }
-            
-            
             
             //Fluid dynamics
             if(showFluidDynamics)
             {
-                //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 
                 for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
                 {
                     if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
                         OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f));//drawingQueueCopy[h].scale*2.f);
+                    else if(drawingQueueCopy[h].type == RenderableType::HYDRO)
+                        OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0]);
                 }
                 
-               // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
                 
             //Debugging

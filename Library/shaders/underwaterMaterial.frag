@@ -158,8 +158,8 @@ uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
 uniform float planetRadius;
 uniform vec3 whitePoint;
+uniform vec3 lightAbsorption;
 
-const vec3 waterAbsorption = vec3(0.3,0.08,0.07);
 const float water2Air = 1.33/1.0;
 
 //---------------Functions-------------------
@@ -383,7 +383,7 @@ void main()
 		fragColor.rgb += calcSunContribution(N, toEye, depth, albedo, sunIlluminance / 30000.0);
 		
 		//Attenuation
-		fragColor.rgb *= exp(-waterAbsorption*(depth + distance));
+		fragColor.rgb *= exp(-lightAbsorption*(depth + distance));
 	}
 		
 	//Point lights
@@ -395,7 +395,7 @@ void main()
 		
 	//Inscatter
 	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-	fragColor.rgb += skyIlluminance/whitePoint/1000000.0 * exp(-waterAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*waterAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*waterAbsorption );	
+	fragColor.rgb += skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );	
 	
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;

@@ -54,7 +54,7 @@ std::vector<Renderable> DVL::Render()
     btTransform dvlTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     
     Renderable item;
-    item.type = RenderableType::SENSOR;
+    item.type = RenderableType::SENSOR_LINES;
     item.model = glMatrixFromBtTransform(dvlTrans);
     item.points.push_back(glm::vec3(0,0,0));
     item.points.push_back(glm::vec3(0,0, getLastSample().getData()[3]));

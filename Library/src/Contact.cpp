@@ -133,25 +133,25 @@ void Contact::SaveContactDataToOctaveFile(const char* path, bool includeTime)
     SaveOctaveData(path, data);
 }
 
-void Contact::Render()
+std::vector<Renderable> Contact::Render()
 {
-    if(points.size() == 0)
-        return;
+    std::vector<Renderable> items(0);
     
-	std::vector<glm::vec3> vertices;
-	
+    if(points.size() == 0)
+        return items;
+    
 	//Drawing points
-    if(displayMask & CONTACT_DISPLAY_LAST_A)
+    /*if(displayMask & CONTACT_DISPLAY_LAST_A)
         vertices.push_back(glm::vec3((GLfloat)points.back().locationA.getX(), (GLfloat)points.back().locationA.getY(), (GLfloat)points.back().locationA.getZ()));
     
     if(displayMask & CONTACT_DISPLAY_LAST_B)
         vertices.push_back(glm::vec3((GLfloat)points.back().locationB.getX(), (GLfloat)points.back().locationB.getY(), (GLfloat)points.back().locationB.getZ()));
 	
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);
+	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);*/
 	
 	//Drawing lines
-	vertices.clear();
-	
+    std::vector<glm::vec3> vertices;
+    
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A)
     {
 		btVector3 p1 = points.back().locationA;
@@ -184,31 +184,45 @@ void Contact::Render()
 		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
 	
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, CONTACT_COLOR);
-	
+    if(vertices.size() > 0)
+    {
+        Renderable item;
+        item.model = glm::mat4(1.f);
+        item.points = vertices;
+        item.type = RenderableType::SENSOR_LINES;
+        items.push_back(item);
+    }
+    	
 	//Drawing line strips
-	vertices.clear();
-	
 	if(displayMask & CONTACT_DISPLAY_PATH_A)
     {
+        Renderable item;
+        item.model = glm::mat4(1.f);
+        item.type = RenderableType::SENSOR_LINE_STRIP;
+        
 		for(size_type i = 0; i < points.size(); ++i)
         {	
 			btVector3 p = points[i].locationA;
-			vertices.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
 		}
 		
-		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
-		vertices.clear();
+		items.push_back(item);
 	}
 	
     if(displayMask & CONTACT_DISPLAY_PATH_B)
     {
+        Renderable item;
+        item.model = glm::mat4(1.f);
+        item.type = RenderableType::SENSOR_LINE_STRIP;
+        
 		for(size_type i = 0; i < points.size(); ++i)
         {	
 			btVector3 p = points[i].locationB;
-			vertices.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
 		}
 		
-		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
+		items.push_back(item);
     }
+    
+    return items;
 }

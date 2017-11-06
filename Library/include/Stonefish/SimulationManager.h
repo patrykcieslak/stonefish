@@ -49,7 +49,6 @@ typedef struct
 Collision;
 
 /*! 
-    @class SimulationManager
     An abstract class managing all of the simulated entities, solver settings and equipped with custom callbacks.
  */
 class SimulationManager
@@ -62,6 +61,7 @@ public:
     
     //physics
     virtual void BuildScenario() = 0;
+    virtual void SimulationStepCompleted();
     bool SolveICProblem();
     void DestroyScenario();
     void RestartScenario();
@@ -69,9 +69,7 @@ public:
     void ResumeSimulation();
     void StopSimulation();
     void AdvanceSimulation();
-    virtual void SimulationStepCompleted();
-	void UpdateDrawingQueue();
-    
+    void UpdateDrawingQueue();
 	
     void EnableLiquid(Fluid* f = NULL);
 	void AddEntity(Entity* ent);

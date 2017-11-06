@@ -20,6 +20,7 @@ OpenGLPool::OpenGLPool()
     poolShaders[2] = NULL;
 	poolShaders[3] = NULL;
 	t = 0;
+    lightAbsorption = glm::vec3(0.f);
 }
 
 OpenGLPool::~OpenGLPool()
@@ -27,6 +28,16 @@ OpenGLPool::~OpenGLPool()
     for(unsigned short i=0; i<4; ++i) if(poolShaders[i] != NULL) delete poolShaders[i];
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
+}
+
+void OpenGLPool::setLightAbsorptionCoeff(glm::vec3 a)
+{
+    lightAbsorption = a;
+}
+
+glm::vec3 OpenGLPool::getLightAbsorptionCoeff()
+{
+    return lightAbsorption;
 }
 
 void OpenGLPool::Init()
@@ -85,6 +96,7 @@ void OpenGLPool::Init()
 	poolShaders[1]->AddUniform("eyePos", ParameterType::VEC3);
 	poolShaders[1]->AddUniform("R0", ParameterType::FLOAT);
 	poolShaders[1]->AddUniform("time", ParameterType::FLOAT);
+    poolShaders[1]->AddUniform("lightAbsorption", ParameterType::VEC3);
 	poolShaders[1]->AddUniform("texReflection", ParameterType::INT);
 	poolShaders[1]->AddUniform("transmittance_texture", ParameterType::INT);
 	poolShaders[1]->AddUniform("scattering_texture", ParameterType::INT);
@@ -96,6 +108,7 @@ void OpenGLPool::Init()
 	poolShaders[1]->AddUniform("cosSunSize", ParameterType::FLOAT);
 	
 	poolShaders[2] = new GLSLShader(precompiled, "poolBackground.frag", "saq.vert");
+    poolShaders[2]->AddUniform("lightAbsorption", ParameterType::VEC3);
 	poolShaders[2]->AddUniform("eyePos", ParameterType::VEC3);
 	poolShaders[2]->AddUniform("invProj", ParameterType::MAT4);
 	poolShaders[2]->AddUniform("invView", ParameterType::MAT3);
@@ -156,6 +169,7 @@ void OpenGLPool::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pro
 	poolShaders[1]->SetUniform("eyePos", eyePos);
 	poolShaders[1]->SetUniform("R0", R0);
 	poolShaders[1]->SetUniform("time", t);
+    poolShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
     OpenGLAtmosphere::getInstance()->SetupOceanShader(poolShaders[1]);
 	t+= 0.01;
 	
@@ -173,6 +187,7 @@ void OpenGLPool::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pro
 void OpenGLPool::DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
 {
 	poolShaders[2]->Use();
+    poolShaders[2]->SetUniform("lightAbsorption", lightAbsorption);
 	poolShaders[2]->SetUniform("eyePos", eyePos);
 	poolShaders[2]->SetUniform("invProj", glm::inverse(projection));
 	poolShaders[2]->SetUniform("invView", glm::inverse(glm::mat3(view)));

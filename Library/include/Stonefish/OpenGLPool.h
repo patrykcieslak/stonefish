@@ -24,11 +24,15 @@ public:
 	void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
 	void DrawVolume(GLuint sceneTexture, GLuint linearDepthTex);
     
+    void setLightAbsorptionCoeff(glm::vec3 a);
+    glm::vec3 getLightAbsorptionCoeff();
+    
 private:    
     GLuint vao;
     GLuint vbo;
     GLSLShader* poolShaders[4]; //Surface, backsurface, background, volume
 	GLfloat t;
+    glm::vec3 lightAbsorption;
 };
 
 #endif

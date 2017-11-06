@@ -112,7 +112,6 @@
       <File Name="src/SphericalJoint.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="sensors">
-      <File Name="src/Contact.cpp"/>
       <File Name="src/Mux.cpp"/>
       <File Name="src/Sample.cpp"/>
       <File Name="src/SimpleSensor.cpp"/>
@@ -133,6 +132,7 @@
       </VirtualDirectory>
       <VirtualDirectory Name="advanced">
         <File Name="src/Camera.cpp"/>
+        <File Name="src/Contact.cpp"/>
       </VirtualDirectory>
       <File Name="src/ADC.cpp"/>
     </VirtualDirectory>
@@ -177,11 +177,11 @@
       <File Name="include/Stonefish/FeatherstoneEntity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="sensors">
-      <File Name="include/Stonefish/Contact.h"/>
       <File Name="include/Stonefish/Mux.h"/>
       <File Name="include/Stonefish/Sample.h"/>
       <VirtualDirectory Name="advanced">
         <File Name="include/Stonefish/Camera.h"/>
+        <File Name="include/Stonefish/Contact.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="simple">
         <File Name="include/Stonefish/Current.h"/>

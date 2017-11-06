@@ -21,6 +21,7 @@ Sensor::Sensor(std::string uniqueName, btScalar frequency)
     freq = frequency;
     eleapsedTime = btScalar(0.);
     renderable = false;
+    newDataAvailable = false;
 }
 
 Sensor::~Sensor()
@@ -31,6 +32,16 @@ Sensor::~Sensor()
 std::string Sensor::getName()
 {
     return name;
+}
+
+void Sensor::MarkDataOld()
+{
+    newDataAvailable = false;
+}
+
+bool Sensor::isNewDataAvailable()
+{
+    return newDataAvailable;
 }
 
 void Sensor::setRenderable(bool render)
@@ -54,6 +65,7 @@ void Sensor::Update(btScalar dt)
     if(freq <= btScalar(0.)) // Every simulation tick
     {
         InternalUpdate(dt);
+        newDataAvailable = true;
     }
     else //Fixed rate
     {
@@ -64,6 +76,7 @@ void Sensor::Update(btScalar dt)
         {
             InternalUpdate(invFreq);
             eleapsedTime -= invFreq;
+            newDataAvailable = true;
         }
     }
 }

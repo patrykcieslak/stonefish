@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "FilteredCollisionDispatcher.h"
@@ -15,8 +15,7 @@
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
     inclusive = inclusiveMode;
-    if(inclusive)
-        setNearCallback(myNearCallback);
+    setNearCallback(myNearCallback);
 }
 
 bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
@@ -59,18 +58,16 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
     btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
     btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
     
-    if (dispatcher.needsCollision(colObj0,colObj1))
+    if(dispatcher.needsCollision(colObj0,colObj1))
     {
         btCollisionObjectWrapper obj0Wrap(0,colObj0->getCollisionShape(),colObj0,colObj0->getWorldTransform(),-1,-1);
         btCollisionObjectWrapper obj1Wrap(0,colObj1->getCollisionShape(),colObj1,colObj1->getWorldTransform(),-1,-1);
         
-        //dispatcher will keep algorithms persistent in the collision pair
+        //Dispatcher will keep algorithms persistent in the collision pair
         if (!collisionPair.m_algorithm)
-        {
             collisionPair.m_algorithm = dispatcher.findAlgorithm(&obj0Wrap,&obj1Wrap,0,BT_CONTACT_POINT_ALGORITHMS);
-        }
         
-        if (collisionPair.m_algorithm)
+        if(collisionPair.m_algorithm)
         {
             btManifoldResult contactPointResult(&obj0Wrap,&obj1Wrap);
             
@@ -88,13 +85,15 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
             }
             
             //Add contact point information
-            if(contactPointResult.getPersistentManifold()->getNumContacts() > 0)
+            btPersistentManifold* pm = contactPointResult.getPersistentManifold();
+            if(pm != NULL && pm->getNumContacts() > 0)
             {
-                //Add contact point to Contact object
+                //Add contact point to Contact object if it exists
                 Entity* entA = (Entity*)obj0Wrap.m_collisionObject->getUserPointer();
                 Entity* entB = (Entity*)obj1Wrap.m_collisionObject->getUserPointer();
                 Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
-                contact->AddContactPoint(contactPointResult.getPersistentManifold(), contact->getEntityA() != entA);
+                if(contact != NULL)
+                    contact->AddContactPoint(contactPointResult.getPersistentManifold(), contact->getEntityA() != entA);
                 
                 //Clear persistent user data (it will leak if not!)
                 for(int i = 0; i < contactPointResult.getPersistentManifold()->getNumContacts(); i++)

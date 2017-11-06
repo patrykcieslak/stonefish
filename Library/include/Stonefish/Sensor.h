@@ -26,6 +26,8 @@ public:
     virtual void Reset();
     virtual std::vector<Renderable> Render();
     void Update(btScalar dt);
+    void MarkDataOld();
+    bool isNewDataAvailable();
     bool isRenderable();
     void setRenderable(bool render);
     std::string getName();
@@ -44,6 +46,7 @@ private:
     std::string name;
     btScalar eleapsedTime;
     bool renderable;
+    bool newDataAvailable;
     
     static NameManager nameManager;
 };

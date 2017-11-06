@@ -3,13 +3,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Contact__
 #define __Stonefish_Contact__
 
 #include "Entity.h"
+#include "OpenGLPipeline.h"
 
 typedef enum {  CONTACT_DISPLAY_NONE = 0,
                 CONTACT_DISPLAY_LAST_A = 1 << 0,
@@ -42,8 +43,8 @@ public:
     void AddContactPoint(const btPersistentManifold* manifold, bool swapped);
     void AddContactPoint(ContactPoint p);
     void ClearHistory();
-    void Render();
     void SaveContactDataToOctaveFile(const char* path, bool includeTime = true);
+    std::vector<Renderable> Render();
     
     void setDisplayMask(int16_t mask);
     const Entity* getEntityA();

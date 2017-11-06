@@ -48,5 +48,6 @@ private:
     Fluid* fluid;
     btScalar depth;
     OpenGLPool* glPool;
+    glm::vec3 fluidAbsorption;
 };
 #endif

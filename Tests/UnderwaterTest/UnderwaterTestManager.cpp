@@ -30,6 +30,8 @@
 #include "FOG.h"
 #include "IMU.h"
 #include "GPS.h"
+#include "Contact.h"
+#include "Camera.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::DANTZIG, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -40,7 +42,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, true, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -167,4 +169,12 @@ void UnderwaterTestManager::BuildScenario()
     Cylinder* hand = new Cylinder("Hand", 0.05, 0.1, getMaterialManager()->getMaterial("Dummy"), manipLook, false);
     FixedGripper* gripper = new FixedGripper("Gripper", arm, hand);
     AddSystemEntity(gripper, btTransform(btQuaternion(0,0,M_PI_2), btVector3(1.35,0,2.25)));
+    
+    //Add contact sensing between gripper and target
+    Contact* cnt = AddContact(comp, cyl, 1000);
+    cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
+    
+    //Camera works in openGL coordinates!!! On screen coords have y = 0 at the bottom!
+    //Camera* cam = new Camera("Camera", btVector3(-10.0,0,2.0), btVector3(5.0,0,-1.0), btVector3(0,0,1.0), 20, 70, 300, 200, 60.0);
+    //AddSensor(cam);
 }
