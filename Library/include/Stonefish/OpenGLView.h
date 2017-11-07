@@ -70,6 +70,7 @@ public:
     virtual glm::vec3 GetLookingDirection() const = 0;
     virtual glm::vec3 GetUpDirection() const = 0;
     virtual ViewType getType() = 0;
+    virtual bool needsUpdate() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
     void SetViewport();
@@ -77,10 +78,6 @@ public:
     void SetViewTransform();
 	btVector3 Ray(GLint x, GLint y);
 	void SetReflectionViewport();
-	
-    void Activate();
-    void Deactivate();
-    
 	void GenerateLinearDepth(int sampleId);
 	void GenerateBlurArray();
 	void EnterPostprocessing();
@@ -110,9 +107,8 @@ public:
     GLuint getAOTexture();
 	GLuint getLinearDepthTexture();
 	GLuint getPostprocessTexture(unsigned int id);
-    bool isActive();
     bool hasAO();
-        
+    
     static void Init();
     static void Destroy();
     
@@ -153,7 +149,6 @@ protected:
 	AOData aoData;
 	
 	//Data
-    bool active;
 	GLint originX;
     GLint originY;
     GLint viewportWidth;

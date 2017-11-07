@@ -29,7 +29,6 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     originX = x;
     originY = y;
     fovx = 0.785f;
-    active = false;
     aoFactor = ao ? 1 : 0;
 	samples = spp < 1 ? 1 : (spp > 8 ? 8 : spp);
     far = UnitSystem::SetLength(horizon);
@@ -307,21 +306,6 @@ OpenGLView::~OpenGLView()
 		
 		glDeleteBuffers(1, &aoDataUBO);
     }
-}
-
-void OpenGLView::Activate()
-{
-    active = true;
-}
-
-void OpenGLView::Deactivate()
-{
-    active = false;
-}
-
-bool OpenGLView::isActive()
-{
-    return active;
 }
 
 GLint* OpenGLView::GetViewport() const

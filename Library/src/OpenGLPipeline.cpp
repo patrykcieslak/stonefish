@@ -206,11 +206,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         }
     }
 		
-	/*GLfloat az,elev;
+	GLfloat az,elev;
 	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
 	az += 0.05f;
 	elev = sin(az/180.f*M_PI) * 45.f+35.f;
-	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);*/
+	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);
 	
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
@@ -229,7 +229,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     {
 		OpenGLView* view = OpenGLContent::getInstance()->getView(i);
         
-        if(view->isActive())
+        if(view->needsUpdate())
         {
             glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
@@ -382,17 +382,16 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					//Distant pool background
 					glPool.DrawBackground(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 					
+                    //Underwater blur
 					view->GenerateLinearDepth(0);
-					
-					//Go to postprocessing stage
 					view->EnterPostprocessing();
 					view->GenerateBlurArray();
-					
-					//Draw water volume
+                    
+                    //Apply blur
 					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
 					glPool.DrawVolume(view->getPostprocessTexture(2), view->getLinearDepthTexture());
 					
-					//Render sky
+					//Render sky if camera crossing water plane
 					//OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
 					
 					//Go to postprocessing again
@@ -463,100 +462,103 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
             //================Post-processing=============================
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-            view->DrawHDR(screenFBO);
+			view->DrawHDR(screenFBO);
            
             //================Helper objects===================
-            glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
-			glBindTexture(GL_TEXTURE_2D, 0);
-            glEnable(GL_DEPTH_TEST);
-            glClear(GL_DEPTH_BUFFER_BIT);
-			
-            glm::mat4 proj = view->GetProjectionMatrix();
-			glm::mat4 viewM = view->GetViewMatrix();
-			OpenGLContent::getInstance()->SetProjectionMatrix(proj);
-			OpenGLContent::getInstance()->SetViewMatrix(viewM);
-			
-            //Bullet debug draw
-            if(drawDebug)
-                sim->dynamicsWorld->debugDrawWorld();
-            
-            //Coordinate systems
-            if(showCoordSys)
+            if(view->getType() == ViewType::TRACKBALL)
             {
-				if(sim->isZAxisUp())
-					OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 2.f);
-				else
-					OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 2.f);
+                //Overlay helpers
+                glBindFramebuffer(GL_FRAMEBUFFER, screenFBO); //No depth buffer, just one color buffer
                 
-				for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
-				{
-					if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
-                        OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
-				}
-            }
-            
-            //Sensors
-            if(showSensors)
-            {
-                for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                glm::mat4 proj = view->GetProjectionMatrix();
+                glm::mat4 viewM = view->GetViewMatrix();
+                OpenGLContent::getInstance()->SetProjectionMatrix(proj);
+                OpenGLContent::getInstance()->SetViewMatrix(viewM);
+			
+                //Coordinate systems
+                if(showCoordSys)
                 {
-                    if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
-                        OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0,1.f,0,1.f), drawingQueueCopy[h].model);
-                    else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
-                        OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(0,1.f,0,1.f), drawingQueueCopy[h].model);
-                }
-            }
-            
-            //Fluid dynamics
-            if(showFluidDynamics)
-            {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    if(sim->isZAxisUp())
+                        OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 2.f);
+                    else
+                        OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 2.f);
                 
-                for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                    {
+                        if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
+                            OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
+                    }
+                }
+            
+                //Sensors
+                if(showSensors)
                 {
-                    if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
-                        OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f));//drawingQueueCopy[h].scale*2.f);
-                    else if(drawingQueueCopy[h].type == RenderableType::HYDRO)
-                        OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0]);
+                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                    {
+                        if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
+                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                        else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
+                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                    }
+                }
+            
+                //Fluid dynamics
+                if(showFluidDynamics)
+                {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                
+                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                    {
+                        if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
+                            OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f));//drawingQueueCopy[h].scale*2.f);
+                        else if(drawingQueueCopy[h].type == RenderableType::HYDRO)
+                            OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0]);
+                    }
+                
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 }
                 
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            }
+                //===============Debugging=================
+                //Bullet debug draw --> breaks thread safeness!
+                if(drawDebug)
+                    sim->dynamicsWorld->debugDrawWorld();
                 
-            //Debugging
-			//if(ocean != NULL)
-			//{	
-				//ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
-				//ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
-			//}
+                /*
+                //if(ocean != NULL)
+                //{	
+                    //ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
+                    //ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
+                //}
 			
-			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
-			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
-			//OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
-			//OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
+                //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
+                //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
+                //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
+                //OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
 			
-			//view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
-			//view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
-			//view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
-			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
-			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
-			//view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
-			//view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
-			//view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
+                //view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
+                //view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
+                //view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
+                //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
+                //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
+                //view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
+                //view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
+                //view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
 			
-			//sim->views[i]->getGBuffer()->ShowTexture(DIFFUSE, 0,0,300,200); // FBO debugging
-            //sim->views[i]->getGBuffer()->ShowTexture(POSITION1,0,200,300,200); // FBO debugging
-			//sim->views[i]->getGBuffer()->ShowTexture(NORMAL1,0,400,300,200); // FBO debugging
+                //sim->views[i]->ShowSceneTexture(NORMAL, 0, 600, 300, 200);
+                //sim->lights[0]->ShowShadowMap(0, 800, 300, 300);
 			
-			//sim->views[i]->ShowSceneTexture(NORMAL, 0, 600, 300, 200);
-            //sim->lights[0]->ShowShadowMap(0, 800, 300, 300);
-			
-			//sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
+                //sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
+                */
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
             
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            
+            delete viewport;
+        }
+        else
+        {
+            GLint* viewport = view->GetViewport();
+            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+			view->DrawHDR(screenFBO);
             delete viewport;
         }
     }

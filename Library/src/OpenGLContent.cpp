@@ -681,20 +681,16 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		texQuadShader->SetUniform("tex", TEX_BASE);
 		texQuadShader->SetUniform("color", color);
 		
-		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_BASE, GL_TEXTURE_2D, texture);
 		glBindVertexArray(baseVertexArray);
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
+		
+        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(0);
-		glBindVertexArray(0);
 		
-		glBindTexture(GL_TEXTURE_2D, 0);
+        glBindVertexArray(0);
+		glBindMultiTextureEXT(GL_TEXTURE0 + TEX_BASE, GL_TEXTURE_2D, 0);
 		glUseProgram(0);
 	}
 }

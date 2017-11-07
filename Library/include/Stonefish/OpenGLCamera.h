@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLCamera__
@@ -14,9 +14,8 @@
 class OpenGLCamera : public OpenGLView
 {
 public:
-    OpenGLCamera(const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp = 1, bool ao = false);
-    ~OpenGLCamera();
-    
+    OpenGLCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp = 1, bool ao = false);
+   
     glm::mat4 GetViewTransform() const;
     glm::vec3 GetEyePosition() const;
     glm::vec3 GetLookingDirection() const;
@@ -24,16 +23,16 @@ public:
     ViewType getType();
     
     void SetupCamera();
+    void SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up);
     void RenderDummy();
-    void GlueToEntity(SolidEntity* ent);
-    void MoveCamera(const btVector3& move);
-    void MoveCamera(btScalar step);
     void RotateCamera(btScalar panStep, btScalar tiltStep);
+    void Update();
     
     void setPanAngle(GLfloat newPanAngle);
     GLfloat getPanAngle();
     void setTiltAngle(GLfloat newTiltAngle);
     GLfloat getTiltAngle();
+    bool needsUpdate();
     
 private:
     glm::mat4 cameraTransform;
@@ -41,12 +40,11 @@ private:
     glm::vec3 eye;
     glm::vec3 dir;
     glm::vec3 up;
-    
-    SolidEntity* holdingEntity;
     GLfloat pan;
     GLfloat tilt;
     glm::vec3 lookingDir;
     glm::vec3 currentUp;
+    bool _needsUpdate;
 };
 
 

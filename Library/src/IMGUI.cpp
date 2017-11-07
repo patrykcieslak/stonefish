@@ -334,6 +334,7 @@ void IMGUI::Begin()
     
     glScissor(0, 0, windowW, windowH);
     glViewport(0, 0, windowW, windowH);
+    OpenGLContent::getInstance()->SetViewportSize(windowW, windowH);
 	glBindVertexArray(guiVAO);
 }
 

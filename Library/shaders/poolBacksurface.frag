@@ -120,5 +120,6 @@ void main()
 	//Inscatter
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(P, vec3(0,0,1.0), sunDirection, Isky);
+    //distance *= 10.0;
 	fragColor += Isky/whitePoint/1000000.0 * exp(-lightAbsorption * -eyePos.z) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );
 }

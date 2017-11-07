@@ -32,6 +32,7 @@
 #include "GPS.h"
 #include "Contact.h"
 #include "Camera.h"
+#include "Light.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::DANTZIG, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -42,7 +43,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, true, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, true, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -69,7 +70,7 @@ void UnderwaterTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
     Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,10.0)));    
+    AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,7.0)));    
     
     Obstacle* cyl = new Obstacle("Rock", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.75)));    
@@ -94,11 +95,11 @@ void UnderwaterTestManager::BuildScenario()
     Polyhedron* ductHeaveB = new Polyhedron("DuctHeaveBow", GetDataPath() + "duct_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), ductLook, false);
     //Internals
     Cylinder* batteryCyl = new Cylinder("BatteryCylinder", 0.13, 0.6, getMaterialManager()->getMaterial("Dummy"), manipLook);
-    batteryCyl->ScalePhysicalPropertiesToArbitraryMass(btScalar(50));
-    Cylinder* portCyl = new Cylinder("PortCylinder", 0.13, 0.9, getMaterialManager()->getMaterial("Dummy"), manipLook);
-    portCyl->ScalePhysicalPropertiesToArbitraryMass(btScalar(27));
-    Cylinder* starboardCyl = new Cylinder("StarboardCylinder", 0.13, 0.9, getMaterialManager()->getMaterial("Dummy"), manipLook);
-    starboardCyl->ScalePhysicalPropertiesToArbitraryMass(btScalar(27));
+    batteryCyl->ScalePhysicalPropertiesToArbitraryMass(btScalar(47));
+    Cylinder* portCyl = new Cylinder("PortCylinder", 0.13, 1.0, getMaterialManager()->getMaterial("Dummy"), manipLook);
+    portCyl->ScalePhysicalPropertiesToArbitraryMass(btScalar(35));
+    Cylinder* starboardCyl = new Cylinder("StarboardCylinder", 0.13, 1.0, getMaterialManager()->getMaterial("Dummy"), manipLook);
+    starboardCyl->ScalePhysicalPropertiesToArbitraryMass(btScalar(35));
     
     //Build whole body
     Compound* comp = new Compound("Compound", hullB, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)));
@@ -111,7 +112,7 @@ void UnderwaterTestManager::BuildScenario()
     comp->AddExternalPart(ductSurgeS, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));
     comp->AddExternalPart(ductHeaveS, btTransform(btQuaternion(M_PI_2,-M_PI_2,0), btVector3(-0.5337,0.0,-0.6747)));
     comp->AddExternalPart(ductHeaveB, btTransform(btQuaternion(-M_PI_2,-M_PI_2,0), btVector3(0.5837,0.0,-0.6747)));
-	comp->AddInternalPart(batteryCyl, btTransform(btQuaternion(M_PI_2,0,0), btVector3(0,0,0)));
+	comp->AddInternalPart(batteryCyl, btTransform(btQuaternion(M_PI_2,0,0), btVector3(-0.1,0,0)));
     comp->AddInternalPart(portCyl, btTransform(btQuaternion(M_PI_2,0,0), btVector3(0.0,-0.35,-0.7)));
     comp->AddInternalPart(starboardCyl, btTransform(btQuaternion(M_PI_2,0,0), btVector3(0.0,0.35,-0.7)));
     
@@ -161,8 +162,8 @@ void UnderwaterTestManager::BuildScenario()
     arm->AddRotLinkDH(link1, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), -0.0136, 0.1065, M_PI_2);
 	arm->AddRotLinkDH(link2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.23332, 0);
 	arm->AddRotLinkDH(link3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.103, -M_PI_2);
-    arm->AddTransformDH(0.196,0,0);
-    arm->AddRotLinkDH(link4, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0.006, 0, 0);
+    arm->AddTransformDH(0.201,0,0);
+    arm->AddRotLinkDH(link4, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0, 0, 0);
 	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,2)));
     
     //Create gripper
@@ -174,7 +175,11 @@ void UnderwaterTestManager::BuildScenario()
     Contact* cnt = AddContact(comp, cyl, 1000);
     cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
     
-    //Camera works in openGL coordinates!!! On screen coords have y = 0 at the bottom!
-    //Camera* cam = new Camera("Camera", btVector3(-10.0,0,2.0), btVector3(5.0,0,-1.0), btVector3(0,0,1.0), 20, 70, 300, 200, 60.0);
+    //Camera
+    //Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,-0.1,M_PI), btVector3(0.5,0.0,-0.35)), comp, 5.0, 1, true);
     //AddSensor(cam);
+    
+    //Light
+    //Light* l = new Light("Spot", btVector3(0,0,0), btVector3(0,0,-1), 30.0, OpenGLLight::ColorFromTemperature(4500, 1000000));
+    //AddActuator(l);
 }

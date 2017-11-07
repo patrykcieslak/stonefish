@@ -395,8 +395,8 @@ void main()
 		
 	//Inscatter
 	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-	fragColor.rgb += skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );	
-	
+    fragColor.rgb += skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );	
+
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }

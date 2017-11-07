@@ -40,6 +40,11 @@ ViewType OpenGLTrackball::getType()
     return TRACKBALL;
 }
 
+bool OpenGLTrackball::needsUpdate()
+{
+    return true;
+}
+
 glm::vec3 OpenGLTrackball::GetEyePosition() const
 {
     return center - radius * GetLookingDirection();

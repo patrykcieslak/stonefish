@@ -11,12 +11,12 @@
 
 #include "Sensor.h"
 #include "OpenGLCamera.h"
+#include "SolidEntity.h"
 
 class Camera : public Sensor
 {
 public:
-    Camera(std::string uniqueName, const btVector3& eyePosition, const btVector3& targetPosition, const btVector3& cameraUp, 
-           GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, btScalar frequency = btScalar(-1.), bool advancedRendering = true);
+    Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btScalar horizFOV, const btTransform& geomToSensor, SolidEntity* attachment = NULL, btScalar frequency = btScalar(-1.), unsigned int spp = 1, bool ao = true);
     virtual ~Camera();
     
 	virtual void InternalUpdate(btScalar dt);
@@ -25,6 +25,13 @@ public:
 
 private:
     OpenGLCamera* glCamera;
+    SolidEntity* attach;
+    btTransform g2s;
+    btScalar fovH;
+    unsigned int resx;
+    unsigned int resy;
+    unsigned int renderSpp;
+    bool renderAO;
 };
 
 #endif

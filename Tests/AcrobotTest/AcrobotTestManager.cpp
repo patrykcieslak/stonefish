@@ -29,6 +29,7 @@
 #include "Manipulator.h"
 #include "Obstacle.h"
 #include "ForceTorque.h"
+#include "Light.h"
 
 AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG)
 {
@@ -215,4 +216,6 @@ void AcrobotTestManager::BuildScenario()
     //trackb->Activate();
     //AddView(trackb);
     
+    Light* l = new Light("Spot", btVector3(0,0,1), glm::vec4(10.f,10.f,10.f,10.f));
+    AddActuator(l);
 }
