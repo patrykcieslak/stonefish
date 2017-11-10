@@ -117,8 +117,10 @@ void Compound::RecalculatePhysicalProperties()
     }
     
     compoundCOG /= compoundMass;
-    CoB = compoundCOB / compoundVolume;
     localTransform.setOrigin(compoundCOG);
+    
+    if(compoundVolume > btScalar(0))
+        CoB = compoundCOB / compoundVolume;
         
     //2. Calculate compound inertia matrix
     btMatrix3x3 I = btMatrix3x3(0,0,0,0,0,0,0,0,0);

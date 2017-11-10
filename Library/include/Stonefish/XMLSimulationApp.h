@@ -14,7 +14,7 @@
 class XMLSimulationApp : public SimulationApp
 {
 public:    
-    XMLSimulationApp(std::string name, std::string xmlPath, std::string dataDirPath, std::string shaderDirPath, int windowWidth, int windowHeight, SimulationManager* sim);
+    XMLSimulationApp(std::string name, std::string xmlPath, std::string dataDirPath, int windowWidth, int windowHeight, SimulationManager* sim);
     
 private:
     

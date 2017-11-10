@@ -11,8 +11,9 @@
 #include "SimulationApp.h"
 #include "ScientificFileUtil.h"
 
-SimpleSensor::SimpleSensor(std::string uniqueName, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency)
+SimpleSensor::SimpleSensor(std::string uniqueName,  const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency)
 {
+    g2s = UnitSystem::SetTransform(geomToSensor);
     historyLen = historyLength;
     history = std::deque<Sample*>(0);
 }
@@ -106,6 +107,11 @@ SensorChannel SimpleSensor::getSensorChannelDescription(unsigned int channel)
         return channels[channel];
     else
         return SensorChannel("Invalid", QUANTITY_INVALID);
+}
+
+btTransform SimpleSensor::getSensorFrame()
+{
+    return g2s;
 }
 
 void SimpleSensor::Reset()

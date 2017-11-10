@@ -481,7 +481,7 @@ void SolidEntity::BuildRigidBody()
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
         
-        std::cout << getName() << " mass: " << mass << std::endl;
+        cInfo("Built rigid body %s [mass: %1.3lf; inertia: %1.3lf, %1.3lf, %1.3lf; volume: %1.1lf]", getName().c_str(), mass, Ipri.x(), Ipri.y(), Ipri.z(), volume*1e6);
     }
 }
 
@@ -514,7 +514,7 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         //Graphics
         BuildGraphicalObject();
         
-        std::cout << getName() << " mass: " << mass << std::endl;
+        cInfo("Built multibody link %s (mass[kg]: %1.3lf; inertia[kgm2]: %1.3lf, %1.3lf, %1.3lf; volume[cm3]: %1.1lf)", getName().c_str(), mass, Ipri.x(), Ipri.y(), Ipri.z(), volume*1e6);
     }
 }
 
@@ -615,8 +615,9 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
         
     uint64_t start = GetTimeInMicroseconds();
    
+#ifdef DEBUG
     std::cout << getName() << " " << a.x() << "," << a.y() << "," << a.z() << std::endl; 
-    
+#endif
    
     //Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();

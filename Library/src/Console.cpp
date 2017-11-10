@@ -54,7 +54,7 @@ void Console::Init(GLuint w, GLuint h)
 
     //Load logo texture - can't use material class because it writes to the console
     int width, height, channels;
-    std::string path = GetDataPath() + "logo_color_64.png";
+    std::string path = GetShaderPath() + "logo_color_64.png";
     
     // Allocate image; fail out on error
     unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);

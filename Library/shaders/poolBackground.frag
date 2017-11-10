@@ -31,6 +31,6 @@ void main()
 	
 	vec3 skyIlluminance;
 	vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 color = skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -eyePos.z) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );
+    vec3 color = skyIlluminance/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z)) * 1.0;
 	fragColor = vec4(color, 1.0);
 }

@@ -8,10 +8,9 @@
 
 #include "IMU.h"
 
-IMU::IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+IMU::IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
-    g2s = UnitSystem::SetTransform(geomToSensor);
     channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Pitch", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
@@ -56,4 +55,9 @@ void IMU::SetNoise(btScalar angleStdDev, btScalar angularVelocityStdDev)
     channels[3].setStdDev(angularVelocityStdDev);
     channels[4].setStdDev(angularVelocityStdDev);
     channels[5].setStdDev(angularVelocityStdDev);
+}
+
+btTransform IMU::getSensorFrame()
+{
+    return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
 }

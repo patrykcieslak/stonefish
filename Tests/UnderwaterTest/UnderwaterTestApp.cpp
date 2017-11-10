@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestApp.h"
@@ -14,8 +14,8 @@
 #include "UnderwaterVehicle.h"
 #include "Pool.h"
 
-UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, UnderwaterTestManager* sim) 
-    : SimulationApp("Underwater Test", dataDirPath, shaderDirPath, width, height, sim)
+UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
+    : SimulationApp("Underwater Test", dataDirPath, width, height, sim)
 {
 }
 

@@ -44,10 +44,12 @@ struct SensorChannel
 class SimpleSensor : public Sensor
 {
 public:
-    SimpleSensor(std::string uniqueName, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    SimpleSensor(std::string uniqueName, const btTransform& geomToSensor = btTransform::getIdentity(), btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     virtual ~SimpleSensor();
     
 	virtual void Reset();
+    virtual btTransform getSensorFrame();
+    
     void ClearHistory();
     void SaveMeasurementsToTextFile(const char* path, bool includeTime = true, unsigned int fixedPrecision = 6);
     void SaveMeasurementsToOctaveFile(const char* path, bool includeTime = true, bool separateChannels = false);
@@ -66,6 +68,7 @@ protected:
     void AddSampleToHistory(const Sample& s);
     std::deque<Sample*> history;
     std::vector<SensorChannel> channels;
+    btTransform g2s;
     
 private:
     unsigned int historyLen;

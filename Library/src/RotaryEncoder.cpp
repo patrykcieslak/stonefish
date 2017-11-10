@@ -8,7 +8,7 @@
 
 #include "RotaryEncoder.h"
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {
     revolute = joint;
     multibody = NULL;
@@ -18,7 +18,7 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btSca
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {
     revolute = NULL;
     multibody = fe;
@@ -28,7 +28,7 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, uns
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
 }
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {
     revolute = NULL;
     multibody = NULL;

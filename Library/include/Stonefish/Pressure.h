@@ -20,10 +20,10 @@ public:
     void InternalUpdate(btScalar dt);
     void SetRange(btScalar max);
     void SetNoise(btScalar pressureStdDev);
+    btTransform getSensorFrame();
     
 private:
     SolidEntity* attach;
-    btTransform g2s;
 };
 
 #endif

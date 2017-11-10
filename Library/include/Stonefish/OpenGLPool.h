@@ -19,8 +19,8 @@ public:
     ~OpenGLPool();
     
     void Init();
-    void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture);
-	void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture);
+    void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
+	void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
 	void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
 	void DrawVolume(GLuint sceneTexture, GLuint linearDepthTex);
     

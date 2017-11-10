@@ -206,11 +206,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         }
     }
 		
-	GLfloat az,elev;
+	/*GLfloat az,elev;
 	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
 	az += 0.05f;
 	elev = sin(az/180.f*M_PI) * 45.f+35.f;
-	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);
+	OpenGLAtmosphere::getInstance()->SetSunPosition(az, elev);*/
 	
     //==============Bake shadow maps (independent of view)================
     if(renderShadows)
@@ -294,15 +294,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
 					DrawObjects();
 					OpenGLContent::getInstance()->DisableClipPlane();
-					
-					//Ambient occlusion
+                    
+                    //Ambient occlusion
 					view->DrawAO();
 			
 					//Generate reflection texture
 					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());
 					glDrawBuffer(GL_COLOR_ATTACHMENT0);
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					view->SetReflectionViewport();
 					OpenGLContent::getInstance()->SetCurrentView(view, true);
 					
 					//Render all objects
@@ -320,7 +319,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					OpenGLContent::getInstance()->SetCurrentView(view);
 					
 					//Draw water surface
-					glPool.DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix(), view->getReflectionTexture());
+					glPool.DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix(), view->getReflectionTexture(), viewport);
 		
 					//Render sky
 					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
@@ -339,8 +338,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					view->SetViewport();
 					OpenGLContent::getInstance()->SetCurrentView(view);
 					
-					//OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-					//DrawObjects();
 					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
 					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
 					DrawObjects();
@@ -358,7 +355,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());
 					glDrawBuffer(GL_COLOR_ATTACHMENT0);
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					view->SetReflectionViewport();
 					OpenGLContent::getInstance()->SetCurrentView(view, true);
 					
 					//Render all objects
@@ -377,7 +373,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					glDrawBuffers(2, renderBuffs);
 					view->SetViewport();
 					OpenGLContent::getInstance()->SetCurrentView(view);
-					glPool.DrawBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix(), view->getReflectionTexture());
+					glPool.DrawBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix(), view->getReflectionTexture(), viewport);
 					
 					//Distant pool background
 					glPool.DrawBackground(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
@@ -463,12 +459,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             //================Post-processing=============================
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 			view->DrawHDR(screenFBO);
-           
+            
             //================Helper objects===================
             if(view->getType() == ViewType::TRACKBALL)
             {
                 //Overlay helpers
                 glBindFramebuffer(GL_FRAMEBUFFER, screenFBO); //No depth buffer, just one color buffer
+                glDisable(GL_CULL_FACE);
                 
                 glm::mat4 proj = view->GetProjectionMatrix();
                 glm::mat4 viewM = view->GetViewMatrix();
@@ -534,7 +531,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
                 //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
                 //OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
-			
+			   */
                 //view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
                 //view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
                 //view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
@@ -542,13 +539,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
                 //view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
                 //view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
-                //view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
-			
-                //sim->views[i]->ShowSceneTexture(NORMAL, 0, 600, 300, 200);
-                //sim->lights[0]->ShowShadowMap(0, 800, 300, 300);
-			
-                //sim->views[i]->ShowAmbientOcclusion(0, 0, 300, 200);		
-                */
+                //view->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
+                
+               // view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
+                
+                glEnable(GL_CULL_FACE);
+                
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
             

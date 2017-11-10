@@ -214,7 +214,7 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
         
         //Load logo texture - can't use material class because it writes to the console
         int width, height, channels;
-        std::string path = GetDataPath() + "logo_gray_64.png";
+        std::string path = GetShaderPath() + "logo_gray_64.png";
         
         // Allocate image; fail out on error
         unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
@@ -238,7 +238,7 @@ void IMGUI::Init(GLint windowWidth, GLint windowHeight, GLfloat hue)
             logoTexture = 0;
         
 		//Load corner texture
-		path = GetDataPath() + "gui.png";
+		path = GetShaderPath() + "gui.png";
         
         // Allocate image; fail out on error
         dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);

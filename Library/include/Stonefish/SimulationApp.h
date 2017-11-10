@@ -17,13 +17,12 @@
 #include "SimulationManager.h"
 
 /*!
-    @class SimulationApp
     A class that defines an application interface combined with a simulation manager.
  */
 class SimulationApp
 {
 public:
-    SimulationApp(std::string name, std::string dataDirPath, std::string shaderDirPath, int windowWidth, int windowHeight, SimulationManager* sim);
+    SimulationApp(std::string name, std::string dataDirPath, int windowWidth, int windowHeight, SimulationManager* sim);
     virtual ~SimulationApp();
     
     virtual void Init();

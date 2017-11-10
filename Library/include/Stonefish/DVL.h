@@ -22,10 +22,10 @@ public:
     
     void SetRange(const btVector3& velocityMax, btScalar altitudeMin, btScalar altitudeMax);
     void SetNoise(btScalar velocityStdDev, btScalar altitudeStdDev);
+    btTransform getSensorFrame();
     
 private:
     SolidEntity* attach;
-    btTransform g2s;
 };
 
 #endif

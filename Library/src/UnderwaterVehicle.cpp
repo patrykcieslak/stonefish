@@ -57,37 +57,44 @@ void UnderwaterVehicle::AddThruster(Thruster* thruster, const btTransform& locat
 
 Pressure* UnderwaterVehicle::AddPressureSensor(const btTransform& location, btScalar updateFrequency)
 {
-    Pressure* press = new Pressure(getName() + "Pressure", vehicleBody->getLink(0).solid, location, updateFrequency);
+    Pressure* press = new Pressure(getName() + "/Pressure", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(press);
     return press;
 }
 
 DVL* UnderwaterVehicle::AddDVL(const btTransform& location, btScalar updateFrequency)
 {
-    DVL* dvl = new DVL(getName() + "DVL", vehicleBody->getLink(0).solid, location, updateFrequency);
+    DVL* dvl = new DVL(getName() + "/DVL", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(dvl);
     return dvl;
 }
 
 FOG* UnderwaterVehicle::AddFOG(const btTransform& location, btScalar updateFrequency)
 {
-    FOG* fog = new FOG(getName() + "FOG", vehicleBody->getLink(0).solid, location, updateFrequency);
+    FOG* fog = new FOG(getName() + "/FOG", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(fog);
     return fog;
 }
 
 IMU* UnderwaterVehicle::AddIMU(const btTransform& location, btScalar updateFrequency)
 {
-    IMU* imu = new IMU(getName() + "IMU", vehicleBody->getLink(0).solid, location, updateFrequency);
+    IMU* imu = new IMU(getName() + "/IMU", vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(imu);
     return imu;
 }
 
 GPS* UnderwaterVehicle::AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency)
 {
-    GPS* gps = new GPS(getName() + "GPS", homeLatitude, homeLongitude, vehicleBody->getLink(0).solid, location, updateFrequency);
+    GPS* gps = new GPS(getName() + "/GPS", homeLatitude, homeLongitude, vehicleBody->getLink(0).solid, location, updateFrequency);
     sensors.push_back(gps);
     return gps;
+}
+
+Odometry* UnderwaterVehicle::AddOdometry(const btTransform& location, btScalar updateFrequency)
+{
+    Odometry* odom = new Odometry(getName() + "/Odometry", vehicleBody->getLink(0).solid, location, updateFrequency);
+    sensors.push_back(odom);
+    return odom;
 }
 
 void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
@@ -167,6 +174,14 @@ btScalar UnderwaterVehicle::GetThrusterSetpoint(unsigned int index)
 {
     if(index < thrusters.size())
         return thrusters[index]->getSetpoint();
+    else
+        return btScalar(0);
+}
+
+btScalar UnderwaterVehicle::GetThrusterVelocity(unsigned int index)
+{
+    if(index < thrusters.size())
+        return thrusters[index]->getOmega();
     else
         return btScalar(0);
 }

@@ -72,12 +72,12 @@ void UnderwaterTestManager::BuildScenario()
     Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,7.0)));    
     
-    Obstacle* cyl = new Obstacle("Rock", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.75)));    
+    for(unsigned int i=0; i<10; ++i)
+    {
+        Obstacle* cyl = new Obstacle("Rock", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
+        AddStaticEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(i*2.0,0,5.5)));    
+    }
     
-    Obstacle* cyl2 = new Obstacle("Rock2", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(cyl2, btTransform(btQuaternion::getIdentity(), btVector3(2,2,6)));
-	
     //Box* box = new Box("Test", btVector3(1.0,1.0,0.5), getMaterialManager()->getMaterial("Rock"), seabed);
     //AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.0)));
     
@@ -121,7 +121,7 @@ void UnderwaterTestManager::BuildScenario()
 	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
     
     //Add sensors
-    Pressure* press = vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    Pressure* press = vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), 1.0);
     press->SetNoise(1.0);
     DVL* dvl = vehicle->AddDVL(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
     dvl->SetNoise(0.02, 0.05);
@@ -131,7 +131,7 @@ void UnderwaterTestManager::BuildScenario()
     fog->SetNoise(0.001);
     GPS* gps = vehicle->AddGPS(btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1)), UnitSystem::Angle(true, 50), UnitSystem::Angle(true, 20));
     gps->SetNoise(0.000001, 0.000001);
-    
+
     //Create and attach thrusters
     Polyhedron* prop1 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
     Polyhedron* prop2 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
@@ -172,8 +172,8 @@ void UnderwaterTestManager::BuildScenario()
     AddSystemEntity(gripper, btTransform(btQuaternion(0,0,M_PI_2), btVector3(1.35,0,2.25)));
     
     //Add contact sensing between gripper and target
-    Contact* cnt = AddContact(comp, cyl, 1000);
-    cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
+    //Contact* cnt = AddContact(comp, cyl, 1000);
+    //cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
     
     //Camera
     //Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,-0.1,M_PI), btVector3(0.5,0.0,-0.35)), comp, 5.0, 1, true);

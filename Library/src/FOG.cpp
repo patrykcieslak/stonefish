@@ -8,10 +8,9 @@
 
 #include "FOG.h"
 
-FOG::FOG(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+FOG::FOG(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
-    g2s = UnitSystem::SetTransform(geomToSensor);
     channels.push_back(SensorChannel("Heading", QUANTITY_ANGLE));
 }
 
@@ -31,4 +30,9 @@ void FOG::InternalUpdate(btScalar dt)
 void FOG::SetNoise(btScalar headingStdDev)
 {
     channels[0].setStdDev(headingStdDev);
+}
+
+btTransform FOG::getSensorFrame()
+{
+    return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
 }

@@ -8,10 +8,9 @@
 
 #include "Trajectory.h"
 
-Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, btTransform relativeFrame, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     solid = attachment;
-    relToSolid = UnitSystem::SetTransform(relativeFrame);
     channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Coordinate Y", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Coordinate Z", QUANTITY_LENGTH));
@@ -28,7 +27,7 @@ void Trajectory::Reset()
 void Trajectory::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to imu frame
-    btTransform globalFrame = solid->getTransform() * relToSolid;
+    btTransform globalFrame = solid->getTransform() * g2s;
     
     //angles
     btScalar yaw, pitch, roll;

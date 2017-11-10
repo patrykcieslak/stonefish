@@ -25,6 +25,7 @@ public:
     
     virtual void Reset();
     virtual std::vector<Renderable> Render();
+    
     void Update(btScalar dt);
     void MarkDataOld();
     bool isNewDataAvailable();

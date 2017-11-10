@@ -120,6 +120,9 @@ void main()
 	//Inscatter
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(P, vec3(0,0,1.0), sunDirection, Isky);
-    //distance *= 10.0;
-	fragColor += Isky/whitePoint/1000000.0 * exp(-lightAbsorption * -eyePos.z) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );
+    vec3 a = lightAbsorption;
+    float b = 0.5*length(a);
+    vec3 fogColor = Isky/whitePoint/30000.0 * exp(-a * -min(-5.0, eyePos.z));
+    float fogFactor = 1.0 - exp(-b*distance);
+    fragColor = mix(fragColor, fogColor, fogFactor);
 }

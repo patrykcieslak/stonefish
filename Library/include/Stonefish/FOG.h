@@ -19,10 +19,10 @@ public:
     
     void InternalUpdate(btScalar dt);
     void SetNoise(btScalar headingStdDev);
+    btTransform getSensorFrame();
     
 private:
     SolidEntity* attach;
-    btTransform g2s;
 };
 
 #endif

@@ -8,8 +8,8 @@
 
 #include "XMLSimulationApp.h"
 
-XMLSimulationApp::XMLSimulationApp(std::string name, std::string xmlPath, std::string dataDirPath, std::string shaderDirPath, int windowWidth, int windowHeight, SimulationManager* sim)
-    : SimulationApp(name, dataDirPath, shaderDirPath, windowWidth, windowHeight, sim)
+XMLSimulationApp::XMLSimulationApp(std::string name, std::string xmlPath, std::string dataDirPath, int windowWidth, int windowHeight, SimulationManager* sim)
+    : SimulationApp(name, dataDirPath, windowWidth, windowHeight, sim)
 {
     
 }

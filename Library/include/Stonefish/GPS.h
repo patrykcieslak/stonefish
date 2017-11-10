@@ -19,10 +19,10 @@ public:
     
     void InternalUpdate(btScalar dt);
     void SetNoise(btScalar latDev, btScalar longDev);
+    btTransform getSensorFrame();
     
 private:
     SolidEntity* attach;
-    btTransform g2s;
     btScalar homeLatitude;
     btScalar homeLongitude;
 };

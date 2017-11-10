@@ -354,7 +354,7 @@ vec3 calcSunContribution(vec3 N, vec3 toEye, float waterDepth, vec3 albedo, vec3
 void main()
 {	
 	//Common
-	fragColor = vec4(0.0,0.0,0.0,1.0);
+    fragColor = vec4(0.);
 	vec3 N = normalize(normal);
 	vec3 toEye = normalize(eyePos - fragPos);
 	vec3 center = vec3(0,0,-planetRadius);
@@ -395,8 +395,17 @@ void main()
 		
 	//Inscatter
 	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    fragColor.rgb += skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption );	
-
-	//Normal
+    vec3 a = lightAbsorption;
+    float b = 0.5*length(a);
+    vec3 fogColor = skyIlluminance/whitePoint/30000.0 * exp(-a * -min(-5.0, eyePos.z));
+    float fogFactor = 1.0 - exp(-b*distance);
+    fragColor.rgb = mix(fragColor.rgb, fogColor, fogFactor)/2.0;
+    fragColor.a = 1.0 - fogFactor;
+	
+    //Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }
+
+//Original: + skyIlluminance/whitePoint/1000000.0 * exp(-lightAbsorption * -min(0.0, eyePos.z)) * ( exp((-toEye.z - 1.0)*lightAbsorption*distance)-1.0 )/( (-toEye.z - 1.0)*lightAbsorption )	
+
+    

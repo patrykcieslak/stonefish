@@ -9,17 +9,16 @@
 #include "Pressure.h"
 #include "SimulationApp.h"
 
-Pressure::Pressure(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+Pressure::Pressure(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
-    g2s = UnitSystem::SetTransform(geomToSensor);
     channels.push_back(SensorChannel("Pressure", QUANTITY_PRESSURE));
 }
 
 void Pressure::InternalUpdate(btScalar dt)
 {
     btTransform pressureTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
-    btScalar data(101325.); //Pa (1 atm)
+    btScalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
     
     Liquid* liq = SimulationApp::getApp()->getSimulationManager()->getLiquid();
     if(liq != NULL)
@@ -39,4 +38,9 @@ void Pressure::SetRange(btScalar max)
 void Pressure::SetNoise(btScalar pressureStdDev)
 {
     channels[0].setStdDev(pressureStdDev);
+}
+
+btTransform Pressure::getSensorFrame()
+{
+    return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
 }

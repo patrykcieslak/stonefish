@@ -8,10 +8,9 @@
 
 #include "Gyroscope.h"
 
-Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, btTransform relFrame, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     solid = attachment;
-    relToSolid = relFrame;
     axis = senseAxis;
     
     std::string axisName[3] = {"X", "Y", "Z"};
@@ -37,7 +36,7 @@ void Gyroscope::Reset()
 void Gyroscope::InternalUpdate(btScalar dt)
 {
     //calculate transformation from global to gyro frame
-    btMatrix3x3 toGyroFrame = relToSolid.getBasis().inverse() * solid->getTransform().getBasis().inverse();
+    btMatrix3x3 toGyroFrame = g2s.getBasis().inverse() * solid->getTransform().getBasis().inverse();
     
     //get angular velocity
     btVector3 actualAV = solid->getAngularVelocity();
@@ -57,4 +56,9 @@ void Gyroscope::InternalUpdate(btScalar dt)
     //save sample
     Sample s(1, &av);
     AddSampleToHistory(s);
+}
+
+btTransform Gyroscope::getSensorFrame()
+{
+    return solid->getTransform() * solid->getGeomToCOGTransform().inverse() * g2s;
 }

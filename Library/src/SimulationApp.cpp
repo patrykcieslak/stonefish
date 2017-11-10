@@ -11,12 +11,16 @@
 #include <chrono>
 #include <thread>
 
-SimulationApp::SimulationApp(std::string name, std::string dataDirPath, std::string shaderDirPath, int windowWidth, int windowHeight, SimulationManager* sim)
+SimulationApp::SimulationApp(std::string name, std::string dataDirPath, int windowWidth, int windowHeight, SimulationManager* sim)
 {
     SimulationApp::handle = this;
 	appName = name;
+#ifdef SHADER_DIR_PATH
+    shaderPath = SHADER_DIR_PATH;
+#else
+    shaderPath = "/usr/local/share/Stonefish/shaders/";
+#endif
     dataPath = dataDirPath;
-    shaderPath = shaderDirPath;
     winWidth = windowWidth;
     winHeight = windowHeight;
     finished = false;

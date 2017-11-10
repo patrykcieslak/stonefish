@@ -11,23 +11,24 @@
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "MathsUtil.hpp"
 
-DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
-    g2s = UnitSystem::SetTransform(geomToSensor);
     channels.push_back(SensorChannel("Velocity X", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Z", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Altitude", QUANTITY_LENGTH));
+    channels[3].rangeMin = btScalar(0.0);
+    channels[3].rangeMax = btScalar(1000.0);
 }    
     
 void DVL::InternalUpdate(btScalar dt)
 {
     //Check hit with bottom
-    btScalar altitude(-1);
+    btScalar altitude(channels[3].rangeMax);
     btTransform dvlTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
-    btVector3 from = dvlTrans.getOrigin();
-    btVector3 to = from + dvlTrans.getBasis().getColumn(2) * btScalar(10000);
+    btVector3 from = dvlTrans.getOrigin() - dvlTrans.getBasis().getColumn(2) * channels[3].rangeMin;
+    btVector3 to = from - dvlTrans.getBasis().getColumn(2) * channels[3].rangeMax;
     
     btCollisionWorld::ClosestRayResultCallback closest(from, to);
     SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from, to, closest);
@@ -35,7 +36,7 @@ void DVL::InternalUpdate(btScalar dt)
     if(closest.hasHit())
     {
         btVector3 p = from.lerp(to, closest.m_closestHitFraction);
-        altitude = (p-from).length();
+        altitude = (p - dvlTrans.getOrigin()).length();
     }
     
     //Get velocity
@@ -57,7 +58,7 @@ std::vector<Renderable> DVL::Render()
     item.type = RenderableType::SENSOR_LINES;
     item.model = glMatrixFromBtTransform(dvlTrans);
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(0,0, getLastSample().getData()[3]));
+    item.points.push_back(glm::vec3(0,0,-getLastSample().getData()[3]));
     items.push_back(item);
 
     return items;
@@ -85,3 +86,7 @@ void DVL::SetNoise(btScalar velocityStdDev, btScalar altitudeStdDev)
     channels[3].setStdDev(altitudeStdDev);
 }
     
+btTransform DVL::getSensorFrame()
+{
+    return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+}

@@ -126,7 +126,7 @@ void OpenGLPool::Init()
 	poolShaders[3]->AddUniform("texLinearDepth", ParameterType::INT);
 }	
 
-void OpenGLPool::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture)
+void OpenGLPool::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport)
 {
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, reflectionTexture);
 	
@@ -136,7 +136,7 @@ void OpenGLPool::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 project
     poolShaders[0]->Use();
     poolShaders[0]->SetUniform("MVP", projection*view);
 	poolShaders[0]->SetUniform("texReflection", TEX_POSTPROCESS1);
-	poolShaders[0]->SetUniform("viewport", glm::vec2(1500.f,1000.f));
+	poolShaders[0]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
 	poolShaders[0]->SetUniform("eyePos", eyePos);
 	poolShaders[0]->SetUniform("R0", R0);
 	poolShaders[0]->SetUniform("time", t);
@@ -155,17 +155,16 @@ void OpenGLPool::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 project
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
 }
 
-void OpenGLPool::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture)
+void OpenGLPool::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport)
 {
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, reflectionTexture);
-	
 	GLfloat na = 1.33f;
 	GLfloat nw = 1.0f; 
 	GLfloat R0 = (na-nw)*(na-nw)/((na+nw)*(na+nw));
     poolShaders[1]->Use();
     poolShaders[1]->SetUniform("MVP", projection*view);
 	poolShaders[1]->SetUniform("texReflection", TEX_POSTPROCESS1);
-	poolShaders[1]->SetUniform("viewport", glm::vec2(1500.f,1000.f));
+	poolShaders[1]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
 	poolShaders[1]->SetUniform("eyePos", eyePos);
 	poolShaders[1]->SetUniform("R0", R0);
 	poolShaders[1]->SetUniform("time", t);

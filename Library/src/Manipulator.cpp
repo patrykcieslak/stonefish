@@ -91,8 +91,8 @@ void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
 
 void Manipulator::UpdateAcceleration(btScalar dt)
 {	
-    for(unsigned int i=0; i<nLinks-1; ++i)
-        std::cout << "Motor " << i << " torque: " << motorTorque[i] << std::endl;
+    //for(unsigned int i=0; i<nLinks-1; ++i)
+    //    std::cout << "Motor " << i << " torque: " << motorTorque[i] << std::endl;
 }
 
 void Manipulator::UpdateSensors(btScalar dt)

@@ -183,7 +183,9 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     
     if(uni.location < 0)
 	{
+#ifdef DEBUG
 		cError("Uniform '%s' doesn't exist!", name.c_str());
+#endif
         return false;
 	}
     
@@ -335,7 +337,9 @@ bool GLSLShader::GetUniform(std::string name, ParameterType type, GLint& locatio
             }
             else
             {
+#ifdef DEBUG
                 cError("Uniform %s doesn't exist! Mismatched type!", name.c_str());
+#endif
                 return false;
             }
         }
@@ -395,10 +399,11 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::stri
 	std::ifstream sourceFile(sourcePath);
 	std::string source = header + "\n";
 	std::string line;
-	
+
+#ifdef DEBUG
 	if(verbose)
 		cInfo("Loading shader from: %s", sourcePath.c_str());
-    
+#endif
 	while(!sourceFile.eof())
 	{
 		std::getline(sourceFile, line);
@@ -414,10 +419,10 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::stri
 			{
 				std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
 				std::ifstream injectedFile(injectedPath);
-				
+#ifdef DEBUG
 				if(verbose)
 					cInfo("--> Injecting source from: %s", injectedPath.c_str());
-
+#endif
 				while(!injectedFile.eof())
 				{
 					std::getline(injectedFile, line);
@@ -438,20 +443,18 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::stri
 		
 		glShaderSource(shader, 1, (const GLchar**)&shaderSource, NULL);
 		glCompileShader(shader);
-		
+        glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
+		if(*shaderCompiled == 0)
+			cError("Failed to compile shader: %s", shaderSource);
+#ifdef DEBUG		
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-		
 		if(infoLogLength > 0)
 		{
 			std::vector<char> infoLog(infoLogLength+1);
 			glGetShaderInfoLog(shader, infoLogLength, NULL, &infoLog[0]);
 			cWarning("Shader compile log: %s", &infoLog[0]);
 		}
-		
-		glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
-		
-		if(*shaderCompiled == 0)
-			cError("Failed to compile shader: %s", shaderSource);
+#endif
 	}
 	else
 		*shaderCompiled = 0;
@@ -470,7 +473,7 @@ GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, uns
 			glAttachShader(program, compiledShaders[i]);
 	
 	glLinkProgram(program);
-	
+#ifdef DEBUG
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
 	if(infoLogLength > 0)
 	{
@@ -478,8 +481,9 @@ GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, uns
 		glGetProgramInfoLog(program, infoLogLength, NULL, &infoLog[0]);
 		cWarning("Program link log: %s", &infoLog[0]);
 	}
+#endif
 	glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
-	
+    
 	for(unsigned int i=0; i<compiledShaders.size(); ++i)
 	{
 		if(compiledShaders[i] > 0)

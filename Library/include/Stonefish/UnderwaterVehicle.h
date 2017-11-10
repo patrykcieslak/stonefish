@@ -19,6 +19,7 @@
 #include "FOG.h"
 #include "IMU.h"
 #include "GPS.h"
+#include "Odometry.h"
 
 //! A dynamical model of a fully equipped underwater vehicle
 /*!
@@ -33,6 +34,7 @@ public:
     
     //Underwater vehicle
     void AddThruster(Thruster* thruster, const btTransform& location); //Location in the body geometry frame
+    Odometry* AddOdometry(const btTransform& location, btScalar updateFrequency = btScalar(-1));
     Pressure* AddPressureSensor(const btTransform& location, btScalar updateFrequency = btScalar(-1));
     DVL* AddDVL(const btTransform& location, btScalar updateFrequency = btScalar(-1)); 
     FOG* AddFOG(const btTransform& location, btScalar updateFrequency = btScalar(-1));
@@ -40,6 +42,7 @@ public:
     GPS* AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency = btScalar(-1));
     void SetThrusterSetpoint(unsigned int index, btScalar s);
     btScalar GetThrusterSetpoint(unsigned int index);
+    btScalar GetThrusterVelocity(unsigned int index);
     
     //System
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);

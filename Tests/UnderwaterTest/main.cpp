@@ -13,9 +13,10 @@
 int main(int argc, const char * argv[])
 {
     //feenableexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
+    feenableexcept(FE_INVALID | FE_OVERFLOW);
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(200.0);
-    UnderwaterTestApp app("../../../../Library/data", "../../../../Library/shaders", 1500, 1000, simulationManager);
+    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", 1500, 1000, simulationManager);
     app.Init();
     app.EventLoop();
     app.CleanUp();

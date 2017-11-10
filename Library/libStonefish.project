@@ -129,6 +129,7 @@
         <File Name="src/Pressure.cpp"/>
         <File Name="src/FOG.cpp"/>
         <File Name="src/GPS.cpp"/>
+        <File Name="src/Odometry.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="advanced">
         <File Name="src/Camera.cpp"/>
@@ -196,6 +197,7 @@
         <File Name="include/Stonefish/Trajectory.h"/>
         <File Name="include/Stonefish/Pressure.h"/>
         <File Name="include/Stonefish/FOG.h"/>
+        <File Name="include/Stonefish/Odometry.h"/>
       </VirtualDirectory>
       <File Name="include/Stonefish/SimpleSensor.h"/>
       <File Name="include/Stonefish/Sensor.h"/>
@@ -404,6 +406,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

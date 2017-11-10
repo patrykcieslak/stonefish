@@ -15,7 +15,7 @@
 class ForceTorque : public SimpleSensor
 {
 public:
-    ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& location, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     void InternalUpdate(btScalar dt);
     void Reset();
@@ -25,7 +25,6 @@ public:
 private:
     Joint* joint;
     SolidEntity* attach;
-    btTransform g2s;
 };
 
 #endif

@@ -8,11 +8,10 @@
 
 #include "ForceTorque.h"
 
-ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& location, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, frequency, historyLength)
+ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     joint = j;
     attach = attachment;
-    g2s = location;
     
     channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
     channels.push_back(SensorChannel("Force Y", QUANTITY_FORCE));
@@ -41,8 +40,6 @@ void ForceTorque::InternalUpdate(btScalar dt)
     btTransform ftTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     force = ftTrans.getBasis().inverse() * force;
     torque = ftTrans.getBasis().inverse() * torque;
-    
-    std::cout << "FT: " << force.getX() << "," << force.getY() << "," << force.getZ() << std::endl;
     
     btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
     Sample s(6, values);

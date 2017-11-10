@@ -20,10 +20,10 @@ public:
     void InternalUpdate(btScalar dt);
     void SetRange(btScalar angularVelocityMax);
     void SetNoise(btScalar angleStdDev, btScalar angularVelocityStdDev);
+    btTransform getSensorFrame();
     
 protected:
     SolidEntity* attach;
-    btTransform g2s;
 };
 
 #endif

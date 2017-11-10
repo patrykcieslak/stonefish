@@ -15,7 +15,7 @@
 class UnderwaterTestApp : public SimulationApp
 {
 public:
-    UnderwaterTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, UnderwaterTestManager* sim);
+    UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim);
     void DoHUD();
 };
 
