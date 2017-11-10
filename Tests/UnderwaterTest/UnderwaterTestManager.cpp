@@ -107,7 +107,7 @@ void UnderwaterTestManager::BuildScenario()
 	comp->AddExternalPart(hullS, btTransform(btQuaternion(0,0,0), btVector3(0,0.35,-0.7)));
     comp->AddExternalPart(vBarStern, btTransform(btQuaternion::getIdentity(), btVector3(-0.25,0.0,-0.15)));
     comp->AddExternalPart(vBarBow, btTransform(btQuaternion::getIdentity(), btVector3(0.30,0.0,-0.15)));
-    comp->AddExternalPart(ductSway, btTransform(btQuaternion(M_PI_2,0,0), btVector3(-0.0137, -0.0307, -0.38)));
+    comp->AddExternalPart(ductSway, btTransform(btQuaternion(M_PI_2,M_PI,0), btVector3(-0.0137, 0.0307, -0.38)));
     comp->AddExternalPart(ductSurgeP, btTransform(btQuaternion(0,0,M_PI), btVector3(-0.2807,-0.2587,-0.38)));
     comp->AddExternalPart(ductSurgeS, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));
     comp->AddExternalPart(ductHeaveS, btTransform(btQuaternion(M_PI_2,-M_PI_2,0), btVector3(-0.5337,0.0,-0.6747)));
@@ -117,13 +117,15 @@ void UnderwaterTestManager::BuildScenario()
     comp->AddInternalPart(starboardCyl, btTransform(btQuaternion(M_PI_2,0,0), btVector3(0.0,0.35,-0.7)));
     
     //Create underwater vehicle
+    btScalar depth = 0.7;
+    
 	UnderwaterVehicle* vehicle = new UnderwaterVehicle("AUV", comp);
-	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
+	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,depth)));
     
     //Add sensors
     Pressure* press = vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), 1.0);
     press->SetNoise(1.0);
-    DVL* dvl = vehicle->AddDVL(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    DVL* dvl = vehicle->AddDVL(btTransform(btQuaternion(0,0,M_PI), btVector3(0,0,0)), UnitSystem::Angle(true, 30.0));
     dvl->SetNoise(0.02, 0.05);
     IMU* imu = vehicle->AddIMU(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
     imu->SetNoise(0.01, 0.05);
@@ -143,7 +145,7 @@ void UnderwaterTestManager::BuildScenario()
     Thruster* thSurgeS = new Thruster("ThrusterSurgeStarboard", prop3, 0.18, 0.48, 0.05, 100.0);
     Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", prop4, 0.18, 0.48, 0.05, 100.0);
     Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", prop5, 0.18, 0.48, 0.05, 100.0);
-    vehicle->AddThruster(thSway, btTransform(btQuaternion(M_PI_2,0,0), btVector3(-0.0137, -0.0307, -0.38)));
+    vehicle->AddThruster(thSway, btTransform(btQuaternion(M_PI_2,M_PI,0), btVector3(-0.0137, 0.0307, -0.38)));
     vehicle->AddThruster(thSurgeP, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,-0.2587,-0.38)));
     vehicle->AddThruster(thSurgeS, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));
     vehicle->AddThruster(thHeaveS, btTransform(btQuaternion(0,-M_PI_2,0), btVector3(-0.5337,0.0,-0.6747)));
@@ -164,12 +166,12 @@ void UnderwaterTestManager::BuildScenario()
 	arm->AddRotLinkDH(link3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.103, -M_PI_2);
     arm->AddTransformDH(0.201,0,0);
     arm->AddRotLinkDH(link4, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0, 0, 0);
-	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,2)));
+	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,depth)));
     
     //Create gripper
-    Cylinder* hand = new Cylinder("Hand", 0.05, 0.1, getMaterialManager()->getMaterial("Dummy"), manipLook, false);
+    /*Cylinder* hand = new Cylinder("Hand", 0.05, 0.1, getMaterialManager()->getMaterial("Dummy"), manipLook, false);
     FixedGripper* gripper = new FixedGripper("Gripper", arm, hand);
-    AddSystemEntity(gripper, btTransform(btQuaternion(0,0,M_PI_2), btVector3(1.35,0,2.25)));
+    AddSystemEntity(gripper, btTransform(btQuaternion(0,0,M_PI_2), btVector3(1.35,0,2.25)));*/
     
     //Add contact sensing between gripper and target
     //Contact* cnt = AddContact(comp, cyl, 1000);

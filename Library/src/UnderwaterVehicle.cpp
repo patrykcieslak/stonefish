@@ -62,9 +62,9 @@ Pressure* UnderwaterVehicle::AddPressureSensor(const btTransform& location, btSc
     return press;
 }
 
-DVL* UnderwaterVehicle::AddDVL(const btTransform& location, btScalar updateFrequency)
+DVL* UnderwaterVehicle::AddDVL(const btTransform& location, btScalar beamSpreadAngle, btScalar updateFrequency)
 {
-    DVL* dvl = new DVL(getName() + "/DVL", vehicleBody->getLink(0).solid, location, updateFrequency);
+    DVL* dvl = new DVL(getName() + "/DVL", vehicleBody->getLink(0).solid, location, beamSpreadAngle, updateFrequency);
     sensors.push_back(dvl);
     return dvl;
 }

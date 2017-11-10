@@ -663,6 +663,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
         
                 fn = fv1.cross(fv2); //Normal of the face (length != 1)
                 btScalar len = fn.length();
+                
+                if(btFuzzyZero(len))
+                    continue;
+                
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/btScalar(2); //Area of the face (triangle)
             }
@@ -679,6 +683,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
         
                 fn = fv1.cross(fv2); //Normal of the face (length != 1)
                 btScalar len = fn.length();
+                
+                if(btFuzzyZero(len))
+                    continue;
+                
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/btScalar(2); //Area of the face (triangle)
             }
@@ -699,6 +707,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
                 fc = (p1 + p2 + p3 + p4)/btScalar(4);
                 fn = fv1.cross(fv2);
                 btScalar len = fn.length();
+                
+                if(btFuzzyZero(len))
+                    continue;
+                
                 fn1 = fn/len;
                 A = len + fv2.cross(fv3).length();
                 fn = fn1 * A;
@@ -719,6 +731,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
         
                 fn = fv1.cross(fv2); //Normal of the face (length != 1)
                 btScalar len = fn.length();
+                
+                if(btFuzzyZero(len))
+                    continue;
+                
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/btScalar(2); //Area of the face (triangle)
             }
@@ -739,6 +755,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
                 fc = (p1 + p2 + p3 + p4)/btScalar(4);
                 fn = fv1.cross(fv2);
                 btScalar len = fn.length();
+                
+                if(btFuzzyZero(len))
+                    continue;
+                
                 fn1 = fn/len;
                 A = len + fv2.cross(fv3).length();
                 fn = fn1 * A;
@@ -762,6 +782,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
             fc = (p1 + p2 + p3 + p4)/btScalar(4);
             fn = fv1.cross(fv2);
             btScalar len = fn.length();
+            
+            if(btFuzzyZero(len))
+                continue;
+            
             fn1 = fn/len;
             A = len + fv2.cross(fv3).length();
             fn = fn1 * A;
@@ -774,6 +798,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
         
             fn = fv1.cross(fv2); //Normal of the face (length != 1)
             btScalar len = fn.length();
+            
+            if(btFuzzyZero(len))
+                continue;
+            
             fn1 = fn/len; //Normalised normal (length = 1)
             A = len/btScalar(2); //Area of the face (triangle)
         }

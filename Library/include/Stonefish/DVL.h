@@ -15,7 +15,7 @@
 class DVL : public SimpleSensor
 {
 public:
-    DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar beamSpreadAngle, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
     
     void InternalUpdate(btScalar dt);
     std::vector<Renderable> Render();
@@ -26,6 +26,8 @@ public:
     
 private:
     SolidEntity* attach;
+    btScalar beamAngle;
+    btScalar range[4];
 };
 
 #endif

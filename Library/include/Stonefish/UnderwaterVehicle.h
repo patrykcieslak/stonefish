@@ -36,7 +36,7 @@ public:
     void AddThruster(Thruster* thruster, const btTransform& location); //Location in the body geometry frame
     Odometry* AddOdometry(const btTransform& location, btScalar updateFrequency = btScalar(-1));
     Pressure* AddPressureSensor(const btTransform& location, btScalar updateFrequency = btScalar(-1));
-    DVL* AddDVL(const btTransform& location, btScalar updateFrequency = btScalar(-1)); 
+    DVL* AddDVL(const btTransform& location, btScalar beamSpreadAngle, btScalar updateFrequency = btScalar(-1)); 
     FOG* AddFOG(const btTransform& location, btScalar updateFrequency = btScalar(-1));
     IMU* AddIMU(const btTransform& location, btScalar updateFrequency = btScalar(-1));
     GPS* AddGPS(const btTransform& location, btScalar homeLatitude, btScalar homeLongitude, btScalar updateFrequency = btScalar(-1));
