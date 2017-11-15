@@ -15,7 +15,7 @@
 class Trajectory : public SimpleSensor
 {
 public:
-    Trajectory(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    Trajectory(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     void Reset();

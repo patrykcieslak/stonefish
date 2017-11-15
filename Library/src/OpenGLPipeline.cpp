@@ -475,11 +475,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Coordinate systems
                 if(showCoordSys)
                 {
+                    //WORLD
                     if(sim->isZAxisUp())
-                        OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 2.f);
+                        OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 1.f);
                     else
-                        OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 2.f);
+                        OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 1.f);
                 
+                    //Solids
                     for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
                     {
                         if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
@@ -492,10 +494,22 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 {
                     for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
                     {
-                        if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
+                        if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
+                            OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
+                        else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
                             OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
                         else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
                             OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                    }
+                }
+                
+                //Actuators
+                if(showActuators)
+                {
+                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+                    {
+                        if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
+                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
                     }
                 }
             

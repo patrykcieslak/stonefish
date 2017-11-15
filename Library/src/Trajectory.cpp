@@ -8,7 +8,7 @@
 
 #include "Trajectory.h"
 
-Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+Trajectory::Trajectory(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     solid = attachment;
     channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));

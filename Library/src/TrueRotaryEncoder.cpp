@@ -8,13 +8,13 @@
 
 #include "TrueRotaryEncoder.h"
 
-TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
+TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
 {
     cpr_res = cpr_resolution;
     abs = absolute;
 }
 
-TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, fe, joint, frequency, historyLength)
+TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, fe, joint, frequency, historyLength)
 {
     cpr_res = cpr_resolution;
     abs = absolute;

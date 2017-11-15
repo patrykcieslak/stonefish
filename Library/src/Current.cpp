@@ -8,7 +8,7 @@
 
 #include "Current.h"
 
-Current::Current(std::string uniqueName, DCMotor* m, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
+Current::Current(std::string uniqueName, DCMotor* m, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {
     motor = m;
     channels.push_back(SensorChannel("Current", QUANTITY_CURRENT));

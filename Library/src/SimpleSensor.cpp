@@ -11,7 +11,7 @@
 #include "SimulationApp.h"
 #include "ScientificFileUtil.h"
 
-SimpleSensor::SimpleSensor(std::string uniqueName,  const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : Sensor(uniqueName, frequency)
+SimpleSensor::SimpleSensor(std::string uniqueName,  const btTransform& geomToSensor, btScalar frequency, int historyLength) : Sensor(uniqueName, frequency)
 {
     g2s = UnitSystem::SetTransform(geomToSensor);
     historyLen = historyLength;
@@ -122,23 +122,34 @@ void SimpleSensor::Reset()
 
 void SimpleSensor::AddSampleToHistory(const Sample& s)
 {
-    if(historyLen > 0 && history.size() == historyLen) // 0 means unlimited history
+    if(historyLen < 0) //No history
     {
-        delete history[0];
-        history.pop_front();
+        if(history.size() > 0)
+        {
+            delete history[0];
+            history.pop_front();
+        }
     }
-    
-    for(unsigned int i=0; i<s.nDim; ++i)
+    else
     {
-        //Add noise
-        if(channels[i].stdDev > btScalar(0))
-            s.data[i] += channels[i].noise(randomGenerator);
+        if(historyLen > 0 && history.size() == historyLen) // 0 means unlimited history
+        {
+            delete history[0];
+            history.pop_front();
+        }
     
-        //Limit readings
-        if(s.data[i] > channels[i].rangeMax)
-            s.data[i] = channels[i].rangeMax;
-        else if(s.data[i] < channels[i].rangeMin)
-            s.data[i] = channels[i].rangeMin;
+        for(unsigned int i=0; i<s.nDim; ++i)
+        {
+            //Add noise
+            if(channels[i].stdDev > btScalar(0))
+                s.data[i] += channels[i].noise(randomGenerator);
+    
+            //Limit readings
+            if(s.data[i] > channels[i].rangeMax)
+                s.data[i] = channels[i].rangeMax;
+            else if(s.data[i] < channels[i].rangeMin)
+                s.data[i] = channels[i].rangeMin;
+        }
     }
     
     //Add to history

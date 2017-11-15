@@ -43,7 +43,7 @@
 #define TEX_SPOT_SHADOW			((GLint)15)
 #define TEX_SPOT_DEPTH			((GLint)16)
 
-typedef enum {SOLID, SOLID_CS, HYDRO, HYDRO_CS, SENSOR_LINES, SENSOR_LINE_STRIP} RenderableType;   
+typedef enum {SOLID, SOLID_CS, HYDRO, HYDRO_CS, SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, ACTUATOR_LINES} RenderableType;   
 
 typedef struct
 {

@@ -9,7 +9,7 @@
 #include "Pressure.h"
 #include "SimulationApp.h"
 
-Pressure::Pressure(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+Pressure::Pressure(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
     channels.push_back(SensorChannel("Pressure", QUANTITY_PRESSURE));

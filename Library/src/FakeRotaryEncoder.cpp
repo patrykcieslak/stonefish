@@ -3,22 +3,27 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
 #include "FakeRotaryEncoder.h"
 
-FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
 {
     Reset();
 }
 
-FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* mb, unsigned int joint, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, mb, joint, frequency, historyLength)
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, FeatherstoneEntity* mb, unsigned int joint, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, mb, joint, frequency, historyLength)
 {
     Reset();
 }
 
-FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency, unsigned int historyLength) : RotaryEncoder(uniqueName, m, frequency, historyLength)
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, Motor* m, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, m, frequency, historyLength)
+{
+    Reset();
+}
+
+FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, Thruster* th, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, th, frequency, historyLength)
 {
     Reset();
 }
@@ -61,29 +66,4 @@ void FakeRotaryEncoder::InternalUpdate(btScalar dt)
     
     Sample s(2, m);
     AddSampleToHistory(s);
-}
-
-btScalar FakeRotaryEncoder::GetRawAngularVelocity()
-{
-    if(revolute != NULL)
-    {
-        return revolute->getAngularVelocity();
-    }
-    else if(multibody != NULL)
-    {
-        btScalar mbAV(0);
-        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        multibody->getJointVelocity(multibodyJoint, mbAV, jt);
-        
-        if(jt == btMultibodyLink::eRevolute)
-            return mbAV;
-        else
-            return btScalar(0);
-    }
-    else if(motor != NULL)
-    {
-        return motor->getAngularVelocity();
-    }
-    else
-        return btScalar(0);
 }

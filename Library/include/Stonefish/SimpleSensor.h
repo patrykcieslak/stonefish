@@ -44,7 +44,8 @@ struct SensorChannel
 class SimpleSensor : public Sensor
 {
 public:
-    SimpleSensor(std::string uniqueName, const btTransform& geomToSensor = btTransform::getIdentity(), btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    //HistoryLength: -1 --> no history, 0 --> unlimited history, >0 --> history with specified number of simulation steps
+    SimpleSensor(std::string uniqueName, const btTransform& geomToSensor = btTransform::getIdentity(), btScalar frequency = btScalar(-1.), int historyLength = -1);
     virtual ~SimpleSensor();
     
 	virtual void Reset();
@@ -71,7 +72,7 @@ protected:
     btTransform g2s;
     
 private:
-    unsigned int historyLen;
+    int historyLen;
 };
 
 #endif

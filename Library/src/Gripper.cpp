@@ -42,7 +42,11 @@ ForceTorque* Gripper::getFT()
 
 void Gripper::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
-    mechanism->AddToDynamicsWorld(world, worldTransform);
+    FeatherstoneEntity* chain = manipulator->getChain();
+    SolidEntity* lastLink = chain->getLink(manipulator->getNumOfLinks()-1).solid;    
+    btTransform trans = lastLink->getTransform() * lastLink->getGeomToCOGTransform().inverse() * worldTransform;
+    
+    mechanism->AddToDynamicsWorld(world, trans);
 	
     fix = new FixedJoint(getName() + "/Fix", mechanism, manipulator->getChain(), -1, manipulator->getNumOfLinks()-2);
     fix->AddToDynamicsWorld(world);
@@ -76,6 +80,11 @@ void Gripper::GetAABB(btVector3& min, btVector3& max)
 
 std::vector<Renderable> Gripper::Render()
 {
-    return mechanism->Render();
+    std::vector<Renderable> items = mechanism->Render();
+    
+    std::vector<Renderable> sens = ft->Render();
+    items.insert(items.end(), sens.begin(), sens.end());
+    
+    return items;
 }
     

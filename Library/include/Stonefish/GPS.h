@@ -15,7 +15,7 @@
 class GPS : public SimpleSensor
 {
 public:
-    GPS(std::string uniqueName, btScalar latitude, btScalar longitude, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    GPS(std::string uniqueName, btScalar latitude, btScalar longitude, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     void SetNoise(btScalar latDev, btScalar longDev);

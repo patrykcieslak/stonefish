@@ -8,7 +8,7 @@
 
 #include "IMU.h"
 
-IMU::IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+IMU::IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
     channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));

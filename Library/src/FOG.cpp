@@ -8,7 +8,7 @@
 
 #include "FOG.h"
 
-FOG::FOG(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+FOG::FOG(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
     channels.push_back(SensorChannel("Heading", QUANTITY_ANGLE));

@@ -15,7 +15,7 @@
 class FOG : public SimpleSensor
 {
 public:
-    FOG(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    FOG(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     void SetNoise(btScalar headingStdDev);

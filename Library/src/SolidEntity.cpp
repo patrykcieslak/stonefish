@@ -616,7 +616,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
     uint64_t start = GetTimeInMicroseconds();
    
 #ifdef DEBUG
-    std::cout << getName() << " " << a.x() << "," << a.y() << "," << a.z() << std::endl; 
+//    std::cout << getName() << " " << a.x() << "," << a.y() << "," << a.z() << std::endl; 
 #endif
    
     //Calculate fluid dynamics forces and torques

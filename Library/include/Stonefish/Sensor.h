@@ -29,6 +29,7 @@ public:
     void Update(btScalar dt);
     void MarkDataOld();
     bool isNewDataAvailable();
+    void setUpdateFrequency(btScalar f);
     bool isRenderable();
     void setRenderable(bool render);
     std::string getName();

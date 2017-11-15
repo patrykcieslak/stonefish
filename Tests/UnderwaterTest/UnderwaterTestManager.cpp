@@ -33,6 +33,7 @@
 #include "Contact.h"
 #include "Camera.h"
 #include "Light.h"
+#include "FakeRotaryEncoder.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::DANTZIG, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -42,8 +43,8 @@ UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond)
 void UnderwaterTestManager::BuildScenario()
 {
     //General
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, true, false, false, false);
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, false, true);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, true, true, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -66,6 +67,8 @@ void UnderwaterTestManager::BuildScenario()
     int propLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 1.f, 1.f), 0.3f, 0.f, GetDataPath() + "propeller_tex.png");
     int ductLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.1f, 0.1f, 0.1f), 0.4f, 0.5f);
     int manipLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.2f, 0.15f, 0.1f), 0.6f, 0.8f);
+    int link4Look = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 1.f, 1.f), 0.6f, 0.8f, GetDataPath() + "link4_tex.png");
+    int eeLook = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.59f, 0.56f, 0.51f), 0.6f, 0.8f);
     
     ////////OBJECTS    
     //Create environment
@@ -140,16 +143,19 @@ void UnderwaterTestManager::BuildScenario()
     Polyhedron* prop3 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
     Polyhedron* prop4 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
     Polyhedron* prop5 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
-    Thruster* thSway = new Thruster("ThrusterSway", prop1, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thSurgeP = new Thruster("ThrusterSurgePort", prop2, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thSurgeS = new Thruster("ThrusterSurgeStarboard", prop3, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", prop4, 0.18, 0.48, 0.05, 100.0);
-    Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", prop5, 0.18, 0.48, 0.05, 100.0);
+    Thruster* thSway = new Thruster("ThrusterSway", prop1, 0.18, 0.48, 0.05, 1000.0);
+    Thruster* thSurgeP = new Thruster("ThrusterSurgePort", prop2, 0.18, 0.48, 0.05, 1000.0);
+    Thruster* thSurgeS = new Thruster("ThrusterSurgeStarboard", prop3, 0.18, 0.48, 0.05, 1000.0);
+    Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", prop4, 0.18, 0.48, 0.05, 1000.0);
+    Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", prop5, 0.18, 0.48, 0.05, 1000.0);
     vehicle->AddThruster(thSway, btTransform(btQuaternion(M_PI_2,M_PI,0), btVector3(-0.0137, 0.0307, -0.38)));
     vehicle->AddThruster(thSurgeP, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,-0.2587,-0.38)));
     vehicle->AddThruster(thSurgeS, btTransform(btQuaternion(0,0,0), btVector3(-0.2807,0.2587,-0.38)));
     vehicle->AddThruster(thHeaveS, btTransform(btQuaternion(0,-M_PI_2,0), btVector3(-0.5337,0.0,-0.6747)));
     vehicle->AddThruster(thHeaveB, btTransform(btQuaternion(0,-M_PI_2,0), btVector3(0.5837,0.0,-0.6747)));
+    
+    FakeRotaryEncoder* enc = new FakeRotaryEncoder("Encoder", thSway, -1, 400);
+    AddSensor(enc);
     
     //Create manipulator
     //-->Create solids
@@ -157,7 +163,7 @@ void UnderwaterTestManager::BuildScenario()
     Polyhedron* link1 = new Polyhedron("ArmLink1", GetDataPath() + "link1_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
     Polyhedron* link2 = new Polyhedron("ArmLink2", GetDataPath() + "link2_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
     Polyhedron* link3 = new Polyhedron("ArmLink3", GetDataPath() + "link3_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
-    Polyhedron* link4 = new Polyhedron("ArmLink4", GetDataPath() + "link4_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
+    Polyhedron* link4 = new Polyhedron("ArmLink4", GetDataPath() + "link4ft_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), link4Look, false);
     
     //-->Build manipulator
 	Manipulator* arm = new Manipulator("Arm", 4, baseLink, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), vehicle->getVehicleBody());
@@ -169,9 +175,13 @@ void UnderwaterTestManager::BuildScenario()
 	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,depth)));
     
     //Create gripper
-    /*Cylinder* hand = new Cylinder("Hand", 0.05, 0.1, getMaterialManager()->getMaterial("Dummy"), manipLook, false);
-    FixedGripper* gripper = new FixedGripper("Gripper", arm, hand);
-    AddSystemEntity(gripper, btTransform(btQuaternion(0,0,M_PI_2), btVector3(1.35,0,2.25)));*/
+    Polyhedron* eeBase = new Polyhedron("EEBase", GetDataPath() + "eeprobe_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), eeLook, false);
+    Sphere* eeTip = new Sphere("EETip", 0.015, getMaterialManager()->getMaterial("Dummy"), eeLook);
+    Compound* ee = new Compound("EndEffector", eeBase, btTransform::getIdentity());
+    ee->AddExternalPart(eeTip, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0.124)));
+    
+    FixedGripper* gripper = new FixedGripper("Gripper", arm, ee);
+    AddSystemEntity(gripper, btTransform(btQuaternion::getIdentity(), btVector3(0,0, 0.05)));
     
     //Add contact sensing between gripper and target
     //Contact* cnt = AddContact(comp, cyl, 1000);

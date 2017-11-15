@@ -14,8 +14,8 @@
 class TrueRotaryEncoder : public RotaryEncoder
 {
 public:
-    TrueRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
-    TrueRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    TrueRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1.), int historyLength = -1);
+    TrueRotaryEncoder(std::string uniqueName, FeatherstoneEntity* fe, unsigned int joint, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     void Reset();

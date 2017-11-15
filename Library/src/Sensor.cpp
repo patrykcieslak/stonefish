@@ -18,8 +18,8 @@ std::mt19937 Sensor::randomGenerator(randomDevice());
 Sensor::Sensor(std::string uniqueName, btScalar frequency)
 {
     name = nameManager.AddName(uniqueName);
-    freq = frequency;
-    eleapsedTime = btScalar(0.);
+    freq = frequency == btScalar(0) ? btScalar(1) : frequency;
+    eleapsedTime = btScalar(0);
     renderable = false;
     newDataAvailable = false;
 }
@@ -37,6 +37,11 @@ std::string Sensor::getName()
 void Sensor::MarkDataOld()
 {
     newDataAvailable = false;
+}
+
+void Sensor::setUpdateFrequency(btScalar f)
+{
+    freq = f == btScalar(0) ? btScalar(1) : f;
 }
 
 bool Sensor::isNewDataAvailable()

@@ -15,7 +15,7 @@
 class IMU : public SimpleSensor
 {
 public:
-    IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    IMU(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     void SetRange(btScalar angularVelocityMax);

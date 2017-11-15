@@ -11,15 +11,15 @@
 #include "OpenGLContent.h"
 #include "MathsUtil.hpp"
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar omegaMax) : Actuator(uniqueName)
+Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar maxRPM) : Actuator(uniqueName)
 {
     D = UnitSystem::SetLength(diameter);
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = btScalar(10.0);
-    ki = btScalar(1.0);
-    iLim = btScalar(1.0);
-    omegaLim = omegaMax;
+    kp = btScalar(15.0);
+    ki = btScalar(3.0);
+    iLim = btScalar(10.0);
+    omegaLim = maxRPM/btScalar(60); //In 1/s
     
     theta = btScalar(0);
     omega = btScalar(0);
@@ -56,6 +56,11 @@ void Thruster::setSetpoint(btScalar value)
 btScalar Thruster::getSetpoint()
 {
     return setpoint;
+}
+
+btScalar Thruster::getAngle()
+{
+    return theta;
 }
 
 btScalar Thruster::getOmega()
@@ -111,7 +116,9 @@ std::vector<Renderable> Thruster::Render()
 	item.model = glMatrixFromBtTransform(thrustTrans);
     items.push_back(item);
     
-    item.type = RenderableType::SOLID_CS;
+    item.type = RenderableType::ACTUATOR_LINES;
+    item.points.push_back(glm::vec3(0,0,0));
+    item.points.push_back(glm::vec3(0.1f*thrust,0,0));
     items.push_back(item);
     
     return items;
@@ -121,27 +128,32 @@ void Thruster::Update(btScalar dt)
 {
     //Update thruster velocity
     btScalar error = setpoint*omegaLim - omega;
-    btScalar epsilon = error*kp + iError*ki;
+    btScalar epsilon = error*kp + iError*ki; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
     iError += error*dt;
     iError = iError > iLim ? iLim : iError;
     
-    omega += epsilon*dt;
-    theta += omega*dt;
-       
+    omega += (epsilon - torque)/btScalar(2.0)*dt; //Damping due to axial torque
+    theta += (omega * btScalar(2) * M_PI)*dt; //Just for animation (in Radians)
+    
     //Get transforms
     btTransform solidTrans;
     btTransform thrustTrans;
+    btVector3 velocity;
     
     if(attach != NULL)
     {
         solidTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse();
         thrustTrans = solidTrans * pos;
+        btVector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
+        velocity = attach->getLinearVelocityInLocalPoint(relPos);
     }
     else if(attachFE != NULL)
     {
         FeatherstoneLink link = attachFE->getLink(linkId);
         solidTrans = link.solid->getTransform() * link.solid->getGeomToCOGTransform().inverse();
         thrustTrans = solidTrans * pos;
+        btVector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
+        velocity = link.solid->getLinearVelocityInLocalPoint(relPos);
     }
     else 
         return;
@@ -151,9 +163,21 @@ void Thruster::Update(btScalar dt)
     
     if(liquid->IsInsideFluid(thrustTrans.getOrigin()))
     {
-        btScalar omega1overS = omega/(2.0*M_PI); 
-        thrust = liquid->getFluid()->density * kT * btFabs(omega1overS)*omega1overS * D*D*D*D;
-        torque = liquid->getFluid()->density * kQ * btFabs(omega1overS)*omega1overS * D*D*D*D*D;
+        //kT depends on advance ratio J = u/(omega*D)
+        btScalar A = M_PI*D*D/btScalar(4);
+        btScalar k1(-0.3);
+        btScalar k2(-0.3);
+        btScalar k3 = btScalar(2)*kT/M_PI;
+        btScalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
+        thrust = btScalar(2) * liquid->getFluid()->density * A * (k1*u*u + k2*u*D*omega + k3*D*D*omega*omega);
+        if(omega < btScalar(0))
+            thrust = -thrust;
+            
+        //btScalar kt = thrust/(liquid->getFluid()->density * D*D*D*D * btFabs(omega)*omega);
+        //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
+        
+        //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
+        torque = liquid->getFluid()->density * kQ * btFabs(omega)*omega * D*D*D*D*D;
         btVector3 thrustV(thrust, 0, 0);
         btVector3 torqueV(torque, 0, 0);
     

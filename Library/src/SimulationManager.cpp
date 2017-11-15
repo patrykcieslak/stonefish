@@ -831,11 +831,12 @@ void SimulationManager::AdvanceSimulation()
     SDL_LockMutex(simInfoMutex);
     physicsTime = physicsEnd - physicsStart;
     
-    btScalar factor1 = (btScalar)deltaTime/(btScalar)physicsTime;
+    /*btScalar factor1 = (btScalar)deltaTime/(btScalar)physicsTime;
     btScalar factor2 = btScalar(1000000.0/60.0)/(btScalar)physicsTime;
     realtimeFactor *=  factor1*factor2;
-    realtimeFactor = realtimeFactor < btScalar(0.05) ? btScalar(0.05) : (realtimeFactor > btScalar(1) ? btScalar(1) : realtimeFactor);
-	
+    realtimeFactor = realtimeFactor < btScalar(0.05) ? btScalar(0.05) : (realtimeFactor > btScalar(1) ? btScalar(1) : realtimeFactor);*/
+	realtimeFactor = btScalar(1);
+    
     //Inform about MLCP failures
 	if(solver != SolverType::SI)
 	{

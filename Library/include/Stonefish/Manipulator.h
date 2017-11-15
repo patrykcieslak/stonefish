@@ -40,6 +40,7 @@ public:
     //void setDesiredJointForce() ???
     
     btScalar GetJointPosition(unsigned int jointId);
+    btScalar GetJointVelocity(unsigned int jointId);
     btScalar GetJointTorque(unsigned int jointId);
     btScalar GetDesiredJointPosition(unsigned int jointId);
     btScalar GetDesiredJointVelocity(unsigned int jointId);

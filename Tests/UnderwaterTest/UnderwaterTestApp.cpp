@@ -13,6 +13,7 @@
 #include "Manipulator.h"
 #include "UnderwaterVehicle.h"
 #include "Pool.h"
+#include "FakeRotaryEncoder.h"
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
     : SimulationApp("Underwater Test", dataDirPath, width, height, sim)
@@ -66,6 +67,13 @@ void UnderwaterTestApp::DoHUD()
     
     slider.item = 11;
     pool->setTurbidity(IMGUI::getInstance()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, pool->getTurbidity(), "Turbidity"));
+    
+    FakeRotaryEncoder* enc = (FakeRotaryEncoder*)getSimulationManager()->getSensor("Encoder");
+    
+    slider.item = 12;
+    std::vector<unsigned short> dims;
+    dims.push_back(1);
+    IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, enc, dims, "Thruster Sway", new btScalar[2]{-20.f,20.f});
     
     /*
     ui_id plot;

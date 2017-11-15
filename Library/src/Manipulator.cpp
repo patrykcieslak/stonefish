@@ -160,6 +160,17 @@ btScalar Manipulator::GetJointPosition(unsigned int jointId)
     return pos; 
 }
 
+btScalar Manipulator::GetJointVelocity(unsigned int jointId)
+{
+	if(jointId >= nLinks-1)
+		return btScalar(0);
+
+    btScalar pos;
+    btMultibodyLink::eFeatherstoneJointType link;
+    chain->getJointVelocity(jointId, pos, link);    
+    return pos; 
+}
+
 btScalar Manipulator::GetJointTorque(unsigned int jointId)
 {
     return btScalar(0);

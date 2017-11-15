@@ -19,7 +19,7 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody->setBaseWorldTransform(btTransform::getIdentity());
     multiBody->setAngularDamping(btScalar(0));
     multiBody->setLinearDamping(btScalar(0));
-    multiBody->setMaxAppliedImpulse(btScalar(1000));
+    multiBody->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     multiBody->setMaxCoordinateVelocity(btScalar(1000));
     multiBody->useRK4Integration(false); //Enabling RK4 causes unreallistic energy accumulation (strange motions in 0 gravity)
     multiBody->useGlobalVelocities(false); //See previous comment

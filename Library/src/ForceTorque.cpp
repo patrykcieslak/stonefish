@@ -7,8 +7,9 @@
 //
 
 #include "ForceTorque.h"
+#include "MathsUtil.hpp"
 
-ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     joint = j;
     attach = attachment;
@@ -73,3 +74,16 @@ void ForceTorque::SetNoise(btScalar forceStdDev, btScalar torqueStdDev)
     channels[5].setStdDev(torqueStdDev);
 }
     
+std::vector<Renderable> ForceTorque::Render()
+{
+    std::vector<Renderable> items(0);
+    
+    btTransform ftTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+    
+    Renderable item;
+    item.type = RenderableType::SENSOR_CS;
+    item.model = glMatrixFromBtTransform(ftTrans);
+    items.push_back(item);
+
+    return items;
+}

@@ -15,7 +15,7 @@
 class Current : public SimpleSensor
 {
 public:
-    Current(std::string uniqueName, DCMotor* m, btScalar frequency = btScalar(-1.), unsigned int historyLength = 0);
+    Current(std::string uniqueName, DCMotor* m, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     void Reset();

@@ -11,7 +11,7 @@
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "MathsUtil.hpp"
 
-DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar beamSpreadAngle, btScalar frequency, unsigned int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar beamSpreadAngle, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
     range[0] = range[1] = range[2] = range[3] = btScalar(0.);
@@ -58,19 +58,7 @@ void DVL::InternalUpdate(btScalar dt)
         if(range[i] < minRange)
             minRange = range[i];
     }
-    
-    //btVector3 from = dvlTrans.getOrigin() - dvlTrans.getBasis().getColumn(2) * channels[3].rangeMin;
-    //btVector3 to = from - dvlTrans.getBasis().getColumn(2) * channels[3].rangeMax;
-    
-    //btCollisionWorld::ClosestRayResultCallback closest(from, to);
-    //SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from, to, closest);
-                
-    //if(closest.hasHit())
-    //{
-    //   btVector3 p = from.lerp(to, closest.m_closestHitFraction);
-    //   altitude = (p - dvlTrans.getOrigin()).length();
-    //}
-    
+   
     //Get velocity
     btVector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocity();
     
@@ -87,22 +75,22 @@ std::vector<Renderable> DVL::Render()
     btTransform dvlTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     
     btVector3 dir[4];
-    dir[0] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) + dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/btScalar(2));
-    dir[1] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) - dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/btScalar(2));
-    dir[2] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) + dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/btScalar(2));
-    dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/btScalar(2));
+    dir[0] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) + btVector3(1,0,0) * btSin(beamAngle/btScalar(2));
+    dir[1] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) - btVector3(1,0,0) * btSin(beamAngle/btScalar(2));
+    dir[2] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) + btVector3(0,1,0) * btSin(beamAngle/btScalar(2));
+    dir[3] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) - btVector3(0,1,0) * btSin(beamAngle/btScalar(2));
     
     Renderable item;
     item.type = RenderableType::SENSOR_LINES;
     item.model = glMatrixFromBtTransform(dvlTrans);
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(dir[0].x()*range[0],dir[0].y()*range[0],dir[0].z()*range[0]));
+    item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(dir[1].x()*range[1],dir[1].y()*range[1],dir[1].z()*range[1]));
+    item.points.push_back(glm::vec3(-dir[1].x()*range[1], -dir[1].y()*range[1], -dir[1].z()*range[1]));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(dir[2].x()*range[2],dir[2].y()*range[2],dir[2].z()*range[2]));
+    item.points.push_back(glm::vec3(-dir[2].x()*range[2], -dir[2].y()*range[2], -dir[2].z()*range[2]));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(dir[3].x()*range[3],dir[3].y()*range[3],dir[3].z()*range[3]));
+    item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
     items.push_back(item);
 
     return items;

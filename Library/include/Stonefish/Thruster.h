@@ -16,12 +16,13 @@
 class Thruster : public Actuator
 {
 public:
-    Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar omegaMax);
+    Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar maxRPM);
     virtual ~Thruster();
 
     void setSetpoint(btScalar value);
     btScalar getSetpoint();
     btScalar getThrust();
+    btScalar getAngle();
     btScalar getOmega();
     
     void Update(btScalar dt);

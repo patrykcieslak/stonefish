@@ -30,6 +30,7 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
 	
 	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, btVector3(0,0,0), pivotInB, btMatrix3x3::getIdentity(), frameInB);
 	setConstraint(fixed);
+    fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
 
     //Disable collision
     SimulationApp::getApp()->getSimulationManager()->DisableCollision(feA->getLink(linkIdA+1).solid, feB->getLink(linkIdB+1).solid);

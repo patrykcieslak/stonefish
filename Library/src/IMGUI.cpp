@@ -700,7 +700,7 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
     return result;
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sens, std::vector<unsigned short>& dims, const char* title, bool plottingEnabled, btScalar fixedRange[2], unsigned int historyLength)
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2])
 {
     bool result = false;
 	GLfloat pltW = w/windowW * 2.f;
@@ -733,28 +733,38 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
     //data
     const std::deque<Sample*>& data = sens->getHistory();
     
-    if(plottingEnabled && data.size() > 1)
+    if(data.size() > 1)
     {
-        //autoscale
-        GLfloat minValue = 1000.f;
-        GLfloat maxValue = -1000.f;
+        GLfloat minValue;
+        GLfloat maxValue;
         
-        for(int i = 0; i < data.size(); i++)
+        if(fixedRange != NULL)
         {
-            for(int n = 0; n < dims.size(); n++)
-            {
-                GLfloat value = (GLfloat)data[i]->getValue(dims[n]);
-                if(value > maxValue)
-                    maxValue = value;
-                else if(value < minValue)
-                    minValue = value;
-            }
+            minValue = fixedRange[0];
+            maxValue = fixedRange[1];
         }
-        
-        if(maxValue == minValue) //secure division by zero
+        else //Autoscale
         {
-            maxValue += 1.f;
-            minValue -= 1.f;
+            minValue = 1000.f;
+            maxValue = -1000.f;
+        
+            for(int i = 0; i < data.size(); i++)
+            {
+                for(int n = 0; n < dims.size(); n++)
+                {
+                    GLfloat value = (GLfloat)data[i]->getValue(dims[n]);
+                    if(value > maxValue)
+                        maxValue = value;
+                    else if(value < minValue)
+                        minValue = value;
+                }
+            }
+        
+            if(maxValue == minValue) //secure division by zero
+            {
+                maxValue += 1.f;
+                minValue -= 1.f;
+            }
         }
         
         GLfloat dy = (pltH-2.f*pltMargin)/(maxValue-minValue);
@@ -846,7 +856,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
     return result;
 }
 
-bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sensX, unsigned short dimX, SimpleSensor* sensY, unsigned short dimY, const char* title, unsigned int historyLength)
+bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sensX, unsigned short dimX, SimpleSensor* sensY, unsigned short dimY, const char* title)
 {
     bool result = false;
     GLfloat pltW = w/windowW * 2.f;
