@@ -132,7 +132,7 @@ void Thruster::Update(btScalar dt)
     iError += error*dt;
     iError = iError > iLim ? iLim : iError;
     
-    omega += (epsilon - torque)/btScalar(2.0)*dt; //Damping due to axial torque
+    omega += (epsilon - torque)*dt; //Damping due to axial torque
     theta += (omega * btScalar(2) * M_PI)*dt; //Just for animation (in Radians)
     
     //Get transforms
@@ -179,7 +179,7 @@ void Thruster::Update(btScalar dt)
         //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
         torque = liquid->getFluid()->density * kQ * btFabs(omega)*omega * D*D*D*D*D;
         btVector3 thrustV(thrust, 0, 0);
-        btVector3 torqueV(torque, 0, 0);
+        btVector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
     
         //Apply forces and torques
         if(attach != NULL)
