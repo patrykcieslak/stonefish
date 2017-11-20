@@ -135,7 +135,7 @@ in vec2 texCoord;
 in vec3 fragPos;
 in vec3 eyeSpaceNormal;
 
-layout(location = 0) out vec4 fragColor;
+layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragNormal;
 
 uniform vec3 eyePos;
@@ -365,18 +365,17 @@ void main()
 	//Ambient
 	vec3 skyIlluminance;
     vec3 sunIlluminance = GetSunAndSkyIlluminance(fragPos - center, N, sunDirection, skyIlluminance);
-    vec3 outColor =  albedo * skyIlluminance/whitePoint/30000.0;
+    fragColor = albedo * skyIlluminance/whitePoint/30000.0;
 	
 	//Sun
-	outColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/30000.0);
+	fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/30000.0);
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
-		outColor += calcPointLightContribution(i, N, toEye, albedo);
+		fragColor += calcPointLightContribution(i, N, toEye, albedo);
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
-		outColor += calcSpotLightContribution(i, N, toEye, albedo);
+		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
 		
 	//Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
-	fragColor = vec4(outColor, 1.0);
 }

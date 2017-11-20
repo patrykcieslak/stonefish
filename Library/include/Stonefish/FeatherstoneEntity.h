@@ -69,6 +69,7 @@ public:
     void ApplyDamping();
     void AddLinkForce(unsigned int index, const btVector3& F);
     void AddLinkTorque(unsigned int index, const btVector3& tau);
+	void UpdateAcceleration(btScalar dt);
     
     //Joints
     void setJointIC(unsigned int index, btScalar position, btScalar velocity);

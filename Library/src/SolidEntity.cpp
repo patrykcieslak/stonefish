@@ -16,27 +16,27 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScal
 {
 	mat = m;
     mass = btScalar(0);
-	Ipri = btVector3(0,0,0);
+	Ipri.setZero();
     volume = btScalar(0);
 	thick = UnitSystem::SetLength(thickness);
-	//aMass = btVector3(0,0,0);
-    //dragCoeff = btVector3(0,0,0);
-    CoB = btVector3(0,0,0);
+    CoB.setZero();
     localTransform = btTransform::getIdentity(); //CoG = (0,0,0)
-    ellipsoidR = btVector3(0,0,0);
+    ellipsoidR.setZero();
     ellipsoidTransform = btTransform::getIdentity();
 	computeHydro = true;
     buoyant = isBuoyant;
-    Fb = btVector3(0,0,0);
-    Tb = btVector3(0,0,0); 
-    Fd = btVector3(0,0,0);
-    Td = btVector3(0,0,0); 
-    Fa = btVector3(0,0,0); 
-    Ta = btVector3(0,0,0);
-    	
-    linearAcc = btVector3(0,0,0);
-    angularAcc = btVector3(0,0,0);
+    Fb.setZero();
+    Tb.setZero();
+    Fd.setZero();
+    Td.setZero();
+    Fa.setZero();
+    Ta.setZero();
     
+	filteredLinearVel.setZero();
+	filteredAngularVel.setZero();
+    linearAcc.setZero();
+    angularAcc.setZero();
+	
     rigidBody = NULL;
     multibodyCollider = NULL;
     
@@ -233,7 +233,7 @@ btVector3 SolidEntity::getLinearVelocity()
         //Get multibody and link id
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
         int index = multibodyCollider->m_link;
-        
+		
         //Start with base velocity
         btVector3 linVelocity = multiBody->getBaseVel(); //Global
         
@@ -257,11 +257,10 @@ btVector3 SolidEntity::getLinearVelocity()
                 }
             }
         }
-        
-        return linVelocity;
+		return linVelocity;
     }
     else
-        return btVector3(0.,0.,0.);
+        return btVector3(0,0,0);
 }
 
 btVector3 SolidEntity::getAngularVelocity()
@@ -294,9 +293,8 @@ btVector3 SolidEntity::getAngularVelocity()
         return angVelocity;
     }
     else
-        return btVector3(0.,0.,0.);
+        return btVector3(0,0,0);
 }
-
 
 btVector3 SolidEntity::getLinearVelocityInLocalPoint(const btVector3& relPos)
 {
@@ -337,9 +335,14 @@ btVector3 SolidEntity::getCOBInGeomFrame()
     return CoB;
 }
 
-btVector3 SolidEntity::getMomentsOfInertia()
+btVector3 SolidEntity::getInertia()
 {
     return Ipri;
+}
+
+btVector3 SolidEntity::getInvInertia()
+{
+	return btVector3(btScalar(1)/Ipri.x(), btScalar(1)/Ipri.y(), btScalar(1)/Ipri.z());
 }
 
 btScalar SolidEntity::getMass()
@@ -475,9 +478,9 @@ void SolidEntity::BuildRigidBody()
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
-        rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
-        //rigidBody->setActivationState(DISABLE_DEACTIVATION);
+		//rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        rigidBody->setActivationState(DISABLE_DEACTIVATION);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
         
@@ -498,10 +501,12 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         multibodyCollider = new btMultiBodyLinkCollider(mb, child - 1);
         multibodyCollider->setUserPointer(this);
         multibodyCollider->setCollisionShape(colShape);
-        multibodyCollider->setFriction(btScalar(0.));
-        multibodyCollider->setRestitution(btScalar(0.));
-        multibodyCollider->setRollingFriction(btScalar(0.));
-        multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        multibodyCollider->setFriction(btScalar(0));
+        multibodyCollider->setRestitution(btScalar(0));
+        multibodyCollider->setRollingFriction(btScalar(0));
+        multibodyCollider->setSpinningFriction(btScalar(0));
+		//multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+		//multibodyCollider->setContactStiffnessAndDamping(10000000.0,0.001);
 		multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
@@ -546,14 +551,26 @@ void SolidEntity::RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world)
     }
 }
 
-void SolidEntity::UpdateAcceleration()
+void SolidEntity::UpdateAcceleration(btScalar dt)
 {
-    if(rigidBody != NULL)
-    {
-        linearAcc = rigidBody->getTotalForce()/mass;
-        btVector3 torque = rigidBody->getTotalTorque();
-        angularAcc = btVector3(torque.x()/Ipri.x(), torque.y()/Ipri.y(), torque.z()/Ipri.z());
-    }
+	//Filter velocity
+	btScalar alpha = 0.5;
+	btVector3 currentLinearVel = alpha * getLinearVelocity() + (btScalar(1)-alpha) * filteredLinearVel;
+	btVector3 currentAngularVel = alpha * getAngularVelocity() + (btScalar(1)-alpha) * filteredAngularVel;
+		
+	//Compute derivative
+	linearAcc = (currentLinearVel - filteredLinearVel)/dt;
+	angularAcc = (currentAngularVel - filteredAngularVel)/dt;
+		
+	//Update filtered
+	filteredLinearVel = currentLinearVel;
+	filteredAngularVel = currentAngularVel;
+}
+
+void SolidEntity::SetAcceleration(const btVector3& lin, const btVector3& ang)
+{
+	linearAcc = lin;
+	angularAcc = ang;
 }
 
 void SolidEntity::ApplyGravity()

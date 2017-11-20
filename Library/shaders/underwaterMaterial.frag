@@ -135,7 +135,7 @@ in vec2 texCoord;
 in vec3 fragPos;
 in vec3 eyeSpaceNormal;
 
-layout(location = 0) out vec4 fragColor;
+layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragNormal;
 
 uniform vec3 eyePos;
@@ -159,6 +159,7 @@ uniform sampler2DArrayShadow sunShadowMap;
 uniform float planetRadius;
 uniform vec3 whitePoint;
 uniform vec3 lightAbsorption;
+uniform float turbidity;
 
 const float water2Air = 1.33/1.0;
 
@@ -288,7 +289,8 @@ float calcSunShadow(float waterDepth)
 	shadowCoord.z += 0.001; //Bias
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
 	
-	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]) * exp(waterDepth/5.0);
+	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
+	radiusUV *= exp(waterDepth/5.0);// * turbidity/10.0; //Underwater shadow blur
 	
 	// STEP 1: blocker search
     float accumBlockerDepth, numBlockers, maxBlockers;
@@ -354,7 +356,7 @@ vec3 calcSunContribution(vec3 N, vec3 toEye, float waterDepth, vec3 albedo, vec3
 void main()
 {	
 	//Common
-    fragColor = vec4(0.);
+    fragColor = vec3(0.);
 	vec3 N = normalize(normal);
 	vec3 toEye = normalize(eyePos - fragPos);
 	vec3 center = vec3(0,0,-planetRadius);
@@ -377,31 +379,28 @@ void main()
 	{
 		//Ambient
 		sunIlluminance = GetSunAndSkyIlluminance(vec3(fragPos.xy, 0.0) - center, toSky, sunDirection, skyIlluminance);
-		fragColor.rgb += albedo * skyIlluminance / 30000.0;
+		fragColor += albedo * skyIlluminance / 30000.0;
 	
 		//Sun
-		fragColor.rgb += calcSunContribution(N, toEye, depth, albedo, sunIlluminance / 30000.0);
+		fragColor += calcSunContribution(N, toEye, depth, albedo, sunIlluminance / 30000.0);
 		
 		//Attenuation
-		fragColor.rgb *= exp(-lightAbsorption*(depth + distance));
+		fragColor *= exp(-lightAbsorption*(turbidity/100.0)*(depth + distance));
 	}
 		
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
-		fragColor.rgb += calcPointLightContribution(i, N, toEye, albedo);
+		fragColor += calcPointLightContribution(i, N, toEye, albedo);
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
-		fragColor.rgb += calcSpotLightContribution(i, N, toEye, albedo);
+		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
 		
 	//Inscatter
 	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 a = lightAbsorption;
-    float b = 0.5*length(a);
-    vec3 fogColor = skyIlluminance/whitePoint/30000.0 * exp(-a * -min(-5.0, eyePos.z));
-    float fogFactor = 1.0 - exp(-b*distance);
-    fragColor.rgb = mix(fragColor.rgb, fogColor, fogFactor)/2.0;
-    fragColor.a = 1.0 - fogFactor;
-	
+    vec3 fogColor = skyIlluminance/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z));
+    float fogFactor = 1.0 - exp(-(turbidity/1000.0)*distance);
+    fragColor = mix(fragColor.rgb, fogColor, fogFactor);
+   
     //Normal
 	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
 }

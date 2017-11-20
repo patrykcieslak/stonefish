@@ -25,7 +25,9 @@ public:
 	void DrawVolume(GLuint sceneTexture, GLuint linearDepthTex);
     
     void setLightAbsorptionCoeff(glm::vec3 a);
+	void setTurbidity(GLfloat tur);
     glm::vec3 getLightAbsorptionCoeff();
+	GLfloat getTurbidity();
     
 private:    
     GLuint vao;
@@ -33,6 +35,7 @@ private:
     GLSLShader* poolShaders[4]; //Surface, backsurface, background, volume
 	GLfloat t;
     glm::vec3 lightAbsorption;
+	GLfloat turbidity;
 };
 
 #endif

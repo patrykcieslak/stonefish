@@ -41,7 +41,7 @@ void ForceTorque::InternalUpdate(btScalar dt)
     btTransform ftTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     force = ftTrans.getBasis().inverse() * force;
     torque = ftTrans.getBasis().inverse() * torque;
-    
+	
     btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
     Sample s(6, values);
     AddSampleToHistory(s);

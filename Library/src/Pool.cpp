@@ -12,6 +12,7 @@ Pool::Pool(std::string uniqueName, Fluid* f) : Liquid(uniqueName, f)
 {
     algeaBloom = 0.2f;
     turbidity = 100.f;
+	glPool.setTurbidity(turbidity);
     glPool.setLightAbsorptionCoeff(ComputeLightAbsorption());
 }
 
@@ -34,7 +35,7 @@ void Pool::setAlgeaBloomFactor(GLfloat f)
 void Pool::setTurbidity(GLfloat ntu)
 {
     turbidity = ntu < 0.f ? 0.f : ntu;
-    glPool.setLightAbsorptionCoeff(ComputeLightAbsorption());
+	glPool.setTurbidity(turbidity);
 }
     
 GLfloat Pool::getAlgeaBloomFactor()
@@ -49,6 +50,5 @@ GLfloat Pool::getTurbidity()
 
 glm::vec3 Pool::ComputeLightAbsorption()
 {
-    glm::vec3 absorption = glm::vec3(0.2f+0.2f*(algeaBloom), 0.02f, 0.02f+0.02f*(algeaBloom));
-    return expf(turbidity/1000.f)*absorption;
+    return glm::vec3(0.2f+0.2f*(algeaBloom), 0.02f, 0.02f+0.02f*(algeaBloom));
 }

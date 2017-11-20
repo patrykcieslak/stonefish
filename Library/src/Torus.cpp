@@ -54,6 +54,6 @@ SolidType Torus::getSolidType()
 btCollisionShape* Torus::BuildCollisionShape()
 {
     TorusShape* colShape = new TorusShape(majorRadius, minorRadius);
-    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
+    colShape->setMargin(btScalar(0.0));
     return colShape;
 }

@@ -10,9 +10,10 @@
 
 #include "Manipulator.h"
 #include "NativeDialog.h"
+#include "Accelerometer.h"
 
-FallingTestApp::FallingTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, FallingTestManager* sim) 
-    : SimulationApp("Falling Test", dataDirPath, shaderDirPath, width, height, sim)
+FallingTestApp::FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim) 
+    : SimulationApp("Falling Test", dataDirPath, width, height, sim)
 {
     checked = false;
 }
@@ -20,6 +21,18 @@ FallingTestApp::FallingTestApp(std::string dataDirPath, std::string shaderDirPat
 void FallingTestApp::DoHUD()
 {
     SimulationApp::DoHUD();
+    
+	ui_id slider;
+    slider.owner = 1;
+    slider.item = 0;
+	slider.index = 0;
+	getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    
+	slider.item = 1;
+	std::vector<unsigned short> dims;
+    dims.push_back(2);
+	Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");
+    IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Acceleration", new btScalar[2]{0.0, 1000.0});
     
     //Left side
     /*ui_id button;

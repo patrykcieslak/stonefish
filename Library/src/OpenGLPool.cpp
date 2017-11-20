@@ -21,6 +21,7 @@ OpenGLPool::OpenGLPool()
 	poolShaders[3] = NULL;
 	t = 0;
     lightAbsorption = glm::vec3(0.f);
+	turbidity = 0.f;
 }
 
 OpenGLPool::~OpenGLPool()
@@ -35,9 +36,19 @@ void OpenGLPool::setLightAbsorptionCoeff(glm::vec3 a)
     lightAbsorption = a;
 }
 
+void OpenGLPool::setTurbidity(GLfloat tur)
+{
+	turbidity = tur < 1.f ? 1.f : tur;
+}
+
 glm::vec3 OpenGLPool::getLightAbsorptionCoeff()
 {
     return lightAbsorption;
+}
+
+GLfloat OpenGLPool::getTurbidity()
+{
+	return turbidity;
 }
 
 void OpenGLPool::Init()
@@ -97,6 +108,7 @@ void OpenGLPool::Init()
 	poolShaders[1]->AddUniform("R0", ParameterType::FLOAT);
 	poolShaders[1]->AddUniform("time", ParameterType::FLOAT);
     poolShaders[1]->AddUniform("lightAbsorption", ParameterType::VEC3);
+	poolShaders[1]->AddUniform("turbidity", ParameterType::FLOAT);
 	poolShaders[1]->AddUniform("texReflection", ParameterType::INT);
 	poolShaders[1]->AddUniform("transmittance_texture", ParameterType::INT);
 	poolShaders[1]->AddUniform("scattering_texture", ParameterType::INT);
@@ -169,6 +181,7 @@ void OpenGLPool::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pro
 	poolShaders[1]->SetUniform("R0", R0);
 	poolShaders[1]->SetUniform("time", t);
     poolShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
+	poolShaders[1]->SetUniform("turbidity", turbidity);
     OpenGLAtmosphere::getInstance()->SetupOceanShader(poolShaders[1]);
 	t+= 0.01;
 	

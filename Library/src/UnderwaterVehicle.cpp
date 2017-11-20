@@ -104,15 +104,16 @@ void UnderwaterVehicle::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, cons
 
 void UnderwaterVehicle::UpdateAcceleration(btScalar dt)
 {
-   	btVector3 linearVel = vehicleBody->getLinkLinearVelocity(0);
+   	/*btVector3 linearVel = vehicleBody->getLinkLinearVelocity(0);
 	linearAcc = (linearVel - lastLinearVel)/dt;
 	lastLinearVel = linearVel;
 		
 	btVector3 angularVel = vehicleBody->getLinkAngularVelocity(0);
 	angularAcc = (angularVel - lastAngularVel)/dt;
-	lastAngularVel = angularVel;
+	lastAngularVel = angularVel;*/
 		
 	//std::cout << "Acc: " << linearAcc.x() << ", " << linearAcc.y() << ", " << linearAcc.z() << std::endl;
+	vehicleBody->UpdateAcceleration(dt);
 }
 
 void UnderwaterVehicle::UpdateSensors(btScalar dt)

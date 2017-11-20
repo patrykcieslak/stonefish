@@ -437,6 +437,7 @@ void OpenGLContent::Init()
 	uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
 	uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("lightAbsorption", ParameterType::VEC3);
+	uwBlinnPhong->AddUniform("turbidity", ParameterType::FLOAT);
 	
 	uwBlinnPhong->AddUniform("numPointLights", ParameterType::INT);
 	uwBlinnPhong->AddUniform("numSpotLights", ParameterType::INT);
@@ -500,6 +501,7 @@ void OpenGLContent::Init()
 	uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
 	uwCookTorrance->AddUniform("lightAbsorption", ParameterType::VEC3);
+	uwCookTorrance->AddUniform("turbidity", ParameterType::FLOAT);
     
 	uwCookTorrance->AddUniform("numPointLights", ParameterType::INT);
 	uwCookTorrance->AddUniform("numSpotLights", ParameterType::INT);
@@ -1016,6 +1018,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
         {
             Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getLiquid();
             shader->SetUniform("lightAbsorption", pool->getOpenGLPool().getLightAbsorptionCoeff());
+			shader->SetUniform("turbidity", pool->getOpenGLPool().getTurbidity());
         }
 	}
 	

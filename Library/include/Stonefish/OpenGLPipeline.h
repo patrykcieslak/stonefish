@@ -88,7 +88,7 @@ private:
     
     bool renderShadows;
     bool renderFluid;
-    bool renderSAO;
+    bool renderAO;
     
     bool drawDebug;
     bool showCoordSys;

@@ -27,7 +27,6 @@ void main()
 {
 	vec3 toEye = -getWorldNormal();
 	vec3 center = vec3(0,0,-planetRadius);
-	float distance = 1000000.0;
 	
 	vec3 skyIlluminance;
 	vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);

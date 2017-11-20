@@ -15,7 +15,7 @@
 class FallingTestApp : public SimulationApp
 {
 public:
-    FallingTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, FallingTestManager* sim);
+    FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim);
     void DoHUD();
     
 private:

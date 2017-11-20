@@ -12,7 +12,8 @@ uniform vec3 sunDirection;
 uniform float planetRadius;
 uniform vec3 whitePoint;
 uniform float cosSunSize;
-uniform vec3  lightAbsorption;// = vec3(0.3,0.08,0.07);
+uniform vec3  lightAbsorption;
+uniform float turbidity;
 
 const float w2a = 1.33/1.0;
 
@@ -115,14 +116,12 @@ void main()
 	fragColor = fresn * reflectedColor.rgb + (1.0-fresn) * Lsky/whitePoint/10000.0;
 	
 	//Absorption
-	fragColor *= exp(-lightAbsorption*distance);
+	fragColor *= exp(-lightAbsorption*(turbidity/100.0)*distance);
 	
 	//Inscatter
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(P, vec3(0,0,1.0), sunDirection, Isky);
-    vec3 a = lightAbsorption;
-    float b = 0.5*length(a);
-    vec3 fogColor = Isky/whitePoint/30000.0 * exp(-a * -min(-5.0, eyePos.z));
-    float fogFactor = 1.0 - exp(-b*distance);
+    vec3 fogColor = Isky/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z));
+    float fogFactor = 1.0 - exp(-(turbidity/1000.0)*distance);
     fragColor = mix(fragColor, fogColor, fogFactor);
 }

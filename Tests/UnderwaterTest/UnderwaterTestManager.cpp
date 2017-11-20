@@ -36,14 +36,14 @@
 #include "FakeRotaryEncoder.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
-    : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::DANTZIG, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
+    : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
 {
 }
 
 void UnderwaterTestManager::BuildScenario()
 {
     //General
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, false, true);
+    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
     OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, true, true, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     

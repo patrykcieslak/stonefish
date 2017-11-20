@@ -128,7 +128,7 @@ void Compound::RecalculatePhysicalProperties()
     for(unsigned int i=0; i<parts.size(); ++i)
     {
         //Calculate inertia matrix 3x3 of solid in the global frame and COG
-        btVector3 solidPriInertia = parts[i].solid->getMomentsOfInertia();
+        btVector3 solidPriInertia = parts[i].solid->getInertia();
         btMatrix3x3 solidInertia = btMatrix3x3(solidPriInertia.x(), 0, 0, 0, solidPriInertia.y(), 0, 0, 0, solidPriInertia.z());
             
         //Rotate inertia tensor from local to global

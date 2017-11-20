@@ -12,7 +12,7 @@
 
 Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint) : SystemEntity(uniqueName)
 {
-	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), true);
+	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
     DH.push_back(geomToJoint);
@@ -91,8 +91,7 @@ void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTr
 
 void Manipulator::UpdateAcceleration(btScalar dt)
 {	
-    //for(unsigned int i=0; i<nLinks-1; ++i)
-    //    std::cout << "Motor " << i << " torque: " << motorTorque[i] << std::endl;
+	chain->UpdateAcceleration(dt);
 }
 
 void Manipulator::UpdateSensors(btScalar dt)

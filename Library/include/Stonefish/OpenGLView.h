@@ -81,7 +81,7 @@ public:
 	void GenerateLinearDepth(int sampleId);
 	void GenerateBlurArray();
 	void EnterPostprocessing();
-    void DrawAO();
+    void DrawAO(GLfloat intensity);
 	void DrawHDR(GLuint destinationFBO);
 	
 	void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);

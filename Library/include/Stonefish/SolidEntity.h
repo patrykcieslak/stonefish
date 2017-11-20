@@ -36,7 +36,7 @@ public:
     virtual void BuildGraphicalObject();
 	
 	//Computation
-    void UpdateAcceleration();
+    void UpdateAcceleration(btScalar dt);
     virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
 									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta);
     virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid);
@@ -51,12 +51,14 @@ public:
 	void ScalePhysicalPropertiesToArbitraryMass(btScalar mass);
     void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& geomToCOG);
 	void SetHydrodynamicProperties(const eigMatrix6x6& addedMass, const eigMatrix6x6& damping, const btTransform& geomToCOB);
+	void SetAcceleration(const btVector3& lin, const btVector3& ang);
+	
 	void setComputeHydrodynamics(bool flag);
     void setTransform(const btTransform& trans);
-	
 	btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
-    btVector3 getMomentsOfInertia();
+    btVector3 getInertia();
+	btVector3 getInvInertia();
     btScalar getMass();
     Material getMaterial();
     btScalar getVolume();
@@ -114,6 +116,8 @@ protected:
     btVector3 Ta;
 	
     //Motion
+	btVector3 filteredLinearVel;
+	btVector3 filteredAngularVel;
     btVector3 linearAcc;
     btVector3 angularAcc;
     

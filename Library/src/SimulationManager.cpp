@@ -540,12 +540,12 @@ void SimulationManager::InitializeSolver()
     
     //Collision
     dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = btScalar(-0.001); //value close to zero needed for accurate friction/too close to zero causes multibody sinking
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = btScalar(1.); //error reduction for rigid body angular velocity
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = btScalar(0.0); //value close to zero needed for accurate friction/too close to zero causes multibody sinking
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = btScalar(1.0); //error reduction for rigid body angular velocity
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
-    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = btScalar(-0.001);
+    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = btScalar(0.0);
     dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
-    dynamicsWorld->getSolverInfo().m_restingContactRestitutionThreshold = INT_MAX; //not used
+	dynamicsWorld->getSolverInfo().m_restitutionVelocityThreshold = btScalar(0.05); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
     
     //Special forces
     dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = btScalar(1e30); //gyroscopic effect
@@ -583,7 +583,7 @@ void SimulationManager::InitializeScenario()
         {
             //Plane
             getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
-            std::string path = GetDataPath() + "grid.png";
+            std::string path = GetShaderPath() + "grid.png";
             int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
             
             Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
@@ -844,7 +844,9 @@ void SimulationManager::AdvanceSimulation()
 		if(numFallbacks)
 		{
 			mlcpFallbacks += numFallbacks;
-			//cInfo("MLCP solver failed %d times.", mlcpFallbacks);
+#ifdef DEBUG
+			std::cout << "MLCP solver failed " << mlcpFallbacks << " times." << std::endl;
+#endif
 		}
 		((ResearchConstraintSolver*)dwSolver)->setNumFallbacks(0);
 	}
@@ -975,22 +977,23 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     {
 		StaticEntity* sent0 = (StaticEntity*)ent0;
         mat0 = sent0->getMaterial();
-        contactVelocity0 = btVector3(0.,0.,0.);
-        contactAngularVelocity0 = btScalar(0.);
+        contactVelocity0.setZero();
+        contactAngularVelocity0 = btScalar(0);
     }
     else if(ent0->getType() == ENTITY_SOLID)
     {
         SolidEntity* sent0 = (SolidEntity*)ent0;
         mat0 = sent0->getMaterial();
-        btVector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
-        contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
-        contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
+		//btVector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
+		btVector3 localPoint0 = sent0->getTransform().inverse() * cp.getPositionWorldOnA();
+		contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
+		contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
     }
     else
     {
-        cp.m_combinedFriction = btScalar(0.);
-        cp.m_combinedRollingFriction = btScalar(0.);
-        cp.m_combinedRestitution = btScalar(0.);
+        cp.m_combinedFriction = btScalar(0);
+        cp.m_combinedRollingFriction = btScalar(0);
+        cp.m_combinedRestitution = btScalar(0);
         return true;
     }
     
@@ -1002,25 +1005,26 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     {
 		StaticEntity* sent1 = (StaticEntity*)ent1;
         mat1 = sent1->getMaterial();
-        contactVelocity1 = btVector3(0.,0.,0.);
-        contactAngularVelocity1 = btScalar(0.);
+        contactVelocity1.setZero();
+        contactAngularVelocity1 = btScalar(0);
     }
     else if(ent1->getType() == ENTITY_SOLID)
     {
         SolidEntity* sent1 = (SolidEntity*)ent1;
         mat1 = sent1->getMaterial();
-        btVector3 localPoint1 = sent1->getTransform().getBasis() * cp.m_localPointB;
+        //btVector3 localPoint1 = sent1->getTransform().getBasis() * cp.m_localPointB;
+		btVector3 localPoint1 = sent1->getTransform().inverse() * cp.getPositionWorldOnB();
         contactVelocity1 = sent1->getLinearVelocityInLocalPoint(localPoint1);
         contactAngularVelocity1 = sent1->getAngularVelocity().dot(cp.m_normalWorldOnB);
     }
     else
     {
-        cp.m_combinedFriction = btScalar(0.);
-        cp.m_combinedRollingFriction = btScalar(0.);
-        cp.m_combinedRestitution = btScalar(0.);
+        cp.m_combinedFriction = btScalar(0);
+        cp.m_combinedRollingFriction = btScalar(0);
+        cp.m_combinedRestitution = btScalar(0);
         return true;
     }
-    
+	
     btVector3 relLocalVel = contactVelocity1 - contactVelocity0;
     btVector3 normalVel = cp.m_normalWorldOnB * cp.m_normalWorldOnB.dot(relLocalVel);
     btVector3 slipVel = relLocalVel - normalVel;
@@ -1031,7 +1035,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
 	cp.m_combinedFriction = (f.fStatic - f.fDynamic)/(sigma * slipVelMod * slipVelMod + btScalar(1)) + f.fDynamic;
 	
     //Rolling friction not possible to generalize - needs special treatment
-    cp.m_combinedRollingFriction = btScalar(0.);
+    cp.m_combinedRollingFriction = btScalar(0);
     
     //Slipping
     cp.m_userPersistentData = (void *)(new btVector3(slipVel));
@@ -1055,7 +1059,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     //Restitution
     cp.m_combinedRestitution = mat0.restitution * mat1.restitution;
     
-    //printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
+    printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
     
     return true;
 }
@@ -1246,15 +1250,20 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, btSca
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
 	
 	//Update acceleration data
-    for(unsigned int i = 0 ; i < simManager->entities.size(); ++i)
+	for(unsigned int i = 0 ; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];
             
         if(ent->getType() == ENTITY_SOLID)
         {
             SolidEntity* solid = (SolidEntity*)ent;
-            solid->UpdateAcceleration();
+            solid->UpdateAcceleration(timeStep);
         }
+		else if(ent->getType() == ENTITY_FEATHERSTONE)
+		{
+			FeatherstoneEntity* fe = (FeatherstoneEntity*)ent;
+			fe->UpdateAcceleration(timeStep);
+		}
 		else if(ent->getType() == ENTITY_SYSTEM)
 		{
 			SystemEntity* sys = (SystemEntity*)ent;

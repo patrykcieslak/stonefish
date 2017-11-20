@@ -34,7 +34,7 @@ OpenGLPipeline* OpenGLPipeline::getInstance()
 
 OpenGLPipeline::OpenGLPipeline()
 {
-	renderShadows = renderFluid = renderSAO = false;
+	renderShadows = renderFluid = renderAO = false;
     showCoordSys = showJoints = showActuators = showSensors = false;
     showLightMeshes = showCameraFrustums = false;
     drawingQueueMutex = SDL_CreateMutex();
@@ -55,7 +55,7 @@ void OpenGLPipeline::setRenderingEffects(bool shadows, bool fluid, bool ambientO
 {
     renderShadows = shadows;
     renderFluid = fluid;
-    renderSAO = ambientOcclusion;
+    renderAO = ambientOcclusion;
 }
 
 void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics)
@@ -81,7 +81,7 @@ bool OpenGLPipeline::isFluidRendered()
 
 bool OpenGLPipeline::isSAORendered()
 {
-    return renderSAO;
+    return renderAO;
 }
 
 GLuint OpenGLPipeline::getScreenTexture()
@@ -263,7 +263,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				DrawObjects();
             
 				//Ambient occlusion
-				view->DrawAO();
+				if(renderAO)
+					view->DrawAO(1.f);
 			
 				//Render sky
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
@@ -296,7 +297,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					OpenGLContent::getInstance()->DisableClipPlane();
                     
                     //Ambient occlusion
-					view->DrawAO();
+					if(renderAO)
+						view->DrawAO(1.f);
 			
 					//Generate reflection texture
 					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());
@@ -349,7 +351,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					OpenGLContent::getInstance()->DisableClipPlane();
 					
 					//Ambient occlusion
-					view->DrawAO();
+					if(renderAO)
+					{
+						GLfloat factor = expf(-glPool.getTurbidity()/1000.f);
+						factor *= factor*factor;
+						view->DrawAO(factor);
+					}
 					
 					//Render planar reflection
 					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());

@@ -26,8 +26,9 @@
 #include "UnderwaterVehicle.h"
 #include "Thruster.h"
 #include "Compound.h"
+#include "Accelerometer.h"
 
-FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG, EXCLUSIVE)
+FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, SI, EXCLUSIVE)
 {
 }
 
@@ -35,11 +36,11 @@ void FallingTestManager::BuildScenario()
 {
 	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
     OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, false, false);
-	OpenGLPipeline::getInstance()->setDebugSimulation(true);
+	OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setICSolverParams(false);
 	
     ///////MATERIALS////////
-	getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 1.0), 0.7);
+	getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 1.0), 1.0);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
@@ -54,13 +55,14 @@ void FallingTestManager::BuildScenario()
 	
     //Parts of vehicle body
 	//Polyhedron* hull = new Polyhedron("Solid", path, btScalar(0.001), getMaterialManager()->getMaterial("Steel"), yellow, true);
-    Cylinder* hull = new Cylinder("Hull", 0.15, 1.5, getMaterialManager()->getMaterial("Steel"), yellow, -1, true);
+    //Cylinder* hull = new Cylinder("Hull", 0.15, 1.5, getMaterialManager()->getMaterial("Steel"), yellow, -1, true);
 	
 	//Vehicle body
-	Compound* comp = new Compound("Compound", hull, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
-	comp->AddExternalPart(hull, btTransform(btQuaternion::getIdentity(), btVector3(0.35,0,0.7)));
-	comp->AddExternalPart(hull, btTransform(btQuaternion::getIdentity(), btVector3(-0.35,0,0.7)));
-    AddSolidEntity(comp, btTransform::getIdentity());
+	//Compound* comp = new Compound("Compound", hull, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+	//comp->AddExternalPart(hull, btTransform(btQuaternion::getIdentity(), btVector3(0.35,0,0.7)));
+	//comp->AddExternalPart(hull, btTransform(btQuaternion::getIdentity(), btVector3(-0.35,0,0.7)));
+    //AddSolidEntity(comp, btTransform::getIdentity());
+	
 	/*UnderwaterVehicle* vehicle = new UnderwaterVehicle("AUV", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,2)));
 	AddSystemEntity(vehicle, btTransform::getIdentity());
 	
@@ -70,30 +72,30 @@ void FallingTestManager::BuildScenario()
 	AddSystemEntity(th, btTransform::getIdentity());
 	
 	th->SetDesiredSpeed(5000);
+	*/
 	
     Box* link1A = new Box("Link1A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
 	Box* link2A = new Box("Link2A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
 	Box* link3A = new Box("Link3A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
 	
-	Sphere* baseA = new Sphere("BaseA", 0.1f, getMaterialManager()->getMaterial("Steel"), green);
-	Manipulator* manipA = new Manipulator("ArmA", 3, baseA, vehicle->getVehicleBody());
-	manipA->AddRotLinkDH(link1A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	manipA->AddRotLinkDH(link2A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
-	manipA->AddRotLinkDH(link3A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	Sphere* baseA = new Sphere("BaseA", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
+	//Torus* baseA = new Torus("BaseA", 0.25,0.1,getMaterialManager()->getMaterial("Steel"), green);
+	AddSolidEntity(baseA, btTransform(btQuaternion::getIdentity(), btVector3(0,0,2)));
+	
+	Sphere* baseB = new Sphere("BaseB", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
+	FeatherstoneEntity* fe = new FeatherstoneEntity("Test", 1, baseB, getDynamicsWorld(), false);
+	AddFeatherstoneEntity(fe, btTransform(btQuaternion::getIdentity(), btVector3(2,0,2)));
+	
+	
+	//Manipulator* manipA = new Manipulator("ArmA", 1, baseA, btTransform::getIdentity());
+	//manipA->AddRotLinkDH(link1A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	//manipA->AddRotLinkDH(link2A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
+	//manipA->AddRotLinkDH(link3A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);
 	//AddSystemEntity(manipA, btTransform(btQuaternion(M_PI_2, 0, M_PI_2), btVector3(0.1,0.75,1.5)));
 	
+	Accelerometer* acc = new Accelerometer("Acc", baseB, btTransform::getIdentity(), -1.0, 0);
+	AddSensor(acc);
 	
-	Box* link1B = new Box("Link1B", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
-	Box* link2B = new Box("Link2B", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
-	Box* link3B = new Box("Link3B", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
-	
-	Sphere* baseB = new Sphere("BaseB", 0.1f, getMaterialManager()->getMaterial("Steel"), green);
-	Manipulator* manipB = new Manipulator("ArmB", 3, baseB, vehicle->getVehicleBody());
-	manipB->AddRotLinkDH(link1B, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.5f, M_PI_2);
-	manipB->AddRotLinkDH(link2B, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.5f, 0);
-	manipB->AddRotLinkDH(link3B, btTransform(btQuaternion::getIdentity(), btVector3(-0.25f,0,0)), 0, 0.5f, 0);
-	AddSystemEntity(manipB, btTransform(btQuaternion(M_PI_2, 0, M_PI_2), btVector3(-0.1,0.75,1.5)));
-	*/
 	////////////////////////////// EVERYTHING ///////////////////////////////////
 	
     ///////LOOKS///////////
@@ -152,8 +154,8 @@ void FallingTestManager::BuildScenario()
 	//FakeIMU* imu = new FakeIMU("IMU", vehicle, btTransform::getIdentity());
 	//AddSensor(imu);
 	
-    Light* omni = new Light("Omni", btVector3(-2,2,2), OpenGLLight::ColorFromTemperature(4500, 1000000));
-    AddActuator(omni);
+    //Light* omni = new Light("Omni", btVector3(-2,2,2), OpenGLLight::ColorFromTemperature(4500, 1000000));
+    //AddActuator(omni);
     //Light* spot = new Light("Spot", btVector3(5.f, 5.f, 5.f), btVector3(-1.f,-1.f,-1.f), 30.f, OpenGLLight::ColorFromTemperature(4500, 2000000));
     //AddActuator(spot);
     //Camera* cam = new Camera("Camera", btVector3(10,0,10000000), btVector3(0,0,0), btVector3(0,0,1.), 0, 0, FallingTestApp::getApp()->getWindowWidth()/3, FallingTestApp::getApp()->getWindowHeight()/3, 60.f);

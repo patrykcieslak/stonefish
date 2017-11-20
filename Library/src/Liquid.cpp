@@ -95,10 +95,12 @@ void Liquid::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world
 		else
 			ent = (Entity*)mbl->getUserPointer();
 	}
+	else
+		return;
 	
 	HydrodynamicsSettings settings;
 	settings.algorithm = ht;
-	settings.addedMassForces = true;
+	settings.addedMassForces = false;
 	settings.dampingForces = true;
 	settings.reallisticBuoyancy = true;
 	

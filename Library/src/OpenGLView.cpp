@@ -41,7 +41,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 	{
 		glGenTextures(1, &renderColorTex);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderColorTex);
-		glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA16F, viewportWidth, viewportHeight, GL_FALSE);
+		glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB16F, viewportWidth, viewportHeight, GL_FALSE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		
 		glGenTextures(1, &renderViewNormalTex);
@@ -58,7 +58,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
 	{
 		glGenTextures(1, &renderColorTex);
 		glBindTexture(GL_TEXTURE_2D, renderColorTex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, viewportWidth, viewportHeight);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB16F, viewportWidth, viewportHeight);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		
 		glGenTextures(1, &renderViewNormalTex);
@@ -580,7 +580,7 @@ GLuint OpenGLView::getLinearDepthTexture()
 	return linearDepthTex;
 }
 
-void OpenGLView::DrawAO()
+void OpenGLView::DrawAO(GLfloat intensity)
 {
     if(hasAO())
     {
@@ -604,7 +604,7 @@ void OpenGLView::DrawAO()
 		aoData.R2 = R * R;
 		aoData.NegInvR2 = -1.f/aoData.R2;
 		aoData.RadiusToScreen = R * 0.5f * projScale;
-		aoData.PowExponent = 0.8f; //intensity
+		aoData.PowExponent = intensity < 0.f ? 0.f : intensity; //intensity
 		aoData.NDotVBias = 0.01f;  //<0,1>
 		aoData.AOMultiplier = 1.f/(1.f-aoData.NDotVBias);
 		aoData.InvQuarterResolution = invQuarterRes;
@@ -706,7 +706,8 @@ void OpenGLView::DrawAO()
 			glDepthMask(GL_FALSE);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);
+			//glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
             
 			if(samples>1)
 			{
