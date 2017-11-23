@@ -31,8 +31,8 @@ void FallingTestApp::DoHUD()
 	slider.item = 1;
 	std::vector<unsigned short> dims;
     dims.push_back(2);
-	Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");
-    IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Acceleration", new btScalar[2]{0.0, 1000.0});
+	//Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");
+    //IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Acceleration", new btScalar[2]{0.0, 1000.0});
     
     //Left side
     /*ui_id button;

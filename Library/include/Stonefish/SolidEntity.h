@@ -38,13 +38,13 @@ public:
 	//Computation
     void UpdateAcceleration(btScalar dt);
     virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
-									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta);
+									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& _Fb, btVector3& _Tb, btVector3& _Fds, btVector3& _Tds, btVector3& _Fdp, btVector3& _Tdp);
     virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid);
     
 	//Applying forces
 	void ApplyCentralForce(const btVector3& force);
     void ApplyTorque(const btVector3& torque);
-    void ApplyGravity();
+    void ApplyGravity(const btVector3& g);
 	virtual void ApplyFluidForces();
 	
 	//Rigid body
@@ -58,8 +58,8 @@ public:
 	btRigidBody* getRigidBody();
     btMultiBodyLinkCollider* getMultibodyLinkCollider();
     btVector3 getInertia();
-	btVector3 getInvInertia();
     btScalar getMass();
+    eigMatrix6x6 getAddedMass();
     Material getMaterial();
     btScalar getVolume();
     virtual std::vector<Vertex>* getMeshVertices(); //Copy of vertices, must be deleted manually!!!
@@ -85,6 +85,7 @@ public:
 	
 protected:
     void ComputeEquivEllipsoid();
+    btScalar LambKFactor(btScalar r1, btScalar r2);
     virtual void BuildRigidBody();
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
     
@@ -110,8 +111,10 @@ protected:
     bool buoyant;
     btVector3 Fb;
     btVector3 Tb; 
-    btVector3 Fd; 
-    btVector3 Td; 
+    btVector3 Fds; 
+    btVector3 Tds; 
+    btVector3 Fdp;
+    btVector3 Tdp;
     btVector3 Fa; 
     btVector3 Ta;
 	

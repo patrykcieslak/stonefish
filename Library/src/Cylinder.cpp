@@ -59,6 +59,6 @@ SolidType Cylinder::getSolidType()
 btCollisionShape* Cylinder::BuildCollisionShape()
 {
     btCylinderShape* colShape = new btCylinderShape(btVector3(radius, halfHeight, radius));
-    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
+    //colShape->setMargin(0.0);
     return colShape;
 }

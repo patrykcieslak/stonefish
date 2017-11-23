@@ -40,7 +40,7 @@ void FallingTestManager::BuildScenario()
     setICSolverParams(false);
 	
     ///////MATERIALS////////
-	getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 1.0), 1.0);
+	getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 1.0), 0.1);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
@@ -78,14 +78,22 @@ void FallingTestManager::BuildScenario()
 	Box* link2A = new Box("Link2A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
 	Box* link3A = new Box("Link3A", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
 	
-	Sphere* baseA = new Sphere("BaseA", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
-	//Torus* baseA = new Torus("BaseA", 0.25,0.1,getMaterialManager()->getMaterial("Steel"), green);
-	AddSolidEntity(baseA, btTransform(btQuaternion::getIdentity(), btVector3(0,0,2)));
+	Sphere* sph1 = new Sphere("Sphere1", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
+    Cylinder* cyl = new Cylinder("Cylinder1", 0.5f, 0.5f, getMaterialManager()->getMaterial("Steel"), green);
+    Compound* baseA = new Compound("BaseA", sph1, btTransform::getIdentity());
+    baseA->AddExternalPart(cyl, btTransform(btQuaternion::getIdentity(), btVector3(0,0,-0.5)));
+    
+    AddSolidEntity(sph1, btTransform(btQuaternion::getIdentity(), btVector3(0,0,2)));
 	
-	Sphere* baseB = new Sphere("BaseB", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
-	FeatherstoneEntity* fe = new FeatherstoneEntity("Test", 1, baseB, getDynamicsWorld(), false);
+    Obstacle* obs = new Obstacle("Obs1", 0.25f, getMaterialManager()->getMaterial("Steel"), yellow);
+    //AddStaticEntity(obs, btTransform::getIdentity());
+    Obstacle* obs2 = new Obstacle("Obs2", 0.25f, getMaterialManager()->getMaterial("Steel"), yellow);
+    //AddStaticEntity(obs2, btTransform(btQuaternion::getIdentity(), btVector3(2,0,0)));
+    
+	Sphere* sph2 = new Sphere("Sphere2", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
+	Compound* baseB = new Compound("BaseB", sph2, btTransform::getIdentity());
+    FeatherstoneEntity* fe = new FeatherstoneEntity("Test", 1, baseB, getDynamicsWorld(), false);
 	AddFeatherstoneEntity(fe, btTransform(btQuaternion::getIdentity(), btVector3(2,0,2)));
-	
 	
 	//Manipulator* manipA = new Manipulator("ArmA", 1, baseA, btTransform::getIdentity());
 	//manipA->AddRotLinkDH(link1A, btTransform(btQuaternion::btQuaternion(0,0,0), btVector3(-0.25,0,0)), 0, 0.5, 0);

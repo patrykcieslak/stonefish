@@ -1,157 +1,23 @@
-Short-term:
-- Fix rendering by writing a draw function in Pipeline
-- Remove display lists -> VBO
-- Remove OGLFT -> write code in OpenGLPrinter
+ToDo:
+- added mass effect
+- currents
+- camera frame copy
 
-Implemented:
-x Ability to set internal unit system -> MKS as default
-x Add global coord system choice (z-up or z-down)
-x Torus collision shape
-x Joints: Fixed, Revolute, Spherical, Prysmatic, Cylindrical, Gear, Belt
-x Sensor architecture
-x Accelerometer
-x Gyroscope
-x Rendering put into OpenGLPipeline class
-x Drawing dummy shapes without lighting
-x Common includes cleaned and distributed
-x Drawing joints
-x Rotary encoder
-x Compass (magnetometer)
-x Drawing coord systems
-x Don't move camera when you move a part of the gui
-x Rendering options
-x DCMotor
-x Name System preserving uniqueness
-x Friction material pair table
-x Sky improvements + sun lighting
-x Fix native dialog memory leak when returning result
-x IMGUI save plot data
-x IMGUI TimePlot
-x IMGUI doesn't need static
-x Spot light shadows
-x Sun shadow (Cascaded Shadow Maps)
-x Drawing global coordinate system + grid
-x Shadow filtering to improve borders
-x Material shading
-x New ambient occlusion algorithm - SAO (+ edge-aware blur)
-x Revolute joint damping
-x Replaced Bullet motors with direct force/torque (it was blowing up!)
-x Optimized, fast text rendering -> FTGL exchanged for OGLFT (true-type fonts through Freetype2)
-x Adaptive shadow sampling with spiral sample pattern (high precision sampling only for the borders of shadows)
-x Setting arbitrary physical properties for simple solid entities
-x Comparison with ADAMS for a double pendulum (undamped and damped case) - ALMOST IDENTICAL!
-x Tested double precision - NO SIGNIFICANT DIFFERENCE!
-x Trackball class rewritten
-x Controller architecture
-x ServoController controller (PID)
-x Removed autopointers from Sensor
-x Fixed simulation time
-x Fake IMU - ideal readings from Bullet, RPY angles
-x Collision filtering or contact joints - exclusive or inclusive
-x Easy solver and collision filtering setup
-x SAO downsampling with separate averaging of encoded depth
-x Only one fluid entity in simulation
-x OpenGLPipeline is now a singleton
-x Shader system
-x New Utils group, textures transferred to Material
-x Gyroscopic effect
-x Fixed rendering of initial configuration
-x New concept of rendering pipeline - three different paths
-x Object picking
-x HDR tonemapping
-x Static entities - Plane(update), Terrain, Obstacle
-x Graphical console
-x Multithreaded loading stage
-x Mux
-x CSM -> take scene bounding box to build better crop matrix (correct shadow)
-x Universal SS controller
-x Drawing path of the rolling object contact points
-x Drawing path of the COG(+offset) of objects
-x Setting arbitrary physical properties for MeshEntity
-x Designed simple logo
-x Improved loading screen -> mutex, delay, color logo in the corner
-x IMGUI subtle transparent logo in the corner
-x CEGUI removed, Bullet source moved to the project, static dependences
-x IMGUI XYPlot
-x Custom contact callback -> friction coefficient computed from relative velocity, restitution combined by multiplication
-x Sliding test demo - friction works very accurate
-x Complete IMGUI rewrite: translucent panels, HSV based color theme, radio button group, gauge
-x One pass 4x downsampling shader and fast gaussian shader
-x MISO state-space controller (regulator or reference tracking)
-x Switchable HUD and console rendering
-x Joint damping (sigmoidal + viscous)
-x Joint limits
-x Accurate collision restitution for high iteration count (>60)
-x Console scrolling with momentum when displayed as overlay
-x Tested Acrobot stabilization with MISO controller - no more than 5% of difference compared to SimMechanics
-x Motor current sensor
-x Cook-Torrence materials, improvements to SAO
-x Contact sliding detection and recording
-x Contact impulse recording
-x Standard joint initial position -> iterative solver
-x Own Solver and DynamicsWorld classes for combination of MLCP and Multibody
-x Sensor frequency
-x 2D path generator
-x 1D and 2D polynomials
-x Simulation debug drawing
-x Featherstone multibody
-x Featherstone support in filtered collisions, contact trajectories and picking
-x Choice of IC solver parameters - include gravity, time step, max iterations, max solving time
-x IC solving with gravity
-x Attaching views and lights to solids and Featherstone links
-x Real world sun, sky and light intensity relations + log-average brigthness calculation + sun position with azimuth/elevation
-x Mono-wheel stabilization controllers (miso + gain scheduling) + joystick teleoperation
-x User unit system used during setup, results in user unit system obtained only through graphs, display, file saving (to remove unnecessary conversions)
-x Reading data from binary Octave files
-x Torus sliding during lateral rotation -> needs high frequency
-x Accurate restitution modification copied to multi-body constraint solver
-x Signal generator and multiplexer
-x Fixed dc motor model -> current is now integrated(mid-point method)
-x Mono-wheel longitudinal controller results exactly match ADAMS+Simulink
-x Mono-wheel lateral controller results exactly match ADAMS+Simulink
-x Saving sensor measurements and contact data to a binary Octave file
-x Damping of body spinning around contact normal
-x General path following controller
-x Mono-wheel path following controller (pursuit)
-- Implement advanced friction model (GMS)
-- Fix sideways drift of torus when tilted
-- Check what happens when pausing the simulation with sim frequency higher than sensor frequency
-- Rolling friction and spinning reduction based on Hertz deformation
-- True IMU - acc, gyro, kalman filter
-- Laser scanner 2d + polar plot
-- Doxygen comments!
+Fix:
+- f/t sensor frame 
+- water rendering --> better inscatter, water color, surface rendering from ocean implementation?
 
-Simulation:
-- Laser rangefinder
-- Ultrasonic range finder
-- Camera with lens/aperture/iso/stereo
-- Interaction with mouse - natural way to introduce disturbance (point-click normal, drag-rubber, shoot)
-- Battery(LiIon, LiPoly, A123)
-- GPS(AHRS)
-- Linear actuator -> nut/lead screw, pneumatic, hydraulic
-- Linear encoder
-- 3D path generator
-- Gimpact or convex decomposition for concave meshes
-- LiDAR (laser scanner 3d)
+Added mass (3 element mass vector) - changes to Bullet Physics library:
+1. btMultiBody
+    --> baseMass as btVector3
+    --> Featherstone algorithm (acceleration)
+    --> inertia matrix setup
+2. btMultiBodyDynamicsWorld:
+    -->
+    
+3. btMultiBodyConstraintSolver:
 
-Underwater:
-- Above water surface rendering
-- Underwater rendering
-x Buoyancy as difference in hydrostatic pressure(?) -> calculated together with drag
-* Added mass calculation
-- Tether entity
-- Thruster
-- Control surface
-- DVL
-- Multi-beam
-- Side-scan
-- SVS
-- Sea currents
 
-Graphics:
-- Move to OpenGL 3.3 Core (remove deprecated stuff, rewrite OGLFT)
-- Transparent objects(OIT - comutative blending)
-- Omni light shadows
-- Reflective material
-- Stencil light volumes(taking into account the attenuation, disable shadow generation)
-- Drawing actuators, sensors and stickers(icons)
+4. btSequentialImpulseConstraintSolver:
+
+

@@ -57,7 +57,7 @@ SolidType Box::getSolidType()
 btCollisionShape* Box::BuildCollisionShape()
 {
     btBoxShape* colShape = new btBoxShape(halfExtents);
-    colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
+    //colShape->setMargin(0.0);
     return colShape;
 }
 

@@ -34,6 +34,7 @@
 #include "Camera.h"
 #include "Light.h"
 #include "FakeRotaryEncoder.h"
+#include "Accelerometer.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -44,7 +45,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, true, true, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, true, true, false, false, true);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     
     ///////MATERIALS////////
@@ -124,6 +125,8 @@ void UnderwaterTestManager::BuildScenario()
     
 	UnderwaterVehicle* vehicle = new UnderwaterVehicle("AUV", comp);
 	AddSystemEntity(vehicle, btTransform(btQuaternion(0,0,0), btVector3(0,0,depth)));
+    Accelerometer* acc = new Accelerometer("Acc", comp, btTransform::getIdentity(), -1, 0);
+    AddSensor(acc);
     
     //Add sensors
     Pressure* press = vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), 1.0);
@@ -178,14 +181,14 @@ void UnderwaterTestManager::BuildScenario()
     Polyhedron* eeBase = new Polyhedron("EEBase", GetDataPath() + "eeprobe_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), eeLook, false);
     Sphere* eeTip = new Sphere("EETip", 0.015, getMaterialManager()->getMaterial("Dummy"), eeLook);
     Compound* ee = new Compound("EndEffector", eeBase, btTransform::getIdentity());
-    ee->AddExternalPart(eeTip, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0.124)));
+    ee->AddExternalPart(eeTip, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0.124+0.05)));
     
     FixedGripper* gripper = new FixedGripper("Gripper", arm, ee);
     AddSystemEntity(gripper, btTransform(btQuaternion::getIdentity(), btVector3(0,0, 0.05)));
     
     //Add contact sensing between gripper and target
-    //Contact* cnt = AddContact(comp, cyl, 1000);
-    //cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
+    Contact* cnt = AddContact(ee, plane, 10000);
+    cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
     
     //Camera
     //Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,-0.1,M_PI), btVector3(0.5,0.0,-0.35)), comp, 5.0, 1, true);

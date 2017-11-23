@@ -112,8 +112,8 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 	glEnable(GL_MULTISAMPLE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glPointSize(5.f);
-    glLineWidth(1.0f);
+    glPointSize(1.f);
+    glLineWidth(1.f);
     glLineStipple(3, 0xE4E4);
 	glPatchParameteri(GL_PATCH_VERTICES, 4);
 	glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
@@ -503,6 +503,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     {
                         if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
                             OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
+                        else if(drawingQueueCopy[h].type == RenderableType::SENSOR_POINTS)
+                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
                         else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
                             OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
                         else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)

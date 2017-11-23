@@ -14,7 +14,11 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     //baseRenderable = fixedBase ? false : true;
     baseRenderable = true;
 	
-    multiBody = new btMultiBody(totalNumOfLinks - 1, baseSolid->getMass(), baseSolid->getInertia(), fixedBase, true);
+    eigMatrix6x6 aMass = baseSolid->getAddedMass();
+    btScalar M = baseSolid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    btVector3 I = baseSolid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    
+    multiBody = new btMultiBody(totalNumOfLinks - 1, M, I, fixedBase, true);
     
     multiBody->setBaseWorldTransform(btTransform::getIdentity());
     multiBody->setAngularDamping(btScalar(0));
@@ -334,14 +338,18 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
     btVector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (UnitSystem::SetPosition(pivot) - getLinkTransform(parent).getOrigin());
     btVector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - UnitSystem::SetPosition(pivot));
     
-    multiBody->setupRevolute(child - 1, links[child].solid->getMass(), links[child].solid->getInertia(), parent - 1,
-                             ornParentToChild, getLinkTransform(child).getBasis().inverse() * axis.normalized() , parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
+    //Get mass properties (including addem mass)
+    eigMatrix6x6 aMass = links[child].solid->getAddedMass();
+    btScalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    btVector3 I = links[child].solid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
     
+    //Setup joint
+    multiBody->setupRevolute(child - 1, M, I, parent - 1, ornParentToChild, getLinkTransform(child).getBasis().inverse() * axis.normalized() , parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
     multiBody->finalizeMultiDof();
-    
     multiBody->setJointPos((int)child - 1, btScalar(0));
     multiBody->setJointVel((int)child - 1, btScalar(0));
     
+    //Add feedback
     FeatherstoneJoint joint(btMultibodyLink::eRevolute, parent, child);
     joint.feedback = new btMultiBodyJointFeedback();
     multiBody->getLink((int)child - 1).m_jointFeedback = joint.feedback;
@@ -366,15 +374,18 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     btVector3 parentComToPivotOffset = btVector3(0,0,0);
     btVector3 pivotToChildComOffset = getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin()-getLinkTransform(parent).getOrigin());
     
+    //Get mass properties (including addem mass)
+    eigMatrix6x6 aMass = links[child].solid->getAddedMass();
+    btScalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    btVector3 I = links[child].solid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    
     //Check if pivot offset is ok!
-    multiBody->setupPrismatic(child - 1, links[child].solid->getMass(), links[child].solid->getInertia(), parent - 1,
-                              ornParentToChild, getLinkTransform(child).getBasis().inverse() * axis.normalized(), parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
-    
+    multiBody->setupPrismatic(child - 1, M, I, parent - 1, ornParentToChild, getLinkTransform(child).getBasis().inverse() * axis.normalized(), parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
     multiBody->finalizeMultiDof();
-    
     multiBody->setJointPos(child - 1, btScalar(0.));
     multiBody->setJointVel(child - 1, btScalar(0.));
     
+    //Add feedback
     FeatherstoneJoint joint(btMultibodyLink::ePrismatic, parent, child);
     joint.feedback = new btMultiBodyJointFeedback();
     multiBody->getLink((int)child - 1).m_jointFeedback = joint.feedback;
@@ -398,13 +409,21 @@ int FeatherstoneEntity::AddFixedJoint(unsigned int parent, unsigned int child)
 	btVector3 parentComToPivotOffset = btVector3(0,0,0);
     btVector3 pivotToChildComOffset = getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin()-getLinkTransform(parent).getOrigin());
     
-	multiBody->setupFixed(child - 1, links[child].solid->getMass(), links[child].solid->getInertia(), parent - 1,
-						  ornParentToChild, parentComToPivotOffset, pivotToChildComOffset);
-
+    //Get mass properties (including addem mass)
+    eigMatrix6x6 aMass = links[child].solid->getAddedMass();
+    btScalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    btVector3 I = links[child].solid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    
+    //Setup joint
+	multiBody->setupFixed(child - 1, M, I, parent - 1, ornParentToChild, parentComToPivotOffset, pivotToChildComOffset);
 	multiBody->finalizeMultiDof();
 	
+    //Add feedback
 	FeatherstoneJoint joint(btMultibodyLink::eFixed, parent, child);
+    joint.feedback = new btMultiBodyJointFeedback();
+    multiBody->getLink((int)child - 1).m_jointFeedback = joint.feedback;
 	joints.push_back(joint);
+    
 	return ((int)joints.size() - 1);
 }
 
@@ -492,11 +511,11 @@ void FeatherstoneEntity::ApplyGravity(const btVector3& g)
 
     if(!isSleeping)
     {
-        multiBody->addBaseForce(g * multiBody->getBaseMass());
+        multiBody->addBaseForce(g * links[0].solid->getMass());
 
         for(int i=0; i<multiBody->getNumLinks(); ++i) 
 		{
-            multiBody->addLinkForce(i, g *multiBody->getLinkMass(i));
+            multiBody->addLinkForce(i, g * links[i+1].solid->getMass());
 		}
     }
 }

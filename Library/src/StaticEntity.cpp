@@ -67,6 +67,8 @@ void StaticEntity::BuildRigidBody(btCollisionShape* shape)
 {
     btDefaultMotionState* motionState = new btDefaultMotionState();
     
+    shape->setMargin(0.0);
+    
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(btScalar(0), motionState, shape, btVector3(0,0,0));
     rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0); //not used
     rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = btScalar(0); //not used

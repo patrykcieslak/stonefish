@@ -20,37 +20,22 @@ FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguratio
 
 bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
 {
+    bool needs = btCollisionDispatcher::needsCollision(body0, body1);
+    if(!needs)
+        return false;
+    
+    Entity* ent0 = (Entity*)body0->getUserPointer();
+    if(ent0 == NULL)
+        return false;
+        
+    Entity* ent1 = (Entity*)body1->getUserPointer();
+    if(ent1 == NULL)
+        return false;
+    
     if(inclusive)
-    {
-        Entity* ent0 = (Entity*)body0->getUserPointer();
-        if(ent0 == NULL)
-            return false;
-        
-        Entity* ent1 = (Entity*)body1->getUserPointer();
-        if(ent1 == NULL)
-            return false;
-        
         return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
-    }
     else //exclusive
-    {
-        bool needs = btCollisionDispatcher::needsCollision(body0, body1);
-        
-        if(needs)
-        {
-            Entity* ent0 = (Entity*)body0->getUserPointer();
-            if(ent0 == NULL)
-                return true;
-            
-            Entity* ent1 = (Entity*)body1->getUserPointer();
-            if(ent1 == NULL)
-                return true;
-            
-            return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
-        }
-        else
-            return false;
-    }
+        return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
 }
 
 void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
@@ -60,12 +45,12 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
     
     if(dispatcher.needsCollision(colObj0,colObj1))
     {
-        btCollisionObjectWrapper obj0Wrap(0,colObj0->getCollisionShape(),colObj0,colObj0->getWorldTransform(),-1,-1);
-        btCollisionObjectWrapper obj1Wrap(0,colObj1->getCollisionShape(),colObj1,colObj1->getWorldTransform(),-1,-1);
-        
+        btCollisionObjectWrapper obj0Wrap(0,colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform(), -1, -1);
+        btCollisionObjectWrapper obj1Wrap(0,colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform(), -1, -1);
+     
         //Dispatcher will keep algorithms persistent in the collision pair
-        if (!collisionPair.m_algorithm)
-            collisionPair.m_algorithm = dispatcher.findAlgorithm(&obj0Wrap,&obj1Wrap,0,BT_CONTACT_POINT_ALGORITHMS);
+        if(!collisionPair.m_algorithm)
+            collisionPair.m_algorithm = dispatcher.findAlgorithm(&obj0Wrap, &obj1Wrap, 0, BT_CONTACT_POINT_ALGORITHMS);
         
         if(collisionPair.m_algorithm)
         {
@@ -74,32 +59,35 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
             if (dispatchInfo.m_dispatchFunc == 	btDispatcherInfo::DISPATCH_DISCRETE)
             {
                 //discrete collision detection query
-                collisionPair.m_algorithm->processCollision(&obj0Wrap,&obj1Wrap,dispatchInfo,&contactPointResult);
+                collisionPair.m_algorithm->processCollision(&obj0Wrap, &obj1Wrap, dispatchInfo, &contactPointResult);
             }
             else
             {
                 //continuous collision detection query, time of impact (toi)
-                btScalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0,colObj1,dispatchInfo,&contactPointResult);
+                btScalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0, colObj1, dispatchInfo, &contactPointResult);
                 if (dispatchInfo.m_timeOfImpact > toi)
                     dispatchInfo.m_timeOfImpact = toi;
             }
             
-            //Add contact point information
-            btPersistentManifold* pm = contactPointResult.getPersistentManifold();
-            if(pm != NULL && pm->getNumContacts() > 0)
+            btManifoldArray marray;
+            collisionPair.m_algorithm->getAllContactManifolds(marray);
+            
+            Entity* entA = (Entity*)obj0Wrap.m_collisionObject->getUserPointer();
+            Entity* entB = (Entity*)obj1Wrap.m_collisionObject->getUserPointer();
+            Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
+            
+            for(unsigned int i=0; i<marray.size(); ++i)
             {
-                //Add contact point to Contact object if it exists
-                Entity* entA = (Entity*)obj0Wrap.m_collisionObject->getUserPointer();
-                Entity* entB = (Entity*)obj1Wrap.m_collisionObject->getUserPointer();
-                Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
-                if(contact != NULL)
-                    contact->AddContactPoint(contactPointResult.getPersistentManifold(), contact->getEntityA() != entA);
-                
-                //Clear persistent user data (it will leak if not!)
-                for(int i = 0; i < contactPointResult.getPersistentManifold()->getNumContacts(); i++)
+                if(marray[i]->getNumContacts() > 0)
                 {
-                    delete (btVector3*)contactPointResult.getPersistentManifold()->getContactPoint(i).m_userPersistentData;
-                    contactPointResult.getPersistentManifold()->getContactPoint(i).m_userPersistentData = 0;
+                    if(contact != NULL)
+                        contact->AddContactPoint(marray[i], contact->getEntityA() != entA);
+                        
+                    for(unsigned int h=0; h<marray[i]->getNumContacts(); ++h)
+                    {
+                        delete (btVector3*)marray[i]->getContactPoint(h).m_userPersistentData;
+                        marray[i]->getContactPoint(h).m_userPersistentData = NULL;
+                    }
                 }
             }
         }

@@ -288,6 +288,7 @@
     <File Name="3rdparty/stb_image.c"/>
     <File Name="3rdparty/stb_image.h"/>
     <File Name="3rdparty/MersenneTwister.hpp"/>
+    <File Name="ToDo.txt" ExcludeProjConfig="Release"/>
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">
@@ -408,7 +409,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
-        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/zbuffer/Documents/stonefish/Library/shaders/\&quot;"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

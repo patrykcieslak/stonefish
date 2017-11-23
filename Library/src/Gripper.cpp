@@ -56,6 +56,7 @@ void Gripper::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransf
 
 void Gripper::UpdateAcceleration(btScalar dt)
 {
+    mechanism->UpdateAcceleration(dt);
 }
 
 void Gripper::UpdateSensors(btScalar dt)

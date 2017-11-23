@@ -293,7 +293,7 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
 	}
 	
 	convex->optimizeConvexHull();
-    convex->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
+    //convex->setMargin(0.0);//UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
 	return convex;
 }
 

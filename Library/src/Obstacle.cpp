@@ -35,7 +35,6 @@ Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar s
     btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray(mesh->faces.size(), indices, 3*sizeof(int),
                                                                                mesh->vertices.size(), vertices, 3*sizeof(btScalar));
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
-    shape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
     BuildRigidBody(shape);
     
     delete[] vertices;
@@ -48,7 +47,6 @@ Obstacle::Obstacle(std::string uniqueName, btScalar sphereRadius, Material m, in
     sphereRadius = UnitSystem::SetLength(sphereRadius);
     
     btSphereShape* shape = new btSphereShape(sphereRadius);
-    shape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
     BuildRigidBody(shape);
     
     mesh = OpenGLContent::BuildSphere(sphereRadius);
@@ -60,7 +58,6 @@ Obstacle::Obstacle(std::string uniqueName, btVector3 boxDimensions, Material m, 
     btVector3 halfExtents = UnitSystem::SetPosition(boxDimensions/btScalar(2));
     
     btBoxShape* shape = new btBoxShape(halfExtents);
-    shape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
     BuildRigidBody(shape);
     
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
@@ -74,7 +71,6 @@ Obstacle::Obstacle(std::string uniqueName, btScalar cylinderRadius, btScalar cyl
     btScalar halfHeight = UnitSystem::SetLength(cylinderHeight/btScalar(2));
     
     btCylinderShape* shape = new btCylinderShape(btVector3(cylinderRadius, halfHeight, cylinderRadius));
-    shape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
     BuildRigidBody(shape);
     
     mesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);

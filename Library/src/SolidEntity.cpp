@@ -16,6 +16,7 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScal
 {
 	mat = m;
     mass = btScalar(0);
+    aMass = eigMatrix6x6::Zero();
 	Ipri.setZero();
     volume = btScalar(0);
 	thick = UnitSystem::SetLength(thickness);
@@ -27,8 +28,10 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScal
     buoyant = isBuoyant;
     Fb.setZero();
     Tb.setZero();
-    Fd.setZero();
-    Td.setZero();
+    Fds.setZero();
+    Tds.setZero();
+    Fdp.setZero();
+    Tdp.setZero();
     Fa.setZero();
     Ta.setZero();
     
@@ -340,14 +343,14 @@ btVector3 SolidEntity::getInertia()
     return Ipri;
 }
 
-btVector3 SolidEntity::getInvInertia()
-{
-	return btVector3(btScalar(1)/Ipri.x(), btScalar(1)/Ipri.y(), btScalar(1)/Ipri.z());
-}
-
 btScalar SolidEntity::getMass()
 {
     return mass;
+}
+
+eigMatrix6x6 SolidEntity::getAddedMass()
+{
+    return aMass;
 }
 
 Material SolidEntity::getMaterial()
@@ -378,11 +381,25 @@ void SolidEntity::ComputeEquivEllipsoid()
 	//Fill points matrix
 	eigMatrix P(vertices->size(), 3);
 	for(unsigned int i=0; i<vertices->size(); ++i)
-		P.row(i) << (*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z;
+    {
+        btVector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
+        vpos = localTransform.inverse() * vpos;
+		P.row(i) << vpos.x(), vpos.y(), vpos.z();
+    }
     delete vertices;
     
-	//Compute contraints
-	eigMatrix A(P.rows(), 9);
+    //Ellipsoid fit
+    //Compute contraints -> axis aligned, three radii
+	eigMatrix A(P.rows(), 6);
+	A.col(0) = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() - 2 * P.col(2).array() * P.col(2).array();
+	A.col(1) = P.col(0).array() * P.col(0).array() + P.col(2).array() * P.col(2).array() - 2 * P.col(1).array() * P.col(1).array();
+	A.col(2) = 2 * P.col(0);
+	A.col(3) = 2 * P.col(1);
+	A.col(4) = 2 * P.col(2);
+	A.col(5) = eigMatrix::Ones(P.rows(), 1);
+	
+	//Compute contraints -> arbitrary axes, three radii
+	/*eigMatrix A(P.rows(), 9);
 	A.col(0) = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() - 2 * P.col(2).array() * P.col(2).array();
 	A.col(1) = P.col(0).array() * P.col(0).array() + P.col(2).array() * P.col(2).array() - 2 * P.col(1).array() * P.col(1).array();
 	A.col(2) = 2 * P.col(0).array() * P.col(1).array();
@@ -391,11 +408,11 @@ void SolidEntity::ComputeEquivEllipsoid()
 	A.col(5) = 2 * P.col(0);
 	A.col(6) = 2 * P.col(1);
 	A.col(7) = 2 * P.col(2);
-	A.col(8) = eigMatrix::Ones(P.rows(), 1);
+	A.col(8) = eigMatrix::Ones(P.rows(), 1);*/
 	
 	//Solve Least-Squares problem Ax=b
 	eigMatrix b(P.rows(), 1);
-	eigMatrix x(9, 1);	
+	eigMatrix x(A.cols(), 1);	
 	//squared norm
 	b = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() + P.col(2).array() * P.col(2).array();
 	//solution
@@ -404,6 +421,18 @@ void SolidEntity::ComputeEquivEllipsoid()
     
 	//Find ellipsoid parameters
 	eigMatrix p(10, 1);
+    p(0) = x(0) + x(1) - 1.0;
+    p(1) = x(0) - 2*x(1) - 1.0;
+    p(2) = x(1) - 2*x(0) - 1.0;
+    p(3) = 0.0;
+    p(4) = 0.0;
+    p(5) = 0.0;
+    p(6) = x(2);
+    p(7) = x(3);
+    p(8) = x(4);
+    p(9) = x(5);
+    
+    /*
 	p(0) = x(0) + x(1) - 1;
 	p(1) = x(0) - 2 * x(1) - 1;
 	p(2) = x(1) - 2 * x(0) - 1;
@@ -413,7 +442,7 @@ void SolidEntity::ComputeEquivEllipsoid()
 	p(6) = x(5);
 	p(7) = x(6);
 	p(8) = x(7);
-	p(9) = x(8);
+	p(9) = x(8);*/
 	
 	eigMatrix E(4, 4);
 	E << p(0), p(3), p(4), p(6),
@@ -441,15 +470,53 @@ void SolidEntity::ComputeEquivEllipsoid()
 	
     //Ellipsoid radii
 	eigMatrix r(3, 1);
-	r = Eigen::sqrt(1/Eigen::abs(eigenSolver.eigenvalues().array()));
+	r = Eigen::sqrt(1.0/Eigen::abs(eigenSolver.eigenvalues().array()));
     ellipsoidR = btVector3(r(0), r(1), r(2));
     
     //Ellipsoid axes
 	eigMatrix axes(3, 3);
 	axes = eigenSolver.eigenvectors().array();
+    
+    //Reorder radii
     ellipsoidTransform.setIdentity();
-    ellipsoidTransform.setOrigin(btVector3(c(0), c(1), c(2)));
     ellipsoidTransform.setBasis(btMatrix3x3(axes(0,0), axes(0,1), axes(0,2), axes(1,0), axes(1,1), axes(1,2), axes(2,0), axes(2,1), axes(2,2)));
+    ellipsoidR = ellipsoidTransform.getBasis() * ellipsoidR;
+    
+    //Compute added mass
+    //Search for the longest semiaxis
+    btScalar rho = 1000.0; //Fluid density
+    btScalar r12 = (r(1) + r(2))/btScalar(2);
+    btScalar m1 = LambKFactor(r(0), r12)*btScalar(4)/btScalar(3)*M_PI*rho*r(0)*r12*r12;
+    btScalar m2 = btScalar(4)/btScalar(3)*M_PI*rho*r(2)*r(2)*r(0);
+    btScalar m3 = btScalar(4)/btScalar(3)*M_PI*rho*r(1)*r(1)*r(0);
+    btScalar I1 = btScalar(0); //THIS SHOULD BE > 0
+    btScalar I2 = btScalar(1)/btScalar(12)*M_PI*rho*r(1)*r(1)*btPow(r(0)*btScalar(2), btScalar(3));
+    btScalar I3 = btScalar(1)/btScalar(12)*M_PI*rho*r(2)*r(2)*btPow(r(0)*btScalar(2), btScalar(3));
+    
+    btVector3 M = ellipsoidTransform.getBasis() * btVector3(m1,m2,m3);
+    btVector3 I = ellipsoidTransform.getBasis() * btVector3(I1,I2,I3);
+    
+    aMass(0,0) = M.x();
+    aMass(1,1) = M.y();
+    aMass(2,2) = M.z();
+    aMass(3,3) = I.x();
+    aMass(4,4) = I.y();
+    aMass(5,5) = I.z();
+    
+    //Set transform with respect to geometry
+    ellipsoidTransform.getBasis().setIdentity();
+    ellipsoidTransform.setOrigin(btVector3(c(0), c(1), c(2)));
+    ellipsoidTransform = localTransform * ellipsoidTransform;
+#ifdef DEBUG
+    std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
+#endif
+}
+
+btScalar SolidEntity::LambKFactor(btScalar r1, btScalar r2)
+{
+    btScalar e = btScalar(1) - r2*r2/r1;
+    btScalar alpha0 = btScalar(2)*(btScalar(1)-e*e)/(e*e) * (btScalar(0.5)*btLog((btScalar(1)+e)/(btScalar(1)-e)) - e);
+    return alpha0/(btScalar(2)-alpha0);
 }
 
 void SolidEntity::BuildGraphicalObject()
@@ -466,11 +533,32 @@ void SolidEntity::BuildRigidBody()
     {
         btDefaultMotionState* motionState = new btDefaultMotionState();
         
-        btCompoundShape* colShape = new btCompoundShape();
-        colShape->addChildShape(localTransform.inverse(), BuildCollisionShape());
-        colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+        //Generate collision shape
+        btCollisionShape* colShape0 = BuildCollisionShape();
+        btCompoundShape* colShape;
         
-        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, colShape, Ipri);
+        if(colShape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
+        {
+            colShape = (btCompoundShape*)colShape0;
+            for(unsigned int i=0; i < colShape->getNumChildShapes(); ++i)
+            {
+                colShape->getChildShape(i)->setMargin(btScalar(0));
+                colShape->updateChildTransform(i, localTransform.inverse() * colShape->getChildTransform(i), true);
+            }
+        }
+        else //For other shapes, create compound shape which allow for the shift against gravity centre
+        {
+            colShape = new btCompoundShape();
+            colShape0->setMargin(btScalar(0));
+            colShape->addChildShape(localTransform.inverse(), colShape0);            
+        }
+        colShape->setMargin(btScalar(0));
+        
+        //Construct Bullet rigid body
+        btScalar M = mass + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+        btVector3 I = Ipri + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+        
+        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0.); //not used
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = btScalar(0.); //not used
 		rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = btScalar(0.); //not used
@@ -492,21 +580,37 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
 {
     if(multibodyCollider == NULL)
     {
-        //Shape with offset
-        btCompoundShape* colShape = new btCompoundShape();
-        colShape->addChildShape(localTransform.inverse(), BuildCollisionShape());
-        colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), 0.001));
+        //Generate collision shape
+        btCollisionShape* colShape0 = BuildCollisionShape();
+        btCompoundShape* colShape;
+        if(colShape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
+        {
+            colShape = (btCompoundShape*)colShape0;
+            for(unsigned int i=0; i < colShape->getNumChildShapes(); ++i)
+            {
+                colShape->getChildShape(i)->setMargin(btScalar(0));
+                colShape->updateChildTransform(i, localTransform.inverse() * colShape->getChildTransform(i), true);
+            }
+        }
+        else //For other shapes, create compound shape which allow for the shift against gravity centre
+        {
+            colShape = new btCompoundShape();
+            colShape0->setMargin(btScalar(0));
+            colShape->addChildShape(localTransform.inverse(), colShape0);            
+            
+        }
+        colShape->setMargin(btScalar(0));
         
-        //Link
+        //Construct Bullet multi-body link
         multibodyCollider = new btMultiBodyLinkCollider(mb, child - 1);
-        multibodyCollider->setUserPointer(this);
         multibodyCollider->setCollisionShape(colShape);
+        multibodyCollider->setUserPointer(this); //HAS TO BE AFTER SETTING COLLISION SHAPE TO PROPAGATE TO ALL OF COMPOUND SUBSHAPES!!!!!
         multibodyCollider->setFriction(btScalar(0));
         multibodyCollider->setRestitution(btScalar(0));
         multibodyCollider->setRollingFriction(btScalar(0));
         multibodyCollider->setSpinningFriction(btScalar(0));
 		//multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-		//multibodyCollider->setContactStiffnessAndDamping(10000000.0,0.001);
+		//multibodyCollider->setContactStiffnessAndDamping(1000000.0,0.1);
 		multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
@@ -573,11 +677,11 @@ void SolidEntity::SetAcceleration(const btVector3& lin, const btVector3& ang)
 	angularAcc = ang;
 }
 
-void SolidEntity::ApplyGravity()
+void SolidEntity::ApplyGravity(const btVector3& g)
 {
     if(rigidBody != NULL)
     {
-        rigidBody->applyGravity();
+        rigidBody->applyCentralForce(g * mass);
     }
 }
 
@@ -613,31 +717,33 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fd, btVector3& _Td, btVector3& _Fa, btVector3& _Ta)
+void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fds, btVector3& _Tds, btVector3& _Fdp, btVector3& _Tdp)
 {
+    //Buoyancy
     if(settings.reallisticBuoyancy)
     {
         _Fb.setZero();
         _Tb.setZero();
     }
-	
-	_Fd.setZero();
-	_Td.setZero();
-	_Fa.setZero();
-	_Ta.setZero();
     
+    //Damping forces
+    if(settings.dampingForces)
+    {
+        _Fds.setZero();
+        _Tds.setZero();
+        _Fdp.setZero();
+        _Tdp.setZero();
+    }
+	
     //Set zeros
 	if(mesh == NULL)
 		return;
         
     uint64_t start = GetTimeInMicroseconds();
-   
-#ifdef DEBUG
-//    std::cout << getName() << " " << a.x() << "," << a.y() << "," << a.z() << std::endl; 
-#endif
-   
+      
     //Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
+    btScalar viscousity = liquid->getFluid()->viscosity;
  
 	//Loop through all faces...
     for(int i=0; i<mesh->faces.size(); ++i)
@@ -841,7 +947,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
             //Skin drag force
             btVector3 vc = liquid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
             btVector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
-            btVector3 Fds = liquid->getFluid()->viscosity * vt * A / btScalar(0.0001);
+            btVector3 Fds = viscousity * vt * A / btScalar(0.0001);
             //btVector3 Fds = vt.safeNormalize()*btScalar(0.5)*fluid->getFluid()->density*btScalar(1.328)/1000.0*vt.length2()*fn.length()/btScalar(2);
         
             //Pressure drag force
@@ -854,26 +960,10 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
             }
             
             //Accumulate
-            _Fd += Fds + Fdp;
-            _Td += (fc - p).cross(Fds + Fdp);
-        }
-        
-        //Added mass effect
-		if(settings.addedMassForces)
-        {
-            btVector3 ac = -(a + epsilon.cross(fc - p)); //Water acceleration at face center (velocity of fluid is constant)
-            btVector3 Fai(0,0,0);
-            btScalar an; //acceleration normal to face
-            
-            if((an = fn1.dot(ac)) < btScalar(0))
-            {
-                btScalar d = btScalar(1.)/(-an + btScalar(1.)); //Positive thickness of affected layer of fluid
-                Fai = liquid->getFluid()->density * A * d * an * fn1; //Fa = rho V a = rho A d a
-            }
-            
-            //Accumulate
-            _Fa += Fai;
-            _Ta += (fc - p).cross(Fai);
+            _Fds += Fds;
+            _Tds += (fc - p).cross(Fds); 
+            _Fdp += Fdp; 
+            _Tdp += (fc - p).cross(Fdp);
         }
     }
     
@@ -892,6 +982,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
     btVector3 omega = getAngularVelocity();
 	btVector3 a = getLinearAcceleration();
     btVector3 epsilon = getAngularAcceleration();
+    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
     
     //Check if fully submerged --> simplifies buoyancy calculation
     btVector3 aabbMin, aabbMax;
@@ -904,21 +995,46 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
         settings.reallisticBuoyancy = false; //disable buoyancy calculation
     }
     
-	ComputeFluidForces(settings, liquid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fd, Td, Fa, Ta);
+    if(settings.dampingForces || settings.reallisticBuoyancy)
+    {
+        ComputeFluidForces(settings, liquid, getTransform(), T, v, omega, a, epsilon, Fb, Tb, Fds, Tds, Fdp, Tdp);
+        
+        if(settings.dampingForces)
+        {
+            //Correct drag based on ellipsoid approximation of shape
+            btVector3 eFd = eTrans.getBasis().inverse() * Fdp;
+            //btVector3 eTd = eTrans.getBasis().inverse() * Td;
+            btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
+            btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+            Cd /= maxCd;
+            eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
+            Fdp = eTrans.getBasis() * eFd;
+        }
+    }
     
-    //Correct drag based on ellipsoid approximation of shape
-    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
-    btVector3 eFd = eTrans.getBasis().inverse() * Fd;
-    //btVector3 eTd = eTrans.getBasis().inverse() * Td;
-    btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
-    btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
-    Cd /= maxCd;
-    eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
-    Fd = eTrans.getBasis() * eFd;
+    /*
+    if(settings.addedMassForces)
+    {
+        btScalar rho = liquid->getFluid()->density;
+        btVector3 ea = eTrans.getBasis().inverse() * a;
+        
+        btScalar r2 = (ellipsoidR.y() + ellipsoidR.z())/btScalar(2);
+        btScalar m11 = LambKFactor(ellipsoidR.x(), r2)*btScalar(4)/btScalar(3)*M_PI*rho*ellipsoidR.x()*r2*r2;
+        btScalar m22 = 0;
+        btScalar m33 = 0;
+        
+        btVector3 eFa = btVector3(-ea.x() * m11, -ea.y() * m22, -ea.z() * m33);
+        Fa = eTrans.getBasis() * eFa;
+        
+        //Ta = -epsilon * 0.333 * Ipri;
+#ifdef DEBUG
+        std::cout << getName() << " added mass: " << Fa.x() << ", " << Fa.y() << ", " << Fa.z() << " " << Ta.x() << ", " << Ta.y() << ", " << Ta.z() << std::endl;
+#endif
+    }*/
 }
 
 void SolidEntity::ApplyFluidForces()
 {
-    ApplyCentralForce(Fb + Fd + Fa);
-    ApplyTorque(Tb + Td + Ta);
+    ApplyCentralForce(Fb + Fds + Fdp + Fa);
+    ApplyTorque(Tb + Tds + Tdp + Ta);
 }

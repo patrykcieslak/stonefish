@@ -192,11 +192,10 @@ btCollisionShape* Compound::BuildCollisionShape()
         if(parts[i].isExternal)
         {
             btTransform childTrans = parts[i].position;
-            colShape->addChildShape(childTrans, parts[i].solid->BuildCollisionShape());
+            btCollisionShape* partColShape = parts[i].solid->BuildCollisionShape();
+            colShape->addChildShape(childTrans, partColShape);
         }
     }
-	
-	colShape->setMargin(UnitSystem::Length(UnitSystems::MKS, UnitSystem::GetInternalUnitSystem(), btScalar(0.001)));
 	return colShape;
 }
 
@@ -207,21 +206,9 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* 
     btVector3 omega = getAngularVelocity();
 	btVector3 a = getLinearAcceleration();
     btVector3 epsilon = getAngularAcceleration();
+    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
 	
-	Fb.setZero();
-	Tb.setZero();
-	Fd.setZero();
-	Td.setZero();
-	Fa.setZero();
-	Ta.setZero();
-	
-	btVector3 Fbp(0,0,0);
-	btVector3 Tbp(0,0,0);
-	btVector3 Fdp(0,0,0);
-	btVector3 Tdp(0,0,0);
-	btVector3 Fap(0,0,0);
-	btVector3 Tap(0,0,0);
-	
+    //Check if fully submerged
     btVector3 aabbMin, aabbMax;
     GetAABB(aabbMin, aabbMax);
     
@@ -232,38 +219,89 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* 
         settings.reallisticBuoyancy = false; //disable buoyancy calculation
     }
     
-	for(unsigned int i=0; i<parts.size(); ++i)
-	{
-		if(parts[i].isExternal)
-		{
-			parts[i].solid->ComputeFluidForces(settings, liquid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdp, Tdp, Fap, Tap);
-			Fb += Fbp;
-			Tb += Tbp;
-			Fd += Fdp;
-			Td += Tdp;
-			Fa += Fap;
-			Ta += Tap;
-		}
-		else
-		{
-			HydrodynamicsSettings iSettings = settings;
-			iSettings.addedMassForces = false;
-			iSettings.dampingForces = false;
-			parts[i].solid->ComputeFluidForces(iSettings, liquid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdp, Tdp, Fap, Tap);
-			Fb += Fbp;
-			Tb += Tbp;
-		}
-	}
+    //Clear forces that will be recomputed
+    if(settings.reallisticBuoyancy)
+    {
+        Fb.setZero();
+        Tb.setZero();
+    }
     
-    //Correct drag based on ellipsoid approximation of shape
-    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
-    btVector3 eFd = eTrans.getBasis().inverse() * Fd;
-    //btVector3 eTd = eTrans.getBasis().inverse() * Td;
-    btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
-    btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
-    Cd /= maxCd;
-    eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
-    Fd = eTrans.getBasis() * eFd;
+    if(settings.dampingForces)
+    {
+        Fds.setZero();
+        Tds.setZero();
+        Fdp.setZero();
+        Tdp.setZero();
+    }
+    
+    if(settings.reallisticBuoyancy || settings.dampingForces)
+    {
+        btVector3 Fbp(0,0,0);
+        btVector3 Tbp(0,0,0);
+        btVector3 Fdsp(0,0,0);
+        btVector3 Tdsp(0,0,0);
+        btVector3 Fdpp(0,0,0);
+        btVector3 Tdpp(0,0,0);
+	
+        for(unsigned int i=0; i<parts.size(); ++i)
+        {
+            if(parts[i].isExternal)
+            {
+                parts[i].solid->ComputeFluidForces(settings, liquid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
+                Fb += Fbp;
+                Tb += Tbp;
+                Fds += Fdsp;
+                Tds += Tdsp;
+                Fdp += Fdpp;
+                Tdp += Tdpp;
+            }
+            else if(settings.reallisticBuoyancy)
+            {
+                HydrodynamicsSettings iSettings = settings;
+                iSettings.dampingForces = false;
+                parts[i].solid->ComputeFluidForces(iSettings, liquid, getTransform(), T * parts[i].position, v, omega, a, epsilon, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
+                Fb += Fbp;
+                Tb += Tbp;
+            }
+        }
+        
+        if(settings.dampingForces)
+        {
+            //Correct drag based on ellipsoid approximation of shape
+            btVector3 eFd = eTrans.getBasis().inverse() * Fdp;
+            //btVector3 eTd = eTrans.getBasis().inverse() * Td;
+            btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
+            btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+            Cd /= maxCd;
+            eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
+            Fdp = eTrans.getBasis() * eFd;
+        }
+    }
+    
+    /*
+    if(settings.addedMassForces)
+    {
+        btScalar rho = liquid->getFluid()->density;
+        btVector3 ea = eTrans.getBasis().inverse() * a;
+        
+        //X
+        btScalar r2 = (ellipsoidR.y() + ellipsoidR.z())/btScalar(2);
+        btScalar m11 = LambKFactor(ellipsoidR.x(), r2)*btScalar(4)/btScalar(3)*M_PI*rho*ellipsoidR.x()*r2*r2;
+        btScalar m22 = btScalar(4)/btScalar(3)*M_PI*rho*ellipsoidR.x()*ellipsoidR.y()*ellipsoidR.z();
+        btScalar m33 = btScalar(4)/btScalar(3)*M_PI*rho*ellipsoidR.x()*ellipsoidR.y()*ellipsoidR.z();
+        btScalar m55 = btScalar(1)/btScalar(12)*M_PI*rho*ellipsoidR.y()*ellipsoidR.z()*btPow(ellipsoidR.x(), btScalar(3));
+        
+        //m22 = 0;
+        //m33 = 0;
+        
+        btVector3 eFa = btVector3(-ea.x() * m11, -ea.y() * m22, -ea.z() * m33);
+        Fa = eTrans.getBasis() * eFa;
+        
+        //Ta = -epsilon * 0.333 * Ipri;
+#ifdef DEBUG
+        std::cout << getName() << " added mass: " << Fa.x() << ", " << Fa.y() << ", " << Fa.z() << " " << Ta.x() << ", " << Ta.y() << ", " << Ta.z() << std::endl;
+#endif
+    }*/
 }
 
 void Compound::BuildGraphicalObject()

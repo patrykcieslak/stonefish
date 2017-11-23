@@ -57,6 +57,6 @@ btCollisionShape* Sphere::BuildCollisionShape()
 	//btVector3 pos(0,0,0);
 	//btMultiSphereShape* colShape = new btMultiSphereShape(&pos, &radius, 1);
     btSphereShape* colShape = new btSphereShape(radius);
-	colShape->setMargin(btScalar(0.0));
+	//colShape->setMargin(0.0);
     return colShape;
 }

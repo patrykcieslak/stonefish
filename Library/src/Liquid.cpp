@@ -100,14 +100,23 @@ void Liquid::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world
 	
 	HydrodynamicsSettings settings;
 	settings.algorithm = ht;
-	settings.addedMassForces = false;
-	settings.dampingForces = true;
-	settings.reallisticBuoyancy = true;
 	
     if(ent->getType() == ENTITY_SOLID)
     {
-        if(recompute) 
+        if(recompute)
+        {
+            settings.addedMassForces = true;
+            settings.dampingForces = true;
+            settings.reallisticBuoyancy = true;
             ((SolidEntity*)ent)->ComputeFluidForces(settings, this);
+        }
+        else
+        {
+            settings.addedMassForces = true;
+            settings.dampingForces = false;
+            settings.reallisticBuoyancy = false;
+            ((SolidEntity*)ent)->ComputeFluidForces(settings, this);
+        }
         
         ((SolidEntity*)ent)->ApplyFluidForces();
     }

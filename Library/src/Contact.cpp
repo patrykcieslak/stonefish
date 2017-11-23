@@ -198,7 +198,7 @@ std::vector<Renderable> Contact::Render()
     {
         Renderable item;
         item.model = glm::mat4(1.f);
-        item.type = RenderableType::SENSOR_LINE_STRIP;
+        item.type = RenderableType::SENSOR_POINTS;
         
 		for(size_type i = 0; i < points.size(); ++i)
         {	
@@ -213,7 +213,7 @@ std::vector<Renderable> Contact::Render()
     {
         Renderable item;
         item.model = glm::mat4(1.f);
-        item.type = RenderableType::SENSOR_LINE_STRIP;
+        item.type = RenderableType::SENSOR_POINTS;
         
 		for(size_type i = 0; i < points.size(); ++i)
         {	

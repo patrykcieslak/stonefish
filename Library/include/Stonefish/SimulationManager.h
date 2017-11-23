@@ -37,7 +37,7 @@
 #include "Console.h"
 
 //Simulation algorithm settings
-typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE} SolverType;
+typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE, NNCG} SolverType;
 typedef enum {INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
 typedef enum {TERRESTIAL, MARINE, POOL, CUSTOM} SimulationType;
 

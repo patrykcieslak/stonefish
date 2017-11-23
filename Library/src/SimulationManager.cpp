@@ -410,6 +410,7 @@ void SimulationManager::setStepsPerSecond(btScalar steps)
     sps = steps;
     ssus = (uint64_t)(1000000.0/steps);
     hydroPrescaler = (unsigned int)round(sps/btScalar(50));
+    hydroPrescaler = hydroPrescaler == 0 ? 1 : hydroPrescaler;
     SDL_UnlockMutex(simSettingsMutex);
 }
 
@@ -492,9 +493,7 @@ void SimulationManager::InitializeSolver()
     //Choose constraint solver
     if(solver == SolverType::SI)
 	{
-		//Create solver and world
 		dwSolver = new btMultiBodyConstraintSolver();
-		dynamicsWorld = new btMultiBodyDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
 	}
 	else
 	{
@@ -516,13 +515,15 @@ void SimulationManager::InitializeSolver()
 				break;
             
             case SolverType::SI: //Never happens, warning suppression
+            case SolverType::NNCG:
                 break;
 		}
 		
-		//Create solver and world
 		dwSolver = new ResearchConstraintSolver(mlcp);
-		dynamicsWorld = new ResearchDynamicsWorld(dwDispatcher, dwBroadphase, (ResearchConstraintSolver*)dwSolver, dwCollisionConfig);
 	}
+    
+    //Create dynamics world
+    dynamicsWorld = new btMultiBodyDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     
     //Basic configuration
     dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER; // | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
@@ -1059,7 +1060,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     //Restitution
     cp.m_combinedRestitution = mat0.restitution * mat1.restitution;
     
-    printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
+    //printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
     
     return true;
 }
@@ -1083,7 +1084,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
             if(simManager->entities[i]->getType() == ENTITY_SOLID)
             {
                 SolidEntity* solid = (SolidEntity*)simManager->entities[i];
-                solid->ApplyGravity();
+                solid->ApplyGravity(world->getGravity());
             }
             else if(simManager->entities[i]->getType() == ENTITY_FEATHERSTONE)
             {
@@ -1193,7 +1194,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
         if(ent->getType() == ENTITY_SOLID)
         {
             SolidEntity* solid = (SolidEntity*)ent;
-            solid->ApplyGravity();
+            solid->ApplyGravity(mbDynamicsWorld->getGravity());
         }
         else if(ent->getType() == ENTITY_FEATHERSTONE)
         {
@@ -1201,11 +1202,11 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             multibody->ApplyGravity(mbDynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
-        else if(ent->getType() == ENTITY_CABLE)
+       /* else if(ent->getType() == ENTITY_CABLE)
         {
             CableEntity* cable = (CableEntity*)ent;
             cable->ApplyGravity();
-        }
+        }*/
         else if(ent->getType() == ENTITY_SYSTEM)
         {
             SystemEntity* system = (SystemEntity*)ent;
