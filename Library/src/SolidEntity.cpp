@@ -490,8 +490,8 @@ void SolidEntity::ComputeEquivEllipsoid()
     btScalar m2 = btScalar(4)/btScalar(3)*M_PI*rho*r(2)*r(2)*r(0);
     btScalar m3 = btScalar(4)/btScalar(3)*M_PI*rho*r(1)*r(1)*r(0);
     btScalar I1 = btScalar(0); //THIS SHOULD BE > 0
-    btScalar I2 = btScalar(1)/btScalar(12)*M_PI*rho*r(1)*r(1)*btPow(r(0)*btScalar(2), btScalar(3));
-    btScalar I3 = btScalar(1)/btScalar(12)*M_PI*rho*r(2)*r(2)*btPow(r(0)*btScalar(2), btScalar(3));
+    btScalar I2 = btScalar(1)/btScalar(12)*M_PI*rho*r(1)*r(1)*btPow(r(0), btScalar(3));
+    btScalar I3 = btScalar(1)/btScalar(12)*M_PI*rho*r(2)*r(2)*btPow(r(0), btScalar(3));
     
     btVector3 M = ellipsoidTransform.getBasis() * btVector3(m1,m2,m3);
     btVector3 I = ellipsoidTransform.getBasis() * btVector3(I1,I2,I3);
