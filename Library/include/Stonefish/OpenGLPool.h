@@ -16,7 +16,7 @@ class OpenGLPool
 {
 public:
     OpenGLPool();
-    ~OpenGLPool();
+    virtual ~OpenGLPool();
     
     void Init();
     void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
@@ -32,7 +32,8 @@ public:
 private:    
     GLuint vao;
     GLuint vbo;
-    GLSLShader* poolShaders[4]; //Surface, backsurface, background, volume
+	std::vector<GLSLShader*> poolShaders;
+    //GLSLShader* poolShaders[4]; //Surface, backsurface, background, volume
 	GLfloat t;
     glm::vec3 lightAbsorption;
 	GLfloat turbidity;

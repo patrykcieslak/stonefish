@@ -42,6 +42,19 @@ void OpenGLCamera::Update()
     _needsUpdate = true;
 }
 
+void OpenGLCamera::setRendering(bool render)
+{
+	if(!rendering && render)
+	{
+		dir = tempDir;
+		eye = tempEye;
+		up = tempUp;
+		SetupCamera();
+	}
+	
+	rendering = render;
+}
+
 bool OpenGLCamera::needsUpdate()
 {
     bool nu = _needsUpdate;
@@ -91,10 +104,17 @@ glm::vec3 OpenGLCamera::GetUpDirection() const
 
 void OpenGLCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-    dir = _dir;
-    eye = _eye;
-    up = _up;
-    SetupCamera();
+	if(!rendering)
+	{
+		dir = _dir;
+		eye = _eye;
+		up = _up;
+		SetupCamera();
+	}
+	
+	tempDir = _dir;
+	tempEye = _eye;
+	tempUp = _up;
 }
 
 void OpenGLCamera::SetupCamera()

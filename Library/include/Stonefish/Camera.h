@@ -19,6 +19,7 @@ public:
     Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btScalar horizFOV, const btTransform& geomToSensor, SolidEntity* attachment = NULL, btScalar frequency = btScalar(-1.), unsigned int spp = 1, bool ao = true);
     virtual ~Camera();
     
+	void UpdateTransform();
 	virtual void InternalUpdate(btScalar dt);
     virtual std::vector<Renderable> Render();
 	virtual SensorType getType();

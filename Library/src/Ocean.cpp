@@ -10,6 +10,12 @@
 
 Ocean::Ocean(std::string uniqueName, Fluid* f) : Liquid(uniqueName, f)
 {
+	glOcean = new OpenGLOcean();
+}
+
+Ocean::~Ocean()
+{
+	delete glOcean;
 }
 
 ForcefieldType Ocean::getForcefieldType()
@@ -17,7 +23,7 @@ ForcefieldType Ocean::getForcefieldType()
     return FORCEFIELD_OCEAN;
 }
 
-OpenGLOcean& Ocean::getOpenGLOcean()
+OpenGLOcean* Ocean::getOpenGLOcean()
 {
 	return glOcean;
 }

@@ -182,22 +182,29 @@ void OpenGLPipeline::DrawObjects()
 
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
-    //Copy drawing queue -> double buffering to enable threading
+	//Prepare for drawing
     drawingQueueCopy.clear();
     SDL_LockMutex(drawingQueueMutex);
-    drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
-    SDL_UnlockMutex(drawingQueueMutex);
-    
+    //--Copy drawing queue -> double buffering to enable threading
+	drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
+	//--Update view transforms (avoid shaking)
+	for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
+	{
+		OpenGLView* view = OpenGLContent::getInstance()->getView(i);
+		view->setRendering(true);
+	}
+	SDL_UnlockMutex(drawingQueueMutex);
+	
+	//Choose rendering mode
     unsigned int renderMode = 0;
     
-    //Simulate ocean
-	Liquid* liquid = sim->getLiquid();
+    Liquid* liquid = sim->getLiquid();
     
     if(liquid != NULL)
     {
         if(liquid->getForcefieldType() == ForcefieldType::FORCEFIELD_OCEAN)
         {
-            ((Ocean*)liquid)->getOpenGLOcean().SimulateOcean();
+            ((Ocean*)liquid)->getOpenGLOcean()->SimulateOcean();
             renderMode = renderFluid ? 2 : 0;
         }
         else //POOL
@@ -231,7 +238,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         
         if(view->needsUpdate())
         {
-            glDisable(GL_BLEND);
+			glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_CULL_FACE);
             
@@ -274,7 +281,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
             else if(renderMode == 1)
             {
-				OpenGLPool& glPool = ((Pool*)liquid)->getOpenGLPool();
+				OpenGLPool* glPool = ((Pool*)liquid)->getOpenGLPool();
                 
 				if(view->GetEyePosition().z >= 0.f)
 				{
@@ -321,7 +328,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					OpenGLContent::getInstance()->SetCurrentView(view);
 					
 					//Draw water surface
-					glPool.DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix(), view->getReflectionTexture(), viewport);
+					glPool->DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix(), view->getReflectionTexture(), viewport);
 		
 					//Render sky
 					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
@@ -353,7 +360,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					//Ambient occlusion
 					if(renderAO)
 					{
-						GLfloat factor = expf(-glPool.getTurbidity()/1000.f);
+						GLfloat factor = expf(-glPool->getTurbidity()/1000.f);
 						factor *= factor*factor;
 						view->DrawAO(factor);
 					}
@@ -372,7 +379,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					glCullFace(GL_BACK);
 					glm::vec3 eyePos = view->GetEyePosition();
 					eyePos.z = -eyePos.z;
-					glPool.DrawBackground(eyePos, OpenGLContent::getInstance()->GetViewMatrix(), view->GetProjectionMatrix());
+					glPool->DrawBackground(eyePos, OpenGLContent::getInstance()->GetViewMatrix(), view->GetProjectionMatrix());
 					OpenGLContent::getInstance()->DisableClipPlane();
 					
 					//Draw water surface
@@ -380,10 +387,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					glDrawBuffers(2, renderBuffs);
 					view->SetViewport();
 					OpenGLContent::getInstance()->SetCurrentView(view);
-					glPool.DrawBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix(), view->getReflectionTexture(), viewport);
+					glPool->DrawBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix(), view->getReflectionTexture(), viewport);
 					
 					//Distant pool background
-					glPool.DrawBackground(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+					glPool->DrawBackground(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 					
                     //Underwater blur
 					view->GenerateLinearDepth(0);
@@ -392,7 +399,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     //Apply blur
 					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-					glPool.DrawVolume(view->getPostprocessTexture(2), view->getLinearDepthTexture());
+					glPool->DrawVolume(view->getPostprocessTexture(2), view->getLinearDepthTexture());
 					
 					//Render sky if camera crossing water plane
 					//OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
@@ -403,19 +410,17 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
 			else if(renderMode == 2)
 			{
-                /*Ocean* ocean = (Ocean*)liquid;
-				view->SetViewport();
+				OpenGLOcean* glOcean = ((Ocean*)liquid)->getOpenGLOcean();
 				
-				glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+                glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
 				GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 				glDrawBuffers(2, renderBuffs);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-				//Draw ocean surface
-				ocean->getOpenGLOcean().DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+				view->SetViewport();
+				OpenGLContent::getInstance()->SetCurrentView(view);
 				
 				//Draw stencil mask
-				glEnable(GL_STENCIL_TEST);
+				/*glEnable(GL_STENCIL_TEST);
 				
 				glStencilFunc(GL_ALWAYS, 1, 0xFF);
 				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -424,43 +429,44 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 				glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 				glDepthMask(GL_FALSE);
 				
-				ocean->getOpenGLOcean().DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());				
+				glOcean->DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());				
 				
 				glStencilFunc(GL_EQUAL, 0, 0xFF);
 				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 				glStencilMask(0x00);
 				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 				glDepthMask(GL_TRUE);
-				
+				*/
 				//Render all objects above ocean surface
-				OpenGLContent::getInstance()->SetCurrentView(view);
 				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-				glDrawBuffers(2, renderBuffs);
 				DrawObjects();
             
+				glOcean->DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
+				
+			
 				//Ambient occlusion
-				//view->DrawAO();
+				//view->DrawAO(1.0);
 				
 				//Draw sky
 				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
 				
-				glStencilFunc(GL_EQUAL, 1, 0xFF);
+				//glStencilFunc(GL_EQUAL, 1, 0xFF);
 				
 				//Render all objects below ocean surface
-				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
+				//OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+				//glDrawBuffers(2, renderBuffs);
+				//DrawObjects();
 					
 				//Ambient occlusion
 				//view->DrawAO();
 					
 				//Draw ocean surface from below
-				ocean->getOpenGLOcean().DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
+				//glOcean->DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
 				
-				glDisable(GL_STENCIL_TEST);
+				//glDisable(GL_STENCIL_TEST);
 				
 				//Go to postprocessing stage
-				view->EnterPostprocessing();*/
+				view->EnterPostprocessing();
 			}
 			
             //================Post-processing=============================
@@ -572,6 +578,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
             
             delete viewport;
+			
+			view->setRendering(false);
         }
         else
         {

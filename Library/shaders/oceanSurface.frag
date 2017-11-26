@@ -2,14 +2,12 @@
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
 uniform vec4 gridSizes;
-uniform vec4 choppyFactor;
 uniform vec3 eyePos;
 uniform mat3 MV;
 uniform vec3 sunDirection;
 uniform float planetRadius;
 
-in vec2 waveCoord;
-in vec3 fragPos;
+in vec4 fragPos;
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragNormal;
 
@@ -81,32 +79,17 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 
 void main()
 {
-	vec3 toEye = normalize(eyePos - fragPos);
+	vec3 pos = fragPos.xyz/fragPos.w;
+	vec3 toEye = normalize(eyePos - pos);
 	vec3 center = vec3(0, 0, -planetRadius + 5.0);
-	vec3 P = fragPos - center;
+	vec3 P = pos - center;
 	
 	//Wave slope (layers 1,2)
+	vec2 waveCoord = pos.xy;
 	vec2 slopes = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 1.0)).zw;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 2.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 2.0)).zw;
-	
-	//Choppy wave component (layers 5,6)
-	// Jxx1..4 : partial Jxx
-	float Jxx1 = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 5.0)).r;
-	float Jxx2 = texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 5.0)).g;
-	float Jxx3 = texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 5.0)).b;
-	float Jxx4 = texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 5.0)).a;
-	float Jxxc = dot(choppyFactor, vec4(Jxx1, Jxx2, Jxx3, Jxx4));
-
-	// Jyy1..4 : partial Jyy
-	float Jyy1 = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 6.0)).r;
-	float Jyy2 = texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 6.0)).g;
-	float Jyy3 = texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 6.0)).b;
-	float Jyy4 = texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 6.0)).a;
-	float Jyyc = dot(choppyFactor, vec4(Jyy1, Jyy2, Jyy3, Jyy4));
-
-	slopes /= (1.0 + vec2(Jxxc, Jyyc));
 	
 	//Normals
 	vec3 normal = normalize(vec3(-slopes.x, -slopes.y, 1.0));

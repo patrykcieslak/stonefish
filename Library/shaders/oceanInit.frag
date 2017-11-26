@@ -1,5 +1,5 @@
 #version 430 core
-layout(location = 0,index=0) out vec4 fragColor[8];
+layout(location = 0,index=0) out vec4 fragColor[3];
 in vec2 texcoord;
 
 uniform sampler2D texSpectrum12;
@@ -48,12 +48,6 @@ void main()
 	float K3 = length(k3);
 	float K4 = length(k4);
 
-	// 1/kmag
-	float IK1 = K1 == 0.0 ? 0.0 : 1.0 / K1;
-	float IK2 = K2 == 0.0 ? 0.0 : 1.0 / K2;
-	float IK3 = K3 == 0.0 ? 0.0 : 1.0 / K3;
-	float IK4 = K4 == 0.0 ? 0.0 : 1.0 / K4;
-
 	// h(k,t)
 	vec2 h1 = getSpectrum(K1, s12.xy, s12c.xy);
 	vec2 h2 = getSpectrum(K2, s12.zw, s12c.zw);
@@ -66,23 +60,4 @@ void main()
 	// slopes (for normal computation)
 	fragColor[1] = vec4(i(k1.x * h1) - (k1.y * h1), i(k2.x * h2) - (k2.y * h2)); // Tes01 eq20
 	fragColor[2] = vec4(i(k3.x * h3) - (k3.y * h3), i(k4.x * h4) - (k4.y * h4)); // Tes01 eq20
-
-	// D(X,t)  = Sum_over_K(-i * norm(K) * h(K,t) * exp(iK . X))
-	fragColor[3] = fragColor[1] * vec4(IK1, IK1, IK2, IK2);	// Tes01 eq29
-	fragColor[4] = fragColor[2] * vec4(IK3, IK3, IK4, IK4);
-
-	/// Jacobians
-	vec4 IK = vec4(IK1,IK2,IK3,IK4);
-	vec2 k1Squared = k1*k1;
-	vec2 k2Squared = k2*k2;
-	vec2 k3Squared = k3*k3;
-	vec2 k4Squared = k4*k4;
-
-	// 5: d(Dx(X,t))/dx 	Tes01 eq30
-	// 6: d(Dy(X,t))/dy 	Tes01 eq30
-	// 7: d(Dx(X,t))/dy 	Tes01 eq30
-	vec4 tmp = vec4(h1.x, h2.x, h3.x, h4.x);
-	fragColor[5] = -tmp * (vec4(k1Squared.x, k2Squared.x, k3Squared.x, k4Squared.x) * IK);
-	fragColor[6] = -tmp * (vec4(k1Squared.y, k2Squared.y, k3Squared.y, k4Squared.y) * IK);
-	fragColor[7] = -tmp * (vec4(k1.x*k1.y, k2.x*k2.y, k3.x*k3.y, k4.x*k4.y) * IK);
 }

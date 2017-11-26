@@ -16,11 +16,12 @@ class Ocean : public Liquid
 {
 public:
     Ocean(std::string uniqueName, Fluid* f);
-    
+    virtual ~Ocean();
+	
     ForcefieldType getForcefieldType();
-    OpenGLOcean& getOpenGLOcean();
+    OpenGLOcean* getOpenGLOcean();
 	
 private:	
-    OpenGLOcean glOcean;
+    OpenGLOcean* glOcean;
 };
 #endif

@@ -100,6 +100,7 @@ public:
     GLfloat GetNearClip();
     GLfloat GetFarClip();
 	
+	virtual void setRendering(bool render); 
     GLuint getRenderFBO();
 	GLuint getReflectionFBO();
 	GLuint getReflectionTexture();
@@ -159,6 +160,7 @@ protected:
     GLfloat near;
     GLfloat far;
     glm::mat4 projection;
+	bool rendering;
     
     //Shaders
 	static GLSLShader** depthAwareBlurShader;

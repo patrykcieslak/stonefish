@@ -428,6 +428,11 @@ bool OpenGLView::hasAO()
     return aoFactor > 0;
 }
 
+void OpenGLView::setRendering(bool render)
+{
+	rendering = render;
+}
+
 void OpenGLView::SetupViewport(GLint x, GLint y, GLint width)
 {
     originX = x;

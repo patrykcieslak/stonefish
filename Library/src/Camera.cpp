@@ -13,14 +13,15 @@
 Camera::Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btScalar horizFOV, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency, unsigned int spp, bool ao) : Sensor(uniqueName, frequency)
 {
     g2s = UnitSystem::SetTransform(geomToSensor);
-    glCamera = NULL;
     attach = attachment;
     fovH = horizFOV;
     resx = resX;
     resy = resY;
     renderSpp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     renderAO = ao;
-    InternalUpdate(0);
+    
+	glCamera = new OpenGLCamera(glm::vec3(0,0,0), glm::vec3(1.f,0,0), glm::vec3(0,0,1.f), 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
+	InternalUpdate(0);
     OpenGLContent::getInstance()->AddView(glCamera);
 }
     
@@ -29,9 +30,9 @@ Camera::~Camera()
     glCamera = NULL;
 }
 
-void Camera::InternalUpdate(btScalar dt)
+void Camera::UpdateTransform()
 {
-    btTransform cameraTransform;
+	btTransform cameraTransform;
     
     if(attach != NULL)
         cameraTransform = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
@@ -49,10 +50,7 @@ void Camera::InternalUpdate(btScalar dt)
         glm::vec3 eye = glm::vec3((GLfloat)eyePosition.x(), (GLfloat)eyePosition.y(), (GLfloat)eyePosition.z());
         glm::vec3 dir = glm::vec3((GLfloat)direction.x(), (GLfloat)direction.y(), (GLfloat)direction.z());
         glm::vec3 up = glm::vec3((GLfloat)cameraUp.x(), (GLfloat)cameraUp.y(), (GLfloat)cameraUp.z());
-        if(glCamera == NULL)
-            glCamera = new OpenGLCamera(eye, dir, up, 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
-        else
-            glCamera->SetupCamera(eye, dir, up);
+		glCamera->SetupCamera(eye, dir, up);
     }
     else
     {
@@ -64,12 +62,12 @@ void Camera::InternalUpdate(btScalar dt)
         glm::vec3 eye = glm::vec3((GLfloat)rotEyePosition.x(), (GLfloat)rotEyePosition.y(), (GLfloat)rotEyePosition.z());
         glm::vec3 dir = glm::vec3((GLfloat)rotDirection.x(), (GLfloat)rotDirection.y(), (GLfloat)rotDirection.z());
         glm::vec3 up = glm::vec3((GLfloat)rotCameraUp.x(), (GLfloat)rotCameraUp.y(), (GLfloat)rotCameraUp.z());
-        if(glCamera == NULL)
-            glCamera = new OpenGLCamera(eye, dir, up, 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
-        else
-            glCamera->SetupCamera(eye, dir, up);
+		glCamera->SetupCamera(eye, dir, up);
     }
-    
+}
+
+void Camera::InternalUpdate(btScalar dt)
+{
     glCamera->Update();
 }
 

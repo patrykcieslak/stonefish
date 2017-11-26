@@ -17,18 +17,21 @@ class Pool : public Liquid
 public:
     //Pool
     Pool(std::string uniqueName, Fluid* f);
+	virtual ~Pool();
+	
     void setAlgeaBloomFactor(GLfloat f);
     void setTurbidity(GLfloat ntu);
     GLfloat getAlgeaBloomFactor();
     GLfloat getTurbidity();
-    OpenGLPool& getOpenGLPool();
+    OpenGLPool* getOpenGLPool();
 	
     //Force field
     ForcefieldType getForcefieldType();
     
 private:	
     glm::vec3 ComputeLightAbsorption();
-    OpenGLPool glPool;
+	
+    OpenGLPool* glPool;
     GLfloat algeaBloom;
     GLfloat turbidity;
 };

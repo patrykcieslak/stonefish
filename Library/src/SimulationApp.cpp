@@ -285,44 +285,52 @@ void SimulationApp::KeyDown(SDL_Event *event)
 			
 		case SDLK_w: //Forward
 		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-            trackball->MoveCenter(trackball->GetLookingDirection() * 0.1);
+			OpenGLTrackball* trackball = simulation->getTrackball();
+			if(trackball->isEnabled())
+				trackball->MoveCenter(trackball->GetLookingDirection() * 0.1);
 		}
 			break;
 			
 		case SDLK_s: //Backward
 		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-            trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1);
+			OpenGLTrackball* trackball = simulation->getTrackball();
+			if(trackball->isEnabled())
+				trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1);
 		}
 			break;
 			
 		case SDLK_a: //Left
 		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-            glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-            trackball->MoveCenter(-axis * 0.1);
+			OpenGLTrackball* trackball = simulation->getTrackball();
+			if(trackball->isEnabled())
+			{
+				glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
+				trackball->MoveCenter(-axis * 0.1);
+			}
 		}
 			break;
 			
 		case SDLK_d: //Right
 		{
-			OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-            glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-            trackball->MoveCenter(axis * 0.1);
+			OpenGLTrackball* trackball = simulation->getTrackball();
+			if(trackball->isEnabled())
+            {
+				glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
+				trackball->MoveCenter(axis * 0.1);
+			}
 		}
 			break;
             
         case SDLK_q: //Up
         {
-            OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            OpenGLTrackball* trackball = simulation->getTrackball();
             trackball->MoveCenter(glm::vec3(0,0,0.1));
         }
             break;
             
         case SDLK_z: //Down
         {
-            OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
+            OpenGLTrackball* trackball = simulation->getTrackball();
             trackball->MoveCenter(glm::vec3(0,0,-0.1));
         }
             break;
@@ -415,8 +423,9 @@ void SimulationApp::EventLoop()
                     //Trackball
                     if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
                     {
-                        OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-                        trackball->MouseUp();
+                        OpenGLTrackball* trackball = simulation->getTrackball();
+						if(trackball->isEnabled())
+							trackball->MouseUp();
                     }
                     
                     //Pass
@@ -429,10 +438,13 @@ void SimulationApp::EventLoop()
                     //GUI
                     IMGUI::getInstance()->MouseMove(event.motion.x, event.motion.y);
                     
-                    GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                    GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                    OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-                    trackball->MouseMove(xPos, yPos);
+                    OpenGLTrackball* trackball = simulation->getTrackball();
+					if(trackball->isEnabled())
+                    {
+						GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+						GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+						trackball->MouseMove(xPos, yPos);
+					}
                         
                     //Pass
                     MouseMove(&event);
@@ -446,8 +458,9 @@ void SimulationApp::EventLoop()
                     else
                     {
                         //Trackball
-                        OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-                        trackball->MouseScroll(event.wheel.y * -1.f);
+                        OpenGLTrackball* trackball = simulation->getTrackball();
+						if(trackball->isEnabled())
+							trackball->MouseScroll(event.wheel.y * -1.f);
                         
                         //Pass
                         MouseScroll(&event);
@@ -496,10 +509,13 @@ void SimulationApp::EventLoop()
             //Trackball
             if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
             {
-                GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                OpenGLTrackball* trackball = (OpenGLTrackball*)OpenGLContent::getInstance()->getView(0);
-                trackball->MouseDown(xPos, yPos, event.button.button == SDL_BUTTON_MIDDLE);
+                OpenGLTrackball* trackball = simulation->getTrackball();
+				if(trackball->isEnabled())
+				{
+					GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+					GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+					trackball->MouseDown(xPos, yPos, event.button.button == SDL_BUTTON_MIDDLE);
+				}
             }
             
             //Pass

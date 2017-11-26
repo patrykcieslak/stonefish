@@ -19,7 +19,6 @@ struct OceanParams
 	glm::vec4 gridSizes;
 	float* spectrum12;
 	float* spectrum34;
-	glm::vec4 choppyFactor;
 	bool propagate;
 	float wind;
 	float omega;
@@ -33,7 +32,7 @@ class OpenGLOcean
 {
 public:
 	OpenGLOcean();
-	~OpenGLOcean();
+	virtual ~OpenGLOcean();
 	
 	void InitOcean();
 	void SimulateOcean();
@@ -55,13 +54,15 @@ private:
 	float omega(float k);
 	float sqr(float x);
 
-	GLSLShader* oceanShaders[9]; //surface, volume, init, fftx, ffty, variance, choppy, show spectrum, volume mask
+	std::vector<GLSLShader*> oceanShaders;
 	GLuint oceanFBOs[3];
-	GLuint oceanTextures[7]; //spectrum12, spectrum34, slope, fft ping, fft pong, butterfly, gaussz
-	GLuint oceanViewTextures[8];
+	GLuint oceanTextures[6];
+	GLuint oceanViewTextures[3];
 	
 	OceanParams params;
-	QuadTree qt;
+	GLuint vao;
+    GLuint vbo;
+	//QuadTree qt;
 	int64_t lastTime;
 	GLuint vaoMask;
 	GLuint vboMask;

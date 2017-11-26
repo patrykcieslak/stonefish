@@ -111,7 +111,8 @@ public:
     Controller* getController(unsigned int index);
     Controller* getController(std::string name);
 	Liquid* getLiquid();
-    
+    OpenGLTrackball* getTrackball();
+	
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();
     btMultiBodyDynamicsWorld* getDynamicsWorld();
@@ -120,7 +121,7 @@ public:
     MaterialManager* getMaterialManager();
     bool isZAxisUp();
     bool isSimulationFresh();
-    bool drawCameraDummies;
+	bool drawCameraDummies;
     bool drawLightDummies;
     
 protected:

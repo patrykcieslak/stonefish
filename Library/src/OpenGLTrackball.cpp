@@ -24,6 +24,7 @@ OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbit
     GLfloat fovy = fovx/aspect;
     projection = glm::perspective(fovy, aspect, near, far);
     
+	enabled = true;
 	dragging = false;
     transMode = false;
     holdingEntity = NULL;
@@ -40,9 +41,19 @@ ViewType OpenGLTrackball::getType()
     return TRACKBALL;
 }
 
+void OpenGLTrackball::setEnabled(bool en)
+{
+	enabled = true;
+}
+
+bool OpenGLTrackball::isEnabled()
+{
+	return enabled;
+}
+
 bool OpenGLTrackball::needsUpdate()
 {
-    return true;
+    return enabled;
 }
 
 glm::vec3 OpenGLTrackball::GetEyePosition() const

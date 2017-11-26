@@ -15,10 +15,10 @@ OpenGLPool::OpenGLPool()
 {
     vao = 0;
     vbo = 0;
-    poolShaders[0] = NULL;
-    poolShaders[1] = NULL;
-    poolShaders[2] = NULL;
-	poolShaders[3] = NULL;
+    //poolShaders[0] = NULL;
+    //poolShaders[1] = NULL;
+    //poolShaders[2] = NULL;
+	//poolShaders[3] = NULL;
 	t = 0;
     lightAbsorption = glm::vec3(0.f);
 	turbidity = 0.f;
@@ -26,7 +26,8 @@ OpenGLPool::OpenGLPool()
 
 OpenGLPool::~OpenGLPool()
 {
-    for(unsigned short i=0; i<4; ++i) if(poolShaders[i] != NULL) delete poolShaders[i];
+    //for(unsigned short i=0; i<4; ++i) if(poolShaders[i] != NULL) delete poolShaders[i];
+	for(unsigned int i=0; i<poolShaders.size(); ++i) delete poolShaders[i];
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 }
@@ -85,57 +86,61 @@ void OpenGLPool::Init()
 	std::vector<GLuint> precompiled;
 	precompiled.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
 	
-	poolShaders[0] = new GLSLShader(precompiled, "poolSurface.frag", "poolSurface.vert");
-	poolShaders[0]->AddUniform("MVP", ParameterType::MAT4);
-	poolShaders[0]->AddUniform("viewport", ParameterType::VEC2);
-	poolShaders[0]->AddUniform("eyePos", ParameterType::VEC3);
-	poolShaders[0]->AddUniform("R0", ParameterType::FLOAT);
-	poolShaders[0]->AddUniform("time", ParameterType::FLOAT);
-	poolShaders[0]->AddUniform("texReflection", ParameterType::INT);
-	poolShaders[0]->AddUniform("transmittance_texture", ParameterType::INT);
-	poolShaders[0]->AddUniform("scattering_texture", ParameterType::INT);
-	poolShaders[0]->AddUniform("irradiance_texture", ParameterType::INT);
-	poolShaders[0]->AddUniform("sunRadius", ParameterType::VEC3);
-	poolShaders[0]->AddUniform("planetRadius", ParameterType::FLOAT);
-	poolShaders[0]->AddUniform("whitePoint", ParameterType::VEC3);
-	poolShaders[0]->AddUniform("sunDirection", ParameterType::VEC3);
-	poolShaders[0]->AddUniform("cosSunSize", ParameterType::FLOAT);
+	GLSLShader* poolSurface = new GLSLShader(precompiled, "poolSurface.frag", "poolSurface.vert");
+	poolSurface->AddUniform("MVP", ParameterType::MAT4);
+	poolSurface->AddUniform("viewport", ParameterType::VEC2);
+	poolSurface->AddUniform("eyePos", ParameterType::VEC3);
+	poolSurface->AddUniform("R0", ParameterType::FLOAT);
+	poolSurface->AddUniform("time", ParameterType::FLOAT);
+	poolSurface->AddUniform("texReflection", ParameterType::INT);
+	poolSurface->AddUniform("transmittance_texture", ParameterType::INT);
+	poolSurface->AddUniform("scattering_texture", ParameterType::INT);
+	poolSurface->AddUniform("irradiance_texture", ParameterType::INT);
+	poolSurface->AddUniform("sunRadius", ParameterType::VEC3);
+	poolSurface->AddUniform("planetRadius", ParameterType::FLOAT);
+	poolSurface->AddUniform("whitePoint", ParameterType::VEC3);
+	poolSurface->AddUniform("sunDirection", ParameterType::VEC3);
+	poolSurface->AddUniform("cosSunSize", ParameterType::FLOAT);
+	poolShaders.push_back(poolSurface);
 	
-	poolShaders[1] = new GLSLShader(precompiled, "poolBacksurface.frag", "poolSurface.vert");
-	poolShaders[1]->AddUniform("MVP", ParameterType::MAT4);
-	poolShaders[1]->AddUniform("viewport", ParameterType::VEC2);
-	poolShaders[1]->AddUniform("eyePos", ParameterType::VEC3);
-	poolShaders[1]->AddUniform("R0", ParameterType::FLOAT);
-	poolShaders[1]->AddUniform("time", ParameterType::FLOAT);
-    poolShaders[1]->AddUniform("lightAbsorption", ParameterType::VEC3);
-	poolShaders[1]->AddUniform("turbidity", ParameterType::FLOAT);
-	poolShaders[1]->AddUniform("texReflection", ParameterType::INT);
-	poolShaders[1]->AddUniform("transmittance_texture", ParameterType::INT);
-	poolShaders[1]->AddUniform("scattering_texture", ParameterType::INT);
-	poolShaders[1]->AddUniform("irradiance_texture", ParameterType::INT);
-	poolShaders[1]->AddUniform("sunRadius", ParameterType::VEC3);
-	poolShaders[1]->AddUniform("planetRadius", ParameterType::FLOAT);
-	poolShaders[1]->AddUniform("whitePoint", ParameterType::VEC3);
-	poolShaders[1]->AddUniform("sunDirection", ParameterType::VEC3);
-	poolShaders[1]->AddUniform("cosSunSize", ParameterType::FLOAT);
+	GLSLShader* poolBacksurface = new GLSLShader(precompiled, "poolBacksurface.frag", "poolSurface.vert");
+	poolBacksurface->AddUniform("MVP", ParameterType::MAT4);
+	poolBacksurface->AddUniform("viewport", ParameterType::VEC2);
+	poolBacksurface->AddUniform("eyePos", ParameterType::VEC3);
+	poolBacksurface->AddUniform("R0", ParameterType::FLOAT);
+	poolBacksurface->AddUniform("time", ParameterType::FLOAT);
+    poolBacksurface->AddUniform("lightAbsorption", ParameterType::VEC3);
+	poolBacksurface->AddUniform("turbidity", ParameterType::FLOAT);
+	poolBacksurface->AddUniform("texReflection", ParameterType::INT);
+	poolBacksurface->AddUniform("transmittance_texture", ParameterType::INT);
+	poolBacksurface->AddUniform("scattering_texture", ParameterType::INT);
+	poolBacksurface->AddUniform("irradiance_texture", ParameterType::INT);
+	poolBacksurface->AddUniform("sunRadius", ParameterType::VEC3);
+	poolBacksurface->AddUniform("planetRadius", ParameterType::FLOAT);
+	poolBacksurface->AddUniform("whitePoint", ParameterType::VEC3);
+	poolBacksurface->AddUniform("sunDirection", ParameterType::VEC3);
+	poolBacksurface->AddUniform("cosSunSize", ParameterType::FLOAT);
+	poolShaders.push_back(poolBacksurface);
 	
-	poolShaders[2] = new GLSLShader(precompiled, "poolBackground.frag", "saq.vert");
-    poolShaders[2]->AddUniform("lightAbsorption", ParameterType::VEC3);
-	poolShaders[2]->AddUniform("eyePos", ParameterType::VEC3);
-	poolShaders[2]->AddUniform("invProj", ParameterType::MAT4);
-	poolShaders[2]->AddUniform("invView", ParameterType::MAT3);
-	poolShaders[2]->AddUniform("transmittance_texture", ParameterType::INT);
-	poolShaders[2]->AddUniform("scattering_texture", ParameterType::INT);
-	poolShaders[2]->AddUniform("irradiance_texture", ParameterType::INT);
-	poolShaders[2]->AddUniform("sunRadius", ParameterType::VEC3);
-	poolShaders[2]->AddUniform("planetRadius", ParameterType::FLOAT);
-	poolShaders[2]->AddUniform("whitePoint", ParameterType::VEC3);
-	poolShaders[2]->AddUniform("sunDirection", ParameterType::VEC3);
-	poolShaders[2]->AddUniform("cosSunSize", ParameterType::FLOAT);
+	GLSLShader* poolBackground = new GLSLShader(precompiled, "poolBackground.frag", "saq.vert");
+    poolBackground->AddUniform("lightAbsorption", ParameterType::VEC3);
+	poolBackground->AddUniform("eyePos", ParameterType::VEC3);
+	poolBackground->AddUniform("invProj", ParameterType::MAT4);
+	poolBackground->AddUniform("invView", ParameterType::MAT3);
+	poolBackground->AddUniform("transmittance_texture", ParameterType::INT);
+	poolBackground->AddUniform("scattering_texture", ParameterType::INT);
+	poolBackground->AddUniform("irradiance_texture", ParameterType::INT);
+	poolBackground->AddUniform("sunRadius", ParameterType::VEC3);
+	poolBackground->AddUniform("planetRadius", ParameterType::FLOAT);
+	poolBackground->AddUniform("whitePoint", ParameterType::VEC3);
+	poolBackground->AddUniform("sunDirection", ParameterType::VEC3);
+	poolBackground->AddUniform("cosSunSize", ParameterType::FLOAT);
+	poolShaders.push_back(poolBackground);
 	
-	poolShaders[3] = new GLSLShader("poolVolume.frag");
-	poolShaders[3]->AddUniform("texScene", ParameterType::INT);
-	poolShaders[3]->AddUniform("texLinearDepth", ParameterType::INT);
+	GLSLShader* poolVolume = new GLSLShader("poolVolume.frag");
+	poolVolume->AddUniform("texScene", ParameterType::INT);
+	poolVolume->AddUniform("texLinearDepth", ParameterType::INT);
+	poolShaders.push_back(poolVolume);
 }	
 
 void OpenGLPool::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport)

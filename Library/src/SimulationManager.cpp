@@ -22,8 +22,8 @@
 #include "SimulationApp.h"
 #include "SystemUtil.hpp"
 #include "OpenGLTrackball.h"
+#include "Camera.h"
 #include "SolidEntity.h"
-#include "Box.h"
 #include "StaticEntity.h"
 #include "CableEntity.h"
 #include "ForcefieldEntity.h"
@@ -137,12 +137,12 @@ void SimulationManager::EnableLiquid(Fluid* f)
     if(simType == SimulationType::MARINE)
     {
         liquid = new Ocean("Ocean", f);
-        ((Ocean*)liquid)->getOpenGLOcean().InitOcean();
+        ((Ocean*)liquid)->getOpenGLOcean()->InitOcean();
     }
     else //POOL
     {
         liquid = new Pool("Pool", f);
-        ((Pool*)liquid)->getOpenGLPool().Init();
+        ((Pool*)liquid)->getOpenGLPool()->Init();
 	}
 	
 	liquid->setRenderable(true);
@@ -371,6 +371,11 @@ Controller* SimulationManager::getController(std::string name)
 Liquid* SimulationManager::getLiquid()
 {
 	return liquid;
+}
+
+OpenGLTrackball* SimulationManager::getTrackball()
+{
+	return trackball;
 }
 
 btMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
@@ -908,6 +913,9 @@ void SimulationManager::UpdateDrawingQueue()
 			
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
+		
+		if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
+			((Camera*)sensors[i])->UpdateTransform();
     }
     
     //Contacts

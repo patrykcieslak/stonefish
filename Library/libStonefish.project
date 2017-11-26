@@ -60,8 +60,8 @@
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
       <VirtualDirectory Name="specials">
-        <File Name="src/OpenGLOcean.cpp"/>
         <File Name="src/OpenGLPool.cpp"/>
+        <File Name="src/OpenGLOcean.cpp"/>
       </VirtualDirectory>
       <File Name="src/OpenGLContent.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
@@ -275,9 +275,9 @@
       <File Name="include/Stonefish/UnitSystem.h"/>
       <File Name="include/Stonefish/TorusShape.h"/>
       <File Name="include/Stonefish/MaterialManager.h"/>
-      <File Name="include/Stonefish/SimulationManager.h"/>
       <File Name="include/Stonefish/XMLSimulationApp.h"/>
       <File Name="include/Stonefish/XMLSimulationManager.h"/>
+      <File Name="include/Stonefish/SimulationManager.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>
@@ -409,7 +409,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
-        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/zbuffer/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

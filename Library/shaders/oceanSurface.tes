@@ -5,11 +5,9 @@ layout(quads, equal_spacing, ccw) in;
 uniform sampler2DArray texWaveFFT;
 uniform mat4 MVP;
 uniform vec4 gridSizes;
-uniform vec4 choppyFactor;
 uniform float tessDiv;
 
-out vec2 waveCoord;
-out vec3 fragPos;
+out vec4 fragPos;
 
 vec4 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
 {
@@ -27,20 +25,13 @@ void main()
 	vec2 dy = (gl_in[1].gl_Position.xy - gl_in[0].gl_Position.xy)/tessDiv;
 	vec2 dx = (gl_in[3].gl_Position.xy - gl_in[0].gl_Position.xy)/tessDiv;
 	
-	vec3 dP = vec3(0.0);
+	float dz = 0.0;
 	//Basic wave height (layer 0)
-    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0), dx/gridSizes.x, dy/gridSizes.x).x;
-    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0), dx/gridSizes.y, dy/gridSizes.y).y;
-    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0), dx/gridSizes.z, dy/gridSizes.z).z;
-    dP.z += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0), dx/gridSizes.w, dy/gridSizes.w).w;
+    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0), dx/gridSizes.x, dy/gridSizes.x).x;
+    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0), dx/gridSizes.y, dy/gridSizes.y).y;
+    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0), dx/gridSizes.z, dy/gridSizes.z).z;
+    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0), dx/gridSizes.w, dy/gridSizes.w).w;
 
-    //Choppy waves (layers 3,4)
-	dP.xy += choppyFactor.x*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.x, 3.0), dx/gridSizes.x, dy/gridSizes.x).xy;
-	dP.xy += choppyFactor.y*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.y, 3.0), dx/gridSizes.y, dy/gridSizes.y).zw;
-	dP.xy += choppyFactor.z*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.z, 4.0), dx/gridSizes.z, dy/gridSizes.z).xy;
-	dP.xy += choppyFactor.w*textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 4.0), dx/gridSizes.w, dy/gridSizes.w).zw;
-    
-	waveCoord = P.xy; //Horizontal coordinates used to compute dP, in world space
-	fragPos = vec3(waveCoord + dP.xy, dP.z); //Position of deformed vertex in world space
-	gl_Position = MVP * vec4(fragPos, 1.0); //Screen space position
+	fragPos = vec4(P.xy, dz, 1.0); //Position of deformed vertex in world space
+	gl_Position = MVP * fragPos; //Screen space position
 }

@@ -1017,8 +1017,8 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 		if(SimulationApp::getApp()->getSimulationManager()->getLiquid()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
         {
             Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getLiquid();
-            shader->SetUniform("lightAbsorption", pool->getOpenGLPool().getLightAbsorptionCoeff());
-			shader->SetUniform("turbidity", pool->getOpenGLPool().getTurbidity());
+            shader->SetUniform("lightAbsorption", pool->getOpenGLPool()->getLightAbsorptionCoeff());
+			shader->SetUniform("turbidity", pool->getOpenGLPool()->getTurbidity());
         }
 	}
 	

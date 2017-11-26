@@ -12,8 +12,14 @@ Pool::Pool(std::string uniqueName, Fluid* f) : Liquid(uniqueName, f)
 {
     algeaBloom = 0.2f;
     turbidity = 100.f;
-	glPool.setTurbidity(turbidity);
-    glPool.setLightAbsorptionCoeff(ComputeLightAbsorption());
+	glPool = new OpenGLPool();
+	glPool->setTurbidity(turbidity);
+    glPool->setLightAbsorptionCoeff(ComputeLightAbsorption());
+}
+
+Pool::~Pool()
+{
+	delete glPool;
 }
 
 ForcefieldType Pool::getForcefieldType()
@@ -21,7 +27,7 @@ ForcefieldType Pool::getForcefieldType()
     return FORCEFIELD_POOL;
 }
 
-OpenGLPool& Pool::getOpenGLPool()
+OpenGLPool* Pool::getOpenGLPool()
 {
 	return glPool;
 }
@@ -29,13 +35,13 @@ OpenGLPool& Pool::getOpenGLPool()
 void Pool::setAlgeaBloomFactor(GLfloat f)
 {
     algeaBloom = f < 0.f ? 0.f : (f > 1.f ? 1.f : f);
-    glPool.setLightAbsorptionCoeff(ComputeLightAbsorption());
+    glPool->setLightAbsorptionCoeff(ComputeLightAbsorption());
 }
 
 void Pool::setTurbidity(GLfloat ntu)
 {
     turbidity = ntu < 0.f ? 0.f : ntu;
-	glPool.setTurbidity(turbidity);
+	glPool->setTurbidity(turbidity);
 }
     
 GLfloat Pool::getAlgeaBloomFactor()

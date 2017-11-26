@@ -12,25 +12,23 @@
 
 OpenGLOcean::OpenGLOcean()
 {
-	qt.root.size = glm::vec2(10000.f,10000.f);
-	for(unsigned short i=0; i<3; ++i) oceanFBOs[i] = 0;
-	for(unsigned short i=0; i<8; ++i) oceanShaders[i] = NULL;
-	for(unsigned short i=0; i<7; ++i) oceanTextures[i] = 0;
-	for(unsigned short i=0; i<8; ++i) oceanViewTextures[i] = 0;
+	//qt.root.size = glm::vec2(10000.f,10000.f);
+	for(unsigned int i=0; i<3; ++i) oceanFBOs[i] = 0;
+	for(unsigned int i=0; i<6; ++i) oceanTextures[i] = 0;
+	for(unsigned int i=0; i<3; ++i) oceanViewTextures[i] = 0;
 	lastTime = GetTimeInMicroseconds();
 }
 
 OpenGLOcean::~OpenGLOcean()
 {
-	for(unsigned short i=0; i<3; ++i) if(oceanFBOs[i] != 0) glDeleteFramebuffers(1, &oceanFBOs[i]);
-	for(unsigned short i=0; i<9; ++i) if(oceanShaders[i] != NULL) delete oceanShaders[i];
-	for(unsigned short i=0; i<7; ++i) if(oceanTextures[i] != 0) glDeleteTextures(1, &oceanTextures[i]);
-	for(unsigned short i=0; i<8; ++i) if(oceanViewTextures[i] != 0) glDeleteTextures(1, &oceanViewTextures[i]);
+	for(unsigned int i=0; i<oceanShaders.size(); ++i) delete oceanShaders[i];
+	for(unsigned int i=0; i<3; ++i) if(oceanFBOs[i] != 0) glDeleteFramebuffers(1, &oceanFBOs[i]);
+	for(unsigned int i=0; i<6; ++i) if(oceanTextures[i] != 0) glDeleteTextures(1, &oceanTextures[i]);
+	for(unsigned int i=0; i<3; ++i) if(oceanViewTextures[i] != 0) glDeleteTextures(1, &oceanViewTextures[i]);
 	if(params.spectrum12 != NULL) delete[] params.spectrum12;
 	if(params.spectrum34 != NULL) delete[] params.spectrum34;
 	glDeleteVertexArrays(1, &vaoMask);
 	if(vboMask > 0) glDeleteBuffers(1, &vboMask);
-
 }
 
 void OpenGLOcean::InitOcean()
@@ -41,7 +39,6 @@ void OpenGLOcean::InitOcean()
 	params.passes = 8;
 	params.slopeVarianceSize = 4;
 	params.fftSize = 1 << params.passes;
-	params.choppyFactor = glm::vec4(2.3f, 2.1f, 1.3f, 0.9f);
 	params.propagate = true;
 	params.wind = 10.f;
 	params.omega = 2.f;
@@ -65,6 +62,7 @@ void OpenGLOcean::InitOcean()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, params.fftSize, params.fftSize, 0, GL_RGBA, GL_FLOAT, params.spectrum12);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindTexture(GL_TEXTURE_2D, oceanTextures[1]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -72,15 +70,6 @@ void OpenGLOcean::InitOcean()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, params.fftSize, params.fftSize, 0, GL_RGBA, GL_FLOAT, params.spectrum34);
-	
-	glBindTexture(GL_TEXTURE_2D, oceanTextures[5]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	GLfloat* data = ComputeButterflyLookupTable(params.fftSize, params.passes);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, params.fftSize, params.passes, 0, GL_RGBA, GL_FLOAT, data);
-	delete[] data;
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	glBindTexture(GL_TEXTURE_3D, oceanTextures[2]);
@@ -102,8 +91,8 @@ void OpenGLOcean::InitOcean()
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 	
-	glGenTextures(8, oceanViewTextures);
-	for(int i=0; i<8; ++i)
+	glGenTextures(3, oceanViewTextures);
+	for(int i=0; i<3; ++i)
 	{
 		glTextureView(oceanViewTextures[i], GL_TEXTURE_2D, oceanTextures[3], GL_RGBA32F, 0, 1, i, 1);
 		glBindTexture(GL_TEXTURE_2D, oceanViewTextures[i]);
@@ -123,24 +112,30 @@ void OpenGLOcean::InitOcean()
 	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-		
+	
+	glBindTexture(GL_TEXTURE_2D, oceanTextures[5]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	GLfloat* data = ComputeButterflyLookupTable(params.fftSize, params.passes);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, params.fftSize, params.passes, 0, GL_RGBA, GL_FLOAT, data);
+	delete[] data;
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
 	//---framebuffers
 	glGenFramebuffers(3, oceanFBOs);
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, oceanFBOs[0]);
-	GLenum drawBuffers[8] = 
+	GLenum drawBuffers[3] = 
 	{
 		GL_COLOR_ATTACHMENT0,
 		GL_COLOR_ATTACHMENT1,
-		GL_COLOR_ATTACHMENT2,
-		GL_COLOR_ATTACHMENT3,
-		GL_COLOR_ATTACHMENT4,
-		GL_COLOR_ATTACHMENT5,
-		GL_COLOR_ATTACHMENT6,
-		GL_COLOR_ATTACHMENT7
+		GL_COLOR_ATTACHMENT2
 	};
-	glDrawBuffers(8, drawBuffers);
+	glDrawBuffers(3, drawBuffers);
 	
-	for(int layer = 0; layer < 8; ++layer)
+	for(int layer = 0; layer < 3; ++layer)
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, oceanViewTextures[layer], 0);
 		
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -154,78 +149,84 @@ void OpenGLOcean::InitOcean()
 	std::vector<GLuint> precompiled;
 	precompiled.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
 	
-	oceanShaders[0] = new GLSLShader(precompiled, "oceanSurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
-	oceanShaders[0]->AddUniform("tessDiv", ParameterType::FLOAT);
-	oceanShaders[0]->AddUniform("texWaveFFT", ParameterType::INT);
-	oceanShaders[0]->AddUniform("texSlopeVariance", ParameterType::INT);
-	oceanShaders[0]->AddUniform("MVP", ParameterType::MAT4);
-	oceanShaders[0]->AddUniform("gridSizes", ParameterType::VEC4);
-	oceanShaders[0]->AddUniform("eyePos", ParameterType::VEC3);
-	oceanShaders[0]->AddUniform("choppyFactor", ParameterType::VEC4);
-	oceanShaders[0]->AddUniform("MV", ParameterType::MAT3);
-	oceanShaders[0]->AddUniform("transmittance_texture", ParameterType::INT);
-	oceanShaders[0]->AddUniform("scattering_texture", ParameterType::INT);
-	oceanShaders[0]->AddUniform("irradiance_texture", ParameterType::INT);
-	oceanShaders[0]->AddUniform("planetRadius", ParameterType::FLOAT);
-	oceanShaders[0]->AddUniform("sunDirection", ParameterType::VEC3);
+	//GLSLShader* oceanSurface = new GLSLShader(precompiled, "oceanSurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
+	GLSLShader* oceanSurface = new GLSLShader(precompiled, "oceanSurface.frag", "poolSurface.vert");
+	//oceanSurface->AddUniform("tessDiv", ParameterType::FLOAT);
+	oceanSurface->AddUniform("texWaveFFT", ParameterType::INT);
+	oceanSurface->AddUniform("texSlopeVariance", ParameterType::INT);
+	oceanSurface->AddUniform("MVP", ParameterType::MAT4);
+	oceanSurface->AddUniform("gridSizes", ParameterType::VEC4);
+	oceanSurface->AddUniform("eyePos", ParameterType::VEC3);
+	oceanSurface->AddUniform("MV", ParameterType::MAT3);
+	oceanSurface->AddUniform("transmittance_texture", ParameterType::INT);
+	oceanSurface->AddUniform("scattering_texture", ParameterType::INT);
+	oceanSurface->AddUniform("irradiance_texture", ParameterType::INT);
+	oceanSurface->AddUniform("planetRadius", ParameterType::FLOAT);
+	oceanSurface->AddUniform("sunDirection", ParameterType::VEC3);
+	oceanShaders.push_back(oceanSurface);
 	
-	oceanShaders[1] = new GLSLShader(precompiled, "oceanBacksurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
-	oceanShaders[1]->AddUniform("tessDiv", ParameterType::FLOAT);
-	oceanShaders[1]->AddUniform("texWaveFFT", ParameterType::INT);
-	oceanShaders[1]->AddUniform("texSlopeVariance", ParameterType::INT);
-	oceanShaders[1]->AddUniform("MVP", ParameterType::MAT4);
-	oceanShaders[1]->AddUniform("gridSizes", ParameterType::VEC4);
-	oceanShaders[1]->AddUniform("eyePos", ParameterType::VEC3);
-	oceanShaders[1]->AddUniform("choppyFactor", ParameterType::VEC4);
-	oceanShaders[1]->AddUniform("MV", ParameterType::MAT3);
-	oceanShaders[1]->AddUniform("transmittance_texture", ParameterType::INT);
-	oceanShaders[1]->AddUniform("scattering_texture", ParameterType::INT);
-	oceanShaders[1]->AddUniform("irradiance_texture", ParameterType::INT);
-	oceanShaders[1]->AddUniform("planetRadius", ParameterType::FLOAT);
-	oceanShaders[1]->AddUniform("sunDirection", ParameterType::VEC3);
+	GLSLShader* oceanBacksurface = new GLSLShader(precompiled, "oceanBacksurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tcs", "oceanSurface.tes"));
+	oceanBacksurface->AddUniform("tessDiv", ParameterType::FLOAT);
+	oceanBacksurface->AddUniform("texWaveFFT", ParameterType::INT);
+	oceanBacksurface->AddUniform("texSlopeVariance", ParameterType::INT);
+	oceanBacksurface->AddUniform("MVP", ParameterType::MAT4);
+	oceanBacksurface->AddUniform("gridSizes", ParameterType::VEC4);
+	oceanBacksurface->AddUniform("eyePos", ParameterType::VEC3);
+	oceanBacksurface->AddUniform("MV", ParameterType::MAT3);
+	oceanBacksurface->AddUniform("transmittance_texture", ParameterType::INT);
+	oceanBacksurface->AddUniform("scattering_texture", ParameterType::INT);
+	oceanBacksurface->AddUniform("irradiance_texture", ParameterType::INT);
+	oceanBacksurface->AddUniform("planetRadius", ParameterType::FLOAT);
+	oceanBacksurface->AddUniform("sunDirection", ParameterType::VEC3);
+	oceanShaders.push_back(oceanBacksurface);
 	
-	oceanShaders[2] = new GLSLShader("oceanInit.frag"); //Using saq vertex shader
-	oceanShaders[2]->AddUniform("texSpectrum12", ParameterType::INT);
-	oceanShaders[2]->AddUniform("texSpectrum34", ParameterType::INT);
-	oceanShaders[2]->AddUniform("inverseGridSizes", ParameterType::VEC4);
-	oceanShaders[2]->AddUniform("fftSize", ParameterType::FLOAT);
-	oceanShaders[2]->AddUniform("t", ParameterType::FLOAT);
+	GLSLShader* oceanInit = new GLSLShader("oceanInit.frag"); //Using saq vertex shader
+	oceanInit->AddUniform("texSpectrum12", ParameterType::INT);
+	oceanInit->AddUniform("texSpectrum34", ParameterType::INT);
+	oceanInit->AddUniform("inverseGridSizes", ParameterType::VEC4);
+	oceanInit->AddUniform("fftSize", ParameterType::FLOAT);
+	oceanInit->AddUniform("t", ParameterType::FLOAT);
+	oceanShaders.push_back(oceanInit);
 	
-	oceanShaders[3] = new GLSLShader("oceanFFTX.frag", "", "hbaoSaq.geom"); //Using saq vertex shader
-	oceanShaders[3]->AddUniform("texButterfly", ParameterType::INT);
-	oceanShaders[3]->AddUniform("texSource", ParameterType::INT);
-	oceanShaders[3]->AddUniform("pass", ParameterType::FLOAT);
+	GLSLShader* oceanFFTX = new GLSLShader("oceanFFTX.frag", "", "hbaoSaq.geom"); //Using saq vertex shader
+	oceanFFTX->AddUniform("texButterfly", ParameterType::INT);
+	oceanFFTX->AddUniform("texSource", ParameterType::INT);
+	oceanFFTX->AddUniform("pass", ParameterType::FLOAT);
+	oceanShaders.push_back(oceanFFTX);
 	
-	oceanShaders[4] = new GLSLShader("oceanFFTY.frag", "", "hbaoSaq.geom"); //Using saq vertex shader
-	oceanShaders[4]->AddUniform("texButterfly", ParameterType::INT);
-	oceanShaders[4]->AddUniform("texSource", ParameterType::INT);
-	oceanShaders[4]->AddUniform("pass", ParameterType::FLOAT);
+	GLSLShader* oceanFFTY = new GLSLShader("oceanFFTY.frag", "", "hbaoSaq.geom"); //Using saq vertex shader
+	oceanFFTY->AddUniform("texButterfly", ParameterType::INT);
+	oceanFFTY->AddUniform("texSource", ParameterType::INT);
+	oceanFFTY->AddUniform("pass", ParameterType::FLOAT);
+	oceanShaders.push_back(oceanFFTY);
 	
-	oceanShaders[5] = new GLSLShader("oceanVariance.frag"); //Using saq vertex shader
-	oceanShaders[5]->AddUniform("texSpectrum12", ParameterType::INT);
-	oceanShaders[5]->AddUniform("texSpectrum34", ParameterType::INT);
-	oceanShaders[5]->AddUniform("varianceSize", ParameterType::FLOAT);
-	oceanShaders[5]->AddUniform("fftSize", ParameterType::INT);
-	oceanShaders[5]->AddUniform("gridSizes", ParameterType::VEC4);
-	oceanShaders[5]->AddUniform("slopeVarianceDelta", ParameterType::FLOAT);
-	oceanShaders[5]->AddUniform("c", ParameterType::FLOAT);
+	GLSLShader* oceanVariance = new GLSLShader("oceanVariance.frag"); //Using saq vertex shader
+	oceanVariance->AddUniform("texSpectrum12", ParameterType::INT);
+	oceanVariance->AddUniform("texSpectrum34", ParameterType::INT);
+	oceanVariance->AddUniform("varianceSize", ParameterType::FLOAT);
+	oceanVariance->AddUniform("fftSize", ParameterType::INT);
+	oceanVariance->AddUniform("gridSizes", ParameterType::VEC4);
+	oceanVariance->AddUniform("slopeVarianceDelta", ParameterType::FLOAT);
+	oceanVariance->AddUniform("c", ParameterType::FLOAT);
+	oceanShaders.push_back(oceanVariance);
 	
-	oceanShaders[7] = new GLSLShader("oceanSpectrum.frag", "texQuad.vert");
-	oceanShaders[7]->AddUniform("texSpectrum12", ParameterType::INT);
-	oceanShaders[7]->AddUniform("texSpectrum34", ParameterType::INT);
-	oceanShaders[7]->AddUniform("invGridSizes", ParameterType::VEC4);
-	oceanShaders[7]->AddUniform("fftSize", ParameterType::FLOAT);
-	oceanShaders[7]->AddUniform("zoom", ParameterType::FLOAT);
-	oceanShaders[7]->AddUniform("linear", ParameterType::FLOAT);
-	oceanShaders[7]->AddUniform("rect", ParameterType::VEC4);
+	GLSLShader* oceanVolume = new GLSLShader("flat.frag", "pass.vert", "oceanVolume.geom");
+	oceanVolume->AddUniform("axis", ParameterType::VEC2);
+	oceanVolume->AddUniform("cellSize", ParameterType::VEC2);
+	oceanVolume->AddUniform("MVP", ParameterType::MAT4);
+	oceanVolume->AddUniform("texWaveFFT", ParameterType::INT);
+	oceanVolume->AddUniform("gridSizes", ParameterType::VEC4);
+	oceanShaders.push_back(oceanVolume);
 	
-	oceanShaders[8] = new GLSLShader("flat.frag", "pass.vert", "oceanVolume.geom");
-	oceanShaders[8]->AddUniform("axis", ParameterType::VEC2);
-	oceanShaders[8]->AddUniform("cellSize", ParameterType::VEC2);
-	oceanShaders[8]->AddUniform("MVP", ParameterType::MAT4);
-	oceanShaders[8]->AddUniform("texWaveFFT", ParameterType::INT);
-	oceanShaders[8]->AddUniform("gridSizes", ParameterType::VEC4);
-	oceanShaders[8]->AddUniform("choppyFactor", ParameterType::VEC4);
+	GLSLShader* oceanSpectrum = new GLSLShader("oceanSpectrum.frag", "texQuad.vert");
+	oceanSpectrum->AddUniform("texSpectrum12", ParameterType::INT);
+	oceanSpectrum->AddUniform("texSpectrum34", ParameterType::INT);
+	oceanSpectrum->AddUniform("invGridSizes", ParameterType::VEC4);
+	oceanSpectrum->AddUniform("fftSize", ParameterType::FLOAT);
+	oceanSpectrum->AddUniform("zoom", ParameterType::FLOAT);
+	oceanSpectrum->AddUniform("linear", ParameterType::FLOAT);
+	oceanSpectrum->AddUniform("rect", ParameterType::VEC4);
+	oceanShaders.push_back(oceanSpectrum);
 	
 	//---generate variances
 	float slopeVarianceDelta = ComputeSlopeVariance();
@@ -258,6 +259,33 @@ void OpenGLOcean::InitOcean()
 	glBindVertexArray(vaoMask);
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
+	
+	//Surface rendering
+	GLfloat surfData[12][4] = {{0.f, 0.f,  0.f, 1.f},
+							  {1.f, 0.f,  0.f, 0.f},
+							  {0.f, 1.f,  0.f, 0.f},
+							  {0.f, 0.f,  0.f, 1.f},
+							  {0.f, 1.f,  0.f, 0.f},
+							  {-1.f, 0.f, 0.f, 0.f},
+							  {0.f, 0.f,  0.f, 1.f},
+							  {-1.f, 0.f, 0.f, 0.f},
+							  {0.f, -1.f, 0.f, 0.f},
+							  {0.f, 0.f,  0.f, 1.f},
+							  {0.f, -1.f, 0.f, 0.f},
+							  {1.f, 0.f,  0.f, 0.f}};
+							  
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo); 
+	
+    glBindVertexArray(vao);	
+	glEnableVertexAttribArray(0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(surfData), surfData, GL_STATIC_DRAW); 
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);	
+	
+    glBindVertexArray(0);
 }
 
 int OpenGLOcean::bitReverse(int i, int N)
@@ -546,7 +574,7 @@ void OpenGLOcean::SimulateOcean()
 		    glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
 		    glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		}
-		glDrawArrays(GL_TRIANGLES, 0, 3 * 8); //8 Layers
+		glDrawArrays(GL_TRIANGLES, 0, 3 * 3); //3 Layers
 	}
 
 	oceanShaders[4]->Use();
@@ -566,7 +594,7 @@ void OpenGLOcean::SimulateOcean()
 		    glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
 		    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		}
-		glDrawArrays(GL_TRIANGLES, 0, 3 * 8); //8 Layers
+		glDrawArrays(GL_TRIANGLES, 0, 3 * 3); //3 Layers
 	}
 
 	glUseProgram(0);
@@ -589,8 +617,29 @@ void OpenGLOcean::SimulateOcean()
 
 void OpenGLOcean::DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
 {
+	oceanShaders[0]->Use();
+	oceanShaders[0]->SetUniform("MVP", projection * view);
+	oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
+	oceanShaders[0]->SetUniform("eyePos", eyePos);
+	//oceanShaders[0]->SetUniform("tessDiv", 8.f);
+	oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
+	oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+	oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
+	OpenGLAtmosphere::getInstance()->SetupOceanShader(oceanShaders[0]);
+	
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+	
+	glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 12);
+    glBindVertexArray(0);
+    
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
+	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, 0);
+	glUseProgram(0);
+	
 	//Delete old tree
-	qt.leafs.clear();
+	/*qt.leafs.clear();
 	if(!qt.root.leaf)
 	{
 		delete qt.root.child[0];
@@ -644,7 +693,6 @@ void OpenGLOcean::DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 p
 	oceanShaders[0]->SetUniform("eyePos", eyePos);
 	oceanShaders[0]->SetUniform("tessDiv", 8.f);
 	oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
-	oceanShaders[0]->SetUniform("choppyFactor", params.choppyFactor);
 	oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
 	oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
 	OpenGLAtmosphere::getInstance()->SetupOceanShader(oceanShaders[0]);
@@ -669,14 +717,14 @@ void OpenGLOcean::DrawOceanSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 p
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, 0);
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, 0);
 	glUseProgram(0);
-	
+	*/
 	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
 }
 
 void OpenGLOcean::DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
 {
 	//Delete old tree
-	qt.leafs.clear();
+	/*qt.leafs.clear();
 	if(!qt.root.leaf)
 	{
 		delete qt.root.child[0];
@@ -732,7 +780,6 @@ void OpenGLOcean::DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::ma
 	oceanShaders[1]->SetUniform("eyePos", eyePos);
 	oceanShaders[1]->SetUniform("tessDiv", 8.f);
 	oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
-	oceanShaders[1]->SetUniform("choppyFactor", params.choppyFactor);
 	oceanShaders[1]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
 	oceanShaders[1]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
 	OpenGLAtmosphere::getInstance()->SetupOceanShader(oceanShaders[1]);
@@ -758,7 +805,7 @@ void OpenGLOcean::DrawOceanBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::ma
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, 0);
 	glUseProgram(0);
 	
-	glCullFace(GL_BACK);
+	glCullFace(GL_BACK);*/
 	//printf("Ocean mesh vertices: %ld, time: %ld\n", data.size(), end-start);
 }
 
@@ -785,13 +832,12 @@ void OpenGLOcean::DrawOceanVolumeMask(glm::vec3 eyePos, glm::vec3 lookingDir, gl
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 	//Draw ocean volume
-	oceanShaders[8]->Use();
-	oceanShaders[8]->SetUniform("axis", glm::vec2(right.x, right.y));
-	oceanShaders[8]->SetUniform("cellSize", gridSize/50.f);
-	oceanShaders[8]->SetUniform("MVP", projection * view);
-	oceanShaders[8]->SetUniform("gridSizes", params.gridSizes);
-	oceanShaders[8]->SetUniform("choppyFactor", params.choppyFactor);
-	oceanShaders[8]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+	oceanShaders[6]->Use();
+	oceanShaders[6]->SetUniform("axis", glm::vec2(right.x, right.y));
+	oceanShaders[6]->SetUniform("cellSize", gridSize/50.f);
+	oceanShaders[6]->SetUniform("MVP", projection * view);
+	oceanShaders[6]->SetUniform("gridSizes", params.gridSizes);
+	oceanShaders[6]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
 	
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
 	
