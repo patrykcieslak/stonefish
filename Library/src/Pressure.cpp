@@ -20,7 +20,7 @@ void Pressure::InternalUpdate(btScalar dt)
     btTransform pressureTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     btScalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
     
-    Liquid* liq = SimulationApp::getApp()->getSimulationManager()->getLiquid();
+    Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(liq != NULL)
         data += liq->GetPressure(pressureTrans.getOrigin());
     

@@ -20,8 +20,9 @@ Camera::Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btS
     renderSpp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     renderAO = ao;
     
-	glCamera = new OpenGLCamera(glm::vec3(0,0,0), glm::vec3(1.f,0,0), glm::vec3(0,0,1.f), 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
-	InternalUpdate(0);
+    glCamera = new OpenGLCamera(glm::vec3(0,0,0), glm::vec3(1.f,0,0), glm::vec3(0,0,1.f), 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
+    UpdateTransform();
+    InternalUpdate(0);
     OpenGLContent::getInstance()->AddView(glCamera);
 }
     
@@ -32,7 +33,7 @@ Camera::~Camera()
 
 void Camera::UpdateTransform()
 {
-	btTransform cameraTransform;
+    btTransform cameraTransform;
     
     if(attach != NULL)
         cameraTransform = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
@@ -50,7 +51,7 @@ void Camera::UpdateTransform()
         glm::vec3 eye = glm::vec3((GLfloat)eyePosition.x(), (GLfloat)eyePosition.y(), (GLfloat)eyePosition.z());
         glm::vec3 dir = glm::vec3((GLfloat)direction.x(), (GLfloat)direction.y(), (GLfloat)direction.z());
         glm::vec3 up = glm::vec3((GLfloat)cameraUp.x(), (GLfloat)cameraUp.y(), (GLfloat)cameraUp.z());
-		glCamera->SetupCamera(eye, dir, up);
+        glCamera->SetupCamera(eye, dir, up);
     }
     else
     {
@@ -62,7 +63,7 @@ void Camera::UpdateTransform()
         glm::vec3 eye = glm::vec3((GLfloat)rotEyePosition.x(), (GLfloat)rotEyePosition.y(), (GLfloat)rotEyePosition.z());
         glm::vec3 dir = glm::vec3((GLfloat)rotDirection.x(), (GLfloat)rotDirection.y(), (GLfloat)rotDirection.z());
         glm::vec3 up = glm::vec3((GLfloat)rotCameraUp.x(), (GLfloat)rotCameraUp.y(), (GLfloat)rotCameraUp.z());
-		glCamera->SetupCamera(eye, dir, up);
+        glCamera->SetupCamera(eye, dir, up);
     }
 }
 

@@ -29,10 +29,8 @@ public:
     glm::vec3 GetEyePosition() const;
     glm::vec3 GetLookingDirection() const;
     glm::vec3 GetUpDirection() const;
-	void setEnabled(bool en);
-	bool isEnabled();
+    ViewType getType();
     bool needsUpdate();
-	ViewType getType();
     
 private:
     void UpdateTrackballTransform();
@@ -45,8 +43,7 @@ private:
     glm::vec3 center;
     glm::vec3 up;
 	GLfloat radius;
-    bool enabled;
-	
+    
 	//Mouse interaction
 	GLfloat x_start, y_start, z_start;
 	glm::quat rotation_start;

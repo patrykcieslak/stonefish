@@ -24,7 +24,7 @@ public:
     std::vector<Renderable> Render();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void ApplyGravity();
-    void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
+    void CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Liquid* fluid,
                                 btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                 const btTransform& worldTransform, const btVector3& velocity, const btVector3& angularVelocity);
     

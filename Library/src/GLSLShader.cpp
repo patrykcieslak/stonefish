@@ -49,7 +49,7 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
     
 	shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
-
+		
     valid = true;
 }
 
@@ -139,7 +139,7 @@ GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, std::string fragment
 	
 GLSLShader::~GLSLShader()
 {
-	if(valid)
+    if(valid)
         glDeleteProgram(shader);
 }
 
@@ -150,7 +150,7 @@ bool GLSLShader::isValid()
 
 void GLSLShader::Use()
 {
-	if(valid)
+    if(valid)
         glUseProgram(shader);
 }
 

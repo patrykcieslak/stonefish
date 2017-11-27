@@ -25,7 +25,7 @@ void GPS::InternalUpdate(btScalar dt)
     btTransform gpsTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     
     //GPS not updating underwater
-    Liquid* liq = SimulationApp::getApp()->getSimulationManager()->getLiquid();
+    Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(liq != NULL && liq->IsInsideFluid(gpsTrans.getOrigin()))
     {
         btScalar data[4] = {btScalar(0), btScalar(-1), btScalar(0), btScalar(0)};

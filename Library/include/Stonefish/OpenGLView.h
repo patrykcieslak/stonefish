@@ -70,6 +70,9 @@ public:
     virtual glm::vec3 GetLookingDirection() const = 0;
     virtual glm::vec3 GetUpDirection() const = 0;
     virtual ViewType getType() = 0;
+    void setEnabled(bool en);
+    bool isEnabled();
+    virtual void setRendering(bool render);
     virtual bool needsUpdate() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
@@ -100,7 +103,6 @@ public:
     GLfloat GetNearClip();
     GLfloat GetFarClip();
 	
-	virtual void setRendering(bool render); 
     GLuint getRenderFBO();
 	GLuint getReflectionFBO();
 	GLuint getReflectionTexture();
@@ -160,7 +162,8 @@ protected:
     GLfloat near;
     GLfloat far;
     glm::mat4 projection;
-	bool rendering;
+    bool rendering;
+    bool enabled;
     
     //Shaders
 	static GLSLShader** depthAwareBlurShader;

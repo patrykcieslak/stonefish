@@ -28,7 +28,7 @@ public:
     void RotateCamera(btScalar panStep, btScalar tiltStep);
     void Update();
     
-	void setRendering(bool render); 
+    void setRendering(bool render);
     void setPanAngle(GLfloat newPanAngle);
     GLfloat getPanAngle();
     void setTiltAngle(GLfloat newTiltAngle);
@@ -41,9 +41,9 @@ private:
     glm::vec3 eye;
     glm::vec3 dir;
     glm::vec3 up;
-	glm::vec3 tempEye;
-	glm::vec3 tempDir;
-	glm::vec3 tempUp;
+    glm::vec3 tempEye;
+    glm::vec3 tempDir;
+    glm::vec3 tempUp;
     GLfloat pan;
     GLfloat tilt;
     glm::vec3 lookingDir;

@@ -159,7 +159,7 @@ void Thruster::Update(btScalar dt)
         return;
 
     //Calculate thrust
-    Liquid* liquid = SimulationApp::getApp()->getSimulationManager()->getLiquid();
+    Ocean* liquid = SimulationApp::getApp()->getSimulationManager()->getOcean();
     
     if(liquid->IsInsideFluid(thrustTrans.getOrigin()))
     {
@@ -169,7 +169,7 @@ void Thruster::Update(btScalar dt)
         btScalar k2(-0.3);
         btScalar k3 = btScalar(2)*kT/M_PI;
         btScalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
-        thrust = btScalar(2) * liquid->getFluid()->density * A * (k1*u*u + k2*u*D*omega + k3*D*D*omega*omega);
+        thrust = btScalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*omega + k3*D*D*omega*omega);
         if(omega < btScalar(0))
             thrust = -thrust;
             
@@ -177,7 +177,7 @@ void Thruster::Update(btScalar dt)
         //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
         
         //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
-        torque = liquid->getFluid()->density * kQ * btFabs(omega)*omega * D*D*D*D*D;
+        torque = liquid->getLiquid()->density * kQ * btFabs(omega)*omega * D*D*D*D*D;
         btVector3 thrustV(thrust, 0, 0);
         btVector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
     

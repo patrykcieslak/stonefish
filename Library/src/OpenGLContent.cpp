@@ -13,7 +13,7 @@
 #include "SystemUtil.hpp"
 #include "stb_image.h"
 #include "SimulationApp.h"
-#include "Pool.h"
+#include "Ocean.h"
 #include <map>
 #include <algorithm>
 
@@ -1014,12 +1014,15 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 	
 	if(mode == DrawingMode::UNDERWATER)
 	{
-		if(SimulationApp::getApp()->getSimulationManager()->getLiquid()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
+        Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        shader->SetUniform("lightAbsorption", ocean->ComputeLightAbsorption());
+        shader->SetUniform("turbidity", ocean->getTurbidity());
+		/*if(SimulationApp::getApp()->getSimulationManager()->getOcean()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
         {
-            Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getLiquid();
+            Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getOcean();
             shader->SetUniform("lightAbsorption", pool->getOpenGLPool()->getLightAbsorptionCoeff());
 			shader->SetUniform("turbidity", pool->getOpenGLPool()->getTurbidity());
-        }
+        }*/
 	}
 	
 	SetupLights(shader);

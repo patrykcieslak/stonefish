@@ -21,7 +21,7 @@ struct Material
     btScalar restitution;
 };
 
-struct Fluid
+struct Liquid
 {
     std::string name;
     btScalar density;
@@ -72,8 +72,8 @@ public:
     Material getMaterial(int index);
     
     std::string CreateFluid(std::string uniqueName, btScalar density, btScalar viscosity, btScalar IOR);
-    Fluid* getFluid(std::string name);
-    Fluid* getFluid(int index);
+    Liquid* getFluid(std::string name);
+    Liquid* getFluid(int index);
     
     void ClearMaterialsAndFluids();
     
@@ -82,7 +82,7 @@ private:
     
     std::vector<Material> materials;
 	std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions;
-    std::vector<Fluid> fluids;
+    std::vector<Liquid> fluids;
     
     NameManager materialNameManager;
     NameManager fluidNameManager;

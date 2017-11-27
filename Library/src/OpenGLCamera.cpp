@@ -59,7 +59,7 @@ bool OpenGLCamera::needsUpdate()
 {
     bool nu = _needsUpdate;
     _needsUpdate = false;
-    return nu;
+    return nu && enabled;
 }
 
 void OpenGLCamera::setPanAngle(GLfloat newPanAngle)
@@ -75,7 +75,6 @@ void OpenGLCamera::setTiltAngle(GLfloat newTiltAngle)
     tilt = newTiltAngle;
     SetupCamera();
 }
-
 
 GLfloat OpenGLCamera::getPanAngle()
 {
@@ -104,7 +103,7 @@ glm::vec3 OpenGLCamera::GetUpDirection() const
 
 void OpenGLCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-	if(!rendering)
+    if(!rendering)
 	{
 		dir = _dir;
 		eye = _eye;

@@ -12,7 +12,7 @@
 #include "NativeDialog.h"
 #include "Manipulator.h"
 #include "UnderwaterVehicle.h"
-#include "Pool.h"
+#include "Ocean.h"
 #include "FakeRotaryEncoder.h"
 #include "Accelerometer.h"
 
@@ -61,13 +61,13 @@ void UnderwaterTestApp::DoHUD()
     vehicle->SetThrusterSetpoint(4, IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(4), "Heave bow"));
     
     
-    Pool* pool = (Pool*)getSimulationManager()->getLiquid();
+    Ocean* ocean = getSimulationManager()->getOcean();
     
     slider.item = 10;
-    pool->setAlgeaBloomFactor(IMGUI::getInstance()->DoSlider(slider, 5.f, 625.f, 200.f, 0.0, 1.0, pool->getAlgeaBloomFactor(), "Algea bloom"));
+    ocean->setAlgeaBloomFactor(IMGUI::getInstance()->DoSlider(slider, 5.f, 625.f, 200.f, 0.0, 1.0, ocean->getAlgeaBloomFactor(), "Algea bloom"));
     
     slider.item = 11;
-    pool->setTurbidity(IMGUI::getInstance()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, pool->getTurbidity(), "Turbidity"));
+    ocean->setTurbidity(IMGUI::getInstance()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, ocean->getTurbidity(), "Turbidity"));
     
     //FakeRotaryEncoder* enc = (FakeRotaryEncoder*)getSimulationManager()->getSensor("Encoder");
     Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");

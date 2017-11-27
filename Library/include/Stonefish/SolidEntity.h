@@ -11,7 +11,7 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "Entity.h"
-#include "Liquid.h"
+#include "Ocean.h"
 #include "MaterialManager.h"
 #include "OpenGLContent.h"
 
@@ -37,9 +37,9 @@ public:
 	
 	//Computation
     void UpdateAcceleration(btScalar dt);
-    virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
+    virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, 
 									const btVector3& linearV, const btVector3& angularV, const btVector3& linearA, const btVector3& angularA, btVector3& _Fb, btVector3& _Tb, btVector3& _Fds, btVector3& _Tds, btVector3& _Fdp, btVector3& _Tdp);
-    virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid);
+    virtual void ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid);
     
 	//Applying forces
 	void ApplyCentralForce(const btVector3& force);

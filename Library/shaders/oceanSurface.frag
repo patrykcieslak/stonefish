@@ -1,14 +1,17 @@
 #version 430 core
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
+uniform sampler2D texReflection; 
+uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
 uniform mat3 MV;
 uniform vec3 sunDirection;
 uniform float planetRadius;
+uniform vec3 whitePoint;
 
 in vec4 fragPos;
-layout(location = 0) out vec3 fragColor;
+layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec3 fragNormal;
 
 //Atmosphere
@@ -79,13 +82,13 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 
 void main()
 {
-	vec3 pos = fragPos.xyz/fragPos.w;
+    vec3 pos = fragPos.xyz/fragPos.w;
 	vec3 toEye = normalize(eyePos - pos);
 	vec3 center = vec3(0, 0, -planetRadius + 5.0);
 	vec3 P = pos - center;
 	
 	//Wave slope (layers 1,2)
-	vec2 waveCoord = pos.xy;
+    vec2 waveCoord = pos.xy;
 	vec2 slopes = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 1.0)).zw;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 2.0)).xy;
@@ -114,29 +117,23 @@ void main()
 	vec3 Ty = normalize(vec3(0.0, normal.z, -normal.y));
 	vec3 Tx = cross(Ty, normal);
 
-	vec3 Rf = vec3(0.0);
-	vec3 Rs = vec3(0.0);
-	vec3 Ru = vec3(0.0);
-	
 	float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
 	
-	fragColor = vec3(0.0);
+	vec3 outColor = vec3(0.0);
 	
 	//Sun contribution
-	fragColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/30000.0;
+    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/30000.0;
 	
-	//Sky contribution
+	//Sky and scene reflection
 	vec3 ray = reflect(toEye, normal);
 	vec3 trans;
 	vec3 Lsky = GetSkyLuminance(P, -ray, 0.0, sunDirection, trans);
-	fragColor += fresnel * Lsky/30000.0;
-	
+	vec4 reflection = texture(texReflection, vec2(gl_FragCoord.x/viewport.x + normal.x*0.02, gl_FragCoord.y/viewport.y + min(-0.001, normal.y*0.02)));
+    outColor += mix(fresnel * Lsky/whitePoint/30000.0, reflection.rgb, reflection.a);
+    
 	//Sea contribution
-	vec3 seaColor = vec3(0.01,0.05,0.1);
-	vec3 Lsea = seaColor * Isky/30000.0;
-	fragColor += (1.0-fresnel) * Lsea;
-	
+    fragColor = vec4(outColor, 1.0-fresnel);
 	fragNormal = normalize(MV * normal);
 }

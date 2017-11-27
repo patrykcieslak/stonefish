@@ -27,7 +27,7 @@ public:
 	void AddInternalPart(SolidEntity* solid, const btTransform& position);
     void AddExternalPart(SolidEntity* solid, const btTransform& position);
 	void RecalculatePhysicalProperties();
-    void ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid);
+    void ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid);
 	
     SolidType getSolidType();
     std::vector<Vertex>* getMeshVertices();

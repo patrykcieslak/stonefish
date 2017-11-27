@@ -37,7 +37,7 @@
 #include "Accelerometer.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
-    : SimulationManager(SimulationType::POOL, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
+    : SimulationManager(SimulationType::MARINE, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
 {
 }
 
@@ -47,6 +47,7 @@ void UnderwaterTestManager::BuildScenario()
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
     OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
+    //getTrackball()->setEnabled(false);
     
     ///////MATERIALS////////
     getMaterialManager()->CreateMaterial("Dummy", UnitSystem::Density(CGS, MKS, 1.0), 0.5);

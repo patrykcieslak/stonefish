@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 layout(points) in;
 layout(triangle_strip, max_vertices=6) out;
@@ -20,7 +20,7 @@ vec3 getWaveSurfaceVertex(in vec3 P)
     dz += texture(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0)).y;
     dz += texture(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0)).z;
     dz += texture(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0)).w;
-    
+  
 	return vec3(P.xy, dz-0.001); //Position of deformed vertex in world space
 }
 

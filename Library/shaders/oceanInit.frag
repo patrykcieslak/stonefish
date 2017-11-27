@@ -22,7 +22,6 @@ vec2 i(vec2 z)
 	return vec2(-z.y, z.x); // returns i times z (complex number)
 }
 
-
 void main() 
 {
 	vec2 st = floor(texcoord * fftSize)/fftSize; // in [-N/2,N/2[

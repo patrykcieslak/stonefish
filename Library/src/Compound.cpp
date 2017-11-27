@@ -199,7 +199,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 	return colShape;
 }
 
-void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid)
+void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid)
 {
     btTransform T = getTransform() * localTransform.inverse();
     btVector3 v = getLinearVelocity();
@@ -214,7 +214,7 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* 
     
     if(liquid->GetDepth(aabbMin) > btScalar(0) && liquid->GetDepth(aabbMax) > btScalar(0))
     {
-        Fb = -volume*liquid->getFluid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+        Fb = -volume*liquid->getLiquid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
         Tb = (T*CoB - getTransform().getOrigin()).cross(Fb);
         settings.reallisticBuoyancy = false; //disable buoyancy calculation
     }

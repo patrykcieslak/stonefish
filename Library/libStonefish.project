@@ -60,7 +60,6 @@
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
       <VirtualDirectory Name="specials">
-        <File Name="src/OpenGLPool.cpp"/>
         <File Name="src/OpenGLOcean.cpp"/>
       </VirtualDirectory>
       <File Name="src/OpenGLContent.cpp"/>
@@ -89,8 +88,6 @@
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
         <File Name="src/Ocean.cpp"/>
-        <File Name="src/Liquid.cpp"/>
-        <File Name="src/Pool.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="src/Gripper.cpp"/>
@@ -165,8 +162,6 @@
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
         <File Name="include/Stonefish/Ocean.h"/>
-        <File Name="include/Stonefish/Liquid.h"/>
-        <File Name="include/Stonefish/Pool.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="include/Stonefish/Gripper.h"/>
@@ -238,7 +233,6 @@
       <File Name="include/Stonefish/OpenGLPipeline.h"/>
       <VirtualDirectory Name="specials">
         <File Name="include/Stonefish/OpenGLOcean.h"/>
-        <File Name="include/Stonefish/OpenGLPool.h"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
@@ -275,9 +269,9 @@
       <File Name="include/Stonefish/UnitSystem.h"/>
       <File Name="include/Stonefish/TorusShape.h"/>
       <File Name="include/Stonefish/MaterialManager.h"/>
+      <File Name="include/Stonefish/SimulationManager.h"/>
       <File Name="include/Stonefish/XMLSimulationApp.h"/>
       <File Name="include/Stonefish/XMLSimulationManager.h"/>
-      <File Name="include/Stonefish/SimulationManager.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>
@@ -302,6 +296,8 @@
       <File Name="shaders/oceanBacksurface.frag"/>
       <File Name="shaders/oceanVolume.frag"/>
       <File Name="shaders/oceanVolume.geom"/>
+      <File Name="shaders/oceanBackground.frag"/>
+      <File Name="shaders/oceanBlur.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="gui">
       <File Name="shaders/guiFlat.frag"/>
@@ -345,6 +341,7 @@
       <File Name="shaders/quadTree.vert"/>
       <File Name="shaders/texLevelQuad.frag"/>
       <File Name="shaders/pass.vert"/>
+      <File Name="shaders/infiniteSurface.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="materials">
       <File Name="shaders/blinnPhong.frag"/>
@@ -367,13 +364,6 @@
       <File Name="shaders/atmosphereSkySun.vert"/>
       <File Name="shaders/atmosphereApi.glsl"/>
       <File Name="shaders/sunCSM.frag"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="pool">
-      <File Name="shaders/poolVolume.frag"/>
-      <File Name="shaders/poolSurface.vert"/>
-      <File Name="shaders/poolSurface.frag"/>
-      <File Name="shaders/poolBackground.frag"/>
-      <File Name="shaders/poolBacksurface.frag"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
@@ -409,7 +399,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
-        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/zbuffer/Documents/stonefish/Library/shaders/\&quot;"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

@@ -210,7 +210,7 @@ void CableEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 }
 
 
-void CableEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Fluid* fluid,
+void CableEntity::CalculateFluidDynamics(const btVector3& surfaceN, const btVector3&surfaceD, const btVector3&fluidV, const Liquid* fluid,
                                          btScalar& submergedVolume, btVector3& cob,  btVector3& drag, btVector3& angularDrag,
                                          const btTransform& worldTransform, const btVector3& velocity, const btVector3& angularVelocity)
 {

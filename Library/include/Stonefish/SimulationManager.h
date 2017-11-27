@@ -20,7 +20,7 @@
 #include "Entity.h"
 #include "SolidEntity.h"
 #include "FeatherstoneEntity.h"
-#include "Liquid.h"
+#include "Ocean.h"
 #include "SystemEntity.h"
 
 //Dynamic elements
@@ -39,7 +39,7 @@
 //Simulation algorithm settings
 typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE, NNCG} SolverType;
 typedef enum {INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
-typedef enum {TERRESTIAL, MARINE, POOL, CUSTOM} SimulationType;
+typedef enum {TERRESTIAL, MARINE, CUSTOM} SimulationType;
 
 typedef struct 
 {
@@ -71,7 +71,7 @@ public:
     void AdvanceSimulation();
     void UpdateDrawingQueue();
 	
-    void EnableLiquid(Fluid* f = NULL);
+    void EnableOcean(Liquid* f = NULL);
 	void AddEntity(Entity* ent);
     void AddStaticEntity(StaticEntity* ent, const btTransform& worldTransform);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
@@ -110,18 +110,18 @@ public:
     Sensor* getSensor(std::string name);
     Controller* getController(unsigned int index);
     Controller* getController(std::string name);
-	Liquid* getLiquid();
-    OpenGLTrackball* getTrackball();
-	
+	Ocean* getOcean();
+    
     void setGravity(btScalar gravityConstant);
     btVector3 getGravity();
     btMultiBodyDynamicsWorld* getDynamicsWorld();
     btScalar getSimulationTime();
 	btScalar getRealtimeFactor();
     MaterialManager* getMaterialManager();
+    OpenGLTrackball* getTrackball();
     bool isZAxisUp();
     bool isSimulationFresh();
-	bool drawCameraDummies;
+    bool drawCameraDummies;
     bool drawLightDummies;
     
 protected:
@@ -174,7 +174,7 @@ private:
     std::vector<Controller*> controllers;
     std::vector<Contact*> contacts;
     std::vector<Collision> collisions;
-    Liquid* liquid;
+    Ocean* liquid;
     btScalar g;
     bool zUp;
 

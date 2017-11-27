@@ -717,7 +717,7 @@ void SolidEntity::ApplyTorque(const btVector3& torque)
     }
 }
 
-void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fds, btVector3& _Tds, btVector3& _Fdp, btVector3& _Tdp)
+void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid, const btTransform& cogTransform, const btTransform& geometryTransform, const btVector3& v, const btVector3& omega, const btVector3& a, const btVector3& epsilon, btVector3& _Fb, btVector3& _Tb, btVector3& _Fds, btVector3& _Tds, btVector3& _Fdp, btVector3& _Tdp)
 {
     //Buoyancy
     if(settings.reallisticBuoyancy)
@@ -743,7 +743,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
       
     //Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
-    btScalar viscousity = liquid->getFluid()->viscosity;
+    btScalar viscousity = liquid->getLiquid()->viscosity;
  
 	//Loop through all faces...
     for(int i=0; i<mesh->faces.size(); ++i)
@@ -956,7 +956,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
             
             if(fn.dot(vn) < btScalar(0))
             {
-                Fdp = btScalar(0.5) * liquid->getFluid()->density * vn * vn.length() * A;
+                Fdp = btScalar(0.5) * liquid->getLiquid()->density * vn * vn.length() * A;
             }
             
             //Accumulate
@@ -972,7 +972,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
     //std::cout << getName() << ": " <<  elapsed << std::endl; 
 }
 
-void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liquid* liquid)
+void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid)
 {
     if(!computeHydro)
         return;
@@ -990,7 +990,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Liqui
     
     if(liquid->GetDepth(aabbMin) > btScalar(0) && liquid->GetDepth(aabbMax) > btScalar(0))
     {
-        Fb = -volume*liquid->getFluid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+        Fb = -volume*liquid->getLiquid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
         Tb = (T*CoB - getTransform().getOrigin()).cross(Fb);
         settings.reallisticBuoyancy = false; //disable buoyancy calculation
     }

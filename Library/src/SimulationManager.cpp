@@ -28,7 +28,6 @@
 #include "CableEntity.h"
 #include "ForcefieldEntity.h"
 #include "Ocean.h"
-#include "Pool.h"
 #include "Plane.h"
 
 SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
@@ -36,7 +35,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     //Set coordinate system
     UnitSystem::SetUnitSystem(unitSystem, false);
     simType = t;
-    zUp = simType == SimulationType::MARINE || simType == SimulationType::POOL ? false : true;
+    zUp = simType == SimulationType::MARINE ? false : true;
     
     //Initialize simulation world
     setStepsPerSecond(stepsPerSecond);
@@ -123,7 +122,7 @@ void SimulationManager::AddSystemEntity(SystemEntity* ent, const btTransform& wo
     }
 }
 
-void SimulationManager::EnableLiquid(Fluid* f)
+void SimulationManager::EnableOcean(Liquid* f)
 {
 	if(liquid != NULL)
 		return;
@@ -137,14 +136,9 @@ void SimulationManager::EnableLiquid(Fluid* f)
     if(simType == SimulationType::MARINE)
     {
         liquid = new Ocean("Ocean", f);
-        ((Ocean*)liquid)->getOpenGLOcean()->InitOcean();
+        liquid->getOpenGLOcean()->Init();
     }
-    else //POOL
-    {
-        liquid = new Pool("Pool", f);
-        ((Pool*)liquid)->getOpenGLPool()->Init();
-	}
-	
+  
 	liquid->setRenderable(true);
 	liquid->AddToDynamicsWorld(dynamicsWorld);
 }
@@ -368,14 +362,9 @@ Controller* SimulationManager::getController(std::string name)
     return NULL;
 }
 
-Liquid* SimulationManager::getLiquid()
+Ocean* SimulationManager::getOcean()
 {
 	return liquid;
-}
-
-OpenGLTrackball* SimulationManager::getTrackball()
-{
-	return trackball;
 }
 
 btMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
@@ -404,6 +393,11 @@ btScalar SimulationManager::getSimulationTime()
 MaterialManager* SimulationManager::getMaterialManager()
 {
     return materialManager;
+}
+
+OpenGLTrackball* SimulationManager::getTrackball()
+{
+    return trackball;
 }
 
 void SimulationManager::setStepsPerSecond(btScalar steps)
@@ -598,9 +592,8 @@ void SimulationManager::InitializeScenario()
             break;
         
         case MARINE:
-        case POOL:
         {
-			EnableLiquid();
+			EnableOcean();
         }
             break;
             
@@ -913,8 +906,8 @@ void SimulationManager::UpdateDrawingQueue()
 			
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
-		
-		if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
+        
+        if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
 			((Camera*)sensors[i])->UpdateTransform();
     }
     

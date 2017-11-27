@@ -61,7 +61,7 @@ std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar den
 
 std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscosity, btScalar IOR)
 {
-    Fluid flu;
+    Liquid flu;
     flu.name = fluidNameManager.AddName(uniqueName);
     flu.density = UnitSystem::SetDensity(density);
     flu.viscosity = viscosity;
@@ -148,7 +148,7 @@ Material MaterialManager::getMaterial(int index)
         return materials[0];
 }
 
-Fluid* MaterialManager::getFluid(std::string name)
+Liquid* MaterialManager::getFluid(std::string name)
 {
     for(unsigned int i=0; i<fluids.size(); ++i)
         if(fluids[i].name == name)
@@ -157,7 +157,7 @@ Fluid* MaterialManager::getFluid(std::string name)
     return NULL;
 }
 
-Fluid* MaterialManager::getFluid(int index)
+Liquid* MaterialManager::getFluid(int index)
 {
     if(index >= 0 && index < fluids.size())
         return &fluids[index];
