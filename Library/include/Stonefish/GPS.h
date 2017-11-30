@@ -12,19 +12,25 @@
 #include "SimpleSensor.h"
 #include "SolidEntity.h"
 
+class Ned;
+
 class GPS : public SimpleSensor
 {
 public:
-    GPS(std::string uniqueName, btScalar latitude, btScalar longitude, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
+    GPS(std::string uniqueName, btScalar latitudeDeg, btScalar longitudeDeg, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
+    ~GPS();
     
     void InternalUpdate(btScalar dt);
-    void SetNoise(btScalar latDev, btScalar longDev);
+    void SetNoise(btScalar nedDev);
     btTransform getSensorFrame();
     
 private:
     SolidEntity* attach;
-    btScalar homeLatitude;
-    btScalar homeLongitude;
+    Ned* ned;
+    
+    //Custom noise generation specific to GPS 
+    btScalar nedStdDev;
+    std::normal_distribution<btScalar> noise;
 };
 
 #endif

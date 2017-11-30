@@ -12,8 +12,8 @@
 #include "common.h"
 
 #define FULL_ANGLE  btScalar(2. * M_PI)
-#define PIover180   0.01745329
-#define _180overPI  57.29577951
+#define PIover180   btScalar(M_PI / 180.0)
+#define _180overPI  btScalar(180.0 / M_PI)
 
 typedef enum {CGS = 0, MKS, MMKS} UnitSystems;
 typedef enum {AXIS_X, AXIS_Y, AXIS_Z} AxisType;

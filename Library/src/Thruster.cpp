@@ -142,16 +142,16 @@ void Thruster::Update(btScalar dt)
     
     if(attach != NULL)
     {
-        solidTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse();
-        thrustTrans = solidTrans * pos;
+        solidTrans = attach->getTransform();
+        thrustTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * pos;
         btVector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
         velocity = attach->getLinearVelocityInLocalPoint(relPos);
     }
     else if(attachFE != NULL)
     {
         FeatherstoneLink link = attachFE->getLink(linkId);
-        solidTrans = link.solid->getTransform() * link.solid->getGeomToCOGTransform().inverse();
-        thrustTrans = solidTrans * pos;
+        solidTrans = link.solid->getTransform();
+        thrustTrans = link.solid->getTransform() * link.solid->getGeomToCOGTransform().inverse() * pos;
         btVector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
         velocity = link.solid->getLinearVelocityInLocalPoint(relPos);
     }

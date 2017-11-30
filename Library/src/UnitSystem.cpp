@@ -107,9 +107,9 @@ btVector3 UnitSystem::Inertia(UnitSystems from, UnitSystems to, const btVector3&
 btScalar UnitSystem::Angle(bool degToRad, btScalar value)
 {
     if(degToRad)
-        return value*PIover180;
+        return (value/180.0) * M_PI;
     else
-        return value*_180overPI;
+        return (value/M_PI) * 180.0;
 }
 
 btScalar UnitSystem::Density(UnitSystems from, UnitSystems to, btScalar value)

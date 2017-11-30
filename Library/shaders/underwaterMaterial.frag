@@ -397,7 +397,7 @@ void main()
 		
 	//Inscatter
 	sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 fogColor = skyIlluminance/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z));
+    vec3 fogColor = skyIlluminance/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z)) * 0.2;
     float fogFactor = 1.0 - exp(-(turbidity/1000.0)*distance);
     fragColor = mix(fragColor.rgb, fogColor, fogFactor);
    

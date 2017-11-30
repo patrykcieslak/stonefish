@@ -283,6 +283,8 @@
     <File Name="3rdparty/stb_image.h"/>
     <File Name="3rdparty/MersenneTwister.hpp"/>
     <File Name="ToDo.txt" ExcludeProjConfig="Release"/>
+    <File Name="3rdparty/Ned.h"/>
+    <File Name="3rdparty/Ned.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">

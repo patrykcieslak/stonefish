@@ -60,7 +60,7 @@ void DVL::InternalUpdate(btScalar dt)
     }
    
     //Get velocity
-    btVector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocity();
+    btVector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getTransform().getOrigin());
     
     //Record sample
     btScalar data[4] = {v.x(),v.y(),v.z(), minRange * btCos(beamAngle/btScalar(2))};

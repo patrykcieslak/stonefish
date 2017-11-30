@@ -5,6 +5,7 @@ sudo cp -f build/Release/libStonefish.so /usr/local/lib
 #sudo cp -f build/Debug/libStonefish_debug.so /usr/local/lib
 
 #Copy include files
+sudo rm -rf /usr/local/include/Stonefish
 sudo cp -rf include/Stonefish /usr/local/include
 
 #Copy shaders

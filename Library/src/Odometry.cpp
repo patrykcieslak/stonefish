@@ -32,7 +32,8 @@ void Odometry::InternalUpdate(btScalar dt)
     btTransform odomTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     
     btVector3 pos = odomTrans.getOrigin();
-    btVector3 v = odomTrans.getBasis().inverse() * attach->getLinearVelocity();
+    btVector3 v = odomTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(odomTrans.getOrigin() - attach->getTransform().getOrigin());
+    
     btQuaternion orn = odomTrans.getRotation();
     btVector3 av = odomTrans.getBasis().inverse() * attach->getAngularVelocity();
     

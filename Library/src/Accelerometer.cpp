@@ -25,7 +25,7 @@ void Accelerometer::InternalUpdate(btScalar dt)
     btTransform accTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
     
 	//Get acceleration
-	btVector3 la = accTrans.getBasis().inverse() * attach->getLinearAcceleration();
+	btVector3 la = accTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(accTrans.getOrigin() - attach->getTransform().getOrigin()));
 	
     //Get angular acceleration
     btVector3 aa = accTrans.getBasis().inverse() * attach->getAngularAcceleration();

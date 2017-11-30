@@ -45,7 +45,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(false, false, false, false, false, false, true);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     //getTrackball()->setEnabled(false);
     
@@ -138,8 +138,8 @@ void UnderwaterTestManager::BuildScenario()
     imu->SetNoise(0.01, 0.05);
     FOG* fog = vehicle->AddFOG(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
     fog->SetNoise(0.001);
-    GPS* gps = vehicle->AddGPS(btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1)), UnitSystem::Angle(true, 50), UnitSystem::Angle(true, 20));
-    gps->SetNoise(0.000001, 0.000001);
+    GPS* gps = vehicle->AddGPS(btTransform(btQuaternion::getIdentity(), btVector3(0,0,-1)), 41.77737, 3.03376);
+    gps->SetNoise(0.5);
 
     //Create and attach thrusters
     Polyhedron* prop1 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);

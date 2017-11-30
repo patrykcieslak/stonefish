@@ -8,16 +8,23 @@
 
 #include "GPS.h"
 #include "SimulationApp.h"
+#include "Ned.h"
 
-GPS::GPS(std::string uniqueName, btScalar latitude, btScalar longitude, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+GPS::GPS(std::string uniqueName, btScalar latitudeDeg, btScalar longitudeDeg, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
-    homeLatitude = UnitSystem::SetAngle(latitude);
-    homeLongitude = UnitSystem::SetAngle(longitude);
+    ned = new Ned(latitudeDeg, longitudeDeg, btScalar(0.0));
+    nedStdDev = btScalar(0);
+    
     channels.push_back(SensorChannel("Latitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Longitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("North", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("East", QUANTITY_LENGTH));
+}
+
+GPS::~GPS()
+{
+    delete ned;
 }
 
 void GPS::InternalUpdate(btScalar dt)
@@ -34,24 +41,34 @@ void GPS::InternalUpdate(btScalar dt)
     }
     else
     {
-        btScalar x = gpsTrans.getOrigin().getX();
-        btScalar y = gpsTrans.getOrigin().getY();
-        btScalar d = btSqrt(x*x + y*y);
-        btScalar R = 6378.1e3;
-        btScalar latitude = btAsin( btSin(homeLatitude) * btCos(d/R) + btCos(homeLatitude) * btSin(d/R) * x/y); //x/y = cos(theta)
-        btScalar longitude = homeLongitude + btAtan2( y/x * btSin(d/R) * btCos(homeLatitude), btCos(d/R) - btSin(homeLatitude) * btSin(latitude) ); //y/x = sin(theta)
+        btVector3 gpsPos = gpsTrans.getOrigin();
+        
+        //Add noise
+        if(!btFuzzyZero(nedStdDev))
+        {
+            gpsPos.setX(gpsPos.x() + noise(randomGenerator));
+            gpsPos.setY(gpsPos.y() + noise(randomGenerator));
+        }
+        
+        //Convert NED to geodetic coordinates
+        double latitude;
+        double longitude;
+        double height;
+        ned->ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
         
         //Record sample
-        btScalar data[4] = {latitude, longitude, x, y};
+        btScalar data[4] = {latitude, longitude, gpsPos.x(), gpsPos.y()};
         Sample s(4, data);
+        
+        
         AddSampleToHistory(s);
     }
 }
 
-void GPS::SetNoise(btScalar latDev, btScalar longDev)
+void GPS::SetNoise(btScalar nedDev)
 {
-    channels[0].setStdDev(latDev);
-    channels[1].setStdDev(longDev);
+    nedStdDev = nedDev > btScalar(0) ? nedDev : btScalar(0);
+    noise = std::normal_distribution<btScalar>(btScalar(0), nedStdDev);
 }
 
 btTransform GPS::getSensorFrame()
