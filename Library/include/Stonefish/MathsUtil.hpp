@@ -1,5 +1,5 @@
 //
-//  MathsUtil.h
+//  MathsUtil.hpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/3/13.

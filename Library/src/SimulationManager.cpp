@@ -907,8 +907,8 @@ void SimulationManager::UpdateDrawingQueue()
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
         
-        if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
-			((Camera*)sensors[i])->UpdateTransform();
+        //if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
+		//	((Camera*)sensors[i])->UpdateTransform();
     }
     
     //Contacts

@@ -11,11 +11,15 @@
 
 #include "OpenGLView.h"
 
+class Camera;
+
 class OpenGLCamera : public OpenGLView
 {
 public:
     OpenGLCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp = 1, bool ao = false);
+    ~OpenGLCamera();
    
+    void DrawHDR(GLuint destinationFBO);
     glm::mat4 GetViewTransform() const;
     glm::vec3 GetEyePosition() const;
     glm::vec3 GetLookingDirection() const;
@@ -29,6 +33,7 @@ public:
     void Update();
     
     void setRendering(bool render);
+    void setCamera(Camera* cam);
     void setPanAngle(GLfloat newPanAngle);
     GLfloat getPanAngle();
     void setTiltAngle(GLfloat newTiltAngle);
@@ -36,6 +41,10 @@ public:
     bool needsUpdate();
     
 private:
+    Camera* camera;
+    GLuint cameraFBO;
+    GLuint cameraColorTex;
+    
     glm::mat4 cameraTransform;
     glm::mat4 cameraRender;
     glm::vec3 eye;
@@ -49,6 +58,7 @@ private:
     glm::vec3 lookingDir;
     glm::vec3 currentUp;
     bool _needsUpdate;
+    bool update;
 };
 
 

@@ -192,8 +192,8 @@ void UnderwaterTestManager::BuildScenario()
     cnt->setDisplayMask(CONTACT_DISPLAY_PATH_B);
     
     //Camera
-    //Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,-0.1,M_PI), btVector3(0.5,0.0,-0.35)), comp, -1.0, 1, true);
-    //AddSensor(cam);
+    Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,-0.1,M_PI), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
+    AddSensor(cam);
     
     //Light
     //Light* l = new Light("Spot", btVector3(0,0,0), btVector3(0,0,-1), 30.0, OpenGLLight::ColorFromTemperature(4500, 1000000));

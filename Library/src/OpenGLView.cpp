@@ -783,10 +783,10 @@ GLuint OpenGLView::getPostprocessTexture(unsigned int id)
 
 void OpenGLView::DrawHDR(GLuint destinationFBO)
 {
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
-	
-    //matrix light metering
+    //Bind HDR texture
+    glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);
+    
+    //Matrix light metering
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
     lightMeterShader->Use();
     lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
@@ -794,11 +794,10 @@ void OpenGLView::DrawHDR(GLuint destinationFBO)
     OpenGLContent::getInstance()->DrawSAQ();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    //hdr drawing
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, lightMeterTex);
+    //Bind exposure texture
+    glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, lightMeterTex);
     
+    //LDR drawing
     glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
     tonemapShader->Use();
     tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
@@ -806,12 +805,11 @@ void OpenGLView::DrawHDR(GLuint destinationFBO)
     OpenGLContent::getInstance()->DrawSAQ();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-	glUseProgram(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+	glUseProgram(0); //Disable shaders
     
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    //Unbind textures
+    glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+    glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, 0);
 }
 
 ///////////////////////// Static /////////////////////////////

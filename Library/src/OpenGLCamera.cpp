@@ -7,11 +7,17 @@
 //
 
 #include "OpenGLCamera.h"
+#include "Camera.h"
+#include "Console.h"
 #include "MathsUtil.hpp"
 
 OpenGLCamera::OpenGLCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp, bool sao) : OpenGLView(x, y, width, height, horizon, spp, sao)
 {
     _needsUpdate = false;
+    update = false;
+    camera = NULL;
+    cameraFBO = 0;
+    cameraColorTex = 0;
     
     //Setup view
     pan = 0.f;
@@ -23,6 +29,15 @@ OpenGLCamera::OpenGLCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
     GLfloat fovy = fovx/aspect;
     projection = glm::perspective(fovy, aspect, near, far);
+}
+
+OpenGLCamera::~OpenGLCamera()
+{
+    if(camera != NULL)
+    {
+        glDeleteFramebuffers(1, &cameraFBO);
+        glDeleteTextures(1, &cameraColorTex);
+    }
 }
 
 ViewType OpenGLCamera::getType()
@@ -44,22 +59,47 @@ void OpenGLCamera::Update()
 
 void OpenGLCamera::setRendering(bool render)
 {
-	if(!rendering && render)
+	if(!rendering && render) //Rendering started
 	{
 		dir = tempDir;
 		eye = tempEye;
 		up = tempUp;
 		SetupCamera();
 	}
-	
+   
 	rendering = render;
 }
 
 bool OpenGLCamera::needsUpdate()
 {
-    bool nu = _needsUpdate;
+    update = _needsUpdate;
     _needsUpdate = false;
-    return nu && enabled;
+    return update && enabled;
+}
+
+void OpenGLCamera::setCamera(Camera* cam)
+{
+    //Connect with camera sensor
+    camera = cam;
+    
+    //Generate buffers
+    glGenFramebuffers(1, &cameraFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, cameraFBO);
+    
+    glGenTextures(1, &cameraColorTex);
+    glBindTexture(GL_TEXTURE_2D, cameraColorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cameraColorTex, 0);
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+        cError("Camera FBO initialization failed!");
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void OpenGLCamera::setPanAngle(GLfloat newPanAngle)
@@ -141,4 +181,39 @@ void OpenGLCamera::SetupCamera()
 glm::mat4 OpenGLCamera::GetViewTransform() const
 {
     return cameraTransform;
+}
+
+void OpenGLCamera::DrawHDR(GLuint destinationFBO)
+{
+    //Draw to screen
+    OpenGLView::DrawHDR(destinationFBO);
+    
+    //Draw to camera buffer (no need to calculate exposure again)
+    if(camera != NULL && update)
+    {
+        //Draw LDR
+        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);
+        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, lightMeterTex);
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, cameraFBO);
+        glViewport(0, 0, viewportWidth, viewportHeight);
+        tonemapShader->Use();
+        tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
+        tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
+        OpenGLContent::getInstance()->DrawSAQ();
+        glUseProgram(0);
+        
+        //Copy to camera data
+        glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getDataPointer());
+        
+        //Unbind
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, 0);
+        
+        //Inform camera to run callback
+        camera->NewDataReady();
+    }
+    
+    update = false;
 }

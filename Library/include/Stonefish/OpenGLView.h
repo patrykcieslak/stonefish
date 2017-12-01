@@ -63,8 +63,9 @@ class OpenGLView
 {
 public:
     OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
-    virtual ~OpenGLView(void);
+    virtual ~OpenGLView();
     
+    virtual void DrawHDR(GLuint destinationFBO); //Draw the final image to the screen
     virtual glm::mat4 GetViewTransform() const = 0;
     virtual glm::vec3 GetEyePosition() const = 0;
     virtual glm::vec3 GetLookingDirection() const = 0;
@@ -85,7 +86,6 @@ public:
 	void GenerateBlurArray();
 	void EnterPostprocessing();
     void DrawAO(GLfloat intensity);
-	void DrawHDR(GLuint destinationFBO);
 	
 	void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
 	void ShowLinearDepthTexture(glm::vec4 rect);

@@ -13,7 +13,7 @@
   <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="No"/>
   <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="Yes"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="libStonefish" ConfigName="Debug"/>
       <Project Name="FallingTest" ConfigName="Debug"/>
@@ -21,7 +21,7 @@
       <Project Name="AcrobotTest" ConfigName="Debug"/>
       <Project Name="UnderwaterTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="libStonefish" ConfigName="Release"/>
       <Project Name="FallingTest" ConfigName="Release"/>

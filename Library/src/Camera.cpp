@@ -10,7 +10,7 @@
 #include "SimulationApp.h"
 #include "MathsUtil.hpp"
 
-Camera::Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btScalar horizFOV, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency, unsigned int spp, bool ao) : Sensor(uniqueName, frequency)
+Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOV, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency, uint32_t spp, bool ao) : Sensor(uniqueName, frequency)
 {
     g2s = UnitSystem::SetTransform(geomToSensor);
     attach = attachment;
@@ -19,8 +19,12 @@ Camera::Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btS
     resy = resY;
     renderSpp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     renderAO = ao;
+    newDataCallback = NULL;
+    imageData = new uint8_t[resx*resy*3]; //RGB color
+    memset(imageData, 0, resx*resy*3);
     
     glCamera = new OpenGLCamera(glm::vec3(0,0,0), glm::vec3(1.f,0,0), glm::vec3(0,0,1.f), 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
+    glCamera->setCamera(this);
     UpdateTransform();
     InternalUpdate(0);
     OpenGLContent::getInstance()->AddView(glCamera);
@@ -29,6 +33,34 @@ Camera::Camera(std::string uniqueName, unsigned int resX, unsigned int resY, btS
 Camera::~Camera()
 {
     glCamera = NULL;
+    delete imageData;
+}
+
+btScalar Camera::getHorizontalFOV()
+{
+    return fovH;
+}
+
+void Camera::getResolution(uint32_t& x, uint32_t& y)
+{
+    x = resx;
+    y = resy;
+}
+
+uint8_t* Camera::getDataPointer()
+{
+    return imageData;
+}
+
+void Camera::InstallNewDataHandler(std::function<void(Camera*)> callback)
+{
+    newDataCallback = callback;
+}
+
+void Camera::NewDataReady()
+{
+    if(newDataCallback != NULL)
+        newDataCallback(this);
 }
 
 void Camera::UpdateTransform()
@@ -118,4 +150,9 @@ std::vector<Renderable> Camera::Render()
 SensorType Camera::getType()
 {
     return SensorType::SENSOR_CAMERA;
+}
+
+btTransform Camera::getSensorFrame()
+{
+    return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
 }
