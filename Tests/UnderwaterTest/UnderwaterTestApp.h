@@ -17,6 +17,9 @@ class UnderwaterTestApp : public SimulationApp
 public:
     UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim);
     void DoHUD();
+    
+private:
+    double decimalTime;
 };
 
 #endif

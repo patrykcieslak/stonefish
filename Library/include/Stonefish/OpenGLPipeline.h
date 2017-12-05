@@ -63,12 +63,12 @@ class OpenGLPipeline
 public:
     void Initialize(GLint windowWidth, GLint windowHeight);
 	void AddToDrawingQueue(Renderable r);
-	void ClearDrawingQueue();
 	void DrawDisplay();
     void Render(SimulationManager* sim);
     void DrawObjects();
+    
+    bool isDrawingQueueEmpty();
     SDL_mutex* getDrawingQueueMutex();
-   
     void setRenderingEffects(bool shadows, bool fluid, bool ambientOcclusion);
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics);
     void setDebugSimulation(bool enabled);

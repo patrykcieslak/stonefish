@@ -19,25 +19,19 @@ public:
     OpenGLCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp = 1, bool ao = false);
     ~OpenGLCamera();
    
-    void DrawHDR(GLuint destinationFBO);
+    void DrawLDR(GLuint destinationFBO);
+    void SetupCamera();
+    void UpdateTransform();
+    void SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up);
+    void Update();
+    void RenderDummy();
+    
     glm::mat4 GetViewTransform() const;
     glm::vec3 GetEyePosition() const;
     glm::vec3 GetLookingDirection() const;
     glm::vec3 GetUpDirection() const;
     ViewType getType();
-    
-    void SetupCamera();
-    void SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up);
-    void RenderDummy();
-    void RotateCamera(btScalar panStep, btScalar tiltStep);
-    void Update();
-    
-    void setRendering(bool render);
     void setCamera(Camera* cam);
-    void setPanAngle(GLfloat newPanAngle);
-    GLfloat getPanAngle();
-    void setTiltAngle(GLfloat newTiltAngle);
-    GLfloat getTiltAngle();
     bool needsUpdate();
     
 private:
@@ -53,10 +47,6 @@ private:
     glm::vec3 tempEye;
     glm::vec3 tempDir;
     glm::vec3 tempUp;
-    GLfloat pan;
-    GLfloat tilt;
-    glm::vec3 lookingDir;
-    glm::vec3 currentUp;
     bool _needsUpdate;
     bool update;
 };

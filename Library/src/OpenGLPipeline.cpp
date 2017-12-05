@@ -158,9 +158,9 @@ void OpenGLPipeline::AddToDrawingQueue(Renderable r)
 	drawingQueue.push_back(r);
 }
 
-void OpenGLPipeline::ClearDrawingQueue()
+bool OpenGLPipeline::isDrawingQueueEmpty()
 {
-	drawingQueue.clear();
+	return drawingQueue.empty();
 }
 
 void OpenGLPipeline::DrawDisplay()
@@ -181,17 +181,19 @@ void OpenGLPipeline::DrawObjects()
 
 void OpenGLPipeline::Render(SimulationManager* sim)
 {
-    drawingQueueCopy.clear();
-    SDL_LockMutex(drawingQueueMutex);
-    //Copy queue
-    drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
-    //Update cameras
-    for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
-	{
-		OpenGLView* view = OpenGLContent::getInstance()->getView(i);
-		view->setRendering(true);
-	}
-    SDL_UnlockMutex(drawingQueueMutex);
+    //Double buffered drawing queue
+    if(!drawingQueue.empty())
+    {
+        drawingQueueCopy.clear();
+        SDL_LockMutex(drawingQueueMutex);
+        drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
+        //Update camera transforms to ensure consistency
+        for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
+            if(OpenGLContent::getInstance()->getView(i)->getType() == ViewType::CAMERA)
+                ((OpenGLCamera*)OpenGLContent::getInstance()->getView(i))->UpdateTransform();
+        drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
+        SDL_UnlockMutex(drawingQueueMutex);
+    }
     
     //Choose rendering mode
     unsigned int renderMode = 0;
@@ -463,7 +465,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 			
             //================Post-processing=============================
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-			view->DrawHDR(screenFBO);
+			view->DrawLDR(screenFBO);
             
             //================Helper objects===================
             if(view->getType() == ViewType::TRACKBALL)
@@ -570,14 +572,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
             
             delete viewport;
-            
-            view->setRendering(false);
         }
         else
         {
             GLint* viewport = view->GetViewport();
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-			view->DrawHDR(screenFBO);
+			view->DrawLDR(screenFBO);
             delete viewport;
         }
     }

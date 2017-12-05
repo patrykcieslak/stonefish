@@ -702,9 +702,12 @@ int SimulationApp::RunSimulation(void* data)
     while(stdata->app->isRunning())
     {
         sim->AdvanceSimulation();
-        SDL_LockMutex(stdata->drawMutex);
-        sim->UpdateDrawingQueue();
-        SDL_UnlockMutex(stdata->drawMutex);
+        if(OpenGLPipeline::getInstance()->isDrawingQueueEmpty())
+        {
+            SDL_LockMutex(stdata->drawMutex);
+            sim->UpdateDrawingQueue();
+            SDL_UnlockMutex(stdata->drawMutex);
+        }
 	}
     
     return 0;

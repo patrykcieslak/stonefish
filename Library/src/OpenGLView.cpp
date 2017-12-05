@@ -34,7 +34,6 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     far = UnitSystem::SetLength(horizon);
     near = 0.1f;
 	activePostprocessTexture = 0;
-    rendering = false;
     enabled = true;
     
 	//----Geometry rendering----
@@ -440,11 +439,6 @@ bool OpenGLView::isEnabled()
     return enabled;
 }
 
-void OpenGLView::setRendering(bool render)
-{
-    rendering = render;
-}
-
 void OpenGLView::SetupViewport(GLint x, GLint y, GLint width)
 {
     originX = x;
@@ -781,7 +775,7 @@ GLuint OpenGLView::getPostprocessTexture(unsigned int id)
 		return 0;
 }
 
-void OpenGLView::DrawHDR(GLuint destinationFBO)
+void OpenGLView::DrawLDR(GLuint destinationFBO)
 {
     //Bind HDR texture
     glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);

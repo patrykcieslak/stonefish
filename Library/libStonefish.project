@@ -51,7 +51,6 @@
         <File Name="src/OpenGLLight.cpp"/>
         <File Name="src/OpenGLSpotLight.cpp"/>
         <File Name="src/OpenGLPointLight.cpp"/>
-        <File Name="src/OpenGLAtmosphere.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="src/OpenGLTrackball.cpp"/>
@@ -61,6 +60,7 @@
       <File Name="src/GLSLShader.cpp"/>
       <VirtualDirectory Name="specials">
         <File Name="src/OpenGLOcean.cpp"/>
+        <File Name="src/OpenGLAtmosphere.cpp"/>
       </VirtualDirectory>
       <File Name="src/OpenGLContent.cpp"/>
       <File Name="src/OpenGLPipeline.cpp"/>
@@ -217,7 +217,6 @@
         <File Name="include/Stonefish/OpenGLSpotLight.h"/>
         <File Name="include/Stonefish/OpenGLLight.h"/>
         <File Name="include/Stonefish/OpenGLPointLight.h"/>
-        <File Name="include/Stonefish/OpenGLAtmosphere.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
         <File Name="include/Stonefish/OpenGLCamera.h"/>
@@ -233,6 +232,7 @@
       <File Name="include/Stonefish/OpenGLPipeline.h"/>
       <VirtualDirectory Name="specials">
         <File Name="include/Stonefish/OpenGLOcean.h"/>
+        <File Name="include/Stonefish/OpenGLAtmosphere.h"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">

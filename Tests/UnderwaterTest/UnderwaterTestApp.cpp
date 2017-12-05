@@ -19,6 +19,7 @@
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
     : SimulationApp("Underwater Test", dataDirPath, width, height, sim)
 {
+    decimalTime = 12.0;
 }
 
 void UnderwaterTestApp::DoHUD()
@@ -68,6 +69,21 @@ void UnderwaterTestApp::DoHUD()
     
     slider.item = 11;
     ocean->setTurbidity(IMGUI::getInstance()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, ocean->getTurbidity(), "Turbidity"));
+    
+    slider.item = 13;
+    double newTime = IMGUI::getInstance()->DoSlider(slider, 5.f, 735.f, 200.f, 0.0, 24.0, decimalTime, "Time");
+	if(newTime != decimalTime)
+	{
+		decimalTime = newTime;
+		std::time_t rawTime;
+		std::time(&rawTime);
+		std::tm* hUtc;
+		hUtc = std::gmtime(&rawTime);
+		hUtc->tm_hour = trunc(decimalTime);
+		hUtc->tm_min = ((int)trunc(decimalTime*60.0)) % 60;
+		hUtc->tm_sec = 0;
+    	OpenGLAtmosphere::getInstance()->SetSunPosition(3, 40.0, *hUtc);
+	}
     
     //FakeRotaryEncoder* enc = (FakeRotaryEncoder*)getSimulationManager()->getSensor("Encoder");
     Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");

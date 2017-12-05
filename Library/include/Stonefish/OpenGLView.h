@@ -65,7 +65,7 @@ public:
     OpenGLView(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
     virtual ~OpenGLView();
     
-    virtual void DrawHDR(GLuint destinationFBO); //Draw the final image to the screen
+    virtual void DrawLDR(GLuint destinationFBO); //Draw the final image to the screen
     virtual glm::mat4 GetViewTransform() const = 0;
     virtual glm::vec3 GetEyePosition() const = 0;
     virtual glm::vec3 GetLookingDirection() const = 0;
@@ -73,7 +73,6 @@ public:
     virtual ViewType getType() = 0;
     void setEnabled(bool en);
     bool isEnabled();
-    virtual void setRendering(bool render);
     virtual bool needsUpdate() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
@@ -162,7 +161,6 @@ protected:
     GLfloat near;
     GLfloat far;
     glm::mat4 projection;
-    bool rendering;
     bool enabled;
     
     //Shaders

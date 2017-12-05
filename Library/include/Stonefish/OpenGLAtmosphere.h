@@ -10,6 +10,7 @@
 #define __Stonefish_OpenGLAtmosphere__
 
 #include <functional>
+#include <ctime>
 #include "OpenGLPipeline.h"
 #include "GLSLShader.h"
 #include "OpenGLView.h"
@@ -35,13 +36,6 @@ struct DensityProfile
 	DensityProfileLayer layers[2];
 };
 
-struct Time
-{
-	unsigned short hour;
-	unsigned short minute;
-	unsigned short second;
-};
-
 enum AtmosphereTextures
 {
 	TRANSMITTANCE = 0,
@@ -59,8 +53,8 @@ public:
 	void SetupMaterialShader(GLSLShader* shader);
 	void SetupOceanShader(GLSLShader* shader);
 	
+    void SetSunPosition(double longitudeDeg, double latitudeDeg, std::tm& utc);   
 	void SetSunPosition(GLfloat azimuthDeg, GLfloat elevationDeg);
-	void SetSunPosition(GLfloat latitude, GLfloat longitude, Time utc);   
 	void GetSunPosition(GLfloat& azimuthDeg, GLfloat& elevationDeg);
 	GLuint getAtmosphereAPI();
 	GLuint getAtmosphereTexture(AtmosphereTextures id);
@@ -76,7 +70,8 @@ public:
 private:
 	OpenGLAtmosphere();
 	~OpenGLAtmosphere();
-	
+	int JulianDay(std::tm& tm);
+    
 	//Precomputation
 	std::string EarthsAtmosphere(const glm::dvec3& lambdas);
 	void Precompute();

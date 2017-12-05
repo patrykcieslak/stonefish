@@ -859,9 +859,6 @@ void SimulationManager::SimulationStepCompleted()
 
 void SimulationManager::UpdateDrawingQueue()
 {
-	//Clear old items
-	OpenGLPipeline::getInstance()->ClearDrawingQueue();
-	
 	//Build new drawing queue
     //Solids, manipulators, systems....
 	for(unsigned int i=0; i<entities.size(); ++i)
@@ -907,8 +904,8 @@ void SimulationManager::UpdateDrawingQueue()
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
         
-        //if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
-		//	((Camera*)sensors[i])->UpdateTransform();
+        if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
+			((Camera*)sensors[i])->UpdateTransform();
     }
     
     //Contacts
