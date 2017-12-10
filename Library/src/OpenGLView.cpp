@@ -109,7 +109,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height, GLfloat hori
     
     glGenTextures(1, &lightMeterTex);
     glBindTexture(GL_TEXTURE_2D, lightMeterTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 2, 2, 0, GL_RGB, GL_FLOAT, NULL); //Distribute work to 4 parallel threads
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 2, 2, 0, GL_RGB, GL_FLOAT, NULL); //Distribute work to 4 parallel threads
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Use hardware linear interpolation
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -782,9 +782,10 @@ void OpenGLView::DrawLDR(GLuint destinationFBO)
     
     //Matrix light metering
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
+	glViewport(0,0,2,2);
     lightMeterShader->Use();
     lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
-    lightMeterShader->SetUniform("samples", glm::ivec2(128,128));
+    lightMeterShader->SetUniform("samples", glm::ivec2(64,64));
     OpenGLContent::getInstance()->DrawSAQ();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -793,6 +794,7 @@ void OpenGLView::DrawLDR(GLuint destinationFBO)
     
     //LDR drawing
     glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
+	glViewport(0,0,viewportWidth,viewportHeight);
     tonemapShader->Use();
     tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
     tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);

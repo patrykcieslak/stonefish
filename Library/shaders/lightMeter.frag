@@ -1,9 +1,10 @@
 #version 330 core
 
-in vec2 texcoord;
-out vec4 fragcolor;
+out vec3 fragColor;
 uniform sampler2D texHDR;
 uniform ivec2 samples;
+
+const float pi2 = 3.14159/2.0;
 
 vec3 rgb2hsv(vec3 c)
 {
@@ -17,17 +18,19 @@ vec3 rgb2hsv(vec3 c)
 
 void main(void)
 {
-    float avgLuminance = 0.0;
+    float luminance = 0.0;
     
-    for(int i = 0; i < samples.x; i++)
-        for(int h = 0; h < samples.y; h++)
+    for(int a = 0; a < samples.x; ++a) //angle
+	{
+		float angle = (a+0.5)/float(samples.x)*pi2;
+		
+        for(int r = 1; r <= samples.y; ++r) //radius
         {
-            vec2 texCoord = vec2(float(i)/float(samples.x - 1), float(h)/float(samples.y - 1));
-            vec3 hsvColor = rgb2hsv(texture(texHDR, texcoord).rgb);
-            avgLuminance += log(hsvColor.z + 1.0);
+            vec2 texCoord = vec2(0.5) + (gl_FragCoord.xy-vec2(1.0)) * float(r)/float(samples.y) * vec2(cos(angle), sin(angle));
+            vec3 hsvColor = rgb2hsv(texture(texHDR, texCoord).rgb);
+            luminance += log(clamp(hsvColor.z,0.0,1000.0)+1.1);
         }
-    
-    avgLuminance /= float(samples.x * samples.y);
-    
-    fragcolor = vec4(avgLuminance);
+    }
+	
+	fragColor = vec3(luminance/float(samples.x * samples.y));
 }

@@ -79,12 +79,11 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
     return fresnel * p / ((1.0 + Lambda(zL, sigmaL2) + Lambda(zV, sigmaV2)) * zV * zH2 * zH2 * 4.0);
 }
 
-
 void main()
 {
     vec3 pos = fragPos.xyz/fragPos.w;
 	vec3 toEye = normalize(eyePos - pos);
-	vec3 center = vec3(0, 0, -planetRadius + 5.0);
+	vec3 center = vec3(0, 0, -planetRadius);
 	vec3 P = pos - center;
 	
 	//Wave slope (layers 1,2)
@@ -127,12 +126,16 @@ void main()
     outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/30000.0;
 	
 	//Sky and scene reflection
-	vec3 ray = reflect(toEye, normal);
+	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, 3.0)));
 	vec3 trans;
-	vec3 Lsky = GetSkyLuminance(P, -ray, 0.0, sunDirection, trans);
+	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
 	vec4 reflection = texture(texReflection, vec2(gl_FragCoord.x/viewport.x + normal.x*0.02, gl_FragCoord.y/viewport.y + min(-0.001, normal.y*0.02)));
-    outColor += mix(fresnel * Lsky/whitePoint/30000.0, reflection.rgb, reflection.a);
+	outColor += mix(fresnel * Lsky/whitePoint/30000.0, reflection.rgb, reflection.a);
     
+	//Aerial perspective
+	vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, P, 0.0, sunDirection, trans)/whitePoint/30000.0;
+	outColor = trans * outColor + L2P;
+	
 	//Sea contribution
     fragColor = vec4(outColor, 1.0-fresnel);
 	fragNormal = normalize(MV * normal);

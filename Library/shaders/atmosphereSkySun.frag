@@ -64,7 +64,7 @@ void main()
 	vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance);
 
 	//Sun
-	luminance += smoothstep(cosSunSize*0.99999, cosSunSize, dot(viewDir, sunDir)) * transmittance * GetSolarLuminance()/100000.0;
+	luminance += smoothstep(cosSunSize*0.99999, cosSunSize, dot(viewDir, sunDir)) * transmittance * GetSolarLuminance()/30000.0;
 
 	//Mix
 	luminance = mix(luminance, groundLuminance, groundAlpha);

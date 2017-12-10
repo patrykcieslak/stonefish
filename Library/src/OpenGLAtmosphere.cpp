@@ -477,7 +477,7 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
         lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
     }
 
-    shader->SetUniform("planetRadius", atmBottomRadius);
+    shader->SetUniform("planetRadius", atmBottomRadius+1.f);
     shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
     shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
@@ -494,7 +494,7 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
     shader->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
     shader->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
     shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    //shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
     shader->SetUniform("whitePoint", whitePoint);
 
@@ -512,7 +512,7 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
 
 void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
 {
-    shader->SetUniform("planetRadius", atmBottomRadius);
+    shader->SetUniform("planetRadius", atmBottomRadius+1.f);
     shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);

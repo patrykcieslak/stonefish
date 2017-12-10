@@ -42,19 +42,14 @@ float Uncharted2TonemapValue(float v)
 void main(void)
 {
     //Read textures
-    float lumAvg = 1.0;// texture2D(texAverage, vec2(0.5, 0.5)).x;
+    float lumAvg = texture2D(texAverage, vec2(0.5, 0.5)).r;
     vec3 rgbColor = texture2D(texHDR, texcoord).rgb;
     
     //Correct exposure and tonemap
-    float exposure = 0.5/lumAvg;
+    float exposure = clamp(0.2/lumAvg, 0.0, 2.0);
     rgbColor = Uncharted2Tonemap(exposure * rgbColor);
     vec3 whitePoint = Uncharted2Tonemap(vec3(1.0)); //1.0 is the saturated color of sun in the sky
     rgbColor /= whitePoint;
-    
-    //Increase saturation
-    vec3 hsvColor = rgb2hsv(rgbColor);
-    hsvColor.y *= 1.0;
-    rgbColor = hsv2rgb(hsvColor);
     
     //Correct Gamma
     fragcolor = vec4(pow(rgbColor, vec3(1.0/2.2)), 1.0);
