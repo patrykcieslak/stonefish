@@ -47,6 +47,7 @@ public:
     const std::vector<btTransform>& getDH();
     FeatherstoneEntity* getChain();
     unsigned int getNumOfLinks();
+    unsigned int getNumOfJoints();
     
 	//System
 	void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);

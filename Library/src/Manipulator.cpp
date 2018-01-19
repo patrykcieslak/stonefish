@@ -136,7 +136,8 @@ void Manipulator::SetDesiredJointPosition(unsigned int jointId, btScalar positio
 		return;
 	
     desiredPos[jointId] = position;
-    chain->MotorPositionSetpoint(jointId, position, btScalar(1.0));
+    chain->MotorPositionSetpoint(jointId, position, btScalar(0.1));
+    chain->MotorVelocitySetpoint(jointId, btScalar(0), btScalar(1.0));
 }
 
 void Manipulator::SetDesiredJointVelocity(unsigned int jointId, btScalar velocity)
@@ -146,6 +147,7 @@ void Manipulator::SetDesiredJointVelocity(unsigned int jointId, btScalar velocit
 	
     desiredVel[jointId] = velocity;
     chain->MotorVelocitySetpoint(jointId, velocity, btScalar(1.0));
+    chain->MotorPositionSetpoint(jointId, btScalar(0), btScalar(0));
 }
 
 btScalar Manipulator::GetJointPosition(unsigned int jointId)
@@ -204,4 +206,9 @@ FeatherstoneEntity* Manipulator::getChain()
 unsigned int Manipulator::getNumOfLinks()
 {
     return nLinks;
+}
+
+unsigned int Manipulator::getNumOfJoints()
+{
+    return desiredPos.size();
 }

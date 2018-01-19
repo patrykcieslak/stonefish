@@ -67,6 +67,9 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
                 closestDistance = distance;
             }
         }
+        
+        if(closestDistance < btScalar(0.001)*btScalar(0.001)) //Distance less than 1 mm --> skip to save memory and drawing time
+            return;
     }
     
     if(mp->m_userPersistentData != NULL)

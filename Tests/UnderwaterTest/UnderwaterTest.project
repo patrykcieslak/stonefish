@@ -10,6 +10,7 @@
   <VirtualDirectory Name="src">
     <File Name="UnderwaterTestApp.cpp"/>
     <File Name="UnderwaterTestManager.cpp"/>
+    <File Name="main.cpp"/>
   </VirtualDirectory>
   <Dependencies Name="Release">
     <Project Name="libStonefish"/>
@@ -45,6 +46,7 @@
         <Library Value="freetype"/>
         <Library Value="GL"/>
         <Library Value="GLU"/>
+        <Library Value="GLEW"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>

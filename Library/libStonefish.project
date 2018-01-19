@@ -20,7 +20,6 @@
       <File Name="src/UnitSystem.cpp"/>
       <File Name="src/XMLSimulationApp.cpp"/>
       <File Name="src/XMLSimulationManager.cpp"/>
-      <File Name="../Tests/UnderwaterTest/main.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="src/Actuator.cpp"/>
@@ -402,7 +401,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
-        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/zbuffer/Documents/stonefish/Library/shaders/\&quot;"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

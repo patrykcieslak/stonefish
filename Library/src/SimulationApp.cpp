@@ -189,10 +189,11 @@ void SimulationApp::InitializeSDL()
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &glVersionMajor);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &glVersionMinor);
 	
-    //Disnable vertical synchronization --> use framerate limitting instead (e.g. max 60 FPS)
+    //Disable vertical synchronization --> use framerate limitting instead (e.g. max 60 FPS)
     SDL_GL_SetSwapInterval(0);
     
 	//Initialize basic drawing functions and console
+    glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK) 
 	{
 		printf("Failed to initialize GLEW!\n");

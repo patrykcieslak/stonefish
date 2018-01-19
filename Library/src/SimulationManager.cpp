@@ -38,8 +38,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     zUp = simType == SimulationType::MARINE ? false : true;
     
     //Initialize simulation world
-    setStepsPerSecond(stepsPerSecond);
-	realtimeFactor = btScalar(1);
+    realtimeFactor = btScalar(1);
     solver = st;
     collisionFilter = cft;
     hydroType = ht;
@@ -58,7 +57,8 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
 	trackball = NULL;
     simSettingsMutex = SDL_CreateMutex();
     simInfoMutex = SDL_CreateMutex();
-    
+    setStepsPerSecond(stepsPerSecond);
+	
     //Set IC solver params
     icProblemSolved = false;
     setICSolverParams(false);
