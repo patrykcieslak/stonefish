@@ -32,6 +32,7 @@ void UnderwaterTestApp::DoHUD()
     slider.index = 0;
     getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
+#ifdef USE_IAUV_CLASSES
     Manipulator* manip = (Manipulator*)getSimulationManager()->getEntity("Arm");
     slider.item = 1;
     manip->SetDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 100.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(0), "Joint1"));
@@ -60,7 +61,27 @@ void UnderwaterTestApp::DoHUD()
     
     slider.item = 9;
     vehicle->SetThrusterSetpoint(4, IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(4), "Heave bow"));
+#else
+    slider.item = 5;
+    Thruster* thSway = (Thruster*)getSimulationManager()->getActuator("ThrusterSway");
+    thSway->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, thSway->getSetpoint(), "Sway"));
     
+    slider.item = 6;
+    Thruster* thSurgeP = (Thruster*)getSimulationManager()->getActuator("ThrusterSurgePort");
+    thSurgeP->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, thSurgeP->getSetpoint(), "Surge port"));
+    
+    slider.item = 7;
+    Thruster* thSurgeS = (Thruster*)getSimulationManager()->getActuator("ThrusterSurgeStarboard");
+    thSurgeS->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, thSurgeS->getSetpoint(), "Surge starboard"));
+    
+    slider.item = 8;
+    Thruster* thHeaveS = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveStern");
+    thHeaveS->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, thHeaveS->getSetpoint(), "Heave stern"));
+    
+    slider.item = 9;
+    Thruster* thHeaveB = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveBow");
+    thHeaveB->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, thHeaveB->getSetpoint(), "Heave bow"));
+#endif
     
     Ocean* ocean = getSimulationManager()->getOcean();
     
@@ -85,6 +106,7 @@ void UnderwaterTestApp::DoHUD()
     	OpenGLAtmosphere::getInstance()->SetSunPosition(3, 40.0, *hUtc);
 	}
     
+#ifdef USE_IAUV_CLASS
     //FakeRotaryEncoder* enc = (FakeRotaryEncoder*)getSimulationManager()->getSensor("Encoder");
     Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");
     
@@ -92,7 +114,7 @@ void UnderwaterTestApp::DoHUD()
     std::vector<unsigned short> dims;
     dims.push_back(2);
     IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Test", new btScalar[2]{-20.f,20.f});
-    
+#endif
     /*
     ui_id plot;
     plot.owner = 1;

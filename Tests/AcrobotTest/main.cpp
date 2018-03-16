@@ -12,7 +12,7 @@
 int main(int argc, const char * argv[])
 {
     AcrobotTestManager* simulationManager = new AcrobotTestManager(2000.0);
-    AcrobotTestApp app("../../../../Library/data", "../../../../Library/shaders", 1100, 700, simulationManager);
+    AcrobotTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", 1100, 700, simulationManager);
     app.Init();
     app.EventLoop();
     app.CleanUp();

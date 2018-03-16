@@ -12,6 +12,8 @@
 #include "SimulationApp.h"
 #include "UnderwaterTestManager.h"
 
+//#define USE_IAUV_CLASSES
+
 class UnderwaterTestApp : public SimulationApp
 {
 public:

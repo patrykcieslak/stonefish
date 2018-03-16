@@ -83,7 +83,7 @@ void AcrobotTestManager::BuildScenario()
     manip->AddRotLinkDH(link1, btTransform(btQuaternion(0,M_PI_2,1.5*M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0, 1,-1, 10);
     //manip->AddRotLinkDH(link2, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
     //manip->AddRotLinkDH(link3, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.25)), 0, -1.0, 0.0);
-    AddSystemEntity(manip, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.01)));
+    AddSystemEntity(manip, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.5)));
     manip->SetDesiredJointVelocity(0, -0.5);
     //manip->SetDesiredJointPosition(0, 1.0);
     //manip->SetDesiredJointVelocity(2, -0.1);

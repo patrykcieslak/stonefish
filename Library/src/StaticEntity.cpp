@@ -32,6 +32,47 @@ EntityType StaticEntity::getType()
     return ENTITY_STATIC;
 }
 
+Material StaticEntity::getMaterial()
+{
+    return mat;
+}
+
+void StaticEntity::setTransform(const btTransform& trans)
+{
+    if(rigidBody != NULL)
+    {
+        rigidBody->getMotionState()->setWorldTransform(UnitSystem::SetTransform(trans));
+        rigidBody->setCenterOfMassTransform(UnitSystem::SetTransform(trans));
+    }
+}
+
+btTransform StaticEntity::getTransform()
+{
+    if(rigidBody != NULL)
+    {
+        btTransform T;
+        rigidBody->getMotionState()->getWorldTransform(T);
+        return UnitSystem::GetTransform(T);
+    }
+    else
+        return btTransform::getIdentity();
+}
+
+btRigidBody* StaticEntity::getRigidBody()
+{
+    return rigidBody;
+}
+
+void StaticEntity::SetLook(int newLookId)
+{
+    lookId = newLookId;
+}
+
+void StaticEntity::SetWireframe(bool enabled)
+{
+    wireframe = enabled;
+}
+
 void StaticEntity::GetAABB(btVector3& min, btVector3& max)
 {
 	if(rigidBody != NULL)
@@ -56,11 +97,6 @@ std::vector<Renderable> StaticEntity::Render()
     }
 	
 	return items;
-}
-
-Material StaticEntity::getMaterial()
-{
-    return mat;
 }
 
 void StaticEntity::BuildRigidBody(btCollisionShape* shape)
@@ -95,17 +131,15 @@ void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btT
     }
 }
 
-btRigidBody* StaticEntity::getRigidBody()
+//Static members
+void StaticEntity::GroupTransform(std::vector<StaticEntity*>& objects, const btTransform& centre, const btTransform& transform)
 {
-    return rigidBody;
-}
-
-void StaticEntity::SetLook(int newLookId)
-{
-    lookId = newLookId;
-}
-
-void StaticEntity::SetWireframe(bool enabled)
-{
-    wireframe = enabled;
+    for(unsigned int i=0; i<objects.size(); ++i)
+    {
+        btTransform Tw = objects[i]->getTransform();
+        btTransform Tc = centre.inverse() * Tw;
+        Tc = transform * Tc;
+        Tw = centre * Tc;
+        objects[i]->setTransform(Tw);
+    }
 }

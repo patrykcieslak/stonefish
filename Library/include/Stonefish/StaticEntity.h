@@ -28,13 +28,17 @@ public:
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
-    EntityType getType();
     virtual void GetAABB(btVector3& min, btVector3& max);
     
+    void setTransform(const btTransform& trans);
+    btTransform getTransform();
     Material getMaterial();
     btRigidBody* getRigidBody();
+    EntityType getType();
     
     virtual StaticEntityType getStaticType() = 0;
+    
+    static void GroupTransform(std::vector<StaticEntity*>& objects, const btTransform& centre, const btTransform& transform);
     
 protected:
     void BuildRigidBody(btCollisionShape* shape);
