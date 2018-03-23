@@ -8,9 +8,9 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="AcrobotTestManager.cpp"/>
     <File Name="AcrobotTestApp.cpp"/>
     <File Name="main.cpp"/>
-    <File Name="AcrobotTestManager.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="AcrobotTestApp.h"/>

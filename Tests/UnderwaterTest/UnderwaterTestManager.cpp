@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright(c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestManager.h"
@@ -146,6 +146,12 @@ void UnderwaterTestManager::BuildScenario()
     Thruster* thHeaveS = new Thruster("ThrusterHeaveStern", prop4, 0.18, 0.48, 0.05, 1000.0);
     Thruster* thHeaveB = new Thruster("ThrusterHeaveBow", prop5, 0.18, 0.48, 0.05, 1000.0);
     
+    //Create gripper body
+    Polyhedron* eeBase = new Polyhedron("EEBase", GetDataPath() + "eeprobe_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), eeLook, false);
+    Sphere* eeTip = new Sphere("EETip", 0.015, getMaterialManager()->getMaterial("Dummy"), eeLook);
+    Compound* ee = new Compound("EE", eeBase, btTransform::getIdentity());
+    ee->AddExternalPart(eeTip, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0.124)));
+
     //Create underwater vehicle
 #ifdef USE_IAUV_CLASSES
     btScalar depth = 0.7;
@@ -186,12 +192,7 @@ void UnderwaterTestManager::BuildScenario()
     arm->AddRotLinkDH(link4, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0, 0, 0);
 	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,depth)));
     
-    //Create gripper
-    Polyhedron* eeBase = new Polyhedron("EEBase", GetDataPath() + "eeprobe_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), eeLook, false);
-    Sphere* eeTip = new Sphere("EETip", 0.015, getMaterialManager()->getMaterial("Dummy"), eeLook);
-    Compound* ee = new Compound("EndEffector", eeBase, btTransform::getIdentity());
-    ee->AddExternalPart(eeTip, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0.124+0.05)));
-    
+    //Add end-effector with force sensor
     FixedGripper* gripper = new FixedGripper("Gripper", arm, ee);
     AddSystemEntity(gripper, btTransform(btQuaternion::getIdentity(), btVector3(0,0, 0.05)));
     
@@ -214,9 +215,25 @@ void UnderwaterTestManager::BuildScenario()
     iauv->AddRevoluteJoint(3, 4, btVector3(0.74 + 0.1065 + 0.23332 + 0.103, 0.0, 0.201), btVector3(0.0,0.0,1.0));
     AddFeatherstoneEntity(iauv, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)));
     
+    //Add end-effector with force sensor
+    FeatherstoneEntity* effector = new FeatherstoneEntity("EndEffector", 1, ee, getDynamicsWorld(), false);
+    AddFeatherstoneEntity(effector, btTransform(btQuaternion::getIdentity(), btVector3(0.74 + 0.1065 + 0.23332 + 0.103, 0.0, 0.201+0.05)));
+    FixedJoint* ftFix = new FixedJoint("Fix", effector, iauv, -1, 3);
+    AddJoint(ftFix);
+    ForceTorque* ft = new ForceTorque("FT", ftFix, effector->getLink(0).solid, btTransform::getIdentity());
+    AddSensor(ft);
+    
     //Add sensors
-    
-    
+    Pressure* press = new Pressure("Pressure", comp, btTransform::getIdentity());
+    AddSensor(press);
+    DVL* dvl = new DVL("DVL", comp, btTransform(btQuaternion(0,0,M_PI), btVector3(0,0,0)), UnitSystem::Angle(true, 30.0));
+    AddSensor(dvl);
+    IMU* imu = new IMU("IMU", comp, btTransform::getIdentity());
+    AddSensor(imu);
+    FOG* fog = new FOG("FOG", comp, btTransform::getIdentity());
+    AddSensor(fog);
+    GPS* gps = new GPS("GPS", 20.0, 0.0, comp, btTransform::getIdentity());
+    AddSensor(gps);
     
     //Attach thrusters
     thSway->AttachToSolid(iauv, 0, btTransform(btQuaternion(M_PI_2,M_PI,0), btVector3(-0.0137, 0.0307, -0.38)));

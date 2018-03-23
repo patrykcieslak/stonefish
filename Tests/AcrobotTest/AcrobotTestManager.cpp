@@ -30,8 +30,9 @@
 #include "Obstacle.h"
 #include "ForceTorque.h"
 #include "Light.h"
+#include "Torque.h"
 
-AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, DANTZIG)
+AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, SolverType::SI)
 {
 }
 
@@ -39,7 +40,7 @@ void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, true, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     setGravity(9.81);
     setICSolverParams(false);
@@ -47,9 +48,9 @@ void AcrobotTestManager::BuildScenario()
     /////// MATERIALS
     getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 4.0), 0.7);
     getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MKS, 1.0), 0.3);
-    getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.9, 0.5);
-    getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.9, 0.7);
-    getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.7, 0.5);
+    getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.01, 0.01);
+    getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.01, 0.01);
+    getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.01, 0.01);
     
     /////// LOOKS
     int grey = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.5, 0.0);
@@ -57,8 +58,9 @@ void AcrobotTestManager::BuildScenario()
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.1, 0.0);
     
     /////// OBJECTS
-    /*Box* box1 = new Box("B1", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
-    Box* box2 = new Box("B2", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Concrete"), shiny);
+    //Obstacle* box1 = new Obstacle("B1", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
+    //AddStaticEntity(box1, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-1.0,0.44)));
+    /*Box* box2 = new Box("B2", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Concrete"), shiny);
     
     FeatherstoneEntity* fe1 = new FeatherstoneEntity("FE1", 1, box1, getDynamicsWorld(), false);
     FeatherstoneEntity* fe2 = new FeatherstoneEntity("FE2", 1, box2, getDynamicsWorld(), false);
@@ -72,24 +74,65 @@ void AcrobotTestManager::BuildScenario()
     AddSensor(ft);*/
     
     Box* baseLink = new Box("BaseLink", btVector3(0.01,0.01,0.01), getMaterialManager()->getMaterial("Rubber"), shiny);
-    Box* link1 = new Box("Link1", btVector3(0.01,0.01,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* link1 = new Box("Link1", btVector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
     link1->ScalePhysicalPropertiesToArbitraryMass(1.0);
-    Box* link2 = new Box("Link1", btVector3(0.1,0.1,1.0), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* link2 = new Box("Link2", btVector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), green);
     link2->ScalePhysicalPropertiesToArbitraryMass(1.0);
-    Box* link3 = new Box("Link1", btVector3(0.1,0.1,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
-    link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
     
-    Manipulator* manip = new Manipulator("Manipulator", 1, baseLink, btTransform::getIdentity());
+    Box* baseLinkB = new Box("BaseLinkB", btVector3(0.01,0.01,0.01), getMaterialManager()->getMaterial("Rubber"), shiny);
+    Box* link1B = new Box("Link1B", btVector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
+    link1B->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    Box* link2B = new Box("Link2B", btVector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), green);
+    link2B->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    
+    //Box* link3 = new Box("Link1", btVector3(0.1,0.1,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
+    //link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    
+    FeatherstoneEntity* fe = new FeatherstoneEntity("Manipulator1", 3, baseLink, getDynamicsWorld(), true);
+    fe->AddLink(link1, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,-0.25,0)), getDynamicsWorld());
+    fe->AddLink(link2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.75,0)), getDynamicsWorld());
+    fe->AddRevoluteJoint(0, 1, btVector3(0,0,0), btVector3(1,0,0));
+    fe->AddRevoluteJoint(1, 2, btVector3(0,-0.5,0), btVector3(1,0,0));
+    //fe->AddFixedJoint(1,2);
+    
+    fe->AddJointMotor(0, 10000.0);
+    fe->MotorVelocitySetpoint(0, 0.0, 1.0);
+    fe->MotorPositionSetpoint(0, 0.0, 1.0);
+    
+    fe->AddJointMotor(1, 10000.0);
+    fe->MotorVelocitySetpoint(1, 0.0, 1.0);
+    fe->MotorPositionSetpoint(1, 0.0, 1.0);
+    
+    AddFeatherstoneEntity(fe, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0.5)));
+    
+    ForceTorque* ft = new ForceTorque("FT1", fe, 1, btTransform::getIdentity());
+    AddSensor(ft);
+    
+    Torque* tau = new Torque("Torque", fe, 1);
+    AddSensor(tau);
+    
+    FeatherstoneEntity* feB1 = new FeatherstoneEntity("Manipulator21", 2, baseLinkB, getDynamicsWorld(), true);
+    feB1->AddLink(link1B, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.25,0)), getDynamicsWorld());
+    feB1->AddRevoluteJoint(0, 1, btVector3(0,0,0), btVector3(1,0,0));
+    AddFeatherstoneEntity(feB1, btTransform(btQuaternion::getIdentity(), btVector3(0.1,0,0.5)));
+    
+    FeatherstoneEntity* feB2 = new FeatherstoneEntity("Manipulator22", 1, link2B, getDynamicsWorld(), false);
+    AddFeatherstoneEntity(feB2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0.1,-0.75,0.5)));
+    
+    FixedJoint* ftFix = new FixedJoint("Fix", feB2, feB1, -1, 0);
+    AddJoint(ftFix);
+    ForceTorque* ft2 = new ForceTorque("FT2", ftFix, feB2->getLink(0).solid, btTransform::getIdentity());
+    AddSensor(ft2);
+    
+    /*Manipulator* manip = new Manipulator("Manipulator", 1, baseLink, btTransform::getIdentity());
     manip->AddRotLinkDH(link1, btTransform(btQuaternion(0,M_PI_2,1.5*M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0, 1,-1, 10);
     //manip->AddRotLinkDH(link2, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.5)), 0, -1.0, 0.0);
     //manip->AddRotLinkDH(link3, btTransform(btQuaternion(0,M_PI_2,M_PI_2), btVector3(0,0,-0.25)), 0, -1.0, 0.0);
     AddSystemEntity(manip, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0.5)));
-    manip->SetDesiredJointVelocity(0, -0.5);
+    manip->SetDesiredJointVelocity(0, -0.5);*/
     //manip->SetDesiredJointPosition(0, 1.0);
     //manip->SetDesiredJointVelocity(2, -0.1);
 
-    
-    
     //Obstacle* sph = new Obstacle("Sphere", 1.0, getMaterialManager()->getMaterial("Concrete"), grey);
     //AddStaticEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0,0,10)));
     

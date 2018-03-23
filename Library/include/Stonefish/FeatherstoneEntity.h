@@ -39,6 +39,7 @@ struct FeatherstoneJoint
     
     unsigned int parent;
     unsigned int child;
+    btVector3 axisInChild;
     btScalar sigDamping;
     btScalar velDamping;
 };
@@ -78,6 +79,7 @@ public:
     void getJointVelocity(unsigned int index, btScalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
     btScalar getJointTorque(unsigned int index); //Only shows sum of manually applied torques
     btScalar getMotorImpulse(unsigned int index); 
+    btVector3 getJointAxis(unsigned int index);
     
     /*
      * Both vectors are in the CoG frame of the child link. 
@@ -86,7 +88,7 @@ public:
      * The force acting on every link causes a reaction force and a torque on this link. 
      * If the rection torque acts around the axis of the joint, then this torque does not transfer directly to previous joints (only force is transferred)
     */
-    void getJointFeedback(unsigned int index, btVector3& force, btVector3& torque);
+    unsigned int getJointFeedback(unsigned int index, btVector3& force, btVector3& torque);
     
 	//Links
 	void setBaseTransform(const btTransform& trans);
@@ -96,6 +98,7 @@ public:
     btVector3 getLinkLinearVelocity(unsigned int index);
     btVector3 getLinkAngularVelocity(unsigned int index);
     unsigned int getNumOfJoints();
+    unsigned int getNumOfMovingJoints();
     unsigned int getNumOfLinks();
 	btMultiBody* getMultiBody();
     void setSelfCollision(bool enabled);

@@ -114,6 +114,7 @@
       <File Name="src/SimpleSensor.cpp"/>
       <File Name="src/Sensor.cpp"/>
       <VirtualDirectory Name="simple">
+        <File Name="src/Torque.cpp"/>
         <File Name="src/Current.cpp"/>
         <File Name="src/FakeRotaryEncoder.cpp"/>
         <File Name="src/IMU.cpp"/>
@@ -181,6 +182,7 @@
         <File Name="include/Stonefish/Contact.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="simple">
+        <File Name="include/Stonefish/Torque.h"/>
         <File Name="include/Stonefish/Current.h"/>
         <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
         <File Name="include/Stonefish/IMU.h"/>

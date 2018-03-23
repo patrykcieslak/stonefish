@@ -16,6 +16,7 @@ SimpleSensor::SimpleSensor(std::string uniqueName,  const btTransform& geomToSen
     g2s = UnitSystem::SetTransform(geomToSensor);
     historyLen = historyLength;
     history = std::deque<Sample*>(0);
+    lastFrame = btTransform::getIdentity();
 }
 
 SimpleSensor::~SimpleSensor()

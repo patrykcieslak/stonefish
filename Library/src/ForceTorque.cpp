@@ -13,6 +13,23 @@ ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachme
 {
     joint = j;
     attach = attachment;
+    fe = NULL;
+    jId = 0;
+    
+    channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
+    channels.push_back(SensorChannel("Force Y", QUANTITY_FORCE));
+    channels.push_back(SensorChannel("Force Z", QUANTITY_FORCE));
+    channels.push_back(SensorChannel("Torque X", QUANTITY_TORQUE));
+    channels.push_back(SensorChannel("Torque Y", QUANTITY_TORQUE));
+    channels.push_back(SensorChannel("Torque Z", QUANTITY_TORQUE));
+}
+
+ForceTorque::ForceTorque(std::string uniqueName, FeatherstoneEntity* f, unsigned int jointId, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
+{
+    joint = NULL;
+    attach = NULL;
+    fe = f;
+    jId = jointId; 
     
     channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
     channels.push_back(SensorChannel("Force Y", QUANTITY_FORCE));
@@ -29,22 +46,40 @@ void ForceTorque::Reset()
 
 void ForceTorque::InternalUpdate(btScalar dt)
 {
-    btVector3 force(joint->getFeedback(0), joint->getFeedback(1), joint->getFeedback(2));
-    btVector3 torque(joint->getFeedback(3), joint->getFeedback(4), joint->getFeedback(5));
-    
-    if(joint->isMultibodyJoint())
+    if(joint != NULL)
     {
-        force /= dt;
-        torque /= dt;
-    }
+        btVector3 force(joint->getFeedback(0), joint->getFeedback(1), joint->getFeedback(2));
+        btVector3 torque(joint->getFeedback(3), joint->getFeedback(4), joint->getFeedback(5));
     
-    btTransform ftTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
-    force = ftTrans.getBasis().inverse() * force;
-    torque = ftTrans.getBasis().inverse() * torque;
+        if(joint->isMultibodyJoint())
+        {  
+            force /= dt;
+            torque /= dt;
+        }
+    
+        lastFrame = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+        btMatrix3x3 toSensor = lastFrame.getBasis().inverse();
+        force = toSensor * force;
+        torque = toSensor * torque;
 	
-    btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
-    Sample s(6, values);
-    AddSampleToHistory(s);
+        btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
+        Sample s(6, values);
+        AddSampleToHistory(s);
+    }
+    else
+    {   
+        btVector3 force, torque;
+        unsigned int childId = fe->getJointFeedback(jId, force, torque);
+        lastFrame = fe->getLink(childId).solid->getGeomToCOGTransform().inverse() * g2s;
+        btMatrix3x3 toSensor = lastFrame.getBasis().inverse();
+        force = toSensor * force;
+        torque = toSensor * torque;
+        lastFrame = fe->getLink(childId).solid->getTransform() * lastFrame; //From local to global
+        
+        btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
+        Sample s(6, values);
+        AddSampleToHistory(s);
+    }
 }
 
 void ForceTorque::SetRange(const btVector3& forceMax, const btVector3& torqueMax)
@@ -78,12 +113,10 @@ std::vector<Renderable> ForceTorque::Render()
 {
     std::vector<Renderable> items(0);
     
-    btTransform ftTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
-    
     Renderable item;
     item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromBtTransform(ftTrans);
+    item.model = glMatrixFromBtTransform(lastFrame);
     items.push_back(item);
-
+    
     return items;
 }

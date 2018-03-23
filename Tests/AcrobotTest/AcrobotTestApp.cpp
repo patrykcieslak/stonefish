@@ -11,6 +11,8 @@
 #include "OpenGLTrackball.h"
 #include "DCMotor.h"
 #include "NativeDialog.h"
+#include "ForceTorque.h"
+#include "Torque.h"
 
 AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, int width, int height, AcrobotTestManager* sim) : SimulationApp("Acrobot Test", dataDirPath, width, height, sim)
 {
@@ -47,6 +49,21 @@ void AcrobotTestApp::DoHUD()
     std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
+    
+    btVector3 force, torque;
+    
+    FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("Manipulator1");
+    /*fe->getJointFeedback(1, force, torque);
+    bt8Vector3 baseF = fe->getMultiBody()->getLinkTorque(0);
+    
+    std::cout << "FT1: " << force.x() << ", " << force.y() << ", " << force.z() << ", " << torque.x() << ", " << torque.y() << ", " << torque.z() << std::endl;
+    
+    ForceTorque* ft = (ForceTorque*)getSimulationManager()->getSensor("FT1");
+    std::cout << "FT2: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
+                                << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+ */
+    Torque* tau = (Torque*)getSimulationManager()->getSensor("Torque");
+    std::cout << "Tau: " << tau->getLastSample().data[0] << std::endl;
  
     /*if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
     {

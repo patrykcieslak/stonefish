@@ -15,6 +15,7 @@
 #include "Ocean.h"
 #include "FakeRotaryEncoder.h"
 #include "Accelerometer.h"
+#include "ForceTorque.h"
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
     : SimulationApp("Underwater Test", dataDirPath, width, height, sim)
@@ -81,6 +82,12 @@ void UnderwaterTestApp::DoHUD()
     slider.item = 9;
     Thruster* thHeaveB = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveBow");
     thHeaveB->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, thHeaveB->getSetpoint(), "Heave bow"));
+    
+    
+    ForceTorque* ft = (ForceTorque*)getSimulationManager()->getSensor("FT");
+    std::cout << "Force/torque" << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
+                                << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+    
 #endif
     
     Ocean* ocean = getSimulationManager()->getOcean();

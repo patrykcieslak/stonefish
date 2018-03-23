@@ -11,11 +11,13 @@
 
 #include "SimpleSensor.h"
 #include "Joint.h"
+#include "FeatherstoneEntity.h"
 
 class ForceTorque : public SimpleSensor
 {
 public:
     ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
+    ForceTorque(std::string uniqueName, FeatherstoneEntity* f, unsigned int jointId, const btTransform& geomToSensor, btScalar frequency = btScalar(-1.), int historyLength = -1);
     
     void InternalUpdate(btScalar dt);
     std::vector<Renderable> Render();
@@ -27,6 +29,8 @@ public:
 private:
     Joint* joint;
     SolidEntity* attach;
+    FeatherstoneEntity* fe;
+    unsigned int jId;
 };
 
 #endif

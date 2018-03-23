@@ -70,6 +70,7 @@ protected:
     std::deque<Sample*> history;
     std::vector<SensorChannel> channels;
     btTransform g2s;
+    btTransform lastFrame;
     
 private:
     int historyLen;
