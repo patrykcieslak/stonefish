@@ -9,6 +9,7 @@
   <Dependencies/>
   <VirtualDirectory Name="src">
     <VirtualDirectory Name="core">
+      <File Name="src/ScrewConstraint.cpp"/>
       <File Name="src/FilteredCollisionDispatcher.cpp"/>
       <File Name="src/MaterialManager.cpp"/>
       <File Name="src/NameManager.cpp"/>
@@ -99,6 +100,7 @@
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
+      <File Name="src/ScrewJoint.cpp"/>
       <File Name="src/BeltJoint.cpp"/>
       <File Name="src/CylindricalJoint.cpp"/>
       <File Name="src/FixedJoint.cpp"/>
@@ -203,6 +205,7 @@
       <File Name="include/Stonefish/ADC.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
+      <File Name="include/Stonefish/ScrewJoint.h"/>
       <File Name="include/Stonefish/BeltJoint.h"/>
       <File Name="include/Stonefish/CylindricalJoint.h"/>
       <File Name="include/Stonefish/FixedJoint.h"/>
@@ -263,6 +266,7 @@
       <File Name="include/Stonefish/MathsUtil.hpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
+      <File Name="include/Stonefish/ScrewConstraint.h"/>
       <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
       <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
       <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>

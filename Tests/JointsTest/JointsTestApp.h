@@ -15,7 +15,7 @@
 class JointsTestApp : public SimulationApp
 {
 public:
-    JointsTestApp(std::string dataDirPath, std::string shaderDirPath, int width, int height, JointsTestManager* sim);
+    JointsTestApp(std::string dataDirPath, int width, int height, JointsTestManager* sim);
 };
 
 #endif
