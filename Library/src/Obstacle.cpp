@@ -37,9 +37,9 @@ Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar s
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
     BuildRigidBody(shape);
     
-    delete[] vertices;
-    delete[] indices;
-    delete triangleArray;
+    //delete[] vertices;
+    //delete[] indices;
+    //delete triangleArray;
 }
 
 Obstacle::Obstacle(std::string uniqueName, btScalar sphereRadius, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)

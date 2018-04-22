@@ -16,6 +16,7 @@
 #include "FakeRotaryEncoder.h"
 #include "Accelerometer.h"
 #include "ForceTorque.h"
+#include "Trigger.h"
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
     : SimulationApp("Underwater Test", dataDirPath, width, height, sim)
@@ -151,4 +152,7 @@ void UnderwaterTestApp::DoHUD()
         delete [] pathToFile;
         delete openDialog;
     }*/
+	
+	Trigger* trig = (Trigger*)getSimulationManager()->getEntity("BoxTrigger");
+	std::cout << "Trigger: " << (int)trig->isActive() << std::endl;
 }

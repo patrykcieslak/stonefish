@@ -29,6 +29,7 @@
 #include "ForcefieldEntity.h"
 #include "Ocean.h"
 #include "Plane.h"
+#include "Trigger.h"
 
 SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
 {
@@ -1212,6 +1213,33 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             system->ApplyGravity(mbDynamicsWorld->getGravity());
 			system->ApplyDamping();
         }
+		else if(ent->getType() == ENTITY_FORCEFIELD)
+		{
+			ForcefieldEntity* ff = (ForcefieldEntity*)ent;
+			if(ff->getForcefieldType() == FORCEFIELD_TRIGGER)
+			{				
+				Trigger* trigger = (Trigger*)ff;
+				trigger->Clear();
+				btBroadphasePairArray& pairArray = trigger->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+				int numPairs = pairArray.size();
+					
+				for(int h=0; h<numPairs; h++)
+				{
+					const btBroadphasePair& pair = pairArray[h];
+					btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
+					if(!colPair)
+						continue;
+                    
+					btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
+					btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                
+					if(co1 == trigger->getGhost())
+						trigger->Activate(co2);
+					else if(co2 == trigger->getGhost())
+						trigger->Activate(co1);
+				}
+			}
+		}
     }
     
 	//Fluid forces
@@ -1241,6 +1269,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             ++simManager->hydroCounter;
         }
     }
+	
+	//Check triggers
+	
 }
 
 //Used to measure body motions and calculate controls

@@ -26,6 +26,7 @@
 #include "Thruster.h"
 #include "FixedGripper.h"
 #include "Pressure.h"
+#include "Odometry.h"
 #include "DVL.h"
 #include "FOG.h"
 #include "IMU.h"
@@ -36,6 +37,7 @@
 #include "FakeRotaryEncoder.h"
 #include "Accelerometer.h"
 #include "FeatherstoneEntity.h"
+#include "Trigger.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::MARINE, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -75,10 +77,13 @@ void UnderwaterTestManager::BuildScenario()
     
     ////////OBJECTS    
     //Create environment
-    Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
+	Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,7.0)));    
+	
+	//Obstacle* bedrock = new Obstacle("Bedrock", GetDataPath() + "canyon.obj", 1.0, getMaterialManager()->getMaterial("Rock"), grey, false);
+	//AddStaticEntity(bedrock, btTransform(btQuaternion(0.0,0.0,-M_PI_2), btVector3(0,0,7.0)));
     
-    std::vector<StaticEntity*> group;
+    /*std::vector<StaticEntity*> group;
     
     for(unsigned int i=0; i<10; ++i)
     {
@@ -90,7 +95,7 @@ void UnderwaterTestManager::BuildScenario()
     StaticEntity::GroupTransform(group, btTransform(btQuaternion::getIdentity(), btVector3(9.0,0.0,0.0)), btTransform(btQuaternion(M_PI_2,0,0), btVector3(-4.0,0.0,0.0)));
         
     Box* box = new Box("Test", btVector3(1.0,1.0,0.5), getMaterialManager()->getMaterial("Rock"), propLook);
-    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.0)));
+    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0,0,3.0)));*/
     
 	//Create underwater vehicle body
     //Externals
@@ -162,6 +167,7 @@ void UnderwaterTestManager::BuildScenario()
     AddSensor(acc);
     
     //Add sensors
+	Odometry* odom = vehicle->AddOdometry(btTransform::getIdentity());
     Pressure* press = vehicle->AddPressureSensor(btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), 1.0);
     press->SetNoise(1.0);
     DVL* dvl = vehicle->AddDVL(btTransform(btQuaternion(0,0,M_PI), btVector3(0,0,0)), UnitSystem::Angle(true, 30.0));
@@ -252,4 +258,10 @@ void UnderwaterTestManager::BuildScenario()
     Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
     cam->setDisplayOnScreen(false);
     AddSensor(cam);
+	
+	//Triggers
+	Trigger* trig = new Trigger("BoxTrigger", btVector3(1.0,1.0,1.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,5.0)));
+	trig->AddActiveSolid(comp);
+	trig->setRenderable(false);
+	AddEntity(trig);	
 }

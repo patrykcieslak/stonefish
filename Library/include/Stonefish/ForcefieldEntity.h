@@ -12,7 +12,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include "Entity.h"
 
-typedef enum {FORCEFIELD_POOL, FORCEFIELD_OCEAN} ForcefieldType;
+typedef enum {FORCEFIELD_POOL, FORCEFIELD_OCEAN, FORCEFIELD_TRIGGER} ForcefieldType;
 
 //Pure virtual class
 class ForcefieldEntity : public Entity

@@ -89,6 +89,7 @@
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
         <File Name="src/Ocean.cpp"/>
+        <File Name="src/Trigger.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="src/Gripper.cpp"/>
@@ -159,12 +160,13 @@
         <File Name="include/Stonefish/Compound.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="static">
+        <File Name="include/Stonefish/Obstacle.h"/>
         <File Name="include/Stonefish/Plane.h"/>
         <File Name="include/Stonefish/Terrain.h"/>
-        <File Name="include/Stonefish/Obstacle.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
         <File Name="include/Stonefish/Ocean.h"/>
+        <File Name="include/Stonefish/Trigger.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="systems">
         <File Name="include/Stonefish/Gripper.h"/>
@@ -407,7 +409,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
-        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/zbuffer/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
