@@ -163,7 +163,7 @@ struct Look
 };
 
 //Class
-class OpenGLView;
+class OpenGLCamera;
 class OpenGLLight;
 
 class OpenGLContent
@@ -181,7 +181,7 @@ public:
 	void SetViewMatrix(glm::mat4 V);
 	glm::mat4 GetViewMatrix();
 	void SetDrawingMode(DrawingMode m);
-	void SetCurrentView(OpenGLView* v, bool mirror = false);
+	void SetCurrentView(OpenGLCamera* v, bool mirror = false);
 	void BindBaseVertexArray();
 	void EnableClipPlane(glm::vec4 clipPlaneCoeff);
 	void DisableClipPlane();
@@ -198,14 +198,14 @@ public:
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
 	
 	//Allocate and build content
-	void AddView(OpenGLView* view);
+	void AddView(OpenGLCamera* view);
     void AddLight(OpenGLLight* light);
 	unsigned int BuildObject(Mesh* mesh);
 	unsigned int CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, std::string textureName = "");
 	unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metallic = 0.f, std::string textureName = "");
 	void UseLook(unsigned int lookId, const glm::mat4& M);
 	
-	OpenGLView* getView(unsigned int id);
+	OpenGLCamera* getView(unsigned int id);
 	unsigned int getViewsCount();
 	OpenGLLight* getLight(unsigned int id);
 	unsigned int getLightsCount();
@@ -229,7 +229,7 @@ private:
 	DrawingMode mode;
 	
 	//Data
-	std::vector<OpenGLView*> views;
+	std::vector<OpenGLCamera*> views;
     std::vector<OpenGLLight*> lights;
 	std::vector<Object> objects; //VBAs
 	std::vector<Look> looks; //OpenGL materials

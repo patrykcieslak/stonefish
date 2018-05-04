@@ -9,22 +9,17 @@
 #ifndef __Stonefish_Camera__
 #define __Stonefish_Camera__
 
-#include <functional>
 #include "Sensor.h"
-#include "OpenGLCamera.h"
 #include "SolidEntity.h"
 
 class Camera : public Sensor
 {
 public:
-    //Camera
-    Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment = NULL, btScalar frequency = btScalar(-1.), uint32_t spp = 1, bool ao = true);
+    Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment = NULL, btScalar frequency = btScalar(-1.));
     virtual ~Camera();
     
-    void InstallNewDataHandler(std::function<void(Camera*)> callback);
-    void NewDataReady();
+    virtual void SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up) = 0;
     void UpdateTransform();
-    
     void setDisplayOnScreen(bool screen);
     void setPan(btScalar value);
     void setTilt(btScalar value);
@@ -37,12 +32,14 @@ public:
     bool getDisplayOnScreen();
     
     //Sensor
-	virtual void InternalUpdate(btScalar dt);
+	virtual void InternalUpdate(btScalar dt) = 0;
     virtual std::vector<Renderable> Render();
 	virtual SensorType getType();
 
+protected:
+    uint8_t* imageData;
+
 private:
-    OpenGLCamera* glCamera;
     SolidEntity* attach;
     btTransform g2s;
     btScalar fovH;
@@ -50,13 +47,7 @@ private:
     btScalar tilt;
     uint32_t resx;
     uint32_t resy;
-    uint32_t renderSpp;
-    bool renderAO;
     bool display;
-    std::function<void(Camera*)> newDataCallback;
-    uint8_t* imageData;
-    
-    
 };
 
 #endif

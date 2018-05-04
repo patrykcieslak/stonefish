@@ -55,7 +55,7 @@ typedef struct
 } Renderable;
 
 class SimulationManager;
-class OpenGLView;
+class OpenGLCamera;
 
 /*! A singleton class representing OpenGL rendering pipeline */
 class OpenGLPipeline

@@ -2,55 +2,169 @@
 //  OpenGLCamera.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 5/29/13.
+//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLCamera__
 #define __Stonefish_OpenGLCamera__
 
 #include "OpenGLView.h"
+#include "SolidEntity.h"
 
-class Camera;
+#define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1
+#define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0
+#define AO_RANDOMTEX_SIZE		4
+#define HBAO_RANDOM_SIZE		AO_RANDOMTEX_SIZE
+#define HBAO_RANDOM_ELEMENTS	(HBAO_RANDOM_SIZE*HBAO_RANDOM_SIZE)
+#define NUM_MRT					8
+#define MAX_SAMPLES				8
+
+typedef struct
+{
+    GLfloat near;
+    GLfloat far;
+    GLfloat fov;
+    GLfloat ratio;
+    glm::vec3 corners[8];
+}
+ViewFrustum;
+
+typedef struct
+{
+	GLfloat RadiusToScreen; 
+	GLfloat R2;     		
+	GLfloat NegInvR2;
+	GLfloat NDotVBias;
+ 
+	glm::vec2 InvFullResolution;
+	glm::vec2 InvQuarterResolution;
+  
+	GLfloat AOMultiplier;
+	GLfloat PowExponent;
+	glm::vec2 _pad0;
+  
+	glm::vec4 projInfo;
+	glm::vec2 projScale;
+	glm::vec2 _pad1;
+	//GLint     projOrtho;
+	//GLint     _pad1;
+  
+	glm::vec4 float2Offsets[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
+	glm::vec4 jitters[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
+}
+AOData;
+
+typedef enum {CAMERA, TRACKBALL} ViewType;
+typedef enum {NORMAL, REFLECTED, REFRACTED} SceneComponent;
 
 class OpenGLCamera : public OpenGLView
 {
 public:
-    OpenGLCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp = 1, bool ao = false);
-    ~OpenGLCamera();
-   
-    void DrawLDR(GLuint destinationFBO);
-    void SetupCamera();
-    void UpdateTransform();
-    void SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up);
-    void Update();
-    void RenderDummy();
+    OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
+    virtual ~OpenGLCamera();
     
-    glm::mat4 GetViewTransform() const;
-    glm::vec3 GetEyePosition() const;
-    glm::vec3 GetLookingDirection() const;
-    glm::vec3 GetUpDirection() const;
-    ViewType getType();
-    void setCamera(Camera* cam);
-    bool needsUpdate();
+    virtual void DrawLDR(GLuint destinationFBO);
+    virtual glm::mat4 GetViewTransform() const = 0;
+    virtual glm::vec3 GetEyePosition() const = 0;
+    virtual glm::vec3 GetLookingDirection() const = 0;
+    virtual glm::vec3 GetUpDirection() const = 0;
+    virtual ViewType getType() = 0;
+    virtual bool needsUpdate() = 0;
     
-private:
-    Camera* camera;
-    GLuint cameraFBO;
-    GLuint cameraColorTex;
+    void SetupViewport(GLint x, GLint y, GLint width);
+    void SetViewport();
+    void SetProjection();
+    void SetViewTransform();
+	btVector3 Ray(GLint x, GLint y);
+	void SetReflectionViewport();
+	void GenerateLinearDepth(int sampleId);
+	void GenerateBlurArray();
+	void EnterPostprocessing();
+    void DrawAO(GLfloat intensity);
+	
+	void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
+	void ShowLinearDepthTexture(glm::vec4 rect);
+	void ShowViewNormalTexture(glm::vec4 rect);
+	void ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index);
+	void ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index);
+    void ShowAmbientOcclusion(glm::vec4 rect);
+	
+    GLint* GetViewport() const;
+    glm::mat4 GetProjectionMatrix() const;
+	glm::mat4 GetInfiniteProjectionMatrix() const;
+    glm::mat4 GetViewMatrix() const;
+	GLfloat GetFOVX() const;
+    GLfloat GetFOVY() const;
+    GLfloat GetNearClip();
+    GLfloat GetFarClip();
+	
+    GLuint getRenderFBO();
+	GLuint getReflectionFBO();
+	GLuint getReflectionTexture();
+	GLuint getFinalTexture();
+    GLuint getAOTexture();
+	GLuint getLinearDepthTexture();
+	GLuint getPostprocessTexture(unsigned int id);
+    bool hasAO();
     
-    glm::mat4 cameraTransform;
-    glm::mat4 cameraRender;
-    glm::vec3 eye;
-    glm::vec3 dir;
-    glm::vec3 up;
-    glm::vec3 tempEye;
-    glm::vec3 tempDir;
-    glm::vec3 tempUp;
-    bool _needsUpdate;
-    bool update;
+    static void Init();
+    static void Destroy();
+    
+protected:
+	//Multisampled float textures
+    GLuint renderFBO;
+    GLuint renderColorTex;
+	GLuint renderViewNormalTex;
+	GLuint renderDepthStencilTex;
+	
+	//Non-multisampled reflection textures
+	GLuint reflectionFBO;
+	GLuint reflectionColorTex;
+	GLuint reflectionDepthStencilTex;
+	
+	//Float texture
+	GLuint lightMeterFBO;
+    GLuint lightMeterTex;
+	
+	//Postprocessing
+	GLuint postprocessFBO;
+	GLuint postprocessTex[3];
+	int activePostprocessTexture;
+
+	GLuint linearDepthFBO;
+	GLuint linearDepthTex;
+	
+	//HBAO Cache-aware (NVIDIA designworks)
+	GLuint aoBlurTex;
+	GLuint aoResultTex;
+	GLuint aoDepthArrayTex;
+	GLuint aoResultArrayTex;
+	GLuint aoDepthViewTex[HBAO_RANDOM_ELEMENTS];
+	GLuint aoFinalFBO;
+	GLuint aoDeinterleaveFBO;
+	GLuint aoCalcFBO;
+	GLuint aoDataUBO;
+	AOData aoData;
+	
+	//Data
+    GLuint aoFactor;
+	GLuint samples;
+    GLfloat fovx;
+    GLfloat near;
+    GLfloat far;
+    glm::mat4 projection;
+    bool enabled;
+    
+    //Shaders
+	static GLSLShader** depthAwareBlurShader;
+    static GLSLShader* lightMeterShader;
+    static GLSLShader* tonemapShader;
+	static GLSLShader** depthLinearizeShader; //Two shaders -> no msaa/msaa
+	static GLSLShader* aoDeinterleaveShader;
+	static GLSLShader** aoCalcShader;         //Two shaders -> no msaa/msaa
+	static GLSLShader* aoReinterleaveShader;
+	static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
 };
-
-
 
 #endif

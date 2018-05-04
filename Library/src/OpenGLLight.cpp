@@ -13,7 +13,7 @@
 GLuint OpenGLLight::spotShadowArrayTex = 0;
 GLuint OpenGLLight::spotDepthSampler = 0;
 GLuint OpenGLLight::spotShadowSampler = 0;
-OpenGLView* OpenGLLight::activeView = NULL;
+OpenGLCamera* OpenGLLight::activeView = NULL;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 
 OpenGLLight::OpenGLLight(const btVector3& _position, glm::vec4 c)
@@ -131,7 +131,7 @@ void OpenGLLight::Destroy()
 	if(spotShadowSampler != 0) glDeleteSamplers(1, &spotShadowSampler);
 }
 
-void OpenGLLight::SetCamera(OpenGLView* view)
+void OpenGLLight::SetCamera(OpenGLCamera* view)
 {
     activeView = view;
 }

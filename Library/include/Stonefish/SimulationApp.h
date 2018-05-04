@@ -74,6 +74,10 @@ public:
     //statics
     static SimulationApp* getApp();
     
+protected:
+    bool displayHUD;
+    bool displayConsole;
+    
 private:
     void InitializeSDL();
     void InitializeSimulation();
@@ -99,8 +103,6 @@ private:
     bool loading;
 	double drawingTime;
     double physicsTime;
-    bool displayHUD;
-    bool displayConsole;
   
     static int RenderLoadingScreen(void* data);
     static int RunSimulation(void* data);

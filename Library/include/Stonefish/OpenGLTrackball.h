@@ -9,9 +9,9 @@
 #ifndef __Stonefish_OpenGLTrackball__
 #define __Stonefish_OpenGLTrackball__
 
-#include "OpenGLView.h"
+#include "OpenGLCamera.h"
 
-class OpenGLTrackball : public OpenGLView
+class OpenGLTrackball : public OpenGLCamera
 {
 public:
     OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp = 1, bool ao = false);

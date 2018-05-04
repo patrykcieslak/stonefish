@@ -54,9 +54,11 @@
         <File Name="src/OpenGLPointLight.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
-        <File Name="src/OpenGLTrackball.cpp"/>
-        <File Name="src/OpenGLCamera.cpp"/>
+        <File Name="src/OpenGLDepthCamera.cpp"/>
         <File Name="src/OpenGLView.cpp"/>
+        <File Name="src/OpenGLCamera.cpp"/>
+        <File Name="src/OpenGLRealCamera.cpp"/>
+        <File Name="src/OpenGLTrackball.cpp"/>
       </VirtualDirectory>
       <File Name="src/GLSLShader.cpp"/>
       <VirtualDirectory Name="specials">
@@ -134,6 +136,7 @@
         <File Name="src/Accelerometer.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="advanced">
+        <File Name="src/ColorCamera.cpp"/>
         <File Name="src/Camera.cpp"/>
         <File Name="src/Contact.cpp"/>
       </VirtualDirectory>
@@ -182,6 +185,8 @@
       <File Name="include/Stonefish/Mux.h"/>
       <File Name="include/Stonefish/Sample.h"/>
       <VirtualDirectory Name="advanced">
+        <File Name="include/Stonefish/ColorCamera.h"/>
+        <File Name="include/Stonefish/DepthCamera.h"/>
         <File Name="include/Stonefish/Camera.h"/>
         <File Name="include/Stonefish/Contact.h"/>
       </VirtualDirectory>
@@ -226,9 +231,11 @@
         <File Name="include/Stonefish/OpenGLPointLight.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="views">
-        <File Name="include/Stonefish/OpenGLCamera.h"/>
-        <File Name="include/Stonefish/OpenGLTrackball.h"/>
+        <File Name="include/Stonefish/OpenGLDepthCamera.h"/>
         <File Name="include/Stonefish/OpenGLView.h"/>
+        <File Name="include/Stonefish/OpenGLCamera.h"/>
+        <File Name="include/Stonefish/OpenGLRealCamera.h"/>
+        <File Name="include/Stonefish/OpenGLTrackball.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="gui">
         <File Name="include/Stonefish/IMGUI.h"/>
@@ -409,7 +416,7 @@
       <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
-        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/zbuffer/Documents/stonefish/Library/shaders/\&quot;"/>
+        <Preprocessor Value="SHADER_DIR_PATH=\&quot;/home/pcieslak/Documents/stonefish/Library/shaders/\&quot;"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

@@ -32,7 +32,7 @@
 #include "IMU.h"
 #include "GPS.h"
 #include "Contact.h"
-#include "Camera.h"
+#include "ColorCamera.h"
 #include "Light.h"
 #include "FakeRotaryEncoder.h"
 #include "Accelerometer.h"
@@ -255,7 +255,7 @@ void UnderwaterTestManager::BuildScenario()
     
 #endif
     //Camera
-    Camera* cam = new Camera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
+    ColorCamera* cam = new ColorCamera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
     cam->setDisplayOnScreen(false);
     AddSensor(cam);
 	

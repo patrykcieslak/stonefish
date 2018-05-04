@@ -13,7 +13,7 @@
 #include <ctime>
 #include "OpenGLPipeline.h"
 #include "GLSLShader.h"
-#include "OpenGLView.h"
+#include "OpenGLCamera.h"
 
 // An atmosphere layer of width 'width', and whose density is defined as
 // 'exp_term' * exp('exp_scale' * h) + 'linear_term' * h + 'constant_term',
@@ -48,8 +48,8 @@ class OpenGLAtmosphere
 {
 public: 
 	void Init(unsigned int numOfPrecomputedWavelengths = 15, unsigned int numOfScatteringOrders = 4);
-	void DrawSkyAndSun(const OpenGLView* view);
-	void BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view);
+	void DrawSkyAndSun(const OpenGLCamera* view);
+	void BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view);
 	void SetupMaterialShader(GLSLShader* shader);
 	void SetupOceanShader(GLSLShader* shader);
 	

@@ -10,7 +10,7 @@
 #include "MathsUtil.hpp"
 #include "SimulationApp.h"
 
-Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency, uint32_t spp, bool ao) : Sensor(uniqueName, frequency)
+Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency) : Sensor(uniqueName, frequency)
 {
     g2s = UnitSystem::SetTransform(geomToSensor);
     attach = attachment;
@@ -19,25 +19,14 @@ Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar ho
     resy = resY;
     pan = btScalar(0);
     tilt = btScalar(0);
-    renderSpp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
-    renderAO = ao;
     display = false;
-    newDataCallback = NULL;
-    imageData = new uint8_t[resx*resy*3]; //RGB color
-    memset(imageData, 0, resx*resy*3);
-    
-    glCamera = new OpenGLCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resx, resy, (GLfloat)fovH, 1000.f, renderSpp, renderAO);
-    glCamera->setCamera(this);
-    UpdateTransform();
-    glCamera->UpdateTransform();
-    InternalUpdate(0);
-    OpenGLContent::getInstance()->AddView(glCamera);
+    imageData = NULL;
 }
     
 Camera::~Camera()
 {
-    glCamera = NULL;
-    delete imageData;
+    if(imageData != NULL)
+        delete imageData;
 }
 
 btScalar Camera::getHorizontalFOV()
@@ -90,17 +79,6 @@ btScalar Camera::getTilt()
     return UnitSystem::GetAngle(tilt);
 }
 
-void Camera::InstallNewDataHandler(std::function<void(Camera*)> callback)
-{
-    newDataCallback = callback;
-}
-
-void Camera::NewDataReady()
-{
-    if(newDataCallback != NULL)
-        newDataCallback(this);
-}
-
 void Camera::UpdateTransform()
 {
     btTransform cameraTransform = getSensorFrame();
@@ -125,10 +103,7 @@ void Camera::UpdateTransform()
     
     if(zUp)
     {
-        glm::vec3 eye = glm::vec3((GLfloat)eyePosition.x(), (GLfloat)eyePosition.y(), (GLfloat)eyePosition.z());
-        glm::vec3 dir = glm::vec3((GLfloat)direction.x(), (GLfloat)direction.y(), (GLfloat)direction.z());
-        glm::vec3 up = glm::vec3((GLfloat)cameraUp.x(), (GLfloat)cameraUp.y(), (GLfloat)cameraUp.z());
-        glCamera->SetupCamera(eye, dir, up);
+        SetupCamera(eyePosition, direction, cameraUp);
     }
     else
     {
@@ -137,16 +112,8 @@ void Camera::UpdateTransform()
         btVector3 rotEyePosition = rotation * eyePosition;
         btVector3 rotDirection = rotation * direction;
         btVector3 rotCameraUp = rotation * cameraUp;
-        glm::vec3 eye = glm::vec3((GLfloat)rotEyePosition.x(), (GLfloat)rotEyePosition.y(), (GLfloat)rotEyePosition.z());
-        glm::vec3 dir = glm::vec3((GLfloat)rotDirection.x(), (GLfloat)rotDirection.y(), (GLfloat)rotDirection.z());
-        glm::vec3 up = glm::vec3((GLfloat)rotCameraUp.x(), (GLfloat)rotCameraUp.y(), (GLfloat)rotCameraUp.z());
-        glCamera->SetupCamera(eye, dir, up);
+        SetupCamera(rotEyePosition, rotDirection, rotCameraUp);
     }
-}
-
-void Camera::InternalUpdate(btScalar dt)
-{
-    glCamera->Update();
 }
 
 std::vector<Renderable> Camera::Render()

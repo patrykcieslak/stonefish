@@ -264,7 +264,7 @@ GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
     return textures[id];
 }
 
-void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLView* view)
+void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
 {
     glm::mat4 viewMatrix = view->GetViewMatrix();
     glm::mat4 projection = view->GetProjectionMatrix();
@@ -284,7 +284,7 @@ void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLView* view)
     glUseProgram(0);
 }
 
-void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view)
+void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
 {
     //Pre-set splits
     for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {

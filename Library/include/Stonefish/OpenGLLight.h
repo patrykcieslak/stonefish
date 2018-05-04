@@ -12,7 +12,7 @@
 #include "OpenGLPipeline.h"
 #include "GLSLShader.h"
 #include "SolidEntity.h"
-#include "OpenGLCamera.h"
+#include "OpenGLRealCamera.h"
 
 #define Max(a, b)   (((a) > (b)) ? (a) : (b))
 
@@ -62,7 +62,7 @@ public:
     static void Init(std::vector<OpenGLLight*>& lights);
     static void Destroy();
     static void SetupShader(GLSLShader* shader);
-	static void SetCamera(OpenGLView* view);
+	static void SetCamera(OpenGLCamera* view);
     
     //Utilities
     static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat lux);
@@ -78,7 +78,7 @@ protected:
     static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
 	static GLuint spotShadowSampler;
 	static GLuint spotDepthSampler;
-    static OpenGLView* activeView;
+    static OpenGLCamera* activeView;
     static ColorSystem cs;
 	
     static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);

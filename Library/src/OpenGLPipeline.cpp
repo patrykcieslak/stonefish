@@ -12,7 +12,7 @@
 #include "GLSLShader.h"
 #include "MathsUtil.hpp"
 #include "OpenGLContent.h"
-#include "OpenGLView.h"
+#include "OpenGLCamera.h"
 #include "OpenGLAtmosphere.h"
 #include "OpenGLLight.h"
 #include "Console.h"
@@ -41,7 +41,7 @@ OpenGLPipeline::OpenGLPipeline()
 
 OpenGLPipeline::~OpenGLPipeline()
 {
-    OpenGLView::Destroy();
+    OpenGLCamera::Destroy();
     OpenGLLight::Destroy();
 	OpenGLContent::Destroy();
 	
@@ -131,7 +131,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 	//Load shaders and create rendering buffers
 	OpenGLAtmosphere::getInstance()->Init();
 	OpenGLContent::getInstance()->Init();
-    OpenGLView::Init();
+    OpenGLCamera::Init();
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
@@ -190,7 +190,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         //Update camera transforms to ensure consistency
         for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
             if(OpenGLContent::getInstance()->getView(i)->getType() == ViewType::CAMERA)
-                ((OpenGLCamera*)OpenGLContent::getInstance()->getView(i))->UpdateTransform();
+                ((OpenGLRealCamera*)OpenGLContent::getInstance()->getView(i))->UpdateTransform();
         drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
         SDL_UnlockMutex(drawingQueueMutex);
     }
@@ -225,7 +225,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     //==================Loop through all views==========================
     for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
     {
-		OpenGLView* view = OpenGLContent::getInstance()->getView(i);
+		OpenGLCamera* view = OpenGLContent::getInstance()->getView(i);
         
         if(view->needsUpdate())
         {
