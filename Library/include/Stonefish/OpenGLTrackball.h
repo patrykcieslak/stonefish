@@ -25,7 +25,7 @@ public:
     void MouseUp();
     void MouseScroll(GLfloat s);
     
-    glm::mat4 GetViewTransform() const;
+    glm::mat4 GetViewMatrix() const;
     glm::vec3 GetEyePosition() const;
     glm::vec3 GetLookingDirection() const;
     glm::vec3 GetUpDirection() const;

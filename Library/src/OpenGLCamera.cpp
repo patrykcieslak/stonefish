@@ -30,7 +30,6 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
     far = UnitSystem::SetLength(horizon);
     near = 0.1f;
 	activePostprocessTexture = 0;
-    enabled = true;
     
 	//----Geometry rendering----
 	//Normal render buffer
@@ -304,16 +303,6 @@ OpenGLCamera::~OpenGLCamera()
     }
 }
 
-GLint* OpenGLCamera::GetViewport() const
-{
-	GLint* view = new GLint[4];
-	view[0] = originX;
-	view[1] = originY;
-	view[2] = viewportWidth;
-	view[3] = viewportHeight;
-    return view;
-}
-
 glm::mat4 OpenGLCamera::GetProjectionMatrix() const
 {
     return projection;
@@ -332,11 +321,6 @@ glm::mat4 OpenGLCamera::GetInfiniteProjectionMatrix() const
 	infProj[2][3] = -1.f;
 	infProj[3][2] = -2.f*near;
 	return infProj;
-}
-
-glm::mat4 OpenGLCamera::GetViewMatrix() const
-{
-	return GetViewTransform();
 }
 
 GLfloat OpenGLCamera::GetFOVX() const
@@ -399,11 +383,6 @@ btVector3 OpenGLCamera::Ray(GLint x, GLint y)
     return rayTo;
 }
 
-GLuint OpenGLCamera::getRenderFBO()
-{
-    return renderFBO;
-}
-
 GLuint OpenGLCamera::getReflectionFBO()
 {
 	return reflectionFBO;
@@ -433,11 +412,6 @@ void OpenGLCamera::SetupViewport(GLint x, GLint y, GLint width)
     viewportHeight = ((GLfloat)viewportHeight/(GLfloat)oldWidth)*width;
 }
 
-void OpenGLCamera::SetViewport()
-{
-    glViewport(0, 0, viewportWidth, viewportHeight);
-}
-
 void OpenGLCamera::SetReflectionViewport()
 {
 	glViewport(0, 0, viewportWidth, viewportHeight);
@@ -450,7 +424,7 @@ void OpenGLCamera::SetProjection()
 
 void OpenGLCamera::SetViewTransform()
 {
-    OpenGLContent::getInstance()->SetViewMatrix(GetViewTransform());
+    OpenGLContent::getInstance()->SetViewMatrix(GetViewMatrix());
 }
 
 void OpenGLCamera::ShowSceneTexture(SceneComponent sc, glm::vec4 rect)

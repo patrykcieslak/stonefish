@@ -20,13 +20,10 @@ Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar ho
     pan = btScalar(0);
     tilt = btScalar(0);
     display = false;
-    imageData = NULL;
 }
     
 Camera::~Camera()
 {
-    if(imageData != NULL)
-        delete imageData;
 }
 
 btScalar Camera::getHorizontalFOV()
@@ -38,11 +35,6 @@ void Camera::getResolution(uint32_t& x, uint32_t& y)
 {
     x = resx;
     y = resy;
-}
-
-uint8_t* Camera::getDataPointer()
-{
-    return imageData;
 }
 
 void Camera::setDisplayOnScreen(bool onScreen)

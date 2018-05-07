@@ -136,6 +136,7 @@
         <File Name="src/Accelerometer.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="advanced">
+        <File Name="src/DepthCamera.cpp"/>
         <File Name="src/ColorCamera.cpp"/>
         <File Name="src/Camera.cpp"/>
         <File Name="src/Contact.cpp"/>
@@ -325,6 +326,7 @@
       <File Name="shaders/printer.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="postprocessing">
+      <File Name="shaders/depthVisualize.frag"/>
       <File Name="shaders/lightMeter.frag"/>
       <File Name="shaders/tonemapping.frag"/>
       <File Name="shaders/depthLinearizeMSAA.frag"/>

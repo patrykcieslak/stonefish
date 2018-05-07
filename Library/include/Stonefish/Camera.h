@@ -27,7 +27,6 @@ public:
     btScalar getTilt();
     btScalar getHorizontalFOV();
     void getResolution(uint32_t& x, uint32_t& y);
-    uint8_t* getDataPointer(); //Should be only used in the callback
     btTransform getSensorFrame();
     bool getDisplayOnScreen();
     
@@ -35,9 +34,6 @@ public:
 	virtual void InternalUpdate(btScalar dt) = 0;
     virtual std::vector<Renderable> Render();
 	virtual SensorType getType();
-
-protected:
-    uint8_t* imageData;
 
 private:
     SolidEntity* attach;

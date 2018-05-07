@@ -114,10 +114,9 @@ void OpenGLRealCamera::UpdateTransform()
 void OpenGLRealCamera::SetupCamera()
 {
 	cameraTransform = glm::lookAt(eye, eye+dir, up);
-	cameraRender = glm::inverse(cameraTransform);
 }
 
-glm::mat4 OpenGLRealCamera::GetViewTransform() const
+glm::mat4 OpenGLRealCamera::GetViewMatrix() const
 {
     return cameraTransform;
 }

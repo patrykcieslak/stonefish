@@ -33,6 +33,7 @@
 #include "GPS.h"
 #include "Contact.h"
 #include "ColorCamera.h"
+#include "DepthCamera.h"
 #include "Light.h"
 #include "FakeRotaryEncoder.h"
 #include "Accelerometer.h"
@@ -254,10 +255,14 @@ void UnderwaterTestManager::BuildScenario()
     AddActuator(thHeaveB);
     
 #endif
-    //Camera
-    ColorCamera* cam = new ColorCamera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
-    cam->setDisplayOnScreen(false);
+    //ColorCamera* cam = new ColorCamera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
+    //cam->setDisplayOnScreen(true);
+    //AddSensor(cam);
+    
+    DepthCamera* cam = new DepthCamera("Camera", 600, 400, 90.0, 0.1, 2.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0);
+    cam->setDisplayOnScreen(true);
     AddSensor(cam);
+    
 	
 	//Triggers
 	Trigger* trig = new Trigger("BoxTrigger", btVector3(1.0,1.0,1.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,5.0)));

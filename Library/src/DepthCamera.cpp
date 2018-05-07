@@ -1,22 +1,21 @@
 //
-//  ColorCamera.cpp
+//  DepthCamera.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 4/5/18.
+//  Created by Patryk Cieslak on 07/05/18.
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "ColorCamera.h"
+#include "DepthCamera.h"
 
-ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency, uint32_t spp, bool ao) 
+DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar minDepth, btScalar maxDepth, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency)
     : Camera(uniqueName, resX, resY, horizFOVDeg, geomToSensor, attachment, frequency)
 {
-    spp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     newDataCallback = NULL;
-    imageData = new uint8_t[resX*resY*3]; //RGB color
-    memset(imageData, 0, resX*resY*3);
+    imageData = new GLfloat[resX*resY]; //float depth
+    memset(imageData, 0, resX*resY*sizeof(GLfloat));
     
-    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)horizFOVDeg, 1000.f, spp, ao);
+    glCamera = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)horizFOVDeg, (GLfloat)minDepth, (GLfloat)maxDepth);
     glCamera->setCamera(this);
     UpdateTransform();
     glCamera->UpdateTransform();
@@ -24,20 +23,19 @@ ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, b
     OpenGLContent::getInstance()->AddView(glCamera);
 }
 
-ColorCamera::~ColorCamera()
+DepthCamera::~DepthCamera()
 {
     if(imageData != NULL)
         delete imageData;
-    
     glCamera = NULL;
 }
 
-uint8_t* ColorCamera::getDataPointer()
+GLfloat* DepthCamera::getDataPointer()
 {
     return imageData;
 }
 
-void ColorCamera::SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up)
+void DepthCamera::SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up)
 {
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
@@ -45,18 +43,18 @@ void ColorCamera::SetupCamera(const btVector3& eye, const btVector3& dir, const 
     glCamera->SetupCamera(eye_, dir_, up_);
 }
 
-void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callback)
+void DepthCamera::InstallNewDataHandler(std::function<void(DepthCamera*)> callback)
 {
     newDataCallback = callback;
 }
 
-void ColorCamera::NewDataReady()
+void DepthCamera::NewDataReady()
 {
     if(newDataCallback != NULL)
         newDataCallback(this);
 }
 
-void ColorCamera::InternalUpdate(btScalar dt)
+void DepthCamera::InternalUpdate(btScalar dt)
 {
     glCamera->Update();
 }

@@ -8,7 +8,7 @@
 
 #include "OpenGLContent.h"
 #include "Console.h"
-#include "OpenGLCamera.h"
+#include "OpenGLView.h"
 #include "OpenGLLight.h"
 #include "SystemUtil.hpp"
 #include "stb_image.h"
@@ -608,7 +608,7 @@ glm::mat4 OpenGLContent::GetViewMatrix()
 	return view;
 }
 
-void OpenGLContent::SetCurrentView(OpenGLCamera* v, bool mirror)
+void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
 {
 	if(mirror)
 	{
@@ -1119,12 +1119,12 @@ unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat rough
 	return looks.size()-1;
 }
 
-void OpenGLContent::AddView(OpenGLCamera *view)
+void OpenGLContent::AddView(OpenGLView *view)
 {
     views.push_back(view);
 }
 
-OpenGLCamera* OpenGLContent::getView(unsigned int id)
+OpenGLView* OpenGLContent::getView(unsigned int id)
 {
     if(id < views.size())
         return views[id];

@@ -13,6 +13,7 @@
 #include "MathsUtil.hpp"
 #include "OpenGLContent.h"
 #include "OpenGLCamera.h"
+#include "OpenGLDepthCamera.h"
 #include "OpenGLAtmosphere.h"
 #include "OpenGLLight.h"
 #include "Console.h"
@@ -132,6 +133,7 @@ void OpenGLPipeline::Initialize(GLint windowWidth, GLint windowHeight)
 	OpenGLAtmosphere::getInstance()->Init();
 	OpenGLContent::getInstance()->Init();
     OpenGLCamera::Init();
+    OpenGLDepthCamera::Init();
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
@@ -204,7 +206,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         renderMode = renderFluid ? (ocean->usesTrueWaves() ? 2 : 1) : 0;
     }
     
-	/*GLfloat az,elev;
+	/*GLfloat az, elev;
 	OpenGLAtmosphere::getInstance()->GetSunPosition(az, elev);
 	az += 0.05f;
 	elev = sin(az/180.f*M_PI) * 45.f+35.f;
@@ -225,353 +227,368 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     //==================Loop through all views==========================
     for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
     {
-		OpenGLCamera* view = OpenGLContent::getInstance()->getView(i);
+        OpenGLView* view = OpenGLContent::getInstance()->getView(i);
         
         if(view->needsUpdate())
         {
-            glDisable(GL_BLEND);
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
-            
-            //=================Apply view properties======================
-            OpenGLLight::SetCamera(view);
-			GLint* viewport = view->GetViewport();
-            OpenGLContent::getInstance()->SetViewportSize(viewport[2],viewport[3]);
-			
-            //=================Bake sun shadows========================
-            if(renderShadows)
-			{
-                OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FLAT);
-                OpenGLAtmosphere::getInstance()->BakeShadowmaps(this, view);
-			}
-			
-            //================Setup rendering scene======================
-            if(renderMode == 0)
+            if(view->getType() == DEPTH_CAMERA)
             {
-				glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-				GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-				glDrawBuffers(2, renderBuffs);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-                //Render all objects
-				view->SetViewport();
-				OpenGLContent::getInstance()->SetCurrentView(view);
-				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
-            
-				//Ambient occlusion
-				if(renderAO)
-					view->DrawAO(1.f);
-			
-				//Render sky
-				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-				
-				//Go to postprocessing stage
-				view->EnterPostprocessing();
-            }
-            else if(renderMode == 1)
-            {
-				OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+                OpenGLDepthCamera* camera = (OpenGLDepthCamera*)view;
                 
-                if(view->GetEyePosition().z >= 0.f)
-				{
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-					GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-					glDrawBuffers(2, renderBuffs);
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					view->SetViewport();
-					OpenGLContent::getInstance()->SetCurrentView(view);
-					
-					//Render all objects
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
-					DrawObjects();
-					OpenGLContent::getInstance()->DisableClipPlane();
-					
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
-					DrawObjects();
-					OpenGLContent::getInstance()->DisableClipPlane();
-                    
-                    //Ambient occlusion
-					if(renderAO)
-						view->DrawAO(1.f);
-			
-					//Generate reflection texture
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());
-					glDrawBuffer(GL_COLOR_ATTACHMENT0);
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					OpenGLContent::getInstance()->SetCurrentView(view, true);
-					
-					//Render all objects
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
-					glCullFace(GL_FRONT);
-					DrawObjects();
-					glCullFace(GL_BACK);
-					OpenGLContent::getInstance()->DisableClipPlane();
-					
-					//Draw surface
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-					glDrawBuffers(2, renderBuffs);
-					view->SetViewport();
-					OpenGLContent::getInstance()->SetCurrentView(view);
-					
-					//Draw water surface
-					glOcean->DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix(), view->getReflectionTexture(), viewport);
-		
-                    //Render sky
-					OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-					
-					//Go to postprocessing stage
-					view->EnterPostprocessing();
-                }
-				else //Underwater
-				{
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-					GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-					glDrawBuffers(2, renderBuffs);
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-					//Render all objects
-					view->SetViewport();
-					OpenGLContent::getInstance()->SetCurrentView(view);
-					
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
-					DrawObjects();
-					OpenGLContent::getInstance()->DisableClipPlane();
-					
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
-					DrawObjects();
-					OpenGLContent::getInstance()->DisableClipPlane();
-					
-					//Ambient occlusion
-					if(renderAO)
-					{
-						GLfloat factor = expf(-ocean->getTurbidity()/1000.f);
-						factor *= factor*factor;
-						view->DrawAO(factor);
-					}
-					
-					//Render planar reflection
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getReflectionFBO());
-					glDrawBuffer(GL_COLOR_ATTACHMENT0);
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					OpenGLContent::getInstance()->SetCurrentView(view, true);
-					
-					//Render all objects
-					OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-					OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
-					glCullFace(GL_FRONT);
-					DrawObjects();
-					glCullFace(GL_BACK);
-					glm::vec3 eyePos = view->GetEyePosition();
-					eyePos.z = -eyePos.z;
-					glOcean->DrawBackground(eyePos, OpenGLContent::getInstance()->GetViewMatrix(), view->GetProjectionMatrix());
-					OpenGLContent::getInstance()->DisableClipPlane();
-					
-					//Draw water surface
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-					glDrawBuffers(2, renderBuffs);
-					view->SetViewport();
-					OpenGLContent::getInstance()->SetCurrentView(view);
-					glOcean->DrawBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix(), view->getReflectionTexture(), viewport);
-					
-					//Distant pool background
-					glOcean->DrawBackground(view->GetEyePosition(), view->GetViewMatrix(), view->GetProjectionMatrix());
-					
-                    //Underwater blur
-					view->GenerateLinearDepth(0);
-					view->EnterPostprocessing();
-					view->GenerateBlurArray();
-                    
-                    //Apply blur
-					glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-					glOcean->DrawVolume(view->getPostprocessTexture(2), view->getLinearDepthTexture());
-					
-					//Render sky if camera crossing water plane
-					//OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-					
-					//Go to postprocessing again
-					view->EnterPostprocessing();
-				}
-            }
-			else if(renderMode == 2)
-			{
-               /*
-                OpenGLOcean* glOcean = ocean->getOpenGLOcean();
-                
-				view->SetViewport();
-				
-				glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
-				GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-				glDrawBuffers(2, renderBuffs);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-				//Draw ocean surface
-				ocean->getOpenGLOcean()->DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
-				
-				//Draw stencil mask
-				glEnable(GL_STENCIL_TEST);
-				
-				glStencilFunc(GL_ALWAYS, 1, 0xFF);
-				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-				glStencilMask(0xFF);
-				glClear(GL_STENCIL_BUFFER_BIT);
-				glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-				glDepthMask(GL_FALSE);
-				
-				ocean->getOpenGLOcean()->DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());				
-				
-				glStencilFunc(GL_EQUAL, 0, 0xFF);
-				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-				glStencilMask(0x00);
-				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-				glDepthMask(GL_TRUE);
-				
-				//Render all objects above ocean surface
-				OpenGLContent::getInstance()->SetCurrentView(view);
-				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
-            
-				//Ambient occlusion
-				//view->DrawAO();
-				
-				//Draw sky
-				OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-				
-				glStencilFunc(GL_EQUAL, 1, 0xFF);
-				
-				//Render all objects below ocean surface
-				OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
-				glDrawBuffers(2, renderBuffs);
-				DrawObjects();
-					
-				//Ambient occlusion
-				//view->DrawAO();
-					
-				//Draw ocean surface from below
-				ocean->getOpenGLOcean()->DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
-				
-				glDisable(GL_STENCIL_TEST);
-				
-				//Go to postprocessing stage
-				view->EnterPostprocessing();*/
-			}
-			
-            //================Post-processing=============================
-            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-			view->DrawLDR(screenFBO);
-            
-            //================Helper objects===================
-            if(view->getType() == ViewType::TRACKBALL)
-            {
-                //Overlay helpers
-                glBindFramebuffer(GL_FRAMEBUFFER, screenFBO); //No depth buffer, just one color buffer
-                glDisable(GL_CULL_FACE);
-                
-                glm::mat4 proj = view->GetProjectionMatrix();
-                glm::mat4 viewM = view->GetViewMatrix();
-                OpenGLContent::getInstance()->SetProjectionMatrix(proj);
-                OpenGLContent::getInstance()->SetViewMatrix(viewM);
-			
-                //Coordinate systems
-                if(showCoordSys)
-                {
-                    //WORLD
-                    if(sim->isZAxisUp())
-                        OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 1.f);
-                    else
-                        OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 1.f);
-                
-                    //Solids
-                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
-                    {
-                        if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
-                            OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
-                    }
-                }
-            
-                //Sensors
-                if(showSensors)
-                {
-                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
-                    {
-                        if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
-                            OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
-                        else if(drawingQueueCopy[h].type == RenderableType::SENSOR_POINTS)
-                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
-                        else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
-                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
-                        else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
-                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
-                    }
-                }
-                
-                //Actuators
-                if(showActuators)
-                {
-                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
-                    {
-                        if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
-                            OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
-                    }
-                }
-            
-                //Fluid dynamics
-                if(showFluidDynamics)
-                {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                
-                    for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
-                    {
-                        if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
-                            OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f));//drawingQueueCopy[h].scale*2.f);
-                        else if(drawingQueueCopy[h].type == RenderableType::HYDRO)
-                            OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0]);
-                    }
-                
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                }
-                
-                //===============Debugging=================
-                //Bullet debug draw --> breaks thread safeness!
-                if(drawDebug)
-                    sim->dynamicsWorld->debugDrawWorld();
-                
-                /*
-                //if(ocean != NULL)
-                //{	
-                    //ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
-                    //ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
-                //}
-			
-                //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
-                //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
-                //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
-                //OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
-			   */
-                //view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
-                //view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
-                //view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
-                //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
-                //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
-                //view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
-                //view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
-                //view->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
-                
-               // view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
-                
+                glDisable(GL_BLEND);
+                glEnable(GL_DEPTH_TEST);
                 glEnable(GL_CULL_FACE);
                 
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            }
+                GLint* viewport = camera->GetViewport();
+                OpenGLContent::getInstance()->SetViewportSize(viewport[2],viewport[3]);
             
-            delete viewport;
+                glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                glClear(GL_DEPTH_BUFFER_BIT);
+                
+                camera->SetViewport();
+                OpenGLContent::getInstance()->SetCurrentView(camera);
+                OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FLAT);
+                DrawObjects();
+                
+                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+                camera->DrawLDR(screenFBO);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                
+                delete viewport;
+            }
+            else if(view->getType() == CAMERA || view->getType() == TRACKBALL)
+            {
+                OpenGLCamera* camera = (OpenGLCamera*)view;
+                
+                glDisable(GL_BLEND);
+                glEnable(GL_DEPTH_TEST);
+                glEnable(GL_CULL_FACE);
+            
+                //=================Apply view properties======================
+                OpenGLLight::SetCamera(camera);
+                GLint* viewport = camera->GetViewport();
+                OpenGLContent::getInstance()->SetViewportSize(viewport[2],viewport[3]);
+            
+                //=================Bake sun shadows========================
+                if(renderShadows) 
+                {
+                    OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FLAT);
+                    OpenGLAtmosphere::getInstance()->BakeShadowmaps(this, camera);
+                }
+            
+                //================Setup rendering scene======================
+                if(renderMode == 0) 
+                {
+                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                    GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+                    glDrawBuffers(2, renderBuffs);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+                    //Render all objects
+                    camera->SetViewport();
+                    OpenGLContent::getInstance()->SetCurrentView(camera);
+                    OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+                    glDrawBuffers(2, renderBuffs);
+                    DrawObjects();
+            
+                    //Ambient occlusion
+                    if(renderAO)
+                        camera->DrawAO(1.f);
+            
+                    //Render sky
+                    OpenGLAtmosphere::getInstance()->DrawSkyAndSun(camera);
+            
+                    //Go to postprocessing stage
+                    camera->EnterPostprocessing();
+                } 
+                else if(renderMode == 1)
+                {
+                    OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+            
+                    if(camera->GetEyePosition().z >= 0.f) {
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                        GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+                        glDrawBuffers(2, renderBuffs);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        camera->SetViewport();
+                        OpenGLContent::getInstance()->SetCurrentView(camera);
+            
+                        //Render all objects
+                        OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+                        OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
+                        DrawObjects();
+                        OpenGLContent::getInstance()->DisableClipPlane();
+            
+                        OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+                        OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
+                        DrawObjects();
+                        OpenGLContent::getInstance()->DisableClipPlane();
+            
+                        //Ambient occlusion
+                        if(renderAO)
+                            camera->DrawAO(1.f);
+            
+                        //Generate reflection texture
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getReflectionFBO());
+                        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        OpenGLContent::getInstance()->SetCurrentView(camera, true);
+            
+                        //Render all objects
+                        OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+                        OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
+                        glCullFace(GL_FRONT);
+                        DrawObjects();
+                        glCullFace(GL_BACK);
+                        OpenGLContent::getInstance()->DisableClipPlane();
+            
+                        //Draw surface
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                        glDrawBuffers(2, renderBuffs);
+                        camera->SetViewport();
+                        OpenGLContent::getInstance()->SetCurrentView(camera);
+            
+                        //Draw water surface
+                        glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), camera->getReflectionTexture(), viewport);
+            
+                        //Render sky
+                        OpenGLAtmosphere::getInstance()->DrawSkyAndSun(camera);
+            
+                        //Go to postprocessing stage
+                        camera->EnterPostprocessing();
+                    } else { //Underwater
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                        GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+                        glDrawBuffers(2, renderBuffs);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+                        //Render all objects
+                        camera->SetViewport();
+                        OpenGLContent::getInstance()->SetCurrentView(camera);
+            
+                        OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+                        OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
+                        DrawObjects();
+                        OpenGLContent::getInstance()->DisableClipPlane();
+            
+                        OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+                        OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,1.f,0));
+                        DrawObjects();
+                        OpenGLContent::getInstance()->DisableClipPlane();
+            
+                        //Ambient occlusion
+                        if(renderAO) {
+                            GLfloat factor = expf(-ocean->getTurbidity()/1000.f);
+                            factor *= factor*factor;
+                            camera->DrawAO(factor);
+                        }
+            
+                        //Render planar reflection
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getReflectionFBO());
+                        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        OpenGLContent::getInstance()->SetCurrentView(camera, true);
+            
+                        //Render all objects
+                        OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+                        OpenGLContent::getInstance()->EnableClipPlane(glm::vec4(0,0,-1.f,0));
+                        glCullFace(GL_FRONT);
+                        DrawObjects();
+                        glCullFace(GL_BACK);
+                        glm::vec3 eyePos = camera->GetEyePosition();
+                        eyePos.z = -eyePos.z;
+                        glOcean->DrawBackground(eyePos, OpenGLContent::getInstance()->GetViewMatrix(), camera->GetProjectionMatrix());
+                        OpenGLContent::getInstance()->DisableClipPlane();
+            
+                        //Draw water surface
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                        glDrawBuffers(2, renderBuffs);
+                        camera->SetViewport();
+                        OpenGLContent::getInstance()->SetCurrentView(camera);
+                        glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), camera->getReflectionTexture(), viewport);
+            
+                        //Distant pool background
+                        glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
+            
+                        //Underwater blur
+                        camera->GenerateLinearDepth(0);
+                        camera->EnterPostprocessing();
+                        camera->GenerateBlurArray();
+            
+                        //Apply blur
+                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                        glOcean->DrawVolume(camera->getPostprocessTexture(2), camera->getLinearDepthTexture());
+            
+                        //Render sky if camera crossing water plane
+                        //OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+            
+                        //Go to postprocessing again
+                        camera->EnterPostprocessing();
+                    }
+                } else if(renderMode == 2) {
+                    /*
+                     OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+            
+                    view->SetViewport();
+            
+                    glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+                    GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+                    glDrawBuffers(2, renderBuffs);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+                    //Draw ocean surface
+                    ocean->getOpenGLOcean()->DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
+            
+                    //Draw stencil mask
+                    glEnable(GL_STENCIL_TEST);
+            
+                    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+                    glStencilMask(0xFF);
+                    glClear(GL_STENCIL_BUFFER_BIT);
+                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                    glDepthMask(GL_FALSE);
+            
+                    ocean->getOpenGLOcean()->DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());
+            
+                    glStencilFunc(GL_EQUAL, 0, 0xFF);
+                    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                    glStencilMask(0x00);
+                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                    glDepthMask(GL_TRUE);
+            
+                    //Render all objects above ocean surface
+                    OpenGLContent::getInstance()->SetCurrentView(view);
+                    OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+                    glDrawBuffers(2, renderBuffs);
+                    DrawObjects();
+            
+                    //Ambient occlusion
+                    //view->DrawAO();
+            
+                    //Draw sky
+                    OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+            
+                    glStencilFunc(GL_EQUAL, 1, 0xFF);
+            
+                    //Render all objects below ocean surface
+                    OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+                    glDrawBuffers(2, renderBuffs);
+                    DrawObjects();
+            
+                    //Ambient occlusion
+                    //view->DrawAO();
+            
+                    //Draw ocean surface from below
+                    ocean->getOpenGLOcean()->DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
+            
+                    glDisable(GL_STENCIL_TEST);
+            
+                    //Go to postprocessing stage
+                    view->EnterPostprocessing();*/
+                }
+            
+                //================Post-processing=============================
+                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+                camera->DrawLDR(screenFBO);
+            
+                //================Helper objects===================
+                if(camera->getType() == ViewType::TRACKBALL) {
+                    //Overlay helpers
+                    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO); //No depth buffer, just one color buffer
+                    glDisable(GL_CULL_FACE);
+            
+                    glm::mat4 proj = camera->GetProjectionMatrix();
+                    glm::mat4 viewM = camera->GetViewMatrix();
+                    OpenGLContent::getInstance()->SetProjectionMatrix(proj);
+                    OpenGLContent::getInstance()->SetViewMatrix(viewM);
+            
+                    //Coordinate systems
+                    if(showCoordSys) {
+                        //WORLD
+                        if(sim->isZAxisUp())
+                            OpenGLContent::getInstance()->DrawCoordSystem(glm::mat4(), 1.f);
+                        else
+                            OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 1.f);
+            
+                        //Solids
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                            if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
+                                OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
+                        }
+                    }
+            
+                    //Sensors
+                    if(showSensors) {
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                            if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
+                                OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
+                            else if(drawingQueueCopy[h].type == RenderableType::SENSOR_POINTS)
+                                OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                            else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
+                                OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                            else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
+                                OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                        }
+                    }
+            
+                    //Actuators
+                    if(showActuators) {
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                            if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
+                                OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
+                        }
+                    }
+            
+                    //Fluid dynamics
+                    if(showFluidDynamics) {
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                            if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
+                                OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f));//drawingQueueCopy[h].scale*2.f);
+                            else if(drawingQueueCopy[h].type == RenderableType::HYDRO)
+                                OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0]);
+                        }
+            
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    }
+            
+                    //===============Debugging=================
+                    //Bullet debug draw --> breaks thread safeness!
+                    if(drawDebug)
+                        sim->dynamicsWorld->debugDrawWorld();
+            
+                    /*
+                    //if(ocean != NULL)
+                    //{
+                        //ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
+                        //ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
+                    //}
+            
+                    //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,200,400,400));
+                    //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,200,400,400));
+                    //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(800,200,400,400));
+                    //OpenGLAtmosphere::getInstance()->ShowSunShadowmaps(0, 0, 0.05f);
+                    */
+                    //view->ShowSceneTexture(SceneComponent::REFLECTED, glm::vec4(0,700,300,200));
+                    //view->ShowLinearDepthTexture(glm::vec4(0,200,300,200));
+                    //view->ShowViewNormalTexture(glm::vec4(0,400,300,200));
+                    //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
+                    //view->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);
+                    //view->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
+                    //view->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
+                    //view->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
+            
+                    // view->ShowAmbientOcclusion(glm::vec4(0,600,300,200));
+            
+                    glEnable(GL_CULL_FACE);
+            
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                }
+            
+                delete viewport;
+            }
         }
         else
         {

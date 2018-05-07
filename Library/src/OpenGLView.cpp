@@ -14,6 +14,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
     originY = y;
     viewportWidth = width;
     viewportHeight = height;
+    enabled = true;
 }
 
 OpenGLView::~OpenGLView()
@@ -28,4 +29,24 @@ void OpenGLView::setEnabled(bool en)
 bool OpenGLView::isEnabled()
 {
     return enabled;
+}
+
+void OpenGLView::SetViewport()
+{
+    glViewport(0, 0, viewportWidth, viewportHeight);
+}
+
+GLint* OpenGLView::GetViewport() const
+{
+	GLint* view = new GLint[4];
+	view[0] = originX;
+	view[1] = originY;
+	view[2] = viewportWidth;
+	view[3] = viewportHeight;
+    return view;
+}
+
+GLuint OpenGLView::getRenderFBO()
+{
+    return renderFBO;
 }

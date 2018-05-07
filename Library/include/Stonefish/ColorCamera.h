@@ -22,12 +22,14 @@ public:
     void SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up);
     void InstallNewDataHandler(std::function<void(ColorCamera*)> callback);
     void NewDataReady();
-    
+    uint8_t* getDataPointer(); //Should be only used in the callback
+     
     //Sensor
 	void InternalUpdate(btScalar dt);
 
 private:
     OpenGLRealCamera* glCamera;
+    uint8_t* imageData;
     std::function<void(ColorCamera*)> newDataCallback;
 };
 

@@ -135,7 +135,7 @@ void OpenGLTrackball::MouseScroll(GLfloat s)
     UpdateTrackballTransform();
 }
 
-glm::mat4 OpenGLTrackball::GetViewTransform() const
+glm::mat4 OpenGLTrackball::GetViewMatrix() const
 {
 	return trackballTransform;
 }

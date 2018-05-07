@@ -26,7 +26,7 @@ public:
     void Update();
     void RenderDummy();
     
-    glm::mat4 GetViewTransform() const;
+    glm::mat4 GetViewMatrix() const;
     glm::vec3 GetEyePosition() const;
     glm::vec3 GetLookingDirection() const;
     glm::vec3 GetUpDirection() const;
@@ -40,7 +40,6 @@ private:
     GLuint cameraColorTex;
     
     glm::mat4 cameraTransform;
-    glm::mat4 cameraRender;
     glm::vec3 eye;
     glm::vec3 dir;
     glm::vec3 up;

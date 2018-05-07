@@ -55,7 +55,6 @@ typedef struct
 }
 AOData;
 
-typedef enum {CAMERA, TRACKBALL} ViewType;
 typedef enum {NORMAL, REFLECTED, REFRACTED} SceneComponent;
 
 class OpenGLCamera : public OpenGLView
@@ -65,15 +64,13 @@ public:
     virtual ~OpenGLCamera();
     
     virtual void DrawLDR(GLuint destinationFBO);
-    virtual glm::mat4 GetViewTransform() const = 0;
+    virtual glm::mat4 GetViewMatrix() const = 0;
     virtual glm::vec3 GetEyePosition() const = 0;
     virtual glm::vec3 GetLookingDirection() const = 0;
     virtual glm::vec3 GetUpDirection() const = 0;
     virtual ViewType getType() = 0;
-    virtual bool needsUpdate() = 0;
     
     void SetupViewport(GLint x, GLint y, GLint width);
-    void SetViewport();
     void SetProjection();
     void SetViewTransform();
 	btVector3 Ray(GLint x, GLint y);
@@ -90,17 +87,14 @@ public:
 	void ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index);
     void ShowAmbientOcclusion(glm::vec4 rect);
 	
-    GLint* GetViewport() const;
     glm::mat4 GetProjectionMatrix() const;
 	glm::mat4 GetInfiniteProjectionMatrix() const;
-    glm::mat4 GetViewMatrix() const;
 	GLfloat GetFOVX() const;
     GLfloat GetFOVY() const;
     GLfloat GetNearClip();
     GLfloat GetFarClip();
 	
-    GLuint getRenderFBO();
-	GLuint getReflectionFBO();
+    GLuint getReflectionFBO();
 	GLuint getReflectionTexture();
 	GLuint getFinalTexture();
     GLuint getAOTexture();
@@ -113,7 +107,6 @@ public:
     
 protected:
 	//Multisampled float textures
-    GLuint renderFBO;
     GLuint renderColorTex;
 	GLuint renderViewNormalTex;
 	GLuint renderDepthStencilTex;
@@ -154,7 +147,6 @@ protected:
     GLfloat near;
     GLfloat far;
     glm::mat4 projection;
-    bool enabled;
     
     //Shaders
 	static GLSLShader** depthAwareBlurShader;
