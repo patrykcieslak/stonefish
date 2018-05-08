@@ -7,13 +7,13 @@
     <Include Path="/usr/include/"/>
     <Include Path="/usr/local/include/"/>
   </WorkspaceParserPaths>
-  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
+  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="Yes"/>
   <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
   <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
   <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="No"/>
-  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="Yes"/>
+  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="yes">
+    <WorkspaceConfiguration Name="Debug" Selected="no">
       <Environment/>
       <Project Name="libStonefish" ConfigName="Debug"/>
       <Project Name="FallingTest" ConfigName="Debug"/>
@@ -21,7 +21,7 @@
       <Project Name="AcrobotTest" ConfigName="Debug"/>
       <Project Name="UnderwaterTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="no">
+    <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
       <Project Name="libStonefish" ConfigName="Release"/>
       <Project Name="FallingTest" ConfigName="Release"/>

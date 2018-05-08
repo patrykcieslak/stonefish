@@ -23,6 +23,7 @@ public:
     void InstallNewDataHandler(std::function<void(DepthCamera*)> callback);
     void NewDataReady();
     GLfloat* getDataPointer(); //Should be only used in the callback
+    glm::vec2 getDepthRange();
      
     //Sensor
 	void InternalUpdate(btScalar dt);
@@ -30,6 +31,7 @@ public:
 private:
     OpenGLDepthCamera* glCamera;
     GLfloat* imageData;
+    glm::vec2 depthRange;
     std::function<void(DepthCamera*)> newDataCallback;
 };
 

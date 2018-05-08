@@ -197,9 +197,9 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
         if(!display)
             LinearizeDepth();
         
-        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex); 
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_R32F, GL_FLOAT, camera->getDataPointer());
-        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, camera->getDataPointer());
+        glBindTexture(GL_TEXTURE_2D, 0);
          
         //Inform camera to run callback
         camera->NewDataReady();

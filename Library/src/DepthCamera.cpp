@@ -12,6 +12,8 @@ DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, b
     : Camera(uniqueName, resX, resY, horizFOVDeg, geomToSensor, attachment, frequency)
 {
     newDataCallback = NULL;
+    depthRange.x = minDepth;
+    depthRange.y = maxDepth;
     imageData = new GLfloat[resX*resY]; //float depth
     memset(imageData, 0, resX*resY*sizeof(GLfloat));
     
@@ -33,6 +35,11 @@ DepthCamera::~DepthCamera()
 GLfloat* DepthCamera::getDataPointer()
 {
     return imageData;
+}
+
+glm::vec2 DepthCamera::getDepthRange()
+{
+    return depthRange;
 }
 
 void DepthCamera::SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up)

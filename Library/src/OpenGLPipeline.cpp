@@ -193,6 +193,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         for(unsigned int i=0; i<OpenGLContent::getInstance()->getViewsCount(); ++i)
             if(OpenGLContent::getInstance()->getView(i)->getType() == ViewType::CAMERA)
                 ((OpenGLRealCamera*)OpenGLContent::getInstance()->getView(i))->UpdateTransform();
+            else if(OpenGLContent::getInstance()->getView(i)->getType() == ViewType::DEPTH_CAMERA)
+                ((OpenGLDepthCamera*)OpenGLContent::getInstance()->getView(i))->UpdateTransform();
         drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
         SDL_UnlockMutex(drawingQueueMutex);
     }
