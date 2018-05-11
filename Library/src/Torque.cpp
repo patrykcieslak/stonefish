@@ -27,8 +27,9 @@ void Torque::InternalUpdate(btScalar dt)
     btVector3 force, torque;
     unsigned int childId = fe->getJointFeedback(jId, force, torque);
     btVector3 axis = fe->getJointAxis(jId);
-    btScalar tau = torque.dot(axis); //fe->getMotorImpulse(jId)/dt;
-        
+    //btScalar tau = torque.dot(axis); //
+    btScalar tau = fe->getMotorImpulse(jId)/dt;
+    
     btScalar values[1] = {tau};
     Sample s(1, values);
     AddSampleToHistory(s);
