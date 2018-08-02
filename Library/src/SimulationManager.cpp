@@ -923,6 +923,20 @@ void SimulationManager::UpdateDrawingQueue()
 			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
 		}
     }
+    
+    if(liquid != NULL)
+    {
+        std::vector<Renderable> items = liquid->Render();
+        for(unsigned int h=0; h<items.size(); ++h)
+		{
+			if(!zUp)
+            {
+				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
+			}
+			
+			OpenGLPipeline::getInstance()->AddToDrawingQueue(items[h]);
+		}
+    }
 }
 
 Entity* SimulationManager::PickEntity(int x, int y)

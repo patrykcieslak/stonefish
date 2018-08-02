@@ -24,8 +24,10 @@ public:
     Gripper(std::string uniqueName, Manipulator* m);
     virtual ~Gripper();
     
-    virtual void Open() = 0;
-    virtual void Close() = 0;
+    virtual void SetState(btScalar openFraction) = 0;
+    btScalar GetState();
+    void Open();
+    void Close();
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
     void UpdateAcceleration(btScalar dt);
@@ -37,12 +39,12 @@ public:
     std::vector<Renderable> Render();
     btTransform getTransform() const;
     SystemType getSystemType();
-    bool isClosed();
     ForceTorque* getFT();
+    
     
 protected:
     FeatherstoneEntity* mechanism;
-    bool closed;
+    btScalar openFrac;
     
 private:
     FixedJoint* fix;

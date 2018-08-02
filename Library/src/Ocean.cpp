@@ -23,8 +23,9 @@ Ocean::Ocean(std::string uniqueName, Liquid* l) : ForcefieldEntity(uniqueName)
     ghost->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0,0,size/btScalar(2)))); //Surface at 0
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
+    currents = std::vector<VelocityField*>(0);
+     
     glOcean = new OpenGLOcean();
-    
     trueWaves = false;
     liquid = l;
     setAlgeaBloomFactor(0.2f);
@@ -33,6 +34,13 @@ Ocean::Ocean(std::string uniqueName, Liquid* l) : ForcefieldEntity(uniqueName)
 
 Ocean::~Ocean()
 {
+    if(currents.size() > 0)
+    {
+        for(unsigned int i=0; i<currents.size(); ++i)
+            delete currents[i];
+        currents.clear();
+    }
+    
     liquid = NULL;
     delete glOcean;
 }
@@ -84,6 +92,11 @@ GLfloat Ocean::getTurbidity()
     return turbidity;
 }
 
+void Ocean::AddVelocityField(VelocityField* field)
+{
+    currents.push_back(field);
+}
+
 glm::vec3 Ocean::ComputeLightAbsorption()
 {
     return glm::vec3(0.2f+0.2f*(algeaBloom), 0.02f, 0.02f+0.02f*(algeaBloom));
@@ -109,7 +122,10 @@ btScalar Ocean::GetPressure(const btVector3& point) const
 
 btVector3 Ocean::GetFluidVelocity(const btVector3& point) const
 {
-    return btVector3(0,0,0);
+    btVector3 fv(0,0,0);
+    for(unsigned int i=0; i<currents.size(); ++i)
+        fv += currents[i]->GetVelocityAtPoint(point);
+    return fv;
 }
 
 void Ocean::GetSurface(btVector3& normal, btVector3& position) const
@@ -173,4 +189,17 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
         
         ((SolidEntity*)ent)->ApplyFluidForces();
     }
+}
+
+std::vector<Renderable> Ocean::Render()
+{
+    std::vector<Renderable> items(0);
+    
+    for(unsigned int i=0; i<currents.size(); ++i)
+    {
+        std::vector<Renderable> citems = currents[i]->Render();
+        items.insert(items.end(), citems.begin(), citems.end());
+    }
+    
+    return items;
 }

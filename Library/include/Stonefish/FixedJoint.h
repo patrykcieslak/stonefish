@@ -16,7 +16,7 @@ class FixedJoint : public Joint
 {
 public:
     FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
-	FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA = -1, int linkIdB = -1);
+	FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const btVector3& pivot);
     
     btVector3 Render();
     JointType getType();

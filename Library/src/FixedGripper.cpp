@@ -11,14 +11,10 @@
 
 FixedGripper::FixedGripper(std::string uniqueName, Manipulator* m, SolidEntity* hand) : Gripper(uniqueName, m)
 {
-    closed = false;
     mechanism = new FeatherstoneEntity(uniqueName + "/FE", 1, hand, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
 }
 
-void FixedGripper::Open()
+void FixedGripper::SetState(btScalar openFraction)
 {
-}
-
-void FixedGripper::Close()
-{
+    //Nothing to be done
 }

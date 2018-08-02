@@ -15,6 +15,7 @@ Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidE
 	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), true);
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
+    nJoints = 0;
     DH.push_back(geomToJoint);
 	chain->setSelfCollision(true); //Enable collision between links
 	attach = NULL;
@@ -78,13 +79,41 @@ void Manipulator::AddTransformDH(btScalar d, btScalar a, btScalar alpha)
     DH.push_back(DH.back() * t1 * t2);
 }
 
+void Manipulator::AddRotLinkURDF(SolidEntity* link, const btTransform& trans, const btVector3& axis, btScalar lowerLimit, btScalar upperLimit, btScalar maxTorque)
+{
+    if(nLinks < nTotalLinks)
+    {
+        btMultiBodyDynamicsWorld* world = SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld();
+        
+        btTransform linkTrans = DH.back() * trans;
+        chain->AddLink(link, linkTrans, world);
+		chain->AddRevoluteJoint(nLinks-1, nLinks, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
+        
+        if(lowerLimit < upperLimit)
+            chain->AddJointLimit(nLinks-1, lowerLimit, upperLimit);
+		
+        chain->AddJointMotor(nLinks-1, maxTorque/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+        //chain->setJointDamping(nLinks-1, 0, 0.5);
+		
+        desiredPos.push_back(0);
+        desiredVel.push_back(0);
+        motorTorque.push_back(0);
+        
+		//Update trasformation matrix
+		DH.push_back(linkTrans);
+        
+		//Link successfully created
+		++nLinks;
+	}
+}
+
 void Manipulator::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
 {
 	chain->AddToDynamicsWorld(world, worldTransform);
 	
 	if(attach != NULL)
 	{
-		FixedJoint* fixed = new FixedJoint(getName() + "/Fix", chain, attach);
+		FixedJoint* fixed = new FixedJoint(getName() + "/Fix", chain, attach, -1, -1, chain->getLinkTransform(0).getOrigin());
 		fixed->AddToDynamicsWorld(world);
 	}
 }

@@ -90,6 +90,10 @@
         <File Name="src/Plane.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
+        <File Name="src/Jet.cpp"/>
+        <File Name="src/Pipe.cpp"/>
+        <File Name="src/VelocityField.cpp"/>
+        <File Name="src/Stream.cpp"/>
         <File Name="src/Ocean.cpp"/>
         <File Name="src/Trigger.cpp"/>
       </VirtualDirectory>
@@ -98,12 +102,12 @@
         <File Name="src/UnderwaterVehicle.cpp"/>
         <File Name="src/Manipulator.cpp"/>
         <VirtualDirectory Name="grippers">
+          <File Name="src/TwoFingerGripper.cpp"/>
           <File Name="src/FixedGripper.cpp"/>
         </VirtualDirectory>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
-      <File Name="src/ScrewJoint.cpp"/>
       <File Name="src/BeltJoint.cpp"/>
       <File Name="src/CylindricalJoint.cpp"/>
       <File Name="src/FixedJoint.cpp"/>
@@ -119,6 +123,8 @@
       <File Name="src/SimpleSensor.cpp"/>
       <File Name="src/Sensor.cpp"/>
       <VirtualDirectory Name="simple">
+        <File Name="src/Multibeam.cpp"/>
+        <File Name="src/Profiler.cpp"/>
         <File Name="src/Torque.cpp"/>
         <File Name="src/Current.cpp"/>
         <File Name="src/FakeRotaryEncoder.cpp"/>
@@ -169,6 +175,10 @@
         <File Name="include/Stonefish/Terrain.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
+        <File Name="include/Stonefish/Jet.h"/>
+        <File Name="include/Stonefish/Pipe.h"/>
+        <File Name="include/Stonefish/Stream.h"/>
+        <File Name="include/Stonefish/VelocityField.h"/>
         <File Name="include/Stonefish/Ocean.h"/>
         <File Name="include/Stonefish/Trigger.h"/>
       </VirtualDirectory>
@@ -177,6 +187,7 @@
         <File Name="include/Stonefish/Manipulator.h"/>
         <File Name="include/Stonefish/UnderwaterVehicle.h"/>
         <VirtualDirectory Name="grippers">
+          <File Name="include/Stonefish/TwoFingerGripper.h"/>
           <File Name="include/Stonefish/FixedGripper.h"/>
         </VirtualDirectory>
       </VirtualDirectory>
@@ -192,6 +203,8 @@
         <File Name="include/Stonefish/Contact.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="simple">
+        <File Name="include/Stonefish/Multibeam.h"/>
+        <File Name="include/Stonefish/Profiler.h"/>
         <File Name="include/Stonefish/Torque.h"/>
         <File Name="include/Stonefish/Current.h"/>
         <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
@@ -213,7 +226,6 @@
       <File Name="include/Stonefish/ADC.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
-      <File Name="include/Stonefish/ScrewJoint.h"/>
       <File Name="include/Stonefish/BeltJoint.h"/>
       <File Name="include/Stonefish/CylindricalJoint.h"/>
       <File Name="include/Stonefish/FixedJoint.h"/>

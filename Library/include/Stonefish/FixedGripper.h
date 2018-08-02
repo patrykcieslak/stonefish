@@ -20,8 +20,7 @@ class FixedGripper : public Gripper
 public:
     FixedGripper(std::string uniqueName, Manipulator* m, SolidEntity* hand);
     
-    void Open();
-    void Close();
+    void SetState(btScalar openFraction);
 };
 
 #endif

@@ -57,13 +57,30 @@ void AcrobotTestApp::DoHUD()
     bt8Vector3 baseF = fe->getMultiBody()->getLinkTorque(0);
     
     std::cout << "FT1: " << force.x() << ", " << force.y() << ", " << force.z() << ", " << torque.x() << ", " << torque.y() << ", " << torque.z() << std::endl;
-    
+    */
     ForceTorque* ft = (ForceTorque*)getSimulationManager()->getSensor("FT1");
+    std::cout << "FT1: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
+              << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+ 
+    ft = (ForceTorque*)getSimulationManager()->getSensor("FT2");
     std::cout << "FT2: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
-                                << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
- */
-    Torque* tau = (Torque*)getSimulationManager()->getSensor("Torque");
-    std::cout << "Tau: " << tau->getLastSample().data[0] << std::endl;
+              << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+ 
+    ft = (ForceTorque*)getSimulationManager()->getSensor("FT3");
+    std::cout << "FT3: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
+              << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+ 
+    ft = (ForceTorque*)getSimulationManager()->getSensor("FT4");
+    std::cout << "FT4: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
+              << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+ 
+    ft = (ForceTorque*)getSimulationManager()->getSensor("FT5");
+    std::cout << "FT5: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
+              << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
+ 
+    std::cout << std::endl;
+   // Torque* tau = (Torque*)getSimulationManager()->getSensor("Torque");
+    //std::cout << "Tau: " << tau->getLastSample().data[0] << std::endl;
  
     /*if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
     {

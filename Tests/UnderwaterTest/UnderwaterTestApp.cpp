@@ -153,6 +153,6 @@ void UnderwaterTestApp::DoHUD()
         delete openDialog;
     }*/
 	
-	Trigger* trig = (Trigger*)getSimulationManager()->getEntity("BoxTrigger");
-	std::cout << "Trigger: " << (int)trig->isActive() << std::endl;
+	//Trigger* trig = (Trigger*)getSimulationManager()->getEntity("BoxTrigger");
+	//std::cout << "Trigger: " << (int)trig->isActive() << std::endl;
 }

@@ -40,6 +40,7 @@ struct FeatherstoneJoint
     unsigned int parent;
     unsigned int child;
     btVector3 axisInChild;
+    btVector3 pivotInChild;
     btScalar sigDamping;
     btScalar velDamping;
 };
@@ -58,7 +59,7 @@ public:
     void AddLink(SolidEntity* solid, const btTransform& transform, btMultiBodyDynamicsWorld* world);
     int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
     int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
-	int AddFixedJoint(unsigned int parent, unsigned int child);
+	int AddFixedJoint(unsigned int parent, unsigned int child, const btVector3& pivot);
     void AddJointMotor(unsigned int index, btScalar maxImpulse);
     void AddJointLimit(unsigned int index, btScalar lower, btScalar upper);
 	

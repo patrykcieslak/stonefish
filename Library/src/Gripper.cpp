@@ -11,7 +11,7 @@
 Gripper::Gripper(std::string uniqueName, Manipulator* m) : SystemEntity(uniqueName)
 {
     manipulator = m;
-    closed = false;
+    openFrac = btScalar(0);
 }
 
 Gripper::~Gripper()
@@ -30,14 +30,24 @@ btTransform Gripper::getTransform() const
     return mechanism->getMultiBody()->getBaseWorldTransform();
 }
 
-bool Gripper::isClosed()
-{
-    return closed;
-}
-
 ForceTorque* Gripper::getFT()
 {
     return ft;
+}
+
+void Gripper::Open()
+{
+    SetState(btScalar(1));    
+}
+
+void Gripper::Close()
+{
+    SetState(btScalar(0));
+} 
+
+btScalar Gripper::GetState()
+{
+    return openFrac;
 }
 
 void Gripper::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
@@ -48,7 +58,7 @@ void Gripper::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransf
     
     mechanism->AddToDynamicsWorld(world, trans);
 	
-    fix = new FixedJoint(getName() + "/Fix", mechanism, manipulator->getChain(), -1, manipulator->getNumOfLinks()-2);
+    fix = new FixedJoint(getName() + "/Fix", mechanism, manipulator->getChain(), -1, manipulator->getNumOfLinks()-2, getTransform().getOrigin());
     fix->AddToDynamicsWorld(world);
     
     ft = new ForceTorque(getName() + "/FT", fix, mechanism->getLink(0).solid, btTransform::getIdentity());

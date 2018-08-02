@@ -39,6 +39,11 @@
 #include "Accelerometer.h"
 #include "FeatherstoneEntity.h"
 #include "Trigger.h"
+#include "TwoFingerGripper.h"
+#include "Pipe.h"
+#include "Jet.h"
+#include "Profiler.h"
+#include "Multibeam.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
     : SimulationManager(SimulationType::MARINE, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
@@ -49,7 +54,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(false, true, true, true, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, true, true, true, false, false, false);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     //getTrackball()->setEnabled(false);
     
@@ -81,18 +86,24 @@ void UnderwaterTestManager::BuildScenario()
 	Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,7.0)));    
 	
+    Pipe* vf = new Pipe(btVector3(10.0, 0.0, 1.0), btVector3(-10.0, 0.0, 1.0), 1.0, 1.0, 1.0, 1.0);
+    //getOcean()->AddVelocityField(vf);
+    
+    Jet* vf2 = new Jet(btVector3(0.0, -3.0, 1.0),btVector3(0,1.0,0), 0.1, 10.0);
+    //getOcean()->AddVelocityField(vf2);
+    
 	//Obstacle* bedrock = new Obstacle("Bedrock", GetDataPath() + "canyon.obj", 1.0, getMaterialManager()->getMaterial("Rock"), grey, false);
 	//AddStaticEntity(bedrock, btTransform(btQuaternion(0.0,0.0,-M_PI_2), btVector3(0,0,7.0)));
     
-    /*std::vector<StaticEntity*> group;
+    //std::vector<StaticEntity*> group;
     
     for(unsigned int i=0; i<10; ++i)
     {
         Obstacle* cyl = new Obstacle("Rock", 1.0,3.0, getMaterialManager()->getMaterial("Rock"), seabed);
         AddStaticEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(i*2.0,0,5.5)));    
-        group.push_back(cyl);
+        //group.push_back(cyl);
     }
-    
+    /*
     StaticEntity::GroupTransform(group, btTransform(btQuaternion::getIdentity(), btVector3(9.0,0.0,0.0)), btTransform(btQuaternion(M_PI_2,0,0), btVector3(-4.0,0.0,0.0)));
         
     Box* box = new Box("Test", btVector3(1.0,1.0,0.5), getMaterialManager()->getMaterial("Rock"), propLook);
@@ -200,8 +211,15 @@ void UnderwaterTestManager::BuildScenario()
 	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,depth)));
     
     //Add end-effector with force sensor
-    FixedGripper* gripper = new FixedGripper("Gripper", arm, ee);
-    AddSystemEntity(gripper, btTransform(btQuaternion::getIdentity(), btVector3(0,0, 0.05)));
+    //FixedGripper* gripper = new FixedGripper("Gripper", arm, ee);
+    Box* eeBase0 = new Box("EEBase", btVector3(0.02,0.02,0.02), getMaterialManager()->getMaterial("Dummy"), manipLook);
+    Box* eeFinger1_ = new Box("EEFinger1_", btVector3(0.02,0.1,0.2), getMaterialManager()->getMaterial("Dummy"), manipLook);
+    Box* eeFinger2_ = new Box("EEFinger2_", btVector3(0.02,0.1,0.2), getMaterialManager()->getMaterial("Dummy"), manipLook);
+    Compound* eeFinger1 = new Compound("EEFinger1", eeFinger1_, btTransform(btQuaternion::getIdentity(), btVector3(0.04, 0.0, 0.1)));
+    Compound* eeFinger2 = new Compound("EEFinger2", eeFinger2_, btTransform(btQuaternion::getIdentity(), btVector3(-0.04, 0.0, 0.1)));
+    
+    TwoFingerGripper* gripper = new TwoFingerGripper("Gripper", arm, eeBase0, eeFinger1, eeFinger2, btVector3(0.04, 0.0, 0.0), btVector3(-0.04, 0.0, 0.0), btVector3(0.0, 1.0, 0.0), 0.3, 10.0);
+    AddSystemEntity(gripper, btTransform(btQuaternion::getIdentity(), btVector3(0,0, 0.4)));
     
     //Add contact sensing between gripper and target
     Contact* cnt = AddContact(ee, plane, 10000);
@@ -255,18 +273,24 @@ void UnderwaterTestManager::BuildScenario()
     AddActuator(thHeaveB);
     
 #endif
+    
+    //Profiler* prof = new Profiler("Laser", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.5)), 50.0, 100, 100.0);
+    //AddSensor(prof);
+    Multibeam* mb = new Multibeam("Multibeam", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.5)), 120.0, 400, 10.0);
+    mb->SetRange(0.2, 10.0);
+    AddSensor(mb);
+    
     //ColorCamera* cam = new ColorCamera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
     //cam->setDisplayOnScreen(true);
     //AddSensor(cam);
     
-    DepthCamera* cam = new DepthCamera("Camera", 600, 400, 90.0, 0.1, 2.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0);
-    cam->setDisplayOnScreen(true);
-    AddSensor(cam);
+    //DepthCamera* cam = new DepthCamera("Camera", 600, 400, 90.0, 0.1, 2.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0);
+    //cam->setDisplayOnScreen(true);
+    //AddSensor(cam);
     
-	
 	//Triggers
-	Trigger* trig = new Trigger("BoxTrigger", btVector3(1.0,1.0,1.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,5.0)));
-	trig->AddActiveSolid(comp);
-	trig->setRenderable(false);
-	AddEntity(trig);	
+	//Trigger* trig = new Trigger("BoxTrigger", btVector3(1.0,1.0,1.0), btTransform(btQuaternion::getIdentity(), btVector3(0,0,5.0)));
+	//trig->AddActiveSolid(comp);
+	//trig->setRenderable(false);
+	//AddEntity(trig);	
 }

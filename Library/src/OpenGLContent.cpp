@@ -825,12 +825,10 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 	}
 }
 
-void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii)
+void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 {
     if(helperShader != NULL && ellipsoid.mesh != NULL)
     {
-        glm::vec4 color(0.2f, 0.5f, 1.f, 1.f);
-        
         helperShader->Use();
 		helperShader->SetUniform("MVP", viewProjection*M);
 		helperShader->SetUniform("scale", radii);

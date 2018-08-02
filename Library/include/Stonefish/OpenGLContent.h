@@ -193,7 +193,7 @@ public:
 	
 	void DrawCubemapCross(GLuint texture);
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
-	void DrawEllipsoid(glm::mat4 M, glm::vec3 radii);
+	void DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color);
     void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
 	

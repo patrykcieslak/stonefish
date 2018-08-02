@@ -10,6 +10,7 @@
 #define __Stonefish_Ocean__
 
 #include "ForcefieldEntity.h"
+#include "VelocityField.h"
 #include "MaterialManager.h"
 #include "OpenGLOcean.h"
 
@@ -30,6 +31,7 @@ public:
     virtual ~Ocean();
     
     //Forces
+    void AddVelocityField(VelocityField* field);
     virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
     virtual btVector3 GetFluidVelocity(const btVector3& point) const;
     void GetSurface(btVector3& normal, btVector3& position) const;
@@ -50,8 +52,11 @@ public:
     OpenGLOcean* getOpenGLOcean();
     ForcefieldType getForcefieldType();
     
+    std::vector<Renderable> Render();
+    
 private:	
     Liquid* liquid;
+    std::vector<VelocityField*> currents;
     OpenGLOcean* glOcean;
     btScalar depth;
     GLfloat algeaBloom;

@@ -31,10 +31,14 @@ public:
     virtual ~Manipulator();
     
 	//Manipulator
-	void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, 
+	//Denavit-Hartenberg notation
+    void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, 
                       btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0), btScalar maxTorque = btScalar(1000.0));
     void AddTransformDH(btScalar d, btScalar a, btScalar alpha);
-	
+    //URDF format
+    void AddRotLinkURDF(SolidEntity* link, const btTransform& trans, const btVector3& axis, 
+                         btScalar lowerLimit = btScalar(1), btScalar upperLimit = btScalar(-1), btScalar maxTorque = btScalar(1000.0));
+    
 	void SetDesiredJointPosition(unsigned int jointId, btScalar position);
     void SetDesiredJointVelocity(unsigned int jointId, btScalar position);
     //void setDesiredJointForce() ???
@@ -68,6 +72,7 @@ private:
     std::vector<btScalar> desiredVel;
     std::vector<btScalar> motorTorque;
 	unsigned int nLinks;
+    unsigned int nJoints;
 	unsigned int nTotalLinks;
 	
 	std::vector<btTransform> DH; //Succesive transforms from DH notation (multiplied) 
