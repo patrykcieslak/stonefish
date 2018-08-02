@@ -38,7 +38,7 @@ void OpenGLPointLight::RenderDummy()
 {
     glm::mat4 model = glm::translate(getPosition());
     GLfloat iconSize = surfaceDistance;
-    int steps = 24;
+    unsigned int steps = 24;
     
 	std::vector<glm::vec3> vertices;
 	

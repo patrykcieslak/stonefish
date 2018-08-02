@@ -1,5 +1,5 @@
 Name: Stonefish
-Description: Marine/surface robotics simulation library
+Description: Marine and terrestial robotics simulation library
 Requires: 
 Version: 1.0
 Libs: -L/usr/local/lib -lStonefish

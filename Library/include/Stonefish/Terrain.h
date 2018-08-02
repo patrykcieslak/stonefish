@@ -17,7 +17,7 @@
 class Terrain : public StaticEntity
 {
 public:
-    Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId = -1);
+    Terrain(std::string uniqueName, unsigned int width, unsigned int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId = -1);
    
     StaticEntityType getStaticType();
     

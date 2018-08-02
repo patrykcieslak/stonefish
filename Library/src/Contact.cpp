@@ -203,7 +203,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         
-		for(size_type i = 0; i < points.size(); ++i)
+		for(unsigned int i = 0; i < points.size(); ++i)
         {	
 			btVector3 p = points[i].locationA;
 			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
@@ -218,7 +218,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         
-		for(size_type i = 0; i < points.size(); ++i)
+		for(unsigned int i = 0; i < points.size(); ++i)
         {	
 			btVector3 p = points[i].locationB;
 			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));

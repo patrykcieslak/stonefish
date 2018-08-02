@@ -98,13 +98,13 @@ ScientificData* LoadOctaveData(const char* path)
     idString[idStringLen] = '\0';
     
     //Get endianness
-    bool littleEndian;
+    //bool littleEndian;
     
     if(strncmp(idString, "Octave-1-L", idStringLen) == 0)
-        littleEndian = true;
+        ; //littleEndian = true;
     else if(strncmp(idString, "Octave-1-B", idStringLen) == 0)
     {
-        littleEndian = false;
+        //littleEndian = false;
         cError("File format not supported!");
         return NULL;
     }

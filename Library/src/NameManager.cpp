@@ -24,7 +24,7 @@ std::string NameManager::AddName(std::string proposedName)
     int number = 1;
     
 checkname:
-    for(int i = 0; i < names.size(); i++)
+    for(unsigned int i = 0; i < names.size(); i++)
     {
         if(goodName == names[i])
         {

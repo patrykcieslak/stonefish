@@ -13,7 +13,7 @@
 OpenGLOcean::OpenGLOcean()
 {
 	qt.root.size = glm::vec2(10000.f,10000.f);
-	for(unsigned short i=0; i<7; ++i) oceanTextures[i] = 0;
+    for(unsigned int i=0; i<6; ++i) oceanTextures[i] = 0;
 	vao = 0;
     vbo = 0;
     turbidity = 1.0;
@@ -296,7 +296,7 @@ void OpenGLOcean::Init()
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[0]);
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D, oceanTextures[1]);
 	
-    for(int layer = 0; layer < params.slopeVarianceSize; ++layer)
+    for(unsigned int layer = 0; layer < params.slopeVarianceSize; ++layer)
     {
         glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, oceanTextures[2], 0, layer);
 		oceanShaders[5]->SetUniform("c", (GLfloat)layer);
@@ -371,7 +371,7 @@ void OpenGLOcean::Simulate()
 	oceanShaders[3]->SetUniform("texSource", TEX_POSTPROCESS2);
 	glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[5]);
 	
-	for(int i = 0; i < params.passes; ++i)
+	for(unsigned int i = 0; i < params.passes; ++i)
 	{
 		oceanShaders[3]->SetUniform("pass", ((float)i + 0.5f)/(float)params.passes);
 		if(i%2 == 0)
@@ -391,7 +391,7 @@ void OpenGLOcean::Simulate()
 	oceanShaders[4]->SetUniform("texButterfly", TEX_POSTPROCESS1);
 	oceanShaders[4]->SetUniform("texSource", TEX_POSTPROCESS2);
 	
-	for(int i = params.passes; i < 2 * params.passes; ++i)
+	for(unsigned int i = params.passes; i < 2 * params.passes; ++i)
 	{
 		oceanShaders[4]->SetUniform("pass", ((float)i - params.passes + 0.5f)/(float)params.passes);
 		if (i%2 == 0)
@@ -845,9 +845,9 @@ GLfloat* OpenGLOcean::ComputeButterflyLookupTable(unsigned int size, unsigned in
 {
 	GLfloat *data = new GLfloat[size * passes * 4];
 
-	for(int i = 0; i < passes; ++i)
+	for(unsigned int i = 0; i < passes; ++i)
 	{
-		int nBlocks  = (int)powf(2.0, float(passes - 1 - i));
+		int nBlocks  = (int)powf(2.0, float(passes - 1 - (int)i));
 		int nHInputs = (int)powf(2.0, float(i));
 		for(int j = 0; j < nBlocks; ++j)
 		{

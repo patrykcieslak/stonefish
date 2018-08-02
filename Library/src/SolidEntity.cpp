@@ -242,7 +242,7 @@ btVector3 SolidEntity::getLinearVelocity()
         
         if(index >= 0) //If collider is not base
         {
-            for(unsigned int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
+            for(int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
             {
                 if(multiBody->getLink(i).m_jointType == btMultibodyLink::ePrismatic) //Just add linear velocity
                 {
@@ -283,7 +283,7 @@ btVector3 SolidEntity::getAngularVelocity()
         
         if(index >= 0)
         {
-            for(unsigned int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
+            for(int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
                 if(multiBody->getLink(i).m_jointType == btMultibodyLink::eRevolute) //Only revolute joints can change angular velocity
                 {
                     btVector3 axis = multiBody->getLink(i).getAxisTop(0); //Local axis
@@ -540,7 +540,7 @@ void SolidEntity::BuildRigidBody()
         if(colShape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
         {
             colShape = (btCompoundShape*)colShape0;
-            for(unsigned int i=0; i < colShape->getNumChildShapes(); ++i)
+            for(int i=0; i < colShape->getNumChildShapes(); ++i)
             {
                 colShape->getChildShape(i)->setMargin(btScalar(0));
                 colShape->updateChildTransform(i, localTransform.inverse() * colShape->getChildTransform(i), true);
@@ -586,7 +586,7 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         if(colShape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
         {
             colShape = (btCompoundShape*)colShape0;
-            for(unsigned int i=0; i < colShape->getNumChildShapes(); ++i)
+            for(int i=0; i < colShape->getNumChildShapes(); ++i)
             {
                 colShape->getChildShape(i)->setMargin(btScalar(0));
                 colShape->updateChildTransform(i, localTransform.inverse() * colShape->getChildTransform(i), true);
@@ -738,15 +738,17 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean
     //Set zeros
 	if(mesh == NULL)
 		return;
-        
+    
+#ifdef DEBUG    
     uint64_t start = GetTimeInMicroseconds();
+#endif
       
     //Calculate fluid dynamics forces and torques
     btVector3 p = cogTransform.getOrigin();
     btScalar viscousity = liquid->getLiquid()->viscosity;
  
 	//Loop through all faces...
-    for(int i=0; i<mesh->faces.size(); ++i)
+    for(unsigned int i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
 		glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
@@ -966,10 +968,11 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean
             _Tdp += (fc - p).cross(Fdp);
         }
     }
-    
+
+#ifdef DEBUG
     uint64_t elapsed = GetTimeInMicroseconds() - start;
-    
     //std::cout << getName() << ": " <<  elapsed << std::endl; 
+#endif
 }
 
 void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid)

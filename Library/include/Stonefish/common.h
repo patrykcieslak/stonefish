@@ -20,7 +20,7 @@
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 
 //Eigen matrix library
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 #ifdef BT_USE_DOUBLE_PRECISION
 	#define eigMatrix 	 Eigen::MatrixXd

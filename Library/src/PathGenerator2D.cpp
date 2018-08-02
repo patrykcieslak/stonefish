@@ -16,7 +16,7 @@ PathGenerator2D::PathGenerator2D(PlaneType pathOnPlane)
 
 PathGenerator2D::~PathGenerator2D()
 {
-    for(int i = 0; i < subPaths.size(); i++)
+    for(unsigned int i = 0; i < subPaths.size(); i++)
         delete subPaths[i];
 }
 
@@ -98,7 +98,7 @@ void PathGenerator2D::PointAtTime(btScalar t, btVector3& point, btVector3& tange
     Point2D pointOnSubpath;
     Point2D derivOnSubpath;
     
-    for(int i = 0; i < subPaths.size(); i++) //Go from the beginning of path
+    for(unsigned int i = 0; i < subPaths.size(); i++) //Go from the beginning of path
     {
         btScalar subLength = subPaths[i]->getLength();
         

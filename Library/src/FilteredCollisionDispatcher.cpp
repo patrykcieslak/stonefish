@@ -76,14 +76,14 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
             Entity* entB = (Entity*)obj1Wrap.m_collisionObject->getUserPointer();
             Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
             
-            for(unsigned int i=0; i<marray.size(); ++i)
+            for(int i=0; i<marray.size(); ++i)
             {
                 if(marray[i]->getNumContacts() > 0)
                 {
                     if(contact != NULL)
                         contact->AddContactPoint(marray[i], contact->getEntityA() != entA);
                         
-                    for(unsigned int h=0; h<marray[i]->getNumContacts(); ++h)
+                    for(int h=0; h<marray[i]->getNumContacts(); ++h)
                     {
                         delete (btVector3*)marray[i]->getContactPoint(h).m_userPersistentData;
                         marray[i]->getContactPoint(h).m_userPersistentData = NULL;

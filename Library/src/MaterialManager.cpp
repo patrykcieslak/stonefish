@@ -142,7 +142,7 @@ Material MaterialManager::getMaterial(std::string name)
 
 Material MaterialManager::getMaterial(int index)
 {
-	if(index >= 0 && index < materials.size())
+	if(index >= 0 && index < (int)materials.size())
         return materials[index];
     else
         return materials[0];
@@ -159,7 +159,7 @@ Liquid* MaterialManager::getFluid(std::string name)
 
 Liquid* MaterialManager::getFluid(int index)
 {
-    if(index >= 0 && index < fluids.size())
+    if(index >= 0 && index < (int)fluids.size())
         return &fluids[index];
     else
         return NULL;
@@ -169,7 +169,7 @@ std::vector<std::string> MaterialManager::GetMaterialsList()
 {
     std::vector<std::string> list;
     
-    for(int i=0; i<materials.size(); i++)
+    for(unsigned int i=0; i<materials.size(); i++)
         list.push_back(materials[i].name);
     
     return list;

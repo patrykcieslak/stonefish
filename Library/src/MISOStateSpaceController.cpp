@@ -14,7 +14,7 @@ MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* 
     this->output = output;
     this->maxOutput = maxOutput;
     
-    for(int i = 0; i < input->getNumOfComponents(); i++)
+    for(unsigned int i = 0; i < input->getNumOfComponents(); i++)
         gains.push_back(btScalar(0.));
 }
 
@@ -44,7 +44,7 @@ void MISOStateSpaceController::Tick(btScalar dt)
     //Calculate control
     btScalar control = 0;
     
-    for(int i = 0; i < gains.size(); i++)
+    for(unsigned int i = 0; i < gains.size(); i++)
         control += (ref[i] - measurements[i]) * gains[i];
     
     //Limit control

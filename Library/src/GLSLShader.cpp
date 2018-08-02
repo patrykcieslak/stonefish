@@ -327,7 +327,7 @@ bool GLSLShader::SetUniform(std::string name, glm::mat4 x)
 
 bool GLSLShader::GetUniform(std::string name, ParameterType type, GLint& location)
 {
-    for(int i = 0; i < uniforms.size(); i++)
+    for(unsigned int i = 0; i < uniforms.size(); i++)
         if(uniforms[i].name == name)
         {
             if(uniforms[i].type == type)
@@ -350,7 +350,7 @@ bool GLSLShader::GetUniform(std::string name, ParameterType type, GLint& locatio
 
 bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index)
 {
-    for(int i = 0; i < attributes.size(); i++)
+    for(unsigned int i = 0; i < attributes.size(); i++)
         if(attributes[i].name == name)
         {
             if(attributes[i].type == type)
@@ -438,15 +438,14 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::stri
 	
 	if(shaderSource != NULL)
 	{
-		GLint infoLogLength = 0;
 		shader = glCreateShader(shaderType);
-		
 		glShaderSource(shader, 1, (const GLchar**)&shaderSource, NULL);
 		glCompileShader(shader);
         glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
 		if(*shaderCompiled == 0)
 			cError("Failed to compile shader: %s", shaderSource);
-#ifdef DEBUG		
+#ifdef DEBUG	
+        GLint infoLogLength = 0;	
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 		if(infoLogLength > 0)
 		{
@@ -466,7 +465,6 @@ GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, uns
 {
 	GLint programLinked = 0;
 	GLuint program = glCreateProgram();
-	GLint infoLogLength = 0;
 	
 	for(unsigned int i=0; i<compiledShaders.size(); ++i)
 		if(compiledShaders[i] > 0)
@@ -474,7 +472,8 @@ GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, uns
 	
 	glLinkProgram(program);
 #ifdef DEBUG
-	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+	GLint infoLogLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
 	if(infoLogLength > 0)
 	{
 		std::vector<char> infoLog(infoLogLength+1);

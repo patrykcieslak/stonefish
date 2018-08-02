@@ -8,7 +8,7 @@
 
 #include "Terrain.h"
 
-Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Terrain::Terrain(std::string uniqueName, unsigned int width, unsigned int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     size = UnitSystem::SetLength(size);
     minHeight = UnitSystem::SetLength(minHeight);
@@ -20,8 +20,8 @@ Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, b
     btScalar amplitude = maxHeight;
     
     //heightfield generation
-    for(int i=0; i<length; i++)
-        for(int h=0; h<width; h++)
+    for(unsigned int i=0; i<length; i++)
+        for(unsigned int h=0; h<width; h++)
         {
             btScalar distance = sqrt((i*size)*(i*size)+(h*size)*(h*size))*10;
             btScalar height = amplitude*sin(i*size*0.5)*cos(h*size*0.5)*exp(-(distance/correl)*(distance/correl));   //amplitude*amplitude*exp(-fabs(distance/correl)*fabs(distance/correl))+minHeight;
@@ -29,12 +29,12 @@ Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, b
         }
     
     //normals calculation
-    for(int i=0; i<length; i++)
-        for(int h=0; h<width; h++)
+    for(unsigned int i=0; i<length; i++)
+        for(unsigned int h=0; h<width; h++)
             terrainNormals[i*width+h] = btVector3(0,1,0);
     
-    for(int i=1; i<length-1; i++)
-        for(int h=1; h<width-1; h++)
+    for(unsigned int i=1; i<length-1; i++)
+        for(unsigned int h=1; h<width-1; h++)
         {
             btVector3 c = btVector3(h*size, terrainHeight[i*width+h], i*size);
             btVector3 a1 = btVector3((h-1)*size, terrainHeight[i*width+(h-1)], i*size) - c;
@@ -53,11 +53,6 @@ Terrain::Terrain(std::string uniqueName, int width, int length, btScalar size, b
     
     BuildRigidBody(shape);
     
-    //rendering mesh
-    GLfloat offsetX = ((width-1)/2.0)*size;
-    GLfloat offsetZ = ((length-1)/2.0)*size;
-    GLfloat offsetY = (maxHeight-minHeight)/2.0;
-
     delete [] terrainNormals;
 }
 

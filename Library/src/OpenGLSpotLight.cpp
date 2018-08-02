@@ -100,7 +100,7 @@ void OpenGLSpotLight::RenderDummy()
 	
     //rendering
     GLfloat iconSize = 5.f;
-    int steps = 24;
+    unsigned int steps = 24;
     
     GLfloat r = iconSize*tanf(coneAngle);
     

@@ -187,7 +187,7 @@ Contact* SimulationManager::AddContact(Entity *entA, Entity *entB, size_type con
 
 int SimulationManager::CheckCollision(Entity *entA, Entity *entB)
 {
-    for(int i = 0; i < collisions.size(); ++i)
+    for(unsigned int i = 0; i < collisions.size(); ++i)
     {
         if((collisions[i].A == entA && collisions[i].B == entB) 
             || (collisions[i].B == entA && collisions[i].A == entB))
@@ -233,7 +233,7 @@ void SimulationManager::DisableCollision(Entity* entA, Entity* entB)
 
 Contact* SimulationManager::getContact(Entity* entA, Entity* entB)
 {
-    for(int i = 0; i < contacts.size(); i++)
+    for(unsigned int i = 0; i < contacts.size(); i++)
     {
         if(contacts[i]->getEntityA() == entA)
         {
@@ -288,7 +288,7 @@ Entity* SimulationManager::getEntity(unsigned int index)
 
 Entity* SimulationManager::getEntity(std::string name)
 {
-    for(int i = 0; i < entities.size(); i++)
+    for(unsigned int i = 0; i < entities.size(); i++)
         if(entities[i]->getName() == name)
             return entities[i];
     
@@ -305,7 +305,7 @@ Joint* SimulationManager::getJoint(unsigned int index)
 
 Joint* SimulationManager::getJoint(std::string name)
 {
-    for(int i = 0; i < joints.size(); i++)
+    for(unsigned int i = 0; i < joints.size(); i++)
         if(joints[i]->getName() == name)
             return joints[i];
     
@@ -322,7 +322,7 @@ Actuator* SimulationManager::getActuator(unsigned int index)
 
 Actuator* SimulationManager::getActuator(std::string name)
 {
-    for(int i = 0; i < actuators.size(); i++)
+    for(unsigned int i = 0; i < actuators.size(); i++)
         if(actuators[i]->getName() == name)
             return actuators[i];
     
@@ -339,7 +339,7 @@ Sensor* SimulationManager::getSensor(unsigned int index)
 
 Sensor* SimulationManager::getSensor(std::string name)
 {
-    for(int i = 0; i < sensors.size(); i++)
+    for(unsigned int i = 0; i < sensors.size(); i++)
         if(sensors[i]->getName() == name)
             return sensors[i];
     
@@ -356,7 +356,7 @@ Controller* SimulationManager::getController(unsigned int index)
 
 Controller* SimulationManager::getController(std::string name)
 {
-    for(int i = 0; i < controllers.size(); i++)
+    for(unsigned int i = 0; i < controllers.size(); i++)
         if(controllers[i]->getName() == name)
             return controllers[i];
     
@@ -440,7 +440,7 @@ void SimulationManager::getWorldAABB(btVector3& min, btVector3& max)
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
     
-    for(int i = 0; i < entities.size(); i++)
+    for(unsigned int i = 0; i < entities.size(); i++)
     {
         btVector3 entAabbMin, entAabbMax;
         entities[i]->GetAABB(entAabbMin, entAabbMax);
@@ -501,6 +501,7 @@ void SimulationManager::InitializeSolver()
     
 		switch(solver)
 		{
+            default:
 			case SolverType::DANTZIG:
 				mlcp = new btDantzigSolver();
 				break;
@@ -513,10 +514,6 @@ void SimulationManager::InitializeSolver()
 				mlcp = new btLemkeSolver();
 				//((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
 				break;
-            
-            case SolverType::SI: //Never happens, warning suppression
-            case SolverType::NNCG:
-                break;
 		}
 		
 		dwSolver = new ResearchConstraintSolver(mlcp);
@@ -653,7 +650,7 @@ void SimulationManager::DestroyScenario()
     }
     
     //remove sim manager objects
-    for(int i=0; i<entities.size(); i++)
+    for(unsigned int i=0; i<entities.size(); i++)
         delete entities[i];
     entities.clear();
     
@@ -663,23 +660,23 @@ void SimulationManager::DestroyScenario()
 		liquid = NULL;
 	}
     
-    for(int i=0; i<joints.size(); i++)
+    for(unsigned int i=0; i<joints.size(); i++)
         delete joints[i];
     joints.clear();
     
-    for(int i=0; i<contacts.size(); i++)
+    for(unsigned int i=0; i<contacts.size(); i++)
         delete contacts[i];
     contacts.clear();
     
-    for(int i=0; i<sensors.size(); i++)
+    for(unsigned int i=0; i<sensors.size(); i++)
         delete sensors[i];
     sensors.clear();
     
-    for(int i=0; i<actuators.size(); i++)
+    for(unsigned int i=0; i<actuators.size(); i++)
         delete actuators[i];
     actuators.clear();
     
-    for(int i=0; i<controllers.size(); i++)
+    for(unsigned int i=0; i<controllers.size(); i++)
         delete controllers[i];
     controllers.clear();
 	
@@ -703,15 +700,15 @@ bool SimulationManager::StartSimulation()
         return false;
     
     //Reset contacts
-    for(int i = 0; i < contacts.size(); i++)
+    for(unsigned int i = 0; i < contacts.size(); i++)
         contacts[i]->ClearHistory();
     
     //Reset sensors
-    for(int i = 0; i < sensors.size(); i++)
+    for(unsigned int i = 0; i < sensors.size(); i++)
         sensors[i]->Reset();
     
     //Turn on controllers
-    for(int i = 0; i < controllers.size(); i++)
+    for(unsigned int i = 0; i < controllers.size(); i++)
         controllers[i]->Start();
     
     return true;
@@ -725,14 +722,14 @@ void SimulationManager::ResumeSimulation()
     {
         currentTime = 0;
 
-        for(int i = 0; i < controllers.size(); i++)
+        for(unsigned int i = 0; i < controllers.size(); i++)
             controllers[i]->Start();
     }
 }
 
 void SimulationManager::StopSimulation()
 {
-    for(int i=0; i < controllers.size(); i++)
+    for(unsigned int i=0; i < controllers.size(); i++)
         controllers[i]->Stop();
 }
 
@@ -752,7 +749,7 @@ bool SimulationManager::SolveICProblem()
     dynamicsWorld->setInternalTickCallback(NULL, this, false); //Post-tick
     
     uint64_t icTime = GetTimeInMicroseconds();
-    int iterations = 0;
+    unsigned int iterations = 0;
     
     do
     {
@@ -1092,7 +1089,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
     if(simManager->icUseGravity)
     {
         //Apply gravity to bodies
-        for(int i = 0; i < simManager->entities.size(); i++)
+        for(unsigned int i = 0; i < simManager->entities.size(); i++)
         {
             if(simManager->entities[i]->getType() == ENTITY_SOLID)
             {
@@ -1111,7 +1108,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
         else
         {
             //Check if objects settled
-            for(int i = 0; i < simManager->entities.size(); i++)
+            for(unsigned int i = 0; i < simManager->entities.size(); i++)
             {
                 if(simManager->entities[i]->getType() == ENTITY_SOLID)
                 {
@@ -1137,7 +1134,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
                     }
                     
                     //Loop through all joints
-                    for(int h = 0; h < multibody->getNumOfJoints(); h++)
+                    for(unsigned int h = 0; h < multibody->getNumOfJoints(); h++)
                     {
                         btScalar jVelocity;
                         btMultibodyLink::eFeatherstoneJointType jType;
@@ -1170,7 +1167,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, btScalar tim
     //Solve for joint initial conditions
     bool jointsICSolved = true;
     
-    for(int i = 0; i < simManager->joints.size(); i++)
+    for(unsigned int i = 0; i < simManager->joints.size(); i++)
         if(!simManager->joints[i]->SolvePositionIC(simManager->icLinTolerance, simManager->icAngTolerance))
             jointsICSolved = false;
 

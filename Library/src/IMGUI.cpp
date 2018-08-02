@@ -748,9 +748,9 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
             minValue = 1000.f;
             maxValue = -1000.f;
         
-            for(int i = 0; i < data.size(); i++)
+            for(unsigned int i = 0; i < data.size(); i++)
             {
-                for(int n = 0; n < dims.size(); n++)
+                for(unsigned int n = 0; n < dims.size(); n++)
                 {
                     GLfloat value = (GLfloat)data[i]->getValue(dims[n]);
                     if(value > maxValue)
@@ -773,7 +773,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
         GLfloat dt = pltW/(GLfloat)(data.size()-1);
     
         //drawing
-        for(int n = 0; n < dims.size(); n++)
+        for(unsigned int n = 0; n < dims.size(); n++)
         {
             //set color
             glm::vec4 color;
@@ -840,7 +840,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
             long selectedDim = (long)floorf((mouseY - y - 5.f)/10.f);
             if(selectedDim < 0)
                 selectedDim = 0;
-            if(selectedDim > dims.size()-1)
+            if(selectedDim > (int)dims.size()-1)
                 selectedDim = dims.size()-1;
             
             char buffer[64];

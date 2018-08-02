@@ -333,9 +333,7 @@ std::vector<Renderable> Compound::Render()
 		for(unsigned int i=0; i<parts.size(); ++i)
 		{
 			btTransform oTrans = oCompoundTrans * parts[i].position;
-			btTransform cgTrans = cgCompoundTrans; //Multiple rendering of the same coordinate system!!!!!
-			//btTransform cgTrans = oTrans * parts[i].solid->getGeomToCOGTransform();
-            
+			
 			Renderable item;
             item.type = RenderableType::SOLID;
 			item.objectId = parts[i].solid->getObject();

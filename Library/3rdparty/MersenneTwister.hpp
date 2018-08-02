@@ -60,7 +60,7 @@
 #include <climits>
 #include <ctime>
 
-#pragma warning (disable : 4146 )
+//#pragma warning (disable : 4146 )
 
 // Not thread safe (unless auto-initialization is avoided and each thread has
 // its own MTRand object)

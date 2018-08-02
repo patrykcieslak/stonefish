@@ -286,7 +286,7 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
     trimesh->updateBound();*/
         
     btConvexHullShape* convex = new btConvexHullShape();
-    for(int i=0; i<mesh->vertices.size(); i++)
+    for(unsigned int i=0; i<mesh->vertices.size(); i++)
 	{
 		btVector3 v(mesh->vertices[i].pos.x, mesh->vertices[i].pos.y, mesh->vertices[i].pos.z);
         convex->addPoint(v);

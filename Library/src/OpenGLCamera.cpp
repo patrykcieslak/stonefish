@@ -583,7 +583,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
 		GLfloat blurSharpness = 40.0f;
 		
 		//For all samples
-		for(int n=0; n<samples; ++n)
+		for(unsigned int n=0; n<samples; ++n)
 		{
 			GenerateLinearDepth(n);
 			OpenGLContent::getInstance()->BindBaseVertexArray(); //Previous function unbinds vertex array
@@ -616,7 +616,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
 				aoCalcShader[1]->Use();
 				aoCalcShader[1]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
 				aoCalcShader[1]->SetUniform("texViewNormal", TEX_POSTPROCESS2);
-				aoCalcShader[1]->SetUniform("sampleIndex", n);
+				aoCalcShader[1]->SetUniform("sampleIndex", (int)n);
 		
 				glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_2D_MULTISAMPLE, renderViewNormalTex);
 				glBindBufferBase(GL_UNIFORM_BUFFER, 0, aoDataUBO);

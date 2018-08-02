@@ -624,7 +624,7 @@ void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
 										 -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, 0,
 										 -2.f*n.x*D,   -2.f*n.y*D,   -2.f*n.z*D,      1);*/									
 													
-		glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
+		//glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
 		
 		eyePos = v->GetEyePosition();
 		eyePos.z = -eyePos.z;
@@ -888,7 +888,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
 
 void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
-	if(objectId >= 0 && objectId < objects.size()) //Check if object exists
+	if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
 	{
 		if(mode == DrawingMode::FLAT)
 		{
@@ -901,7 +901,7 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 		}
 		else
 		{
-			if(lookId >= 0 && lookId < looks.size())
+			if(lookId >= 0 && lookId < (int)looks.size())
 				UseLook(lookId, M);
 			else
 				UseStandardLook(M);
@@ -919,7 +919,7 @@ void OpenGLContent::SetupLights(GLSLShader* shader)
 	int pointId = 0;
 	int spotId = 0;
 	
-	for(int i=0; i<lights.size(); ++i)
+	for(unsigned int i=0; i<lights.size(); ++i)
 	{
 		if(lights[i]->getType() == POINT_LIGHT)
 		{
@@ -946,6 +946,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 	
 	switch(l.type)
 	{		
+        default:
 		case SIMPLE: //Blinn-Phong
 		{
 			shader = mode == DrawingMode::FULL ? materialShaders[0] : materialShaders[2];
@@ -1004,9 +1005,6 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 				shader->SetUniform("color", glm::vec4(l.color, 0.f));			
 			}
 		}
-			break;
-			
-		default:
 			break;
 	}
 	
@@ -2118,7 +2116,7 @@ void OpenGLContent::AABB(Mesh* mesh, btVector3& min, btVector3& max)
     btScalar minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
     btScalar minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
     
-    for(int i=0; i<mesh->vertices.size(); i++)
+    for(unsigned int i=0; i<mesh->vertices.size(); i++)
     {
         glm::vec3 vertex = mesh->vertices[i].pos;
         

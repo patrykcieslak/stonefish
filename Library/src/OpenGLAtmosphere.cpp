@@ -525,8 +525,9 @@ void OpenGLAtmosphere::Precompute()
 {
     cInfo("Precomputing atmosphere...");
     GLSLShader::Silent();
+#ifdef DEBUG
     uint64_t start = GetTimeInMicroseconds();
-
+#endif
     //Delete old textures when recomputing
     for(unsigned short i=0; i< AtmosphereTextures::TEXTURE_COUNT; ++i)
         if(textures[i] != 0) glDeleteTextures(1, &textures[i]);
@@ -683,12 +684,12 @@ void OpenGLAtmosphere::Precompute()
     glDeleteTextures(1, &delta_rayleigh_scattering_texture);
     glDeleteTextures(1, &delta_irradiance_texture);
 
-    int64_t stop = GetTimeInMicroseconds();
-    GLSLShader::Verbose();
-
 #ifdef DEBUG
+    int64_t stop = GetTimeInMicroseconds();
     std::cout << "Precomputed in " << std::to_string((stop-start)/1000) << "ms." << std::endl;
 #endif
+
+    GLSLShader::Verbose();
 }
 
 void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_texture, GLuint delta_rayleigh_scattering_texture,
@@ -773,7 +774,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     }
 
     //Compute the 2nd, 3rd and 4th order of scattering, in sequence.
-    for(int scattering_order = 2; scattering_order <= nScatteringOrders; ++scattering_order) {
+    for(unsigned int scattering_order = 2; scattering_order <= nScatteringOrders; ++scattering_order) {
         //Compute the scattering density, and store it in
         //delta_scattering_density_texture.
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_scattering_density_texture, 0);
@@ -789,7 +790,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         scatteringDensityShader.SetUniform("texSingleMieScattering", TEX_POSTPROCESS3);
         scatteringDensityShader.SetUniform("texMultipleScattering", TEX_POSTPROCESS4);
         scatteringDensityShader.SetUniform("texIrradiance", TEX_POSTPROCESS5);
-        scatteringDensityShader.SetUniform("scatteringOrder", scattering_order);
+        scatteringDensityShader.SetUniform("scatteringOrder", (int)scattering_order);
         glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
         glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
         glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS3, GL_TEXTURE_3D, delta_mie_scattering_texture);
@@ -811,7 +812,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         indirectIrradianceShader.SetUniform("texSingleRayleighScattering",	TEX_POSTPROCESS2);
         indirectIrradianceShader.SetUniform("texSingleMieScattering", TEX_POSTPROCESS3);
         indirectIrradianceShader.SetUniform("texMultipleScattering", TEX_POSTPROCESS4);
-        indirectIrradianceShader.SetUniform("scatteringOrder", scattering_order - 1);
+        indirectIrradianceShader.SetUniform("scatteringOrder", (int)scattering_order - 1);
         indirectIrradianceShader.SetUniform("luminanceFromRadiance", glm::mat3(luminance_from_radiance));
         glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
         glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS3, GL_TEXTURE_3D, delta_mie_scattering_texture);
@@ -871,7 +872,7 @@ std::string OpenGLAtmosphere::EarthsAtmosphere(const glm::dvec3& lambdas)
     // the ozone density profile defined below, which is equal to 15km).
     constexpr double kMaxOzoneNumberDensity = 300.0 * kDobsonUnit / 15000.0;
     // Wavelength independent solar irradiance "spectrum" (not physically realistic, but was used in the original implementation).
-    constexpr double kConstantSolarIrradiance = 1.5;
+    //constexpr double kConstantSolarIrradiance = 1.5;
     constexpr double kBottomRadius = 6360000.0;
     constexpr double kTopRadius = 6420000.0;
     constexpr double kRayleigh = 1.24062e-6;
@@ -883,7 +884,7 @@ std::string OpenGLAtmosphere::EarthsAtmosphere(const glm::dvec3& lambdas)
     constexpr double kMiePhaseFunctionG = 0.8;
     constexpr double kGroundAlbedo = 0.1;
     constexpr double kSunAngularRadius = 0.00935 / 2.0;
-    constexpr double kSunSolidAngle = M_PI * kSunAngularRadius * kSunAngularRadius;
+    //constexpr double kSunSolidAngle = M_PI * kSunAngularRadius * kSunAngularRadius;
     const double max_sun_zenith_angle = 102.0/180.0 * M_PI;
     double length_unit_in_meters = kLengthUnitInMeters;
 

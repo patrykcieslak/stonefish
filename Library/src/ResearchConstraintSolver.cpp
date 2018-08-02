@@ -115,8 +115,8 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 		}
 	}
     
-	btScalar* w = 0;
-	int nub = 0;
+	//btScalar* w = 0;
+	//int nub = 0;
     
 	m_lo.resize(numConstraintRows);
 	m_hi.resize(numConstraintRows);
@@ -292,8 +292,8 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 			int row__ = ofs[c];
 			int sbA = m_allConstraintPtrArray[i]->m_solverBodyIdA;
 			int sbB = m_allConstraintPtrArray[i]->m_solverBodyIdB;
-			btRigidBody* orgBodyA = m_tmpSolverBodyPool[sbA].m_originalBody;
-			btRigidBody* orgBodyB = m_tmpSolverBodyPool[sbB].m_originalBody;
+			//btRigidBody* orgBodyA = m_tmpSolverBodyPool[sbA].m_originalBody;
+			//btRigidBody* orgBodyB = m_tmpSolverBodyPool[sbB].m_originalBody;
             
 			numRows = i<m_tmpSolverNonContactConstraintPool.size() ? m_tmpConstraintSizesPool[c].m_numConstraintRows : numContactRows ;
             
@@ -348,9 +348,9 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 			for (;row__<numJointRows;)
 			{
                 
-				int sbA = m_allConstraintPtrArray[row__]->m_solverBodyIdA;
+				//int sbA = m_allConstraintPtrArray[row__]->m_solverBodyIdA;
 				int sbB = m_allConstraintPtrArray[row__]->m_solverBodyIdB;
-				btRigidBody* orgBodyA = m_tmpSolverBodyPool[sbA].m_originalBody;
+				//btRigidBody* orgBodyA = m_tmpSolverBodyPool[sbA].m_originalBody;
 				btRigidBody* orgBodyB = m_tmpSolverBodyPool[sbB].m_originalBody;
                 
                 
@@ -530,8 +530,7 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlySetup(btCollisionObjec
         
 		int numFrictionPerContact = m_tmpSolverContactConstraintPool.size()==m_tmpSolverContactFrictionConstraintPool.size()? 1 : 2;
         
-        
-		int numBodies = m_tmpSolverBodyPool.size();
+		//int numBodies = m_tmpSolverBodyPool.size();
 		m_allConstraintPtrArray.resize(0);
 		m_limitDependencies.resize(m_tmpSolverNonContactConstraintPool.size()+m_tmpSolverContactConstraintPool.size()+m_tmpSolverContactFrictionConstraintPool.size());
 		btAssert(m_limitDependencies.size() == m_tmpSolverNonContactConstraintPool.size()+m_tmpSolverContactConstraintPool.size()+m_tmpSolverContactFrictionConstraintPool.size());
@@ -623,8 +622,8 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
 				btSolverConstraint& c = *m_allConstraintPtrArray[i];
 				int sbA = c.m_solverBodyIdA;
 				int sbB = c.m_solverBodyIdB;
-				btRigidBody* orgBodyA = m_tmpSolverBodyPool[sbA].m_originalBody;
-				btRigidBody* orgBodyB = m_tmpSolverBodyPool[sbB].m_originalBody;
+				//btRigidBody* orgBodyA = m_tmpSolverBodyPool[sbA].m_originalBody;
+				//btRigidBody* orgBodyB = m_tmpSolverBodyPool[sbB].m_originalBody;
                 
 				btSolverBody& solverBodyA = m_tmpSolverBodyPool[sbA];
 				btSolverBody& solverBodyB = m_tmpSolverBodyPool[sbB];

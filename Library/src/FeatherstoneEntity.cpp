@@ -57,7 +57,7 @@ void FeatherstoneEntity::GetAABB(btVector3& min, btVector3& max)
     min = btVector3(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max = btVector3(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
     
-    for(int i = 0; i < links.size(); i++)
+    for(unsigned int i = 0; i < links.size(); i++)
     {
         //Get link AABB
         btVector3 lmin;
@@ -112,7 +112,7 @@ void FeatherstoneEntity::setBaseTransform(const btTransform& trans)
     multiBody->getBaseCollider()->setWorldTransform(T0);
 	multiBody->setBaseWorldTransform(T0);
     
-	for(int i=1; i<links.size(); ++i)
+	for(unsigned int i=1; i<links.size(); ++i)
 	{
 		btTransform tr = links[i].solid->getMultibodyLinkCollider()->getWorldTransform();
 		links[i].solid->getMultibodyLinkCollider()->setWorldTransform(trans * tr);
@@ -617,7 +617,7 @@ std::vector<Renderable> FeatherstoneEntity::Render()
     }
     
     //Draw rest of links
-    for(unsigned int i = 0; i < multiBody->getNumLinks(); ++i)
+    for(int i = 0; i < multiBody->getNumLinks(); ++i)
     {
 		std::vector<Renderable> _link = links[i+1].solid->Render();
 		items.insert(items.end(), _link.begin(), _link.end());

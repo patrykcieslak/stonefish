@@ -46,7 +46,7 @@ CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const b
     up.normalize();
     rotation.setValue(left.x(), front.x(), up.x(), left.y(), front.y(), up.y(), left.z(), front.z(), up.z());
     
-    for(int i=0; i<parts; i++)
+    for(unsigned int i=0; i<parts; i++)
     {
         btVector3 center = end1 + (i+0.5)*partVec;
         btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(rotation, center));
@@ -71,7 +71,7 @@ CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const b
     btTransform frameInA(btMatrix3x3().getIdentity(), pivotInA);
     btTransform frameInB(btMatrix3x3().getIdentity(), pivotInB);
     
-    for(int i=1; i<parts; i++)
+    for(unsigned int i=1; i<parts; i++)
     {
         btGeneric6DofSpringConstraint* constr = new btGeneric6DofSpringConstraint(*cableParts[i-1], *cableParts[i], frameInA, frameInB, true);
         constr->setLinearLowerLimit(btVector3(0,0,0));
@@ -188,13 +188,13 @@ btScalar CableEntity::getPartVolume()
 
 void CableEntity::ApplyGravity()
 {
-    for(int i=0; i<cableParts.size(); i++)
+    for(unsigned int i=0; i<cableParts.size(); i++)
         cableParts[i]->applyGravity();
 }
 
 void CableEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
-    for(int i=0; i<cableParts.size(); i++)
+    for(unsigned int i=0; i<cableParts.size(); i++)
     {
         if(selfCollision)
             world->addRigidBody(cableParts[i], i % 2 == 0 ? MASK_CABLE_EVEN : MASK_CABLE_ODD, (i % 2 == 0 ? MASK_CABLE_EVEN : MASK_CABLE_ODD) | MASK_DEFAULT | MASK_STATIC);
@@ -202,7 +202,7 @@ void CableEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
             world->addRigidBody(cableParts[i], MASK_CABLE_EVEN, MASK_DEFAULT | MASK_STATIC);
     }
     
-    for(int i=0; i<links.size(); i++)
+    for(unsigned int i=0; i<links.size(); i++)
         world->addConstraint(links[i]);
 		
 	//Generate graphical object

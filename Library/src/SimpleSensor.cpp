@@ -92,9 +92,8 @@ btScalar SimpleSensor::getValueExternal(unsigned long int index, unsigned int ch
                 return v;
         }
     }
-    else
-        return btScalar(0.);
-
+    
+    return btScalar(0);
 }
 
 btScalar SimpleSensor::getLastValueExternal(unsigned int channel)
@@ -133,7 +132,7 @@ void SimpleSensor::AddSampleToHistory(const Sample& s)
     }
     else
     {
-        if(historyLen > 0 && history.size() == historyLen) // 0 means unlimited history
+        if(historyLen > 0 && (int)history.size() == historyLen) // 0 means unlimited history
         {
             delete history[0];
             history.pop_front();
@@ -159,7 +158,7 @@ void SimpleSensor::AddSampleToHistory(const Sample& s)
 
 void SimpleSensor::ClearHistory()
 {
-    for(int i = 0; i < history.size(); i++)
+    for(unsigned int i = 0; i < history.size(); i++)
         delete history[i];
     
     history.clear();

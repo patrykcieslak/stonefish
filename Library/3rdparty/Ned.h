@@ -1,7 +1,7 @@
 #ifndef COLA2_LIB_INCLUDE_COLA2_LIB_COLA2_NAVIGATION_NED_H_
 #define COLA2_LIB_INCLUDE_COLA2_LIB_COLA2_NAVIGATION_NED_H_
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 //World Geodetic System 1984 (WGS84)
 static const double a = 6378137.0;
