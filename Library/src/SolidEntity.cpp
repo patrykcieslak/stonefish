@@ -22,8 +22,11 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScal
 	thick = UnitSystem::SetLength(thickness);
     CoB.setZero();
     localTransform = btTransform::getIdentity(); //CoG = (0,0,0)
-    ellipsoidR.setZero();
-    ellipsoidTransform = btTransform::getIdentity();
+    
+    hydroProxyType = HYDRO_PROXY_NONE;
+    hydroProxyParams = std::vector<btScalar>(0);
+    hydroProxyTransform = btTransform::getIdentity();
+    
 	computeHydro = true;
     buoyant = isBuoyant;
     Fb.setZero();
@@ -182,10 +185,32 @@ std::vector<Renderable> SolidEntity::Render()
         item.model = glMatrixFromBtTransform(getTransform());
         items.push_back(item);
         
-        item.type = RenderableType::HYDRO;
-        item.model = glMatrixFromBtTransform(oTrans * ellipsoidTransform);
-        item.points.push_back(glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]));
-        items.push_back(item);
+        switch(hydroProxyType)
+        {
+            case HYDRO_PROXY_NONE:
+                break;
+                
+            case HYDRO_PROXY_SPHERE:
+                item.type = RenderableType::HYDRO_ELLIPSOID;
+                item.model = glMatrixFromBtTransform(oTrans * hydroProxyTransform);
+                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0]));
+                items.push_back(item);
+                break;
+                
+            case HYDRO_PROXY_CYLINDER:
+                item.type = RenderableType::HYDRO_CYLINDER;
+                item.model = glMatrixFromBtTransform(oTrans * hydroProxyTransform);
+                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[0]));
+                items.push_back(item);
+                break;
+                
+            case HYDRO_PROXY_ELLIPSOID:
+                item.type = RenderableType::HYDRO_ELLIPSOID;
+                item.model = glMatrixFromBtTransform(oTrans * hydroProxyTransform);
+                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
+                items.push_back(item);
+                break;
+        }
         
         btVector3 cobWorld = oTrans * CoB;
         item.type = RenderableType::HYDRO_CS;
@@ -368,7 +393,168 @@ std::vector<Vertex>* SolidEntity::getMeshVertices()
     return pVert;
 }
 
-void SolidEntity::ComputeEquivEllipsoid()
+void SolidEntity::ComputeHydrodynamicProxy(HydrodynamicProxyType t)
+{
+    switch(t)
+    {
+        case HYDRO_PROXY_NONE:
+            break;
+            
+        case HYDRO_PROXY_SPHERE:
+            ComputeProxySphere();
+            break;
+            
+        case HYDRO_PROXY_CYLINDER:
+            ComputeProxyCylinder();
+            break;
+            
+        case HYDRO_PROXY_ELLIPSOID:
+            ComputeProxyEllipsoid();
+            break;
+    }
+}
+
+void SolidEntity::ComputeProxySphere()
+{
+    //Get vertices of solid
+    std::vector<Vertex>* vertices = getMeshVertices();
+    if(vertices->size() < 2)
+    {
+        delete vertices;
+        return;
+    }
+    
+    //Fit spherical envelope aligned with COG
+    btScalar radius = 0;
+    
+    for(unsigned int i=0; i<vertices->size(); ++i)
+    {
+        btVector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
+        vpos = localTransform.inverse() * vpos;
+        
+        btScalar tmp = vpos.length2();
+        
+        if(radius < tmp)
+            radius = tmp;
+    }
+    
+    //Set parameters
+    hydroProxyType = HYDRO_PROXY_SPHERE;
+    hydroProxyParams.resize(1);
+    hydroProxyParams[0] = btSqrt(radius);
+    hydroProxyTransform.setIdentity();
+    
+    //Added mass and inertia
+    btScalar rho = btScalar(1000);
+    btScalar m = btScalar(2)*M_PI*rho*radius*radius*radius/btScalar(3);
+    btScalar I = btScalar(0);
+    
+    aMass(0,0) = m;
+    aMass(1,1) = m;
+    aMass(2,2) = m;
+    aMass(3,3) = I;
+    aMass(4,4) = I;
+    aMass(5,5) = I;
+    
+#ifdef DEBUG
+    std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
+#endif
+}
+
+void SolidEntity::ComputeProxyCylinder()
+{
+    //Get vertices of solid
+	std::vector<Vertex>* vertices = getMeshVertices();
+    if(vertices->size() < 2)
+    {
+        delete vertices;
+        return;
+    }
+    
+    //Fit cylindrical envelope alinged with x,y,z axes
+    btScalar cylinders[6] = {0,0,0,0,0,0};
+    
+    for(unsigned int i=0; i<vertices->size(); ++i)
+    {
+        btVector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
+        vpos = localTransform.inverse() * vpos;
+        
+        btScalar tmp;
+        
+        //Along X
+        if(cylinders[0] < (tmp = vpos.z()*vpos.z() + vpos.y()*vpos.y()))
+            cylinders[0] = tmp;
+        if(cylinders[1] < (tmp = btFabs(vpos.x())))
+            cylinders[1] = tmp;
+        //Along Y
+        if(cylinders[2] < (tmp = vpos.x()*vpos.x() + vpos.z()*vpos.z()))
+            cylinders[2] = tmp;
+        if(cylinders[3] < (tmp = btFabs(vpos.y())))
+            cylinders[3] = tmp;
+        //Along Z
+        if(cylinders[4] < (tmp = vpos.x()*vpos.x() + vpos.y()*vpos.y()))
+            cylinders[4] = tmp;
+        if(cylinders[5] < (tmp = btFabs(vpos.z())))
+            cylinders[5] = tmp;
+    }
+    
+    //Calculate volume
+    btScalar volume[3];
+    volume[0] = cylinders[0] * cylinders[1];
+    volume[1] = cylinders[2] * cylinders[3];
+    volume[2] = cylinders[4] * cylinders[5];
+    
+    //Choose smallest volume
+    hydroProxyType = HYDRO_PROXY_CYLINDER;
+    hydroProxyParams.resize(2);
+    
+    if(volume[0] <= volume[1] && volume[0] <= volume[2]) //X cylinder smallest
+    {
+        hydroProxyParams[0] = btSqrt(cylinders[0]);
+        hydroProxyParams[1] = cylinders[1]*btScalar(2);
+        
+        hydroProxyTransform = btTransform(btQuaternion(-M_PI_2, 0, 0), btVector3(0,0,0));
+    }
+    else if(volume[1] <= volume[0] && volume[1] <= volume[2]) //Y cylinder smallest
+    {
+        hydroProxyParams[0] = btSqrt(cylinders[2]);
+        hydroProxyParams[1] = cylinders[3]*btScalar(2);
+        
+        hydroProxyTransform = btTransform::getIdentity();
+    }
+    else //Z cylinder smallest
+    {
+        hydroProxyParams[0] = btSqrt(cylinders[4]);
+        hydroProxyParams[1] = cylinders[5]*btScalar(2);
+        
+        hydroProxyTransform = btTransform(btQuaternion(0, 0, M_PI_2), btVector3(0,0,0));
+    }
+    
+    //Added mass and inertia
+    btScalar rho = btScalar(1000);
+    btScalar m1 = rho*M_PI*hydroProxyParams[0]*hydroProxyParams[0]; //Parallel to axis
+    btScalar m2 = rho*M_PI*hydroProxyParams[0]*hydroProxyParams[0]*btScalar(2)*hydroProxyParams[1]; //Perpendicular to axis
+    btScalar I1 = btScalar(0);
+    btScalar I2 = btScalar(1)/btScalar(12)*M_PI*rho*hydroProxyParams[1]*hydroProxyParams[1]*btPow(hydroProxyParams[0], btScalar(3));
+    
+    btVector3 M = hydroProxyTransform.getBasis() * btVector3(m2, m1, m2);
+    btVector3 I = hydroProxyTransform.getBasis() * btVector3(I2, I1, I2);
+    
+    aMass(0,0) = btFabs(M.x());
+    aMass(1,1) = btFabs(M.y());
+    aMass(2,2) = btFabs(M.z());
+    aMass(3,3) = btFabs(I.x());
+    aMass(4,4) = btFabs(I.y());
+    aMass(5,5) = btFabs(I.z());
+    
+    hydroProxyTransform = localTransform * hydroProxyTransform;
+    
+#ifdef DEBUG
+    std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
+#endif
+}
+
+void SolidEntity::ComputeProxyEllipsoid()
 {
     //Get vertices of solid
 	std::vector<Vertex>* vertices = getMeshVertices();
@@ -471,20 +657,27 @@ void SolidEntity::ComputeEquivEllipsoid()
     //Ellipsoid radii
 	eigMatrix r(3, 1);
 	r = Eigen::sqrt(1.0/Eigen::abs(eigenSolver.eigenvalues().array()));
-    ellipsoidR = btVector3(r(0), r(1), r(2));
+    btVector3 ellipsoidR(r(0), r(1), r(2));
     
     //Ellipsoid axes
 	eigMatrix axes(3, 3);
 	axes = eigenSolver.eigenvectors().array();
     
     //Reorder radii
+    btTransform ellipsoidTransform;
     ellipsoidTransform.setIdentity();
     ellipsoidTransform.setBasis(btMatrix3x3(axes(0,0), axes(0,1), axes(0,2), axes(1,0), axes(1,1), axes(1,2), axes(2,0), axes(2,1), axes(2,2)));
     ellipsoidR = ellipsoidTransform.getBasis() * ellipsoidR;
     
+    hydroProxyType = HYDRO_PROXY_ELLIPSOID;
+    hydroProxyParams.resize(3);
+    hydroProxyParams[0] = ellipsoidR.getX();
+    hydroProxyParams[1] = ellipsoidR.getY();
+    hydroProxyParams[2] = ellipsoidR.getZ();
+    
     //Compute added mass
     //Search for the longest semiaxis
-    btScalar rho = 1000.0; //Fluid density
+    btScalar rho = btScalar(1000); //Fluid density
     btScalar r12 = (r(1) + r(2))/btScalar(2);
     btScalar m1 = LambKFactor(r(0), r12)*btScalar(4)/btScalar(3)*M_PI*rho*r(0)*r12*r12;
     btScalar m2 = btScalar(4)/btScalar(3)*M_PI*rho*r(2)*r(2)*r(0);
@@ -507,6 +700,9 @@ void SolidEntity::ComputeEquivEllipsoid()
     ellipsoidTransform.getBasis().setIdentity();
     ellipsoidTransform.setOrigin(btVector3(c(0), c(1), c(2)));
     ellipsoidTransform = localTransform * ellipsoidTransform;
+    
+    hydroProxyTransform = ellipsoidTransform;
+    
 #ifdef DEBUG
     std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
 #endif
@@ -985,7 +1181,6 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean
     btVector3 omega = getAngularVelocity();
 	btVector3 a = getLinearAcceleration();
     btVector3 epsilon = getAngularAcceleration();
-    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
     
     //Check if fully submerged --> simplifies buoyancy calculation
     btVector3 aabbMin, aabbMax;
@@ -1004,14 +1199,41 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean
         
         if(settings.dampingForces)
         {
-            //Correct drag based on ellipsoid approximation of shape
-            btVector3 eFd = eTrans.getBasis().inverse() * Fdp;
-            //btVector3 eTd = eTrans.getBasis().inverse() * Td;
-            btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
-            btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
-            Cd /= maxCd;
-            eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
-            Fdp = eTrans.getBasis() * eFd;
+            btTransform hpTrans = getTransform() * localTransform.inverse() * hydroProxyTransform;
+            
+            switch(hydroProxyType)
+            {
+                case HYDRO_PROXY_NONE:
+                    //No information to correct
+                    break;
+                
+                case HYDRO_PROXY_SPHERE:
+                    //No need to correct
+                    break;
+                    
+                case HYDRO_PROXY_CYLINDER:
+                {
+                    //Correct drag based on cylindrical approximation of shape
+                    btVector3 cFd = hpTrans.getBasis().inverse() * Fdp;
+                    btVector3 Cd(0.5, 1.0, 0.5);
+                    cFd = btVector3(Cd.x()*cFd.x(), Cd.y()*cFd.y(), Cd.z()*cFd.z());
+                    Fdp = hpTrans.getBasis() * cFd;
+                }
+                    break;
+                    
+                case HYDRO_PROXY_ELLIPSOID:
+                {
+                    //Correct drag based on ellipsoid approximation of shape
+                    btVector3 eFd = hpTrans.getBasis().inverse() * Fdp;
+                    //btVector3 eTd = eTrans.getBasis().inverse() * Td;
+                    btVector3 Cd(btScalar(1)/hydroProxyParams[0] , btScalar(1)/hydroProxyParams[1], btScalar(1)/hydroProxyParams[2]);
+                    btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+                    Cd /= maxCd;
+                    eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
+                    Fdp = hpTrans.getBasis() * eFd;
+                }
+                break;
+            }
         }
     }
     

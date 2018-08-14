@@ -40,7 +40,7 @@ Sphere::Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lo
     //dragCoeff = btVector3(btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius, btScalar(0.47)*M_PI*radius*radius);
     
     mesh = OpenGLContent::BuildSphere(radius);
-	ComputeEquivEllipsoid();
+	ComputeHydrodynamicProxy(HYDRO_PROXY_SPHERE);
 }
 
 Sphere::~Sphere()

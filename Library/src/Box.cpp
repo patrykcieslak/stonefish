@@ -42,7 +42,7 @@ Box::Box(std::string uniqueName, const btVector3& dimensions, Material m, int lo
     
 	glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
 	mesh = OpenGLContent::BuildBox(glHalfExtents);
-	ComputeEquivEllipsoid();
+	ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
 }
 
 Box::~Box()

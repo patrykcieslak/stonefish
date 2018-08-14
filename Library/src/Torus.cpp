@@ -39,7 +39,7 @@ Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMi
     //dragCoeff = btVector3(0.5, 0.5, 0.5);//btVector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
     
 	mesh = OpenGLContent::BuildTorus(majorRadius, minorRadius);
-	ComputeEquivEllipsoid();
+	ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
 }
 
 Torus::~Torus()

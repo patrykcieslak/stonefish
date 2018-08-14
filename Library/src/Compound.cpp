@@ -180,7 +180,7 @@ void Compound::RecalculatePhysicalProperties()
 	volume = compoundVolume;
 	Ipri = compoundPriInertia;
     
-    ComputeEquivEllipsoid();
+    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
@@ -206,8 +206,7 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* l
     btVector3 omega = getAngularVelocity();
 	btVector3 a = getLinearAcceleration();
     btVector3 epsilon = getAngularAcceleration();
-    btTransform eTrans = getTransform() * localTransform.inverse() * ellipsoidTransform;
-	
+    
     //Check if fully submerged
     btVector3 aabbMin, aabbMax;
     GetAABB(aabbMin, aabbMax);
@@ -267,14 +266,41 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* l
         
         if(settings.dampingForces)
         {
-            //Correct drag based on ellipsoid approximation of shape
-            btVector3 eFd = eTrans.getBasis().inverse() * Fdp;
-            //btVector3 eTd = eTrans.getBasis().inverse() * Td;
-            btVector3 Cd(btScalar(1)/ellipsoidR.x(), btScalar(1)/ellipsoidR.y(), btScalar(1)/ellipsoidR.z());
-            btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
-            Cd /= maxCd;
-            eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
-            Fdp = eTrans.getBasis() * eFd;
+            btTransform hpTrans = getTransform() * localTransform.inverse() * hydroProxyTransform;
+            
+            switch(hydroProxyType)
+            {
+                case HYDRO_PROXY_NONE:
+                    //No info to correct
+                    break;
+                
+                case HYDRO_PROXY_SPHERE:
+                    //No need to correct
+                    break;
+                    
+                case HYDRO_PROXY_CYLINDER:
+                {
+                    //Correct drag based on cylindrical approximation of shape
+                    btVector3 cFd = hpTrans.getBasis().inverse() * Fdp;
+                    btVector3 Cd(0.5, 1.0, 0.5);
+                    cFd = btVector3(Cd.x()*cFd.x(), Cd.y()*cFd.y(), Cd.z()*cFd.z());
+                    Fdp = hpTrans.getBasis() * cFd;
+                }
+                    break;
+                    
+                case HYDRO_PROXY_ELLIPSOID:
+                {
+                    //Correct drag based on ellipsoid approximation of shape
+                    btVector3 eFd = hpTrans.getBasis().inverse() * Fdp;
+                    //btVector3 eTd = eTrans.getBasis().inverse() * Td;
+                    btVector3 Cd(btScalar(1)/hydroProxyParams[0] , btScalar(1)/hydroProxyParams[1], btScalar(1)/hydroProxyParams[2]);
+                    btScalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+                    Cd /= maxCd;
+                    eFd = btVector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
+                    Fdp = hpTrans.getBasis() * eFd;
+                }
+                break;
+            }
         }
     }
     
@@ -341,10 +367,10 @@ std::vector<Renderable> Compound::Render()
 			item.model = glMatrixFromBtTransform(oTrans);
 			items.push_back(item);
             
-            item.type = RenderableType::HYDRO;
-            item.model = glMatrixFromBtTransform(oCompoundTrans * ellipsoidTransform);
-            item.points.push_back(glm::vec3((GLfloat)ellipsoidR[0], (GLfloat)ellipsoidR[1], (GLfloat)ellipsoidR[2]));
-			items.push_back(item);
+            item.type = RenderableType::HYDRO_ELLIPSOID;
+            item.model = glMatrixFromBtTransform(oCompoundTrans * hydroProxyTransform);
+            item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
+            items.push_back(item);
 		}
 	}
 		

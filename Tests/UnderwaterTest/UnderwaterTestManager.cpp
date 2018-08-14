@@ -54,7 +54,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //General
     OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, true, true, true, false, false, false);
+    OpenGLPipeline::getInstance()->setVisibleHelpers(true, true, true, true, false, false, true);
     OpenGLPipeline::getInstance()->setDebugSimulation(false);
     //getTrackball()->setEnabled(false);
     
@@ -146,10 +146,10 @@ void UnderwaterTestManager::BuildScenario()
     
     //Manipulator bodies
     Polyhedron* baseLink = new Polyhedron("ArmBaseLink", GetDataPath() + "base_link_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
-    Polyhedron* link1 = new Polyhedron("ArmLink1", GetDataPath() + "link1_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
-    Polyhedron* link2 = new Polyhedron("ArmLink2", GetDataPath() + "link2_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
-    Polyhedron* link3 = new Polyhedron("ArmLink3", GetDataPath() + "link3_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false);
-    Polyhedron* link4 = new Polyhedron("ArmLink4", GetDataPath() + "link4ft_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), link4Look, false);
+    Polyhedron* link1 = new Polyhedron("ArmLink1", GetDataPath() + "link1_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false, -1, true, HYDRO_PROXY_CYLINDER);
+    Polyhedron* link2 = new Polyhedron("ArmLink2", GetDataPath() + "link2_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false, -1, true, HYDRO_PROXY_CYLINDER);
+    Polyhedron* link3 = new Polyhedron("ArmLink3", GetDataPath() + "link3_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), manipLook, false, -1, true);//, HYDRO_PROXY_CYLINDER);
+    Polyhedron* link4 = new Polyhedron("ArmLink4", GetDataPath() + "link4ft_hydro.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), link4Look, false, -1, true);//, HYDRO_PROXY_CYLINDER);
     
     //Create thrusters
     Polyhedron* prop1 = new Polyhedron("Propeller", GetDataPath() + "propeller.obj", btScalar(1), getMaterialManager()->getMaterial("Dummy"), propLook, false);
@@ -276,9 +276,9 @@ void UnderwaterTestManager::BuildScenario()
     
     //Profiler* prof = new Profiler("Laser", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.5)), 50.0, 100, 100.0);
     //AddSensor(prof);
-    Multibeam* mb = new Multibeam("Multibeam", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.5)), 120.0, 400, 10.0);
-    mb->SetRange(0.2, 10.0);
-    AddSensor(mb);
+    //Multibeam* mb = new Multibeam("Multibeam", comp, btTransform(btQuaternion(0,0,0), btVector3(0,0,0.5)), 120.0, 400, 10.0);
+    //mb->SetRange(0.2, 10.0);
+    //AddSensor(mb);
     
     //ColorCamera* cam = new ColorCamera("Camera", 600, 400, 90.0, btTransform(btQuaternion(0,0,0), btVector3(0.5,0.0,-0.35)), comp, 1.0, 1, true);
     //cam->setDisplayOnScreen(true);

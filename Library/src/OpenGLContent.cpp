@@ -123,6 +123,7 @@ OpenGLContent::OpenGLContent()
 	csBuf[0] = 0;
 	csBuf[1] = 0;
     ellipsoid.mesh = NULL;
+    cylinder.mesh = NULL;
 	helperShader = NULL;
 	texQuadShader = NULL;
 	texQuadMSShader = NULL;
@@ -230,6 +231,25 @@ void OpenGLContent::Init()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(csColor), csColor, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
+    //Cylinder helper
+    cylinder.mesh = BuildCylinder(1.f, 1.f, 12);
+    
+	glGenVertexArrays(1, &cylinder.vao);
+	glGenBuffers(1, &cylinder.vboVertex);
+	glGenBuffers(1, &cylinder.vboIndex);
+	
+	glBindVertexArray(cylinder.vao);	
+	glEnableVertexAttribArray(0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*cylinder.mesh->vertices.size(), &cylinder.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*cylinder.mesh->faces.size(), &cylinder.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+	glBindVertexArray(0);
+    
     //Ellipsoid helper
     ellipsoid.mesh = BuildSphere(1.f, 3);
     
@@ -823,6 +843,22 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 		glDisableVertexAttribArray(1);
 		glUseProgram(0);
 	}
+}
+
+void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
+{
+    if(helperShader != NULL && cylinder.mesh != NULL)
+    {
+        helperShader->Use();
+		helperShader->SetUniform("MVP", viewProjection*M);
+		helperShader->SetUniform("scale", dims);
+		
+        glBindVertexArray(cylinder.vao);
+        glVertexAttrib4fv(1, &color.r);
+        glDrawElements(GL_TRIANGLES, 3 * cylinder.mesh->faces.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+    }
 }
 
 void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)

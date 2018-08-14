@@ -16,6 +16,7 @@
 #include "OpenGLContent.h"
 
 typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidType;
+typedef enum {HYDRO_PROXY_NONE = 0, HYDRO_PROXY_SPHERE, HYDRO_PROXY_CYLINDER, HYDRO_PROXY_ELLIPSOID} HydrodynamicProxyType;
 
 //pure virtual class
 class SolidEntity : public Entity
@@ -84,7 +85,10 @@ public:
     bool isCoordSysVisible();
 	
 protected:
-    void ComputeEquivEllipsoid();
+    void ComputeHydrodynamicProxy(HydrodynamicProxyType t);
+    void ComputeProxySphere();
+    void ComputeProxyCylinder();
+    void ComputeProxyEllipsoid();
     btScalar LambKFactor(btScalar r1, btScalar r2);
     virtual void BuildRigidBody();
     void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
@@ -105,8 +109,13 @@ protected:
     eigMatrix6x6 aMass; //Hydrodynamic added mass matrix
 	eigMatrix6x6 dCS; //Hydrodynamic damping coefficients multiplied by cross sections
     btVector3 CoB; //Center of Buoyancy (in geometry frame)
-    btVector3 ellipsoidR; //Radii of hydrodynamic proxy ellipsoid
-    btTransform ellipsoidTransform; //Transform of the ellipsoid
+    HydrodynamicProxyType hydroProxyType;
+    std::vector<btScalar> hydroProxyParams;
+    btTransform hydroProxyTransform;
+    
+    //btVector3 ellipsoidR; //Radii of hydrodynamic proxy ellipsoid
+    //btTransform ellipsoidTransform; //Transform of the ellipsoid
+    
 	bool computeHydro;
     bool buoyant;
     btVector3 Fb;

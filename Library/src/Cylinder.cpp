@@ -40,7 +40,7 @@ Cylinder::Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cyl
     //dragCoeff = btVector3(radius*halfHeight*btScalar(4*0.5), M_PI*radius*radius*btScalar(0.9), radius*halfHeight*btScalar(4*0.5));
     
 	mesh = OpenGLContent::BuildCylinder(radius, halfHeight*(GLfloat)2);
-	ComputeEquivEllipsoid();
+	ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
     
 #ifdef DEBUG
     std::cout << getName() << " m:" << mass << " I:" << Ipri.x() << "," << Ipri.y() << "," << Ipri.z() << std::endl;

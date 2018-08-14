@@ -9,7 +9,7 @@
 #include "Polyhedron.h"
 #include "SystemUtil.hpp"
 
-Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals, btScalar thickness, bool isBuoyant, HydrodynamicProxyType geoProxy) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     scale = UnitSystem::SetLength(scale);
     
@@ -248,7 +248,7 @@ Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScal
     mass = volume*mat.density;
 	
 	//7.Calculate equivalent ellipsoid for hydrodynamic force computation
-	ComputeEquivEllipsoid();
+	ComputeHydrodynamicProxy(geoProxy);
     
     //8. Set hydrodynamic properties
     CoB = localTransform.getOrigin();

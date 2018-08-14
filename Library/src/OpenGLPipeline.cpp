@@ -514,7 +514,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                             OpenGLContent::getInstance()->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 1.f);
             
                         //Solids
-                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) 
+                        {
                             if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
                                 OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
                         }
@@ -522,7 +523,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                     //Sensors
                     if(showSensors) {
-                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) 
+                        {
                             if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
                                 OpenGLContent::getInstance()->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
                             else if(drawingQueueCopy[h].type == RenderableType::SENSOR_POINTS)
@@ -535,8 +537,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     }
             
                     //Actuators
-                    if(showActuators) {
-                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
+                    if(showActuators) 
+                    {
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) 
+                        {
                             if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
                                 OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
                         }
@@ -546,15 +550,33 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     if(showFluidDynamics) {
                         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             
-                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) {
-                            if(drawingQueueCopy[h].type == RenderableType::HYDRO_CS)
-                                OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f), glm::vec4(0.2f, 0.5f, 1.f, 1.f));//drawingQueueCopy[h].scale*2.f);
-                            else if(drawingQueueCopy[h].type == RenderableType::HYDRO)
-                                OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0], glm::vec4(0.2f, 0.5f, 1.f, 1.f));
-                            else if(drawingQueueCopy[h].type == RenderableType::HYDRO_LINES)
-                                OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
-                            else if(drawingQueueCopy[h].type == RenderableType::HYDRO_LINE_STRIP)
-                                OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h) 
+                        {
+                            switch(drawingQueueCopy[h].type)
+                            {
+                                case RenderableType::HYDRO_CS:
+                                    OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f), glm::vec4(0.2f, 0.5f, 1.f, 1.f)); //drawingQueueCopy[h].scale*2.f);
+                                    break;
+                             
+                                case RenderableType::HYDRO_CYLINDER:
+                                    OpenGLContent::getInstance()->DrawCylinder(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0], glm::vec4(0.2f, 0.5f, 1.f, 1.f));
+                                    break;
+                                    
+                                case RenderableType::HYDRO_ELLIPSOID:
+                                    OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0], glm::vec4(0.2f, 0.5f, 1.f, 1.f));
+                                    break;
+                                
+                                case RenderableType::HYDRO_LINES:
+                                    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                                    break;
+                                    
+                                case RenderableType::HYDRO_LINE_STRIP:
+                                    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                                    break;
+                                    
+                                default:
+                                    break;
+                            }
                         }
             
                         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
