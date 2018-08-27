@@ -36,7 +36,7 @@ Manipulator::~Manipulator()
 	delete chain;
 }
 
-void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit, btScalar upperLimit, btScalar maxTorque)
+void Manipulator::AddRotLinkDH(std::string jointName, SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, btScalar lowerLimit, btScalar upperLimit, btScalar maxTorque)
 {
 	if(nLinks < nTotalLinks)
 	{
@@ -50,7 +50,7 @@ void Manipulator::AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint
 		
 		//Update Featherstone chain
 		chain->AddLink(link, trans, world);
-		chain->AddRevoluteJoint(nLinks-1, nLinks, pivot, DH.back().getBasis().getColumn(2)); //Revolve always around local Z axis, no collision between joint links
+		chain->AddRevoluteJoint(jointName, nLinks-1, nLinks, pivot, DH.back().getBasis().getColumn(2)); //Revolve always around local Z axis, no collision between joint links
         
         if(lowerLimit < upperLimit)
             chain->AddJointLimit(nLinks-1, lowerLimit, upperLimit);
@@ -79,7 +79,7 @@ void Manipulator::AddTransformDH(btScalar d, btScalar a, btScalar alpha)
     DH.push_back(DH.back() * t1 * t2);
 }
 
-void Manipulator::AddRotLinkURDF(SolidEntity* link, const btTransform& trans, const btVector3& axis, btScalar lowerLimit, btScalar upperLimit, btScalar maxTorque)
+void Manipulator::AddRotLinkURDF(std::string jointName, SolidEntity* link, const btTransform& trans, const btVector3& axis, btScalar lowerLimit, btScalar upperLimit, btScalar maxTorque)
 {
     if(nLinks < nTotalLinks)
     {
@@ -87,7 +87,7 @@ void Manipulator::AddRotLinkURDF(SolidEntity* link, const btTransform& trans, co
         
         btTransform linkTrans = DH.back() * trans;
         chain->AddLink(link, linkTrans, world);
-		chain->AddRevoluteJoint(nLinks-1, nLinks, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
+		chain->AddRevoluteJoint(jointName, nLinks-1, nLinks, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
         
         if(lowerLimit < upperLimit)
             chain->AddJointLimit(nLinks-1, lowerLimit, upperLimit);
@@ -179,34 +179,33 @@ void Manipulator::SetDesiredJointVelocity(unsigned int jointId, btScalar velocit
     chain->MotorPositionSetpoint(jointId, btScalar(0), btScalar(0));
 }
 
-btScalar Manipulator::GetJointPosition(unsigned int jointId)
+std::string Manipulator::getJointName(unsigned int jointId)
 {
-	if(jointId >= nLinks-1)
-		return btScalar(0);
+    return chain->getJointName(jointId);
+}
 
+btScalar Manipulator::getJointPosition(unsigned int jointId)
+{
     btScalar pos;
     btMultibodyLink::eFeatherstoneJointType link;
     chain->getJointPosition(jointId, pos, link);    
     return pos; 
 }
 
-btScalar Manipulator::GetJointVelocity(unsigned int jointId)
+btScalar Manipulator::getJointVelocity(unsigned int jointId)
 {
-	if(jointId >= nLinks-1)
-		return btScalar(0);
-
     btScalar pos;
     btMultibodyLink::eFeatherstoneJointType link;
     chain->getJointVelocity(jointId, pos, link);    
     return pos; 
 }
 
-btScalar Manipulator::GetJointTorque(unsigned int jointId)
+btScalar Manipulator::getJointTorque(unsigned int jointId)
 {
     return btScalar(0);
 }
 
-btScalar Manipulator::GetDesiredJointPosition(unsigned int jointId)
+btScalar Manipulator::getDesiredJointPosition(unsigned int jointId)
 {
 	if(jointId >= nLinks-1)
 		return btScalar(0);
@@ -214,7 +213,7 @@ btScalar Manipulator::GetDesiredJointPosition(unsigned int jointId)
     return desiredPos[jointId];
 }
 
-btScalar Manipulator::GetDesiredJointVelocity(unsigned int jointId)
+btScalar Manipulator::getDesiredJointVelocity(unsigned int jointId)
 {
 	if(jointId >= nLinks-1)
 		return btScalar(0);

@@ -19,8 +19,8 @@ TwoFingerGripper::TwoFingerGripper(std::string uniqueName, Manipulator* m, Solid
     mechanism->setSelfCollision(false);
     mechanism->AddLink(finger1, btTransform::getIdentity(), world);
     mechanism->AddLink(finger2, btTransform::getIdentity(), world);
-    mechanism->AddRevoluteJoint(0, 1, pivotA, axis);
-    mechanism->AddRevoluteJoint(0, 2, pivotB, axis);
+    mechanism->AddRevoluteJoint(uniqueName + "/FE/FingerJoint1", 0, 1, pivotA, axis);
+    mechanism->AddRevoluteJoint(uniqueName + "/FE/FingerJoint2", 0, 2, pivotB, axis);
     mechanism->AddJointMotor(0, maxImpulse);
     mechanism->AddJointMotor(1, maxImpulse);
     mechanism->MotorVelocitySetpoint(0, 0.0, 1.0);

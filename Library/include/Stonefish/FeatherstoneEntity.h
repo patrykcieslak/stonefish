@@ -29,9 +29,10 @@ struct FeatherstoneLink
 
 struct FeatherstoneJoint
 {
-    FeatherstoneJoint(btMultibodyLink::eFeatherstoneJointType t, unsigned int p, unsigned int c)
-                        : type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(btScalar(0)), velDamping(btScalar(0))  {}
+    FeatherstoneJoint(std::string n, btMultibodyLink::eFeatherstoneJointType t, unsigned int p, unsigned int c)
+                        : name(n), type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(btScalar(0)), velDamping(btScalar(0))  {}
     
+    std::string name;
     btMultibodyLink::eFeatherstoneJointType type;
     btMultiBodyJointFeedback* feedback;
     btMultiBodyJointLimitConstraint* limit;
@@ -57,9 +58,9 @@ public:
     
     //Multibody definition
     void AddLink(SolidEntity* solid, const btTransform& transform, btMultiBodyDynamicsWorld* world);
-    int AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
-    int AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
-	int AddFixedJoint(unsigned int parent, unsigned int child, const btVector3& pivot);
+    int AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
+    int AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
+	int AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot);
     void AddJointMotor(unsigned int index, btScalar maxImpulse);
     void AddJointLimit(unsigned int index, btScalar lower, btScalar upper);
 	
@@ -76,6 +77,7 @@ public:
     //Joints
     void setJointIC(unsigned int index, btScalar position, btScalar velocity);
     void setJointDamping(unsigned int  index, btScalar constantFactor, btScalar viscousFactor);
+    std::string getJointName(unsigned int index);
     void getJointPosition(unsigned int index, btScalar& position, btMultibodyLink::eFeatherstoneJointType& jointType);
     void getJointVelocity(unsigned int index, btScalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
     btScalar getJointTorque(unsigned int index); //Only shows sum of manually applied torques

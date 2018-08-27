@@ -163,6 +163,14 @@ void FeatherstoneEntity::setJointDamping(unsigned int index, btScalar constantFa
     joints[index].velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
 }
 
+std::string FeatherstoneEntity::getJointName(unsigned int index)
+{
+    if(index >= joints.size())
+        return "Invalid id!";
+    else 
+        return joints[index].name;
+}
+
 void FeatherstoneEntity::getJointPosition(unsigned int index, btScalar &position, btMultibodyLink::eFeatherstoneJointType &jointType)
 {
     if(index >= joints.size())
@@ -351,7 +359,7 @@ void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transfor
     }
 }
 
-int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -362,7 +370,7 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
         return -1;
     
     //Instantiate joint structure
-    FeatherstoneJoint joint(btMultibodyLink::eRevolute, parent, child);
+    FeatherstoneJoint joint(name, btMultibodyLink::eRevolute, parent, child);
     
     //Setup joint
     //q' = q2 * q1
@@ -391,7 +399,7 @@ int FeatherstoneEntity::AddRevoluteJoint(unsigned int parent, unsigned int child
     return ((int)joints.size() - 1);
 }
 
-int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -402,7 +410,7 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
         return -1;
     
     //Instantiate joint structure
-    FeatherstoneJoint joint(btMultibodyLink::ePrismatic, parent, child);
+    FeatherstoneJoint joint(name, btMultibodyLink::ePrismatic, parent, child);
     
     //Setup joint
     //q' = q2 * q1
@@ -431,7 +439,7 @@ int FeatherstoneEntity::AddPrismaticJoint(unsigned int parent, unsigned int chil
     return ((int)joints.size() - 1);
 }
 
-int FeatherstoneEntity::AddFixedJoint(unsigned int parent, unsigned int child, const btVector3& pivot)
+int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot)
 {
 	//No self joint possible and base cannot be a child
 	if(parent == child || child == 0)
@@ -442,7 +450,7 @@ int FeatherstoneEntity::AddFixedJoint(unsigned int parent, unsigned int child, c
         return -1;
     
     //Instantiate joint structure
-    FeatherstoneJoint joint(btMultibodyLink::eFixed, parent, child);
+    FeatherstoneJoint joint(name, btMultibodyLink::eFixed, parent, child);
     
 	//Setup joint
 	btQuaternion ornParentToChild =  getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();

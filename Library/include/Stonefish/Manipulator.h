@@ -32,22 +32,22 @@ public:
     
 	//Manipulator
 	//Denavit-Hartenberg notation
-    void AddRotLinkDH(SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, 
+    void AddRotLinkDH(std::string jointName, SolidEntity* link, const btTransform& geomToJoint, btScalar d, btScalar a, btScalar alpha, 
                       btScalar lowerLimit = btScalar(1.0), btScalar upperLimit = btScalar(-1.0), btScalar maxTorque = btScalar(1000.0));
     void AddTransformDH(btScalar d, btScalar a, btScalar alpha);
     //URDF format
-    void AddRotLinkURDF(SolidEntity* link, const btTransform& trans, const btVector3& axis, 
+    void AddRotLinkURDF(std::string jointName, SolidEntity* link, const btTransform& trans, const btVector3& axis, 
                          btScalar lowerLimit = btScalar(1), btScalar upperLimit = btScalar(-1), btScalar maxTorque = btScalar(1000.0));
     
 	void SetDesiredJointPosition(unsigned int jointId, btScalar position);
-    void SetDesiredJointVelocity(unsigned int jointId, btScalar position);
-    //void setDesiredJointForce() ???
+    void SetDesiredJointVelocity(unsigned int jointId, btScalar velocity);
     
-    btScalar GetJointPosition(unsigned int jointId);
-    btScalar GetJointVelocity(unsigned int jointId);
-    btScalar GetJointTorque(unsigned int jointId);
-    btScalar GetDesiredJointPosition(unsigned int jointId);
-    btScalar GetDesiredJointVelocity(unsigned int jointId);
+    std::string getJointName(unsigned int jointId);
+    btScalar getJointPosition(unsigned int jointId);
+    btScalar getJointVelocity(unsigned int jointId);
+    btScalar getJointTorque(unsigned int jointId);
+    btScalar getDesiredJointPosition(unsigned int jointId);
+    btScalar getDesiredJointVelocity(unsigned int jointId);
     const std::vector<btTransform>& getDH();
     FeatherstoneEntity* getChain();
     unsigned int getNumOfLinks();
