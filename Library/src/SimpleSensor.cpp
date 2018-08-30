@@ -122,34 +122,29 @@ void SimpleSensor::Reset()
 
 void SimpleSensor::AddSampleToHistory(const Sample& s)
 {
-    if(historyLen < 0) //No history
+    if(historyLen < 0 && history.size() > 0) //No history
     {
-        if(history.size() > 0)
-        {
-            delete history[0];
-            history.pop_front();
-        }
+        delete history[0];
+        history.pop_front();
     }
-    else
+    else if(historyLen > 0 && (int)history.size() == historyLen) //Specified history length
     {
-        if(historyLen > 0 && (int)history.size() == historyLen) // 0 means unlimited history
-        {
-            delete history[0];
-            history.pop_front();
-        }
+        delete history[0];
+        history.pop_front();
+    }
+    //else == 0 --> unlimited history
+        
+    for(unsigned int i=0; i<s.nDim; ++i)
+    {
+        //Add noise
+        if(channels[i].stdDev > btScalar(0))
+            s.data[i] += channels[i].noise(randomGenerator);
     
-        for(unsigned int i=0; i<s.nDim; ++i)
-        {
-            //Add noise
-            if(channels[i].stdDev > btScalar(0))
-                s.data[i] += channels[i].noise(randomGenerator);
-    
-            //Limit readings
-            if(s.data[i] > channels[i].rangeMax)
-                s.data[i] = channels[i].rangeMax;
-            else if(s.data[i] < channels[i].rangeMin)
-                s.data[i] = channels[i].rangeMin;
-        }
+        //Limit readings
+        if(s.data[i] > channels[i].rangeMax)
+            s.data[i] = channels[i].rangeMax;
+        else if(s.data[i] < channels[i].rangeMin)
+            s.data[i] = channels[i].rangeMin;
     }
     
     //Add to history
