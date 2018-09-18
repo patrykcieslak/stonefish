@@ -28,7 +28,7 @@
     #include <windows.h>
 #endif
 
-#include "SimulationApp.h"
+#include "GraphicalSimulationApp.h"
 #include "OpenGLPipeline.h"
 
 //Precise time
@@ -76,7 +76,7 @@ inline std::string GetShaderPath()
     std::string path(cwd);
 	path += "/" + SimulationApp::getApp()->getShaderPath() + "/";
 	return path;*/
-    return SimulationApp::getApp()->getShaderPath();
+    return ((GraphicalSimulationApp*)SimulationApp::getApp())->getShaderPath();
 }
 
 inline std::string GetDataPath()

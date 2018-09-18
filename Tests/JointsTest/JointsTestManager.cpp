@@ -24,7 +24,7 @@
 #include "BeltJoint.h"
 #include "DCMotor.h"
 
-JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, SolverType::SI)
+JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
 {
 }
 

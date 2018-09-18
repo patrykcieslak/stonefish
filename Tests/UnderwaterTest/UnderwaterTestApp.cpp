@@ -19,14 +19,14 @@
 #include "Trigger.h"
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
-    : SimulationApp("Underwater Test", dataDirPath, width, height, sim)
+    : GraphicalSimulationApp("Underwater Test", dataDirPath, width, height, sim)
 {
     decimalTime = 12.0;
 }
 
 void UnderwaterTestApp::DoHUD()
 {
-    SimulationApp::DoHUD();
+    GraphicalSimulationApp::DoHUD();
     
     ui_id slider;
     slider.owner = 0;
@@ -37,16 +37,16 @@ void UnderwaterTestApp::DoHUD()
 #ifdef USE_IAUV_CLASSES
     Manipulator* manip = (Manipulator*)getSimulationManager()->getEntity("Arm");
     slider.item = 1;
-    manip->SetDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 100.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(0), "Joint1"));
+    manip->SetDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 100.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(0), "Joint1"));
     
     slider.item = 2;
-    manip->SetDesiredJointPosition(1 , IMGUI::getInstance()->DoSlider(slider, 5.f, 155.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(1), "Joint2"));
+    manip->SetDesiredJointPosition(1 , IMGUI::getInstance()->DoSlider(slider, 5.f, 155.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(1), "Joint2"));
     
     slider.item = 3;
-    manip->SetDesiredJointPosition(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 210.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(2), "Joint3"));
+    manip->SetDesiredJointPosition(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 210.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(2), "Joint3"));
     
     slider.item = 4;
-    manip->SetDesiredJointPosition(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 265.f, 200.f, -1.0, 1.0, manip->GetDesiredJointPosition(3), "Joint4"));
+    manip->SetDesiredJointPosition(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 265.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(3), "Joint4"));
     
     UnderwaterVehicle* vehicle = (UnderwaterVehicle*)getSimulationManager()->getEntity("AUV");
     slider.item = 5;

@@ -9,10 +9,10 @@
 #ifndef __Stonefish__FallingTestApp__
 #define __Stonefish__FallingTestApp__
 
-#include "SimulationApp.h"
+#include "GraphicalSimulationApp.h"
 #include "FallingTestManager.h"
 
-class FallingTestApp : public SimulationApp
+class FallingTestApp : public GraphicalSimulationApp
 {
 public:
     FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim);

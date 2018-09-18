@@ -28,7 +28,7 @@
 #include "Compound.h"
 #include "Accelerometer.h"
 
-FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, SI, EXCLUSIVE)
+FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SI, EXCLUSIVE)
 {
 }
 

@@ -17,27 +17,33 @@ Console::Console()
 {
 	windowW = 800;
     windowH = 600;
-    ready = false;
-	consoleVAO = 0;
+	printer = NULL;
+	logoTexture = 0;
+    consoleVAO = 0;
 	texQuadVBO = 0;
 	texQuadShader = NULL;
-	linesMutex = SDL_CreateMutex();
 	lastTime = 0;
+	ready = false;
 }
 
 Console::~Console()
 {
-    lines.clear();
-    delete printer;
-    if(logoTexture > 0)
-        glDeleteTextures(1, &logoTexture);
-	if(consoleVAO > 0)
-		glDeleteVertexArrays(1, &consoleVAO);
-	if(texQuadVBO > 0)
-		glDeleteBuffers(1, &texQuadVBO);
-	if(texQuadShader != NULL)
-		delete texQuadShader;
-    SDL_DestroyMutex(linesMutex);
+	if(ready)
+	{
+		lines.clear();
+		SDL_DestroyMutex(linesMutex);
+		
+		if(printer != NULL)
+			delete printer;
+		if(logoTexture > 0)
+			glDeleteTextures(1, &logoTexture);
+		if(consoleVAO > 0)
+			glDeleteVertexArrays(1, &consoleVAO);
+		if(texQuadVBO > 0)
+			glDeleteBuffers(1, &texQuadVBO);
+		if(texQuadShader != NULL)
+			delete texQuadShader;
+	}
 }
 
 void Console::Init(GLuint w, GLuint h)
@@ -96,6 +102,8 @@ void Console::Init(GLuint w, GLuint h)
 	texQuadShader->AddUniform("rect", ParameterType::VEC4);
 	texQuadShader->AddUniform("tex", ParameterType::INT);
 	texQuadShader->AddUniform("color", ParameterType::VEC4);
+	
+	linesMutex = SDL_CreateMutex();
 	
 	ready = true;
 	lastTime = GetTimeInMicroseconds();
@@ -259,19 +267,17 @@ void Console::Print(int messageType, const char *format, ...)
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 	
-#ifdef DEBUG
     printf("%s\n", buffer);
-#endif
 	
-	if(!ready)
-		return;
-	
-    ConsoleMessage msg;
-    msg.type = messageType;
-    msg.text = std::string(buffer);
-    SDL_LockMutex(linesMutex);
-    lines.push_back(msg);
-    SDL_UnlockMutex(linesMutex);
+	if(ready)
+	{
+		ConsoleMessage msg;
+		msg.type = messageType;
+		msg.text = std::string(buffer);
+		SDL_LockMutex(linesMutex);
+		lines.push_back(msg);
+		SDL_UnlockMutex(linesMutex);
+	}
 }
 
 void Console::Clear()

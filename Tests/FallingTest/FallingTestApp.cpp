@@ -13,14 +13,14 @@
 #include "Accelerometer.h"
 
 FallingTestApp::FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim) 
-    : SimulationApp("Falling Test", dataDirPath, width, height, sim)
+    : GraphicalSimulationApp("Falling Test", dataDirPath, width, height, sim)
 {
     checked = false;
 }
 
 void FallingTestApp::DoHUD()
 {
-    SimulationApp::DoHUD();
+    GraphicalSimulationApp::DoHUD();
     
 	ui_id slider;
     slider.owner = 1;

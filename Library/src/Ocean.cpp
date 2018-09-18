@@ -24,12 +24,10 @@ Ocean::Ocean(std::string uniqueName, Liquid* l) : ForcefieldEntity(uniqueName)
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
     currents = std::vector<VelocityField*>(0);
-     
-    glOcean = new OpenGLOcean();
-    trueWaves = false;
+	
+	glOcean = NULL;
     liquid = l;
-    setAlgeaBloomFactor(0.2f);
-    setTurbidity(100.f);
+	trueWaves = false;
 }
 
 Ocean::~Ocean()
@@ -42,7 +40,9 @@ Ocean::~Ocean()
     }
     
     liquid = NULL;
-    delete glOcean;
+	
+	if(glOcean != NULL)
+		delete glOcean;
 }
 
 void Ocean::setUseTrueWaves(bool waves)
@@ -189,6 +189,14 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
         
         ((SolidEntity*)ent)->ApplyFluidForces();
     }
+}
+
+void Ocean::InitGraphics()
+{
+	glOcean = new OpenGLOcean();
+	glOcean->Init();
+    setAlgeaBloomFactor(0.2f);
+    setTurbidity(100.f);
 }
 
 std::vector<Renderable> Ocean::Render()

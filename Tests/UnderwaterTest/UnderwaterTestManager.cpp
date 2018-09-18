@@ -46,7 +46,7 @@
 #include "Multibeam.h"
 
 UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond) 
-    : SimulationManager(SimulationType::MARINE, UnitSystems::MKS, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
+    : SimulationManager(UnitSystems::MKS, false, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
 {
 }
 
@@ -83,6 +83,8 @@ void UnderwaterTestManager::BuildScenario()
     
     ////////OBJECTS    
     //Create environment
+	EnableOcean();
+	
 	Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,7.0)));    
 	
@@ -203,11 +205,11 @@ void UnderwaterTestManager::BuildScenario()
     
     //Create manipulator
     Manipulator* arm = new Manipulator("Arm", 4, baseLink, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)), vehicle->getVehicleBody());
-    arm->AddRotLinkDH(link1, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), -0.0136, 0.1065, M_PI_2);
-	arm->AddRotLinkDH(link2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.23332, 0);
-	arm->AddRotLinkDH(link3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.103, -M_PI_2);
+    arm->AddRotLinkDH("Link1", link1, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), -0.0136, 0.1065, M_PI_2);
+	arm->AddRotLinkDH("Link2", link2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.23332, 0);
+	arm->AddRotLinkDH("Link3", link3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,0,0)), 0, 0.103, -M_PI_2);
     arm->AddTransformDH(0.201,0,0);
-    arm->AddRotLinkDH(link4, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0, 0, 0);
+    arm->AddRotLinkDH("Link4", link4, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), 0, 0, 0);
 	AddSystemEntity(arm, btTransform(btQuaternion(0,0,0), btVector3(0.90,0.0,depth)));
     
     //Add end-effector with force sensor

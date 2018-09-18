@@ -9,12 +9,12 @@
 #ifndef __Stonefish__UnderwaterTestApp__
 #define __Stonefish__UnderwaterTestApp__
 
-#include "SimulationApp.h"
+#include "GraphicalSimulationApp.h"
 #include "UnderwaterTestManager.h"
 
 #define USE_IAUV_CLASSES
 
-class UnderwaterTestApp : public SimulationApp
+class UnderwaterTestApp : public GraphicalSimulationApp
 {
 public:
     UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim);

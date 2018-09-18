@@ -9,6 +9,8 @@
   <Dependencies/>
   <VirtualDirectory Name="src">
     <VirtualDirectory Name="core">
+      <File Name="src/ConsoleSimulationApp.cpp"/>
+      <File Name="src/GraphicalSimulationApp.cpp"/>
       <File Name="src/ScrewConstraint.cpp"/>
       <File Name="src/FilteredCollisionDispatcher.cpp"/>
       <File Name="src/MaterialManager.cpp"/>
@@ -19,8 +21,6 @@
       <File Name="src/SimulationManager.cpp"/>
       <File Name="src/TorusShape.cpp"/>
       <File Name="src/UnitSystem.cpp"/>
-      <File Name="src/XMLSimulationApp.cpp"/>
-      <File Name="src/XMLSimulationManager.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
       <File Name="src/Actuator.cpp"/>
@@ -288,6 +288,8 @@
       <File Name="include/Stonefish/MathsUtil.hpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
+      <File Name="include/Stonefish/GraphicalSimulationApp.h"/>
+      <File Name="include/Stonefish/ConsoleSimulationApp.h"/>
       <File Name="include/Stonefish/ScrewConstraint.h"/>
       <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
       <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
@@ -298,8 +300,6 @@
       <File Name="include/Stonefish/TorusShape.h"/>
       <File Name="include/Stonefish/MaterialManager.h"/>
       <File Name="include/Stonefish/SimulationManager.h"/>
-      <File Name="include/Stonefish/XMLSimulationApp.h"/>
-      <File Name="include/Stonefish/XMLSimulationManager.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>

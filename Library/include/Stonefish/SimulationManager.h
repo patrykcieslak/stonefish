@@ -39,7 +39,6 @@
 //Simulation algorithm settings
 typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE, NNCG} SolverType;
 typedef enum {INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
-typedef enum {TERRESTIAL, MARINE, CUSTOM} SimulationType;
 
 typedef struct 
 {
@@ -56,7 +55,7 @@ class SimulationManager
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st = SI, CollisionFilteringType cft = EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
+    SimulationManager(UnitSystems unitSystem = MKS, bool zAxisUp = false, btScalar stepsPerSecond = btScalar(60), SolverType st = SI, CollisionFilteringType cft = EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -95,7 +94,6 @@ public:
     void getWorldAABB(btVector3& min, btVector3& max);
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
-	SimulationType getSimulationType();
 	HydrodynamicsType getHydrodynamicsType();
     
     Entity* getEntity(unsigned int index);
@@ -144,7 +142,6 @@ private:
 	
 	SolverType solver;
     CollisionFilteringType collisionFilter;
-	SimulationType simType;
 	HydrodynamicsType hydroType;
 	btScalar sps;
 	btScalar realtimeFactor;
@@ -174,7 +171,7 @@ private:
     std::vector<Controller*> controllers;
     std::vector<Contact*> contacts;
     std::vector<Collision> collisions;
-    Ocean* liquid;
+    Ocean* ocean;
     btScalar g;
     bool zUp;
 

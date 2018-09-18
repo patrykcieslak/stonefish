@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "AcrobotTestApp.h"
@@ -14,13 +14,14 @@
 #include "ForceTorque.h"
 #include "Torque.h"
 
-AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, int width, int height, AcrobotTestManager* sim) : SimulationApp("Acrobot Test", dataDirPath, width, height, sim)
+AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, int width, int height, AcrobotTestManager* sim) 
+: GraphicalSimulationApp("Acrobot Test", dataDirPath, width, height, sim)
 {
 }
 
 void AcrobotTestApp::DoHUD()
 {
-    SimulationApp::DoHUD();
+    GraphicalSimulationApp::DoHUD();
     
     ui_id slider1;
     slider1.owner = 0;

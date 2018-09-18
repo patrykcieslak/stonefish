@@ -13,10 +13,8 @@ int main(int argc, const char * argv[])
 {
     FallingTestManager* simulationManager = new FallingTestManager(200.0);
     FallingTestApp app("/home/pcieslak/Documents/stonefish/Library/data", 1200, 900, simulationManager);
-    app.Init();
-    app.EventLoop();
-    app.CleanUp();
-    
+    app.Run();
+	
     return 0;
 }
 

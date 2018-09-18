@@ -19,7 +19,7 @@
 #include <BulletCollision/Gimpact/btGImpactShape.h>
 #include "FilteredCollisionDispatcher.h"
 
-#include "SimulationApp.h"
+#include "GraphicalSimulationApp.h"
 #include "SystemUtil.hpp"
 #include "OpenGLTrackball.h"
 #include "Camera.h"
@@ -31,12 +31,11 @@
 #include "Plane.h"
 #include "Trigger.h"
 
-SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
+SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
 {
     //Set coordinate system
     UnitSystem::SetUnitSystem(unitSystem, false);
-    simType = t;
-    zUp = simType == SimulationType::MARINE ? false : true;
+    zUp = zAxisUp;
     
     //Initialize simulation world
     realtimeFactor = btScalar(1);
@@ -54,7 +53,7 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
     dwBroadphase = NULL;
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
-    liquid = NULL;
+    ocean = NULL;
 	trackball = NULL;
     simSettingsMutex = SDL_CreateMutex();
     simInfoMutex = SDL_CreateMutex();
@@ -73,7 +72,6 @@ SimulationManager::SimulationManager(SimulationType t, UnitSystems unitSystem, b
 SimulationManager::~SimulationManager()
 {
     DestroyScenario();
-	delete liquid;
     SDL_DestroyMutex(simSettingsMutex);
     SDL_DestroyMutex(simInfoMutex);
 }
@@ -125,7 +123,7 @@ void SimulationManager::AddSystemEntity(SystemEntity* ent, const btTransform& wo
 
 void SimulationManager::EnableOcean(Liquid* f)
 {
-	if(liquid != NULL)
+	if(ocean != NULL)
 		return;
 	
     if(f == NULL)
@@ -133,15 +131,15 @@ void SimulationManager::EnableOcean(Liquid* f)
         std::string water = getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55); 
         f = getMaterialManager()->getFluid(water);
     }
-        
-    if(simType == SimulationType::MARINE)
-    {
-        liquid = new Ocean("Ocean", f);
-        liquid->getOpenGLOcean()->Init();
-    }
-  
-	liquid->setRenderable(true);
-	liquid->AddToDynamicsWorld(dynamicsWorld);
+    
+	ocean = new Ocean("Ocean", f);
+	ocean->AddToDynamicsWorld(dynamicsWorld);
+	
+	if(SimulationApp::getApp()->hasGraphics())
+	{
+		ocean->InitGraphics();
+		ocean->setRenderable(true);
+	}
 }
 
 void SimulationManager::AddSensor(Sensor *sens)
@@ -268,11 +266,6 @@ SolverType SimulationManager::getSolverType()
     return solver;
 }
 
-SimulationType SimulationManager::getSimulationType()
-{
-	return simType;
-}
-
 HydrodynamicsType SimulationManager::getHydrodynamicsType()
 {
 	return hydroType;
@@ -365,7 +358,7 @@ Controller* SimulationManager::getController(std::string name)
 
 Ocean* SimulationManager::getOcean()
 {
-	return liquid;
+	return ocean;
 }
 
 btMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
@@ -575,37 +568,25 @@ void SimulationManager::InitializeSolver()
 
 void SimulationManager::InitializeScenario()
 {
-    switch(simType)
-    {
-        case TERRESTIAL:
-        {
-            //Plane
-            getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
-            std::string path = GetShaderPath() + "grid.png";
-            int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
+	if(SimulationApp::getApp()->hasGraphics())
+	{
+		GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
+		trackball = new OpenGLTrackball(btVector3(0,0,1.0), 10.0, btVector3(0,0, 1.0), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
+		trackball->Rotate(btQuaternion(0.25, 0.0, 0.0));
+		OpenGLContent::getInstance()->AddView(trackball);
+	}
+	
+	/*
+	//Plane
+    getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
+    std::string path = GetShaderPath() + "grid.png";
+    int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
             
-            Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
-            AddStaticEntity(floor, btTransform::getIdentity());
-		}
-            break;
-        
-        case MARINE:
-        {
-			EnableOcean();
-        }
-            break;
-            
-        case CUSTOM:
-            break;
-			
-		default:
-			break;
-    }
-    
-    //Standard trackball
-    trackball = new OpenGLTrackball(btVector3(0,0,1.0), 10.0, btVector3(0,0, 1.0), 0, 0, SimulationApp::getApp()->getWindowWidth(), SimulationApp::getApp()->getWindowHeight(), 90.f, 1000.f, 4, true);
-	trackball->Rotate(btQuaternion(0.25, 0.0, 0.0));
-    OpenGLContent::getInstance()->AddView(trackball);
+    Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
+    AddStaticEntity(floor, btTransform::getIdentity());
+		
+    EnableOcean();
+	*/
 }
 
 void SimulationManager::RestartScenario()
@@ -654,10 +635,10 @@ void SimulationManager::DestroyScenario()
         delete entities[i];
     entities.clear();
     
-    if(liquid != NULL)
+    if(ocean != NULL)
 	{
-        delete liquid;
-		liquid = NULL;
+        delete ocean;
+		ocean = NULL;
 	}
     
     for(unsigned int i=0; i<joints.size(); i++)
@@ -921,9 +902,9 @@ void SimulationManager::UpdateDrawingQueue()
 		}
     }
     
-    if(liquid != NULL)
+    if(ocean != NULL)
     {
-        std::vector<Renderable> items = liquid->Render();
+        std::vector<Renderable> items = ocean->Render();
         for(unsigned int h=0; h<items.size(); ++h)
 		{
 			if(!zUp)
@@ -1254,9 +1235,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     }
     
 	//Fluid forces
-    if(simManager->liquid != NULL)
+    if(simManager->ocean != NULL)
     {
-        btBroadphasePairArray& pairArray = simManager->liquid->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+        btBroadphasePairArray& pairArray = simManager->ocean->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
@@ -1271,10 +1252,10 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
                 btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
-                if(co1 == simManager->liquid->getGhost())
-                    simManager->liquid->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co2, simManager->hydroCounter % simManager->hydroPrescaler == 0);
-                else if(co2 == simManager->liquid->getGhost())
-                    simManager->liquid->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co1, simManager->hydroCounter % simManager->hydroPrescaler == 0);
+                if(co1 == simManager->ocean->getGhost())
+                    simManager->ocean->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co2, simManager->hydroCounter % simManager->hydroPrescaler == 0);
+                else if(co2 == simManager->ocean->getGhost())
+                    simManager->ocean->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co1, simManager->hydroCounter % simManager->hydroPrescaler == 0);
             }
             
             ++simManager->hydroCounter;

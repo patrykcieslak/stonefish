@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "AcrobotTestManager.h"
@@ -32,7 +32,7 @@
 #include "Light.h"
 #include "Torque.h"
 
-AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(SimulationType::TERRESTIAL, UnitSystems::MKS, stepsPerSecond, SolverType::SI)
+AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
 {
 }
 
@@ -100,9 +100,9 @@ void AcrobotTestManager::BuildScenario()
     //fe->AddRevoluteJoint(0, 1, btVector3(0,0,0), btVector3(1,0,0));
     //fe->AddRevoluteJoint(1, 2, btVector3(0,-0.5,0), btVector3(1,0,0));
     //fe->AddRevoluteJoint(2, 3, btVector3(0,-1.0,0), btVector3(1,0,0));
-    fe->AddFixedJoint(0, 1, btVector3(0,0,0));
-    fe->AddFixedJoint(1, 2, btVector3(0,-0.5,0));
-    fe->AddFixedJoint(2, 3, btVector3(0,-1.0,0));
+    fe->AddFixedJoint("Fix1", 0, 1, btVector3(0,0,0));
+    fe->AddFixedJoint("Fix2", 1, 2, btVector3(0,-0.5,0));
+    fe->AddFixedJoint("Fix3", 2, 3, btVector3(0,-1.0,0));
     
     /*fe->AddJointMotor(0, 10000.0);
     fe->MotorVelocitySetpoint(0, 0.0, 1.0);
@@ -132,7 +132,7 @@ void AcrobotTestManager::BuildScenario()
     
     FeatherstoneEntity* feB1 = new FeatherstoneEntity("Manipulator21", 2, baseLinkB, getDynamicsWorld(), true);
     feB1->AddLink(link1B, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.25,0)), getDynamicsWorld());
-    feB1->AddFixedJoint(0, 1, btVector3(0,0,0));
+    feB1->AddFixedJoint("Fix1", 0, 1, btVector3(0,0,0));
     //feB1->AddRevoluteJoint(0, 1, btVector3(0,0,0), btVector3(1,0,0));
     AddFeatherstoneEntity(feB1, btTransform(btQuaternion::getIdentity(), btVector3(0.1,0,0.5)));
     

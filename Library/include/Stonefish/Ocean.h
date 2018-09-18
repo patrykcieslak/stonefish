@@ -52,6 +52,7 @@ public:
     OpenGLOcean* getOpenGLOcean();
     ForcefieldType getForcefieldType();
     
+	void InitGraphics();
     std::vector<Renderable> Render();
     
 private:	
