@@ -53,11 +53,15 @@ void AcrobotTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.01, 0.01);
     
     /////// LOOKS
+    int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, GetShaderPath() + "grid.png");
     int grey = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.5, 0.0);
 	int shiny = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.3, 0.0);
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.1, 0.0);
     
     /////// OBJECTS
+    Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Concrete"), grid);
+    AddStaticEntity(floor, btTransform::getIdentity());
+    
     //Obstacle* box1 = new Obstacle("B1", btVector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
     //AddStaticEntity(box1, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-1.0,0.44)));
     /*Box* box2 = new Box("B2", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Concrete"), shiny);

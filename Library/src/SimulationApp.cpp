@@ -16,10 +16,10 @@ SimulationApp::SimulationApp(std::string name, std::string dataDirPath, Simulati
     SimulationApp::handle = this;
 	appName = name;
     dataPath = dataDirPath;
+    simulation = sim;
     finished = false;
     running = false;
-    simulation = sim;
-	physicsTime = 0.0;
+    physicsTime = 0.0;
 }
 
 SimulationApp::~SimulationApp()

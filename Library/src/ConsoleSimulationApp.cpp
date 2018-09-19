@@ -38,8 +38,10 @@ void ConsoleSimulationApp::Loop()
 {
     while(!hasFinished())
     {
-		//btScalar simTime = getSimulationManager()->getSimulationTime();
-		//cInfo("Simulation time: %1.3lf s", simTime);
+#ifdef DEBUG
+		btScalar simTime = getSimulationManager()->getSimulationTime();
+		cInfo("Simulation time: %1.3lf s", simTime);
+#endif
     }
 }
 
@@ -63,11 +65,11 @@ void ConsoleSimulationApp::ResumeSimulation()
 
 void ConsoleSimulationApp::StopSimulation()
 {
+    SimulationApp::StopSimulation();
+    
 	int status;
     SDL_WaitThread(simulationThread, &status);
     simulationThread = NULL;
-	
-	SimulationApp::StopSimulation();
 }
 
 //Static

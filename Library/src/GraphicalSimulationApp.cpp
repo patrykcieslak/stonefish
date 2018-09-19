@@ -248,7 +248,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 			
 		case SDLK_w: //Forward
 		{
-			OpenGLTrackball* trackball = simulation->getTrackball();
+			OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
                 trackball->MoveCenter(trackball->GetLookingDirection() * 0.1);
 		}
@@ -256,7 +256,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 			
 		case SDLK_s: //Backward
 		{
-			OpenGLTrackball* trackball = simulation->getTrackball();
+			OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
                 trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1);
 		}
@@ -264,7 +264,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 			
 		case SDLK_a: //Left
 		{
-			OpenGLTrackball* trackball = simulation->getTrackball();
+			OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
             {
                 glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
@@ -275,7 +275,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 			
 		case SDLK_d: //Right
 		{
-			OpenGLTrackball* trackball = simulation->getTrackball();
+			OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
             {
                 glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
@@ -286,7 +286,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             
         case SDLK_q: //Up
         {
-            OpenGLTrackball* trackball = simulation->getTrackball();
+            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
                 trackball->MoveCenter(glm::vec3(0,0,0.1));
         }
@@ -294,7 +294,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             
         case SDLK_z: //Down
         {
-            OpenGLTrackball* trackball = simulation->getTrackball();
+            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
                 trackball->MoveCenter(glm::vec3(0,0,-0.1));
         }
@@ -388,7 +388,7 @@ void GraphicalSimulationApp::Loop()
                     //Trackball
                     if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
                     {
-                        OpenGLTrackball* trackball = simulation->getTrackball();
+                        OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                         if(trackball->isEnabled())
                             trackball->MouseUp();
                     }
@@ -403,7 +403,7 @@ void GraphicalSimulationApp::Loop()
                     //GUI
                     IMGUI::getInstance()->MouseMove(event.motion.x, event.motion.y);
                     
-                    OpenGLTrackball* trackball = simulation->getTrackball();
+                    OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                     if(trackball->isEnabled())
                     {
                         GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
@@ -423,7 +423,7 @@ void GraphicalSimulationApp::Loop()
                     else
                     {
                         //Trackball
-                        OpenGLTrackball* trackball = simulation->getTrackball();
+                        OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                         if(trackball->isEnabled())
                             trackball->MouseScroll(event.wheel.y * -1.f);
                         
@@ -469,12 +469,12 @@ void GraphicalSimulationApp::Loop()
         //workaround for checking if IMGUI is being manipulated
         if(mouseWasDown && !IMGUI::getInstance()->isAnyActive())
         {
-            lastPicked = simulation->PickEntity(event.button.x, event.button.y);
+            lastPicked = getSimulationManager()->PickEntity(event.button.x, event.button.y);
             
             //Trackball
             if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
             {
-                OpenGLTrackball* trackball = simulation->getTrackball();
+                OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                 
                 if(trackball->isEnabled())
                 {
@@ -501,12 +501,12 @@ void GraphicalSimulationApp::RenderLoop()
     //Do some updates
     if(!isRunning())
     {
-        simulation->UpdateDrawingQueue();
+        getSimulationManager()->UpdateDrawingQueue();
     }
 	
     //Rendering
     uint64_t startTime = GetTimeInMicroseconds();
-	OpenGLPipeline::getInstance()->Render(simulation);
+	OpenGLPipeline::getInstance()->Render(getSimulationManager());
     OpenGLPipeline::getInstance()->DrawDisplay();
     
     //GUI & Console
@@ -584,11 +584,11 @@ void GraphicalSimulationApp::ResumeSimulation()
 
 void GraphicalSimulationApp::StopSimulation()
 {
-	int status;
+	SimulationApp::StopSimulation();
+    
+    int status;
     SDL_WaitThread(simulationThread, &status);
     simulationThread = NULL;
-	
-	SimulationApp::StopSimulation();
 }
 
 void GraphicalSimulationApp::CleanUp()

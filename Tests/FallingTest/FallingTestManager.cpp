@@ -40,16 +40,21 @@ void FallingTestManager::BuildScenario()
     setICSolverParams(false);
 	
     ///////MATERIALS////////
+    getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
 	getMaterialManager()->CreateMaterial("Steel", UnitSystem::Density(CGS, MKS, 1.0), 0.1);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
     getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
 	///////LOOKS///////////
+    int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, GetShaderPath() + "grid.png");
     int yellow = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 0.6f, 0.2f), 0.2f, 0.f);
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
 	
     ////////OBJECTS
+    Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
+    AddStaticEntity(floor, btTransform::getIdentity());
+    
     //Setup model paths
     std::string path = GetDataPath() + "torpedo.stl";
 	

@@ -77,7 +77,6 @@ private:
     SDL_Window* window;
     SDL_Joystick* joystick;
     
-    SimulationManager* simulation;
     Entity* lastPicked;
 	bool displayHUD;
     bool displayConsole;
