@@ -30,7 +30,6 @@ void ConsoleSimulationApp::Init()
 {
 	cInfo("Initializing simulation:");
     InitializeSimulation();
-	StartSimulation();
     cInfo("Running...");
 }
 

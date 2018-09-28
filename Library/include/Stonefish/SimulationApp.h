@@ -21,7 +21,7 @@ public:
     SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim);
     virtual ~SimulationApp();
     
-	void Run();
+	void Run(bool autostart = true);
 	
     virtual bool hasGraphics() = 0;
 	SimulationManager* getSimulationManager();

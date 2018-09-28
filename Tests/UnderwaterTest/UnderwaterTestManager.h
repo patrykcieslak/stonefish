@@ -17,6 +17,7 @@ public:
     UnderwaterTestManager(btScalar stepsPerSecond);
     
     void BuildScenario();
+    void SimulationStepCompleted();
 };
 
 #endif

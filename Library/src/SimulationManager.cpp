@@ -1168,7 +1168,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
     	
     //Clear all forces to ensure that no summing occurs
     mbDynamicsWorld->clearForces(); //Includes clearing of multibody forces!
-    
+        
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
     for(unsigned int i = 0; i < simManager->actuators.size(); ++i)
         simManager->actuators[i]->Update(timeStep);

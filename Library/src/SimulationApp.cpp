@@ -65,9 +65,10 @@ void SimulationApp::InitializeSimulation()
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.", btGetVersion()/100, btGetVersion()%100);
 }
 
-void SimulationApp::Run()
+void SimulationApp::Run(bool autostart)
 {
 	Init();
+    if(autostart) StartSimulation();
 	Loop();
 	CleanUp();
 }

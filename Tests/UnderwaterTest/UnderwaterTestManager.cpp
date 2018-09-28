@@ -296,3 +296,9 @@ void UnderwaterTestManager::BuildScenario()
 	//trig->setRenderable(false);
 	//AddEntity(trig);	
 }
+
+void UnderwaterTestManager::SimulationStepCompleted()
+{
+    UnderwaterVehicle* vehicle = (UnderwaterVehicle*)getEntity("AUV");
+    std::cout << vehicle->getName();
+}

@@ -17,7 +17,7 @@ int main(int argc, const char * argv[])
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(500.0);
     UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", 1500, 1000, simulationManager);
-    app.Run();
+    app.Run(false);
     
     return 0;
 }
