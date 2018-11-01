@@ -6,11 +6,13 @@
     </Plugin>
   </Plugins>
   <VirtualDirectory Name="include">
+    <File Name="ConsoleTestApp.h"/>
     <File Name="ConsoleTestManager.h"/>
   </VirtualDirectory>
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="ConsoleTestApp.cpp"/>
     <File Name="ConsoleTestManager.cpp"/>
     <File Name="main.cpp"/>
   </VirtualDirectory>

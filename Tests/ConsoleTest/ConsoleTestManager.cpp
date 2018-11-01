@@ -7,13 +7,35 @@
 //
 
 #include "ConsoleTestManager.h"
+
 #include "ConsoleSimulationApp.h"
+#include "Plane.h"
+#include "Sphere.h"
+#include "ColorCamera.h"
 
 ConsoleTestManager::ConsoleTestManager(btScalar stepsPerSecond) 
-    : SimulationManager(UnitSystems::MKS, false, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
+    : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
 {
 }
 
 void ConsoleTestManager::BuildScenario()
 {
+	//Create materials
+	getMaterialManager()->CreateMaterial("Rock", UnitSystem::Density(CGS, MKS, 3.0), 0.8);
+	getMaterialManager()->SetMaterialsInteraction("Rock", "Rock", 0.9, 0.7);
+	
+	//Build scene	
+	Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"));
+    AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+	
+	Sphere* sph = new Sphere("Sphere", 0.1, getMaterialManager()->getMaterial("Rock"));
+	AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0,0,1.0)));
+}
+
+void ConsoleTestManager::SimulationStepCompleted()
+{
+	SimulationManager::SimulationStepCompleted();
+	
+    SolidEntity* ent = (SolidEntity*)getEntity("Sphere");
+	cInfo("Sphere height: %1.3lf", ent->getTransform().getOrigin().getZ());
 }

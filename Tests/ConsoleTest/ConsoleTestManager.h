@@ -17,6 +17,7 @@ public:
     ConsoleTestManager(btScalar stepsPerSecond);
     
     void BuildScenario();
+	void SimulationStepCompleted();
 };
 
 #endif

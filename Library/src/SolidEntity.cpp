@@ -11,6 +11,7 @@
 #include "SystemUtil.hpp"
 #include "Console.h"
 #include "Ocean.h"
+#include "SimulationApp.h"
 
 SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScalar thickness, bool isBuoyant) : Entity(uniqueName)
 {
@@ -717,7 +718,7 @@ btScalar SolidEntity::LambKFactor(btScalar r1, btScalar r2)
 
 void SolidEntity::BuildGraphicalObject()
 {
-	if(mesh == NULL)
+	if(mesh == NULL || !SimulationApp::getApp()->hasGraphics())
 		return;
 		
 	objectId = OpenGLContent::getInstance()->BuildObject(mesh);	

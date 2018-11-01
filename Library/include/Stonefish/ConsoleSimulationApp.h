@@ -25,8 +25,7 @@ public:
 	
 protected:
 	void Init();
-    void Loop();
-	
+    virtual void Loop();
 	void StartSimulation();
     void ResumeSimulation();
     void StopSimulation();

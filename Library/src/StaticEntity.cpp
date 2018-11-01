@@ -8,6 +8,7 @@
 
 #include "StaticEntity.h"
 #include "MathsUtil.hpp"
+#include "SimulationApp.h"
 
 StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
@@ -99,9 +100,17 @@ std::vector<Renderable> StaticEntity::Render()
 	return items;
 }
 
+void StaticEntity::BuildGraphicalObject()
+{
+	if(mesh == NULL || !SimulationApp::getApp()->hasGraphics())
+		return;
+		
+	objectId = OpenGLContent::getInstance()->BuildObject(mesh);	
+}
+
 void StaticEntity::BuildRigidBody(btCollisionShape* shape)
 {
-    btDefaultMotionState* motionState = new btDefaultMotionState();
+	btDefaultMotionState* motionState = new btDefaultMotionState();
     
     shape->setMargin(0.0);
     
@@ -114,6 +123,8 @@ void StaticEntity::BuildRigidBody(btCollisionShape* shape)
     rigidBody = new btRigidBody(rigidBodyCI);
     rigidBody->setUserPointer(this);
     rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK | btCollisionObject::CF_STATIC_OBJECT);
+	
+	BuildGraphicalObject();
 }
 
 void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)

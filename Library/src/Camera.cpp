@@ -12,7 +12,13 @@
 
 Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency) : Sensor(uniqueName, frequency)
 {
-    g2s = UnitSystem::SetTransform(geomToSensor);
+	if(!SimulationApp::getApp()->hasGraphics())
+	{
+		std::cerr << "Not possible to use cameras in console simulation! Use graphical simulation if possible.";
+		abort();
+	}
+	
+	g2s = UnitSystem::SetTransform(geomToSensor);
     attach = attachment;
     fovH = horizFOVDeg;
     resx = resX;

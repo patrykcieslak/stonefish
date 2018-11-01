@@ -834,6 +834,10 @@ void SimulationManager::AdvanceSimulation()
 
 void SimulationManager::SimulationStepCompleted()
 {
+#ifdef DEBUG
+	if(!SimulationApp::getApp()->hasGraphics())
+		cInfo("Simulation time: %1.3lf s", getSimulationTime());
+#endif	
 }
 
 void SimulationManager::UpdateDrawingQueue()

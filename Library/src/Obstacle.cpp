@@ -11,9 +11,7 @@
 Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : StaticEntity(uniqueName, m, lookId)
 {
     scale = UnitSystem::SetLength(scale);
-    
     mesh = OpenGLContent::LoadMesh(modelFilename, scale, smoothNormals);
-    objectId = OpenGLContent::getInstance()->BuildObject(mesh);
     
     btScalar* vertices = new btScalar[mesh->vertices.size()*3];
     int* indices = new int[mesh->faces.size()*3];
@@ -45,36 +43,30 @@ Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar s
 Obstacle::Obstacle(std::string uniqueName, btScalar sphereRadius, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     sphereRadius = UnitSystem::SetLength(sphereRadius);
+    mesh = OpenGLContent::BuildSphere(sphereRadius);
     
     btSphereShape* shape = new btSphereShape(sphereRadius);
     BuildRigidBody(shape);
-    
-    mesh = OpenGLContent::BuildSphere(sphereRadius);
-    objectId = OpenGLContent::getInstance()->BuildObject(mesh);
 }
 
 Obstacle::Obstacle(std::string uniqueName, btVector3 boxDimensions, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     btVector3 halfExtents = UnitSystem::SetPosition(boxDimensions/btScalar(2));
-    
-    btBoxShape* shape = new btBoxShape(halfExtents);
-    BuildRigidBody(shape);
-    
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
 	mesh = OpenGLContent::BuildBox(glHalfExtents);
-	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
+	
+    btBoxShape* shape = new btBoxShape(halfExtents);
+    BuildRigidBody(shape);
 }
 
 Obstacle::Obstacle(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     cylinderRadius = UnitSystem::SetLength(cylinderRadius);
     btScalar halfHeight = UnitSystem::SetLength(cylinderHeight/btScalar(2));
-    
+    mesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);
+	
     btCylinderShape* shape = new btCylinderShape(btVector3(cylinderRadius, halfHeight, cylinderRadius));
     BuildRigidBody(shape);
-    
-    mesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);
-	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
 }
 
 StaticEntityType Obstacle::getStaticType()

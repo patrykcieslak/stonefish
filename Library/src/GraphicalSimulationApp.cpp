@@ -107,7 +107,7 @@ void GraphicalSimulationApp::Init()
     
     cInfo("Initializing simulation:");
     InitializeSimulation();
-    cInfo("Running...");
+    cInfo("Ready for running...");
     
     //Close loading console - exit loading thread
     SDL_Delay(1000);

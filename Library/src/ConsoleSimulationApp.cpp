@@ -30,18 +30,12 @@ void ConsoleSimulationApp::Init()
 {
 	cInfo("Initializing simulation:");
     InitializeSimulation();
-    cInfo("Running...");
+    cInfo("Ready for running...");
 }
 
 void ConsoleSimulationApp::Loop()
 {
-    while(!hasFinished())
-    {
-#ifdef DEBUG
-		btScalar simTime = getSimulationManager()->getSimulationTime();
-		cInfo("Simulation time: %1.3lf s", simTime);
-#endif
-    }
+	while(!hasFinished());
 }
 
 void ConsoleSimulationApp::StartSimulation()

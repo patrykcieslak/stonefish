@@ -42,6 +42,8 @@ public:
     
 protected:
     void BuildRigidBody(btCollisionShape* shape);
+	void BuildGraphicalObject();
+	
     btRigidBody* rigidBody;
 	Material mat;
     Mesh* mesh;
