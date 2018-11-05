@@ -8,16 +8,16 @@
 
 #include <actuators/Actuator.h>
 
-NameManager Actuator::nameManager;
+#include <core/SimulationApp.h>
 
 Actuator::Actuator(std::string uniqueName)
 {
-    name = nameManager.AddName(uniqueName);
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
 }
 
 Actuator::~Actuator()
 {
-    nameManager.RemoveName(name);
+    SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 std::string Actuator::getName()

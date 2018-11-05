@@ -10,7 +10,6 @@
 #define __Stonefish_Actuator__
 
 #include <common.h>
-#include <core/NameManager.h>
 #include <graphics/OpenGLContent.h>
 
 typedef enum {ACTUATOR_MOTOR, ACTUATOR_THRUSTER, ACTUATOR_LIGHT} ActuatorType;
@@ -30,7 +29,6 @@ public:
     
 private:
     std::string name;
-    static NameManager nameManager;
 };
 
 #endif 

@@ -10,7 +10,6 @@
 #define __Stonefish_Sensor__
 
 #include <core/UnitSystem.h>
-#include <core/NameManager.h>
 #include <graphics/OpenGLPipeline.h>
 #include <random>
 
@@ -49,8 +48,6 @@ private:
     btScalar eleapsedTime;
     bool renderable;
     bool newDataAvailable;
-    
-    static NameManager nameManager;
 };
 
 #endif

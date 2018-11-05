@@ -9,15 +9,14 @@
 #ifndef __Stonefish_FeatherstoneEntity__
 #define __Stonefish_FeatherstoneEntity__
 
+#include <entities/SolidEntity.h>
+#include <entities/StaticEntity.h>
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLink.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
-#include "Entity.h"
-#include "SolidEntity.h"
-#include "StaticEntity.h"
 
 struct FeatherstoneLink
 {
@@ -53,11 +52,11 @@ struct FeatherstoneJoint
 class FeatherstoneEntity : public Entity
 {
 public:
-    FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, btMultiBodyDynamicsWorld* world, bool fixedBase = false);
+    FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, bool fixedBase = false);
     virtual ~FeatherstoneEntity();
     
     //Multibody definition
-    void AddLink(SolidEntity* solid, const btTransform& transform, btMultiBodyDynamicsWorld* world);
+    void AddLink(SolidEntity* solid, const btTransform& transform);
     int AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
     int AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
 	int AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot);

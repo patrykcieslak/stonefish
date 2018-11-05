@@ -10,7 +10,6 @@
 #define __Stonefish_Joint__
 
 #include <common.h>
-#include <core/NameManager.h>
 #include <entities/SolidEntity.h>
 #include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
 
@@ -56,8 +55,6 @@ private:
     bool collisionEnabled;
     btTypedConstraint* constraint;
 	btMultiBodyConstraint* mbConstraint;
-    
-    static NameManager nameManager;
 };
 
 

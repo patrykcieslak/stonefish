@@ -8,11 +8,11 @@
 
 #include <joints/Joint.h>
 
-NameManager Joint::nameManager;
+#include <core/SimulationApp.h>
 
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
-    name = nameManager.AddName(uniqueName);
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     renderable = false;
     collisionEnabled = collideLinkedEntities;
 	mbConstraint = NULL;
@@ -21,7 +21,7 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 
 Joint::~Joint(void)
 {
-    nameManager.RemoveName(name);
+	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 void Joint::setRenderable(bool render)

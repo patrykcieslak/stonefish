@@ -8,11 +8,11 @@
 
 #include <controllers/Controller.h>
 
-NameManager Controller::nameManager;
+#include <core/SimulationApp.h>
 
 Controller::Controller(std::string uniqueName, btScalar frequency)
 {
-    name = nameManager.AddName(uniqueName);
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     freq = frequency;
     eleapsedTime = btScalar(0.);
     runningTime = btScalar(0.);
@@ -21,7 +21,7 @@ Controller::Controller(std::string uniqueName, btScalar frequency)
 
 Controller::~Controller()
 {
-    nameManager.RemoveName(name);
+    SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 btScalar Controller::getFrequency()

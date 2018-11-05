@@ -10,7 +10,6 @@
 
 #include <graphics/OpenGLTrackball.h>
 #include <actuators/DCMotor.h>
-#include "NativeDialog.h"
 #include <sensors/ForceTorque.h>
 #include <sensors/Torque.h>
 
@@ -83,28 +82,9 @@ void AcrobotTestApp::DoHUD()
    // Torque* tau = (Torque*)getSimulationManager()->getSensor("Torque");
     //std::cout << "Tau: " << tau->getLastSample().data[0] << std::endl;
  
-    /*if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
-    {
-        StopSimulation();
-        
-        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
-        openDialog->Show();
-     
-        char* pathToFile;
-        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
-        {
-			SimpleSensor* sensor = (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"); 
-			sensor->SaveMeasurementsToTextFile(pathToFile);
-        }
-     
-        delete [] pathToFile;
-        delete openDialog;
-        
-        ResumeSimulation();
-     }
-	 
-	 FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("FE");
-	 btVector3 f, tau;
-	 fe->getJointFeedback(2, f, tau);
-	 std::cout << "Force=(" << f.x() << "," << f.y() << "," << f.z() << ") Torque=(" << tau.x() << "," << tau.y() << "," << tau.z() << ")" << std::endl;	 */
+    /*IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
+	FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("FE");
+	btVector3 f, tau;
+	fe->getJointFeedback(2, f, tau);
+	std::cout << "Force=(" << f.x() << "," << f.y() << "," << f.z() << ") Torque=(" << tau.x() << "," << tau.y() << "," << tau.z() << ")" << std::endl;	 */
 }

@@ -11,7 +11,7 @@
 #include <graphics/Console.h>
 #include <graphics/OpenGLContent.h>
 #include <utils/SystemUtil.hpp>
-#include "stb_image.h"
+#include <utils/stb_image.h>
 #include <stdio.h>
 #include <math.h>
 

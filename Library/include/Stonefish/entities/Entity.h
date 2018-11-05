@@ -10,7 +10,6 @@
 #define __Stonefish_Entity__
 
 #include <core/UnitSystem.h>
-#include <core/NameManager.h>
 #include <graphics/OpenGLContent.h>
 
 #define BIT(x) (1<<(x))
@@ -53,8 +52,6 @@ protected:
 private:
     bool renderable;
     std::string name;
-    
-    static NameManager nameManager;
 };
 
 #endif

@@ -8,9 +8,8 @@
 
 #include "FallingTestApp.h"
 
-#include "Manipulator.h"
-#include "NativeDialog.h"
-#include "Accelerometer.h"
+#include <entities/systems/Manipulator.h>
+#include <sensors/Accelerometer.h>
 
 FallingTestApp::FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim) 
     : GraphicalSimulationApp("Falling Test", dataDirPath, width, height, sim)
@@ -71,6 +70,7 @@ void FallingTestApp::DoHUD()
     l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
     
 	*/
+	
     //Right side
     /*ui_id plot;
     plot.owner = 1;
@@ -80,29 +80,5 @@ void FallingTestApp::DoHUD()
     dims.push_back(2);
 	dims.push_back(0);
     
-    if(IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height"))
-    {
-        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
-        openDialog->Show();
-        
-        char* pathToFile;
-        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
-        {
-            const std::deque<Sample*>& data = ((SimpleSensor*)getSimulationManager()->getSensor(0))->getHistory();
-            if(data.size() > 0)
-            {
-                FILE* fp;
-                fp = fopen(pathToFile, "wt");
-                
-                for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6lf\t%1.6lf\n", data[i]->getTimestamp(), data[i]->getValue(2));
-                fclose(fp);
-                
-                cInfo("Saved plot data to %s.\n", pathToFile);
-            }
-        }
-        
-        delete [] pathToFile;
-        delete openDialog;
-    }*/
+    IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height");*/
 }

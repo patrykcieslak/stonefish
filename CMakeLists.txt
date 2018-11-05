@@ -13,7 +13,6 @@ find_package(Bullet REQUIRED)
 
 include_directories(
     Library/include/Stonefish
-    Library/3rdparty
     ${OPENGL_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
@@ -22,10 +21,8 @@ include_directories(
 )
 
 file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
-file(GLOB SOURCES_3RDPARTY_C "${CMAKE_CURRENT_SOURCE_DIR}/Library/3rdparty/*.c")
-file(GLOB SOURCES_3RDPARTY_CXX "${CMAKE_CURRENT_SOURCE_DIR}/Library/3rdparty/*.cpp")
 
-add_library(Stonefish SHARED ${SOURCES} ${SOURCES_3RDPARTY_C} ${SOURCES_3RDPARTY_CXX})
+add_library(Stonefish SHARED ${SOURCES})
 target_link_libraries(Stonefish ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} GLEW)
 
 install(

@@ -17,6 +17,7 @@
 #define cInfo(format, ...)     Console::getInstance()->Print(0, format, ##__VA_ARGS__)
 #define cWarning(format, ...)  Console::getInstance()->Print(1, format, ##__VA_ARGS__)
 #define cError(format, ...)    Console::getInstance()->Print(2, format, ##__VA_ARGS__)
+#define cCritical(format, ...) {Console::getInstance()->Print(3, format, ##__VA_ARGS__);abort();}
 
 typedef struct
 {

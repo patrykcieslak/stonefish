@@ -96,10 +96,10 @@ void AcrobotTestManager::BuildScenario()
     //Box* link3 = new Box("Link1", btVector3(0.1,0.1,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
     //link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
     
-    FeatherstoneEntity* fe = new FeatherstoneEntity("Manipulator1", 4, baseLink, getDynamicsWorld(), true);
-    fe->AddLink(link1, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.25,0)), getDynamicsWorld());
-    fe->AddLink(link2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.75,0)), getDynamicsWorld());
-    fe->AddLink(link3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-1.25,0)), getDynamicsWorld());
+    FeatherstoneEntity* fe = new FeatherstoneEntity("Manipulator1", 4, baseLink, true);
+    fe->AddLink(link1, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.25,0)));
+    fe->AddLink(link2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.75,0)));
+    fe->AddLink(link3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-1.25,0)));
     
     //fe->AddRevoluteJoint(0, 1, btVector3(0,0,0), btVector3(1,0,0));
     //fe->AddRevoluteJoint(1, 2, btVector3(0,-0.5,0), btVector3(1,0,0));
@@ -134,16 +134,16 @@ void AcrobotTestManager::BuildScenario()
     //Torque* tau = new Torque("Torque", fe, 1);
     //AddSensor(tau);
     
-    FeatherstoneEntity* feB1 = new FeatherstoneEntity("Manipulator21", 2, baseLinkB, getDynamicsWorld(), true);
-    feB1->AddLink(link1B, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.25,0)), getDynamicsWorld());
+    FeatherstoneEntity* feB1 = new FeatherstoneEntity("Manipulator21", 2, baseLinkB, true);
+    feB1->AddLink(link1B, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0,-0.25,0)));
     feB1->AddFixedJoint("Fix1", 0, 1, btVector3(0,0,0));
     //feB1->AddRevoluteJoint(0, 1, btVector3(0,0,0), btVector3(1,0,0));
     AddFeatherstoneEntity(feB1, btTransform(btQuaternion::getIdentity(), btVector3(0.1,0,0.5)));
     
-    FeatherstoneEntity* feB2 = new FeatherstoneEntity("Manipulator22", 1, link2B, getDynamicsWorld(), false);
+    FeatherstoneEntity* feB2 = new FeatherstoneEntity("Manipulator22", 1, link2B, false);
     AddFeatherstoneEntity(feB2, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0.1,-0.75,0.5)));
     
-    FeatherstoneEntity* feB3 = new FeatherstoneEntity("Manipulator23", 1, link3B, getDynamicsWorld(), false);
+    FeatherstoneEntity* feB3 = new FeatherstoneEntity("Manipulator23", 1, link3B, false);
     AddFeatherstoneEntity(feB3, btTransform(btQuaternion(0,0,M_PI_2), btVector3(0.1,-1.25,0.5)));
     
     FixedJoint* ftFix = new FixedJoint("Fix", feB2, feB1, -1, 0, btVector3(0.1,-0.5,0.5));

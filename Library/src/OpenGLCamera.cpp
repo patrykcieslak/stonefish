@@ -12,7 +12,7 @@
 #include <graphics/Console.h>
 #include <utils/MathsUtil.hpp>
 #include <utils/SystemUtil.hpp>
-#include "MersenneTwister.hpp"
+#include <random>
 
 GLSLShader** OpenGLCamera::depthAwareBlurShader = NULL;
 GLSLShader* OpenGLCamera::lightMeterShader = NULL;
@@ -251,20 +251,20 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
 		glNamedBufferStorageEXT(aoDataUBO, sizeof(AOData), NULL, GL_DYNAMIC_STORAGE_BIT);
 		
 		//Generate random data
-		MTRand rng;
-		float numDir = 8; // keep in sync to glsl
-		rng.seed((unsigned)0);
-
-		for(int i=0; i<HBAO_RANDOM_ELEMENTS; ++i)
+		std::mt19937 rng(GetTimeInMicroseconds());
+		GLfloat numDir = 8; //Keep in sync with GLSL shader!!!
+		GLfloat rngMax = (GLfloat)rng.max() + 1.f; 
+		
+		for(unsigned int i=0; i<HBAO_RANDOM_ELEMENTS; ++i)
 		{
-			float Rand1 = rng.randExc();
-			float Rand2 = rng.randExc();
+			GLfloat rand1 = (GLfloat)rng()/rngMax; //random in [0,1)
+			GLfloat rand2 = (GLfloat)rng()/rngMax; //random in [0,1)
 
 			//Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
-			float angle = 2.f * M_PI * Rand1 / numDir;
+			GLfloat angle = 2.f * M_PI * rand1 / numDir;
 			aoData.jitters[i].x = cosf(angle);
 			aoData.jitters[i].y = sinf(angle);
-			aoData.jitters[i].z = Rand2;
+			aoData.jitters[i].z = rand2;
 			aoData.jitters[i].w = 0;
 			
 			aoData.float2Offsets[i] = glm::vec4((GLfloat)(i%4) + 0.5f, (GLfloat)(i/4) + 0.5f, 0.0, 0.0);

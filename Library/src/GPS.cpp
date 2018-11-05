@@ -9,12 +9,11 @@
 #include <sensors/GPS.h>
 
 #include <core/SimulationApp.h>
-#include <Ned.h>
 
 GPS::GPS(std::string uniqueName, btScalar latitudeDeg, btScalar longitudeDeg, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {
     attach = attachment;
-    ned = new Ned(latitudeDeg, longitudeDeg, btScalar(0.0));
+    ned = new NED(latitudeDeg, longitudeDeg, btScalar(0.0));
     nedStdDev = btScalar(0);
     
     channels.push_back(SensorChannel("Latitude", QUANTITY_ANGLE));
@@ -43,7 +42,7 @@ void GPS::InternalUpdate(btScalar dt)
     else
     {
         btVector3 gpsPos = gpsTrans.getOrigin();
-        
+		
         //Add noise
         if(!btFuzzyZero(nedStdDev))
         {

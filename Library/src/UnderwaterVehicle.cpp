@@ -8,11 +8,9 @@
 
 #include <entities/systems/UnderwaterVehicle.h>
 
-#include <core/SimulationApp.h>
-
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid) : SystemEntity(uniqueName)
 {
-    vehicleBody = new FeatherstoneEntity(uniqueName + "/FE", 1, bodySolid, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
+    vehicleBody = new FeatherstoneEntity(uniqueName + "/FE", 1, bodySolid, false);
     showInternals = false;
     lastLinearVel = btVector3(0,0,0);
     lastAngularVel = btVector3(0,0,0);

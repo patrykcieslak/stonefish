@@ -46,6 +46,7 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
     physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
+	nameManager = NULL;
     materialManager = NULL;
     dynamicsWorld = NULL;
     dwSolver = NULL;
@@ -70,9 +71,11 @@ SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btSca
 
 SimulationManager::~SimulationManager()
 {
-    DestroyScenario();
+	DestroyScenario();
     SDL_DestroyMutex(simSettingsMutex);
     SDL_DestroyMutex(simInfoMutex);
+	delete materialManager;
+	delete nameManager;
 }
 
 void SimulationManager::AddEntity(Entity *ent)
@@ -388,6 +391,11 @@ MaterialManager* SimulationManager::getMaterialManager()
     return materialManager;
 }
 
+NameManager* SimulationManager::getNameManager()
+{
+	return nameManager;
+}
+
 OpenGLTrackball* SimulationManager::getTrackball()
 {
     return trackball;
@@ -557,6 +565,9 @@ void SimulationManager::InitializeSolver()
     //Set default params
     g = btScalar(9.81);
     
+	//Create name manager
+	nameManager = new NameManager();
+	
     //Create material manager & load standard materials
     materialManager = new MaterialManager();
     
@@ -660,9 +671,12 @@ void SimulationManager::DestroyScenario()
         delete controllers[i];
     controllers.clear();
 	
+	if(nameManager != NULL)
+		nameManager->ClearNames();
+		
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
-		
+
 	OpenGLContent::getInstance()->DestroyContent();
 }
 

@@ -14,9 +14,10 @@
 #include <graphics/OpenGLLight.h>
 #include <utils/SystemUtil.hpp>
 #include <entities/forcefields/Ocean.h>
-#include "stb_image.h"
 #include <map>
 #include <algorithm>
+#define STB_IMAGE_IMPLEMENTATION
+#include <utils/stb_image.h>
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 

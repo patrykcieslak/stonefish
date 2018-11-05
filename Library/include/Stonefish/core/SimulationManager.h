@@ -116,6 +116,7 @@ public:
     btScalar getSimulationTime();
 	btScalar getRealtimeFactor();
     MaterialManager* getMaterialManager();
+	NameManager* getNameManager();
     OpenGLTrackball* getTrackball();
     bool isZAxisUp();
     bool isSimulationFresh();
@@ -164,6 +165,7 @@ private:
     bool icProblemSolved;
 	bool simulationFresh;
     
+	NameManager* nameManager;
     std::vector<Entity*> entities;
     std::vector<Joint*> joints;
     std::vector<Sensor*> sensors;

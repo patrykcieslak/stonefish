@@ -10,7 +10,7 @@
 
 #include <graphics/IMGUI.h>
 #include <utils/SystemUtil.hpp>
-#include "stb_image.h"
+#include <utils/stb_image.h>
 
 Console* Console::instance = NULL;
 
@@ -268,7 +268,25 @@ void Console::Print(int messageType, const char *format, ...)
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 	
-    printf("%s\n", buffer);
+	switch(messageType)
+	{
+		default:
+		case 0: //Info
+			printf("[INFO] %s\n", buffer);
+			break;
+			
+		case 1: //Warning
+			printf("\033[33m[WARN] %s\033[0m\n", buffer);
+			break;
+			
+		case 2: //Error
+			printf("\033[31m[ERROR] %s\033[0m\n", buffer);
+			break;
+			
+		case 3: //Critical
+			printf("\033[1;31m[CRITICAL] %s\033[0m\n", buffer);
+			break;
+	}
 	
 	if(ready)
 	{

@@ -8,8 +8,7 @@
 
 #include <entities/Entity.h>
 
-//Statics
-NameManager Entity::nameManager;
+#include <core/SimulationApp.h>
 
 btVector3 Entity::findInertiaAxis(btMatrix3x3 I, btScalar value)
 {
@@ -56,13 +55,13 @@ btVector3 Entity::findInertiaAxis(btMatrix3x3 I, btScalar value)
 //Class
 Entity::Entity(std::string uniqueName)
 {
-    name = nameManager.AddName(uniqueName);
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     renderable = true;
 }
 
 Entity::~Entity(void)
 {
-    nameManager.RemoveName(name);
+    SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 void Entity::setRenderable(bool render)

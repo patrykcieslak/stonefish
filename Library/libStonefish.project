@@ -9,6 +9,7 @@
   <Dependencies/>
   <VirtualDirectory Name="src">
     <VirtualDirectory Name="core">
+      <File Name="src/Robot.cpp"/>
       <File Name="src/ConsoleSimulationApp.cpp"/>
       <File Name="src/GraphicalSimulationApp.cpp"/>
       <File Name="src/ScrewConstraint.cpp"/>
@@ -118,6 +119,7 @@
       <File Name="src/SphericalJoint.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="sensors">
+      <File Name="src/NED.cpp"/>
       <File Name="src/Mux.cpp"/>
       <File Name="src/Sample.cpp"/>
       <File Name="src/SimpleSensor.cpp"/>
@@ -155,6 +157,7 @@
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <VirtualDirectory Name="sensors">
+      <File Name="include/Stonefish/sensors/NED.h"/>
       <File Name="include/Stonefish/sensors/TrueRotaryEncoder.h"/>
       <File Name="include/Stonefish/sensors/Trajectory.h"/>
       <File Name="include/Stonefish/sensors/Torque.h"/>
@@ -249,6 +252,7 @@
       <File Name="include/Stonefish/entities/CableEntity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
+      <File Name="include/Stonefish/utils/stb_image.h"/>
       <File Name="include/Stonefish/utils/SystemUtil.hpp"/>
       <File Name="include/Stonefish/utils/ScientificFileUtil.h"/>
       <File Name="include/Stonefish/utils/Polynomials.hpp"/>
@@ -274,6 +278,7 @@
       <File Name="include/Stonefish/graphics/Console.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
+      <File Name="include/Stonefish/core/Robot.h"/>
       <File Name="include/Stonefish/core/UnitSystem.h"/>
       <File Name="include/Stonefish/core/TorusShape.h"/>
       <File Name="include/Stonefish/core/SimulationManager.h"/>
@@ -288,17 +293,6 @@
       <File Name="include/Stonefish/core/ConsoleSimulationApp.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
-  </VirtualDirectory>
-  <VirtualDirectory Name="3rdparty">
-    <File Name="3rdparty/NativeDialog.cpp"/>
-    <File Name="3rdparty/NativeDialog.h"/>
-    <File Name="3rdparty/rapidxml.hpp"/>
-    <File Name="3rdparty/stb_image.c"/>
-    <File Name="3rdparty/stb_image.h"/>
-    <File Name="3rdparty/MersenneTwister.hpp"/>
-    <File Name="ToDo.txt" ExcludeProjConfig="Release"/>
-    <File Name="3rdparty/Ned.h"/>
-    <File Name="3rdparty/Ned.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">

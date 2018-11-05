@@ -8,9 +8,10 @@
 
 #include <entities/FeatherstoneEntity.h>
 
+#include <core/SimulationApp.h>
 #include <utils/MathsUtil.hpp>
 
-FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, btMultiBodyDynamicsWorld* world, bool fixedBase) : Entity(uniqueName)
+FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, bool fixedBase) : Entity(uniqueName)
 {
     //baseRenderable = fixedBase ? false : true;
     baseRenderable = true;
@@ -32,7 +33,7 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody->setUseGyroTerm(true);
     multiBody->setCanSleep(true);
    
-    AddLink(baseSolid, btTransform::getIdentity(), world);
+    AddLink(baseSolid, btTransform::getIdentity());
 	multiBody->finalizeMultiDof();
 }
 
@@ -337,14 +338,14 @@ unsigned int FeatherstoneEntity::getNumOfMovingJoints()
     return movingJoints;
 }
 
-void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transform, btMultiBodyDynamicsWorld* world)
+void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transform)
 {
     if(solid != NULL)
     {
         //Add link
         links.push_back(FeatherstoneLink(solid, UnitSystem::SetTransform(transform)));
         //Build collider
-        links.back().solid->BuildMultibodyLinkCollider(multiBody, (int)(links.size() - 1), world);
+        links.back().solid->BuildMultibodyLinkCollider(multiBody, (int)(links.size() - 1), SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld());
         
         if(links.size() > 1) //If not base link
         {

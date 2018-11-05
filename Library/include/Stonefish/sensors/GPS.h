@@ -9,9 +9,8 @@
 #ifndef __Stonefish_GPS__
 #define __Stonefish_GPS__
 
-#include "SimpleSensor.h"
-
-class Ned;
+#include <sensors/SimpleSensor.h>
+#include <sensors/NED.h>
 
 class GPS : public SimpleSensor
 {
@@ -25,7 +24,7 @@ public:
     
 private:
     SolidEntity* attach;
-    Ned* ned;
+    NED* ned;
     
     //Custom noise generation specific to GPS 
     btScalar nedStdDev;

@@ -13,7 +13,7 @@
 
 Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint) : SystemEntity(uniqueName)
 {
-	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), true);
+	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, true);
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
     nJoints = 0;
@@ -24,7 +24,7 @@ Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidE
 
 Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint, FeatherstoneEntity* attachment) : SystemEntity(uniqueName)
 {
-	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
+	chain = new FeatherstoneEntity(uniqueName + "/FE", numOfLinks+1, baseLink, false);
 	nTotalLinks = numOfLinks+1;
 	nLinks = 1;
 	DH.push_back(geomToJoint);
@@ -41,8 +41,6 @@ void Manipulator::AddRotLinkDH(std::string jointName, SolidEntity* link, const b
 {
 	if(nLinks < nTotalLinks)
 	{
-		btMultiBodyDynamicsWorld* world = SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld();
-		
 		//Link connected with parent in joint 
 		btTransform trans = DH.back() * geomToJoint.inverse();
 		
@@ -50,7 +48,7 @@ void Manipulator::AddRotLinkDH(std::string jointName, SolidEntity* link, const b
 		btVector3 pivot = DH.back().getOrigin();
 		
 		//Update Featherstone chain
-		chain->AddLink(link, trans, world);
+		chain->AddLink(link, trans);
 		chain->AddRevoluteJoint(jointName, nLinks-1, nLinks, pivot, DH.back().getBasis().getColumn(2)); //Revolve always around local Z axis, no collision between joint links
         
         if(lowerLimit < upperLimit)
@@ -84,10 +82,8 @@ void Manipulator::AddRotLinkURDF(std::string jointName, SolidEntity* link, const
 {
     if(nLinks < nTotalLinks)
     {
-        btMultiBodyDynamicsWorld* world = SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld();
-        
         btTransform linkTrans = DH.back() * trans;
-        chain->AddLink(link, linkTrans, world);
+        chain->AddLink(link, linkTrans);
 		chain->AddRevoluteJoint(jointName, nLinks-1, nLinks, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
         
         if(lowerLimit < upperLimit)

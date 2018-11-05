@@ -16,10 +16,10 @@ TwoFingerGripper::TwoFingerGripper(std::string uniqueName, Manipulator* m, Solid
     btScalar maxImpulse = btScalar(1)/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond() * UnitSystem::SetTorque(closingTorque);
     open = UnitSystem::SetAngle(openAngle)/btScalar(2);
  
-    mechanism = new FeatherstoneEntity(uniqueName + "/FE", 3, hand, world, false);
+    mechanism = new FeatherstoneEntity(uniqueName + "/FE", 3, hand, false);
     mechanism->setSelfCollision(false);
-    mechanism->AddLink(finger1, btTransform::getIdentity(), world);
-    mechanism->AddLink(finger2, btTransform::getIdentity(), world);
+    mechanism->AddLink(finger1, btTransform::getIdentity());
+    mechanism->AddLink(finger2, btTransform::getIdentity());
     mechanism->AddRevoluteJoint(uniqueName + "/FE/FingerJoint1", 0, 1, pivotA, axis);
     mechanism->AddRevoluteJoint(uniqueName + "/FE/FingerJoint2", 0, 2, pivotB, axis);
     mechanism->AddJointMotor(0, maxImpulse);

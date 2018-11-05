@@ -8,11 +8,9 @@
 
 #include <entities/systems/FixedGripper.h>
 
-#include <core/SimulationApp.h>
-
 FixedGripper::FixedGripper(std::string uniqueName, Manipulator* m, SolidEntity* hand) : Gripper(uniqueName, m)
 {
-    mechanism = new FeatherstoneEntity(uniqueName + "/FE", 1, hand, SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld(), false);
+    mechanism = new FeatherstoneEntity(uniqueName + "/FE", 1, hand, false);
 }
 
 void FixedGripper::SetState(btScalar openFraction)

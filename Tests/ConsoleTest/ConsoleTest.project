@@ -16,12 +16,14 @@
     <File Name="ConsoleTestManager.cpp"/>
     <File Name="main.cpp"/>
   </VirtualDirectory>
+  <Dependencies Name="Debug">
+    <Project Name="libStonefish"/>
+  </Dependencies>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-std=c++14" C_Options="" Assembler="">
         <IncludePath Value="."/>
         <IncludePath Value="../../Library/include/Stonefish"/>
-        <IncludePath Value="../../Library/3rdparty"/>
         <IncludePath Value="/usr/include/freetype2"/>
         <IncludePath Value="/usr/include/eigen3"/>
         <IncludePath Value="/usr/local/include/bullet"/>
@@ -129,7 +131,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug">
-    <Project Name="libStonefish"/>
-  </Dependencies>
 </CodeLite_Project>

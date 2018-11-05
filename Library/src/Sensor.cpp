@@ -12,13 +12,12 @@
 #include <graphics/Console.h>
 #include <utils/ScientificFileUtil.h>
 
-NameManager Sensor::nameManager;
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
 
 Sensor::Sensor(std::string uniqueName, btScalar frequency)
 {
-    name = nameManager.AddName(uniqueName);
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     freq = frequency == btScalar(0) ? btScalar(1) : frequency;
     eleapsedTime = btScalar(0);
     renderable = false;
@@ -27,7 +26,7 @@ Sensor::Sensor(std::string uniqueName, btScalar frequency)
 
 Sensor::~Sensor()
 {
-    nameManager.RemoveName(name);
+	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 std::string Sensor::getName()

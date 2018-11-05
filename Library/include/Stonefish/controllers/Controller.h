@@ -10,7 +10,6 @@
 #define __Stonefish_Controller__
 
 #include <common.h>
-#include <core/NameManager.h>
 
 typedef enum {CONTROLLER_FEEDBACK, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} ControllerType;
 
@@ -41,8 +40,6 @@ private:
     std::string name;
     btScalar eleapsedTime;
     bool running;
-    
-    static NameManager nameManager;
 };
 
 #endif

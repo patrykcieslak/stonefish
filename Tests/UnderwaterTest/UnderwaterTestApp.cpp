@@ -9,7 +9,6 @@
 #include "UnderwaterTestApp.h"
 
 #include <graphics/OpenGLTrackball.h>
-#include "NativeDialog.h"
 #include <entities/systems/Manipulator.h>
 #include <entities/systems/UnderwaterVehicle.h>
 #include <entities/forcefields/Ocean.h>
@@ -128,31 +127,8 @@ void UnderwaterTestApp::DoHUD()
     plot.owner = 1;
     plot.item = 0;
     plot.index = 0;
-    if(getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), "Acceleration"))
-    {
-        NativeDialog* openDialog = new NativeDialog(DialogType_Save, "Save plot data...", "txt");
-        openDialog->Show();
-        
-        char* pathToFile;
-        if(openDialog->GetInput(&pathToFile) == DialogResult_OK)
-        {
-            const std::deque<std::unique_ptr<Sample>>& data = getSimulationManager()->getSensor(0)->getHistory();
-            if(data.size() > 0)
-            {
-                FILE* fp;
-                fp = fopen(pathToFile, "wt");
-                for(int i=0; i<data.size(); i++)
-                    fprintf(fp, "%1.6f\n", data[i]->getValue(0));
-                fclose(fp);
-            
-                printf("Saved plot data to %s.\n", pathToFile);
-            }
-        }
-        
-        delete [] pathToFile;
-        delete openDialog;
-    }*/
-	
+    getHUD()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, getSimulationManager()->getSensor(0), "Acceleration");
+    */
 	//Trigger* trig = (Trigger*)getSimulationManager()->getEntity("BoxTrigger");
 	//std::cout << "Trigger: " << (int)trig->isActive() << std::endl;
 }

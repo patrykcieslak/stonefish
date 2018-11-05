@@ -9,7 +9,7 @@
 #ifndef __Stonefish_SystemEntity__
 #define __Stonefish_SystemEntity__
 
-#include "Entity.h"
+#include <entities/Entity.h>
 
 typedef enum {SYSTEM_MANIPULATOR, SYSTEM_GRIPPER, SYSTEM_UNDERWATER_VEHICLE} SystemType;
 
