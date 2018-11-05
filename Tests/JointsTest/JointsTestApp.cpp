@@ -8,7 +8,7 @@
 
 #include "JointsTestApp.h"
 
-#include "OpenGLTrackball.h"
+#include <graphics/OpenGLTrackball.h>
 
 JointsTestApp::JointsTestApp(std::string dataDirPath, int width, int height, JointsTestManager* sim) 
     : GraphicalSimulationApp("Joints Test", dataDirPath, width, height, sim)

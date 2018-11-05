@@ -6,11 +6,12 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Contact.h"
-#include "OpenGLPipeline.h"
-#include "SolidEntity.h"
-#include "ScientificFileUtil.h"
-#include "SimulationApp.h"
+#include <sensors/Contact.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/OpenGLPipeline.h>
+#include <utils/ScientificFileUtil.h>
+#include <entities/SolidEntity.h>
 
 Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {

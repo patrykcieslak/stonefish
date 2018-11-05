@@ -9,28 +9,28 @@
 #include "AcrobotTestManager.h"
 
 #include "AcrobotTestApp.h"
-#include "SystemUtil.hpp"
-#include "Plane.h"
-#include "Box.h"
-#include "Sphere.h"
-#include "Torus.h"
-#include "Cylinder.h"
-#include "OpenGLPointLight.h"
-#include "OpenGLTrackball.h"
-#include "FixedJoint.h"
-#include "RevoluteJoint.h"
-#include "DCMotor.h"
-#include "RotaryEncoder.h"
-#include "FakeRotaryEncoder.h"
-#include "ServoController.h"
-#include "MISOStateSpaceController.h"
-#include "Current.h"
-#include "FeatherstoneEntity.h"
-#include "Manipulator.h"
-#include "Obstacle.h"
-#include "ForceTorque.h"
-#include "Light.h"
-#include "Torque.h"
+#include <utils/SystemUtil.hpp>
+#include <entities/statics/Plane.h>
+#include <entities/solids/Box.h>
+#include <entities/solids/Sphere.h>
+#include <entities/solids/Torus.h>
+#include <entities/solids/Cylinder.h>
+#include <graphics/OpenGLPointLight.h>
+#include <graphics/OpenGLTrackball.h>
+#include <joints/FixedJoint.h>
+#include <joints/RevoluteJoint.h>
+#include <actuators/DCMotor.h>
+#include <sensors/RotaryEncoder.h>
+#include <sensors/FakeRotaryEncoder.h>
+#include <controllers/ServoController.h>
+#include <controllers/MISOStateSpaceController.h>
+#include <sensors/Current.h>
+#include <entities/FeatherstoneEntity.h>
+#include <entities/systems/Manipulator.h>
+#include <entities/statics/Obstacle.h>
+#include <sensors/ForceTorque.h>
+#include <actuators/Light.h>
+#include <sensors/Torque.h>
 
 AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
 {

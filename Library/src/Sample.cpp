@@ -6,8 +6,9 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "Sample.h"
-#include "SimulationApp.h"
+#include <sensors/Sample.h>
+
+#include <core/SimulationApp.h>
 
 Sample::Sample(unsigned short nDimensions, btScalar* values)
 {

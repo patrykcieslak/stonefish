@@ -6,11 +6,12 @@
 //  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Ocean.h"
-#include "SolidEntity.h"
-#include "SystemEntity.h"
-#include "MathsUtil.hpp"
-#include "SystemUtil.hpp"
+#include <entities/forcefields/Ocean.h>
+
+#include <utils/MathsUtil.hpp>
+#include <utils/SystemUtil.hpp>
+#include <entities/SolidEntity.h>
+#include <entities/SystemEntity.h>
 #include <algorithm>
 
 Ocean::Ocean(std::string uniqueName, Liquid* l) : ForcefieldEntity(uniqueName)

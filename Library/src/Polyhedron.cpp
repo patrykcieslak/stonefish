@@ -6,8 +6,9 @@
 //  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
 //
 
-#include "Polyhedron.h"
-#include "SystemUtil.hpp"
+#include <entities/solids/Polyhedron.h>
+
+#include <utils/SystemUtil.hpp>
 
 Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals, btScalar thickness, bool isBuoyant, HydrodynamicProxyType geoProxy) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {

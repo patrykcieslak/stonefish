@@ -6,8 +6,9 @@
 //  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "Trigger.h"
-#include "MathsUtil.hpp"
+#include <entities/forcefields/Trigger.h>
+
+#include <utils/MathsUtil.hpp>
 
 Trigger::Trigger(std::string uniqueName, btScalar radius, const btTransform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
 {

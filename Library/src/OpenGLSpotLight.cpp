@@ -6,9 +6,10 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLSpotLight.h"
-#include "SimulationManager.h"
-#include "MathsUtil.hpp"
+#include <graphics/OpenGLSpotLight.h>
+
+#include <core/SimulationManager.h>
+#include <utils/MathsUtil.hpp>
 
 OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {

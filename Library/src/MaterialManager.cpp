@@ -6,8 +6,8 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "MaterialManager.h"
-#include "Console.h"
+#include <core/MaterialManager.h>
+#include <graphics/Console.h>
 
 MaterialManager::MaterialManager()
 {

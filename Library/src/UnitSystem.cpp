@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "UnitSystem.h"
+#include <core/UnitSystem.h>
 
 UnitSystems UnitSystem::externalUS = MKS;
 bool UnitSystem::externalDeg = true;

@@ -6,9 +6,10 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLOcean.h"
-#include "Console.h"
-#include "SystemUtil.hpp"
+#include <graphics/OpenGLOcean.h>
+
+#include <graphics/Console.h>
+#include <utils/SystemUtil.hpp>
 
 OpenGLOcean::OpenGLOcean()
 {

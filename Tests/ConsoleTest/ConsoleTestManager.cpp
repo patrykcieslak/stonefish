@@ -8,10 +8,8 @@
 
 #include "ConsoleTestManager.h"
 
-#include "ConsoleSimulationApp.h"
-#include "Plane.h"
-#include "Sphere.h"
-#include "ColorCamera.h"
+#include <entities/statics/Plane.h>
+#include <entities/solids/Sphere.h>
 
 ConsoleTestManager::ConsoleTestManager(btScalar stepsPerSecond) 
     : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)

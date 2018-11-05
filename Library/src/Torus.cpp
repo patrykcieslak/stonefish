@@ -6,8 +6,9 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "Torus.h"
-#include "TorusShape.h"
+#include <entities/solids/Torus.h>
+
+#include <core/TorusShape.h>
 
 Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {

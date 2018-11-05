@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "GearJoint.h"
+#include <joints/GearJoint.h>
 
 GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
 {

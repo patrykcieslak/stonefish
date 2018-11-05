@@ -6,7 +6,7 @@
 //  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "VelocityField.h"
+#include <entities/forcefields/VelocityField.h>
 
 VelocityField::VelocityField()
 {

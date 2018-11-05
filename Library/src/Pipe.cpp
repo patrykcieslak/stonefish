@@ -6,7 +6,7 @@
 //  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "Pipe.h"
+#include <entities/forcefields/Pipe.h>
 
 Pipe::Pipe(const btVector3& point1, const btVector3& point2, btScalar radius1, btScalar radius2, btScalar inletVelocity, btScalar exponent)
 {

@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "PrismaticJoint.h"
+#include <joints/PrismaticJoint.h>
 
 PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {

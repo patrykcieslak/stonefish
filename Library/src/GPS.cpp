@@ -6,9 +6,10 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "GPS.h"
-#include "SimulationApp.h"
-#include "Ned.h"
+#include <sensors/GPS.h>
+
+#include <core/SimulationApp.h>
+#include <Ned.h>
 
 GPS::GPS(std::string uniqueName, btScalar latitudeDeg, btScalar longitudeDeg, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

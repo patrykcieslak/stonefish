@@ -6,11 +6,11 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "FilteredCollisionDispatcher.h"
+#include <core/FilteredCollisionDispatcher.h>
+
+#include <core/SimulationApp.h>
+#include <entities/SolidEntity.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
-#include "Entity.h"
-#include "SolidEntity.h"
-#include "SimulationApp.h"
 
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {

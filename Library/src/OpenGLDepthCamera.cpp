@@ -6,9 +6,10 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLDepthCamera.h"
-#include "Console.h"
-#include "DepthCamera.h"
+#include <graphics/OpenGLDepthCamera.h>
+
+#include <graphics/Console.h>
+#include <sensors/DepthCamera.h>
 
 GLSLShader* OpenGLDepthCamera::depthLinearizeShader = NULL;
 GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;

@@ -6,10 +6,11 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Sensor.h"
-#include "Console.h"
-#include "SimulationApp.h"
-#include "ScientificFileUtil.h"
+#include <sensors/Sensor.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/Console.h>
+#include <utils/ScientificFileUtil.h>
 
 NameManager Sensor::nameManager;
 std::random_device Sensor::randomDevice;

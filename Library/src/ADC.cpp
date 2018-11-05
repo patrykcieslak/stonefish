@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "ADC.h"
+#include <sensors/ADC.h>
 
 ADC::ADC(unsigned short resolution, btScalar plusRefVoltage, btScalar minusRefVoltage)
 {

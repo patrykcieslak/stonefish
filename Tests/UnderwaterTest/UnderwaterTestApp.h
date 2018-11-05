@@ -9,7 +9,7 @@
 #ifndef __Stonefish__UnderwaterTestApp__
 #define __Stonefish__UnderwaterTestApp__
 
-#include "GraphicalSimulationApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "UnderwaterTestManager.h"
 
 #define USE_IAUV_CLASSES

@@ -6,9 +6,10 @@
 //  Copyright(c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "CableEntity.h"
-#include "Joint.h"
-#include "MathsUtil.hpp"
+#include <entities/CableEntity.h>
+
+#include <utils/MathsUtil.hpp>
+#include <joints/Joint.h>
 
 CableEntity::CableEntity(std::string uniqueName, const btVector3& _end1, const btVector3& _end2, unsigned int parts, btScalar diam, btScalar stiffness, bool selfCollidable, Material* mat) : Entity(uniqueName)
 {

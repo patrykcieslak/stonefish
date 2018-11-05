@@ -6,7 +6,7 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "DCMotor.h"
+#include <actuators/DCMotor.h>
 
 DCMotor::DCMotor(std::string uniqueName, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName)
 {

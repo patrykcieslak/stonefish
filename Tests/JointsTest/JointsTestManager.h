@@ -9,7 +9,7 @@
 #ifndef __Stonefish__JointsTestManager__
 #define __Stonefish__JointsTestManager__
 
-#include "SimulationManager.h"
+#include <core/SimulationManager.h>
 
 class JointsTestManager : public SimulationManager
 {

@@ -6,8 +6,9 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "ScientificFileUtil.h"
-#include "Console.h"
+#include <utils/ScientificFileUtil.h>
+
+#include <graphics/Console.h>
 #include <iostream>
 #include <fstream>
 

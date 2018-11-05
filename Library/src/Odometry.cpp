@@ -6,7 +6,7 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Odometry.h"
+#include <sensors/Odometry.h>
 
 Odometry::Odometry(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

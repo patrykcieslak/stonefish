@@ -6,10 +6,11 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "Multibeam.h"
-#include "SimulationApp.h"
+#include <sensors/Multibeam.h>
+
+#include <core/SimulationApp.h>
+#include <utils/MathsUtil.hpp>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
-#include "MathsUtil.hpp"
 
 Multibeam::Multibeam(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar angleRangeDeg, unsigned int angleSteps, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

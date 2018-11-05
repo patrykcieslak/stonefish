@@ -6,7 +6,7 @@
 //  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Gripper.h"
+#include <entities/systems/Gripper.h>
 
 Gripper::Gripper(std::string uniqueName, Manipulator* m) : SystemEntity(uniqueName)
 {

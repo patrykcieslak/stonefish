@@ -6,8 +6,9 @@
 //  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "TwoFingerGripper.h"
-#include "SimulationApp.h"
+#include <entities/systems/TwoFingerGripper.h>
+
+#include <core/SimulationApp.h>
 
 TwoFingerGripper::TwoFingerGripper(std::string uniqueName, Manipulator* m, SolidEntity* hand, SolidEntity* finger1, SolidEntity* finger2, const btVector3& pivotA, const btVector3& pivotB, const btVector3& axis, btScalar openAngle, btScalar closingTorque) : Gripper(uniqueName, m)
 {

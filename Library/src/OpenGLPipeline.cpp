@@ -6,21 +6,21 @@
 //  Copyright(c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLPipeline.h"
+#include <graphics/OpenGLPipeline.h>
 
-#include "SimulationManager.h"
-#include "GLSLShader.h"
-#include "MathsUtil.hpp"
-#include "OpenGLContent.h"
-#include "OpenGLCamera.h"
-#include "OpenGLDepthCamera.h"
-#include "OpenGLAtmosphere.h"
-#include "OpenGLLight.h"
-#include "Console.h"
-#include "PathGenerator.h"
-#include "PathFollowingController.h"
-#include "Ocean.h"
-#include "Manipulator.h"
+#include <core/SimulationManager.h>
+#include <graphics/GLSLShader.h>
+#include <graphics/OpenGLContent.h>
+#include <graphics/OpenGLCamera.h>
+#include <graphics/OpenGLDepthCamera.h>
+#include <graphics/OpenGLAtmosphere.h>
+#include <graphics/OpenGLLight.h>
+#include <graphics/Console.h>
+#include <utils/MathsUtil.hpp>
+#include <entities/forcefields/Ocean.h>
+#include <entities/systems/Manipulator.h>
+#include <controllers/PathGenerator.h>
+#include <controllers/PathFollowingController.h>
 
 OpenGLPipeline* OpenGLPipeline::instance = NULL;
 

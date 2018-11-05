@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "Gyroscope.h"
+#include <sensors/Gyroscope.h>
 
 Gyroscope::Gyroscope(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, AxisType senseAxis, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

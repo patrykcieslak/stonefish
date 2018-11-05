@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "SignalMux.h"
+#include <controllers/SignalMux.h>
 
 SignalMux::SignalMux()
 {

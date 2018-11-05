@@ -9,20 +9,20 @@
 #include "JointsTestManager.h"
 
 #include "JointsTestApp.h"
-#include "Plane.h"
-#include "Box.h"
-#include "Sphere.h"
-#include "Cylinder.h"
-#include "OpenGLPointLight.h"
-#include "OpenGLTrackball.h"
-#include "FixedJoint.h"
-#include "SphericalJoint.h"
-#include "RevoluteJoint.h"
-#include "PrismaticJoint.h"
-#include "CylindricalJoint.h"
-#include "GearJoint.h"
-#include "BeltJoint.h"
-#include "DCMotor.h"
+#include <entities/statics/Plane.h>
+#include <entities/solids/Box.h>
+#include <entities/solids/Sphere.h>
+#include <entities/solids/Cylinder.h>
+#include <graphics/OpenGLPointLight.h>
+#include <graphics/OpenGLTrackball.h>
+#include <joints/FixedJoint.h>
+#include <joints/SphericalJoint.h>
+#include <joints/RevoluteJoint.h>
+#include <joints/PrismaticJoint.h>
+#include <joints/CylindricalJoint.h>
+#include <joints/GearJoint.h>
+#include <joints/BeltJoint.h>
+#include <actuators/DCMotor.h>
 
 JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
 {

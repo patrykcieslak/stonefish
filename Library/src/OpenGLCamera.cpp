@@ -6,11 +6,12 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLCamera.h"
-#include "MathsUtil.hpp"
-#include "SimulationApp.h"
-#include "Console.h"
-#include "SystemUtil.hpp"
+#include <graphics/OpenGLCamera.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/Console.h>
+#include <utils/MathsUtil.hpp>
+#include <utils/SystemUtil.hpp>
 #include "MersenneTwister.hpp"
 
 GLSLShader** OpenGLCamera::depthAwareBlurShader = NULL;

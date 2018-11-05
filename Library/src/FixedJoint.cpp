@@ -6,9 +6,10 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "FixedJoint.h"
+#include <joints/FixedJoint.h>
+
+#include <core/SimulationApp.h>
 #include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
-#include "SimulationApp.h"
 
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {

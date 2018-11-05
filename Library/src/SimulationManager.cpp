@@ -6,10 +6,8 @@
 //  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "SimulationManager.h"
+#include <core/SimulationManager.h>
 
-#include <chrono>
-#include <thread>
 #include <BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.h>
 #include <BulletDynamics/MLCPSolvers/btDantzigSolver.h>
 #include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
@@ -17,19 +15,20 @@
 #include <BulletDynamics/MLCPSolvers/btMLCPSolver.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <BulletCollision/Gimpact/btGImpactShape.h>
-#include "FilteredCollisionDispatcher.h"
-
-#include "GraphicalSimulationApp.h"
-#include "SystemUtil.hpp"
-#include "OpenGLTrackball.h"
-#include "Camera.h"
-#include "SolidEntity.h"
-#include "StaticEntity.h"
-#include "CableEntity.h"
-#include "ForcefieldEntity.h"
-#include "Ocean.h"
-#include "Plane.h"
-#include "Trigger.h"
+#include <chrono>
+#include <thread>
+#include <core/FilteredCollisionDispatcher.h>
+#include <core/GraphicalSimulationApp.h>
+#include <graphics/OpenGLTrackball.h>
+#include <utils/SystemUtil.hpp>
+#include <entities/SolidEntity.h>
+#include <entities/StaticEntity.h>
+#include <entities/CableEntity.h>
+#include <entities/ForcefieldEntity.h>
+#include <entities/forcefields/Ocean.h>
+#include <entities/forcefields/Trigger.h>
+#include <entities/statics/Plane.h>
+#include <sensors/Camera.h>
 
 SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
 {

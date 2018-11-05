@@ -6,8 +6,9 @@
 //  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLLight.h"
-#include "MathsUtil.hpp"
+#include <graphics/OpenGLLight.h>
+
+#include <utils/MathsUtil.hpp>
 
 //static variables
 GLuint OpenGLLight::spotShadowArrayTex = 0;

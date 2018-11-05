@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "MISOStateSpaceController.h"
+#include <controllers/MISOStateSpaceController.h>
 
 MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, inputs->getNumOfComponents(), frequency)
 {

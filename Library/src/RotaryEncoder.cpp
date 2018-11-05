@@ -6,7 +6,7 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "RotaryEncoder.h"
+#include <sensors/RotaryEncoder.h>
 
 RotaryEncoder::RotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {

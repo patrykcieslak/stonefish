@@ -6,9 +6,10 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Light.h"
-#include "OpenGLPointLight.h"
-#include "OpenGLSpotLight.h"
+#include <actuators/Light.h>
+
+#include <graphics/OpenGLPointLight.h>
+#include <graphics/OpenGLSpotLight.h>
 
 Light::Light(std::string uniqueName, const btVector3& position, glm::vec4 color) : Actuator(uniqueName)
 {

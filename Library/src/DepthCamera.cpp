@@ -6,7 +6,7 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "DepthCamera.h"
+#include <sensors/DepthCamera.h>
 
 DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar minDepth, btScalar maxDepth, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency)
     : Camera(uniqueName, resX, resY, horizFOVDeg, geomToSensor, attachment, frequency)

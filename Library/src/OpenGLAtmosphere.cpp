@@ -6,10 +6,11 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLAtmosphere.h"
-#include "MathsUtil.hpp"
-#include "SystemUtil.hpp"
-#include "Console.h"
+#include <graphics/OpenGLAtmosphere.h>
+
+#include <graphics/Console.h>
+#include <utils/MathsUtil.hpp>
+#include <utils/SystemUtil.hpp>
 #include <fstream>
 #include <sstream>
 

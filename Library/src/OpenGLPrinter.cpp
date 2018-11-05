@@ -6,7 +6,8 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLPrinter.h"
+#include <graphics/OpenGLPrinter.h>
+
 #include <stdio.h>
 
 GLuint OpenGLPrinter::windowW = 800;

@@ -23,9 +23,9 @@
  3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "ResearchConstraintSolver.h"
-#include "LinearMath/btMatrixX.h"
-#include "LinearMath/btQuickprof.h"
+#include <core/ResearchConstraintSolver.h>
+#include <LinearMath/btMatrixX.h>
+#include <LinearMath/btQuickprof.h>
 #include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
 
 ResearchConstraintSolver::ResearchConstraintSolver(btMLCPSolverInterface* mlcp) : btMultiBodyConstraintSolver()

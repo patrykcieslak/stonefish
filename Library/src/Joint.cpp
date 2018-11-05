@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "Joint.h"
+#include <joints/Joint.h>
 
 NameManager Joint::nameManager;
 

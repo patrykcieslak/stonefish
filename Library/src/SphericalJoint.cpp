@@ -6,7 +6,7 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "SphericalJoint.h"
+#include <joints/SphericalJoint.h>
 
 SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {

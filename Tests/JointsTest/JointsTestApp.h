@@ -9,7 +9,7 @@
 #ifndef __Stonefish__JointsTestApp__
 #define __Stonefish__JointsTestApp__
 
-#include "GraphicalSimulationApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "JointsTestManager.h"
 
 class JointsTestApp : public GraphicalSimulationApp

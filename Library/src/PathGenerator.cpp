@@ -6,8 +6,9 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "PathGenerator.h"
-#include "Console.h"
+#include <controllers/PathGenerator.h>
+
+#include <graphics/Console.h>
 
 PathGenerator::PathGenerator()
 {

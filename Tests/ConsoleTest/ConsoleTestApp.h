@@ -9,7 +9,7 @@
 #ifndef __Stonefish__ConsoleTestApp__
 #define __Stonefish__ConsoleTestApp__
 
-#include "ConsoleSimulationApp.h"
+#include <core/ConsoleSimulationApp.h>
 #include "ConsoleTestManager.h"
 
 class ConsoleTestApp : public ConsoleSimulationApp

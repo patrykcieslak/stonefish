@@ -9,7 +9,7 @@
 #ifndef __Stonefish__AcrobotTestApp__
 #define __Stonefish__AcrobotTestApp__
 
-#include "GraphicalSimulationApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "AcrobotTestManager.h"
 
 class AcrobotTestApp : public GraphicalSimulationApp

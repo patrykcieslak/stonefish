@@ -6,8 +6,9 @@
 //  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "FixedGripper.h"
-#include "SimulationApp.h"
+#include <entities/systems/FixedGripper.h>
+
+#include <core/SimulationApp.h>
 
 FixedGripper::FixedGripper(std::string uniqueName, Manipulator* m, SolidEntity* hand) : Gripper(uniqueName, m)
 {

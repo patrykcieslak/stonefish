@@ -6,7 +6,7 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "SystemEntity.h"
+#include <entities/SystemEntity.h>
 
 SystemEntity::SystemEntity(std::string uniqueName) : Entity(uniqueName)
 {

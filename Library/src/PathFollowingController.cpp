@@ -6,8 +6,9 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "PathFollowingController.h"
-#include "PathGenerator2D.h"
+#include <controllers/PathFollowingController.h>
+
+#include <controllers/PathGenerator2D.h>
 
 PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency) : Controller(uniqueName, frequency)
 {

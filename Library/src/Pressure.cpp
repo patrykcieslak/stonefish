@@ -6,8 +6,9 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Pressure.h"
-#include "SimulationApp.h"
+#include <sensors/Pressure.h>
+
+#include <core/SimulationApp.h>
 
 Pressure::Pressure(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

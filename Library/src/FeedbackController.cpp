@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "FeedbackController.h"
+#include <controllers/FeedbackController.h>
 
 FeedbackController::FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency) : Controller(uniqueName, frequency)
 {

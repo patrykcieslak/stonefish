@@ -6,9 +6,10 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLPointLight.h"
-#include "SimulationManager.h"
-#include "MathsUtil.hpp"
+#include <graphics/OpenGLPointLight.h>
+
+#include <core/SimulationManager.h>
+#include <utils/MathsUtil.hpp>
 
 OpenGLPointLight::OpenGLPointLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {

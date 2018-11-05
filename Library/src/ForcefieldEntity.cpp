@@ -6,7 +6,7 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "ForcefieldEntity.h"
+#include <entities/ForcefieldEntity.h>
 
 ForcefieldEntity::ForcefieldEntity(std::string uniqueName) : Entity(uniqueName)
 {

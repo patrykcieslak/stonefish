@@ -6,10 +6,11 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "DVL.h"
-#include "SimulationApp.h"
+#include <sensors/DVL.h>
+
+#include <core/SimulationApp.h>
+#include <utils/MathsUtil.hpp>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
-#include "MathsUtil.hpp"
 
 DVL::DVL(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar beamSpreadAngle, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

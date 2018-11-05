@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "NameManager.h"
+#include <core/NameManager.h>
 
 NameManager::NameManager()
 {

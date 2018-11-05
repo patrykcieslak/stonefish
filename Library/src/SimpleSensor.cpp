@@ -6,10 +6,11 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "SimpleSensor.h"
-#include "Console.h"
-#include "SimulationApp.h"
-#include "ScientificFileUtil.h"
+#include <sensors/SimpleSensor.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/Console.h>
+#include <utils/ScientificFileUtil.h>
 
 SimpleSensor::SimpleSensor(std::string uniqueName,  const btTransform& geomToSensor, btScalar frequency, int historyLength) : Sensor(uniqueName, frequency)
 {

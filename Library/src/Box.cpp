@@ -6,7 +6,7 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Box.h"
+#include <entities/solids/Box.h>
 
 Box::Box(std::string uniqueName, const btVector3& dimensions, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {

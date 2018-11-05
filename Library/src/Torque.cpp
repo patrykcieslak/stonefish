@@ -6,8 +6,9 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "Torque.h"
-#include "MathsUtil.hpp"
+#include <sensors/Torque.h>
+
+#include <utils/MathsUtil.hpp>
 
 Torque::Torque(std::string uniqueName, FeatherstoneEntity* f, unsigned int jointId, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {

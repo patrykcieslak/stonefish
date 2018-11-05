@@ -9,7 +9,7 @@
 #ifndef __Stonefish__UnderwaterTestManager__
 #define __Stonefish__UnderwaterTestManager__
 
-#include "SimulationManager.h"
+#include <core/SimulationManager.h>
 
 class UnderwaterTestManager : public SimulationManager
 {

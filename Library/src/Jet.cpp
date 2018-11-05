@@ -6,7 +6,7 @@
 //  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "Jet.h"
+#include <entities/forcefields/Jet.h>
 
 Jet::Jet(const btVector3& point, const btVector3& direction, btScalar radius, btScalar outletVelocity)
 {

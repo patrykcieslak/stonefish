@@ -6,7 +6,7 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "ColorCamera.h"
+#include <sensors/ColorCamera.h>
 
 ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency, uint32_t spp, bool ao) 
     : Camera(uniqueName, resX, resY, horizFOVDeg, geomToSensor, attachment, frequency)

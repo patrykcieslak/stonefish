@@ -6,10 +6,11 @@
 //  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLRealCamera.h"
-#include "ColorCamera.h"
-#include "Console.h"
-#include "MathsUtil.hpp"
+#include <graphics/OpenGLRealCamera.h>
+
+#include <graphics/Console.h>
+#include <utils/MathsUtil.hpp>
+#include <sensors/ColorCamera.h>
 
 OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {

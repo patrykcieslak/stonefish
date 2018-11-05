@@ -6,7 +6,7 @@
 //  Copyright (c) 2015-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Motor.h"
+#include <actuators/Motor.h>
 
 Motor::Motor(std::string uniqueName) : Actuator(uniqueName)
 {

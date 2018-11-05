@@ -6,14 +6,15 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLContent.h"
-#include "Console.h"
-#include "OpenGLView.h"
-#include "OpenGLLight.h"
-#include "SystemUtil.hpp"
+#include <graphics/OpenGLContent.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/Console.h>
+#include <graphics/OpenGLView.h>
+#include <graphics/OpenGLLight.h>
+#include <utils/SystemUtil.hpp>
+#include <entities/forcefields/Ocean.h>
 #include "stb_image.h"
-#include "SimulationApp.h"
-#include "Ocean.h"
 #include <map>
 #include <algorithm>
 

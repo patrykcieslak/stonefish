@@ -9,24 +9,24 @@
 #include "FallingTestManager.h"
 
 #include "FallingTestApp.h"
-#include "Plane.h"
-#include "Obstacle.h"
-#include "Polyhedron.h"
-#include "Box.h"
-#include "Sphere.h"
-#include "Torus.h"
-#include "Cylinder.h"
-#include "OpenGLContent.h"
-#include "SystemUtil.hpp"
-#include "IMU.h"
-#include "Trajectory.h"
-#include "Manipulator.h"
-#include "Light.h"
-#include "Camera.h"
-#include "UnderwaterVehicle.h"
-#include "Thruster.h"
-#include "Compound.h"
-#include "Accelerometer.h"
+#include <entities/statics/Plane.h>
+#include <entities/statics/Obstacle.h>
+#include <entities/solids/Polyhedron.h>
+#include <entities/solids/Box.h>
+#include <entities/solids/Sphere.h>
+#include <entities/solids/Torus.h>
+#include <entities/solids/Cylinder.h>
+#include <graphics/OpenGLContent.h>
+#include <utils/SystemUtil.hpp>
+#include <sensors/IMU.h>
+#include <sensors/Trajectory.h>
+#include <entities/systems/Manipulator.h>
+#include <actuators/Light.h>
+#include <sensors/Camera.h>
+#include <entities/systems/UnderwaterVehicle.h>
+#include <actuators/Thruster.h>
+#include <entities/solids/Compound.h>
+#include <sensors/Accelerometer.h>
 
 FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SI, EXCLUSIVE)
 {

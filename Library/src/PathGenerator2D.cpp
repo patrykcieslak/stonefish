@@ -6,8 +6,9 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "PathGenerator2D.h"
-#include "OpenGLContent.h"
+#include <controllers/PathGenerator2D.h>
+
+#include <graphics/OpenGLContent.h>
 
 PathGenerator2D::PathGenerator2D(PlaneType pathOnPlane)
 {

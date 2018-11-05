@@ -6,10 +6,11 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Thruster.h"
-#include "SimulationApp.h"
-#include "OpenGLContent.h"
-#include "MathsUtil.hpp"
+#include <actuators/Thruster.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/OpenGLContent.h>
+#include <utils/MathsUtil.hpp>
 
 Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar maxRPM) : Actuator(uniqueName)
 {

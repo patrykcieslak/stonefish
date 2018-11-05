@@ -6,9 +6,10 @@
 //  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Manipulator.h"
-#include "SimulationApp.h"
-#include "FakeRotaryEncoder.h"
+#include <entities/systems/Manipulator.h>
+
+#include <core/SimulationApp.h>
+#include <sensors/FakeRotaryEncoder.h>
 
 Manipulator::Manipulator(std::string uniqueName, unsigned int numOfLinks, SolidEntity* baseLink, const btTransform& geomToJoint) : SystemEntity(uniqueName)
 {

@@ -6,9 +6,10 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Camera.h"
-#include "MathsUtil.hpp"
-#include "SimulationApp.h"
+#include <sensors/Camera.h>
+
+#include <core/SimulationApp.h>
+#include <utils/MathsUtil.hpp>
 
 Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, const btTransform& geomToSensor, SolidEntity* attachment, btScalar frequency) : Sensor(uniqueName, frequency)
 {

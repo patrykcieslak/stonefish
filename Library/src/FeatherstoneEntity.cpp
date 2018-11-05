@@ -6,8 +6,9 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "FeatherstoneEntity.h"
-#include "MathsUtil.hpp"
+#include <entities/FeatherstoneEntity.h>
+
+#include <utils/MathsUtil.hpp>
 
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, btMultiBodyDynamicsWorld* world, bool fixedBase) : Entity(uniqueName)
 {

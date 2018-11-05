@@ -6,7 +6,7 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "RevoluteJoint.h"
+#include <joints/RevoluteJoint.h>
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities) : 
 		RevoluteJoint(uniqueName, solidA->getRigidBody(), solidB->getRigidBody(), pivot, axis, collideLinkedEntities)

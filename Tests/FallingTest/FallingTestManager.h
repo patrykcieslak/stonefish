@@ -9,7 +9,7 @@
 #ifndef __Stonefish__FallingTestManager__
 #define __Stonefish__FallingTestManager__
 
-#include "SimulationManager.h"
+#include <core/SimulationManager.h>
 
 class FallingTestManager : public SimulationManager
 {

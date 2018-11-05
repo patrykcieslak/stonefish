@@ -6,8 +6,9 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "ConsoleSimulationApp.h"
-#include "SystemUtil.hpp"
+#include <core/ConsoleSimulationApp.h>
+
+#include <utils/SystemUtil.hpp>
 #include <chrono>
 #include <thread>
 

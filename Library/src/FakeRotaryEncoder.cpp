@@ -6,7 +6,7 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "FakeRotaryEncoder.h"
+#include <sensors/FakeRotaryEncoder.h>
 
 FakeRotaryEncoder::FakeRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
 {

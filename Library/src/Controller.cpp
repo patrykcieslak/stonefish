@@ -6,7 +6,7 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Controller.h"
+#include <controllers/Controller.h>
 
 NameManager Controller::nameManager;
 

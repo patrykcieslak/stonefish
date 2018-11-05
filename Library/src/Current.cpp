@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "Current.h"
+#include <sensors/Current.h>
 
 Current::Current(std::string uniqueName, DCMotor* m, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, btTransform::getIdentity(), frequency, historyLength)
 {

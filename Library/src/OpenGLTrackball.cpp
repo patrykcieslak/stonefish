@@ -6,9 +6,10 @@
 //  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLTrackball.h"
-#include "SimulationApp.h"
-#include "MathsUtil.hpp"
+#include <graphics/OpenGLTrackball.h>
+
+#include <core/SimulationApp.h>
+#include <utils/MathsUtil.hpp>
 
 OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {

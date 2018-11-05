@@ -9,7 +9,7 @@
 #ifndef __Stonefish__FallingTestApp__
 #define __Stonefish__FallingTestApp__
 
-#include "GraphicalSimulationApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "FallingTestManager.h"
 
 class FallingTestApp : public GraphicalSimulationApp

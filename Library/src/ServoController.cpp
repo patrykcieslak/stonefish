@@ -6,7 +6,7 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "ServoController.h"
+#include <controllers/ServoController.h>
 
 ServoController::ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {

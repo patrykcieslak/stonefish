@@ -6,8 +6,9 @@
 //  Copyright(c) 2013-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Plane.h"
-#include "SimulationApp.h"
+#include <entities/statics/Plane.h>
+
+#include <core/SimulationApp.h>
 
 Plane::Plane(std::string uniqueName, btScalar planeSize, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {

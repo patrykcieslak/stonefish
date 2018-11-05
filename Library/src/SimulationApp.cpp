@@ -6,8 +6,9 @@
 //  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "SimulationApp.h"
-#include "SystemUtil.hpp"
+#include <core/SimulationApp.h>
+
+#include <utils/SystemUtil.hpp>
 #include <chrono>
 #include <thread>
 

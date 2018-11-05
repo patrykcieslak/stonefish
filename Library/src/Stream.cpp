@@ -6,7 +6,7 @@
 //  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "Stream.h"
+#include <entities/forcefields/Stream.h>
 
 Stream::Stream(const std::vector<btVector3>& streamline, const std::vector<btScalar>& radius, btScalar inputVelocity, btScalar exponent)
 {

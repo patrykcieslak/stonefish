@@ -6,7 +6,7 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Obstacle.h"
+#include <entities/statics/Obstacle.h>
 
 Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : StaticEntity(uniqueName, m, lookId)
 {

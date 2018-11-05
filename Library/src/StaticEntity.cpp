@@ -6,9 +6,10 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "StaticEntity.h"
-#include "MathsUtil.hpp"
-#include "SimulationApp.h"
+#include <entities/StaticEntity.h>
+
+#include <core/SimulationApp.h>
+#include <utils/MathsUtil.hpp>
 
 StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {

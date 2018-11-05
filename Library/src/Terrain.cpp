@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "Terrain.h"
+#include <entities/statics/Terrain.h>
 
 Terrain::Terrain(std::string uniqueName, unsigned int width, unsigned int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {

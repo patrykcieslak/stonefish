@@ -6,7 +6,7 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Accelerometer.h"
+#include <sensors/Accelerometer.h>
 
 Accelerometer::Accelerometer(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

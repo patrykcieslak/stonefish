@@ -6,7 +6,7 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "ScrewConstraint.h"
+#include <core/ScrewConstraint.h>
 
 btScalar ScrewConstraint::getAngularPosition()
 {

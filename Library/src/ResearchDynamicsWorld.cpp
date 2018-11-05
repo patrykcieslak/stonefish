@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "ResearchDynamicsWorld.h"
+#include <core/ResearchDynamicsWorld.h>
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>

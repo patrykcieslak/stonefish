@@ -6,8 +6,9 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "ForceTorque.h"
-#include "MathsUtil.hpp"
+#include <sensors/ForceTorque.h>
+
+#include <utils/MathsUtil.hpp>
 
 ForceTorque::ForceTorque(std::string uniqueName, Joint* j, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : SimpleSensor(uniqueName, geomToSensor, frequency, historyLength)
 {

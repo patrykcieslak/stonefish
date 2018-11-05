@@ -8,15 +8,15 @@
 
 #include "UnderwaterTestApp.h"
 
-#include "OpenGLTrackball.h"
+#include <graphics/OpenGLTrackball.h>
 #include "NativeDialog.h"
-#include "Manipulator.h"
-#include "UnderwaterVehicle.h"
-#include "Ocean.h"
-#include "FakeRotaryEncoder.h"
-#include "Accelerometer.h"
-#include "ForceTorque.h"
-#include "Trigger.h"
+#include <entities/systems/Manipulator.h>
+#include <entities/systems/UnderwaterVehicle.h>
+#include <entities/forcefields/Ocean.h>
+#include <sensors/FakeRotaryEncoder.h>
+#include <sensors/Accelerometer.h>
+#include <sensors/ForceTorque.h>
+#include <entities/forcefields/Trigger.h>
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
     : GraphicalSimulationApp("Underwater Test", dataDirPath, width, height, sim)

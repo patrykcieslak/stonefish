@@ -9,7 +9,7 @@
 #ifndef __Stonefish__AcrobotTestManager__
 #define __Stonefish__AcrobotTestManager__
 
-#include "SimulationManager.h"
+#include <core/SimulationManager.h>
 
 #define USE_FEATHERSTONE_ALGORITHM
 

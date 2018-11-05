@@ -154,152 +154,138 @@
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
-    <VirtualDirectory Name="entities">
-      <File Name="include/Stonefish/CableEntity.h"/>
-      <File Name="include/Stonefish/Entity.h"/>
-      <File Name="include/Stonefish/SolidEntity.h"/>
-      <File Name="include/Stonefish/StaticEntity.h"/>
-      <File Name="include/Stonefish/ForcefieldEntity.h"/>
-      <File Name="include/Stonefish/SystemEntity.h"/>
-      <VirtualDirectory Name="solids">
-        <File Name="include/Stonefish/Box.h"/>
-        <File Name="include/Stonefish/Cylinder.h"/>
-        <File Name="include/Stonefish/Sphere.h"/>
-        <File Name="include/Stonefish/Torus.h"/>
-        <File Name="include/Stonefish/Polyhedron.h"/>
-        <File Name="include/Stonefish/Compound.h"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="static">
-        <File Name="include/Stonefish/Obstacle.h"/>
-        <File Name="include/Stonefish/Plane.h"/>
-        <File Name="include/Stonefish/Terrain.h"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="forcefields">
-        <File Name="include/Stonefish/Jet.h"/>
-        <File Name="include/Stonefish/Pipe.h"/>
-        <File Name="include/Stonefish/Stream.h"/>
-        <File Name="include/Stonefish/VelocityField.h"/>
-        <File Name="include/Stonefish/Ocean.h"/>
-        <File Name="include/Stonefish/Trigger.h"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="systems">
-        <File Name="include/Stonefish/Gripper.h"/>
-        <File Name="include/Stonefish/Manipulator.h"/>
-        <File Name="include/Stonefish/UnderwaterVehicle.h"/>
-        <VirtualDirectory Name="grippers">
-          <File Name="include/Stonefish/TwoFingerGripper.h"/>
-          <File Name="include/Stonefish/FixedGripper.h"/>
-        </VirtualDirectory>
-      </VirtualDirectory>
-      <File Name="include/Stonefish/FeatherstoneEntity.h"/>
-    </VirtualDirectory>
     <VirtualDirectory Name="sensors">
-      <File Name="include/Stonefish/Mux.h"/>
-      <File Name="include/Stonefish/Sample.h"/>
-      <VirtualDirectory Name="advanced">
-        <File Name="include/Stonefish/ColorCamera.h"/>
-        <File Name="include/Stonefish/DepthCamera.h"/>
-        <File Name="include/Stonefish/Camera.h"/>
-        <File Name="include/Stonefish/Contact.h"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="simple">
-        <File Name="include/Stonefish/Multibeam.h"/>
-        <File Name="include/Stonefish/Profiler.h"/>
-        <File Name="include/Stonefish/Torque.h"/>
-        <File Name="include/Stonefish/Current.h"/>
-        <File Name="include/Stonefish/FakeRotaryEncoder.h"/>
-        <File Name="include/Stonefish/IMU.h"/>
-        <File Name="include/Stonefish/RotaryEncoder.h"/>
-        <File Name="include/Stonefish/ForceTorque.h"/>
-        <File Name="include/Stonefish/GPS.h"/>
-        <File Name="include/Stonefish/DVL.h"/>
-        <File Name="include/Stonefish/Gyroscope.h"/>
-        <File Name="include/Stonefish/TrueRotaryEncoder.h"/>
-        <File Name="include/Stonefish/Trajectory.h"/>
-        <File Name="include/Stonefish/Pressure.h"/>
-        <File Name="include/Stonefish/FOG.h"/>
-        <File Name="include/Stonefish/Odometry.h"/>
-        <File Name="include/Stonefish/Accelerometer.h"/>
-      </VirtualDirectory>
-      <File Name="include/Stonefish/SimpleSensor.h"/>
-      <File Name="include/Stonefish/Sensor.h"/>
-      <File Name="include/Stonefish/ADC.h"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="joints">
-      <File Name="include/Stonefish/BeltJoint.h"/>
-      <File Name="include/Stonefish/CylindricalJoint.h"/>
-      <File Name="include/Stonefish/FixedJoint.h"/>
-      <File Name="include/Stonefish/GearJoint.h"/>
-      <File Name="include/Stonefish/Joint.h"/>
-      <File Name="include/Stonefish/PrismaticJoint.h"/>
-      <File Name="include/Stonefish/RevoluteJoint.h"/>
-      <File Name="include/Stonefish/SphericalJoint.h"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="display">
-      <File Name="include/Stonefish/GLSLShader.h"/>
-      <File Name="include/Stonefish/OpenGLDebugDrawer.h"/>
-      <VirtualDirectory Name="lights">
-        <File Name="include/Stonefish/OpenGLSpotLight.h"/>
-        <File Name="include/Stonefish/OpenGLLight.h"/>
-        <File Name="include/Stonefish/OpenGLPointLight.h"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="views">
-        <File Name="include/Stonefish/OpenGLDepthCamera.h"/>
-        <File Name="include/Stonefish/OpenGLView.h"/>
-        <File Name="include/Stonefish/OpenGLCamera.h"/>
-        <File Name="include/Stonefish/OpenGLRealCamera.h"/>
-        <File Name="include/Stonefish/OpenGLTrackball.h"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="gui">
-        <File Name="include/Stonefish/IMGUI.h"/>
-        <File Name="include/Stonefish/Console.h"/>
-        <File Name="include/Stonefish/OpenGLPrinter.h"/>
-      </VirtualDirectory>
-      <File Name="include/Stonefish/OpenGLContent.h"/>
-      <File Name="include/Stonefish/OpenGLPipeline.h"/>
-      <VirtualDirectory Name="specials">
-        <File Name="include/Stonefish/OpenGLOcean.h"/>
-        <File Name="include/Stonefish/OpenGLAtmosphere.h"/>
-      </VirtualDirectory>
-    </VirtualDirectory>
-    <VirtualDirectory Name="actuators">
-      <File Name="include/Stonefish/Actuator.h"/>
-      <File Name="include/Stonefish/DCMotor.h"/>
-      <File Name="include/Stonefish/Motor.h"/>
-      <File Name="include/Stonefish/Light.h"/>
-      <File Name="include/Stonefish/Thruster.h"/>
+      <File Name="include/Stonefish/sensors/TrueRotaryEncoder.h"/>
+      <File Name="include/Stonefish/sensors/Trajectory.h"/>
+      <File Name="include/Stonefish/sensors/Torque.h"/>
+      <File Name="include/Stonefish/sensors/SimpleSensor.h"/>
+      <File Name="include/Stonefish/sensors/Sensor.h"/>
+      <File Name="include/Stonefish/sensors/Sample.h"/>
+      <File Name="include/Stonefish/sensors/RotaryEncoder.h"/>
+      <File Name="include/Stonefish/sensors/Profiler.h"/>
+      <File Name="include/Stonefish/sensors/Pressure.h"/>
+      <File Name="include/Stonefish/sensors/Odometry.h"/>
+      <File Name="include/Stonefish/sensors/Mux.h"/>
+      <File Name="include/Stonefish/sensors/Multibeam.h"/>
+      <File Name="include/Stonefish/sensors/IMU.h"/>
+      <File Name="include/Stonefish/sensors/Gyroscope.h"/>
+      <File Name="include/Stonefish/sensors/GPS.h"/>
+      <File Name="include/Stonefish/sensors/ForceTorque.h"/>
+      <File Name="include/Stonefish/sensors/FOG.h"/>
+      <File Name="include/Stonefish/sensors/FakeRotaryEncoder.h"/>
+      <File Name="include/Stonefish/sensors/DVL.h"/>
+      <File Name="include/Stonefish/sensors/DepthCamera.h"/>
+      <File Name="include/Stonefish/sensors/Current.h"/>
+      <File Name="include/Stonefish/sensors/Contact.h"/>
+      <File Name="include/Stonefish/sensors/ColorCamera.h"/>
+      <File Name="include/Stonefish/sensors/Camera.h"/>
+      <File Name="include/Stonefish/sensors/ADC.h"/>
+      <File Name="include/Stonefish/sensors/Accelerometer.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="controllers">
-      <File Name="include/Stonefish/Controller.h"/>
-      <File Name="include/Stonefish/FeedbackController.h"/>
-      <File Name="include/Stonefish/MISOStateSpaceController.h"/>
-      <File Name="include/Stonefish/PathFollowingController.h"/>
-      <File Name="include/Stonefish/PathGenerator.h"/>
-      <File Name="include/Stonefish/PathGenerator2D.h"/>
-      <File Name="include/Stonefish/ServoController.h"/>
-      <File Name="include/Stonefish/SignalGenerator.h"/>
-      <File Name="include/Stonefish/SignalMux.h"/>
-      <File Name="include/Stonefish/SpeedController.h"/>
+      <File Name="include/Stonefish/controllers/SpeedController.h"/>
+      <File Name="include/Stonefish/controllers/SignalMux.h"/>
+      <File Name="include/Stonefish/controllers/SignalGenerator.h"/>
+      <File Name="include/Stonefish/controllers/ServoController.h"/>
+      <File Name="include/Stonefish/controllers/PathGenerator2D.h"/>
+      <File Name="include/Stonefish/controllers/PathGenerator.h"/>
+      <File Name="include/Stonefish/controllers/PathFollowingController.h"/>
+      <File Name="include/Stonefish/controllers/MISOStateSpaceController.h"/>
+      <File Name="include/Stonefish/controllers/FeedbackController.h"/>
+      <File Name="include/Stonefish/controllers/Controller.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="actuators">
+      <File Name="include/Stonefish/actuators/Thruster.h"/>
+      <File Name="include/Stonefish/actuators/Motor.h"/>
+      <File Name="include/Stonefish/actuators/Light.h"/>
+      <File Name="include/Stonefish/actuators/DCMotor.h"/>
+      <File Name="include/Stonefish/actuators/Actuator.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="joints">
+      <File Name="include/Stonefish/joints/SphericalJoint.h"/>
+      <File Name="include/Stonefish/joints/RevoluteJoint.h"/>
+      <File Name="include/Stonefish/joints/PrismaticJoint.h"/>
+      <File Name="include/Stonefish/joints/Joint.h"/>
+      <File Name="include/Stonefish/joints/GearJoint.h"/>
+      <File Name="include/Stonefish/joints/FixedJoint.h"/>
+      <File Name="include/Stonefish/joints/CylindricalJoint.h"/>
+      <File Name="include/Stonefish/joints/BeltJoint.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="entities">
+      <VirtualDirectory Name="systems">
+        <File Name="include/Stonefish/entities/systems/UnderwaterVehicle.h"/>
+        <File Name="include/Stonefish/entities/systems/TwoFingerGripper.h"/>
+        <File Name="include/Stonefish/entities/systems/Manipulator.h"/>
+        <File Name="include/Stonefish/entities/systems/Gripper.h"/>
+        <File Name="include/Stonefish/entities/systems/FixedGripper.h"/>
+      </VirtualDirectory>
+      <VirtualDirectory Name="forcefields">
+        <File Name="include/Stonefish/entities/forcefields/VelocityField.h"/>
+        <File Name="include/Stonefish/entities/forcefields/Trigger.h"/>
+        <File Name="include/Stonefish/entities/forcefields/Stream.h"/>
+        <File Name="include/Stonefish/entities/forcefields/Pipe.h"/>
+        <File Name="include/Stonefish/entities/forcefields/Ocean.h"/>
+        <File Name="include/Stonefish/entities/forcefields/Jet.h"/>
+      </VirtualDirectory>
+      <VirtualDirectory Name="statics">
+        <File Name="include/Stonefish/entities/statics/Terrain.h"/>
+        <File Name="include/Stonefish/entities/statics/Plane.h"/>
+        <File Name="include/Stonefish/entities/statics/Obstacle.h"/>
+      </VirtualDirectory>
+      <VirtualDirectory Name="solids">
+        <File Name="include/Stonefish/entities/solids/Torus.h"/>
+        <File Name="include/Stonefish/entities/solids/Sphere.h"/>
+        <File Name="include/Stonefish/entities/solids/Polyhedron.h"/>
+        <File Name="include/Stonefish/entities/solids/Cylinder.h"/>
+        <File Name="include/Stonefish/entities/solids/Compound.h"/>
+        <File Name="include/Stonefish/entities/solids/Box.h"/>
+      </VirtualDirectory>
+      <File Name="include/Stonefish/entities/SystemEntity.h"/>
+      <File Name="include/Stonefish/entities/StaticEntity.h"/>
+      <File Name="include/Stonefish/entities/SolidEntity.h"/>
+      <File Name="include/Stonefish/entities/ForcefieldEntity.h"/>
+      <File Name="include/Stonefish/entities/FeatherstoneEntity.h"/>
+      <File Name="include/Stonefish/entities/Entity.h"/>
+      <File Name="include/Stonefish/entities/CableEntity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
-      <File Name="include/Stonefish/ScientificFileUtil.h"/>
-      <File Name="include/Stonefish/Polynomials.hpp"/>
-      <File Name="include/Stonefish/SystemUtil.hpp"/>
-      <File Name="include/Stonefish/MathsUtil.hpp"/>
+      <File Name="include/Stonefish/utils/SystemUtil.hpp"/>
+      <File Name="include/Stonefish/utils/ScientificFileUtil.h"/>
+      <File Name="include/Stonefish/utils/Polynomials.hpp"/>
+      <File Name="include/Stonefish/utils/MathsUtil.hpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="graphics">
+      <File Name="include/Stonefish/graphics/OpenGLView.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLTrackball.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLSpotLight.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLRealCamera.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLPrinter.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLPointLight.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLPipeline.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLOcean.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLLight.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLDepthCamera.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLDebugDrawer.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLContent.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLCamera.h"/>
+      <File Name="include/Stonefish/graphics/OpenGLAtmosphere.h"/>
+      <File Name="include/Stonefish/graphics/IMGUI.h"/>
+      <File Name="include/Stonefish/graphics/GLSLShader.h"/>
+      <File Name="include/Stonefish/graphics/Console.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
-      <File Name="include/Stonefish/GraphicalSimulationApp.h"/>
-      <File Name="include/Stonefish/ConsoleSimulationApp.h"/>
-      <File Name="include/Stonefish/ScrewConstraint.h"/>
-      <File Name="include/Stonefish/FilteredCollisionDispatcher.h"/>
-      <File Name="include/Stonefish/ResearchConstraintSolver.h"/>
-      <File Name="include/Stonefish/ResearchDynamicsWorld.h"/>
-      <File Name="include/Stonefish/NameManager.h"/>
-      <File Name="include/Stonefish/SimulationApp.h"/>
-      <File Name="include/Stonefish/UnitSystem.h"/>
-      <File Name="include/Stonefish/TorusShape.h"/>
-      <File Name="include/Stonefish/MaterialManager.h"/>
-      <File Name="include/Stonefish/SimulationManager.h"/>
+      <File Name="include/Stonefish/core/UnitSystem.h"/>
+      <File Name="include/Stonefish/core/TorusShape.h"/>
+      <File Name="include/Stonefish/core/SimulationManager.h"/>
+      <File Name="include/Stonefish/core/SimulationApp.h"/>
+      <File Name="include/Stonefish/core/ScrewConstraint.h"/>
+      <File Name="include/Stonefish/core/ResearchDynamicsWorld.h"/>
+      <File Name="include/Stonefish/core/ResearchConstraintSolver.h"/>
+      <File Name="include/Stonefish/core/NameManager.h"/>
+      <File Name="include/Stonefish/core/MaterialManager.h"/>
+      <File Name="include/Stonefish/core/GraphicalSimulationApp.h"/>
+      <File Name="include/Stonefish/core/FilteredCollisionDispatcher.h"/>
+      <File Name="include/Stonefish/core/ConsoleSimulationApp.h"/>
     </VirtualDirectory>
     <File Name="include/Stonefish/common.h"/>
   </VirtualDirectory>

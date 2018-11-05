@@ -6,7 +6,7 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLView.h"
+#include <graphics/OpenGLView.h>
 
 OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
 {

@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "SignalGenerator.h"
+#include <controllers/SignalGenerator.h>
 
 SignalGenerator::SignalGenerator()
 {

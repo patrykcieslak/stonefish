@@ -8,11 +8,11 @@
 
 #include "AcrobotTestApp.h"
 
-#include "OpenGLTrackball.h"
-#include "DCMotor.h"
+#include <graphics/OpenGLTrackball.h>
+#include <actuators/DCMotor.h>
 #include "NativeDialog.h"
-#include "ForceTorque.h"
-#include "Torque.h"
+#include <sensors/ForceTorque.h>
+#include <sensors/Torque.h>
 
 AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, int width, int height, AcrobotTestManager* sim) 
 : GraphicalSimulationApp("Acrobot Test", dataDirPath, width, height, sim)

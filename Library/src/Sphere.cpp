@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "Sphere.h"
+#include <entities/solids/Sphere.h>
 
 /*! Spherical solid entity constructor.
  *

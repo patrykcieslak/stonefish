@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "TrueRotaryEncoder.h"
+#include <sensors/TrueRotaryEncoder.h>
 
 TrueRotaryEncoder::TrueRotaryEncoder(std::string uniqueName, RevoluteJoint* joint, unsigned int cpr_resolution, bool absolute, btScalar frequency, int historyLength) : RotaryEncoder(uniqueName, joint, frequency, historyLength)
 {

@@ -6,8 +6,9 @@
 //  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "UnderwaterVehicle.h"
-#include "SimulationApp.h"
+#include <entities/systems/UnderwaterVehicle.h>
+
+#include <core/SimulationApp.h>
 
 UnderwaterVehicle::UnderwaterVehicle(std::string uniqueName, SolidEntity* bodySolid) : SystemEntity(uniqueName)
 {

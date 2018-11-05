@@ -6,13 +6,14 @@
 //  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "IMGUI.h"
+#include <graphics/IMGUI.h>
+
+#include <graphics/Console.h>
+#include <graphics/OpenGLContent.h>
+#include <utils/SystemUtil.hpp>
+#include "stb_image.h"
 #include <stdio.h>
 #include <math.h>
-#include "SystemUtil.hpp"
-#include "stb_image.h"
-#include "Console.h"
-#include "OpenGLContent.h"
 
 IMGUI* IMGUI::instance = NULL;
 

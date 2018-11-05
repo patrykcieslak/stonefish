@@ -6,9 +6,10 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "OpenGLDebugDrawer.h"
-#include "OpenGLContent.h"
-#include "Console.h"
+#include <graphics/OpenGLDebugDrawer.h>
+
+#include <graphics/OpenGLContent.h>
+#include <graphics/Console.h>
 
 OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode, bool zUp)
 {

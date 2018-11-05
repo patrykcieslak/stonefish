@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
 //
 
-#include "TorusShape.h"
+#include <core/TorusShape.h>
 
 TorusShape::TorusShape(btScalar majorRadius, btScalar minorRadius)
 {

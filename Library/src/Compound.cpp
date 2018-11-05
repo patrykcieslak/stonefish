@@ -6,9 +6,10 @@
 //  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Compound.h"
-#include "MathsUtil.hpp"
-#include "SimulationApp.h"
+#include <entities/solids/Compound.h>
+
+#include <core/SimulationApp.h>
+#include <utils/MathsUtil.hpp>
 
 Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const btTransform& position) : SolidEntity(uniqueName, firstExternalPart->getMaterial(), firstExternalPart->getLook())
 {

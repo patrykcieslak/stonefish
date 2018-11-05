@@ -6,10 +6,11 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "Console.h"
-#include "SystemUtil.hpp"
+#include <graphics/Console.h>
+
+#include <graphics/IMGUI.h>
+#include <utils/SystemUtil.hpp>
 #include "stb_image.h"
-#include "IMGUI.h"
 
 Console* Console::instance = NULL;
 

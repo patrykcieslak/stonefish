@@ -6,8 +6,9 @@
 //  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
 //
 
-#include "GraphicalSimulationApp.h"
-#include "SystemUtil.hpp"
+#include <core/GraphicalSimulationApp.h>
+
+#include <utils/SystemUtil.hpp>
 #include <chrono>
 #include <thread>
 

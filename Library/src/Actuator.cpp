@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
 //
 
-#include "Actuator.h"
+#include <actuators/Actuator.h>
 
 NameManager Actuator::nameManager;
 

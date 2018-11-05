@@ -6,10 +6,11 @@
 //  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
 //
 
-#include "GLSLShader.h"
+#include <graphics/GLSLShader.h>
+
+#include <graphics/Console.h>
+#include <utils/SystemUtil.hpp>
 #include <fstream>
-#include "SystemUtil.hpp"
-#include "Console.h"
 
 GLuint GLSLShader::saqVertexShader = 0;
 bool GLSLShader::verbose = true;

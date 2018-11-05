@@ -6,12 +6,13 @@
 //  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
 //
 
-#include "SolidEntity.h"
-#include "MathsUtil.hpp"
-#include "SystemUtil.hpp"
-#include "Console.h"
-#include "Ocean.h"
-#include "SimulationApp.h"
+#include <entities/SolidEntity.h>
+
+#include <core/SimulationApp.h>
+#include <graphics/Console.h>
+#include <utils/MathsUtil.hpp>
+#include <utils/SystemUtil.hpp>
+#include <entities/forcefields/Ocean.h>
 
 SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScalar thickness, bool isBuoyant) : Entity(uniqueName)
 {

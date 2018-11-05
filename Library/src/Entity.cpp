@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
 //
 
-#include "Entity.h"
+#include <entities/Entity.h>
 
 //Statics
 NameManager Entity::nameManager;
