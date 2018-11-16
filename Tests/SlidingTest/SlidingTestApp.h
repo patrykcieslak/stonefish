@@ -9,18 +9,13 @@
 #ifndef __Stonefish__SlidingTestApp__
 #define __Stonefish__SlidingTestApp__
 
-#include "SimulationApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "SlidingTestManager.h"
 
-class SlidingTestApp : public SimulationApp
+class SlidingTestApp : public GraphicalSimulationApp
 {
 public:
-    SlidingTestApp(int width, int height, SlidingTestManager* sim);
-    
-    void MouseDown(SDL_Event* event);
-    void MouseUp(SDL_Event* event);
-    void MouseMove(SDL_Event* event);
-    void MouseScroll(SDL_Event* event);
+    SlidingTestApp(std::string dataDirPath, RenderSettings s, SlidingTestManager* sim);
     
     void DoHUD();
 };

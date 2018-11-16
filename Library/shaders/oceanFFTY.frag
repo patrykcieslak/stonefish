@@ -1,4 +1,5 @@
-#version 430 core
+#version 330 core
+//430
 uniform sampler2D texButterfly;
 uniform sampler2DArray texSource; // 2 complex inputs (= 4 values) per layer
 uniform float pass;

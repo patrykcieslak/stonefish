@@ -1,5 +1,5 @@
-#version 430 core
-
+#version 330 core
+//430
 in vec2 texcoord;
 in vec2 blurtexcoord[4];
 out vec4 fragcolor;

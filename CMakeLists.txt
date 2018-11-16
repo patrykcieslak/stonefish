@@ -12,7 +12,7 @@ find_package(Freetype REQUIRED)
 find_package(Bullet REQUIRED)
 
 include_directories(
-    Library/include/Stonefish
+    Library/include
     ${OPENGL_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
@@ -20,7 +20,7 @@ include_directories(
     ${BULLET_INCLUDE_DIRS}
 )
 
-file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
+file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
 
 add_library(Stonefish SHARED ${SOURCES})
 target_link_libraries(Stonefish ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} GLEW)
@@ -30,6 +30,6 @@ install(
     LIBRARY DESTINATION /usr/local/lib
 )
 
-install(DIRECTORY Library/include/Stonefish DESTINATION /usr/local/include)
+install(DIRECTORY Library/include DESTINATION /usr/local/include/Stonefish)
 install(DIRECTORY Library/shaders DESTINATION /usr/local/share/Stonefish)
 install(FILES Library/stonefish.pc DESTINATION /usr/local/lib/pkgconfig)

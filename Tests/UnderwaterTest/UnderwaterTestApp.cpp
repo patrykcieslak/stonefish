@@ -17,8 +17,8 @@
 #include <sensors/ForceTorque.h>
 #include <entities/forcefields/Trigger.h>
 
-UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, int width, int height, UnderwaterTestManager* sim) 
-    : GraphicalSimulationApp("Underwater Test", dataDirPath, width, height, sim)
+UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, RenderSettings s, UnderwaterTestManager* sim)
+    : GraphicalSimulationApp("Underwater Test", dataDirPath, s, sim)
 {
     decimalTime = 12.0;
 }
@@ -31,57 +31,57 @@ void UnderwaterTestApp::DoHUD()
     slider.owner = 0;
     slider.item = 0;
     slider.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
 #ifdef USE_IAUV_CLASSES
     Manipulator* manip = (Manipulator*)getSimulationManager()->getEntity("Arm");
     slider.item = 1;
-    manip->SetDesiredJointPosition(0 , IMGUI::getInstance()->DoSlider(slider, 5.f, 100.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(0), "Joint1"));
+    manip->SetDesiredJointPosition(0 , getGUI()->DoSlider(slider, 5.f, 100.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(0), "Joint1"));
     
     slider.item = 2;
-    manip->SetDesiredJointPosition(1 , IMGUI::getInstance()->DoSlider(slider, 5.f, 155.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(1), "Joint2"));
+    manip->SetDesiredJointPosition(1 , getGUI()->DoSlider(slider, 5.f, 155.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(1), "Joint2"));
     
     slider.item = 3;
-    manip->SetDesiredJointPosition(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 210.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(2), "Joint3"));
+    manip->SetDesiredJointPosition(2, getGUI()->DoSlider(slider, 5.f, 210.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(2), "Joint3"));
     
     slider.item = 4;
-    manip->SetDesiredJointPosition(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 265.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(3), "Joint4"));
+    manip->SetDesiredJointPosition(3, getGUI()->DoSlider(slider, 5.f, 265.f, 200.f, -1.0, 1.0, manip->getDesiredJointPosition(3), "Joint4"));
     
     UnderwaterVehicle* vehicle = (UnderwaterVehicle*)getSimulationManager()->getEntity("AUV");
     slider.item = 5;
-    vehicle->SetThrusterSetpoint(0, IMGUI::getInstance()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(0), "Sway"));
+    vehicle->SetThrusterSetpoint(0, getGUI()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(0), "Sway"));
     
     slider.item = 6;
-    vehicle->SetThrusterSetpoint(1, IMGUI::getInstance()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(1), "Surge port"));
+    vehicle->SetThrusterSetpoint(1, getGUI()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(1), "Surge port"));
     
     slider.item = 7;    
-    vehicle->SetThrusterSetpoint(2, IMGUI::getInstance()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(2), "Surge starboard"));
+    vehicle->SetThrusterSetpoint(2, getGUI()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(2), "Surge starboard"));
     
     slider.item = 8;
-    vehicle->SetThrusterSetpoint(3, IMGUI::getInstance()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(3), "Heave stern"));
+    vehicle->SetThrusterSetpoint(3, getGUI()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(3), "Heave stern"));
     
     slider.item = 9;
-    vehicle->SetThrusterSetpoint(4, IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(4), "Heave bow"));
+    vehicle->SetThrusterSetpoint(4, getGUI()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, vehicle->GetThrusterSetpoint(4), "Heave bow"));
 #else
     slider.item = 5;
     Thruster* thSway = (Thruster*)getSimulationManager()->getActuator("ThrusterSway");
-    thSway->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, thSway->getSetpoint(), "Sway"));
+    thSway->setSetpoint(getGUI()->DoSlider(slider, 5.f, 350.f, 200.f, -1.0, 1.0, thSway->getSetpoint(), "Sway"));
     
     slider.item = 6;
     Thruster* thSurgeP = (Thruster*)getSimulationManager()->getActuator("ThrusterSurgePort");
-    thSurgeP->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, thSurgeP->getSetpoint(), "Surge port"));
+    thSurgeP->setSetpoint(getGUI()->DoSlider(slider, 5.f, 405.f, 200.f, -1.0, 1.0, thSurgeP->getSetpoint(), "Surge port"));
     
     slider.item = 7;
     Thruster* thSurgeS = (Thruster*)getSimulationManager()->getActuator("ThrusterSurgeStarboard");
-    thSurgeS->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, thSurgeS->getSetpoint(), "Surge starboard"));
+    thSurgeS->setSetpoint(getGUI()->DoSlider(slider, 5.f, 460.f, 200.f, -1.0, 1.0, thSurgeS->getSetpoint(), "Surge starboard"));
     
     slider.item = 8;
     Thruster* thHeaveS = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveStern");
-    thHeaveS->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, thHeaveS->getSetpoint(), "Heave stern"));
+    thHeaveS->setSetpoint(getGUI()->DoSlider(slider, 5.f, 515.f, 200.f, -1.0, 1.0, thHeaveS->getSetpoint(), "Heave stern"));
     
     slider.item = 9;
     Thruster* thHeaveB = (Thruster*)getSimulationManager()->getActuator("ThrusterHeaveBow");
-    thHeaveB->setSetpoint(IMGUI::getInstance()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, thHeaveB->getSetpoint(), "Heave bow"));
+    thHeaveB->setSetpoint(getGUI()->DoSlider(slider, 5.f, 570.f, 200.f, -1.0, 1.0, thHeaveB->getSetpoint(), "Heave bow"));
     
     
     ForceTorque* ft = (ForceTorque*)getSimulationManager()->getSensor("FT");
@@ -93,13 +93,13 @@ void UnderwaterTestApp::DoHUD()
     Ocean* ocean = getSimulationManager()->getOcean();
     
     slider.item = 10;
-    ocean->setAlgeaBloomFactor(IMGUI::getInstance()->DoSlider(slider, 5.f, 625.f, 200.f, 0.0, 1.0, ocean->getAlgeaBloomFactor(), "Algea bloom"));
+    ocean->setAlgeaBloomFactor(getGUI()->DoSlider(slider, 5.f, 625.f, 200.f, 0.0, 1.0, ocean->getAlgeaBloomFactor(), "Algea bloom"));
     
     slider.item = 11;
-    ocean->setTurbidity(IMGUI::getInstance()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, ocean->getTurbidity(), "Turbidity"));
+    ocean->setTurbidity(getGUI()->DoSlider(slider, 5.f, 680.f, 200.f, 0.0, 1000.0, ocean->getTurbidity(), "Turbidity"));
     
     slider.item = 13;
-    double newTime = IMGUI::getInstance()->DoSlider(slider, 5.f, 735.f, 200.f, 0.0, 24.0, decimalTime, "Time");
+    double newTime = getGUI()->DoSlider(slider, 5.f, 735.f, 200.f, 0.0, 24.0, decimalTime, "Time");
 	if(newTime != decimalTime)
 	{
 		decimalTime = newTime;
@@ -120,7 +120,7 @@ void UnderwaterTestApp::DoHUD()
     slider.item = 12;
     std::vector<unsigned short> dims;
     dims.push_back(2);
-    IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Test", new btScalar[2]{-20.f,20.f});
+    getGUI()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Test", new btScalar[2]{-20.f,20.f});
 #endif
     /*
     ui_id plot;

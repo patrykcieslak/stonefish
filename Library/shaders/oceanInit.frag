@@ -1,4 +1,5 @@
-#version 430 core
+#version 330 core
+//430
 layout(location = 0,index=0) out vec4 fragColor[3];
 in vec2 texcoord;
 

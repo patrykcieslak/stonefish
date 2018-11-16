@@ -10,7 +10,7 @@
 
 #include <graphics/OpenGLTrackball.h>
 
-JointsTestApp::JointsTestApp(std::string dataDirPath, int width, int height, JointsTestManager* sim) 
-    : GraphicalSimulationApp("Joints Test", dataDirPath, width, height, sim)
+JointsTestApp::JointsTestApp(std::string dataDirPath, RenderSettings s, JointsTestManager* sim)
+    : GraphicalSimulationApp("Joints Test", dataDirPath, s, sim)
 {
 }

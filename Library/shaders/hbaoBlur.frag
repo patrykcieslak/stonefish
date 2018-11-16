@@ -1,5 +1,5 @@
-#version 430
-
+#version 330
+//430
 const float KERNEL_RADIUS = 3;
   
 layout(location=0) uniform float sharpness;

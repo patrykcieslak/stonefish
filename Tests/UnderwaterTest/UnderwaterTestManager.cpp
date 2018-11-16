@@ -53,9 +53,9 @@ UnderwaterTestManager::UnderwaterTestManager(btScalar stepsPerSecond)
 void UnderwaterTestManager::BuildScenario()
 {
     //General
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, true, true, true, false, false, true);
-    OpenGLPipeline::getInstance()->setDebugSimulation(false);
+    OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
+    glPipeline->setVisibleHelpers(true, true, true, true, false, false, true);
+    glPipeline->setDebugSimulation(false);
     //getTrackball()->setEnabled(false);
     
     ///////MATERIALS////////

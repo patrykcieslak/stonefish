@@ -5,7 +5,7 @@
  * Copyright (c) 2017
 */
 
-#version 330 core
+#version 330
 
 //Cook-Torrance model
 uniform float metallic;

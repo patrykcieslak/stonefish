@@ -15,7 +15,7 @@
 class FallingTestApp : public GraphicalSimulationApp
 {
 public:
-    FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim);
+    FallingTestApp(std::string dataDirPath, RenderSettings s, FallingTestManager* sim);
     void DoHUD();
     
 private:

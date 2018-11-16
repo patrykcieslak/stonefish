@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 in vec2 texcoord;
 out vec4 fragcolor;
@@ -42,8 +42,8 @@ float Uncharted2TonemapValue(float v)
 void main(void)
 {
     //Read textures
-    float lumAvg = texture2D(texAverage, vec2(0.5, 0.5)).r;
-    vec3 rgbColor = texture2D(texHDR, texcoord).rgb;
+    float lumAvg = texture(texAverage, vec2(0.5, 0.5)).r;
+    vec3 rgbColor = texture(texHDR, texcoord).rgb;
     
     //Correct exposure and tonemap
     float exposure = clamp(0.2/lumAvg, 0.0, 2.0);

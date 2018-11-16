@@ -13,10 +13,18 @@
 int main(int argc, const char * argv[])
 {
     //feenableexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
-    feenableexcept(FE_INVALID | FE_OVERFLOW);
+    //feenableexcept(FE_INVALID | FE_OVERFLOW);
+    
+    RenderSettings s;
+    s.windowW = 800;
+    s.windowH = 600;
+    s.shadows = RenderQuality::QUALITY_MEDIUM;
+    s.ao = RenderQuality::QUALITY_DISABLED;
+    s.atmosphere = RenderQuality::QUALITY_MEDIUM;
+    s.ocean = RenderQuality::QUALITY_MEDIUM;
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(500.0);
-    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", 1500, 1000, simulationManager);
+    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, simulationManager);
     app.Run(false);
     
     return 0;

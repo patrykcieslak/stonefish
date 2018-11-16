@@ -1,5 +1,5 @@
-#version 430
-
+#version 330
+//430
 layout(binding=0) uniform sampler2DArray texResultArray;
 layout(location=0,index=0) out vec4 fragColor;
 

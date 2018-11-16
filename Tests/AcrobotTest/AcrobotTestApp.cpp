@@ -13,8 +13,8 @@
 #include <sensors/ForceTorque.h>
 #include <sensors/Torque.h>
 
-AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, int width, int height, AcrobotTestManager* sim) 
-: GraphicalSimulationApp("Acrobot Test", dataDirPath, width, height, sim)
+AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, RenderSettings s, AcrobotTestManager* sim)
+: GraphicalSimulationApp("Acrobot Test", dataDirPath, s, sim)
 {
 }
 
@@ -26,7 +26,7 @@ void AcrobotTestApp::DoHUD()
     slider1.owner = 0;
     slider1.item = 3;
     slider1.index = 0;
-    getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider1, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider1, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
     char buffer[128];
     GLfloat white[4] = {1.f,1.f,1.f,1.f};

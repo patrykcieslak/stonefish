@@ -1,5 +1,5 @@
-#version 430 core
-
+#version 330 core
+//430
 layout(triangles) in;
 layout(triangle_strip,max_vertices=3) out;
 

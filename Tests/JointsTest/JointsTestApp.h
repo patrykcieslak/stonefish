@@ -15,7 +15,7 @@
 class JointsTestApp : public GraphicalSimulationApp
 {
 public:
-    JointsTestApp(std::string dataDirPath, int width, int height, JointsTestManager* sim);
+    JointsTestApp(std::string dataDirPath, RenderSettings s, JointsTestManager* sim);
 };
 
 #endif

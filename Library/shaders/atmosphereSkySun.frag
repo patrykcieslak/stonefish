@@ -1,4 +1,5 @@
-#version 330 core
+#version 330
+
 uniform vec3 eyePos;
 uniform vec3 sunDir;
 uniform mat4 invProj;
@@ -52,7 +53,7 @@ void main()
 		vec3 skyIlluminance;
 		vec3 sunIlluminance = GetSunAndSkyIlluminance(point - center, normal, sunDir, skyIlluminance);
 		groundLuminance = kGroundAlbedo * (1.0 / PI) * (sunIlluminance + skyIlluminance);
-
+        
 		vec3 transmittance;
 		vec3 inScatter = GetSkyLuminanceToPoint(P, point - center, 0.0, sunDir, transmittance);
 		groundLuminance = groundLuminance * transmittance + inScatter;
@@ -61,7 +62,7 @@ void main()
 
 	//Sky
 	vec3 transmittance;
-	vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance);
+    vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance);
 
 	//Sun
 	luminance += smoothstep(cosSunSize*0.99999, cosSunSize, dot(viewDir, sunDir)) * transmittance * GetSolarLuminance()/30000.0;
@@ -70,5 +71,5 @@ void main()
 	luminance = mix(luminance, groundLuminance, groundAlpha);
 
 	//Color correction
-	fragColor = luminance/whitePoint/10000.0;
+    fragColor = luminance/whitePoint/10000.0;
 }

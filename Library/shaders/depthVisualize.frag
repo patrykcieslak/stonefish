@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 in vec2 texcoord;
 out vec4 fragcolor;
@@ -7,5 +7,5 @@ uniform vec2 range;
 
 void main()
 {
-    fragcolor = (texture2D(texLinearDepth, texcoord).rrrr-range.xxxx)/(range.y-range.x);
+    fragcolor = (texture(texLinearDepth, texcoord).rrrr-range.xxxx)/(range.y-range.x);
 }

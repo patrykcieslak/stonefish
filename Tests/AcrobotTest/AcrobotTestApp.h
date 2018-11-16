@@ -15,7 +15,7 @@
 class AcrobotTestApp : public GraphicalSimulationApp
 {
 public:
-    AcrobotTestApp(std::string dataDirPath, int width, int height, AcrobotTestManager* sim);
+    AcrobotTestApp(std::string dataDirPath, RenderSettings s, AcrobotTestManager* sim);
 
     void DoHUD();
 };

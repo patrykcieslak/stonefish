@@ -1,4 +1,5 @@
-#version 430 core
+#version 400
+
 out vec2 texcoord;
 
 //Draws multiple fullscreen quads as oversized triangles!

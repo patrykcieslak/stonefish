@@ -5,7 +5,7 @@
  * Copyright (c) 2017
 */
 
-#version 330 core
+#version 330
 
 //Blinn-Phong model
 uniform float shininess;

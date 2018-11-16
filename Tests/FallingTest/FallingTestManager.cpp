@@ -17,7 +17,6 @@
 #include <entities/solids/Torus.h>
 #include <entities/solids/Cylinder.h>
 #include <graphics/OpenGLContent.h>
-#include <utils/SystemUtil.hpp>
 #include <sensors/IMU.h>
 #include <sensors/Trajectory.h>
 #include <entities/systems/Manipulator.h>
@@ -27,6 +26,7 @@
 #include <actuators/Thruster.h>
 #include <entities/solids/Compound.h>
 #include <sensors/Accelerometer.h>
+#include <utils/SystemUtil.hpp>
 
 FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SI, EXCLUSIVE)
 {
@@ -34,9 +34,9 @@ FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationMana
 
 void FallingTestManager::BuildScenario()
 {
-	OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, false, true, false, false);
-	OpenGLPipeline::getInstance()->setDebugSimulation(false);
+    OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
+    glPipeline->setVisibleHelpers(true, false, false, false, true, false, false);
+	glPipeline->setDebugSimulation(false);
     setICSolverParams(false);
 	
     ///////MATERIALS////////
@@ -97,7 +97,7 @@ void FallingTestManager::BuildScenario()
     
 	Sphere* sph2 = new Sphere("Sphere2", 0.25f, getMaterialManager()->getMaterial("Steel"), green);
 	Compound* baseB = new Compound("BaseB", sph2, btTransform::getIdentity());
-    FeatherstoneEntity* fe = new FeatherstoneEntity("Test", 1, baseB, getDynamicsWorld(), false);
+    FeatherstoneEntity* fe = new FeatherstoneEntity("Test", 1, baseB, false);
 	AddFeatherstoneEntity(fe, btTransform(btQuaternion::getIdentity(), btVector3(2,0,2)));
 	
 	//Manipulator* manipA = new Manipulator("ArmA", 1, baseA, btTransform::getIdentity());

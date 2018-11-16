@@ -3,8 +3,8 @@
     http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
     + texture coordinates precomputed in vertex shader.
  */
-#version 430 core
-
+#version 400
+//430
 out vec2 texcoord;
 out vec2 blurtexcoord[4];
 uniform vec2 texelOffset;

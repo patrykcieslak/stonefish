@@ -210,12 +210,12 @@ void GetRMuFromTransmittanceTextureUv(const in AtmosphereParameters atmosphere, 
 	mu = ClampCosine(mu);
 }
 
-DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundaryTexture(const in AtmosphereParameters atmosphere, vec2 gl_frag_coord) 
+DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundaryTexture(const in AtmosphereParameters atmosphere, vec2 frag_coord)
 {
 	const vec2 TRANSMITTANCE_TEXTURE_SIZE = vec2(TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
 	Length r;
 	Number mu;
-	GetRMuFromTransmittanceTextureUv(atmosphere, gl_frag_coord / TRANSMITTANCE_TEXTURE_SIZE, r, mu);
+	GetRMuFromTransmittanceTextureUv(atmosphere, frag_coord / TRANSMITTANCE_TEXTURE_SIZE, r, mu);
 	return ComputeTransmittanceToTopAtmosphereBoundary(atmosphere, r, mu);
 }
 
@@ -417,19 +417,19 @@ void GetRMuMuSNuFromScatteringTextureUvwz(const in AtmosphereParameters atmosphe
 	nu = ClampCosine(uvwz.x * 2.0 - 1.0);
 }
 
-void GetRMuMuSNuFromScatteringTextureFragCoord(const in AtmosphereParameters atmosphere, vec3 gl_frag_coord, out Length r, out Number mu, out Number mu_s, out Number nu,
+void GetRMuMuSNuFromScatteringTextureFragCoord(const in AtmosphereParameters atmosphere, vec3 frag_coord, out Length r, out Number mu, out Number mu_s, out Number nu,
 												out bool ray_r_mu_intersects_ground) 
 {
 	const vec4 SCATTERING_TEXTURE_SIZE = vec4(SCATTERING_TEXTURE_NU_SIZE - 1, SCATTERING_TEXTURE_MU_S_SIZE, SCATTERING_TEXTURE_MU_SIZE, SCATTERING_TEXTURE_R_SIZE);
-	Number frag_coord_nu = floor(gl_frag_coord.x / Number(SCATTERING_TEXTURE_MU_S_SIZE));
-	Number frag_coord_mu_s = mod(gl_frag_coord.x, Number(SCATTERING_TEXTURE_MU_S_SIZE));
-	vec4 uvwz =	vec4(frag_coord_nu, frag_coord_mu_s, gl_frag_coord.y, gl_frag_coord.z) / SCATTERING_TEXTURE_SIZE;
+	Number frag_coord_nu = floor(frag_coord.x / Number(SCATTERING_TEXTURE_MU_S_SIZE));
+	Number frag_coord_mu_s = mod(frag_coord.x, Number(SCATTERING_TEXTURE_MU_S_SIZE));
+	vec4 uvwz =	vec4(frag_coord_nu, frag_coord_mu_s, frag_coord.y, frag_coord.z) / SCATTERING_TEXTURE_SIZE;
 	GetRMuMuSNuFromScatteringTextureUvwz(atmosphere, uvwz, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
 	// Clamp nu to its valid range of values, given mu and mu_s.
 	nu = clamp(nu, mu * mu_s - sqrt((1.0 - mu * mu) * (1.0 - mu_s * mu_s)), mu * mu_s + sqrt((1.0 - mu * mu) * (1.0 - mu_s * mu_s)));
 }
 
-void ComputeSingleScatteringTexture(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture, vec3 gl_frag_coord,
+void ComputeSingleScatteringTexture(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture, vec3 frag_coord,
 									out IrradianceSpectrum rayleigh, out IrradianceSpectrum mie) 
 {
 	Length r;
@@ -437,7 +437,7 @@ void ComputeSingleScatteringTexture(const in AtmosphereParameters atmosphere, Tr
 	Number mu_s;
 	Number nu;
 	bool ray_r_mu_intersects_ground;
-	GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, gl_frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
+	GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
 	ComputeSingleScattering(atmosphere, transmittance_texture, r, mu, mu_s, nu, ray_r_mu_intersects_ground, rayleigh, mie);
 }
 
@@ -596,26 +596,26 @@ RadianceDensitySpectrum ComputeScatteringDensityTexture(const in AtmosphereParam
 														ReducedScatteringTexture single_rayleigh_scattering_texture,
 														ReducedScatteringTexture single_mie_scattering_texture,
 														ScatteringTexture multiple_scattering_texture,
-														IrradianceTexture irradiance_texture, vec3 gl_frag_coord, int scattering_order) 
+														IrradianceTexture irradiance_texture, vec3 frag_coord, int scattering_order)
 {
 	Length r;
 	Number mu;
 	Number mu_s;
 	Number nu;
 	bool ray_r_mu_intersects_ground;
-	GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, gl_frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
+	GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
 	return ComputeScatteringDensity(atmosphere, transmittance_texture, single_rayleigh_scattering_texture, single_mie_scattering_texture,
 										multiple_scattering_texture, irradiance_texture, r, mu, mu_s, nu, scattering_order);
 }
 
 RadianceSpectrum ComputeMultipleScatteringTexture(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture,
-												  ScatteringDensityTexture scattering_density_texture, vec3 gl_frag_coord, out Number nu) 
+												  ScatteringDensityTexture scattering_density_texture, vec3 frag_coord, out Number nu)
 {
 	Length r;
 	Number mu;
 	Number mu_s;
 	bool ray_r_mu_intersects_ground;
-	GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, gl_frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
+	GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
 	return ComputeMultipleScattering(atmosphere, transmittance_texture, scattering_density_texture, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
 }
 
@@ -679,21 +679,21 @@ void GetRMuSFromIrradianceTextureUv(const in AtmosphereParameters atmosphere, ve
 
 const vec2 IRRADIANCE_TEXTURE_SIZE = vec2(IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
 
-IrradianceSpectrum ComputeDirectIrradianceTexture(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture, vec2 gl_frag_coord) 
+IrradianceSpectrum ComputeDirectIrradianceTexture(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture, vec2 frag_coord)
 {
 	Length r;
 	Number mu_s;
-	GetRMuSFromIrradianceTextureUv(atmosphere, gl_frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
+	GetRMuSFromIrradianceTextureUv(atmosphere, frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
 	return ComputeDirectIrradiance(atmosphere, transmittance_texture, r, mu_s);
 }
 
 IrradianceSpectrum ComputeIndirectIrradianceTexture(const in AtmosphereParameters atmosphere, ReducedScatteringTexture single_rayleigh_scattering_texture,
 													ReducedScatteringTexture single_mie_scattering_texture, ScatteringTexture multiple_scattering_texture,
-													vec2 gl_frag_coord, int scattering_order) 
+													vec2 frag_coord, int scattering_order)
 {
 	Length r;
 	Number mu_s;
-	GetRMuSFromIrradianceTextureUv(atmosphere, gl_frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
+	GetRMuSFromIrradianceTextureUv(atmosphere, frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
 	return ComputeIndirectIrradiance(atmosphere, single_rayleigh_scattering_texture, single_mie_scattering_texture, multiple_scattering_texture, r, mu_s, scattering_order);
 }
 
@@ -774,12 +774,13 @@ function, where most of the computations are used to correctly handle the case
 of viewers outside the atmosphere, and the case of light shafts:
 */
 
-RadianceSpectrum GetSkyRadiance(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture, ReducedScatteringTexture scattering_texture,
-								ReducedScatteringTexture single_mie_scattering_texture, Position camera, Direction view_ray, Length shadow_length,
-								Direction sun_direction, out DimensionlessSpectrum transmittance) 
+RadianceSpectrum GetSkyRadiance(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture,
+                                ReducedScatteringTexture scattering_texture, ReducedScatteringTexture single_mie_scattering_texture,
+                                Position camera, Direction view_ray, Length shadow_length, Direction sun_direction,
+                                out DimensionlessSpectrum transmittance)
 {
 	// Compute the distance to the top atmosphere boundary along the view ray, assuming the viewer is in space (or NaN if the view ray does not intersect the atmosphere).
-	Length r = length(camera);
+    Length r = length(camera);
 	Length rmu = dot(camera, view_ray);
 	Length distance_to_top_atmosphere_boundary = -rmu - sqrt(rmu * rmu - r * r + atmosphere.top_radius * atmosphere.top_radius);
 	// If the viewer is in space and the view ray intersects the atmosphere, move the viewer to the top atmosphere boundary (along the view ray):
@@ -842,8 +843,9 @@ correctly handle the case of viewers outside the atmosphere):
 */
 
 RadianceSpectrum GetSkyRadianceToPoint(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture,
-										ReducedScatteringTexture scattering_texture, ReducedScatteringTexture single_mie_scattering_texture,
-										Position camera, Position point, Length shadow_length, Direction sun_direction, out DimensionlessSpectrum transmittance) 
+                                       ReducedScatteringTexture scattering_texture, ReducedScatteringTexture single_mie_scattering_texture,
+                                       Position camera, Position point, Length shadow_length, Direction sun_direction,
+                                       out DimensionlessSpectrum transmittance)
 {
 	// Compute the distance to the top atmosphere boundary along the view ray, assuming the viewer is in space (or NaN if the view ray does not intersect the atmosphere).
 	Direction view_ray = normalize(point - camera);
@@ -926,8 +928,8 @@ approximation:
 */
 
 IrradianceSpectrum GetSunAndSkyIrradiance(const in AtmosphereParameters atmosphere, TransmittanceTexture transmittance_texture,
-											IrradianceTexture irradiance_texture, Position point, Direction normal, Direction sun_direction,
-											out IrradianceSpectrum sky_irradiance) 
+                                          IrradianceTexture irradiance_texture, Position point, Direction normal, Direction sun_direction,
+                                          out IrradianceSpectrum sky_irradiance) 
 {
 	Length r = length(point);
 	Number mu_s = dot(point, sun_direction) / r;

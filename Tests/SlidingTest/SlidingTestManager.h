@@ -9,7 +9,7 @@
 #ifndef __Stonefish__SlidingTestManager__
 #define __Stonefish__SlidingTestManager__
 
-#include "SimulationManager.h"
+#include <core/SimulationManager.h>
 
 class SlidingTestManager : public SimulationManager
 {

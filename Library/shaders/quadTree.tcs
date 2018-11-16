@@ -1,5 +1,5 @@
-#version 430 core
-
+#version 330 core
+//430
 layout(vertices = 4) out;
 in float edgeDiv[];
 uniform float tessDiv;

@@ -11,8 +11,8 @@
 #include <entities/systems/Manipulator.h>
 #include <sensors/Accelerometer.h>
 
-FallingTestApp::FallingTestApp(std::string dataDirPath, int width, int height, FallingTestManager* sim) 
-    : GraphicalSimulationApp("Falling Test", dataDirPath, width, height, sim)
+FallingTestApp::FallingTestApp(std::string dataDirPath, RenderSettings s, FallingTestManager* sim)
+    : GraphicalSimulationApp("Falling Test", dataDirPath, s, sim)
 {
     checked = false;
 }
@@ -25,7 +25,7 @@ void FallingTestApp::DoHUD()
     slider.owner = 1;
     slider.item = 0;
 	slider.index = 0;
-	getSimulationManager()->setStepsPerSecond(IMGUI::getInstance()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+	getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
 	slider.item = 1;
 	std::vector<unsigned short> dims;

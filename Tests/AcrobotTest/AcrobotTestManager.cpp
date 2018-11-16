@@ -39,9 +39,9 @@ AcrobotTestManager::AcrobotTestManager(btScalar stepsPerSecond) : SimulationMana
 void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
-    OpenGLPipeline::getInstance()->setRenderingEffects(true, true, true);
-    OpenGLPipeline::getInstance()->setVisibleHelpers(true, false, false, true, false, false, false);
-    OpenGLPipeline::getInstance()->setDebugSimulation(false);
+    OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
+    glPipeline->setVisibleHelpers(true, false, false, true, false, false, false);
+    glPipeline->setDebugSimulation(false);
     setGravity(9.81);
     setICSolverParams(false);
     
