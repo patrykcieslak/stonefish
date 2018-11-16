@@ -3,4 +3,4 @@ Description: Marine and terrestial robotics simulation library
 Requires: bullet freetype2 sdl2 glew
 Version: 1.0
 Libs: -L/usr/local/lib -lStonefish -lBulletDynamics -lBulletCollision -lLinearMath -lfreetype -lSDL2 -lGL -lGLU -lGLEW
-Cflags: -DBT_EULER_DEFAULT_ZYX -I/usr/local/include
+Cflags: -DBT_EULER_DEFAULT_ZYX -I/usr/local/include -I/usr/local/include/Stonefish

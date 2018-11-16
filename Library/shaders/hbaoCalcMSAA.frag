@@ -4,7 +4,7 @@ https://github.com/NVIDIAGameWorks/D3DSamples/tree/master/samples/DeinterleavedT
 
 */
 
-#version 330
+#version 430
 //430
 #define AO_RANDOMTEX_SIZE 4
 

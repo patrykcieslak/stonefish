@@ -1,4 +1,4 @@
-#version 410
+#version 430
 
 layout(location=0) uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
 layout(location=1) uniform int sampleIndex;

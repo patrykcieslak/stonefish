@@ -141,6 +141,7 @@ OpenGLContent::OpenGLContent()
 	viewportSize = glm::vec2(800.f,600.f);
 	mode = DrawingMode::FULL;
 	clipPlane = glm::vec4();
+    materialShaders = std::vector<GLSLShader*>(0);
 }
 
 OpenGLContent::~OpenGLContent()
@@ -1950,7 +1951,7 @@ Mesh* OpenGLContent::LoadOBJ(std::string filename, GLfloat scale, bool smooth)
 	
 #ifdef DEBUG
 	printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->vertices.size()-genVStart);
-	printf("Total time: %lld\n", end-start);
+	printf("Total time: %ld\n", end-start);
 #endif	
 	
 	cInfo("Loaded mesh with %ld faces in %ld ms.", mesh->faces.size(), (end-start)/1000);

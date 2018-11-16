@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Workspace Name="Stonefish" Database="" Version="10.0.0" SWTLW="Yes">
+<CodeLite_Workspace Name="Stonefish" Database="" Version="10.0.0">
   <WorkspaceParserMacros/>
   <WorkspaceParserPaths>
     <Include Path="/usr/include/eigen3/"/>
@@ -7,21 +7,23 @@
     <Include Path="/usr/include/"/>
     <Include Path="/usr/local/include/"/>
   </WorkspaceParserPaths>
-  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="Yes"/>
+  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
   <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
   <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
   <Project Name="AcrobotTest" Path="Tests/AcrobotTest/AcrobotTest.project" Active="No"/>
-  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="No"/>
+  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="Yes"/>
   <Project Name="ConsoleTest" Path="Tests/ConsoleTest/ConsoleTest.project" Active="No"/>
+  <Project Name="SlidingTest" Path="Tests/SlidingTest/SlidingTest.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
-      <Environment/>
+      <Environment>LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:$(WorkspacePath)/Library/build/Debug</Environment>
       <Project Name="libStonefish" ConfigName="Debug"/>
       <Project Name="FallingTest" ConfigName="Debug"/>
       <Project Name="JointsTest" ConfigName="Debug"/>
       <Project Name="AcrobotTest" ConfigName="Debug"/>
       <Project Name="UnderwaterTest" ConfigName="Debug"/>
       <Project Name="ConsoleTest" ConfigName="Debug"/>
+      <Project Name="SlidingTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
@@ -31,6 +33,7 @@
       <Project Name="AcrobotTest" ConfigName="Release"/>
       <Project Name="UnderwaterTest" ConfigName="Release"/>
       <Project Name="ConsoleTest" ConfigName="Release"/>
+      <Project Name="SlidingTest" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

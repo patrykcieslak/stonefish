@@ -16,10 +16,10 @@ int main(int argc, const char * argv[])
     //feenableexcept(FE_INVALID | FE_OVERFLOW);
     
     RenderSettings s;
-    s.windowW = 800;
-    s.windowH = 600;
-    s.shadows = RenderQuality::QUALITY_MEDIUM;
-    s.ao = RenderQuality::QUALITY_DISABLED;
+    s.windowW = 1600;
+    s.windowH = 1200;
+    s.shadows = RenderQuality::QUALITY_HIGH;
+    s.ao = RenderQuality::QUALITY_HIGH;
     s.atmosphere = RenderQuality::QUALITY_MEDIUM;
     s.ocean = RenderQuality::QUALITY_MEDIUM;
     

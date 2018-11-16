@@ -25,15 +25,17 @@ Console::Console()
 	texQuadShader = NULL;
 	lastTime = 0;
 	ready = false;
+    lines = std::vector<ConsoleMessage>(0);
+    linesMutex = SDL_CreateMutex();
 }
 
 Console::~Console()
 {
+    lines.clear();
+    SDL_DestroyMutex(linesMutex);
+    
 	if(ready)
 	{
-		lines.clear();
-		SDL_DestroyMutex(linesMutex);
-		
 		if(printer != NULL)
 			delete printer;
 		if(logoTexture > 0)
@@ -103,8 +105,6 @@ void Console::Init(GLuint w, GLuint h)
 	texQuadShader->AddUniform("rect", ParameterType::VEC4);
 	texQuadShader->AddUniform("tex", ParameterType::INT);
 	texQuadShader->AddUniform("color", ParameterType::VEC4);
-	
-	linesMutex = SDL_CreateMutex();
 	
 	ready = true;
 	lastTime = GetTimeInMicroseconds();
@@ -308,15 +308,12 @@ void Console::Print(int messageType, const char *format, ...)
     }
 #endif
 	
-	if(ready)
-	{
-		ConsoleMessage msg;
-		msg.type = messageType;
-		msg.text = std::string(buffer);
-		SDL_LockMutex(linesMutex);
-		lines.push_back(msg);
-		SDL_UnlockMutex(linesMutex);
-	}
+    ConsoleMessage msg;
+	msg.type = messageType;
+	msg.text = std::string(buffer);
+	SDL_LockMutex(linesMutex);
+	lines.push_back(msg);
+	SDL_UnlockMutex(linesMutex);
 }
 
 void Console::Clear()

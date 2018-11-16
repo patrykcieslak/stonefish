@@ -1,5 +1,5 @@
-#version 330
-//430
+#version 430
+
 layout(location=0) uniform vec4 info; // xy
 vec2 uvOffset = info.xy;
 vec2 invResolution = info.zw;

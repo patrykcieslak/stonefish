@@ -1,27 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Project Name="FallingTest" Version="10.0.0" InternalType="Console">
+<CodeLite_Project Name="SlidingTest" Version="10.0.0" InternalType="Console">
   <Plugins>
     <Plugin Name="qmake">
-      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
+      <![CDATA[00010001N0005Debug000000000000]]>
     </Plugin>
   </Plugins>
+  <VirtualDirectory Name="include">
+    <File Name="SlidingTestApp.h"/>
+    <File Name="SlidingTestManager.h"/>
+  </VirtualDirectory>
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
     <File Name="main.cpp"/>
-    <File Name="FallingTestApp.cpp"/>
-    <File Name="FallingTestManager.cpp"/>
+    <File Name="SlidingTestApp.cpp"/>
+    <File Name="SlidingTestManager.cpp"/>
   </VirtualDirectory>
-  <VirtualDirectory Name="include">
-    <File Name="FallingTestApp.h"/>
-    <File Name="FallingTestManager.h"/>
-  </VirtualDirectory>
-  <Dependencies Name="Release">
-    <Project Name="libStonefish"/>
-  </Dependencies>
-  <Dependencies Name="Debug">
-    <Project Name="libStonefish"/>
-  </Dependencies>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-std=c++14" C_Options="" Assembler="">
@@ -36,8 +30,8 @@
       </Compiler>
       <Linker Options="">
         <LibraryPath Value="/usr/lib"/>
-        <LibraryPath Value="/usr/local/lib"/>
         <LibraryPath Value="/usr/lib/x86_64-linux-gnu"/>
+        <LibraryPath Value="/usr/local/lib"/>
         <Library Value="BulletCollision"/>
         <Library Value="BulletDynamics"/>
         <Library Value="LinearMath"/>
@@ -58,12 +52,12 @@
         <Library Value="Stonefish_debug"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
-      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="yes">
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
         <DebuggerSearchPaths/>
         <PostConnectCommands/>
         <StartupCommands/>
@@ -91,16 +85,14 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Release" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Release" CompilerType="clang( tags/RELEASE_380/final )" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-O2;-Wall" C_Options="-O2;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
-      <Linker Options="" Required="yes">
-        <LibraryPath Value="../../Library/build/Release"/>
-      </Linker>
+      <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>

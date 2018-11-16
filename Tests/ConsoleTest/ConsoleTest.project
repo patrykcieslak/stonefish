@@ -23,7 +23,7 @@
     <GlobalSettings>
       <Compiler Options="-std=c++14" C_Options="" Assembler="">
         <IncludePath Value="."/>
-        <IncludePath Value="../../Library/include/Stonefish"/>
+        <IncludePath Value="../../Library/include"/>
         <IncludePath Value="/usr/include/freetype2"/>
         <IncludePath Value="/usr/include/eigen3"/>
         <IncludePath Value="/usr/local/include/bullet"/>

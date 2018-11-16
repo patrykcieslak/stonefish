@@ -30,6 +30,6 @@ install(
     LIBRARY DESTINATION /usr/local/lib
 )
 
-install(DIRECTORY Library/include DESTINATION /usr/local/include/Stonefish)
-install(DIRECTORY Library/shaders DESTINATION /usr/local/share/Stonefish)
+install(DIRECTORY Library/include/ DESTINATION /usr/local/include/Stonefish)
+install(DIRECTORY Library/shaders/ DESTINATION /usr/local/share/Stonefish/shaders)
 install(FILES Library/stonefish.pc DESTINATION /usr/local/lib/pkgconfig)

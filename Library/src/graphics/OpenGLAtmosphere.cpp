@@ -127,7 +127,7 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
         
         case RenderQuality::QUALITY_LOW:
             sunShadowmapSize = 1024;
-            sunShadowmapSplits = 3;
+            sunShadowmapSplits = 4;
             break;
         
         case RenderQuality::QUALITY_MEDIUM:
@@ -137,7 +137,7 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
         
         case RenderQuality::QUALITY_HIGH:
             sunShadowmapSize = 4096;
-            sunShadowmapSplits = 5;
+            sunShadowmapSplits = 4;
             break;
     }
     
@@ -533,14 +533,14 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
     glm::mat4 lightClipSpace[4];
 
     //For every inactive split
-    for(unsigned int i = sunShadowmapSplits; i<4; ++i) {
+    /*for(unsigned int i = sunShadowmapSplits; i<4; ++i) {
         frustumNear[i] = 0;
         frustumFar[i] = 0;
         lightClipSpace[i] = glm::mat4();
-    }
+    }*/
 
     //For every active split
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {
+    for(unsigned int i = 0; i < 4; ++i) {
         frustumNear[i] = sunShadowFrustum[i].near;
         frustumFar[i] = sunShadowFrustum[i].far;
         lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
