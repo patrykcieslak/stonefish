@@ -15,6 +15,9 @@
 #include "entities/Entity.h"
 #include "entities/forcefields/Ocean.h"
 
+namespace sf
+{
+
 typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidType;
 typedef enum {HYDRO_PROXY_NONE = 0, HYDRO_PROXY_SPHERE, HYDRO_PROXY_CYLINDER, HYDRO_PROXY_ELLIPSOID} HydrodynamicProxyType;
 
@@ -49,7 +52,7 @@ public:
 	virtual void ApplyFluidForces();
 	
 	//Rigid body
-	void ScalePhysicalPropertiesToArbitraryMass(btScalar mass);
+    void ScalePhysicalPropertiesToArbitraryMass(btScalar mass);
     void SetArbitraryPhysicalProperties(btScalar mass, const btVector3& inertia, const btTransform& geomToCOG);
 	void SetHydrodynamicProperties(const eigMatrix6x6& addedMass, const eigMatrix6x6& damping, const btTransform& geomToCOB);
 	void SetAcceleration(const btVector3& lin, const btVector3& ang);
@@ -139,4 +142,6 @@ protected:
     bool dispCoordSys;
 };
 
+}
+    
 #endif

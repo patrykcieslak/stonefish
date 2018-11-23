@@ -9,11 +9,15 @@
 #include "entities/solids/Torus.h"
 
 #include "core/TorusShape.h"
+#include "utils/MathUtil.hpp"
 
-Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+using namespace sf;
+
+Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, const btTransform& originTrans, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     majorRadius = UnitSystem::SetLength(torusMajorRadius);
     minorRadius = UnitSystem::SetLength(torusMinorRadius);
+    localTransform = UnitSystem::SetTransform(originTrans);
     
     //Calculate physical properties
     if(thick > btScalar(0) && thick/btScalar(2) < minorRadius)
@@ -37,10 +41,14 @@ Torus::Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMi
         Ipri = btVector3(Id,Ia,Id);
     }
     
-    //dragCoeff = btVector3(0.5, 0.5, 0.5);//btVector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
+    //Build geometry
+    mesh = OpenGLContent::BuildTorus(majorRadius, minorRadius);
+    transformMesh(mesh, localTransform);
     
-	mesh = OpenGLContent::BuildTorus(majorRadius, minorRadius);
-	ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
+    //Compute hydrodynamic properties
+    ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
+    CoB = localTransform.getOrigin();
+    //dragCoeff = btVector3(0.5, 0.5, 0.5);//btVector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
 }
 
 Torus::~Torus()
@@ -54,7 +62,9 @@ SolidType Torus::getSolidType()
 
 btCollisionShape* Torus::BuildCollisionShape()
 {
-    TorusShape* colShape = new TorusShape(majorRadius, minorRadius);
+    TorusShape* torusShape = new TorusShape(majorRadius, minorRadius);
+    btCompoundShape* colShape = new btCompoundShape();
+    colShape->addChildShape(localTransform, torusShape);
    // colShape->setMargin(0.0);
     return colShape;
 }

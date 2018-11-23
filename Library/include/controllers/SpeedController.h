@@ -10,14 +10,17 @@
 #define __Stonefish_SpeedController__
 
 #include "actuators/Motor.h"
-#include "sensors/RotaryEncoder.h"
+#include "sensors/scalar/RotaryEncoder.h"
 #include "controllers/FeedbackController.h"
+
+namespace sf
+{
 
 /*! Speed controller with PID */
 class SpeedController : public FeedbackController
 {
 public:
-    SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency = btScalar(-1.));
+    SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency = btScalar(-1));
     ~SpeedController();
     
     void Reset();
@@ -41,6 +44,7 @@ private:
     btScalar lastError;
     btScalar integratedError;
 };
-
+    
+}
 
 #endif

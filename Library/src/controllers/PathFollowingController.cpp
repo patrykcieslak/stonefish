@@ -10,6 +10,8 @@
 
 #include "controllers/PathGenerator2D.h"
 
+using namespace sf;
+
 PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency) : Controller(uniqueName, frequency)
 {
     inputPath = pathGenerator;

@@ -11,6 +11,9 @@
 
 #include "entities/forcefields/VelocityField.h"
 
+namespace sf
+{
+
 //! Pipe (current) velocity field class.
 /*!
 	Class implements a velocity field in a shape of a simple tube with variable diameter.
@@ -31,5 +34,7 @@ private:
     btScalar vin;
     btScalar gamma;
 };
+    
+}
 
 #endif

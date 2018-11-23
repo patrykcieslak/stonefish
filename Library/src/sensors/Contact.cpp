@@ -10,8 +10,10 @@
 
 #include "core/SimulationApp.h"
 #include "graphics/OpenGLPipeline.h"
-#include "utils/ScientificFileUtil.h"
 #include "entities/SolidEntity.h"
+#include "utils/ScientificFileUtil.h"
+
+using namespace sf;
 
 Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {

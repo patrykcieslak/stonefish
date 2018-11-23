@@ -1,13 +1,13 @@
-#version 410
+#version 330
 
-uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
+uniform vec4 clipInfo;
 uniform sampler2D texDepth;
 out float fragColor;
-/*
-layout(location=0) uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
+
+/*layout(location=0) uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
 layout(binding=0)  uniform sampler2D texDepth;
-layout(location=0,index=0) out float fragColor;
-*/
+layout(location=0,index=0) out float fragColor;*/
+
 float reconstructCSZ(float d, vec4 clipInfo) 
 {
 	if(clipInfo[3] != 0)

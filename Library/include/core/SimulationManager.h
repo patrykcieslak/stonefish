@@ -15,12 +15,12 @@
 #include "core/UnitSystem.h"
 #include "core/NameManager.h"
 #include "core/MaterialManager.h"
+#include "core/Robot.h"
 
 //Entities
 #include "entities/Entity.h"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
-#include "entities/SystemEntity.h"
 #include "entities/forcefields/Ocean.h"
 
 //Dynamic elements
@@ -36,6 +36,9 @@
 #include "graphics/OpenGLDebugDrawer.h"
 #include "graphics/Console.h"
 
+namespace sf
+{
+    
 //Simulation algorithm settings
 typedef enum {SI, DANTZIG, PROJ_GAUSS_SIEDEL, LEMKE, NNCG} SolverType;
 typedef enum {INCLUSIVE, EXCLUSIVE} CollisionFilteringType;
@@ -70,12 +73,12 @@ public:
     void AdvanceSimulation();
     void UpdateDrawingQueue();
 	
-    void EnableOcean(Liquid* f = NULL);
-	void AddEntity(Entity* ent);
+    bool LoadSDF(const std::string& path);
+    void AddRobot(Robot* robot, const btTransform& worldTransform);
+    void AddEntity(Entity* ent);
     void AddStaticEntity(StaticEntity* ent, const btTransform& worldTransform);
     void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
     void AddFeatherstoneEntity(FeatherstoneEntity* ent, const btTransform& worldTransform);
-    void AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform);
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
@@ -83,6 +86,7 @@ public:
     Contact* AddContact(Entity* entA, Entity* entB, size_type contactHistoryLength = 1);
     void EnableCollision(Entity* entA, Entity* entB);
     void DisableCollision(Entity* entA, Entity* entB);
+    void EnableOcean(bool waves = false, Liquid* f = NULL);
     
 	Entity* PickEntity(int x, int y);
     int CheckCollision(Entity* entA, Entity* entB);
@@ -181,5 +185,7 @@ private:
     OpenGLTrackball* trackball;
     OpenGLDebugDrawer* debugDrawer;
 };
+    
+}
 
 #endif

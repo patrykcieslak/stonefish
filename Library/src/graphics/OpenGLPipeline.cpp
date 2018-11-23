@@ -16,11 +16,12 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/Console.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
 #include "entities/forcefields/Ocean.h"
-#include "entities/systems/Manipulator.h"
 #include "controllers/PathGenerator.h"
 #include "controllers/PathFollowingController.h"
+
+using namespace sf;
 
 OpenGLPipeline::OpenGLPipeline(RenderSettings s)
 {
@@ -37,7 +38,6 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_MULTISAMPLE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glPointSize(1.f);
@@ -46,6 +46,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s)
     glPatchParameteri(GL_PATCH_VERTICES, 4);
     glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
     glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, new GLfloat[4]{1,1,1,1});
+    if(s.msaa) glEnable(GL_MULTISAMPLE); else glDisable(GL_MULTISAMPLE);
     
     GLint texUnits;
     GLint maxTexLayers;
@@ -60,19 +61,14 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s)
     if(GLEW_VERSION_3_3)
     {
         cInfo("OpenGL 3.3 supported.");
-        if(GLEW_VERSION_4_0)
-        {
-            cInfo("OpenGL 4.0 supported.");
-            if(GLEW_VERSION_4_3)
+        
+        if(GLEW_VERSION_4_3)
             cInfo("OpenGL 4.3 supported.");
-            else
-            cWarning("OpenGL 4.3 not supported!");
-        }
         else
-        cWarning("OpenGL 4.0 not supported!");
+            cWarning("OpenGL 4.3 not supported!");
     }
     else
-    cCritical("OpenGL 3.3 not supported!");
+        cCritical("OpenGL 3.3 not supported - minimum requirements not met!");
     
     //Load shaders and create rendering buffers
     OpenGLAtmosphere::getInstance()->Init(settings.atmosphere, settings.shadows);
@@ -109,6 +105,11 @@ OpenGLPipeline::~OpenGLPipeline()
     glDeleteTextures(1, &screenTex);
     glDeleteFramebuffers(1, &screenFBO);
     SDL_DestroyMutex(drawingQueueMutex);
+}
+
+RenderSettings OpenGLPipeline::getSettings() const
+{
+    return settings;
 }
 
 void OpenGLPipeline::setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics)
@@ -187,7 +188,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(ocean != NULL)
     {
         ocean->getOpenGLOcean()->Simulate();
-        renderMode = settings.ocean > RenderQuality::QUALITY_DISABLED ? (ocean->usesTrueWaves() ? 2 : 1) : 0;
+        renderMode = settings.ocean > RenderQuality::QUALITY_DISABLED ? (ocean->hasWaves() ? 2 : 1) : 0;
     }
     
 	/*GLfloat az, elev;
@@ -291,7 +292,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 {
                     OpenGLOcean* glOcean = ocean->getOpenGLOcean();
             
-                    if(camera->GetEyePosition().z >= 0.f) {
+                    if(camera->GetEyePosition().z >= 0.f)
+                    {
                         glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                         GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
                         glDrawBuffers(2, renderBuffs);
@@ -336,13 +338,15 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                         //Draw water surface
                         glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), camera->getReflectionTexture(), viewport);
-            
+                        
                         //Render sky
                         OpenGLAtmosphere::getInstance()->DrawSkyAndSun(camera);
-            
+                        
                         //Go to postprocessing stage
                         camera->EnterPostprocessing();
-                    } else { //Underwater
+                    }
+                    else //Underwater
+                    {
                         glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                         GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
                         glDrawBuffers(2, renderBuffs);
@@ -411,9 +415,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         //Go to postprocessing again
                         camera->EnterPostprocessing();
                     }
-                } else if(renderMode == 2) {
-                    /*
-                     OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+                }
+                else if(renderMode == 2)
+                {
+                    /*OpenGLOcean* glOcean = ocean->getOpenGLOcean();
             
                     view->SetViewport();
             
@@ -423,7 +428,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
                     //Draw ocean surface
-                    ocean->getOpenGLOcean()->DrawOceanSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
+                    glOcean->DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
             
                     //Draw stencil mask
                     glEnable(GL_STENCIL_TEST);

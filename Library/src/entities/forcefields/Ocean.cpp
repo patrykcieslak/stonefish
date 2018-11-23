@@ -9,12 +9,13 @@
 #include "entities/forcefields/Ocean.h"
 
 #include <algorithm>
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
 #include "entities/SolidEntity.h"
-#include "entities/SystemEntity.h"
 
-Ocean::Ocean(std::string uniqueName, Liquid* l) : ForcefieldEntity(uniqueName)
+using namespace sf;
+
+Ocean::Ocean(std::string uniqueName, bool simulateWaves, Liquid* l) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     
@@ -28,7 +29,7 @@ Ocean::Ocean(std::string uniqueName, Liquid* l) : ForcefieldEntity(uniqueName)
 	
 	glOcean = NULL;
     liquid = l;
-	trueWaves = false;
+    waves = simulateWaves;
 }
 
 Ocean::~Ocean()
@@ -46,14 +47,9 @@ Ocean::~Ocean()
 		delete glOcean;
 }
 
-void Ocean::setUseTrueWaves(bool waves)
+bool Ocean::hasWaves()
 {
-    trueWaves = false; //No support for waves yet
-}
-
-bool Ocean::usesTrueWaves()
-{
-    return trueWaves;
+    return waves;
 }
 
 OpenGLOcean* Ocean::getOpenGLOcean()
@@ -194,9 +190,8 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
 
 void Ocean::InitGraphics()
 {
-	glOcean = new OpenGLOcean();
-	glOcean->Init();
-    setAlgeaBloomFactor(0.2f);
+	glOcean = new OpenGLOcean(waves);
+	setAlgeaBloomFactor(0.2f);
     setTurbidity(100.f);
 }
 

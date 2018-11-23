@@ -14,93 +14,16 @@
 #include "graphics/Console.h"
 #include "graphics/OpenGLView.h"
 #include "graphics/OpenGLLight.h"
-#include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
+#include "utils/SystemUtil.hpp"
+#include "utils/GeometryFileUtil.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/stb_image.h"
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
-//////////////////////////////////////////////////////
-void QuadTreeNode::Grow(glm::vec3 p, glm::mat4 VP)
-{
-	glm::vec2 half = size/2.f;
-	GLfloat distance = glm::length(origin - p);
-	GLfloat ratio = (half.x + half.y)/(distance + 0.01f);
-	
-	if(ratio > 0.25f)
-	{
-		bool visible = true;
-		
-		//Clips space coordinates
-		glm::vec4 corners[4];
-		corners[0] = VP * glm::vec4(origin + glm::vec3(half, 0.f), 1.f);
-		corners[1] = VP * glm::vec4(origin + glm::vec3(-half.x, half.y, 0.f), 1.f);
-		corners[2] = VP * glm::vec4(origin + glm::vec3(-half, 0.f), 1.f);
-		corners[3] = VP * glm::vec4(origin + glm::vec3(half.x, -half.y, 0.f), 1.f);
-		
-		//Secure margin accounting for later displacement
-		corners[0].w *= 1.1f;
-		corners[1].w *= 1.1f;
-		corners[2].w *= 1.1f;
-		corners[3].w *= 1.1f;
-		
-		//Check if quad visible
-		if(corners[0].z < -corners[0].w && corners[1].z < -corners[1].w && corners[2].z < -corners[2].w && corners[3].z < -corners[3].w) //Behind camera
-			visible = false;
-		else if(corners[0].x < -corners[0].w && corners[1].x < -corners[1].w && corners[2].x < -corners[2].w && corners[3].x < -corners[3].w) //Left of frustum
-			visible = false;
-		else if(corners[0].x > corners[0].w && corners[1].x > corners[1].w && corners[2].x > corners[2].w && corners[3].x > corners[3].w) //Right of frustum
-			visible = false;
-		else if(corners[0].y < -corners[0].w && corners[1].y < -corners[1].w && corners[2].y < -corners[2].w && corners[3].y < -corners[3].w) //Bottom of frustum
-			visible = false;
-		else if(corners[0].y > corners[0].w && corners[1].y > corners[1].w && corners[2].y > corners[2].w && corners[3].y > corners[3].w) //Top of frustum
-			visible = false;
-		else if(corners[0].z > corners[0].w && corners[1].z > corners[1].w && corners[2].z > corners[2].w && corners[3].z > corners[3].w) //Further than far plane
-			visible = false;
-		
-		//Grow tree
-		if(visible)
-		{	
-			leaf = false;
-			
-			//Create new nodes
-			child[0] = new QuadTreeNode(origin + glm::vec3(half/2.f,0.f), half, this, tree);
-			child[1] = new QuadTreeNode(origin + glm::vec3(-half.x/2.f, half.y/2.f, 0.f), half, this, tree);
-			child[2] = new QuadTreeNode(origin + glm::vec3(-half/2.f, 0.f), half, this, tree);
-			child[3] = new QuadTreeNode(origin + glm::vec3(half.x/2.f, -half.y/2.f, 0.f), half, this, tree);
-			
-			//Grow tree
-			child[0]->Grow(p, VP);
-			child[1]->Grow(p, VP);
-			child[2]->Grow(p, VP);
-			child[3]->Grow(p, VP);
-			return;
-		}
-	}
-	
-	//Corrent edge divisions
-	distance = glm::length(origin + glm::vec3(size.x, 0, 0) - p);
-	ratio = (half.x + half.y)/(distance + 0.01f);
-	edgeFactors[0] = ratio > 0.25f ? 2.f : 1.f;
-	
-	distance = glm::length(origin + glm::vec3(0, size.y, 0) - p);
-	ratio = (half.x + half.y)/(distance + 0.01f);
-	edgeFactors[1] = ratio > 0.25f ? 2.f : 1.f;
-	
-	distance = glm::length(origin + glm::vec3(-size.x, 0, 0) - p);
-	ratio = (half.x + half.y)/(distance + 0.01f);
-	edgeFactors[2] = ratio > 0.25f ? 2.f : 1.f;
-	
-	distance = glm::length(origin + glm::vec3(0, -size.y, 0) - p);
-	ratio = (half.x + half.y)/(distance + 0.01f);
-	edgeFactors[3] = ratio > 0.25f ? 2.f : 1.f;
-	
-	leaf = true;
-	tree->leafs.push_back(this);
-}
+using namespace sf;
 
-////////////////////////////////////////////////////
 OpenGLContent* OpenGLContent::instance = NULL;
 
 OpenGLContent* OpenGLContent::getInstance()
@@ -774,7 +697,6 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		texQuadMSShader->SetUniform("texSize", texSize);
 		
 		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		//glEnable(GL_TEXTURE_2D_MULTISAMPLE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
 		
 		glBindVertexArray(baseVertexArray);
@@ -1617,10 +1539,10 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     //Side vertices
     for(unsigned int i=0; i<slices; ++i)
     {
-		vt.normal = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0), 0.0, cos(i/(GLfloat)slices*M_PI*2.0));
-		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
+		vt.normal = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0), -cos(i/(GLfloat)slices*M_PI*2.0), 0.0);
+		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -cos(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight);
         mesh->vertices.push_back(vt);
-		vt.pos.y = -halfHeight;
+		vt.pos.z = -halfHeight;
         mesh->vertices.push_back(vt);
     }
     
@@ -1639,7 +1561,7 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     
 	//Last side
     int i = slices-1;
-	vt.normal = glm::vec3(sin((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), 0.0, cos((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0));
+	vt.normal = glm::vec3(sin((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), -cos((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), 0.0);
     f.vertexID[0] = i*2;
     f.vertexID[1] = i*2+1;
     f.vertexID[2] = 0;
@@ -1650,14 +1572,14 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     mesh->faces.push_back(f);
     
     //TOP CAP
-    vt.normal = glm::vec3(0,1.f,0);
-	vt.pos = glm::vec3(0,halfHeight,0);
+    vt.normal = glm::vec3(0,0,1.f);
+	vt.pos = glm::vec3(0,0,halfHeight);
 	mesh->vertices.push_back(vt);
 	unsigned int centerIndex = (unsigned int)mesh->vertices.size()-1;
 	//vertices
 	for(unsigned int i=0; i<slices; ++i)
     {
-		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
+		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -cos(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight);
         mesh->vertices.push_back(vt);
     }
 	//faces
@@ -1675,14 +1597,14 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
 	mesh->faces.push_back(f);
 	
 	//BOTTOM CAP
-    vt.normal = glm::vec3(0,-1.f,0);
-	vt.pos = glm::vec3(0,-halfHeight,0);
+    vt.normal = glm::vec3(0,0,-1.f);
+	vt.pos = glm::vec3(0,0,-halfHeight);
 	mesh->vertices.push_back(vt);
 	centerIndex = (unsigned int)mesh->vertices.size()-1;
 	//vertices
 	for(unsigned int i=0; i<slices; ++i)
     {
-		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -halfHeight, cos(i/(GLfloat)slices*M_PI*2.0)*radius);
+		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -cos(i/(GLfloat)slices*M_PI*2.0)*radius, -halfHeight);
         mesh->vertices.push_back(vt);
     }
 	//faces
@@ -1777,278 +1699,50 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 
 Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
-    std::string extension = filename.substr(filename.length()-3,3);
-    
-    if(extension == "stl" || extension == "STL")
-    {
-        return LoadSTL(filename, scale, smooth);
-    }
-    else if(extension == "obj" || extension == "OBJ")
-    {
-        return LoadOBJ(filename, scale, smooth);
-    }
-    else
-    {
-        cError("Unsupported model file type: %s!", extension.c_str());
-        return NULL;
-    }
-}
-
-Mesh* OpenGLContent::LoadOBJ(std::string filename, GLfloat scale, bool smooth)
-{
-    //Read OBJ data
-    cInfo("Loading model from: %s", filename.c_str());
-    
-	FILE* file = fopen(filename.c_str(), "rb");
-    char line[128];
-    Mesh* mesh = new Mesh();
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec2> uvs;
-	bool hasNormals = false;
-	size_t genVStart = 0;
-    
-	int64_t start = GetTimeInMicroseconds();
-	
-    //Read vertices
-	while(fgets(line, 128, file))
-	{
-		if(line[0] == 'v')
-		{
-			if(line[1] == ' ')
-            {
-                Vertex v;
-                sscanf(line, "v %f %f %f\n", &v.pos.x, &v.pos.y, &v.pos.z);
-				v.pos *= scale; //Scaling
-                mesh->vertices.push_back(v);
-            }
-            else if(line[1] == 'n')
-            {
-                glm::vec3 n;
-                sscanf(line, "vn %f %f %f\n", &n.x, &n.y, &n.z);
-                normals.push_back(n);
-            }
-            else if(line[1] == 't')
-            {
-                glm::vec2 uv;
-                sscanf(line, "vt %f %f\n", &uv.x, &uv.y);
-                uvs.push_back(uv);
-            }
-		}
-		else if(line[0] == 'f')
-		{
-			break;
-		}
-	}
-		
-	genVStart = mesh->vertices.size();
-	hasNormals = normals.size() > 0;
-	mesh->hasUVs = uvs.size() > 0;
-   
-#ifdef DEBUG
-	printf("Vertices: %ld Normals: %ld\n", genVStart, normals.size());
-#endif
-	
-	//Read faces
-	do
-	{
-		if(line[0] != 'f')
-			break;
-		
-	    Face face;
-				
-		if(mesh->hasUVs && hasNormals)
-		{
-			unsigned int vID[3];
-			unsigned int uvID[3];
-			unsigned int nID[3];
-			sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
-                
-			for(short unsigned int i=0; i<3; ++i)
-			{
-				Vertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
-				
-				if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
-				{
-					mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
-					mesh->vertices[vID[i]-1].uv = uvs[uvID[i]-1];
-					face.vertexID[i] = vID[i]-1;
-				}
-				else if((v.normal == normals[nID[i]-1]) && (v.uv == uvs[uvID[i]-1])) //Does it have the same normal and UV?
-				{
-					face.vertexID[i] = vID[i]-1;
-				}
-				else //Otherwise search the generated pool
-				{
-					v.normal = normals[nID[i]-1];
-					v.uv = uvs[uvID[i]-1];
-					
-					std::vector<Vertex>::iterator it;
-					if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
-					{
-						face.vertexID[i] = (GLuint)(it - mesh->vertices.begin());
-					}
-					else
-					{
-						mesh->vertices.push_back(v);
-						face.vertexID[i] = (GLuint)mesh->vertices.size()-1;
-					}
-				}
-			}
-		}
-		else if(hasNormals)
-		{
-			unsigned int vID[3];
-			unsigned int nID[3];
-			sscanf(line, "f %u//%u %u//%u %u//%u\n", &vID[0], &nID[0], &vID[1], &nID[1], &vID[2], &nID[2]);
-			
-			for(short unsigned int i=0; i<3; ++i)
-			{
-				Vertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
-				
-				if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
-				{
-					mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
-					face.vertexID[i] = vID[i]-1;
-				}
-				else if(v.normal == normals[nID[i]-1]) //Does it have the same normal?
-				{
-					face.vertexID[i] = vID[i]-1;
-				}
-				else //Otherwise search the generated pool
-				{
-					v.normal = normals[nID[i]-1];
-					
-					std::vector<Vertex>::iterator it;
-					if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
-					{
-						face.vertexID[i] = (GLuint)(it - mesh->vertices.begin());
-					}
-					else
-					{
-						mesh->vertices.push_back(v);
-						face.vertexID[i] = (GLuint)mesh->vertices.size()-1;
-					}
-				}
-			}
-		}
-		else
-		{
-			unsigned int vID[3];
-			sscanf(line, "f %u %u %u\n", &vID[0], &vID[1], &vID[2]);
-                
-			face.vertexID[0] = vID[0]-1;
-			face.vertexID[1] = vID[1]-1;
-			face.vertexID[2] = vID[2]-1;
-		}
-            
-		mesh->faces.push_back(face);
-	}
-    while(fgets(line, 128, file));
-	
-	fclose(file);
-	
-	int64_t end = GetTimeInMicroseconds();
-	
-#ifdef DEBUG
-	printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->vertices.size()-genVStart);
-	printf("Total time: %ld\n", end-start);
-#endif	
-	
-	cInfo("Loaded mesh with %ld faces in %ld ms.", mesh->faces.size(), (end-start)/1000);
-	
-    if(smooth)
-		SmoothNormals(mesh);
-    
-    return mesh;
-}
-
-Mesh* OpenGLContent::LoadSTL(std::string filename, GLfloat scale, bool smooth)
-{
-    //Read STL data
-    cInfo("Loading model from: %s", filename.c_str());
-    
-	FILE* file = fopen(filename.c_str(), "rb");
-    char line[128];
-    char keyword[10];
-    Mesh *mesh = new Mesh();
-	mesh->hasUVs = false;
-    
-	Vertex v;
-	
-    while(fgets(line, 128, file))
-    {
-        sscanf(line, "%s", keyword);
-        
-        if(strcmp(keyword, "facet")==0)
-        {
-            sscanf(line, " facet normal %f %f %f\n", &v.normal.x, &v.normal.y, &v.normal.z);
-        }
-        else if(strcmp(keyword, "vertex")==0)
-        {
-			sscanf(line, " vertex %f %f %f\n", &v.pos.x, &v.pos.y, &v.pos.z);
-			v.pos *= scale;
-            mesh->vertices.push_back(v);
-        }
-        else if(strcmp(keyword, "endfacet")==0)
-        {
-            unsigned int lastVertexID = (GLuint)mesh->vertices.size()-1;
-            
-			Face f;
-            f.vertexID[0] = lastVertexID-2;
-            f.vertexID[1] = lastVertexID-1;
-            f.vertexID[2] = lastVertexID;
-            mesh->faces.push_back(f);
-        }
-    }
-	
-    fclose(file);
-    
-    //Remove duplicates (so that it becomes equivalent to OBJ file representation)
-	
-	if(smooth)
-		SmoothNormals(mesh);
-    
+    Mesh* mesh = LoadGeometryFromFile(filename, scale);
+    if(mesh != NULL && smooth)
+        SmoothNormals(mesh);
     return mesh;
 }
 
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
-	//For all faces
-	for(unsigned int i=0; i<mesh->faces.size(); ++i)
-	{
-		Face thisFace = mesh->faces[i];
-		glm::vec3 thisN = mesh->computeFaceNormal(i);
-						
-		//For every vertex
-		for(unsigned short int h=0; h<3; ++h)
-		{
-			glm::vec3 n = thisN;
-			unsigned int contrib = 1;
-                
-			//Loop through all faces
-			for(unsigned int j=0; j<mesh->faces.size(); ++j)
-			{
-				if(j != i) //Reject same face
-				{
-					Face thatFace = mesh->faces[j];
-					glm::vec3 thatN = mesh->computeFaceNormal(j);
-                        
-					for(unsigned short int k=0; k<3; k++)
-					{	
-						if((mesh->vertices[thatFace.vertexID[k]].pos == mesh->vertices[thisFace.vertexID[h]].pos)&&(glm::dot(thatN,thisN) > 0.707f))
-						{
-							n += thatN;
-							contrib++;
-							break;
-						}
-					}
-				}
-			}
-                
-			n /= (GLfloat)contrib;
-			mesh->vertices[mesh->faces[i].vertexID[h]].normal = n;
-		}
-	}
+    //For all faces
+    for(unsigned int i=0; i<mesh->faces.size(); ++i)
+    {
+        Face thisFace = mesh->faces[i];
+        glm::vec3 thisN = mesh->computeFaceNormal(i);
+        
+        //For every vertex
+        for(unsigned short int h=0; h<3; ++h)
+        {
+            glm::vec3 n = thisN;
+            unsigned int contrib = 1;
+            
+            //Loop through all faces
+            for(unsigned int j=0; j<mesh->faces.size(); ++j)
+            {
+                if(j != i) //Reject same face
+                {
+                    Face thatFace = mesh->faces[j];
+                    glm::vec3 thatN = mesh->computeFaceNormal(j);
+                    
+                    for(unsigned short int k=0; k<3; k++)
+                    {
+                        if((mesh->vertices[thatFace.vertexID[k]].pos == mesh->vertices[thisFace.vertexID[h]].pos)&&(glm::dot(thatN,thisN) > 0.707f))
+                        {
+                            n += thatN;
+                            contrib++;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            n /= (GLfloat)contrib;
+            mesh->vertices[mesh->faces[i].vertexID[h]].normal = n;
+        }
+    }
 }
 
 GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* mesh, GLuint firstID, GLuint secondID)

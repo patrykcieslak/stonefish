@@ -9,7 +9,9 @@
 #include "entities/solids/Compound.h"
 
 #include "core/SimulationApp.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const btTransform& position) : SolidEntity(uniqueName, firstExternalPart->getMaterial(), firstExternalPart->getLook())
 {

@@ -10,6 +10,8 @@
 
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 Sample::Sample(unsigned short nDimensions, btScalar* values)
 {
     nDim = nDimensions > 0 ? nDimensions : 1;

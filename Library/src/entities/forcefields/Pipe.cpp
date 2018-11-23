@@ -8,6 +8,8 @@
 
 #include "entities/forcefields/Pipe.h"
 
+using namespace sf;
+
 Pipe::Pipe(const btVector3& point1, const btVector3& point2, btScalar radius1, btScalar radius2, btScalar inletVelocity, btScalar exponent)
 {
     p1 = point1;

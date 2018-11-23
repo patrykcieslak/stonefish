@@ -12,6 +12,9 @@
 #include <SDL2/SDL_thread.h>
 #include "core/SimulationApp.h"
 
+namespace sf
+{
+
 /*!
     A class that defines a console application interface.
  */
@@ -42,4 +45,6 @@ typedef struct
 }
 ConsoleSimulationThreadData;
 
+}
+    
 #endif

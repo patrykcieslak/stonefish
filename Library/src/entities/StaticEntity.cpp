@@ -9,7 +9,9 @@
 #include "entities/StaticEntity.h"
 
 #include "core/SimulationApp.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {

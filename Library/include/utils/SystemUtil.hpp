@@ -29,6 +29,9 @@
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLPipeline.h"
 
+namespace sf
+{
+    
 inline int64_t GetTimeInMicroseconds()
 {
     std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
@@ -153,6 +156,8 @@ inline float grandom(float mean, float stdDeviation, long *seed)
         use_last = 1;
     }
     return mean + y1 * stdDeviation;
+}
+    
 }
 
 #endif 

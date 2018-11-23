@@ -11,6 +11,9 @@
 
 #include "entities/StaticEntity.h"
 
+namespace sf
+{
+
 class Plane : public StaticEntity
 {
 public:
@@ -19,5 +22,7 @@ public:
     void GetAABB(btVector3& min, btVector3& max);
     StaticEntityType getStaticType();
 };
+
+}
 
 #endif

@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 //---------------Definitions--------------------
 #define MAX_POINT_LIGHTS 	32

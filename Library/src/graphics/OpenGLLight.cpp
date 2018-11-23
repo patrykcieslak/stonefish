@@ -8,7 +8,9 @@
 
 #include "graphics/OpenGLLight.h"
 
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 //static variables
 GLuint OpenGLLight::spotShadowArrayTex = 0;
@@ -92,8 +94,8 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 	//Generate shadowmap array
 	glGenTextures(1, &spotShadowArrayTex);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
-	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32F, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE, numOfSpotLights);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE, numOfSpotLights, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 	
 	//Generate samplers
 	glGenSamplers(1, &spotDepthSampler);

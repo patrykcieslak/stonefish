@@ -8,6 +8,8 @@
 
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 SimulationApp::SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
 {
     SimulationApp::handle = this;

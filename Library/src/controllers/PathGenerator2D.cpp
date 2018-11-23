@@ -10,6 +10,8 @@
 
 #include "graphics/OpenGLContent.h"
 
+using namespace sf;
+
 PathGenerator2D::PathGenerator2D(PlaneType pathOnPlane)
 {
     plane = pathOnPlane;

@@ -10,6 +10,8 @@
 
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 Plane::Plane(std::string uniqueName, btScalar planeSize, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     btScalar size = UnitSystem::SetLength(planeSize);

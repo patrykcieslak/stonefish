@@ -11,6 +11,9 @@
 
 #include "joints/Joint.h"
 
+namespace sf
+{
+
 class SphericalJoint : public Joint
 {
 public:
@@ -32,4 +35,6 @@ private:
     btVector3 angleIC;
 };
 
+}
+    
 #endif

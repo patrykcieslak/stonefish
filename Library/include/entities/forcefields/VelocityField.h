@@ -12,6 +12,9 @@
 #include "common.h"
 #include "graphics/OpenGLContent.h"
 
+namespace sf
+{
+
 class VelocityField
 {
 public:
@@ -21,5 +24,7 @@ public:
     virtual btVector3 GetVelocityAtPoint(const btVector3& p) = 0;
     virtual std::vector<Renderable> Render() = 0;
 };
+
+}
 
 #endif

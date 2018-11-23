@@ -11,8 +11,10 @@
 #include <fstream>
 #include <sstream>
 #include "graphics/Console.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
+
+using namespace sf;
 
 //Atmosphere textures allocation parameters
 constexpr int TRANSMITTANCE_TEXTURE_WIDTH = 256;
@@ -127,12 +129,12 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
         
         case RenderQuality::QUALITY_LOW:
             sunShadowmapSize = 1024;
-            sunShadowmapSplits = 4;
+            sunShadowmapSplits = 2;
             break;
         
         case RenderQuality::QUALITY_MEDIUM:
             sunShadowmapSize = 2048;
-            sunShadowmapSplits = 4;
+            sunShadowmapSplits = 3;
             break;
         
         case RenderQuality::QUALITY_HIGH:
@@ -171,6 +173,9 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
     skySunShader->AddUniform("cosSunSize", ParameterType::FLOAT);
 
     //Initialize shadows
+    sunShadowFrustum = new ViewFrustum[sunShadowmapSplits];
+    sunShadowCPM = new glm::mat4x4[sunShadowmapSplits];
+    
     if(shadow > RenderQuality::QUALITY_DISABLED)
     {
         sunShadowmapShader = new GLSLShader("sunCSM.frag");
@@ -181,7 +186,7 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glGenTextures(1, &sunShadowmapArray);
         glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32F, sunShadowmapSize, sunShadowmapSize, sunShadowmapSplits);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, sunShadowmapSize, sunShadowmapSize, sunShadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
         
         //Generate samplers
@@ -211,9 +216,6 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
         cError("Sun shadow FBO initialization failed!");
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        
-        sunShadowFrustum = new ViewFrustum[sunShadowmapSplits];
-        sunShadowCPM = new glm::mat4x4[sunShadowmapSplits];
     }
     else
     {
@@ -221,7 +223,11 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glGenTextures(1, &sunShadowmapArray);
         glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32F, 1, 1, 1);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, 1, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     }
 }
@@ -235,6 +241,9 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
     if(atmosphereAPI > 0) glDeleteShader(atmosphereAPI);
 
     if(sunShadowmapArray != 0) glDeleteTextures(1, &sunShadowmapArray);
+
+    delete [] sunShadowFrustum;
+    delete [] sunShadowCPM;
     
     if(sunShadowmapSize > 0)
     {
@@ -356,7 +365,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
         return;
     
     //Pre-set splits
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {
+    for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
+    {
         sunShadowFrustum[i].fov = view->GetFOVY() + 0.2f; //avoid artifacts in the borders
         GLint* viewport = view->GetViewport();
         sunShadowFrustum[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
@@ -377,7 +387,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
     glm::vec3 camUp = view->GetUpDirection();
 
     // for all shadow splits
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {
+    for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
+    {
         //Compute the camera frustum slice boundary points in world space
         UpdateFrustumCorners(sunShadowFrustum[i], camPos, camDir, camUp);
 
@@ -533,14 +544,16 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
     glm::mat4 lightClipSpace[4];
 
     //For every inactive split
-    /*for(unsigned int i = sunShadowmapSplits; i<4; ++i) {
+    for(unsigned int i = sunShadowmapSplits; i<4; ++i)
+    {
         frustumNear[i] = 0;
         frustumFar[i] = 0;
         lightClipSpace[i] = glm::mat4();
-    }*/
+    }
 
     //For every active split
-    for(unsigned int i = 0; i < 4; ++i) {
+    for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
+    {
         frustumNear[i] = sunShadowFrustum[i].near;
         frustumFar[i] = sunShadowFrustum[i].far;
         lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space

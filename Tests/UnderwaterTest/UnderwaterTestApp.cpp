@@ -26,7 +26,7 @@ UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, RenderSettings s, 
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
-    
+    /*
     ui_id slider;
     slider.owner = 0;
     slider.item = 0;
@@ -122,6 +122,7 @@ void UnderwaterTestApp::DoHUD()
     dims.push_back(2);
     getGUI()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Test", new btScalar[2]{-20.f,20.f});
 #endif
+    */
     /*
     ui_id plot;
     plot.owner = 1;

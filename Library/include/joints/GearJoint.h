@@ -11,6 +11,9 @@
 
 #include "joints/Joint.h"
 
+namespace sf
+{
+
 class GearJoint : public Joint
 {
 public:
@@ -28,5 +31,7 @@ public:
 private:
     btScalar gearRatio;
 };
+
+}
 
 #endif

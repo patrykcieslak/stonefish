@@ -12,6 +12,9 @@
 #include "graphics/OpenGLView.h"
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 class DepthCamera;
 
 class OpenGLDepthCamera : public OpenGLView
@@ -58,5 +61,7 @@ protected:
     static GLSLShader* depthLinearizeShader;
     static GLSLShader* depthVisualizeShader;
 };
+
+}
 
 #endif

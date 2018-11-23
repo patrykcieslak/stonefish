@@ -8,6 +8,8 @@
 
 #include "core/ScrewConstraint.h"
 
+using namespace sf;
+
 btScalar ScrewConstraint::getAngularPosition()
 {
   this->calculateTransforms(m_rbA.getCenterOfMassTransform(), m_rbB.getCenterOfMassTransform());

@@ -11,6 +11,9 @@
 
 #include <LinearMath/btMatrixX.h>
 
+namespace sf
+{
+
 /*! Polynomial described by coefficient vector */
 class Polynomial
 {
@@ -75,4 +78,6 @@ private:
     unsigned int orderY;
 };
 
+}
+    
 #endif

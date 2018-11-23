@@ -11,6 +11,9 @@
 
 #include "controllers/PathGenerator.h"
 
+namespace sf
+{
+
 /*! Structure representing a two-dimensional point */
 struct Point2D
 {
@@ -165,5 +168,7 @@ private:
     PlaneType plane;
     std::vector<Path2D*> subPaths;
 };
+    
+}
 
 #endif

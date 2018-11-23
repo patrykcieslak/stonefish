@@ -10,20 +10,23 @@
 #define __Stonefish_Light__
 
 #include "graphics/OpenGLLight.h"
-#include "actuators/Actuator.h"
+#include "actuators/LinkActuator.h"
 
-class Light : public Actuator
+namespace sf
+{
+
+class Light : public LinkActuator
 {
 public:
-    Light(std::string uniqueName, const btVector3& position, glm::vec4 color);
-    Light(std::string uniqueName, const btVector3& position, const btVector3& direction, btScalar coneAngle, glm::vec4 color);
-    virtual ~Light();
+    Light(std::string uniqueName, const btVector3& initialPos, glm::vec4 color);
+    Light(std::string uniqueName, const btVector3& initialPos, const btVector3& initialDir, btScalar coneAngle, glm::vec4 color);
     
     void Update(btScalar dt);
-    ActuatorType getType();
-
+    
 private:
     OpenGLLight* glLight;
 };
+
+}
 
 #endif

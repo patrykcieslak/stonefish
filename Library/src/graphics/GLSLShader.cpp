@@ -12,6 +12,8 @@
 #include "graphics/Console.h"
 #include "utils/SystemUtil.hpp"
 
+using namespace sf;
+
 GLuint GLSLShader::saqVertexShader = 0;
 bool GLSLShader::verbose = true;
 

@@ -9,7 +9,9 @@
 #include "graphics/OpenGLPointLight.h"
 
 #include "core/SimulationManager.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 OpenGLPointLight::OpenGLPointLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {

@@ -10,6 +10,8 @@
 
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 btVector3 Entity::findInertiaAxis(btMatrix3x3 I, btScalar value)
 {
 	//Check if not I matrix already diagonal

@@ -18,6 +18,9 @@
 #define CONSTRAINT_STOP_ERP 1.0
 #define CONSTRAINT_STOP_CFM 0.0
 
+namespace sf
+{
+
 typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL, JOINT_GEAR, JOINT_BELT, JOINT_SCREW} JointType;
 
 //abstract class
@@ -57,6 +60,6 @@ private:
 	btMultiBodyConstraint* mbConstraint;
 };
 
-
+}
 
 #endif

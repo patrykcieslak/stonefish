@@ -8,6 +8,8 @@
 
 #include "joints/PrismaticJoint.h"
 
+using namespace sf;
+
 PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();

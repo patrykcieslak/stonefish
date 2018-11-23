@@ -8,6 +8,8 @@
 
 #include "graphics/OpenGLView.h"
 
+using namespace sf;
+
 OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
 {
     originX = x;

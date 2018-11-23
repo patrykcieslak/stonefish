@@ -8,6 +8,8 @@
 
 #include "entities/ForcefieldEntity.h"
 
+using namespace sf;
+
 ForcefieldEntity::ForcefieldEntity(std::string uniqueName) : Entity(uniqueName)
 {
     ghost = new btPairCachingGhostObject();

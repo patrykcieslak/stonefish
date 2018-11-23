@@ -8,6 +8,8 @@
 
 #include "entities/statics/Obstacle.h"
 
+using namespace sf;
+
 Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : StaticEntity(uniqueName, m, lookId)
 {
     scale = UnitSystem::SetLength(scale);

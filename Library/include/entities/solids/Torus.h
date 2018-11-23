@@ -11,10 +11,13 @@
 
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 class Torus : public SolidEntity
 {
 public:
-    Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
+    Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     ~Torus();
     
     SolidType getSolidType();
@@ -24,5 +27,7 @@ private:
     btScalar minorRadius;
     btScalar majorRadius;
 };
+
+}
 
 #endif

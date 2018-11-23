@@ -12,6 +12,8 @@
 #include "graphics/Console.h"
 #include "utils/ScientificFileUtil.h"
 
+using namespace sf;
+
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
 

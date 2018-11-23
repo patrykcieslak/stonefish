@@ -9,8 +9,10 @@
 #include "graphics/OpenGLRealCamera.h"
 
 #include "graphics/Console.h"
-#include "utils/MathsUtil.hpp"
-#include "sensors/ColorCamera.h"
+#include "utils/MathUtil.hpp"
+#include "sensors/vision/ColorCamera.h"
+
+using namespace sf;
 
 OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {
@@ -26,9 +28,7 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
 
     //Setup projection
     fovx = fovH/180.f*M_PI;
-    GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
-    GLfloat fovy = fovx/aspect;
-    projection = glm::perspective(fovy, aspect, near, far);
+    projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
 }
 
 OpenGLRealCamera::~OpenGLRealCamera()

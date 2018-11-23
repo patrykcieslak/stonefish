@@ -12,6 +12,9 @@
 #include "core/UnitSystem.h"
 #include "graphics/OpenGLPipeline.h"
 
+namespace sf
+{
+
 /*! Abstract path generator base class */
 class PathGenerator
 {
@@ -37,5 +40,7 @@ protected:
     btScalar length;
     bool renderable;
 };
+    
+}
 
 #endif

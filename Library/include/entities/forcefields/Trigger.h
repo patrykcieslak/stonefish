@@ -12,6 +12,9 @@
 #include "entities/ForcefieldEntity.h"
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 class Trigger : public ForcefieldEntity
 {
 public:
@@ -32,5 +35,7 @@ private:
 	int objectId;
     int look;
 };
+
+}
 
 #endif

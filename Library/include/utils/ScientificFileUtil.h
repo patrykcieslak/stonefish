@@ -12,6 +12,9 @@
 #include <LinearMath/btMatrixX.h>
 #include "common.h"
 
+namespace sf
+{
+
 typedef enum {DATA_SCALAR, DATA_VECTOR, DATA_MATRIX} ScientificDataType;
 
 struct ScientificDataItem
@@ -70,4 +73,7 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat 
 bool SaveOctaveData(const char* path, const ScientificData& data);
 void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it);
 void SaveOctaveMatrix(std::ofstream& file, const ScientificDataItem& it);
+    
+}
+
 #endif

@@ -8,6 +8,8 @@
 
 #include "controllers/ServoController.h"
 
+using namespace sf;
+
 ServoController::ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
     motor = m;

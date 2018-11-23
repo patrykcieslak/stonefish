@@ -3,18 +3,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Actuator__
 #define __Stonefish_Actuator__
 
-#include "common.h"
 #include "graphics/OpenGLContent.h"
 
-typedef enum {ACTUATOR_MOTOR, ACTUATOR_THRUSTER, ACTUATOR_LIGHT} ActuatorType;
+namespace sf
+{
 
-//abstract class
+typedef enum {ACTUATOR_JOINT = 0, ACTUATOR_LINK} ActuatorType;
+
+//abstract
 class Actuator
 {
 public:
@@ -22,13 +24,15 @@ public:
     virtual ~Actuator();
     
     virtual void Update(btScalar dt) = 0;
-    virtual std::vector<Renderable> Render();
-    
     virtual ActuatorType getType() = 0;
+    
+    virtual std::vector<Renderable> Render();
     std::string getName();
     
 private:
     std::string name;
 };
+    
+}
 
 #endif 

@@ -8,6 +8,8 @@
 
 #include "controllers/FeedbackController.h"
 
+using namespace sf;
+
 FeedbackController::FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency) : Controller(uniqueName, frequency)
 {
     referenceGen = NULL;

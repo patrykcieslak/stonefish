@@ -11,6 +11,9 @@
 
 #include "common.h"
 
+namespace sf
+{
+
 class Sample
 {
 public:
@@ -26,5 +29,7 @@ public:
     unsigned short nDim;
     btScalar* data;
 };
+    
+}
 
 #endif

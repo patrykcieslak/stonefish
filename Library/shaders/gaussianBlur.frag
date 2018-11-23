@@ -1,5 +1,8 @@
-#version 330 core
-//430
+//Gaussian blur equivalent to 9 samples achieved by making use of the built-in bilinear filtering
+//http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+//+ texture coordinates precomputed in vertex shader.
+#version 330
+
 in vec2 texcoord;
 in vec2 blurtexcoord[4];
 out vec4 fragcolor;

@@ -12,6 +12,8 @@
 #include "core/SimulationApp.h"
 #include "entities/SolidEntity.h"
 
+using namespace sf;
+
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
     inclusive = inclusiveMode;

@@ -11,6 +11,9 @@
 
 #include "graphics/OpenGLLight.h"
 
+namespace sf
+{
+
 class OpenGLPointLight : public OpenGLLight
 {
 public:
@@ -29,5 +32,7 @@ public:
 	//Field access
 	LightType getType();
 };
+    
+}
 
 #endif

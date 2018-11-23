@@ -11,6 +11,9 @@
 
 #include "common.h"
 
+namespace sf
+{
+
 class NameManager
 {
 public:
@@ -25,5 +28,6 @@ private:
     std::vector<std::string> names;
 };
 
-
+}
+    
 #endif

@@ -15,6 +15,9 @@
 #include "graphics/IMGUI.h"
 #include "graphics/Console.h"
 
+namespace sf
+{
+
 /*!
     A class that defines a graphical application interface.
  */
@@ -107,5 +110,7 @@ typedef struct
     SDL_mutex* mutex;
 }
 LoadingThreadData;
+
+}
 
 #endif

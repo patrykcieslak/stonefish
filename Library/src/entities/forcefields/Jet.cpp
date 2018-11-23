@@ -8,6 +8,8 @@
 
 #include "entities/forcefields/Jet.h"
 
+using namespace sf;
+
 Jet::Jet(const btVector3& point, const btVector3& direction, btScalar radius, btScalar outletVelocity)
 {
     c = point;

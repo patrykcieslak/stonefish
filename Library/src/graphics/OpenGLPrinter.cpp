@@ -10,6 +10,8 @@
 
 #include <stdio.h>
 
+using namespace sf;
+
 GLuint OpenGLPrinter::windowW = 800;
 GLuint OpenGLPrinter::windowH = 600;
 GLSLShader* OpenGLPrinter::printShader = NULL;

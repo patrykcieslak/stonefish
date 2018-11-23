@@ -11,6 +11,9 @@
 
 #include "joints/Joint.h"
 
+namespace sf
+{
+
 class CylindricalJoint : public Joint
 {
 public:
@@ -39,5 +42,7 @@ private:
     btScalar displacementIC;
     btScalar angleIC;
 };
+    
+}
 
 #endif

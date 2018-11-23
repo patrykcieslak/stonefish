@@ -8,6 +8,8 @@
 
 #include "actuators/DCMotor.h"
 
+using namespace sf;
+
 DCMotor::DCMotor(std::string uniqueName, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction) : Motor(uniqueName)
 {
     //Params

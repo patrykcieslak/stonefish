@@ -10,9 +10,11 @@
 
 #include "core/SimulationApp.h"
 #include "graphics/Console.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
+
+using namespace sf;
 
 SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, btScalar thickness, bool isBuoyant) : Entity(uniqueName)
 {
@@ -202,7 +204,7 @@ std::vector<Renderable> SolidEntity::Render()
             case HYDRO_PROXY_CYLINDER:
                 item.type = RenderableType::HYDRO_CYLINDER;
                 item.model = glMatrixFromBtTransform(oTrans * hydroProxyTransform);
-                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[0]));
+                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1]));
                 items.push_back(item);
                 break;
                 
@@ -514,22 +516,21 @@ void SolidEntity::ComputeProxyCylinder()
     {
         hydroProxyParams[0] = btSqrt(cylinders[0]);
         hydroProxyParams[1] = cylinders[1]*btScalar(2);
-        
         hydroProxyTransform = btTransform(btQuaternion(-M_PI_2, 0, 0), btVector3(0,0,0));
     }
     else if(volume[1] <= volume[0] && volume[1] <= volume[2]) //Y cylinder smallest
     {
         hydroProxyParams[0] = btSqrt(cylinders[2]);
         hydroProxyParams[1] = cylinders[3]*btScalar(2);
-        
-        hydroProxyTransform = btTransform::getIdentity();
+        hydroProxyTransform = btTransform(btQuaternion(0, M_PI_2, 0), btVector3(0,0,0));
     }
     else //Z cylinder smallest
     {
         hydroProxyParams[0] = btSqrt(cylinders[4]);
         hydroProxyParams[1] = cylinders[5]*btScalar(2);
         
-        hydroProxyTransform = btTransform(btQuaternion(0, 0, M_PI_2), btVector3(0,0,0));
+        
+        hydroProxyTransform = btTransform::getIdentity();
     }
     
     //Added mass and inertia
@@ -539,8 +540,8 @@ void SolidEntity::ComputeProxyCylinder()
     btScalar I1 = btScalar(0);
     btScalar I2 = btScalar(1)/btScalar(12)*M_PI*rho*hydroProxyParams[1]*hydroProxyParams[1]*btPow(hydroProxyParams[0], btScalar(3));
     
-    btVector3 M = hydroProxyTransform.getBasis() * btVector3(m2, m1, m2);
-    btVector3 I = hydroProxyTransform.getBasis() * btVector3(I2, I1, I2);
+    btVector3 M = hydroProxyTransform.getBasis() * btVector3(m2, m2, m1);
+    btVector3 I = hydroProxyTransform.getBasis() * btVector3(I2, I2, I1);
     
     aMass(0,0) = btFabs(M.x());
     aMass(1,1) = btFabs(M.y());
@@ -1217,7 +1218,7 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, const Ocean
                 {
                     //Correct drag based on cylindrical approximation of shape
                     btVector3 cFd = hpTrans.getBasis().inverse() * Fdp;
-                    btVector3 Cd(0.5, 1.0, 0.5);
+                    btVector3 Cd(0.5, 0.5, 1.0);
                     cFd = btVector3(Cd.x()*cFd.x(), Cd.y()*cFd.y(), Cd.z()*cFd.z());
                     Fdp = hpTrans.getBasis() * cFd;
                 }

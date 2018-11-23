@@ -11,6 +11,9 @@
 
 #include "entities/forcefields/VelocityField.h"
 
+namespace sf
+{
+
 //! Stream (current) velocity field class.
 /*!
 	Class implements a velocity field in a shape of a tube along a Hermite spline, with variable diameter.
@@ -31,5 +34,7 @@ private:
     btScalar vin;
     btScalar gamma;
 };
+    
+}
 
 #endif

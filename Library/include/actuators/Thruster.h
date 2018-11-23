@@ -9,28 +9,25 @@
 #ifndef __Stonefish_Thruster__
 #define __Stonefish_Thruster__
 
-#include "entities/SolidEntity.h"
-#include "entities/FeatherstoneEntity.h"
-#include "actuators/Actuator.h"
+#include "actuators/LinkActuator.h"
 
-class Thruster : public Actuator
+namespace sf
+{
+
+class Thruster : public LinkActuator
 {
 public:
     Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar maxRPM);
     virtual ~Thruster();
 
+    void Update(btScalar dt);
+    std::vector<Renderable> Render();
+    
     void setSetpoint(btScalar value);
     btScalar getSetpoint();
     btScalar getThrust();
     btScalar getAngle();
     btScalar getOmega();
-    
-    void Update(btScalar dt);
-    std::vector<Renderable> Render();
-    ActuatorType getType();
-    
-    void AttachToSolid(SolidEntity* solid, const btTransform& position);
-    void AttachToSolid(FeatherstoneEntity* fe, unsigned int link, const btTransform& position);
     
 private:
     //Params
@@ -43,11 +40,7 @@ private:
     btScalar iLim;
     btScalar omegaLim;
     SolidEntity* prop;
-    SolidEntity* attach;
-    FeatherstoneEntity* attachFE; 
-    unsigned int linkId;
-    btTransform pos;
-
+    
     //States
     btScalar theta;
     btScalar omega;
@@ -56,5 +49,7 @@ private:
     btScalar setpoint;
     btScalar iError;
 };
+    
+}
 
 #endif

@@ -8,6 +8,8 @@
 
 #include "joints/BeltJoint.h"
 
+using namespace sf;
+
 BeltJoint::BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
 {
     btVector3 newAxisB = -axisB; // Belt -> same direction of rotation

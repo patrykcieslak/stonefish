@@ -12,6 +12,9 @@
 #include "common.h"
 #include "core/SimulationManager.h"
 
+namespace sf
+{
+
 /*!
     An abstract class that defines an application interface combined with a simulation manager.
  */
@@ -54,5 +57,7 @@ private:
 
     static SimulationApp* handle;
 };
+
+}
 
 #endif

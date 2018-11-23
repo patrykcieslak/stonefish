@@ -11,6 +11,9 @@
 
 #include "controllers/SignalGenerator.h"
 
+namespace sf
+{
+
 /*! Signal multiplexer - combines signal generators */
 class SignalMux
 {
@@ -26,4 +29,6 @@ private:
     std::vector<SignalGenerator*> signalGens;
 };
 
+}
+    
 #endif

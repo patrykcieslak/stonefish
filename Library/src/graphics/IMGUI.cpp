@@ -13,6 +13,8 @@
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image.h"
 
+using namespace sf;
+
 glm::vec4 IMGUI::HSV2RGB(glm::vec4 hsv)
 {
     glm::vec4 K = glm::vec4(1.f, 2.f/3.f, 1.f/3.f, 3.f);
@@ -681,7 +683,7 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
     return result;
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2])
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2])
 {
     bool result = false;
 	GLfloat pltW = w/windowW * 2.f;
@@ -837,7 +839,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sim
     return result;
 }
 
-bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sensX, unsigned short dimX, SimpleSensor* sensY, unsigned short dimY, const char* title)
+bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const char* title)
 {
     bool result = false;
     GLfloat pltW = w/windowW * 2.f;

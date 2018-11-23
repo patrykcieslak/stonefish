@@ -1,5 +1,5 @@
-#version 330 core
-//430
+#version 330
+
 uniform sampler2D texSpectrum12;
 uniform sampler2D texSpectrum34;
 uniform float varianceSize;

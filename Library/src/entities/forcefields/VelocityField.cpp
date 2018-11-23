@@ -8,6 +8,8 @@
 
 #include "entities/forcefields/VelocityField.h"
 
+using namespace sf;
+
 VelocityField::VelocityField()
 {
 }

@@ -12,6 +12,9 @@
 #include <LinearMath/btIDebugDraw.h>
 #include "graphics/OpenGLPipeline.h"
 
+namespace sf
+{
+
 class OpenGLDebugDrawer : public btIDebugDraw
 {
 public:
@@ -31,6 +34,6 @@ private:
 	bool zAxisUp;
 };
 
-
+}
 
 #endif

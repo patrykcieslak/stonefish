@@ -10,14 +10,17 @@
 #define __Stonefish_ServoController__
 
 #include "actuators/Motor.h"
-#include "sensors/RotaryEncoder.h"
+#include "sensors/scalar/RotaryEncoder.h"
 #include "controllers/FeedbackController.h"
+
+namespace sf
+{
 
 /*! Servo controller with PID */
 class ServoController : public FeedbackController
 {
 public:
-    ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency = btScalar(-1.));
+    ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency = btScalar(-1));
     ~ServoController();
     
     void Reset();
@@ -42,5 +45,6 @@ private:
     btScalar integratedError;
 };
 
+}
 
 #endif

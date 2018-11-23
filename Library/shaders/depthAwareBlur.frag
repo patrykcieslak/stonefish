@@ -1,12 +1,11 @@
 #version 330
-//430
+
 in vec2 texcoord;
 in vec2 blurtexcoord[4];
 out vec4 fragColor;
 uniform sampler2D texSource;
 uniform sampler2D texLinearDepth;
 
-//const float weights[4] = {0.0702702703, 0.3162162162, 0.3162162162, 0.0702702703};
 const float weights[4] = float[4](0.0702702703, 0.3162162162, 0.3162162162, 0.0702702703);
 
 void main()

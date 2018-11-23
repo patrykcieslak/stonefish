@@ -12,6 +12,9 @@
 #include "entities/FeatherstoneEntity.h"
 #include "joints/Joint.h"
 
+namespace sf
+{
+
 class FixedJoint : public Joint
 {
 public:
@@ -26,4 +29,6 @@ public:
     bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance){ return true; }
 };
 
+}
+    
 #endif

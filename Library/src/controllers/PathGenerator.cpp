@@ -10,6 +10,8 @@
 
 #include "graphics/Console.h"
 
+using namespace sf;
+
 PathGenerator::PathGenerator()
 {
     time = btScalar(0.);

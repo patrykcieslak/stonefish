@@ -11,6 +11,9 @@
 
 #include "actuators/Motor.h"
 
+namespace sf
+{
+
 class DCMotor : public Motor
 {
 public:
@@ -53,5 +56,7 @@ private:
     //integral
     btScalar lastVoverL;
 };
+    
+}
 
 #endif

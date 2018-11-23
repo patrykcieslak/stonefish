@@ -9,7 +9,9 @@
 #include "graphics/OpenGLDepthCamera.h"
 
 #include "graphics/Console.h"
-#include "sensors/DepthCamera.h"
+#include "sensors/vision/DepthCamera.h"
+
+using namespace sf;
 
 GLSLShader* OpenGLDepthCamera::depthLinearizeShader = NULL;
 GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
@@ -27,14 +29,12 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     UpdateTransform();
     
     GLfloat fovx = fovH/180.f*M_PI;
-    GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
-    GLfloat fovy = fovx/aspect;
-    projection = glm::perspective(fovy, aspect, range.x, range.y);
+    projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
     
     //Render depth
     glGenTextures(1, &renderDepthTex);
 	glBindTexture(GL_TEXTURE_2D, renderDepthTex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, viewportWidth, viewportHeight);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewportWidth, viewportHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -54,7 +54,7 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     //Linear depth
 	glGenTextures(1, &linearDepthTex);
 	glBindTexture(GL_TEXTURE_2D, linearDepthTex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, viewportWidth, viewportHeight);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, viewportWidth, viewportHeight, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

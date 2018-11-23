@@ -12,6 +12,8 @@
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image.h"
 
+using namespace sf;
+
 Console* Console::instance = NULL;
 
 Console::Console()

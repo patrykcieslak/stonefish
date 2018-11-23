@@ -8,9 +8,14 @@
 
 #include "entities/solids/Box.h"
 
-Box::Box(std::string uniqueName, const btVector3& dimensions, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
+
+Box::Box(std::string uniqueName, const btVector3& dimensions, const btTransform& originTrans, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     halfExtents = UnitSystem::SetPosition(dimensions * btScalar(0.5));
+    localTransform = UnitSystem::SetTransform(originTrans);
     
     //Calculate physical properties
     if(thick > btScalar(0) && thick/btScalar(2) < halfExtents.x() && thick/btScalar(2) < halfExtents.y() && thick/btScalar(2) < halfExtents.z())
@@ -38,11 +43,15 @@ Box::Box(std::string uniqueName, const btVector3& dimensions, Material m, int lo
                         btScalar(1)/btScalar(12)*mass*((halfExtents.x()*btScalar(2))*(halfExtents.x()*btScalar(2))+(halfExtents.y()*btScalar(2))*(halfExtents.y()*btScalar(2))));
     }
     
-    //dragCoeff = btVector3(halfExtents.y()*halfExtents.z()*btScalar(4*1.05), halfExtents.x()*halfExtents.z()*btScalar(4*1.05), halfExtents.y()*halfExtents.x()*btScalar(4*1.05));
-    
+    //Build geometry
 	glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
 	mesh = OpenGLContent::BuildBox(glHalfExtents);
-	ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
+    transformMesh(mesh, localTransform);
+    
+    //Compute hydrodynamic properties
+    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
+    CoB = localTransform.getOrigin();
+    //dragCoeff = btVector3(halfExtents.y()*halfExtents.z()*btScalar(4*1.05), halfExtents.x()*halfExtents.z()*btScalar(4*1.05), halfExtents.y()*halfExtents.x()*btScalar(4*1.05));
 }
 
 Box::~Box()
@@ -56,7 +65,9 @@ SolidType Box::getSolidType()
 
 btCollisionShape* Box::BuildCollisionShape()
 {
-    btBoxShape* colShape = new btBoxShape(halfExtents);
+    btBoxShape* boxShape = new btBoxShape(halfExtents);
+    btCompoundShape* colShape = new btCompoundShape();
+    colShape->addChildShape(localTransform, boxShape);
     //colShape->setMargin(0.0);
     return colShape;
 }

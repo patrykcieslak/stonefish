@@ -9,158 +9,11 @@
 #ifndef __Stonefish_OpenGLContent__
 #define __Stonefish_OpenGLContent__
 
-#include <vector>
-#include "graphics/OpenGLPipeline.h"
 #include "graphics/GLSLShader.h"
+#include "graphics/OpenGLDataStructs.h"
 
-//Geometry
-typedef enum {POINTS, LINES, LINE_STRIP} PrimitiveType;
-
-struct Vertex 
+namespace sf
 {
-	glm::vec3 pos;
-	glm::vec3 normal;
-	glm::vec2 uv;
-	
-	Vertex()
-	{
-		pos = glm::vec3(0.f);
-		normal = glm::vec3(0.f);
-		uv = glm::vec3(-1.f);
-	}
-	
-	friend bool operator==(const Vertex& lhs, const Vertex& rhs)
-	{
-		if(lhs.pos == rhs.pos && lhs.normal == rhs.normal && lhs.uv == rhs.uv)
-			return true;
-		return false;
-	};
-};
-
-struct Face
-{
-    GLuint vertexID[3];
-    
-    friend bool operator==(const Face& lhs, const Face& rhs)
-    {
-		if(lhs.vertexID[0] == rhs.vertexID[0] && lhs.vertexID[1] == rhs.vertexID[1] && lhs.vertexID[2] == rhs.vertexID[2])
-			return true;
-        return false;
-    };
-};
-
-struct Mesh
-{
-    std::vector<Vertex> vertices;
-    std::vector<Face> faces;
-	bool hasUVs;
-	
-	glm::vec3 computeFaceNormal(unsigned int faceID)
-	{
-		glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
-		glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
-		return glm::normalize(glm::cross(v12,v13));
-	}
-};
-
-struct Object
-{
-	Mesh* mesh;
-	GLuint vao;
-	GLuint vboVertex;
-	GLuint vboIndex;
-};
-
-struct QuadTree;
-
-struct QuadTreeNode
-{
-	unsigned int level;
-	glm::vec3 origin;
-	glm::vec2 size;
-	glm::vec4 edgeFactors;
-	
-	bool leaf;
-	QuadTreeNode* parent;
-	QuadTreeNode* child[4];
-	QuadTree* tree;
-	
-	QuadTreeNode(glm::vec3 _origin, glm::vec2 _size, QuadTreeNode* _parent, QuadTree* _tree)
-	{
-		if(_parent != NULL)
-			level = _parent->level+1;
-		else
-			level = 0;
-			
-		origin = _origin;
-		size = _size;
-		edgeFactors = glm::vec4(1);
-	
-		leaf = true;
-		parent = _parent;
-		child[0] = NULL;
-		child[1] = NULL;
-		child[2] = NULL;
-		child[3] = NULL;
-		tree = _tree;
-	}
-	
-	~QuadTreeNode()
-	{
-		if(!leaf)
-		{
-			delete child[0];
-			delete child[1];
-			delete child[2];
-			delete child[3];
-		}
-	}
-		
-	void Grow(glm::vec3 p, glm::mat4 VP);
-};
-
-struct QuadTree
-{
-	QuadTreeNode root;
-	std::vector<QuadTreeNode*> leafs;
-	unsigned int maxLvl;
-	
-	GLuint vao;
-	GLuint vboVertex;
-	GLuint vboEdgeDiv;
-	
-	QuadTree() : root(glm::vec3(0), glm::vec2(1.f), NULL, this)
-	{
-		maxLvl = 16;
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glBindVertexArray(0);
-	}
-	
-	~QuadTree()
-	{
-		glDeleteVertexArrays(1, &vao);
-	}
-	
-	void Grow(glm::vec3 eye, glm::mat4 VP)
-	{
-		root.Grow(eye, VP);
-	}
-};
-
-//Rendering styles
-typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
-typedef enum {FLAT, FULL, UNDERWATER} DrawingMode;
-
-struct Look
-{
-    LookType type;
-    glm::vec3 color;
-    std::vector<GLfloat> params;
-    std::vector<GLuint> textures;
-};
 
 //Class
 class OpenGLView;
@@ -195,7 +48,7 @@ public:
 	void DrawCoordSystem(glm::mat4 M, GLfloat size);
 	void DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color);
     void DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color);
-    void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4());
+    void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4(1.f));
 	void DrawObject(int modelId, int lookId, const glm::mat4& M);
 	
 	//Allocate and build content
@@ -268,11 +121,8 @@ private:
 	//Methods
 	void UseStandardLook(const glm::mat4& M);
 	void SetupLights(GLSLShader* shader);
-	
-	//Static
-	static Mesh* LoadSTL(std::string filename, GLfloat scale, bool smooth);
-	static Mesh* LoadOBJ(std::string filename, GLfloat scale, bool smooth);
-	//TODO: Implement support for PLY
 };
+    
+}
 
 #endif

@@ -11,6 +11,9 @@
 
 #include "entities/forcefields/VelocityField.h"
 
+namespace sf
+{
+
 //! Jet velocity field class.
 /*!
 	Class implements a velocity field coming from a water jet.
@@ -30,5 +33,7 @@ private:
     btScalar r;
     btScalar vout;
 };
+
+}
 
 #endif

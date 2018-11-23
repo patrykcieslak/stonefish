@@ -11,6 +11,9 @@
 
 #include "graphics/OpenGLCamera.h"
 
+namespace sf
+{
+
 class OpenGLTrackball : public OpenGLCamera
 {
 public:
@@ -52,5 +55,6 @@ private:
     bool transMode;
 };
 
+}
 
 #endif

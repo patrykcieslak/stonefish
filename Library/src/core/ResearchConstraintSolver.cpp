@@ -29,6 +29,8 @@
 #include <LinearMath/btQuickprof.h>
 #include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
 
+using namespace sf;
+
 ResearchConstraintSolver::ResearchConstraintSolver(btMLCPSolverInterface* mlcp) : btMultiBodyConstraintSolver()
 {
     m_solver = mlcp;

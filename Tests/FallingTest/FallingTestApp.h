@@ -12,10 +12,10 @@
 #include <core/GraphicalSimulationApp.h>
 #include "FallingTestManager.h"
 
-class FallingTestApp : public GraphicalSimulationApp
+class FallingTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    FallingTestApp(std::string dataDirPath, RenderSettings s, FallingTestManager* sim);
+    FallingTestApp(std::string dataDirPath, sf::RenderSettings s, FallingTestManager* sim);
     void DoHUD();
     
 private:

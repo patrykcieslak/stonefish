@@ -8,6 +8,8 @@
 
 #include "core/UnitSystem.h"
 
+using namespace sf;
+
 UnitSystems UnitSystem::externalUS = MKS;
 bool UnitSystem::externalDeg = true;
 const btScalar UnitSystem::CGStoOther[2][9] = //MKS = 0 , MMKS = 1

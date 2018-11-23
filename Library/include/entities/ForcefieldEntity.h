@@ -12,6 +12,9 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include "entities/Entity.h"
 
+namespace sf
+{
+
 typedef enum {FORCEFIELD_POOL, FORCEFIELD_OCEAN, FORCEFIELD_TRIGGER} ForcefieldType;
 
 //Pure virtual class
@@ -34,5 +37,6 @@ protected:
     btPairCachingGhostObject* ghost;
 };
 
+}
 
 #endif

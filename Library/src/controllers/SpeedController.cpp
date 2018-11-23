@@ -8,6 +8,8 @@
 
 #include "controllers/SpeedController.h"
 
+using namespace sf;
+
 SpeedController::SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
     motor = m;

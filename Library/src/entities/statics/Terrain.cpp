@@ -8,6 +8,8 @@
 
 #include "entities/statics/Terrain.h"
 
+using namespace sf;
+
 Terrain::Terrain(std::string uniqueName, unsigned int width, unsigned int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
     size = UnitSystem::SetLength(size);

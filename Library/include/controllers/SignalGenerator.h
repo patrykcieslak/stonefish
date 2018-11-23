@@ -11,6 +11,9 @@
 
 #include "controllers/PathGenerator2D.h"
 
+namespace sf
+{
+
 typedef enum {SIGNAL_ADD, SIGNAL_SUBTRACT, SIGNAL_MULTIPLY} SignalCombineType;
 
 /*! An abstract time domain signal */
@@ -96,5 +99,6 @@ private:
     std::vector<Signal*> components;
 };
 
+}
 
 #endif

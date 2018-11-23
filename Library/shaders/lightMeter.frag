@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 out vec3 fragColor;
 uniform sampler2D texHDR;

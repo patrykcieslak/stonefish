@@ -9,13 +9,17 @@
 #include "entities/solids/Polyhedron.h"
 
 #include "utils/SystemUtil.hpp"
+#include "utils/MathUtil.hpp"
 
-Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals, btScalar thickness, bool isBuoyant, HydrodynamicProxyType geoProxy) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+using namespace sf;
+
+Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, const btTransform& originTrans, Material m, int lookId, bool smoothNormals, btScalar thickness, bool isBuoyant, HydrodynamicProxyType geoProxy) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     scale = UnitSystem::SetLength(scale);
     
     //1.Load triangle mesh from file
     mesh = OpenGLContent::LoadMesh(modelFilename, scale, smoothNormals);
+    transformMesh(mesh, UnitSystem::SetTransform(originTrans));
     
     //2.Calculate mesh volume and COG    
     btVector3 meshCog(0,0,0);
@@ -253,10 +257,6 @@ Polyhedron::Polyhedron(std::string uniqueName, std::string modelFilename, btScal
     
     //8. Set hydrodynamic properties
     CoB = localTransform.getOrigin();
-    
-#ifdef DEBUG
-    std::cout << getName() << " m:" << mass << " I:" << Ipri.x() << "," << Ipri.y() << "," << Ipri.z() << std::endl;
-#endif
 }
 
 Polyhedron::~Polyhedron(void)

@@ -1,4 +1,5 @@
-#version 330 core
+#version 330
+
 uniform vec3 eyePos;
 uniform mat4 invProj;
 uniform mat3 invView;

@@ -12,10 +12,15 @@
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 #include "core/ResearchConstraintSolver.h"
 
+namespace sf
+{
+
 class ResearchDynamicsWorld : public btMultiBodyDynamicsWorld
 {
 public:
     ResearchDynamicsWorld(btDispatcher* dispatcher, btBroadphaseInterface* pairCache, ResearchConstraintSolver* constraintSolver, btCollisionConfiguration* collisionConfiguration);
 };
+    
+}
 
 #endif

@@ -11,28 +11,21 @@
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
 
-Light::Light(std::string uniqueName, const btVector3& position, glm::vec4 color) : Actuator(uniqueName)
+using namespace sf;
+
+Light::Light(std::string uniqueName, const btVector3& initialPos, glm::vec4 color) : LinkActuator(uniqueName)
 {
-    glLight = new OpenGLPointLight(position, color);
+    glLight = new OpenGLPointLight(initialPos, color);
     OpenGLContent::getInstance()->AddLight(glLight);
 }
 
-Light::Light(std::string uniqueName, const btVector3& position, const btVector3& direction, btScalar coneAngle, glm::vec4 color) : Actuator(uniqueName)
+Light::Light(std::string uniqueName, const btVector3& initialPos, const btVector3& initialDir, btScalar coneAngle, glm::vec4 color) : LinkActuator(uniqueName)
 {
-    glLight = new OpenGLSpotLight(position, position+direction, (GLfloat)coneAngle, color);
+    glLight = new OpenGLSpotLight(initialPos, initialPos+initialDir, (GLfloat)coneAngle, color);
     OpenGLContent::getInstance()->AddLight(glLight);
-}
-
-Light::~Light()
-{
-    glLight = NULL;
 }
 
 void Light::Update(btScalar dt)
 {
-}
-    
-ActuatorType Light::getType()
-{
-    return ActuatorType::ACTUATOR_LIGHT;
+    //TODO: Update light position when solid moves!!!!
 }

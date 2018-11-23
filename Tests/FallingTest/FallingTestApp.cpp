@@ -8,28 +8,27 @@
 
 #include "FallingTestApp.h"
 
-#include <entities/systems/Manipulator.h>
-#include <sensors/Accelerometer.h>
+#include <sensors/scalar/IMU.h>
 
-FallingTestApp::FallingTestApp(std::string dataDirPath, RenderSettings s, FallingTestManager* sim)
-    : GraphicalSimulationApp("Falling Test", dataDirPath, s, sim)
+FallingTestApp::FallingTestApp(std::string dataDirPath, sf::RenderSettings s, FallingTestManager* sim)
+    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, sim)
 {
     checked = false;
 }
 
 void FallingTestApp::DoHUD()
 {
-    GraphicalSimulationApp::DoHUD();
+    sf::GraphicalSimulationApp::DoHUD();
     
-	ui_id slider;
+    sf::ui_id slider;
     slider.owner = 1;
     slider.item = 0;
 	slider.index = 0;
 	getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
-	slider.item = 1;
-	std::vector<unsigned short> dims;
-    dims.push_back(2);
+	//slider.item = 1;
+	//std::vector<unsigned short> dims;
+    //dims.push_back(2);
 	//Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");
     //IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Acceleration", new btScalar[2]{0.0, 1000.0});
     
@@ -72,13 +71,18 @@ void FallingTestApp::DoHUD()
 	*/
 	
     //Right side
-    /*ui_id plot;
+    sf::ui_id plot;
     plot.owner = 1;
-    plot.item = 0;
+    plot.item = 1;
     plot.index = 0;
     std::vector<unsigned short> dims;
+    dims.push_back(0);
+	dims.push_back(1);
     dims.push_back(2);
-	dims.push_back(0);
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("IMU"), dims, "RPY");
     
-    IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height");*/
+    dims.clear();
+    dims.push_back(0);
+    plot.item = 2;
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 440, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Encoder"), dims, "Angle");
 }

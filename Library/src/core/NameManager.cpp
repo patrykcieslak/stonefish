@@ -8,6 +8,8 @@
 
 #include "core/NameManager.h"
 
+using namespace sf;
+
 NameManager::NameManager()
 {
     names = std::vector<std::string>(0);

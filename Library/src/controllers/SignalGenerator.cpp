@@ -8,6 +8,8 @@
 
 #include "controllers/SignalGenerator.h"
 
+using namespace sf;
+
 SignalGenerator::SignalGenerator()
 {
 }

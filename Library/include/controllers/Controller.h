@@ -11,13 +11,16 @@
 
 #include "common.h"
 
+namespace sf
+{
+
 typedef enum {CONTROLLER_FEEDBACK, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} ControllerType;
 
 /*! Abstract class representing a general controller */
 class Controller
 {
 public:
-    Controller(std::string uniqueName, btScalar frequency = btScalar(-1.));
+    Controller(std::string uniqueName, btScalar frequency);
     virtual ~Controller();
     
     void Start();
@@ -41,5 +44,7 @@ private:
     btScalar eleapsedTime;
     bool running;
 };
+    
+}
 
 #endif

@@ -8,7 +8,9 @@
 
 #include "entities/forcefields/Trigger.h"
 
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 Trigger::Trigger(std::string uniqueName, btScalar radius, const btTransform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
 {

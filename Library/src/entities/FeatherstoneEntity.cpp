@@ -9,7 +9,9 @@
 #include "entities/FeatherstoneEntity.h"
 
 #include "core/SimulationApp.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, bool fixedBase) : Entity(uniqueName)
 {

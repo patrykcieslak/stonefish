@@ -11,6 +11,9 @@
 
 #include "graphics/OpenGLContent.h"
 
+namespace sf
+{
+
 struct OceanParams
 {
 	unsigned int passes;
@@ -31,10 +34,9 @@ struct OceanParams
 class OpenGLOcean 
 {
 public:
-	OpenGLOcean();
+	OpenGLOcean(bool geometricWaves);
 	~OpenGLOcean();
 	
-	void Init();
 	void Simulate();
 	void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
 	void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
@@ -63,17 +65,21 @@ private:
 	std::vector<GLSLShader*> oceanShaders;
     GLuint oceanFBOs[3];
 	GLuint oceanTextures[6];
-	GLuint oceanViewTextures[3];
 	
+    bool waves;
 	OceanParams params;
-	QuadTree qt;
+	QuadTree* qt;
 	int64_t lastTime;
 	GLuint vao;
     GLuint vbo;
+    GLuint vaoEdge;
+    GLuint vboEdge;
     GLuint vaoMask;
 	GLuint vboMask;
     glm::vec3 lightAbsorption;
     GLfloat turbidity;
 };
+    
+}
 
 #endif

@@ -12,6 +12,9 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/GLSLShader.h"
 
+namespace sf
+{
+
 typedef enum {CAMERA, TRACKBALL, DEPTH_CAMERA} ViewType;
 
 class OpenGLView
@@ -44,4 +47,6 @@ protected:
     bool enabled;
 };
 
+}
+    
 #endif

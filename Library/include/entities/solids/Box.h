@@ -11,10 +11,13 @@
 
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 class Box : public SolidEntity
 {
 public:
-    Box(std::string uniqueName, const btVector3& dimensions, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
+    Box(std::string uniqueName, const btVector3& dimensions, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     ~Box();
     
     SolidType getSolidType();
@@ -23,5 +26,7 @@ public:
 private:
     btVector3 halfExtents;
 };
+    
+}
 
 #endif

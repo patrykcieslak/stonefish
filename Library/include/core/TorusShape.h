@@ -12,6 +12,9 @@
 #include <BulletCollision/CollisionShapes/btConvexInternalShape.h>
 #include <BulletCollision/BroadphaseCollision/btBroadphaseProxy.h>
 
+namespace sf
+{
+
 ATTRIBUTE_ALIGNED16(class) TorusShape : public btConvexInternalShape
 {
 protected:
@@ -44,4 +47,6 @@ public:
 	virtual btVector3 getAnisotropicRollingFrictionDirection() const { return btVector3(0,1,0); }
 };
 
+}
+    
 #endif

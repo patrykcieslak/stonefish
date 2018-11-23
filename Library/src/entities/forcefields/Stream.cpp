@@ -8,6 +8,8 @@
 
 #include "entities/forcefields/Stream.h"
 
+using namespace sf;
+
 Stream::Stream(const std::vector<btVector3>& streamline, const std::vector<btScalar>& radius, btScalar inputVelocity, btScalar exponent)
 {
     c = streamline;

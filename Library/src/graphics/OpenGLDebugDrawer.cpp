@@ -11,6 +11,8 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/Console.h"
 
+using namespace sf;
+
 OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode, bool zUp)
 {
 	zAxisUp = zUp;

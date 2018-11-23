@@ -9,8 +9,10 @@
 #include "core/ConsoleSimulationApp.h"
 
 #include "utils/SystemUtil.hpp"
-#include "chrono"
-#include "thread"
+#include <chrono>
+#include <thread>
+
+using namespace sf;
 
 ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)

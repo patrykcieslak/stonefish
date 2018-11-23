@@ -10,6 +10,8 @@
 
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 Controller::Controller(std::string uniqueName, btScalar frequency)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);

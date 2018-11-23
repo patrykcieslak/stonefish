@@ -11,11 +11,14 @@
 
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 /*! Spherical solid entity. */
 class Sphere : public SolidEntity
 {
 public:
-    Sphere(std::string uniqueName, btScalar sphereRadius, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
+    Sphere(std::string uniqueName, btScalar sphereRadius, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
     ~Sphere();
     
     SolidType getSolidType();
@@ -24,5 +27,7 @@ public:
 private:    
     btScalar radius;
 };
+    
+}
 
 #endif

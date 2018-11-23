@@ -11,6 +11,9 @@
 
 #include "graphics/OpenGLLight.h"
 
+namespace sf
+{
+
 class OpenGLSpotLight : public OpenGLLight
 {
 public:
@@ -40,5 +43,7 @@ private:
     glm::mat4 clipSpace;
 	GLuint shadowFBO;
 };
+    
+}
 
 #endif

@@ -11,10 +11,13 @@
 
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 class Polyhedron : public SolidEntity
 {
 public:
-    Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId = -1, bool smoothNormals = true, btScalar thickness = btScalar(-1), bool isBuoyant = true, HydrodynamicProxyType geoProxy = HYDRO_PROXY_ELLIPSOID);
+    Polyhedron(std::string uniqueName, std::string modelFilename, btScalar scale, const btTransform& originTrans, Material m, int lookId = -1, bool smoothNormals = true, btScalar thickness = btScalar(-1), bool isBuoyant = true, HydrodynamicProxyType geoProxy = HYDRO_PROXY_ELLIPSOID);
 	~Polyhedron();
     
     SolidType getSolidType();
@@ -25,5 +28,6 @@ private:
     btVector3 aabb[2];
 };
 
+}
 
 #endif

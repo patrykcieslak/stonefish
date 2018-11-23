@@ -12,6 +12,9 @@
 #include <fstream>
 #include "graphics/Console.h"
 
+namespace sf
+{
+
 ScientificData::ScientificData(std::string filepath) : path(filepath)
 {
 }
@@ -560,4 +563,6 @@ void SaveOctaveMatrix(std::ofstream& file, const ScientificDataItem& it)
             }
 #endif
     }
+}
+
 }

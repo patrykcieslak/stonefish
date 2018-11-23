@@ -10,6 +10,8 @@
 
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);

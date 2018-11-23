@@ -23,5 +23,5 @@ void SlidingTestApp::DoHUD()
   
     std::vector<unsigned short> dims;
     dims.push_back(2);
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor(0), dims, "Height");
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (ScalarSensor*)getSimulationManager()->getSensor(0), dims, "Height");
 }

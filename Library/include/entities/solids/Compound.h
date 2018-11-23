@@ -11,6 +11,9 @@
 
 #include "entities/SolidEntity.h"
 
+namespace sf
+{
+
 typedef struct
 {
     SolidEntity* solid;
@@ -39,5 +42,7 @@ public:
 private:
     std::vector<Part> parts; //Parts of the compound solid
 };
+
+}
 
 #endif

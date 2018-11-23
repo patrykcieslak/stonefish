@@ -14,6 +14,9 @@
 #include "entities/ForcefieldEntity.h"
 #include "entities/forcefields/VelocityField.h"
 
+namespace sf
+{
+
 typedef enum {TRIFOLD_SYMMETRY, FULLY_COUPLED, GEOMETRY_BASED} HydrodynamicsType;
 
 typedef struct
@@ -27,7 +30,7 @@ typedef struct
 class Ocean : public ForcefieldEntity
 {
 public:
-    Ocean(std::string uniqueName, Liquid* l);
+    Ocean(std::string uniqueName, bool simulateWaves, Liquid* l);
     virtual ~Ocean();
     
     //Forces
@@ -42,8 +45,7 @@ public:
     glm::vec3 ComputeLightAbsorption();
     
     //Getters
-    void setUseTrueWaves(bool waves);
-    bool usesTrueWaves();
+    bool hasWaves();
     void setAlgeaBloomFactor(GLfloat f);
     void setTurbidity(GLfloat ntu);
     GLfloat getAlgeaBloomFactor();
@@ -62,6 +64,9 @@ private:
     btScalar depth;
     GLfloat algeaBloom;
     GLfloat turbidity;
-    bool trueWaves;
+    bool waves;
 };
+    
+}
+
 #endif

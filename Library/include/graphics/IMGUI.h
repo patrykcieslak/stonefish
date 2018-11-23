@@ -14,7 +14,7 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLPrinter.h"
 #include "graphics/GLSLShader.h"
-#include "sensors/SimpleSensor.h"
+#include "sensors/ScalarSensor.h"
 
 //interface colors
 #define PANEL_COLOR 0                 //Panel/background
@@ -30,13 +30,15 @@
 #define PLOT_TEXT_COLOR 10
 #define CORNER_RADIUS 5.f
 
+namespace sf
+{
+
 struct ui_id
 {
     int owner;
     int item;
     int index;
 };
-
 
 class IMGUI
 {
@@ -82,8 +84,8 @@ public:
     bool DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
     btScalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, btScalar min, btScalar max, btScalar value, const char* title);
     bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const char* title);
-    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2] = NULL);
-    bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, SimpleSensor* sensX, unsigned short dimX, SimpleSensor* sensY, unsigned short dimY, const char* title);
+    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2] = NULL);
+    bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const char* title);
     
     static glm::vec4 HSV2RGB(glm::vec4 hsv);
     
@@ -115,5 +117,7 @@ private:
     GLSLShader* gaussianShader;
 	GLSLShader* guiShader[2];
 };
+
+}
 
 #endif

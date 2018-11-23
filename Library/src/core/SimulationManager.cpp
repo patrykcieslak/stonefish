@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationManager.h"
@@ -21,14 +21,16 @@
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLTrackball.h"
 #include "utils/SystemUtil.hpp"
+#include "utils/tinyxml2.h"
 #include "entities/SolidEntity.h"
 #include "entities/StaticEntity.h"
-#include "entities/CableEntity.h"
 #include "entities/ForcefieldEntity.h"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Trigger.h"
 #include "entities/statics/Plane.h"
-#include "sensors/Camera.h"
+#include "sensors/VisionSensor.h"
+
+using namespace sf;
 
 SimulationManager::SimulationManager(UnitSystems unitSystem, bool zAxisUp, btScalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
 {
@@ -78,6 +80,19 @@ SimulationManager::~SimulationManager()
 	delete nameManager;
 }
 
+bool SimulationManager::LoadSDF(const std::string& path)
+{
+    tinyxml2::XMLDocument doc;
+    doc.LoadFile(path.c_str());
+    return doc.ErrorID() == 0;
+}
+
+void SimulationManager::AddRobot(Robot* robot, const btTransform& worldTransform)
+{
+    if(robot != NULL)
+        robot->AddToSimulation(this, worldTransform);
+}
+
 void SimulationManager::AddEntity(Entity *ent)
 {
     if(ent != NULL)
@@ -114,16 +129,7 @@ void SimulationManager::AddSolidEntity(SolidEntity* ent, const btTransform& worl
      }
  }
 
-void SimulationManager::AddSystemEntity(SystemEntity* ent, const btTransform& worldTransform)
-{
-    if(ent != NULL)
-    {
-        entities.push_back(ent);
-        ent->AddToDynamicsWorld(dynamicsWorld, worldTransform);
-    }
-}
-
-void SimulationManager::EnableOcean(Liquid* f)
+void SimulationManager::EnableOcean(bool waves, Liquid* f)
 {
 	if(ocean != NULL)
 		return;
@@ -134,7 +140,7 @@ void SimulationManager::EnableOcean(Liquid* f)
         f = getMaterialManager()->getFluid(water);
     }
     
-	ocean = new Ocean("Ocean", f);
+	ocean = new Ocean("Ocean", waves, f);
 	ocean->AddToDynamicsWorld(dynamicsWorld);
 	
 	if(SimulationApp::getApp()->hasGraphics())
@@ -581,22 +587,10 @@ void SimulationManager::InitializeScenario()
 	if(SimulationApp::getApp()->hasGraphics())
 	{
 		GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-		trackball = new OpenGLTrackball(btVector3(0,0,1.0), 10.0, btVector3(0,0, 1.0), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
+		trackball = new OpenGLTrackball(btVector3(0,0,1.0), 1.0, btVector3(0,0, 1.0), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
 		trackball->Rotate(btQuaternion(0.25, 0.0, 0.0));
 		OpenGLContent::getInstance()->AddView(trackball);
 	}
-	
-	/*
-	//Plane
-    getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
-    std::string path = GetShaderPath() + "grid.png";
-    int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, path);
-            
-    Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
-    AddStaticEntity(floor, btTransform::getIdentity());
-		
-    EnableOcean();
-	*/
 }
 
 void SimulationManager::RestartScenario()
@@ -896,8 +890,8 @@ void SimulationManager::UpdateDrawingQueue()
 			glPipeline->AddToDrawingQueue(items[h]);
 		}
         
-        if(sensors[i]->getType() == SensorType::SENSOR_CAMERA)
-			((Camera*)sensors[i])->UpdateTransform();
+        if(sensors[i]->getType() == SensorType::SENSOR_VISION)
+			((VisionSensor*)sensors[i])->UpdateTransform();
     }
     
     //Contacts
@@ -1207,13 +1201,13 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, btScalar 
             CableEntity* cable = (CableEntity*)ent;
             cable->ApplyGravity();
         }*/
-        else if(ent->getType() == ENTITY_SYSTEM)
+        /*else if(ent->getType() == ENTITY_SYSTEM)
         {
             SystemEntity* system = (SystemEntity*)ent;
             system->UpdateActuators(timeStep);
             system->ApplyGravity(mbDynamicsWorld->getGravity());
 			system->ApplyDamping();
-        }
+        }*/
 		else if(ent->getType() == ENTITY_FORCEFIELD)
 		{
 			ForcefieldEntity* ff = (ForcefieldEntity*)ent;
@@ -1295,11 +1289,11 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, btSca
 			FeatherstoneEntity* fe = (FeatherstoneEntity*)ent;
 			fe->UpdateAcceleration(timeStep);
 		}
-		else if(ent->getType() == ENTITY_SYSTEM)
+		/*else if(ent->getType() == ENTITY_SYSTEM)
 		{
 			SystemEntity* sys = (SystemEntity*)ent;
 			sys->UpdateAcceleration(timeStep);
-		}
+		}*/
     }
 	
 	//loop through all sensors -> update measurements
@@ -1315,12 +1309,12 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, btSca
     {
         Entity* ent = simManager->entities[i];
         
-        if(ent->getType() == ENTITY_SYSTEM)
+        /*if(ent->getType() == ENTITY_SYSTEM)
         {
             SystemEntity* system = (SystemEntity*)ent;
             system->UpdateSensors(timeStep);
             system->UpdateControllers(timeStep);
-        }
+        }*/
     }
 	
     //Update simulation time

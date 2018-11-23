@@ -13,6 +13,9 @@
 #include "graphics/OpenGLContent.h"
 #include "entities/Entity.h"
 
+namespace sf
+{
+
 typedef enum {STATIC_PLANE, STATIC_TERRAIN, STATIC_OBSTACLE} StaticEntityType;
 
 //abstract class
@@ -52,5 +55,7 @@ protected:
     int lookId;
     bool wireframe;
 };
+    
+}
 
 #endif

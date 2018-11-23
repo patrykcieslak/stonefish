@@ -12,6 +12,9 @@
 #include <utility>
 #include "graphics/OpenGLPipeline.h"
 
+namespace sf
+{
+
 typedef enum {BOOLEAN, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, MAT3, MAT4} ParameterType;
 
 struct GLSLUniform
@@ -99,5 +102,6 @@ private:
 	static GLuint CreateProgram(const std::vector<GLuint>& compiledShaders, unsigned int doNotDeleteNFirstShaders = 0);
 };
 
+}
 
 #endif

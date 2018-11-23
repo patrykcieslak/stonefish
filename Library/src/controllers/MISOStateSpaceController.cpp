@@ -8,6 +8,8 @@
 
 #include "controllers/MISOStateSpaceController.h"
 
+using namespace sf;
+
 MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, inputs->getNumOfComponents(), frequency)
 {
     this->input = inputs;

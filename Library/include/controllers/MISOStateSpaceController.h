@@ -10,14 +10,17 @@
 #define __Stonefish_MISOStateSpaceController__
 
 #include "actuators/DCMotor.h"
-#include "sensors/Mux.h"
+#include "sensors/scalar/Mux.h"
 #include "controllers/FeedbackController.h"
+
+namespace sf
+{
 
 /*! MISO controller for controlling SIMO systems */
 class MISOStateSpaceController : public FeedbackController
 {
 public:
-    MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency = btScalar(-1.));
+    MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency = btScalar(-1));
     ~MISOStateSpaceController();
     
     void Reset();
@@ -32,5 +35,7 @@ private:
     btScalar maxOutput;
     std::vector<btScalar> gains;
 };
+    
+}
 
 #endif

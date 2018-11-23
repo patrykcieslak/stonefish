@@ -11,16 +11,16 @@
 
 int main(int argc, const char * argv[])
 {
-    RenderSettings s;
+    sf::RenderSettings s;
     s.windowW = 800;
     s.windowH = 600;
-    s.shadows = RenderQuality::QUALITY_MEDIUM;
-    s.ao = RenderQuality::QUALITY_DISABLED;
-    s.atmosphere = RenderQuality::QUALITY_MEDIUM;
-    s.ocean = RenderQuality::QUALITY_DISABLED;
+    s.shadows = sf::RenderQuality::QUALITY_MEDIUM;
+    s.ao = sf::RenderQuality::QUALITY_DISABLED;
+    s.atmosphere = sf::RenderQuality::QUALITY_LOW;
+    s.ocean = sf::RenderQuality::QUALITY_DISABLED;
     
     FallingTestManager* simulationManager = new FallingTestManager(60.0);
-    FallingTestApp app("/home/pcieslak/Documents/stonefish/Library/data", s, simulationManager);
+    FallingTestApp app(DATA_DIR_PATH, s, simulationManager);
     app.Run(false);
 	
     return 0;

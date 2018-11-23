@@ -15,6 +15,9 @@
 #define PIover180   btScalar(M_PI / 180.0)
 #define _180overPI  btScalar(180.0 / M_PI)
 
+namespace sf
+{
+
 typedef enum {CGS = 0, MKS, MMKS} UnitSystems;
 typedef enum {AXIS_X, AXIS_Y, AXIS_Z} AxisType;
 typedef enum {PLANE_XY, PLANE_XZ, PLANE_YZ} PlaneType;
@@ -115,5 +118,7 @@ private:
     static UnitSystems externalUS;
     static bool externalDeg;
 };
+
+}
 
 #endif

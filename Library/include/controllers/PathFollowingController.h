@@ -9,15 +9,18 @@
 #ifndef __Stonefish_PathFollowingController__
 #define __Stonefish_PathFollowingController__
 
-#include "sensors/Trajectory.h"
+#include "sensors/scalar/Trajectory.h"
 #include "controllers/Controller.h"
 #include "controllers/PathGenerator.h"
+
+namespace sf
+{
 
 /*! Abstract path following controller base class */
 class PathFollowingController : public Controller
 {
 public:
-    PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency = btScalar(1.));
+    PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency);
     virtual ~PathFollowingController();
     
     void RenderPath();
@@ -37,4 +40,6 @@ protected:
     std::vector<btScalar> error;
 };
 
+}
+    
 #endif

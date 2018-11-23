@@ -11,6 +11,9 @@
 
 #include "joints/Joint.h"
 
+namespace sf
+{
+
 class PrismaticJoint : public Joint
 {
 public:
@@ -33,5 +36,7 @@ private:
     btScalar velDamping;
     btScalar displacementIC;
 };
+    
+}
 
 #endif

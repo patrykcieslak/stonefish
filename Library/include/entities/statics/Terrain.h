@@ -12,6 +12,9 @@
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include "entities/StaticEntity.h"
 
+namespace sf
+{
+
 class Terrain : public StaticEntity
 {
 public:
@@ -22,5 +25,7 @@ public:
 private:
     btScalar* terrainHeight;
 };
+
+}
 
 #endif

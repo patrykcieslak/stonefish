@@ -9,6 +9,8 @@
 #include "core/MaterialManager.h"
 #include "graphics/Console.h"
 
+using namespace sf;
+
 MaterialManager::MaterialManager()
 {
 }

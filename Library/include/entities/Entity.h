@@ -14,6 +14,9 @@
 
 #define BIT(x) (1<<(x))
 
+namespace sf
+{
+    
 typedef enum
 {
     ENTITY_STATIC, ENTITY_SOLID, ENTITY_CABLE, ENTITY_FEATHERSTONE, ENTITY_FORCEFIELD, ENTITY_SYSTEM
@@ -53,5 +56,7 @@ private:
     bool renderable;
     std::string name;
 };
+    
+}
 
 #endif

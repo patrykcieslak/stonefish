@@ -13,6 +13,9 @@
 #include <cmath>
 #include <BulletDynamics/ConstraintSolver/btSliderConstraint.h>
 
+namespace sf
+{
+
 class ScrewConstraint : public btSliderConstraint
 {
 public: 
@@ -62,4 +65,6 @@ private:
     double threadPitch;
 };
 
+}
+    
 #endif

@@ -11,6 +11,9 @@
 
 #include "entities/StaticEntity.h"
 
+namespace sf
+{
+
 //! A static obstacle loaded from a file or taking one of the simple geometrical shapes.
 class Obstacle : public StaticEntity
 {
@@ -22,5 +25,7 @@ public:
  
     StaticEntityType getStaticType();
 };
+
+}
 
 #endif

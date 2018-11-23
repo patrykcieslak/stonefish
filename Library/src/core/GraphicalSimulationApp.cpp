@@ -12,6 +12,8 @@
 #include <thread>
 #include "utils/SystemUtil.hpp"
 
+using namespace sf;
+
 GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings s, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)
 {
@@ -352,13 +354,15 @@ void GraphicalSimulationApp::Loop()
 {
     SDL_Event event;
     bool mouseWasDown = false;
+    SDL_Keymod modKeys = KMOD_NONE;
     
     uint64_t startTime = GetTimeInMicroseconds();
     
     while(!hasFinished())
     {
         SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
-
+        modKeys = SDL_GetModState();
+        
         while(SDL_PollEvent(&event))
         {
             switch(event.type)
@@ -397,7 +401,7 @@ void GraphicalSimulationApp::Loop()
                     gui->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
                     
                     //Trackball
-                    if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
+                    //if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
                     {
                         OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                         if(trackball->isEnabled())
@@ -483,7 +487,8 @@ void GraphicalSimulationApp::Loop()
             lastPicked = getSimulationManager()->PickEntity(event.button.x, event.button.y);
             
             //Trackball
-            if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
+            //if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
+            if((modKeys & KMOD_RSHIFT) || (modKeys & KMOD_RALT))
             {
                 OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                 
@@ -491,7 +496,8 @@ void GraphicalSimulationApp::Loop()
                 {
                     GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
                     GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                    trackball->MouseDown(xPos, yPos, event.button.button == SDL_BUTTON_MIDDLE);
+                    //trackball->MouseDown(xPos, yPos, event.button.button == SDL_BUTTON_MIDDLE);
+                    trackball->MouseDown(xPos, yPos, modKeys & KMOD_RSHIFT);
                 }
             }
             

@@ -14,6 +14,9 @@
 #include "core/UnitSystem.h"
 #include "core/NameManager.h"
 
+namespace sf
+{
+
 struct Material 
 {
     std::string name;
@@ -87,5 +90,7 @@ private:
     NameManager materialNameManager;
     NameManager fluidNameManager;
 };
+    
+}
 
 #endif 

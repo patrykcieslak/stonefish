@@ -2,7 +2,7 @@
     Downsample x4 by using only one pass achieved by making use of the built-in bilinear filtering
  */
 
-#version 330 core
+#version 330
 
 out vec4 fragcolor;
 uniform sampler2D source;

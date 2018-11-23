@@ -18,6 +18,9 @@
 #include "entities/SolidEntity.h"
 #include "entities/StaticEntity.h"
 
+namespace sf
+{
+
 struct FeatherstoneLink
 {
     FeatherstoneLink(SolidEntity* s, const btTransform& t) : solid(s), trans(t) {}
@@ -118,5 +121,7 @@ private:
     std::vector<FeatherstoneJoint> joints;
 	bool baseRenderable;
 };
+    
+}
 
 #endif

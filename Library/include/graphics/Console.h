@@ -19,6 +19,9 @@
 #define cError(format, ...)    Console::getInstance()->Print(2, format, ##__VA_ARGS__)
 #define cCritical(format, ...) {Console::getInstance()->Print(3, format, ##__VA_ARGS__);abort();}
 
+namespace sf
+{
+
 typedef struct
 {
     int type;
@@ -60,5 +63,7 @@ private:
     
     static Console* instance;
 };
+
+}
 
 #endif

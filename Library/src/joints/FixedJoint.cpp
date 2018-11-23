@@ -11,6 +11,8 @@
 #include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
 #include "core/SimulationApp.h"
 
+using namespace sf;
+
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->getRigidBody();

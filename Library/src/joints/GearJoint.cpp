@@ -8,6 +8,8 @@
 
 #include "joints/GearJoint.h"
 
+using namespace sf;
+
 GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
 {
     gearRatio = ratio;

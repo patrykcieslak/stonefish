@@ -15,6 +15,8 @@
 #include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
 #include <LinearMath/btQuickprof.h>
 
+using namespace sf;
+
 ResearchDynamicsWorld::ResearchDynamicsWorld(btDispatcher* dispatcher, btBroadphaseInterface* pairCache, ResearchConstraintSolver* constraintSolver, btCollisionConfiguration* collisionConfiguration) : btMultiBodyDynamicsWorld(dispatcher, pairCache, constraintSolver, collisionConfiguration)
 {
 }

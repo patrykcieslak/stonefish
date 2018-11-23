@@ -20,6 +20,9 @@
 #define NUM_MRT					8
 #define MAX_SAMPLES				8
 
+namespace sf
+{
+
 typedef struct
 {
     GLfloat near;
@@ -158,5 +161,7 @@ protected:
 	static GLSLShader* aoReinterleaveShader;
 	static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
 };
+    
+}
 
 #endif

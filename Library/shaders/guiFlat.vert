@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 layout(location = 0) in vec2 vertex;
 

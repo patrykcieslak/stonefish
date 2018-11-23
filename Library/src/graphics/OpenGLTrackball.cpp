@@ -9,7 +9,9 @@
 #include "graphics/OpenGLTrackball.h"
 
 #include "core/SimulationApp.h"
-#include "utils/MathsUtil.hpp"
+#include "utils/MathUtil.hpp"
+
+using namespace sf;
 
 OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {
@@ -20,10 +22,7 @@ OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbit
 	center = glm::vec3((GLfloat)_center.getX(), (GLfloat)_center.getY(), (GLfloat)_center.getZ());
 	radius = (GLfloat)UnitSystem::SetLength(orbitRadius);
     fovx = fov/180.f*M_PI;
-    
-	GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
-    GLfloat fovy = fovx/aspect;
-    projection = glm::perspective(fovy, aspect, near, far);
+    projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
     
 	dragging = false;
     transMode = false;

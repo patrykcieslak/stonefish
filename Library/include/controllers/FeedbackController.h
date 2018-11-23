@@ -12,11 +12,14 @@
 #include "controllers/Controller.h"
 #include "controllers/SignalMux.h"
 
+namespace sf
+{
+
 /*! Abstract class representing a feedback controller */
 class FeedbackController : public Controller
 {
 public:
-    FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency = btScalar(-1.));
+    FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency);
     virtual ~FeedbackController();
     
     virtual void Reset() = 0;
@@ -41,6 +44,6 @@ private:
     SignalMux* referenceMux;
 };
 
-
+}
 
 #endif

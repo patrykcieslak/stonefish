@@ -8,6 +8,8 @@
 
 #include "core/TorusShape.h"
 
+using namespace sf;
+
 TorusShape::TorusShape(btScalar majorRadius, btScalar minorRadius)
 {
 	m_majorRadius = majorRadius;

@@ -11,6 +11,9 @@
 
 #include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
 
+namespace sf
+{
+
 class FilteredCollisionDispatcher : public btCollisionDispatcher
 {
 public:
@@ -23,5 +26,7 @@ public:
 private:
     bool inclusive;
 };
+    
+}
 
 #endif

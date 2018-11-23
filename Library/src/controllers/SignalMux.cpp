@@ -8,6 +8,8 @@
 
 #include "controllers/SignalMux.h"
 
+using namespace sf;
+
 SignalMux::SignalMux()
 {
 }

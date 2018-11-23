@@ -12,6 +12,9 @@
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
 #include <BulletDynamics/MLCPSolvers/btMLCPSolverInterface.h>
 
+namespace sf
+{
+    
 class ResearchConstraintSolver : public btMultiBodyConstraintSolver
 {
 public:
@@ -50,5 +53,7 @@ protected:
 	virtual void createMLCP(const btContactSolverInfo& infoGlobal);
 	virtual void createMLCPFast(const btContactSolverInfo& infoGlobal);
 };
+    
+}
 
 #endif

@@ -11,6 +11,9 @@
 
 #include "graphics/OpenGLCamera.h"
 
+namespace sf
+{
+
 class ColorCamera;
 
 class OpenGLRealCamera : public OpenGLCamera
@@ -49,5 +52,7 @@ private:
     bool _needsUpdate;
     bool update;
 };
+    
+}
 
 #endif

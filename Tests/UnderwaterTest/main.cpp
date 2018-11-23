@@ -16,15 +16,16 @@ int main(int argc, const char * argv[])
     //feenableexcept(FE_INVALID | FE_OVERFLOW);
     
     RenderSettings s;
-    s.windowW = 1600;
-    s.windowH = 1200;
+    s.windowW = 800;
+    s.windowH = 600;
     s.shadows = RenderQuality::QUALITY_HIGH;
     s.ao = RenderQuality::QUALITY_HIGH;
     s.atmosphere = RenderQuality::QUALITY_MEDIUM;
     s.ocean = RenderQuality::QUALITY_MEDIUM;
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(500.0);
-    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, simulationManager);
+    UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, simulationManager);
+    //UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, simulationManager);
     app.Run(false);
     
     return 0;

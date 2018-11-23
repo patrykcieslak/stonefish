@@ -45,6 +45,9 @@
 #define TEX_POINT_SHADOW        ((GLint)15) //Not used
 #define TEX_POINT_DEPTH         ((GLint)16) //Not used
 
+namespace sf
+{
+
 typedef enum {SOLID = 0, SOLID_CS, HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_LINES, HYDRO_LINE_STRIP, SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES} RenderableType;
 
 typedef enum {QUALITY_DISABLED = 0, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH} RenderQuality;
@@ -66,6 +69,7 @@ struct RenderSettings
     RenderQuality ao;
     RenderQuality atmosphere;
     RenderQuality ocean;
+    bool msaa;
     
     RenderSettings()
     {
@@ -75,6 +79,7 @@ struct RenderSettings
         ao = RenderQuality::QUALITY_MEDIUM;
         atmosphere = RenderQuality::QUALITY_MEDIUM;
         ocean = RenderQuality::QUALITY_MEDIUM;
+        msaa = false;
     }
 };
 
@@ -96,6 +101,7 @@ public:
     SDL_mutex* getDrawingQueueMutex();
     void setVisibleHelpers(bool coordSystems, bool joints, bool actuators, bool sensors, bool lights, bool cameras, bool fluidDynamics);
     void setDebugSimulation(bool enabled);
+    RenderSettings getSettings() const;
     
     GLuint getScreenTexture();
 	
@@ -118,5 +124,7 @@ private:
     GLuint screenFBO;
     GLuint screenTex;
 };
+    
+}
 
 #endif

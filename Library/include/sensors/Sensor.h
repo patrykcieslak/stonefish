@@ -10,16 +10,18 @@
 #define __Stonefish_Sensor__
 
 #include <random>
-#include "core/UnitSystem.h"
 #include "graphics/OpenGLPipeline.h"
 
-typedef enum {SENSOR_SIMPLE, SENSOR_CAMERA, SENSOR_LIGHT} SensorType;
+namespace sf
+{
+
+typedef enum {SENSOR_JOINT = 0, SENSOR_LINK, SENSOR_VISION, SENSOR_OTHER} SensorType;
 
 //Abstract class
 class Sensor
 {
 public:
-    Sensor(std::string uniqueName, btScalar frequency = btScalar(-1.));
+    Sensor(std::string uniqueName, btScalar frequency);
     virtual ~Sensor();
     
     virtual void Reset();
@@ -32,11 +34,10 @@ public:
     bool isRenderable();
     void setRenderable(bool render);
     std::string getName();
-	
-	//Abstract
-	virtual void InternalUpdate(btScalar dt) = 0;
-	virtual SensorType getType() = 0;
     
+	virtual void InternalUpdate(btScalar dt) = 0;
+    virtual SensorType getType() = 0;
+	
 protected:
     btScalar freq;
     
@@ -49,5 +50,7 @@ private:
     bool renderable;
     bool newDataAvailable;
 };
+
+}
 
 #endif

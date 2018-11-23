@@ -12,6 +12,9 @@
 #include "graphics/OpenGLPipeline.h"
 #include "entities/Entity.h"
 
+namespace sf
+{
+
 typedef enum {  CONTACT_DISPLAY_NONE = 0,
                 CONTACT_DISPLAY_LAST_A = 1 << 0,
                 CONTACT_DISPLAY_PATH_A = 1 << 1,
@@ -59,5 +62,6 @@ private:
     int16_t displayMask;
 };
 
+}
 
 #endif

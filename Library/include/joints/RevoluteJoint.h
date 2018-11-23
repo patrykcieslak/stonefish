@@ -11,6 +11,9 @@
 
 #include "joints/Joint.h"
 
+namespace sf
+{
+
 class RevoluteJoint : public Joint
 {
 public:
@@ -38,5 +41,7 @@ private:
     btScalar velDamping;
     btScalar angleIC;
 };
+    
+}
 
 #endif

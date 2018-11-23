@@ -20,6 +20,9 @@
 #define MAX_SPOT_LIGHTS 	32
 #define SPOT_LIGHT_SHADOWMAP_SIZE	2048
 
+namespace sf
+{
+
 typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
 
 typedef struct
@@ -85,5 +88,7 @@ protected:
     static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
     static void xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b);
 };
+    
+}
 
 #endif

@@ -1,5 +1,5 @@
-#version 330 core
-//430
+#version 330
+
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
 uniform sampler2D texReflection; 

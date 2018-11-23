@@ -9,32 +9,32 @@
 #include "core/Robot.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/Console.h"
+
+using namespace sf;
 
 NameManager Robot::nameManager;
 
 Robot::Robot(std::string uniqueName, bool fixedBase)
 {
 	name = nameManager.AddName(uniqueName);
-    renderable = true;
-	dynamics = NULL;
+    dynamics = NULL;
 	fixed = fixedBase;
 }
 
 Robot::~Robot()
 {
 	nameManager.RemoveName(name);
-	if(dynamics != NULL)
-		delete dynamics;
 }
 
-void Robot::getLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId)
+void Robot::getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId)
 {
 	if(dynamics == NULL)
 		cCritical("Robot links not defined!");
 		
-	if(links.size() == 0)
-		cCritical("No more links allocated!");
+	if(detachedLinks.size() == 0)
+		cCritical("No more free links allocated!");
 	
 	//Find parent ID
 	parentId = UINT32_MAX;
@@ -47,12 +47,34 @@ void Robot::getLinkPair(const std::string& parentName, const std::string& childN
 	
 	//Find child ID
 	childId = UINT32_MAX;
-	for(unsigned int i=0; i<links.size(); ++i)
-		if(links[i]->getName() == childName)
+	for(unsigned int i=0; i<detachedLinks.size(); ++i)
+		if(detachedLinks[i]->getName() == childName)
 			childId = i;
 			
-	if(childId >= links.size())
+	if(childId >= detachedLinks.size())
 		cCritical("Child link '%s' doesn't exist!", childName.c_str());
+}
+
+SolidEntity* Robot::getLink(const std::string& name)
+{
+    for(size_t i=0; i<links.size(); ++i)
+        if(links[i]->getName() == name) return links[i];
+    
+    for(size_t i=0; i<detachedLinks.size(); ++i)
+        if(detachedLinks[i]->getName() == name) return detachedLinks[i];
+    
+    return NULL;
+}
+
+int Robot::getJoint(const std::string& name)
+{
+    if(dynamics == NULL)
+        cCritical("Robot links not defined!");
+    
+    for(int i=0; i<dynamics->getNumOfJoints(); ++i)
+        if(dynamics->getJointName(i) == name) return i;
+    
+    return -1;
 }
 
 btTransform Robot::getTransform() const
@@ -68,38 +90,41 @@ void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLi
 	if(dynamics != NULL)
 		cCritical("Robot cannot be redefined!");
 	
-	links = otherLinks;
-	dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)links.size() + 1, baseLink, fixed);
+    links.push_back(baseLink);
+    detachedLinks = otherLinks;
+	dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
 }
 
 void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const btTransform& T, const btVector3& axis, std::pair<btScalar,btScalar> positionLimits, btScalar torqueLimit)
 {
 	unsigned int parentId, childId;
-	getLinkPair(parentName, childName, parentId, childId);
+	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	btTransform linkTrans = dynamics->getLinkTransform(parentId) * T;
-	dynamics->AddLink(links[childId], linkTrans);
-	links.erase(links.begin()+childId);
+    btTransform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getGeomToCOGTransform().inverse() * T;
+	dynamics->AddLink(detachedLinks[childId], linkTrans);
+    links.push_back(detachedLinks[childId]);
+    detachedLinks.erase(detachedLinks.begin()+childId);
 	dynamics->AddRevoluteJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
        
 	if(positionLimits.first < positionLimits.second)
 		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
 	
-	dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, torqueLimit/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+	//dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, torqueLimit/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 
 void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const btTransform& T, const btVector3& axis, std::pair<btScalar,btScalar> positionLimits, btScalar forceLimit)
 {
 	unsigned int parentId, childId;
-	getLinkPair(parentName, childName, parentId, childId);
+	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	btTransform linkTrans = dynamics->getLinkTransform(parentId) * T;
-	dynamics->AddLink(links[childId], linkTrans);
-	links.erase(links.begin()+childId);
-	dynamics->AddPrismaticJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getBasis() * axis);
+	btTransform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getGeomToCOGTransform().inverse() * T;
+	dynamics->AddLink(detachedLinks[childId], linkTrans);
+    links.push_back(detachedLinks[childId]);
+	detachedLinks.erase(detachedLinks.begin()+childId);
+    dynamics->AddPrismaticJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getBasis() * axis);
        
 	if(positionLimits.first < positionLimits.second)
 		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
@@ -111,49 +136,84 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const btTransform& T)
 {
 	unsigned int parentId, childId;
-	getLinkPair(parentName, childName, parentId, childId);
+	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	btTransform linkTrans = dynamics->getLinkTransform(parentId) * T;
-	dynamics->AddLink(links[childId], linkTrans);
-	links.erase(links.begin()+childId);
+	btTransform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getGeomToCOGTransform().inverse() * T;
+	dynamics->AddLink(detachedLinks[childId], linkTrans);
+    links.push_back(detachedLinks[childId]);
+    detachedLinks.erase(detachedLinks.begin()+childId);
 	dynamics->AddFixedJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin());
 }
 
-void Robot::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
+void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const btTransform& origin)
 {
-	if(links.size() > 0)
-		cCritical("Not all links connected to robot!");
-	
-	dynamics->AddToDynamicsWorld(world, worldTransform);
+    SolidEntity* link = getLink(monitoredLinkName);
+    if(link != NULL)
+    {
+        s->AttachToSolid(link, origin);
+        sensors.push_back(s);
+    }
+    else
+        cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredLinkName.c_str(), s->getName().c_str());
 }
 
-void Robot::AddLinkActuator(Actuator* act, const std::string& actuatedLinkName)
+void Robot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName)
 {
-	
-}
- 
-void Robot::AddLinkSensor(Sensor* sens, const std::string& monitoredLinkName)
-{
-	
-}
-
-void Robot::AddJointActuator(Actuator* act, const std::string& actuatedJointName)
-{
-	
+    int jointId = getJoint(monitoredJointName);
+    if(jointId > -1)
+    {
+        s->AttachToJoint(dynamics, jointId);
+        sensors.push_back(s);
+    }
+    else
+        cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredJointName.c_str(), s->getName().c_str());
 }
 
-void Robot::AddJointSensor(Sensor* sens, const std::string& monitoredJointName)
+void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkName, const btTransform& origin)
 {
-	
+    SolidEntity* link = getLink(attachmentLinkName);
+    if(link != NULL)
+    {
+        s->AttachToSolid(link, origin);
+        sensors.push_back(s);
+    }
+    else
+        cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", attachmentLinkName.c_str(), s->getName().c_str());
 }
 
-void Robot::GetAABB(btVector3& min, btVector3& max)
+void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const btTransform& origin)
 {
-	dynamics->GetAABB(min, max);
+    SolidEntity* link = getLink(actuatedLinkName);
+    if(link != NULL)
+    {
+        a->AttachToSolid(link, origin);
+        actuators.push_back(a);
+    }
+    else
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
 }
 
-std::vector<Renderable> Robot::Render()
+void Robot::AddJointActuator(JointActuator* a, const std::string& actuatedJointName)
 {
-	return std::vector<Renderable>(0);
+    int jointId = getJoint(actuatedJointName);
+    if(jointId > -1)
+    {
+        a->AttachToJoint(dynamics, jointId);
+        actuators.push_back(a);
+    }
+    else
+        cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
+}
+
+void Robot::AddToSimulation(SimulationManager* sm, const btTransform& worldTransform)
+{
+    if(detachedLinks.size() > 0)
+        cCritical("Detected unconnected links!");
+    
+    sm->AddFeatherstoneEntity(dynamics, worldTransform);
+    for(size_t i=0; i<sensors.size(); ++i)
+        sm->AddSensor(sensors[i]);
+    for(size_t i=0; i<actuators.size(); ++i)
+        sm->AddActuator(actuators[i]);
 }
