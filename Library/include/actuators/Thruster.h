@@ -17,37 +17,37 @@ namespace sf
 class Thruster : public LinkActuator
 {
 public:
-    Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar maxRPM);
+    Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM);
     virtual ~Thruster();
 
-    void Update(btScalar dt);
+    void Update(Scalar dt);
     std::vector<Renderable> Render();
     
-    void setSetpoint(btScalar value);
-    btScalar getSetpoint();
-    btScalar getThrust();
-    btScalar getAngle();
-    btScalar getOmega();
+    void setSetpoint(Scalar value);
+    Scalar getSetpoint();
+    Scalar getThrust();
+    Scalar getAngle();
+    Scalar getOmega();
     
 private:
     //Params
-    btScalar D;
-    btScalar I;
-    btScalar kT;
-    btScalar kQ;
-    btScalar kp;
-    btScalar ki;
-    btScalar iLim;
-    btScalar omegaLim;
+    Scalar D;
+    Scalar I;
+    Scalar kT;
+    Scalar kQ;
+    Scalar kp;
+    Scalar ki;
+    Scalar iLim;
+    Scalar omegaLim;
     SolidEntity* prop;
     
     //States
-    btScalar theta;
-    btScalar omega;
-    btScalar thrust;
-    btScalar torque;
-    btScalar setpoint;
-    btScalar iError;
+    Scalar theta;
+    Scalar omega;
+    Scalar thrust;
+    Scalar torque;
+    Scalar setpoint;
+    Scalar iError;
 };
     
 }

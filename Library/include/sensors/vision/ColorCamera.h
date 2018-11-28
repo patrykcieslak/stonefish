@@ -19,11 +19,11 @@ namespace sf
 class ColorCamera : public Camera
 {
 public:
-    ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar frequency = btScalar(-1), uint32_t spp = 1, bool ao = true);
+    ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency = Scalar(-1), uint32_t spp = 1, bool ao = true);
     virtual ~ColorCamera();
     
-    void InternalUpdate(btScalar dt);
-    void SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up);
+    void InternalUpdate(Scalar dt);
+    void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up);
     void InstallNewDataHandler(std::function<void(ColorCamera*)> callback);
     void NewDataReady();
     uint8_t* getDataPointer(); //Should be only used in the callback

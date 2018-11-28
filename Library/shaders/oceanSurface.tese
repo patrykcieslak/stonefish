@@ -19,8 +19,8 @@ vec4 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
 void main()
 {
 	//Interpolate positions
-	vec4 P = interpolate(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position); 
-	
+	vec4 P = interpolate(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position);
+
     //Basic wave height (layer 0)
 	float dz = 0.0;
     dz += texture(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0)).x;

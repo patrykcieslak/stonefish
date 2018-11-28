@@ -17,11 +17,11 @@ namespace sf
 class Pressure : public LinkSensor
 {
 public:
-    Pressure(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Pressure(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(btScalar max);
-    void SetNoise(btScalar pressureStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(Scalar max);
+    void SetNoise(Scalar pressureStdDev);
 };
     
 }

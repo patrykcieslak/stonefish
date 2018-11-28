@@ -14,32 +14,32 @@
 
 using namespace sf;
 
-DVL::DVL(std::string uniqueName, btScalar beamSpreadAngle, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+DVL::DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    range[0] = range[1] = range[2] = range[3] = btScalar(0.);
-    beamAngle = UnitSystem::SetAngle(beamSpreadAngle);
+    range[0] = range[1] = range[2] = range[3] = Scalar(0.);
+    beamAngle = beamSpreadAngle;
     channels.push_back(SensorChannel("Velocity X", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Z", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Altitude", QUANTITY_LENGTH));
-    channels[3].rangeMin = btScalar(0.0);
-    channels[3].rangeMax = btScalar(1000.0);
+    channels[3].rangeMin = Scalar(0.0);
+    channels[3].rangeMax = Scalar(1000.0);
 }    
     
-void DVL::InternalUpdate(btScalar dt)
+void DVL::InternalUpdate(Scalar dt)
 {
     //check hit with bottom
-    btScalar minRange = channels[3].rangeMax;
-    btTransform dvlTrans = getSensorFrame();
+    Scalar minRange = channels[3].rangeMax;
+    Transform dvlTrans = getSensorFrame();
     
     //simulate 4 beam DVL (typical design)
-    btVector3 dir[4];
-    btVector3 from[4];
-    btVector3 to[4];
-    dir[0] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) + dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/btScalar(2));
-    dir[1] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) - dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/btScalar(2));
-    dir[2] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) + dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/btScalar(2));
-    dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/btScalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/btScalar(2));
+    Vector3 dir[4];
+    Vector3 from[4];
+    Vector3 to[4];
+    dir[0] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) + dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/Scalar(2));
+    dir[1] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/Scalar(2));
+    dir[2] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) + dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
+    dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
     
     for(unsigned int i=0; i<4; ++i)
     {
@@ -51,7 +51,7 @@ void DVL::InternalUpdate(btScalar dt)
         
         if(closest.hasHit())
         {
-            btVector3 p = from[i].lerp(to[i], closest.m_closestHitFraction);
+            Vector3 p = from[i].lerp(to[i], closest.m_closestHitFraction);
             range[i] = (p - dvlTrans.getOrigin()).length();
         }
         else
@@ -62,10 +62,10 @@ void DVL::InternalUpdate(btScalar dt)
     }
    
     //get velocity
-    btVector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getTransform().getOrigin());
+    Vector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getCGTransform().getOrigin());
     
     //record sample
-    btScalar data[4] = {v.x(),v.y(),v.z(), minRange * btCos(beamAngle/btScalar(2))};
+    Scalar data[4] = {v.x(),v.y(),v.z(), minRange * btCos(beamAngle/Scalar(2))};
     Sample s(4, data);
     AddSampleToHistory(s);
 }
@@ -74,11 +74,11 @@ std::vector<Renderable> DVL::Render()
 {
     std::vector<Renderable> items(0);
     
-    btVector3 dir[4];
-    dir[0] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) + btVector3(1,0,0) * btSin(beamAngle/btScalar(2));
-    dir[1] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) - btVector3(1,0,0) * btSin(beamAngle/btScalar(2));
-    dir[2] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) + btVector3(0,1,0) * btSin(beamAngle/btScalar(2));
-    dir[3] = btVector3(0,0,1) * btCos(beamAngle/btScalar(2)) - btVector3(0,1,0) * btSin(beamAngle/btScalar(2));
+    Vector3 dir[4];
+    dir[0] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
+    dir[1] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
+    dir[2] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
+    dir[3] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
     
     Renderable item;
     item.type = RenderableType::SENSOR_LINES;
@@ -96,7 +96,7 @@ std::vector<Renderable> DVL::Render()
     return items;
 }
 
-void DVL::SetRange(const btVector3& velocityMax, btScalar altitudeMin, btScalar altitudeMax)
+void DVL::SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax)
 {
     channels[0].rangeMin = -velocityMax.getX();
     channels[1].rangeMin = -velocityMax.getY();
@@ -110,7 +110,7 @@ void DVL::SetRange(const btVector3& velocityMax, btScalar altitudeMin, btScalar 
     channels[3].rangeMax = altitudeMax;
 }
 
-void DVL::SetNoise(btScalar velocityStdDev, btScalar altitudeStdDev)
+void DVL::SetNoise(Scalar velocityStdDev, Scalar altitudeStdDev)
 {
     channels[0].setStdDev(velocityStdDev);
     channels[1].setStdDev(velocityStdDev);

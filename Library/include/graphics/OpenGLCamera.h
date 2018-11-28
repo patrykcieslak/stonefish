@@ -76,7 +76,7 @@ public:
     void SetupViewport(GLint x, GLint y, GLint width);
     void SetProjection();
     void SetViewTransform();
-	btVector3 Ray(GLint x, GLint y);
+	Vector3 Ray(GLint x, GLint y);
 	void SetReflectionViewport();
 	void GenerateLinearDepth(int sampleId);
 	void GenerateBlurArray();

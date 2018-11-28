@@ -30,7 +30,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
     fovx = 0.785f;
     aoFactor = ao ? 1 : 0;
 	samples = spp < 1 ? 1 : (spp > 8 ? 8 : spp);
-    far = UnitSystem::SetLength(horizon);
+    far = horizon;
     near = 0.1f;
 	activePostprocessTexture = 0;
     
@@ -379,7 +379,7 @@ GLfloat OpenGLCamera::GetFarClip()
     return far;
 }
 
-btVector3 OpenGLCamera::Ray(GLint x, GLint y)
+Vector3 OpenGLCamera::Ray(GLint x, GLint y)
 {
     //translate point to view
     x -= originX;
@@ -387,18 +387,18 @@ btVector3 OpenGLCamera::Ray(GLint x, GLint y)
     
     //check if point in view
     if((x < 0) || (x >= viewportWidth) || (y < 0) || (y >= viewportHeight))
-        return btVector3(0,0,0);
+        return Vector3(0,0,0);
     
     //calculate ray from point
 	glm::vec3 _eye = GetEyePosition();
 	glm::vec3 _lookingDir = GetLookingDirection();
 	glm::vec3 _up = GetUpDirection();
 	
-    btVector3 rayFrom(_eye.x, _eye.y, _eye.z);
-    btVector3 rayForward = btVector3(_lookingDir.x, _lookingDir.y, _lookingDir.z) * far;
-    btVector3 horizontal = rayForward.cross(btVector3(_up.x, _up.y, _up.z));
+    Vector3 rayFrom(_eye.x, _eye.y, _eye.z);
+    Vector3 rayForward = Vector3(_lookingDir.x, _lookingDir.y, _lookingDir.z) * far;
+    Vector3 horizontal = rayForward.cross(Vector3(_up.x, _up.y, _up.z));
     horizontal.normalize();
-    btVector3 vertical = horizontal.cross(rayForward);
+    Vector3 vertical = horizontal.cross(rayForward);
     vertical.normalize();
     
     GLfloat tanFov = tanf(0.5f*fovx);
@@ -407,13 +407,13 @@ btVector3 OpenGLCamera::Ray(GLint x, GLint y)
     GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
     vertical /= aspect;
     
-    btVector3 rayToCenter = rayFrom + rayForward;
-    btVector3 dH = horizontal * 1.f/(GLfloat)viewportWidth;
-    btVector3 dV = vertical * 1.f/(GLfloat)viewportHeight;
+    Vector3 rayToCenter = rayFrom + rayForward;
+    Vector3 dH = horizontal * 1.f/(GLfloat)viewportWidth;
+    Vector3 dV = vertical * 1.f/(GLfloat)viewportHeight;
     
-    btVector3 rayTo = rayToCenter - 0.5f * horizontal + 0.5f * vertical;
-    rayTo += btScalar(x) * dH;
-    rayTo -= btScalar(y) * dV;
+    Vector3 rayTo = rayToCenter - 0.5f * horizontal + 0.5f * vertical;
+    rayTo += Scalar(x) * dH;
+    rayTo -= Scalar(y) * dV;
     
     return rayTo;
 }

@@ -17,29 +17,29 @@ namespace sf
 class RevoluteJoint : public Joint
 {
 public:
-    RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
-    RevoluteJoint(std::string uniqueName, SolidEntity* solid, const btVector3& pivot, const btVector3& axis);
-    RevoluteJoint(std::string uniqueName, btRigidBody* bodyA, btRigidBody* bodyB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
+    RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities = true);
+    RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis);
+    RevoluteJoint(std::string uniqueName, btRigidBody* bodyA, btRigidBody* bodyB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities = true);
 	
-    void ApplyTorque(btScalar T);
+    void ApplyTorque(Scalar T);
     void ApplyDamping();
-    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
-   	btVector3 Render();
+    bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
+   	Vector3 Render();
     
-    void setDamping(btScalar constantFactor, btScalar viscousFactor);
-    void setLimits(btScalar min, btScalar max);
-    void setIC(btScalar angle);
+    void setDamping(Scalar constantFactor, Scalar viscousFactor);
+    void setLimits(Scalar min, Scalar max);
+    void setIC(Scalar angle);
     
-    btScalar getAngle();
-    btScalar getAngularVelocity();
+    Scalar getAngle();
+    Scalar getAngularVelocity();
     JointType getType();
     
 private:
-    btVector3 axisInA;
-    btVector3 pivotInA;
-    btScalar sigDamping;
-    btScalar velDamping;
-    btScalar angleIC;
+    Vector3 axisInA;
+    Vector3 pivotInA;
+    Scalar sigDamping;
+    Scalar velDamping;
+    Scalar angleIC;
 };
     
 }

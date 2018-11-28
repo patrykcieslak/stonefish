@@ -10,16 +10,21 @@
 
 #include "graphics/Console.h"
 #include "utils/SystemUtil.hpp"
+#include "utils/stb_image_write.h"
+
+#include <iostream>
 
 using namespace sf;
 
-OpenGLOcean::OpenGLOcean(bool geometricWaves)
+OpenGLOcean::OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics)
 {
     cInfo("Generating ocean waves...");
     
     //Params
     waves = geometricWaves;
+    hydroMutex = hydrodynamics;
     qt = NULL;
+    fftData = NULL;
     turbidity = 1.0;
     params.passes = 8;
     params.slopeVarianceSize = 4;
@@ -29,7 +34,7 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves)
     params.omega = 2.f;
     params.km = 370.f;
     params.cm = 0.23f;
-    params.A = 1.5f;
+    params.A = 1.0f;
     params.t = 0.f;
     params.gridSizes = glm::vec4(893.f, 101.f, 21.f, 11.f);
     params.spectrum12 = NULL;
@@ -74,8 +79,10 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves)
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RG16F, params.slopeVarianceSize, params.slopeVarianceSize, params.slopeVarianceSize, 0, GL_RG, GL_FLOAT, NULL);
     glBindTexture(GL_TEXTURE_3D, 0);
     
+    GLint layers = 4;
+    
     glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, params.fftSize, params.fftSize, 10, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, params.fftSize, params.fftSize, layers, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -84,9 +91,8 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves)
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     
-    
     glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, params.fftSize, params.fftSize, 10, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, params.fftSize, params.fftSize, layers, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -312,6 +318,7 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves)
     if(waves)
     {
         qt = new QuadTree(glm::vec3(0), 10000.f, 15);
+        fftData = new GLfloat[params.fftSize * params.fftSize * 4 * layers];
     }
     
     lastTime = GetTimeInMicroseconds();
@@ -327,11 +334,14 @@ OpenGLOcean::~OpenGLOcean()
     glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
     
-    if(params.spectrum12 != NULL) delete[] params.spectrum12;
-	if(params.spectrum34 != NULL) delete[] params.spectrum34;
+    if(params.spectrum12 != NULL) delete [] params.spectrum12;
+	if(params.spectrum34 != NULL) delete [] params.spectrum34;
     
     if(qt != NULL)
         delete qt;
+    
+    if(fftData != NULL)
+        delete [] fftData;
 }
 
 void OpenGLOcean::setTurbidity(GLfloat t)
@@ -352,6 +362,64 @@ void OpenGLOcean::setLightAbsorption(glm::vec3 la)
 glm::vec3 OpenGLOcean::getLightAbsorption()
 {
     return lightAbsorption;
+}
+
+GLfloat OpenGLOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel)
+{
+    //BILINEAR INTERPOLATION ACCORDING TO OPENGL SPECIFICATION (4.5)
+    //Calculate pixel cooridnates
+    //x and y are already divided by the phyiscal dimensions of the texture (represented area in [m])
+    //so they are directly texture coordinates
+    float tmp;
+    
+    //First coordinate pair
+    float i0f = modff(x - 0.5f/(float)params.fftSize, &tmp);
+    float j0f = modff(y - 0.5f/(float)params.fftSize, &tmp);
+    if(i0f < 0.f) i0f = 1.f - fabsf(i0f);
+    if(j0f < 0.f) j0f = 1.f - fabsf(j0f);
+    int i0 = (int)truncf(i0f * (float)params.fftSize);
+    int j0 = (int)truncf(j0f * (float)params.fftSize);
+    
+    //Second coordinate pair
+    float i1f = modff(x + 0.5f/(float)params.fftSize, &tmp);
+    float j1f = modff(y + 0.5f/(float)params.fftSize, &tmp);
+    if(i1f < 0.f) i1f = 1.f - fabsf(i1f);
+    if(j1f < 0.f) j1f = 1.f - fabsf(j1f);
+    int i1 = (int)truncf(i1f * (float)params.fftSize);
+    int j1 = (int)truncf(j1f * (float)params.fftSize);
+    
+    //Calculate weigths
+    float alpha = modff(i0f * (float)params.fftSize, &tmp);
+    float beta = modff(j0f * (float)params.fftSize, &tmp);
+    
+    //Get texel values
+    float t[4];
+    t[0] = fftData[(j0 * params.fftSize + i0) * 4 + channel];
+    t[1] = fftData[(j0 * params.fftSize + i1) * 4 + channel];
+    t[2] = fftData[(j1 * params.fftSize + i0) * 4 + channel];
+    t[3] = fftData[(j1 * params.fftSize + i1) * 4 + channel];
+    
+    //Interpolate
+    float h = (1.f - alpha)*(1.f - beta)*t[0] + alpha*(1.f - beta)*t[1] + (1.f - alpha)*beta*t[2] + alpha*beta*t[3];
+    
+    return h;
+}
+
+GLfloat OpenGLOcean::getWaveHeight(GLfloat x, GLfloat y)
+{
+    if(waves)
+    {
+        //Z,X are reversed because the coordinate system used to draw ocean has Z axis pointing up!
+        GLfloat z = 0.f;
+        z -= ComputeInterpolatedWaveData(-x/params.gridSizes.x, y/params.gridSizes.x, 0);
+        z -= ComputeInterpolatedWaveData(-x/params.gridSizes.y, y/params.gridSizes.y, 1);
+        //The components below have low importance and were excluded to lower the computational cost
+        //z -= ComputeInterpolatedWaveData(-x/params.gridSizes.z, y/params.gridSizes.z, 2);
+        //z -= ComputeInterpolatedWaveData(-x/params.gridSizes.w, y/params.gridSizes.w, 3);
+        return z;
+    }
+    else
+        return 0.f;
 }
 
 void OpenGLOcean::Simulate()
@@ -441,18 +509,18 @@ void OpenGLOcean::Simulate()
 	
 	glBindVertexArray(0);
 	
-    //Copy wave data to RAM for hydrostatic computations
-    /*GLfloat* fft = new GLfloat[params.fftSize * params.fftSize * 4 * 10];
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
-    glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, GL_FLOAT, (GLvoid*)fft);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    
-    for(unsigned int i=0; i<params.fftSize; ++i)
-        printf("%1.3f ", fft[i*4]);
-    
-    delete[] fft;*/
+    if(waves)
+    {
+        //Copy wave data to RAM for hydrodynamic computations
+        if(SDL_TryLockMutex(hydroMutex) == 0)
+        {
+            glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
+            glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, GL_FLOAT, (GLvoid*)fftData);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+            SDL_UnlockMutex(hydroMutex);
+        }
+    }
     
 	//Advance time
 	int64_t now = GetTimeInMicroseconds();
@@ -778,7 +846,7 @@ void OpenGLOcean::ShowTexture(int id, glm::vec4 rect)
 			
 		case 3:
 		case 4:
-			OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures[id], 1);
+			OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures[id], 0, true);
 			break;
 			
 		case 30:

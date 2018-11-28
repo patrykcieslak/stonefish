@@ -17,30 +17,30 @@ namespace sf
 class CylindricalJoint : public Joint
 {
 public:
-    CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, const btVector3& axis, bool collideLinkedEntities = true);
+    CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities = true);
     
-    void ApplyForce(btScalar F);
-    void ApplyTorque(btScalar T);
+    void ApplyForce(Scalar F);
+    void ApplyTorque(Scalar T);
     void ApplyDamping();
-    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
+    bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
    	
-    btVector3 Render();
+    Vector3 Render();
     
-    void setDamping(btScalar linearConstantFactor, btScalar linearViscousFactor, btScalar angularConstantFactor, btScalar angularViscousFactor);
-    void setLimits(btScalar linearMin, btScalar linearMax, btScalar angularMin, btScalar angularMax);
-    void setIC(btScalar displacement, btScalar angle);
+    void setDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor);
+    void setLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax);
+    void setIC(Scalar displacement, Scalar angle);
     
     JointType getType();
     
 private:
-    btVector3 axisInA;
-    btVector3 pivotInA;
-    btScalar linSigDamping;
-    btScalar linVelDamping;
-    btScalar angSigDamping;
-    btScalar angVelDamping;
-    btScalar displacementIC;
-    btScalar angleIC;
+    Vector3 axisInA;
+    Vector3 pivotInA;
+    Scalar linSigDamping;
+    Scalar linVelDamping;
+    Scalar angSigDamping;
+    Scalar angVelDamping;
+    Scalar displacementIC;
+    Scalar angleIC;
 };
     
 }

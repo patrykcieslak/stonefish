@@ -139,5 +139,5 @@ void main()
 	
 	//Sea contribution
     fragColor = vec4(outColor, 1.0-fresnel);
-	fragNormal = normalize(MV * normal);
+    fragNormal = normalize(MV * normal);
 }

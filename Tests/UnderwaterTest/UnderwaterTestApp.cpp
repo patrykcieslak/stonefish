@@ -9,15 +9,13 @@
 #include "UnderwaterTestApp.h"
 
 #include <graphics/OpenGLTrackball.h>
-#include <entities/systems/Manipulator.h>
-#include <entities/systems/UnderwaterVehicle.h>
 #include <entities/forcefields/Ocean.h>
-#include <sensors/FakeRotaryEncoder.h>
-#include <sensors/Accelerometer.h>
-#include <sensors/ForceTorque.h>
+#include <sensors/scalar/RotaryEncoder.h>
+#include <sensors/scalar/Accelerometer.h>
+#include <sensors/scalar/ForceTorque.h>
 #include <entities/forcefields/Trigger.h>
 
-UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, RenderSettings s, UnderwaterTestManager* sim)
+UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, UnderwaterTestManager* sim)
     : GraphicalSimulationApp("Underwater Test", dataDirPath, s, sim)
 {
     decimalTime = 12.0;
@@ -120,7 +118,7 @@ void UnderwaterTestApp::DoHUD()
     slider.item = 12;
     std::vector<unsigned short> dims;
     dims.push_back(2);
-    getGUI()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Test", new btScalar[2]{-20.f,20.f});
+    getGUI()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Test", new Scalar[2]{-20.f,20.f});
 #endif
     */
     /*

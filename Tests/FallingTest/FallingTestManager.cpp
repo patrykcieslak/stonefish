@@ -22,7 +22,7 @@
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/RotaryEncoder.h>
 
-FallingTestManager::FallingTestManager(btScalar stepsPerSecond) : SimulationManager(sf::UnitSystems::MKS, true, stepsPerSecond, sf::SI, sf::EXCLUSIVE)
+FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) : SimulationManager(true, stepsPerSecond, sf::SI, sf::EXCLUSIVE)
 {
 }
 
@@ -47,15 +47,15 @@ void FallingTestManager::BuildScenario()
 	
     ////////OBJECTS
     sf::Plane* floor = new sf::Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
-    AddStaticEntity(floor, btTransform::getIdentity());
+    AddStaticEntity(floor, sf::Transform::getIdentity());
     
     //Mechanical parts
-    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, btTransform(btQuaternion(0,0,0), btVector3(0,0,0)), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), getMaterialManager()->getMaterial("Steel"), green);
     
-    sf::Cylinder* cyl = new sf::Cylinder("Cyl", 0.2, 1.0, btTransform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
-    sf::Box* link1 = new sf::Box("Link1", btVector3(0.1,0.02,0.5), btTransform(btQuaternion(0,0,0), btVector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
-    sf::Box* link2 = new sf::Box("Link2", btVector3(0.1,0.02,0.5), btTransform(btQuaternion(0,0,0), btVector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
-    sf::Box* link3 = new sf::Box("Link3", btVector3(0.5,0.01,0.01), btTransform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Cylinder* cyl = new sf::Cylinder("Cyl", 0.2, 1.0, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Box* link3 = new sf::Box("Link3", sf::Vector3(0.5,0.01,0.01), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
 	
     std::vector<sf::SolidEntity*> links;
     links.push_back(link1);
@@ -71,21 +71,21 @@ void FallingTestManager::BuildScenario()
     
     robot->DefineLinks(obj, links);
     robot->DefineRevoluteJoint("Joint1", "Base", "Link1",
-                               btTransform(btQuaternion::getIdentity(), btVector3(0,0.25,0)), btVector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
+                               sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0.25,0)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
     robot->DefineRevoluteJoint("Joint2", "Base", "Link2",
-                               btTransform(btQuaternion::getIdentity(), btVector3(0,-0.25,0)), btVector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
+                               sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,-0.25,0)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
     
-    robot->AddLinkSensor(imu, "Link2", btTransform::getIdentity());
+    robot->AddLinkSensor(imu, "Link2", sf::Transform::getIdentity());
     robot->AddJointSensor(enc, "Joint2");
     
-    AddRobot(robot, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,1.0)));
+    AddRobot(robot, sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0.0,0.0,1.0)));
     
     /*FeatherstoneEntity* fe = new FeatherstoneEntity("Test", 4, base, true);
-    fe->AddLink(link1, btTransform(btQuaternion(0,0,0), btVector3(0.25,0,0)));
-    fe->AddLink(link2, btTransform(btQuaternion(0,0,0), btVector3(0.75,0,0)));
-    fe->AddLink(link3, btTransform(btQuaternion(0,0,0), btVector3(-0.5,0,0)));
-    fe->AddRevoluteJoint("Joint1", 0, 1, btVector3(0,0,0), btVector3(0,1,0));
-    fe->AddRevoluteJoint("Joint2", 1, 2, btVector3(0.5,0,0), btVector3(0,1,0));
-    fe->AddRevoluteJoint("Joint3", 0, 3, btVector3(0,0,0), btVector3(0,1,0));
-    AddFeatherstoneEntity(fe, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,1.0)));*/
+    fe->AddLink(link1, Transform(Quaternion(0,0,0), Vector3(0.25,0,0)));
+    fe->AddLink(link2, Transform(Quaternion(0,0,0), Vector3(0.75,0,0)));
+    fe->AddLink(link3, Transform(Quaternion(0,0,0), Vector3(-0.5,0,0)));
+    fe->AddRevoluteJoint("Joint1", 0, 1, Vector3(0,0,0), Vector3(0,1,0));
+    fe->AddRevoluteJoint("Joint2", 1, 2, Vector3(0.5,0,0), Vector3(0,1,0));
+    fe->AddRevoluteJoint("Joint3", 0, 3, Vector3(0,0,0), Vector3(0,1,0));
+    AddFeatherstoneEntity(fe, Transform(Quaternion::getIdentity(), Vector3(0.0,0.0,1.0)));*/
 }

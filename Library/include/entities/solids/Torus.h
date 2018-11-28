@@ -17,15 +17,15 @@ namespace sf
 class Torus : public SolidEntity
 {
 public:
-    Torus(std::string uniqueName, btScalar torusMajorRadius, btScalar torusMinorRadius, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
+    Torus(std::string uniqueName, Scalar torusMajorRadius, Scalar torusMinorRadius, const Transform& originTrans, Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
     ~Torus();
     
     SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
     
 private:	
-    btScalar minorRadius;
-    btScalar majorRadius;
+    Scalar minorRadius;
+    Scalar majorRadius;
 };
 
 }

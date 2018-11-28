@@ -3,13 +3,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/MaterialManager.h"
 #include "graphics/Console.h"
 
-using namespace sf;
+namespace sf
+{
 
 MaterialManager::MaterialManager()
 {
@@ -29,12 +30,12 @@ void MaterialManager::ClearMaterialsAndFluids()
     fluidNameManager.ClearNames();
 }
 
-std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar density, btScalar restitution)
+std::string MaterialManager::CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution)
 {
 	//Create and add new material
     Material mat;
     mat.name = materialNameManager.AddName(uniqueName);
-    mat.density = UnitSystem::SetDensity(density);
+    mat.density = density;
     mat.restitution = restitution;
     materials.push_back(mat);
 	
@@ -42,8 +43,8 @@ std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar den
     
 	//Set initial friction coefficients
 	Friction f;
-	f.fStatic = btScalar(1);
-	f.fDynamic = btScalar(1);
+	f.fStatic = Scalar(1);
+	f.fDynamic = Scalar(1);
 	
 	MaterialPair p;
 	p.mat1Id = (int)materials.size()-1;
@@ -61,11 +62,11 @@ std::string MaterialManager::CreateMaterial(std::string uniqueName, btScalar den
     return mat.name;
 }
 
-std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar density, btScalar viscosity, btScalar IOR)
+std::string MaterialManager::CreateFluid(std::string uniqueName, Scalar density, Scalar viscosity, Scalar IOR)
 {
-    Liquid flu;
+    Fluid flu;
     flu.name = fluidNameManager.AddName(uniqueName);
-    flu.density = UnitSystem::SetDensity(density);
+    flu.density = density;
     flu.viscosity = viscosity;
     flu.IOR = IOR > 0 ? IOR : 1.0;
     fluids.push_back(flu);
@@ -73,7 +74,7 @@ std::string MaterialManager::CreateFluid(std::string uniqueName, btScalar densit
     return flu.name;
 }
 
-bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, btScalar staticFricCoeff, btScalar dynamicFricCoeff)
+bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
 {
     MaterialPair p;
 	p.mat1Id = getMaterialIndex(firstMaterialName);
@@ -111,8 +112,8 @@ Friction MaterialManager::GetMaterialsInteraction(int mat1Index, int mat2Index)
 		cError("Material pair (%d,%d) not found!", mat1Index, mat2Index);
 		
 		Friction f;
-		f.fStatic = btScalar(1);
-		f.fDynamic = btScalar(2);
+		f.fStatic = Scalar(1);
+		f.fDynamic = Scalar(2);
 		
 		return f;
 	}
@@ -150,7 +151,7 @@ Material MaterialManager::getMaterial(int index)
         return materials[0];
 }
 
-Liquid* MaterialManager::getFluid(std::string name)
+Fluid* MaterialManager::getFluid(std::string name)
 {
     for(unsigned int i=0; i<fluids.size(); ++i)
         if(fluids[i].name == name)
@@ -159,7 +160,7 @@ Liquid* MaterialManager::getFluid(std::string name)
     return NULL;
 }
 
-Liquid* MaterialManager::getFluid(int index)
+Fluid* MaterialManager::getFluid(int index)
 {
     if(index >= 0 && index < (int)fluids.size())
         return &fluids[index];
@@ -175,4 +176,6 @@ std::vector<std::string> MaterialManager::GetMaterialsList()
         list.push_back(materials[i].name);
     
     return list;
+}
+
 }

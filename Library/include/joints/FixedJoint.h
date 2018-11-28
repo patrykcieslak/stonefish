@@ -19,14 +19,14 @@ class FixedJoint : public Joint
 {
 public:
     FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
-	FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const btVector3& pivot);
+	FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot);
     
-    btVector3 Render();
+    Vector3 Render();
     JointType getType();
     
     //Not applicable
     void ApplyDamping(){}
-    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance){ return true; }
+    bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance){ return true; }
 };
 
 }

@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Odometry::Odometry(std::string uniqueName, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Odometry::Odometry(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Position X", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Position Y", QUANTITY_LENGTH));
@@ -27,24 +27,24 @@ Odometry::Odometry(std::string uniqueName, btScalar frequency, int historyLength
     channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
 }
 
-void Odometry::InternalUpdate(btScalar dt)
+void Odometry::InternalUpdate(Scalar dt)
 {
     //Calculate transformation from global to imu frame
-    btTransform odomTrans = getSensorFrame();
+    Transform odomTrans = getSensorFrame();
     
-    btVector3 pos = odomTrans.getOrigin();
-    btVector3 v = odomTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(odomTrans.getOrigin() - attach->getTransform().getOrigin());
+    Vector3 pos = odomTrans.getOrigin();
+    Vector3 v = odomTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(odomTrans.getOrigin() - attach->getCGTransform().getOrigin());
     
-    btQuaternion orn = odomTrans.getRotation();
-    btVector3 av = odomTrans.getBasis().inverse() * attach->getAngularVelocity();
+    Quaternion orn = odomTrans.getRotation();
+    Vector3 av = odomTrans.getBasis().inverse() * attach->getAngularVelocity();
     
     //Record sample
-    btScalar values[13] = {pos.x(), pos.y(), pos.z(), v.x(), v.y(), v.z(), orn.x(), orn.y(), orn.z(), orn.w(), av.x(), av.y(), av.z()};
+    Scalar values[13] = {pos.x(), pos.y(), pos.z(), v.x(), v.y(), v.z(), orn.x(), orn.y(), orn.z(), orn.w(), av.x(), av.y(), av.z()};
     Sample s(13, values);
     AddSampleToHistory(s);
 }
    
-void Odometry::SetNoise(btScalar positionStdDev, btScalar velocityStdDev, btScalar orientationStdDev, btScalar angularVelocityStdDev)
+void Odometry::SetNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev)
 {
     channels[0].setStdDev(positionStdDev);
     channels[1].setStdDev(positionStdDev);

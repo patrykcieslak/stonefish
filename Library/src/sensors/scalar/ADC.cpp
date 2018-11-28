@@ -10,14 +10,14 @@
 
 using namespace sf;
 
-ADC::ADC(unsigned short resolution, btScalar plusRefVoltage, btScalar minusRefVoltage)
+ADC::ADC(unsigned short resolution, Scalar plusRefVoltage, Scalar minusRefVoltage)
 {
     bits = resolution;
     pRefV = plusRefVoltage;
     mRefV = minusRefVoltage;
 }
 
-btScalar ADC::MeasureVoltage(btScalar Vin)
+Scalar ADC::MeasureVoltage(Scalar Vin)
 {
     if(Vin <= mRefV)
         return mRefV;
@@ -25,8 +25,8 @@ btScalar ADC::MeasureVoltage(btScalar Vin)
         return pRefV;
     else
     {
-        btScalar Vrange = pRefV - mRefV;
-        btScalar frac = (Vin - mRefV) / Vrange;
-        return btScalar(trunc(frac * btScalar((1 << bits) - 1))) / btScalar((1 << bits) - 1) * Vrange; //quantization
+        Scalar Vrange = pRefV - mRefV;
+        Scalar frac = (Vin - mRefV) / Vrange;
+        return Scalar(trunc(frac * Scalar((1 << bits) - 1))) / Scalar((1 << bits) - 1) * Vrange; //quantization
     }
 }

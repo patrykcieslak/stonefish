@@ -29,7 +29,7 @@ int OpenGLDebugDrawer::getDebugMode() const
     return mode;
 }
 
-void OpenGLDebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const Vector3& color)
 {
 	std::vector<glm::vec3> vertices;
 	vertices.push_back(glm::vec3(from.getX(), from.getY(), from.getZ()));
@@ -45,16 +45,16 @@ void OpenGLDebugDrawer::drawLine(const btVector3& from, const btVector3& to, con
 	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, glcolor);
 }
 
-void OpenGLDebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& fromColor, const btVector3& toColor)
+void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const Vector3& fromColor, const Vector3& toColor)
 {
     drawLine(from, to, fromColor);
 }
 
-void OpenGLDebugDrawer::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color)
+void OpenGLDebugDrawer::drawContactPoint(const Vector3& PointOnB, const Vector3& normalOnB, Scalar distance, int lifeTime, const Vector3& color)
 {
 }
 
-void OpenGLDebugDrawer::draw3dText(const btVector3& location, const char* textString)
+void OpenGLDebugDrawer::draw3dText(const Vector3& location, const char* textString)
 {
 }
 

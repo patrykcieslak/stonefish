@@ -10,7 +10,7 @@
 #define __Stonefish_ScientificFileUtil__
 
 #include <LinearMath/btMatrixX.h>
-#include "common.h"
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -32,7 +32,7 @@ struct ScientificDataItem
             switch(type)
             {
                 case DATA_SCALAR:
-                    delete ((btScalar*)value);
+                    delete ((Scalar*)value);
                     break;
                     
                 case DATA_VECTOR:
@@ -57,7 +57,7 @@ public:
     const ScientificDataItem* getItem(std::string name) const;
     const ScientificDataItem* getItem(unsigned int index) const;
     unsigned int getItemsCount() const;
-    btScalar getScalar(std::string name);
+    Scalar getScalar(std::string name);
     btVectorXu getVector(std::string name);
     btMatrixXu getMatrix(std::string name);
 

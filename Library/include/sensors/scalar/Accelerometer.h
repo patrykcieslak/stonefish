@@ -17,11 +17,11 @@ namespace sf
 class Accelerometer : public LinkSensor
 {
 public:
-    Accelerometer(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Accelerometer(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(btScalar linearAccMax, btScalar angularAccMax);
-    void SetNoise(btScalar linearAccStdDev, btScalar angularAccStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(Scalar linearAccMax, Scalar angularAccMax);
+    void SetNoise(Scalar linearAccStdDev, Scalar angularAccStdDev);
 };
     
 }

@@ -9,8 +9,7 @@
 #ifndef __Stonefish_ScalarSensor__
 #define __Stonefish_ScalarSensor__
 
-#include "core/UnitSystem.h"
-#include "core/NameManager.h"
+#include <deque>
 #include "sensors/Sample.h"
 #include "sensors/Sensor.h"
 
@@ -37,21 +36,21 @@ struct SensorChannel
 {
     std::string name;
     QuantityType type;
-    btScalar stdDev;
-    std::normal_distribution<btScalar> noise;
-    btScalar rangeMin;
-    btScalar rangeMax;
+    Scalar stdDev;
+    std::normal_distribution<Scalar> noise;
+    Scalar rangeMin;
+    Scalar rangeMax;
     
     SensorChannel(std::string name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT)
     {
     }
     
-    void setStdDev(btScalar sd)
+    void setStdDev(Scalar sd)
     {
-        if(sd > btScalar(0))
+        if(sd > Scalar(0))
         {
             stdDev = sd;
-            noise = std::normal_distribution<btScalar>(btScalar(0), stdDev);
+            noise = std::normal_distribution<Scalar>(Scalar(0), stdDev);
         }
     }
 };
@@ -61,10 +60,10 @@ class ScalarSensor : public Sensor
 {
 public:
     //HistoryLength: -1 --> no history, 0 --> unlimited history, >0 --> history with specified number of simulation steps
-    ScalarSensor(std::string uniqueName, btScalar frequency, int historyLength);
+    ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength);
     virtual ~ScalarSensor();
     
-    virtual void InternalUpdate(btScalar dt) = 0;
+    virtual void InternalUpdate(Scalar dt) = 0;
     virtual SensorType getType() = 0;
     
     virtual void Reset();
@@ -75,8 +74,8 @@ public:
     unsigned short getNumOfChannels();
     Sample getLastSample();
     const std::deque<Sample*>& getHistory();
-    btScalar getValueExternal(unsigned long int index, unsigned int channel);
-    btScalar getLastValueExternal(unsigned int channel);
+    Scalar getValueExternal(unsigned long int index, unsigned int channel);
+    Scalar getLastValueExternal(unsigned int channel);
     SensorChannel getSensorChannelDescription(unsigned int channel);
     
 protected:

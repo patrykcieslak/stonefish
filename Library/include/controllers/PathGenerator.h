@@ -9,7 +9,6 @@
 #ifndef __Stonefish_PathGenerator__
 #define __Stonefish_PathGenerator__
 
-#include "core/UnitSystem.h"
 #include "graphics/OpenGLPipeline.h"
 
 namespace sf
@@ -22,22 +21,22 @@ public:
     PathGenerator();
     virtual ~PathGenerator();
     
-    virtual void FindClosestPoint(const btVector3& position, btVector3& point, btVector3& tangent) = 0;
-    virtual void PointAtTime(btScalar t, btVector3& point, btVector3& tangent) = 0;
+    virtual void FindClosestPoint(const Vector3& position, Vector3& point, Vector3& tangent) = 0;
+    virtual void PointAtTime(Scalar t, Vector3& point, Vector3& tangent) = 0;
     virtual void Render() = 0;
     
-    void MoveOnPath(btScalar distance, btVector3& point, btVector3& tangent);
+    void MoveOnPath(Scalar distance, Vector3& point, Vector3& tangent);
     void SavePathToTextFile(const char* path, unsigned int numOfPoints, unsigned int fixedPrecision = 6);
     
     void setRenderable(bool render);
-    btScalar getLength();
-    btScalar getTime();
+    Scalar getLength();
+    Scalar getTime();
     bool isRenderable();
     virtual bool is3D() = 0;
     
 protected:
-    btScalar time;
-    btScalar length;
+    Scalar time;
+    Scalar length;
     bool renderable;
 };
     

@@ -18,9 +18,9 @@ namespace sf
 class Trigger : public ForcefieldEntity
 {
 public:
-	Trigger(std::string uniqueName, btScalar radius, const btTransform& worldTransform, int lookId = -1); //Spherical trigger
-	Trigger(std::string uniqueName, btScalar radius, btScalar length, const btTransform& worldTransform, int lookId = -1); //Cylindrical trigger
-	Trigger(std::string uniqueName, const btVector3& dimensions, const btTransform& worldTransform, int lookId = -1); //Box trigger
+	Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, int lookId = -1); //Spherical trigger
+	Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, int lookId = -1); //Cylindrical trigger
+	Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, int lookId = -1); //Box trigger
 	void AddActiveSolid(SolidEntity* solid);
 	void Activate(btCollisionObject* co);
 	void Clear();

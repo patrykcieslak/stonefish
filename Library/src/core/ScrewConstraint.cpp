@@ -10,17 +10,17 @@
 
 using namespace sf;
 
-btScalar ScrewConstraint::getAngularPosition()
+Scalar ScrewConstraint::getAngularPosition()
 {
   this->calculateTransforms(m_rbA.getCenterOfMassTransform(), m_rbB.getCenterOfMassTransform());
-  const btVector3 axisA0 = m_calculatedTransformA.getBasis().getColumn(1);
-  const btVector3 axisA1 = m_calculatedTransformA.getBasis().getColumn(2);
-  const btVector3 axisB0 = m_calculatedTransformB.getBasis().getColumn(1);
+  const Vector3 axisA0 = m_calculatedTransformA.getBasis().getColumn(1);
+  const Vector3 axisA1 = m_calculatedTransformA.getBasis().getColumn(2);
+  const Vector3 axisB0 = m_calculatedTransformB.getBasis().getColumn(1);
   return btAtan2(axisB0.dot(axisA1), axisB0.dot(axisA0));
 }
 
 //////////////////////////////////////////////////
-btScalar ScrewConstraint::getLinearPosition()
+Scalar ScrewConstraint::getLinearPosition()
 {
   this->calculateTransforms(m_rbA.getCenterOfMassTransform(), m_rbB.getCenterOfMassTransform());
   return this->m_depth[0];
@@ -39,8 +39,8 @@ btRigidBody& ScrewConstraint::getRigidBodyB()
 }
 
 //////////////////////////////////////////////////
-void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTransform& transA, const btTransform& transB,
-                                          const btVector3& linVelA, const btVector3& linVelB, btScalar rbAinvMass, btScalar rbBinvMass)
+void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const Transform& transA, const Transform& transB,
+                                          const Vector3& linVelA, const Vector3& linVelB, Scalar rbAinvMass, Scalar rbBinvMass)
 {
   /// This is a copy of btSliderConstraint::getInfo2NonVirtual(...)
   /// with minor changes to the ax1 direction constraint.
@@ -48,35 +48,35 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
   /// changed to a screw constraint.
 
   /// First, always turn on
-  const btTransform& trA = getCalculatedTransformA();
-  const btTransform& trB = getCalculatedTransformB();
+  const Transform& trA = getCalculatedTransformA();
+  const Transform& trB = getCalculatedTransformB();
 
   btAssert(!m_useSolveConstraintObsolete);
   int i, s = info->rowskip;
 
-  btScalar signFact = m_useLinearReferenceFrameA ?
-    btScalar(1.0f) : btScalar(-1.0f);
+  Scalar signFact = m_useLinearReferenceFrameA ?
+    Scalar(1.0f) : Scalar(-1.0f);
 
   // difference between frames in WCS
-  btVector3 ofs = trB.getOrigin() - trA.getOrigin();
+  Vector3 ofs = trB.getOrigin() - trA.getOrigin();
   // now get weight factors depending on masses
-  btScalar miA = rbAinvMass;
-  btScalar miB = rbBinvMass;
+  Scalar miA = rbAinvMass;
+  Scalar miB = rbBinvMass;
   bool hasStaticBody = (miA < SIMD_EPSILON) || (miB < SIMD_EPSILON);
-  btScalar miS = miA + miB;
-  btScalar factA, factB;
-  if (miS > btScalar(0.f))
+  Scalar miS = miA + miB;
+  Scalar factA, factB;
+  if (miS > Scalar(0.f))
   {
     factA = miB / miS;
   }
   else
   {
-    factA = btScalar(0.5f);
+    factA = Scalar(0.5f);
   }
-  factB = btScalar(1.0f) - factA;
-  btVector3 ax1, p, q;
-  btVector3 ax1A = trA.getBasis().getColumn(0);
-  btVector3 ax1B = trB.getBasis().getColumn(0);
+  factB = Scalar(1.0f) - factA;
+  Vector3 ax1, p, q;
+  Vector3 ax1A = trA.getBasis().getColumn(0);
+  Vector3 ax1B = trB.getBasis().getColumn(0);
   if (m_useOffsetForConstraintFrame)
   {
     // get the desired direction of slider axis
@@ -129,12 +129,12 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
   //    angular_velocity  = (erp*fps) * (ax1 x ax2)
   // ax1 x ax2 is in the plane space of ax1, so we project the angular
   // velocity to p and q to find the right hand side.
-//  btScalar k = info->fps * info->erp * getSoftnessOrthoAng();
-  btScalar currERP = (m_flags & BT_SLIDER_FLAGS_ERP_ORTANG) ?
+//  Scalar k = info->fps * info->erp * getSoftnessOrthoAng();
+  Scalar currERP = (m_flags & BT_SLIDER_FLAGS_ERP_ORTANG) ?
     m_softnessOrthoAng : m_softnessOrthoAng * info->erp;
-  btScalar k = info->fps * currERP;
+  Scalar k = info->fps * currERP;
 
-  btVector3 u = ax1A.cross(ax1B);
+  Vector3 u = ax1A.cross(ax1B);
   info->m_constraintError[0] = k * u.dot(p);
   info->m_constraintError[s] = k * u.dot(q);
   if (m_flags & BT_SLIDER_FLAGS_CFM_ORTANG)
@@ -146,7 +146,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
   // last filled row
   int nrow = 1;
   int srow;
-  btScalar limit_err;
+  Scalar limit_err;
   int limit;
   int powered;
 
@@ -155,37 +155,37 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
   // result in three equations, so we project along two orthos to the
   // slider axis
 
-  btTransform bodyA_trans = transA;
-  btTransform bodyB_trans = transB;
+  Transform bodyA_trans = transA;
+  Transform bodyB_trans = transB;
   nrow++;
   int s2 = nrow * s;
   nrow++;
   int s3 = nrow * s;
-  btVector3 tmpA(0, 0, 0), tmpB(0, 0, 0), relA(0, 0, 0),
+  Vector3 tmpA(0, 0, 0), tmpB(0, 0, 0), relA(0, 0, 0),
     relB(0, 0, 0), c(0, 0, 0);
   if (m_useOffsetForConstraintFrame)
   {
     // get vector from bodyB to frameB in WCS
     relB = trB.getOrigin() - bodyB_trans.getOrigin();
     // get its projection to slider axis
-    btVector3 projB = ax1 * relB.dot(ax1);
+    Vector3 projB = ax1 * relB.dot(ax1);
     // get vector directed from bodyB to slider axis (and orthogonal to it)
-    btVector3 orthoB = relB - projB;
+    Vector3 orthoB = relB - projB;
     // same for bodyA
     relA = trA.getOrigin() - bodyA_trans.getOrigin();
-    btVector3 projA = ax1 * relA.dot(ax1);
-    btVector3 orthoA = relA - projA;
+    Vector3 projA = ax1 * relA.dot(ax1);
+    Vector3 orthoA = relA - projA;
     // get desired offset between frames A and B along slider axis
-    btScalar sliderOffs = m_linPos - m_depth[0];
+    Scalar sliderOffs = m_linPos - m_depth[0];
     // desired vector from projection of center of bodyA to projection of
     // center of bodyB to slider axis
-    btVector3 totalDist = projA + ax1 * sliderOffs - projB;
+    Vector3 totalDist = projA + ax1 * sliderOffs - projB;
     // get offset vectors relA and relB
     relA = orthoA + totalDist * factA;
     relB = orthoB - totalDist * factB;
     // now choose average ortho to slider axis
     p = orthoB * factA + orthoA * factB;
-    btScalar len2 = p.length2();
+    Scalar len2 = p.length2();
     if (len2 > SIMD_EPSILON)
     {
       p /= btSqrt(len2);
@@ -228,7 +228,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
     // see discussion "Bug in slider constraint"
     // http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=9&t=4024&start=0
     c = bodyB_trans.getOrigin() - bodyA_trans.getOrigin();
-    btVector3 tmp = c.cross(p);
+    Vector3 tmp = c.cross(p);
     for (i = 0; i < 3; ++i)
     {
      info->m_J1angularAxis[s2+i] = factA*tmp[i];
@@ -252,7 +252,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
     m_softnessOrthoLin : m_softnessOrthoLin * info->erp;
   k = info->fps * currERP;
 
-  btScalar rhs = k * p.dot(ofs);
+  Scalar rhs = k * p.dot(ofs);
   info->m_constraintError[s2] = rhs;
   rhs = k * q.dot(ofs);
   info->m_constraintError[s3] = rhs;
@@ -284,8 +284,8 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
 
     // correction
     // rhs = k * ax1.dot(ofs);  // from hinge constraint
-    btScalar lin_disp = ax1.dot(ofs);
-    btScalar ang_pos = this->getAngularPosition();
+    Scalar lin_disp = ax1.dot(ofs);
+    Scalar ang_pos = this->getAngularPosition();
     info->m_constraintError[srow] =
       -k * (lin_disp * this->threadPitch - ang_pos);
     info->cfm[srow] = -m_cfmOrthoLin;
@@ -302,12 +302,12 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
   // rotation along slider axis
 
   // check linear limits
-  limit_err = btScalar(0.0);
+  limit_err = Scalar(0.0);
   limit = 0;
   if (getSolveLinLimit())
   {
     limit_err = getLinDepth() *  signFact;
-    limit = (limit_err > btScalar(0.0)) ? 2 : 1;
+    limit = (limit_err > Scalar(0.0)) ? 2 : 1;
   }
   powered = 0;
   if (getPoweredLinMotor())
@@ -351,7 +351,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
     else
     { // The old way. May be incorrect if bodies are not on the slider axis
       // Linear Torque Decoupling vector (a torque)
-      btVector3 ltd;
+      Vector3 ltd;
       ltd = c.cross(ax1);
       info->m_J1angularAxis[srow+0] = factA*ltd[0];
       info->m_J1angularAxis[srow+1] = factA*ltd[1];
@@ -361,13 +361,13 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       info->m_J2angularAxis[srow+2] = factB*ltd[2];
     }
     // right-hand part
-    btScalar lostop = getLowerLinLimit();
-    btScalar histop = getUpperLinLimit();
+    Scalar lostop = getLowerLinLimit();
+    Scalar histop = getUpperLinLimit();
 
     // issue #1104:
     // if (limit && (lostop == histop)) raises warnings, using
     // a warning-less implementation.
-    if (limit && (std::fabs(lostop - histop) <= static_cast<btScalar>(std::numeric_limits<double>::epsilon())))
+    if (limit && (std::fabs(lostop - histop) <= static_cast<Scalar>(std::numeric_limits<double>::epsilon())))
     {
       // the joint motor is ineffective
       powered = 0;
@@ -383,8 +383,8 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       {
         info->cfm[srow] = m_cfmDirLin;
       }
-      btScalar tag_vel = getTargetLinMotorVelocity();
-      btScalar mot_fact = getMotorFactor(m_linPos, m_lowerLinLimit,
+      Scalar tag_vel = getTargetLinMotorVelocity();
+      Scalar mot_fact = getMotorFactor(m_linPos, m_lowerLinLimit,
         m_upperLinLimit, tag_vel, info->fps * currERP);
       info->m_constraintError[srow] -=
         signFact * mot_fact * getTargetLinMotorVelocity();
@@ -402,7 +402,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       // issue #1104:
       // if (lostop == histop) raises warnings, using
       // a warning-less implementation.
-      if (std::fabs(lostop - histop) <= static_cast<btScalar>(std::numeric_limits<double>::epsilon()))
+      if (std::fabs(lostop - histop) <= static_cast<Scalar>(std::numeric_limits<double>::epsilon()))
       {
         // limited low and high simultaneously
         info->m_lowerLimit[srow] = -SIMD_INFINITY;
@@ -421,10 +421,10 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       }
       // bounce (we'll use slider parameter abs(1.0 - m_dampingLimLin)
       //   for that)
-      btScalar bounce = btFabs(btScalar(1.0) - getDampingLimLin());
-      if (bounce > btScalar(0.0))
+      Scalar bounce = btFabs(Scalar(1.0) - getDampingLimLin());
+      if (bounce > Scalar(0.0))
       {
-        btScalar vel = linVelA.dot(ax1);
+        Scalar vel = linVelA.dot(ax1);
         vel -= linVelB.dot(ax1);
         vel *= signFact;
         // only apply bounce if the velocity is incoming, and if the
@@ -433,7 +433,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
         {  // low limit
           if (vel < 0)
           {
-            btScalar newc = -bounce * vel;
+            Scalar newc = -bounce * vel;
             if (newc > info->m_constraintError[srow])
             {
               info->m_constraintError[srow] = newc;
@@ -444,7 +444,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
         { // high limit - all those computations are reversed
           if (vel > 0)
           {
-            btScalar newc = -bounce * vel;
+            Scalar newc = -bounce * vel;
             if (newc < info->m_constraintError[srow])
             {
               info->m_constraintError[srow] = newc;
@@ -461,12 +461,12 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
   // printf("tp: %f\n", this->threadPitch);
 
   // check angular limits
-  limit_err = btScalar(0.0);
+  limit_err = Scalar(0.0);
   limit = 0;
   if (getSolveAngLimit())
   {
     limit_err = getAngDepth();
-    limit = (limit_err > btScalar(0.0)) ? 1 : 2;
+    limit = (limit_err > Scalar(0.0)) ? 1 : 2;
   }
   // if the slider has joint limits, add in the extra row
   powered = 0;
@@ -486,12 +486,12 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
     info->m_J2angularAxis[srow+1] = -ax1[1];
     info->m_J2angularAxis[srow+2] = -ax1[2];
 
-    btScalar lostop = getLowerAngLimit();
-    btScalar histop = getUpperAngLimit();
+    Scalar lostop = getLowerAngLimit();
+    Scalar histop = getUpperAngLimit();
     // issue #1104:
     // if (limit && (lostop == histop)) raises warnings, using
     // a warning-less implementation.
-    if (limit && (std::fabs(lostop - histop) <= static_cast<btScalar>(std::numeric_limits<double>::epsilon())))
+    if (limit && (std::fabs(lostop - histop) <= static_cast<Scalar>(std::numeric_limits<double>::epsilon())))
     {  // the joint motor is ineffective
       powered = 0;
     }
@@ -503,7 +503,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       {
         info->cfm[srow] = m_cfmDirAng;
       }
-      btScalar mot_fact = getMotorFactor(m_angPos, m_lowerAngLimit,
+      Scalar mot_fact = getMotorFactor(m_angPos, m_lowerAngLimit,
         m_upperAngLimit, getTargetAngMotorVelocity(), info->fps * currERP);
       info->m_constraintError[srow] = mot_fact * getTargetAngMotorVelocity();
       info->m_lowerLimit[srow] = -getMaxAngMotorForce() * info->fps;
@@ -520,7 +520,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       // issue #1104:
       // if (lostop == histop) raises warnings, using
       // a warning-less implementation.
-      if (std::fabs(lostop - histop) <= static_cast<btScalar>(std::numeric_limits<double>::epsilon()))
+      if (std::fabs(lostop - histop) <= static_cast<Scalar>(std::numeric_limits<double>::epsilon()))
       {
         // limited low and high simultaneously
         info->m_lowerLimit[srow] = -SIMD_INFINITY;
@@ -538,10 +538,10 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
       }
       // bounce (we'll use slider parameter abs(1.0 - m_dampingLimAng)
       // for that)
-      btScalar bounce = btFabs(btScalar(1.0) - getDampingLimAng());
-      if (bounce > btScalar(0.0))
+      Scalar bounce = btFabs(Scalar(1.0) - getDampingLimAng());
+      if (bounce > Scalar(0.0))
       {
-        btScalar vel = m_rbA.getAngularVelocity().dot(ax1);
+        Scalar vel = m_rbA.getAngularVelocity().dot(ax1);
         vel -= m_rbB.getAngularVelocity().dot(ax1);
         // only apply bounce if the velocity is incoming, and if the
         // resulting c[] exceeds what we already have.
@@ -549,7 +549,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
         {  // low limit
           if (vel < 0)
           {
-            btScalar newc = -bounce * vel;
+            Scalar newc = -bounce * vel;
             if (newc > info->m_constraintError[srow])
             {
               info->m_constraintError[srow] = newc;
@@ -560,7 +560,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const btTrans
         {  // high limit - all those computations are reversed
           if (vel > 0)
           {
-            btScalar newc = -bounce * vel;
+            Scalar newc = -bounce * vel;
             if (newc < info->m_constraintError[srow])
             {
               info->m_constraintError[srow] = newc;

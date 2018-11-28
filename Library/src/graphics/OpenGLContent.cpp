@@ -19,6 +19,8 @@
 #include "utils/GeometryFileUtil.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "utils/stb_image_write.h"
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
@@ -1837,11 +1839,11 @@ void OpenGLContent::Subdivide(Mesh* mesh, bool icoMode)
 	mesh->faces = newFaces;
 }
 
-void OpenGLContent::AABB(Mesh* mesh, btVector3& min, btVector3& max)
+void OpenGLContent::AABB(Mesh* mesh, Vector3& min, Vector3& max)
 {
-    btScalar minX=BT_LARGE_FLOAT, maxX=-BT_LARGE_FLOAT;
-    btScalar minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
-    btScalar minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
+    Scalar minX=BT_LARGE_FLOAT, maxX=-BT_LARGE_FLOAT;
+    Scalar minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
+    Scalar minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
     
     for(unsigned int i=0; i<mesh->vertices.size(); i++)
     {
@@ -1866,11 +1868,11 @@ void OpenGLContent::AABB(Mesh* mesh, btVector3& min, btVector3& max)
             minZ = vertex.z;
     }
     
-    min = btVector3(minX, minY, minZ);
-    max = btVector3(maxX, maxY, maxZ);
+    min = Vector3(minX, minY, minZ);
+    max = Vector3(maxX, maxY, maxZ);
 }
 
-void OpenGLContent::AABS(Mesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffset)
+void OpenGLContent::AABS(Mesh* mesh, Scalar& bsRadius, Vector3& bsCenterOffset)
 {
     glm::vec3 tempCenter(0,0,0);
     
@@ -1889,8 +1891,8 @@ void OpenGLContent::AABS(Mesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffs
             radius = r;
     }
     
-    bsRadius = (btScalar)radius;
-    bsCenterOffset.setX((btScalar)tempCenter.x);
-    bsCenterOffset.setY((btScalar)tempCenter.y);
-    bsCenterOffset.setZ((btScalar)tempCenter.z);
+    bsRadius = (Scalar)radius;
+    bsCenterOffset.setX((Scalar)tempCenter.x);
+    bsCenterOffset.setY((Scalar)tempCenter.y);
+    bsCenterOffset.setZ((Scalar)tempCenter.z);
 }

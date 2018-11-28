@@ -11,44 +11,45 @@
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "core/SimulationApp.h"
 #include "utils/MathUtil.hpp"
+#include "utils/UnitSystem.h"
 
 using namespace sf;
 
-Multibeam::Multibeam(std::string uniqueName, btScalar angleRangeDeg, unsigned int angleSteps, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Multibeam::Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     angRange = UnitSystem::Angle(true, angleRangeDeg);
     angSteps = angleSteps;
     
     for(unsigned int i=0; i <= angSteps; ++i)
     {
-        angles.push_back(i/(btScalar)angSteps * angRange - btScalar(0.5) * angRange);
+        angles.push_back(i/(Scalar)angSteps * angRange - Scalar(0.5) * angRange);
     
         channels.push_back(SensorChannel("Distance", QUANTITY_LENGTH));
-        channels.back().rangeMin = btScalar(0);
+        channels.back().rangeMin = Scalar(0);
         channels.back().rangeMax = BT_LARGE_FLOAT;
     }
     
-    distances = std::vector<btScalar>(angSteps+1, btScalar(0));
+    distances = std::vector<Scalar>(angSteps+1, Scalar(0));
 }
     
-void Multibeam::InternalUpdate(btScalar dt)
+void Multibeam::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    btTransform mbTrans = getSensorFrame();
+    Transform mbTrans = getSensorFrame();
     
     //shoot rays
     for(unsigned int i=0; i<=angSteps; ++i)
     {
-        btVector3 dir = mbTrans.getBasis().getColumn(0) * btCos(angles[i]) + mbTrans.getBasis().getColumn(1) * btSin(angles[i]);
-        btVector3 from = mbTrans.getOrigin() + dir * channels[1].rangeMin;
-        btVector3 to = mbTrans.getOrigin() + dir * channels[1].rangeMax;
+        Vector3 dir = mbTrans.getBasis().getColumn(0) * btCos(angles[i]) + mbTrans.getBasis().getColumn(1) * btSin(angles[i]);
+        Vector3 from = mbTrans.getOrigin() + dir * channels[1].rangeMin;
+        Vector3 to = mbTrans.getOrigin() + dir * channels[1].rangeMax;
     
         btCollisionWorld::ClosestRayResultCallback closest(from, to);
         SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from, to, closest);
         
         if(closest.hasHit())
         {
-            btVector3 p = from.lerp(to, closest.m_closestHitFraction);
+            Vector3 p = from.lerp(to, closest.m_closestHitFraction);
             distances[i] = (p - mbTrans.getOrigin()).length();
         }
         else
@@ -70,7 +71,7 @@ std::vector<Renderable> Multibeam::Render()
     
     for(unsigned int i=0; i <= angSteps; ++i)
     {
-        btVector3 dir = btVector3(1, 0, 0) * btCos(angles[i]) + btVector3(0, 1, 0) * btSin(angles[i]);
+        Vector3 dir = Vector3(1, 0, 0) * btCos(angles[i]) + Vector3(0, 1, 0) * btSin(angles[i]);
         item.points.push_back(glm::vec3(0,0,0));
         item.points.push_back(glm::vec3(dir.x() * distances[i], dir.y() * distances[i], dir.z() * distances[i]));
     }        
@@ -79,7 +80,7 @@ std::vector<Renderable> Multibeam::Render()
     return items;
 }
 
-void Multibeam::SetRange(btScalar distanceMin, btScalar distanceMax)
+void Multibeam::SetRange(Scalar distanceMin, Scalar distanceMax)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
     {
@@ -88,7 +89,7 @@ void Multibeam::SetRange(btScalar distanceMin, btScalar distanceMax)
     }
 }
 
-void Multibeam::SetNoise(btScalar distanceStdDev)
+void Multibeam::SetNoise(Scalar distanceStdDev)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
         channels[i].setStdDev(distanceStdDev);

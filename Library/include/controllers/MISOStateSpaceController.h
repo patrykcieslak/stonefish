@@ -20,20 +20,20 @@ namespace sf
 class MISOStateSpaceController : public FeedbackController
 {
 public:
-    MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency = btScalar(-1));
+    MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, Scalar maxOutput, Scalar frequency = Scalar(-1));
     ~MISOStateSpaceController();
     
     void Reset();
     
-    void SetGains(const std::vector<btScalar>& g);
+    void SetGains(const std::vector<Scalar>& g);
     
 private:
-    void Tick(btScalar dt);
+    void Tick(Scalar dt);
     
     Mux* input;
     DCMotor* output;
-    btScalar maxOutput;
-    std::vector<btScalar> gains;
+    Scalar maxOutput;
+    std::vector<Scalar> gains;
 };
     
 }

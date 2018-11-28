@@ -12,20 +12,20 @@
 
 using namespace sf;
 
-LinkSensor::LinkSensor(std::string uniqueName, btScalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+LinkSensor::LinkSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     attach = NULL;
-    g2s = btTransform::getIdentity();
+    g2s = Transform::getIdentity();
 }
 
 LinkSensor::~LinkSensor()
 {
 }
 
-btTransform LinkSensor::getSensorFrame()
+Transform LinkSensor::getSensorFrame()
 {
     if(attach != NULL)
-        return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+        return attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2s;
     else
         return g2s;
 }
@@ -35,20 +35,20 @@ SensorType LinkSensor::getType()
     return SensorType::SENSOR_LINK;
 }
 
-void LinkSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const btTransform& location)
+void LinkSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& location)
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())
     {
-        g2s = UnitSystem::SetTransform(location);
+        g2s = location;
         attach = multibody->getLink(linkId).solid;
     }
 }
 
-void LinkSensor::AttachToSolid(SolidEntity* solid, const btTransform& location)
+void LinkSensor::AttachToSolid(SolidEntity* solid, const Transform& location)
 {
     if(solid != NULL)
     {
-        g2s = UnitSystem::SetTransform(location);
+        g2s = location;
         attach = solid;
     }
 }

@@ -17,11 +17,11 @@ using namespace sf;
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
 
-Sensor::Sensor(std::string uniqueName, btScalar frequency)
+Sensor::Sensor(std::string uniqueName, Scalar frequency)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    freq = frequency == btScalar(0) ? btScalar(1) : frequency;
-    eleapsedTime = btScalar(0);
+    freq = frequency == Scalar(0) ? Scalar(1) : frequency;
+    eleapsedTime = Scalar(0);
     renderable = false;
     newDataAvailable = false;
 }
@@ -41,9 +41,9 @@ void Sensor::MarkDataOld()
     newDataAvailable = false;
 }
 
-void Sensor::setUpdateFrequency(btScalar f)
+void Sensor::setUpdateFrequency(Scalar f)
 {
-    freq = f == btScalar(0) ? btScalar(1) : f;
+    freq = f == Scalar(0) ? Scalar(1) : f;
 }
 
 bool Sensor::isNewDataAvailable()
@@ -63,13 +63,13 @@ bool Sensor::isRenderable()
 
 void Sensor::Reset()
 {
-    eleapsedTime = btScalar(0.);
+    eleapsedTime = Scalar(0.);
     InternalUpdate(1.); //time delta should not affect initial measurement!!!
 }
 
-void Sensor::Update(btScalar dt)
+void Sensor::Update(Scalar dt)
 {
-    if(freq <= btScalar(0.)) // Every simulation tick
+    if(freq <= Scalar(0.)) // Every simulation tick
     {
         InternalUpdate(dt);
         newDataAvailable = true;
@@ -77,7 +77,7 @@ void Sensor::Update(btScalar dt)
     else //Fixed rate
     {
         eleapsedTime += dt;
-        btScalar invFreq = btScalar(1.)/freq;
+        Scalar invFreq = Scalar(1.)/freq;
         
         if(eleapsedTime >= invFreq)
         {

@@ -20,10 +20,10 @@ class OpenGLDebugDrawer : public btIDebugDraw
 public:
     OpenGLDebugDrawer(int debugMode, bool zUp);
     
-    void drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
-    void drawLine(const btVector3& from,const btVector3& to, const btVector3& fromColor, const btVector3& toColor);
-    void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color);
-	void draw3dText(const btVector3& location, const char* textString);
+    void drawLine(const Vector3& from,const Vector3& to,const Vector3& color);
+    void drawLine(const Vector3& from,const Vector3& to, const Vector3& fromColor, const Vector3& toColor);
+    void drawContactPoint(const Vector3& PointOnB, const Vector3& normalOnB, Scalar distance, int lifeTime, const Vector3& color);
+	void draw3dText(const Vector3& location, const char* textString);
     void reportErrorWarning(const char* warningString);
 	
 	void setDebugMode(int debugMode);

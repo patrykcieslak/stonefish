@@ -30,18 +30,18 @@ typedef struct
 class Ocean : public ForcefieldEntity
 {
 public:
-    Ocean(std::string uniqueName, bool simulateWaves, Liquid* l);
+    Ocean(std::string uniqueName, bool simulateWaves, Fluid* l);
     virtual ~Ocean();
     
     //Forces
     void AddVelocityField(VelocityField* field);
     virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
-    virtual btVector3 GetFluidVelocity(const btVector3& point) const;
-    void GetSurface(btVector3& normal, btVector3& position) const;
+    virtual Vector3 GetFluidVelocity(const Vector3& point) const;
+    void GetSurface(Vector3& normal, Vector3& position) const;
     void GetSurfaceEquation(double* plane4) const;
-    bool IsInsideFluid(const btVector3& point) const;
-    btScalar GetPressure(const btVector3& point) const;
-    btScalar GetDepth(const btVector3& point) const;
+    bool IsInsideFluid(const Vector3& point);
+    Scalar GetPressure(const Vector3& point);
+    Scalar GetDepth(const Vector3& point);
     glm::vec3 ComputeLightAbsorption();
     
     //Getters
@@ -50,21 +50,22 @@ public:
     void setTurbidity(GLfloat ntu);
     GLfloat getAlgeaBloomFactor();
     GLfloat getTurbidity();
-    const Liquid* getLiquid() const;
+    const Fluid* getLiquid() const;
     OpenGLOcean* getOpenGLOcean();
     ForcefieldType getForcefieldType();
     
-	void InitGraphics();
+	void InitGraphics(SDL_mutex* hydrodynamics);
     std::vector<Renderable> Render();
     
 private:	
-    Liquid* liquid;
+    Fluid* liquid;
     std::vector<VelocityField*> currents;
     OpenGLOcean* glOcean;
-    btScalar depth;
+    Scalar depth;
     GLfloat algeaBloom;
     GLfloat turbidity;
     bool waves;
+    Renderable wavesDebug;
 };
     
 }

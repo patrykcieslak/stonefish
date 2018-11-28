@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-JointSensor::JointSensor(std::string uniqueName, btScalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+JointSensor::JointSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     fe = NULL;
     jId = 0;

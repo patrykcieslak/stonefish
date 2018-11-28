@@ -12,7 +12,7 @@
 
 using namespace sf;
 
-Trigger::Trigger(std::string uniqueName, btScalar radius, const btTransform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	ghost->setWorldTransform(worldTransform);
@@ -24,11 +24,11 @@ Trigger::Trigger(std::string uniqueName, btScalar radius, const btTransform& wor
 	look = lookId;
 }
 
-Trigger::Trigger(std::string uniqueName, btScalar radius, btScalar length, const btTransform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	ghost->setWorldTransform(worldTransform);
-    ghost->setCollisionShape(new btCylinderShape(btVector3(radius, length/btScalar(2), radius)));
+    ghost->setCollisionShape(new btCylinderShape(Vector3(radius, length/Scalar(2), radius)));
 	active = false;
 	
 	Mesh* mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
@@ -36,14 +36,14 @@ Trigger::Trigger(std::string uniqueName, btScalar radius, btScalar length, const
 	look = lookId;
 }
 
-Trigger::Trigger(std::string uniqueName, const btVector3& dimensions, const btTransform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	ghost->setWorldTransform(worldTransform);
-    ghost->setCollisionShape(new btBoxShape(dimensions/btScalar(2)));
+    ghost->setCollisionShape(new btBoxShape(dimensions/Scalar(2)));
 	active = false;
 	
-	glm::vec3 halfExt((GLfloat)(dimensions.x()/btScalar(2)), (GLfloat)(dimensions.y()/btScalar(2)), (GLfloat)(dimensions.z()/btScalar(2)));
+	glm::vec3 halfExt((GLfloat)(dimensions.x()/Scalar(2)), (GLfloat)(dimensions.y()/Scalar(2)), (GLfloat)(dimensions.z()/Scalar(2)));
 	Mesh* mesh = OpenGLContent::BuildBox(halfExt);
 	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
 	look = lookId;
@@ -113,7 +113,7 @@ std::vector<Renderable> Trigger::Render()
 	
     if(objectId >= 0 && isRenderable())
     {
-		btTransform trans = ghost->getWorldTransform();
+		Transform trans = ghost->getWorldTransform();
 		Renderable item;
         item.type = RenderableType::SOLID;
 		item.objectId = objectId;

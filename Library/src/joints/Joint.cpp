@@ -61,10 +61,10 @@ void Joint::setConstraint(btMultiBodyConstraint *c)
     mbConstraint = c;
 }
 
-btScalar Joint::getFeedback(unsigned int dof)
+Scalar Joint::getFeedback(unsigned int dof)
 {
     if(dof > 5)
-        return btScalar(0);
+        return Scalar(0);
     
     if(constraint != NULL)
     {
@@ -79,7 +79,7 @@ btScalar Joint::getFeedback(unsigned int dof)
         return mbConstraint->getAppliedImpulse(dof);
     }
     else
-        return btScalar(0);
+        return Scalar(0);
 }
 
 void Joint::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)

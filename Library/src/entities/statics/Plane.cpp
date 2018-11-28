@@ -12,16 +12,15 @@
 
 using namespace sf;
 
-Plane::Plane(std::string uniqueName, btScalar planeSize, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Plane::Plane(std::string uniqueName, Scalar planeSize, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
-    btScalar size = UnitSystem::SetLength(planeSize);
-    mesh = OpenGLContent::BuildPlane(size/2.f);
+    mesh = OpenGLContent::BuildPlane(planeSize/2.f);
 	
-    btCollisionShape* shape = new btStaticPlaneShape(SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? btVector3(0,0,1) : btVector3(0,0,-1),0);
+    btCollisionShape* shape = new btStaticPlaneShape(SimulationApp::getApp()->getSimulationManager()->isZAxisUp() ? Vector3(0,0,1) : Vector3(0,0,-1),0);
     BuildRigidBody(shape);
 }
 
-void Plane::GetAABB(btVector3 &min, btVector3 &max)
+void Plane::getAABB(Vector3 &min, Vector3 &max)
 {
     //Plane shouldn't affect shadow calculation
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);

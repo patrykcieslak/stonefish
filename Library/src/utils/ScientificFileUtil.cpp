@@ -55,13 +55,13 @@ unsigned int ScientificData::getItemsCount() const
     return (unsigned int)items.size();
 }
 
-btScalar ScientificData::getScalar(std::string name)
+Scalar ScientificData::getScalar(std::string name)
 {
     const ScientificDataItem* it = getItem(name);
     if(it != NULL && it->type == DATA_SCALAR)
-        return *((btScalar*)it->value);
+        return *((Scalar*)it->value);
     else
-        return btScalar(0.);
+        return Scalar(0.);
 }
 
 btVectorXu ScientificData::getVector(std::string name)
@@ -332,7 +332,7 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
             {
                 float value;
                 file.read(reinterpret_cast<char*>(&value), 4);
-                (*v)[i] = (btScalar)value;
+                (*v)[i] = (Scalar)value;
             }
         }
         else //double
@@ -341,7 +341,7 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
             {
                 double value;
                 file.read(reinterpret_cast<char*>(&value), 8);
-                (*v)[i] = (btScalar)value;
+                (*v)[i] = (Scalar)value;
             }
         }
         
@@ -361,7 +361,7 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
                 {
                     float value;
                     file.read(reinterpret_cast<char*>(&value), 4);
-                    m->setElem(h, i, (btScalar)value);
+                    m->setElem(h, i, (Scalar)value);
                 }
         }
         else //double
@@ -371,7 +371,7 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
                 {
                     double value;
                     file.read(reinterpret_cast<char*>(&value), 8);
-                    m->setElem(h, i, (btScalar)value);
+                    m->setElem(h, i, (Scalar)value);
                 }
         }
         
@@ -474,7 +474,7 @@ void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it)
     file.write(&type, 1);
     
     //write value
-    btScalar* scalar = (btScalar*)it.value;
+    Scalar* scalar = (Scalar*)it.value;
     file.write(reinterpret_cast<char*>(scalar), 8);
 #else
     //write type identifier [1 byte]
@@ -482,7 +482,7 @@ void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it)
     file.write(&type, 1);
     
     //write value
-    btScalar* scalar = (btScalar*)it.value;
+    Scalar* scalar = (Scalar*)it.value;
     file.write(reinterpret_cast<char*>(scalar), 4);
 #endif
 }

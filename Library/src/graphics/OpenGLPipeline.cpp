@@ -21,7 +21,8 @@
 #include "controllers/PathGenerator.h"
 #include "controllers/PathFollowingController.h"
 
-using namespace sf;
+namespace sf
+{
 
 OpenGLPipeline::OpenGLPipeline(RenderSettings s)
 {
@@ -40,8 +41,8 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s)
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glPointSize(1.f);
-    glLineWidth(1.f);
+    glPointSize(2.f);
+    glLineWidth(2.f);
     glLineStipple(3, 0xE4E4);
     glPatchParameteri(GL_PATCH_VERTICES, 4);
     glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
@@ -264,7 +265,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 }
             
                 //================Setup rendering scene======================
-                if(renderMode == 0) 
+                if(renderMode == 0) //NO OCEAN
                 {
                     glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                     GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
@@ -288,7 +289,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Go to postprocessing stage
                     camera->EnterPostprocessing();
                 } 
-                else if(renderMode == 1)
+                else if(renderMode == 1) //OCEAN WITHOUT WAVES
                 {
                     OpenGLOcean* glOcean = ocean->getOpenGLOcean();
             
@@ -416,67 +417,42 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         camera->EnterPostprocessing();
                     }
                 }
-                else if(renderMode == 2)
+                else if(renderMode == 2) //OCEAN WITH WAVES
                 {
-                    /*OpenGLOcean* glOcean = ocean->getOpenGLOcean();
-            
-                    view->SetViewport();
-            
-                    glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+                    OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+                    
+                    //Set main FBO
+                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                     GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
                     glDrawBuffers(2, renderBuffs);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            
-                    //Draw ocean surface
-                    glOcean->DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
-            
-                    //Draw stencil mask
-                    glEnable(GL_STENCIL_TEST);
-            
-                    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-                    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-                    glStencilMask(0xFF);
-                    glClear(GL_STENCIL_BUFFER_BIT);
-                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-                    glDepthMask(GL_FALSE);
-            
-                    ocean->getOpenGLOcean()->DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());
-            
-                    glStencilFunc(GL_EQUAL, 0, 0xFF);
-                    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-                    glStencilMask(0x00);
-                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                    glDepthMask(GL_TRUE);
-            
-                    //Render all objects above ocean surface
-                    OpenGLContent::getInstance()->SetCurrentView(view);
+                    camera->SetViewport();
+                    OpenGLContent::getInstance()->SetCurrentView(camera);
+                    
+                    //Render all objects
                     OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
-                    glDrawBuffers(2, renderBuffs);
                     DrawObjects();
-            
+                    
                     //Ambient occlusion
-                    //view->DrawAO();
-            
-                    //Draw sky
-                    OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
-            
-                    glStencilFunc(GL_EQUAL, 1, 0xFF);
-            
-                    //Render all objects below ocean surface
-                    OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+                    if(settings.ao > RenderQuality::QUALITY_DISABLED)
+                        camera->DrawAO(1.f);
+                    
+                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getReflectionFBO());
+                    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    
+                    //Draw surface
+                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                     glDrawBuffers(2, renderBuffs);
-                    DrawObjects();
-            
-                    //Ambient occlusion
-                    //view->DrawAO();
-            
-                    //Draw ocean surface from below
-                    ocean->getOpenGLOcean()->DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
-            
-                    glDisable(GL_STENCIL_TEST);
-            
+                    camera->SetViewport();
+                    OpenGLContent::getInstance()->SetCurrentView(camera);
+                    glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), camera->getReflectionTexture(), viewport);
+                        
+                    //Render sky
+                    OpenGLAtmosphere::getInstance()->DrawSkyAndSun(camera);
+                        
                     //Go to postprocessing stage
-                    view->EnterPostprocessing();*/
+                    camera->EnterPostprocessing();
                 }
             
                 //================Post-processing=============================
@@ -544,18 +520,22 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         {
                             switch(drawingQueueCopy[h].type)
                             {
-                                case RenderableType::HYDRO_CS:
+                               case RenderableType::HYDRO_CS:
                                     OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f), glm::vec4(0.2f, 0.5f, 1.f, 1.f)); //drawingQueueCopy[h].scale*2.f);
                                     break;
                              
-                                case RenderableType::HYDRO_CYLINDER:
+                               case RenderableType::HYDRO_CYLINDER:
                                     OpenGLContent::getInstance()->DrawCylinder(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0], glm::vec4(0.2f, 0.5f, 1.f, 1.f));
                                     break;
                                     
                                 case RenderableType::HYDRO_ELLIPSOID:
                                     OpenGLContent::getInstance()->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].points[0], glm::vec4(0.2f, 0.5f, 1.f, 1.f));
                                     break;
-                                
+                                    
+                                case RenderableType::HYDRO_POINTS:
+                                    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].points, glm::vec4(0.3f, 0.7f, 1.f, 1.f), drawingQueueCopy[h].model);
+                                    break;
+                                    
                                 case RenderableType::HYDRO_LINES:
                                     OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
                                     break;
@@ -563,7 +543,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                                 case RenderableType::HYDRO_LINE_STRIP:
                                     OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
                                     break;
-                                    
+                                  
                                 default:
                                     break;
                             }
@@ -577,11 +557,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     if(drawDebug)
                         sim->dynamicsWorld->debugDrawWorld();
 
-                    //if(ocean != NULL)
-                    //{
+                    if(ocean != NULL)
+                    {
                         //ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
-                        //ocean->getOpenGLOcean().ShowOceanTexture(3, glm::vec4(0,500,300,300));
-                    //}
+                        
+                        //ocean->getOpenGLOcean()->ShowTexture(4, glm::vec4(0,0,256,256));
+                    }
             
                     //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,400,200,200));
                     //OpenGLAtmosphere::getInstance()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(400,400,200,200));
@@ -616,3 +597,68 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         }
     }
 }
+
+}
+
+
+
+/*
+ OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+ 
+ view->SetViewport();
+ 
+ glBindFramebuffer(GL_FRAMEBUFFER, view->getRenderFBO());
+ GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+ glDrawBuffers(2, renderBuffs);
+ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+ 
+ //Draw ocean surface
+ glOcean->DrawSurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
+ 
+ //Draw stencil mask
+ glEnable(GL_STENCIL_TEST);
+ 
+ glStencilFunc(GL_ALWAYS, 1, 0xFF);
+ glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+ glStencilMask(0xFF);
+ glClear(GL_STENCIL_BUFFER_BIT);
+ glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+ glDepthMask(GL_FALSE);
+ 
+ ocean->getOpenGLOcean()->DrawOceanVolumeMask(view->GetEyePosition(), view->GetLookingDirection(), view->GetViewMatrix(), view->GetProjectionMatrix());
+ 
+ glStencilFunc(GL_EQUAL, 0, 0xFF);
+ glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+ glStencilMask(0x00);
+ glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+ glDepthMask(GL_TRUE);
+ 
+ //Render all objects above ocean surface
+ OpenGLContent::getInstance()->SetCurrentView(view);
+ OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::FULL);
+ glDrawBuffers(2, renderBuffs);
+ DrawObjects();
+ 
+ //Ambient occlusion
+ //view->DrawAO();
+ 
+ //Draw sky
+ OpenGLAtmosphere::getInstance()->DrawSkyAndSun(view);
+ 
+ glStencilFunc(GL_EQUAL, 1, 0xFF);
+ 
+ //Render all objects below ocean surface
+ OpenGLContent::getInstance()->SetDrawingMode(DrawingMode::UNDERWATER);
+ glDrawBuffers(2, renderBuffs);
+ DrawObjects();
+ 
+ //Ambient occlusion
+ //view->DrawAO();
+ 
+ //Draw ocean surface from below
+ ocean->getOpenGLOcean()->DrawOceanBacksurface(view->GetEyePosition(), view->GetViewMatrix(), view->GetInfiniteProjectionMatrix());
+ 
+ glDisable(GL_STENCIL_TEST);
+ 
+ //Go to postprocessing stage
+ view->EnterPostprocessing();*/

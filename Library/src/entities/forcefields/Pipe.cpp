@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Pipe::Pipe(const btVector3& point1, const btVector3& point2, btScalar radius1, btScalar radius2, btScalar inletVelocity, btScalar exponent)
+Pipe::Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar radius2, Scalar inletVelocity, Scalar exponent)
 {
     p1 = point1;
     l = (point2-point1).length();
@@ -21,25 +21,25 @@ Pipe::Pipe(const btVector3& point1, const btVector3& point2, btScalar radius1, b
     gamma = exponent;
 }
 
-btVector3 Pipe::GetVelocityAtPoint(const btVector3& p)
+Vector3 Pipe::GetVelocityAtPoint(const Vector3& p)
 {
     //Calculate distance to line
-    btVector3 p1p = p-p1;
-    btScalar d = p1p.cross(n).norm();
+    Vector3 p1p = p-p1;
+    Scalar d = p1p.cross(n).norm();
     
     //Calculate closest point on line section between P1 and P2
-    btScalar t = p1p.dot(n);
-    if(t < 0.0 || t > l) return btVector3(0,0,0);
+    Scalar t = p1p.dot(n);
+    if(t < 0.0 || t > l) return Vector3(0,0,0);
     
     //Calculate radius at point
-    btScalar r = r1 + (r2-r1) * t/l;
-    if(d >= r) return btVector3(0,0,0);
+    Scalar r = r1 + (r2-r1) * t/l;
+    if(d >= r) return Vector3(0,0,0);
     
     //Calculate central velocity
-    btVector3 v = r1/r * vin * n;
+    Vector3 v = r1/r * vin * n;
     
     //Calculate fraction of central velocity
-    btScalar f = btPow(btScalar(1)-d/r, gamma);
+    Scalar f = btPow(Scalar(1)-d/r, gamma);
     
     return f*v;
 }
@@ -72,9 +72,9 @@ std::vector<Renderable> Pipe::Render()
     
     for(unsigned int i=0; i<12; ++i)
     {
-        btScalar alpha = btScalar(i)/btScalar(12) * M_PI * btScalar(2);
-        btVector3 v1(btCos(alpha)*r1, btSin(alpha)*r1, 0);
-        btVector3 v2(v1.x()*r2/r1, v1.y()*r2/r1, l);
+        Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
+        Vector3 v1(btCos(alpha)*r1, btSin(alpha)*r1, 0);
+        Vector3 v2(v1.x()*r2/r1, v1.y()*r2/r1, l);
         pipe.points.push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
         inlet.points.push_back(pipe.points.back());
         pipe.points.push_back(glm::vec3(v2.x(), v2.y(), v2.z()));

@@ -12,7 +12,7 @@
 #include <entities/solids/Sphere.h>
 #include <core/Robot.h>
 
-ConsoleTestManager::ConsoleTestManager(btScalar stepsPerSecond) 
+ConsoleTestManager::ConsoleTestManager(Scalar stepsPerSecond) 
     : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI, CollisionFilteringType::EXCLUSIVE, HydrodynamicsType::GEOMETRY_BASED)
 {
 }
@@ -25,7 +25,7 @@ void ConsoleTestManager::BuildScenario()
 	
 	//Build scene	
 	//Plane* plane = new Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"));
-    //AddStaticEntity(plane, btTransform(btQuaternion::getIdentity(), btVector3(0,0,0)));
+    //AddStaticEntity(plane, Transform(Quaternion::getIdentity(), Vector3(0,0,0)));
 	
 	Sphere* sph1 = new Sphere("Sphere1", 0.1, getMaterialManager()->getMaterial("Rock"));
 	Sphere* sph2 = new Sphere("Sphere2", 0.1, getMaterialManager()->getMaterial("Rock"));
@@ -38,12 +38,12 @@ void ConsoleTestManager::BuildScenario()
 	robot->DefineRevoluteJoint("Joint1", 
 							   "Sphere1", 
 							   "Sphere2", 
-							   btTransform(btQuaternion::getIdentity(), btVector3(0.5,0,0.0)), 
-							   btVector3(0.0,1.0,0.0), 
-							   std::make_pair<btScalar,btScalar>(-1.0,1.0),
+							   Transform(Quaternion::getIdentity(), Vector3(0.5,0,0.0)), 
+							   Vector3(0.0,1.0,0.0), 
+							   std::make_pair<Scalar,Scalar>(-1.0,1.0),
 							   1.0);
 							   
-	robot->AddToDynamicsWorld(getDynamicsWorld(), btTransform::getIdentity());
+	robot->AddToDynamicsWorld(getDynamicsWorld(), Transform::getIdentity());
 }
 
 void ConsoleTestManager::SimulationStepCompleted()

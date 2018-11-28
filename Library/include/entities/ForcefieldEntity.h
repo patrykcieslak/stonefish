@@ -29,7 +29,7 @@ public:
 	
 	btPairCachingGhostObject* getGhost();
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
-    virtual void GetAABB(btVector3& min, btVector3& max);
+    virtual void getAABB(Vector3& min, Vector3& max);
 	
     virtual ForcefieldType getForcefieldType() = 0;
     

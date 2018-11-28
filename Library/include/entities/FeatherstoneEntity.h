@@ -23,16 +23,16 @@ namespace sf
 
 struct FeatherstoneLink
 {
-    FeatherstoneLink(SolidEntity* s, const btTransform& t) : solid(s), trans(t) {}
+    FeatherstoneLink(SolidEntity* s, const Transform& t) : solid(s), trans(t) {}
     
     SolidEntity* solid;
-    btTransform trans;
+    Transform trans;
 };
 
 struct FeatherstoneJoint
 {
     FeatherstoneJoint(std::string n, btMultibodyLink::eFeatherstoneJointType t, unsigned int p, unsigned int c)
-                        : name(n), type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(btScalar(0)), velDamping(btScalar(0))  {}
+                        : name(n), type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(Scalar(0)), velDamping(Scalar(0))  {}
     
     std::string name;
     btMultibodyLink::eFeatherstoneJointType type;
@@ -42,10 +42,10 @@ struct FeatherstoneJoint
     
     unsigned int parent;
     unsigned int child;
-    btVector3 axisInChild;
-    btVector3 pivotInChild;
-    btScalar sigDamping;
-    btScalar velDamping;
+    Vector3 axisInChild;
+    Vector3 pivotInChild;
+    Scalar sigDamping;
+    Scalar velDamping;
 };
 
 //! Featherstone multi-body dynamics class.
@@ -59,32 +59,32 @@ public:
     virtual ~FeatherstoneEntity();
     
     //Multibody definition
-    void AddLink(SolidEntity* solid, const btTransform& transform);
-    int AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks = false);
-    int AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks = false);
-	int AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot);
-    void AddJointMotor(unsigned int index, btScalar maxImpulse);
-    void AddJointLimit(unsigned int index, btScalar lower, btScalar upper);
+    void AddLink(SolidEntity* solid, const Transform& transform);
+    int AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks = false);
+    int AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& axis, bool collisionBetweenJointLinks = false);
+	int AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& pivot);
+    void AddJointMotor(unsigned int index, Scalar maxImpulse);
+    void AddJointLimit(unsigned int index, Scalar lower, Scalar upper);
 	
     //Multibody control
-    void MotorPositionSetpoint(unsigned int index, btScalar pos, btScalar kp);
-    void MotorVelocitySetpoint(unsigned int index, btScalar vel, btScalar kd);
-    void DriveJoint(unsigned int index, btScalar forceTorque);
-    void ApplyGravity(const btVector3& g);
+    void MotorPositionSetpoint(unsigned int index, Scalar pos, Scalar kp);
+    void MotorVelocitySetpoint(unsigned int index, Scalar vel, Scalar kd);
+    void DriveJoint(unsigned int index, Scalar forceTorque);
+    void ApplyGravity(const Vector3& g);
     void ApplyDamping();
-    void AddLinkForce(unsigned int index, const btVector3& F);
-    void AddLinkTorque(unsigned int index, const btVector3& tau);
-	void UpdateAcceleration(btScalar dt);
+    void AddLinkForce(unsigned int index, const Vector3& F);
+    void AddLinkTorque(unsigned int index, const Vector3& tau);
+	void UpdateAcceleration(Scalar dt);
     
     //Joints
-    void setJointIC(unsigned int index, btScalar position, btScalar velocity);
-    void setJointDamping(unsigned int  index, btScalar constantFactor, btScalar viscousFactor);
+    void setJointIC(unsigned int index, Scalar position, Scalar velocity);
+    void setJointDamping(unsigned int  index, Scalar constantFactor, Scalar viscousFactor);
     std::string getJointName(unsigned int index);
-    void getJointPosition(unsigned int index, btScalar& position, btMultibodyLink::eFeatherstoneJointType& jointType);
-    void getJointVelocity(unsigned int index, btScalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
-    btScalar getJointTorque(unsigned int index); //Only shows sum of manually applied torques
-    btScalar getMotorImpulse(unsigned int index); 
-    btVector3 getJointAxis(unsigned int index);
+    void getJointPosition(unsigned int index, Scalar& position, btMultibodyLink::eFeatherstoneJointType& jointType);
+    void getJointVelocity(unsigned int index, Scalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
+    Scalar getJointTorque(unsigned int index); //Only shows sum of manually applied torques
+    Scalar getMotorImpulse(unsigned int index); 
+    Vector3 getJointAxis(unsigned int index);
     
     /*
      * Both vectors are in the CoG frame of the child link. 
@@ -93,15 +93,15 @@ public:
      * The force acting on every link causes a reaction force and a torque on this link. 
      * If the rection torque acts around the axis of the joint, then this torque does not transfer directly to previous joints (only force is transferred)
     */
-    unsigned int getJointFeedback(unsigned int index, btVector3& force, btVector3& torque);
+    unsigned int getJointFeedback(unsigned int index, Vector3& force, Vector3& torque);
     
 	//Links
-	void setBaseTransform(const btTransform& trans);
+	void setBaseTransform(const Transform& trans);
     void setBaseRenderable(bool render);
     FeatherstoneLink getLink(unsigned int index);
-    btTransform getLinkTransform(unsigned int index);
-    btVector3 getLinkLinearVelocity(unsigned int index);
-    btVector3 getLinkAngularVelocity(unsigned int index);
+    Transform getLinkTransform(unsigned int index);
+    Vector3 getLinkLinearVelocity(unsigned int index);
+    Vector3 getLinkAngularVelocity(unsigned int index);
     unsigned int getNumOfJoints();
     unsigned int getNumOfMovingJoints();
     unsigned int getNumOfLinks();
@@ -110,9 +110,9 @@ public:
     
     //Common
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
-    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform);
     std::vector<Renderable> Render();
-    void GetAABB(btVector3& min, btVector3& max);
+    void getAABB(Vector3& min, Vector3& max);
     EntityType getType();
     
 private:

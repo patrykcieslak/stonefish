@@ -10,14 +10,14 @@
 
 using namespace sf;
 
-Gyroscope::Gyroscope(std::string uniqueName, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage, Scalar driftSpeed, Scalar noisePSD, ADC* adc, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
     
-    range[0] = UnitSystem::SetAngularVelocity(rangeMin);
-    range[1] = UnitSystem::SetAngularVelocity(rangeMax);
-    sens = UnitSystem::SetAngularVelocity(sensitivity);
-    drift = UnitSystem::SetAngle(driftSpeed);
+    range[0] = rangeMin;
+    range[1] = rangeMax;
+    sens = sensitivity;
+    drift = driftSpeed;
 
     zeroV = zeroVoltage;
     this->noisePSD = noisePSD;
@@ -30,17 +30,17 @@ void Gyroscope::Reset()
     ScalarSensor::Reset();
 }
 
-void Gyroscope::InternalUpdate(btScalar dt)
+void Gyroscope::InternalUpdate(Scalar dt)
 {
     //calculate transformation from global to gyro frame
-    btMatrix3x3 toGyroFrame = getSensorFrame().inverse().getBasis();
+    Matrix3 toGyroFrame = getSensorFrame().inverse().getBasis();
     
     //get angular velocity
-    btVector3 actualAV = attach->getAngularVelocity();
+    Vector3 actualAV = attach->getAngularVelocity();
     actualAV = toGyroFrame * actualAV;
     
     //select axis Z
-    btScalar av = actualAV.getZ();
+    Scalar av = actualAV.getZ();
     
     //add limits/noise/nonlinearity/drift
     accumulatedDrift += drift * dt;

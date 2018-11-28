@@ -9,26 +9,27 @@
 #include "entities/Entity.h"
 
 #include "core/SimulationApp.h"
+#include "graphics/OpenGLContent.h"
 
 using namespace sf;
 
-btVector3 Entity::findInertiaAxis(btMatrix3x3 I, btScalar value)
+Vector3 Entity::findInertiaAxis(Matrix3 I, Scalar value)
 {
 	//Check if not I matrix already diagonal
 	if(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
 		&& btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
 		&& btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY()))
 		{
-			return btVector3(0,0,0);
+			return Vector3(0,0,0);
 		}
 	
 	//Diagonalize
-    btMatrix3x3 L;
-    btVector3 candidates[3];
-    btVector3 axis;
+    Matrix3 L;
+    Vector3 candidates[3];
+    Vector3 axis;
     
     //Characteristic matrix
-    L = I - btMatrix3x3::getIdentity().scaled(btVector3(value,value,value));
+    L = I - Matrix3::getIdentity().scaled(Vector3(value,value,value));
     
     //Candidates (orthogonal vectors)
     candidates[0] = (L.getRow(0).cross(L.getRow(1)));

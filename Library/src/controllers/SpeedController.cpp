@@ -10,14 +10,14 @@
 
 using namespace sf;
 
-SpeedController::SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, 1, frequency)
+SpeedController::SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, Scalar maxOutput, Scalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
     motor = m;
     encoder = e;
     maxCtrl = maxOutput;
-    gainP = btScalar(1.);
-    gainI = btScalar(0.);
-    gainD = btScalar(0.);
+    gainP = Scalar(1.);
+    gainI = Scalar(0.);
+    gainD = Scalar(0.);
     
     Reset();
 }
@@ -26,12 +26,12 @@ SpeedController::~SpeedController()
 {
 }
 
-void SpeedController::SetSpeed(btScalar speed)
+void SpeedController::SetSpeed(Scalar speed)
 {
-    setReferenceValue(0, UnitSystem::SetAngularVelocity(speed));
+    setReferenceValue(0, speed);
 }
 
-void SpeedController::SetGains(btScalar P, btScalar I, btScalar D, btScalar ILimit)
+void SpeedController::SetGains(Scalar P, Scalar I, Scalar D, Scalar ILimit)
 {
     gainP = P;
     gainI = I;
@@ -41,31 +41,31 @@ void SpeedController::SetGains(btScalar P, btScalar I, btScalar D, btScalar ILim
 
 void SpeedController::Reset()
 {
-    setReferenceValue(0, btScalar(0.));
-    lastError = btScalar(0.);
-    integratedError = btScalar(0.);
+    setReferenceValue(0, Scalar(0.));
+    lastError = Scalar(0.);
+    integratedError = Scalar(0.);
 }
 
-void SpeedController::Tick(btScalar dt)
+void SpeedController::Tick(Scalar dt)
 {
     //get desired servo position
-    std::vector<btScalar> ref = getReferenceValues();
+    std::vector<Scalar> ref = getReferenceValues();
     
     //get measurements
     Sample encSample = encoder->getLastSample();
     
     //calculate error
-    btScalar error = ref[0] - encSample.getValue(1);
+    Scalar error = ref[0] - encSample.getValue(1);
     
 	//integrate and limit
 	integratedError += error * dt;
 	integratedError = integratedError > limitI ? limitI : (integratedError < -limitI ? -limitI : integratedError);
 	
-    btScalar derivativeError = (error - lastError)/dt;
+    Scalar derivativeError = (error - lastError)/dt;
     lastError = error;
     
     //calculate and apply control
-    btScalar control = gainP * error + gainI * integratedError + gainD * derivativeError;
+    Scalar control = gainP * error + gainI * integratedError + gainD * derivativeError;
     control = control > maxCtrl ? maxCtrl : (control < -maxCtrl ? -maxCtrl : control);
 	output = control;
 	

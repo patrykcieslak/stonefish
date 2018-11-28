@@ -17,15 +17,15 @@ namespace sf
 class Cylinder : public SolidEntity
 {
 public:
-    Cylinder(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
+    Cylinder(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& originTrans, Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
     ~Cylinder();
     
     SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
 
 private:
-    btScalar radius;
-    btScalar halfHeight;
+    Scalar radius;
+    Scalar halfHeight;
 };
 
 }

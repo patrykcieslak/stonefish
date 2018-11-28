@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar minDepth, btScalar maxDepth, btScalar frequency)
+DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
     : Camera(uniqueName, resX, resY, horizFOVDeg, frequency)
 {
     newDataCallback = NULL;
@@ -44,7 +44,7 @@ glm::vec2 DepthCamera::getDepthRange()
     return depthRange;
 }
 
-void DepthCamera::SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up)
+void DepthCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
 {
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
@@ -63,7 +63,7 @@ void DepthCamera::NewDataReady()
         newDataCallback(this);
 }
 
-void DepthCamera::InternalUpdate(btScalar dt)
+void DepthCamera::InternalUpdate(Scalar dt)
 {
     glCamera->Update();
 }

@@ -19,9 +19,9 @@ namespace sf
 class JointSensor : public ScalarSensor
 {
 public:
-    JointSensor(std::string uniqueName, btScalar frequency, int historyLength);
+    JointSensor(std::string uniqueName, Scalar frequency, int historyLength);
     
-    virtual void InternalUpdate(btScalar dt) = 0;
+    virtual void InternalUpdate(Scalar dt) = 0;
     
     virtual void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
     virtual void AttachToJoint(Joint* joint);

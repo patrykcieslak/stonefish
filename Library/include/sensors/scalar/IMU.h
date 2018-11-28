@@ -17,11 +17,11 @@ namespace sf
 class IMU : public LinkSensor
 {
 public:
-    IMU(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    IMU(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(btScalar angularVelocityMax);
-    void SetNoise(btScalar angleStdDev, btScalar angularVelocityStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(Scalar angularVelocityMax);
+    void SetNoise(Scalar angleStdDev, Scalar angularVelocityStdDev);
 };
     
 }

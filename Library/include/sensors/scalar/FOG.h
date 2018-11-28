@@ -17,10 +17,10 @@ namespace sf
 class FOG : public LinkSensor
 {
 public:
-    FOG(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    FOG(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetNoise(btScalar headingStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetNoise(Scalar headingStdDev);
 };
     
 }

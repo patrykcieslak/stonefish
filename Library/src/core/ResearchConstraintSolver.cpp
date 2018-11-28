@@ -106,11 +106,11 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 		m_bSplit.setZero();
 		for (int i=0;i<numConstraintRows ;i++)
 		{
-			btScalar jacDiag = m_allConstraintPtrArray[i]->m_jacDiagABInv;
+			Scalar jacDiag = m_allConstraintPtrArray[i]->m_jacDiagABInv;
 			if (!btFuzzyZero(jacDiag))
 			{
-				btScalar rhs = m_allConstraintPtrArray[i]->m_rhs;
-				btScalar rhsPenetration = m_allConstraintPtrArray[i]->m_rhsPenetration;
+				Scalar rhs = m_allConstraintPtrArray[i]->m_rhs;
+				Scalar rhsPenetration = m_allConstraintPtrArray[i]->m_rhsPenetration;
 				m_b[i]=rhs/jacDiag;
 				m_bSplit[i] = rhsPenetration/jacDiag;
 			}
@@ -118,7 +118,7 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 		}
 	}
     
-	//btScalar* w = 0;
+	//Scalar* w = 0;
 	//int nub = 0;
     
 	m_lo.resize(numConstraintRows);
@@ -209,8 +209,8 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
 				}
 				for (int row=0;row<numRows;row++,cur++)
 				{
-					btVector3 normalInvMass =				m_allConstraintPtrArray[i+row]->m_contactNormal1 *		orgBodyA->getInvMass();
-					btVector3 relPosCrossNormalInvInertia = m_allConstraintPtrArray[i+row]->m_relpos1CrossNormal *	orgBodyA->getInvInertiaTensorWorld();
+					Vector3 normalInvMass =				m_allConstraintPtrArray[i+row]->m_contactNormal1 *		orgBodyA->getInvMass();
+					Vector3 relPosCrossNormalInvInertia = m_allConstraintPtrArray[i+row]->m_relpos1CrossNormal *	orgBodyA->getInvInertiaTensorWorld();
                     
 					for (int r=0;r<3;r++)
 					{
@@ -246,8 +246,8 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
                 
 				for (int row=0;row<numRows;row++,cur++)
 				{
-					btVector3 normalInvMassB = m_allConstraintPtrArray[i+row]->m_contactNormal2*orgBodyB->getInvMass();
-					btVector3 relPosInvInertiaB = m_allConstraintPtrArray[i+row]->m_relpos2CrossNormal * orgBodyB->getInvInertiaTensorWorld();
+					Vector3 normalInvMassB = m_allConstraintPtrArray[i+row]->m_contactNormal2*orgBodyB->getInvMass();
+					Vector3 relPosInvInertiaB = m_allConstraintPtrArray[i+row]->m_relpos2CrossNormal * orgBodyB->getInvInertiaTensorWorld();
                     
 					for (int r=0;r<3;r++)
 					{
@@ -274,9 +274,9 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
     
     
 	//compute JinvM = J*invM.
-	const btScalar* JinvM = JinvM3.getBufferPointer();
+	const Scalar* JinvM = JinvM3.getBufferPointer();
     
-	const btScalar* Jptr = J3.getBufferPointer();
+	const Scalar* Jptr = J3.getBufferPointer();
 	{
 		BT_PROFILE("m_A.resize");
 		m_A.resize(n,n);
@@ -300,7 +300,7 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
             
 			numRows = i<m_tmpSolverNonContactConstraintPool.size() ? m_tmpConstraintSizesPool[c].m_numConstraintRows : numContactRows ;
             
-			const btScalar *JinvMrow = JinvM + 2*8*(size_t)row__;
+			const Scalar *JinvMrow = JinvM + 2*8*(size_t)row__;
             
 			{
 				int startJointNodeA = bodyJointNodeArray[sbA];
@@ -359,8 +359,8 @@ void ResearchConstraintSolver::createMLCPFast(const btContactSolverInfo& infoGlo
                 
 				const unsigned int infom =  row__ < m_tmpSolverNonContactConstraintPool.size() ? m_tmpConstraintSizesPool[jj].m_numConstraintRows : numContactRows;
 				
-				const btScalar *JinvMrow = JinvM + 2*8*(size_t)row__;
-				const btScalar *Jrow = Jptr + 2*8*(size_t)row__;
+				const Scalar *JinvMrow = JinvM + 2*8*(size_t)row__;
+				const Scalar *Jrow = Jptr + 2*8*(size_t)row__;
 				m_A.multiply2_p8r (JinvMrow, Jrow, infom, infom, row__,row__);
 				if (orgBodyB)
 				{
@@ -437,7 +437,7 @@ void ResearchConstraintSolver::createMLCP(const btContactSolverInfo& infoGlobal)
 	for (int i=0;i<numBodies;i++)
 	{
 		const btSolverBody& rb = m_tmpSolverBodyPool[i];
-		const btVector3& invMass = rb.m_invMass;
+		const Vector3& invMass = rb.m_invMass;
 		setElem(Minv,i*6+0,i*6+0,invMass[0]);
 		setElem(Minv,i*6+1,i*6+1,invMass[1]);
 		setElem(Minv,i*6+2,i*6+2,invMass[2]);
@@ -524,7 +524,7 @@ void ResearchConstraintSolver::createMLCP(const btContactSolverInfo& infoGlobal)
     
 }
 
-btScalar ResearchConstraintSolver::solveGroupCacheFriendlySetup(btCollisionObject** bodies, int numBodiesUnUsed, btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer)
+Scalar ResearchConstraintSolver::solveGroupCacheFriendlySetup(btCollisionObject** bodies, int numBodiesUnUsed, btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer)
 {
     btMultiBodyConstraintSolver::solveGroupCacheFriendlySetup( bodies, numBodiesUnUsed, manifoldPtr, numManifolds,constraints,numConstraints,infoGlobal,debugDrawer);
     
@@ -607,7 +607,7 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlySetup(btCollisionObjec
 	return 0.f;
 }
 
-btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollisionObject** bodies ,int numBodies,btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer)
+Scalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollisionObject** bodies ,int numBodies,btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer)
 {
 	bool result = false;
     
@@ -632,7 +632,7 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
 				btSolverBody& solverBodyB = m_tmpSolverBodyPool[sbB];
                 
 				{
-					btScalar deltaImpulse = m_x[i]-c.m_appliedImpulse;
+					Scalar deltaImpulse = m_x[i]-c.m_appliedImpulse;
 					c.m_appliedImpulse = m_x[i];
 					solverBodyA.internalApplyImpulse(c.m_contactNormal1*solverBodyA.internalGetInvMass(),c.m_angularComponentA,deltaImpulse);
 					solverBodyB.internalApplyImpulse(c.m_contactNormal2*solverBodyB.internalGetInvMass(),c.m_angularComponentB,deltaImpulse);
@@ -640,7 +640,7 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
                 
 				if (infoGlobal.m_splitImpulse)
 				{
-					btScalar deltaImpulse = m_xSplit[i] - c.m_appliedPushImpulse;
+					Scalar deltaImpulse = m_xSplit[i] - c.m_appliedPushImpulse;
 					solverBodyA.internalApplyPushImpulse(c.m_contactNormal1*solverBodyA.internalGetInvMass(),c.m_angularComponentA,deltaImpulse);
 					solverBodyB.internalApplyPushImpulse(c.m_contactNormal2*solverBodyB.internalGetInvMass(),c.m_angularComponentB,deltaImpulse);
 					c.m_appliedPushImpulse = m_xSplit[i];
@@ -676,9 +676,9 @@ btScalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollision
         for (int j=0;j<this->m_multiBodyFrictionContactConstraints.size();j++)
         {
             btMultiBodySolverConstraint& frictionConstraint = m_multiBodyFrictionContactConstraints[j];
-            btScalar totalImpulse = m_multiBodyNormalContactConstraints[frictionConstraint.m_frictionIndex].m_appliedImpulse;
+            Scalar totalImpulse = m_multiBodyNormalContactConstraints[frictionConstraint.m_frictionIndex].m_appliedImpulse;
             //adjust friction limits here
-            if (totalImpulse>btScalar(0))
+            if (totalImpulse>Scalar(0))
             {
                 frictionConstraint.m_lowerLimit = -(frictionConstraint.m_friction*totalImpulse);
                 frictionConstraint.m_upperLimit = frictionConstraint.m_friction*totalImpulse;

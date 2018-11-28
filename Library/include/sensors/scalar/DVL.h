@@ -17,16 +17,16 @@ namespace sf
 class DVL : public LinkSensor
 {
 public:
-    DVL(std::string uniqueName, btScalar beamSpreadAngle, btScalar frequency = btScalar(-1), int historyLength = -1);
+    DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(const btVector3& velocityMax, btScalar altitudeMin, btScalar altitudeMax);
-    void SetNoise(btScalar velocityStdDev, btScalar altitudeStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
+    void SetNoise(Scalar velocityStdDev, Scalar altitudeStdDev);
     std::vector<Renderable> Render();
     
 private:
-    btScalar beamAngle;
-    btScalar range[4];
+    Scalar beamAngle;
+    Scalar range[4];
 };
     
 }

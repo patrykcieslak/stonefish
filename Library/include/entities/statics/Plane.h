@@ -17,9 +17,9 @@ namespace sf
 class Plane : public StaticEntity
 {
 public:
-    Plane(std::string uniqueName, btScalar size, Material m, int lookId = -1);
+    Plane(std::string uniqueName, Scalar size, Material m, int lookId = -1);
     
-    void GetAABB(btVector3& min, btVector3& max);
+    void getAABB(Vector3& min, Vector3& max);
     StaticEntityType getStaticType();
 };
 

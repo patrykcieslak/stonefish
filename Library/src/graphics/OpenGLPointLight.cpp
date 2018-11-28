@@ -13,7 +13,7 @@
 
 using namespace sf;
 
-OpenGLPointLight::OpenGLPointLight(const btVector3& position, glm::vec4 color) : OpenGLLight(position, color)
+OpenGLPointLight::OpenGLPointLight(const Vector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {
 }
 

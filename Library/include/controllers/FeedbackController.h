@@ -19,26 +19,26 @@ namespace sf
 class FeedbackController : public Controller
 {
 public:
-    FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency);
+    FeedbackController(std::string uniqueName, unsigned int numberOfInputs, Scalar frequency);
     virtual ~FeedbackController();
     
     virtual void Reset() = 0;
     
     void setReferenceSignalGenerator(unsigned int inputId, SignalGenerator* sg);
     void setReferenceSignalMux(SignalMux* sm);
-    void setReferenceValue(unsigned int inputId, btScalar value);
-    void setReferenceValues(const std::vector<btScalar>& values);
-    std::vector<btScalar> getReferenceValues();
-	btScalar getLastOutput();
+    void setReferenceValue(unsigned int inputId, Scalar value);
+    void setReferenceValues(const std::vector<Scalar>& values);
+    std::vector<Scalar> getReferenceValues();
+	Scalar getLastOutput();
     unsigned int getNumOfInputs();
     ControllerType getType();
     
 protected:
-    virtual void Tick(btScalar dt) = 0;
-	btScalar output;
+    virtual void Tick(Scalar dt) = 0;
+	Scalar output;
     
 private:
-    std::vector<btScalar> reference;
+    std::vector<Scalar> reference;
     SignalGenerator* referenceGen;
     unsigned int referenceGenInput;
     SignalMux* referenceMux;

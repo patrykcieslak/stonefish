@@ -30,18 +30,18 @@ public:
     void SetWireframe(bool enabled);
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
-    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform);
-    virtual void GetAABB(btVector3& min, btVector3& max);
+    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform);
+    virtual void getAABB(Vector3& min, Vector3& max);
     
-    void setTransform(const btTransform& trans);
-    btTransform getTransform();
+    void setTransform(const Transform& trans);
+    Transform getTransform();
     Material getMaterial();
     btRigidBody* getRigidBody();
     EntityType getType();
     
     virtual StaticEntityType getStaticType() = 0;
     
-    static void GroupTransform(std::vector<StaticEntity*>& objects, const btTransform& centre, const btTransform& transform);
+    static void GroupTransform(std::vector<StaticEntity*>& objects, const Transform& centre, const Transform& transform);
     
 protected:
     void BuildRigidBody(btCollisionShape* shape);

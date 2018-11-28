@@ -14,22 +14,22 @@
 
 using namespace sf;
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, btScalar diameter, btScalar thrustCoeff, btScalar torqueCoeff, btScalar maxRPM) : LinkActuator(uniqueName)
+Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM) : LinkActuator(uniqueName)
 {
-    D = UnitSystem::SetLength(diameter);
+    D = diameter;
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = btScalar(15.0);
-    ki = btScalar(3.0);
-    iLim = btScalar(10.0);
-    omegaLim = maxRPM/btScalar(60); //In 1/s
+    kp = Scalar(15.0);
+    ki = Scalar(3.0);
+    iLim = Scalar(10.0);
+    omegaLim = maxRPM/Scalar(60); //In 1/s
     
-    theta = btScalar(0);
-    omega = btScalar(0);
-    thrust = btScalar(0);
-    torque = btScalar(0);
-    setpoint = btScalar(0);
-    iError = btScalar(0);
+    theta = Scalar(0);
+    omega = Scalar(0);
+    thrust = Scalar(0);
+    torque = Scalar(0);
+    setpoint = Scalar(0);
+    iError = Scalar(0);
     
     prop = propeller;
     prop->BuildGraphicalObject();
@@ -41,49 +41,49 @@ Thruster::~Thruster()
         delete prop;
 }
 
-void Thruster::setSetpoint(btScalar value)
+void Thruster::setSetpoint(Scalar value)
 {
-    setpoint = value < btScalar(-1) ? btScalar(-1) : (value > btScalar(1) ? btScalar(1) : value);
+    setpoint = value < Scalar(-1) ? Scalar(-1) : (value > Scalar(1) ? Scalar(1) : value);
 }
 
-btScalar Thruster::getSetpoint()
+Scalar Thruster::getSetpoint()
 {
     return setpoint;
 }
 
-btScalar Thruster::getAngle()
+Scalar Thruster::getAngle()
 {
     return theta;
 }
 
-btScalar Thruster::getOmega()
+Scalar Thruster::getOmega()
 {
     return omega;
 }
 
-btScalar Thruster::getThrust()
+Scalar Thruster::getThrust()
 {
     return thrust;
 }
 
-void Thruster::Update(btScalar dt)
+void Thruster::Update(Scalar dt)
 {
     //Update thruster velocity
-    btScalar error = setpoint*omegaLim - omega;
-    btScalar epsilon = error*kp + iError*ki; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
+    Scalar error = setpoint*omegaLim - omega;
+    Scalar epsilon = error*kp + iError*ki; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
     iError += error*dt;
     iError = iError > iLim ? iLim : iError;
     
     omega += (epsilon - torque)*dt; //Damping due to axial torque
-    theta += (omega * btScalar(2) * M_PI)*dt; //Just for animation (in Radians)
+    theta += (omega * Scalar(2) * M_PI)*dt; //Just for animation (in Radians)
     
     if(attach != NULL)
     {
         //Get transforms
-        btTransform solidTrans = attach->getTransform();
-        btTransform thrustTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2a;
-        btVector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
-        btVector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
+        Transform solidTrans = attach->getCGTransform();
+        Transform thrustTrans = attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2a;
+        Vector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
+        Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
         
         //Calculate thrust
         Ocean* liquid = SimulationApp::getApp()->getSimulationManager()->getOcean();
@@ -91,22 +91,22 @@ void Thruster::Update(btScalar dt)
         if(liquid->IsInsideFluid(thrustTrans.getOrigin()))
         {
             //kT depends on advance ratio J = u/(omega*D)
-            btScalar A = M_PI*D*D/btScalar(4);
-            btScalar k1(-0.3);
-            btScalar k2(-0.3);
-            btScalar k3 = btScalar(2)*kT/M_PI;
-            btScalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
-            thrust = btScalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*omega + k3*D*D*omega*omega);
-            if(omega < btScalar(0))
+            Scalar A = M_PI*D*D/Scalar(4);
+            Scalar k1(-0.3);
+            Scalar k2(-0.3);
+            Scalar k3 = Scalar(2)*kT/M_PI;
+            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
+            thrust = Scalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*omega + k3*D*D*omega*omega);
+            if(omega < Scalar(0))
                 thrust = -thrust;
             
-            //btScalar kt = thrust/(liquid->getFluid()->density * D*D*D*D * btFabs(omega)*omega);
+            //Scalar kt = thrust/(liquid->getFluid()->density * D*D*D*D * btFabs(omega)*omega);
             //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
             
             //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
             torque = liquid->getLiquid()->density * kQ * btFabs(omega)*omega * D*D*D*D*D;
-            btVector3 thrustV(thrust, 0, 0);
-            btVector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
+            Vector3 thrustV(thrust, 0, 0);
+            Vector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
             
             //Apply forces and torques
             attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
@@ -118,14 +118,14 @@ void Thruster::Update(btScalar dt)
 
 std::vector<Renderable> Thruster::Render()
 {
-    btTransform thrustTrans = btTransform::getIdentity();
+    Transform thrustTrans = Transform::getIdentity();
     if(attach != NULL)
-        thrustTrans = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2a;
+        thrustTrans = attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2a;
     else
         LinkActuator::Render();
     
     //Rotate propeller
-    thrustTrans *= btTransform(btQuaternion(0, 0, theta), btVector3(0,0,0));
+    thrustTrans *= Transform(Quaternion(0, 0, theta), Vector3(0,0,0));
     
     //Add renderable
     std::vector<Renderable> items(0);

@@ -17,44 +17,44 @@ namespace sf
 class DCMotor : public Motor
 {
 public:
-    DCMotor(std::string uniqueName, btScalar motorR, btScalar motorL, btScalar motorKe, btScalar motorKt, btScalar friction);
+    DCMotor(std::string uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction);
     
 	//Motor
-    void Update(btScalar dt);
-	void setIntensity(btScalar value);
-    btScalar getTorque();
-    btScalar getAngle();
-	btScalar getAngularVelocity();
+    void Update(Scalar dt);
+	void setIntensity(Scalar value);
+    Scalar getTorque();
+    Scalar getAngle();
+	Scalar getAngularVelocity();
     
 	//DC motor
-	void SetupGearbox(bool enable, btScalar ratio, btScalar efficiency);
-	void setVoltage(btScalar volt);
-	btScalar getCurrent();
-	btScalar getVoltage();
-    btScalar getKe();
-    btScalar getKt();
-    btScalar getGearRatio();
-    btScalar getR();
+	void SetupGearbox(bool enable, Scalar ratio, Scalar efficiency);
+	void setVoltage(Scalar volt);
+	Scalar getCurrent();
+	Scalar getVoltage();
+    Scalar getKe();
+    Scalar getKt();
+    Scalar getGearRatio();
+    Scalar getR();
     
 private:
     //inputs
-    btScalar V;
+    Scalar V;
     
     //states
-    btScalar I;
+    Scalar I;
     
     //motor params
-    btScalar R;
-    btScalar L;
-    btScalar Ke;
-    btScalar Kt;
-    btScalar B;
+    Scalar R;
+    Scalar L;
+    Scalar Ke;
+    Scalar Kt;
+    Scalar B;
     bool gearEnabled;
-    btScalar gearRatio;
-    btScalar gearEff;
+    Scalar gearRatio;
+    Scalar gearEff;
     
     //integral
-    btScalar lastVoverL;
+    Scalar lastVoverL;
 };
     
 }

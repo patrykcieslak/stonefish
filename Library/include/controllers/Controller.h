@@ -9,7 +9,7 @@
 #ifndef __Stonefish_Controller__
 #define __Stonefish_Controller__
 
-#include "common.h"
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -20,28 +20,28 @@ typedef enum {CONTROLLER_FEEDBACK, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} 
 class Controller
 {
 public:
-    Controller(std::string uniqueName, btScalar frequency);
+    Controller(std::string uniqueName, Scalar frequency);
     virtual ~Controller();
     
     void Start();
     void Stop();
-    void Update(btScalar dt);
+    void Update(Scalar dt);
     virtual void Reset() = 0;
     
-    btScalar getFrequency();
-    btScalar getRunningTime();
+    Scalar getFrequency();
+    Scalar getRunningTime();
     std::string getName();
     virtual ControllerType getType() = 0;
     
 protected:
-    virtual void Tick(btScalar dt) = 0;
+    virtual void Tick(Scalar dt) = 0;
     
-    btScalar freq;
-    btScalar runningTime;
+    Scalar freq;
+    Scalar runningTime;
     
 private:
     std::string name;
-    btScalar eleapsedTime;
+    Scalar eleapsedTime;
     bool running;
 };
     

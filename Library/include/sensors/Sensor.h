@@ -21,32 +21,32 @@ typedef enum {SENSOR_JOINT = 0, SENSOR_LINK, SENSOR_VISION, SENSOR_OTHER} Sensor
 class Sensor
 {
 public:
-    Sensor(std::string uniqueName, btScalar frequency);
+    Sensor(std::string uniqueName, Scalar frequency);
     virtual ~Sensor();
     
     virtual void Reset();
     virtual std::vector<Renderable> Render();
     
-    void Update(btScalar dt);
+    void Update(Scalar dt);
     void MarkDataOld();
     bool isNewDataAvailable();
-    void setUpdateFrequency(btScalar f);
+    void setUpdateFrequency(Scalar f);
     bool isRenderable();
     void setRenderable(bool render);
     std::string getName();
     
-	virtual void InternalUpdate(btScalar dt) = 0;
+	virtual void InternalUpdate(Scalar dt) = 0;
     virtual SensorType getType() = 0;
 	
 protected:
-    btScalar freq;
+    Scalar freq;
     
     static std::random_device randomDevice;
     static std::mt19937 randomGenerator;
     
 private:
     std::string name;
-    btScalar eleapsedTime;
+    Scalar eleapsedTime;
     bool renderable;
     bool newDataAvailable;
 };

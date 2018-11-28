@@ -9,12 +9,13 @@
 #include "sensors/scalar/RotaryEncoder.h"
 
 #include "joints/RevoluteJoint.h"
+#include "utils/UnitSystem.h"
 
 using namespace sf;
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, btScalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
-    angle = lastAngle = btScalar(0);
+    angle = lastAngle = Scalar(0);
     motor = NULL;
     thrust = NULL;
     channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
@@ -33,7 +34,7 @@ void RotaryEncoder::AttachToThruster(Thruster* th)
         thrust = th;
 }
 
-btScalar RotaryEncoder::GetRawAngle()
+Scalar RotaryEncoder::GetRawAngle()
 {
     if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
     {
@@ -41,14 +42,14 @@ btScalar RotaryEncoder::GetRawAngle()
     }
     else if(fe != NULL)
     {
-        btScalar mbAngle;
+        Scalar mbAngle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
         fe->getJointPosition(jId, mbAngle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAngle;
         else
-            return btScalar(0);
+            return Scalar(0);
     }
     else if(motor != NULL)
     {
@@ -59,10 +60,10 @@ btScalar RotaryEncoder::GetRawAngle()
         return thrust->getAngle();
     }
     else
-        return btScalar(0);
+        return Scalar(0);
 }
 
-btScalar RotaryEncoder::GetRawAngularVelocity()
+Scalar RotaryEncoder::GetRawAngularVelocity()
 {
     if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
     {
@@ -70,14 +71,14 @@ btScalar RotaryEncoder::GetRawAngularVelocity()
     }
     else if(fe != NULL)
     {
-        btScalar mbAV;
+        Scalar mbAV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
         fe->getJointVelocity(jId, mbAV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAV;
         else
-            return btScalar(0);
+            return Scalar(0);
     }
     else if(motor != NULL)
     {
@@ -88,16 +89,16 @@ btScalar RotaryEncoder::GetRawAngularVelocity()
         return thrust->getOmega();
     }
     else
-        return btScalar(0);
+        return Scalar(0);
 }
 
-void RotaryEncoder::InternalUpdate(btScalar dt)
+void RotaryEncoder::InternalUpdate(Scalar dt)
 {
     //new angle
-    btScalar actualAngle = GetRawAngle();
+    Scalar actualAngle = GetRawAngle();
     
     //accumulate
-    if(lastAngle * actualAngle < btScalar(0.))
+    if(lastAngle * actualAngle < Scalar(0.))
     {
         if(lastAngle > M_PI_4)
             angle += ((actualAngle + FULL_ANGLE) - lastAngle);
@@ -112,10 +113,10 @@ void RotaryEncoder::InternalUpdate(btScalar dt)
     lastAngle = actualAngle;
     
     //angular velocity
-    btScalar angularVelocity = GetRawAngularVelocity();
+    Scalar angularVelocity = GetRawAngularVelocity();
     
     //record sample
-    btScalar m[2];
+    Scalar m[2];
     m[0] = angle;
     m[1] = angularVelocity;
     Sample s(2, m);

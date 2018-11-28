@@ -17,24 +17,24 @@ namespace sf
 class PrismaticJoint : public Joint
 {
 public:
-    PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities = true);
+    PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinkedEntities = true);
     
-    void ApplyForce(btScalar F);
+    void ApplyForce(Scalar F);
     void ApplyDamping();
-    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
-    btVector3 Render();
+    bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
+    Vector3 Render();
     
-    void setDamping(btScalar constantFactor, btScalar viscousFactor);
-    void setLimits(btScalar min, btScalar max);
-    void setIC(btScalar displacement);
+    void setDamping(Scalar constantFactor, Scalar viscousFactor);
+    void setLimits(Scalar min, Scalar max);
+    void setIC(Scalar displacement);
     
     JointType getType();
     
 private:
-    btVector3 axisInA;
-    btScalar sigDamping;
-    btScalar velDamping;
-    btScalar displacementIC;
+    Vector3 axisInA;
+    Scalar sigDamping;
+    Scalar velDamping;
+    Scalar displacementIC;
 };
     
 }

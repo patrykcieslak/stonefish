@@ -10,7 +10,7 @@
 #define __Stonefish_IMGUI__
 
 #include <SDL2/SDL_keyboard.h>
-#include "common.h"
+#include "StonefishCommon.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLPrinter.h"
 #include "graphics/GLSLShader.h"
@@ -79,12 +79,12 @@ public:
     //passive
     void DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
     void DoLabel(GLfloat x, GLfloat y, const char* text, GLfloat* color = NULL);
-    void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, btScalar progress, const char* title);
+    void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const char* title);
     //active
     bool DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title);
-    btScalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, btScalar min, btScalar max, btScalar value, const char* title);
+    Scalar DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const char* title);
     bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const char* title);
-    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2] = NULL);
+    bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, Scalar fixedRange[2] = NULL);
     bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const char* title);
     
     static glm::vec4 HSV2RGB(glm::vec4 hsv);

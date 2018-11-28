@@ -18,10 +18,10 @@ namespace sf
 class Obstacle : public StaticEntity
 {
 public:
-    Obstacle(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId = -1, bool smoothNormals = false);
-    Obstacle(std::string uniqueName, btScalar sphereRadius, Material m, int lookId = -1);
-    Obstacle(std::string uniqueName, btVector3 boxDimensions, Material m, int lookId = -1);
-    Obstacle(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId = -1);
+    Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, Material m, int lookId = -1, bool smoothNormals = false);
+    Obstacle(std::string uniqueName, Scalar sphereRadius, Material m, int lookId = -1);
+    Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId = -1);
+    Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, Material m, int lookId = -1);
  
     StaticEntityType getStaticType();
 };

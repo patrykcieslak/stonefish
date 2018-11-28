@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Stream::Stream(const std::vector<btVector3>& streamline, const std::vector<btScalar>& radius, btScalar inputVelocity, btScalar exponent)
+Stream::Stream(const std::vector<Vector3>& streamline, const std::vector<Scalar>& radius, Scalar inputVelocity, Scalar exponent)
 {
     c = streamline;
     r = radius;
@@ -18,9 +18,9 @@ Stream::Stream(const std::vector<btVector3>& streamline, const std::vector<btSca
     gamma = exponent;
 }
     
-btVector3 Stream::GetVelocityAtPoint(const btVector3& p)
+Vector3 Stream::GetVelocityAtPoint(const Vector3& p)
 {
-    return btVector3(0,0,0);
+    return Vector3(0,0,0);
 }
 
 std::vector<Renderable> Stream::Render()

@@ -9,10 +9,9 @@
 #ifndef __Stonefish_Entity__
 #define __Stonefish_Entity__
 
-#include "core/UnitSystem.h"
-#include "graphics/OpenGLContent.h"
-
 #define BIT(x) (1<<(x))
+
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -33,6 +32,8 @@ typedef enum
 }
 CollisionMask;
 
+struct Renderable;
+    
 //abstract class
 class Entity
 {
@@ -47,10 +48,10 @@ public:
    	virtual EntityType getType() = 0;
     virtual std::vector<Renderable> Render() = 0;
     virtual void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world) = 0;
-    virtual void GetAABB(btVector3& min, btVector3& max) = 0;
+    virtual void getAABB(Vector3& min, Vector3& max) = 0;
     
 protected:
-    static btVector3 findInertiaAxis(btMatrix3x3 I, btScalar value);
+    static Vector3 findInertiaAxis(Matrix3 I, Scalar value);
     
 private:
     bool renderable;

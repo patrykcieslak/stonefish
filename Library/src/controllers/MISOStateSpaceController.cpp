@@ -10,14 +10,14 @@
 
 using namespace sf;
 
-MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, btScalar maxOutput, btScalar frequency) : FeedbackController(uniqueName, inputs->getNumOfComponents(), frequency)
+MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, Scalar maxOutput, Scalar frequency) : FeedbackController(uniqueName, inputs->getNumOfComponents(), frequency)
 {
     this->input = inputs;
     this->output = output;
     this->maxOutput = maxOutput;
     
     for(unsigned int i = 0; i < input->getNumOfComponents(); i++)
-        gains.push_back(btScalar(0.));
+        gains.push_back(Scalar(0.));
 }
 
 MISOStateSpaceController::~MISOStateSpaceController()
@@ -25,26 +25,26 @@ MISOStateSpaceController::~MISOStateSpaceController()
     gains.clear();
 }
 
-void MISOStateSpaceController::SetGains(const std::vector<btScalar>& g)
+void MISOStateSpaceController::SetGains(const std::vector<Scalar>& g)
 {
     if(g.size() == gains.size())
-        gains = std::vector<btScalar>(g);
+        gains = std::vector<Scalar>(g);
 }
 
 void MISOStateSpaceController::Reset()
 {
 }
 
-void MISOStateSpaceController::Tick(btScalar dt)
+void MISOStateSpaceController::Tick(Scalar dt)
 {
     //Update desired values
-    std::vector<btScalar> ref = getReferenceValues();
+    std::vector<Scalar> ref = getReferenceValues();
    
     //Get last measurements
-    btScalar* measurements = input->getLastSample();
+    Scalar* measurements = input->getLastSample();
     
     //Calculate control
-    btScalar control = 0;
+    Scalar control = 0;
     
     for(unsigned int i = 0; i < gains.size(); i++)
         control += (ref[i] - measurements[i]) * gains[i];

@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-IMU::IMU(std::string uniqueName, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+IMU::IMU(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Pitch", QUANTITY_ANGLE));
@@ -20,25 +20,25 @@ IMU::IMU(std::string uniqueName, btScalar frequency, int historyLength) : LinkSe
     channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
 }
 
-void IMU::InternalUpdate(btScalar dt)
+void IMU::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    btTransform imuTrans = getSensorFrame();
+    Transform imuTrans = getSensorFrame();
     
     //get angular velocity
-    btVector3 av = imuTrans.getBasis().inverse() * attach->getAngularVelocity();
+    Vector3 av = imuTrans.getBasis().inverse() * attach->getAngularVelocity();
     
     //get angles
-    btScalar yaw, pitch, roll;
+    Scalar yaw, pitch, roll;
     imuTrans.getBasis().getEulerYPR(yaw, pitch, roll);
     
     //record sample
-    btScalar values[6] = {roll, pitch, yaw, av.x(), av.y(), av.z()};
+    Scalar values[6] = {roll, pitch, yaw, av.x(), av.y(), av.z()};
     Sample s(6, values);
     AddSampleToHistory(s);
 }
 
-void IMU::SetRange(btScalar angularVelocityMax)
+void IMU::SetRange(Scalar angularVelocityMax)
 {
     channels[3].rangeMin = -angularVelocityMax;
     channels[4].rangeMin = -angularVelocityMax;
@@ -48,7 +48,7 @@ void IMU::SetRange(btScalar angularVelocityMax)
     channels[5].rangeMax = angularVelocityMax;
 }
     
-void IMU::SetNoise(btScalar angleStdDev, btScalar angularVelocityStdDev)
+void IMU::SetNoise(Scalar angleStdDev, Scalar angularVelocityStdDev)
 {
     channels[0].setStdDev(angleStdDev);
     channels[1].setStdDev(angleStdDev);

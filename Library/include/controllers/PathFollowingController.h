@@ -20,7 +20,7 @@ namespace sf
 class PathFollowingController : public Controller
 {
 public:
-    PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency);
+    PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, Scalar frequency);
     virtual ~PathFollowingController();
     
     void RenderPath();
@@ -29,15 +29,15 @@ public:
     ControllerType getType();
     
 protected:
-    void Tick(btScalar dt); //updating path generator, calculating error and updating controller
-    virtual btScalar VelocityOnPath() = 0; //calculate velocity to update position on path
-    virtual void ControlTick(btScalar dt) = 0; //path following control algorithm
+    void Tick(Scalar dt); //updating path generator, calculating error and updating controller
+    virtual Scalar VelocityOnPath() = 0; //calculate velocity to update position on path
+    virtual void ControlTick(Scalar dt) = 0; //path following control algorithm
     virtual void PathEnd() = 0; //path end control algorithm
     
     PathGenerator* inputPath;
     Trajectory* measuredTraj;
     std::vector<Controller*> outputControllers;
-    std::vector<btScalar> error;
+    std::vector<Scalar> error;
 };
 
 }

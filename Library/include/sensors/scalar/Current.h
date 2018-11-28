@@ -18,9 +18,9 @@ namespace sf
 class Current : public ScalarSensor
 {
 public:
-    Current(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Current(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
+    void InternalUpdate(Scalar dt);
     void AttachToMotor(DCMotor* m);
     SensorType getType();
    

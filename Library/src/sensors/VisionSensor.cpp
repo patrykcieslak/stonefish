@@ -10,20 +10,20 @@
 
 using namespace sf;
 
-VisionSensor::VisionSensor(std::string uniqueName, btScalar frequency) : Sensor(uniqueName, frequency)
+VisionSensor::VisionSensor(std::string uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
 {
     attach = NULL;
-    g2s = btTransform::getIdentity();
+    g2s = Transform::getIdentity();
 }
 
 VisionSensor::~VisionSensor()
 {
 }
 
-btTransform VisionSensor::getSensorFrame()
+Transform VisionSensor::getSensorFrame()
 {
     if(attach != NULL)
-        return attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
+        return attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2s;
     else
         return g2s;
 }
@@ -33,20 +33,20 @@ SensorType VisionSensor::getType()
     return SensorType::SENSOR_VISION;
 }
 
-void VisionSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const btTransform& location)
+void VisionSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())
     {
-        g2s = UnitSystem::SetTransform(location);
+        g2s = origin;
         attach = multibody->getLink(linkId).solid;
     }
 }
 
-void VisionSensor::AttachToSolid(SolidEntity* solid, const btTransform& location)
+void VisionSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        g2s = UnitSystem::SetTransform(location);
+        g2s = origin;
         attach = solid;
     }
 }

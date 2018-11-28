@@ -9,6 +9,7 @@
 #ifndef __Stonefish_Contact__
 #define __Stonefish_Contact__
 
+#include <deque>
 #include "graphics/OpenGLPipeline.h"
 #include "entities/Entity.h"
 
@@ -30,11 +31,11 @@ typedef enum {  CONTACT_DISPLAY_NONE = 0,
 
 struct ContactPoint
 {
-    btScalar timeStamp;
-    btVector3 locationA;
-    btVector3 locationB;
-    btVector3 slippingVelocityA;
-    btVector3 normalForceA;
+    Scalar timeStamp;
+    Vector3 locationA;
+    Vector3 locationB;
+    Vector3 slippingVelocityA;
+    Vector3 normalForceA;
 };
 
 class Contact

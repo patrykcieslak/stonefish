@@ -14,7 +14,7 @@
 class ConsoleTestManager : public SimulationManager
 {
 public:
-    ConsoleTestManager(btScalar stepsPerSecond);
+    ConsoleTestManager(Scalar stepsPerSecond);
     
     void BuildScenario();
 	void SimulationStepCompleted();

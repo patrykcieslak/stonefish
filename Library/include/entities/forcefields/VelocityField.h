@@ -9,7 +9,7 @@
 #ifndef __Stonefish_VelocityField__
 #define __Stonefish_VelocityField__
 
-#include "common.h"
+#include "StonefishCommon.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf
@@ -21,7 +21,7 @@ public:
     VelocityField();
     virtual ~VelocityField();
     
-    virtual btVector3 GetVelocityAtPoint(const btVector3& p) = 0;
+    virtual Vector3 GetVelocityAtPoint(const Vector3& p) = 0;
     virtual std::vector<Renderable> Render() = 0;
 };
 

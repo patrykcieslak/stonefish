@@ -9,7 +9,7 @@
 #ifndef __Stonefish_Sample__
 #define __Stonefish_Sample__
 
-#include "common.h"
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -17,17 +17,17 @@ namespace sf
 class Sample
 {
 public:
-    Sample(unsigned short nDimensions, btScalar* values);
+    Sample(unsigned short nDimensions, Scalar* values);
     Sample(const Sample& other);
     ~Sample();
     
-    btScalar getTimestamp();
-    btScalar getValue(unsigned short dimension);
-    std::vector<btScalar> getData();
+    Scalar getTimestamp();
+    Scalar getValue(unsigned short dimension);
+    std::vector<Scalar> getData();
     
-    btScalar timestamp;
+    Scalar timestamp;
     unsigned short nDim;
-    btScalar* data;
+    Scalar* data;
 };
     
 }

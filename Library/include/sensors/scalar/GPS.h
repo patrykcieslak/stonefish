@@ -18,18 +18,18 @@ namespace sf
 class GPS : public LinkSensor
 {
 public:
-    GPS(std::string uniqueName, btScalar latitudeDeg, btScalar longitudeDeg, btScalar frequency = btScalar(-1), int historyLength = -1);
+    GPS(std::string uniqueName, Scalar latitudeDeg, Scalar longitudeDeg, Scalar frequency = Scalar(-1), int historyLength = -1);
     ~GPS();
     
-    void InternalUpdate(btScalar dt);
-    void SetNoise(btScalar nedDev);
+    void InternalUpdate(Scalar dt);
+    void SetNoise(Scalar nedDev);
     
 private:
     NED* ned;
     
     //Custom noise generation specific to GPS 
-    btScalar nedStdDev;
-    std::normal_distribution<btScalar> noise;
+    Scalar nedStdDev;
+    std::normal_distribution<Scalar> noise;
 };
     
 }

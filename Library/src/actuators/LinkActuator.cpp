@@ -8,12 +8,16 @@
 
 #include "actuators/LinkActuator.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
+
+namespace sf
+{
 
 LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
 {
     attach = NULL;
-    g2a = btTransform::getIdentity();
+    g2a = Transform::getIdentity();
 }
 
 ActuatorType LinkActuator::getType()
@@ -21,22 +25,22 @@ ActuatorType LinkActuator::getType()
     return ActuatorType::ACTUATOR_LINK;
 }
 
-void LinkActuator::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const btTransform& location)
+void LinkActuator::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())
     {
-        g2a = UnitSystem::SetTransform(location);
+        g2a = origin;
         attach = multibody->getLink(linkId).solid;
     }
 }
 
-void LinkActuator::AttachToSolid(SolidEntity* solid, const btTransform& location)
+void LinkActuator::AttachToSolid(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        g2a = UnitSystem::SetTransform(location);
+        g2a = origin;
         attach = solid;
     }
 }
 
-
+}

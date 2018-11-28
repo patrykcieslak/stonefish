@@ -10,15 +10,15 @@
 
 using namespace sf;
 
-FOG::FOG(std::string uniqueName, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+FOG::FOG(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Heading", QUANTITY_ANGLE));
 }
 
-void FOG::InternalUpdate(btScalar dt)
+void FOG::InternalUpdate(Scalar dt)
 {
     //get angles
-    btScalar yaw, pitch, roll;
+    Scalar yaw, pitch, roll;
     getSensorFrame().getBasis().getEulerYPR(yaw, pitch, roll);
     
     //record sample
@@ -26,7 +26,7 @@ void FOG::InternalUpdate(btScalar dt)
     AddSampleToHistory(s);
 }
 
-void FOG::SetNoise(btScalar headingStdDev)
+void FOG::SetNoise(Scalar headingStdDev)
 {
     channels[0].setStdDev(headingStdDev);
 }

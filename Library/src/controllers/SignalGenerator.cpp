@@ -28,9 +28,9 @@ void SignalGenerator::AddComponent(Signal* c)
         components.push_back(c);
 }
 
-btScalar SignalGenerator::ValueAtTime(btScalar t)
+Scalar SignalGenerator::ValueAtTime(Scalar t)
 {
-    btScalar value = btScalar(0.);
+    Scalar value = Scalar(0.);
     
     for(unsigned int i = 0; i < components.size(); ++i)
     {
@@ -53,25 +53,25 @@ btScalar SignalGenerator::ValueAtTime(btScalar t)
     return value;
 }
 
-ConstSignal::ConstSignal(btScalar value, SignalCombineType combineOperation) : Signal(combineOperation)
+ConstSignal::ConstSignal(Scalar value, SignalCombineType combineOperation) : Signal(combineOperation)
 {
     val = value;
 }
 
-btScalar ConstSignal::ValueAtTime(btScalar t)
+Scalar ConstSignal::ValueAtTime(Scalar t)
 {
     return val;
 }
 
-StepSignal::StepSignal(btScalar initialValue, btScalar finalValue, btScalar stepTime, btScalar stepDuration, SignalCombineType combineOperation) : Signal(combineOperation)
+StepSignal::StepSignal(Scalar initialValue, Scalar finalValue, Scalar stepTime, Scalar stepDuration, SignalCombineType combineOperation) : Signal(combineOperation)
 {
     val0 = initialValue;
     val1 = finalValue;
-    stepT = stepTime < btScalar(0.) ? btScalar(0.) : stepTime;
-    stepD = stepDuration < btScalar(0.) ? btScalar(0.) : stepDuration;
+    stepT = stepTime < Scalar(0.) ? Scalar(0.) : stepTime;
+    stepD = stepDuration < Scalar(0.) ? Scalar(0.) : stepDuration;
 }
 
-btScalar StepSignal::ValueAtTime(btScalar t)
+Scalar StepSignal::ValueAtTime(Scalar t)
 {
     if(t < stepT)
         return val0;
@@ -81,12 +81,12 @@ btScalar StepSignal::ValueAtTime(btScalar t)
         return (t - stepT)/stepD * (val1 - val0) + val0;
 }
 
-PwlSignal::PwlSignal(btScalar initialValue, SignalCombineType combineOperation)  : Signal(combineOperation)
+PwlSignal::PwlSignal(Scalar initialValue, SignalCombineType combineOperation)  : Signal(combineOperation)
 {
     points.push_back(Point2D(0, initialValue));
 }
 
-bool PwlSignal::AddValueAtTime(btScalar v, btScalar t)
+bool PwlSignal::AddValueAtTime(Scalar v, Scalar t)
 {
     if(t >= points.back().x)
     {
@@ -97,10 +97,10 @@ bool PwlSignal::AddValueAtTime(btScalar v, btScalar t)
         return false;
 }
 
-btScalar PwlSignal::ValueAtTime(btScalar t)
+Scalar PwlSignal::ValueAtTime(Scalar t)
 {
     //Time at end of signal definition
-    if(t <= btScalar(0.))
+    if(t <= Scalar(0.))
         return points[0].y;
     
     if(t >= points.back().x)
@@ -119,17 +119,17 @@ btScalar PwlSignal::ValueAtTime(btScalar t)
     }
    
     //Should never be reached
-    return btScalar(0.);
+    return Scalar(0.);
 }
 
-SinSignal::SinSignal(btScalar frequency, btScalar amplitude, btScalar initialPhase, SignalCombineType combineOperation) : Signal(combineOperation)
+SinSignal::SinSignal(Scalar frequency, Scalar amplitude, Scalar initialPhase, SignalCombineType combineOperation) : Signal(combineOperation)
 {
-    freq = frequency > btScalar(0.) ? frequency : btScalar(1.); //Defaults to 1Hz
+    freq = frequency > Scalar(0.) ? frequency : Scalar(1.); //Defaults to 1Hz
     amp = btFabs(amplitude);
-    phase = UnitSystem::SetAngle(initialPhase);
+    phase = initialPhase;
 }
 
-btScalar SinSignal::ValueAtTime(btScalar t)
+Scalar SinSignal::ValueAtTime(Scalar t)
 {
     return amp * btSin(t * freq * SIMD_2_PI + phase);
 }

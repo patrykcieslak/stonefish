@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Trajectory::Trajectory(std::string uniqueName, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Trajectory::Trajectory(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Coordinate Y", QUANTITY_LENGTH));
@@ -20,15 +20,15 @@ Trajectory::Trajectory(std::string uniqueName, btScalar frequency, int historyLe
     channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
 }
 
-void Trajectory::InternalUpdate(btScalar dt)
+void Trajectory::InternalUpdate(Scalar dt)
 {
     //get angles
-    btTransform trajFrame = getSensorFrame();
-    btScalar yaw, pitch, roll;
+    Transform trajFrame = getSensorFrame();
+    Scalar yaw, pitch, roll;
     trajFrame.getBasis().getEulerYPR(yaw, pitch, roll);
     
     //record sample
-    btScalar values[6] = {trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw};
+    Scalar values[6] = {trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw};
     Sample s(6, values);
     AddSampleToHistory(s);
 }

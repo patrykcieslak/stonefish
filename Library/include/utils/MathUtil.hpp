@@ -14,29 +14,29 @@
 namespace sf
 {
 
-inline btScalar distanceFromCenteredPlane(const btVector3& planeN, const btVector3& v)
+inline Scalar distanceFromCenteredPlane(const Vector3& planeN, const Vector3& v)
 {
-    btScalar distance = planeN.dot(v);
+    Scalar distance = planeN.dot(v);
     return distance == 0.0 ? 10e-9 : distance;
 }
 
-inline void SetFloatvFromMat(const btMatrix3x3 &mat, float* fv)
+inline void SetFloatvFromMat(const Matrix3 &mat, float* fv)
 {
-	fv[0] = btScalar(mat.getRow(0).x());
-    fv[1] = btScalar(mat.getRow(1).x());
-    fv[2] = btScalar(mat.getRow(2).x());
-    fv[3] = btScalar(mat.getRow(0).y());
-    fv[4] = btScalar(mat.getRow(1).y());
-    fv[5] = btScalar(mat.getRow(2).y());
-    fv[6] = btScalar(mat.getRow(0).z());
-    fv[7] = btScalar(mat.getRow(1).z());
-    fv[8] = btScalar(mat.getRow(2).z());
+	fv[0] = Scalar(mat.getRow(0).x());
+    fv[1] = Scalar(mat.getRow(1).x());
+    fv[2] = Scalar(mat.getRow(2).x());
+    fv[3] = Scalar(mat.getRow(0).y());
+    fv[4] = Scalar(mat.getRow(1).y());
+    fv[5] = Scalar(mat.getRow(2).y());
+    fv[6] = Scalar(mat.getRow(0).z());
+    fv[7] = Scalar(mat.getRow(1).z());
+    fv[8] = Scalar(mat.getRow(2).z());
 }
 
-inline glm::mat4 glMatrixFromBtTransform(const btTransform& T)
+inline glm::mat4 glMatrixFromBtTransform(const Transform& T)
 {
 #ifdef BT_USE_DOUBLE_PRECISION
-    btScalar glmatrix[16];
+    Scalar glmatrix[16];
     T.getOpenGLMatrix(glmatrix);
     glm::mat4 M((GLfloat)glmatrix[0],(GLfloat)glmatrix[1],(GLfloat)glmatrix[2],(GLfloat)glmatrix[3],
 				(GLfloat)glmatrix[4],(GLfloat)glmatrix[5],(GLfloat)glmatrix[6],(GLfloat)glmatrix[7],
@@ -53,7 +53,7 @@ inline glm::mat4 glMatrixFromBtTransform(const btTransform& T)
 	return M;
 }
 
-inline void transformMesh(Mesh* m, const btTransform& T)
+inline void transformMesh(Mesh* m, const Transform& T)
 {
     glm::mat4 gT = glMatrixFromBtTransform(T);
     glm::mat3 gR(gT);

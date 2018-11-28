@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-FeedbackController::FeedbackController(std::string uniqueName, unsigned int numberOfInputs, btScalar frequency) : Controller(uniqueName, frequency)
+FeedbackController::FeedbackController(std::string uniqueName, unsigned int numberOfInputs, Scalar frequency) : Controller(uniqueName, frequency)
 {
     referenceGen = NULL;
     referenceGenInput = 0;
@@ -18,7 +18,7 @@ FeedbackController::FeedbackController(std::string uniqueName, unsigned int numb
 	output = 0;
     
     for(unsigned int i = 0; i < numberOfInputs; ++i)
-        reference.push_back(btScalar(0.));
+        reference.push_back(Scalar(0.));
 }
 
 FeedbackController::~FeedbackController()
@@ -81,13 +81,13 @@ void FeedbackController::setReferenceSignalMux(SignalMux* sm)
     }
 }
 
-void FeedbackController::setReferenceValue(unsigned int inputId, btScalar value)
+void FeedbackController::setReferenceValue(unsigned int inputId, Scalar value)
 {
     if(inputId < reference.size())
         reference[inputId] = value;
 }
 
-void FeedbackController::setReferenceValues(const std::vector<btScalar> &values)
+void FeedbackController::setReferenceValues(const std::vector<Scalar> &values)
 {
     if(values.size() != reference.size())
         return;
@@ -96,11 +96,11 @@ void FeedbackController::setReferenceValues(const std::vector<btScalar> &values)
         reference[i] = values[i];
 }
 
-std::vector<btScalar> FeedbackController::getReferenceValues()
+std::vector<Scalar> FeedbackController::getReferenceValues()
 {
     if(referenceGen != NULL)
     {
-        std::vector<btScalar> ref = reference;
+        std::vector<Scalar> ref = reference;
         ref[referenceGenInput] = referenceGen->ValueAtTime(runningTime);
         return ref;
     }
@@ -110,7 +110,7 @@ std::vector<btScalar> FeedbackController::getReferenceValues()
         return reference;
 }
 
-btScalar FeedbackController::getLastOutput()
+Scalar FeedbackController::getLastOutput()
 {
 	return output;
 }

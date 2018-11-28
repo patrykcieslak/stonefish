@@ -10,15 +10,15 @@
 
 using namespace sf;
 
-BeltJoint::BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio) : Joint(uniqueName, false)
+BeltJoint::BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axisA, const Vector3& axisB, Scalar ratio) : Joint(uniqueName, false)
 {
-    btVector3 newAxisB = -axisB; // Belt -> same direction of rotation
+    Vector3 newAxisB = -axisB; // Belt -> same direction of rotation
     gearRatio = ratio;
     
     btRigidBody* bodyA = solidA->getRigidBody();
     btRigidBody* bodyB = solidB->getRigidBody();
-    btVector3 axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * axisA;
-    btVector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * newAxisB;
+    Vector3 axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * axisA;
+    Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * newAxisB;
     
     btGearConstraint* gear = new btGearConstraint(*bodyA, *bodyB, axisInA, axisInB, gearRatio);
     setConstraint(gear);
@@ -29,12 +29,12 @@ JointType BeltJoint::getType()
     return JOINT_BELT;
 }
 
-btScalar BeltJoint::getRatio()
+Scalar BeltJoint::getRatio()
 {
     return gearRatio;
 }
 
-btVector3 BeltJoint::Render()
+Vector3 BeltJoint::Render()
 {
-    return btVector3();
+    return Vector3();
 }

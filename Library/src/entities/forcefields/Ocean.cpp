@@ -15,14 +15,14 @@
 
 using namespace sf;
 
-Ocean::Ocean(std::string uniqueName, bool simulateWaves, Liquid* l) : ForcefieldEntity(uniqueName)
+Ocean::Ocean(std::string uniqueName, bool simulateWaves, Fluid* l) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     
-	btScalar size(10000);
-	depth = UnitSystem::SetLength(size);
-    btVector3 halfExtents = btVector3(UnitSystem::SetLength(size/btScalar(2)), UnitSystem::SetLength(size/btScalar(2)), size/btScalar(2));
-    ghost->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0,0,size/btScalar(2)))); //Surface at 0
+	Scalar size(10000);
+	depth = size;
+    Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
+    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,size/Scalar(2)))); //Surface at 0
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
     currents = std::vector<VelocityField*>(0);
@@ -30,6 +30,8 @@ Ocean::Ocean(std::string uniqueName, bool simulateWaves, Liquid* l) : Forcefield
 	glOcean = NULL;
     liquid = l;
     waves = simulateWaves;
+    wavesDebug.type = RenderableType::HYDRO_POINTS;
+    wavesDebug.model = glm::mat4(1.f);
 }
 
 Ocean::~Ocean()
@@ -62,7 +64,7 @@ ForcefieldType Ocean::getForcefieldType()
     return FORCEFIELD_OCEAN;
 }
 
-const Liquid* Ocean::getLiquid() const
+const Fluid* Ocean::getLiquid() const
 {
     return liquid;
 }
@@ -99,33 +101,45 @@ glm::vec3 Ocean::ComputeLightAbsorption()
     return glm::vec3(0.2f+0.2f*(algeaBloom), 0.02f, 0.02f+0.02f*(algeaBloom));
 }
 
-bool Ocean::IsInsideFluid(const btVector3& point) const
+bool Ocean::IsInsideFluid(const Vector3& point)
 {
-    return point.z() >= btScalar(0);
+    return GetDepth(point) >= Scalar(0);
 }
 
-btScalar Ocean::GetDepth(const btVector3& point) const
+Scalar Ocean::GetDepth(const Vector3& point)
 {
-    return point.z();
+    if(waves) //Geometric waves
+    {
+        GLfloat waveHeight = glOcean->getWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
+        glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), waveHeight);
+        wavesDebug.points.push_back(wavePoint);
+        return point.z() - Scalar(waveHeight);
+    }
+    else //Flat surface
+    {
+        glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), 0.f);
+        wavesDebug.points.push_back(wavePoint);
+        return point.z();
+    }
 }
 
-btScalar Ocean::GetPressure(const btVector3& point) const
+Scalar Ocean::GetPressure(const Vector3& point)
 {
-    btScalar g = 9.81;
-    btScalar d = point.z();
-    btScalar pressure = d > btScalar(0) ? d*liquid->density*g : btScalar(0);
+    Scalar g = 9.81;
+    Scalar d = GetDepth(point);
+    Scalar pressure = d > Scalar(0) ? d*liquid->density*g : Scalar(0);
     return pressure;
 }
 
-btVector3 Ocean::GetFluidVelocity(const btVector3& point) const
+Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
 {
-    btVector3 fv(0,0,0);
+    Vector3 fv(0,0,0);
     for(unsigned int i=0; i<currents.size(); ++i)
         fv += currents[i]->GetVelocityAtPoint(point);
     return fv;
 }
 
-void Ocean::GetSurface(btVector3& normal, btVector3& position) const
+void Ocean::GetSurface(Vector3& normal, Vector3& position) const
 {
     normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
     position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
@@ -133,8 +147,8 @@ void Ocean::GetSurface(btVector3& normal, btVector3& position) const
 
 void Ocean::GetSurfaceEquation(double* plane4) const
 {
-    btVector3 normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
-    btVector3 position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
+    Vector3 normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
+    Vector3 position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
     plane4[0] = normal.x();
     plane4[1] = normal.y();
     plane4[2] = normal.z();
@@ -188,9 +202,9 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
     }
 }
 
-void Ocean::InitGraphics()
+void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
-	glOcean = new OpenGLOcean(waves);
+	glOcean = new OpenGLOcean(waves, hydrodynamics);
 	setAlgeaBloomFactor(0.2f);
     setTurbidity(100.f);
 }
@@ -203,6 +217,12 @@ std::vector<Renderable> Ocean::Render()
     {
         std::vector<Renderable> citems = currents[i]->Render();
         items.insert(items.end(), citems.begin(), citems.end());
+    }
+    
+    if(wavesDebug.points.size() > 0)
+    {
+        items.push_back(wavesDebug);
+        wavesDebug.points.clear();
     }
     
     return items;

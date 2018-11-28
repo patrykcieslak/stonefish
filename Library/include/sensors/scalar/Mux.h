@@ -30,7 +30,7 @@ public:
     bool AddComponent(ScalarSensor* s, unsigned short channel);
     
     MuxComponent* getComponent(unsigned int index);
-    btScalar* getLastSample();
+    Scalar* getLastSample();
     unsigned int getNumOfComponents();
     
 private:

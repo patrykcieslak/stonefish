@@ -10,12 +10,11 @@
 
 using namespace sf;
 
-Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar scale, Material m, int lookId, bool smoothNormals) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, Material m, int lookId, bool smoothNormals) : StaticEntity(uniqueName, m, lookId)
 {
-    scale = UnitSystem::SetLength(scale);
     mesh = OpenGLContent::LoadMesh(modelFilename, scale, smoothNormals);
     
-    btScalar* vertices = new btScalar[mesh->vertices.size()*3];
+    Scalar* vertices = new Scalar[mesh->vertices.size()*3];
     int* indices = new int[mesh->faces.size()*3];
     
     for(unsigned int i=0; i<mesh->vertices.size(); ++i)
@@ -33,7 +32,7 @@ Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar s
     }
 	    
     btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray((int)mesh->faces.size(), indices, 3*sizeof(int),
-                                                                               (int)mesh->vertices.size(), vertices, 3*sizeof(btScalar));
+                                                                               (int)mesh->vertices.size(), vertices, 3*sizeof(Scalar));
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
     BuildRigidBody(shape);
     
@@ -42,18 +41,17 @@ Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, btScalar s
     //delete triangleArray;
 }
 
-Obstacle::Obstacle(std::string uniqueName, btScalar sphereRadius, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
-    sphereRadius = UnitSystem::SetLength(sphereRadius);
     mesh = OpenGLContent::BuildSphere(sphereRadius);
     
     btSphereShape* shape = new btSphereShape(sphereRadius);
     BuildRigidBody(shape);
 }
 
-Obstacle::Obstacle(std::string uniqueName, btVector3 boxDimensions, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
-    btVector3 halfExtents = UnitSystem::SetPosition(boxDimensions/btScalar(2));
+    Vector3 halfExtents = boxDimensions/Scalar(2);
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
 	mesh = OpenGLContent::BuildBox(glHalfExtents);
 	
@@ -61,13 +59,12 @@ Obstacle::Obstacle(std::string uniqueName, btVector3 boxDimensions, Material m, 
     BuildRigidBody(shape);
 }
 
-Obstacle::Obstacle(std::string uniqueName, btScalar cylinderRadius, btScalar cylinderHeight, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
 {
-    cylinderRadius = UnitSystem::SetLength(cylinderRadius);
-    btScalar halfHeight = UnitSystem::SetLength(cylinderHeight/btScalar(2));
+    Scalar halfHeight = cylinderHeight/Scalar(2);
     mesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);
 	
-    btCylinderShape* shape = new btCylinderShape(btVector3(cylinderRadius, halfHeight, cylinderRadius));
+    btCylinderShape* shape = new btCylinderShape(Vector3(cylinderRadius, halfHeight, cylinderRadius));
     BuildRigidBody(shape);
 }
 

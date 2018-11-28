@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Jet::Jet(const btVector3& point, const btVector3& direction, btScalar radius, btScalar outletVelocity)
+Jet::Jet(const Vector3& point, const Vector3& direction, Scalar radius, Scalar outletVelocity)
 {
     c = point;
     n = direction.normalized();
@@ -18,25 +18,25 @@ Jet::Jet(const btVector3& point, const btVector3& direction, btScalar radius, bt
     vout = outletVelocity;
 }
 
-btVector3 Jet::GetVelocityAtPoint(const btVector3& p)
+Vector3 Jet::GetVelocityAtPoint(const Vector3& p)
 {
     //Calculate distance to axis
-    btVector3 cp = p-c;
-    btScalar d = cp.cross(n).norm();
+    Vector3 cp = p-c;
+    Scalar d = cp.cross(n).norm();
     
     //Calculate distance from outlet
-    btScalar t = cp.dot(n);
-    if(t < 0.0) return btVector3(0,0,0);
+    Scalar t = cp.dot(n);
+    if(t < 0.0) return Vector3(0,0,0);
     
     //Calculate radius at point
-    btScalar r_ = btScalar(1)/btScalar(5)*(t + btScalar(5)*r); //Jet angle is around 24 deg independent of conditions!
-    if(d >= r_) return btVector3(0,0,0);
+    Scalar r_ = Scalar(1)/Scalar(5)*(t + Scalar(5)*r); //Jet angle is around 24 deg independent of conditions!
+    if(d >= r_) return Vector3(0,0,0);
     
     //Calculate central velocity
-    btVector3 vmax = btScalar(10)*r/(t + btScalar(5)*r) * vout * n;  
+    Vector3 vmax = Scalar(10)*r/(t + Scalar(5)*r) * vout * n;  
     
     //Calculate fraction of central velocity
-    btScalar f = btExp(-btScalar(50)*d*d/(t*t));
+    Scalar f = btExp(-Scalar(50)*d*d/(t*t));
     
     return f*vmax;
 }
@@ -58,8 +58,8 @@ std::vector<Renderable> Jet::Render()
     
     for(unsigned int i=0; i<=12; ++i)
     {
-        btScalar alpha = btScalar(i)/btScalar(12) * M_PI * btScalar(2);
-        btVector3 v(btCos(alpha)*r, btSin(alpha)*r, 0);
+        Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
+        Vector3 v(btCos(alpha)*r, btSin(alpha)*r, 0);
         orifice.points.push_back(glm::vec3(v.x(), v.y(), v.z()));
     }
     
@@ -70,13 +70,13 @@ std::vector<Renderable> Jet::Render()
     cone.points.push_back(glm::vec3(0, 0, 0));
     cone.points.push_back(glm::vec3(0, 0, vout));
     
-    btScalar r_ = btScalar(1)/btScalar(5)*(vout + btScalar(5)*r);
+    Scalar r_ = Scalar(1)/Scalar(5)*(vout + Scalar(5)*r);
     
     for(unsigned int i=0; i<12; ++i)
     {
-        btScalar alpha = btScalar(i)/btScalar(12) * M_PI * btScalar(2);
-        btVector3 v1(btCos(alpha)*r, btSin(alpha)*r, 0);
-        btVector3 v2(v1.x()*r_/r, v1.y()*r_/r, vout);
+        Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
+        Vector3 v1(btCos(alpha)*r, btSin(alpha)*r, 0);
+        Vector3 v2(v1.x()*r_/r, v1.y()*r_/r, vout);
         cone.points.push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
         cone.points.push_back(glm::vec3(v2.x(), v2.y(), v2.z()));
     }

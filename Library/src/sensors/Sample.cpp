@@ -12,11 +12,11 @@
 
 using namespace sf;
 
-Sample::Sample(unsigned short nDimensions, btScalar* values)
+Sample::Sample(unsigned short nDimensions, Scalar* values)
 {
     nDim = nDimensions > 0 ? nDimensions : 1;
-    data = new btScalar[nDim];
-    std::memcpy(data, values, sizeof(btScalar)*nDim);
+    data = new Scalar[nDim];
+    std::memcpy(data, values, sizeof(Scalar)*nDim);
     timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
 }
 
@@ -24,8 +24,8 @@ Sample::Sample(const Sample& other)
 {
     timestamp = other.timestamp;
     nDim = other.nDim;
-    data = new btScalar[nDim];
-    std::memcpy(data, other.data, sizeof(btScalar)*nDim);
+    data = new Scalar[nDim];
+    std::memcpy(data, other.data, sizeof(Scalar)*nDim);
 }
 
 Sample::~Sample()
@@ -33,20 +33,20 @@ Sample::~Sample()
     delete [] data;
 }
 
-btScalar Sample::getTimestamp()
+Scalar Sample::getTimestamp()
 {
     return timestamp;
 }
 
-btScalar Sample::getValue(unsigned short dimension)
+Scalar Sample::getValue(unsigned short dimension)
 {
     if((dimension < nDim) && (data != NULL))
         return data[dimension];
     else
-        return btScalar(0.);
+        return Scalar(0.);
 }
 
-std::vector<btScalar> Sample::getData()
+std::vector<Scalar> Sample::getData()
 {
-    return std::vector<btScalar>(data, data+nDim);
+    return std::vector<Scalar>(data, data+nDim);
 }

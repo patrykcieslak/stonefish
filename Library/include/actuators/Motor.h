@@ -19,14 +19,14 @@ class Motor : public JointActuator
 public:
     Motor(std::string uniqueName);
     
-    virtual void Update(btScalar dt);
-    virtual void setIntensity(btScalar value);
-	virtual btScalar getTorque();
-    virtual btScalar getAngle();
-	virtual btScalar getAngularVelocity();
+    virtual void Update(Scalar dt);
+    virtual void setIntensity(Scalar value);
+	virtual Scalar getTorque();
+    virtual Scalar getAngle();
+	virtual Scalar getAngularVelocity();
     
 protected:
-	btScalar torque;
+	Scalar torque;
 };
 
 }

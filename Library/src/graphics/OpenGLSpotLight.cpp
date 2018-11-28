@@ -13,12 +13,12 @@
 
 using namespace sf;
 
-OpenGLSpotLight::OpenGLSpotLight(const btVector3& position, const btVector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
+OpenGLSpotLight::OpenGLSpotLight(const Vector3& position, const Vector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {
-    btVector3 dir = UnitSystem::SetPosition(target - position).normalized();
+    Vector3 dir = (target - position).normalized();
 	direction = glm::vec3((GLfloat)dir.getX(), (GLfloat)dir.getY(), (GLfloat)dir.getZ());
 	
-    coneAngle = cone/180.f*M_PI;//UnitSystem::SetAngle(cone);
+    coneAngle = cone/180.f*M_PI;
     clipSpace = glm::mat4();
 	zNear = 0.1f;
 	zFar = 100.f;
@@ -54,7 +54,7 @@ glm::vec3 OpenGLSpotLight::getDirection()
 {
     if(holdingEntity != NULL)
 	{
-		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform());
+		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getCGTransform());
         return glm::mat3(trans) * direction;
 	}
 	else

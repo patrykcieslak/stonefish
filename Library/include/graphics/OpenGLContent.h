@@ -75,8 +75,8 @@ public:
 	static Mesh* BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices = 48, unsigned int minorSlices = 24);
 	static void SmoothNormals(Mesh* mesh);
 	static void Subdivide(Mesh* mesh, bool icoMode = false);
-	static void AABB(Mesh* mesh, btVector3& min, btVector3& max);
-	static void AABS(Mesh* mesh, btScalar& bsRadius, btVector3& bsCenterOffset);
+	static void AABB(Mesh* mesh, Vector3& min, Vector3& max);
+	static void AABS(Mesh* mesh, Scalar& bsRadius, Vector3& bsCenterOffset);
 	
 private:
 	//Modes

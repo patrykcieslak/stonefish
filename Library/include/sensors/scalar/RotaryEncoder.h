@@ -20,22 +20,22 @@ namespace sf
 class RotaryEncoder : public JointSensor
 {
 public:
-    RotaryEncoder(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    RotaryEncoder(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
     void AttachToMotor(Motor* m);
     void AttachToThruster(Thruster* th);
     
-    virtual void InternalUpdate(btScalar dt);
+    virtual void InternalUpdate(Scalar dt);
     virtual void Reset();
     
 protected:
-    btScalar GetRawAngle();
-    btScalar GetRawAngularVelocity();
+    Scalar GetRawAngle();
+    Scalar GetRawAngularVelocity();
     
     Motor* motor;
     Thruster* thrust;
-    btScalar angle;
-    btScalar lastAngle;
+    Scalar angle;
+    Scalar lastAngle;
 };
 
 }

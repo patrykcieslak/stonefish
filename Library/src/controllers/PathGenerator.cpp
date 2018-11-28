@@ -14,8 +14,8 @@ using namespace sf;
 
 PathGenerator::PathGenerator()
 {
-    time = btScalar(0.);
-    length = btScalar(0.);
+    time = Scalar(0.);
+    length = Scalar(0.);
     renderable = false;
 }
 
@@ -23,23 +23,23 @@ PathGenerator::~PathGenerator()
 {
 }
 
-btScalar PathGenerator::getTime()
+Scalar PathGenerator::getTime()
 {
     return time;
 }
 
-btScalar PathGenerator::getLength()
+Scalar PathGenerator::getLength()
 {
     return length;
 }
 
-void PathGenerator::MoveOnPath(btScalar distance, btVector3& point, btVector3& tangent)
+void PathGenerator::MoveOnPath(Scalar distance, Vector3& point, Vector3& tangent)
 {
-    if(length > btScalar(0.))
+    if(length > Scalar(0.))
     {
-        btScalar dt = distance/length;
+        Scalar dt = distance/length;
         time += dt;
-        time = time > btScalar(1.) ? btScalar(1.) : time;
+        time = time > Scalar(1.) ? Scalar(1.) : time;
         PointAtTime(time, point, tangent);
     }
 }
@@ -59,7 +59,7 @@ void PathGenerator::SavePathToTextFile(const char* path, unsigned int numOfPoint
     }
     
     //Write header
-    fprintf(fp, "#Unit system: %s\n\n", UnitSystem::GetDescription().c_str());
+    fprintf(fp, "#Unit system: SI\n\n");
     
     //Write data header
     fprintf(fp, "#X\tY\tZ\n");
@@ -69,11 +69,10 @@ void PathGenerator::SavePathToTextFile(const char* path, unsigned int numOfPoint
     
     for(unsigned int i = 0; i < numOfPoints; i++)
     {
-        btVector3 point;
-        btVector3 tangent;
+        Vector3 point;
+        Vector3 tangent;
         
-        PointAtTime(btScalar(i)/btScalar(numOfPoints-1), point, tangent);
-        point = UnitSystem::GetPosition(point);
+        PointAtTime(Scalar(i)/Scalar(numOfPoints-1), point, tangent);
         
         fprintf(fp, format.c_str(), point.x());
         fprintf(fp, "\t");

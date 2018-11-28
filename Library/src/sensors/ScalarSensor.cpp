@@ -14,7 +14,7 @@
 
 using namespace sf;
 
-ScalarSensor::ScalarSensor(std::string uniqueName, btScalar frequency, int historyLength) : Sensor(uniqueName, frequency)
+ScalarSensor::ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength) : Sensor(uniqueName, frequency)
 {
     historyLen = historyLength;
     history = std::deque<Sample*>(0);
@@ -33,8 +33,8 @@ Sample ScalarSensor::getLastSample()
     else
     {
         unsigned short chs = getNumOfChannels();
-        btScalar values[chs];
-        memset(values, 0, sizeof(btScalar) * chs);
+        Scalar values[chs];
+        memset(values, 0, sizeof(Scalar) * chs);
         return Sample(chs, values);
     }
 }
@@ -49,50 +49,19 @@ unsigned short ScalarSensor::getNumOfChannels()
     return channels.size();
 }
 
-btScalar ScalarSensor::getValueExternal(unsigned long int index, unsigned int channel)
+Scalar ScalarSensor::getValueExternal(unsigned long int index, unsigned int channel)
 {
     if(index < history.size() && channel < channels.size())
     {
         Sample* s = history[index];
-        btScalar v = s->getValue(channel);
-        
-        switch(channels[channel].type)
-        {
-            case QUANTITY_LENGTH:
-                return UnitSystem::GetLength(v);
-                
-            case QUANTITY_ANGLE:
-                return UnitSystem::GetAngle(v);
-                
-            case QUANTITY_VELOCITY:
-                return UnitSystem::GetVelocity(v);
-                
-            case QUANTITY_ANGULAR_VELOCITY:
-                return UnitSystem::GetAngularVelocity(v);
-                
-            case QUANTITY_ACCELERATION:
-                return UnitSystem::GetAcceleration(v);
-                
-            case QUANTITY_FORCE:
-                return UnitSystem::GetForce(v);
-                
-            case QUANTITY_TORQUE:
-                return UnitSystem::GetTorque(v);
-                
-            case QUANTITY_PRESSURE:
-                return UnitSystem::GetPressure(v);
-                
-            case QUANTITY_CURRENT:
-            case QUANTITY_UNITLESS:
-            case QUANTITY_INVALID:
-                return v;
-        }
+        Scalar v = s->getValue(channel);
+        return v;
     }
     
-    return btScalar(0);
+    return Scalar(0);
 }
 
-btScalar ScalarSensor::getLastValueExternal(unsigned int channel)
+Scalar ScalarSensor::getLastValueExternal(unsigned int channel)
 {
     return getValueExternal(history.size() - 1, channel);
 }
@@ -128,7 +97,7 @@ void ScalarSensor::AddSampleToHistory(const Sample& s)
     for(unsigned int i=0; i<s.nDim; ++i)
     {
         //Add noise
-        if(channels[i].stdDev > btScalar(0))
+        if(channels[i].stdDev > Scalar(0))
             s.data[i] += channels[i].noise(randomGenerator);
     
         //Limit readings
@@ -168,11 +137,11 @@ void ScalarSensor::SaveMeasurementsToTextFile(const char* path, bool includeTime
     fprintf(fp, "#Measurements from %s\n", getName().c_str());
     fprintf(fp, "#Number of channels: %ld\n", channels.size());
     fprintf(fp, "#Number of samples: %ld\n", history.size());
-    if(freq <= btScalar(0.))
+    if(freq <= Scalar(0.))
         fprintf(fp, "#Frequency: %1.3lf Hz\n", SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
     else
         fprintf(fp, "#Frequency: %1.3lf Hz\n", freq);
-    fprintf(fp, "#Unit system: %s\n\n", UnitSystem::GetDescription().c_str());
+    fprintf(fp, "#Unit system: SI\n\n");
     
     //Write data header
     if(includeTime)
@@ -205,47 +174,7 @@ void ScalarSensor::SaveMeasurementsToTextFile(const char* path, bool includeTime
         
         for(unsigned int h = 0; h < channels.size(); h++)
         {
-            btScalar v = s->getValue(h);
-            
-            switch(channels[h].type)
-            {
-                case QUANTITY_LENGTH:
-                    v = UnitSystem::GetLength(v);
-                    break;
-                    
-                case QUANTITY_ANGLE:
-                    v = UnitSystem::GetAngle(v);
-                    break;
-                    
-                case QUANTITY_VELOCITY:
-                    v = UnitSystem::GetVelocity(v);
-                    break;
-                    
-                case QUANTITY_ANGULAR_VELOCITY:
-                    v = UnitSystem::GetAngularVelocity(v);
-                    break;
-                    
-                case QUANTITY_ACCELERATION:
-                    v = UnitSystem::GetAcceleration(v);
-                    break;
-                    
-                case QUANTITY_FORCE:
-                    v = UnitSystem::GetForce(v);
-                    break;
-                    
-                case QUANTITY_TORQUE:
-                    v = UnitSystem::GetTorque(v);
-                    break;
-                    
-                case QUANTITY_PRESSURE:
-                    v =  UnitSystem::GetPressure(v);
-                    break;
-                    
-                case QUANTITY_CURRENT:
-                case QUANTITY_UNITLESS:
-                case QUANTITY_INVALID:
-                    break;
-            }
+            Scalar v = s->getValue(h);
             
             fprintf(fp, format.c_str(), v);
             
@@ -300,48 +229,7 @@ void ScalarSensor::SaveMeasurementsToOctaveFile(const char* path, bool includeTi
             for(unsigned int h = 0; h < history.size(); ++h)
             {
                 Sample* s = history[h];
-                btScalar v = s->getValue(i);
-                
-                switch(channels[i].type)
-                {
-                    case QUANTITY_LENGTH:
-                        v = UnitSystem::GetLength(v);
-                        break;
-                        
-                    case QUANTITY_ANGLE:
-                        v = UnitSystem::GetAngle(v);
-                        break;
-                        
-                    case QUANTITY_VELOCITY:
-                        v = UnitSystem::GetVelocity(v);
-                        break;
-                        
-                    case QUANTITY_ANGULAR_VELOCITY:
-                        v = UnitSystem::GetAngularVelocity(v);
-                        break;
-                        
-                    case QUANTITY_ACCELERATION:
-                        v = UnitSystem::GetAcceleration(v);
-                        break;
-                        
-                    case QUANTITY_FORCE:
-                        v = UnitSystem::GetForce(v);
-                        break;
-                        
-                    case QUANTITY_TORQUE:
-                        v = UnitSystem::GetTorque(v);
-                        break;
-                        
-                    case QUANTITY_PRESSURE:
-                        v =  UnitSystem::GetPressure(v);
-                        break;
-                        
-                    case QUANTITY_CURRENT:
-                    case QUANTITY_UNITLESS:
-                    case QUANTITY_INVALID:
-                        break;
-                }
-                
+                Scalar v = s->getValue(i);
                 (*vector)[h] = v;
             }
             
@@ -366,48 +254,7 @@ void ScalarSensor::SaveMeasurementsToOctaveFile(const char* path, bool includeTi
             
             for(unsigned int h = 0; h < channels.size(); ++h)
             {
-                btScalar v = s->getValue(h);
-                
-                switch(channels[h].type)
-                {
-                    case QUANTITY_LENGTH:
-                        v = UnitSystem::GetLength(v);
-                        break;
-                        
-                    case QUANTITY_ANGLE:
-                        v = UnitSystem::GetAngle(v);
-                        break;
-                        
-                    case QUANTITY_VELOCITY:
-                        v = UnitSystem::GetVelocity(v);
-                        break;
-                        
-                    case QUANTITY_ANGULAR_VELOCITY:
-                        v = UnitSystem::GetAngularVelocity(v);
-                        break;
-                        
-                    case QUANTITY_ACCELERATION:
-                        v = UnitSystem::GetAcceleration(v);
-                        break;
-                        
-                    case QUANTITY_FORCE:
-                        v = UnitSystem::GetForce(v);
-                        break;
-                        
-                    case QUANTITY_TORQUE:
-                        v = UnitSystem::GetTorque(v);
-                        break;
-                        
-                    case QUANTITY_PRESSURE:
-                        v =  UnitSystem::GetPressure(v);
-                        break;
-                        
-                    case QUANTITY_CURRENT:
-                    case QUANTITY_UNITLESS:
-                    case QUANTITY_INVALID:
-                        break;
-                }
-                
+                Scalar v = s->getValue(h);
                 matrix->setElem(i, h + (includeTime ? 1 : 0), v);
             }
         }

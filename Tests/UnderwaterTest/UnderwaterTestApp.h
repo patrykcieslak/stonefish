@@ -14,10 +14,10 @@
 
 #define USE_IAUV_CLASSES
 
-class UnderwaterTestApp : public GraphicalSimulationApp
+class UnderwaterTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    UnderwaterTestApp(std::string dataDirPath, RenderSettings s, UnderwaterTestManager* sim);
+    UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, UnderwaterTestManager* sim);
     void DoHUD();
     
 private:

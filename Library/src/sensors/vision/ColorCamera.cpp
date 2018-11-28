@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar frequency, uint32_t spp, bool ao)
+ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency, uint32_t spp, bool ao)
     : Camera(uniqueName, resX, resY, horizFOVDeg, frequency)
 {
     spp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
@@ -39,7 +39,7 @@ uint8_t* ColorCamera::getDataPointer()
     return imageData;
 }
 
-void ColorCamera::SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up)
+void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
 {
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
@@ -58,7 +58,7 @@ void ColorCamera::NewDataReady()
         newDataCallback(this);
 }
 
-void ColorCamera::InternalUpdate(btScalar dt)
+void ColorCamera::InternalUpdate(Scalar dt)
 {
     glCamera->Update();
 }

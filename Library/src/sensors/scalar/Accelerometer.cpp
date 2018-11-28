@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Accelerometer::Accelerometer(std::string uniqueName, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Acceleration X", QUANTITY_ACCELERATION));
     channels.push_back(SensorChannel("Acceleration Y", QUANTITY_ACCELERATION));
@@ -20,24 +20,24 @@ Accelerometer::Accelerometer(std::string uniqueName, btScalar frequency, int his
     channels.push_back(SensorChannel("Angular acceleration Z", QUANTITY_ANGULAR_VELOCITY));
 }
 
-void Accelerometer::InternalUpdate(btScalar dt)
+void Accelerometer::InternalUpdate(Scalar dt)
 {
     //calculate transformation from global to imu frame
-    btTransform accTrans = getSensorFrame();
+    Transform accTrans = getSensorFrame();
     
 	//get acceleration
-	btVector3 la = accTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(accTrans.getOrigin() - attach->getTransform().getOrigin()));
+	Vector3 la = accTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(accTrans.getOrigin() - attach->getCGTransform().getOrigin()));
 	
     //get angular acceleration
-    btVector3 aa = accTrans.getBasis().inverse() * attach->getAngularAcceleration();
+    Vector3 aa = accTrans.getBasis().inverse() * attach->getAngularAcceleration();
     
     //record sample
-    btScalar values[6] = {la.x(), la.y(), la.z(), aa.x(), aa.y(), aa.z()};
+    Scalar values[6] = {la.x(), la.y(), la.z(), aa.x(), aa.y(), aa.z()};
     Sample s(6, values);
     AddSampleToHistory(s);
 }
 
-void Accelerometer::SetRange(btScalar linearAccMax, btScalar angularAccMax)
+void Accelerometer::SetRange(Scalar linearAccMax, Scalar angularAccMax)
 {
 	channels[0].rangeMin = -linearAccMax;
     channels[1].rangeMin = -linearAccMax;
@@ -54,7 +54,7 @@ void Accelerometer::SetRange(btScalar linearAccMax, btScalar angularAccMax)
     channels[5].rangeMax = angularAccMax;
 }
     
-void Accelerometer::SetNoise(btScalar linearAccStdDev, btScalar angularAccStdDev)
+void Accelerometer::SetNoise(Scalar linearAccStdDev, Scalar angularAccStdDev)
 {
     channels[0].setStdDev(linearAccStdDev);
     channels[1].setStdDev(linearAccStdDev);

@@ -10,23 +10,23 @@
 
 using namespace sf;
 
-PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
+PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
     btRigidBody* bodyA = solidA->getRigidBody();
     btRigidBody* bodyB = solidB->getRigidBody();
     
-    btVector3 sliderAxis = axis.normalized();
-    btVector3 v2;
-    if(fabs(sliderAxis.z()) > 0.8) v2 = btVector3(1,0,0); else v2 = btVector3(0,0,1);
-    btVector3 v3 = (sliderAxis.cross(v2)).normalized();
+    Vector3 sliderAxis = axis.normalized();
+    Vector3 v2;
+    if(fabs(sliderAxis.z()) > 0.8) v2 = Vector3(1,0,0); else v2 = Vector3(0,0,1);
+    Vector3 v3 = (sliderAxis.cross(v2)).normalized();
     v2 = (v3.cross(sliderAxis)).normalized();
-    btMatrix3x3 sliderBasis(sliderAxis.x(), v2.x(), v3.x(),
+    Matrix3 sliderBasis(sliderAxis.x(), v2.x(), v3.x(),
                             sliderAxis.y(), v2.y(), v3.y(),
                             sliderAxis.z(), v2.z(), v3.z());
-    btTransform sliderFrame(sliderBasis, (bodyA->getCenterOfMassPosition() + bodyB->getCenterOfMassPosition())/btScalar(2.));
+    Transform sliderFrame(sliderBasis, (bodyA->getCenterOfMassPosition() + bodyB->getCenterOfMassPosition())/Scalar(2.));
     
-    btTransform frameInA = bodyA->getCenterOfMassTransform().inverse() * sliderFrame;
-    btTransform frameInB = bodyB->getCenterOfMassTransform().inverse() * sliderFrame;
+    Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * sliderFrame;
+    Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * sliderFrame;
     axisInA = frameInA.getBasis().getColumn(0).normalized();
     
     btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
@@ -36,28 +36,28 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     slider->setUpperAngLimit(0.);
     setConstraint(slider);
     
-    sigDamping = btScalar(0.);
-    velDamping = btScalar(0.);
+    sigDamping = Scalar(0.);
+    velDamping = Scalar(0.);
     
-    displacementIC = btScalar(0.);
+    displacementIC = Scalar(0.);
 }
 
-void PrismaticJoint::setDamping(btScalar constantFactor, btScalar viscousFactor)
+void PrismaticJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 {
-    sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetForce(constantFactor) : btScalar(0.);
-    velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
+    sigDamping = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
+    velDamping = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
 }
 
-void PrismaticJoint::setLimits(btScalar min, btScalar max)
+void PrismaticJoint::setLimits(Scalar min, Scalar max)
 {
     btSliderConstraint* slider = (btSliderConstraint*)getConstraint();
-    slider->setLowerLinLimit(UnitSystem::SetLength(min));
-    slider->setUpperLinLimit(UnitSystem::SetLength(max));
+    slider->setLowerLinLimit(min);
+    slider->setUpperLinLimit(max);
 }
 
-void PrismaticJoint::setIC(btScalar displacement)
+void PrismaticJoint::setIC(Scalar displacement)
 {
-    displacementIC = UnitSystem::SetLength(displacement);
+    displacementIC = displacement;
 }
 
 JointType PrismaticJoint::getType()
@@ -65,30 +65,30 @@ JointType PrismaticJoint::getType()
     return JOINT_PRISMATIC;
 }
 
-void PrismaticJoint::ApplyForce(btScalar F)
+void PrismaticJoint::ApplyForce(Scalar F)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
-    btVector3 force = UnitSystem::SetForce(axis * F);
+    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 force = axis * F;
     bodyA.applyCentralForce(force);
     bodyB.applyCentralForce(-force);
 }
 
 void PrismaticJoint::ApplyDamping()
 {
-    if(sigDamping > btScalar(0.) || velDamping > btScalar(0.))
+    if(sigDamping > Scalar(0.) || velDamping > Scalar(0.))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
         btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-        btVector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
-        btVector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
-        btScalar v = relativeV.dot(axis);
+        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+        Vector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
+        Scalar v = relativeV.dot(axis);
         
-        if(v != btScalar(0.))
+        if(v != Scalar(0.))
         {
-            btScalar F = sigDamping * v/fabs(v) + velDamping * v;
-            btVector3 force = axis * -F;
+            Scalar F = sigDamping * v/fabs(v) + velDamping * v;
+            Vector3 force = axis * -F;
             
             bodyA.applyCentralForce(force);
             bodyB.applyCentralForce(-force);
@@ -96,24 +96,24 @@ void PrismaticJoint::ApplyDamping()
     }
 }
 
-bool PrismaticJoint::SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance)
+bool PrismaticJoint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
 {
     return true;
 }
 
-btVector3 PrismaticJoint::Render()
+Vector3 PrismaticJoint::Render()
 {
     btTypedConstraint* slider = getConstraint();
-    btVector3 A = slider->getRigidBodyA().getCenterOfMassPosition();
-    btVector3 B = slider->getRigidBodyB().getCenterOfMassPosition();
-    btVector3 pivot = (A+B)/btScalar(2.);
-    btVector3 axis = (slider->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 A = slider->getRigidBodyA().getCenterOfMassPosition();
+    Vector3 B = slider->getRigidBodyB().getCenterOfMassPosition();
+    Vector3 pivot = (A+B)/Scalar(2.);
+    Vector3 axis = (slider->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
     
     //calculate axis ends
-    btScalar e1 = (A-pivot).dot(axis);
-    btScalar e2 = (B-pivot).dot(axis);
-    btVector3 C1 = pivot + e1 * axis;
-    btVector3 C2 = pivot + e2 * axis;
+    Scalar e1 = (A-pivot).dot(axis);
+    Scalar e2 = (B-pivot).dot(axis);
+    Vector3 C1 = pivot + e1 * axis;
+    Vector3 C2 = pivot + e2 * axis;
     
     std::vector<glm::vec3> vertices;
 	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
@@ -129,5 +129,5 @@ btVector3 PrismaticJoint::Render()
     OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
 	glDisable(GL_LINE_STIPPLE);
     
-    return (C1+C2)/btScalar(2.);
+    return (C1+C2)/Scalar(2.);
 }

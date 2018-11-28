@@ -20,29 +20,29 @@ namespace sf
 class ServoController : public FeedbackController
 {
 public:
-    ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency = btScalar(-1));
+    ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, Scalar maxOutput, Scalar frequency = Scalar(-1));
     ~ServoController();
     
     void Reset();
     
-    void SetPosition(btScalar pos);
-    void SetGains(btScalar P, btScalar I, btScalar D, btScalar ILimit);
+    void SetPosition(Scalar pos);
+    void SetGains(Scalar P, Scalar I, Scalar D, Scalar ILimit);
     
 private:
-    void Tick(btScalar dt);
+    void Tick(Scalar dt);
     
     RotaryEncoder* encoder;
 	Motor* motor;
-    btScalar maxCtrl;
-    btScalar gainP;
-    btScalar gainI;
-    btScalar gainD;
-	btScalar limitI;
+    Scalar maxCtrl;
+    Scalar gainP;
+    Scalar gainI;
+    Scalar gainD;
+	Scalar limitI;
     
     //state
-    btScalar targetPos;
-    btScalar lastError;
-    btScalar integratedError;
+    Scalar targetPos;
+    Scalar lastError;
+    Scalar integratedError;
 };
 
 }

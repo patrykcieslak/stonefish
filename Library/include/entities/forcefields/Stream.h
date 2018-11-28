@@ -23,16 +23,16 @@ namespace sf
 class Stream : public VelocityField
 {
 public:
-    Stream(const std::vector<btVector3>& streamline, const std::vector<btScalar>& radius, btScalar inputVelocity, btScalar exponent);
+    Stream(const std::vector<Vector3>& streamline, const std::vector<Scalar>& radius, Scalar inputVelocity, Scalar exponent);
     
-    btVector3 GetVelocityAtPoint(const btVector3& p);
+    Vector3 GetVelocityAtPoint(const Vector3& p);
     std::vector<Renderable> Render();
     
 private:
-    std::vector<btVector3> c;
-    std::vector<btScalar> r;
-    btScalar vin;
-    btScalar gamma;
+    std::vector<Vector3> c;
+    std::vector<Scalar> r;
+    Scalar vin;
+    Scalar gamma;
 };
     
 }

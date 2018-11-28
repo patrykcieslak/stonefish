@@ -13,14 +13,14 @@
 
 using namespace sf;
 
-OpenGLTrackball::OpenGLTrackball(const btVector3& centerPosition, btScalar orbitRadius, const btVector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
+OpenGLTrackball::OpenGLTrackball(const Vector3& centerPosition, Scalar orbitRadius, const Vector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {
 	this->up = glm::normalize(glm::vec3((GLfloat)up.getX(), (GLfloat)up.getY(), (GLfloat)up.getZ()));
     rotation = glm::rotation(this->up, glm::vec3(0,0,1.f));
 	
-    btVector3 _center = UnitSystem::SetPosition(centerPosition);
+    Vector3 _center = centerPosition;
 	center = glm::vec3((GLfloat)_center.getX(), (GLfloat)_center.getY(), (GLfloat)_center.getZ());
-	radius = (GLfloat)UnitSystem::SetLength(orbitRadius);
+	radius = (GLfloat)orbitRadius;
     fovx = fov/180.f*M_PI;
     projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
     
@@ -65,7 +65,7 @@ void OpenGLTrackball::UpdateTrackballTransform()
 {
 	if(holdingEntity != NULL)
     {
-		glm::mat4 solidTrans = glMatrixFromBtTransform(holdingEntity->getTransform());
+		glm::mat4 solidTrans = glMatrixFromBtTransform(holdingEntity->getCGTransform());
         center = glm::vec3(solidTrans[3]);
 	}
 	
@@ -127,7 +127,7 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 
 void OpenGLTrackball::MouseScroll(GLfloat s)
 {
-    btScalar factor = pow(radius/5.0, 2.0);
+    Scalar factor = pow(radius/5.0, 2.0);
     factor = factor > 1.0 ? 1.0 : factor;
     
     radius += s * factor;
@@ -140,7 +140,7 @@ glm::mat4 OpenGLTrackball::GetViewMatrix() const
 	return trackballTransform;
 }
 
-void OpenGLTrackball::Rotate(const btQuaternion& rot)
+void OpenGLTrackball::Rotate(const Quaternion& rot)
 {
 	glm::quat _rot((GLfloat)rot[0], (GLfloat)rot[1], (GLfloat)rot[2], (GLfloat)rot[3]);
 	rotation = glm::rotation(this->up,  glm::vec3(0,0,1.f)) * _rot;

@@ -23,15 +23,15 @@ namespace sf
 class Jet : public VelocityField
 {
 public:
-    Jet(const btVector3& point, const btVector3& direction, btScalar radius, btScalar outletVelocity);
+    Jet(const Vector3& point, const Vector3& direction, Scalar radius, Scalar outletVelocity);
     
-    btVector3 GetVelocityAtPoint(const btVector3& p);
+    Vector3 GetVelocityAtPoint(const Vector3& p);
     std::vector<Renderable> Render();    
 
 private:
-    btVector3 c, n;
-    btScalar r;
-    btScalar vout;
+    Vector3 c, n;
+    Scalar r;
+    Scalar vout;
 };
 
 }

@@ -19,9 +19,9 @@ GLuint OpenGLLight::spotShadowSampler = 0;
 OpenGLCamera* OpenGLLight::activeView = NULL;
 ColorSystem OpenGLLight::cs = {0.64f, 0.33f, 0.3f, 0.6f, 0.15f, 0.06f, 0.3127f, 0.3291f, 0.0}; //sRGB color space
 
-OpenGLLight::OpenGLLight(const btVector3& _position, glm::vec4 c)
+OpenGLLight::OpenGLLight(const Vector3& _position, glm::vec4 c)
 {
-    btVector3 p = UnitSystem::SetPosition(_position);
+    Vector3 p = _position;
     position = glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ());
 	color = SUN_SKY_FACTOR * c / SUN_ILLUMINANCE;
     active = true;
@@ -56,7 +56,7 @@ bool OpenGLLight::isActive()
 
 void OpenGLLight::setLightSurfaceDistance(GLfloat dist)
 {
-    surfaceDistance = UnitSystem::SetLength(dist);
+    surfaceDistance = dist;
 }
 
 glm::vec3 OpenGLLight::getColor()
@@ -68,7 +68,7 @@ glm::vec3 OpenGLLight::getPosition()
 {
     if(holdingEntity != NULL)
 	{
-        glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getTransform()); //holdingEntity->getTransform().getOrigin() + holdingEntity->getTransform().getBasis()
+        glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getCGTransform()); //holdingEntity->getTransform().getOrigin() + holdingEntity->getTransform().getBasis()
 		return glm::vec3(trans * glm::vec4(position,1.f));
 	}
 	else

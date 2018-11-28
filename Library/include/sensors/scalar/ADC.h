@@ -9,7 +9,7 @@
 #ifndef __Stonefish_ADC__
 #define __Stonefish_ADC__
 
-#include "common.h"
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -17,14 +17,14 @@ namespace sf
 class ADC
 {
 public:
-    ADC(unsigned short resolution, btScalar plusRefVoltage, btScalar minusRefVoltage = btScalar(0));
+    ADC(unsigned short resolution, Scalar plusRefVoltage, Scalar minusRefVoltage = Scalar(0));
     
-    btScalar MeasureVoltage(btScalar Vin);
+    Scalar MeasureVoltage(Scalar Vin);
     
 private:
     unsigned short bits;
-    btScalar pRefV;
-    btScalar mRefV;
+    Scalar pRefV;
+    Scalar mRefV;
 };
 
 }

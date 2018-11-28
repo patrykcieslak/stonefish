@@ -3,14 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Actuator.h"
 
 #include "core/SimulationApp.h"
+#include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 Actuator::Actuator(std::string uniqueName)
 {
@@ -31,4 +33,6 @@ std::vector<Renderable> Actuator::Render()
 {
     std::vector<Renderable> items(0);
     return items;
+}
+
 }

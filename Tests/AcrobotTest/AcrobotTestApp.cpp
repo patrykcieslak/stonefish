@@ -50,7 +50,7 @@ void AcrobotTestApp::DoHUD()
     dims.push_back(0);
     dims.push_back(1);
     
-    btVector3 force, torque;
+    Vector3 force, torque;
     
     FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("Manipulator1");
     /*fe->getJointFeedback(1, force, torque);
@@ -84,7 +84,7 @@ void AcrobotTestApp::DoHUD()
  
     /*IMGUI::getInstance()->DoTimePlot(plot, getWindowWidth()-310, 10, 300, 200, (SimpleSensor*)getSimulationManager()->getSensor("Encoder1"), dims, "Arm1"))
 	FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("FE");
-	btVector3 f, tau;
+	Vector3 f, tau;
 	fe->getJointFeedback(2, f, tau);
 	std::cout << "Force=(" << f.x() << "," << f.y() << "," << f.z() << ") Torque=(" << tau.x() << "," << tau.y() << "," << tau.z() << ")" << std::endl;	 */
 }

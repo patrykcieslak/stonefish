@@ -11,6 +11,7 @@
 
 #include <BulletCollision/CollisionShapes/btConvexInternalShape.h>
 #include <BulletCollision/BroadphaseCollision/btBroadphaseProxy.h>
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -18,33 +19,33 @@ namespace sf
 ATTRIBUTE_ALIGNED16(class) TorusShape : public btConvexInternalShape
 {
 protected:
-    btScalar m_majorRadius;
-	btScalar m_minorRadius;
+    Scalar m_majorRadius;
+	Scalar m_minorRadius;
     
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
-	TorusShape(btScalar majorRadius, btScalar minorRadius);
+	TorusShape(Scalar majorRadius, Scalar minorRadius);
 
-    virtual btVector3 localGetSupportingVertex(const btVector3& vec)const;
-	virtual btVector3 localGetSupportingVertexWithoutMargin(const btVector3& vec)const;
-	virtual void batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
+    virtual Vector3 localGetSupportingVertex(const Vector3& vec)const;
+	virtual Vector3 localGetSupportingVertexWithoutMargin(const Vector3& vec)const;
+	virtual void batchedUnitVectorGetSupportingVertexWithoutMargin(const Vector3* vectors,Vector3* supportVerticesOut,int numVectors) const;
 
-	virtual void calculateLocalInertia(btScalar mass,btVector3& inertia) const;
+	virtual void calculateLocalInertia(Scalar mass,Vector3& inertia) const;
     
-	virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
+	virtual void getAabb(const Transform& t,Vector3& aabbMin,Vector3& aabbMax) const;
     
-    btScalar getMajorRadius() const { return m_majorRadius; }
-	btScalar getMinorRadius() const { return m_minorRadius; }
-	btScalar getRadius() const { return getMajorRadius(); }
+    Scalar getMajorRadius() const { return m_majorRadius; }
+	Scalar getMinorRadius() const { return m_minorRadius; }
+	Scalar getRadius() const { return getMajorRadius(); }
 	
-	btVector3 getHalfExtentsWithMargin() const;
-	const btVector3& getHalfExtentsWithoutMargin() const;
-	virtual void setLocalScaling(const btVector3& scaling);
+	Vector3 getHalfExtentsWithMargin() const;
+	const Vector3& getHalfExtentsWithoutMargin() const;
+	virtual void setLocalScaling(const Vector3& scaling);
 
 	virtual const char*	getName()const { return "TORUS"; }
 	
-	virtual btVector3 getAnisotropicRollingFrictionDirection() const { return btVector3(0,1,0); }
+	virtual Vector3 getAnisotropicRollingFrictionDirection() const { return Vector3(0,1,0); }
 };
 
 }

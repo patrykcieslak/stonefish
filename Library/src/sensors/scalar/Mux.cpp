@@ -42,9 +42,9 @@ MuxComponent* Mux::getComponent(unsigned int index)
     return NULL;
 }
 
-btScalar* Mux::getLastSample()
+Scalar* Mux::getLastSample()
 {
-    btScalar* sample = new btScalar[components.size()];
+    Scalar* sample = new Scalar[components.size()];
     for(unsigned int i = 0; i < components.size(); ++i)
         sample[i] = components[i].sensor->getLastSample().getValue(components[i].channel);
     return sample;

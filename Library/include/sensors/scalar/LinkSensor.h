@@ -19,20 +19,20 @@ namespace sf
 class LinkSensor : public ScalarSensor
 {
 public:
-    LinkSensor(std::string uniqueName, btScalar frequency, int historyLength);
+    LinkSensor(std::string uniqueName, Scalar frequency, int historyLength);
     virtual ~LinkSensor();
     
-    virtual void InternalUpdate(btScalar dt) = 0;
+    virtual void InternalUpdate(Scalar dt) = 0;
     
     virtual std::vector<Renderable> Render();
-    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const btTransform& location);
-    void AttachToSolid(SolidEntity* solid, const btTransform& location);
-    btTransform getSensorFrame();
+    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& location);
+    void AttachToSolid(SolidEntity* solid, const Transform& location);
+    Transform getSensorFrame();
     SensorType getType();
     
 protected:
     SolidEntity* attach;
-    btTransform g2s;
+    Transform g2s;
 };
 
 }

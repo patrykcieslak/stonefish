@@ -12,11 +12,11 @@
 
 using namespace sf;
 
-ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& geomToSensor, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     attach = attachment;
     g2s = geomToSensor;
-    lastFrame = btTransform::getIdentity();
+    lastFrame = Transform::getIdentity();
     
     channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
     channels.push_back(SensorChannel("Force Y", QUANTITY_FORCE));
@@ -26,17 +26,17 @@ ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const 
     channels.push_back(SensorChannel("Torque Z", QUANTITY_TORQUE));
 }
 
-ForceTorque::ForceTorque(std::string uniqueName, const btTransform& geomToSensor, btScalar frequency, int historyLength) :
+ForceTorque::ForceTorque(std::string uniqueName, const Transform& geomToSensor, Scalar frequency, int historyLength) :
     ForceTorque(uniqueName, NULL, geomToSensor, frequency, historyLength)
 {
 }
 
-void ForceTorque::InternalUpdate(btScalar dt)
+void ForceTorque::InternalUpdate(Scalar dt)
 {
     if(j != NULL)
     {
-        btVector3 force(j->getFeedback(0), j->getFeedback(1), j->getFeedback(2));
-        btVector3 torque(j->getFeedback(3), j->getFeedback(4), j->getFeedback(5));
+        Vector3 force(j->getFeedback(0), j->getFeedback(1), j->getFeedback(2));
+        Vector3 torque(j->getFeedback(3), j->getFeedback(4), j->getFeedback(5));
     
         if(j->isMultibodyJoint())
         {  
@@ -44,32 +44,32 @@ void ForceTorque::InternalUpdate(btScalar dt)
             torque /= dt;
         }
     
-        lastFrame = attach->getTransform() * attach->getGeomToCOGTransform().inverse() * g2s;
-        btMatrix3x3 toSensor = lastFrame.getBasis().inverse();
+        lastFrame = attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2s;
+        Matrix3 toSensor = lastFrame.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
 	
-        btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
+        Scalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
         Sample s(6, values);
         AddSampleToHistory(s);
     }
     else
     {   
-        btVector3 force, torque;
+        Vector3 force, torque;
         unsigned int childId = fe->getJointFeedback(jId, force, torque);
-        lastFrame = fe->getLink(childId).solid->getGeomToCOGTransform().inverse() * g2s;
-        btMatrix3x3 toSensor = lastFrame.getBasis().inverse();
+        lastFrame = fe->getLink(childId).solid->getG2CGTransform().inverse() * g2s;
+        Matrix3 toSensor = lastFrame.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
-        lastFrame = fe->getLink(childId).solid->getTransform() * lastFrame; //From local to global
+        lastFrame = fe->getLink(childId).solid->getCGTransform() * lastFrame; //From local to global
         
-        btScalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
+        Scalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
         Sample s(6, values);
         AddSampleToHistory(s);
     }
 }
 
-void ForceTorque::SetRange(const btVector3& forceMax, const btVector3& torqueMax)
+void ForceTorque::SetRange(const Vector3& forceMax, const Vector3& torqueMax)
 {
     channels[0].rangeMin = -forceMax.getX();
     channels[1].rangeMin = -forceMax.getY();
@@ -86,7 +86,7 @@ void ForceTorque::SetRange(const btVector3& forceMax, const btVector3& torqueMax
     channels[5].rangeMax = torqueMax.getZ();
 }
     
-void ForceTorque::SetNoise(btScalar forceStdDev, btScalar torqueStdDev)
+void ForceTorque::SetNoise(Scalar forceStdDev, Scalar torqueStdDev)
 {
     channels[0].setStdDev(forceStdDev);
     channels[1].setStdDev(forceStdDev);

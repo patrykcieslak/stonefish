@@ -17,19 +17,19 @@ namespace sf
 class GearJoint : public Joint
 {
 public:
-    GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& axisA, const btVector3& axisB, btScalar ratio);
+    GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axisA, const Vector3& axisB, Scalar ratio);
     
-    btVector3 Render();
+    Vector3 Render();
     
     JointType getType();
-    btScalar getRatio();
+    Scalar getRatio();
     
     //Not applicable
     void ApplyDamping(){}
-    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance){ return true; }
+    bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance){ return true; }
     
 private:
-    btScalar gearRatio;
+    Scalar gearRatio;
 };
 
 }

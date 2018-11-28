@@ -14,7 +14,7 @@
 class JointsTestManager : public SimulationManager
 {
 public:
-    JointsTestManager(btScalar stepsPerSecond);
+    JointsTestManager(Scalar stepsPerSecond);
     
     void BuildScenario();
 };

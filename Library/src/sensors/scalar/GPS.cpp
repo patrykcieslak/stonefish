@@ -12,10 +12,10 @@
 
 using namespace sf;
 
-GPS::GPS(std::string uniqueName, btScalar latitudeDeg, btScalar longitudeDeg, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+GPS::GPS(std::string uniqueName, Scalar latitudeDeg, Scalar longitudeDeg, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    ned = new NED(latitudeDeg, longitudeDeg, btScalar(0.0));
-    nedStdDev = btScalar(0);
+    ned = new NED(latitudeDeg, longitudeDeg, Scalar(0.0));
+    nedStdDev = Scalar(0);
     
     channels.push_back(SensorChannel("Latitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Longitude", QUANTITY_ANGLE));
@@ -28,22 +28,22 @@ GPS::~GPS()
     delete ned;
 }
 
-void GPS::InternalUpdate(btScalar dt)
+void GPS::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    btTransform gpsTrans = getSensorFrame();
+    Transform gpsTrans = getSensorFrame();
     
     //GPS not updating underwater
     Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(liq != NULL && liq->IsInsideFluid(gpsTrans.getOrigin()))
     {
-        btScalar data[4] = {btScalar(0), btScalar(-1), btScalar(0), btScalar(0)};
+        Scalar data[4] = {Scalar(0), Scalar(-1), Scalar(0), Scalar(0)};
         Sample s(4, data);
         AddSampleToHistory(s);
     }
     else
     {
-        btVector3 gpsPos = gpsTrans.getOrigin();
+        Vector3 gpsPos = gpsTrans.getOrigin();
 		
         //add noise
         if(!btFuzzyZero(nedStdDev))
@@ -59,14 +59,14 @@ void GPS::InternalUpdate(btScalar dt)
         ned->ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
         
         //record sample
-        btScalar data[4] = {latitude, longitude, gpsPos.x(), gpsPos.y()};
+        Scalar data[4] = {latitude, longitude, gpsPos.x(), gpsPos.y()};
         Sample s(4, data);
         AddSampleToHistory(s);
     }
 }
 
-void GPS::SetNoise(btScalar nedDev)
+void GPS::SetNoise(Scalar nedDev)
 {
-    nedStdDev = nedDev > btScalar(0) ? nedDev : btScalar(0);
-    noise = std::normal_distribution<btScalar>(btScalar(0), nedStdDev);
+    nedStdDev = nedDev > Scalar(0) ? nedDev : Scalar(0);
+    noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
 }

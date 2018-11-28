@@ -24,7 +24,7 @@
 #include <joints/BeltJoint.h>
 #include <actuators/DCMotor.h>
 
-JointsTestManager::JointsTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
+JointsTestManager::JointsTestManager(Scalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
 {
 }
 
@@ -44,70 +44,70 @@ void JointsTestManager::BuildScenario()
     
     ////////OBJECTS
     //----Fixed Joint----
-    Box* box = new Box("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
-    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0.0,0.0,1.0)));
+    Box* box = new Box("Box", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
+    AddSolidEntity(box, Transform(Quaternion::getIdentity(), Vector3(0.0,0.0,1.0)));
     Sphere* sph = new Sphere("Sph1", 0.2, getMaterialManager()->getMaterial("Steel"), orange);
-    AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-0.5,1.0)));
+    AddSolidEntity(sph, Transform(Quaternion::getIdentity(), Vector3(0.0,-0.5,1.0)));
     
     FixedJoint* fixed = new FixedJoint("Fix", box, sph);
     AddJoint(fixed);
     
     //----Revolute Joint----
-    box = new Box("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
-    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(0.5,0.0,1.0)));
+    box = new Box("Box", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
+    AddSolidEntity(box, Transform(Quaternion::getIdentity(), Vector3(0.5,0.0,1.0)));
     
-    Box* box2 = new Box("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), orange);
-    AddSolidEntity(box2, btTransform(btQuaternion::getIdentity(), btVector3(0.5,0.2,1.0)));
+    Box* box2 = new Box("Box", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), orange);
+    AddSolidEntity(box2, Transform(Quaternion::getIdentity(), Vector3(0.5,0.2,1.0)));
     
-    RevoluteJoint* revo = new RevoluteJoint("Revolute", box, box2, btVector3(0.5,0.1,0.9), btVector3(0,1,0), false);
+    RevoluteJoint* revo = new RevoluteJoint("Revolute", box, box2, Vector3(0.5,0.1,0.9), Vector3(0,1,0), false);
     AddJoint(revo);
     
     //----Spherical Joint----
     sph = new Sphere("Sph2", 0.2, getMaterialManager()->getMaterial("Plastic"), green);
-    AddSolidEntity(sph, btTransform(btQuaternion::getIdentity(), btVector3(0.0, -2.0,1.0)));
+    AddSolidEntity(sph, Transform(Quaternion::getIdentity(), Vector3(0.0, -2.0,1.0)));
     Sphere* sph2 = new Sphere("Sph3", 0.15, getMaterialManager()->getMaterial("Plastic"), orange);
-    AddSolidEntity(sph2, btTransform(btQuaternion::getIdentity(), btVector3(0.0,-2.2,0.4)));
+    AddSolidEntity(sph2, Transform(Quaternion::getIdentity(), Vector3(0.0,-2.2,0.4)));
     
-    SphericalJoint* spher = new SphericalJoint("Spherical", sph, sph2, btVector3(0.0, -2.0, 0.6));
+    SphericalJoint* spher = new SphericalJoint("Spherical", sph, sph2, Vector3(0.0, -2.0, 0.6));
     AddJoint(spher);
     
     //----Prismatic Joint----
-    box = new Box("Box4", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
-    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(1.0,0.0,0.051)));
+    box = new Box("Box4", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
+    AddSolidEntity(box, Transform(Quaternion::getIdentity(), Vector3(1.0,0.0,0.051)));
     
-    box2 = new Box("Box5", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), orange);
-    AddSolidEntity(box2, btTransform(btQuaternion::getIdentity(), btVector3(1.0,0.0,0.5)));
+    box2 = new Box("Box5", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), orange);
+    AddSolidEntity(box2, Transform(Quaternion::getIdentity(), Vector3(1.0,0.0,0.5)));
     
-    PrismaticJoint* trans = new PrismaticJoint("Prismatic", box, box2, btVector3(0.5,0,1));
+    PrismaticJoint* trans = new PrismaticJoint("Prismatic", box, box2, Vector3(0.5,0,1));
     AddJoint(trans);
     
     //----Cylindrical Joint----
-    box = new Box("Box6", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
-    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(-1.0,0.0,0.051)));
+    box = new Box("Box6", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), green);
+    AddSolidEntity(box, Transform(Quaternion::getIdentity(), Vector3(-1.0,0.0,0.051)));
     
-    box2 = new Box("Box7", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), orange);
-    AddSolidEntity(box2, btTransform(btQuaternion::getIdentity(), btVector3(-1.0,0.0,0.5)));
+    box2 = new Box("Box7", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Plastic"), orange);
+    AddSolidEntity(box2, Transform(Quaternion::getIdentity(), Vector3(-1.0,0.0,0.5)));
     
-    CylindricalJoint* cyli = new CylindricalJoint("Cylindrical", box, box2, btVector3(-1.0, 0.050, 0.25), btVector3(0,0,1));
+    CylindricalJoint* cyli = new CylindricalJoint("Cylindrical", box, box2, Vector3(-1.0, 0.050, 0.25), Vector3(0,0,1));
     AddJoint(cyli);
     
     //----Gear Joint----
-    box = new Box("Box", btVector3(1.0,1.0,1.0), getMaterialManager()->getMaterial("Plastic"), green);
-    AddSolidEntity(box, btTransform(btQuaternion::getIdentity(), btVector3(2.0,2.0,1.0)));
+    box = new Box("Box", Vector3(1.0,1.0,1.0), getMaterialManager()->getMaterial("Plastic"), green);
+    AddSolidEntity(box, Transform(Quaternion::getIdentity(), Vector3(2.0,2.0,1.0)));
     
     Cylinder* cyl = new Cylinder("Cyl1", 0.2, 0.020, getMaterialManager()->getMaterial("Steel"), green);
-    AddSolidEntity(cyl, btTransform(btQuaternion::getIdentity(), btVector3(2.0, 2.0, 2.0)));
+    AddSolidEntity(cyl, Transform(Quaternion::getIdentity(), Vector3(2.0, 2.0, 2.0)));
     
     Cylinder* cyl2 = new Cylinder("Cyl2", 0.1, 0.020, getMaterialManager()->getMaterial("Steel"), orange);
-    AddSolidEntity(cyl2, btTransform(btQuaternion(0,0,M_PI_4), btVector3(2.0, 1.93, 2.56)));
+    AddSolidEntity(cyl2, Transform(Quaternion(0,0,M_PI_4), Vector3(2.0, 1.93, 2.56)));
     
-    revo = new RevoluteJoint("GearRevolute1", box, cyl, btVector3(2.0, 2.0, 2.0), btVector3(0,1,0), false);
+    revo = new RevoluteJoint("GearRevolute1", box, cyl, Vector3(2.0, 2.0, 2.0), Vector3(0,1,0), false);
     AddJoint(revo);
     
-    revo = new RevoluteJoint("GearRevolute2", box, cyl2, btVector3(2.0, 1.93, 2.56), btVector3(0,1,1), false);
+    revo = new RevoluteJoint("GearRevolute2", box, cyl2, Vector3(2.0, 1.93, 2.56), Vector3(0,1,1), false);
     AddJoint(revo);
     
-    GearJoint* gear = new GearJoint("Gear", cyl2, cyl, btVector3(0,1,1), btVector3(0,1,0), 2.0);
+    GearJoint* gear = new GearJoint("Gear", cyl2, cyl, Vector3(0,1,1), Vector3(0,1,0), 2.0);
     gear->setRenderable(true);
     AddJoint(gear);
 }

@@ -66,7 +66,7 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
             else
             {
                 //continuous collision detection query, time of impact (toi)
-                btScalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0, colObj1, dispatchInfo, &contactPointResult);
+                Scalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0, colObj1, dispatchInfo, &contactPointResult);
                 if (dispatchInfo.m_timeOfImpact > toi)
                     dispatchInfo.m_timeOfImpact = toi;
             }
@@ -87,7 +87,7 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
                         
                     for(int h=0; h<marray[i]->getNumContacts(); ++h)
                     {
-                        delete (btVector3*)marray[i]->getContactPoint(h).m_userPersistentData;
+                        delete (Vector3*)marray[i]->getContactPoint(h).m_userPersistentData;
                         marray[i]->getContactPoint(h).m_userPersistentData = NULL;
                     }
                 }

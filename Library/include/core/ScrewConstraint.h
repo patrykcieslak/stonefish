@@ -12,6 +12,7 @@
 #include <limits>
 #include <cmath>
 #include <BulletDynamics/ConstraintSolver/btSliderConstraint.h>
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -19,10 +20,10 @@ namespace sf
 class ScrewConstraint : public btSliderConstraint
 {
 public: 
-      ScrewConstraint(btRigidBody &_rbA, btRigidBody &_rbB, const btTransform &_frameInA, const btTransform &_frameInB, bool _useLinearReferenceFrameA)
+      ScrewConstraint(btRigidBody &_rbA, btRigidBody &_rbB, const Transform &_frameInA, const Transform &_frameInB, bool _useLinearReferenceFrameA)
           : btSliderConstraint(_rbA, _rbB, _frameInA, _frameInB, _useLinearReferenceFrameA), threadPitch(1.0) {}
 
-      ScrewConstraint(btRigidBody &_rbB, const btTransform &_frameInB, bool _useLinearReferenceFrameA)
+      ScrewConstraint(btRigidBody &_rbB, const Transform &_frameInB, bool _useLinearReferenceFrameA)
           : btSliderConstraint(_rbB, _frameInB, _useLinearReferenceFrameA), threadPitch(1.0) {}
 
       virtual void getInfo1(btConstraintInfo1 *_info)
@@ -42,10 +43,10 @@ public:
 
       void _getInfo1NonVirtual(btConstraintInfo1* info);
       
-      void _getInfo2NonVirtual(btConstraintInfo2* info, const btTransform& transA, const btTransform& transB, const btVector3& linVelA, const btVector3& linVelB, btScalar rbAinvMass, btScalar rbBinvMass);
+      void _getInfo2NonVirtual(btConstraintInfo2* info, const Transform& transA, const Transform& transB, const Vector3& linVelA, const Vector3& linVelB, Scalar rbAinvMass, Scalar rbBinvMass);
 
-      btScalar getLinearPosition();
-      btScalar getAngularPosition();
+      Scalar getLinearPosition();
+      Scalar getAngularPosition();
 
       // needed non-const version for SetForce
       btRigidBody& getRigidBodyA();

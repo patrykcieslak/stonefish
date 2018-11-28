@@ -550,7 +550,7 @@ bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const
     return result;
 }
 
-btScalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, btScalar min, btScalar max, btScalar value, const char* title)
+Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const char* title)
 {
 	//Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
@@ -562,7 +562,7 @@ btScalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, btScalar min
     GLfloat h = sliderH + 2.f * backgroundMargin + 5.f + FONT_SIZE;
 	
     //Check mouse position
-    btScalar result = value;
+    Scalar result = value;
     GLfloat sliderPosition = (value-min)/(max-min);
     
     if(MouseInRect(x + backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin + FONT_SIZE + 5.f, sliderW, sliderH))
@@ -614,7 +614,7 @@ btScalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, btScalar min
     return result;
 }
 
-void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, btScalar progress, const char* title)
+void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const char* title)
 {
 	//Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
@@ -623,7 +623,7 @@ void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, btScalar progress, co
 	GLfloat h =  barH + 2.f * backgroundMargin + 5.f + FONT_SIZE;
 	
     //Check and correct progress value
-    progress = progress < btScalar(0.) ? btScalar(0.) : (progress > btScalar(1.) ? btScalar(1.) : progress);
+    progress = progress < Scalar(0.) ? Scalar(0.) : (progress > Scalar(1.) ? Scalar(1.) : progress);
     
     //Draw background and title
     DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
@@ -683,7 +683,7 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
     return result;
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, btScalar fixedRange[2])
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, Scalar fixedRange[2])
 {
     bool result = false;
 	GLfloat pltW = w/windowW * 2.f;

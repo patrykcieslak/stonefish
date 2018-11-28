@@ -12,14 +12,14 @@
 
 using namespace sf;
 
-Pressure::Pressure(std::string uniqueName, btScalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pressure::Pressure(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Pressure", QUANTITY_PRESSURE));
 }
 
-void Pressure::InternalUpdate(btScalar dt)
+void Pressure::InternalUpdate(Scalar dt)
 {
-    btScalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
+    Scalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
     
     Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(liq != NULL)
@@ -30,13 +30,13 @@ void Pressure::InternalUpdate(btScalar dt)
     AddSampleToHistory(s);
 }
 
-void Pressure::SetRange(btScalar max)
+void Pressure::SetRange(Scalar max)
 {
-    channels[0].rangeMin = btScalar(0);
+    channels[0].rangeMin = Scalar(0);
     channels[0].rangeMax = max;
 }
     
-void Pressure::SetNoise(btScalar pressureStdDev)
+void Pressure::SetNoise(Scalar pressureStdDev)
 {
     channels[0].setStdDev(pressureStdDev);
 }

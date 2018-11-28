@@ -19,18 +19,18 @@ namespace sf
 class ForceTorque : public JointSensor
 {
 public:
-    ForceTorque(std::string uniqueName, SolidEntity* attachment, const btTransform& geomToSensor, btScalar frequency = btScalar(-1), int historyLength = -1);
-    ForceTorque(std::string uniqueName, const btTransform& geomToSensor, btScalar frequency = btScalar(-1), int historyLength = -1);
+    ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& geomToSensor, Scalar frequency = Scalar(-1), int historyLength = -1);
+    ForceTorque(std::string uniqueName, const Transform& geomToSensor, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(const btVector3& forceMax, const btVector3& torqueMax);
-    void SetNoise(btScalar forceStdDev, btScalar torqueStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(const Vector3& forceMax, const Vector3& torqueMax);
+    void SetNoise(Scalar forceStdDev, Scalar torqueStdDev);
     std::vector<Renderable> Render();
     
 private:
     SolidEntity* attach;
-    btTransform g2s;
-    btTransform lastFrame;
+    Transform g2s;
+    Transform lastFrame;
 };
     
 }

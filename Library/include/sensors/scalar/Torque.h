@@ -19,11 +19,11 @@ namespace sf
 class Torque : public JointSensor
 {
 public:
-    Torque(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Torque(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(btScalar max);
-    void SetNoise(btScalar stdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(Scalar max);
+    void SetNoise(Scalar stdDev);
 };
 
 }

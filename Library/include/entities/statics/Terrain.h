@@ -18,12 +18,12 @@ namespace sf
 class Terrain : public StaticEntity
 {
 public:
-    Terrain(std::string uniqueName, unsigned int width, unsigned int length, btScalar size, btScalar minHeight, btScalar maxHeight, btScalar roughness, Material m, int lookId = -1);
+    Terrain(std::string uniqueName, unsigned int width, unsigned int length, Scalar size, Scalar minHeight, Scalar maxHeight, Scalar roughness, Material m, int lookId = -1);
    
     StaticEntityType getStaticType();
     
 private:
-    btScalar* terrainHeight;
+    Scalar* terrainHeight;
 };
 
 }

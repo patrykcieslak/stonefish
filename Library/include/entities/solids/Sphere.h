@@ -18,14 +18,14 @@ namespace sf
 class Sphere : public SolidEntity
 {
 public:
-    Sphere(std::string uniqueName, btScalar sphereRadius, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
+    Sphere(std::string uniqueName, Scalar sphereRadius, const Transform& originTrans, Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
     ~Sphere();
     
     SolidType getSolidType();
     btCollisionShape* BuildCollisionShape();
 
 private:    
-    btScalar radius;
+    Scalar radius;
 };
     
 }

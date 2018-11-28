@@ -10,7 +10,7 @@
 
 using namespace sf;
 
-Current::Current(std::string uniqueName, btScalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+Current::Current(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     motor = NULL;
     channels.push_back(SensorChannel("Current", QUANTITY_CURRENT));
@@ -22,10 +22,10 @@ void Current::AttachToMotor(DCMotor* m)
         motor = m;
 }
 
-void Current::InternalUpdate(btScalar dt)
+void Current::InternalUpdate(Scalar dt)
 {
     //read current
-    btScalar current = btScalar(0);
+    Scalar current = Scalar(0);
     if(motor != NULL)
         current = motor->getCurrent();
     

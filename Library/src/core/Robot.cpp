@@ -11,21 +11,26 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/Console.h"
+#include "entities/FeatherstoneEntity.h"
+#include "actuators/LinkActuator.h"
+#include "actuators/JointActuator.h"
+#include "sensors/scalar/LinkSensor.h"
+#include "sensors/scalar/JointSensor.h"
+#include "sensors/VisionSensor.h"
 
-using namespace sf;
-
-NameManager Robot::nameManager;
+namespace sf
+{
 
 Robot::Robot(std::string uniqueName, bool fixedBase)
 {
-	name = nameManager.AddName(uniqueName);
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     dynamics = NULL;
 	fixed = fixedBase;
 }
 
 Robot::~Robot()
 {
-	nameManager.RemoveName(name);
+	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 void Robot::getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId)
@@ -77,12 +82,12 @@ int Robot::getJoint(const std::string& name)
     return -1;
 }
 
-btTransform Robot::getTransform() const
+Transform Robot::getTransform() const
 {
 	if(dynamics != NULL)
 		return dynamics->getLinkTransform(0);
 	else
-		return btTransform::getIdentity();
+		return Transform::getIdentity();
 }
 
 void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks)
@@ -95,13 +100,13 @@ void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLi
 	dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
 }
 
-void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const btTransform& T, const btVector3& axis, std::pair<btScalar,btScalar> positionLimits, btScalar torqueLimit)
+void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar torqueLimit)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-    btTransform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getGeomToCOGTransform().inverse() * T;
+    Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getG2CGTransform().inverse() * origin;
 	dynamics->AddLink(detachedLinks[childId], linkTrans);
     links.push_back(detachedLinks[childId]);
     detachedLinks.erase(detachedLinks.begin()+childId);
@@ -114,13 +119,13 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 
-void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const btTransform& T, const btVector3& axis, std::pair<btScalar,btScalar> positionLimits, btScalar forceLimit)
+void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar forceLimit)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	btTransform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getGeomToCOGTransform().inverse() * T;
+	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getG2CGTransform().inverse() * origin;
 	dynamics->AddLink(detachedLinks[childId], linkTrans);
     links.push_back(detachedLinks[childId]);
 	detachedLinks.erase(detachedLinks.begin()+childId);
@@ -133,20 +138,20 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 
-void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const btTransform& T)
+void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	btTransform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getGeomToCOGTransform().inverse() * T;
+	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getG2CGTransform().inverse() * origin;
 	dynamics->AddLink(detachedLinks[childId], linkTrans);
     links.push_back(detachedLinks[childId]);
     detachedLinks.erase(detachedLinks.begin()+childId);
 	dynamics->AddFixedJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin());
 }
 
-void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const btTransform& origin)
+void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(monitoredLinkName);
     if(link != NULL)
@@ -170,7 +175,7 @@ void Robot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName
         cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredJointName.c_str(), s->getName().c_str());
 }
 
-void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkName, const btTransform& origin)
+void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(attachmentLinkName);
     if(link != NULL)
@@ -182,7 +187,7 @@ void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkNa
         cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", attachmentLinkName.c_str(), s->getName().c_str());
 }
 
-void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const btTransform& origin)
+void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(actuatedLinkName);
     if(link != NULL)
@@ -206,14 +211,16 @@ void Robot::AddJointActuator(JointActuator* a, const std::string& actuatedJointN
         cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
 }
 
-void Robot::AddToSimulation(SimulationManager* sm, const btTransform& worldTransform)
+void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     if(detachedLinks.size() > 0)
         cCritical("Detected unconnected links!");
     
-    sm->AddFeatherstoneEntity(dynamics, worldTransform);
+    sm->AddFeatherstoneEntity(dynamics, origin);
     for(size_t i=0; i<sensors.size(); ++i)
         sm->AddSensor(sensors[i]);
     for(size_t i=0; i<actuators.size(); ++i)
         sm->AddActuator(actuators[i]);
+}
+
 }

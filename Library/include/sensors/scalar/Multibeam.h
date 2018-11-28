@@ -17,18 +17,18 @@ namespace sf
 class Multibeam : public LinkSensor
 {
 public:
-    Multibeam(std::string uniqueName, btScalar angleRangeDeg, unsigned int angleSteps, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
    
-    void InternalUpdate(btScalar dt);
-    void SetRange(btScalar distanceMin, btScalar distanceMax);
-    void SetNoise(btScalar distanceStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(Scalar distanceMin, Scalar distanceMax);
+    void SetNoise(Scalar distanceStdDev);
     std::vector<Renderable> Render();
     
 private:
-    btScalar angRange;
+    Scalar angRange;
     unsigned int angSteps;
-    std::vector<btScalar> angles;
-    std::vector<btScalar> distances; 
+    std::vector<Scalar> angles;
+    std::vector<Scalar> distances; 
 };
     
 }

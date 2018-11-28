@@ -10,26 +10,44 @@
 #define __Stonefish_LinkActuator__
 
 #include "actuators/Actuator.h"
-#include "entities/SolidEntity.h"
-#include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
-
-class LinkActuator : public Actuator
-{
-public:
-    LinkActuator(std::string uniqueName);
-   
-    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const btTransform& location);
-    void AttachToSolid(SolidEntity* solid, const btTransform& location);
-    ActuatorType getType();
+    class FeatherstoneEntity;
+    class SolidEntity;
     
-protected:
-    SolidEntity* attach;
-    btTransform g2a;    
-};
-    
+    //! An abstract class representing an actuator that can be attached to a rigid body.
+    class LinkActuator : public Actuator
+    {
+    public:
+        //! A constructor.
+        /*!
+         \param uniqueName a name of the link actuator
+         */
+        LinkActuator(std::string uniqueName);
+        
+        //! A method used to attach the actuator to a specified link of a multibody tree.
+        /*!
+         \param multibody a pointer to a rigid multibody object
+         \param linkId an index of the link
+         \param origin a transformation from the link origin to the actuator origin
+         */
+        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
+        
+        //! A method used to attach the actuator to a specified rigid body.
+        /*!
+         \param solid a pointer to a rigid body
+         \param origin a transformation from the body origin to the actuator origin
+         */
+        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        
+        //! A method returning the type of the actuator.
+        ActuatorType getType();
+        
+    protected:
+        SolidEntity* attach;
+        Transform g2a;
+    };
 }
 
 #endif

@@ -16,7 +16,7 @@
 #include <glm/ext.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <SDL2/SDL_thread.h>
-#include "common.h"
+#include "StonefishCommon.h"
 
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
@@ -48,7 +48,7 @@
 namespace sf
 {
 
-typedef enum {SOLID = 0, SOLID_CS, HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_LINES, HYDRO_LINE_STRIP, SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES} RenderableType;
+typedef enum {SOLID = 0, SOLID_CS, HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES} RenderableType;
 
 typedef enum {QUALITY_DISABLED = 0, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH} RenderQuality;
 

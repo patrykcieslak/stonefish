@@ -18,27 +18,27 @@ namespace sf
 class Camera : public VisionSensor
 {
 public:
-    Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar frequency);
+    Camera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency);
     virtual ~Camera();
     
-    virtual void InternalUpdate(btScalar dt) = 0;
-    virtual void SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up) = 0;
+    virtual void InternalUpdate(Scalar dt) = 0;
+    virtual void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up) = 0;
     
     void UpdateTransform();
     void setDisplayOnScreen(bool screen);
-    void setPan(btScalar value);
-    void setTilt(btScalar value);
-    btScalar getPan();
-    btScalar getTilt();
-    btScalar getHorizontalFOV();
+    void setPan(Scalar value);
+    void setTilt(Scalar value);
+    Scalar getPan();
+    Scalar getTilt();
+    Scalar getHorizontalFOV();
     void getResolution(uint32_t& x, uint32_t& y);
     bool getDisplayOnScreen();
     std::vector<Renderable> Render();
 	
 private:
-    btScalar fovH;
-    btScalar pan;
-    btScalar tilt;
+    Scalar fovH;
+    Scalar pan;
+    Scalar tilt;
     uint32_t resx;
     uint32_t resy;
     bool display;

@@ -17,18 +17,18 @@ namespace sf
 class Profiler : public LinkSensor
 {
 public:
-    Profiler(std::string uniqueName, btScalar angleRangeDeg, unsigned int angleSteps, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetRange(btScalar distanceMin, btScalar distanceMax);
-    void SetNoise(btScalar distanceStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetRange(Scalar distanceMin, Scalar distanceMax);
+    void SetNoise(Scalar distanceStdDev);
     std::vector<Renderable> Render();
     
 private:
-    btScalar angRange;
+    Scalar angRange;
     unsigned int angSteps;
     unsigned int currentAngStep;
-    btScalar distance;
+    Scalar distance;
     bool clockwise;
 };
     

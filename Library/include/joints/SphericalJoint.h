@@ -17,22 +17,22 @@ namespace sf
 class SphericalJoint : public Joint
 {
 public:
-    SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const btVector3& pivot, bool collideLinkedEntities = true);
+    SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinkedEntities = true);
     
-    void ApplyTorque(btVector3 T);
+    void ApplyTorque(Vector3 T);
     void ApplyDamping();
-    bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance);
-    btVector3 Render();
+    bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
+    Vector3 Render();
     
-    void setDamping(btVector3 constantFactor, btVector3 viscousFactor);
-    void setIC(btVector3 angles);
+    void setDamping(Vector3 constantFactor, Vector3 viscousFactor);
+    void setIC(Vector3 angles);
     
     JointType getType();
     
 private:
-    btVector3 sigDamping;
-    btVector3 velDamping;
-    btVector3 angleIC;
+    Vector3 sigDamping;
+    Vector3 velDamping;
+    Vector3 angleIC;
 };
 
 }

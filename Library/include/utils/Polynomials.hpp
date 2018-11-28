@@ -20,10 +20,10 @@ class Polynomial
 public:
     Polynomial(const btVectorXu& coeffs) : c(coeffs), order(coeffs.size()-1) {}
     
-    btScalar Value(btScalar x)
+    Scalar Value(Scalar x)
     {
-        btScalar xPower = btScalar(1.);
-        btScalar value = btScalar(0.);
+        Scalar xPower = Scalar(1.);
+        Scalar value = Scalar(0.);
         
         for(int i = 0; i <= order; ++i)
         {
@@ -45,23 +45,23 @@ class PolySurface
 public:
     PolySurface(const btMatrixXu& coeffs) : C(coeffs), orderX(coeffs.cols()-1), orderY(coeffs.rows()-1) {}
     
-    btScalar Value(btScalar x, btScalar y)
+    Scalar Value(Scalar x, Scalar y)
     {
         btVectorXu xPowers(orderX + 1);
-        xPowers[0] = btScalar(1.);
+        xPowers[0] = Scalar(1.);
         for(int i = 1; i <= orderX; ++i)
             xPowers[i] = xPowers[i-1] * x;
         
         btVectorXu yPowers(orderY + 1);
-        yPowers[0] = btScalar(1.);
+        yPowers[0] = Scalar(1.);
         for(int i = 1; i <= orderY; ++i)
             yPowers[i] = yPowers[i-1] * y;
         
-        btScalar value = btScalar(0.);
+        Scalar value = Scalar(0.);
         
         for(int i = 0; i <= orderY; ++i)
         {
-            btScalar yPoly = btScalar(0.);
+            Scalar yPoly = Scalar(0.);
             
             for(int h = 0; h <= orderX; ++h)
                 yPoly += C(i,h) * xPowers[orderX - h];

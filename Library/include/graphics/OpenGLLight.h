@@ -25,15 +25,19 @@ namespace sf
 
 typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
 
-typedef struct
+struct Color
+{
+    glm::vec3 rgb;
+};
+    
+struct ColorSystem
 {
     GLfloat xRed, yRed,	    /* Red x, y */
     xGreen, yGreen,  	    /* Green x, y */
     xBlue, yBlue,    	    /* Blue x, y */
     xWhite, yWhite,  	    /* White point x, y */
     gamma;   	    	    /* Gamma correction for system */
-}
-ColorSystem;
+};
 
 class SimulationManager;
 
@@ -41,7 +45,7 @@ class OpenGLLight
 {
 public:
     //Discrete lights
-    OpenGLLight(const btVector3& position, glm::vec4 color);
+    OpenGLLight(const Vector3& position, glm::vec4 color);
     virtual ~OpenGLLight();
     
 	virtual void InitShadowmap(GLint shadowmapLayer) = 0;

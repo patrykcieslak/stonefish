@@ -16,7 +16,7 @@
 class AcrobotTestManager : public SimulationManager
 {
 public:
-    AcrobotTestManager(btScalar stepsPerSecond);
+    AcrobotTestManager(Scalar stepsPerSecond);
     
     void BuildScenario();
 };

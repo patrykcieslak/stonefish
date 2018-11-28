@@ -9,6 +9,7 @@
 #ifndef __Stonefish_OpenGLOcean__
 #define __Stonefish_OpenGLOcean__
 
+#include <SDL2/SDL_mutex.h>
 #include "graphics/OpenGLContent.h"
 
 namespace sf
@@ -34,7 +35,7 @@ struct OceanParams
 class OpenGLOcean 
 {
 public:
-	OpenGLOcean(bool geometricWaves);
+	OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics);
 	~OpenGLOcean();
 	
 	void Simulate();
@@ -45,6 +46,8 @@ public:
 	void DrawVolumeMask(glm::vec3 eyePos, glm::vec3 lookingDir, glm::mat4 view, glm::mat4 projection);
 	void ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
 	void ShowTexture(int id, glm::vec4 rect);
+    
+    GLfloat getWaveHeight(GLfloat x, GLfloat y);
     void setTurbidity(GLfloat t);
     GLfloat getTurbidity();
     void setLightAbsorption(glm::vec3 la);
@@ -52,7 +55,8 @@ public:
 
 private:	
 	GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
-	int bitReverse(int i, int N);
+    GLfloat ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel);
+    int bitReverse(int i, int N);
 	void computeWeight(int N, int k, float &Wr, float &Wi);
 	float ComputeSlopeVariance();
 	float GetSlopeVariance(float kx, float ky, float *spectrumSample);
@@ -67,7 +71,9 @@ private:
 	GLuint oceanTextures[6];
 	
     bool waves;
-	OceanParams params;
+    SDL_mutex* hydroMutex;
+    GLfloat* fftData;
+    OceanParams params;
 	QuadTree* qt;
 	int64_t lastTime;
 	GLuint vao;

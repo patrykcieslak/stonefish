@@ -14,7 +14,7 @@
 class SlidingTestManager : public SimulationManager
 {
 public:
-    SlidingTestManager(btScalar stepsPerSecond);
+    SlidingTestManager(Scalar stepsPerSecond);
     
     void BuildScenario();
 };

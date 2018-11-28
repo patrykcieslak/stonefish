@@ -10,7 +10,7 @@
 #define __Stonefish_Joint__
 
 #include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
-#include "common.h"
+#include "StonefishCommon.h"
 #include "entities/SolidEntity.h"
 
 #define CONSTRAINT_ERP 0.2
@@ -31,8 +31,8 @@ public:
     virtual ~Joint();
     
     virtual void ApplyDamping() = 0;
-	virtual bool SolvePositionIC(btScalar linearTolerance, btScalar angularTolerance) = 0;
-    virtual btVector3 Render() = 0;
+	virtual bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance) = 0;
+    virtual Vector3 Render() = 0;
     virtual JointType getType() = 0;
     
     void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
@@ -41,7 +41,7 @@ public:
     btTypedConstraint* getConstraint();
     
     //In the world frame
-    btScalar getFeedback(unsigned int dof);
+    Scalar getFeedback(unsigned int dof);
     
     std::string getName();
     

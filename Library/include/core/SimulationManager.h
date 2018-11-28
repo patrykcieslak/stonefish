@@ -12,7 +12,6 @@
 //Engine core
 #include "core/ResearchDynamicsWorld.h"
 #include "core/ResearchConstraintSolver.h"
-#include "core/UnitSystem.h"
 #include "core/NameManager.h"
 #include "core/MaterialManager.h"
 #include "core/Robot.h"
@@ -58,7 +57,7 @@ class SimulationManager
     friend class OpenGLPipeline;
     
 public:
-    SimulationManager(UnitSystems unitSystem = MKS, bool zAxisUp = false, btScalar stepsPerSecond = btScalar(60), SolverType st = SI, CollisionFilteringType cft = EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
+    SimulationManager(bool zAxisUp = false, Scalar stepsPerSecond = Scalar(60), SolverType st = SI, CollisionFilteringType cft = EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
 	virtual ~SimulationManager(void);
     
     //physics
@@ -74,11 +73,11 @@ public:
     void UpdateDrawingQueue();
 	
     bool LoadSDF(const std::string& path);
-    void AddRobot(Robot* robot, const btTransform& worldTransform);
+    void AddRobot(Robot* robot, const Transform& worldTransform);
     void AddEntity(Entity* ent);
-    void AddStaticEntity(StaticEntity* ent, const btTransform& worldTransform);
-    void AddSolidEntity(SolidEntity* ent, const btTransform& worldTransform);
-    void AddFeatherstoneEntity(FeatherstoneEntity* ent, const btTransform& worldTransform);
+    void AddStaticEntity(StaticEntity* ent, const Transform& worldTransform);
+    void AddSolidEntity(SolidEntity* ent, const Transform& worldTransform);
+    void AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& worldTransform);
     void AddJoint(Joint* jnt);
     void AddActuator(Actuator* act);
     void AddSensor(Sensor* sens);
@@ -86,16 +85,16 @@ public:
     Contact* AddContact(Entity* entA, Entity* entB, size_type contactHistoryLength = 1);
     void EnableCollision(Entity* entA, Entity* entB);
     void DisableCollision(Entity* entA, Entity* entB);
-    void EnableOcean(bool waves = false, Liquid* f = NULL);
+    void EnableOcean(bool waves = false, Fluid* f = NULL);
     
 	Entity* PickEntity(int x, int y);
     int CheckCollision(Entity* entA, Entity* entB);
 
-    btScalar getPhysicsTimeInMiliseconds();
-    void setStepsPerSecond(btScalar steps);
-    void setICSolverParams(bool useGravity, btScalar timeStep = btScalar(0.001), unsigned int maxIterations = 100000, btScalar maxTime = BT_LARGE_FLOAT, btScalar linearTolerance = btScalar(1e-6), btScalar angularTolerance = btScalar(1e-6));
-    btScalar getStepsPerSecond();
-    void getWorldAABB(btVector3& min, btVector3& max);
+    Scalar getPhysicsTimeInMiliseconds();
+    void setStepsPerSecond(Scalar steps);
+    void setICSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000, Scalar maxTime = BT_LARGE_FLOAT, Scalar linearTolerance = Scalar(1e-6), Scalar angularTolerance = Scalar(1e-6));
+    Scalar getStepsPerSecond();
+    void getWorldAABB(Vector3& min, Vector3& max);
     CollisionFilteringType getCollisionFilter();
     SolverType getSolverType();
 	HydrodynamicsType getHydrodynamicsType();
@@ -114,11 +113,11 @@ public:
     Controller* getController(std::string name);
 	Ocean* getOcean();
     
-    void setGravity(btScalar gravityConstant);
-    btVector3 getGravity();
+    void setGravity(Scalar gravityConstant);
+    Vector3 getGravity();
     btMultiBodyDynamicsWorld* getDynamicsWorld();
-    btScalar getSimulationTime();
-	btScalar getRealtimeFactor();
+    Scalar getSimulationTime();
+	Scalar getRealtimeFactor();
     MaterialManager* getMaterialManager();
 	NameManager* getNameManager();
     OpenGLTrackball* getTrackball();
@@ -128,9 +127,9 @@ public:
     bool drawLightDummies;
     
 protected:
-    static void SolveICTickCallback(btDynamicsWorld* world, btScalar timeStep);
-    static void SimulationTickCallback(btDynamicsWorld* world, btScalar timeStep);
-    static void SimulationPostTickCallback(btDynamicsWorld* world, btScalar timeStep);
+    static void SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep);
+    static void SimulationTickCallback(btDynamicsWorld* world, Scalar timeStep);
+    static void SimulationPostTickCallback(btDynamicsWorld* world, Scalar timeStep);
     static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
     
     btMultiBodyDynamicsWorld* dynamicsWorld;
@@ -148,23 +147,24 @@ private:
 	SolverType solver;
     CollisionFilteringType collisionFilter;
 	HydrodynamicsType hydroType;
-	btScalar sps;
-	btScalar realtimeFactor;
+	Scalar sps;
+	Scalar realtimeFactor;
     unsigned int hydroPrescaler;
     unsigned int hydroCounter;
     SDL_mutex* simSettingsMutex;
     SDL_mutex* simInfoMutex;
+    SDL_mutex* simHydroMutex;
     
-	btScalar simulationTime;
+	Scalar simulationTime;
     uint64_t currentTime;
     uint64_t physicsTime;
     uint64_t ssus;
 	bool icUseGravity;
-	btScalar icTimeStep;
+	Scalar icTimeStep;
     unsigned int icMaxIter;
-    btScalar icMaxTime;
-    btScalar icLinTolerance;
-    btScalar icAngTolerance;
+    Scalar icMaxTime;
+    Scalar icLinTolerance;
+    Scalar icAngTolerance;
     unsigned int mlcpFallbacks;
     bool icProblemSolved;
 	bool simulationFresh;
@@ -178,7 +178,7 @@ private:
     std::vector<Contact*> contacts;
     std::vector<Collision> collisions;
     Ocean* ocean;
-    btScalar g;
+    Scalar g;
     bool zUp;
 
     //graphics

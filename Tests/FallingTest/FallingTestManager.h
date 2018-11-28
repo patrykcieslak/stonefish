@@ -14,7 +14,7 @@
 class FallingTestManager : public sf::SimulationManager
 {
 public:
-    FallingTestManager(btScalar stepsPerSecond);
+    FallingTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario();
 };

@@ -41,25 +41,25 @@ Material StaticEntity::getMaterial()
     return mat;
 }
 
-void StaticEntity::setTransform(const btTransform& trans)
+void StaticEntity::setTransform(const Transform& trans)
 {
     if(rigidBody != NULL)
     {
-        rigidBody->getMotionState()->setWorldTransform(UnitSystem::SetTransform(trans));
-        rigidBody->setCenterOfMassTransform(UnitSystem::SetTransform(trans));
+        rigidBody->getMotionState()->setWorldTransform(trans);
+        rigidBody->setCenterOfMassTransform(trans);
     }
 }
 
-btTransform StaticEntity::getTransform()
+Transform StaticEntity::getTransform()
 {
     if(rigidBody != NULL)
     {
-        btTransform T;
+        Transform T;
         rigidBody->getMotionState()->getWorldTransform(T);
-        return UnitSystem::GetTransform(T);
+        return T;
     }
     else
-        return btTransform::getIdentity();
+        return Transform::getIdentity();
 }
 
 btRigidBody* StaticEntity::getRigidBody()
@@ -77,7 +77,7 @@ void StaticEntity::SetWireframe(bool enabled)
     wireframe = enabled;
 }
 
-void StaticEntity::GetAABB(btVector3& min, btVector3& max)
+void StaticEntity::getAABB(Vector3& min, Vector3& max)
 {
 	if(rigidBody != NULL)
 		rigidBody->getAabb(min, max);
@@ -89,7 +89,7 @@ std::vector<Renderable> StaticEntity::Render()
 	
     if(rigidBody != NULL && objectId >= 0 && isRenderable())
     {
-		btTransform trans;
+		Transform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
 		
 		Renderable item;
@@ -117,10 +117,10 @@ void StaticEntity::BuildRigidBody(btCollisionShape* shape)
     
     shape->setMargin(0.0);
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(btScalar(0), motionState, shape, btVector3(0,0,0));
-    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = btScalar(0); //not used
-    rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = btScalar(0); //not used
-	rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = btScalar(0); //not used
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState, shape, Vector3(0,0,0));
+    rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0); //not used
+    rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0); //not used
+	rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0); //not used
     rigidBodyCI.m_additionalDamping = false;
     
     rigidBody = new btRigidBody(rigidBodyCI);
@@ -132,26 +132,26 @@ void StaticEntity::BuildRigidBody(btCollisionShape* shape)
 
 void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 {
-    AddToDynamicsWorld(world, btTransform::getIdentity());
+    AddToDynamicsWorld(world, Transform::getIdentity());
 }
 
-void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
+void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform)
 {
     if(rigidBody != NULL)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(UnitSystem::SetTransform(worldTransform));
+        btDefaultMotionState* motionState = new btDefaultMotionState(worldTransform);
         rigidBody->setMotionState(motionState);
         world->addRigidBody(rigidBody, MASK_STATIC, MASK_STATIC | MASK_DEFAULT);
     }
 }
 
 //Static members
-void StaticEntity::GroupTransform(std::vector<StaticEntity*>& objects, const btTransform& centre, const btTransform& transform)
+void StaticEntity::GroupTransform(std::vector<StaticEntity*>& objects, const Transform& centre, const Transform& transform)
 {
     for(unsigned int i=0; i<objects.size(); ++i)
     {
-        btTransform Tw = objects[i]->getTransform();
-        btTransform Tc = centre.inverse() * Tw;
+        Transform Tw = objects[i]->getTransform();
+        Transform Tc = centre.inverse() * Tw;
         Tc = transform * Tc;
         Tw = centre * Tc;
         objects[i]->setTransform(Tw);

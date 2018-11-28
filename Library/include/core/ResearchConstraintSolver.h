@@ -11,6 +11,7 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
 #include <BulletDynamics/MLCPSolvers/btMLCPSolverInterface.h>
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -43,12 +44,12 @@ protected:
 	btAlignedObjectArray<btSolverConstraint*> m_allConstraintPtrArray;
 	btMLCPSolverInterface* m_solver;
 	int m_fallback;
-	btScalar m_cfm;
+	Scalar m_cfm;
     bool m_gUseMatrixMultiply;
     bool m_interleaveContactAndFriction;
 
-	virtual btScalar solveGroupCacheFriendlySetup(btCollisionObject** bodies, int numBodies, btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer);
-	virtual btScalar solveGroupCacheFriendlyIterations(btCollisionObject** bodies ,int numBodies,btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer);
+	virtual Scalar solveGroupCacheFriendlySetup(btCollisionObject** bodies, int numBodies, btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer);
+	virtual Scalar solveGroupCacheFriendlyIterations(btCollisionObject** bodies ,int numBodies,btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer);
     
 	virtual void createMLCP(const btContactSolverInfo& infoGlobal);
 	virtual void createMLCPFast(const btContactSolverInfo& infoGlobal);

@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Box__
@@ -13,20 +13,34 @@
 
 namespace sf
 {
-
-class Box : public SolidEntity
-{
-public:
-    Box(std::string uniqueName, const btVector3& dimensions, const btTransform& originTrans, Material m, int lookId = -1, btScalar thickness = btScalar(-1), bool isBuoyant = true);
-    ~Box();
-    
-    SolidType getSolidType();
-    btCollisionShape* BuildCollisionShape();
-
-private:
-    btVector3 halfExtents;
-};
-    
+    //! A class representing a box shaped rigid body.
+    class Box : public SolidEntity
+    {
+    public:
+        //! A constructor.
+        /*!
+         \param uniqueName a name for the box
+         \param dimensions a vector of box dimensions (side lengths)
+         \param originTrans a transformation of the box origin
+         \param m a material of the box
+         \param lookId an index of the graphical material used to render the box
+         \param thickness defines the thickness of the box walls, if positive the box is treated as shell
+         \param isBuoyant defines if the box should be subject to buoyancy force
+        */
+        Box(std::string uniqueName, const Vector3& dimensions, const Transform& originTrans, Material m,
+                                    int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        
+        void SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& G2CG);
+        
+        //! A method that returns the type of body.
+        SolidType getSolidType();
+        
+        //! A method that returns the collision shape for the box.
+        btCollisionShape* BuildCollisionShape();
+        
+    private:
+        Vector3 halfExtents;
+    };
 }
 
 #endif

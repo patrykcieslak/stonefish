@@ -23,16 +23,16 @@ namespace sf
 class Pipe : public VelocityField
 {
 public:
-    Pipe(const btVector3& point1, const btVector3& point2, btScalar radius1, btScalar radius2, btScalar inletVelocity, btScalar exponent);
+    Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar radius2, Scalar inletVelocity, Scalar exponent);
     
-    btVector3 GetVelocityAtPoint(const btVector3& p);
+    Vector3 GetVelocityAtPoint(const Vector3& p);
     std::vector<Renderable> Render();    
 
 private:
-    btVector3 p1, n;
-    btScalar r1, r2, l;
-    btScalar vin;
-    btScalar gamma;
+    Vector3 p1, n;
+    Scalar r1, r2, l;
+    Scalar vin;
+    Scalar gamma;
 };
     
 }

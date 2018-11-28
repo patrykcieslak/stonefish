@@ -8,6 +8,8 @@
 
 #include "entities/ForcefieldEntity.h"
 
+#include "graphics/OpenGLContent.h"
+
 using namespace sf;
 
 ForcefieldEntity::ForcefieldEntity(std::string uniqueName) : Entity(uniqueName)
@@ -40,7 +42,7 @@ std::vector<Renderable> ForcefieldEntity::Render()
 	return std::vector<Renderable>(0);
 }
 
-void ForcefieldEntity::GetAABB(btVector3& min, btVector3& max)
+void ForcefieldEntity::getAABB(Vector3& min, Vector3& max)
 {
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);

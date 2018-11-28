@@ -15,7 +15,7 @@
 #include <sensors/Trajectory.h>
 #include <utils/SystemUtil.hpp>
 
-SlidingTestManager::SlidingTestManager(btScalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, DANTZIG, EXCLUSIVE)
+SlidingTestManager::SlidingTestManager(Scalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, DANTZIG, EXCLUSIVE)
 {
 }
 
@@ -35,23 +35,23 @@ void SlidingTestManager::BuildScenario()
     int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
     
     ////////OBJECTS
-    btScalar angle = M_PI/180.0 * 14.9;
+    Scalar angle = M_PI/180.0 * 14.9;
     
     Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Ground"), grid);
-    AddStaticEntity(floor, btTransform(btQuaternion(0,angle,0), btVector3(0,0,0)));
+    AddStaticEntity(floor, Transform(Quaternion(0,angle,0), Vector3(0,0,0)));
   
-    Box* box = new Box("Box", btVector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
-    AddSolidEntity(box, btTransform(btQuaternion(0,angle,0), btVector3(0, 0, 0.052)));
+    Box* box = new Box("Box", Vector3(0.1,0.1,0.1), getMaterialManager()->getMaterial("Steel"), green);
+    AddSolidEntity(box, Transform(Quaternion(0,angle,0), Vector3(0, 0, 0.052)));
     
-    Trajectory* traj = new Trajectory("Trajectory", box, btTransform::getIdentity());
+    Trajectory* traj = new Trajectory("Trajectory", box, Transform::getIdentity());
     traj->setRenderable(true);
     AddSensor(traj);
     
     //////CAMERA & LIGHT//////
-    Light* omni = new Light("Omni", btVector3(0,0,1.0), OpenGLLight::ColorFromTemperature(4000, 10000));
+    Light* omni = new Light("Omni", Vector3(0,0,1.0), OpenGLLight::ColorFromTemperature(4000, 10000));
     AddActuator(omni);
     
-    //OpenGLSpotLight* spot = new OpenGLSpotLight(btVector3(0,0,0.5), btVector3(1.0,0,0.0), 30, OpenGLLight::ColorFromTemperature(4000, 10));
+    //OpenGLSpotLight* spot = new OpenGLSpotLight(Vector3(0,0,0.5), Vector3(1.0,0,0.0), 30, OpenGLLight::ColorFromTemperature(4000, 10));
     //spot->GlueToEntity(box);
     //AddLight(spot);
 }

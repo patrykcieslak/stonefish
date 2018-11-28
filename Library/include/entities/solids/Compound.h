@@ -17,20 +17,20 @@ namespace sf
 typedef struct
 {
     SolidEntity* solid;
-    btTransform position;
+    Transform position;
     bool isExternal;
 } Part;
 
 class Compound : public SolidEntity
 {
 public:
-    Compound(std::string uniqueName, SolidEntity* firstExternalPart, const btTransform& position);
+    Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& position);
     ~Compound();
 	
-	void AddInternalPart(SolidEntity* solid, const btTransform& position);
-    void AddExternalPart(SolidEntity* solid, const btTransform& position);
+	void AddInternalPart(SolidEntity* solid, const Transform& position);
+    void AddExternalPart(SolidEntity* solid, const Transform& position);
 	void RecalculatePhysicalProperties();
-    void ComputeFluidForces(HydrodynamicsSettings settings, const Ocean* liquid);
+    void ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid);
 	
     SolidType getSolidType();
     std::vector<Vertex>* getMeshVertices();

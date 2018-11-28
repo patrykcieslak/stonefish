@@ -9,7 +9,7 @@
 #ifndef __Stonefish_NED__
 #define __Stonefish_NED__
 
-#include "common.h"
+#include "StonefishCommon.h"
 
 namespace sf
 {
@@ -17,45 +17,45 @@ namespace sf
 class NED
 {
  public:
-    NED(const btScalar lat, const btScalar lon, const btScalar height);
+    NED(const Scalar lat, const Scalar lon, const Scalar height);
 
-    void geodetic2Ecef(const btScalar lat, const btScalar lon, const btScalar height,
-                       btScalar& x, btScalar& y, btScalar& z);
+    void geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
+                       Scalar& x, Scalar& y, Scalar& z);
 
-    void ecef2Geodetic(const btScalar x, const btScalar y, const btScalar z,
-                       btScalar& lat, btScalar& lon, btScalar& height);
+    void ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
+                       Scalar& lat, Scalar& lon, Scalar& height);
 
-    void ecef2Ned(const btScalar x, const btScalar y, const btScalar z,
-                  btScalar& north, btScalar& east, btScalar& depth);
+    void ecef2Ned(const Scalar x, const Scalar y, const Scalar z,
+                  Scalar& north, Scalar& east, Scalar& depth);
 
-    void ned2Ecef(const btScalar north, const btScalar east, const btScalar depth,
-                  btScalar& x, btScalar& y, btScalar& z);
+    void ned2Ecef(const Scalar north, const Scalar east, const Scalar depth,
+                  Scalar& x, Scalar& y, Scalar& z);
 
-    void geodetic2Ned(const btScalar lat, const btScalar lon, const btScalar height,
-                      btScalar& north, btScalar& east, btScalar& depth);
+    void geodetic2Ned(const Scalar lat, const Scalar lon, const Scalar height,
+                      Scalar& north, Scalar& east, Scalar& depth);
 
-    void ned2Geodetic(const btScalar north, const btScalar east, const btScalar depth,
-                      btScalar& lat, btScalar& lon, btScalar& height);
+    void ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth,
+                      Scalar& lat, Scalar& lon, Scalar& height);
 
  private:
-    btScalar _init_lat;
-    btScalar _init_lon;
-    btScalar _init_h;
-    btScalar _init_ecef_x;
-    btScalar _init_ecef_y;
-    btScalar _init_ecef_z;
-    btMatrix3x3 _ecef_to_ned_matrix;
-    btMatrix3x3 _ned_to_ecef_matrix;
+    Scalar _init_lat;
+    Scalar _init_lon;
+    Scalar _init_h;
+    Scalar _init_ecef_x;
+    Scalar _init_ecef_y;
+    Scalar _init_ecef_z;
+    Matrix3 _ecef_to_ned_matrix;
+    Matrix3 _ned_to_ecef_matrix;
 
-    btScalar __cbrt__(const btScalar x);
-    btMatrix3x3 __nRe__(const btScalar lat_rad, const btScalar lon_rad);
+    Scalar __cbrt__(const Scalar x);
+    Matrix3 __nRe__(const Scalar lat_rad, const Scalar lon_rad);
 	
 	//World Geodetic System 1984 (WGS84)
-	static const btScalar a;
-	static const btScalar b;
-	static const btScalar esq;
-	static const btScalar e1sq;
-	static const btScalar f;
+	static const Scalar a;
+	static const Scalar b;
+	static const Scalar esq;
+	static const Scalar e1sq;
+	static const Scalar f;
 };
 
 }

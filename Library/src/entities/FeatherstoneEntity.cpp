@@ -18,24 +18,24 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     //baseRenderable = fixedBase ? false : true;
     baseRenderable = true;
 	
-    eigMatrix6x6 aMass = baseSolid->getAddedMass();
-    btScalar M = baseSolid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    btVector3 I = baseSolid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    Matrix6Eigen aMass = baseSolid->getAddedMass();
+    Scalar M = baseSolid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    Vector3 I = baseSolid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
     
     multiBody = new btMultiBody(totalNumOfLinks - 1, M, I, fixedBase, true);
     
-    multiBody->setBaseWorldTransform(btTransform::getIdentity());
-    multiBody->setAngularDamping(btScalar(0));
-    multiBody->setLinearDamping(btScalar(0));
+    multiBody->setBaseWorldTransform(Transform::getIdentity());
+    multiBody->setAngularDamping(Scalar(0));
+    multiBody->setLinearDamping(Scalar(0));
     multiBody->setMaxAppliedImpulse(BT_LARGE_FLOAT);
-    multiBody->setMaxCoordinateVelocity(btScalar(1000));
+    multiBody->setMaxCoordinateVelocity(Scalar(1000));
     multiBody->useRK4Integration(false); //Enabling RK4 causes unreallistic energy accumulation (strange motions in 0 gravity)
     multiBody->useGlobalVelocities(false); //See previous comment
     multiBody->setHasSelfCollision(false); //No self collision by default
     multiBody->setUseGyroTerm(true);
     multiBody->setCanSleep(true);
    
-    AddLink(baseSolid, btTransform::getIdentity());
+    AddLink(baseSolid, Transform::getIdentity());
 	multiBody->finalizeMultiDof();
 }
 
@@ -55,17 +55,17 @@ EntityType FeatherstoneEntity::getType()
     return ENTITY_FEATHERSTONE;
 }
 
-void FeatherstoneEntity::GetAABB(btVector3& min, btVector3& max)
+void FeatherstoneEntity::getAABB(Vector3& min, Vector3& max)
 {
     //Initialize AABB
-    min = btVector3(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
-    max = btVector3(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+    min = Vector3(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+    max = Vector3(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
     
     for(unsigned int i = 0; i < links.size(); i++)
     {
         //Get link AABB
-        btVector3 lmin;
-        btVector3 lmax;
+        Vector3 lmin;
+        Vector3 lmax;
         links[i].solid->getMultibodyLinkCollider()->getCollisionShape()->getAabb(getLinkTransform(i), lmin, lmax);
         
         //Merge with other AABBs
@@ -81,14 +81,14 @@ void FeatherstoneEntity::GetAABB(btVector3& min, btVector3& max)
 
 void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
 {
-    AddToDynamicsWorld(world, btTransform::getIdentity());
+    AddToDynamicsWorld(world, Transform::getIdentity());
 }
 
-void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const btTransform& worldTransform)
+void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform)
 {
-    setBaseTransform(UnitSystem::SetTransform(worldTransform));
-    multiBody->setBaseVel(btVector3(0,0,0));
-    multiBody->setBaseOmega(btVector3(0,0,0));
+    setBaseTransform(worldTransform);
+    multiBody->setBaseVel(Vector3(0,0,0));
+    multiBody->setBaseOmega(Vector3(0,0,0));
     world->addMultiBody(multiBody);
     
     for(unsigned int i=0; i<joints.size(); ++i)
@@ -110,20 +110,20 @@ void FeatherstoneEntity::setBaseRenderable(bool render)
     baseRenderable = render;
 }
 
-void FeatherstoneEntity::setBaseTransform(const btTransform& trans)
+void FeatherstoneEntity::setBaseTransform(const Transform& trans)
 {
-	btTransform T0 = trans * links[0].solid->getGeomToCOGTransform(); 
+	Transform T0 = trans * links[0].solid->getG2CGTransform(); 
     multiBody->getBaseCollider()->setWorldTransform(T0);
 	multiBody->setBaseWorldTransform(T0);
     
 	for(unsigned int i=1; i<links.size(); ++i)
 	{
-		btTransform tr = links[i].solid->getMultibodyLinkCollider()->getWorldTransform();
+		Transform tr = links[i].solid->getMultibodyLinkCollider()->getWorldTransform();
 		links[i].solid->getMultibodyLinkCollider()->setWorldTransform(trans * tr);
 	}
 }
 
-void FeatherstoneEntity::setJointIC(unsigned int index, btScalar position, btScalar velocity)
+void FeatherstoneEntity::setJointIC(unsigned int index, Scalar position, Scalar velocity)
 {
     if(index >= joints.size())
         return;
@@ -131,13 +131,13 @@ void FeatherstoneEntity::setJointIC(unsigned int index, btScalar position, btSca
     switch (joints[index].type)
     {
         case btMultibodyLink::eRevolute:
-            multiBody->setJointPos(joints[index].child - 1, UnitSystem::SetAngle(position));
-            multiBody->setJointVel(joints[index].child - 1, UnitSystem::SetAngle(velocity));
+            multiBody->setJointPos(joints[index].child - 1, position);
+            multiBody->setJointVel(joints[index].child - 1, velocity);
             break;
             
         case btMultibodyLink::ePrismatic:
-            multiBody->setJointPos(joints[index].child - 1, UnitSystem::SetLength(position));
-            multiBody->setJointVel(joints[index].child - 1, UnitSystem::SetLength(velocity));
+            multiBody->setJointPos(joints[index].child - 1, position);
+            multiBody->setJointVel(joints[index].child - 1, velocity);
             break;
             
         default:
@@ -145,7 +145,7 @@ void FeatherstoneEntity::setJointIC(unsigned int index, btScalar position, btSca
     }
 }
 
-void FeatherstoneEntity::setJointDamping(unsigned int index, btScalar constantFactor, btScalar viscousFactor)
+void FeatherstoneEntity::setJointDamping(unsigned int index, Scalar constantFactor, Scalar viscousFactor)
 {
     if(index >= joints.size())
         return;
@@ -153,18 +153,18 @@ void FeatherstoneEntity::setJointDamping(unsigned int index, btScalar constantFa
     switch (joints[index].type)
     {
         case btMultibodyLink::eRevolute:
-            joints[index].sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetTorque(constantFactor) : btScalar(0.);
+            joints[index].sigDamping = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
             break;
         
         case btMultibodyLink::ePrismatic:
-            joints[index].sigDamping = constantFactor > btScalar(0.) ? UnitSystem::SetForce(constantFactor) : btScalar(0.);
+            joints[index].sigDamping = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
             break;
             
         default:
             break;
     }
     
-    joints[index].velDamping = viscousFactor > btScalar(0.) ? viscousFactor : btScalar(0.);
+    joints[index].velDamping = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
 }
 
 std::string FeatherstoneEntity::getJointName(unsigned int index)
@@ -175,12 +175,12 @@ std::string FeatherstoneEntity::getJointName(unsigned int index)
         return joints[index].name;
 }
 
-void FeatherstoneEntity::getJointPosition(unsigned int index, btScalar &position, btMultibodyLink::eFeatherstoneJointType &jointType)
+void FeatherstoneEntity::getJointPosition(unsigned int index, Scalar &position, btMultibodyLink::eFeatherstoneJointType &jointType)
 {
     if(index >= joints.size())
     {
         jointType = btMultibodyLink::eInvalid;
-        position = btScalar(0.);
+        position = Scalar(0.);
     }
     else
     {
@@ -202,12 +202,12 @@ void FeatherstoneEntity::getJointPosition(unsigned int index, btScalar &position
     }
 }
 
-void FeatherstoneEntity::getJointVelocity(unsigned int index, btScalar &velocity, btMultibodyLink::eFeatherstoneJointType &jointType)
+void FeatherstoneEntity::getJointVelocity(unsigned int index, Scalar &velocity, btMultibodyLink::eFeatherstoneJointType &jointType)
 {
     if(index >= joints.size())
     {
         jointType = btMultibodyLink::eInvalid;
-        velocity = btScalar(0.);
+        velocity = Scalar(0.);
     }
     else
     {
@@ -229,23 +229,23 @@ void FeatherstoneEntity::getJointVelocity(unsigned int index, btScalar &velocity
     }
 }
 
-btScalar FeatherstoneEntity::getJointTorque(unsigned int index)
+Scalar FeatherstoneEntity::getJointTorque(unsigned int index)
 {
     if(index >= joints.size())
-        return btScalar(0);
+        return Scalar(0);
     else
         return multiBody->getJointTorque(joints[index].child - 1);
 }
 
-btScalar FeatherstoneEntity::getMotorImpulse(unsigned int index)
+Scalar FeatherstoneEntity::getMotorImpulse(unsigned int index)
 {
     if(index >= joints.size() || joints[index].motor == NULL)
-        return btScalar(0);
+        return Scalar(0);
     else
         return joints[index].motor->getAppliedImpulse(0);
 }
 
-unsigned int FeatherstoneEntity::getJointFeedback(unsigned int index, btVector3& force, btVector3& torque)
+unsigned int FeatherstoneEntity::getJointFeedback(unsigned int index, Vector3& force, Vector3& torque)
 {
 	if(index >= joints.size())
 	{
@@ -255,11 +255,11 @@ unsigned int FeatherstoneEntity::getJointFeedback(unsigned int index, btVector3&
 	}
 	else
 	{
-		force = btVector3(joints[index].feedback->m_reactionForces.m_topVec[0],
+		force = Vector3(joints[index].feedback->m_reactionForces.m_topVec[0],
 						  joints[index].feedback->m_reactionForces.m_topVec[1],
 						  joints[index].feedback->m_reactionForces.m_topVec[2]);
 						  
-		torque = btVector3(joints[index].feedback->m_reactionForces.m_bottomVec[0],
+		torque = Vector3(joints[index].feedback->m_reactionForces.m_bottomVec[0],
 						   joints[index].feedback->m_reactionForces.m_bottomVec[1],
 						   joints[index].feedback->m_reactionForces.m_bottomVec[2]);
                       
@@ -269,11 +269,11 @@ unsigned int FeatherstoneEntity::getJointFeedback(unsigned int index, btVector3&
 	}
 }
 
-btVector3 FeatherstoneEntity::getJointAxis(unsigned int index)
+Vector3 FeatherstoneEntity::getJointAxis(unsigned int index)
 {
     if(index >= joints.size())
     {
-        return btVector3(0,0,0);
+        return Vector3(0,0,0);
     }
     else
     {
@@ -291,29 +291,29 @@ FeatherstoneLink FeatherstoneEntity::getLink(unsigned int index)
 	return links[index];
 }
 
-btTransform FeatherstoneEntity::getLinkTransform(unsigned int index)
+Transform FeatherstoneEntity::getLinkTransform(unsigned int index)
 {
     if(index >= links.size())
-        return btTransform::getIdentity();
+        return Transform::getIdentity();
     
     if(index == 0)
         return multiBody->getBaseWorldTransform();
     else
-        return links[index].solid->getTransform();
+        return links[index].solid->getCGTransform();
 }
 
-btVector3 FeatherstoneEntity::getLinkLinearVelocity(unsigned int index)
+Vector3 FeatherstoneEntity::getLinkLinearVelocity(unsigned int index)
 {
     if(index >= links.size())
-        return btVector3(0.,0.,0.);
+        return Vector3(0.,0.,0.);
     
     return links[index].solid->getLinearVelocity();
 }
 
-btVector3 FeatherstoneEntity::getLinkAngularVelocity(unsigned int index)
+Vector3 FeatherstoneEntity::getLinkAngularVelocity(unsigned int index)
 {
     if(index >= links.size())
-        return btVector3(0.,0.,0.);
+        return Vector3(0.,0.,0.);
     
     return links[index].solid->getAngularVelocity();
 }
@@ -340,30 +340,30 @@ unsigned int FeatherstoneEntity::getNumOfMovingJoints()
     return movingJoints;
 }
 
-void FeatherstoneEntity::AddLink(SolidEntity *solid, const btTransform& transform)
+void FeatherstoneEntity::AddLink(SolidEntity *solid, const Transform& transform)
 {
     if(solid != NULL)
     {
         //Add link
-        links.push_back(FeatherstoneLink(solid, UnitSystem::SetTransform(transform)));
+        links.push_back(FeatherstoneLink(solid, transform));
         //Build collider
         links.back().solid->BuildMultibodyLinkCollider(multiBody, (int)(links.size() - 1), SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld());
         
         if(links.size() > 1) //If not base link
         {
-            btTransform trans =  UnitSystem::SetTransform(transform) * links[links.size()-1].solid->getGeomToCOGTransform();
-            links.back().solid->setTransform(trans);
+            Transform trans =  transform * links[links.size()-1].solid->getG2CGTransform();
+            links.back().solid->setCGTransform(trans);
         }
         else
         {
-            btTransform trans = UnitSystem::SetTransform(transform) * links[0].solid->getGeomToCOGTransform();
-            links[0].solid->setTransform(trans);
+            Transform trans = transform * links[0].solid->getG2CGTransform();
+            links[0].solid->setCGTransform(trans);
             multiBody->setBaseWorldTransform(trans);
         }
     }
 }
 
-int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot, const btVector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -378,22 +378,22 @@ int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, 
     
     //Setup joint
     //q' = q2 * q1
-    btQuaternion ornParentToChild = getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
-    btVector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (UnitSystem::SetPosition(pivot) - getLinkTransform(parent).getOrigin());
-    btVector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - UnitSystem::SetPosition(pivot));
+    Quaternion ornParentToChild = getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
+    Vector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (pivot - getLinkTransform(parent).getOrigin());
+    Vector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - pivot);
     
     //Get mass properties (including addem mass)
-    eigMatrix6x6 aMass = links[child].solid->getAddedMass();
-    btScalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    btVector3 I = links[child].solid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    Matrix6Eigen aMass = links[child].solid->getAddedMass();
+    Scalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    Vector3 I = links[child].solid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
     
     //Setup joint
     joint.axisInChild = getLinkTransform(child).getBasis().inverse() * axis.normalized();
     joint.pivotInChild = pivotToChildComOffset;
     multiBody->setupRevolute(child - 1, M, I, parent - 1, ornParentToChild, joint.axisInChild, parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
     multiBody->finalizeMultiDof();
-    multiBody->setJointPos((int)child - 1, btScalar(0));
-    multiBody->setJointVel((int)child - 1, btScalar(0));
+    multiBody->setJointPos((int)child - 1, Scalar(0));
+    multiBody->setJointVel((int)child - 1, Scalar(0));
     
     //Add feedback
     joint.feedback = new btMultiBodyJointFeedback();
@@ -403,7 +403,7 @@ int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, 
     return ((int)joints.size() - 1);
 }
 
-int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -418,22 +418,22 @@ int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent,
     
     //Setup joint
     //q' = q2 * q1
-    btQuaternion ornParentToChild = getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
-    btVector3 parentComToPivotOffset = btVector3(0,0,0);
-    btVector3 pivotToChildComOffset = getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin()-getLinkTransform(parent).getOrigin());
+    Quaternion ornParentToChild = getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
+    Vector3 parentComToPivotOffset = Vector3(0,0,0);
+    Vector3 pivotToChildComOffset = getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin()-getLinkTransform(parent).getOrigin());
     
     //Get mass properties (including addem mass)
-    eigMatrix6x6 aMass = links[child].solid->getAddedMass();
-    btScalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    btVector3 I = links[child].solid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    Matrix6Eigen aMass = links[child].solid->getAddedMass();
+    Scalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    Vector3 I = links[child].solid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
     
     //Check if pivot offset is ok!
     joint.axisInChild = getLinkTransform(child).getBasis().inverse() * axis.normalized();
     joint.pivotInChild = pivotToChildComOffset;
     multiBody->setupPrismatic(child - 1, M, I, parent - 1, ornParentToChild, joint.axisInChild, parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
     multiBody->finalizeMultiDof();
-    multiBody->setJointPos(child - 1, btScalar(0.));
-    multiBody->setJointVel(child - 1, btScalar(0.));
+    multiBody->setJointPos(child - 1, Scalar(0.));
+    multiBody->setJointVel(child - 1, Scalar(0.));
     
     //Add feedback
     joint.feedback = new btMultiBodyJointFeedback();
@@ -443,7 +443,7 @@ int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent,
     return ((int)joints.size() - 1);
 }
 
-int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const btVector3& pivot)
+int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& pivot)
 {
 	//No self joint possible and base cannot be a child
 	if(parent == child || child == 0)
@@ -457,17 +457,17 @@ int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, uns
     FeatherstoneJoint joint(name, btMultibodyLink::eFixed, parent, child);
     
 	//Setup joint
-	btQuaternion ornParentToChild =  getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
-    btVector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (UnitSystem::SetPosition(pivot) - getLinkTransform(parent).getOrigin());
-    btVector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - UnitSystem::SetPosition(pivot));
+	Quaternion ornParentToChild =  getLinkTransform(child).getRotation().inverse() * getLinkTransform(parent).getRotation();
+    Vector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (pivot - getLinkTransform(parent).getOrigin());
+    Vector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - pivot);
     
     //Get mass properties (including addem mass)
-    eigMatrix6x6 aMass = links[child].solid->getAddedMass();
-    btScalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    btVector3 I = links[child].solid->getInertia() + btVector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    Matrix6Eigen aMass = links[child].solid->getAddedMass();
+    Scalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
+    Vector3 I = links[child].solid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
     
     //Setup joint
-    joint.axisInChild = btVector3(0,0,0);
+    joint.axisInChild = Vector3(0,0,0);
     joint.pivotInChild = pivotToChildComOffset;
 	multiBody->setupFixed(child - 1, M, I, parent - 1, ornParentToChild, parentComToPivotOffset, pivotToChildComOffset);
 	multiBody->finalizeMultiDof();
@@ -480,7 +480,7 @@ int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, uns
 	return ((int)joints.size() - 1);
 }
 
-void FeatherstoneEntity::AddJointLimit(unsigned int index, btScalar lower, btScalar upper)
+void FeatherstoneEntity::AddJointLimit(unsigned int index, Scalar lower, Scalar upper)
 {
     if(index >= joints.size())
         return;
@@ -492,7 +492,7 @@ void FeatherstoneEntity::AddJointLimit(unsigned int index, btScalar lower, btSca
     joints[index].limit = jlc;
 }
 
-void FeatherstoneEntity::AddJointMotor(unsigned int index, btScalar maxImpulse)
+void FeatherstoneEntity::AddJointMotor(unsigned int index, Scalar maxImpulse)
 {
     if(index >= joints.size())
         return;
@@ -500,11 +500,11 @@ void FeatherstoneEntity::AddJointMotor(unsigned int index, btScalar maxImpulse)
     if(joints[index].motor != NULL)
         return;
     
-    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, btScalar(0), maxImpulse);
+    btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody, index, Scalar(0), maxImpulse);
     joints[index].motor = jmc;
 }
 
-void FeatherstoneEntity::MotorPositionSetpoint(unsigned int index, btScalar pos, btScalar kp)
+void FeatherstoneEntity::MotorPositionSetpoint(unsigned int index, Scalar pos, Scalar kp)
 {
     if(index >= joints.size())
         return;
@@ -515,7 +515,7 @@ void FeatherstoneEntity::MotorPositionSetpoint(unsigned int index, btScalar pos,
     joints[index].motor->setPositionTarget(pos, kp);
 }
 
-void FeatherstoneEntity::MotorVelocitySetpoint(unsigned int index, btScalar vel, btScalar kd)
+void FeatherstoneEntity::MotorVelocitySetpoint(unsigned int index, Scalar vel, Scalar kd)
 {
     if(index >= joints.size())
         return;
@@ -526,7 +526,7 @@ void FeatherstoneEntity::MotorVelocitySetpoint(unsigned int index, btScalar vel,
     joints[index].motor->setVelocityTarget(vel, kd);
 }
 
-void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
+void FeatherstoneEntity::DriveJoint(unsigned int index, Scalar forceTorque)
 {
     if(index >= joints.size())
         return;
@@ -534,11 +534,11 @@ void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
     switch (joints[index].type)
     {
         case btMultibodyLink::eRevolute:
-            multiBody->addJointTorque(joints[index].child - 1, UnitSystem::SetTorque(forceTorque));
+            multiBody->addJointTorque(joints[index].child - 1, forceTorque);
             break;
             
         case btMultibodyLink::ePrismatic:
-            multiBody->addJointTorque(joints[index].child - 1, UnitSystem::SetForce(forceTorque));
+            multiBody->addJointTorque(joints[index].child - 1, forceTorque);
             break;
             
         default:
@@ -546,7 +546,7 @@ void FeatherstoneEntity::DriveJoint(unsigned int index, btScalar forceTorque)
     }
 }
 
-void FeatherstoneEntity::ApplyGravity(const btVector3& g)
+void FeatherstoneEntity::ApplyGravity(const Vector3& g)
 {
     bool isSleeping = false;
     
@@ -579,18 +579,18 @@ void FeatherstoneEntity::ApplyDamping()
     {
         if(joints[i].sigDamping >= SIMD_EPSILON || joints[i].velDamping >= SIMD_EPSILON) //If damping factors not equal zero
         {
-            btScalar velocity = multiBody->getJointVel(joints[i].child - 1);
+            Scalar velocity = multiBody->getJointVel(joints[i].child - 1);
             
             if(btFabs(velocity) >= SIMD_EPSILON) //If velocity higher than zero
             {
-                btScalar damping = - velocity/btFabs(velocity) * joints[i].sigDamping - velocity * joints[i].velDamping;
+                Scalar damping = - velocity/btFabs(velocity) * joints[i].sigDamping - velocity * joints[i].velDamping;
 				multiBody->addJointTorque(joints[i].child - 1, damping);
             }
         }
     }
 }
 
-void FeatherstoneEntity::AddLinkForce(unsigned int index, const btVector3& F)
+void FeatherstoneEntity::AddLinkForce(unsigned int index, const Vector3& F)
 {
     if(index >= links.size())
         return;
@@ -601,7 +601,7 @@ void FeatherstoneEntity::AddLinkForce(unsigned int index, const btVector3& F)
         multiBody->addLinkForce(index-1, F);
 }
  
-void FeatherstoneEntity::AddLinkTorque(unsigned int index, const btVector3& tau)
+void FeatherstoneEntity::AddLinkTorque(unsigned int index, const Vector3& tau)
 {
     if(index >= links.size())
         return;
@@ -612,7 +612,7 @@ void FeatherstoneEntity::AddLinkTorque(unsigned int index, const btVector3& tau)
         multiBody->addLinkTorque(index-1, tau);
 }
 
-void FeatherstoneEntity::UpdateAcceleration(btScalar dt)
+void FeatherstoneEntity::UpdateAcceleration(Scalar dt)
 {
 	for(unsigned int i=0; i<links.size(); ++i)
 		links[i].solid->UpdateAcceleration(dt);

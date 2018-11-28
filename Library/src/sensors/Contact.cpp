@@ -57,13 +57,13 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
     else
     {
         ContactPoint lastContact = points.back();
-        btScalar closestDistance = BT_LARGE_FLOAT;
+        Scalar closestDistance = BT_LARGE_FLOAT;
     
         for(int i = 0; i < manifold->getNumContacts(); i++)
         {
 
-            btVector3 candidate = swapped ? manifold->getContactPoint(i).getPositionWorldOnB() : manifold->getContactPoint(i).getPositionWorldOnA();
-            btScalar distance = ((swapped ? lastContact.locationB : lastContact.locationA) - candidate).length2();
+            Vector3 candidate = swapped ? manifold->getContactPoint(i).getPositionWorldOnB() : manifold->getContactPoint(i).getPositionWorldOnA();
+            Scalar distance = ((swapped ? lastContact.locationB : lastContact.locationA) - candidate).length2();
             if(distance < closestDistance)
             {
                 mp = &manifold->getContactPoint(i);
@@ -71,7 +71,7 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
             }
         }
         
-        if(closestDistance < btScalar(0.001)*btScalar(0.001)) //Distance less than 1 mm --> skip to save memory and drawing time
+        if(closestDistance < Scalar(0.001)*Scalar(0.001)) //Distance less than 1 mm --> skip to save memory and drawing time
             return;
     }
     
@@ -79,8 +79,8 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
     {
         p.locationA = swapped ? mp->getPositionWorldOnB() : mp->getPositionWorldOnA();
         p.locationB = swapped ? mp->getPositionWorldOnA() : mp->getPositionWorldOnB();
-        p.slippingVelocityA = (swapped ? btScalar(-1.) : btScalar(1.)) * btVector3(*((btVector3*)mp->m_userPersistentData));
-        p.normalForceA = (swapped ? btScalar(1.) : btScalar(-1.)) * mp->m_normalWorldOnB * mp->m_appliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
+        p.slippingVelocityA = (swapped ? Scalar(-1.) : Scalar(1.)) * Vector3(*((Vector3*)mp->m_userPersistentData));
+        p.normalForceA = (swapped ? Scalar(1.) : Scalar(-1.)) * mp->m_normalWorldOnB * mp->m_appliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
         AddContactPoint(p);
     }
 }
@@ -122,15 +122,15 @@ void Contact::SaveContactDataToOctaveFile(const char* path, bool includeTime)
         if(includeTime)
             matrix->setElem(i, 0, points[i].timeStamp);
         
-        matrix->setElem(i, offset, UnitSystem::GetLength(points[i].locationA.x()));
-        matrix->setElem(i, offset + 1, UnitSystem::GetLength(points[i].locationA.y()));
-        matrix->setElem(i, offset + 2, UnitSystem::GetLength(points[i].locationA.z()));
-        matrix->setElem(i, offset + 3, UnitSystem::GetVelocity(points[i].slippingVelocityA.x()));
-        matrix->setElem(i, offset + 4, UnitSystem::GetVelocity(points[i].slippingVelocityA.y()));
-        matrix->setElem(i, offset + 5, UnitSystem::GetVelocity(points[i].slippingVelocityA.z()));
-        matrix->setElem(i, offset + 6, UnitSystem::GetForce(points[i].normalForceA.x()));
-        matrix->setElem(i, offset + 7, UnitSystem::GetForce(points[i].normalForceA.y()));
-        matrix->setElem(i, offset + 8, UnitSystem::GetForce(points[i].normalForceA.z()));
+        matrix->setElem(i, offset, points[i].locationA.x());
+        matrix->setElem(i, offset + 1, points[i].locationA.y());
+        matrix->setElem(i, offset + 2, points[i].locationA.z());
+        matrix->setElem(i, offset + 3, points[i].slippingVelocityA.x());
+        matrix->setElem(i, offset + 4, points[i].slippingVelocityA.y());
+        matrix->setElem(i, offset + 5, points[i].slippingVelocityA.z());
+        matrix->setElem(i, offset + 6, points[i].normalForceA.x());
+        matrix->setElem(i, offset + 7, points[i].normalForceA.y());
+        matrix->setElem(i, offset + 8, points[i].normalForceA.z());
     }
     
     data.addItem(it);
@@ -160,32 +160,32 @@ std::vector<Renderable> Contact::Render()
     
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A)
     {
-		btVector3 p1 = points.back().locationA;
-		btVector3 p2 = points.back().locationA + points.back().slippingVelocityA;
+		Vector3 p1 = points.back().locationA;
+		Vector3 p2 = points.back().locationA + points.back().slippingVelocityA;
 		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
 		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_B)
     {
-        btVector3 p1 = points.back().locationB;
-		btVector3 p2 = points.back().locationB - points.back().slippingVelocityA;
+        Vector3 p1 = points.back().locationB;
+		Vector3 p2 = points.back().locationB - points.back().slippingVelocityA;
 		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
 		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_A)
     {
-        btVector3 p1 = points.back().locationA;
-		btVector3 p2 = points.back().locationA + points.back().normalForceA;
+        Vector3 p1 = points.back().locationA;
+		Vector3 p2 = points.back().locationA + points.back().normalForceA;
 		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
 		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_B)
     {
-        btVector3 p1 = points.back().locationB;
-		btVector3 p2 = points.back().locationB - points.back().normalForceA;
+        Vector3 p1 = points.back().locationB;
+		Vector3 p2 = points.back().locationB - points.back().normalForceA;
 		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
 		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
@@ -208,7 +208,7 @@ std::vector<Renderable> Contact::Render()
         
 		for(unsigned int i = 0; i < points.size(); ++i)
         {	
-			btVector3 p = points[i].locationA;
+			Vector3 p = points[i].locationA;
 			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
 		}
 		
@@ -223,7 +223,7 @@ std::vector<Renderable> Contact::Render()
         
 		for(unsigned int i = 0; i < points.size(); ++i)
         {	
-			btVector3 p = points[i].locationB;
+			Vector3 p = points[i].locationB;
 			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
 		}
 		

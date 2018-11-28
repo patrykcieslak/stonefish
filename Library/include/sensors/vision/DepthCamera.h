@@ -19,11 +19,11 @@ namespace sf
 class DepthCamera : public Camera
 {
 public:
-    DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar minDepth, btScalar maxDepth, btScalar frequency = btScalar(-1));
+    DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
     virtual ~DepthCamera();
     
-    void InternalUpdate(btScalar dt);
-    void SetupCamera(const btVector3& eye, const btVector3& dir, const btVector3& up);
+    void InternalUpdate(Scalar dt);
+    void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up);
     void InstallNewDataHandler(std::function<void(DepthCamera*)> callback);
     void NewDataReady();
     GLfloat* getDataPointer(); //Should be only used in the callback

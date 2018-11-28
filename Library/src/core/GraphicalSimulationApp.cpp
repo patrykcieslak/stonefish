@@ -163,7 +163,7 @@ void GraphicalSimulationApp::InitializeSDL()
                               SDL_WINDOWPOS_CENTERED,
                               renderSettings.windowW,
                               renderSettings.windowH,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN // | SDL_WINDOW_ALLOW_HIGHDPI
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN// | SDL_WINDOW_ALLOW_HIGHDPI
                               );
   
 	glLoadingContext = SDL_GL_CreateContext(window);
@@ -312,7 +312,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
                 trackball->MoveCenter(glm::vec3(0,0,-0.1));
         }
             break;
-            
+
         default:
             break;
     }

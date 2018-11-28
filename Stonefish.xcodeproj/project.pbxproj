@@ -67,7 +67,7 @@
 		F71604402191A9E100E83606 /* SystemUtil.hpp in Headers */ = {isa = PBXBuildFile; fileRef = F71603C72191A9E100E83606 /* SystemUtil.hpp */; };
 		F71604412191A9E100E83606 /* stb_image.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C82191A9E100E83606 /* stb_image.h */; };
 		F71604422191A9E100E83606 /* ScientificFileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C92191A9E100E83606 /* ScientificFileUtil.h */; };
-		F71604432191A9E100E83606 /* common.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603CA2191A9E100E83606 /* common.h */; };
+		F71604432191A9E100E83606 /* StonefishCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603CA2191A9E100E83606 /* StonefishCommon.h */; };
 		F71604442191A9E100E83606 /* Light.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603CC2191A9E100E83606 /* Light.h */; };
 		F71604452191A9E100E83606 /* Motor.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603CD2191A9E100E83606 /* Motor.h */; };
 		F71604462191A9E100E83606 /* Thruster.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603CE2191A9E100E83606 /* Thruster.h */; };
@@ -254,6 +254,7 @@
 		F7E965B621A85F8B0067D12C /* JointActuator.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965B521A85F8B0067D12C /* JointActuator.h */; };
 		F7E965B821A863B20067D12C /* LinkActuator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965B721A863B20067D12C /* LinkActuator.cpp */; };
 		F7E965BA21A863C30067D12C /* JointActuator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965B921A863C30067D12C /* JointActuator.cpp */; };
+		F7EB2DA721AB3BE90080364F /* stb_image_write.h in Headers */ = {isa = PBXBuildFile; fileRef = F7EB2DA621AB3BE90080364F /* stb_image_write.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -496,7 +497,7 @@
 		F71603C72191A9E100E83606 /* SystemUtil.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SystemUtil.hpp; sourceTree = "<group>"; };
 		F71603C82191A9E100E83606 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		F71603C92191A9E100E83606 /* ScientificFileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScientificFileUtil.h; sourceTree = "<group>"; };
-		F71603CA2191A9E100E83606 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		F71603CA2191A9E100E83606 /* StonefishCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StonefishCommon.h; sourceTree = "<group>"; };
 		F71603CC2191A9E100E83606 /* Light.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Light.h; sourceTree = "<group>"; };
 		F71603CD2191A9E100E83606 /* Motor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Motor.h; sourceTree = "<group>"; };
 		F71603CE2191A9E100E83606 /* Thruster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Thruster.h; sourceTree = "<group>"; };
@@ -803,6 +804,7 @@
 		F7E965B521A85F8B0067D12C /* JointActuator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JointActuator.h; sourceTree = "<group>"; };
 		F7E965B721A863B20067D12C /* LinkActuator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LinkActuator.cpp; sourceTree = "<group>"; };
 		F7E965B921A863C30067D12C /* JointActuator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = JointActuator.cpp; sourceTree = "<group>"; };
+		F7EB2DA621AB3BE90080364F /* stb_image_write.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -896,7 +898,7 @@
 		F716038F2191A9E100E83606 /* include */ = {
 			isa = PBXGroup;
 			children = (
-				F71603CA2191A9E100E83606 /* common.h */,
+				F71603CA2191A9E100E83606 /* StonefishCommon.h */,
 				F71603CB2191A9E100E83606 /* actuators */,
 				F71603E32191A9E100E83606 /* controllers */,
 				F71603AD2191A9E100E83606 /* core */,
@@ -931,7 +933,6 @@
 				F71603B92191A9E100E83606 /* ConsoleSimulationApp.h */,
 				F71603B82191A9E100E83606 /* SimulationManager.h */,
 				F71603A32191A9E100E83606 /* NED.h */,
-				F71603B02191A9E100E83606 /* UnitSystem.h */,
 				F71603B52191A9E100E83606 /* Robot.h */,
 				F71603B62191A9E100E83606 /* NameManager.h */,
 				F71603BA2191A9E100E83606 /* MaterialManager.h */,
@@ -962,11 +963,13 @@
 		F71603C42191A9E100E83606 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				F71603B02191A9E100E83606 /* UnitSystem.h */,
 				F71603C52191A9E100E83606 /* Polynomials.hpp */,
 				F71603C62191A9E100E83606 /* MathUtil.hpp */,
 				F71603C72191A9E100E83606 /* SystemUtil.hpp */,
 				F71603C92191A9E100E83606 /* ScientificFileUtil.h */,
 				F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */,
+				F7EB2DA621AB3BE90080364F /* stb_image_write.h */,
 				F71603C82191A9E100E83606 /* stb_image.h */,
 				F7E965AA21A6C0310067D12C /* tinyxml2.h */,
 			);
@@ -1219,7 +1222,6 @@
 			children = (
 				F71604C72191AA0D00E83606 /* SimulationApp.cpp */,
 				F716049F2191AA0D00E83606 /* NED.cpp */,
-				F71604C92191AA0D00E83606 /* UnitSystem.cpp */,
 				F71604AE2191AA0D00E83606 /* Robot.cpp */,
 				F71604892191AA0D00E83606 /* MaterialManager.cpp */,
 				F71604E22191AA0D00E83606 /* NameManager.cpp */,
@@ -1321,6 +1323,7 @@
 		F71605C8219232B000E83606 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				F71604C92191AA0D00E83606 /* UnitSystem.cpp */,
 				F71604AD2191AA0D00E83606 /* ScientificFileUtil.cpp */,
 				F7E965B021A6CC250067D12C /* GeometryFileUtil.cpp */,
 				F7E965AC21A6C0580067D12C /* tinyxml2.cpp */,
@@ -1611,10 +1614,11 @@
 				F71604512191A9E100E83606 /* OpenGLPrinter.h in Headers */,
 				F716041C2191A9E100E83606 /* Accelerometer.h in Headers */,
 				F755751021A05A0100AE8956 /* OpenGLDataStructs.h in Headers */,
+				F7EB2DA721AB3BE90080364F /* stb_image_write.h in Headers */,
 				F71604532191A9E100E83606 /* OpenGLContent.h in Headers */,
 				F71604662191A9E100E83606 /* Terrain.h in Headers */,
 				F71604402191A9E100E83606 /* SystemUtil.hpp in Headers */,
-				F71604432191A9E100E83606 /* common.h in Headers */,
+				F71604432191A9E100E83606 /* StonefishCommon.h in Headers */,
 				F71604222191A9E100E83606 /* ColorCamera.h in Headers */,
 				F716043E2191A9E100E83606 /* Polynomials.hpp in Headers */,
 				F716046D2191A9E100E83606 /* Pipe.h in Headers */,

@@ -17,10 +17,10 @@ namespace sf
 class Odometry : public LinkSensor
 {
 public:
-    Odometry(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Odometry(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
-    void SetNoise(btScalar positionStdDev, btScalar velocityStdDev, btScalar orientationStdDev, btScalar angularVelocityStdDev);
+    void InternalUpdate(Scalar dt);
+    void SetNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev);
 };
 
 }

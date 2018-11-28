@@ -28,9 +28,9 @@ void SignalMux::AddSignalGenerator(SignalGenerator* sg)
         signalGens.push_back(sg);
 }
 
-std::vector<btScalar> SignalMux::ValuesAtTime(btScalar t)
+std::vector<Scalar> SignalMux::ValuesAtTime(Scalar t)
 {
-    std::vector<btScalar> values(signalGens.size());
+    std::vector<Scalar> values(signalGens.size());
     
     for(unsigned int i = 0; i < signalGens.size(); ++i)
         values[i] = signalGens[i]->ValueAtTime(t);

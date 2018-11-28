@@ -12,50 +12,46 @@
 
 using namespace sf;
 
-Box::Box(std::string uniqueName, const btVector3& dimensions, const btTransform& originTrans, Material m, int lookId, btScalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& originTrans, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
-    halfExtents = UnitSystem::SetPosition(dimensions * btScalar(0.5));
-    localTransform = UnitSystem::SetTransform(originTrans);
+    halfExtents = dimensions * Scalar(0.5);
+    T_G2CG = originTrans;
     
     //Calculate physical properties
-    if(thick > btScalar(0) && thick/btScalar(2) < halfExtents.x() && thick/btScalar(2) < halfExtents.y() && thick/btScalar(2) < halfExtents.z())
+    if(thick > Scalar(0) && thick/Scalar(2) < halfExtents.x() && thick/Scalar(2) < halfExtents.y() && thick/Scalar(2) < halfExtents.z())
     {
-        btVector3 halfExtents1 = halfExtents - btVector3(thick, thick, thick)/btScalar(2);
-        btVector3 halfExtents2 = halfExtents + btVector3(thick, thick, thick)/btScalar(2);
-        volume = (halfExtents2.x()*halfExtents2.y()*halfExtents2.z() - halfExtents1.x()*halfExtents1.y()*halfExtents1.z())*btScalar(8);
+        Vector3 halfExtents1 = halfExtents - Vector3(thick, thick, thick)/Scalar(2);
+        Vector3 halfExtents2 = halfExtents + Vector3(thick, thick, thick)/Scalar(2);
+        volume = (halfExtents2.x()*halfExtents2.y()*halfExtents2.z() - halfExtents1.x()*halfExtents1.y()*halfExtents1.z())*Scalar(8);
         mass = volume * mat.density;
-        btScalar m1 = halfExtents1.x()*halfExtents1.y()*halfExtents1.z()*btScalar(8)*mat.density;
-        btScalar m2 = halfExtents2.x()*halfExtents2.y()*halfExtents2.z()*btScalar(8)*mat.density; 
-        btScalar Ix = btScalar(1)/btScalar(12)*m2*((halfExtents2.y()*btScalar(2))*(halfExtents2.y()*btScalar(2))+(halfExtents2.z()*btScalar(2))*(halfExtents2.z()*btScalar(2))) 
-                      - btScalar(1)/btScalar(12)*m1*((halfExtents1.y()*btScalar(2))*(halfExtents1.y()*btScalar(2))+(halfExtents1.z()*btScalar(2))*(halfExtents1.z()*btScalar(2))); 
-        btScalar Iy = btScalar(1)/btScalar(12)*m2*((halfExtents2.x()*btScalar(2))*(halfExtents2.x()*btScalar(2))+(halfExtents2.z()*btScalar(2))*(halfExtents2.z()*btScalar(2))) 
-                      - btScalar(1)/btScalar(12)*m1*((halfExtents1.x()*btScalar(2))*(halfExtents1.x()*btScalar(2))+(halfExtents1.z()*btScalar(2))*(halfExtents1.z()*btScalar(2))); 
-        btScalar Iz = btScalar(1)/btScalar(12)*m2*((halfExtents2.x()*btScalar(2))*(halfExtents2.x()*btScalar(2))+(halfExtents2.y()*btScalar(2))*(halfExtents2.y()*btScalar(2))) 
-                      - btScalar(1)/btScalar(12)*m1*((halfExtents1.x()*btScalar(2))*(halfExtents1.x()*btScalar(2))+(halfExtents1.y()*btScalar(2))*(halfExtents1.y()*btScalar(2))); 
-        Ipri = btVector3(Ix,Iy,Iz);
+        Scalar m1 = halfExtents1.x()*halfExtents1.y()*halfExtents1.z()*Scalar(8)*mat.density;
+        Scalar m2 = halfExtents2.x()*halfExtents2.y()*halfExtents2.z()*Scalar(8)*mat.density; 
+        Scalar Ix = Scalar(1)/Scalar(12)*m2*((halfExtents2.y()*Scalar(2))*(halfExtents2.y()*Scalar(2))+(halfExtents2.z()*Scalar(2))*(halfExtents2.z()*Scalar(2))) 
+                      - Scalar(1)/Scalar(12)*m1*((halfExtents1.y()*Scalar(2))*(halfExtents1.y()*Scalar(2))+(halfExtents1.z()*Scalar(2))*(halfExtents1.z()*Scalar(2))); 
+        Scalar Iy = Scalar(1)/Scalar(12)*m2*((halfExtents2.x()*Scalar(2))*(halfExtents2.x()*Scalar(2))+(halfExtents2.z()*Scalar(2))*(halfExtents2.z()*Scalar(2))) 
+                      - Scalar(1)/Scalar(12)*m1*((halfExtents1.x()*Scalar(2))*(halfExtents1.x()*Scalar(2))+(halfExtents1.z()*Scalar(2))*(halfExtents1.z()*Scalar(2))); 
+        Scalar Iz = Scalar(1)/Scalar(12)*m2*((halfExtents2.x()*Scalar(2))*(halfExtents2.x()*Scalar(2))+(halfExtents2.y()*Scalar(2))*(halfExtents2.y()*Scalar(2))) 
+                      - Scalar(1)/Scalar(12)*m1*((halfExtents1.x()*Scalar(2))*(halfExtents1.x()*Scalar(2))+(halfExtents1.y()*Scalar(2))*(halfExtents1.y()*Scalar(2))); 
+        Ipri = Vector3(Ix,Iy,Iz);
     }
     else
     {
-        volume = halfExtents.x()*halfExtents.y()*halfExtents.z()*btScalar(8);
+        volume = halfExtents.x()*halfExtents.y()*halfExtents.z()*Scalar(8);
         mass = volume * mat.density;
-        Ipri = btVector3(btScalar(1)/btScalar(12)*mass*((halfExtents.y()*btScalar(2))*(halfExtents.y()*btScalar(2))+(halfExtents.z()*btScalar(2))*(halfExtents.z()*btScalar(2))),
-                        btScalar(1)/btScalar(12)*mass*((halfExtents.x()*btScalar(2))*(halfExtents.x()*btScalar(2))+(halfExtents.z()*btScalar(2))*(halfExtents.z()*btScalar(2))),
-                        btScalar(1)/btScalar(12)*mass*((halfExtents.x()*btScalar(2))*(halfExtents.x()*btScalar(2))+(halfExtents.y()*btScalar(2))*(halfExtents.y()*btScalar(2))));
+        Ipri = Vector3(Scalar(1)/Scalar(12)*mass*((halfExtents.y()*Scalar(2))*(halfExtents.y()*Scalar(2))+(halfExtents.z()*Scalar(2))*(halfExtents.z()*Scalar(2))),
+                        Scalar(1)/Scalar(12)*mass*((halfExtents.x()*Scalar(2))*(halfExtents.x()*Scalar(2))+(halfExtents.z()*Scalar(2))*(halfExtents.z()*Scalar(2))),
+                        Scalar(1)/Scalar(12)*mass*((halfExtents.x()*Scalar(2))*(halfExtents.x()*Scalar(2))+(halfExtents.y()*Scalar(2))*(halfExtents.y()*Scalar(2))));
     }
     
     //Build geometry
 	glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
 	mesh = OpenGLContent::BuildBox(glHalfExtents);
-    transformMesh(mesh, localTransform);
+    transformMesh(mesh, originTrans);
     
     //Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
-    CoB = localTransform.getOrigin();
-    //dragCoeff = btVector3(halfExtents.y()*halfExtents.z()*btScalar(4*1.05), halfExtents.x()*halfExtents.z()*btScalar(4*1.05), halfExtents.y()*halfExtents.x()*btScalar(4*1.05));
-}
-
-Box::~Box()
-{
+    ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
+    CB = T_G2CG.getOrigin();
+    //dragCoeff = Vector3(halfExtents.y()*halfExtents.z()*Scalar(4*1.05), halfExtents.x()*halfExtents.z()*Scalar(4*1.05), halfExtents.y()*halfExtents.x()*Scalar(4*1.05));
 }
 
 SolidType Box::getSolidType()
@@ -65,10 +61,19 @@ SolidType Box::getSolidType()
 
 btCollisionShape* Box::BuildCollisionShape()
 {
+    btCompoundShape* shape = new btCompoundShape();
     btBoxShape* boxShape = new btBoxShape(halfExtents);
-    btCompoundShape* colShape = new btCompoundShape();
-    colShape->addChildShape(localTransform, boxShape);
-    //colShape->setMargin(0.0);
-    return colShape;
+    shape->addChildShape(T_G2CG, boxShape);
+    return shape;
 }
 
+void Box::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& G2CG)
+{
+    sf::Transform oldG2CG = getG2CGTransform();
+    SolidEntity::SetArbitraryPhysicalProperties(mass, inertia, G2CG);
+    if(rigidBody != NULL)
+    {
+        btCompoundShape* colShape = (btCompoundShape*)rigidBody->getCollisionShape();
+        colShape->updateChildTransform(0, oldG2CG);
+    }
+}

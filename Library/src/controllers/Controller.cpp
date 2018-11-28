@@ -12,12 +12,12 @@
 
 using namespace sf;
 
-Controller::Controller(std::string uniqueName, btScalar frequency)
+Controller::Controller(std::string uniqueName, Scalar frequency)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     freq = frequency;
-    eleapsedTime = btScalar(0.);
-    runningTime = btScalar(0.);
+    eleapsedTime = Scalar(0.);
+    runningTime = Scalar(0.);
     running = false;
 }
 
@@ -26,12 +26,12 @@ Controller::~Controller()
     SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
-btScalar Controller::getFrequency()
+Scalar Controller::getFrequency()
 {
     return freq;
 }
 
-btScalar Controller::getRunningTime()
+Scalar Controller::getRunningTime()
 {
     return runningTime;
 }
@@ -44,7 +44,7 @@ std::string Controller::getName()
 void Controller::Start()
 {
     running = true;
-    eleapsedTime = btScalar(0.);
+    eleapsedTime = Scalar(0.);
 }
 
 void Controller::Stop()
@@ -52,20 +52,20 @@ void Controller::Stop()
     running = false;
 }
 
-void Controller::Update(btScalar dt)
+void Controller::Update(Scalar dt)
 {
     if(running)
     {
         runningTime += dt;
         
-        if(freq <= btScalar(0.)) //Every simulation tick
+        if(freq <= Scalar(0.)) //Every simulation tick
         {
             Tick(dt);
         }
         else //Fixed rate
         {
             eleapsedTime += dt;
-            btScalar invFreq = btScalar(1.)/freq;
+            Scalar invFreq = Scalar(1.)/freq;
         
             if(eleapsedTime >= invFreq)
             {

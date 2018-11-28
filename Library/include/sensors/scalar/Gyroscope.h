@@ -18,21 +18,21 @@ namespace sf
 class Gyroscope : public LinkSensor
 {
 public:
-    Gyroscope(std::string uniqueName, btScalar rangeMin, btScalar rangeMax, btScalar sensitivity, btScalar zeroVoltage, btScalar driftSpeed, btScalar noisePSD, ADC* adc, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage, Scalar driftSpeed, Scalar noisePSD, ADC* adc, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
+    void InternalUpdate(Scalar dt);
     void Reset();
     
 private:
-    btScalar range[2];
-    btScalar sens;
-    btScalar zeroV;
-    btScalar drift;
-    btScalar noisePSD;
+    Scalar range[2];
+    Scalar sens;
+    Scalar zeroV;
+    Scalar drift;
+    Scalar noisePSD;
     ADC* adc;
     
     //temporary
-    btScalar accumulatedDrift;
+    Scalar accumulatedDrift;
 };
 
 }

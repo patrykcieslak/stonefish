@@ -17,9 +17,9 @@ namespace sf
 class RealRotaryEncoder : public RotaryEncoder
 {
 public:
-    RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute = false, btScalar frequency = btScalar(-1), int historyLength = -1);
+    RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute = false, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
+    void InternalUpdate(Scalar dt);
     void Reset();
     
 private:

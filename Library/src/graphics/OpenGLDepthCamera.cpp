@@ -22,8 +22,8 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     _needsUpdate = false;
     update = false;
     camera = NULL;
-    range.x = UnitSystem::SetLength(minDepth);
-    range.y = UnitSystem::SetLength(maxDepth);
+    range.x = minDepth;
+    range.y = maxDepth;
     
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();

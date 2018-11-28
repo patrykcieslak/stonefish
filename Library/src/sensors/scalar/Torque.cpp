@@ -12,34 +12,34 @@
 
 using namespace sf;
 
-Torque::Torque(std::string uniqueName, btScalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+Torque::Torque(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Torque", QUANTITY_TORQUE));
 }
 
-void Torque::InternalUpdate(btScalar dt)
+void Torque::InternalUpdate(Scalar dt)
 {
-    //btVector3 force, torque;
+    //Vector3 force, torque;
     //fe->getJointFeedback(jId, force, torque);
-    //btVector3 axis = fe->getJointAxis(jId);
-    //btScalar tau = torque.dot(axis);
+    //Vector3 axis = fe->getJointAxis(jId);
+    //Scalar tau = torque.dot(axis);
     if(fe != NULL)
     {
-        btScalar tau = fe->getMotorImpulse(jId)/dt;
+        Scalar tau = fe->getMotorImpulse(jId)/dt;
     
-        btScalar values[1] = {tau};
+        Scalar values[1] = {tau};
         Sample s(1, values);
         AddSampleToHistory(s);
     }
 }
 
-void Torque::SetRange(btScalar max)
+void Torque::SetRange(Scalar max)
 {
     channels[0].rangeMin = -max;
     channels[0].rangeMax = max;
 }
 
-void Torque::SetNoise(btScalar stdDev)
+void Torque::SetNoise(Scalar stdDev)
 {
     channels[0].setStdDev(stdDev);
 }

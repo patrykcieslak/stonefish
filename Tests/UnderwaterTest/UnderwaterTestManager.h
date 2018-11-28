@@ -11,10 +11,10 @@
 
 #include <core/SimulationManager.h>
 
-class UnderwaterTestManager : public SimulationManager
+class UnderwaterTestManager : public sf::SimulationManager
 {
 public:
-    UnderwaterTestManager(btScalar stepsPerSecond);
+    UnderwaterTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario();
     void SimulationStepCompleted();

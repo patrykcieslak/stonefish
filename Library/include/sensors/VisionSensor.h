@@ -19,20 +19,20 @@ namespace sf
 class VisionSensor : public Sensor
 {
 public:
-    VisionSensor(std::string uniqueName, btScalar frequency);
+    VisionSensor(std::string uniqueName, Scalar frequency);
     virtual ~VisionSensor();
     
-    virtual void InternalUpdate(btScalar dt) = 0;
+    virtual void InternalUpdate(Scalar dt) = 0;
     virtual void UpdateTransform() = 0;
     
-    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const btTransform& location);
-    void AttachToSolid(SolidEntity* solid, const btTransform& location);
-    virtual btTransform getSensorFrame();
+    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& location);
+    void AttachToSolid(SolidEntity* solid, const Transform& location);
+    virtual Transform getSensorFrame();
     virtual SensorType getType();
     
 private:
     SolidEntity* attach;
-    btTransform g2s;
+    Transform g2s;
 };
     
 }

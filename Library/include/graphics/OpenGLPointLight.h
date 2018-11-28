@@ -17,7 +17,7 @@ namespace sf
 class OpenGLPointLight : public OpenGLLight
 {
 public:
-    OpenGLPointLight(const btVector3& position, glm::vec4 color);
+    OpenGLPointLight(const Vector3& position, glm::vec4 color);
     ~OpenGLPointLight();
     
 	//Rendering

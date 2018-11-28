@@ -23,7 +23,7 @@ public:
     Signal(SignalCombineType combineOperation) : combineOp(combineOperation) {}
     virtual ~Signal() {}
     
-    virtual btScalar ValueAtTime(btScalar t) = 0;
+    virtual Scalar ValueAtTime(Scalar t) = 0;
     
     SignalCombineType getCombineOperation() { return combineOp; }
     
@@ -35,37 +35,37 @@ private:
 class ConstSignal : public Signal
 {
 public:
-    ConstSignal(btScalar value, SignalCombineType combineOperation = SIGNAL_ADD);
+    ConstSignal(Scalar value, SignalCombineType combineOperation = SIGNAL_ADD);
     
-    btScalar ValueAtTime(btScalar t);
+    Scalar ValueAtTime(Scalar t);
     
 private:
-    btScalar val;
+    Scalar val;
 };
 
 /*! A step time domain signal */
 class StepSignal : public Signal
 {
 public:
-    StepSignal(btScalar initialValue, btScalar finalValue, btScalar stepTime, btScalar stepDuration, SignalCombineType combineOperation = SIGNAL_ADD);
+    StepSignal(Scalar initialValue, Scalar finalValue, Scalar stepTime, Scalar stepDuration, SignalCombineType combineOperation = SIGNAL_ADD);
     
-    btScalar ValueAtTime(btScalar t);
+    Scalar ValueAtTime(Scalar t);
     
 private:
-    btScalar val0;
-    btScalar val1;
-    btScalar stepT;
-    btScalar stepD;
+    Scalar val0;
+    Scalar val1;
+    Scalar stepT;
+    Scalar stepD;
 };
 
 /*! A PWL time domain signal */
 class PwlSignal : public Signal
 {
 public:
-    PwlSignal(btScalar initialValue, SignalCombineType combineOperation = SIGNAL_ADD);
+    PwlSignal(Scalar initialValue, SignalCombineType combineOperation = SIGNAL_ADD);
     
-    bool AddValueAtTime(btScalar v, btScalar t);
-    btScalar ValueAtTime(btScalar t);
+    bool AddValueAtTime(Scalar v, Scalar t);
+    Scalar ValueAtTime(Scalar t);
     
 private:
     std::vector<Point2D> points;
@@ -75,14 +75,14 @@ private:
 class SinSignal : public Signal
 {
 public:
-    SinSignal(btScalar frequency, btScalar amplitude, btScalar initialPhase, SignalCombineType combineOperation = SIGNAL_ADD);
+    SinSignal(Scalar frequency, Scalar amplitude, Scalar initialPhase, SignalCombineType combineOperation = SIGNAL_ADD);
     
-    btScalar ValueAtTime(btScalar t);
+    Scalar ValueAtTime(Scalar t);
     
 private:
-    btScalar freq;
-    btScalar amp;
-    btScalar phase;
+    Scalar freq;
+    Scalar amp;
+    Scalar phase;
 };
 
 /*! A time domain signal generator */
@@ -93,7 +93,7 @@ public:
     virtual ~SignalGenerator();
     
     void AddComponent(Signal* c);
-    btScalar ValueAtTime(btScalar t);
+    Scalar ValueAtTime(Scalar t);
     
 private:
     std::vector<Signal*> components;

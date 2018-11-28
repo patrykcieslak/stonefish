@@ -3,12 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/NameManager.h"
 
-using namespace sf;
+namespace sf
+{
 
 NameManager::NameManager()
 {
@@ -54,4 +55,6 @@ void NameManager::RemoveName(std::string name)
 void NameManager::ClearNames()
 {
     names.clear();
+}
+
 }

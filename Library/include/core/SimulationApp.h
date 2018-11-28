@@ -9,7 +9,7 @@
 #ifndef __Stonefish_SimulationApp__
 #define __Stonefish_SimulationApp__
 
-#include "common.h"
+#include "StonefishCommon.h"
 #include "core/SimulationManager.h"
 
 namespace sf

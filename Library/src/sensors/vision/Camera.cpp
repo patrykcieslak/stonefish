@@ -13,19 +13,16 @@
 
 using namespace sf;
 
-Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, btScalar horizFOVDeg, btScalar frequency) : VisionSensor(uniqueName, frequency)
+Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
 {
 	if(!SimulationApp::getApp()->hasGraphics())
-	{
-		std::cerr << "Not possible to use cameras in console simulation! Use graphical simulation if possible.";
-		abort();
-	}
+		cCritical("Not possible to use cameras in console simulation! Use graphical simulation if possible.");
 	
 	fovH = horizFOVDeg;
     resx = resX;
     resy = resY;
-    pan = btScalar(0);
-    tilt = btScalar(0);
+    pan = Scalar(0);
+    tilt = Scalar(0);
     display = false;
 }
     
@@ -33,7 +30,7 @@ Camera::~Camera()
 {
 }
 
-btScalar Camera::getHorizontalFOV()
+Scalar Camera::getHorizontalFOV()
 {
     return fovH;
 }
@@ -54,36 +51,34 @@ bool Camera::getDisplayOnScreen()
     return display;
 }
 
-void Camera::setPan(btScalar value)
+void Camera::setPan(Scalar value)
 {
-    value = UnitSystem::SetAngle(value);
     pan = value;
     //SetupCamera();
 }
 
-void Camera::setTilt(btScalar value)
+void Camera::setTilt(Scalar value)
 {
-    value = UnitSystem::SetAngle(value);
     tilt = value;
     //SetupCamera();
 }
 
-btScalar Camera::getPan()
+Scalar Camera::getPan()
 {
-    return UnitSystem::GetAngle(pan);
+    return pan;
 }
 
-btScalar Camera::getTilt()
+Scalar Camera::getTilt()
 {
-    return UnitSystem::GetAngle(tilt);
+    return tilt;
 }
 
 void Camera::UpdateTransform()
 {
-    btTransform cameraTransform = getSensorFrame();
-    btVector3 eyePosition = cameraTransform.getOrigin(); //O
-    btVector3 direction = cameraTransform.getBasis().getColumn(2); //Z
-    btVector3 cameraUp = -cameraTransform.getBasis().getColumn(1); //-Y
+    Transform cameraTransform = getSensorFrame();
+    Vector3 eyePosition = cameraTransform.getOrigin(); //O
+    Vector3 direction = cameraTransform.getBasis().getColumn(2); //Z
+    Vector3 cameraUp = -cameraTransform.getBasis().getColumn(1); //-Y
     
     bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
     
@@ -106,11 +101,11 @@ void Camera::UpdateTransform()
     }
     else
     {
-        btMatrix3x3 rotation;
+        Matrix3 rotation;
         rotation.setEulerYPR(0,M_PI,0);
-        btVector3 rotEyePosition = rotation * eyePosition;
-        btVector3 rotDirection = rotation * direction;
-        btVector3 rotCameraUp = rotation * cameraUp;
+        Vector3 rotEyePosition = rotation * eyePosition;
+        Vector3 rotDirection = rotation * direction;
+        Vector3 rotCameraUp = rotation * cameraUp;
         SetupCamera(rotEyePosition, rotDirection, rotCameraUp);
     }
 }

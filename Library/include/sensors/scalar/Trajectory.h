@@ -17,9 +17,9 @@ namespace sf
 class Trajectory : public LinkSensor
 {
 public:
-    Trajectory(std::string uniqueName, btScalar frequency = btScalar(-1), int historyLength = -1);
+    Trajectory(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
-    void InternalUpdate(btScalar dt);
+    void InternalUpdate(Scalar dt);
     std::vector<Renderable> Render();
 };
 

@@ -20,29 +20,29 @@ namespace sf
 class SpeedController : public FeedbackController
 {
 public:
-    SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, btScalar maxOutput, btScalar frequency = btScalar(-1));
+    SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, Scalar maxOutput, Scalar frequency = Scalar(-1));
     ~SpeedController();
     
     void Reset();
     
-    void SetSpeed(btScalar speed);
-    void SetGains(btScalar P, btScalar I, btScalar D, btScalar ILimit);
+    void SetSpeed(Scalar speed);
+    void SetGains(Scalar P, Scalar I, Scalar D, Scalar ILimit);
     
 private:
-    void Tick(btScalar dt);
+    void Tick(Scalar dt);
     
     RotaryEncoder* encoder;
 	Motor* motor;
-    btScalar maxCtrl;
-    btScalar gainP;
-    btScalar gainI;
-    btScalar gainD;
-	btScalar limitI;
+    Scalar maxCtrl;
+    Scalar gainP;
+    Scalar gainI;
+    Scalar gainD;
+	Scalar limitI;
     
     //state
-    btScalar targetSpeed;
-    btScalar lastError;
-    btScalar integratedError;
+    Scalar targetSpeed;
+    Scalar lastError;
+    Scalar integratedError;
 };
     
 }

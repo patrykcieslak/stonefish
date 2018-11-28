@@ -485,8 +485,8 @@ glm::mat4 OpenGLAtmosphere::BuildCropProjMatrix(ViewFrustum &f)
     }
 
     //Make sure all relevant shadow casters are included - use object bounding boxes!
-    btVector3 aabbMin;
-    btVector3 aabbMax;
+    Vector3 aabbMin;
+    Vector3 aabbMax;
     SimulationApp::getApp()->getSimulationManager()->getWorldAABB(aabbMin, aabbMax);
 
     transf = shad_mv * glm::vec4(aabbMin.x(), aabbMin.y(), aabbMin.z(), 1.f);
@@ -767,7 +767,7 @@ void OpenGLAtmosphere::Precompute()
 
 #ifdef DEBUG
     int64_t stop = GetTimeInMicroseconds();
-    std::cout << "Precomputed in " << std::to_string((stop-start)/1000) << "ms." << std::endl;
+    //std::cout << "Precomputed in " << std::to_string((stop-start)/1000) << "ms." << std::endl;
 #else
     GLSLShader::Verbose();
 #endif

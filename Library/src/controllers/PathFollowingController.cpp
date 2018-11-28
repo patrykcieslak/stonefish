@@ -12,7 +12,7 @@
 
 using namespace sf;
 
-PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, btScalar frequency) : Controller(uniqueName, frequency)
+PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, Scalar frequency) : Controller(uniqueName, frequency)
 {
     inputPath = pathGenerator;
     measuredTraj = positionSensor;
@@ -47,8 +47,8 @@ void PathFollowingController::RenderPath()
     {
         inputPath->Render();
         
-        btVector3 point;
-        btVector3 tangent;
+        Vector3 point;
+        Vector3 tangent;
         inputPath->PointAtTime(inputPath->getTime(), point, tangent);
         std::vector<glm::vec3> vertices;
 		vertices.push_back(glm::vec3(point.getX(), point.getY(), point.getZ()));
@@ -60,16 +60,16 @@ void PathFollowingController::Reset()
 {
 }
 
-void PathFollowingController::Tick(btScalar dt)
+void PathFollowingController::Tick(Scalar dt)
 {
     //Update position on path
-    btVector3 desiredPoint;
-    btVector3 desiredTangent;
+    Vector3 desiredPoint;
+    Vector3 desiredTangent;
     inputPath->MoveOnPath(VelocityOnPath() * dt, desiredPoint, desiredTangent);
     //printf("%1.5f\t%1.5f\n", desiredPoint.x(), desiredPoint.y());
     
     
-    if(inputPath->getTime() >= btScalar(1.0)) //End of path reached
+    if(inputPath->getTime() >= Scalar(1.0)) //End of path reached
         PathEnd();
     else
     {
@@ -82,18 +82,18 @@ void PathFollowingController::Tick(btScalar dt)
             PathGenerator2D* inputPath2D = (PathGenerator2D*)inputPath;
             
             //Get last measured position and attitude
-            std::vector<btScalar> measured = measuredTraj->getLastSample().getData();
-            btVector3 actualPoint = btVector3(measured[0], measured[1], measured[2]);
+            std::vector<Scalar> measured = measuredTraj->getLastSample().getData();
+            Vector3 actualPoint = Vector3(measured[0], measured[1], measured[2]);
             
             //Calculate errors
             switch(inputPath2D->getPlane())
             {
                 case PLANE_XY:
                 {
-                    btScalar desiredOrientation = btAtan2(desiredTangent.y(), desiredTangent.x());
-                    btScalar actualOrientation = measured[5]; //Yaw
-                    btVector3 positionDifference = desiredPoint - actualPoint;
-                    btVector3 normalToPath = btVector3(-desiredTangent.y(), desiredTangent.x(), 0.0);
+                    Scalar desiredOrientation = btAtan2(desiredTangent.y(), desiredTangent.x());
+                    Scalar actualOrientation = measured[5]; //Yaw
+                    Vector3 positionDifference = desiredPoint - actualPoint;
+                    Vector3 normalToPath = Vector3(-desiredTangent.y(), desiredTangent.x(), 0.0);
                     
                     error[0] = positionDifference.x(); //difference in x
                     error[1] = positionDifference.y(); //difference in y
@@ -106,10 +106,10 @@ void PathFollowingController::Tick(btScalar dt)
                     
                 case PLANE_XZ:
                 {
-                    btScalar desiredOrientation = btAtan2(desiredTangent.z(), desiredTangent.x());
-                    btScalar actualOrientation = measured[4]; //Pitch
-                    btVector3 positionDifference = desiredPoint - actualPoint;
-                    btVector3 normalToPath = btVector3(-desiredTangent.z(), 0.0, desiredTangent.x());
+                    Scalar desiredOrientation = btAtan2(desiredTangent.z(), desiredTangent.x());
+                    Scalar actualOrientation = measured[4]; //Pitch
+                    Vector3 positionDifference = desiredPoint - actualPoint;
+                    Vector3 normalToPath = Vector3(-desiredTangent.z(), 0.0, desiredTangent.x());
                     
                     error[0] = positionDifference.x(); //difference in x
                     error[1] = positionDifference.z(); //difference in z
@@ -120,10 +120,10 @@ void PathFollowingController::Tick(btScalar dt)
                     
                 case PLANE_YZ:
                 {
-                    btScalar desiredOrientation = btAtan2(desiredTangent.z(), desiredTangent.y());
-                    btScalar actualOrientation = measured[3]; //Roll
-                    btVector3 positionDifference = desiredPoint - actualPoint;
-                    btVector3 normalToPath = btVector3(0.0, -desiredTangent.z(), desiredTangent.y());
+                    Scalar desiredOrientation = btAtan2(desiredTangent.z(), desiredTangent.y());
+                    Scalar actualOrientation = measured[3]; //Roll
+                    Vector3 positionDifference = desiredPoint - actualPoint;
+                    Vector3 normalToPath = Vector3(0.0, -desiredTangent.z(), desiredTangent.y());
                     
                     error[0] = positionDifference.y(); //difference in y
                     error[1] = positionDifference.z(); //difference in z
