@@ -17,7 +17,7 @@ namespace sf
 LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
 {
     attach = NULL;
-    g2a = Transform::getIdentity();
+    o2a = Transform::getIdentity();
 }
 
 ActuatorType LinkActuator::getType()
@@ -29,7 +29,7 @@ void LinkActuator::AttachToLink(FeatherstoneEntity* multibody, unsigned int link
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())
     {
-        g2a = origin;
+        o2a = origin;
         attach = multibody->getLink(linkId).solid;
     }
 }
@@ -38,7 +38,7 @@ void LinkActuator::AttachToSolid(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        g2a = origin;
+        o2a = origin;
         attach = solid;
     }
 }

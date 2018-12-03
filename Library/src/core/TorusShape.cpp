@@ -3,12 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/15/14.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/TorusShape.h"
 
-using namespace sf;
+namespace sf
+{
 
 TorusShape::TorusShape(Scalar majorRadius, Scalar minorRadius)
 {
@@ -110,4 +111,6 @@ void TorusShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const Vector3
         Vector3 support = localGetSupportingVertexWithoutMargin(vectors[i]);
 		supportVerticesOut[i].setValue(support.x(), support.y(), support.z());
 	}
+}
+
 }

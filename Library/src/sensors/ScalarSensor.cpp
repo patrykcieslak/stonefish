@@ -3,16 +3,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/ScalarSensor.h"
 
 #include "core/SimulationApp.h"
-#include "graphics/Console.h"
+#include "core/SimulationManager.h"
+#include "core/Console.h"
 #include "utils/ScientificFileUtil.h"
+#include "sensors/Sample.h"
 
-using namespace sf;
+namespace sf
+{
 
 ScalarSensor::ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength) : Sensor(uniqueName, frequency)
 {
@@ -264,4 +267,6 @@ void ScalarSensor::SaveMeasurementsToOctaveFile(const char* path, bool includeTi
     
     //save data structure to file
     SaveOctaveData(path, data);
+}
+
 }

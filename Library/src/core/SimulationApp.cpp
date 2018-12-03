@@ -3,12 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationApp.h"
 
-using namespace sf;
+#include "core/Console.h"
+#include "core/SimulationManager.h"
+
+namespace sf
+{
 
 SimulationApp::SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
 {
@@ -19,6 +23,7 @@ SimulationApp::SimulationApp(std::string name, std::string dataDirPath, Simulati
     finished = false;
     running = false;
     physicsTime = 0.0;
+    console = NULL;
 }
 
 SimulationApp::~SimulationApp()
@@ -55,6 +60,11 @@ std::string SimulationApp::getName()
 	return appName;
 }
 
+Console* SimulationApp::getConsole()
+{
+    return console;
+}
+
 void SimulationApp::InitializeSimulation()
 {
     cInfo("Building scenario...");
@@ -66,7 +76,6 @@ void SimulationApp::InitializeSimulation()
 
 void SimulationApp::Run(bool autostart)
 {
-	Init();
     if(autostart) StartSimulation();
 	Loop();
 	CleanUp();
@@ -108,4 +117,6 @@ SimulationApp* SimulationApp::handle = NULL;
 SimulationApp* SimulationApp::getApp()
 {
     return SimulationApp::handle;
+}
+
 }

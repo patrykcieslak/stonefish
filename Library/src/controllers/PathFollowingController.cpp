@@ -3,14 +3,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/06/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/PathFollowingController.h"
 
+#include "sensors/scalar/Trajectory.h"
 #include "controllers/PathGenerator2D.h"
+#include "sensors/Sample.h"
 
-using namespace sf;
+namespace sf
+{
 
 PathFollowingController::PathFollowingController(std::string uniqueName, PathGenerator* pathGenerator, Trajectory* positionSensor, Scalar frequency) : Controller(uniqueName, frequency)
 {
@@ -137,4 +140,6 @@ void PathFollowingController::Tick(Scalar dt)
         //Run specific path following algorithm
         ControlTick(dt);
     }
+}
+
 }

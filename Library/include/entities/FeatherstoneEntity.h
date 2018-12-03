@@ -15,12 +15,14 @@
 #include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
-#include "entities/SolidEntity.h"
-#include "entities/StaticEntity.h"
+#include "entities/Entity.h"
 
 namespace sf
 {
 
+    class SolidEntity;
+    class StaticEntity;
+    
 struct FeatherstoneLink
 {
     FeatherstoneLink(SolidEntity* s, const Transform& t) : solid(s), trans(t) {}
@@ -109,8 +111,8 @@ public:
     void setSelfCollision(bool enabled);
     
     //Common
-    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
-    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform);
+    void AddToSimulation(SimulationManager* sm);
+    void AddToSimulation(SimulationManager* sm, const Transform& origin);
     std::vector<Renderable> Render();
     void getAABB(Vector3& min, Vector3& max);
     EntityType getType();

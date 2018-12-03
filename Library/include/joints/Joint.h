@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Joint__
@@ -11,7 +11,6 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
 #include "StonefishCommon.h"
-#include "entities/SolidEntity.h"
 
 #define CONSTRAINT_ERP 0.2
 #define CONSTRAINT_CFM 0.0
@@ -20,46 +19,47 @@
 
 namespace sf
 {
-
-typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL, JOINT_GEAR, JOINT_BELT, JOINT_SCREW} JointType;
-
-//abstract class
-class Joint
-{
-public:
-    Joint(std::string uniqueName, bool collideLinkedEntities = true);
-    virtual ~Joint();
+    //!
+    typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL, JOINT_GEAR, JOINT_BELT, JOINT_SCREW} JointType;
     
-    virtual void ApplyDamping() = 0;
-	virtual bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance) = 0;
-    virtual Vector3 Render() = 0;
-    virtual JointType getType() = 0;
+    class SimulationManager;
     
-    void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
-    
-    void setRenderable(bool render);
-    btTypedConstraint* getConstraint();
-    
-    //In the world frame
-    Scalar getFeedback(unsigned int dof);
-    
-    std::string getName();
-    
-    bool isRenderable();
-    bool isMultibodyJoint();
-    
-protected:
-    void setConstraint(btTypedConstraint* c);
-	void setConstraint(btMultiBodyConstraint* c);
-    
-private:
-    std::string name;
-    bool renderable;
-    bool collisionEnabled;
-    btTypedConstraint* constraint;
-	btMultiBodyConstraint* mbConstraint;
-};
-
+    //!
+    class Joint
+    {
+    public:
+        Joint(std::string uniqueName, bool collideLinkedEntities = true);
+        virtual ~Joint();
+        
+        virtual void ApplyDamping() = 0;
+        virtual bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance) = 0;
+        virtual Vector3 Render() = 0;
+        virtual JointType getType() = 0;
+        
+        void AddToSimulation(SimulationManager* sm);
+        
+        void setRenderable(bool render);
+        btTypedConstraint* getConstraint();
+        
+        //In the world frame
+        Scalar getFeedback(unsigned int dof);
+        
+        std::string getName();
+        
+        bool isRenderable();
+        bool isMultibodyJoint();
+        
+    protected:
+        void setConstraint(btTypedConstraint* c);
+        void setConstraint(btMultiBodyConstraint* c);
+        
+    private:
+        std::string name;
+        bool renderable;
+        bool collisionEnabled;
+        btTypedConstraint* constraint;
+        btMultiBodyConstraint* mbConstraint;
+    };
 }
 
 #endif

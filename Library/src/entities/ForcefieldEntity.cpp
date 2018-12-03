@@ -8,9 +8,11 @@
 
 #include "entities/ForcefieldEntity.h"
 
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 ForcefieldEntity::ForcefieldEntity(std::string uniqueName) : Entity(uniqueName)
 {
@@ -32,9 +34,9 @@ btPairCachingGhostObject* ForcefieldEntity::getGhost()
     return ghost;
 }
 
-void ForcefieldEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
+void ForcefieldEntity::AddToSimulation(SimulationManager* sm)
 {
-    world->addCollisionObject(ghost, MASK_DEFAULT, MASK_DEFAULT);
+    sm->getDynamicsWorld()->addCollisionObject(ghost, MASK_DEFAULT, MASK_DEFAULT);
 }
 
 std::vector<Renderable> ForcefieldEntity::Render()
@@ -46,4 +48,6 @@ void ForcefieldEntity::getAABB(Vector3& min, Vector3& max)
 {
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+}
+
 }

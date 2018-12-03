@@ -10,54 +10,54 @@
 #define __Stonefish_SimulationApp__
 
 #include "StonefishCommon.h"
-#include "core/SimulationManager.h"
 
 namespace sf
 {
-
-/*!
-    An abstract class that defines an application interface combined with a simulation manager.
- */
-class SimulationApp
-{
-public:
-    SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim);
-    virtual ~SimulationApp();
+    class Console;
+    class SimulationManager;
     
-	void Run(bool autostart = true);
-	
-    virtual bool hasGraphics() = 0;
-	SimulationManager* getSimulationManager();
-    double getPhysicsTime();
-    bool isRunning();
-	bool hasFinished();
-    std::string getDataPath();
-	std::string getName();
-	
-    static SimulationApp* getApp();
- 
-protected:
-	virtual void Init() = 0;
-    virtual void Loop() = 0;
-    virtual void CleanUp();
-    virtual void Quit();
-    
-	virtual void InitializeSimulation();
-    virtual void StartSimulation();
-    virtual void ResumeSimulation();
-    virtual void StopSimulation();
-    
-private:
-    SimulationManager* simulation;
-    std::string appName;
-    std::string dataPath;
-    bool finished;
-    bool running;
-    double physicsTime;
-
-    static SimulationApp* handle;
-};
-
+    //! An abstract class that defines an application interface hosting a simulation manager.
+    class SimulationApp
+    {
+    public:
+        SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim);
+        virtual ~SimulationApp();
+        
+        void Run(bool autostart = true);
+        
+        virtual bool hasGraphics() = 0;
+        SimulationManager* getSimulationManager();
+        double getPhysicsTime();
+        bool isRunning();
+        bool hasFinished();
+        std::string getDataPath();
+        std::string getName();
+        Console* getConsole();
+        
+        static SimulationApp* getApp();
+        
+    protected:
+        virtual void Loop() = 0;
+        virtual void CleanUp();
+        virtual void Quit();
+        
+        virtual void InitializeSimulation();
+        virtual void StartSimulation();
+        virtual void ResumeSimulation();
+        virtual void StopSimulation();
+        
+        Console* console;
+        
+    private:
+        SimulationManager* simulation;
+        std::string appName;
+        std::string dataPath;
+        bool finished;
+        bool running;
+        double physicsTime;
+        
+        static SimulationApp* handle;
+    };
 }
 
 #endif

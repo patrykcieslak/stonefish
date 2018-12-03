@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/JointSensor.h"
 
-using namespace sf;
+#include "entities/FeatherstoneEntity.h"
+#include "joints/Joint.h"
+
+namespace sf
+{
 
 JointSensor::JointSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
@@ -35,4 +39,6 @@ void JointSensor::AttachToJoint(Joint* joint)
 {
     if(joint != NULL)
         j = joint;
+}
+
 }

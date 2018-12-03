@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "graphics/Console.h"
+#include "core/Console.h"
 
 namespace sf
 {

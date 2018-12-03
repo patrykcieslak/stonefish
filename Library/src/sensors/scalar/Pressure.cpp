@@ -9,8 +9,11 @@
 #include "sensors/scalar/Pressure.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
+#include "sensors/Sample.h"
 
-using namespace sf;
+namespace sf
+{
 
 Pressure::Pressure(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -39,4 +42,6 @@ void Pressure::SetRange(Scalar max)
 void Pressure::SetNoise(Scalar pressureStdDev)
 {
     channels[0].setStdDev(pressureStdDev);
+}
+
 }

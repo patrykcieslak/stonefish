@@ -8,7 +8,11 @@
 
 #include "sensors/vision/DepthCamera.h"
 
-using namespace sf;
+#include "core/GraphicalSimulationApp.h"
+#include "graphics/OpenGLContent.h"
+
+namespace sf
+{
 
 DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
     : Camera(uniqueName, resX, resY, horizFOVDeg, frequency)
@@ -24,7 +28,7 @@ DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, S
     UpdateTransform();
     glCamera->UpdateTransform();
     InternalUpdate(0);
-    OpenGLContent::getInstance()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
 }
 
 DepthCamera::~DepthCamera()
@@ -66,4 +70,6 @@ void DepthCamera::NewDataReady()
 void DepthCamera::InternalUpdate(Scalar dt)
 {
     glCamera->Update();
+}
+
 }

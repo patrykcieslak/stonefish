@@ -10,6 +10,7 @@
 
 #include "UnderwaterTestApp.h"
 #include <entities/statics/Plane.h>
+#include <entities/statics/Obstacle.h>
 #include <entities/solids/Polyhedron.h>
 #include <entities/solids/Box.h>
 #include <entities/solids/Sphere.h>
@@ -44,20 +45,17 @@
 #include <utils/UnitSystem.h>
 
 UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
-: SimulationManager(false, stepsPerSecond, sf::SolverType::SI, sf::CollisionFilteringType::EXCLUSIVE, sf::HydrodynamicsType::GEOMETRY_BASED)
+: SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::HydrodynamicsType::GEOMETRY_BASED)
 {
 }
 
 void UnderwaterTestManager::BuildScenario()
 {
     //General
-    sf::OpenGLPipeline* glPipeline = ((sf::GraphicalSimulationApp*)sf::SimulationApp::getApp())->getGLPipeline();
-    glPipeline->setVisibleHelpers(true, true, true, true, false, false, false);
-    glPipeline->setDebugSimulation(true);
     //getTrackball()->setEnabled(false);
     
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.5);
+    getMaterialManager()->CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.8), 0.5);
     getMaterialManager()->CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.3);
     getMaterialManager()->CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);
     
@@ -70,36 +68,47 @@ void UnderwaterTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rock", "Fiberglass", 0.6, 0.4);
     
     ///////LOOKS///////////
-    int yellow = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 0.9f, 0.f), 0.3f, 0.f);
-    int grey = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.4f, 0.5f);
-    int seabed = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.7f, 0.7f, 0.5f), 0.9f, 0.f);
-    int propLook = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 1.f, 1.f), 0.3f, 0.f, sf::GetDataPath() + "propeller_tex.png");
-    int ductLook = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.1f, 0.1f, 0.1f), 0.4f, 0.5f);
-    int manipLook = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.2f, 0.15f, 0.1f), 0.6f, 0.8f);
-    int link4Look = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(1.f, 1.f, 1.f), 0.6f, 0.8f, sf::GetDataPath() + "link4_tex.png");
-    int eeLook = sf::OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.59f, 0.56f, 0.51f), 0.6f, 0.8f);
+    int yellow = CreateLook(sf::Color::RGB(1.f, 0.9f, 0.f), 0.3f, 0.f);
+    int grey = CreateLook(sf::Color::RGB(0.3f, 0.3f, 0.3f), 0.4f, 0.5f);
+    int seabed = CreateLook(sf::Color::RGB(0.7f, 0.7f, 0.5f), 0.9f, 0.f);
+    int propLook = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.3f, 0.f, 0.f, sf::GetDataPath() + "propeller_tex.png");
+    int ductLook = CreateLook(sf::Color::RGB(0.1f, 0.1f, 0.1f), 0.4f, 0.5f);
+    int manipLook = CreateLook(sf::Color::RGB(0.2f, 0.15f, 0.1f), 0.6f, 0.8f);
+    int link4Look = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.6f, 0.8f, 0.f, sf::GetDataPath() + "link4_tex.png");
+    int eeLook = CreateLook(sf::Color::RGB(0.59f, 0.56f, 0.51f), 0.6f, 0.8f);
     
     ////////OBJECTS    
     //Create environment
 	EnableOcean(true);
-	
+    getOcean()->setTurbidity(400.f);
+    
     sf::Plane* plane = new sf::Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(plane, sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0,7.0)));
+    AddStaticEntity(plane, sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0,3.0)));
 	
-    sf::Box* box = new sf::Box("TestBox", sf::Vector3(1,2,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,1.0)), getMaterialManager()->getMaterial("Dummy"), yellow);
+    sf::Obstacle* column = new sf::Obstacle("Col", sf::Scalar(0.2), sf::Scalar(5.0), getMaterialManager()->getMaterial("Rock"), grey);
+    AddStaticEntity(column, sf::Transform(sf::IQ(), sf::Vector3(0,2.0,0.5)));
+    
+    /*sf::Box* box = new sf::Box("TestBox", sf::Vector3(1,2,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), getMaterialManager()->getMaterial("Dummy"), yellow);
     AddSolidEntity(box, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
-    box->SetArbitraryPhysicalProperties(box->getMass(), box->getInertia(), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
+    box->SetArbitraryPhysicalProperties(box->getMass(), box->getInertia(), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,3.0)));*/
     
-    //sf::Polyhedron* sph = new sf::Polyhedron("Poly", sf::GetDataPath() + "sphere_R=1.obj", sf::Scalar(1),
-    //                                       sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,1.0)), getMaterialManager()->getMaterial("Dummy"), grey);
-    //sph->SetArbitraryPhysicalProperties(sph->getMass(), sph->getInertia(), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
-    //AddSolidEntity(sph, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
-    //sf::Sphere* sph = new sf::Sphere("Ballast", sf::Scalar(0.3), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Rock"), grey);
+    /*sf::Polyhedron* sph = new sf::Polyhedron("Poly", sf::GetDataPath() + "sphere_R=1.obj", sf::Scalar(1),
+                                             sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,1.0)), getMaterialManager()->getMaterial("Dummy"), grey);
+    AddSolidEntity(sph, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));*/
     
+    /*sf::Polyhedron* sph = new sf::Polyhedron("Poly", sf::GetDataPath() + "sphere_R=1.obj", sf::Scalar(0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)),
+                                                     sf::GetDataPath() + "sphere_R=1.obj", sf::Scalar(0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)),
+                                                     getMaterialManager()->getMaterial("Dummy"), grey);
+    AddSolidEntity(sph, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));*/
     
-    //sf::Compound* comp = new sf::Compound("Boat", box, sf::Transform::getIdentity());
-    //comp->AddExternalPart(sph, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,2.5)));
-    //AddSolidEntity(comp, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
+    //sph->SetArbitraryPhysicalProperties(sph->getMass(), sph->getInertia(), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,1.0)));
+    
+    /*sf::Sphere* sph = new sf::Sphere("Ballast", sf::Scalar(0.3), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Rock"), grey);
+    sf::Sphere* sph2 = new sf::Sphere("Ballast", sf::Scalar(0.3), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), grey);
+    
+    sf::Compound* comp = new sf::Compound("Boat", sph, sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));
+    comp->AddExternalPart(sph2, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,-1.0)));
+    AddSolidEntity(comp, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));*/
     
     //Pipe* vf = new Pipe(Vector3(10.0, 0.0, 1.0), Vector3(-10.0, 0.0, 1.0), 1.0, 1.0, 1.0, 1.0);
     //getOcean()->AddVelocityField(vf);

@@ -3,33 +3,52 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/09/17.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Compound.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "utils/MathUtil.hpp"
 
-using namespace sf;
-
-Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& position) : SolidEntity(uniqueName, firstExternalPart->getMaterial(), firstExternalPart->getLook())
+namespace sf
 {
+
+Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin) : SolidEntity(uniqueName, Material(), 0)
+{
+    //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
+    phyMesh = NULL; // There is no single mesh
     volume = 0;
 	mass = 0;
 	Ipri = Vector3(0,0,0);
-	mesh = NULL;
-	AddExternalPart(firstExternalPart, position);
+    
+	AddExternalPart(firstExternalPart, origin);
 }
 
 Compound::~Compound()
 {
     for(unsigned int i=0; i<parts.size(); ++i)
         delete parts[i].solid;
-    
     parts.clear();
 }
+    
+Material Compound::getMaterial(size_t partId) const
+{
+    if(partId < parts.size())
+        return parts[partId].solid->getMaterial();
+    else
+        return Material();
+}
 
+size_t Compound::getPartId(size_t collisionShapeId) const
+{
+    if(collisionShapeId < collisionPartId.size())
+        return collisionPartId[collisionShapeId];
+    else
+        return 0;
+}
+    
 SolidType Compound::getSolidType()
 {
     return SOLID_COMPOUND;
@@ -38,49 +57,53 @@ SolidType Compound::getSolidType()
 std::vector<Vertex>* Compound::getMeshVertices()
 {
     std::vector<Vertex>* pVert = new std::vector<Vertex>(0);
-    
-    for(unsigned int i=0; i<parts.size(); ++i)
+        
+    for(size_t i=0; i<parts.size(); ++i)
     {
         if(parts[i].isExternal)
         {
             std::vector<Vertex>* pPartVert = parts[i].solid->getMeshVertices();
+            Transform phyMeshTrans = (parts[i].origin
+                                     * parts[i].solid->getCG2OTransform().inverse()
+                                     * parts[i].solid->getCG2CTransform());
             
-            for(unsigned int h=0; h < pPartVert->size(); ++h)
+            glm::mat4 glTrans = glMatrixFromBtTransform(phyMeshTrans);
+            
+            for(size_t h=0; h < pPartVert->size(); ++h)
             {
-                glm::mat4 trans = glMatrixFromBtTransform(parts[i].position);
-                glm::vec4 vTrans = trans * glm::vec4((*pPartVert)[h].pos, 1.f);
+                glm::vec4 vTrans = glTrans * glm::vec4((*pPartVert)[h].pos, 1.f);
                 Vertex v;
                 v.pos = glm::vec3(vTrans);
                 pVert->push_back(v);
             }
-            
+                
             delete pPartVert;
         }
     }
-    
+        
     return pVert;
 }
-
-void Compound::AddInternalPart(SolidEntity* solid, const Transform& position)
+    
+void Compound::AddInternalPart(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        Part part;
+        CompoundPart part;
         part.solid = solid;
-        part.position = position;
+        part.origin = origin;
         part.isExternal = false;
         parts.push_back(part);
 		RecalculatePhysicalProperties();
     }
 }
 
-void Compound::AddExternalPart(SolidEntity* solid, const Transform& position)
+void Compound::AddExternalPart(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        Part part;
+        CompoundPart part;
         part.solid = solid;
-        part.position = position;
+        part.origin = origin;
         part.isExternal = true;
         parts.push_back(part);
 		RecalculatePhysicalProperties();
@@ -91,58 +114,56 @@ void Compound::RecalculatePhysicalProperties()
 {
 	//Calculate rigid body properties
     /*
-      1. Calculate compound mass and compound COG (sum of location - local * m / M)
-      2. Calculate inertia of part in global frame and compound COG (rotate and translate inertia tensor) 3x3
+      1. Calculate compound mass and compound CG (sum of location - local * m / M)
+      2. Calculate inertia of part in global frame and compound CG (rotate and translate inertia tensor) 3x3
          and calculate compound inertia 3x3 (sum of parts inertia)
       3. Calculate primary moments of inertia
       4. Find primary axes of inertia
-      5. Rotate frame to match primary axes and move to COG
+      5. Rotate frame to match primary axes and move to CG
     */
      
-    //1. Calculate compound mass and COG
-    Vector3 compoundCOG(0,0,0);
-    Vector3 compoundCOB(0,0,0);
+    //1. Calculate compound mass, CG and CB
+    Vector3 compoundCG(0,0,0); //In compound body origin frame
+    Vector3 compoundCB(0,0,0); //In compound body origin frame
     Scalar compoundMass = 0;
 	Scalar compoundVolume = 0;
-    T_G2CG = Transform::getIdentity();
+    T_CG2O = T_CG2C = T_CG2G = Transform::getIdentity();
         
-    for(unsigned int i=0; i<parts.size(); ++i)
+    for(size_t i=0; i<parts.size(); ++i)
     {
         compoundMass += parts[i].solid->getMass();
-        //compoundCOG += (bodyParts[i].position.getOrigin() + bodyParts[i].solid->getLocalTransform().getOrigin())*bodyParts[i].solid->getMass();
-        compoundCOG += (parts[i].position*parts[i].solid->getG2CGTransform().getOrigin())*parts[i].solid->getMass();
+        compoundCG += (parts[i].origin * parts[i].solid->getCG2OTransform().inverse()).getOrigin() * parts[i].solid->getMass();
         
         if(parts[i].solid->isBuoyant())
         {
             compoundVolume += parts[i].solid->getVolume();
-            compoundCOB += (parts[i].position*parts[i].solid->getCBPositionInGFrame())*parts[i].solid->getVolume();
+            compoundCB += parts[i].origin * parts[i].solid->getCG2OTransform().inverse() * parts[i].solid->getCB() * parts[i].solid->getVolume();
         }
     }
     
-    compoundCOG /= compoundMass;
-    T_G2CG.setOrigin(compoundCOG);
+    //Set transform origin
+    compoundCG /= compoundMass;
+    T_CG2O.setOrigin(-compoundCG);
     
-    if(compoundVolume > Scalar(0))
-        CB = compoundCOB / compoundVolume;
-        
     //2. Calculate compound inertia matrix
     Matrix3 I = Matrix3(0,0,0,0,0,0,0,0,0);
         
     for(unsigned int i=0; i<parts.size(); ++i)
     {
-        //Calculate inertia matrix 3x3 of solid in the global frame and COG
+        //Calculate inertia matrix 3x3 of solid in the compound body origin frame and transform to CB
         Vector3 solidPriInertia = parts[i].solid->getInertia();
         Matrix3 solidInertia = Matrix3(solidPriInertia.x(), 0, 0, 0, solidPriInertia.y(), 0, 0, 0, solidPriInertia.z());
             
-        //Rotate inertia tensor from local to global
-        Matrix3 rotation = parts[i].position.getBasis()*parts[i].solid->getG2CGTransform().getBasis();
-        solidInertia = rotation * solidInertia * rotation.transpose();
+        //Rotate inertia tensor from part CG to compound CG
+        Transform compToPart = T_CG2O * parts[i].origin * parts[i].solid->getCG2OTransform().inverse();
+        solidInertia = compToPart.getBasis() * solidInertia * compToPart.getBasis().transpose();
             
-        //Translate inertia tensor from local COG to global COG
-        Vector3 translation = parts[i].position.getOrigin()+parts[i].solid->getG2CGTransform().getOrigin()-compoundCOG;
-        solidInertia = solidInertia +  Matrix3(translation.y()*translation.y()+translation.z()*translation.z(), -translation.x()*translation.y(), -translation.x()*translation.z(),
-                                                    -translation.y()*translation.x(), translation.x()*translation.x()+translation.z()*translation.z(), -translation.y()*translation.z(),
-                                                    -translation.z()*translation.x(), -translation.z()*translation.y(), translation.x()*translation.x()+translation.y()*translation.y()).scaled(Vector3(parts[i].solid->getMass(), parts[i].solid->getMass(), parts[i].solid->getMass()));
+        //Translate inertia tensor from part CG to compound CG
+        Vector3 t = compToPart.getOrigin();
+        Scalar m = parts[i].solid->getMass();
+        solidInertia += Matrix3(t.y()*t.y()+t.z()*t.z(),            -t.x()*t.y(),            -t.x()*t.z(),
+                                           -t.y()*t.x(), t.x()*t.x()+t.z()*t.z(),            -t.y()*t.z(),
+                                           -t.z()*t.x(),            -t.z()*t.y(), t.x()*t.x()+t.y()*t.y()).scaled(Vector3(m, m, m));
             
         //Accumulate inertia tensor
         I += solidInertia;
@@ -176,9 +197,15 @@ void Compound::RecalculatePhysicalProperties()
     
 		//3.3. Rotate body so that principal axes are parallel to (x,y,z) system
 		Matrix3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-		T_G2CG.setBasis(rotMat);
+		T_CG2O.setBasis(rotMat.inverse());
     }
 	
+    T_CG2C = T_CG2G = T_CG2O;
+    
+    //Move CB to compound CG frame
+    if(compoundVolume > Scalar(0))
+        P_CB = T_CG2O * (compoundCB / compoundVolume);
+    
 	mass = compoundMass;
 	volume = compoundVolume;
 	Ipri = compoundPriInertia;
@@ -190,13 +217,14 @@ btCollisionShape* Compound::BuildCollisionShape()
 {
 	//Build collision shape from external parts
     btCompoundShape* colShape = new btCompoundShape();
-    for(unsigned int i=0; i<parts.size(); ++i)
+    for(size_t i = 0; i<parts.size(); ++i)
     {
         if(parts[i].isExternal)
         {
-            Transform childTrans = parts[i].position;
+            Transform childTrans = parts[i].origin * parts[i].solid->getCG2OTransform().inverse() * parts[i].solid->getCG2CTransform();
             btCollisionShape* partColShape = parts[i].solid->BuildCollisionShape();
             colShape->addChildShape(childTrans, partColShape);
+            collisionPartId.push_back(i);
         }
     }
 	return colShape;
@@ -204,8 +232,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 
 void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
 {
-    if(!computeHydro)
-        return;
+    if(!computeHydro) return;
     
     BodyFluidPosition bf = CheckBodyFluidPosition(liquid);
     
@@ -221,105 +248,105 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
         return;
     }
     
-    //Get velocities and transformations
-    Transform T = getCGTransform() * T_G2CG.inverse();
-    Vector3 v = getLinearVelocity();
-    Vector3 omega = getAngularVelocity();
-	
-    //Clear forces that will be recomputed
-    if(settings.reallisticBuoyancy)
+    if(bf == BodyFluidPosition::INSIDE_FLUID)
     {
-        Fb.setZero();
-        Tb.setZero();
-    }
-    
-    if(settings.dampingForces)
-    {
-        Fds.setZero();
-        Tds.setZero();
-        Fdp.setZero();
-        Tdp.setZero();
-    }
-    
-    if(settings.reallisticBuoyancy || settings.dampingForces)
-    {
-        Vector3 Fbp(0,0,0);
-        Vector3 Tbp(0,0,0);
-        Vector3 Fdsp(0,0,0);
-        Vector3 Tdsp(0,0,0);
-        Vector3 Fdpp(0,0,0);
-        Vector3 Tdpp(0,0,0);
-	
-        for(unsigned int i=0; i<parts.size(); ++i)
+        //Compute buoyancy based on CB position
+        if(isBuoyant())
         {
-            if(parts[i].isExternal)
-            {
-                if(bf == BodyFluidPosition::INSIDE_FLUID)
-                    parts[i].solid->ComputeFluidForcesSubmerged(settings, liquid, getCGTransform(), T * parts[i].position, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
-                else //CROSSING_FLUID_SURFACE
-                    parts[i].solid->ComputeFluidForcesSurface(settings, liquid, getCGTransform(), T * parts[i].position, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
-                
-                Fb += Fbp;
-                Tb += Tbp;
-                Fds += Fdsp;
-                Tds += Tdsp;
-                Fdp += Fdpp;
-                Tdp += Tdpp;
-            }
-            else if(settings.reallisticBuoyancy)
-            {
-                HydrodynamicsSettings iSettings = settings;
-                iSettings.dampingForces = false;
-                
-                if(bf == BodyFluidPosition::INSIDE_FLUID)
-                    parts[i].solid->ComputeFluidForcesSubmerged(iSettings, liquid, getCGTransform(), T * parts[i].position, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
-                else //CROSSING_FLUID_SURFACE
-                    parts[i].solid->ComputeFluidForcesSurface(iSettings, liquid, getCGTransform(), T * parts[i].position, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
-                
-                Fb += Fbp;
-                Tb += Tbp;
-            }
+            Fb = -volume*liquid->getLiquid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            Tb = (getCGTransform() * P_CB - getCGTransform().getOrigin()).cross(Fb);
         }
         
         if(settings.dampingForces)
         {
-            Transform hpTrans = getCGTransform() * T_G2CG.inverse() * hydroProxyTransform;
+            //Set zero
+            Fds.setZero();
+            Tds.setZero();
+            Fdp.setZero();
+            Tdp.setZero();
             
-            switch(hydroProxyType)
+            //Get velocity data
+            Vector3 v = getLinearVelocity();
+            Vector3 omega = getAngularVelocity();
+            
+            //Create temporary vectors for summing
+            Vector3 Fdsp(0,0,0);
+            Vector3 Tdsp(0,0,0);
+            Vector3 Fdpp(0,0,0);
+            Vector3 Tdpp(0,0,0);
+            
+            for(size_t i=0; i<parts.size(); ++i) //Go through all parts
+                if(parts[i].isExternal) //Compute drag only for external parts
+                {
+                    Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
+                    ComputeFluidForcesSubmerged(parts[i].solid->getPhysicsMesh(), liquid, getCGTransform(), T_C_part, v, omega, Fdsp, Tdsp, Fdpp, Tdpp);
+                    Fds += Fdsp;
+                    Tds += Tdsp;
+                    Fdp += Fdpp;
+                    Tdp += Tdpp;
+                }
+        }
+    }
+    else //CROSSING FLUID SURFACE
+    {
+        if(settings.reallisticBuoyancy || settings.dampingForces)
+        {
+            //Clear forces that will be recomputed
+            if(settings.reallisticBuoyancy)
             {
-                case HYDRO_PROXY_NONE:
-                    //No info to correct
-                    break;
+                Fb.setZero();
+                Tb.setZero();
+            }
+        
+            if(settings.dampingForces)
+            {
+                Fds.setZero();
+                Tds.setZero();
+                Fdp.setZero();
+                Tdp.setZero();
+            }
+        
+            //Get velocity data
+            Vector3 v = getLinearVelocity();
+            Vector3 omega = getAngularVelocity();
+        
+            //Create temporary vectors for summing
+            Vector3 Fbp(0,0,0);
+            Vector3 Tbp(0,0,0);
+            Vector3 Fdsp(0,0,0);
+            Vector3 Tdsp(0,0,0);
+            Vector3 Fdpp(0,0,0);
+            Vector3 Tdpp(0,0,0);
+	
+            for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
+            {
+                Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
+                HydrodynamicsSettings pSettings = settings;
+                pSettings.reallisticBuoyancy &= parts[i].solid->isBuoyant();
                 
-                case HYDRO_PROXY_SPHERE:
-                    //No need to correct
-                    break;
-                    
-                case HYDRO_PROXY_CYLINDER:
+                if(parts[i].isExternal) //Compute buoyancy and drag
                 {
-                    //Correct drag based on cylindrical approximation of shape
-                    Vector3 cFd = hpTrans.getBasis().inverse() * Fdp;
-                    Vector3 Cd(0.5, 1.0, 0.5);
-                    cFd = Vector3(Cd.x()*cFd.x(), Cd.y()*cFd.y(), Cd.z()*cFd.z());
-                    Fdp = hpTrans.getBasis() * cFd;
+                    ComputeFluidForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), liquid, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
+                    Fb += Fbp;
+                    Tb += Tbp;
+                    Fds += Fdsp;
+                    Tds += Tdsp;
+                    Fdp += Fdpp;
+                    Tdp += Tdpp;
                 }
-                    break;
-                    
-                case HYDRO_PROXY_ELLIPSOID:
+                else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
-                    //Correct drag based on ellipsoid approximation of shape
-                    Vector3 eFd = hpTrans.getBasis().inverse() * Fdp;
-                    //Vector3 eTd = eTrans.getBasis().inverse() * Td;
-                    Vector3 Cd(Scalar(1)/hydroProxyParams[0] , Scalar(1)/hydroProxyParams[1], Scalar(1)/hydroProxyParams[2]);
-                    Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
-                    Cd /= maxCd;
-                    eFd = Vector3(Cd.x()*eFd.x(), Cd.y()*eFd.y(), Cd.z()*eFd.z());
-                    Fdp = hpTrans.getBasis() * eFd;
+                    pSettings.dampingForces = false;
+                    ComputeFluidForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), liquid, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
+                    Fb += Fbp;
+                    Tb += Tbp;
                 }
-                break;
             }
         }
     }
+        
+    if(settings.dampingForces)
+        CorrectDampingForces();
 }
 
 void Compound::BuildGraphicalObject()
@@ -334,37 +361,38 @@ std::vector<Renderable> Compound::Render()
 	
 	if(isRenderable())
 	{
-		Transform cgCompoundTrans = getCGTransform();
-		Transform oCompoundTrans =  getCGTransform() * T_G2CG.inverse();
-	
         Renderable item;
         item.type = RenderableType::SOLID_CS;
-        item.model = glMatrixFromBtTransform(cgCompoundTrans);
+        item.model = glMatrixFromBtTransform(getCGTransform());
         items.push_back(item);
         
-        Vector3 cobWorld = oCompoundTrans * CB;
+        Vector3 cbWorld = getCGTransform() * P_CB;
         item.type = RenderableType::HYDRO_CS;
-        item.model = glMatrixFromBtTransform(Transform(Quaternion::getIdentity(), cobWorld));
+        item.model = glMatrixFromBtTransform(Transform(Quaternion::getIdentity(), cbWorld));
         item.points.push_back(glm::vec3(volume, volume, volume));
         items.push_back(item);
-    
+        item.points.clear();
+        
+        item.type = RenderableType::HYDRO_ELLIPSOID;
+        item.model = glMatrixFromBtTransform(getHTransform());
+        item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
+        items.push_back(item);
+        item.points.clear();
+        
+        Transform oCompoundTrans = getOTransform();
+        item.type = RenderableType::SOLID;
+        
 		for(unsigned int i=0; i<parts.size(); ++i)
 		{
-			Transform oTrans = oCompoundTrans * parts[i].position;
-			
-			Renderable item;
-            item.type = RenderableType::SOLID;
+			Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
 			item.objectId = parts[i].solid->getObject();
 			item.lookId = parts[i].solid->getLook();
 			item.model = glMatrixFromBtTransform(oTrans);
 			items.push_back(item);
-            
-            item.type = RenderableType::HYDRO_ELLIPSOID;
-            item.model = glMatrixFromBtTransform(oCompoundTrans * hydroProxyTransform);
-            item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
-            items.push_back(item);
 		}
 	}
 		
 	return items;
+}
+
 }

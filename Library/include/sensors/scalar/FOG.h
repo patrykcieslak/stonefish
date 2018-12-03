@@ -13,16 +13,15 @@
 
 namespace sf
 {
-
-class FOG : public LinkSensor
-{
-public:
-    FOG(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    void SetNoise(Scalar headingStdDev);
-};
-    
+    //!
+    class FOG : public LinkSensor
+    {
+    public:
+        FOG(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void SetNoise(Scalar headingStdDev);
+    };
 }
 
 #endif

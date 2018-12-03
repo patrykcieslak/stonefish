@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -11,9 +11,11 @@
 #include <algorithm>
 #include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
+#include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 Ocean::Ocean(std::string uniqueName, bool simulateWaves, Fluid* l) : ForcefieldEntity(uniqueName)
 {
@@ -226,4 +228,6 @@ std::vector<Renderable> Ocean::Render()
     }
     
     return items;
+}
+
 }

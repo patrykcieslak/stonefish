@@ -3,14 +3,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/06/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/PathGenerator2D.h"
 
 #include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 PathGenerator2D::PathGenerator2D(PlaneType pathOnPlane)
 {
@@ -152,7 +153,7 @@ void PathGenerator2D::Render()
         PointAtTime(Scalar(i)/Scalar(steps), point, tangent);
 		vertices.push_back(glm::vec3(point.getX(), point.getY(), point.getZ()));
 	}
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
 }
 
 Pwl2D::Pwl2D(const Point2D& start)
@@ -300,5 +301,5 @@ Scalar Bezier2D::bezierTerm(unsigned int n, unsigned int i, Scalar t)
     return factorialPart * exponentPart;
 }
 
-
+}
 

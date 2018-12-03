@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/Mux.h"
 
-using namespace sf;
+#include "sensors/ScalarSensor.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 Mux::Mux()
 {
@@ -53,4 +57,6 @@ Scalar* Mux::getLastSample()
 unsigned int Mux::getNumOfComponents()
 {
     return (unsigned int)components.size();
+}
+    
 }

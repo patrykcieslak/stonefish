@@ -11,6 +11,7 @@
 #include "FallingTestApp.h"
 #include <core/Robot.h>
 #include <utils/SystemUtil.hpp>
+#include <utils/UnitSystem.h>
 #include <entities/statics/Plane.h>
 #include <entities/statics/Obstacle.h>
 #include <entities/solids/Polyhedron.h>
@@ -29,8 +30,8 @@ FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) : SimulationMa
 void FallingTestManager::BuildScenario()
 {
     sf::OpenGLPipeline* glPipeline = ((sf::GraphicalSimulationApp*)sf::SimulationApp::getApp())->getGLPipeline();
-    glPipeline->setVisibleHelpers(true, false, false, false, true, false, false);
-	glPipeline->setDebugSimulation(false);
+    glPipeline->setVisibleHelpers(true, false, false, true, true, false, false);
+	glPipeline->setDebugSimulation(true);
     setICSolverParams(false);
 	
     ///////MATERIALS////////
@@ -52,10 +53,10 @@ void FallingTestManager::BuildScenario()
     //Mechanical parts
     sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), getMaterialManager()->getMaterial("Steel"), green);
     
-    sf::Cylinder* cyl = new sf::Cylinder("Cyl", 0.2, 1.0, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
-    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
-    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
-    sf::Box* link3 = new sf::Box("Link3", sf::Vector3(0.5,0.01,0.01), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Cylinder* cyl = new sf::Cylinder("Cyl", 0.2, 1.0, sf::I4(), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
+    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), green);
+    //sf::Box* link3 = new sf::Box("Link3", sf::Vector3(0.5,0.01,0.01), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Steel"), green);
 	
     std::vector<sf::SolidEntity*> links;
     links.push_back(link1);
@@ -71,9 +72,9 @@ void FallingTestManager::BuildScenario()
     
     robot->DefineLinks(obj, links);
     robot->DefineRevoluteJoint("Joint1", "Base", "Link1",
-                               sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0.25,0)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
+                               sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0.25,-0.2)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
     robot->DefineRevoluteJoint("Joint2", "Base", "Link2",
-                               sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,-0.25,0)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
+                               sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,-0.25,-0.2)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0), 10.0);
     
     robot->AddLinkSensor(imu, "Link2", sf::Transform::getIdentity());
     robot->AddJointSensor(enc, "Joint2");

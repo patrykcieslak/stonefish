@@ -3,20 +3,23 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/BeltJoint.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+
+namespace sf
+{
 
 BeltJoint::BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axisA, const Vector3& axisB, Scalar ratio) : Joint(uniqueName, false)
 {
     Vector3 newAxisB = -axisB; // Belt -> same direction of rotation
     gearRatio = ratio;
     
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->rigidBody;
+    btRigidBody* bodyB = solidB->rigidBody;
     Vector3 axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * axisA;
     Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * newAxisB;
     
@@ -37,4 +40,6 @@ Scalar BeltJoint::getRatio()
 Vector3 BeltJoint::Render()
 {
     return Vector3();
+}
+
 }

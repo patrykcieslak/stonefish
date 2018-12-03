@@ -13,22 +13,21 @@
 
 namespace sf
 {
-
-class Motor : public JointActuator
-{
-public:
-    Motor(std::string uniqueName);
-    
-    virtual void Update(Scalar dt);
-    virtual void setIntensity(Scalar value);
-	virtual Scalar getTorque();
-    virtual Scalar getAngle();
-	virtual Scalar getAngularVelocity();
-    
-protected:
-	Scalar torque;
-};
-
+    //!
+    class Motor : public JointActuator
+    {
+    public:
+        Motor(std::string uniqueName);
+        
+        virtual void Update(Scalar dt);
+        virtual void setIntensity(Scalar value);
+        virtual Scalar getTorque();
+        virtual Scalar getAngle();
+        virtual Scalar getAngularVelocity();
+        
+    protected:
+        Scalar torque;
+    };
 }
 
 #endif

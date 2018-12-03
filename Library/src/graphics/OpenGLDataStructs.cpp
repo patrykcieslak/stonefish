@@ -8,7 +8,8 @@
 
 #include "graphics/OpenGLDataStructs.h"
 
-using namespace sf;
+namespace sf
+{
 
 QuadTreeNode::QuadTreeNode(QuadTree* tree_, QuadTreeNode* parent_, Quadrant q_, glm::vec3 origin_, GLfloat size_)
 {
@@ -191,4 +192,6 @@ void QuadTree::Draw()
     glDrawArrays(GL_PATCHES, 0, (GLsizei)(4 * leafs.size()));
     
     glBindVertexArray(0);
+}
+
 }

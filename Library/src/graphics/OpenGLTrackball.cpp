@@ -3,15 +3,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLTrackball.h"
 
 #include "core/SimulationApp.h"
 #include "utils/MathUtil.hpp"
+#include "entities/SolidEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 OpenGLTrackball::OpenGLTrackball(const Vector3& centerPosition, Scalar orbitRadius, const Vector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {
@@ -156,4 +158,6 @@ void OpenGLTrackball::MoveCenter(const glm::vec3& step)
 void OpenGLTrackball::GlueToEntity(SolidEntity* solid)
 {
     holdingEntity = solid;
+}
+
 }

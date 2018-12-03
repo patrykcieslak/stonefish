@@ -17,7 +17,7 @@
 class UnderwaterTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, UnderwaterTestManager* sim);
+    UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings, UnderwaterTestManager* sim);
     void DoHUD();
     
 private:

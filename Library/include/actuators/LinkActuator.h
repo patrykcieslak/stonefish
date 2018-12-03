@@ -46,7 +46,7 @@ namespace sf
         
     protected:
         SolidEntity* attach;
-        Transform g2a;
+        Transform o2a;
     };
 }
 

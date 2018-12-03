@@ -15,6 +15,8 @@
 namespace sf
 {
 
+    class Console;
+    
 /*!
     A class that defines a console application interface.
  */
@@ -27,14 +29,15 @@ public:
 	bool hasGraphics();
 	
 protected:
-	void Init();
-    virtual void Loop();
+	virtual void Loop();
 	void StartSimulation();
     void ResumeSimulation();
     void StopSimulation();
     
 private:
-	SDL_Thread* simulationThread;
+    void Init();
+    
+    SDL_Thread* simulationThread;
     
 	static int RunSimulation(void* data);
 };

@@ -11,9 +11,8 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "core/MaterialManager.h"
-#include "graphics/OpenGLContent.h"
 #include "entities/Entity.h"
-#include "entities/forcefields/Ocean.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
@@ -23,6 +22,9 @@ namespace sf
     typedef enum {HYDRO_PROXY_NONE = 0, HYDRO_PROXY_SPHERE, HYDRO_PROXY_CYLINDER, HYDRO_PROXY_ELLIPSOID} HydrodynamicProxyType;
     //! An enum used to define if the body is submerged.
     typedef enum {INSIDE_FLUID = 0, OUTSIDE_FLUID, CROSSING_FLUID_SURFACE} BodyFluidPosition;
+    
+    struct HydrodynamicsSettings;
+    class Ocean;
     
     //! An abstract class representing a rigid body.
     class SolidEntity : public Entity
@@ -41,24 +43,24 @@ namespace sf
         //! A destructor.
         virtual ~SolidEntity();
         
-        //! A method adding the body to the simulation world.
+        //! A method adding the body to the simulation manager.
         /*!
-         \param world a pointer to the simulation world
+         \param sm a pointer to the simulation manager
          */
-        void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world);
+        void AddToSimulation(SimulationManager* sm);
         
-        //! A method adding the body to the simulation world.
+        //! A method adding the body to the simulation manager.
         /*!
-         \param world a pointer to the simulation world
-         \param worldTransform a pose of the body CG in the world frame
+         \param sm a pointer to the simulation manager
+         \param origin a pose of the body CG in the world frame
          */
-        void AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform);
+        void AddToSimulation(SimulationManager* sm, const Transform& origin);
         
-        //! A method removing the body from the simulation world.
+        //! A method removing the body from the simulation manager.
         /*!
-         \param world a pointer to the simulation world
+         \param sm a pointer to the simulation manager
          */
-        void RemoveFromDynamicsWorld(btMultiBodyDynamicsWorld* world);
+        void RemoveFromSimulation(SimulationManager* sm);
         
         //! A pure virtual method building a collision shape for the body.
         virtual btCollisionShape* BuildCollisionShape() = 0;
@@ -79,12 +81,13 @@ namespace sf
          */
         virtual void ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid);
         
-        //! A method that computes fluid dynamics when a body is crossing the fluid surface.
+        //! A static method that computes fluid dynamics when a body is crossing the fluid surface.
         /*!
-         \param settings a structure holding settings of the fluid dynamics computation
+         \param settings a reference to a structure holding settings of the fluid dynamics computation
+         \param mesh a pointer to the body physics mesh data
          \param liquid a pointer to the fluid entity generating forces (currently only Ocean supported)
          \param T_CG a transform from the world frame to the body CG frame
-         \param T_G a transform from the world frame to the body geometry frame
+         \param T_C a transform from the world frame to the physics frame
          \param linearV the linear velocity of the body in the world frame
          \param angularV the angular velocity of the body in the world frame
          \param _Fb output of the buoyancy force
@@ -94,26 +97,24 @@ namespace sf
          \param _Fdp output of the damping force resulting from pressure drag
          \param _Tdp output of the torque induced by pressure drag
          */
-        void ComputeFluidForcesSurface(HydrodynamicsSettings settings, Ocean* liquid, const Transform& T_CG, const Transform& T_G,
-                                       const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
+        static void ComputeFluidForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
+                                              const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
         
-        //! A method that computes fluid dynamics when a body is completely submerged.
+        //! A static method that computes fluid dynamics when a body is completely submerged.
         /*!
-         \param settings a structure holding settings of the fluid dynamics computation
+         \param mesh a pointer to the body physics mesh data
          \param liquid a pointer to the fluid entity generating forces (currently only Ocean supported)
          \param T_CG a transform from the world frame to the body CG frame
-         \param T_G a transform from the world frame to the body geometry frame
+         \param T_C a transform from the world frame to the body physics frame
          \param linearV the linear velocity of the body in the world frame
          \param angularV the angular velocity of the body in the world frame
-         \param _Fb output of the buoyancy force
-         \param _Tb output of the torque induced by buoyancy force
          \param _Fds output of the damping force resulting from skin drag
          \param _Tds output of the torque induced by skin drag
          \param _Fdp output of the damping force resulting from pressure drag
          \param _Tdp output of the torque induced by pressure drag
          */
-        void ComputeFluidForcesSubmerged(HydrodynamicsSettings settings, Ocean* liquid, const Transform& T_CG, const Transform& T_G,
-                                         const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
+        static void ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
+                                                const Vector3& linearV, const Vector3& angularV, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
         
         //! A method which applies given force to the body CG.
         /*!
@@ -146,9 +147,9 @@ namespace sf
         /*!
          \param mass a new mass of the body
          \param inertia a vector of new inertia moments of the body
-         \param G2CG a transformation between the geometry frame and the CG frame
+         \param CG a transformation between the body origin frame and the new CG frame
          */
-        virtual void SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& G2CG);
+        virtual void SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& CG);
         
         //! A method used to set arbitrary hydrodynamic coefficients and CB of the body.
         /*!
@@ -174,23 +175,38 @@ namespace sf
         //! A method returning the type of the entity.
         EntityType getType();
         
-        //! A method returning a direct pointer to the rigid body.
-        btRigidBody* getRigidBody();
+        //! A method returning the transformation from the CG frame to the graphics mesh origin.
+        Transform getCG2GTransform() const;
         
-        //! A method returning a direct pointer to the multibody link.
-        btMultiBodyLinkCollider* getMultibodyLinkCollider();
+        //! A method returning the transformation from the CG frame to the physics mesh origin.
+        Transform getCG2CTransform() const;
+        
+        //! A method returning the transformation from the CG frame to the body origin.
+        Transform getCG2OTransform() const;
+        
+        //! A method returning the position of the CB in the CG frame.
+        Vector3 getCB() const;
+        
+        //! A method returning the transformation from body origin to the physics mesh origin.
+        Transform getO2CTransform() const;
+        
+        //! A method returning the transformation from body origin to the graphics mesh origin.
+        Transform getO2GTransform() const;
         
         //! A method returning the pose of the body in the world frame.
         Transform getCGTransform() const;
         
-        //! A method returning the pose of the geometry in the world frame.
+        //! A method returning the pose of the graphics mesh in the world frame (rendering).
         Transform getGTransform() const;
         
-        //! A method returning the transformation from the geometry frame to the CG frame.
-        Transform getG2CGTransform() const;
+        //! A method returning the pose of the physics mesh in the world frame (hydrodynamics).
+        Transform getCTransform() const;
         
-        //! A method returning the position of the CB in the geometry frame.
-        Vector3 getCBPositionInGFrame() const;
+        //! A method returning the pose of the hydro proxy origin in the world frame.
+        Transform getHTransform() const;
+        
+        //! A method returning the pose of the body origin in the world frame.
+        Transform getOTransform() const;
         
         //! A method returning the linear velocity of the body.
         Vector3 getLinearVelocity() const;
@@ -222,8 +238,11 @@ namespace sf
         //! A method returning the volume of the body.
         Scalar getVolume() const;
         
-        //! A method returning a copy of a vector of vertices of the body geometry.
-        virtual std::vector<Vertex>* getMeshVertices(); //Copy of vertices, must be deleted manually!!!
+        //! A method returning a copy of the physics mesh vertices (memory needs to be released manually!).
+        virtual std::vector<Vertex>* getMeshVertices();
+        
+        //! A method returning a pointer to the physics mesh.
+        const Mesh* getPhysicsMesh();
         
         //! A method informing if the body is using buoyancy computation.
         bool isBuoyant() const;
@@ -234,6 +253,7 @@ namespace sf
         
         //! A method returning the elements that should be rendered.
         virtual std::vector<Renderable> Render();
+        
         //! A method returning the extents of the body axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
@@ -265,6 +285,7 @@ namespace sf
         void ComputeProxySphere();
         void ComputeProxyCylinder();
         void ComputeProxyEllipsoid();
+        void CorrectDampingForces();
         Scalar LambKFactor(Scalar r1, Scalar r2);
         virtual void BuildRigidBody();
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
@@ -273,27 +294,29 @@ namespace sf
         btRigidBody* rigidBody;
         btMultiBodyLinkCollider* multibodyCollider;
         
-        Mesh *mesh;
+        Mesh *phyMesh; //Mesh used for physics calculation
         Material mat;
         Scalar thick;
         Scalar volume;
         
         Scalar mass;  //Mass of solid
         Vector3 Ipri; //Principal moments of inertia
+        
+        //CG is the point important for the simulation
+        Transform T_CG2C; //Transform between CG and physics origin
+        Transform T_CG2G; //Transform between CG and graphics origin
+        Transform T_CG2O; //Transform between CG and body origin
+        Vector3 P_CB; //Center of Buoyancy (in body CG frame)
+        
+        //O is a point important for building models
         Transform T_O2G; //Transform between body origin and graphics origin
-        Transform T_O2CG; //Transform between body origin and body CG
-        Transform T_O2C; //Transform between body origin and collision shape origin
-        Transform T_G2CG; //Transform between graphical center and calculated mass center
+        Transform T_O2C; //Transform between body origin and physics origin
         
         Matrix6Eigen aMass; //Hydrodynamic added mass matrix
         Matrix6Eigen dCS; //Hydrodynamic damping coefficients multiplied by cross sections
-        Vector3 CB; //Center of Buoyancy (in geometry frame)
         HydrodynamicProxyType hydroProxyType;
         std::vector<Scalar> hydroProxyParams;
-        Transform hydroProxyTransform;
-        
-        //Vector3 ellipsoidR; //Radii of hydrodynamic proxy ellipsoid
-        //Transform ellipsoidTransform; //Transform of the ellipsoid
+        Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame
         
         bool computeHydro;
         bool buoyant;
@@ -312,13 +335,20 @@ namespace sf
         
         //Display
         int lookId;
-        int objectId;
+        int graObjectId;
+        int phyObjectId;
         bool dispCoordSys;
         
     private:
         friend class FeatherstoneEntity;
+        friend class FixedJoint;
+        friend class RevoluteJoint;
+        friend class PrismaticJoint;
+        friend class CylindricalJoint;
+        friend class SphericalJoint;
+        friend class GearJoint;
+        friend class BeltJoint;
     };
-    
 }
 
 #endif

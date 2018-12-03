@@ -3,19 +3,22 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/GearJoint.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+
+namespace sf
+{
 
 GearJoint::GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axisA, const Vector3& axisB, Scalar ratio) : Joint(uniqueName, false)
 {
     gearRatio = ratio;
     
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->rigidBody;
+    btRigidBody* bodyB = solidB->rigidBody;
     Vector3 axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * axisA.normalized();
     Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * axisB.normalized();
     
@@ -61,14 +64,14 @@ Vector3 GearJoint::Render()
     rAn = rBn/gearRatio;
     
     //circle A
-	std::vector<glm::vec3> vertices;
+	/*std::vector<glm::vec3> vertices;
 	for(unsigned short i=0; i<=24; ++i)
 	{
 		Vector3 pd = A + rA.rotate(axisA, i/Scalar(12.) * M_PI) * rAn;
 		glm::vec3 p = glm::vec3((GLfloat)pd.getX(), (GLfloat)pd.getY(), (GLfloat)pd.getZ()); 
 		vertices.push_back(p);
 	}
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
 	vertices.clear();
 	
     //circle B
@@ -79,6 +82,9 @@ Vector3 GearJoint::Render()
 		vertices.push_back(p);
 	}
 	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
-	
+	*/
+    
     return B + rBn*rBp;
+}
+
 }

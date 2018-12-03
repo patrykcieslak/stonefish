@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/Current.h"
 
-using namespace sf;
+#include "actuators/DCMotor.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 Current::Current(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
@@ -39,3 +43,4 @@ SensorType Current::getType()
     return SensorType::SENSOR_OTHER;
 }
 
+}

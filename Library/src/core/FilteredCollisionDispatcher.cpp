@@ -3,16 +3,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/FilteredCollisionDispatcher.h"
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
+#include "sensors/Contact.h"
 
-using namespace sf;
+namespace sf
+{
 
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
@@ -47,8 +50,8 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
     
     if(dispatcher.needsCollision(colObj0,colObj1))
     {
-        btCollisionObjectWrapper obj0Wrap(0,colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform(), -1, -1);
-        btCollisionObjectWrapper obj1Wrap(0,colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform(), -1, -1);
+        btCollisionObjectWrapper obj0Wrap(0, colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform(), -1, -1);
+        btCollisionObjectWrapper obj1Wrap(0, colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform(), -1, -1);
      
         //Dispatcher will keep algorithms persistent in the collision pair
         if(!collisionPair.m_algorithm)
@@ -94,4 +97,6 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
             }
         }
     }
+}
+
 }

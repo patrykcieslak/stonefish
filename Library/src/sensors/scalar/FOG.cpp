@@ -8,7 +8,10 @@
 
 #include "sensors/scalar/FOG.h"
 
-using namespace sf;
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 FOG::FOG(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -29,4 +32,6 @@ void FOG::InternalUpdate(Scalar dt)
 void FOG::SetNoise(Scalar headingStdDev)
 {
     channels[0].setStdDev(headingStdDev);
+}
+
 }

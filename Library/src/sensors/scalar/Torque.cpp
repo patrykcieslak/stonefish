@@ -8,9 +8,12 @@
 
 #include "sensors/scalar/Torque.h"
 
-#include "utils/MathUtil.hpp"
+#include "entities/FeatherstoneEntity.h"
+#include "joints/Joint.h"
+#include "sensors/Sample.h"
 
-using namespace sf;
+namespace sf
+{
 
 Torque::Torque(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
@@ -42,4 +45,6 @@ void Torque::SetRange(Scalar max)
 void Torque::SetNoise(Scalar stdDev)
 {
     channels[0].setStdDev(stdDev);
+}
+
 }

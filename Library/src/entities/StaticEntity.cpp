@@ -3,15 +3,18 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/StaticEntity.h"
 
-#include "core/SimulationApp.h"
+#include "core/GraphicalSimulationApp.h"
+#include "core/SimulationManager.h"
+#include "graphics/OpenGLContent.h"
 #include "utils/MathUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
 StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
 {
@@ -20,15 +23,12 @@ StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : En
     lookId = _lookId;
     wireframe = false;
 	rigidBody = NULL;
-    mesh = NULL;
+    phyMesh = NULL;
 }
 
 StaticEntity::~StaticEntity()
 {
-    if(mesh != NULL)
-        delete mesh;
-    
-    rigidBody = NULL;
+    if(phyMesh != NULL) delete phyMesh;
 }
 
 EntityType StaticEntity::getType()
@@ -105,10 +105,10 @@ std::vector<Renderable> StaticEntity::Render()
 
 void StaticEntity::BuildGraphicalObject()
 {
-	if(mesh == NULL || !SimulationApp::getApp()->hasGraphics())
+	if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
 		return;
-		
-	objectId = OpenGLContent::getInstance()->BuildObject(mesh);	
+	
+    objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
 }
 
 void StaticEntity::BuildRigidBody(btCollisionShape* shape)
@@ -130,18 +130,18 @@ void StaticEntity::BuildRigidBody(btCollisionShape* shape)
 	BuildGraphicalObject();
 }
 
-void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
+void StaticEntity::AddToSimulation(SimulationManager* sm)
 {
-    AddToDynamicsWorld(world, Transform::getIdentity());
+    AddToSimulation(sm, Transform::getIdentity());
 }
 
-void StaticEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform)
+void StaticEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     if(rigidBody != NULL)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(worldTransform);
+        btDefaultMotionState* motionState = new btDefaultMotionState(origin);
         rigidBody->setMotionState(motionState);
-        world->addRigidBody(rigidBody, MASK_STATIC, MASK_STATIC | MASK_DEFAULT);
+        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_STATIC | MASK_DEFAULT);
     }
 }
 
@@ -156,4 +156,6 @@ void StaticEntity::GroupTransform(std::vector<StaticEntity*>& objects, const Tra
         Tw = centre * Tc;
         objects[i]->setTransform(Tw);
     }
+}
+
 }

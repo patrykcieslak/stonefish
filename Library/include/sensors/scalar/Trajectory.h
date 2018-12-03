@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Trajectory__
@@ -13,16 +13,15 @@
 
 namespace sf
 {
-
-class Trajectory : public LinkSensor
-{
-public:
-    Trajectory(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    std::vector<Renderable> Render();
-};
-
+    //!
+    class Trajectory : public LinkSensor
+    {
+    public:
+        Trajectory(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        std::vector<Renderable> Render();
+    };
 }
 
 #endif

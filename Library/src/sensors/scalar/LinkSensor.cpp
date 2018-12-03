@@ -9,13 +9,16 @@
 #include "sensors/scalar/LinkSensor.h"
 
 #include "utils/MathUtil.hpp"
+#include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 LinkSensor::LinkSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     attach = NULL;
-    g2s = Transform::getIdentity();
+    o2s = Transform::getIdentity();
 }
 
 LinkSensor::~LinkSensor()
@@ -25,9 +28,9 @@ LinkSensor::~LinkSensor()
 Transform LinkSensor::getSensorFrame()
 {
     if(attach != NULL)
-        return attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2s;
+        return attach->getOTransform() * o2s;
     else
-        return g2s;
+        return o2s;
 }
 
 SensorType LinkSensor::getType()
@@ -35,20 +38,20 @@ SensorType LinkSensor::getType()
     return SensorType::SENSOR_LINK;
 }
 
-void LinkSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& location)
+void LinkSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())
     {
-        g2s = location;
+        o2s = origin;
         attach = multibody->getLink(linkId).solid;
     }
 }
 
-void LinkSensor::AttachToSolid(SolidEntity* solid, const Transform& location)
+void LinkSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        g2s = location;
+        o2s = origin;
         attach = solid;
     }
 }
@@ -63,4 +66,6 @@ std::vector<Renderable> LinkSensor::Render()
     items.push_back(item);
 
     return items;
+}
+
 }

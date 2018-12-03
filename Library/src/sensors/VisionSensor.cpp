@@ -8,12 +8,16 @@
 
 #include "sensors/VisionSensor.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
+
+namespace sf
+{
 
 VisionSensor::VisionSensor(std::string uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
 {
     attach = NULL;
-    g2s = Transform::getIdentity();
+    o2s = Transform::getIdentity();
 }
 
 VisionSensor::~VisionSensor()
@@ -23,9 +27,9 @@ VisionSensor::~VisionSensor()
 Transform VisionSensor::getSensorFrame()
 {
     if(attach != NULL)
-        return attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2s;
+        return attach->getOTransform() * o2s;
     else
-        return g2s;
+        return o2s;
 }
 
 SensorType VisionSensor::getType()
@@ -37,7 +41,7 @@ void VisionSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int link
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())
     {
-        g2s = origin;
+        o2s = origin;
         attach = multibody->getLink(linkId).solid;
     }
 }
@@ -46,7 +50,9 @@ void VisionSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)
     {
-        g2s = origin;
+        o2s = origin;
         attach = solid;
     }
+}
+
 }

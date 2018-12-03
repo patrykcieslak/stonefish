@@ -3,20 +3,21 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/06/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLDebugDrawer.h"
 
-#include "graphics/OpenGLContent.h"
-#include "graphics/Console.h"
+#include "core/Console.h"
+#include "core/GraphicalSimulationApp.h"
+#include "graphics/OpenGLPipeline.h"
 
-using namespace sf;
-
-OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode, bool zUp)
+namespace sf
 {
-	zAxisUp = zUp;
-    setDebugMode(debugMode);
+
+OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode)
+{
+	setDebugMode(debugMode);
 }
 
 void OpenGLDebugDrawer::setDebugMode(int debugMode)
@@ -31,18 +32,12 @@ int OpenGLDebugDrawer::getDebugMode() const
 
 void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const Vector3& color)
 {
-	std::vector<glm::vec3> vertices;
-	vertices.push_back(glm::vec3(from.getX(), from.getY(), from.getZ()));
-	vertices.push_back(glm::vec3(to.getX(), to.getY(), to.getZ()));
-	
-	if(!zAxisUp)
-	{
-		vertices[0] = glm::vec3(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(vertices[0], 1.f));
-		vertices[1] = glm::vec3(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(vertices[1], 1.f));
-	}
-	
-	glm::vec4 glcolor(color[0], color[1], color[2], 1.f);
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, glcolor);
+    glm::vec3 p1 = glm::vec3(from.getX(), from.getY(), from.getZ());
+    glm::vec3 p2 = glm::vec3(to.getX(), to.getY(), to.getZ());
+    p1 = glm::vec3(glm::rotate((GLfloat)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(p1, 1.f));
+    p2 = glm::vec3(glm::rotate((GLfloat)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(p2, 1.f));
+    lineVertices.push_back(p1);
+    lineVertices.push_back(p2);
 }
 
 void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const Vector3& fromColor, const Vector3& toColor)
@@ -63,4 +58,11 @@ void OpenGLDebugDrawer::reportErrorWarning(const char* warningString)
     cWarning(warningString);
 }
 
+void OpenGLDebugDrawer::Render()
+{
+    glm::vec4 glcolor(1.f, 1.f, 0.f, 1.f);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawPrimitives(PrimitiveType::LINES, lineVertices, glcolor);
+    lineVertices.clear();
+}
 
+}

@@ -3,12 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/07/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/FeedbackController.h"
 
-using namespace sf;
+#include "controllers/SignalMux.h"
+#include "controllers/SignalGenerator.h"
+
+namespace sf
+{
 
 FeedbackController::FeedbackController(std::string uniqueName, unsigned int numberOfInputs, Scalar frequency) : Controller(uniqueName, frequency)
 {
@@ -123,4 +127,6 @@ unsigned int FeedbackController::getNumOfInputs()
 ControllerType FeedbackController::getType()
 {
     return CONTROLLER_FEEDBACK;
+}
+
 }

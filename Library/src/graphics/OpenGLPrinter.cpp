@@ -3,14 +3,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/06/17.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPrinter.h"
 
 #include <stdio.h>
 
-using namespace sf;
+namespace sf
+{
 
 GLuint OpenGLPrinter::windowW = 800;
 GLuint OpenGLPrinter::windowH = 600;
@@ -203,4 +204,6 @@ GLuint OpenGLPrinter::TextLength(const char *text)
 glm::ivec2 OpenGLPrinter::TextDimensions(const char *text)
 {
     return glm::ivec2(TextLength(text), nativeFontSize);
+}
+
 }

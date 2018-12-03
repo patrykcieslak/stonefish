@@ -10,7 +10,8 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "graphics/Console.h"
+#include "core/Console.h"
+#include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
 #include "actuators/LinkActuator.h"
 #include "actuators/JointActuator.h"
@@ -106,7 +107,7 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
 	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-    Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getG2CGTransform().inverse() * origin;
+    Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * origin;
 	dynamics->AddLink(detachedLinks[childId], linkTrans);
     links.push_back(detachedLinks[childId]);
     detachedLinks.erase(detachedLinks.begin()+childId);
@@ -125,7 +126,7 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getG2CGTransform().inverse() * origin;
+	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * origin;
 	dynamics->AddLink(detachedLinks[childId], linkTrans);
     links.push_back(detachedLinks[childId]);
 	detachedLinks.erase(detachedLinks.begin()+childId);
@@ -144,7 +145,7 @@ void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std:
 	getFreeLinkPair(parentName, childName, parentId, childId);
 	
 	//Add link to the dynamic tree
-	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getG2CGTransform().inverse() * origin;
+	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * origin;
 	dynamics->AddLink(detachedLinks[childId], linkTrans);
     links.push_back(detachedLinks[childId]);
     detachedLinks.erase(detachedLinks.begin()+childId);

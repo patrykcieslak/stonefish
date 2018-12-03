@@ -3,17 +3,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SphericalJoint.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+
+namespace sf
+{
 
 SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->rigidBody;
+    btRigidBody* bodyB = solidB->rigidBody;
     Vector3 pivotInA = bodyA->getCenterOfMassTransform().inverse() * pivot;
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse() * pivot;
     
@@ -87,12 +90,14 @@ Vector3 SphericalJoint::Render()
     Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
     
-	std::vector<glm::vec3> vertices;
+	/*std::vector<glm::vec3> vertices;
 	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
 	vertices.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
 	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
 	vertices.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
 	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	
+	*/
     return pivot;
+}
+
 }

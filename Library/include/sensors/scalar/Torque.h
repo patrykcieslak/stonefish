@@ -9,23 +9,20 @@
 #ifndef __Stonefish_Torque__
 #define __Stonefish_Torque__
 
-#include "entities/FeatherstoneEntity.h"
-#include "joints/Joint.h"
 #include "sensors/scalar/JointSensor.h"
 
 namespace sf
 {
-
-class Torque : public JointSensor
-{
-public:
-    Torque(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    void SetRange(Scalar max);
-    void SetNoise(Scalar stdDev);
-};
-
+    //!
+    class Torque : public JointSensor
+    {
+    public:
+        Torque(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void SetRange(Scalar max);
+        void SetNoise(Scalar stdDev);
+    };
 }
 
 #endif

@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Cylinder__
@@ -13,21 +13,34 @@
 
 namespace sf
 {
-
-class Cylinder : public SolidEntity
-{
-public:
-    Cylinder(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& originTrans, Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
-    ~Cylinder();
-    
-    SolidType getSolidType();
-    btCollisionShape* BuildCollisionShape();
-
-private:
-    Scalar radius;
-    Scalar halfHeight;
-};
-
+    //! A class representing a cylinder-shaped (cylinder axis parallel to z axis) rigid body.
+    class Cylinder : public SolidEntity
+    {
+    public:
+        //! A constructor.
+        /*!
+         \param uniqueName a name for the cylinder
+         \param radius a radius of the cylinder
+         \param height a height of the cylinder
+         \param origin a transformation of the physical mesh (graphical is the same for cylinder)
+         \param m a material of the cylinder
+         \param lookId an index of the graphical material used to render the cylinder
+         \param thickness defines the thickness of the cylinder walls, if positive the cylinder is treated as shell
+         \param isBuoyant defines if the cylinder should be subject to buoyancy force
+         */
+        Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m,
+                                         int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        
+        //! A method that returns the type of body.
+        SolidType getSolidType();
+        
+        //! A method that returns the collision shape for the cylinder.
+        btCollisionShape* BuildCollisionShape();
+        
+    private:
+        Scalar r;
+        Scalar halfHeight;
+    };
 }
 
 #endif

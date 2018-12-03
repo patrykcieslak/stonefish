@@ -10,10 +10,14 @@
 
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "utils/MathUtil.hpp"
 #include "utils/UnitSystem.h"
+#include "sensors/Sample.h"
+#include "graphics/OpenGLPipeline.h"
 
-using namespace sf;
+namespace sf
+{
 
 Multibeam::Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -93,4 +97,6 @@ void Multibeam::SetNoise(Scalar distanceStdDev)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
         channels[i].setStdDev(distanceStdDev);
+}
+
 }

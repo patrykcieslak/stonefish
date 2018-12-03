@@ -3,12 +3,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 16/09/2017.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/SpeedController.h"
 
-using namespace sf;
+#include "actuators/Motor.h"
+#include "sensors/scalar/RotaryEncoder.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 SpeedController::SpeedController(std::string uniqueName, Motor* m, RotaryEncoder* e, Scalar maxOutput, Scalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
@@ -20,10 +25,6 @@ SpeedController::SpeedController(std::string uniqueName, Motor* m, RotaryEncoder
     gainD = Scalar(0.);
     
     Reset();
-}
-
-SpeedController::~SpeedController()
-{
 }
 
 void SpeedController::SetSpeed(Scalar speed)
@@ -70,4 +71,6 @@ void SpeedController::Tick(Scalar dt)
 	output = control;
 	
     motor->setIntensity(output);
+}
+
 }

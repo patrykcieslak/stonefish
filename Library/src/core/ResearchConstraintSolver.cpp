@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 // Based on original code by Erwin Coumans
@@ -29,7 +29,8 @@
 #include <LinearMath/btQuickprof.h>
 #include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
 
-using namespace sf;
+namespace sf
+{
 
 ResearchConstraintSolver::ResearchConstraintSolver(btMLCPSolverInterface* mlcp) : btMultiBodyConstraintSolver()
 {
@@ -50,9 +51,9 @@ int ResearchConstraintSolver::getNumFallbacks() const
     return m_fallback;
 }
 
-void ResearchConstraintSolver::setNumFallbacks(int num)
+void ResearchConstraintSolver::resetNumFallbacks()
 {
-    m_fallback = num;
+    m_fallback = 0;
 }
 
 btConstraintSolverType	ResearchConstraintSolver::getSolverType() const
@@ -698,4 +699,6 @@ Scalar ResearchConstraintSolver::solveGroupCacheFriendlyIterations(btCollisionOb
 	}
     
 	return 0.f;
+}
+
 }

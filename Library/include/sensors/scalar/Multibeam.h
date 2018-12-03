@@ -13,24 +13,23 @@
 
 namespace sf
 {
-
-class Multibeam : public LinkSensor
-{
-public:
-    Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
-   
-    void InternalUpdate(Scalar dt);
-    void SetRange(Scalar distanceMin, Scalar distanceMax);
-    void SetNoise(Scalar distanceStdDev);
-    std::vector<Renderable> Render();
-    
-private:
-    Scalar angRange;
-    unsigned int angSteps;
-    std::vector<Scalar> angles;
-    std::vector<Scalar> distances; 
-};
-    
+    //!
+    class Multibeam : public LinkSensor
+    {
+    public:
+        Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void SetRange(Scalar distanceMin, Scalar distanceMax);
+        void SetNoise(Scalar distanceStdDev);
+        std::vector<Renderable> Render();
+        
+    private:
+        Scalar angRange;
+        unsigned int angSteps;
+        std::vector<Scalar> angles;
+        std::vector<Scalar> distances;
+    };
 }
 
 #endif

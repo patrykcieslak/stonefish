@@ -3,18 +3,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Contact.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
 #include "entities/SolidEntity.h"
 #include "utils/ScientificFileUtil.h"
 
-using namespace sf;
-
+namespace sf
+{
+    
 Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
     A = entityA;
@@ -231,4 +233,6 @@ std::vector<Renderable> Contact::Render()
     }
     
     return items;
+}
+
 }

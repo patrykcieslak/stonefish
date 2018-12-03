@@ -3,17 +3,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/CylindricalJoint.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+
+namespace sf
+{
 
 CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->rigidBody;
+    btRigidBody* bodyB = solidB->rigidBody;
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;
@@ -145,19 +148,21 @@ Vector3 CylindricalJoint::Render()
     Vector3 C1 = pivot + e1 * axis;
     Vector3 C2 = pivot + e2 * axis;
     
-	std::vector<glm::vec3> vertices;
+	/*std::vector<glm::vec3> vertices;
 	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
 	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
 	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
 	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
 	vertices.clear();
 	
 	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
 	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
 	glEnable(GL_LINE_STIPPLE);
-    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+    //OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
 	glDisable(GL_LINE_STIPPLE);
-    
+    */
     return (C1+C2)/Scalar(2.);
+}
+
 }

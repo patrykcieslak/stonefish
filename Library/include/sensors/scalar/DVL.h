@@ -13,22 +13,21 @@
 
 namespace sf
 {
-
-class DVL : public LinkSensor
-{
-public:
-    DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
-    void SetNoise(Scalar velocityStdDev, Scalar altitudeStdDev);
-    std::vector<Renderable> Render();
-    
-private:
-    Scalar beamAngle;
-    Scalar range[4];
-};
-    
+    //!
+    class DVL : public LinkSensor
+    {
+    public:
+        DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
+        void SetNoise(Scalar velocityStdDev, Scalar altitudeStdDev);
+        std::vector<Renderable> Render();
+        
+    private:
+        Scalar beamAngle;
+        Scalar range[4];
+    };
 }
 
 #endif

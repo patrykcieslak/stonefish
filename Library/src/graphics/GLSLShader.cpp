@@ -9,10 +9,11 @@
 #include "graphics/GLSLShader.h"
 
 #include <fstream>
-#include "graphics/Console.h"
+#include "core/Console.h"
 #include "utils/SystemUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
 GLuint GLSLShader::saqVertexShader = 0;
 bool GLSLShader::verbose = true;
@@ -504,4 +505,6 @@ GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, uns
 	}
 	
 	return program;
+}
+
 }

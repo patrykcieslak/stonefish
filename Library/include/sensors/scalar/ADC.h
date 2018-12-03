@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ADC__
@@ -13,20 +13,19 @@
 
 namespace sf
 {
-
-class ADC
-{
-public:
-    ADC(unsigned short resolution, Scalar plusRefVoltage, Scalar minusRefVoltage = Scalar(0));
-    
-    Scalar MeasureVoltage(Scalar Vin);
-    
-private:
-    unsigned short bits;
-    Scalar pRefV;
-    Scalar mRefV;
-};
-
+    //!
+    class ADC
+    {
+    public:
+        ADC(unsigned short resolution, Scalar plusRefVoltage, Scalar minusRefVoltage = Scalar(0));
+        
+        Scalar MeasureVoltage(Scalar Vin);
+        
+    private:
+        unsigned short bits;
+        Scalar pRefV;
+        Scalar mRefV;
+    };
 }
 
 #endif

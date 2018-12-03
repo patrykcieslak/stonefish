@@ -10,31 +10,31 @@
 #define __Stonefish_LinkSensor__
 
 #include "sensors/ScalarSensor.h"
-#include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
-
-//Abstract
-class LinkSensor : public ScalarSensor
-{
-public:
-    LinkSensor(std::string uniqueName, Scalar frequency, int historyLength);
-    virtual ~LinkSensor();
+    class SolidEntity;
+    class FeatherstoneEntity;
     
-    virtual void InternalUpdate(Scalar dt) = 0;
-    
-    virtual std::vector<Renderable> Render();
-    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& location);
-    void AttachToSolid(SolidEntity* solid, const Transform& location);
-    Transform getSensorFrame();
-    SensorType getType();
-    
-protected:
-    SolidEntity* attach;
-    Transform g2s;
-};
-
+    //!
+    class LinkSensor : public ScalarSensor
+    {
+    public:
+        LinkSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        virtual ~LinkSensor();
+        
+        virtual void InternalUpdate(Scalar dt) = 0;
+        
+        virtual std::vector<Renderable> Render();
+        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
+        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        Transform getSensorFrame();
+        SensorType getType();
+        
+    protected:
+        SolidEntity* attach;
+        Transform o2s;
+    };
 }
 
 #endif

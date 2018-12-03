@@ -10,11 +10,18 @@
 
 #include <chrono>
 #include <thread>
+#include "core/SimulationManager.h"
+#include "graphics/OpenGLConsole.h"
+#include "graphics/IMGUI.h"
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLTrackball.h"
 #include "utils/SystemUtil.hpp"
+#include "entities/Entity.h"
 
-using namespace sf;
+namespace sf
+{
 
-GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings s, SimulationManager* sim)
+GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)
 {
 #ifdef SHADER_DIR_PATH
@@ -22,7 +29,6 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
 #else
     shaderPath = "/usr/local/share/Stonefish/shaders/";
 #endif
-    renderSettings = s;
     glLoadingContext = NULL;
     glMainContext = NULL;
     lastPicked = NULL;
@@ -37,15 +43,16 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     glPipeline = NULL;
     gui = NULL;
 	drawingTime = 0.0;
+    windowW = r.windowW;
+    windowH = r.windowH;
+    Init(r, h);
 }
 
 GraphicalSimulationApp::~GraphicalSimulationApp()
 {
-    if(glPipeline != NULL)
-        delete glPipeline;
-    
-    if(gui != NULL)
-        delete gui;
+    if(console != NULL) delete console;
+    if(glPipeline != NULL) delete glPipeline;
+    if(gui != NULL) delete gui;
     
 	if(joystick != NULL)
 	{
@@ -100,14 +107,14 @@ double GraphicalSimulationApp::getDrawingTime()
     return drawingTime;
 }
 
-GLint GraphicalSimulationApp::getWindowWidth()
+int GraphicalSimulationApp::getWindowWidth()
 {
-    return renderSettings.windowW;
+    return windowW;
 }
 
-GLint GraphicalSimulationApp::getWindowHeight()
+int GraphicalSimulationApp::getWindowHeight()
 {
-    return renderSettings.windowH;
+    return windowH;
 }
 
 std::string GraphicalSimulationApp::getShaderPath()
@@ -115,17 +122,28 @@ std::string GraphicalSimulationApp::getShaderPath()
     return shaderPath;
 }
 
-void GraphicalSimulationApp::Init()
+RenderSettings GraphicalSimulationApp::getRenderSettings() const
+{
+    return glPipeline->getRenderSettings();
+}
+
+HelperSettings& GraphicalSimulationApp::getHelperSettings()
+{
+    return glPipeline->getHelperSettings();
+}
+
+void GraphicalSimulationApp::Init(RenderSettings r, HelperSettings h)
 {
     //Basics
     loading = true;
+    console = new Console(); //Create temporary text console
     InitializeSDL(); //Window initialization + loading thread
     
     //Continue initialization with console visible
     cInfo("Initializing rendering pipeline:");
     cInfo("Loading GUI...");
-    gui = new IMGUI(renderSettings.windowW, renderSettings.windowH);
-    glPipeline = new OpenGLPipeline(renderSettings);
+    gui = new IMGUI(windowW, windowH);
+    glPipeline = new OpenGLPipeline(r, h);
     ShowHUD();
     
     cInfo("Initializing simulation:");
@@ -161,8 +179,8 @@ void GraphicalSimulationApp::InitializeSDL()
     window = SDL_CreateWindow(getName().c_str(),
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              renderSettings.windowW,
-                              renderSettings.windowH,
+                              windowW,
+                              windowH,
                               SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN// | SDL_WINDOW_ALLOW_HIGHDPI
                               );
   
@@ -192,12 +210,17 @@ void GraphicalSimulationApp::InitializeSDL()
 	if(!GLSLShader::Init())
 		cCritical("No shader support!");
 	
-    Console::getInstance()->Init(renderSettings.windowW, renderSettings.windowH);
-	
+    std::vector<ConsoleMessage> textLines = console->getLines();
+    delete console;
+    console = new OpenGLConsole();
+    for(size_t i=0; i<textLines.size(); ++i)
+        console->AppendMessage(textLines[i]);
+    ((OpenGLConsole*)console)->Init(windowW, windowH);
+    
     //Create loading thread
     LoadingThreadData* data = new LoadingThreadData();
     data->app = this;
-    data->mutex = Console::getInstance()->getLinesMutex();
+    data->mutex = console->getLinesMutex();
     loadingThread = SDL_CreateThread(GraphicalSimulationApp::RenderLoadingScreen, "loadingThread", data);
 	
     //Look for joysticks
@@ -256,7 +279,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             
         case SDLK_c:
             displayConsole = !displayConsole;
-            Console::getInstance()->ResetScroll();
+            ((OpenGLConsole*)console)->ResetScroll();
             break;
 			
 		case SDLK_w: //Forward
@@ -434,7 +457,7 @@ void GraphicalSimulationApp::Loop()
                 case SDL_MOUSEWHEEL:
                 {
                     if(displayConsole) //GUI
-                        Console::getInstance()->Scroll((GLfloat)-event.wheel.y);
+                        ((OpenGLConsole*)console)->Scroll((GLfloat)-event.wheel.y);
                     else
                     {
                         //Trackball
@@ -531,7 +554,7 @@ void GraphicalSimulationApp::RenderLoop()
     if(displayConsole)
     {
         gui->GenerateBackground();
-        Console::getInstance()->Render(true);
+        ((OpenGLConsole*)console)->Render(true);
     }
     else
     {
@@ -646,7 +669,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
         
         //Lock to prevent adding lines to the console while rendering
         SDL_LockMutex(ltdata->mutex);
-        Console::getInstance()->Render(false);
+        ((OpenGLConsole*)ltdata->app->getConsole())->Render(false);
         SDL_UnlockMutex(ltdata->mutex);
         
         SDL_GL_SwapWindow(ltdata->app->window);
@@ -677,4 +700,6 @@ int GraphicalSimulationApp::RunSimulation(void* data)
 	}
     
     return 0;
+}
+
 }

@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/Accelerometer.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -62,4 +66,6 @@ void Accelerometer::SetNoise(Scalar linearAccStdDev, Scalar angularAccStdDev)
     channels[3].setStdDev(angularAccStdDev);
     channels[4].setStdDev(angularAccStdDev);
     channels[5].setStdDev(angularAccStdDev);
+}
+    
 }

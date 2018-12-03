@@ -7,7 +7,8 @@
 //
 
 #include "core/MaterialManager.h"
-#include "graphics/Console.h"
+
+#include "core/Console.h"
 
 namespace sf
 {

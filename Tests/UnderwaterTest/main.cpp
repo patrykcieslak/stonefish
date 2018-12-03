@@ -19,13 +19,15 @@ int main(int argc, const char * argv[])
     s.windowW = 800;
     s.windowH = 600;
     s.msaa = false;
-    s.shadows = sf::RenderQuality::QUALITY_LOW;
+    s.shadows = sf::RenderQuality::QUALITY_MEDIUM;
     s.ao = sf::RenderQuality::QUALITY_LOW;
-    s.atmosphere = sf::RenderQuality::QUALITY_LOW;
-    s.ocean = sf::RenderQuality::QUALITY_DISABLED;
+    s.atmosphere = sf::RenderQuality::QUALITY_MEDIUM;
+    s.ocean = sf::RenderQuality::QUALITY_HIGH;
+    
+    sf::HelperSettings h;
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(100.0);
-    UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, simulationManager);
+    UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, h, simulationManager);
     //UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, simulationManager);
     app.Run(false);
     

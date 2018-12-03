@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/Trajectory.h"
 
-using namespace sf;
+#include "sensors/Sample.h"
+#include "graphics/OpenGLPipeline.h"
+
+namespace sf
+{
 
 Trajectory::Trajectory(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -50,3 +54,4 @@ std::vector<Renderable> Trajectory::Render()
     return items;
 }
 
+}

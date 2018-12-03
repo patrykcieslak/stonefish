@@ -9,10 +9,13 @@
 #include "actuators/Thruster.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLContent.h"
 #include "utils/MathUtil.hpp"
+#include "entities/SolidEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM) : LinkActuator(uniqueName)
 {
@@ -81,7 +84,7 @@ void Thruster::Update(Scalar dt)
     {
         //Get transforms
         Transform solidTrans = attach->getCGTransform();
-        Transform thrustTrans = attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2a;
+        Transform thrustTrans = attach->getOTransform() * o2a;
         Vector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
         Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
         
@@ -120,7 +123,7 @@ std::vector<Renderable> Thruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
     if(attach != NULL)
-        thrustTrans = attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2a;
+        thrustTrans = attach->getOTransform() * o2a;
     else
         LinkActuator::Render();
     
@@ -142,4 +145,6 @@ std::vector<Renderable> Thruster::Render()
     items.push_back(item);
     
     return items;
+}
+    
 }

@@ -3,15 +3,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 05/07/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/RotaryEncoder.h"
 
+#include "sensors/Sample.h"
 #include "joints/RevoluteJoint.h"
 #include "utils/UnitSystem.h"
+#include "entities/FeatherstoneEntity.h"
+#include "actuators/Motor.h"
+#include "actuators/Thruster.h"
 
-using namespace sf;
+namespace sf
+{
 
 RotaryEncoder::RotaryEncoder(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
@@ -127,4 +132,6 @@ void RotaryEncoder::Reset()
 {
     angle = lastAngle = GetRawAngle();
     ScalarSensor::Reset();
+}
+
 }

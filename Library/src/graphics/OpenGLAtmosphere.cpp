@@ -3,18 +3,23 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/2017.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLAtmosphere.h"
 
 #include <fstream>
 #include <sstream>
-#include "graphics/Console.h"
+#include "core/Console.h"
+#include "core/SimulationManager.h"
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLCamera.h"
+#include "graphics/OpenGLContent.h"
 #include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
 //Atmosphere textures allocation parameters
 constexpr int TRANSMITTANCE_TEXTURE_WIDTH = 256;
@@ -38,22 +43,18 @@ constexpr double kLambdaG = 550.0;
 constexpr double kLambdaB = 440.0;
 constexpr double kLengthUnitInMeters = 1.0; //Length unit used in OpenGL
 
-OpenGLAtmosphere* OpenGLAtmosphere::instance = NULL;
-
-OpenGLAtmosphere* OpenGLAtmosphere::getInstance()
-{
-    if(instance == NULL)
-        instance = new OpenGLAtmosphere();
-
-    return instance;
-}
-
-OpenGLAtmosphere::OpenGLAtmosphere()
+GLuint OpenGLAtmosphere::atmosphereAPI = 0;
+std::string OpenGLAtmosphere::glslDefinitions = "";
+std::string OpenGLAtmosphere::glslFunctions = "";
+unsigned int OpenGLAtmosphere::nPrecomputedWavelengths = 0;
+unsigned int OpenGLAtmosphere::nScatteringOrders = 0;
+glm::vec3 OpenGLAtmosphere::whitePoint = glm::vec3(1.f);
+    
+OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
 {
     //Prepare for rendering
     for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures[i] = 0;
     skySunShader = NULL;
-    atmosphereAPI = 0;
     atmBottomRadius = 0.f;
     whitePoint = glm::vec3(1.f);
 
@@ -79,24 +80,10 @@ OpenGLAtmosphere::OpenGLAtmosphere()
     hUtc->tm_min = 0;
     hUtc->tm_sec = 0;
     SetSunPosition(19.945, 50.065, *hUtc);
-}
 
-void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
-{
     if(quality == RenderQuality::QUALITY_DISABLED)
         return;
     
-    //Read base shader code
-    std::ifstream defsCode(GetShaderPath() + "atmosphereDef.glsl");
-    std::stringstream defsBuffer;
-    defsBuffer << defsCode.rdbuf();
-    glslDefinitions = defsBuffer.str();
-
-    std::ifstream funcsCode(GetShaderPath() + "atmosphereFunc.glsl");
-    std::stringstream funcsBuffer;
-    funcsBuffer << funcsCode.rdbuf();
-    glslFunctions = funcsBuffer.str();
-
     //Compute lookup textures
     switch(quality)
     {
@@ -151,12 +138,6 @@ void OpenGLAtmosphere::Init(RenderQuality quality, RenderQuality shadow)
     glActiveTexture(GL_TEXTURE0 + TEX_ATM_IRRADIANCE);
     glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
    
-    //Build atmosphere API shader
-    GLint compiled;
-    std::string additionalDefs = nPrecomputedWavelengths > 3 ? "" : "#define RADIANCE_API_ENABLED\n";
-    additionalDefs = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB)) + additionalDefs;
-    atmosphereAPI = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "atmosphereApi.glsl", additionalDefs, &compiled);
-
     //Build rendering shaders
     std::vector<GLuint> compiledShaders;
     compiledShaders.push_back(atmosphereAPI);
@@ -279,22 +260,6 @@ void OpenGLAtmosphere::SetSunPosition(float azimuthDeg, float elevationDeg)
 #endif
 }
 
-int OpenGLAtmosphere::JulianDay(std::tm& tm)
-{
-    int m = tm.tm_mon + 1;
-    int y = tm.tm_year + 1900;
-    int d = tm.tm_mday;
-
-    double X = (m + 9) / 12.0;
-    int A = 4716 + y + (int)trunc(X);
-    double Y = 275 * m / 9.0;
-    double V = 7 * A / 4.0;
-    double B = 1729279.5 + 367 * y + trunc(Y) - trunc(V) + d;
-    double Q = (A + 83) / 100.0;
-    double W = 3 * (trunc(Q) + 1) / 4.0;
-    return B + 38 - (int)trunc(W);
-}
-
 void OpenGLAtmosphere::SetSunPosition(double longitudeDeg, double latitudeDeg, std::tm& utc)
 {
     double latitude = latitudeDeg/180 * M_PI;
@@ -328,11 +293,6 @@ GLfloat OpenGLAtmosphere::getAtmosphereBottomRadius()
     return atmBottomRadius;
 }
 
-GLuint OpenGLAtmosphere::getAtmosphereAPI()
-{
-    return atmosphereAPI;
-}
-
 GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
 {
     return textures[id];
@@ -355,7 +315,7 @@ void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
     skySunShader->SetUniform("viewport", glm::vec2(viewport[2], viewport[3]));
     skySunShader->SetUniform("whitePoint", whitePoint);
     skySunShader->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
-    OpenGLContent::getInstance()->DrawSAQ();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     glUseProgram(0);
 }
 
@@ -397,8 +357,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
         glm::mat4 cp = BuildCropProjMatrix(sunShadowFrustum[i]);
         sunShadowCPM[i] =  cp * sunModelView;
 
-        OpenGLContent::getInstance()->SetProjectionMatrix(cp);
-        OpenGLContent::getInstance()->SetViewMatrix(sunModelView);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(cp);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(sunModelView);
         //Draw current depth map
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray, 0, i);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -1210,11 +1170,11 @@ void OpenGLAtmosphere::ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 re
     switch(id) {
     case TRANSMITTANCE:
     case IRRADIANCE:
-        OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, textures[id]);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, textures[id]);
         break;
 
     case SCATTERING:
-        OpenGLContent::getInstance()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, textures[id], 0, false);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, textures[id], 0, false);
         break;
 
     default:
@@ -1237,10 +1197,71 @@ void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
     for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {
         glViewport(x + sunShadowmapSize * scale * i, y, sunShadowmapSize * scale, sunShadowmapSize * scale);
         sunShadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
-        OpenGLContent::getInstance()->DrawSAQ();
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     glUseProgram(0);
 
     //Reset
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+}
+
+//static
+int OpenGLAtmosphere::JulianDay(std::tm& tm)
+{
+    int m = tm.tm_mon + 1;
+    int y = tm.tm_year + 1900;
+    int d = tm.tm_mday;
+    
+    double X = (m + 9) / 12.0;
+    int A = 4716 + y + (int)trunc(X);
+    double Y = 275 * m / 9.0;
+    double V = 7 * A / 4.0;
+    double B = 1729279.5 + 367 * y + trunc(Y) - trunc(V) + d;
+    double Q = (A + 83) / 100.0;
+    double W = 3 * (trunc(Q) + 1) / 4.0;
+    return B + 38 - (int)trunc(W);
+}
+    
+void OpenGLAtmosphere::BuildAtmosphereAPI(RenderQuality quality)
+{
+    //Read base shader code
+    std::ifstream defsCode(GetShaderPath() + "atmosphereDef.glsl");
+    std::stringstream defsBuffer;
+    defsBuffer << defsCode.rdbuf();
+    glslDefinitions = defsBuffer.str();
+    
+    std::ifstream funcsCode(GetShaderPath() + "atmosphereFunc.glsl");
+    std::stringstream funcsBuffer;
+    funcsBuffer << funcsCode.rdbuf();
+    glslFunctions = funcsBuffer.str();
+    
+    switch(quality)
+    {
+        case RenderQuality::QUALITY_LOW:
+            nPrecomputedWavelengths = 5;
+            nScatteringOrders = 2;
+            break;
+            
+        default:
+        case RenderQuality::QUALITY_MEDIUM:
+            nPrecomputedWavelengths = 15;
+            nScatteringOrders = 4;
+            break;
+            
+        case RenderQuality::QUALITY_HIGH:
+            nPrecomputedWavelengths = 30;
+            nScatteringOrders = 6;
+    }
+    
+    GLint compiled;
+    std::string additionalDefs = nPrecomputedWavelengths > 3 ? "" : "#define RADIANCE_API_ENABLED\n";
+    additionalDefs = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB)) + additionalDefs;
+    atmosphereAPI = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "atmosphereApi.glsl", additionalDefs, &compiled);
+}
+    
+GLuint OpenGLAtmosphere::getAtmosphereAPI()
+{
+    return atmosphereAPI;
+}
+
 }

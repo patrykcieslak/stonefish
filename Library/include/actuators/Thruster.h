@@ -13,43 +13,42 @@
 
 namespace sf
 {
-
-class Thruster : public LinkActuator
-{
-public:
-    Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM);
-    virtual ~Thruster();
-
-    void Update(Scalar dt);
-    std::vector<Renderable> Render();
-    
-    void setSetpoint(Scalar value);
-    Scalar getSetpoint();
-    Scalar getThrust();
-    Scalar getAngle();
-    Scalar getOmega();
-    
-private:
-    //Params
-    Scalar D;
-    Scalar I;
-    Scalar kT;
-    Scalar kQ;
-    Scalar kp;
-    Scalar ki;
-    Scalar iLim;
-    Scalar omegaLim;
-    SolidEntity* prop;
-    
-    //States
-    Scalar theta;
-    Scalar omega;
-    Scalar thrust;
-    Scalar torque;
-    Scalar setpoint;
-    Scalar iError;
-};
-    
+    //!
+    class Thruster : public LinkActuator
+    {
+    public:
+        Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM);
+        virtual ~Thruster();
+        
+        void Update(Scalar dt);
+        std::vector<Renderable> Render();
+        
+        void setSetpoint(Scalar value);
+        Scalar getSetpoint();
+        Scalar getThrust();
+        Scalar getAngle();
+        Scalar getOmega();
+        
+    private:
+        //Params
+        Scalar D;
+        Scalar I;
+        Scalar kT;
+        Scalar kQ;
+        Scalar kp;
+        Scalar ki;
+        Scalar iLim;
+        Scalar omegaLim;
+        SolidEntity* prop;
+        
+        //States
+        Scalar theta;
+        Scalar omega;
+        Scalar thrust;
+        Scalar torque;
+        Scalar setpoint;
+        Scalar iError;
+    };
 }
 
 #endif

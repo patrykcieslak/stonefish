@@ -3,17 +3,22 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/IMGUI.h"
 
-#include "graphics/Console.h"
+#include "core/Console.h"
 #include "graphics/OpenGLContent.h"
+#include "graphics/OpenGLPrinter.h"
+#include "graphics/GLSLShader.h"
+#include "sensors/ScalarSensor.h"
+#include "sensors/Sample.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image.h"
 
-using namespace sf;
+namespace sf
+{
 
 glm::vec4 IMGUI::HSV2RGB(glm::vec4 hsv)
 {
@@ -280,7 +285,7 @@ void IMGUI::GenerateBackground()
     downsampleShader->Use();
     downsampleShader->SetUniform("source", 0);
     downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
-	OpenGLContent::getInstance()->DrawSAQ();
+	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
 	glUseProgram(0);
     
     for(int i=0; i<3; i++)
@@ -291,7 +296,7 @@ void IMGUI::GenerateBackground()
         gaussianShader->Use();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
-        OpenGLContent::getInstance()->DrawSAQ();
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         glUseProgram(0);
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -300,7 +305,7 @@ void IMGUI::GenerateBackground()
         gaussianShader->Use();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
-        OpenGLContent::getInstance()->DrawSAQ();
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         glUseProgram(0);
     }
 	
@@ -319,7 +324,7 @@ void IMGUI::Begin()
     
     glScissor(0, 0, windowW, windowH);
     glViewport(0, 0, windowW, windowH);
-    OpenGLContent::getInstance()->SetViewportSize(windowW, windowH);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW, windowH);
 	glBindVertexArray(guiVAO);
 }
 
@@ -330,7 +335,7 @@ void IMGUI::End()
     //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
-	OpenGLContent::getInstance()->DrawTexturedQuad(windowW - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture, glm::vec4(1.f,1.f,1.f,0.2f));
+	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture, glm::vec4(1.f,1.f,1.f,0.2f));
    
     glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -988,4 +993,6 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
     
     return result;
+}
+
 }

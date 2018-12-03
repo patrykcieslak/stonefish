@@ -10,31 +10,31 @@
 #define __Stonefish_VisionSensor__
 
 #include "sensors/Sensor.h"
-#include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
-
-//Abstract
-class VisionSensor : public Sensor
-{
-public:
-    VisionSensor(std::string uniqueName, Scalar frequency);
-    virtual ~VisionSensor();
+    class SolidEntity;
+    class FeatherstoneEntity;
     
-    virtual void InternalUpdate(Scalar dt) = 0;
-    virtual void UpdateTransform() = 0;
-    
-    void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& location);
-    void AttachToSolid(SolidEntity* solid, const Transform& location);
-    virtual Transform getSensorFrame();
-    virtual SensorType getType();
-    
-private:
-    SolidEntity* attach;
-    Transform g2s;
-};
-    
+    //!
+    class VisionSensor : public Sensor
+    {
+    public:
+        VisionSensor(std::string uniqueName, Scalar frequency);
+        virtual ~VisionSensor();
+        
+        virtual void InternalUpdate(Scalar dt) = 0;
+        virtual void UpdateTransform() = 0;
+        
+        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
+        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        virtual Transform getSensorFrame();
+        virtual SensorType getType();
+        
+    private:
+        SolidEntity* attach;
+        Transform o2s;
+    };
 }
 
 #endif

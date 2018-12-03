@@ -3,18 +3,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/17.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLContent.h"
 
 #include <map>
 #include <algorithm>
-#include "core/SimulationApp.h"
-#include "graphics/Console.h"
+#include "core/Console.h"
+#include "core/SimulationManager.h"
+#include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLView.h"
 #include "graphics/OpenGLLight.h"
 #include "entities/forcefields/Ocean.h"
+#include "entities/forcefields/Atmosphere.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/GeometryFileUtil.h"
 #define STB_IMAGE_IMPLEMENTATION
@@ -24,27 +26,13 @@
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
-using namespace sf;
-
-OpenGLContent* OpenGLContent::instance = NULL;
-
-OpenGLContent* OpenGLContent::getInstance()
+namespace sf
 {
-    if(instance == NULL)
-        instance = new OpenGLContent();
-    
-    return instance;
-}
-
-void OpenGLContent::Destroy()
-{
-	delete instance;
-	instance = NULL;
-}
 
 OpenGLContent::OpenGLContent()
 {
-	baseVertexArray = 0;
+	//Initialize members
+    baseVertexArray = 0;
 	quadBuf = 0;
 	cubeBuf = 0;
 	csBuf[0] = 0;
@@ -67,6 +55,417 @@ OpenGLContent::OpenGLContent()
 	mode = DrawingMode::FULL;
 	clipPlane = glm::vec4();
     materialShaders = std::vector<GLSLShader*>(0);
+
+    //Initialize shaders and buffers
+    cInfo("Loading shaders...");
+    glGenVertexArrays(1, &baseVertexArray);
+    
+    //Build quad texture VBO
+    GLfloat quadData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
+        {-1.f,  1.f, 0.f, 1.f},
+        { 1.f, -1.f, 1.f, 0.f},
+        { 1.f,  1.f, 1.f, 1.f}};
+    
+    glGenBuffers(1, &quadBuf);
+    glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    //Build cube croos VBO
+    GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
+        {-1.f, -0.333f, -1.f,-1.f, 1.f},
+        {-0.5f, 0.333f, -1.f, 1.f,-1.f},
+        {-0.5f,-0.333f, -1.f,-1.f,-1.f},
+        {-0.5f, 0.333f, -1.f, 1.f,-1.f}, //FRONT
+        {-0.5f,-0.333f, -1.f,-1.f,-1.f},
+        { 0.f,  0.333f,  1.f, 1.f,-1.f},
+        { 0.f, -0.333f,  1.f,-1.f,-1.f},
+        { 0.f,  0.333f,  1.f, 1.f,-1.f}, //RIGHT
+        { 0.f, -0.333f,  1.f,-1.f,-1.f},
+        { 0.5f, 0.333f,  1.f, 1.f, 1.f},
+        { 0.5f,-0.333f,  1.f,-1.f, 1.f},
+        { 0.5f, 0.333f,  1.f, 1.f, 1.f}, //BACK
+        { 0.5f,-0.333f,  1.f,-1.f, 1.f},
+        {  1.f, 0.333f, -1.f, 1.f, 1.f},
+        {  1.f,-0.333f, -1.f,-1.f, 1.f},
+        {-0.5f,-0.333f, -1.f,-1.f, 1.f}, //BOTTOM
+        {-0.5f,   -1.f, -1.f,-1.f,-1.f},
+        {    0,-0.333f,  1.f,-1.f, 1.f},
+        {    0,   -1.f,  1.f,-1.f,-1.f},
+        {-0.5f,    1.f, -1.f, 1.f, 1.f}, //TOP
+        {-0.5f, 0.333f, -1.f, 1.f,-1.f},
+        {    0,    1.f,  1.f, 1.f, 1.f},
+        {    0, 0.333f,  1.f, 1.f,-1.f}};
+    
+    glGenBuffers(1, &cubeBuf);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeData), cubeData, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    //Build coord system VBO
+    GLfloat csVertex[6][3] = {{0.f, 0.f, 0.f},
+        {1.f, 0.f, 0.f},
+        {0.f, 0.f, 0.f},
+        {0.f, 1.f, 0.f},
+        {0.f, 0.f, 0.f},
+        {0.f, 0.f, 1.f}};
+    
+    GLfloat csColor[6][4] = {{1.f, 0.f, 0.f, 1.f},
+        {1.f, 0.f, 0.f, 1.f},
+        {0.f, 1.f, 0.f, 1.f},
+        {0.f, 1.f, 0.f, 1.f},
+        {0.f, 0.f, 1.f, 1.f},
+        {0.f, 0.f, 1.f, 1.f}};
+    
+    glGenBuffers(2, csBuf);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(csVertex), csVertex, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(csColor), csColor, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    //Cylinder helper
+    cylinder.mesh = BuildCylinder(1.f, 1.f, 12);
+    
+    glGenVertexArrays(1, &cylinder.vao);
+    glGenBuffers(1, &cylinder.vboVertex);
+    glGenBuffers(1, &cylinder.vboIndex);
+    
+    glBindVertexArray(cylinder.vao);
+    glEnableVertexAttribArray(0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*cylinder.mesh->vertices.size(), &cylinder.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*cylinder.mesh->faces.size(), &cylinder.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBindVertexArray(0);
+    
+    //Ellipsoid helper
+    ellipsoid.mesh = BuildSphere(1.f, 3);
+    
+    glGenVertexArrays(1, &ellipsoid.vao);
+    glGenBuffers(1, &ellipsoid.vboVertex);
+    glGenBuffers(1, &ellipsoid.vboIndex);
+    
+    glBindVertexArray(ellipsoid.vao);
+    glEnableVertexAttribArray(0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*ellipsoid.mesh->vertices.size(), &ellipsoid.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*ellipsoid.mesh->faces.size(), &ellipsoid.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBindVertexArray(0);
+    
+    //Load shaders
+    //Basic
+    helperShader = new GLSLShader("helpers.frag","helpers.vert");
+    helperShader->AddUniform("MVP", ParameterType::MAT4);
+    helperShader->AddUniform("scale", ParameterType::VEC3);
+    
+    texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
+    texQuadShader->AddUniform("rect", ParameterType::VEC4);
+    texQuadShader->AddUniform("tex", ParameterType::INT);
+    texQuadShader->AddUniform("color", ParameterType::VEC4);
+    
+    texQuadMSShader = new GLSLShader("texQuadMS.frag","texQuad.vert");
+    texQuadMSShader->AddUniform("rect", ParameterType::VEC4);
+    texQuadMSShader->AddUniform("tex", ParameterType::INT);
+    texQuadMSShader->AddUniform("texSize", ParameterType::IVEC2);
+    
+    texLayerQuadShader = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
+    texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
+    texLayerQuadShader->AddUniform("tex", ParameterType::INT);
+    texLayerQuadShader->AddUniform("layer", ParameterType::INT);
+    
+    texLevelQuadShader = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
+    texLevelQuadShader->AddUniform("rect", ParameterType::VEC4);
+    texLevelQuadShader->AddUniform("tex", ParameterType::INT);
+    texLevelQuadShader->AddUniform("level", ParameterType::INT);
+    
+    texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
+    texCubeShader->AddUniform("tex", ParameterType::INT);
+    
+    flatShader = new GLSLShader("flat.frag", "flat.vert");
+    flatShader->AddUniform("MVP", ParameterType::MAT4);
+    
+    //Materials
+    GLint compiled;
+    std::string header = "";
+    std::vector<GLuint> commonMaterialShaders;
+    commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    
+    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header, &compiled);
+    commonMaterialShaders.push_back(materialFragment);
+    
+    //Blinn-Phong shader
+    GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
+    blinnPhong->AddUniform("MVP", ParameterType::MAT4);
+    blinnPhong->AddUniform("M", ParameterType::MAT4);
+    blinnPhong->AddUniform("N", ParameterType::MAT3);
+    blinnPhong->AddUniform("MV", ParameterType::MAT3);
+    blinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
+    blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
+    blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
+    blinnPhong->AddUniform("color", ParameterType::VEC4);
+    blinnPhong->AddUniform("tex", ParameterType::INT);
+    blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
+    blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
+    blinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
+    blinnPhong->AddUniform("numPointLights", ParameterType::INT);
+    blinnPhong->AddUniform("numSpotLights", ParameterType::INT);
+    blinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
+    blinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
+    
+    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+    {
+        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
+        blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+        blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+    }
+    
+    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+    {
+        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
+        blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+        blinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
+        blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+        blinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
+        blinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+        blinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
+        blinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
+        blinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
+    }
+    
+    blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
+    blinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
+    blinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
+    blinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
+    blinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
+    blinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
+    blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
+    blinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
+    blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
+    blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
+    blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
+    blinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
+    blinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
+    
+    materialShaders.push_back(blinnPhong);
+    
+    //Cook-Torrance shader
+    GLSLShader* cookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
+    cookTorrance->AddUniform("MVP", ParameterType::MAT4);
+    cookTorrance->AddUniform("M", ParameterType::MAT4);
+    cookTorrance->AddUniform("N", ParameterType::MAT3);
+    cookTorrance->AddUniform("MV", ParameterType::MAT3);
+    cookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
+    cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
+    cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
+    cookTorrance->AddUniform("color", ParameterType::VEC4);
+    cookTorrance->AddUniform("tex", ParameterType::INT);
+    cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
+    cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
+    cookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
+    cookTorrance->AddUniform("numPointLights", ParameterType::INT);
+    cookTorrance->AddUniform("numSpotLights", ParameterType::INT);
+    cookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
+    cookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
+    
+    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+    {
+        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
+        cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+        cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
+    }
+    
+    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+    {
+        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
+        cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+        cookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
+        cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
+        cookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
+        cookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+        cookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
+        cookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
+        cookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
+    }
+    
+    cookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
+    cookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
+    cookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
+    cookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
+    cookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
+    cookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
+    cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
+    cookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
+    cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
+    cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
+    cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
+    cookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
+    cookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
+    
+    materialShaders.push_back(cookTorrance);
+    glDeleteShader(materialFragment);
+    
+    //-------------Underwater shaders---------------------------
+    header = "";
+    commonMaterialShaders.clear();
+    commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    
+    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header, &compiled);
+    commonMaterialShaders.push_back(materialFragment);
+    
+    //Blinn-Phong shader
+    GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
+    uwBlinnPhong->AddUniform("MVP", ParameterType::MAT4);
+    uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
+    uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
+    uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
+    uwBlinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
+    uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
+    uwBlinnPhong->AddUniform("tex", ParameterType::INT);
+    uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("lightAbsorption", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("turbidity", ParameterType::FLOAT);
+    
+    uwBlinnPhong->AddUniform("numPointLights", ParameterType::INT);
+    uwBlinnPhong->AddUniform("numSpotLights", ParameterType::INT);
+    uwBlinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
+    uwBlinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
+    
+    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+    {
+        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
+        uwBlinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+        uwBlinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+    }
+    
+    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+    {
+        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
+        uwBlinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
+        uwBlinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
+        uwBlinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+        uwBlinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
+        uwBlinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+        uwBlinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
+        uwBlinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
+        uwBlinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
+    }
+    
+    uwBlinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
+    uwBlinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
+    uwBlinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
+    uwBlinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
+    uwBlinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
+    uwBlinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
+    uwBlinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
+    uwBlinnPhong->AddUniform("scattering_texture", ParameterType::INT);
+    uwBlinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
+    uwBlinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
+    
+    materialShaders.push_back(uwBlinnPhong);
+    
+    //Underwater Cook-Torrance shader
+    GLSLShader* uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
+    uwCookTorrance->AddUniform("MVP", ParameterType::MAT4);
+    uwCookTorrance->AddUniform("M", ParameterType::MAT4);
+    uwCookTorrance->AddUniform("N", ParameterType::MAT3);
+    uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
+    uwCookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
+    uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("color", ParameterType::VEC4);
+    uwCookTorrance->AddUniform("tex", ParameterType::INT);
+    uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("lightAbsorption", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("turbidity", ParameterType::FLOAT);
+    
+    uwCookTorrance->AddUniform("numPointLights", ParameterType::INT);
+    uwCookTorrance->AddUniform("numSpotLights", ParameterType::INT);
+    uwCookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
+    uwCookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
+    
+    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+    {
+        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
+        uwCookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+        uwCookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
+    }
+    
+    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+    {
+        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
+        uwCookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
+        uwCookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
+        uwCookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
+        uwCookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
+        uwCookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
+        uwCookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
+        uwCookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
+        uwCookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
+    }
+    
+    uwCookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
+    uwCookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
+    uwCookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
+    uwCookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
+    uwCookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
+    uwCookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
+    uwCookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
+    uwCookTorrance->AddUniform("scattering_texture", ParameterType::INT);
+    uwCookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
+    uwCookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
+    
+    materialShaders.push_back(uwCookTorrance);
+    glDeleteShader(materialFragment);
 }
 
 OpenGLContent::~OpenGLContent()
@@ -88,417 +487,6 @@ OpenGLContent::~OpenGLContent()
 	for(unsigned int i=0; i<materialShaders.size(); ++i)
 		delete materialShaders[i];
 	materialShaders.clear();
-}
-
-void OpenGLContent::Init()
-{
-	cInfo("Loading shaders...");
-	glGenVertexArrays(1, &baseVertexArray);
-	
-	//Build quad texture VBO
-	GLfloat quadData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
-							  {-1.f,  1.f, 0.f, 1.f},
-							  { 1.f, -1.f, 1.f, 0.f},
-							  { 1.f,  1.f, 1.f, 1.f}};
-							  
-	glGenBuffers(1, &quadBuf); 
-	glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW); 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	//Build cube croos VBO
-	GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
-							   {-1.f, -0.333f, -1.f,-1.f, 1.f},
-							   {-0.5f, 0.333f, -1.f, 1.f,-1.f},
-							   {-0.5f,-0.333f, -1.f,-1.f,-1.f},
-							   {-0.5f, 0.333f, -1.f, 1.f,-1.f}, //FRONT
-							   {-0.5f,-0.333f, -1.f,-1.f,-1.f},
-							   { 0.f,  0.333f,  1.f, 1.f,-1.f},
-							   { 0.f, -0.333f,  1.f,-1.f,-1.f},
-							   { 0.f,  0.333f,  1.f, 1.f,-1.f}, //RIGHT
-							   { 0.f, -0.333f,  1.f,-1.f,-1.f},
-							   { 0.5f, 0.333f,  1.f, 1.f, 1.f},
-							   { 0.5f,-0.333f,  1.f,-1.f, 1.f},
-							   { 0.5f, 0.333f,  1.f, 1.f, 1.f}, //BACK
-							   { 0.5f,-0.333f,  1.f,-1.f, 1.f},
-							   {  1.f, 0.333f, -1.f, 1.f, 1.f},
-							   {  1.f,-0.333f, -1.f,-1.f, 1.f},
-							   {-0.5f,-0.333f, -1.f,-1.f, 1.f}, //BOTTOM
-							   {-0.5f,   -1.f, -1.f,-1.f,-1.f},
-							   {    0,-0.333f,  1.f,-1.f, 1.f},
-							   {	0,   -1.f,  1.f,-1.f,-1.f},
-							   {-0.5f,    1.f, -1.f, 1.f, 1.f}, //TOP
-							   {-0.5f, 0.333f, -1.f, 1.f,-1.f},
-							   {    0,    1.f,  1.f, 1.f, 1.f},
-							   {	0, 0.333f,  1.f, 1.f,-1.f}};
-	
-	glGenBuffers(1, &cubeBuf); 
-	glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeData), cubeData, GL_STATIC_DRAW); 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	//Build coord system VBO
-	GLfloat csVertex[6][3] = {{0.f, 0.f, 0.f},
-							  {1.f, 0.f, 0.f},
-							  {0.f, 0.f, 0.f},
-							  {0.f, 1.f, 0.f},
-							  {0.f, 0.f, 0.f},
-							  {0.f, 0.f, 1.f}};
-	
-	GLfloat csColor[6][4] = {{1.f, 0.f, 0.f, 1.f},
-							 {1.f, 0.f, 0.f, 1.f},
-							 {0.f, 1.f, 0.f, 1.f},
-							 {0.f, 1.f, 0.f, 1.f},
-							 {0.f, 0.f, 1.f, 1.f},
-							 {0.f, 0.f, 1.f, 1.f}};
-	
-	glGenBuffers(2, csBuf);
-	glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(csVertex), csVertex, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(csColor), csColor, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-    //Cylinder helper
-    cylinder.mesh = BuildCylinder(1.f, 1.f, 12);
-    
-	glGenVertexArrays(1, &cylinder.vao);
-	glGenBuffers(1, &cylinder.vboVertex);
-	glGenBuffers(1, &cylinder.vboIndex);
-	
-	glBindVertexArray(cylinder.vao);	
-	glEnableVertexAttribArray(0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*cylinder.mesh->vertices.size(), &cylinder.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*cylinder.mesh->faces.size(), &cylinder.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
-	glBindVertexArray(0);
-    
-    //Ellipsoid helper
-    ellipsoid.mesh = BuildSphere(1.f, 3);
-    
-	glGenVertexArrays(1, &ellipsoid.vao);
-	glGenBuffers(1, &ellipsoid.vboVertex);
-	glGenBuffers(1, &ellipsoid.vboIndex);
-	
-	glBindVertexArray(ellipsoid.vao);	
-	glEnableVertexAttribArray(0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*ellipsoid.mesh->vertices.size(), &ellipsoid.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*ellipsoid.mesh->faces.size(), &ellipsoid.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
-	glBindVertexArray(0);
-    
-	//Load shaders
-	//Basic
-	helperShader = new GLSLShader("helpers.frag","helpers.vert");
-	helperShader->AddUniform("MVP", ParameterType::MAT4);
-	helperShader->AddUniform("scale", ParameterType::VEC3);
-	
-	texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
-	texQuadShader->AddUniform("rect", ParameterType::VEC4);
-	texQuadShader->AddUniform("tex", ParameterType::INT);
-	texQuadShader->AddUniform("color", ParameterType::VEC4);
-	
-	texQuadMSShader = new GLSLShader("texQuadMS.frag","texQuad.vert");
-	texQuadMSShader->AddUniform("rect", ParameterType::VEC4);
-	texQuadMSShader->AddUniform("tex", ParameterType::INT);
-	texQuadMSShader->AddUniform("texSize", ParameterType::IVEC2);
-	
-	texLayerQuadShader = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
-	texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
-	texLayerQuadShader->AddUniform("tex", ParameterType::INT);
-	texLayerQuadShader->AddUniform("layer", ParameterType::INT);
-	
-	texLevelQuadShader = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
-	texLevelQuadShader->AddUniform("rect", ParameterType::VEC4);
-	texLevelQuadShader->AddUniform("tex", ParameterType::INT);
-	texLevelQuadShader->AddUniform("level", ParameterType::INT);
-	
-	texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
-	texCubeShader->AddUniform("tex", ParameterType::INT);
-	
-	flatShader = new GLSLShader("flat.frag", "flat.vert");
-	flatShader->AddUniform("MVP", ParameterType::MAT4);
-	
-	//Materials
-	GLint compiled;
-	std::string header = "";
-	std::vector<GLuint> commonMaterialShaders;
-	commonMaterialShaders.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
-	
-	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header, &compiled);
-	commonMaterialShaders.push_back(materialFragment);
-	
-	//Blinn-Phong shader
-	GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
-	blinnPhong->AddUniform("MVP", ParameterType::MAT4);
-	blinnPhong->AddUniform("M", ParameterType::MAT4);
-	blinnPhong->AddUniform("N", ParameterType::MAT3);
-	blinnPhong->AddUniform("MV", ParameterType::MAT3);
-	blinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
-	blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
-	blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
-	blinnPhong->AddUniform("color", ParameterType::VEC4);
-	blinnPhong->AddUniform("tex", ParameterType::INT);
-	blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-	blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-	
-	blinnPhong->AddUniform("numPointLights", ParameterType::INT);
-	blinnPhong->AddUniform("numSpotLights", ParameterType::INT);
-	blinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
-	blinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
-	
-	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-	{
-		std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-		blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-		blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
-	}
-	
-	for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-	{
-		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-		blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-		blinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
-		blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
-		blinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
-		blinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-		blinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-		blinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-		blinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-	}
-	
-	blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
-	blinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-	blinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-	blinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-	blinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-	blinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-	blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-	blinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
-	blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-	blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-	blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
-	blinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
-	blinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
-	
-	materialShaders.push_back(blinnPhong);
-	
-	//Cook-Torrance shader
-	GLSLShader* cookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
-	cookTorrance->AddUniform("MVP", ParameterType::MAT4);
-	cookTorrance->AddUniform("M", ParameterType::MAT4);
-	cookTorrance->AddUniform("N", ParameterType::MAT3);
-	cookTorrance->AddUniform("MV", ParameterType::MAT3);
-	cookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
-	cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
-	cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
-	cookTorrance->AddUniform("color", ParameterType::VEC4);
-	cookTorrance->AddUniform("tex", ParameterType::INT);
-	cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-	
-	cookTorrance->AddUniform("numPointLights", ParameterType::INT);
-	cookTorrance->AddUniform("numSpotLights", ParameterType::INT);
-	cookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
-	cookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
-	
-	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-	{
-		std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-		cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-		cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-	}
-	
-	for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-	{
-		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-		cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-		cookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
-		cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-		cookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
-		cookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-		cookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-		cookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-		cookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-	}
-	
-	cookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
-	cookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-	cookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-	cookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-	cookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-	cookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-	cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-	cookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
-	cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-	cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-	cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
-	cookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
-	cookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
-	
-	materialShaders.push_back(cookTorrance);
-	glDeleteShader(materialFragment);
-	
-	//-------------Underwater shaders---------------------------
-	header = "";
-	commonMaterialShaders.clear();
-	commonMaterialShaders.push_back(OpenGLAtmosphere::getInstance()->getAtmosphereAPI());
-	
-	materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header, &compiled);
-	commonMaterialShaders.push_back(materialFragment);
-	
-	//Blinn-Phong shader
-	GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
-	uwBlinnPhong->AddUniform("MVP", ParameterType::MAT4);
-	uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
-	uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
-	uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
-	uwBlinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
-	uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
-	uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
-	uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
-	uwBlinnPhong->AddUniform("tex", ParameterType::INT);
-	uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("lightAbsorption", ParameterType::VEC3);
-	uwBlinnPhong->AddUniform("turbidity", ParameterType::FLOAT);
-	
-	uwBlinnPhong->AddUniform("numPointLights", ParameterType::INT);
-	uwBlinnPhong->AddUniform("numSpotLights", ParameterType::INT);
-	uwBlinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
-	uwBlinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
-	
-	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-	{
-		std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-		uwBlinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-		uwBlinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
-	}
-	
-	for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-	{
-		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-		uwBlinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-		uwBlinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
-		uwBlinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
-		uwBlinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
-		uwBlinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-		uwBlinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-		uwBlinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-		uwBlinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-	}
-	
-	uwBlinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
-	uwBlinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-	uwBlinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-	uwBlinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-	uwBlinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-	uwBlinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-	uwBlinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
-	uwBlinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-	uwBlinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-	uwBlinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
-	uwBlinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
-	uwBlinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
-	
-	materialShaders.push_back(uwBlinnPhong);
-	
-	//Underwater Cook-Torrance shader
-	GLSLShader* uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
-	uwCookTorrance->AddUniform("MVP", ParameterType::MAT4);
-	uwCookTorrance->AddUniform("M", ParameterType::MAT4);
-	uwCookTorrance->AddUniform("N", ParameterType::MAT3);
-	uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
-	uwCookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
-	uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
-	uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
-	uwCookTorrance->AddUniform("color", ParameterType::VEC4);
-	uwCookTorrance->AddUniform("tex", ParameterType::INT);
-	uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("lightAbsorption", ParameterType::VEC3);
-	uwCookTorrance->AddUniform("turbidity", ParameterType::FLOAT);
-    
-	uwCookTorrance->AddUniform("numPointLights", ParameterType::INT);
-	uwCookTorrance->AddUniform("numSpotLights", ParameterType::INT);
-	uwCookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
-	uwCookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
-	
-	for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-	{
-		std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-		uwCookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-		uwCookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-	}
-	
-	for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-	{
-		std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-		uwCookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-		uwCookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
-		uwCookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-		uwCookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
-		uwCookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-		uwCookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-		uwCookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-		uwCookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-	}
-	
-	uwCookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
-	uwCookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-	uwCookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-	uwCookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-	uwCookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-	uwCookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-	uwCookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
-	uwCookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-	uwCookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-	uwCookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
-	uwCookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
-	uwCookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
-	
-	materialShaders.push_back(uwCookTorrance);
-	glDeleteShader(materialFragment);
 }
 
 void OpenGLContent::Finalize()
@@ -633,17 +621,15 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(GL_TEXTURE_2D, texture);
-		//glBindMultiTextureEXT(GL_TEXTURE0 + TEX_BASE, GL_TEXTURE_2D, texture);
 		glBindVertexArray(baseVertexArray);
-		
+        glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
  		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		
+        glDisableVertexAttribArray(0);
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
-		//glBindMultiTextureEXT(GL_TEXTURE0 + TEX_BASE, GL_TEXTURE_2D, 0);
 		glUseProgram(0);
 	}
 }
@@ -670,7 +656,6 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 		}
 		
 		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		//glEnable(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D);
 		glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
 		
 		glBindVertexArray(baseVertexArray);
@@ -723,7 +708,6 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 		texCubeShader->SetUniform("tex", TEX_BASE);
 		
 		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		//glEnable(GL_TEXTURE_CUBE_MAP);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 		
 		glBindVertexArray(baseVertexArray);
@@ -743,7 +727,6 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-		//glDisable(GL_TEXTURE_CUBE_MAP);
 		glUseProgram(0);
 	}
 }
@@ -902,7 +885,7 @@ void OpenGLContent::SetupLights(GLSLShader* shader)
 	shader->SetUniform("numPointLights", pointId);
 	shader->SetUniform("numSpotLights", spotId);
 	OpenGLLight::SetupShader(shader);
-	OpenGLAtmosphere::getInstance()->SetupMaterialShader(shader);
+	SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupMaterialShader(shader);
 }
 
 void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
@@ -926,6 +909,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("specularStrength", l.params[0]);
 			shader->SetUniform("shininess", l.params[1]);
+            shader->SetUniform("reflectivity", l.reflectivity);
 			shader->SetUniform("tex", TEX_BASE);
             
 			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
@@ -956,6 +940,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 			shader->SetUniform("viewDir", viewDir);
 			shader->SetUniform("roughness", l.params[0]);
 			shader->SetUniform("metallic", l.params[1]);
+            shader->SetUniform("reflectivity", l.reflectivity);
 			shader->SetUniform("tex", TEX_BASE);
 			
 			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
@@ -1003,6 +988,7 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
 	shader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,0.f));
 	shader->SetUniform("shininess", 0.5f);
 	shader->SetUniform("specularStrength", 0.1f);
+    shader->SetUniform("reflectivity", 0.f);
 	shader->SetUniform("tex", TEX_BASE);
 	
 	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
@@ -1040,11 +1026,12 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	return (unsigned int)objects.size()-1;
 }
 
-unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, std::string textureName)
+unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity, std::string textureName)
 {
     Look look;
 	look.type = LookType::SIMPLE;
     look.color = rgbColor;
+    look.reflectivity = reflectivity;
 	look.params.push_back(specular);
 	look.params.push_back(shininess);
     
@@ -1056,13 +1043,14 @@ unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specula
 	return (unsigned int)looks.size()-1;
 }
 
-unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metallic, std::string textureName)
+unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, GLfloat reflectivity, std::string textureName)
 {
 	Look look;
 	look.type = LookType::PHYSICAL;
 	look.color = rgbColor;
+    look.reflectivity = reflectivity;
 	look.params.push_back(roughness);
-	look.params.push_back(metallic);
+	look.params.push_back(metalness);
 	
 	if(textureName != "")
 		look.textures.push_back(LoadTexture(textureName));
@@ -1153,8 +1141,6 @@ GLuint OpenGLContent::LoadInternalTexture(std::string filename)
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 {
-    bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
-    
     Mesh* mesh = new Mesh;
 	mesh->hasUVs = true;
     Face f;
@@ -1162,7 +1148,7 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 	
 	//Only one normal
 	vt.pos.z = 0;
-    vt.normal = glm::vec3(0,0, zUp ? 1.f : -1.f);
+    vt.normal = glm::vec3(0,0,-1.f);
 	
     vt.pos.x = -halfExtents;
     vt.pos.y = -halfExtents;
@@ -1182,27 +1168,13 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     vt.uv.x = 0;
     mesh->vertices.push_back(vt);
     
-    if(zUp)
-    {
-        f.vertexID[0] = 0;
-        f.vertexID[1] = 1;
-        f.vertexID[2] = 2;
-        mesh->faces.push_back(f);
-        f.vertexID[1] = 2;
-        f.vertexID[2] = 3;
-        mesh->faces.push_back(f);
-    }
-    else
-    {
-        f.vertexID[0] = 0;
-        f.vertexID[1] = 2;
-        f.vertexID[2] = 1;
-        mesh->faces.push_back(f);
-        f.vertexID[1] = 3;
-        f.vertexID[2] = 2;
-        mesh->faces.push_back(f);
-    }
-    
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 1;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 3;
+    f.vertexID[2] = 2;
+    mesh->faces.push_back(f);
     return mesh;
 }
 
@@ -1895,4 +1867,6 @@ void OpenGLContent::AABS(Mesh* mesh, Scalar& bsRadius, Vector3& bsCenterOffset)
     bsCenterOffset.setX((Scalar)tempCenter.x);
     bsCenterOffset.setY((Scalar)tempCenter.y);
     bsCenterOffset.setZ((Scalar)tempCenter.z);
+}
+
 }

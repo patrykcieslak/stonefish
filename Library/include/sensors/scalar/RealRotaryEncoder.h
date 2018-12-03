@@ -13,20 +13,19 @@
 
 namespace sf
 {
-
-class RealRotaryEncoder : public RotaryEncoder
-{
-public:
-    RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute = false, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    void Reset();
-    
-private:
-    unsigned int cpr_res;
-    unsigned int abs;
-};
-    
+    //!
+    class RealRotaryEncoder : public RotaryEncoder
+    {
+    public:
+        RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute = false, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void Reset();
+        
+    private:
+        unsigned int cpr_res;
+        unsigned int abs;
+    };
 }
 
 #endif

@@ -3,14 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sample.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 
-using namespace sf;
+namespace sf
+{
 
 Sample::Sample(unsigned short nDimensions, Scalar* values)
 {
@@ -49,4 +51,6 @@ Scalar Sample::getValue(unsigned short dimension)
 std::vector<Scalar> Sample::getData()
 {
     return std::vector<Scalar>(data, data+nDim);
+}
+
 }

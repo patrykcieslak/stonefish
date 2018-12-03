@@ -8,20 +8,26 @@
 
 #include "core/ConsoleSimulationApp.h"
 
-#include "utils/SystemUtil.hpp"
 #include <chrono>
 #include <thread>
+#include "core/Console.h"
+#include "core/SimulationManager.h"
+#include "utils/SystemUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
 ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)
 {
 	simulationThread = NULL;
+    console = new Console();
+    Init();
 }
 
 ConsoleSimulationApp::~ConsoleSimulationApp()
 {
+    delete console;
 }
 
 bool ConsoleSimulationApp::hasGraphics()
@@ -78,4 +84,6 @@ int ConsoleSimulationApp::RunSimulation(void* data)
         sim->AdvanceSimulation();
 	
 	return 0;
+}
+
 }

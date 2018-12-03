@@ -10,28 +10,27 @@
 #define __Stonefish_JointActuator__
 
 #include "actuators/Actuator.h"
-#include "entities/FeatherstoneEntity.h"
-#include "joints/Joint.h"
 
 namespace sf
 {
-
-//abstract
-class JointActuator : public Actuator
-{
-public:
-    JointActuator(std::string uniqueName);
-   
-    void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
-    void AttachToJoint(Joint* joint);
-    ActuatorType getType();
+    class FeatherstoneEntity;
+    class Joint;
     
-protected:
-    FeatherstoneEntity* fe;
-    unsigned int jId;
-    Joint* j;
-};
-
+    //!
+    class JointActuator : public Actuator
+    {
+    public:
+        JointActuator(std::string uniqueName);
+        
+        void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
+        void AttachToJoint(Joint* joint);
+        ActuatorType getType();
+        
+    protected:
+        FeatherstoneEntity* fe;
+        unsigned int jId;
+        Joint* j;
+    };
 }
 
 #endif

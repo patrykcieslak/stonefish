@@ -3,12 +3,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/07/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/SignalMux.h"
 
-using namespace sf;
+#include "controllers/SignalGenerator.h"
+
+namespace sf
+{
 
 SignalMux::SignalMux()
 {
@@ -41,4 +44,6 @@ std::vector<Scalar> SignalMux::ValuesAtTime(Scalar t)
 unsigned int SignalMux::getNumOfSignals()
 {
     return (unsigned int)signalGens.size();
+}
+
 }

@@ -8,11 +8,14 @@
 
 #include "graphics/OpenGLRealCamera.h"
 
-#include "graphics/Console.h"
+#include "core/GraphicalSimulationApp.h"
+#include "core/Console.h"
 #include "utils/MathUtil.hpp"
 #include "sensors/vision/ColorCamera.h"
+#include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
 {
@@ -148,7 +151,7 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
             tonemapShader->Use();
             tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
             tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
-            OpenGLContent::getInstance()->DrawSAQ();
+            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             glUseProgram(0);
         
             //Copy to camera data
@@ -173,4 +176,6 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
     }
     
     update = false;
+}
+
 }

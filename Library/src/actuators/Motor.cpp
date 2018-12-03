@@ -9,8 +9,10 @@
 #include "actuators/Motor.h"
 
 #include "joints/RevoluteJoint.h"
+#include "entities/FeatherstoneEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
 {
@@ -75,4 +77,6 @@ void Motor::Update(Scalar dt)
         ((RevoluteJoint*)j)->ApplyTorque(torque);
     else if(fe != NULL)
         fe->DriveJoint(jId, torque);
+}
+
 }

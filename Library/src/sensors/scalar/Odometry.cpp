@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/Odometry.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 Odometry::Odometry(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -49,4 +53,6 @@ void Odometry::SetNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar ori
     channels[0].setStdDev(positionStdDev);
     channels[1].setStdDev(positionStdDev);
     channels[2].setStdDev(positionStdDev);
+}
+
 }

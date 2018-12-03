@@ -3,16 +3,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/6/17.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sensor.h"
 
 #include "core/SimulationApp.h"
-#include "graphics/Console.h"
+#include "core/SimulationManager.h"
+#include "core/Console.h"
+#include "graphics/OpenGLPipeline.h"
 #include "utils/ScientificFileUtil.h"
 
-using namespace sf;
+namespace sf
+{
 
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
@@ -92,4 +95,6 @@ std::vector<Renderable> Sensor::Render()
 {
     std::vector<Renderable> items(0);
     return items;
+}
+    
 }

@@ -15,8 +15,8 @@
 #include <sensors/scalar/ForceTorque.h>
 #include <entities/forcefields/Trigger.h>
 
-UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, UnderwaterTestManager* sim)
-    : GraphicalSimulationApp("Underwater Test", dataDirPath, s, sim)
+UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, UnderwaterTestManager* sim)
+    : GraphicalSimulationApp("Underwater Test", dataDirPath, s, h, sim)
 {
     decimalTime = 12.0;
 }

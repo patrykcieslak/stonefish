@@ -8,7 +8,7 @@
 
 #include "utils/GeometryFileUtil.h"
 
-#include "graphics/Console.h"
+#include "core/Console.h"
 #include "utils/SystemUtil.hpp"
 
 namespace sf

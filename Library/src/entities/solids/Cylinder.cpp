@@ -3,26 +3,31 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Cylinder.h"
 
+#include "graphics/OpenGLContent.h"
 #include "utils/MathUtil.hpp"
 
-using namespace sf;
-
-Cylinder::Cylinder(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& originTrans, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+namespace sf
 {
-    radius = cylinderRadius;
-    halfHeight = cylinderHeight/Scalar(2);
-    T_G2CG = originTrans;
+
+Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+{
+    r = radius;
+    halfHeight = height/Scalar(2);
+    T_O2G = T_O2C = origin;
+    T_CG2O = origin.inverse();
+    T_CG2C = T_CG2G = I4();
+    P_CB = Vector3(0,0,0);
     
     //Calculate physical properties
-    if(thick > Scalar(0) && thick/Scalar(2) < radius && thick/Scalar(2) < halfHeight)
+    if(thick > Scalar(0) && thick/Scalar(2) < r && thick/Scalar(2) < halfHeight)
     {
-        Scalar r1 = radius - thick/Scalar(2);
-        Scalar r2 = radius + thick/Scalar(2);
+        Scalar r1 = r - thick/Scalar(2);
+        Scalar r2 = r + thick/Scalar(2);
         Scalar h1 = halfHeight - thick/Scalar(2);
         Scalar h2 = halfHeight + thick/Scalar(2);
         volume = M_PI*(r2*r2*h2 - r1*r1*h1)*Scalar(2);
@@ -35,25 +40,19 @@ Cylinder::Cylinder(std::string uniqueName, Scalar cylinderRadius, Scalar cylinde
     }
     else
     {
-        volume = M_PI*radius*radius*halfHeight*Scalar(2);
+        volume = M_PI*r*r*halfHeight*Scalar(2);
         mass = volume * mat.density;
-        Scalar Ia = mass*radius*radius/Scalar(2);
-        Scalar Ip = mass*(Scalar(3)*radius*radius + (halfHeight*Scalar(2))*(halfHeight*Scalar(2)))/Scalar(12);
+        Scalar Ia = mass*r*r/Scalar(2);
+        Scalar Ip = mass*(Scalar(3)*r*r + (halfHeight*Scalar(2))*(halfHeight*Scalar(2)))/Scalar(12);
         Ipri = Vector3(Ip,Ip,Ia);
     }
     
     //Build geometry
-    mesh = OpenGLContent::BuildCylinder(radius, halfHeight*(GLfloat)2);
-    transformMesh(mesh, T_G2CG);
+    phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2));
     
     //Compute hydrodynamic properties
     ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
-    CB = T_G2CG.getOrigin();
     //dragCoeff = Vector3(radius*halfHeight*Scalar(4*0.5), M_PI*radius*radius*Scalar(0.9), radius*halfHeight*Scalar(4*0.5));
-}
-
-Cylinder::~Cylinder()
-{
 }
 
 SolidType Cylinder::getSolidType()
@@ -63,9 +62,7 @@ SolidType Cylinder::getSolidType()
 
 btCollisionShape* Cylinder::BuildCollisionShape()
 {
-    btCylinderShape* cylShape = new btCylinderShapeZ(Vector3(radius, radius, halfHeight));
-    btCompoundShape* colShape = new btCompoundShape();
-    colShape->addChildShape(T_G2CG, cylShape);
-    //colShape->setMargin(0.0);
-    return colShape;
+    return new btCylinderShapeZ(Vector3(r, r, halfHeight));
+}
+
 }

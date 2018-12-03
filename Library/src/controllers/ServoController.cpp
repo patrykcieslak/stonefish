@@ -3,12 +3,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/ServoController.h"
 
-using namespace sf;
+#include "actuators/Motor.h"
+#include "sensors/scalar/RotaryEncoder.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 ServoController::ServoController(std::string uniqueName, Motor* m, RotaryEncoder* e, Scalar maxOutput, Scalar frequency) : FeedbackController(uniqueName, 1, frequency)
 {
@@ -70,4 +75,6 @@ void ServoController::Tick(Scalar dt)
 	output = control;
 		
     motor->setIntensity(output);
+}
+
 }

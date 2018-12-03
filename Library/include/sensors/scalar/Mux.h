@@ -9,34 +9,36 @@
 #ifndef __Stonefish_Mux__
 #define __Stonefish_Mux__
 
-#include "sensors/ScalarSensor.h"
+#include "StonefishCommon.h"
 
 namespace sf
 {
-
-typedef struct
-{
-    ScalarSensor* sensor;
-    unsigned short channel;
-}
-MuxComponent;
-
-class Mux
-{
-public:
-    Mux();
-    ~Mux();
+    class ScalarSensor;
     
-    bool AddComponent(ScalarSensor* s, unsigned short channel);
+    //!
+    typedef struct
+    {
+        ScalarSensor* sensor;
+        unsigned short channel;
+    }
+    MuxComponent;
     
-    MuxComponent* getComponent(unsigned int index);
-    Scalar* getLastSample();
-    unsigned int getNumOfComponents();
-    
-private:
-    std::vector<MuxComponent> components;
-};
-    
+    //!
+    class Mux
+    {
+    public:
+        Mux();
+        ~Mux();
+        
+        bool AddComponent(ScalarSensor* s, unsigned short channel);
+        
+        MuxComponent* getComponent(unsigned int index);
+        Scalar* getLastSample();
+        unsigned int getNumOfComponents();
+        
+    private:
+        std::vector<MuxComponent> components;
+    };
 }
 
 #endif

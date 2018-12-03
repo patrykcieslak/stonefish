@@ -3,19 +3,25 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Box.h"
 
+#include "graphics/OpenGLContent.h"
 #include "utils/MathUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
-Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& originTrans, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m, int lookId, Scalar thickness, bool isBuoyant)
+         : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
 {
     halfExtents = dimensions * Scalar(0.5);
-    T_G2CG = originTrans;
+    T_O2G = T_O2C = origin;
+    T_CG2O = origin.inverse();
+    T_CG2C = T_CG2G = I4();
+    P_CB = Vector3(0,0,0);
     
     //Calculate physical properties
     if(thick > Scalar(0) && thick/Scalar(2) < halfExtents.x() && thick/Scalar(2) < halfExtents.y() && thick/Scalar(2) < halfExtents.z())
@@ -45,12 +51,10 @@ Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& ori
     
     //Build geometry
 	glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
-	mesh = OpenGLContent::BuildBox(glHalfExtents);
-    transformMesh(mesh, originTrans);
+	phyMesh = OpenGLContent::BuildBox(glHalfExtents);
     
     //Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
-    CB = T_G2CG.getOrigin();
+    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
     //dragCoeff = Vector3(halfExtents.y()*halfExtents.z()*Scalar(4*1.05), halfExtents.x()*halfExtents.z()*Scalar(4*1.05), halfExtents.y()*halfExtents.x()*Scalar(4*1.05));
 }
 
@@ -61,19 +65,7 @@ SolidType Box::getSolidType()
 
 btCollisionShape* Box::BuildCollisionShape()
 {
-    btCompoundShape* shape = new btCompoundShape();
-    btBoxShape* boxShape = new btBoxShape(halfExtents);
-    shape->addChildShape(T_G2CG, boxShape);
-    return shape;
+    return new btBoxShape(halfExtents);
 }
 
-void Box::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& G2CG)
-{
-    sf::Transform oldG2CG = getG2CGTransform();
-    SolidEntity::SetArbitraryPhysicalProperties(mass, inertia, G2CG);
-    if(rigidBody != NULL)
-    {
-        btCompoundShape* colShape = (btCompoundShape*)rigidBody->getCollisionShape();
-        colShape->updateChildTransform(0, oldG2CG);
-    }
 }

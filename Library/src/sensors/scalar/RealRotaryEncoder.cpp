@@ -9,8 +9,10 @@
 #include "sensors/scalar/RealRotaryEncoder.h"
 
 #include "utils/UnitSystem.h"
+#include "sensors/Sample.h"
 
-using namespace sf;
+namespace sf
+{
 
 RealRotaryEncoder::RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute, Scalar frequency, int historyLength) : RotaryEncoder(uniqueName, frequency, historyLength)
 {
@@ -75,4 +77,6 @@ void RealRotaryEncoder::InternalUpdate(Scalar dt)
     
     Sample s(2, m);
     AddSampleToHistory(s);
+}
+
 }

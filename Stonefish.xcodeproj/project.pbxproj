@@ -231,6 +231,10 @@
 		F74CEC1B18E56FCB00D0C42D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1818E56FCB00D0C42D /* main.cpp */; };
 		F755751021A05A0100AE8956 /* OpenGLDataStructs.h in Headers */ = {isa = PBXBuildFile; fileRef = F755750F21A05A0100AE8956 /* OpenGLDataStructs.h */; };
 		F755751221A06FF100AE8956 /* OpenGLDataStructs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F755751121A06FF100AE8956 /* OpenGLDataStructs.cpp */; };
+		F77015CF21B421C000585FD1 /* OpenGLConsole.h in Headers */ = {isa = PBXBuildFile; fileRef = F77015CE21B421C000585FD1 /* OpenGLConsole.h */; };
+		F77015D121B421EB00585FD1 /* OpenGLConsole.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F77015D021B421EB00585FD1 /* OpenGLConsole.cpp */; };
+		F77015D321B4458D00585FD1 /* Atmosphere.h in Headers */ = {isa = PBXBuildFile; fileRef = F77015D221B4458D00585FD1 /* Atmosphere.h */; };
+		F77015D521B4485800585FD1 /* Atmosphere.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F77015D421B4485800585FD1 /* Atmosphere.cpp */; };
 		F776649D19213D9200996CF3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F776646F19213CC000996CF3 /* main.cpp */; };
 		F776649E19213D9200996CF3 /* UnderwaterTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F776647019213CC000996CF3 /* UnderwaterTestApp.cpp */; };
 		F776649F19213D9200996CF3 /* UnderwaterTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F776647219213CC000996CF3 /* UnderwaterTestManager.cpp */; };
@@ -771,6 +775,11 @@
 		F74CEC1818E56FCB00D0C42D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F755750F21A05A0100AE8956 /* OpenGLDataStructs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenGLDataStructs.h; sourceTree = "<group>"; };
 		F755751121A06FF100AE8956 /* OpenGLDataStructs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLDataStructs.cpp; sourceTree = "<group>"; };
+		F77015CD21B2E4F100585FD1 /* ssr.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ssr.frag; sourceTree = "<group>"; };
+		F77015CE21B421C000585FD1 /* OpenGLConsole.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenGLConsole.h; sourceTree = "<group>"; };
+		F77015D021B421EB00585FD1 /* OpenGLConsole.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLConsole.cpp; sourceTree = "<group>"; };
+		F77015D221B4458D00585FD1 /* Atmosphere.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Atmosphere.h; sourceTree = "<group>"; };
+		F77015D421B4485800585FD1 /* Atmosphere.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Atmosphere.cpp; sourceTree = "<group>"; };
 		F776646F19213CC000996CF3 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F776647019213CC000996CF3 /* UnderwaterTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnderwaterTestApp.cpp; sourceTree = "<group>"; };
 		F776647119213CC000996CF3 /* UnderwaterTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnderwaterTestApp.h; sourceTree = "<group>"; };
@@ -928,6 +937,7 @@
 		F71603AD2191A9E100E83606 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				F71603D22191A9E100E83606 /* Console.h */,
 				F71603AF2191A9E100E83606 /* SimulationApp.h */,
 				F71603AE2191A9E100E83606 /* GraphicalSimulationApp.h */,
 				F71603B92191A9E100E83606 /* ConsoleSimulationApp.h */,
@@ -993,17 +1003,17 @@
 		F71603D12191A9E100E83606 /* graphics */ = {
 			isa = PBXGroup;
 			children = (
-				F71603D22191A9E100E83606 /* Console.h */,
-				F71603D32191A9E100E83606 /* IMGUI.h */,
-				F71603D42191A9E100E83606 /* OpenGLSpotLight.h */,
-				F71603D52191A9E100E83606 /* OpenGLView.h */,
-				F71603D62191A9E100E83606 /* OpenGLRealCamera.h */,
 				F71603D72191A9E100E83606 /* GLSLShader.h */,
+				F71603D32191A9E100E83606 /* IMGUI.h */,
+				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
 				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
+				F71603DC2191A9E100E83606 /* OpenGLContent.h */,
+				F71603D52191A9E100E83606 /* OpenGLView.h */,
+				F71603D42191A9E100E83606 /* OpenGLSpotLight.h */,
+				F71603D62191A9E100E83606 /* OpenGLRealCamera.h */,
 				F71603D92191A9E100E83606 /* OpenGLDepthCamera.h */,
 				F71603DA2191A9E100E83606 /* OpenGLPrinter.h */,
 				F71603DB2191A9E100E83606 /* OpenGLPointLight.h */,
-				F71603DC2191A9E100E83606 /* OpenGLContent.h */,
 				F71603DD2191A9E100E83606 /* OpenGLLight.h */,
 				F71603DE2191A9E100E83606 /* OpenGLOcean.h */,
 				F71603DF2191A9E100E83606 /* OpenGLAtmosphere.h */,
@@ -1060,12 +1070,13 @@
 		F71603F52191A9E100E83606 /* forcefields */ = {
 			isa = PBXGroup;
 			children = (
-				F71603F62191A9E100E83606 /* Jet.h */,
+				F77015D221B4458D00585FD1 /* Atmosphere.h */,
 				F71603F72191A9E100E83606 /* Ocean.h */,
+				F71603FB2191A9E100E83606 /* VelocityField.h */,
 				F71603F82191A9E100E83606 /* Trigger.h */,
 				F71603F92191A9E100E83606 /* Stream.h */,
 				F71603FA2191A9E100E83606 /* Pipe.h */,
-				F71603FB2191A9E100E83606 /* VelocityField.h */,
+				F71603F62191A9E100E83606 /* Jet.h */,
 			);
 			path = forcefields;
 			sourceTree = "<group>";
@@ -1176,6 +1187,7 @@
 				F71605682191AA1C00E83606 /* texQuadMS.frag */,
 				F71605862191AA1C00E83606 /* tonemapping.frag */,
 				F716058F2191AA1C00E83606 /* underwaterMaterial.frag */,
+				F77015CD21B2E4F100585FD1 /* ssr.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -1220,6 +1232,7 @@
 		F71605C12191C67700E83606 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				F71604992191AA0D00E83606 /* Console.cpp */,
 				F71604C72191AA0D00E83606 /* SimulationApp.cpp */,
 				F716049F2191AA0D00E83606 /* NED.cpp */,
 				F71604AE2191AA0D00E83606 /* Robot.cpp */,
@@ -1242,7 +1255,7 @@
 			children = (
 				F71604BC2191AA0D00E83606 /* IMGUI.cpp */,
 				F716049C2191AA0D00E83606 /* GLSLShader.cpp */,
-				F71604992191AA0D00E83606 /* Console.cpp */,
+				F77015D021B421EB00585FD1 /* OpenGLConsole.cpp */,
 				F71604942191AA0D00E83606 /* OpenGLAtmosphere.cpp */,
 				F71604AF2191AA0D00E83606 /* OpenGLCamera.cpp */,
 				F716049A2191AA0D00E83606 /* OpenGLContent.cpp */,
@@ -1280,13 +1293,13 @@
 			isa = PBXGroup;
 			children = (
 				F716048E2191AA0D00E83606 /* Joint.cpp */,
-				F71604B62191AA0D00E83606 /* BeltJoint.cpp */,
-				F71604DC2191AA0D00E83606 /* SphericalJoint.cpp */,
 				F71604872191AA0D00E83606 /* FixedJoint.cpp */,
-				F71604CB2191AA0D00E83606 /* PrismaticJoint.cpp */,
 				F71604E32191AA0D00E83606 /* RevoluteJoint.cpp */,
-				F71604DE2191AA0D00E83606 /* GearJoint.cpp */,
+				F71604CB2191AA0D00E83606 /* PrismaticJoint.cpp */,
 				F71604B22191AA0D00E83606 /* CylindricalJoint.cpp */,
+				F71604DC2191AA0D00E83606 /* SphericalJoint.cpp */,
+				F71604DE2191AA0D00E83606 /* GearJoint.cpp */,
+				F71604B62191AA0D00E83606 /* BeltJoint.cpp */,
 			);
 			path = joints;
 			sourceTree = "<group>";
@@ -1522,12 +1535,12 @@
 		F7BD9E68219DDB040003E389 /* solids */ = {
 			isa = PBXGroup;
 			children = (
-				F71604802191AA0D00E83606 /* Compound.cpp */,
+				F71604D42191AA0D00E83606 /* Sphere.cpp */,
 				F71604922191AA0D00E83606 /* Box.cpp */,
+				F716048B2191AA0D00E83606 /* Cylinder.cpp */,
 				F71604B82191AA0D00E83606 /* Torus.cpp */,
 				F71604E62191AA0D00E83606 /* Polyhedron.cpp */,
-				F716048B2191AA0D00E83606 /* Cylinder.cpp */,
-				F71604D42191AA0D00E83606 /* Sphere.cpp */,
+				F71604802191AA0D00E83606 /* Compound.cpp */,
 			);
 			path = solids;
 			sourceTree = "<group>";
@@ -1551,6 +1564,7 @@
 				F71604982191AA0D00E83606 /* Jet.cpp */,
 				F71604882191AA0D00E83606 /* Pipe.cpp */,
 				F71604812191AA0D00E83606 /* Ocean.cpp */,
+				F77015D421B4485800585FD1 /* Atmosphere.cpp */,
 			);
 			path = forcefields;
 			sourceTree = "<group>";
@@ -1576,6 +1590,7 @@
 			files = (
 				F71604412191A9E100E83606 /* stb_image.h in Headers */,
 				F716045E2191A9E100E83606 /* PathGenerator2D.h in Headers */,
+				F77015D321B4458D00585FD1 /* Atmosphere.h in Headers */,
 				F71604382191A9E100E83606 /* Joint.h in Headers */,
 				F71604262191A9E100E83606 /* Profiler.h in Headers */,
 				F716041F2191A9E100E83606 /* NED.h in Headers */,
@@ -1660,6 +1675,7 @@
 				F71604192191A9E100E83606 /* Gyroscope.h in Headers */,
 				F716042E2191A9E100E83606 /* ScrewConstraint.h in Headers */,
 				F7895B8421A46EC20014722C /* VisionSensor.h in Headers */,
+				F77015CF21B421C000585FD1 /* OpenGLConsole.h in Headers */,
 				F71604582191A9E100E83606 /* OpenGLTrackball.h in Headers */,
 				F71604632191A9E100E83606 /* ServoController.h in Headers */,
 				F71604552191A9E100E83606 /* OpenGLOcean.h in Headers */,
@@ -1943,6 +1959,7 @@
 				F71604F32191AA0D00E83606 /* FixedJoint.cpp in Sources */,
 				F71605062191AA0D00E83606 /* OpenGLContent.cpp in Sources */,
 				F71605532191AA0E00E83606 /* ScalarSensor.cpp in Sources */,
+				F77015D121B421EB00585FD1 /* OpenGLConsole.cpp in Sources */,
 				F7E965B821A863B20067D12C /* LinkActuator.cpp in Sources */,
 				F7E965B121A6CC250067D12C /* GeometryFileUtil.cpp in Sources */,
 				F71605192191AA0D00E83606 /* ScientificFileUtil.cpp in Sources */,
@@ -1996,6 +2013,7 @@
 				F716051C2191AA0D00E83606 /* Odometry.cpp in Sources */,
 				F7E965AD21A6C0580067D12C /* tinyxml2.cpp in Sources */,
 				F716054B2191AA0D00E83606 /* OpenGLView.cpp in Sources */,
+				F77015D521B4485800585FD1 /* Atmosphere.cpp in Sources */,
 				F716052D2191AA0D00E83606 /* SignalGenerator.cpp in Sources */,
 				F71605392191AA0D00E83606 /* Terrain.cpp in Sources */,
 				F71605402191AA0D00E83606 /* Sphere.cpp in Sources */,

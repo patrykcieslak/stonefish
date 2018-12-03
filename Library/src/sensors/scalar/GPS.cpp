@@ -9,8 +9,13 @@
 #include "sensors/scalar/GPS.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
+#include "core/NED.h"
+#include "entities/forcefields/Ocean.h"
+#include "sensors/Sample.h"
 
-using namespace sf;
+namespace sf
+{
 
 GPS::GPS(std::string uniqueName, Scalar latitudeDeg, Scalar longitudeDeg, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -69,4 +74,6 @@ void GPS::SetNoise(Scalar nedDev)
 {
     nedStdDev = nedDev > Scalar(0) ? nedDev : Scalar(0);
     noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
+}
+
 }

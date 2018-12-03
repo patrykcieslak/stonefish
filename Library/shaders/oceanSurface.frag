@@ -13,7 +13,7 @@ uniform vec3 whitePoint;
 
 in vec4 fragPos;
 layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec3 fragNormal;
+layout(location = 1) out vec4 fragNormal;
 
 //Atmosphere
 vec3 GetSolarLuminance();
@@ -139,5 +139,6 @@ void main()
 	
 	//Sea contribution
     fragColor = vec4(outColor, 1.0-fresnel);
-    fragNormal = normalize(MV * normal);
+    //fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  //vec4(normalize(MV * normal), 1.0);
+    fragNormal = vec4(normalize(MV * vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);
 }

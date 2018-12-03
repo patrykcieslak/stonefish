@@ -8,7 +8,11 @@
 
 #include "actuators/JointActuator.h"
 
-using namespace sf;
+#include "entities/FeatherstoneEntity.h"
+#include "joints/Joint.h"
+
+namespace sf
+{
 
 JointActuator::JointActuator(std::string uniqueName) : Actuator(uniqueName)
 {
@@ -35,4 +39,6 @@ void JointActuator::AttachToJoint(Joint* joint)
 {
     if(joint != NULL)
         j = joint;
+}
+    
 }

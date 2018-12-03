@@ -8,9 +8,12 @@
 
 #include "entities/forcefields/Trigger.h"
 
+#include "core/GraphicalSimulationApp.h"
 #include "utils/MathUtil.hpp"
+#include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
 {
@@ -19,9 +22,13 @@ Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTr
     ghost->setCollisionShape(new btSphereShape(radius));
 	active = false;
 	
-	Mesh* mesh = OpenGLContent::BuildSphere((GLfloat)radius);
-    objectId = OpenGLContent::getInstance()->BuildObject(mesh);
-	look = lookId;
+    Mesh* mesh = OpenGLContent::BuildSphere((GLfloat)radius);
+    look = lookId;
+    
+    if(SimulationApp::getApp()->hasGraphics())
+        objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    else
+        objectId = 0;
 }
 
 Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
@@ -32,8 +39,12 @@ Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Tra
 	active = false;
 	
 	Mesh* mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
-	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
 	look = lookId;
+    
+    if(SimulationApp::getApp()->hasGraphics())
+        objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    else
+        objectId = 0;
 }
 
 Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
@@ -45,8 +56,12 @@ Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transf
 	
 	glm::vec3 halfExt((GLfloat)(dimensions.x()/Scalar(2)), (GLfloat)(dimensions.y()/Scalar(2)), (GLfloat)(dimensions.z()/Scalar(2)));
 	Mesh* mesh = OpenGLContent::BuildBox(halfExt);
-	objectId = OpenGLContent::getInstance()->BuildObject(mesh);
 	look = lookId;
+    
+    if(SimulationApp::getApp()->hasGraphics())
+        objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    else
+        objectId = 0;
 }
 
 ForcefieldType Trigger::getForcefieldType()
@@ -123,4 +138,6 @@ std::vector<Renderable> Trigger::Render()
     }
 	
 	return items;
+}
+
 }

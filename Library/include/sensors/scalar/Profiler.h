@@ -13,25 +13,24 @@
 
 namespace sf
 {
-
-class Profiler : public LinkSensor
-{
-public:
-    Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    void SetRange(Scalar distanceMin, Scalar distanceMax);
-    void SetNoise(Scalar distanceStdDev);
-    std::vector<Renderable> Render();
-    
-private:
-    Scalar angRange;
-    unsigned int angSteps;
-    unsigned int currentAngStep;
-    Scalar distance;
-    bool clockwise;
-};
-    
+    //!
+    class Profiler : public LinkSensor
+    {
+    public:
+        Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void SetRange(Scalar distanceMin, Scalar distanceMax);
+        void SetNoise(Scalar distanceStdDev);
+        std::vector<Renderable> Render();
+        
+    private:
+        Scalar angRange;
+        unsigned int angSteps;
+        unsigned int currentAngStep;
+        Scalar distance;
+        bool clockwise;
+    };
 }
 
 #endif

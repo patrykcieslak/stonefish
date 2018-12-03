@@ -19,25 +19,41 @@
 #include <thread>
 #include "core/FilteredCollisionDispatcher.h"
 #include "core/GraphicalSimulationApp.h"
+#include "core/NameManager.h"
+#include "core/MaterialManager.h"
+#include "core/Robot.h"
+#include "core/ResearchDynamicsWorld.h"
+#include "core/ResearchConstraintSolver.h"
+#include "core/Console.h"
 #include "graphics/OpenGLTrackball.h"
+#include "graphics/OpenGLDebugDrawer.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/tinyxml2.h"
 #include "utils/UnitSystem.h"
+#include "entities/Entity.h"
 #include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
+#include "entities/forcefields/Ocean.h"
+#include "entities/forcefields/Atmosphere.h"
+#include "entities/solids/Compound.h"
 #include "entities/StaticEntity.h"
 #include "entities/ForcefieldEntity.h"
-#include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Trigger.h"
 #include "entities/statics/Plane.h"
+#include "joints/Joint.h"
+#include "actuators/Actuator.h"
+#include "sensors/Sensor.h"
+#include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
+#include "controllers/Controller.h"
 
-using namespace sf;
+extern ContactAddedCallback gContactAddedCallback;
 
-SimulationManager::SimulationManager(bool zAxisUp, Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
+namespace sf
 {
-    //Set coordinate system
-    zUp = zAxisUp;
-    
+
+SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
+{
     //Initialize simulation world
     realtimeFactor = Scalar(1);
     solver = st;
@@ -48,14 +64,13 @@ SimulationManager::SimulationManager(bool zAxisUp, Scalar stepsPerSecond, Solver
     physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
-	nameManager = NULL;
-    materialManager = NULL;
-    dynamicsWorld = NULL;
+	dynamicsWorld = NULL;
     dwSolver = NULL;
     dwBroadphase = NULL;
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
     ocean = NULL;
+    atmosphere = NULL;
 	trackball = NULL;
     simHydroMutex = SDL_CreateMutex();
     simSettingsMutex = SDL_CreateMutex();
@@ -67,9 +82,9 @@ SimulationManager::SimulationManager(bool zAxisUp, Scalar stepsPerSecond, Solver
     setICSolverParams(false);
 	simulationFresh = false;
     
-    //Misc
-    drawLightDummies = false;
-    drawCameraDummies = false;
+    //Create managers
+    nameManager = new NameManager();
+    materialManager = new MaterialManager();
 }
 
 SimulationManager::~SimulationManager()
@@ -100,37 +115,37 @@ void SimulationManager::AddEntity(Entity *ent)
     if(ent != NULL)
     {
         entities.push_back(ent);
-        ent->AddToDynamicsWorld(dynamicsWorld);
+        ent->AddToSimulation(this);
     }
 }
 
-void SimulationManager::AddStaticEntity(StaticEntity* ent, const Transform& worldTransform)
+void SimulationManager::AddStaticEntity(StaticEntity* ent, const Transform& origin)
 {
     if(ent != NULL)
     {
         entities.push_back(ent);
-        ent->AddToDynamicsWorld(dynamicsWorld, worldTransform);
+        ent->AddToSimulation(this, origin);
     }
 }
 
-void SimulationManager::AddSolidEntity(SolidEntity* ent, const Transform& worldTransform)
+void SimulationManager::AddSolidEntity(SolidEntity* ent, const Transform& origin)
 {
     if(ent != NULL)
     {
         entities.push_back(ent);
-        ent->AddToDynamicsWorld(dynamicsWorld, worldTransform);
+        ent->AddToSimulation(this, origin);
     }
 }
 
- void SimulationManager::AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& worldTransform)
+ void SimulationManager::AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& origin)
  {
      if(ent != NULL)
      {
          entities.push_back(ent);
-         ent->AddToDynamicsWorld(dynamicsWorld, worldTransform);
+         ent->AddToSimulation(this, origin);
      }
  }
-
+    
 void SimulationManager::EnableOcean(bool waves, Fluid* f)
 {
 	if(ocean != NULL)
@@ -143,13 +158,31 @@ void SimulationManager::EnableOcean(bool waves, Fluid* f)
     }
     
 	ocean = new Ocean("Ocean", waves, f);
-	ocean->AddToDynamicsWorld(dynamicsWorld);
+	ocean->AddToSimulation(this);
 	
 	if(SimulationApp::getApp()->hasGraphics())
 	{
 		ocean->InitGraphics(simHydroMutex);
 		ocean->setRenderable(true);
 	}
+}
+    
+void SimulationManager::EnableAtmosphere()
+{
+    if(atmosphere != NULL)
+        return;
+    
+    std::string air = getMaterialManager()->CreateFluid("Air", 1.0, 1e-6, 1.0);
+    Fluid* f = getMaterialManager()->getFluid(air);
+    
+    atmosphere = new Atmosphere("Atmosphere", f);
+    atmosphere->AddToSimulation(this);
+    
+    if(SimulationApp::getApp()->hasGraphics())
+    {
+        atmosphere->InitGraphics(((GraphicalSimulationApp*)SimulationApp::getApp())->getRenderSettings());
+        atmosphere->setRenderable(true);
+    }
 }
 
 void SimulationManager::AddSensor(Sensor *sens)
@@ -169,7 +202,7 @@ void SimulationManager::AddJoint(Joint *jnt)
     if(jnt != NULL)
     {
         joints.push_back(jnt);
-        jnt->AddToDynamicsWorld(dynamicsWorld);
+        jnt->AddToSimulation(this);
     }
 }
 
@@ -179,13 +212,13 @@ void SimulationManager::AddActuator(Actuator *act)
         actuators.push_back(act);
 }
 
-Contact* SimulationManager::AddContact(Entity *entA, Entity *entB, size_type contactHistoryLength)
+Contact* SimulationManager::AddContact(Entity *entA, Entity *entB, size_t historyLength)
 {
     Contact* contact = getContact(entA, entB);
     
     if(contact == NULL)
     {
-        contact = new Contact(entA, entB, contactHistoryLength);
+        contact = new Contact(entA, entB, (unsigned int)historyLength);
         contacts.push_back(contact);
         EnableCollision(entA, entB);
     }
@@ -209,14 +242,14 @@ void SimulationManager::EnableCollision(Entity* entA, Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
     
-    if(collisionFilter == INCLUSIVE && colId == -1)
+    if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = entA;
         c.B = entB;
         collisions.push_back(c);
     }
-    else if(collisionFilter == EXCLUSIVE && colId > -1)
+    else if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId > -1)
     {
         collisions.erase(collisions.begin() + colId);
     }
@@ -226,14 +259,14 @@ void SimulationManager::DisableCollision(Entity* entA, Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
     
-    if(collisionFilter == EXCLUSIVE && colId == -1)
+    if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = entA;
         c.B = entB;
         collisions.push_back(c);
     }
-    else if(collisionFilter == INCLUSIVE && colId > -1)
+    else if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId > -1)
     {
         collisions.erase(collisions.begin() + colId);
     }
@@ -371,14 +404,14 @@ Ocean* SimulationManager::getOcean()
 	return ocean;
 }
 
+Atmosphere* SimulationManager::getAtmosphere()
+{
+    return atmosphere;
+}
+
 btMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
     return dynamicsWorld;
-}
-
-bool SimulationManager::isZAxisUp()
-{
-    return zUp;
 }
 
 bool SimulationManager::isSimulationFresh()
@@ -468,7 +501,7 @@ void SimulationManager::setGravity(Scalar gravityConstant)
 
 Vector3 SimulationManager::getGravity()
 {
-    return Vector3(0., 0., zUp ? -g : g);
+    return Vector3(0,0,g);
 }
 
 void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsigned int maxIterations, Scalar maxTime, Scalar linearTolerance, Scalar angularTolerance)
@@ -489,17 +522,17 @@ void SimulationManager::InitializeSolver()
     //Choose collision dispatcher
     switch(collisionFilter)
     {
-        case INCLUSIVE:
+        case CollisionFilteringType::COLLISION_INCLUSIVE:
             dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, true);
             break;
 
-        case EXCLUSIVE:
+        case CollisionFilteringType::COLLISION_EXCLUSIVE:
             dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, false);
             break;
     }
     
     //Choose constraint solver
-    if(solver == SolverType::SI)
+    if(solver == SolverType::SOLVER_SI)
 	{
 		dwSolver = new btMultiBodyConstraintSolver();
 	}
@@ -510,15 +543,15 @@ void SimulationManager::InitializeSolver()
 		switch(solver)
 		{
             default:
-			case SolverType::DANTZIG:
+			case SolverType::SOLVER_DANTZIG:
 				mlcp = new btDantzigSolver();
 				break;
             
-			case SolverType::PROJ_GAUSS_SIEDEL:
+			case SolverType::SOLVER_PGS:
 				mlcp = new btSolveProjectedGaussSeidel();
 				break;
             
-			case SolverType::LEMKE:
+			case SolverType::SOLVER_LEMKE:
 				mlcp = new btLemkeSolver();
 				//((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
 				break;
@@ -573,25 +606,21 @@ void SimulationManager::InitializeSolver()
     //Set default params
     g = Scalar(9.81);
     
-	//Create name manager
-	nameManager = new NameManager();
-	
-    //Create material manager & load standard materials
-    materialManager = new MaterialManager();
-    
     //Debugging
-    debugDrawer = new OpenGLDebugDrawer(btIDebugDraw::DBG_DrawWireframe, zUp);
+    debugDrawer = new OpenGLDebugDrawer(btIDebugDraw::DBG_DrawWireframe);
     dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
 void SimulationManager::InitializeScenario()
 {
+    EnableAtmosphere();
+    
 	if(SimulationApp::getApp()->hasGraphics())
 	{
 		GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-		trackball = new OpenGLTrackball(Vector3(0,0,1.0), 1.0, Vector3(0,0, 1.0), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
+		trackball = new OpenGLTrackball(Vector3(0,0,1.0), 1.0, Vector3(0,0, 1.0), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 10000.f, 4, true);
 		trackball->Rotate(Quaternion(0.25, 0.0, 0.0));
-		OpenGLContent::getInstance()->AddView(trackball);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
 	}
 }
 
@@ -601,7 +630,9 @@ void SimulationManager::RestartScenario()
     InitializeSolver();
     InitializeScenario();
     BuildScenario(); //Defined by specific application
-	OpenGLContent::getInstance()->Finalize();
+    
+    if(SimulationApp::getApp()->hasGraphics())
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->Finalize();
 	
 	simulationFresh = true;
 }
@@ -647,6 +678,12 @@ void SimulationManager::DestroyScenario()
 		ocean = NULL;
 	}
     
+    if(atmosphere != NULL)
+    {
+        delete atmosphere;
+        atmosphere = NULL;
+    }
+    
     for(unsigned int i=0; i<joints.size(); i++)
         delete joints[i];
     joints.clear();
@@ -673,7 +710,8 @@ void SimulationManager::DestroyScenario()
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
 
-	OpenGLContent::getInstance()->DestroyContent();
+    if(SimulationApp::getApp()->hasGraphics())
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
 }
 
 bool SimulationManager::StartSimulation()
@@ -730,9 +768,9 @@ bool SimulationManager::SolveICProblem()
     
     //Should use gravity?
     if(icUseGravity)
-        dynamicsWorld->setGravity(Vector3(0., 0., zUp ? -g : g));
+        dynamicsWorld->setGravity(Vector3(0,0,g));
     else
-        dynamicsWorld->setGravity(Vector3(0.,0.,0.));
+        dynamicsWorld->setGravity(Vector3(0,0,0));
     
     //Set IC callback
     dynamicsWorld->setInternalTickCallback(SolveICTickCallback, this, true); //Pre-tick
@@ -770,7 +808,7 @@ bool SimulationManager::SolveICProblem()
     cInfo("IC problem solved with %d iterations in %1.6lf s.", iterations, solveTime);
     
     //Set gravity
-    dynamicsWorld->setGravity(Vector3(0., 0., zUp ? -g : g));
+    dynamicsWorld->setGravity(Vector3(0,0,g));
     
     //Set simulation tick
     dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true); //Pre-tick
@@ -825,7 +863,7 @@ void SimulationManager::AdvanceSimulation()
 	realtimeFactor = Scalar(1);
     
     //Inform about MLCP failures
-	if(solver != SolverType::SI)
+	if(solver != SolverType::SOLVER_SI)
 	{
 		int numFallbacks = ((ResearchConstraintSolver*)dwSolver)->getNumFallbacks();
 		if(numFallbacks)
@@ -835,7 +873,7 @@ void SimulationManager::AdvanceSimulation()
             cWarning("MLCP solver failed %d times.\n", mlcpFallbacks);
 #endif
 		}
-		((ResearchConstraintSolver*)dwSolver)->setNumFallbacks(0);
+		((ResearchConstraintSolver*)dwSolver)->resetNumFallbacks();
 	}
     
     SDL_UnlockMutex(simInfoMutex);
@@ -860,9 +898,7 @@ void SimulationManager::UpdateDrawingQueue()
 		std::vector<Renderable> items = entities[i]->Render();
 		for(unsigned int h=0; h<items.size(); ++h)
 		{
-			if(!zUp)
-				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-			
+            items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
             glPipeline->AddToDrawingQueue(items[h]);
 		}
 	}
@@ -873,9 +909,7 @@ void SimulationManager::UpdateDrawingQueue()
         std::vector<Renderable> items = actuators[i]->Render();
 		for(unsigned int h=0; h<items.size(); ++h)
 		{
-			if(!zUp)
-				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-			
+            items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);
 		}
     }
@@ -886,9 +920,7 @@ void SimulationManager::UpdateDrawingQueue()
         std::vector<Renderable> items = sensors[i]->Render();
 		for(unsigned int h=0; h<items.size(); ++h)
 		{
-			if(!zUp)
-				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-			
+			items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);
 		}
         
@@ -902,21 +934,18 @@ void SimulationManager::UpdateDrawingQueue()
         std::vector<Renderable> items = contacts[i]->Render();
 		for(unsigned int h=0; h<items.size(); ++h)
 		{
-			if(!zUp)
-				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-			
+            items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);
 		}
     }
     
+    //Ocean currents
     if(ocean != NULL)
     {
         std::vector<Renderable> items = ocean->Render();
         for(unsigned int h=0; h<items.size(); ++h)
 		{
-			if(!zUp)
-				items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
-			
+            items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);
 		}
     }
@@ -949,7 +978,19 @@ Entity* SimulationManager::PickEntity(int x, int y)
     return NULL;
 }
 
-extern ContactAddedCallback gContactAddedCallback;
+void SimulationManager::RenderBulletDebug()
+{
+    dynamicsWorld->debugDrawWorld();
+    debugDrawer->Render();
+}
+    
+int SimulationManager::CreateLook(Color color, float roughness, float metalness, float reflectivity, std::string texturePath)
+{
+    if(SimulationApp::getApp()->hasGraphics())
+        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(color.rgb, roughness, metalness, reflectivity, texturePath);
+    else
+        return -1;
+}
 
 bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)
 {
@@ -980,8 +1021,11 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     else if(ent0->getType() == ENTITY_SOLID)
     {
         SolidEntity* sent0 = (SolidEntity*)ent0;
-        mat0 = sent0->getMaterial();
-		//Vector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
+        if(sent0->getSolidType() == SolidType::SOLID_COMPOUND)
+            mat0 = ((Compound*)sent0)->getMaterial(((Compound*)sent0)->getPartId(index0));
+        else
+            mat0 = sent0->getMaterial();
+        //Vector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
 		Vector3 localPoint0 = sent0->getCGTransform().inverse() * cp.getPositionWorldOnA();
 		contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
 		contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
@@ -1008,7 +1052,10 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     else if(ent1->getType() == ENTITY_SOLID)
     {
         SolidEntity* sent1 = (SolidEntity*)ent1;
-        mat1 = sent1->getMaterial();
+        if(sent1->getSolidType() == SolidType::SOLID_COMPOUND)
+            mat1 = ((Compound*)sent1)->getMaterial(((Compound*)sent1)->getPartId(index1));
+        else
+            mat1 = sent1->getMaterial();
         //Vector3 localPoint1 = sent1->getTransform().getBasis() * cp.m_localPointB;
 		Vector3 localPoint1 = sent1->getCGTransform().inverse() * cp.getPositionWorldOnB();
         contactVelocity1 = sent1->getLinearVelocityInLocalPoint(localPoint1);
@@ -1021,7 +1068,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         cp.m_combinedRestitution = Scalar(0);
         return true;
     }
-	
+  
     Vector3 relLocalVel = contactVelocity1 - contactVelocity0;
     Vector3 normalVel = cp.m_normalWorldOnB * cp.m_normalWorldOnB.dot(relLocalVel);
     Vector3 slipVel = relLocalVel - normalVel;
@@ -1239,7 +1286,12 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 		}
     }
     
-	//Fluid forces
+    //Aerodynamic forces
+    if(simManager->atmosphere != NULL)
+    {
+    }
+    
+	//Hydrodynamic forces
     if(simManager->ocean != NULL)
     {
         bool recompute = simManager->hydroCounter % simManager->hydroPrescaler == 0;
@@ -1309,3 +1361,6 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     //Optional method to update some post simulation data (like ROS messages...)
     simManager->SimulationStepCompleted();
 }
+
+}
+

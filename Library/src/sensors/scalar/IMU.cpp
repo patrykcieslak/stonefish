@@ -8,7 +8,11 @@
 
 #include "sensors/scalar/IMU.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 IMU::IMU(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -56,4 +60,6 @@ void IMU::SetNoise(Scalar angleStdDev, Scalar angularVelocityStdDev)
     channels[3].setStdDev(angularVelocityStdDev);
     channels[4].setStdDev(angularVelocityStdDev);
     channels[5].setStdDev(angularVelocityStdDev);
+}
+
 }

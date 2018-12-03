@@ -8,7 +8,12 @@
 
 #include "sensors/scalar/Gyroscope.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+#include "sensors/scalar/ADC.h"
+#include "sensors/Sample.h"
+
+namespace sf
+{
 
 Gyroscope::Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage, Scalar driftSpeed, Scalar noisePSD, ADC* adc, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -53,4 +58,6 @@ void Gyroscope::InternalUpdate(Scalar dt)
     //save sample
     Sample s(1, &av);
     AddSampleToHistory(s);
+}
+
 }

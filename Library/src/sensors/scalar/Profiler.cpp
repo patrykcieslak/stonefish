@@ -10,10 +10,14 @@
 
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "utils/MathUtil.hpp"
 #include "utils/UnitSystem.h"
+#include "sensors/Sample.h"
+#include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 Profiler::Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -103,4 +107,6 @@ void Profiler::SetRange(Scalar distanceMin, Scalar distanceMax)
 void Profiler::SetNoise(Scalar distanceStdDev)
 {
     channels[1].setStdDev(distanceStdDev);
+}
+
 }

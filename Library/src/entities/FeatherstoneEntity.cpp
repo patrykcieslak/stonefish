@@ -9,9 +9,13 @@
 #include "entities/FeatherstoneEntity.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "utils/MathUtil.hpp"
+#include "entities/SolidEntity.h"
+#include "entities/StaticEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, bool fixedBase) : Entity(uniqueName)
 {
@@ -66,7 +70,7 @@ void FeatherstoneEntity::getAABB(Vector3& min, Vector3& max)
         //Get link AABB
         Vector3 lmin;
         Vector3 lmax;
-        links[i].solid->getMultibodyLinkCollider()->getCollisionShape()->getAabb(getLinkTransform(i), lmin, lmax);
+        links[i].solid->multibodyCollider->getCollisionShape()->getAabb(getLinkTransform(i), lmin, lmax);
         
         //Merge with other AABBs
         min[0] = std::min(min[0], lmin[0]);
@@ -79,24 +83,24 @@ void FeatherstoneEntity::getAABB(Vector3& min, Vector3& max)
     }
 }
 
-void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world)
+void FeatherstoneEntity::AddToSimulation(SimulationManager* sm)
 {
-    AddToDynamicsWorld(world, Transform::getIdentity());
+    AddToSimulation(sm, Transform::getIdentity());
 }
 
-void FeatherstoneEntity::AddToDynamicsWorld(btMultiBodyDynamicsWorld* world, const Transform& worldTransform)
+void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    setBaseTransform(worldTransform);
+    setBaseTransform(origin);
     multiBody->setBaseVel(Vector3(0,0,0));
     multiBody->setBaseOmega(Vector3(0,0,0));
-    world->addMultiBody(multiBody);
+    sm->getDynamicsWorld()->addMultiBody(multiBody);
     
     for(unsigned int i=0; i<joints.size(); ++i)
     {
         if(joints[i].limit != NULL)
-            world->addMultiBodyConstraint(joints[i].limit);
+            sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].limit);
         if(joints[i].motor != NULL)
-            world->addMultiBodyConstraint(joints[i].motor);
+            sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].motor);
     }
 }
 
@@ -112,14 +116,14 @@ void FeatherstoneEntity::setBaseRenderable(bool render)
 
 void FeatherstoneEntity::setBaseTransform(const Transform& trans)
 {
-	Transform T0 = trans * links[0].solid->getG2CGTransform(); 
+	Transform T0 = trans * links[0].solid->getCG2CTransform().inverse();
     multiBody->getBaseCollider()->setWorldTransform(T0);
 	multiBody->setBaseWorldTransform(T0);
     
 	for(unsigned int i=1; i<links.size(); ++i)
 	{
-		Transform tr = links[i].solid->getMultibodyLinkCollider()->getWorldTransform();
-		links[i].solid->getMultibodyLinkCollider()->setWorldTransform(trans * tr);
+		Transform tr = links[i].solid->multibodyCollider->getWorldTransform();
+		links[i].solid->multibodyCollider->setWorldTransform(trans * tr);
 	}
 }
 
@@ -305,7 +309,7 @@ Transform FeatherstoneEntity::getLinkTransform(unsigned int index)
 Vector3 FeatherstoneEntity::getLinkLinearVelocity(unsigned int index)
 {
     if(index >= links.size())
-        return Vector3(0.,0.,0.);
+        return Vector3(0,0,0);
     
     return links[index].solid->getLinearVelocity();
 }
@@ -313,7 +317,7 @@ Vector3 FeatherstoneEntity::getLinkLinearVelocity(unsigned int index)
 Vector3 FeatherstoneEntity::getLinkAngularVelocity(unsigned int index)
 {
     if(index >= links.size())
-        return Vector3(0.,0.,0.);
+        return Vector3(0,0,0);
     
     return links[index].solid->getAngularVelocity();
 }
@@ -331,7 +335,7 @@ unsigned int FeatherstoneEntity::getNumOfJoints()
 unsigned int FeatherstoneEntity::getNumOfMovingJoints()
 {
     unsigned int movingJoints = 0;
-    for(unsigned int i=0; i<joints.size(); ++i)
+    for(size_t i=0; i<joints.size(); ++i)
     {
         if(joints[i].type != btMultibodyLink::eFixed)
             ++movingJoints;
@@ -351,12 +355,12 @@ void FeatherstoneEntity::AddLink(SolidEntity *solid, const Transform& transform)
         
         if(links.size() > 1) //If not base link
         {
-            Transform trans =  transform * links[links.size()-1].solid->getG2CGTransform();
+            Transform trans =  transform * links[links.size()-1].solid->getCG2OTransform().inverse();
             links.back().solid->setCGTransform(trans);
         }
         else
         {
-            Transform trans = transform * links[0].solid->getG2CGTransform();
+            Transform trans = transform * links[0].solid->getCG2OTransform().inverse();
             links[0].solid->setCGTransform(trans);
             multiBody->setBaseWorldTransform(trans);
         }
@@ -621,7 +625,8 @@ void FeatherstoneEntity::UpdateAcceleration(Scalar dt)
 std::vector<Renderable> FeatherstoneEntity::Render()
 {	
 	std::vector<Renderable> items(0);
-	//Draw base
+	
+    //Draw base
     if(baseRenderable)
     {
 		std::vector<Renderable> _base = links[0].solid->Render();
@@ -629,11 +634,41 @@ std::vector<Renderable> FeatherstoneEntity::Render()
     }
     
     //Draw rest of links
-    for(int i = 0; i < multiBody->getNumLinks(); ++i)
+    for(size_t i = 1; i < links.size(); ++i)
     {
-		std::vector<Renderable> _link = links[i+1].solid->Render();
+		std::vector<Renderable> _link = links[i].solid->Render();
 		items.insert(items.end(), _link.begin(), _link.end());
     }
-	
+    
+    //Draw link axes
+    Renderable item;
+    item.type = RenderableType::MULTIBODY_AXIS;
+    item.model = glm::mat4(1.f);
+    
+    for(int i = 1; i < links.size(); ++i)
+    {
+        btMultibodyLink& link = multiBody->getLink(i-1);
+        Vector3 pivot = getLinkTransform(link.m_parent+1) * link.m_eVector;
+        Vector3 axisEnd = pivot;
+        
+        if(link.m_jointType == btMultibodyLink::eFeatherstoneJointType::eRevolute)
+        {
+            Vector3 axisInWorld = getLinkTransform(i).getBasis() * link.getAxisTop(0);
+            axisEnd += axisInWorld * Scalar(0.3);
+        }
+        else if(link.m_jointType == btMultibodyLink::eFeatherstoneJointType::ePrismatic)
+        {
+            Vector3 axisInWorld = getLinkTransform(i).getBasis() * link.getAxisBottom(0);
+            axisEnd += axisInWorld * Scalar(0.3);
+        }
+        
+        item.points.push_back(glm::vec3((GLfloat)pivot.x(), (GLfloat)pivot.y(), (GLfloat)pivot.z()));
+        item.points.push_back(glm::vec3((GLfloat)axisEnd.x(), (GLfloat)axisEnd.y(), (GLfloat)axisEnd.z()));
+    }
+    
+    items.push_back(item);
+    
 	return items;
+}
+
 }

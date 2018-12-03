@@ -8,16 +8,19 @@
 
 #include "joints/RevoluteJoint.h"
 
-using namespace sf;
+#include "entities/SolidEntity.h"
+
+namespace sf
+{
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities) : 
-		RevoluteJoint(uniqueName, solidA->getRigidBody(), solidB->getRigidBody(), pivot, axis, collideLinkedEntities)
+		RevoluteJoint(uniqueName, solidA->rigidBody, solidB->rigidBody, pivot, axis, collideLinkedEntities)
 {
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
 {
-    btRigidBody* body = solid->getRigidBody();
+    btRigidBody* body = solid->rigidBody;
     Vector3 hingeAxis = axis.normalized();
     axisInA = body->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
     pivotInA = body->getCenterOfMassTransform().inverse()(pivot);
@@ -148,19 +151,21 @@ Vector3 RevoluteJoint::Render()
     Vector3 C1 = pivot + e1 * axis;
     Vector3 C2 = pivot + e2 * axis;
     
-    std::vector<glm::vec3> vertices;
+    /*std::vector<glm::vec3> vertices;
 	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
 	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
 	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
 	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
 	vertices.clear();
 	
 	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
 	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
 	glEnable(GL_LINE_STIPPLE);
-    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	glDisable(GL_LINE_STIPPLE);
+    //OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
+	glDisable(GL_LINE_STIPPLE);*/
     
     return (C1+C2)/Scalar(2.);
+}
+    
 }

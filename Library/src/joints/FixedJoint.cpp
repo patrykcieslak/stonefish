@@ -3,20 +3,24 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/FixedJoint.h"
 
 #include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
+#include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->rigidBody;
+    btRigidBody* bodyB = solidB->rigidBody;
     Transform frameInA = Transform::getIdentity();
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * bodyA->getCenterOfMassTransform(); //CHECK IT!!!!!!!!!!
     
@@ -48,4 +52,6 @@ JointType FixedJoint::getType()
 Vector3 FixedJoint::Render()
 {
     return Vector3();
+}
+
 }

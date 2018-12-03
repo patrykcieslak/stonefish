@@ -8,7 +8,8 @@
 
 #include "graphics/OpenGLView.h"
 
-using namespace sf;
+namespace sf
+{
 
 OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
 {
@@ -51,4 +52,6 @@ GLint* OpenGLView::GetViewport() const
 GLuint OpenGLView::getRenderFBO()
 {
     return renderFBO;
+}
+
 }

@@ -8,9 +8,14 @@
 
 #include "sensors/scalar/ForceTorque.h"
 
+#include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
+#include "sensors/Sample.h"
 #include "utils/MathUtil.hpp"
+#include "joints/Joint.h"
 
-using namespace sf;
+namespace sf
+{
 
 ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& geomToSensor, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
@@ -44,7 +49,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
             torque /= dt;
         }
     
-        lastFrame = attach->getCGTransform() * attach->getG2CGTransform().inverse() * g2s;
+        lastFrame = attach->getOTransform() * g2s;
         Matrix3 toSensor = lastFrame.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
@@ -57,7 +62,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
     {   
         Vector3 force, torque;
         unsigned int childId = fe->getJointFeedback(jId, force, torque);
-        lastFrame = fe->getLink(childId).solid->getG2CGTransform().inverse() * g2s;
+        lastFrame = fe->getLink(childId).solid->getCG2OTransform() * g2s;
         Matrix3 toSensor = lastFrame.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
@@ -106,4 +111,6 @@ std::vector<Renderable> ForceTorque::Render()
     items.push_back(item);
     
     return items;
+}
+
 }

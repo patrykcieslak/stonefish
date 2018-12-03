@@ -3,14 +3,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/Joint.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
+#include "entities/SolidEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
@@ -82,7 +85,7 @@ Scalar Joint::getFeedback(unsigned int dof)
         return Scalar(0);
 }
 
-void Joint::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
+void Joint::AddToSimulation(SimulationManager* sm)
 {
 	if(constraint != NULL)
 	{
@@ -101,10 +104,12 @@ void Joint::AddToDynamicsWorld(btMultiBodyDynamicsWorld *world)
 		}
     
 		//Add joint to dynamics world
-		world->addConstraint(constraint, !collisionEnabled);
+		sm->getDynamicsWorld()->addConstraint(constraint, !collisionEnabled);
 	}
 	else if(mbConstraint != NULL)
 	{
-		world->addMultiBodyConstraint(mbConstraint);
+		sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
 	}
+}
+
 }

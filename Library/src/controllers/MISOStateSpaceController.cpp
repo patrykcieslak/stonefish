@@ -3,12 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/MISOStateSpaceController.h"
 
-using namespace sf;
+#include "actuators/DCMotor.h"
+#include "sensors/scalar/Mux.h"
+
+namespace sf
+{
 
 MISOStateSpaceController::MISOStateSpaceController(std::string uniqueName, Mux* inputs, DCMotor* output, Scalar maxOutput, Scalar frequency) : FeedbackController(uniqueName, inputs->getNumOfComponents(), frequency)
 {
@@ -54,4 +58,6 @@ void MISOStateSpaceController::Tick(Scalar dt)
     
     //Apply control
     output->setVoltage(control);
+}
+
 }

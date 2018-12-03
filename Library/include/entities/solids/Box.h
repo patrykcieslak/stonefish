@@ -13,7 +13,7 @@
 
 namespace sf
 {
-    //! A class representing a box shaped rigid body.
+    //! A class representing a box-shaped rigid body.
     class Box : public SolidEntity
     {
     public:
@@ -21,16 +21,14 @@ namespace sf
         /*!
          \param uniqueName a name for the box
          \param dimensions a vector of box dimensions (side lengths)
-         \param originTrans a transformation of the box origin
+         \param origin a transformation of the physical mesh (graphical is the same for box)
          \param m a material of the box
          \param lookId an index of the graphical material used to render the box
          \param thickness defines the thickness of the box walls, if positive the box is treated as shell
          \param isBuoyant defines if the box should be subject to buoyancy force
         */
-        Box(std::string uniqueName, const Vector3& dimensions, const Transform& originTrans, Material m,
+        Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m,
                                     int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
-        
-        void SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& G2CG);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

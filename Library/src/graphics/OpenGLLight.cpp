@@ -3,14 +3,18 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLLight.h"
 
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLRealCamera.h"
+#include "entities/SolidEntity.h"
 #include "utils/MathUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
 //static variables
 GLuint OpenGLLight::spotShadowArrayTex = 0;
@@ -272,7 +276,7 @@ void OpenGLLight::xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat&
     }
 }
 
-
+}
 
 
 

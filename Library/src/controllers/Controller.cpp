@@ -3,14 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/Controller.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 
-using namespace sf;
+namespace sf
+{
 
 Controller::Controller(std::string uniqueName, Scalar frequency)
 {
@@ -74,4 +76,6 @@ void Controller::Update(Scalar dt)
             }
         }
     }
+}
+
 }

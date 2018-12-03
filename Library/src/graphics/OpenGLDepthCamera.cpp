@@ -8,10 +8,14 @@
 
 #include "graphics/OpenGLDepthCamera.h"
 
-#include "graphics/Console.h"
+#include "core/Console.h"
+#include "core/GraphicalSimulationApp.h"
+#include "entities/SolidEntity.h"
 #include "sensors/vision/DepthCamera.h"
+#include "graphics/OpenGLContent.h"
 
-using namespace sf;
+namespace sf
+{
 
 GLSLShader* OpenGLDepthCamera::depthLinearizeShader = NULL;
 GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
@@ -149,18 +153,16 @@ void OpenGLDepthCamera::LinearizeDepth()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
     glViewport(0, 0, viewportWidth, viewportHeight);
-    OpenGLContent::getInstance()->BindBaseVertexArray();
+    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
+    glBindTexture(GL_TEXTURE_2D, renderDepthTex);
+    
     depthLinearizeShader->Use();
 	depthLinearizeShader->SetUniform("clipInfo", glm::vec4(range.x*range.y, range.x-range.y, range.y, 1.f));
 	depthLinearizeShader->SetUniform("texDepth", TEX_POSTPROCESS1);
-		
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, renderDepthTex);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindTexture(GL_TEXTURE_2D, 0);
-	
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     glUseProgram(0);
-    glBindVertexArray(0);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -186,7 +188,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
         depthVisualizeShader->Use();
         depthVisualizeShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         depthVisualizeShader->SetUniform("range", range);
-        OpenGLContent::getInstance()->DrawSAQ();
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
         
@@ -227,4 +229,6 @@ void OpenGLDepthCamera::Destroy()
 {
     if(depthLinearizeShader != NULL) delete depthLinearizeShader;
     if(depthVisualizeShader != NULL) delete depthVisualizeShader;
+}
+
 }

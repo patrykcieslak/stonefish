@@ -43,6 +43,10 @@ namespace sf
     typedef Eigen::Matrix4f Matrix4Eigen;
     typedef Eigen::Matrix<float, 6, 6> Matrix6Eigen;
 #endif
+    
+    inline Transform I4() { return Transform::getIdentity(); }
+    inline Matrix3 I3() { return Matrix3::getIdentity(); }
+    inline Quaternion IQ() { return Quaternion::getIdentity(); }
 }
 
 #endif

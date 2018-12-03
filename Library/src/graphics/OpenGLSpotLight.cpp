@@ -3,15 +3,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSpotLight.h"
 
+#include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLContent.h"
 #include "utils/MathUtil.hpp"
+#include "entities/SolidEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 OpenGLSpotLight::OpenGLSpotLight(const Vector3& position, const Vector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
 {
@@ -118,17 +122,17 @@ void OpenGLSpotLight::RenderDummy()
 	vertices.push_back(glm::vec3(iconSize, 0, r));
 	vertices.push_back(glm::vec3(0,0,0));
 	vertices.push_back(glm::vec3(iconSize, 0, -r));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR, model);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR, model);
 	vertices.clear();
 	
 	for(unsigned int i=0; i<=steps; ++i)
 		vertices.push_back(glm::vec3(iconSize/2.f, cosf(i/(GLfloat)steps*2.f*M_PI)*r/2.f, sinf(i/(GLfloat)steps*2.f*M_PI)*r/2.f));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 	vertices.clear();
 	
 	for(unsigned int i=0; i<=steps; ++i)
 		vertices.push_back(glm::vec3(iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*r, sinf(i/(GLfloat)steps*2.f*M_PI)*r));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
@@ -148,8 +152,8 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
                    0.5f, 0.5f, 0.5f, 1.f);
     clipSpace = bias * (proj * view);
 	
-	OpenGLContent::getInstance()->SetProjectionMatrix(proj);
-	OpenGLContent::getInstance()->SetViewMatrix(view);
+	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(proj);
+	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(view);
 	
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
     glViewport(0, 0, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE);
@@ -169,4 +173,4 @@ void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 	OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);*/
 }
 
-
+}

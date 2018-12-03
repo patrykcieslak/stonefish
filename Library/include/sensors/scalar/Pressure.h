@@ -13,17 +13,16 @@
 
 namespace sf
 {
-
-class Pressure : public LinkSensor
-{
-public:
-    Pressure(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
-    
-    void InternalUpdate(Scalar dt);
-    void SetRange(Scalar max);
-    void SetNoise(Scalar pressureStdDev);
-};
-    
+    //!
+    class Pressure : public LinkSensor
+    {
+    public:
+        Pressure(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        
+        void InternalUpdate(Scalar dt);
+        void SetRange(Scalar max);
+        void SetNoise(Scalar pressureStdDev);
+    };
 }
 
 #endif

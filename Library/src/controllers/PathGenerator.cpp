@@ -3,14 +3,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/06/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "controllers/PathGenerator.h"
 
-#include "graphics/Console.h"
+#include "core/Console.h"
+#include "graphics/OpenGLPipeline.h"
 
-using namespace sf;
+namespace sf
+{
 
 PathGenerator::PathGenerator()
 {
@@ -93,4 +95,6 @@ bool PathGenerator::isRenderable()
 void PathGenerator::setRenderable(bool render)
 {
     renderable = render;
+}
+
 }

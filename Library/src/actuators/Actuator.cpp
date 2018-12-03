@@ -9,6 +9,7 @@
 #include "actuators/Actuator.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf

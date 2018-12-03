@@ -9,9 +9,12 @@
 #include "sensors/vision/Camera.h"
 
 #include "core/SimulationApp.h"
+#include "core/Console.h"
 #include "utils/MathUtil.hpp"
+#include "entities/SolidEntity.h"
 
-using namespace sf;
+namespace sf
+{
 
 Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
 {
@@ -80,8 +83,6 @@ void Camera::UpdateTransform()
     Vector3 direction = cameraTransform.getBasis().getColumn(2); //Z
     Vector3 cameraUp = -cameraTransform.getBasis().getColumn(1); //-Y
     
-    bool zUp = SimulationApp::getApp()->getSimulationManager()->isZAxisUp();
-    
     //additional camera rotation
     /*glm::vec3 tiltAxis = glm::normalize(glm::cross(dir, up));
     glm::vec3 panAxis = glm::normalize(glm::cross(tiltAxis, dir));
@@ -95,19 +96,12 @@ void Camera::UpdateTransform()
     currentUp = glm::rotate(currentUp, pan, panAxis);
 	currentUp = glm::normalize(currentUp);*/
     
-    if(zUp)
-    {
-        SetupCamera(eyePosition, direction, cameraUp);
-    }
-    else
-    {
-        Matrix3 rotation;
-        rotation.setEulerYPR(0,M_PI,0);
-        Vector3 rotEyePosition = rotation * eyePosition;
-        Vector3 rotDirection = rotation * direction;
-        Vector3 rotCameraUp = rotation * cameraUp;
-        SetupCamera(rotEyePosition, rotDirection, rotCameraUp);
-    }
+    Matrix3 rotation;
+    rotation.setEulerYPR(0,M_PI,0);
+    Vector3 rotEyePosition = rotation * eyePosition;
+    Vector3 rotDirection = rotation * direction;
+    Vector3 rotCameraUp = rotation * cameraUp;
+    SetupCamera(rotEyePosition, rotDirection, rotCameraUp);
 }
 
 std::vector<Renderable> Camera::Render()
@@ -149,4 +143,6 @@ std::vector<Renderable> Camera::Render()
     
     items.push_back(item);
     return items;
+}
+
 }

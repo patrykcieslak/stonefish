@@ -8,7 +8,12 @@
 
 #include "sensors/vision/ColorCamera.h"
 
-using namespace sf;
+#include "core/GraphicalSimulationApp.h"
+#include "graphics/OpenGLRealCamera.h"
+#include "graphics/OpenGLContent.h"
+
+namespace sf
+{
 
 ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency, uint32_t spp, bool ao)
     : Camera(uniqueName, resX, resY, horizFOVDeg, frequency)
@@ -23,7 +28,7 @@ ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, S
     UpdateTransform();
     glCamera->UpdateTransform();
     InternalUpdate(0);
-    OpenGLContent::getInstance()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
 }
 
 ColorCamera::~ColorCamera()
@@ -61,4 +66,6 @@ void ColorCamera::NewDataReady()
 void ColorCamera::InternalUpdate(Scalar dt)
 {
     glCamera->Update();
+}
+
 }

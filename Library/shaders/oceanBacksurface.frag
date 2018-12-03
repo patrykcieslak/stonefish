@@ -16,7 +16,7 @@ uniform float cosSunSize;
 
 in vec4 fragPos;
 layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec3 fragNormal;
+layout(location = 1) out vec4 fragNormal;
 
 //Atmosphere
 vec3 GetSolarLuminance();
@@ -149,4 +149,5 @@ void main()
     vec3 fogColor = Isky/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z)) * 0.2;
     float fogFactor = 1.0 - exp(-(turbidity/1000.0)*distance);
     fragColor = mix(fragColor, fogColor, fogFactor);
+    fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0); //fragNormal = vec4(normalize(MV * normal), 1.0);
 }

@@ -10,9 +10,14 @@
 
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
+#include "entities/SolidEntity.h"
 #include "utils/MathUtil.hpp"
+#include "sensors/Sample.h"
+#include "graphics/OpenGLPipeline.h"
 
-using namespace sf;
+namespace sf
+{
 
 DVL::DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
@@ -116,4 +121,6 @@ void DVL::SetNoise(Scalar velocityStdDev, Scalar altitudeStdDev)
     channels[1].setStdDev(velocityStdDev);
     channels[2].setStdDev(velocityStdDev);
     channels[3].setStdDev(altitudeStdDev);
+}
+
 }

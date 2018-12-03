@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPointLight.h"
@@ -11,7 +11,8 @@
 #include "core/SimulationManager.h"
 #include "utils/MathUtil.hpp"
 
-using namespace sf;
+namespace sf
+{
 
 OpenGLPointLight::OpenGLPointLight(const Vector3& position, glm::vec4 color) : OpenGLLight(position, color)
 {
@@ -47,17 +48,17 @@ void OpenGLPointLight::RenderDummy()
 	
 	for(unsigned int i=0; i<=steps; ++i)
 		vertices.push_back(glm::vec3(sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize, 0.f));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 	vertices.clear();
 	
 	for(unsigned int i=0; i<=steps; ++i)
 		vertices.push_back(glm::vec3(0.f, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize, sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 	vertices.clear();
 	
 	for(unsigned int i=0; i<=steps; ++i)
 		vertices.push_back(glm::vec3(sinf(i/(GLfloat)steps*2.f*M_PI)*iconSize, 0.f, cosf(i/(GLfloat)steps*2.f*M_PI)*iconSize));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
+	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
 void OpenGLPointLight::BakeShadowmap(OpenGLPipeline* pipe)
@@ -68,4 +69,6 @@ void OpenGLPointLight::BakeShadowmap(OpenGLPipeline* pipe)
 void OpenGLPointLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 {
     
+}
+
 }

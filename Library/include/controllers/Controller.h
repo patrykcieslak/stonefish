@@ -13,38 +13,37 @@
 
 namespace sf
 {
-
-typedef enum {CONTROLLER_FEEDBACK, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} ControllerType;
-
-/*! Abstract class representing a general controller */
-class Controller
-{
-public:
-    Controller(std::string uniqueName, Scalar frequency);
-    virtual ~Controller();
+    //!
+    typedef enum {CONTROLLER_FEEDBACK, CONTROLLER_PATHFOLLOWING, CONTROLLER_CUSTOM} ControllerType;
     
-    void Start();
-    void Stop();
-    void Update(Scalar dt);
-    virtual void Reset() = 0;
-    
-    Scalar getFrequency();
-    Scalar getRunningTime();
-    std::string getName();
-    virtual ControllerType getType() = 0;
-    
-protected:
-    virtual void Tick(Scalar dt) = 0;
-    
-    Scalar freq;
-    Scalar runningTime;
-    
-private:
-    std::string name;
-    Scalar eleapsedTime;
-    bool running;
-};
-    
+    //! Abstract class representing a general controller.
+    class Controller
+    {
+    public:
+        Controller(std::string uniqueName, Scalar frequency);
+        virtual ~Controller();
+        
+        void Start();
+        void Stop();
+        void Update(Scalar dt);
+        virtual void Reset() = 0;
+        
+        Scalar getFrequency();
+        Scalar getRunningTime();
+        std::string getName();
+        virtual ControllerType getType() = 0;
+        
+    protected:
+        virtual void Tick(Scalar dt) = 0;
+        
+        Scalar freq;
+        Scalar runningTime;
+        
+    private:
+        std::string name;
+        Scalar eleapsedTime;
+        bool running;
+    };
 }
 
 #endif

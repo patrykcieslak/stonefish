@@ -136,11 +136,12 @@ in vec3 fragPos;
 in vec3 eyeSpaceNormal;
 
 layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec3 fragNormal;
+layout(location = 1) out vec4 fragNormal;
 
 uniform vec3 eyePos;
 uniform vec3 viewDir;
 uniform vec4 color;
+uniform float reflectivity;
 uniform sampler2D tex;
 
 uniform PointLight pointLights[MAX_POINT_LIGHTS];
@@ -377,5 +378,5 @@ void main()
 		fragColor += calcSpotLightContribution(i, N, toEye, albedo);
 		
 	//Normal
-	fragNormal = normalize(eyeSpaceNormal) * 0.5 + 0.5;
+	fragNormal = vec4(normalize(eyeSpaceNormal) * 0.5 + 0.5, reflectivity);
 }
