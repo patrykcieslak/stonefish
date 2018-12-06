@@ -10,7 +10,6 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "utils/MathUtil.hpp"
 
 namespace sf
 {
@@ -67,7 +66,7 @@ std::vector<Vertex>* Compound::getMeshVertices()
                                      * parts[i].solid->getCG2OTransform().inverse()
                                      * parts[i].solid->getCG2CTransform());
             
-            glm::mat4 glTrans = glMatrixFromBtTransform(phyMeshTrans);
+            glm::mat4 glTrans = glMatrixFromTransform(phyMeshTrans);
             
             for(size_t h=0; h < pPartVert->size(); ++h)
             {
@@ -363,18 +362,18 @@ std::vector<Renderable> Compound::Render()
 	{
         Renderable item;
         item.type = RenderableType::SOLID_CS;
-        item.model = glMatrixFromBtTransform(getCGTransform());
+        item.model = glMatrixFromTransform(getCGTransform());
         items.push_back(item);
         
         Vector3 cbWorld = getCGTransform() * P_CB;
         item.type = RenderableType::HYDRO_CS;
-        item.model = glMatrixFromBtTransform(Transform(Quaternion::getIdentity(), cbWorld));
+        item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         item.points.push_back(glm::vec3(volume, volume, volume));
         items.push_back(item);
         item.points.clear();
         
         item.type = RenderableType::HYDRO_ELLIPSOID;
-        item.model = glMatrixFromBtTransform(getHTransform());
+        item.model = glMatrixFromTransform(getHTransform());
         item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
         items.push_back(item);
         item.points.clear();
@@ -387,7 +386,7 @@ std::vector<Renderable> Compound::Render()
 			Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
 			item.objectId = parts[i].solid->getObject();
 			item.lookId = parts[i].solid->getLook();
-			item.model = glMatrixFromBtTransform(oTrans);
+			item.model = glMatrixFromTransform(oTrans);
 			items.push_back(item);
 		}
 	}

@@ -11,9 +11,10 @@
 #include <chrono>
 #include <thread>
 #include "core/SimulationManager.h"
+#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLConsole.h"
 #include "graphics/IMGUI.h"
-#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLTrackball.h"
 #include "utils/SystemUtil.hpp"
 #include "entities/Entity.h"

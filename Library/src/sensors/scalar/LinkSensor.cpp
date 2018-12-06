@@ -8,7 +8,6 @@
 
 #include "sensors/scalar/LinkSensor.h"
 
-#include "utils/MathUtil.hpp"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
 
@@ -62,7 +61,7 @@ std::vector<Renderable> LinkSensor::Render()
 
     Renderable item;
     item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromBtTransform(getSensorFrame());
+    item.model = glMatrixFromTransform(getSensorFrame());
     items.push_back(item);
 
     return items;

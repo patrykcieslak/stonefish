@@ -98,14 +98,14 @@ void PrismaticJoint::ApplyDamping()
         }
     }
 }
-
-bool PrismaticJoint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
+    
+std::vector<Renderable> PrismaticJoint::Render()
 {
-    return true;
-}
-
-Vector3 PrismaticJoint::Render()
-{
+    std::vector<Renderable> items(0);
+    Renderable item;
+    item.model = glm::mat4(1.f);
+    item.type = RenderableType::JOINT_LINES;
+    
     btTypedConstraint* slider = getConstraint();
     Vector3 A = slider->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = slider->getRigidBodyB().getCenterOfMassPosition();
@@ -118,21 +118,16 @@ Vector3 PrismaticJoint::Render()
     Vector3 C1 = pivot + e1 * axis;
     Vector3 C2 = pivot + e2 * axis;
     
-    /*std::vector<glm::vec3> vertices;
-	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	vertices.clear();
+	item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+	item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+	item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
 	
-	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	glEnable(GL_LINE_STIPPLE);
-    //OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	glDisable(GL_LINE_STIPPLE);*/
-    
-    return (C1+C2)/Scalar(2.);
+	item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+	
+    items.push_back(item);
+    return items;
 }
 
 }

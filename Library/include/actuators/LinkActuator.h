@@ -41,8 +41,11 @@ namespace sf
          */
         void AttachToSolid(SolidEntity* solid, const Transform& origin);
         
+        //! A method returning actuator frame in the world frame.
+        Transform getActuatorFrame();
+        
         //! A method returning the type of the actuator.
-        ActuatorType getType();
+        virtual ActuatorType getType();
         
     protected:
         SolidEntity* attach;

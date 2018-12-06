@@ -8,9 +8,7 @@
 
 #include "JointsTestApp.h"
 
-#include <graphics/OpenGLTrackball.h>
-
-JointsTestApp::JointsTestApp(std::string dataDirPath, RenderSettings s, JointsTestManager* sim)
-    : GraphicalSimulationApp("Joints Test", dataDirPath, s, sim)
+JointsTestApp::JointsTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, JointsTestManager* sim)
+    : GraphicalSimulationApp("Joints Test", dataDirPath, s, h, sim)
 {
 }

@@ -9,8 +9,8 @@
 #include "entities/statics/Obstacle.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "utils/MathUtil.hpp"
 
 namespace sf
 {
@@ -22,12 +22,12 @@ Obstacle::Obstacle(std::string uniqueName,
 {
     
     graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, smoothGraphicsNormals);
-    transformMesh(graMesh, graphicsOrigin);
+    OpenGLContent::TransformMesh(graMesh, graphicsOrigin);
     
     if(physicsFilename != "")
     {
         phyMesh = OpenGLContent::LoadMesh(physicsFilename, physicsScale, false);
-        transformMesh(phyMesh, physicsOrigin);
+        OpenGLContent::TransformMesh(phyMesh, physicsOrigin);
     }
     else
         phyMesh = graMesh;

@@ -10,6 +10,7 @@
 
 #include "core/Console.h"
 #include "core/GraphicalSimulationApp.h"
+#include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLPipeline.h"
 
 namespace sf

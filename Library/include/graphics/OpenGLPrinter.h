@@ -12,7 +12,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <map>
-#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLDataStructs.h"
 
 //Standard font
 #ifdef __linux__
@@ -35,6 +35,8 @@ namespace sf
         glm::vec2 bearing;
         GLfloat offset;
     };
+    
+    class GLSLShader;
     
     //!
     class OpenGLPrinter

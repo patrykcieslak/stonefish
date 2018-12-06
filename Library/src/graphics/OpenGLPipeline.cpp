@@ -11,13 +11,13 @@
 #include "core/SimulationManager.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLContent.h"
+#include "graphics/OpenGLOcean.h"
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "core/Console.h"
-#include "utils/MathUtil.hpp"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
 #include "controllers/PathGenerator.h"
@@ -154,6 +154,9 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
                 ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
             else if(content->getView(i)->getType() == ViewType::DEPTH_CAMERA)
                 ((OpenGLDepthCamera*)content->getView(i))->UpdateTransform();
+        //Update light transforms to ensure consistency
+        for(unsigned int i=0; i < content->getLightsCount(); ++i)
+            content->getLight(i)->UpdateTransform();
         drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
         SDL_UnlockMutex(drawingQueueMutex);
     }
@@ -184,12 +187,21 @@ void OpenGLPipeline::DrawHelpers()
     {
         content->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 1.f);
         
-        //Solids & multibody axes
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
                 content->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
-            else if(drawingQueueCopy[h].type == RenderableType::MULTIBODY_AXIS)
+        }
+    }
+    
+    //Discrete and multibody joints
+    if(hSettings.showJoints)
+    {
+        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        {
+            if(drawingQueueCopy[h].type == RenderableType::MULTIBODY_AXIS)
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f));
+            else if(drawingQueueCopy[h].type == RenderableType::JOINT_LINES)
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f));
         }
     }
@@ -197,7 +209,7 @@ void OpenGLPipeline::DrawHelpers()
     //Sensors
     if(hSettings.showSensors)
     {
-        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
                 content->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
@@ -213,7 +225,7 @@ void OpenGLPipeline::DrawHelpers()
     //Actuators
     if(hSettings.showActuators)
     {
-        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
@@ -223,7 +235,7 @@ void OpenGLPipeline::DrawHelpers()
     //Fluid dynamics
     if(hSettings.showFluidDynamics)
     {
-        for(unsigned int h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             switch(drawingQueueCopy[h].type)
             {
@@ -531,12 +543,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     glDisable(GL_STENCIL_TEST);
                     
-                    camera->GenerateLinearDepth(0);
+                    //camera->GenerateLinearDepth(0);
                     
                     //Go to postprocessing stage
                     camera->EnterPostprocessing();
-                    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-                    camera->DrawSSR();
+                    //glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+                    //camera->DrawSSR();
                 }
             
                 //Post-processing
@@ -568,9 +580,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
                     atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.05f);*/
                     
-                    camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
-                    camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
-                    camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200));
+                    //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
+                    //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
+                    //camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200));
                     
                     //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
                     //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);

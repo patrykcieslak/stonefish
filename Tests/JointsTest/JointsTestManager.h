@@ -11,10 +11,10 @@
 
 #include <core/SimulationManager.h>
 
-class JointsTestManager : public SimulationManager
+class JointsTestManager : public sf::SimulationManager
 {
 public:
-    JointsTestManager(Scalar stepsPerSecond);
+    JointsTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario();
 };

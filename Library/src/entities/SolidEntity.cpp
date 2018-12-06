@@ -11,8 +11,8 @@
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/Console.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
 
@@ -76,52 +76,33 @@ EntityType SolidEntity::getType()
 
 void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != NULL || multibodyCollider != NULL)
     {
-        Scalar oldMass = this->mass;
-        this->mass = mass;
-        Ipri *= this->mass/oldMass;
-        rigidBody->setMassProps(this->mass, Ipri);
+        cWarning("Physical properties of bodies cannot be changed after adding to simulation!");
+        return;
     }
-    else if(multibodyCollider == NULL) 
-    {
-        Scalar oldMass = this->mass;
-        this->mass = mass;
-        Ipri *= this->mass/oldMass;        
-    }
+    
+    Scalar oldMass = this->mass;
+    this->mass = mass;
+    Ipri *= this->mass/oldMass;
 }
 
 void SolidEntity::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& CG)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != NULL || multibodyCollider != NULL)
     {
-        this->mass = mass;
-        Ipri = inertia;
-        rigidBody->setMassProps(this->mass, Ipri);
-        
-        Transform T_CG_old_new = T_CG2O * CG; //Transform from old CG to new CG
-        T_CG2O = CG.inverse(); //Set new CG in body origin frame
-        T_CG2C = T_CG2O * T_O2C;
-        T_CG2G = T_CG2O * T_O2G;
-        T_CG2H = T_CG_old_new.inverse() * T_CG2H;
-        P_CB = T_CG_old_new.inverse() * P_CB;
-        rigidBody->setCenterOfMassTransform(rigidBody->getCenterOfMassTransform() * T_CG_old_new);
-        
-        btCompoundShape* colShape = (btCompoundShape*)rigidBody->getCollisionShape();
-        colShape->updateChildTransform(0, T_CG2C);
+        cWarning("Physical properties of bodies cannot be changed after adding to simulation!");
+        return;
     }
-    else if(multibodyCollider == NULL)
-    {
-        this->mass = mass;
-        Ipri = inertia;
-        
-        Transform T_CG_old_new = T_CG2O * CG; //Transform from old CG to new CG
-        T_CG2O = CG.inverse(); //Set new CG in body origin frame
-        T_CG2C = T_CG2O * T_O2C;
-        T_CG2G = T_CG2O * T_O2G;
-        T_CG2H = T_CG_old_new.inverse() * T_CG2H;
-        P_CB = T_CG_old_new.inverse() * P_CB;
-    }
+    
+    this->mass = mass;
+    Ipri = inertia;
+    Transform T_CG_old_new = T_CG2O * CG; //Transform from old CG to new CG
+    T_CG2O = CG.inverse(); //Set new CG in body origin frame
+    T_CG2C = T_CG2O * T_O2C;
+    T_CG2G = T_CG2O * T_O2G;
+    T_CG2H = T_CG_old_new.inverse() * T_CG2H;
+    P_CB = T_CG_old_new.inverse() * P_CB;
 }
 
 void SolidEntity::SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB)
@@ -181,16 +162,16 @@ std::vector<Renderable> SolidEntity::Render()
 		item.type = RenderableType::SOLID;
         item.objectId = graObjectId;
 		item.lookId = lookId;
-		item.model = glMatrixFromBtTransform(getGTransform());
+		item.model = glMatrixFromTransform(getGTransform());
 		items.push_back(item);
         
         item.type = RenderableType::SOLID_CS;
-        item.model = glMatrixFromBtTransform(getCGTransform());
+        item.model = glMatrixFromTransform(getCGTransform());
         items.push_back(item);
         
         Vector3 cbWorld = getCGTransform() * P_CB;
         item.type = RenderableType::HYDRO_CS;
-        item.model = glMatrixFromBtTransform(Transform(Quaternion::getIdentity(), cbWorld));
+        item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         item.points.push_back(glm::vec3(volume, volume, volume));
         items.push_back(item);
         item.points.clear();
@@ -202,21 +183,21 @@ std::vector<Renderable> SolidEntity::Render()
                 
             case HYDRO_PROXY_SPHERE:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.model = glMatrixFromBtTransform(getHTransform());
+                item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0]));
                 items.push_back(item);
                 break;
                 
             case HYDRO_PROXY_CYLINDER:
                 item.type = RenderableType::HYDRO_CYLINDER;
-                item.model = glMatrixFromBtTransform(getHTransform());
+                item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1]));
                 items.push_back(item);
                 break;
                 
             case HYDRO_PROXY_ELLIPSOID:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.model = glMatrixFromBtTransform(getHTransform());
+                item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
                 items.push_back(item);
                 break;

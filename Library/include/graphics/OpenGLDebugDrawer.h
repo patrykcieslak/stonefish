@@ -10,7 +10,8 @@
 #define __Stonefish_OpenGLDebugDrawer__
 
 #include <LinearMath/btIDebugDraw.h>
-#include "graphics/OpenGLContent.h"
+#include "StonefishCommon.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {

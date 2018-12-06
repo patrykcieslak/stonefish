@@ -9,7 +9,7 @@
 #include "entities/forcefields/Trigger.h"
 
 #include "core/GraphicalSimulationApp.h"
-#include "utils/MathUtil.hpp"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf
@@ -133,7 +133,7 @@ std::vector<Renderable> Trigger::Render()
         item.type = RenderableType::SOLID;
 		item.objectId = objectId;
 		item.lookId = look;
-		item.model = glMatrixFromBtTransform(trans);
+		item.model = glMatrixFromTransform(trans);
 		items.push_back(item);
     }
 	

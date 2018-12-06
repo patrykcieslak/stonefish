@@ -9,9 +9,10 @@
 #ifndef __Stonefish_Ocean__
 #define __Stonefish_Ocean__
 
+#include <SDL2/SDL_mutex.h>
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
-#include "graphics/OpenGLOcean.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
@@ -26,6 +27,7 @@ namespace sf
     };
     
     class VelocityField;
+    class OpenGLOcean;
     
     class Ocean : public ForcefieldEntity
     {

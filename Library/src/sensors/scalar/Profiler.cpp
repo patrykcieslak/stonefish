@@ -11,7 +11,6 @@
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "utils/MathUtil.hpp"
 #include "utils/UnitSystem.h"
 #include "sensors/Sample.h"
 #include "graphics/OpenGLContent.h"
@@ -90,7 +89,7 @@ std::vector<Renderable> Profiler::Render()
     
     Renderable item;
     item.type = RenderableType::SENSOR_LINES;
-    item.model = glMatrixFromBtTransform(getSensorFrame());
+    item.model = glMatrixFromTransform(getSensorFrame());
     item.points.push_back(glm::vec3(0,0,0));
     item.points.push_back(glm::vec3(dir.x()*distance, dir.y()*distance, dir.z()*distance));
     items.push_back(item);

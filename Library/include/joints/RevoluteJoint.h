@@ -15,23 +15,24 @@ namespace sf
 {
     class SolidEntity;
     
-    //!
+    //! A class representing a revolute joint.
     class RevoluteJoint : public Joint
     {
     public:
         RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities = true);
         RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis);
-        RevoluteJoint(std::string uniqueName, btRigidBody* bodyA, btRigidBody* bodyB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities = true);
         
         void ApplyTorque(Scalar T);
+        
         void ApplyDamping();
+        
         bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
-        Vector3 Render();
+        
+        std::vector<Renderable> Render();
         
         void setDamping(Scalar constantFactor, Scalar viscousFactor);
         void setLimits(Scalar min, Scalar max);
         void setIC(Scalar angle);
-        
         Scalar getAngle();
         Scalar getAngularVelocity();
         JointType getType();

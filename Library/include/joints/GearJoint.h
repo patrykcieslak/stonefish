@@ -15,19 +15,16 @@ namespace sf
 {
     class SolidEntity;
     
+    //! A class representing a gear joint.
     class GearJoint : public Joint
     {
     public:
         GearJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axisA, const Vector3& axisB, Scalar ratio);
         
-        Vector3 Render();
+        std::vector<Renderable> Render();
         
         JointType getType();
         Scalar getRatio();
-        
-        //Not applicable
-        void ApplyDamping(){}
-        bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance){ return true; }
         
     private:
         Scalar gearRatio;

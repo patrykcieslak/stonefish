@@ -9,16 +9,12 @@
 #include "graphics/OpenGLPointLight.h"
 
 #include "core/SimulationManager.h"
-#include "utils/MathUtil.hpp"
+#include "graphics/GLSLShader.h"
 
 namespace sf
 {
 
-OpenGLPointLight::OpenGLPointLight(const Vector3& position, glm::vec4 color) : OpenGLLight(position, color)
-{
-}
-
-OpenGLPointLight::~OpenGLPointLight()
+OpenGLPointLight::OpenGLPointLight(glm::vec3 position, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, color, illuminance)
 {
 }
 
@@ -34,13 +30,13 @@ void OpenGLPointLight::InitShadowmap(GLint shadowmapLayer)
 void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
 	std::string lightUni = "pointLights[" + std::to_string(lightId) + "].";
-	shader->SetUniform(lightUni + "position", getPosition());
+    shader->SetUniform(lightUni + "position", getPosition());
 	shader->SetUniform(lightUni + "color", getColor());
 }
 
 void OpenGLPointLight::RenderDummy()
 {
-    glm::mat4 model = glm::translate(getPosition());
+    glm::mat4 model = getTransform();
     GLfloat iconSize = surfaceDistance;
     unsigned int steps = 24;
     

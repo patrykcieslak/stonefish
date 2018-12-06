@@ -19,34 +19,62 @@
 
 namespace sf
 {
-    //!
+    //! An enum representing the type of joint.
     typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL, JOINT_GEAR, JOINT_BELT, JOINT_SCREW} JointType;
     
+    struct Renderable;
     class SimulationManager;
     
-    //!
+    //! An abstract class implementing a general joint.
     class Joint
     {
     public:
+        //! A constructor.
+        /*!
+         \param uniqueName a name for the joint
+         \param collideLinkedEntities a flag that sets if the bodies connected by the joint should coliide
+         */
         Joint(std::string uniqueName, bool collideLinkedEntities = true);
+        
+        //! A destructor.
         virtual ~Joint();
         
-        virtual void ApplyDamping() = 0;
-        virtual bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance) = 0;
-        virtual Vector3 Render() = 0;
-        virtual JointType getType() = 0;
-        
+        //! A method used to add joint to the simulation.
+        /*!
+         \param sm a pointer to the simulation manager
+         */
         void AddToSimulation(SimulationManager* sm);
         
-        void setRenderable(bool render);
-        btTypedConstraint* getConstraint();
+        //! A method applying damping to the joint.
+        virtual void ApplyDamping();
         
-        //In the world frame
-        Scalar getFeedback(unsigned int dof);
+        //! A method that solves initial conditions problem for the joint.
+        /*!
+         \param linearTolerance a value of the tolerance in position (termination condition)
+         \param angularTolerance a value of the tolerance in rotation (termination condition)
+         */
+        virtual bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
         
+        //! A method implementing the rendering of the joint.
+        virtual std::vector<Renderable> Render();
+        
+        //! A method returning the type of the joint.
+        virtual JointType getType() = 0;
+        
+        //! A method returning the name of the joint.
         std::string getName();
         
-        bool isRenderable();
+        //! A method returning the internal constraint.
+        btTypedConstraint* getConstraint();
+        
+        //! A method returning joint feedback in the world frame.
+        /*!
+         \param dof degree of freedom for which the feedback is desired
+         \return value of force/torque for the specified degree of freedom
+         */
+        Scalar getFeedback(unsigned int dof);
+        
+        //! A method that informs if the joint is of multibody type.
         bool isMultibodyJoint();
         
     protected:
@@ -55,7 +83,6 @@ namespace sf
         
     private:
         std::string name;
-        bool renderable;
         bool collisionEnabled;
         btTypedConstraint* constraint;
         btMultiBodyConstraint* mbConstraint;

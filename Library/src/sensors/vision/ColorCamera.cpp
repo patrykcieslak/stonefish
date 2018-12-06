@@ -10,6 +10,7 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLRealCamera.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf

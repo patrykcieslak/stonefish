@@ -11,16 +11,20 @@
 
 int main(int argc, const char * argv[])
 {
-    RenderSettings s;
+    sf::RenderSettings s;
     s.windowW = 800;
     s.windowH = 600;
-    s.shadows = RenderQuality::QUALITY_MEDIUM;
-    s.ao = RenderQuality::QUALITY_DISABLED;
-    s.atmosphere = RenderQuality::QUALITY_MEDIUM;
-    s.ocean = RenderQuality::QUALITY_DISABLED;
+    s.shadows = sf::RenderQuality::QUALITY_MEDIUM;
+    s.ao = sf::RenderQuality::QUALITY_DISABLED;
+    s.atmosphere = sf::RenderQuality::QUALITY_MEDIUM;
+    s.ocean = sf::RenderQuality::QUALITY_DISABLED;
     
-    JointsTestManager* simulationManager = new JointsTestManager(500.0);
-    JointsTestApp app("../../../../Library/data", s, simulationManager);
+    sf::HelperSettings h;
+    h.showJoints = true;
+    
+    JointsTestManager* simulationManager = new JointsTestManager(100.0);
+    JointsTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/",
+                      s, h, simulationManager);
     app.Run();
     
     return 0;

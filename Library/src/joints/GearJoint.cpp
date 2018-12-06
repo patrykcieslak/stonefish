@@ -36,8 +36,13 @@ Scalar GearJoint::getRatio()
     return gearRatio;
 }
 
-Vector3 GearJoint::Render()
+std::vector<Renderable> GearJoint::Render()
 {
+    std::vector<Renderable> items(0);
+    Renderable item;
+    item.model = glm::mat4(1.f);
+    item.type = RenderableType::JOINT_LINES;
+    
     btGearConstraint* gear = (btGearConstraint*)getConstraint();
     Vector3 axisA = gear->getRigidBodyA().getCenterOfMassTransform().getBasis() * gear->getAxisA();
     Vector3 axisB = gear->getRigidBodyB().getCenterOfMassTransform().getBasis() * gear->getAxisB();
@@ -63,28 +68,30 @@ Vector3 GearJoint::Render()
     
     rAn = rBn/gearRatio;
     
-    //circle A
-	/*std::vector<glm::vec3> vertices;
-	for(unsigned short i=0; i<=24; ++i)
+    //Circle A
+	for(unsigned short i=0; i<24; ++i)
 	{
-		Vector3 pd = A + rA.rotate(axisA, i/Scalar(12.) * M_PI) * rAn;
-		glm::vec3 p = glm::vec3((GLfloat)pd.getX(), (GLfloat)pd.getY(), (GLfloat)pd.getZ()); 
-		vertices.push_back(p);
+		Vector3 pd1 = A + rA.rotate(axisA, i/Scalar(12.) * M_PI) * rAn;
+        Vector3 pd2 = A + rA.rotate(axisA, (i+1)/Scalar(12.) * M_PI) * rAn;
+		glm::vec3 p1 = glm::vec3((GLfloat)pd1.getX(), (GLfloat)pd1.getY(), (GLfloat)pd1.getZ());
+        glm::vec3 p2 = glm::vec3((GLfloat)pd2.getX(), (GLfloat)pd2.getY(), (GLfloat)pd2.getZ());
+        item.points.push_back(p1);
+        item.points.push_back(p2);
 	}
-	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
-	vertices.clear();
 	
-    //circle B
-    for(unsigned short i=0; i<=24; ++i)
+    //Circle B
+    for(unsigned short i=0; i<24; ++i)
 	{
-		Vector3 pd = B + rB.rotate(axisB, i/Scalar(12.) * M_PI) * rBn;
-		glm::vec3 p = glm::vec3((GLfloat)pd.getX(), (GLfloat)pd.getY(), (GLfloat)pd.getZ()); 
-		vertices.push_back(p);
+        Vector3 pd1 = B + rB.rotate(axisB, i/Scalar(12.) * M_PI) * rBn;
+        Vector3 pd2 = B + rB.rotate(axisB, (i+1)/Scalar(12.) * M_PI) * rBn;
+        glm::vec3 p1 = glm::vec3((GLfloat)pd1.getX(), (GLfloat)pd1.getY(), (GLfloat)pd1.getZ());
+        glm::vec3 p2 = glm::vec3((GLfloat)pd2.getX(), (GLfloat)pd2.getY(), (GLfloat)pd2.getZ());
+        item.points.push_back(p1);
+        item.points.push_back(p2);
 	}
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR);
-	*/
     
-    return B + rBn*rBp;
+    items.push_back(item);
+    return items;
 }
 
 }

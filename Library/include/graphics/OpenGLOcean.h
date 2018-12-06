@@ -32,6 +32,8 @@ namespace sf
         float t;
     };
     
+    class GLSLShader;
+    
     //!
     class OpenGLOcean
     {

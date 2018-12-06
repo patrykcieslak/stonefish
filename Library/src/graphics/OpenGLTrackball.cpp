@@ -9,32 +9,25 @@
 #include "graphics/OpenGLTrackball.h"
 
 #include "core/SimulationApp.h"
-#include "utils/MathUtil.hpp"
 #include "entities/SolidEntity.h"
 
 namespace sf
 {
 
-OpenGLTrackball::OpenGLTrackball(const Vector3& centerPosition, Scalar orbitRadius, const Vector3& up, GLint x, GLint y, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
+OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
+                                 GLint x, GLint y, GLint width, GLint height, GLfloat horizontalFovDeg,
+                                 GLfloat horizonDistance, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizonDistance, spp, sao)
 {
-	this->up = glm::normalize(glm::vec3((GLfloat)up.getX(), (GLfloat)up.getY(), (GLfloat)up.getZ()));
+	this->up = glm::normalize(up);
     rotation = glm::rotation(this->up, glm::vec3(0,0,1.f));
-	
-    Vector3 _center = centerPosition;
-	center = glm::vec3((GLfloat)_center.getX(), (GLfloat)_center.getY(), (GLfloat)_center.getZ());
-	radius = (GLfloat)orbitRadius;
-    fovx = fov/180.f*M_PI;
+    center = centerPosition;
+	radius = orbitRadius;
+    fovx = horizontalFovDeg/180.f*M_PI;
     projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
-    
 	dragging = false;
     transMode = false;
     holdingEntity = NULL;
-    
     UpdateTrackballTransform();
-}
-
-OpenGLTrackball::~OpenGLTrackball()
-{
 }
 
 ViewType OpenGLTrackball::getType()
@@ -67,7 +60,7 @@ void OpenGLTrackball::UpdateTrackballTransform()
 {
 	if(holdingEntity != NULL)
     {
-		glm::mat4 solidTrans = glMatrixFromBtTransform(holdingEntity->getCGTransform());
+		glm::mat4 solidTrans = glMatrixFromTransform(holdingEntity->getCGTransform());
         center = glm::vec3(solidTrans[3]);
 	}
 	
@@ -142,14 +135,13 @@ glm::mat4 OpenGLTrackball::GetViewMatrix() const
 	return trackballTransform;
 }
 
-void OpenGLTrackball::Rotate(const Quaternion& rot)
+void OpenGLTrackball::Rotate(glm::quat rot)
 {
-	glm::quat _rot((GLfloat)rot[0], (GLfloat)rot[1], (GLfloat)rot[2], (GLfloat)rot[3]);
-	rotation = glm::rotation(this->up,  glm::vec3(0,0,1.f)) * _rot;
+	rotation = glm::rotation(up,  glm::vec3(0,0,1.f)) * rot;
     UpdateTrackballTransform();
 }
 
-void OpenGLTrackball::MoveCenter(const glm::vec3& step)
+void OpenGLTrackball::MoveCenter(glm::vec3 step)
 {
     center += step;
     UpdateTrackballTransform();

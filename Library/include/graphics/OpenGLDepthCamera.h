@@ -13,6 +13,7 @@
 
 namespace sf
 {
+    class GLSLShader;
     class DepthCamera;
     class SolidEntity;
     
@@ -20,7 +21,9 @@ namespace sf
     class OpenGLDepthCamera : public OpenGLView
     {
     public:
-        OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat minDepth, GLfloat maxDepth);
+        OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
+                          GLint originX, GLint originY, GLint width, GLint height,
+                          GLfloat horizontalFovDeg, GLfloat minDepth, GLfloat maxDepth);
         ~OpenGLDepthCamera();
         
         void DrawLDR(GLuint destinationFBO);

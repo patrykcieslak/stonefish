@@ -9,6 +9,7 @@
 #include "graphics/OpenGLConsole.h"
 
 #include "utils/SystemUtil.hpp"
+#include "graphics/GLSLShader.h"
 #include "graphics/IMGUI.h"
 #include "graphics/OpenGLPrinter.h"
 #include "utils/stb_image.h"

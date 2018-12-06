@@ -8,9 +8,9 @@
 
 #include "entities/solids/Polyhedron.h"
 
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "utils/SystemUtil.hpp"
-#include "utils/MathUtil.hpp"
 
 namespace sf
 {
@@ -269,7 +269,10 @@ Polyhedron::Polyhedron(std::string uniqueName,
     }
     
     //6.Calculate AABB
-    OpenGLContent::AABB(phyMesh, aabb[0], aabb[1]);
+    glm::vec3 aabbMin, aabbMax;
+    OpenGLContent::AABB(phyMesh, aabbMin, aabbMax);
+    aabb[0] = Vector3(aabbMin.x, aabbMin.y, aabbMin.z);
+    aabb[1] = Vector3(aabbMax.x, aabbMax.y, aabbMax.z);
     mass = volume*mat.density;
     
     //7.Calculate equivalent ellipsoid for hydrodynamic force computation

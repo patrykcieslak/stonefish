@@ -10,8 +10,8 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/GLSLShader.h"
 #include "graphics/OpenGLContent.h"
-#include "utils/MathUtil.hpp"
 #include "entities/SolidEntity.h"
 
 namespace sf
@@ -136,7 +136,7 @@ std::vector<Renderable> Thruster::Render()
     item.type = RenderableType::SOLID;
     item.objectId = prop->getObject();
     item.lookId = prop->getLook();
-	item.model = glMatrixFromBtTransform(thrustTrans);
+	item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
     
     item.type = RenderableType::ACTUATOR_LINES;

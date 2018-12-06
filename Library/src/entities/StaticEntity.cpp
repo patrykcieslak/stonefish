@@ -10,8 +10,8 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "utils/MathUtil.hpp"
 
 namespace sf
 {
@@ -96,7 +96,7 @@ std::vector<Renderable> StaticEntity::Render()
         item.type = RenderableType::SOLID;
 		item.objectId = objectId;
 		item.lookId = lookId;
-		item.model = glMatrixFromBtTransform(trans);
+		item.model = glMatrixFromTransform(trans);
 		items.push_back(item);
     }
 	

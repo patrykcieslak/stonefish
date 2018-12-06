@@ -25,6 +25,8 @@
 #include "core/ResearchDynamicsWorld.h"
 #include "core/ResearchConstraintSolver.h"
 #include "core/Console.h"
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLTrackball.h"
 #include "graphics/OpenGLDebugDrawer.h"
 #include "utils/SystemUtil.hpp"
@@ -42,6 +44,7 @@
 #include "entities/statics/Plane.h"
 #include "joints/Joint.h"
 #include "actuators/Actuator.h"
+#include "actuators/Light.h"
 #include "sensors/Sensor.h"
 #include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
@@ -90,6 +93,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
 SimulationManager::~SimulationManager()
 {
 	DestroyScenario();
+    if(atmosphere != NULL) delete atmosphere;
     SDL_DestroyMutex(simSettingsMutex);
     SDL_DestroyMutex(simInfoMutex);
     SDL_DestroyMutex(simHydroMutex);
@@ -618,8 +622,8 @@ void SimulationManager::InitializeScenario()
 	if(SimulationApp::getApp()->hasGraphics())
 	{
 		GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-		trackball = new OpenGLTrackball(Vector3(0,0,1.0), 1.0, Vector3(0,0, 1.0), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 10000.f, 4, true);
-		trackball->Rotate(Quaternion(0.25, 0.0, 0.0));
+        trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,1.f), 1.0, glm::vec3(0.f,0.f,1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 10000.f, 4, true);
+        trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
 	}
 }
@@ -677,12 +681,6 @@ void SimulationManager::DestroyScenario()
         delete ocean;
 		ocean = NULL;
 	}
-    
-    if(atmosphere != NULL)
-    {
-        delete atmosphere;
-        atmosphere = NULL;
-    }
     
     for(unsigned int i=0; i<joints.size(); i++)
         delete joints[i];
@@ -893,32 +891,46 @@ void SimulationManager::UpdateDrawingQueue()
     OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
     
     //Solids, manipulators, systems....
-	for(unsigned int i=0; i<entities.size(); ++i)
+	for(size_t i=0; i<entities.size(); ++i)
 	{
 		std::vector<Renderable> items = entities[i]->Render();
-		for(unsigned int h=0; h<items.size(); ++h)
+		for(size_t h=0; h<items.size(); ++h)
 		{
             items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
             glPipeline->AddToDrawingQueue(items[h]);
 		}
 	}
     
+    //Joints
+    for(size_t i=0; i<joints.size(); ++i)
+    {
+        std::vector<Renderable> items = joints[i]->Render();
+        for(size_t h=0; h<items.size(); ++h)
+        {
+            items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
+            glPipeline->AddToDrawingQueue(items[h]);
+        }
+    }
+    
     //Motors, thrusters, propellers, fins....
-    for(unsigned int i=0; i<actuators.size(); ++i)
+    for(size_t i=0; i<actuators.size(); ++i)
     {
         std::vector<Renderable> items = actuators[i]->Render();
-		for(unsigned int h=0; h<items.size(); ++h)
+		for(size_t h=0; h<items.size(); ++h)
 		{
             items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);
 		}
+        
+        if(actuators[i]->getType() == ActuatorType::ACTUATOR_LIGHT)
+            ((Light*)actuators[i])->UpdateTransform();
     }
     
     //Sensors
-    for(unsigned int i=0; i<sensors.size(); ++i)
+    for(size_t i=0; i<sensors.size(); ++i)
     {
         std::vector<Renderable> items = sensors[i]->Render();
-		for(unsigned int h=0; h<items.size(); ++h)
+		for(size_t h=0; h<items.size(); ++h)
 		{
 			items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);
@@ -929,10 +941,10 @@ void SimulationManager::UpdateDrawingQueue()
     }
     
     //Contacts
-    for(unsigned int i=0; i<contacts.size(); ++i)
+    for(size_t i=0; i<contacts.size(); ++i)
     {
         std::vector<Renderable> items = contacts[i]->Render();
-		for(unsigned int h=0; h<items.size(); ++h)
+		for(size_t h=0; h<items.size(); ++h)
 		{
             items[h].model = glm::rotate((float)M_PI, glm::vec3(0,1.f,0)) * items[h].model;
 			glPipeline->AddToDrawingQueue(items[h]);

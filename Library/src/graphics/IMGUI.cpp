@@ -9,6 +9,7 @@
 #include "graphics/IMGUI.h"
 
 #include "core/Console.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLPrinter.h"
 #include "graphics/GLSLShader.h"
@@ -19,13 +20,6 @@
 
 namespace sf
 {
-
-glm::vec4 IMGUI::HSV2RGB(glm::vec4 hsv)
-{
-    glm::vec4 K = glm::vec4(1.f, 2.f/3.f, 1.f/3.f, 3.f);
-    glm::vec3 p = glm::abs(glm::fract(glm::vec3(hsv.x) + glm::vec3(K.x, K.y, K.z)) * 6.f - glm::vec3(K.w));
-    return glm::vec4(hsv.z * glm::mix(glm::vec3(K.x), glm::clamp(p - glm::vec3(K.x), 0.f, 1.f), hsv.y), hsv.w);
-}
 
 IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
 {
@@ -53,10 +47,10 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     theme[INACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.5f);
     theme[ACTIVE_CONTROL_COLOR] = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);
     theme[INACTIVE_CONTROL_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
-    theme[HOT_CONTROL_COLOR] = HSV2RGB(glm::vec4(hue, 0.1f, 1.0f, 1.0f));
-    theme[PUSHED_CONTROL_COLOR] = HSV2RGB(glm::vec4(hue, 0.2f, 0.8f, 1.0f));
+    theme[HOT_CONTROL_COLOR] = glm::vec4(Color::HSV(hue, 0.1f, 1.0f).rgb, 1.f);
+    theme[PUSHED_CONTROL_COLOR] = glm::vec4(Color::HSV(hue, 0.2f, 0.8f).rgb, 1.f);
     theme[EMPTY_COLOR] = glm::vec4(0.6f, 0.6f, 0.6f, 0.9f);
-    theme[FILLED_COLOR] = HSV2RGB(glm::vec4(hue, 1.f, 0.8f, 0.9f));
+    theme[FILLED_COLOR] = glm::vec4(Color::HSV(hue, 1.f, 0.8f).rgb, 0.9f);
     theme[PLOT_COLOR] = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
     theme[PLOT_TEXT_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.9f);
     
@@ -767,7 +761,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
             glm::vec4 color;
             
             if(dims.size() > 1)
-                color = HSV2RGB(glm::vec4(n/(GLfloat)(dims.size()-1)*0.5, 1.f, 1.f, 1.f));
+                color = glm::vec4(Color::HSV(n/(GLfloat)(dims.size()-1)*0.5, 1.f, 1.f).rgb, 1.f);
             else
                 color = theme[FILLED_COLOR];
             

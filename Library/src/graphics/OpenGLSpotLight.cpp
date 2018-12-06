@@ -10,19 +10,18 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "utils/MathUtil.hpp"
 #include "entities/SolidEntity.h"
 
 namespace sf
 {
 
-OpenGLSpotLight::OpenGLSpotLight(const Vector3& position, const Vector3& target, GLfloat cone, glm::vec4 color) : OpenGLLight(position, color)
+OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 _direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, color, illuminance)
 {
-    Vector3 dir = (target - position).normalized();
-	direction = glm::vec3((GLfloat)dir.getX(), (GLfloat)dir.getY(), (GLfloat)dir.getZ());
-	
-    coneAngle = cone/180.f*M_PI;
+    direction = glm::normalize(_direction);
+    coneAngle = coneAngleDeg/180.f*M_PI;
     clipSpace = glm::mat4();
 	zNear = 0.1f;
 	zFar = 100.f;
@@ -56,13 +55,7 @@ LightType OpenGLSpotLight::getType()
 
 glm::vec3 OpenGLSpotLight::getDirection()
 {
-    if(holdingEntity != NULL)
-	{
-		glm::mat4 trans = glMatrixFromBtTransform(holdingEntity->getCGTransform());
-        return glm::mat3(trans) * direction;
-	}
-	else
-        return direction;
+    return getOrientation() * direction;
 }
 
 GLfloat OpenGLSpotLight::getAngle()

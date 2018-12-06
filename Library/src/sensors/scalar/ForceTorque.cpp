@@ -11,7 +11,6 @@
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
 #include "sensors/Sample.h"
-#include "utils/MathUtil.hpp"
 #include "joints/Joint.h"
 
 namespace sf
@@ -107,7 +106,7 @@ std::vector<Renderable> ForceTorque::Render()
     
     Renderable item;
     item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromBtTransform(lastFrame);
+    item.model = glMatrixFromTransform(lastFrame);
     items.push_back(item);
     
     return items;

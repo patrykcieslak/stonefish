@@ -24,6 +24,14 @@ ActuatorType LinkActuator::getType()
 {
     return ActuatorType::ACTUATOR_LINK;
 }
+    
+Transform LinkActuator::getActuatorFrame()
+{
+    if(attach != NULL)
+        return attach->getOTransform() * o2a;
+    else
+        return o2a;
+}
 
 void LinkActuator::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
 {
@@ -42,5 +50,5 @@ void LinkActuator::AttachToSolid(SolidEntity* solid, const Transform& origin)
         attach = solid;
     }
 }
-
+    
 }

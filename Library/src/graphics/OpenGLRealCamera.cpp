@@ -10,14 +10,17 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/Console.h"
-#include "utils/MathUtil.hpp"
 #include "sensors/vision/ColorCamera.h"
+#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf
 {
 
-OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint x, GLint y, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizon, spp, sao)
+OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
+                                   GLint x, GLint y, GLint width, GLint height,
+                                   GLfloat horizontalFovDeg, GLfloat horizonDistance, GLuint spp, bool sao) : OpenGLCamera(x, y, width, height, horizonDistance, spp, sao)
 {
     _needsUpdate = false;
     update = false;
@@ -30,7 +33,7 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
     UpdateTransform();
 
     //Setup projection
-    fovx = fovH/180.f*M_PI;
+    fovx = horizontalFovDeg/180.f*M_PI;
     projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
 }
 

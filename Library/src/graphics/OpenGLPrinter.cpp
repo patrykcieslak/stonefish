@@ -8,6 +8,7 @@
 
 #include "graphics/OpenGLPrinter.h"
 
+#include "graphics/GLSLShader.h"
 #include <stdio.h>
 
 namespace sf

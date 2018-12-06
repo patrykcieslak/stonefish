@@ -17,11 +17,12 @@ namespace sf
     class OpenGLTrackball : public OpenGLCamera
     {
     public:
-        OpenGLTrackball(const Vector3& centerPosition, Scalar orbitRadius, const Vector3& up, GLint originX, GLint originY, GLint width, GLint height, GLfloat fov, GLfloat horizon, GLuint spp = 1, bool ao = false);
-        ~OpenGLTrackball();
+        OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
+                        GLint originX, GLint originY, GLint width, GLint height,
+                        GLfloat horizontalFovDeg, GLfloat horizonDistance, GLuint spp = 1, bool ao = false);
         
-        void Rotate(const Quaternion& rot);
-        void MoveCenter(const glm::vec3& step);
+        void Rotate(glm::quat rot);
+        void MoveCenter(glm::vec3 step);
         void GlueToEntity(SolidEntity* solid);
         void MouseDown(GLfloat x, GLfloat y, bool translate);
         void MouseMove(GLfloat x, GLfloat y);

@@ -44,6 +44,7 @@ namespace sf
         TEXTURE_COUNT
     };
     
+    class GLSLShader;
     class OpenGLPipeline;
     class OpenGLCamera;
     

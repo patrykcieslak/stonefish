@@ -49,9 +49,4 @@ JointType FixedJoint::getType()
     return JOINT_FIXED;
 }
 
-Vector3 FixedJoint::Render()
-{
-    return Vector3();
-}
-
 }

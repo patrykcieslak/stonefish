@@ -15,20 +15,14 @@ namespace sf
 {
     class SolidEntity;
     
-    //!
+    //! A class representing a belt joint.
     class BeltJoint : public Joint
     {
     public:
         BeltJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axisA, const Vector3& axisB, Scalar ratio);
         
-        Vector3 Render();
-        
         JointType getType();
         Scalar getRatio();
-        
-        //Not applicable
-        void ApplyDamping(){}
-        bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance){ return true; }
         
     private:
         Scalar gearRatio;

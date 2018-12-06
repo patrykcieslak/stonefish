@@ -37,9 +37,4 @@ Scalar BeltJoint::getRatio()
     return gearRatio;
 }
 
-Vector3 BeltJoint::Render()
-{
-    return Vector3();
-}
-
 }

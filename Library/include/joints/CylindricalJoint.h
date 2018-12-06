@@ -15,7 +15,7 @@ namespace sf
 {
     class SolidEntity;
     
-    //!
+    //! A class representing a cylindrical joint.
     class CylindricalJoint : public Joint
     {
     public:
@@ -24,14 +24,11 @@ namespace sf
         void ApplyForce(Scalar F);
         void ApplyTorque(Scalar T);
         void ApplyDamping();
-        bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
-        
-        Vector3 Render();
+        std::vector<Renderable> Render();
         
         void setDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor);
         void setLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax);
         void setIC(Scalar displacement, Scalar angle);
-        
         JointType getType();
         
     private:

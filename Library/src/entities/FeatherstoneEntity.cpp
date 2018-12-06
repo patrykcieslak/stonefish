@@ -3,14 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/FeatherstoneEntity.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "utils/MathUtil.hpp"
 #include "entities/SolidEntity.h"
 #include "entities/StaticEntity.h"
 

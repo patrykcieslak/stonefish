@@ -78,26 +78,25 @@ void SphericalJoint::ApplyDamping()
     }
 }
 
-bool SphericalJoint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
+std::vector<Renderable> SphericalJoint::Render()
 {
-    return true;
-}
-
-Vector3 SphericalJoint::Render()
-{
+    std::vector<Renderable> items(0);
+    Renderable item;
+    item.model = glm::mat4(1.f);
+    item.type = RenderableType::JOINT_LINES;
+    
     btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
     Vector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
     Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
     
-	/*std::vector<glm::vec3> vertices;
-	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-	vertices.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-	vertices.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	*/
-    return pivot;
+	item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+	item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+	item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+	item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+	
+    items.push_back(item);
+    return items;
 }
 
 }

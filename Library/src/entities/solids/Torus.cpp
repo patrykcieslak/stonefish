@@ -9,7 +9,6 @@
 #include "entities/solids/Torus.h"
 
 #include "core/TorusShape.h"
-#include "utils/MathUtil.hpp"
 #include "graphics/OpenGLContent.h"
 
 namespace sf

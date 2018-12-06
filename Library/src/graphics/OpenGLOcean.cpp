@@ -8,15 +8,16 @@
 
 #include "graphics/OpenGLOcean.h"
 
+#include <iostream>
 #include "core/Console.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image_write.h"
 #include "entities/forcefields/Atmosphere.h"
-
-#include <iostream>
 
 namespace sf
 {

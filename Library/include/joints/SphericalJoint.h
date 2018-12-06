@@ -15,7 +15,7 @@ namespace sf
 {
     class SolidEntity;
     
-    //!
+    //! A class representing a spherical joint.
     class SphericalJoint : public Joint
     {
     public:
@@ -23,12 +23,10 @@ namespace sf
         
         void ApplyTorque(Vector3 T);
         void ApplyDamping();
-        bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
-        Vector3 Render();
+        std::vector<Renderable> Render();
         
         void setDamping(Vector3 constantFactor, Vector3 viscousFactor);
         void setIC(Vector3 angles);
-        
         JointType getType();
         
     private:

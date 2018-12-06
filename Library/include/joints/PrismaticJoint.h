@@ -15,21 +15,17 @@ namespace sf
 {
     class SolidEntity;
     
-    //!
+    //! A class representing a prismatic joint.
     class PrismaticJoint : public Joint
     {
     public:
         PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinkedEntities = true);
-        
         void ApplyForce(Scalar F);
         void ApplyDamping();
-        bool SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance);
-        Vector3 Render();
-        
+        std::vector<Renderable> Render();
         void setDamping(Scalar constantFactor, Scalar viscousFactor);
         void setLimits(Scalar min, Scalar max);
         void setIC(Scalar displacement);
-        
         JointType getType();
         
     private:

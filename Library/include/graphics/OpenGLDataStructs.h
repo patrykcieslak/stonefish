@@ -9,7 +9,48 @@
 #ifndef __Stonefish_OpenGLDataStructs__
 #define __Stonefish_OpenGLDataStructs__
 
-#include "graphics/GLSLShader.h"
+#include <GL/glew.h>
+#define GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <vector>
+
+#define Max(a, b)   (((a) > (b)) ? (a) : (b))
+
+#define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
+#define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
+
+#define SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
+#define SUN_SKY_FACTOR 10.f //Sun illuminance to sky illuminance factor (sky treated as reference)
+
+#define TEX_BASE                ((GLint)0)
+#define TEX_GUI1                ((GLint)1)
+#define TEX_GUI2                ((GLinr)2)
+
+#define TEX_ATM_TRANSMITTANCE    ((GLint)3)
+#define TEX_ATM_SCATTERING         ((GLint)4)
+#define TEX_ATM_IRRADIANCE         ((GLint)5)
+
+#define TEX_POSTPROCESS1        ((GLint)6)
+#define TEX_POSTPROCESS2        ((GLint)7)
+#define TEX_POSTPROCESS3        ((GLint)8)
+#define TEX_POSTPROCESS4        ((GLint)9)
+#define TEX_POSTPROCESS5        ((GLint)10)
+
+#define TEX_SUN_SHADOW            ((GLint)11)
+#define TEX_SUN_DEPTH            ((GLint)12)
+#define TEX_SPOT_SHADOW            ((GLint)13)
+#define TEX_SPOT_DEPTH            ((GLint)14)
+#define TEX_POINT_SHADOW        ((GLint)15) //Not used
+#define TEX_POINT_DEPTH         ((GLint)16) //Not used
+
+#define MAX_POINT_LIGHTS     32
+#define MAX_SPOT_LIGHTS     32
+#define SPOT_LIGHT_SHADOWMAP_SIZE    2048
+
+class btTransform;
 
 namespace sf
 {
@@ -148,6 +189,134 @@ namespace sf
         GLfloat ratio;
         glm::vec3 corners[8];
     };
+    
+    //! A structure representing a color system.
+    struct ColorSystem
+    {
+        GLfloat xRed, yRed;     //Red x, y
+        GLfloat xGreen, yGreen; //Green x, y
+        GLfloat xBlue, yBlue;   //Blue x, y
+        GLfloat xWhite, yWhite; //White point x, y
+        GLfloat gamma;          //Gamma correction for system
+        
+        static ColorSystem sRGB()
+        {
+            ColorSystem cs;
+            cs.xRed = 0.64f;
+            cs.yRed = 0.33f;
+            cs.xGreen = 0.3f;
+            cs.yGreen = 0.6f;
+            cs.xBlue = 0.15f;
+            cs.yBlue = 0.06f;
+            cs.xWhite = 0.3127f;
+            cs.yWhite = 0.3291f;
+            cs.gamma = 0.f;
+            return cs;
+        }
+    };
+    
+    //! A structure representing a color.
+    struct Color
+    {
+        glm::vec3 rgb;
+        
+        Color(GLfloat R, GLfloat G, GLfloat B)
+        {
+            rgb = glm::vec3(R,G,B);
+        }
+        
+        static Color RGB(GLfloat R, GLfloat G, GLfloat B)
+        {
+            return Color(R,G,B);
+        }
+        
+        static Color HSV(GLfloat H, GLfloat S, GLfloat V)
+        {
+            const glm::vec4 K(1.f, 2.f/3.f, 1.f/3.f, 3.f);
+            glm::vec3 p = glm::abs(glm::fract(glm::vec3(H) + glm::vec3(K.x, K.y, K.z)) * 6.f - glm::vec3(K.w));
+            glm::vec3 c = V * glm::mix(glm::vec3(K.x), glm::clamp(p - glm::vec3(K.x), 0.f, 1.f), S);
+            return Color(c.r, c.g, c.b);
+        }
+        
+        static Color BlackBody(GLfloat Kelvins)
+        {
+            GLfloat c1, c2, c3;
+            bbSpectrumToXYZ(Kelvins, c1, c2, c3);
+            xyzToRGB(c1, c2, c3, c1, c2, c3, ColorSystem::sRGB());
+            return Color(c1, c2, c3);
+        }
+        
+        static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
+        static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
+        static void xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b, ColorSystem cs);
+    };
+    
+    //! An enum used to designate type of helper objecy to be drawn.
+    typedef enum {SOLID = 0, SOLID_CS, MULTIBODY_AXIS, HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES} RenderableType;
+    
+    //! A structure that represents a renderable object.
+    struct Renderable
+    {
+        RenderableType type;
+        int lookId;
+        int objectId;
+        glm::mat4 model;
+        std::vector<glm::vec3> points;
+    };
+    
+    //! An enum used to designate rendering quality.
+    typedef enum {QUALITY_DISABLED = 0, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH} RenderQuality;
+    
+    //! A structure containing rendering settings.
+    struct RenderSettings
+    {
+        GLint windowW;
+        GLint windowH;
+        RenderQuality shadows;
+        RenderQuality ao;
+        RenderQuality atmosphere;
+        RenderQuality ocean;
+        bool msaa;
+        
+        RenderSettings()
+        {
+            windowW = 800;
+            windowH = 600;
+            shadows = RenderQuality::QUALITY_MEDIUM;
+            ao = RenderQuality::QUALITY_MEDIUM;
+            atmosphere = RenderQuality::QUALITY_MEDIUM;
+            ocean = RenderQuality::QUALITY_MEDIUM;
+            msaa = false;
+        }
+    };
+    
+    //! A structure containing settings for drawing helper objects.
+    struct HelperSettings
+    {
+        bool showCoordSys;
+        bool showJoints;
+        bool showActuators;
+        bool showSensors;
+        bool showLightMeshes;
+        bool showCameraFrustums;
+        bool showFluidDynamics;
+        bool showBulletDebugInfo;
+        
+        HelperSettings()
+        {
+            showCoordSys = false;
+            showJoints = false;
+            showActuators = false;
+            showSensors = false;
+            showLightMeshes = false;
+            showCameraFrustums = false;
+            showFluidDynamics = false;
+            showBulletDebugInfo = false;
+        }
+    };
+    
+    typedef btTransform Transform;
+    glm::mat4 glMatrixFromTransform(const Transform& T);
 }
 
 #endif

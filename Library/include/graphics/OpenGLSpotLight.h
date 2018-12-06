@@ -17,7 +17,7 @@ namespace sf
     class OpenGLSpotLight : public OpenGLLight
     {
     public:
-        OpenGLSpotLight(const Vector3& position, const Vector3& target, GLfloat cone, glm::vec4 color);
+        OpenGLSpotLight(glm::vec3 position, glm::vec3 _direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
         ~OpenGLSpotLight();
         
         //Rendering

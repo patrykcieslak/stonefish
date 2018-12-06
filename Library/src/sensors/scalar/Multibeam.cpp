@@ -11,7 +11,6 @@
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "utils/MathUtil.hpp"
 #include "utils/UnitSystem.h"
 #include "sensors/Sample.h"
 #include "graphics/OpenGLPipeline.h"
@@ -71,7 +70,7 @@ std::vector<Renderable> Multibeam::Render()
     
     Renderable item;
     item.type = RenderableType::SENSOR_LINES;
-    item.model = glMatrixFromBtTransform(getSensorFrame());
+    item.model = glMatrixFromTransform(getSensorFrame());
     
     for(unsigned int i=0; i <= angSteps; ++i)
     {

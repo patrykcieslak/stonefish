@@ -12,6 +12,7 @@
 #include <algorithm>
 #include "core/Console.h"
 #include "core/SimulationManager.h"
+#include "graphics/GLSLShader.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLView.h"
 #include "graphics/OpenGLLight.h"
@@ -1678,6 +1679,20 @@ Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
         SmoothNormals(mesh);
     return mesh;
 }
+    
+
+void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
+{
+    glm::mat4 gT = glMatrixFromTransform(T);
+    glm::mat3 gR(gT);
+    
+    for(size_t i=0; i<mesh->vertices.size(); ++i)
+    {
+        mesh->vertices[i].pos = glm::vec3(gT * glm::vec4(mesh->vertices[i].pos, 1.f));
+        mesh->vertices[i].normal = gR * mesh->vertices[i].normal;
+    }
+}
+
 
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
@@ -1811,11 +1826,11 @@ void OpenGLContent::Subdivide(Mesh* mesh, bool icoMode)
 	mesh->faces = newFaces;
 }
 
-void OpenGLContent::AABB(Mesh* mesh, Vector3& min, Vector3& max)
+void OpenGLContent::AABB(Mesh* mesh, glm::vec3& min, glm::vec3& max)
 {
-    Scalar minX=BT_LARGE_FLOAT, maxX=-BT_LARGE_FLOAT;
-    Scalar minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
-    Scalar minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
+    GLfloat minX=BT_LARGE_FLOAT, maxX=-BT_LARGE_FLOAT;
+    GLfloat minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
+    GLfloat minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
     
     for(unsigned int i=0; i<mesh->vertices.size(); i++)
     {
@@ -1840,11 +1855,11 @@ void OpenGLContent::AABB(Mesh* mesh, Vector3& min, Vector3& max)
             minZ = vertex.z;
     }
     
-    min = Vector3(minX, minY, minZ);
-    max = Vector3(maxX, maxY, maxZ);
+    min = glm::vec3(minX, minY, minZ);
+    max = glm::vec3(maxX, maxY, maxZ);
 }
 
-void OpenGLContent::AABS(Mesh* mesh, Scalar& bsRadius, Vector3& bsCenterOffset)
+void OpenGLContent::AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffset)
 {
     glm::vec3 tempCenter(0,0,0);
     
@@ -1863,10 +1878,8 @@ void OpenGLContent::AABS(Mesh* mesh, Scalar& bsRadius, Vector3& bsCenterOffset)
             radius = r;
     }
     
-    bsRadius = (Scalar)radius;
-    bsCenterOffset.setX((Scalar)tempCenter.x);
-    bsCenterOffset.setY((Scalar)tempCenter.y);
-    bsCenterOffset.setZ((Scalar)tempCenter.z);
+    bsRadius = radius;
+    bsCenterOffset = tempCenter;
 }
 
 }

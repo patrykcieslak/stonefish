@@ -10,7 +10,6 @@
 
 #include "core/SimulationApp.h"
 #include "core/Console.h"
-#include "utils/MathUtil.hpp"
 #include "entities/SolidEntity.h"
 
 namespace sf
@@ -109,7 +108,7 @@ std::vector<Renderable> Camera::Render()
     std::vector<Renderable> items(0);
     
     Renderable item;
-    item.model = glMatrixFromBtTransform(getSensorFrame());
+    item.model = glMatrixFromTransform(getSensorFrame());
     item.type = RenderableType::SENSOR_LINES;
     
     //Create camera dummy

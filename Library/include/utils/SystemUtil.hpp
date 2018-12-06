@@ -27,7 +27,7 @@
 #endif
 
 #include "core/GraphicalSimulationApp.h"
-#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {

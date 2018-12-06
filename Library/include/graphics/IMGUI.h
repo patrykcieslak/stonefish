@@ -11,7 +11,7 @@
 
 #include <SDL2/SDL_keyboard.h>
 #include "StonefishCommon.h"
-#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLDataStructs.h"
 
 //interface colors
 #define PANEL_COLOR 0                 //Panel/background
@@ -88,8 +88,6 @@ namespace sf
         bool DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const char* title);
         bool DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, Scalar fixedRange[2] = NULL);
         bool DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const char* title);
-        
-        static glm::vec4 HSV2RGB(glm::vec4 hsv);
         
     private:
         void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const char* text);

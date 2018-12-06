@@ -12,7 +12,6 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
-#include "utils/MathUtil.hpp"
 #include "sensors/Sample.h"
 #include "graphics/OpenGLPipeline.h"
 
@@ -87,7 +86,7 @@ std::vector<Renderable> DVL::Render()
     
     Renderable item;
     item.type = RenderableType::SENSOR_LINES;
-    item.model = glMatrixFromBtTransform(getSensorFrame());
+    item.model = glMatrixFromTransform(getSensorFrame());
     item.points.push_back(glm::vec3(0,0,0));
     item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
     item.points.push_back(glm::vec3(0,0,0));

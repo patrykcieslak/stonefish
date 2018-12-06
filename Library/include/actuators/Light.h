@@ -23,26 +23,33 @@ namespace sf
         //! A constructor of an omni light.
         /*!
          \param uniqueName a name of the light
-         \param initialPos a position of light in the world frame
+         \param origin a pose of the light in the link frame
          \param color a color of the light
+         \param illuminance a value of luminous flux per unit area of light [lux]
          */
-        Light(std::string uniqueName, const Vector3& initialPos, Color color, float intensity);
+        Light(std::string uniqueName, const Transform& origin, Color color, float illuminance);
         
         //! A constructor of a spot light.
         /*!
          \param uniqueName a name of the light
-         \param initialPos a position of light in the world frame
-         \param initialDir a direction of the spot in the world frame
-         \param coneAngle a beam angle of the spot
+         \param origin a pose of the light in the link frame (cone axis is z axis)
+         \param coneAngleDeg a cone angle of the spot light in degrees
          \param color a color of the light
+         \param illuminance a value of luminous flux per unit area of light [lux]
          */
-        Light(std::string uniqueName, const Vector3& initialPos, const Vector3& initialDir, Scalar coneAngle, Color color, float intensity);
+        Light(std::string uniqueName, const Transform& origin, Scalar coneAngleDeg, Color color, float illuminance);
         
         //! A method which updates the pose of the light
         /*!
          \param dt a time step of the simulation
          */
         void Update(Scalar dt);
+        
+        //! A method that updates light position.
+        void UpdateTransform();
+        
+        //! A method returning the type of the actuator.
+        ActuatorType getType();
         
     private:
         OpenGLLight* glLight;

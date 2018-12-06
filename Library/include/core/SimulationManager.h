@@ -9,6 +9,7 @@
 #ifndef __Stonefish_SimulationManager__
 #define __Stonefish_SimulationManager__
 
+#include <SDL2/SDL_mutex.h>
 #include "StonefishCommon.h"
 #include "entities/forcefields/Ocean.h"
 

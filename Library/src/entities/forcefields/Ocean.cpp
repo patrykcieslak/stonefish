@@ -9,10 +9,10 @@
 #include "entities/forcefields/Ocean.h"
 
 #include <algorithm>
-#include "utils/MathUtil.hpp"
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"
+#include "graphics/OpenGLOcean.h"
 
 namespace sf
 {

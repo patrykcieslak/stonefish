@@ -10,7 +10,7 @@
 #define __Stonefish_GLSLShader__
 
 #include <utility>
-#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {

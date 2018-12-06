@@ -18,7 +18,9 @@ namespace sf
     class OpenGLRealCamera : public OpenGLCamera
     {
     public:
-        OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat horizon, GLuint spp = 1, bool ao = false);
+        OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
+                         GLint originX, GLint originY, GLint width, GLint height,
+                         GLfloat horizontalFovDeg, GLfloat horizonDistance, GLuint spp = 1, bool ao = false);
         ~OpenGLRealCamera();
         
         void DrawLDR(GLuint destinationFBO);

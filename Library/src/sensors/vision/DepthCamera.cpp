@@ -9,6 +9,7 @@
 #include "sensors/vision/DepthCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf

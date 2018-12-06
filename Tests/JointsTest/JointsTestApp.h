@@ -12,10 +12,10 @@
 #include <core/GraphicalSimulationApp.h>
 #include "JointsTestManager.h"
 
-class JointsTestApp : public GraphicalSimulationApp
+class JointsTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    JointsTestApp(std::string dataDirPath, RenderSettings s, JointsTestManager* sim);
+    JointsTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, JointsTestManager* sim);
 };
 
 #endif

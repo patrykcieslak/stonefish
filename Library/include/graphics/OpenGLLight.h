@@ -9,22 +9,16 @@
 #ifndef __Stonefish_OpenGLLight__
 #define __Stonefish_OpenGLLight__
 
-#include "graphics/GLSLShader.h"
-
-#define Max(a, b)   (((a) > (b)) ? (a) : (b))
-
-#define MAX_POINT_LIGHTS 	32
-#define MAX_SPOT_LIGHTS 	32
-#define SPOT_LIGHT_SHADOWMAP_SIZE	2048
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
     //!
     typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
     
+    class GLSLShader;
     class OpenGLPipeline;
-    class OpenGLRealCamera;
-    class SolidEntity;
+    class OpenGLCamera;
     class SimulationManager;
     
     //!
@@ -32,7 +26,7 @@ namespace sf
     {
     public:
         //Discrete lights
-        OpenGLLight(const Vector3& position, glm::vec4 color);
+        OpenGLLight(glm::vec3 position, glm::vec3 color, GLfloat illuminance);
         virtual ~OpenGLLight();
         
         virtual void InitShadowmap(GLint shadowmapLayer) = 0;
@@ -43,14 +37,16 @@ namespace sf
         virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h) = 0;
         virtual LightType getType() = 0;
         
-        void GlueToEntity(SolidEntity* ent);
+        void Update(glm::vec3 pos, glm::quat ori);
+        void UpdateTransform();
         void Activate();
         void Deactivate();
-        bool isActive();
         void setLightSurfaceDistance(GLfloat dist);
         glm::vec3 getColor();
         glm::vec3 getPosition();
-        SolidEntity* getHoldingEntity();
+        glm::quat getOrientation();
+        glm::mat4 getTransform();
+        bool isActive();
         
         //Static methods
         static void Init(std::vector<OpenGLLight*>& lights);
@@ -58,26 +54,21 @@ namespace sf
         static void SetupShader(GLSLShader* shader);
         static void SetCamera(OpenGLCamera* view);
         
-        //Utilities
-        static glm::vec4 ColorFromTemperature(GLfloat temperatureK, GLfloat lux);
-        
     protected:
-        SolidEntity* holdingEntity;
-        
-        bool active;
-        glm::vec3 position;
-        glm::vec4 color;
         GLfloat surfaceDistance;
         
         static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
         static GLuint spotShadowSampler;
         static GLuint spotDepthSampler;
         static OpenGLCamera* activeView;
-        static ColorSystem cs;
         
-        static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
-        static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
-        static void xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b);
+    private:
+        bool active;
+        glm::vec3 position;
+        glm::quat orientation;
+        glm::vec3 tempPos;
+        glm::quat tempOri;
+        glm::vec3 color;
     };
 }
 

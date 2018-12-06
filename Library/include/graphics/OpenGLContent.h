@@ -9,11 +9,11 @@
 #ifndef __Stonefish_OpenGLContent__
 #define __Stonefish_OpenGLContent__
 
-#include "graphics/GLSLShader.h"
 #include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
+    class GLSLShader;
     class OpenGLView;
     class OpenGLLight;
     
@@ -72,10 +72,11 @@ namespace sf
         static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
         static Mesh* BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
         static Mesh* BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices = 48, unsigned int minorSlices = 24);
+        static void TransformMesh(Mesh* mesh, const Transform& T);
         static void SmoothNormals(Mesh* mesh);
         static void Subdivide(Mesh* mesh, bool icoMode = false);
-        static void AABB(Mesh* mesh, Vector3& min, Vector3& max);
-        static void AABS(Mesh* mesh, Scalar& bsRadius, Vector3& bsCenterOffset);
+        static void AABB(Mesh* mesh, glm::vec3& min, glm::vec3& max);
+        static void AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffset);
         
     private:
         //Modes

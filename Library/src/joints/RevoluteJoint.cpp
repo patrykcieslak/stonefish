@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/RevoluteJoint.h"
@@ -13,9 +13,24 @@
 namespace sf
 {
 
-RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities) : 
-		RevoluteJoint(uniqueName, solidA->rigidBody, solidB->rigidBody, pivot, axis, collideLinkedEntities)
+RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
 {
+    Vector3 hingeAxis = axis.normalized();
+    btRigidBody* bodyA = solidA->rigidBody;
+    btRigidBody* bodyB = solidB->rigidBody;
+    axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
+    Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
+    pivotInA = bodyA->getCenterOfMassTransform().inverse()(pivot);
+    Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(pivot);
+    
+    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
+    hinge->setLimit(1.0, -1.0); //no limit (min > max)
+    hinge->enableMotor(false);
+    setConstraint(hinge);
+    
+    sigDamping = Scalar(0);
+    velDamping = Scalar(0);
+    angleIC = Scalar(0);
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
@@ -34,25 +49,6 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const V
     
     angleIC = Scalar(0.);
 }
-
-RevoluteJoint::RevoluteJoint(std::string uniqueName, btRigidBody* bodyA, btRigidBody* bodyB, const Vector3& pivot, const Vector3& axis, bool collideLinkedEntities) : Joint(uniqueName, collideLinkedEntities)
-{
-	Vector3 hingeAxis = axis.normalized();
-    axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
-    Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
-    pivotInA = bodyA->getCenterOfMassTransform().inverse()(pivot);
-    Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(pivot);
-    
-    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
-    hinge->setLimit(1.0, -1.0); //no limit (min > max)
-    hinge->enableMotor(false);
-    setConstraint(hinge);
-    
-    sigDamping = Scalar(0.);
-    velDamping = Scalar(0.);
-    
-    angleIC = Scalar(0.);
-}	
 
 void RevoluteJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 {
@@ -137,35 +133,36 @@ bool RevoluteJoint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolera
     return false;
 }
 
-Vector3 RevoluteJoint::Render()
+std::vector<Renderable> RevoluteJoint::Render()
 {
+    std::vector<Renderable> items(0);
+    Renderable item;
+    item.model = glm::mat4(1.f);
+    item.type = RenderableType::JOINT_LINES;
+    
     btTypedConstraint* revo = getConstraint();
     Vector3 A = revo->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = revo->getRigidBodyB().getCenterOfMassPosition();
     Vector3 pivot =  revo->getRigidBodyA().getCenterOfMassTransform()(pivotInA);
     Vector3 axis = (revo->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
     
-    //calculate axis ends
+    //Calculate axis ends
     Scalar e1 = (A-pivot).dot(axis);
     Scalar e2 = (B-pivot).dot(axis);
     Vector3 C1 = pivot + e1 * axis;
     Vector3 C2 = pivot + e2 * axis;
     
-    /*std::vector<glm::vec3> vertices;
-	vertices.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-	vertices.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	vertices.clear();
+	item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+	item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+	item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
 	
-	vertices.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-	vertices.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	glEnable(GL_LINE_STIPPLE);
-    //OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR);
-	glDisable(GL_LINE_STIPPLE);*/
+	item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+	item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+	
+    items.push_back(item);
     
-    return (C1+C2)/Scalar(2.);
+    return items;
 }
     
 }

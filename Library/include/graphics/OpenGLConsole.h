@@ -10,10 +10,11 @@
 #define __Stonefish_OpenGLConsole__
 
 #include "core/Console.h"
-#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
+    class GLSLShader;
     class OpenGLPrinter;
     
     //! A class implementing a graphical console.

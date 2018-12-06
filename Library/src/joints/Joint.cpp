@@ -18,7 +18,6 @@ namespace sf
 Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    renderable = false;
     collisionEnabled = collideLinkedEntities;
 	mbConstraint = NULL;
 	constraint = NULL;
@@ -27,16 +26,6 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 Joint::~Joint(void)
 {
 	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
-}
-
-void Joint::setRenderable(bool render)
-{
-    renderable = render;
-}
-
-bool Joint::isRenderable()
-{
-    return renderable;
 }
 
 bool Joint::isMultibodyJoint()
@@ -111,5 +100,21 @@ void Joint::AddToSimulation(SimulationManager* sm)
 		sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
 	}
 }
+    
+void Joint::ApplyDamping()
+{
+        //Not applicable.
+}
+    
+bool Joint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
+{
+        return true; //Nothing to solve
+}
 
+std::vector<Renderable> Joint::Render()
+{
+    std::vector<Renderable> items(0);
+    return items;
+}
+    
 }

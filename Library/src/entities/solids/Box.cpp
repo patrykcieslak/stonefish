@@ -9,7 +9,6 @@
 #include "entities/solids/Box.h"
 
 #include "graphics/OpenGLContent.h"
-#include "utils/MathUtil.hpp"
 
 namespace sf
 {

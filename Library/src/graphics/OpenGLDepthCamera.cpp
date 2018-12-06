@@ -12,6 +12,8 @@
 #include "core/GraphicalSimulationApp.h"
 #include "entities/SolidEntity.h"
 #include "sensors/vision/DepthCamera.h"
+#include "graphics/GLSLShader.h"
+#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
 namespace sf
@@ -20,7 +22,9 @@ namespace sf
 GLSLShader* OpenGLDepthCamera::depthLinearizeShader = NULL;
 GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
 
-OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp, GLint originX, GLint originY, GLint width, GLint height, GLfloat fovH, GLfloat minDepth, GLfloat maxDepth) 
+OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
+                                     GLint originX, GLint originY, GLint width, GLint height,
+                                     GLfloat horizontalFovDeg, GLfloat minDepth, GLfloat maxDepth)
  : OpenGLView(originX, originY, width, height)
 {
     _needsUpdate = false;
@@ -32,7 +36,7 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
     
-    GLfloat fovx = fovH/180.f*M_PI;
+    GLfloat fovx = horizontalFovDeg/180.f*M_PI;
     projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
     
     //Render depth

@@ -16,8 +16,7 @@ namespace sf
     class OpenGLPointLight : public OpenGLLight
     {
     public:
-        OpenGLPointLight(const Vector3& position, glm::vec4 color);
-        ~OpenGLPointLight();
+        OpenGLPointLight(glm::vec3 position, glm::vec3 color, GLfloat illuminance);
         
         //Rendering
         void InitShadowmap(GLint shadowmapLayer); //NOT YET IMPLEMENTED

@@ -49,6 +49,7 @@ namespace sf
     //!
     typedef enum {NORMAL, REFLECTED, REFRACTED} SceneComponent;
     
+    class GLSLShader;
     class SolidEntity;
     
     //!
@@ -71,7 +72,7 @@ namespace sf
         void SetupViewport(GLint x, GLint y, GLint width);
         void SetProjection();
         void SetViewTransform();
-        Vector3 Ray(GLint x, GLint y);
+        glm::vec3 Ray(GLint x, GLint y);
         void SetReflectionViewport();
         void GenerateLinearDepth(int sampleId);
         void GenerateBlurArray();
