@@ -16,6 +16,7 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLView.h"
 #include "graphics/OpenGLLight.h"
+#include "graphics/OpenGLOcean.h"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
 #include "utils/SystemUtil.hpp"
@@ -963,9 +964,10 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 	if(mode == DrawingMode::UNDERWATER)
 	{
         Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        shader->SetUniform("lightAbsorption", ocean->ComputeLightAbsorption());
-        shader->SetUniform("turbidity", ocean->getTurbidity());
-		/*if(SimulationApp::getApp()->getSimulationManager()->getOcean()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
+        shader->SetUniform("turbidity", ocean->getOpenGLOcean()->getTurbidity());
+		shader->SetUniform("lightAbsorption", ocean->getOpenGLOcean()->getLightAbsorption());
+        
+        /*if(SimulationApp::getApp()->getSimulationManager()->getOcean()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
         {
             Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getOcean();
             shader->SetUniform("lightAbsorption", pool->getOpenGLPool()->getLightAbsorptionCoeff());

@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/11/13.
-//  Copyright (c) 2013-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/DCMotor.h"
@@ -43,17 +43,17 @@ Scalar DCMotor::getR()
     return R;
 }
 
+Scalar DCMotor::getL()
+{
+    return L;
+}
+
 Scalar DCMotor::getGearRatio()
 {
     return gearRatio;
 }
 
-void DCMotor::setIntensity(Scalar value)
-{
-    setVoltage(value);
-}
-
-void DCMotor::setVoltage(Scalar volt)
+void DCMotor::setIntensity(Scalar volt)
 {
     V = volt;
 }

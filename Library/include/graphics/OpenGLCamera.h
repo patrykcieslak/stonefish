@@ -74,12 +74,12 @@ namespace sf
         void SetViewTransform();
         glm::vec3 Ray(GLint x, GLint y);
         void SetReflectionViewport();
-        void GenerateLinearDepth(int sampleId);
+        void GenerateLinearDepth(int sampleId, bool frontFace);
         void GenerateBlurArray();
         void EnterPostprocessing();
         
         void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
-        void ShowLinearDepthTexture(glm::vec4 rect);
+        void ShowLinearDepthTexture(glm::vec4 rect, bool frontFace);
         void ShowViewNormalTexture(glm::vec4 rect);
         void ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index);
         void ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index);
@@ -92,11 +92,12 @@ namespace sf
         GLfloat GetNearClip();
         GLfloat GetFarClip();
         
+        GLuint getColorTexture();
         GLuint getReflectionFBO();
         GLuint getReflectionTexture();
         GLuint getFinalTexture();
         GLuint getAOTexture();
-        GLuint getLinearDepthTexture();
+        GLuint getLinearDepthTexture(bool frontFace);
         GLuint getPostprocessTexture(unsigned int id);
         bool hasAO();
         
@@ -124,7 +125,7 @@ namespace sf
         int activePostprocessTexture;
         
         GLuint linearDepthFBO;
-        GLuint linearDepthTex;
+        GLuint linearDepthTex[2];
         
         //HBAO Cache-aware (NVIDIA designworks)
         GLuint aoBlurTex;

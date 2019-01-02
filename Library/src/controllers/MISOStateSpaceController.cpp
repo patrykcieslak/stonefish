@@ -57,7 +57,7 @@ void MISOStateSpaceController::Tick(Scalar dt)
     control = control > maxOutput ? maxOutput : (control < -maxOutput ? -maxOutput : control);
     
     //Apply control
-    output->setVoltage(control);
+    output->setIntensity(control);
 }
 
 }

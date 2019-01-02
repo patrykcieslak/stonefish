@@ -25,43 +25,122 @@ namespace sf
     class GraphicalSimulationApp : public SimulationApp
     {
     public:
+        //! A constructor.
+        /*!
+         \param name a name for the application
+         \param dataDirPath a path to the directory containing simulation data
+         \param s a structure containing the rendering settings
+         \param h a structure containing the helper objects display settings
+         \param sim a pointer to the simulation manager
+         */
         GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim);
+        
+        //! A destructor.
         virtual ~GraphicalSimulationApp();
         
-        //GUI
+        //! A method implementing the GUI on top of the simulation window.
         virtual void DoHUD();
+        
+        //! A method to enable rendering the GUI.
         void ShowHUD();
+        
+        //! A method to disable rendering the GUI.
         void HideHUD();
+        
+        //! A method to enable showing the console.
         void ShowConsole();
+        
+        //! A method to disable showing the console.
         void HideConsole();
         
-        //input handling
-        bool* joystickButtons;
-        int16_t* joystickAxes;
-        uint8_t* joystickHats;
-        
+        //! A method implementing input processing.
         virtual void ProcessInputs();
+        
+        //! A method implementing window event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void WindowEvent(SDL_Event* event);
+        
+        //! A method implementing keyboard key down event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void KeyDown(SDL_Event* event);
+        
+        //! A method implementing keyboard key up event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void KeyUp(SDL_Event* event);
+        
+        //! A method implementing mouse down event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void MouseDown(SDL_Event* event);
+        
+        //! A method implementing mouse up event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void MouseUp(SDL_Event* event);
+        
+        //! A method implementing mouse move event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void MouseMove(SDL_Event* event);
+        
+        //! A method implementing mouse scroll event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void MouseScroll(SDL_Event* event);
+        
+        //! A method implementing joystick key down event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void JoystickDown(SDL_Event* event);
+        
+        //! A method implementing joystick key up event handling.
+        /*!
+         \param event a pointer to the event info structure
+         */
         virtual void JoystickUp(SDL_Event* event);
         
-        //accessors
+        //! A method returning a pointer to the OpenGL pipeline.
         OpenGLPipeline* getGLPipeline();
+        
+        //! A method returning a pointer to the GUI.
         IMGUI* getGUI();
+        
+        //! A method informing if the application is graphical.
         bool hasGraphics();
+        
+        //! A method returning a pointer to the joystick info structure.
         SDL_Joystick* getJoystick();
+        
+        //! A method returning the graphics rendering time in seconds.
         double getDrawingTime();
+        
+        //! A method returning the width of the window.
         int getWindowWidth();
+        
+        //! A method returning the height of the window.
         int getWindowHeight();
+        
+        //! A method informing if the simulation is in the loading stage.
         bool isLoading();
+        
+        //! A method returning the path to the shader directory.
         std::string getShaderPath();
+        
+        //! A method returning the current rendering settings.
         RenderSettings getRenderSettings() const;
+        
+        //! A method returning a mutable reference to the helper object rendering settings.
         HelperSettings& getHelperSettings();
         
     protected:
@@ -84,6 +163,9 @@ namespace sf
         SDL_Thread* simulationThread;
         SDL_Window* window;
         SDL_Joystick* joystick;
+        bool* joystickButtons;
+        int16_t* joystickAxes;
+        uint8_t* joystickHats;
         
         IMGUI* gui;
         OpenGLPipeline* glPipeline;
@@ -101,6 +183,7 @@ namespace sf
         static int RunSimulation(void* data);
     };
     
+    //! A structure used to pass information between threads.
     typedef struct
     {
         GraphicalSimulationApp* app;
@@ -108,6 +191,7 @@ namespace sf
     }
     GraphicalSimulationThreadData;
     
+    //! A structure used to pass information between threads.
     typedef struct
     {
         GraphicalSimulationApp* app;

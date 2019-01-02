@@ -15,12 +15,9 @@
 
 namespace sf
 {
+    //! A class implementing a toroidal collision shape.
     ATTRIBUTE_ALIGNED16(class) TorusShape : public btConvexInternalShape
     {
-    protected:
-        Scalar m_majorRadius;
-        Scalar m_minorRadius;
-        
     public:
         BT_DECLARE_ALIGNED_ALLOCATOR();
         
@@ -45,6 +42,10 @@ namespace sf
         virtual const char*	getName()const { return "TORUS"; }
         
         virtual Vector3 getAnisotropicRollingFrictionDirection() const { return Vector3(0,1,0); }
+        
+    protected:
+        Scalar m_majorRadius;
+        Scalar m_minorRadius;
     };
 }
     

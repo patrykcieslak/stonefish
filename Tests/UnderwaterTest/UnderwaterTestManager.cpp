@@ -21,6 +21,7 @@
 #include <graphics/OpenGLSpotLight.h>
 #include <graphics/OpenGLTrackball.h>
 #include <utils/SystemUtil.hpp>
+#include <entities/forcefields/Atmosphere.h>
 #include <entities/forcefields/Ocean.h>
 #include <entities/statics/Obstacle.h>
 #include <actuators/Thruster.h>
@@ -68,6 +69,9 @@ void UnderwaterTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rock", "Fiberglass", 0.6, 0.4);
     
     ///////LOOKS///////////
+    int red = CreateLook(sf::Color::RGB(1.f, 0.f, 0.f), 0.5f, 0.f);
+    int green = CreateLook(sf::Color::RGB(0.f, 1.f, 0.f), 0.5f, 0.f);
+    int blue = CreateLook(sf::Color::RGB(0.f, 0.f, 1.f), 0.5f, 0.f);
     int yellow = CreateLook(sf::Color::RGB(1.f, 0.9f, 0.f), 0.3f, 0.f);
     int grey = CreateLook(sf::Color::RGB(0.3f, 0.3f, 0.3f), 0.4f, 0.5f);
     int seabed = CreateLook(sf::Color::RGB(0.7f, 0.7f, 0.5f), 0.9f, 0.f);
@@ -80,13 +84,26 @@ void UnderwaterTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
 	EnableOcean(true);
-    getOcean()->setTurbidity(400.f);
+    getOcean()->setWaterType(sf::Scalar(0.2));
+    getAtmosphere()->getOpenGLAtmosphere()->SetSunPosition(0.0, 80.0);
     
-    sf::Plane* plane = new sf::Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(plane, sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0,3.0)));
+    sf::Obstacle* terrain = new sf::Obstacle("Terrain", sf::GetDataPath() + "canyon.obj", 1.0, sf::I4(), getMaterialManager()->getMaterial("Rock"), seabed, false);
+    AddStaticEntity(terrain, sf::Transform(sf::IQ(), sf::Vector3(0,0,4.0)));
+    
+    //sf::Plane* plane = new sf::Plane("Bottom", 1000.0, getMaterialManager()->getMaterial("Rock"), seabed);
+    //AddStaticEntity(plane, sf::Transform(sf::Quaternion(0.0,0.0,M_PI/10.0), sf::Vector3(0,0,100.0)));
 	
     sf::Obstacle* column = new sf::Obstacle("Col", sf::Scalar(0.2), sf::Scalar(5.0), getMaterialManager()->getMaterial("Rock"), grey);
-    AddStaticEntity(column, sf::Transform(sf::IQ(), sf::Vector3(0,2.0,0.5)));
+    AddStaticEntity(column, sf::Transform(sf::IQ(), sf::Vector3(0,-2.0,0.5)));
+    
+    sf::Obstacle* sphere = new sf::Obstacle("Sph", sf::Scalar(0.5), getMaterialManager()->getMaterial("Rock"), red);
+    AddStaticEntity(sphere, sf::Transform(sf::IQ(), sf::Vector3(-1.0,-2.0,1.0)));
+
+    sphere = new sf::Obstacle("Sph2", sf::Scalar(0.5), getMaterialManager()->getMaterial("Rock"), green);
+    AddStaticEntity(sphere, sf::Transform(sf::IQ(), sf::Vector3(0.0,-2.0,1.0)));
+    
+    sphere = new sf::Obstacle("Sph3", sf::Scalar(0.5), getMaterialManager()->getMaterial("Rock"), blue);
+    AddStaticEntity(sphere, sf::Transform(sf::IQ(), sf::Vector3(1.0,-2.0,1.0)));
     
     /*sf::Box* box = new sf::Box("TestBox", sf::Vector3(1,2,0.5), sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), getMaterialManager()->getMaterial("Dummy"), yellow);
     AddSolidEntity(box, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));

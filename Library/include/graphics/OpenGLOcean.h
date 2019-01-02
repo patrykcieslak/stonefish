@@ -41,22 +41,38 @@ namespace sf
         OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics);
         ~OpenGLOcean();
         
+        //! Method that simulates wave propagation.
         void Simulate();
+        
+        //! Method that updates the wave mesh.
         void UpdateSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+        
+        //! Method that draws the surface of the ocean.
         void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
+        
+        //! Method that draws the surface of the ocean, seen from underwater.
         void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
-        void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection);
+        
+        //! Method that draws the distant background of the ocean.
         void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
-        void DrawVolume(GLuint sceneTexture, GLuint linearDepthTex);
+        
+        //! Method that generates the stencil mask.
+        void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection);
+        
+        //! Method that draws the particles in the ocean and the blur (scattering).
+        void DrawVolume(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint sceneTexture, GLuint linearDepthTex, GLint* viewport);
+        
+        //! Method that draws the waterline when the camera is crossing the water surface.
+        void DrawWaterline();
         
         void ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
         void ShowTexture(int id, glm::vec4 rect);
-        
-        GLfloat getWaveHeight(GLfloat x, GLfloat y);
+       
+        void setWaterType(GLfloat t);
         void setTurbidity(GLfloat t);
-        GLfloat getTurbidity();
-        void setLightAbsorption(glm::vec3 la);
+        GLfloat getWaveHeight(GLfloat x, GLfloat y);
         glm::vec3 getLightAbsorption();
+        GLfloat getTurbidity();
         
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
@@ -74,6 +90,7 @@ namespace sf
         std::vector<GLSLShader*> oceanShaders;
         GLuint oceanFBOs[3];
         GLuint oceanTextures[6];
+        glm::vec3 absorption[64];
         
         bool waves;
         SDL_mutex* hydroMutex;

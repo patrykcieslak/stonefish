@@ -22,13 +22,16 @@ namespace sf
         //! A constructor.
         /*!
          \param mlcp a pointer to an MLCP type solver
-        */
+         */
         ResearchConstraintSolver(btMLCPSolverInterface* mlcp);
         
         //! A destructor.
         virtual ~ResearchConstraintSolver();
         
         //! A method running the MLCP solver.
+        /*!
+         \param infoGlobal a reference to the contact solver data
+         */
         virtual bool solveMLCP(const btContactSolverInfo& infoGlobal);
         
         //! A method returning a number of fallbacks to the sequential impulse algorithm.

@@ -25,7 +25,7 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diamet
     kp = Scalar(15.0);
     ki = Scalar(3.0);
     iLim = Scalar(10.0);
-    omegaLim = maxRPM/Scalar(60); //In 1/s
+    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
     
     theta = Scalar(0);
     omega = Scalar(0);
@@ -44,9 +44,9 @@ Thruster::~Thruster()
         delete prop;
 }
 
-void Thruster::setSetpoint(Scalar value)
+void Thruster::setSetpoint(Scalar s)
 {
-    setpoint = value < Scalar(-1) ? Scalar(-1) : (value > Scalar(1) ? Scalar(1) : value);
+    setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
 }
 
 Scalar Thruster::getSetpoint()
@@ -78,7 +78,7 @@ void Thruster::Update(Scalar dt)
     iError = iError > iLim ? iLim : iError;
     
     omega += (epsilon - torque)*dt; //Damping due to axial torque
-    theta += (omega * Scalar(2) * M_PI)*dt; //Just for animation (in Radians)
+    theta += omega * dt; //Just for animation
     
     if(attach != NULL)
     {
@@ -99,7 +99,9 @@ void Thruster::Update(Scalar dt)
             Scalar k2(-0.3);
             Scalar k3 = Scalar(2)*kT/M_PI;
             Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
-            thrust = Scalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*omega + k3*D*D*omega*omega);
+            Scalar rate = omega/(Scalar(2) * M_PI);
+            thrust = Scalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*rate + k3*D*D*rate*rate);
+            
             if(omega < Scalar(0))
                 thrust = -thrust;
             
@@ -107,7 +109,7 @@ void Thruster::Update(Scalar dt)
             //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
             
             //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
-            torque = liquid->getLiquid()->density * kQ * btFabs(omega)*omega * D*D*D*D*D;
+            torque = liquid->getLiquid()->density * kQ * btFabs(rate)*rate * D*D*D*D*D;
             Vector3 thrustV(thrust, 0, 0);
             Vector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
             

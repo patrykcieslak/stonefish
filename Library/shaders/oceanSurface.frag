@@ -32,8 +32,8 @@ float erfc(float x)
 float Lambda(float cosTheta, float sigmaSq) 
 {
 	float v = cosTheta / sqrt((1.0 - cosTheta * cosTheta) * (2.0 * sigmaSq));
-    return max(0.0, (exp(-v * v) - v * sqrt(M_PI) * erfc(v)) / (2.0 * v * sqrt(M_PI)));
-	//return (exp(-v * v)) / (2.0 * v * sqrt(M_PI)); // approximate, faster formula
+    //return max(0.0, (exp(-v * v) - v * sqrt(M_PI) * erfc(v)) / (2.0 * v * sqrt(M_PI)));
+	return (exp(-v * v)) / (2.0 * v * sqrt(M_PI)); // approximate, faster formula
 }
 
 float meanFresnel(float cosThetaV, float sigmaV) 
@@ -96,8 +96,8 @@ void main()
 	
 	//Normals
 	vec3 normal = normalize(vec3(-slopes.x, -slopes.y, 1.0));
-	if(dot(toEye, normal) < 0.0) 
-		normal = reflect(normal, toEye); //Reflect backfacing normals
+	if(dot(toEye, normal) < 0.0)
+		normal = normalize(reflect(normal, toEye)); //Reflect backfacing normals
 	
 	//
 	float Jxx = dFdx(waveCoord.x);
@@ -117,7 +117,10 @@ void main()
 	vec3 Ty = normalize(vec3(0.0, normal.z, -normal.y));
 	vec3 Tx = cross(Ty, normal);
 
-	float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
+    //float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
+    //vec3 H = normalize(toEye + normal);
+    float fresnel = 0.02 + 0.98 * pow(1.0 - dot(toEye, normal), 5.0);
+    
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
 	
@@ -130,15 +133,15 @@ void main()
 	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, 3.0)));
 	vec3 trans;
 	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
-	vec4 reflection = texture(texReflection, vec2(gl_FragCoord.x/viewport.x + normal.x*0.02, gl_FragCoord.y/viewport.y + min(-0.001, normal.y*0.02)));
-	outColor += mix(fresnel * Lsky/whitePoint/30000.0, reflection.rgb, reflection.a);
+    outColor += Lsky/whitePoint/30000.0; //fresnel *
     
 	//Aerial perspective
-	vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, P, 0.0, sunDirection, trans)/whitePoint/30000.0;
-	outColor = trans * outColor + L2P;
+    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, P, 0.0, sunDirection, trans);///whitePoint/30000.0;
+    //outColor = L2P;//trans * outColor + L2P;
 	
 	//Sea contribution
-    fragColor = vec4(outColor, 1.0-fresnel);
-    //fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  //vec4(normalize(MV * normal), 1.0);
-    fragNormal = vec4(normalize(MV * vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);
+    fragColor = vec4(outColor, fresnel);
+    fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  //vec4(normalize(MV * normal), 1.0);
+    //fragColor = vec4(outColor, 1.0);
+    //fragNormal = vec4(normalize(MV * vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);
 }

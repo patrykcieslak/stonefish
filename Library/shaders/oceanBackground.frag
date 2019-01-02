@@ -1,35 +1,34 @@
 #version 330
 
-out vec4 fragColor;
-in vec2 texcoord;
+layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec4 fragNormal;
 
 uniform vec3 eyePos;
-uniform mat4 invProj;
-uniform mat3 invView;
 uniform vec3 sunDirection;
 uniform float planetRadius;
 uniform vec3 whitePoint;
 uniform vec3 lightAbsorption;
+uniform float turbidity;
 
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
 
-vec3 getWorldNormal()
-{
-    vec2 fragPos = texcoord;
-    fragPos = (fragPos-0.5)*2.0;
-    vec4 deviceNormal = vec4(fragPos, 0.0, 1.0);
-    vec3 eyeNormal = normalize((invProj * deviceNormal).xyz);
-    vec3 worldNormal = normalize(invView * eyeNormal);
-    return worldNormal;
-}
+const float d = 100000.0;
+const vec3 rayleigh = vec3(0.15023, 0.405565, 1.0);
 
 void main() 
 {
-	vec3 toEye = -getWorldNormal();
-	vec3 center = vec3(0,0,-planetRadius);
+    vec3 center = vec3(0,0,-planetRadius);
 	
-	vec3 skyIlluminance;
-	vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 color = skyIlluminance/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z)) * 0.2;
-	fragColor = vec4(color, 1.0);
+    //Water properties
+    vec3 b = turbidity * rayleigh; //Scattering coefficient
+    vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
+    
+    //Inscattering
+    vec3 skyIlluminance;
+    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
+    vec3 inFactor = exp(-c * max(-eyePos.z,0.0)) * b / c;
+    fragColor = (sunIlluminance + skyIlluminance)/whitePoint/30000.0 * inFactor * 0.01;
+    
+    //Normal
+    fragNormal = vec4(vec3(0.0,0.0,1.0) * 0.5 + 0.5, 0.0);
 }

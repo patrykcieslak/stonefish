@@ -184,8 +184,8 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
 	
 	glBindTexture(GL_TEXTURE_2D_ARRAY, postprocessTex[2]);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB16F, viewportWidth, viewportHeight, 5, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
@@ -197,18 +197,27 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	//Linear depth
-	glGenTextures(1, &linearDepthTex);
-	glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+	glGenTextures(2, linearDepthTex);
+    //Front face
+	glBindTexture(GL_TEXTURE_2D, linearDepthTex[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, viewportWidth, viewportHeight, 0, GL_RED, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture (GL_TEXTURE_2D, 0);
+    //Back face
+    glBindTexture(GL_TEXTURE_2D, linearDepthTex[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, viewportWidth, viewportHeight, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture (GL_TEXTURE_2D, 0);
 
 	glGenFramebuffers(1, &linearDepthFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex[0], 0);
 		
 	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if(status != GL_FRAMEBUFFER_COMPLETE)
@@ -325,7 +334,7 @@ OpenGLCamera::~OpenGLCamera()
 	glDeleteTextures(1, &reflectionColorTex);
 	glDeleteTextures(1, &reflectionDepthStencilTex);
     glDeleteTextures(1, &lightMeterTex);
-	glDeleteTextures(1, &linearDepthTex);
+	glDeleteTextures(2, linearDepthTex);
 	
 	glDeleteFramebuffers(1, &renderFBO);
 	glDeleteFramebuffers(1, &reflectionFBO);
@@ -426,6 +435,11 @@ GLuint OpenGLCamera::getReflectionFBO()
 	return reflectionFBO;
 }
 
+GLuint OpenGLCamera::getColorTexture()
+{
+    return renderColorTex;
+}
+    
 GLuint OpenGLCamera::getFinalTexture()
 {
     return postprocessTex[activePostprocessTexture];
@@ -479,9 +493,9 @@ void OpenGLCamera::ShowSceneTexture(SceneComponent sc, glm::vec4 rect)
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, texture);
 }
 
-void OpenGLCamera::ShowLinearDepthTexture(glm::vec4 rect)
+void OpenGLCamera::ShowLinearDepthTexture(glm::vec4 rect, bool frontFace)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, linearDepthTex);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, frontFace ? linearDepthTex[0] : linearDepthTex[1]);
 }
 
 void OpenGLCamera::ShowViewNormalTexture(glm::vec4 rect)
@@ -511,7 +525,7 @@ void OpenGLCamera::GenerateBlurArray()
 	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
 	
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, getLinearDepthTexture()); //Always attached
+    glBindTexture(GL_TEXTURE_2D, getLinearDepthTexture(true)); //Always attached
 	
 	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[2], 0, 0); //First layer
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
@@ -547,10 +561,11 @@ void OpenGLCamera::GenerateBlurArray()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void OpenGLCamera::GenerateLinearDepth(int sampleId)
+void OpenGLCamera::GenerateLinearDepth(int sampleId, bool frontFace)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-	glViewport(0, 0, viewportWidth, viewportHeight);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frontFace ? linearDepthTex[0] : linearDepthTex[1], 0);
+    glViewport(0, 0, viewportWidth, viewportHeight);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     
 	if(samples>1)
@@ -579,9 +594,9 @@ void OpenGLCamera::GenerateLinearDepth(int sampleId)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-GLuint OpenGLCamera::getLinearDepthTexture()
+GLuint OpenGLCamera::getLinearDepthTexture(bool frontFace)
 {
-	return linearDepthTex;
+    return frontFace ? linearDepthTex[0] : linearDepthTex[1];
 }
 
 void OpenGLCamera::DrawAO(GLfloat intensity)
@@ -619,7 +634,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
 		//For all samples
 		for(unsigned int n=0; n<samples; ++n)
 		{
-			GenerateLinearDepth(n);
+			GenerateLinearDepth(n, true);
 			((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray(); //Previous function unbinds vertex array
 		
 			//Deinterleave
@@ -630,7 +645,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
 			aoDeinterleaveShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
 		
             glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-            glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+            glBindTexture(GL_TEXTURE_2D, linearDepthTex[0]);
 			for(int i=0; i<HBAO_RANDOM_ELEMENTS; i+=NUM_MRT)
 			{
 				aoDeinterleaveShader->SetUniform("info", glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, invFullRes.x, invFullRes.y));
@@ -752,17 +767,53 @@ void OpenGLCamera::DrawSSR()
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
     glBindTexture(GL_TEXTURE_2D, renderViewNormalTex);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
-    glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+    glBindTexture(GL_TEXTURE_2D, getLinearDepthTexture(true));
+    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS4);
+    glBindTexture(GL_TEXTURE_2D, getLinearDepthTexture(false));
+    
+    GLfloat sx = viewportWidth/2.f;
+    GLfloat sy = viewportHeight/2.f;
+    
+    glm::mat4 proj = GetProjectionMatrix();
+    
+    glm::mat4 projPix = glm::transpose(glm::mat4(sx,   0,   0,  sx,
+                                                  0, sy,   0,  sy,
+                                                  0,   0, 1.f,   0,
+                                                  0,   0,   0, 1.f)) * proj;
+    
+    glm::vec4 projInfo(
+                       2.0f/proj[0].x,
+                       2.0f/proj[1].y,
+                       -(1.f-proj[0].z)/proj[0].x,
+                       -(1.f+proj[1].z)/proj[1].y
+                       );
     
     ssrShader[0]->Use();
     ssrShader[0]->SetUniform("texColor", TEX_POSTPROCESS1);
     ssrShader[0]->SetUniform("texViewNormal", TEX_POSTPROCESS2);
     ssrShader[0]->SetUniform("texLinearDepth", TEX_POSTPROCESS3);
-    ssrShader[0]->SetUniform("invP", glm::inverse(projection));
-    ssrShader[0]->SetUniform("viewport", glm::vec2(viewportWidth, viewportHeight));
+    ssrShader[0]->SetUniform("texLinearBackfaceDepth", TEX_POSTPROCESS4);
+    ssrShader[0]->SetUniform("P", projPix);
+    ssrShader[0]->SetUniform("invP", glm::inverse(proj));
+    ssrShader[0]->SetUniform("projInfo", projInfo);
+    ssrShader[0]->SetUniform("viewportSize", glm::vec2(viewportWidth, viewportHeight));
+    ssrShader[0]->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
+    ssrShader[0]->SetUniform("near", near);
+    ssrShader[0]->SetUniform("far", far);
+    ssrShader[0]->SetUniform("maxIterations", 100);
+    ssrShader[0]->SetUniform("maxBinarySearchIterations", 10);
+    ssrShader[0]->SetUniform("pixelZSize", 1.0f);
+    ssrShader[0]->SetUniform("pixelStride", 1.f);
+    ssrShader[0]->SetUniform("pixelStrideZCutoff", 50.f);
+    ssrShader[0]->SetUniform("maxRayDistance", 1000.f);
+    ssrShader[0]->SetUniform("screenEdgeFadeStart", 0.9f);
+    ssrShader[0]->SetUniform("eyeFadeStart", 0.2f);
+    ssrShader[0]->SetUniform("eyeFadeEnd", 0.8f);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
     glUseProgram(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -907,8 +958,23 @@ void OpenGLCamera::Init()
     ssrShader[0]->AddUniform("texColor", ParameterType::INT);
     ssrShader[0]->AddUniform("texViewNormal", ParameterType::INT);
     ssrShader[0]->AddUniform("texLinearDepth", ParameterType::INT);
+    ssrShader[0]->AddUniform("texLinearBackfaceDepth", ParameterType::INT);
+    ssrShader[0]->AddUniform("P", ParameterType::MAT4);
     ssrShader[0]->AddUniform("invP", ParameterType::MAT4);
-    ssrShader[0]->AddUniform("viewport", ParameterType::VEC2);
+    ssrShader[0]->AddUniform("projInfo", ParameterType::VEC4);
+    ssrShader[0]->AddUniform("viewportSize", ParameterType::VEC2);
+    ssrShader[0]->AddUniform("invViewportSize", ParameterType::VEC2);
+    ssrShader[0]->AddUniform("near", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("far", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("maxIterations", ParameterType::INT);
+    ssrShader[0]->AddUniform("maxBinarySearchIterations", ParameterType::INT);
+    ssrShader[0]->AddUniform("pixelZSize", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("pixelStride", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("pixelStrideZCutoff", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("maxRayDistance", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("screenEdgeFadeStart", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("eyeFadeStart", ParameterType::FLOAT);
+    ssrShader[0]->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
 }
 
 void OpenGLCamera::Destroy()

@@ -20,6 +20,12 @@ namespace sf
     {
     public:
         //! A constructor.
+        /*!
+         \param dispatcher a pointer to the collision dispatcher
+         \param pairCache a pointer to the collision cache
+         \param constraintSover a pointer to the constraint solver
+         \param collisionConfiguration a pointer to the collision configuration structure
+         */
         ResearchDynamicsWorld(btDispatcher* dispatcher,
                               btBroadphaseInterface* pairCache,
                               ResearchConstraintSolver* constraintSolver,

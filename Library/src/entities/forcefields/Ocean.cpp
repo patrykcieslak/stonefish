@@ -34,6 +34,8 @@ Ocean::Ocean(std::string uniqueName, bool simulateWaves, Fluid* l) : ForcefieldE
     waves = simulateWaves;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
+    waterType = Scalar(0.5);
+    turbidity = 1.0;
 }
 
 Ocean::~Ocean()
@@ -55,7 +57,33 @@ bool Ocean::hasWaves()
 {
     return waves;
 }
+    
+void Ocean::setWaterType(Scalar t)
+{
+    waterType = t > Scalar(1) ? Scalar(1) : (t < Scalar(0) ? Scalar(0) : t);
+    
+    if(glOcean != NULL)
+        glOcean->setWaterType((float)waterType);
+}
 
+Scalar Ocean::getWaterType()
+{
+    return waterType;
+}
+
+void Ocean::setTurbidity(Scalar t)
+{
+    turbidity = t < Scalar(0) ? Scalar(0) : t;
+    
+    if(glOcean != NULL)
+        glOcean->setTurbidity((float)turbidity);
+}
+    
+Scalar Ocean::getTurbidity()
+{
+    return turbidity;
+}
+    
 OpenGLOcean* Ocean::getOpenGLOcean()
 {
     return glOcean;
@@ -71,36 +99,9 @@ const Fluid* Ocean::getLiquid() const
     return liquid;
 }
 
-void Ocean::setAlgeaBloomFactor(GLfloat f)
-{
-    algeaBloom = f < 0.f ? 0.f : (f > 1.f ? 1.f : f);
-    glOcean->setLightAbsorption(ComputeLightAbsorption());
-}
-
-void Ocean::setTurbidity(GLfloat ntu)
-{
-    turbidity = ntu < 0.f ? 0.f : ntu;
-	glOcean->setTurbidity(turbidity);
-}
-    
-GLfloat Ocean::getAlgeaBloomFactor()
-{
-    return algeaBloom;
-}
-
-GLfloat Ocean::getTurbidity()
-{
-    return turbidity;
-}
-
 void Ocean::AddVelocityField(VelocityField* field)
 {
     currents.push_back(field);
-}
-
-glm::vec3 Ocean::ComputeLightAbsorption()
-{
-    return glm::vec3(0.2f+0.2f*(algeaBloom), 0.02f, 0.02f+0.02f*(algeaBloom));
 }
 
 bool Ocean::IsInsideFluid(const Vector3& point)
@@ -207,8 +208,7 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
 	glOcean = new OpenGLOcean(waves, hydrodynamics);
-	setAlgeaBloomFactor(0.2f);
-    setTurbidity(100.f);
+    setWaterType(Scalar(0.5));
 }
 
 std::vector<Renderable> Ocean::Render()

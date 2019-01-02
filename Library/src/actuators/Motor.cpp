@@ -19,9 +19,9 @@ Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
     torque = Scalar(0);
 }
 
-void Motor::setIntensity(Scalar value)
+void Motor::setIntensity(Scalar tau)
 {
-    torque = value;
+    torque = tau;
 }
 
 Scalar Motor::getTorque()

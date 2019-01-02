@@ -44,14 +44,13 @@ namespace sf
         bool IsInsideFluid(const Vector3& point);
         Scalar GetPressure(const Vector3& point);
         Scalar GetDepth(const Vector3& point);
-        glm::vec3 ComputeLightAbsorption();
         
         //Getters
+        void setWaterType(Scalar t);
+        Scalar getWaterType();
+        void setTurbidity(Scalar t);
+        Scalar getTurbidity();
         bool hasWaves();
-        void setAlgeaBloomFactor(GLfloat f);
-        void setTurbidity(GLfloat ntu);
-        GLfloat getAlgeaBloomFactor();
-        GLfloat getTurbidity();
         const Fluid* getLiquid() const;
         OpenGLOcean* getOpenGLOcean();
         ForcefieldType getForcefieldType();
@@ -64,8 +63,8 @@ namespace sf
         std::vector<VelocityField*> currents;
         OpenGLOcean* glOcean;
         Scalar depth;
-        GLfloat algeaBloom;
-        GLfloat turbidity;
+        Scalar waterType;
+        Scalar turbidity;
         bool waves;
         Renderable wavesDebug;
     };

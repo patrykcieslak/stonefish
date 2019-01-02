@@ -18,7 +18,7 @@ void main()
 	for(int i=0; i<4; ++i)
 	{
 		//float sampleDepth = texture(texLinearDepth, blurtexcoord[i]).r;
-		//if(sampleDepth >= depth-0.1)
+		//if(sampleDepth <= depth)
 		{
 			fragColor += texture(texSource, blurtexcoord[i]) * weights[i];
 			weightSum += weights[i];

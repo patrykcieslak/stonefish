@@ -17,23 +17,83 @@ namespace sf
     class NED
     {
     public:
+        //! A constructor.
+        /*!
+         \param lat the latitude of the NED origin [deg]
+         \param lon the longitude of the NED origin [deg]
+         \param height the height above the ground [m]
+         */
         NED(const Scalar lat, const Scalar lon, const Scalar height);
         
+        //! A method transforming the geodetic coordinates to ECEF.
+        /*!
+         \param lat the latitude [deg]
+         \param lon the longitude [deg]
+         \param height the height above the ground [m]
+         \param x coordinate output
+         \param y coordinate output
+         \param z coordinate output
+         */
         void geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
                            Scalar& x, Scalar& y, Scalar& z);
         
+        //! A method transforming from ECEF to the geodetic coordinates.
+        /*!
+         \param x coordinate
+         \param y coordinate
+         \param z coordinate
+         \param lat the latitude output [deg]
+         \param lon the longitude output [deg]
+         \param height the height output [m]
+         */
         void ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
                            Scalar& lat, Scalar& lon, Scalar& height);
         
+        //! A method transforming from ECEF to NED.
+        /*!
+         \param x coordinate
+         \param y coordinate
+         \param z coordinate
+         \param north output [m]
+         \param east output [m]
+         \param depth output [m]
+         */
         void ecef2Ned(const Scalar x, const Scalar y, const Scalar z,
                       Scalar& north, Scalar& east, Scalar& depth);
         
+        //! A method transforming from NED to ECEF.
+        /*!
+         \param north coordinate [m]
+         \param east coordinate [m]
+         \param depth coordinate [m]
+         \param x coordinate output
+         \param y coordinate output
+         \param z coordinate output
+         */
         void ned2Ecef(const Scalar north, const Scalar east, const Scalar depth,
                       Scalar& x, Scalar& y, Scalar& z);
         
+        //! A method transforming from geodetic coordinates to NED.
+        /*!
+         \param lat the latitude [deg]
+         \param lon the longitude [deg]
+         \param height the height above the ground [m]
+         \param north coordinate output [m]
+         \param east coordinate output [m]
+         \param depth coordinate output [m]
+         */
         void geodetic2Ned(const Scalar lat, const Scalar lon, const Scalar height,
                           Scalar& north, Scalar& east, Scalar& depth);
         
+        //! A method transforming from NED to the geodetic coordinates.
+        /*!
+         \param north coordinate [m]
+         \param east coordinate [m]
+         \param depth coordinate [m]
+         \param lat the latitude output [deg]
+         \param lon the longitude output [deg]
+         \param height the height output [m]
+         */
         void ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth,
                           Scalar& lat, Scalar& lon, Scalar& height);
         

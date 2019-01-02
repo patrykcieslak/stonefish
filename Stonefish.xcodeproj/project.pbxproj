@@ -448,6 +448,7 @@
 		F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AcrobotTestManager.cpp; sourceTree = "<group>"; };
 		F7037CC1191AA77600A1FA98 /* AcrobotTestManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AcrobotTestManager.h; sourceTree = "<group>"; };
 		F7037CE9191AA86A00A1FA98 /* AcrobotTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AcrobotTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F70CDA0F21C15319009550C0 /* water_absorption.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = water_absorption.dat; sourceTree = "<group>"; };
 		F716029D2191A5E800E83606 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F71603922191A9E100E83606 /* RotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotaryEncoder.h; sourceTree = "<group>"; };
 		F71603932191A9E100E83606 /* GPS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPS.h; sourceTree = "<group>"; };
@@ -695,13 +696,11 @@
 		F71605812191AA1C00E83606 /* atmosphereTransmittance.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = atmosphereTransmittance.frag; sourceTree = "<group>"; };
 		F71605822191AA1C00E83606 /* sunCSM.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sunCSM.frag; sourceTree = "<group>"; };
 		F71605832191AA1C00E83606 /* gaussianBlur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gaussianBlur.frag; sourceTree = "<group>"; };
-		F71605842191AA1C00E83606 /* oceanVolume.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = oceanVolume.frag; sourceTree = "<group>"; };
 		F71605852191AA1C00E83606 /* printer.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = printer.vert; sourceTree = "<group>"; };
 		F71605862191AA1C00E83606 /* tonemapping.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = tonemapping.frag; sourceTree = "<group>"; };
 		F71605872191AA1C00E83606 /* atmosphereFunc.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmosphereFunc.glsl; sourceTree = "<group>"; };
 		F71605882191AA1C00E83606 /* flat.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = flat.frag; sourceTree = "<group>"; };
 		F71605892191AA1C00E83606 /* depthLinearizeMSAA.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = depthLinearizeMSAA.frag; sourceTree = "<group>"; };
-		F716058A2191AA1C00E83606 /* oceanVolume.geom */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = oceanVolume.geom; sourceTree = "<group>"; };
 		F716058B2191AA1C00E83606 /* depthAwareBlur.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = depthAwareBlur.frag; sourceTree = "<group>"; };
 		F716058C2191AA1C00E83606 /* atmosphereSkySun.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = atmosphereSkySun.frag; sourceTree = "<group>"; };
 		F716058D2191AA1C00E83606 /* saq.geom */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = saq.geom; sourceTree = "<group>"; };
@@ -945,10 +944,10 @@
 				F71603B62191A9E100E83606 /* NameManager.h */,
 				F71603BA2191A9E100E83606 /* MaterialManager.h */,
 				F71603B72191A9E100E83606 /* ResearchDynamicsWorld.h */,
-				F71603B12191A9E100E83606 /* TorusShape.h */,
-				F71603B22191A9E100E83606 /* FilteredCollisionDispatcher.h */,
-				F71603B32191A9E100E83606 /* ScrewConstraint.h */,
 				F71603B42191A9E100E83606 /* ResearchConstraintSolver.h */,
+				F71603B22191A9E100E83606 /* FilteredCollisionDispatcher.h */,
+				F71603B12191A9E100E83606 /* TorusShape.h */,
+				F71603B32191A9E100E83606 /* ScrewConstraint.h */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -1109,82 +1108,11 @@
 		F71605582191AA1C00E83606 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
-				F71605722191AA1C00E83606 /* atmosphere.geom */,
-				F71605942191AA1D00E83606 /* atmosphereApi.glsl */,
-				F71605612191AA1C00E83606 /* atmosphereDef.glsl */,
-				F71605982191AA1D00E83606 /* atmosphereDirectIrradiance.frag */,
-				F71605872191AA1C00E83606 /* atmosphereFunc.glsl */,
-				F71605972191AA1D00E83606 /* atmosphereIndirectIrradiance.frag */,
-				F71605A12191AA1D00E83606 /* atmosphereMultipleScattering.frag */,
-				F716059B2191AA1D00E83606 /* atmosphereScatteringDensity.frag */,
-				F71605952191AA1D00E83606 /* atmosphereSingleScattering.frag */,
-				F716058C2191AA1C00E83606 /* atmosphereSkySun.frag */,
-				F716055C2191AA1C00E83606 /* atmosphereSkySun.vert */,
-				F71605812191AA1C00E83606 /* atmosphereTransmittance.frag */,
-				F71605792191AA1C00E83606 /* blinnPhong.frag */,
-				F71605692191AA1C00E83606 /* cookTorrance.frag */,
-				F716058B2191AA1C00E83606 /* depthAwareBlur.frag */,
-				F71605602191AA1C00E83606 /* depthAwareBlur2.frag */,
-				F716055B2191AA1C00E83606 /* depthLinearize.frag */,
-				F71605892191AA1C00E83606 /* depthLinearizeMSAA.frag */,
-				F716057E2191AA1C00E83606 /* depthVisualize.frag */,
-				F71605882191AA1C00E83606 /* flat.frag */,
-				F716055D2191AA1C00E83606 /* flat.vert */,
-				F71605832191AA1C00E83606 /* gaussianBlur.frag */,
-				F71605642191AA1C00E83606 /* gaussianBlur.vert */,
-				F716057B2191AA1C00E83606 /* grid.png */,
-				F716056E2191AA1C00E83606 /* gui.png */,
-				F71605802191AA1C00E83606 /* guiFlat.frag */,
-				F716056B2191AA1C00E83606 /* guiFlat.vert */,
-				F716056D2191AA1C00E83606 /* guiTex.frag */,
-				F716059F2191AA1D00E83606 /* guiTex.vert */,
-				F71605992191AA1D00E83606 /* hbaoBlur.frag */,
-				F716056A2191AA1C00E83606 /* hbaoBlur2.frag */,
-				F71605912191AA1C00E83606 /* hbaoCalc.frag */,
-				F71605742191AA1C00E83606 /* hbaoCalcMSAA.frag */,
-				F716056C2191AA1C00E83606 /* hbaoDeinterleave.frag */,
-				F716059A2191AA1D00E83606 /* hbaoReinterleave.frag */,
-				F716058D2191AA1C00E83606 /* saq.geom */,
-				F716059D2191AA1D00E83606 /* helpers.frag */,
-				F71605712191AA1C00E83606 /* helpers.vert */,
-				F71605752191AA1C00E83606 /* infiniteSurface.vert */,
-				F71605662191AA1C00E83606 /* lightMeter.frag */,
-				F716056F2191AA1C00E83606 /* logo_color_64.png */,
-				F716057F2191AA1C00E83606 /* logo_gray_64.png */,
-				F716059C2191AA1D00E83606 /* material.frag */,
-				F71605702191AA1C00E83606 /* material.vert */,
-				F716055E2191AA1C00E83606 /* oceanBackground.frag */,
-				F71605652191AA1C00E83606 /* oceanBacksurface.frag */,
-				F71605592191AA1C00E83606 /* oceanBlur.frag */,
-				F716057C2191AA1C00E83606 /* oceanFFTX.frag */,
-				F716058E2191AA1C00E83606 /* oceanFFTY.frag */,
-				F71605762191AA1C00E83606 /* oceanInit.frag */,
-				F71605782191AA1C00E83606 /* oceanSpectrum.frag */,
-				F71605A02191AA1D00E83606 /* oceanSurface.frag */,
-				F71605732191AA1C00E83606 /* oceanSurface.tese */,
-				F71605922191AA1D00E83606 /* oceanVariance.frag */,
-				F71605842191AA1C00E83606 /* oceanVolume.frag */,
-				F716058A2191AA1C00E83606 /* oceanVolume.geom */,
-				F7895B7D21A1A9030014722C /* oceanEdge.geom */,
-				F7895B7E21A1B3830014722C /* oceanEdge.frag */,
-				F71605622191AA1C00E83606 /* pass.vert */,
-				F71605632191AA1C00E83606 /* printer.frag */,
-				F71605852191AA1C00E83606 /* printer.vert */,
-				F716057A2191AA1C00E83606 /* quadTree.tesc */,
-				F71605932191AA1D00E83606 /* quadTree.vert */,
-				F716055A2191AA1C00E83606 /* saq.vert */,
-				F71605902191AA1C00E83606 /* simpleDownsample.frag */,
-				F71605822191AA1C00E83606 /* sunCSM.frag */,
-				F71605672191AA1C00E83606 /* texCube.frag */,
-				F716057D2191AA1C00E83606 /* texCube.vert */,
-				F716059E2191AA1D00E83606 /* texLayerQuad.frag */,
-				F716055F2191AA1C00E83606 /* texLevelQuad.frag */,
-				F71605962191AA1D00E83606 /* texQuad.frag */,
-				F71605772191AA1C00E83606 /* texQuad.vert */,
-				F71605682191AA1C00E83606 /* texQuadMS.frag */,
-				F71605862191AA1C00E83606 /* tonemapping.frag */,
-				F716058F2191AA1C00E83606 /* underwaterMaterial.frag */,
-				F77015CD21B2E4F100585FD1 /* ssr.frag */,
+				F7C8895A21B96EE100FF2109 /* ocean */,
+				F7C8895921B96E8000FF2109 /* gui */,
+				F7C8895821B96E6B00FF2109 /* post-processing */,
+				F7C8895621B96E1A00FF2109 /* atmosphere */,
+				F7C8895721B96E4600FF2109 /* basic */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -1564,6 +1492,116 @@
 				F77015D421B4485800585FD1 /* Atmosphere.cpp */,
 			);
 			path = forcefields;
+			sourceTree = "<group>";
+		};
+		F7C8895621B96E1A00FF2109 /* atmosphere */ = {
+			isa = PBXGroup;
+			children = (
+				F71605822191AA1C00E83606 /* sunCSM.frag */,
+				F71605722191AA1C00E83606 /* atmosphere.geom */,
+				F71605942191AA1D00E83606 /* atmosphereApi.glsl */,
+				F71605612191AA1C00E83606 /* atmosphereDef.glsl */,
+				F71605982191AA1D00E83606 /* atmosphereDirectIrradiance.frag */,
+				F71605872191AA1C00E83606 /* atmosphereFunc.glsl */,
+				F71605972191AA1D00E83606 /* atmosphereIndirectIrradiance.frag */,
+				F71605A12191AA1D00E83606 /* atmosphereMultipleScattering.frag */,
+				F716059B2191AA1D00E83606 /* atmosphereScatteringDensity.frag */,
+				F71605952191AA1D00E83606 /* atmosphereSingleScattering.frag */,
+				F716058C2191AA1C00E83606 /* atmosphereSkySun.frag */,
+				F716055C2191AA1C00E83606 /* atmosphereSkySun.vert */,
+				F71605812191AA1C00E83606 /* atmosphereTransmittance.frag */,
+			);
+			name = atmosphere;
+			sourceTree = "<group>";
+		};
+		F7C8895721B96E4600FF2109 /* basic */ = {
+			isa = PBXGroup;
+			children = (
+				F716058D2191AA1C00E83606 /* saq.geom */,
+				F716059D2191AA1D00E83606 /* helpers.frag */,
+				F71605712191AA1C00E83606 /* helpers.vert */,
+				F71605792191AA1C00E83606 /* blinnPhong.frag */,
+				F71605692191AA1C00E83606 /* cookTorrance.frag */,
+				F71605882191AA1C00E83606 /* flat.frag */,
+				F716055D2191AA1C00E83606 /* flat.vert */,
+				F716059C2191AA1D00E83606 /* material.frag */,
+				F71605702191AA1C00E83606 /* material.vert */,
+				F716057D2191AA1C00E83606 /* texCube.vert */,
+				F716059E2191AA1D00E83606 /* texLayerQuad.frag */,
+				F716055F2191AA1C00E83606 /* texLevelQuad.frag */,
+				F71605672191AA1C00E83606 /* texCube.frag */,
+				F71605962191AA1D00E83606 /* texQuad.frag */,
+				F71605772191AA1C00E83606 /* texQuad.vert */,
+				F71605682191AA1C00E83606 /* texQuadMS.frag */,
+				F71605752191AA1C00E83606 /* infiniteSurface.vert */,
+				F71605622191AA1C00E83606 /* pass.vert */,
+				F716055A2191AA1C00E83606 /* saq.vert */,
+				F716057A2191AA1C00E83606 /* quadTree.tesc */,
+				F71605932191AA1D00E83606 /* quadTree.vert */,
+				F716057B2191AA1C00E83606 /* grid.png */,
+			);
+			name = basic;
+			sourceTree = "<group>";
+		};
+		F7C8895821B96E6B00FF2109 /* post-processing */ = {
+			isa = PBXGroup;
+			children = (
+				F716058B2191AA1C00E83606 /* depthAwareBlur.frag */,
+				F71605602191AA1C00E83606 /* depthAwareBlur2.frag */,
+				F716055B2191AA1C00E83606 /* depthLinearize.frag */,
+				F71605892191AA1C00E83606 /* depthLinearizeMSAA.frag */,
+				F716057E2191AA1C00E83606 /* depthVisualize.frag */,
+				F71605992191AA1D00E83606 /* hbaoBlur.frag */,
+				F716056A2191AA1C00E83606 /* hbaoBlur2.frag */,
+				F71605912191AA1C00E83606 /* hbaoCalc.frag */,
+				F71605832191AA1C00E83606 /* gaussianBlur.frag */,
+				F71605642191AA1C00E83606 /* gaussianBlur.vert */,
+				F71605742191AA1C00E83606 /* hbaoCalcMSAA.frag */,
+				F716056C2191AA1C00E83606 /* hbaoDeinterleave.frag */,
+				F716059A2191AA1D00E83606 /* hbaoReinterleave.frag */,
+				F71605662191AA1C00E83606 /* lightMeter.frag */,
+				F71605862191AA1C00E83606 /* tonemapping.frag */,
+				F77015CD21B2E4F100585FD1 /* ssr.frag */,
+				F71605902191AA1C00E83606 /* simpleDownsample.frag */,
+			);
+			name = "post-processing";
+			sourceTree = "<group>";
+		};
+		F7C8895921B96E8000FF2109 /* gui */ = {
+			isa = PBXGroup;
+			children = (
+				F71605632191AA1C00E83606 /* printer.frag */,
+				F71605852191AA1C00E83606 /* printer.vert */,
+				F716056F2191AA1C00E83606 /* logo_color_64.png */,
+				F716057F2191AA1C00E83606 /* logo_gray_64.png */,
+				F716056E2191AA1C00E83606 /* gui.png */,
+				F71605802191AA1C00E83606 /* guiFlat.frag */,
+				F716056B2191AA1C00E83606 /* guiFlat.vert */,
+				F716056D2191AA1C00E83606 /* guiTex.frag */,
+				F716059F2191AA1D00E83606 /* guiTex.vert */,
+			);
+			name = gui;
+			sourceTree = "<group>";
+		};
+		F7C8895A21B96EE100FF2109 /* ocean */ = {
+			isa = PBXGroup;
+			children = (
+				F716058F2191AA1C00E83606 /* underwaterMaterial.frag */,
+				F71605A02191AA1D00E83606 /* oceanSurface.frag */,
+				F71605732191AA1C00E83606 /* oceanSurface.tese */,
+				F71605652191AA1C00E83606 /* oceanBacksurface.frag */,
+				F71605592191AA1C00E83606 /* oceanBlur.frag */,
+				F716055E2191AA1C00E83606 /* oceanBackground.frag */,
+				F7895B7E21A1B3830014722C /* oceanEdge.frag */,
+				F7895B7D21A1A9030014722C /* oceanEdge.geom */,
+				F71605762191AA1C00E83606 /* oceanInit.frag */,
+				F716057C2191AA1C00E83606 /* oceanFFTX.frag */,
+				F716058E2191AA1C00E83606 /* oceanFFTY.frag */,
+				F71605782191AA1C00E83606 /* oceanSpectrum.frag */,
+				F71605922191AA1D00E83606 /* oceanVariance.frag */,
+				F70CDA0F21C15319009550C0 /* water_absorption.dat */,
+			);
+			name = ocean;
 			sourceTree = "<group>";
 		};
 		F7DE5F6D193E7899007FEE22 /* SlidingTest */ = {

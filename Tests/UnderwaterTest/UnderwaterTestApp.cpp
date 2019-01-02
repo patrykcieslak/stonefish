@@ -9,6 +9,7 @@
 #include "UnderwaterTestApp.h"
 
 #include <graphics/OpenGLTrackball.h>
+#include <graphics/IMGUI.h>
 #include <entities/forcefields/Ocean.h>
 #include <sensors/scalar/RotaryEncoder.h>
 #include <sensors/scalar/Accelerometer.h>
@@ -24,6 +25,21 @@ UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
+    
+    sf::Ocean* ocean = getSimulationManager()->getOcean();
+    if(ocean != NULL)
+    {
+    sf::ui_id slider;
+    slider.owner = 0;
+    slider.item = 0;
+    slider.index = 0;
+    slider.item = 1;
+    ocean->setWaterType(getGUI()->DoSlider(slider, 5.f, 5.f, 200.f, 0.0, 1.0, ocean->getWaterType(), "Water type"));
+    
+    slider.item = 2;
+    ocean->setTurbidity(getGUI()->DoSlider(slider, 5.f, 70.f, 200.f, 0.0, 10.0, ocean->getTurbidity(), "Turbidity"));
+    }
+    
     /*
     ui_id slider;
     slider.owner = 0;

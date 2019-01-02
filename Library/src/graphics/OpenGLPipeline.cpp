@@ -440,7 +440,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                         //Ambient occlusion
                         if(rSettings.ao > RenderQuality::QUALITY_DISABLED) {
-                            GLfloat factor = expf(-ocean->getTurbidity()/1000.f);
+                            GLfloat factor = 0.1;//expf(-ocean->getTurbidity()/1000.f);
                             factor *= factor*factor;
                             camera->DrawAO(factor);
                         }
@@ -473,13 +473,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
             
                         //Underwater blur
-                        camera->GenerateLinearDepth(0);
+                        camera->GenerateLinearDepth(0, true);
                         camera->EnterPostprocessing();
                         camera->GenerateBlurArray();
             
                         //Apply blur
                         glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
-                        glOcean->DrawVolume(camera->getPostprocessTexture(2), camera->getLinearDepthTexture());
+                        glOcean->DrawVolume(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(),
+                                            camera->getPostprocessTexture(2), camera->getLinearDepthTexture(true), viewport);
             
                         //Render sky if camera crossing water plane
                         //atm->getOpenGLAtmosphere()->DrawSkyAndSun(view);
@@ -504,10 +505,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Drawing underwater without stencil test
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
+                    glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
                     
                     //Draw surface (disable depth testing but write to depth buffer)
                     glEnable(GL_BLEND);
-                    glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                     //glDepthFunc(GL_ALWAYS);
                     glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->getReflectionTexture(), viewport);
                     glDisable(GL_BLEND);
@@ -517,21 +519,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Stencil masking
                     glEnable(GL_STENCIL_TEST);
                     glStencilMask(0x00);
-                    
-                    //Draw only underwater stuff
-                    glStencilFunc(GL_EQUAL, 1, 0xFF);
-                    
-                    //Distant pool background
-                    //glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
-                    
-                    //Underwater blur
-                    //glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
-                    /*camera->EnterPostprocessing();
-                    camera->GenerateBlurArray();
-                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
-                    glOcean->DrawVolume(camera->getPostprocessTexture(2), camera->getLinearDepthTexture());*/
-                    
-                    //Draw only above water stuff
                     glStencilFunc(GL_EQUAL, 0, 0xFF);
                     
                     //Draw all objects as above surface (depth testing will secure drawing only what is above water)
@@ -543,12 +530,39 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     glDisable(GL_STENCIL_TEST);
                     
-                    //camera->GenerateLinearDepth(0);
+                    //Linear depth front faces
+                    camera->GenerateLinearDepth(0, true);
                     
-                    //Go to postprocessing stage
+                    //Linear depth back faces
+                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                    glClear(GL_DEPTH_BUFFER_BIT);
+                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                    glCullFace(GL_FRONT);
+                    content->SetDrawingMode(DrawingMode::FLAT);
+                    DrawObjects();
+                    glCullFace(GL_BACK);
+                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                    camera->GenerateLinearDepth(0, false);
+                    
+                    //Go to postprocessing stage to copy color texture
                     camera->EnterPostprocessing();
-                    //glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-                    //camera->DrawSSR();
+                    
+                    //Go back to rendering framebuffer
+                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                    
+                    //Draw reflections
+                    glDisable(GL_DEPTH_TEST);
+                    camera->DrawSSR();
+                    
+                    //Draw blur only below surface
+                    glEnable(GL_STENCIL_TEST);
+                    glStencilFunc(GL_EQUAL, 1, 0xFF);
+                    glOcean->DrawVolume(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(),
+                                        camera->getColorTexture(), camera->getLinearDepthTexture(true), viewport);
+                    glDisable(GL_STENCIL_TEST);
+                    
+                    //Go to postprocessing for good
+                    camera->EnterPostprocessing();
                 }
             
                 //Post-processing

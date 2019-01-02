@@ -16,14 +16,30 @@ namespace sf
     class FeatherstoneEntity;
     class Joint;
     
-    //!
+    //! An abstract class representing a joint actuator.
     class JointActuator : public Actuator
     {
     public:
+        //! A constructor.
+        /*!
+         \param uniqueName a name for the actuator.
+         */
         JointActuator(std::string uniqueName);
         
+        //! A method used to attach the actuator to the specified joint of a rigid multibody.
+        /*!
+         \param multibody a pointer to the multibody
+         \param jointId the index of the multibody joint to be actuated
+         */
         void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
+        
+        //! A method used to attach the actuator to a discrete joint.
+        /*!
+         \param joint a pointer to a joint object
+         */
         void AttachToJoint(Joint* joint);
+        
+        //! A method returning the type of the actuator.
         ActuatorType getType();
         
     protected:
