@@ -135,7 +135,7 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 	if(positionLimits.first < positionLimits.second)
 		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
 	
-	dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, forceLimit/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+	//dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, forceLimit/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 

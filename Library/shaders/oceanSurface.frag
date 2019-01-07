@@ -1,8 +1,7 @@
 #version 330
 
 uniform sampler2DArray texWaveFFT;
-uniform sampler3D texSlopeVariance;
-uniform sampler2D texReflection; 
+uniform sampler3D texSlopeVariance; 
 uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
@@ -144,4 +143,5 @@ void main()
     fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  //vec4(normalize(MV * normal), 1.0);
     //fragColor = vec4(outColor, 1.0);
     //fragNormal = vec4(normalize(MV * vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);
+    //fragNormal = vec4(normalize(vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);
 }

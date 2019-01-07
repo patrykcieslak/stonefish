@@ -381,10 +381,10 @@ void main()
 	vec3 sunIlluminance;
     
     //1. Direct lighting
-	if(N.z > 0.0 && toSky.z > 0.0)
+	if(N.z > 0.0)// && toSky.z > 0.0)
 	{
 		//Ambient
-		sunIlluminance = GetSunAndSkyIlluminance(vec3(fragPos.xy, 0.0) - center, toSky, sunDirection, skyIlluminance);
+		sunIlluminance = GetSunAndSkyIlluminance(vec3(fragPos.xy, 0.0) - center, N, sunDirection, skyIlluminance);
 		fragColor += albedo * skyIlluminance/whitePoint/30000.0;
 	
 		//Sun
@@ -392,7 +392,7 @@ void main()
 		
 		//Absorption
         float lSurface = depth/N.z;
-        fragColor *= exp(-c * lSurface);
+        fragColor *= exp(-c * lSurface) * smoothstep(0.0, 0.5, N.z);
     }
     
     //2. Inscatter

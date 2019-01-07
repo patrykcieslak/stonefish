@@ -727,7 +727,7 @@ void SolidEntity::ComputeProxyEllipsoid()
     
     //Set transform with respect to geometry
     ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
-    ellipsoidTransform.setOrigin(Vector3(c(0), c(1), c(2)));
+    ellipsoidTransform.setOrigin(Vector3(-c(0), -c(1), -c(2)));
     T_CG2H = ellipsoidTransform;
     
 #ifdef DEBUG

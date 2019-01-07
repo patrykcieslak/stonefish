@@ -2,7 +2,6 @@
 
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
-uniform sampler2D texReflection; 
 uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
@@ -135,11 +134,8 @@ void main()
 		Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/1000.0;
 	}
 	
-	//Reflected objects
-    vec3 reflectedColor = vec3(0.0); //texture(texReflection, vec2(gl_FragCoord.x/viewport.x, gl_FragCoord.y/viewport.y) + normal.xy*0.01);
-	
 	//Final color
-	fragColor = fresnel * reflectedColor.rgb + (1.0-fresnel) * Lsky/whitePoint/10000.0;
+	fragColor = (1.0-fresnel) * Lsky/whitePoint/10000.0;
 	
     //Water properties
     vec3 b = turbidity * rayleigh; //Scattering coefficient

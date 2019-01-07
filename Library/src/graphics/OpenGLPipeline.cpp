@@ -283,7 +283,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(ocean != NULL)
     {
         ocean->getOpenGLOcean()->Simulate();
-        renderMode = rSettings.ocean > RenderQuality::QUALITY_DISABLED ? (ocean->hasWaves() ? 2 : 1) : 0;
+        renderMode = rSettings.ocean > RenderQuality::QUALITY_DISABLED ? 1 : 0;
     }
     Atmosphere* atm = sim->getAtmosphere();
     
@@ -345,11 +345,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
                 }
             
-                //Clear reflection framebuffer
-                glBindFramebuffer(GL_FRAMEBUFFER, camera->getReflectionFBO());
-                glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                
                 //Clear main framebuffer and setup camera
                 glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                 GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
@@ -374,133 +369,21 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                     //Go to postprocessing stage
                     camera->EnterPostprocessing();
-                } 
-                else if(renderMode == 1) //OCEAN WITHOUT WAVES (FLAT SURFACE)
-                {
-                    OpenGLOcean* glOcean = ocean->getOpenGLOcean();
-            
-                    if(camera->GetEyePosition().z >= 0.f) //Camera is above water surface
-                    {
-                        //Render all objects
-                        content->SetDrawingMode(DrawingMode::UNDERWATER);
-                        content->EnableClipPlane(glm::vec4(0,0,-1.f,0));
-                        DrawObjects();
-                        content->DisableClipPlane();
-            
-                        content->SetDrawingMode(DrawingMode::FULL);
-                        content->EnableClipPlane(glm::vec4(0,0,1.f,0));
-                        DrawObjects();
-                        content->DisableClipPlane();
-            
-                        //Ambient occlusion
-                        if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
-                            camera->DrawAO(1.f);
-            
-                        //Generate reflection texture
-                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getReflectionFBO());
-                        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                        content->SetCurrentView(camera, true);
-            
-                        //Render all objects
-                        content->SetDrawingMode(DrawingMode::FULL);
-                        content->EnableClipPlane(glm::vec4(0,0,1.f,0));
-                        glCullFace(GL_FRONT);
-                        DrawObjects();
-                        glCullFace(GL_BACK);
-                        content->DisableClipPlane();
-            
-                        //Draw surface
-                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
-                        glDrawBuffers(2, renderBuffs);
-                        camera->SetViewport();
-                        content->SetCurrentView(camera);
-            
-                        //Draw water surface
-                        glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), camera->getReflectionTexture(), viewport);
-                        
-                        //Render sky
-                        atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
-                        
-                        //Go to postprocessing stage
-                        camera->EnterPostprocessing();
-                    }
-                    else //Camera is underwater
-                    {
-                        //Render all objects
-                        content->SetDrawingMode(DrawingMode::UNDERWATER);
-                        content->EnableClipPlane(glm::vec4(0,0,-1.f,0));
-                        DrawObjects();
-                        content->DisableClipPlane();
-            
-                        content->SetDrawingMode(DrawingMode::FULL);
-                        content->EnableClipPlane(glm::vec4(0,0,1.f,0));
-                        DrawObjects();
-                        content->DisableClipPlane();
-            
-                        //Ambient occlusion
-                        if(rSettings.ao > RenderQuality::QUALITY_DISABLED) {
-                            GLfloat factor = 0.1;//expf(-ocean->getTurbidity()/1000.f);
-                            factor *= factor*factor;
-                            camera->DrawAO(factor);
-                        }
-            
-                        //Render planar reflection
-                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getReflectionFBO());
-                        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                        content->SetCurrentView(camera, true);
-            
-                        //Render all objects
-                        content->SetDrawingMode(DrawingMode::UNDERWATER);
-                        content->EnableClipPlane(glm::vec4(0,0,-1.f,0));
-                        glCullFace(GL_FRONT);
-                        DrawObjects();
-                        glCullFace(GL_BACK);
-                        glm::vec3 eyePos = camera->GetEyePosition();
-                        eyePos.z = -eyePos.z;
-                        glOcean->DrawBackground(eyePos, content->GetViewMatrix(), camera->GetProjectionMatrix());
-                        content->DisableClipPlane();
-            
-                        //Draw water surface
-                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
-                        glDrawBuffers(2, renderBuffs);
-                        camera->SetViewport();
-                        content->SetCurrentView(camera);
-                        glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), camera->getReflectionTexture(), viewport);
-            
-                        //Distant pool background
-                        glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
-            
-                        //Underwater blur
-                        camera->GenerateLinearDepth(0, true);
-                        camera->EnterPostprocessing();
-                        camera->GenerateBlurArray();
-            
-                        //Apply blur
-                        glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
-                        glOcean->DrawVolume(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(),
-                                            camera->getPostprocessTexture(2), camera->getLinearDepthTexture(true), viewport);
-            
-                        //Render sky if camera crossing water plane
-                        //atm->getOpenGLAtmosphere()->DrawSkyAndSun(view);
-            
-                        //Go to postprocessing again
-                        camera->EnterPostprocessing();
-                    }
                 }
-                else if(renderMode == 2) //OCEAN WITH WAVES
+                else if(renderMode == 1) //OCEAN
                 {
                     /////////////////
                     //// ADD AO !!! /////
                     /////////////////////
                     
-                    //Update ocean for this camera
                     OpenGLOcean* glOcean = ocean->getOpenGLOcean();
-                    glOcean->UpdateSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
+                    
+                    //Update ocean for this camera
+                    if(ocean->hasWaves())
+                        glOcean->UpdateSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
                     
                     //Generating stencil mask
-                    glOcean->DrawUnderwaterMask(camera->GetViewMatrix(), camera->GetProjectionMatrix());
+                    glOcean->DrawUnderwaterMask(camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->GetInfiniteProjectionMatrix());
                     
                     //Drawing underwater without stencil test
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
@@ -510,11 +393,18 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw surface (disable depth testing but write to depth buffer)
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    //glDepthFunc(GL_ALWAYS);
-                    glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->getReflectionTexture(), viewport);
+                    glDepthFunc(GL_ALWAYS);
+                    if(ocean->hasWaves())
+                        glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), viewport);
+                    else
+                        glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), viewport);
                     glDisable(GL_BLEND);
-                    //glDepthFunc(GL_LEQUAL);
-                    glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), camera->getReflectionTexture(), viewport);
+                    glDepthFunc(GL_LESS);
+                    if(ocean->hasWaves())
+                        glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), viewport);
+                    else
+                        glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), viewport);
+                    glDepthFunc(GL_LEQUAL);
                     
                     //Stencil masking
                     glEnable(GL_STENCIL_TEST);

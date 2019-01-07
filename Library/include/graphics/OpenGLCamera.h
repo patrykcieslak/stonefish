@@ -46,9 +46,6 @@ namespace sf
         glm::vec4 jitters[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
     };
     
-    //!
-    typedef enum {NORMAL, REFLECTED, REFRACTED} SceneComponent;
-    
     class GLSLShader;
     class SolidEntity;
     
@@ -73,12 +70,11 @@ namespace sf
         void SetProjection();
         void SetViewTransform();
         glm::vec3 Ray(GLint x, GLint y);
-        void SetReflectionViewport();
         void GenerateLinearDepth(int sampleId, bool frontFace);
         void GenerateBlurArray();
         void EnterPostprocessing();
         
-        void ShowSceneTexture(SceneComponent sc, glm::vec4 rect);
+        void ShowSceneTexture(glm::vec4 rect);
         void ShowLinearDepthTexture(glm::vec4 rect, bool frontFace);
         void ShowViewNormalTexture(glm::vec4 rect);
         void ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index);
@@ -93,8 +89,6 @@ namespace sf
         GLfloat GetFarClip();
         
         GLuint getColorTexture();
-        GLuint getReflectionFBO();
-        GLuint getReflectionTexture();
         GLuint getFinalTexture();
         GLuint getAOTexture();
         GLuint getLinearDepthTexture(bool frontFace);
@@ -109,11 +103,6 @@ namespace sf
         GLuint renderColorTex;
         GLuint renderViewNormalTex;
         GLuint renderDepthStencilTex;
-        
-        //Non-multisampled reflection textures
-        GLuint reflectionFBO;
-        GLuint reflectionColorTex;
-        GLuint reflectionDepthStencilTex;
         
         //Float texture
         GLuint lightMeterFBO;

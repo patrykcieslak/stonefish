@@ -48,16 +48,16 @@ namespace sf
         void UpdateSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
         
         //! Method that draws the surface of the ocean.
-        void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
+        void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
         
         //! Method that draws the surface of the ocean, seen from underwater.
-        void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint reflectionTexture, GLint* viewport);
+        void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
         
         //! Method that draws the distant background of the ocean.
         void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
         
         //! Method that generates the stencil mask.
-        void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection);
+        void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::mat4 infProjection);
         
         //! Method that draws the particles in the ocean and the blur (scattering).
         void DrawVolume(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint sceneTexture, GLuint linearDepthTex, GLint* viewport);

@@ -196,7 +196,7 @@ void Compound::RecalculatePhysicalProperties()
     
 		//3.3. Rotate body so that principal axes are parallel to (x,y,z) system
 		Matrix3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-		T_CG2O.setBasis(rotMat.inverse());
+		T_CG2O = Transform(rotMat, Vector3(0,0,0)).inverse() * T_CG2O;
     }
 	
     T_CG2C = T_CG2G = T_CG2O;

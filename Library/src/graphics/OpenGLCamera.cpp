@@ -116,34 +116,6 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Render FBO initialization failed!");
 		
-	//Planar reflection render buffer (half-size, no multisampling)
-	glGenTextures(1, &reflectionColorTex);
-	glBindTexture(GL_TEXTURE_2D, reflectionColorTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Use hardware linear interpolation
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glGenTextures(1, &reflectionDepthStencilTex);
-	glBindTexture(GL_TEXTURE_2D, reflectionDepthStencilTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-		
-	glGenFramebuffers(1, &reflectionFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, reflectionFBO);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, reflectionColorTex, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, reflectionDepthStencilTex, 0);
-		
-	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if(status != GL_FRAMEBUFFER_COMPLETE)
-        cError("Planar reflection FBO initialization failed!");
-    
 	//----Light metering (automatic exposure)----
     glGenFramebuffers(1, &lightMeterFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
@@ -331,14 +303,11 @@ OpenGLCamera::~OpenGLCamera()
     glDeleteTextures(1, &renderColorTex);
 	glDeleteTextures(1, &renderViewNormalTex);
 	glDeleteTextures(1, &renderDepthStencilTex);
-	glDeleteTextures(1, &reflectionColorTex);
-	glDeleteTextures(1, &reflectionDepthStencilTex);
-    glDeleteTextures(1, &lightMeterTex);
+	glDeleteTextures(1, &lightMeterTex);
 	glDeleteTextures(2, linearDepthTex);
 	
 	glDeleteFramebuffers(1, &renderFBO);
-	glDeleteFramebuffers(1, &reflectionFBO);
-    glDeleteFramebuffers(1, &postprocessFBO);
+	glDeleteFramebuffers(1, &postprocessFBO);
 	glDeleteFramebuffers(1, &lightMeterFBO);
     glDeleteFramebuffers(1, &linearDepthFBO);
     
@@ -430,11 +399,6 @@ glm::vec3 OpenGLCamera::Ray(GLint x, GLint y)
     return rayTo;
 }
 
-GLuint OpenGLCamera::getReflectionFBO()
-{
-	return reflectionFBO;
-}
-
 GLuint OpenGLCamera::getColorTexture()
 {
     return renderColorTex;
@@ -443,11 +407,6 @@ GLuint OpenGLCamera::getColorTexture()
 GLuint OpenGLCamera::getFinalTexture()
 {
     return postprocessTex[activePostprocessTexture];
-}
-
-GLuint OpenGLCamera::getReflectionTexture()
-{
-	return reflectionColorTex;
 }
 
 bool OpenGLCamera::hasAO()
@@ -464,11 +423,6 @@ void OpenGLCamera::SetupViewport(GLint x, GLint y, GLint width)
     viewportHeight = ((GLfloat)viewportHeight/(GLfloat)oldWidth)*width;
 }
 
-void OpenGLCamera::SetReflectionViewport()
-{
-	glViewport(0, 0, viewportWidth, viewportHeight);
-}
-
 void OpenGLCamera::SetProjection()
 {
 	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(projection);
@@ -479,18 +433,12 @@ void OpenGLCamera::SetViewTransform()
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(GetViewMatrix());
 }
 
-void OpenGLCamera::ShowSceneTexture(SceneComponent sc, glm::vec4 rect)
+void OpenGLCamera::ShowSceneTexture(glm::vec4 rect)
 {
-    GLuint texture;
-    if(sc == SceneComponent::NORMAL)
-        texture = renderColorTex;
-    else
-        texture = reflectionColorTex;
-    
     if(samples>1)
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, texture, glm::ivec2(viewportWidth, viewportHeight));
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderColorTex, glm::ivec2(viewportWidth, viewportHeight));
     else
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, texture);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderColorTex);
 }
 
 void OpenGLCamera::ShowLinearDepthTexture(glm::vec4 rect, bool frontFace)

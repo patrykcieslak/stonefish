@@ -238,7 +238,7 @@ namespace sf
         //! A method returning the volume of the body.
         Scalar getVolume() const;
         
-        //! A method returning a copy of the physics mesh vertices (memory needs to be released manually!).
+        //! A method returning a copy of the vertices of the physics mesh in physics frame (memory needs to be released manually!).
         virtual std::vector<Vertex>* getMeshVertices();
         
         //! A method returning a pointer to the physics mesh.

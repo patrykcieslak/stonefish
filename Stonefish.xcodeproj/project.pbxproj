@@ -1533,7 +1533,6 @@
 				F71605962191AA1D00E83606 /* texQuad.frag */,
 				F71605772191AA1C00E83606 /* texQuad.vert */,
 				F71605682191AA1C00E83606 /* texQuadMS.frag */,
-				F71605752191AA1C00E83606 /* infiniteSurface.vert */,
 				F71605622191AA1C00E83606 /* pass.vert */,
 				F716055A2191AA1C00E83606 /* saq.vert */,
 				F716057A2191AA1C00E83606 /* quadTree.tesc */,
@@ -1599,6 +1598,7 @@
 				F716058E2191AA1C00E83606 /* oceanFFTY.frag */,
 				F71605782191AA1C00E83606 /* oceanSpectrum.frag */,
 				F71605922191AA1D00E83606 /* oceanVariance.frag */,
+				F71605752191AA1C00E83606 /* infiniteSurface.vert */,
 				F70CDA0F21C15319009550C0 /* water_absorption.dat */,
 			);
 			name = ocean;

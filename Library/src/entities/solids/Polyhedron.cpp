@@ -265,7 +265,8 @@ Polyhedron::Polyhedron(std::string uniqueName,
         
         //5.3. Rotate body so that principal axes are parallel to (x,y,z) system
         Matrix3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-        T_CG2C.setBasis(rotMat.inverse()); //<------ SET BASIS OF G TO CG TRANSFORMATION
+        //T_CG2C.setBasis(rotMat.inverse()); //<------ SET BASIS OF G TO CG TRANSFORMATION
+        T_CG2C = Transform(rotMat, Vector3(0,0,0)).inverse() * T_CG2C;
     }
     
     //6.Calculate AABB

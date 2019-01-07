@@ -25,8 +25,11 @@ int main(int argc, const char * argv[])
     s.ocean = sf::RenderQuality::QUALITY_HIGH;
     
     sf::HelperSettings h;
+    h.showFluidDynamics = false;
+    h.showCoordSys = true;
+    h.showBulletDebugInfo = false;
     
-    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(100.0);
+    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(400.0);
     UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, h, simulationManager);
     //UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, simulationManager);
     app.Run(false);
