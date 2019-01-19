@@ -26,10 +26,11 @@ namespace sf
          \param m a material of the cylinder
          \param lookId an index of the graphical material used to render the cylinder
          \param thickness defines the thickness of the cylinder walls, if positive the cylinder is treated as shell
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if the cylinder should be subject to buoyancy force
          */
         Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m,
-                                         int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+                                         int lookId = -1, Scalar thickness = Scalar(-1), bool enableHydrodynamicForces = true, bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

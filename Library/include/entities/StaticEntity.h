@@ -31,7 +31,7 @@ namespace sf
         void SetWireframe(bool enabled);
         
         void AddToSimulation(SimulationManager* sm);
-        void AddToSimulation(SimulationManager* sm, const Transform& origin);
+        virtual void AddToSimulation(SimulationManager* sm, const Transform& origin);
         virtual void getAABB(Vector3& min, Vector3& max);
         
         void setTransform(const Transform& trans);

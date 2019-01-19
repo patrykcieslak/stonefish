@@ -13,7 +13,8 @@
 namespace sf
 {
 
-Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
+    : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
 {
     r = radius;
     T_O2G = T_O2C = origin;
@@ -49,7 +50,7 @@ Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, M
 
 SolidType Sphere::getSolidType()
 {
-    return SOLID_SPHERE;
+    return SolidType::SOLID_SPHERE;
 }
 
 btCollisionShape* Sphere::BuildCollisionShape()

@@ -10,6 +10,8 @@
 		F7037CEA191AA88600A1FA98 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CBD191AA77600A1FA98 /* main.cpp */; };
 		F7037CEB191AA88600A1FA98 /* AcrobotTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */; };
 		F7037CEC191AA88600A1FA98 /* AcrobotTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */; };
+		F70AF90621F0CF0E00700A8B /* Wing.h in Headers */ = {isa = PBXBuildFile; fileRef = F70AF90521F0CF0E00700A8B /* Wing.h */; };
+		F70AF90921F0D3D900700A8B /* Wing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70AF90821F0D3D900700A8B /* Wing.cpp */; };
 		F716028C2191A48E00E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
 		F716028E2191A48F00E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
 		F716028F2191A49100E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
@@ -249,6 +251,8 @@
 		F7BD9E7C219E502A0003E389 /* SlidingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F6E193E7899007FEE22 /* SlidingTestApp.cpp */; };
 		F7BD9E7D219E502A0003E389 /* SlidingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F70193E7899007FEE22 /* SlidingTestManager.cpp */; };
 		F7BD9E7E219E502A0003E389 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F72193E7899007FEE22 /* main.cpp */; };
+		F7BFFB8621E4B95B008FA3A8 /* ServoMotor.h in Headers */ = {isa = PBXBuildFile; fileRef = F7BFFB8521E4B95B008FA3A8 /* ServoMotor.h */; };
+		F7BFFB8821E4C3CB008FA3A8 /* ServoMotor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7BFFB8721E4C3CB008FA3A8 /* ServoMotor.cpp */; };
 		F7E965AB21A6C0310067D12C /* tinyxml2.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965AA21A6C0310067D12C /* tinyxml2.h */; };
 		F7E965AD21A6C0580067D12C /* tinyxml2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965AC21A6C0580067D12C /* tinyxml2.cpp */; };
 		F7E965AF21A6CA760067D12C /* GeometryFileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */; };
@@ -448,6 +452,10 @@
 		F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AcrobotTestManager.cpp; sourceTree = "<group>"; };
 		F7037CC1191AA77600A1FA98 /* AcrobotTestManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AcrobotTestManager.h; sourceTree = "<group>"; };
 		F7037CE9191AA86A00A1FA98 /* AcrobotTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AcrobotTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F70AF8FF21EE1E6700700A8B /* terrain.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = terrain.png; sourceTree = "<group>"; };
+		F70AF90021EE2C2500700A8B /* terrain_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = terrain_small.png; sourceTree = "<group>"; };
+		F70AF90521F0CF0E00700A8B /* Wing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Wing.h; sourceTree = "<group>"; };
+		F70AF90821F0D3D900700A8B /* Wing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Wing.cpp; sourceTree = "<group>"; };
 		F70CDA0F21C15319009550C0 /* water_absorption.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = water_absorption.dat; sourceTree = "<group>"; };
 		F716029D2191A5E800E83606 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F71603922191A9E100E83606 /* RotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotaryEncoder.h; sourceTree = "<group>"; };
@@ -796,6 +804,8 @@
 		F7AB71CB18C3E19D0077F07D /* FallingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FallingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CD18C3E19D0077F07D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F7BD9E7B219E4FEF0003E389 /* SlidingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SlidingTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7BFFB8521E4B95B008FA3A8 /* ServoMotor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ServoMotor.h; sourceTree = "<group>"; };
+		F7BFFB8721E4C3CB008FA3A8 /* ServoMotor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ServoMotor.cpp; sourceTree = "<group>"; };
 		F7C2314E18CA0D3F00817B69 /* RollingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RollingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7DE5F6E193E7899007FEE22 /* SlidingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SlidingTestApp.cpp; sourceTree = "<group>"; };
 		F7DE5F6F193E7899007FEE22 /* SlidingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlidingTestApp.h; sourceTree = "<group>"; };
@@ -992,6 +1002,7 @@
 				F7E965B521A85F8B0067D12C /* JointActuator.h */,
 				F71603CD2191A9E100E83606 /* Motor.h */,
 				F71603CF2191A9E100E83606 /* DCMotor.h */,
+				F7BFFB8521E4B95B008FA3A8 /* ServoMotor.h */,
 			);
 			path = actuators;
 			sourceTree = "<group>";
@@ -1081,10 +1092,11 @@
 			isa = PBXGroup;
 			children = (
 				F71604072191A9E100E83606 /* Box.h */,
-				F71604082191A9E100E83606 /* Polyhedron.h */,
 				F71604092191A9E100E83606 /* Torus.h */,
 				F716040A2191A9E100E83606 /* Sphere.h */,
 				F716040B2191A9E100E83606 /* Cylinder.h */,
+				F70AF90521F0CF0E00700A8B /* Wing.h */,
+				F71604082191A9E100E83606 /* Polyhedron.h */,
 				F716040C2191A9E100E83606 /* Compound.h */,
 			);
 			path = solids;
@@ -1120,6 +1132,8 @@
 		F71605A22191AA2C00E83606 /* data */ = {
 			isa = PBXGroup;
 			children = (
+				F70AF90021EE2C2500700A8B /* terrain_small.png */,
+				F70AF8FF21EE1E6700700A8B /* terrain.png */,
 				F71605A32191AA2C00E83606 /* base_link_hydro.obj */,
 				F71605A42191AA2C00E83606 /* propeller.obj */,
 				F71605A52191AA2C00E83606 /* link1_hydro.obj */,
@@ -1252,8 +1266,9 @@
 				F71604A72191AA0D00E83606 /* Thruster.cpp */,
 				F71604A32191AA0D00E83606 /* Light.cpp */,
 				F7E965B921A863C30067D12C /* JointActuator.cpp */,
-				F71604BD2191AA0D00E83606 /* DCMotor.cpp */,
 				F71604C82191AA0D00E83606 /* Motor.cpp */,
+				F7BFFB8721E4C3CB008FA3A8 /* ServoMotor.cpp */,
+				F71604BD2191AA0D00E83606 /* DCMotor.cpp */,
 			);
 			path = actuators;
 			sourceTree = "<group>";
@@ -1301,11 +1316,11 @@
 		F74CEC1318E56FCB00D0C42D /* JointsTest */ = {
 			isa = PBXGroup;
 			children = (
+				F74CEC1818E56FCB00D0C42D /* main.cpp */,
 				F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */,
 				F74CEC1518E56FCB00D0C42D /* JointsTestApp.h */,
 				F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */,
 				F74CEC1718E56FCB00D0C42D /* JointsTestManager.h */,
-				F74CEC1818E56FCB00D0C42D /* main.cpp */,
 			);
 			path = JointsTest;
 			sourceTree = "<group>";
@@ -1464,6 +1479,7 @@
 				F71604922191AA0D00E83606 /* Box.cpp */,
 				F716048B2191AA0D00E83606 /* Cylinder.cpp */,
 				F71604B82191AA0D00E83606 /* Torus.cpp */,
+				F70AF90821F0D3D900700A8B /* Wing.cpp */,
 				F71604E62191AA0D00E83606 /* Polyhedron.cpp */,
 				F71604802191AA0D00E83606 /* Compound.cpp */,
 			);
@@ -1701,6 +1717,7 @@
 				F71604152191A9E100E83606 /* Mux.h in Headers */,
 				F716041E2191A9E100E83606 /* Trajectory.h in Headers */,
 				F716046C2191A9E100E83606 /* Stream.h in Headers */,
+				F7BFFB8621E4B95B008FA3A8 /* ServoMotor.h in Headers */,
 				F716047B2191A9E100E83606 /* Sphere.h in Headers */,
 				F71604352191A9E100E83606 /* MaterialManager.h in Headers */,
 				F71604332191A9E100E83606 /* SimulationManager.h in Headers */,
@@ -1735,6 +1752,7 @@
 				F71604122191A9E100E83606 /* Multibeam.h in Headers */,
 				F71604392191A9E100E83606 /* BeltJoint.h in Headers */,
 				F71604202191A9E100E83606 /* Contact.h in Headers */,
+				F70AF90621F0CF0E00700A8B /* Wing.h in Headers */,
 				F71604312191A9E100E83606 /* NameManager.h in Headers */,
 				F71604592191A9E100E83606 /* OpenGLDebugDrawer.h in Headers */,
 				F71604342191A9E100E83606 /* ConsoleSimulationApp.h in Headers */,
@@ -1972,6 +1990,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7BFFB8821E4C3CB008FA3A8 /* ServoMotor.cpp in Sources */,
 				F71604F42191AA0D00E83606 /* Pipe.cpp in Sources */,
 				F71604FA2191AA0D00E83606 /* Joint.cpp in Sources */,
 				F716052C2191AA0D00E83606 /* Stream.cpp in Sources */,
@@ -1985,6 +2004,7 @@
 				F71605212191AA0D00E83606 /* Accelerometer.cpp in Sources */,
 				F71605012191AA0D00E83606 /* Camera.cpp in Sources */,
 				F71604F12191AA0D00E83606 /* Obstacle.cpp in Sources */,
+				F70AF90921F0D3D900700A8B /* Wing.cpp in Sources */,
 				F71605082191AA0D00E83606 /* GLSLShader.cpp in Sources */,
 				F716051D2191AA0D00E83606 /* PathGenerator2D.cpp in Sources */,
 				F716053E2191AA0D00E83606 /* ServoController.cpp in Sources */,

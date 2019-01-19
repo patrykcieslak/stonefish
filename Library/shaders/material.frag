@@ -1,10 +1,9 @@
 #version 330
 
 //---------------Definitions--------------------
+#define MEAN_SUN_ILLUMINANCE 107527.0
 #define MAX_POINT_LIGHTS 	32
 #define MAX_SPOT_LIGHTS 	32
-#define SHADOWMAP_SIZE 		2048.0
-#define SUN_SHADOWMAP_SIZE	4096.0
 #define NUM_SAMPLES 		32
 #define INV_NUM_SAMPLES 	(1.0/32.0)
 #define NUM_SPIRAL_TURNS 	7
@@ -157,6 +156,7 @@ uniform float sunFrustumNear[4];
 uniform float sunFrustumFar[4];
 uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
+uniform float shadowMapSize;
 uniform float planetRadius;
 uniform vec3 whitePoint;
 
@@ -326,12 +326,13 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 	toLight /= distance;
 	
 	float spotEffect = dot(spotLights[id].direction, -toLight);
-	float NdotL = dot(N, -spotLights[id].direction);
-        
+    float NdotL = dot(N, toLight);
+    
 	if(spotEffect > spotLights[id].angle && NdotL > 0.0)
 	{
 		float attenuation = 1.0/(distance*distance);
-		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id) * pow(spotEffect, 10.0) * attenuation;
+        float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].angle);
+		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id) * edge * attenuation;
 	}
 	else
 		return vec3(0.0);
@@ -366,10 +367,10 @@ void main()
 	//Ambient
 	vec3 skyIlluminance;
     vec3 sunIlluminance = GetSunAndSkyIlluminance(fragPos - center, N, sunDirection, skyIlluminance);
-    fragColor = albedo * skyIlluminance/whitePoint/30000.0;
+    fragColor = albedo * skyIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
 	//Sun
-	fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/30000.0);
+	fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE);
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
 		fragColor += calcPointLightContribution(i, N, toEye, albedo);

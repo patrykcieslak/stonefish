@@ -583,9 +583,100 @@ void GraphicalSimulationApp::RenderLoop()
 
 void GraphicalSimulationApp::DoHUD()
 {
-    char buffer[256];
+    //Helper settings
+    HelperSettings& hs = getHelperSettings();
+    Ocean* ocn = getSimulationManager()->getOcean();
+    
+    GLfloat offset = 10.f;
+    gui->DoPanel(10.f, offset, 160.f, ocn != NULL ? 182.f : 137.f);
+    offset += 5.f;
+    gui->DoLabel(15.f, offset, "HELPERS");
+    offset += 15.f;
+    
+    ui_id id;
+    id.owner = 0;
+    id.index = 0;
+    id.item = 1;
+    hs.showCoordSys = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showCoordSys, "Frames");
+    offset += 22.f;
+    
+    id.item = 2;
+    hs.showSensors = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showSensors, "Sensors");
+    offset += 22.f;
+    
+    id.item = 3;
+    hs.showActuators = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showActuators, "Actuators");
+    offset += 22.f;
+    
+    id.item = 4;
+    hs.showJoints = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showJoints, "Joints");
+    offset += 22.f;
+    
+    id.item = 5;
+    hs.showBulletDebugInfo = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showBulletDebugInfo, "Collision");
+    offset += 22.f;
+    
+    if(ocn != NULL)
+    {
+        id.item = 6;
+        hs.showForces = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showForces, "Fluid Forces");
+        offset += 22.f;
+    
+        id.item = 7;
+        hs.showFluidDynamics = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
+        offset += 22.f;
+    }
+    
+    offset += 14.f;
+    
+    //Time settings
+    Scalar az, elev;
+    getSimulationManager()->getAtmosphere()->GetSunPosition(az, elev);
+    
+    gui->DoPanel(10.f, offset, 160.f, 125.f);
+    offset += 5.f;
+    gui->DoLabel(15.f, offset, "SUN POSITION");
+    offset += 15.f;
+    
+    id.owner = 1;
+    id.index = 0;
+    id.item = 0;
+    az = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-180), Scalar(180), az, "Azimuth[deg]");
+    offset += 50.f;
+    
+    id.item = 1;
+    elev = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-10), Scalar(90), elev, "Elevation[deg]");
+    offset += 61.f;
+    
+    getSimulationManager()->getAtmosphere()->SetupSunPosition(az, elev);
+    
+    //Ocean settings
+    if(ocn != NULL)
+    {
+        Scalar waterType = ocn->getWaterType();
+        Scalar turbidity = ocn->getTurbidity();
+        
+        gui->DoPanel(10.f, offset, 160.f, 125.f);
+        offset += 5.f;
+        gui->DoLabel(15.f, offset, "OCEAN");
+        offset += 15.f;
+        
+        id.owner = 2;
+        id.index = 0;
+        id.item = 0;
+        waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Water Type");
+        offset += 50.f;
+        
+        id.item = 1;
+        turbidity = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0.1), Scalar(10.0), turbidity, "Turbidity");
+        offset += 50.f;
+        
+        ocn->SetupWaterProperties(waterType, turbidity);
+    }
     
     //Bottom panel
+    char buffer[256];
+    
     gui->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
     
 	sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());

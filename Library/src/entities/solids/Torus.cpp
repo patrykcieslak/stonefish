@@ -14,7 +14,8 @@
 namespace sf
 {
 
-Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, const Transform& origin, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
+    : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
 {
     MR = majorRadius;
     mR = minorRadius;
@@ -55,7 +56,7 @@ Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, con
 
 SolidType Torus::getSolidType()
 {
-    return SOLID_TORUS;
+    return SolidType::SOLID_TORUS;
 }
 
 btCollisionShape* Torus::BuildCollisionShape()

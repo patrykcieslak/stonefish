@@ -9,7 +9,6 @@
 #include "AcrobotTestManager.h"
 
 #include "AcrobotTestApp.h"
-#include <utils/SystemUtil.hpp>
 #include <entities/statics/Plane.h>
 #include <entities/solids/Box.h>
 #include <entities/solids/Sphere.h>
@@ -20,47 +19,40 @@
 #include <joints/FixedJoint.h>
 #include <joints/RevoluteJoint.h>
 #include <actuators/DCMotor.h>
-#include <sensors/RotaryEncoder.h>
-#include <sensors/FakeRotaryEncoder.h>
 #include <controllers/ServoController.h>
 #include <controllers/MISOStateSpaceController.h>
-#include <sensors/Current.h>
 #include <entities/FeatherstoneEntity.h>
-#include <entities/systems/Manipulator.h>
 #include <entities/statics/Obstacle.h>
-#include <sensors/ForceTorque.h>
-#include <actuators/Light.h>
-#include <sensors/Torque.h>
+#include <utils/SystemUtil.hpp>
+#include <utils/UnitSystem.h>
 
-AcrobotTestManager::AcrobotTestManager(Scalar stepsPerSecond) : SimulationManager(UnitSystems::MKS, true, stepsPerSecond, SolverType::SI)
+AcrobotTestManager::AcrobotTestManager(sf::Scalar stepsPerSecond)
+    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::HydrodynamicsType::GEOMETRY_BASED)
 {
 }
 
 void AcrobotTestManager::BuildScenario()
 {
     /////// BASICS
-    OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
-    glPipeline->setVisibleHelpers(true, false, false, true, false, false, false);
-    glPipeline->setDebugSimulation(false);
-    setGravity(9.81);
+    setGravity(1.0);
     setICSolverParams(false);
     
     /////// MATERIALS
-    getMaterialManager()->CreateMaterial("Concrete", UnitSystem::Density(CGS, MKS, 4.0), 0.7);
-    getMaterialManager()->CreateMaterial("Rubber", UnitSystem::Density(CGS, MKS, 1.0), 0.3);
+    getMaterialManager()->CreateMaterial("Concrete", sf::UnitSystem::Density(sf::CGS, sf::MKS, 4.0), 0.7);
+    getMaterialManager()->CreateMaterial("Rubber", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.0), 0.3);
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Rubber", 0.01, 0.01);
     getMaterialManager()->SetMaterialsInteraction("Concrete", "Concrete", 0.01, 0.01);
     getMaterialManager()->SetMaterialsInteraction("Rubber", "Rubber", 0.01, 0.01);
     
     /////// LOOKS
-    int grid = OpenGLContent::getInstance()->CreateSimpleLook(glm::vec3(1.f, 1.f, 1.f), 0.f, 0.1f, GetShaderPath() + "grid.png");
-    int grey = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.7f, 0.7f, 0.7f), 0.5, 0.0);
-	int shiny = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 0.3f, 0.3f), 0.3, 0.0);
-    int green = OpenGLContent::getInstance()->CreatePhysicalLook(glm::vec3(0.3f, 1.0f, 0.3f), 0.1, 0.0);
+    int grid = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.f, 0.1f, 0.f, sf::GetShaderPath() + "grid.png");
+    int grey = CreateLook(sf::Color::RGB(0.7f, 0.7f, 0.7f), 0.5, 0.0);
+    int shiny = CreateLook(sf::Color::RGB(0.3f, 0.3f, 0.3f), 0.3, 0.0);
+    int green = CreateLook(sf::Color::RGB(0.3f, 1.0f, 0.3f), 0.1, 0.0);
     
     /////// OBJECTS
-    Plane* floor = new Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Concrete"), grid);
-    AddStaticEntity(floor, Transform::getIdentity());
+    sf::Plane* floor = new sf::Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Concrete"), grid);
+    AddStaticEntity(floor, sf::I4());
     
     //Obstacle* box1 = new Obstacle("B1", Vector3(0.5,0.1,0.1), getMaterialManager()->getMaterial("Rubber"), shiny);
     //AddStaticEntity(box1, Transform(Quaternion::getIdentity(), Vector3(0.0,-1.0,0.44)));
@@ -77,15 +69,17 @@ void AcrobotTestManager::BuildScenario()
     ForceTorque* ft = new ForceTorque("FT", fix, fe2->getLink(0).solid, Transform::getIdentity());
     AddSensor(ft);*/
     
-    Box* baseLink = new Box("BaseLink", Vector3(0.01,0.01,0.01), getMaterialManager()->getMaterial("Rubber"), shiny);
-    Box* link1 = new Box("Link1", Vector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
-    link1->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    sf::Box* baseLink = new sf::Box("BaseLink", sf::Vector3(0.01,0.01,0.01), sf::I4(), getMaterialManager()->getMaterial("Rubber"), shiny);
+    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.01,0.01,0.5), sf::I4(), getMaterialManager()->getMaterial("Rubber"), shiny);
+    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.01,0.01,0.5), sf::I4(), getMaterialManager()->getMaterial("Rubber"), shiny);
+    
+    /*link1->ScalePhysicalPropertiesToArbitraryMass(1.0);
     Box* link2 = new Box("Link2", Vector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), green);
     link2->ScalePhysicalPropertiesToArbitraryMass(1.0);
     Box* link3 = new Box("Link3", Vector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), grey);
-    link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    link3->ScalePhysicalPropertiesToArbitraryMass(1.0);*/
     
-    Box* baseLinkB = new Box("BaseLinkB", Vector3(0.01,0.01,0.01), getMaterialManager()->getMaterial("Rubber"), shiny);
+    /*Box* baseLinkB = new Box("BaseLinkB", Vector3(0.01,0.01,0.01), getMaterialManager()->getMaterial("Rubber"), shiny);
     Box* link1B = new Box("Link1B", Vector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
     link1B->ScalePhysicalPropertiesToArbitraryMass(1.0);
     Box* link2B = new Box("Link2B", Vector3(0.01,0.01,0.5), getMaterialManager()->getMaterial("Rubber"), green);
@@ -95,23 +89,25 @@ void AcrobotTestManager::BuildScenario()
     
     //Box* link3 = new Box("Link1", Vector3(0.1,0.1,0.5), getMaterialManager()->getMaterial("Rubber"), shiny);
     //link3->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    */
     
-    FeatherstoneEntity* fe = new FeatherstoneEntity("Manipulator1", 4, baseLink, true);
-    fe->AddLink(link1, Transform(Quaternion(0,0,M_PI_2), Vector3(0,-0.25,0)));
-    fe->AddLink(link2, Transform(Quaternion(0,0,M_PI_2), Vector3(0,-0.75,0)));
-    fe->AddLink(link3, Transform(Quaternion(0,0,M_PI_2), Vector3(0,-1.25,0)));
+    sf::FeatherstoneEntity* fe = new sf::FeatherstoneEntity("Manipulator1", 3, baseLink, true);
+    fe->AddLink(link1, sf::Transform(sf::Quaternion(0,0,M_PI_2), sf::Vector3(0,-0.25,0)));
+    fe->AddLink(link2, sf::Transform(sf::Quaternion(0,0,M_PI_2), sf::Vector3(0,-0.75,0)));
     
-    //fe->AddRevoluteJoint(0, 1, Vector3(0,0,0), Vector3(1,0,0));
+    //fe->AddLink(link2, Transform(Quaternion(0,0,M_PI_2), Vector3(0,-0.75,0)));
+    //fe->AddLink(link3, Transform(Quaternion(0,0,M_PI_2), Vector3(0,-1.25,0)));
+    
+    fe->AddRevoluteJoint("Joint1", 0, 1, sf::Vector3(0,0,0), sf::Vector3(1,0,0));
     //fe->AddRevoluteJoint(1, 2, Vector3(0,-0.5,0), Vector3(1,0,0));
     //fe->AddRevoluteJoint(2, 3, Vector3(0,-1.0,0), Vector3(1,0,0));
-    fe->AddFixedJoint("Fix1", 0, 1, Vector3(0,0,0));
-    fe->AddFixedJoint("Fix2", 1, 2, Vector3(0,-0.5,0));
-    fe->AddFixedJoint("Fix3", 2, 3, Vector3(0,-1.0,0));
-    
-    /*fe->AddJointMotor(0, 10000.0);
-    fe->MotorVelocitySetpoint(0, 0.0, 1.0);
-    fe->MotorPositionSetpoint(0, 0.0, 1.0);
-    
+    //fe->AddFixedJoint("Fix1", 0, 1, Vector3(0,0,0));
+    fe->AddFixedJoint("Fix2", 1, 2, sf::Vector3(0,-0.5,0));
+    //fe->AddFixedJoint("Fix3", 2, 3, Vector3(0,-1.0,0));
+    //fe->AddJointMotor(0, 10000.0);
+    //fe->MotorVelocitySetpoint(0, 0.0, 1.0);
+    //fe->MotorPositionSetpoint(0, 0.0, 1.0);
+    /*
     fe->AddJointMotor(1, 10000.0);
     fe->MotorVelocitySetpoint(1, 0.0, 1.0);
     fe->MotorPositionSetpoint(1, 0.0, 1.0);
@@ -120,8 +116,10 @@ void AcrobotTestManager::BuildScenario()
     fe->MotorVelocitySetpoint(2, 0.0, 1.0);
     fe->MotorPositionSetpoint(2, 0.0, 1.0);
     */
-    AddFeatherstoneEntity(fe, Transform(Quaternion::getIdentity(), Vector3(0,0,0.5)));
     
+    AddFeatherstoneEntity(fe, sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(0,0,-3.0)));
+    
+    /*
     ForceTorque* ft = new ForceTorque("FT1", fe, 0, Transform::getIdentity());
     AddSensor(ft);
     
@@ -155,7 +153,7 @@ void AcrobotTestManager::BuildScenario()
     AddJoint(ftFix2);
     ForceTorque* ft3 = new ForceTorque("FT5", ftFix2, feB3->getLink(0).solid, Transform::getIdentity());
     AddSensor(ft3);
-    
+    */
     /*Manipulator* manip = new Manipulator("Manipulator", 1, baseLink, Transform::getIdentity());
     manip->AddRotLinkDH(link1, Transform(Quaternion(0,M_PI_2,1.5*M_PI_2), Vector3(0,0,-0.5)), 0, -1.0, 0.0, 1,-1, 10);
     //manip->AddRotLinkDH(link2, Transform(Quaternion(0,M_PI_2,M_PI_2), Vector3(0,0,-0.5)), 0, -1.0, 0.0);
@@ -290,7 +288,4 @@ void AcrobotTestManager::BuildScenario()
     //trackb->Rotate(Quaternion(M_PI - M_PI/8.0, 0.0, 0.0));
     //trackb->Activate();
     //AddView(trackb);
-    
-    Light* l = new Light("Spot", Vector3(0,0,1), glm::vec4(10.f,10.f,10.f,10.f));
-    AddActuator(l);
 }

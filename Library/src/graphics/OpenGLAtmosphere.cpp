@@ -212,14 +212,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     sunShadowCPM = NULL;
     
     //Set standard sun position
-    std::time_t rawTime;
-    std::time(&rawTime);
-    std::tm* hUtc;
-    hUtc = std::gmtime(&rawTime);
-    hUtc->tm_hour = 12;
-    hUtc->tm_min = 0;
-    hUtc->tm_sec = 0;
-    SetSunPosition(19.945, 50.065, *hUtc);
+    SetSunPosition(90.0, 70.0);
 
     if(quality == RenderQuality::QUALITY_DISABLED)
         return;
@@ -394,27 +387,6 @@ void OpenGLAtmosphere::SetSunPosition(float azimuthDeg, float elevationDeg)
     right = glm::normalize(right);
     up = glm::normalize(glm::cross(right, sunDirection));
     sunModelView = glm::lookAt(glm::vec3(0,0,0), -sunDirection, up) * glm::mat4(1.f);
-
-#ifdef DEBUG
-    cInfo("Set sun position --> Azimuth: %1.3f  Elevation: %1.3f", azimuthDeg, elevationDeg);
-#endif
-}
-
-void OpenGLAtmosphere::SetSunPosition(double longitudeDeg, double latitudeDeg, std::tm& utc)
-{
-    double latitude = latitudeDeg/180 * M_PI;
-    double longitude = longitudeDeg/180.0 * M_PI;
-    double meridian = 0.0; //GMT
-    double decimalHours = (double)utc.tm_hour + (double)utc.tm_min/60.0 + (double)utc.tm_sec/60.0;
-    std::tm utc0 = utc;
-    utc0.tm_mday = 1; //1
-    utc0.tm_mon = 0; //January
-    int J = JulianDay(utc) - JulianDay(utc0);
-    double solarTime = decimalHours + 0.17*sin(4.0*M_PI*(J - 80)/373.0) - 0.129*sin(2.0*M_PI*(J - 8)/355.0) + 12.0*(meridian - longitude)/M_PI;
-    double declination = 0.4093*sin(2.0*M_PI*(J - 81)/368.0);
-    double elevation = asin(sin(latitude)*sin(declination) - cos(latitude)*cos(declination)*cos(M_PI*solarTime/12.0));
-    double azimuth = atan2(sin(M_PI*solarTime/12.0), cos(M_PI*solarTime/12.0)*sin(latitude) - tan(declination)*cos(latitude));
-    SetSunPosition(azimuth/M_PI*180.0, elevation/M_PI*180.0);
 }
 
 void OpenGLAtmosphere::GetSunPosition(GLfloat& azimuthDeg, GLfloat& elevationDeg)
@@ -513,6 +485,7 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
 //Computes the near and far distances for every frustum slice in camera eye space
 void OpenGLAtmosphere::UpdateSplitDist(GLfloat nd, GLfloat fd)
 {
+    fd = fd > 1000.f ? 1000.f : fd; //Limit camera frustum to max 1000.0 m (to avoid shadow bluring)
     GLfloat lambda = 0.95f;
     GLfloat ratio = fd/nd;
     sunShadowFrustum[0].near = nd;
@@ -1343,23 +1316,6 @@ void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
 
     //Reset
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-}
-
-//static
-int OpenGLAtmosphere::JulianDay(std::tm& tm)
-{
-    int m = tm.tm_mon + 1;
-    int y = tm.tm_year + 1900;
-    int d = tm.tm_mday;
-    
-    double X = (m + 9) / 12.0;
-    int A = 4716 + y + (int)trunc(X);
-    double Y = 275 * m / 9.0;
-    double V = 7 * A / 4.0;
-    double B = 1729279.5 + 367 * y + trunc(Y) - trunc(V) + d;
-    double Q = (A + 83) / 100.0;
-    double W = 3 * (trunc(Q) + 1) / 4.0;
-    return B + 38 - (int)trunc(W);
 }
     
 void OpenGLAtmosphere::BuildAtmosphereAPI(RenderQuality quality)

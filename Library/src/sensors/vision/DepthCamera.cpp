@@ -15,21 +15,14 @@
 namespace sf
 {
 
-DepthCamera::DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
-    : Camera(uniqueName, resX, resY, horizFOVDeg, frequency)
+DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
+    : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
 {
     newDataCallback = NULL;
-    depthRange.x = minDepth;
-    depthRange.y = maxDepth;
+    depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
+    depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
     imageData = new GLfloat[resX*resY]; //float depth
     memset(imageData, 0, resX*resY*sizeof(GLfloat));
-    
-    glCamera = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)horizFOVDeg, (GLfloat)minDepth, (GLfloat)maxDepth);
-    glCamera->setCamera(this);
-    UpdateTransform();
-    glCamera->UpdateTransform();
-    InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
 }
 
 DepthCamera::~DepthCamera()
@@ -47,6 +40,16 @@ GLfloat* DepthCamera::getDataPointer()
 glm::vec2 DepthCamera::getDepthRange()
 {
     return depthRange;
+}
+    
+void DepthCamera::InitGraphics()
+{
+    glCamera = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange.x, depthRange.y);
+    glCamera->setCamera(this);
+    UpdateTransform();
+    glCamera->UpdateTransform();
+    InternalUpdate(0);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
 }
 
 void DepthCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

@@ -17,16 +17,17 @@ namespace sf
     class OpenGLSpotLight : public OpenGLLight
     {
     public:
-        OpenGLSpotLight(glm::vec3 position, glm::vec3 _direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
+        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
         ~OpenGLSpotLight();
         
         //Rendering
         void InitShadowmap(GLint shadowmapLayer);
         void BakeShadowmap(OpenGLPipeline* pipe);
         void SetupShader(GLSLShader* shader, unsigned int lightId);
+        void UpdateDirection(glm::vec3 d);
+        void UpdateTransform();
         
         //Debugging
-        void RenderDummy();
         void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
         
         //Field access
@@ -36,7 +37,8 @@ namespace sf
         GLfloat getAngle();
         
     private:
-        glm::vec3 direction;
+        glm::vec3 dir;
+        glm::vec3 tempDir;
         GLfloat coneAngle;
         GLfloat zNear;
         GLfloat zFar;

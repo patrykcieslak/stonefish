@@ -28,7 +28,7 @@ void Torque::InternalUpdate(Scalar dt)
     //Scalar tau = torque.dot(axis);
     if(fe != NULL)
     {
-        Scalar tau = fe->getMotorImpulse(jId)/dt;
+        Scalar tau = fe->getMotorForceTorque(jId);
     
         Scalar values[1] = {tau};
         Sample s(1, values);

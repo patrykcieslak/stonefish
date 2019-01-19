@@ -30,6 +30,7 @@ namespace sf
          \param lookId a graphical material defining how the mesh is rendered
          \param smoothGraphicsNormals defines if the graphics mesh normals should be smoothed after loading
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param proxy defines what time of hydrodynamic approximation of body shape should be used
          */
@@ -37,7 +38,7 @@ namespace sf
                    std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                    std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
                    Material m, int lookId = -1, bool smoothGraphicsNormals = false, Scalar thickness = Scalar(-1),
-                   bool isBuoyant = true, HydrodynamicProxyType proxy = HYDRO_PROXY_ELLIPSOID);
+                   bool enableHydrodynamicForces = true, bool isBuoyant = true, HydrodynamicProxyType proxy = HYDRO_PROXY_ELLIPSOID);
         
         //! A constructor.
         /*!
@@ -49,12 +50,13 @@ namespace sf
          \param lookId a graphical material defining how the mesh is rendered
          \param smoothNormals defines if the model normals should be smoothed after loading
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param proxy defines what time of hydrodynamic approximation of body shape should be used
          */
         Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
                    Material m, int lookId = -1, bool smoothNormals = true, Scalar thickness = Scalar(-1),
-                   bool isBuoyant = true, HydrodynamicProxyType proxy = HYDRO_PROXY_ELLIPSOID);
+                   bool enableHydrodynamicForces = true, bool isBuoyant = true, HydrodynamicProxyType proxy = HYDRO_PROXY_ELLIPSOID);
         
         //! A destructor.
         ~Polyhedron();
@@ -70,7 +72,7 @@ namespace sf
         
     private:
         Mesh *graMesh; //Mesh used for rendering
-        Vector3 aabb[2];
+        //Vector3 aabb[2];
     };
 }
 

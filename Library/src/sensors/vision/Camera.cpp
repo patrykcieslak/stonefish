@@ -8,21 +8,16 @@
 
 #include "sensors/vision/Camera.h"
 
-#include "core/SimulationApp.h"
-#include "core/Console.h"
 #include "entities/SolidEntity.h"
 
 namespace sf
 {
 
-Camera::Camera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
+Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
 {
-	if(!SimulationApp::getApp()->hasGraphics())
-		cCritical("Not possible to use cameras in console simulation! Use graphical simulation if possible.");
-	
-	fovH = horizFOVDeg;
-    resx = resX;
-    resy = resY;
+    fovH = horizFOVDeg > Scalar(0) ? horizFOVDeg : Scalar(90);
+    resX = resolutionX > 0 ? resolutionX : 1;
+    resY = resolutionY > 0 ? resolutionY : 1;
     pan = Scalar(0);
     tilt = Scalar(0);
     display = false;
@@ -37,10 +32,10 @@ Scalar Camera::getHorizontalFOV()
     return fovH;
 }
 
-void Camera::getResolution(uint32_t& x, uint32_t& y)
+void Camera::getResolution(unsigned int& x, unsigned int& y)
 {
-    x = resx;
-    y = resy;
+    x = resX;
+    y = resY;
 }
 
 void Camera::setDisplayOnScreen(bool onScreen)
@@ -114,7 +109,7 @@ std::vector<Renderable> Camera::Render()
     //Create camera dummy
     GLfloat iconSize = 1.f;
     GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
-    GLfloat aspect = (GLfloat)resx/(GLfloat)resy;
+    GLfloat aspect = (GLfloat)resX/(GLfloat)resY;
     GLfloat y = x/aspect;
 	
 	item.points.push_back(glm::vec3(0,0,0));

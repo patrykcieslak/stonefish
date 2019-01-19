@@ -20,8 +20,8 @@ namespace sf
     class ColorCamera : public Camera
     {
     public:
-        ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency = Scalar(-1), uint32_t spp = 1, bool ao = true);
-        virtual ~ColorCamera();
+        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, unsigned char spp = 1, Scalar frequency = Scalar(-1));
+        ~ColorCamera();
         
         void InternalUpdate(Scalar dt);
         void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up);
@@ -30,7 +30,10 @@ namespace sf
         uint8_t* getDataPointer(); //Should be only used in the callback
         
     private:
+        void InitGraphics();
+        
         OpenGLRealCamera* glCamera;
+        unsigned char samples;
         uint8_t* imageData;
         std::function<void(ColorCamera*)> newDataCallback;
     };

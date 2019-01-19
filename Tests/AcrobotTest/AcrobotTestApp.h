@@ -12,10 +12,10 @@
 #include <core/GraphicalSimulationApp.h>
 #include "AcrobotTestManager.h"
 
-class AcrobotTestApp : public GraphicalSimulationApp
+class AcrobotTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    AcrobotTestApp(std::string dataDirPath, RenderSettings s, AcrobotTestManager* sim);
+    AcrobotTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, AcrobotTestManager* sim);
 
     void DoHUD();
 };

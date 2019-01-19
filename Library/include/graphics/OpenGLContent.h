@@ -72,6 +72,8 @@ namespace sf
         static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
         static Mesh* BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
         static Mesh* BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices = 48, unsigned int minorSlices = 24);
+        static Mesh* BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength);
+        static Mesh* BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight);
         static void TransformMesh(Mesh* mesh, const Transform& T);
         static void SmoothNormals(Mesh* mesh);
         static void Subdivide(Mesh* mesh, bool icoMode = false);

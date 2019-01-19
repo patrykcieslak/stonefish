@@ -30,8 +30,9 @@ namespace sf
          \param uniqueName a name for the body
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          */
-        Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin);
+        Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, bool enableHydrodynamicForces = true);
         
         //! A destructor.
         ~Compound();

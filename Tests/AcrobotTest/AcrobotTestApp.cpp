@@ -9,12 +9,13 @@
 #include "AcrobotTestApp.h"
 
 #include <graphics/OpenGLTrackball.h>
+#include <graphics/IMGUI.h>
 #include <actuators/DCMotor.h>
-#include <sensors/ForceTorque.h>
-#include <sensors/Torque.h>
+//#include <sensors/ForceTorque.h>
+//#include <sensors/Torque.h>
 
-AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, RenderSettings s, AcrobotTestManager* sim)
-: GraphicalSimulationApp("Acrobot Test", dataDirPath, s, sim)
+AcrobotTestApp::AcrobotTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, AcrobotTestManager* sim)
+: sf::GraphicalSimulationApp("Acrobot Test", dataDirPath, s, h, sim)
 {
 }
 
@@ -22,7 +23,7 @@ void AcrobotTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
     
-    ui_id slider1;
+    sf::ui_id slider1;
     slider1.owner = 0;
     slider1.item = 3;
     slider1.index = 0;
@@ -31,7 +32,7 @@ void AcrobotTestApp::DoHUD()
     char buffer[128];
     GLfloat white[4] = {1.f,1.f,1.f,1.f};
 
-    ui_id label1;
+    sf::ui_id label1;
     label1.owner = 1;
     label1.item = 0;
     label1.index = 0;
@@ -39,7 +40,7 @@ void AcrobotTestApp::DoHUD()
     //sprintf(buffer, "Motor Torque: %1.3lf [Nm]", ((DCMotor*)getSimulationManager()->getActuator(0))->getTorque());
     //getHUD()->DoLabel(label1, 90, getWindowHeight()-50, white, buffer);
     
-    ui_id plot;
+    sf::ui_id plot;
     plot.owner = 1;
     plot.item = 0;
     plot.index = 0;
@@ -50,15 +51,16 @@ void AcrobotTestApp::DoHUD()
     dims.push_back(0);
     dims.push_back(1);
     
-    Vector3 force, torque;
+    //sf::Vector3 force, torque;
     
-    FeatherstoneEntity* fe = (FeatherstoneEntity*)getSimulationManager()->getEntity("Manipulator1");
+    //sf::FeatherstoneEntity* fe = (sf::FeatherstoneEntity*)getSimulationManager()->getEntity("Manipulator1");
     /*fe->getJointFeedback(1, force, torque);
     bt8Vector3 baseF = fe->getMultiBody()->getLinkTorque(0);
     
     std::cout << "FT1: " << force.x() << ", " << force.y() << ", " << force.z() << ", " << torque.x() << ", " << torque.y() << ", " << torque.z() << std::endl;
     */
-    ForceTorque* ft = (ForceTorque*)getSimulationManager()->getSensor("FT1");
+    /*
+    sf::ForceTorque* ft = (sf::ForceTorque*)getSimulationManager()->getSensor("FT1");
     std::cout << "FT1: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
               << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
  
@@ -77,8 +79,8 @@ void AcrobotTestApp::DoHUD()
     ft = (ForceTorque*)getSimulationManager()->getSensor("FT5");
     std::cout << "FT5: " << ft->getLastSample().data[0] << ", " << ft->getLastSample().data[1] << ", " << ft->getLastSample().data[2] << ", "
               << ft->getLastSample().data[3] << ", " << ft->getLastSample().data[4] << ", " << ft->getLastSample().data[5] << std::endl;
- 
-    std::cout << std::endl;
+ */
+    //std::cout << std::endl;
    // Torque* tau = (Torque*)getSimulationManager()->getSensor("Torque");
     //std::cout << "Tau: " << tau->getLastSample().data[0] << std::endl;
  

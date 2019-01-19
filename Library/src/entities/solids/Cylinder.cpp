@@ -13,7 +13,8 @@
 namespace sf
 {
 
-Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m, int lookId, Scalar thickness, bool isBuoyant) : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
+    : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
 {
     r = radius;
     halfHeight = height/Scalar(2);
@@ -56,7 +57,7 @@ Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const T
 
 SolidType Cylinder::getSolidType()
 {
-    return SOLID_CYLINDER;
+    return SolidType::SOLID_CYLINDER;
 }
 
 btCollisionShape* Cylinder::BuildCollisionShape()

@@ -13,10 +13,10 @@
 
 #define USE_FEATHERSTONE_ALGORITHM
 
-class AcrobotTestManager : public SimulationManager
+class AcrobotTestManager : public sf::SimulationManager
 {
 public:
-    AcrobotTestManager(Scalar stepsPerSecond);
+    AcrobotTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario();
 };

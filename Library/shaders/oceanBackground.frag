@@ -1,5 +1,7 @@
 #version 330
 
+#define MEAN_SUN_ILLUMINANCE 107527.0
+
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec4 fragNormal;
 
@@ -27,7 +29,7 @@ void main()
     vec3 skyIlluminance;
     vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
     vec3 inFactor = exp(-c * max(-eyePos.z,0.0)) * b / c;
-    fragColor = (sunIlluminance + skyIlluminance)/whitePoint/30000.0 * inFactor * 0.01;
+    fragColor = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
     
     //Normal
     fragNormal = vec4(vec3(0.0,0.0,1.0) * 0.5 + 0.5, 0.0);

@@ -32,14 +32,14 @@ namespace sf
          \param linkId an index of the link
          \param origin a transformation from the link origin to the actuator origin
          */
-        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
+        virtual void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
         
         //! A method used to attach the actuator to a specified rigid body.
         /*!
          \param solid a pointer to a rigid body
          \param origin a transformation from the body origin to the actuator origin
          */
-        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        virtual void AttachToSolid(SolidEntity* solid, const Transform& origin);
         
         //! A method returning actuator frame in the world frame.
         Transform getActuatorFrame();

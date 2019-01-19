@@ -19,7 +19,7 @@ namespace sf
     class Camera : public VisionSensor
     {
     public:
-        Camera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency);
+        Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency);
         virtual ~Camera();
         
         virtual void InternalUpdate(Scalar dt) = 0;
@@ -32,16 +32,16 @@ namespace sf
         Scalar getPan();
         Scalar getTilt();
         Scalar getHorizontalFOV();
-        void getResolution(uint32_t& x, uint32_t& y);
+        void getResolution(unsigned int& x, unsigned int& y);
         bool getDisplayOnScreen();
         std::vector<Renderable> Render();
         
-    private:
+    protected:
         Scalar fovH;
         Scalar pan;
         Scalar tilt;
-        uint32_t resx;
-        uint32_t resy;
+        unsigned int resX;
+        unsigned int resY;
         bool display;
     };
 }

@@ -82,6 +82,24 @@ int Robot::getJoint(const std::string& name)
     
     return -1;
 }
+    
+Actuator* Robot::getActuator(std::string name)
+{
+    for(size_t i=0; i<actuators.size(); ++i)
+        if(actuators[i]->getName() == name)
+            return actuators[i];
+
+    return NULL;
+}
+    
+Sensor* Robot::getSensor(std::string name)
+{
+    for(size_t i=0; i<sensors.size(); ++i)
+        if(sensors[i]->getName() == name)
+            return sensors[i];
+    
+    return NULL;
+}
 
 Transform Robot::getTransform() const
 {
@@ -101,7 +119,7 @@ void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLi
 	dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
 }
 
-void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar torqueLimit)
+void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
@@ -116,11 +134,10 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
 	if(positionLimits.first < positionLimits.second)
 		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
 	
-	//dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, torqueLimit/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 
-void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar forceLimit)
+void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
@@ -135,7 +152,6 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 	if(positionLimits.first < positionLimits.second)
 		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
 	
-	//dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, forceLimit/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 

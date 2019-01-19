@@ -1,5 +1,7 @@
 #version 330
 
+#define MEAN_SUN_ILLUMINANCE 107527.0
+
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance; 
 uniform vec2 viewport;
@@ -116,9 +118,9 @@ void main()
 	vec3 Ty = normalize(vec3(0.0, normal.z, -normal.y));
 	vec3 Tx = cross(Ty, normal);
 
-    //float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
+    float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
     //vec3 H = normalize(toEye + normal);
-    float fresnel = 0.02 + 0.98 * pow(1.0 - dot(toEye, normal), 5.0);
+    //float fresnel = 0.02 + 0.98 * pow(1.0 - dot(toEye, normal), 5.0);
     
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
@@ -126,13 +128,13 @@ void main()
 	vec3 outColor = vec3(0.0);
 	
 	//Sun contribution
-    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/30000.0;
+    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
 	//Sky and scene reflection
 	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, 3.0)));
 	vec3 trans;
 	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
-    outColor += Lsky/whitePoint/30000.0; //fresnel *
+    outColor += Lsky/whitePoint/MEAN_SUN_ILLUMINANCE; //fresnel *
     
 	//Aerial perspective
     //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, P, 0.0, sunDirection, trans);///whitePoint/30000.0;

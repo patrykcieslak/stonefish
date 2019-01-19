@@ -22,9 +22,8 @@ OpenGLCamera* OpenGLLight::activeView = NULL;
 
 OpenGLLight::OpenGLLight(glm::vec3 position, glm::vec3 c, GLfloat illuminance)
 {
-    this->position = tempPos = position;
-    orientation = tempOri = glm::quat();
-    color = SUN_SKY_FACTOR * c * illuminance / SUN_ILLUMINANCE;
+    pos = tempPos = position;
+    color = c * illuminance / MEAN_SUN_ILLUMINANCE;
     active = true;
     surfaceDistance = 1.f; // attenuation = 1 / distance^2 * intesity [Lux]
 }
@@ -33,16 +32,14 @@ OpenGLLight::~OpenGLLight()
 {
 }
 
-void OpenGLLight::Update(glm::vec3 pos, glm::quat ori)
+void OpenGLLight::UpdatePosition(glm::vec3 p)
 {
-    tempPos = pos;
-    tempOri = ori;
+    tempPos = p;
 }
     
 void OpenGLLight::UpdateTransform()
 {
-    position = tempPos;
-    orientation = tempOri;
+    pos = tempPos;
 }
     
 void OpenGLLight::Activate()
@@ -72,19 +69,9 @@ glm::vec3 OpenGLLight::getColor()
 
 glm::vec3 OpenGLLight::getPosition()
 {
-    return position;
+    return pos;
 }
     
-glm::quat OpenGLLight::getOrientation()
-{
-    return orientation;
-}
-    
-glm::mat4 OpenGLLight::getTransform()
-{
-    return glm::mat4(orientation) + glm::translate(position);
-}
-
 //////////////////static//////////////////////////////
 void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 {

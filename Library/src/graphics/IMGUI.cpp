@@ -43,7 +43,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     
     //Set interface colors
     theme[PANEL_COLOR] = glm::vec4(0.98f, 0.98f, 0.98f, 1.f);
-    theme[ACTIVE_TEXT_COLOR] = glm::vec4(0.3f, 0.3f, 0.3f, 0.9f);
+    theme[ACTIVE_TEXT_COLOR] = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
     theme[INACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.5f);
     theme[ACTIVE_CONTROL_COLOR] = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);
     theme[INACTIVE_CONTROL_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);

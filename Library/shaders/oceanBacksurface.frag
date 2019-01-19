@@ -1,5 +1,7 @@
 #version 330
 
+#define MEAN_SUN_ILLUMINANCE 107527.0
+
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
 uniform vec2 viewport;
@@ -131,11 +133,11 @@ void main()
 	{
 		vec3 trans;
 		Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
-		Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/1000.0;
+        Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/MEAN_SUN_ILLUMINANCE; ////1000.0;
 	}
 	
 	//Final color
-	fragColor = (1.0-fresnel) * Lsky/whitePoint/10000.0;
+    fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;  //10000.0;
 	
     //Water properties
     vec3 b = turbidity * rayleigh; //Scattering coefficient
@@ -149,7 +151,7 @@ void main()
     vec3 skyIlluminance;
     vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
     vec3 inFactor = exp(-c * max(-eyePos.z,0.0)) * (exp((-toEye.z - 1.0)* c * d) - 1.0)/((-toEye.z - 1.0) * c) * b;
-    fragColor += (sunIlluminance + skyIlluminance)/whitePoint/30000.0 * inFactor * 0.01;
+    fragColor += (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
     
 	//Absorption
 	//fragColor *= exp(-lightAbsorption*(turbidity/100.0)*distance);

@@ -10,7 +10,6 @@
 #define __Stonefish_OpenGLAtmosphere__
 
 #include <functional>
-#include <ctime>
 #include "graphics/OpenGLDataStructs.h"
 
 namespace sf
@@ -59,7 +58,6 @@ namespace sf
         void SetupMaterialShader(GLSLShader* shader);
         void SetupOceanShader(GLSLShader* shader);
         
-        void SetSunPosition(double longitudeDeg, double latitudeDeg, std::tm& utc);
         void SetSunPosition(GLfloat azimuthDeg, GLfloat elevationDeg);
         void GetSunPosition(GLfloat& azimuthDeg, GLfloat& elevationDeg);
         GLuint getAtmosphereTexture(AtmosphereTextures id);
@@ -70,7 +68,6 @@ namespace sf
         void ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 rect);
         void ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale);
         
-        static int JulianDay(std::tm& tm);
         static void BuildAtmosphereAPI(RenderQuality quality);
         static GLuint getAtmosphereAPI();
         

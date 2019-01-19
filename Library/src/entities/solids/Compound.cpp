@@ -14,7 +14,8 @@
 namespace sf
 {
 
-Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin) : SolidEntity(uniqueName, Material(), 0)
+Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, bool enableHydrodynamicForces)
+    : SolidEntity(uniqueName, Material(), 0, Scalar(-1), enableHydrodynamicForces)
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
     phyMesh = NULL; // There is no single mesh
@@ -50,7 +51,7 @@ size_t Compound::getPartId(size_t collisionShapeId) const
     
 SolidType Compound::getSolidType()
 {
-    return SOLID_COMPOUND;
+    return SolidType::SOLID_COMPOUND;
 }
 
 std::vector<Vertex>* Compound::getMeshVertices()
@@ -127,6 +128,7 @@ void Compound::RecalculatePhysicalProperties()
     Scalar compoundMass = 0;
 	Scalar compoundVolume = 0;
     T_CG2O = T_CG2C = T_CG2G = Transform::getIdentity();
+    P_CB = Vector3(0,0,0);
         
     for(size_t i=0; i<parts.size(); ++i)
     {
@@ -142,6 +144,7 @@ void Compound::RecalculatePhysicalProperties()
     
     //Set transform origin
     compoundCG /= compoundMass;
+    if(compoundVolume > Scalar(0)) compoundCB /= compoundVolume;
     T_CG2O.setOrigin(-compoundCG);
     
     //2. Calculate compound inertia matrix
@@ -202,8 +205,7 @@ void Compound::RecalculatePhysicalProperties()
     T_CG2C = T_CG2G = T_CG2O;
     
     //Move CB to compound CG frame
-    if(compoundVolume > Scalar(0))
-        P_CB = T_CG2O * (compoundCB / compoundVolume);
+    P_CB = T_CG2O * compoundCB;
     
 	mass = compoundMass;
 	volume = compoundVolume;
@@ -389,6 +391,27 @@ std::vector<Renderable> Compound::Render()
 			item.model = glMatrixFromTransform(oTrans);
 			items.push_back(item);
 		}
+        
+        //Forces
+        Vector3 cg = getCGTransform().getOrigin();
+        glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
+        item.points.clear();
+        item.points.push_back(cgv);
+        item.model = glm::mat4(1.f);
+        
+        item.type = RenderableType::FORCE_BUOYANCY;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        items.push_back(item);
+        
+        item.points.pop_back();
+        item.type = RenderableType::FORCE_LINEAR_DRAG;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fds.x(), (GLfloat)Fds.y(), (GLfloat)Fds.z()));
+        items.push_back(item);
+        
+        item.points.pop_back();
+        item.type = RenderableType::FORCE_QUADRATIC_DRAG;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fdp.x(), (GLfloat)Fdp.y(), (GLfloat)Fdp.z()));
+        items.push_back(item);
 	}
 		
 	return items;

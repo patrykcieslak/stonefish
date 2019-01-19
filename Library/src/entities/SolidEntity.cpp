@@ -19,10 +19,11 @@
 namespace sf
 {
 
-SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar thickness, bool isBuoyant) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant) : Entity(uniqueName)
 {
 	mat = m;
     thick = thickness;
+    computeHydro = SimulationApp::getApp()->getSimulationManager()->isOceanEnabled() ? enableHydrodynamicForces : false;
     buoyant = isBuoyant;
     lookId = _lookId;
     
@@ -42,7 +43,6 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar
     hydroProxyType = HYDRO_PROXY_NONE;
     hydroProxyParams = std::vector<Scalar>(0);
     T_CG2H = Transform::getIdentity();
-	computeHydro = true;
     
     //Set vectors to zero
     Fb.setZero();
@@ -60,7 +60,6 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar
     rigidBody = NULL;
     multibodyCollider = NULL;
 	phyMesh = NULL;
-    dispCoordSys = false;
     graObjectId = -1;
 }
 
@@ -105,28 +104,13 @@ void SolidEntity::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& ine
     P_CB = T_CG_old_new.inverse() * P_CB;
 }
 
-void SolidEntity::SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB)
-{
-}
-
-void SolidEntity::setComputeHydrodynamics(bool flag)
-{
-	computeHydro = flag;
-}
+//void SolidEntity::SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB)
+//{
+//}
 
 void SolidEntity::setLook(int newLookId)
 {
     lookId = newLookId;
-}
-
-void SolidEntity::setDisplayCoordSys(bool enabled)
-{
-    dispCoordSys = enabled;
-}
-
-bool SolidEntity::isCoordSysVisible() const
-{
-    return dispCoordSys;
 }
 
 int SolidEntity::getLook() const
@@ -143,6 +127,11 @@ bool SolidEntity::isBuoyant() const
 {
     return buoyant;
 }
+    
+bool SolidEntity::hydrodynamicsEnabled() const
+{
+    return computeHydro;
+}
 
 void SolidEntity::getAABB(Vector3& min, Vector3& max)
 {
@@ -150,6 +139,11 @@ void SolidEntity::getAABB(Vector3& min, Vector3& max)
         rigidBody->getAabb(min, max);
     else if(multibodyCollider != NULL)
         multibodyCollider->getCollisionShape()->getAabb(getCGTransform(), min, max);
+    else
+    {
+        min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+        max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+    }
 }
 
 std::vector<Renderable> SolidEntity::Render()
@@ -169,6 +163,7 @@ std::vector<Renderable> SolidEntity::Render()
         item.model = glMatrixFromTransform(getCGTransform());
         items.push_back(item);
         
+        //Hydrodynamics
         Vector3 cbWorld = getCGTransform() * P_CB;
         item.type = RenderableType::HYDRO_CS;
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
@@ -202,7 +197,28 @@ std::vector<Renderable> SolidEntity::Render()
                 items.push_back(item);
                 break;
         }
-	}
+        
+        //Forces
+        Vector3 cg = getCGTransform().getOrigin();
+        glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
+        item.points.clear();
+        item.points.push_back(cgv);
+        item.model = glm::mat4(1.f);
+        
+        item.type = RenderableType::FORCE_BUOYANCY;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        items.push_back(item);
+        
+        item.points.pop_back();
+        item.type = RenderableType::FORCE_LINEAR_DRAG;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fds.x(), (GLfloat)Fds.y(), (GLfloat)Fds.z()));
+        items.push_back(item);
+        
+        item.points.pop_back();
+        item.type = RenderableType::FORCE_QUADRATIC_DRAG;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fdp.x(), (GLfloat)Fdp.y(), (GLfloat)Fdp.z()));
+        items.push_back(item);
+    }
 	
 	return items;
 }
@@ -299,11 +315,15 @@ Vector3 SolidEntity::getLinearVelocity() const
 		
         //Start with base velocity
         Vector3 linVelocity = multiBody->getBaseVel(); //Global
+        Vector3 angVelocity = multiBody->getBaseOmega(); //Global
         
         if(index >= 0) //If collider is not base
         {
-            for(int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
+            for(int i = 0; i <= index; ++i) //Accumulate velocity resulting from joints
             {
+                //Add velocity resulting from rotation of previous links
+                linVelocity += angVelocity.cross(multiBody->localDirToWorld(i, multiBody->getRVector(i)));
+                
                 if(multiBody->getLink(i).m_jointType == btMultibodyLink::ePrismatic) //Just add linear velocity
                 {
                     Vector3 axis = multiBody->getLink(i).getAxisBottom(0); //Local axis
@@ -313,13 +333,19 @@ Vector3 SolidEntity::getLinearVelocity() const
                 }
                 else if(multiBody->getLink(i).m_jointType == btMultibodyLink::eRevolute) //Add linear velocity due to rotation
                 {
-                    Vector3 axis = multiBody->getLink(i).getAxisBottom(0); //Local linear motion
-                    Vector3 vel = multiBody->getJointVel(i) * axis; //Local velocity
-                    Vector3 gvel = multiBody->localDirToWorld(i, vel); //Global velocity
+                    //Vector3 axis = multiBody->getLink(i).getAxisBottom(0); //Local linear motion
+                    //Vector3 vel = multiBody->getJointVel(i) * axis; //Local velocity
+                    
+                    Vector3 axis = multiBody->getLink(i).getAxisTop(0); //Axis of joint
+                    Vector3 aVel = multiBody->getJointVel(i) * axis;
+                    Vector3 vel = aVel.cross(multiBody->getLink(i).m_dVector); //Local velocity
+                    Vector3 gvel = multiBody->localDirToWorld(i, vel); //Global linear velocity
                     linVelocity += gvel;
+                    angVelocity += multiBody->localDirToWorld(i, aVel); //Global angular velocity
                 }
             }
         }
+        
 		return linVelocity;
     }
     else
@@ -343,7 +369,7 @@ Vector3 SolidEntity::getAngularVelocity() const
         
         if(index >= 0)
         {
-            for(int i = 0; i <= index; i++) //Accumulate velocity resulting from joints
+            for(int i = 0; i <= index; ++i) //Accumulate velocity resulting from joints
                 if(multiBody->getLink(i).m_jointType == btMultibodyLink::eRevolute) //Only revolute joints can change angular velocity
                 {
                     Vector3 axis = multiBody->getLink(i).getAxisTop(0); //Local axis
@@ -425,6 +451,9 @@ const Mesh* SolidEntity::getPhysicsMesh()
 
 void SolidEntity::ComputeHydrodynamicProxy(HydrodynamicProxyType t)
 {
+    if(!computeHydro)
+        return;
+    
     switch(t)
     {
         case HYDRO_PROXY_NONE:
@@ -862,8 +891,8 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
         BuildRigidBody();
 		BuildGraphicalObject();
         
-        //rigidBody->setMotionState(new btDefaultMotionState(UnitSystem::SetTransform(worldTransform)));
-        rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
+        rigidBody->setMotionState(new btDefaultMotionState(origin * T_CG2O.inverse()));
+        //rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
         sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
     }
 }
@@ -963,6 +992,19 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* liquid)
     else
         return BodyFluidPosition::CROSSING_FLUID_SURFACE;
 }
+    
+void SolidEntity::ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Scalar rho, Scalar mu, Vector3& linear, Vector3& quadratic)
+{
+    Vector3 vn = vc.dot(fn) * fn; //Normal velocity
+    Vector3 vt = vc - vn; //Tangent velocity
+    
+    linear = mu * vt * A / Scalar(0.0001);
+    
+    if(fn.dot(vn) > Scalar(0))
+        quadratic = Scalar(0.5) * rho * vn * vn.safeNorm() * A;
+    else
+        quadratic = Vector3(0,0,0);
+}
 
 void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
                                             const Vector3& v, const Vector3& omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp)
@@ -993,6 +1035,7 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
     Scalar viscousity = liquid->getLiquid()->viscosity;
+    Scalar density = liquid->getLiquid()->density;
  
 	//Loop through all faces...
     for(size_t i=0; i<mesh->faces.size(); ++i)
@@ -1193,24 +1236,16 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
         //Damping force
         if(settings.dampingForces)
 		{
-            //Skin drag force
             Vector3 vc = liquid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
-            Vector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
-            Vector3 Fds = viscousity * vt * A / Scalar(0.0001);
-            //Vector3 Fds = vt.safeNormalize()*Scalar(0.5)*fluid->getFluid()->density*Scalar(1.328)/1000.0*vt.length2()*fn.length()/Scalar(2);
-        
-            //Pressure drag force
-            Vector3 vn = vc - vt; //Water velocity normal to face
-            Vector3 Fdp(0,0,0);
-            
-            if(fn.dot(vn) < Scalar(0))
-                Fdp = Scalar(0.5) * liquid->getLiquid()->density * vn * vn.safeNorm() * A;
+            Vector3 Fdsf;
+            Vector3 Fdpf;
+            ComputeDampingForces(vc, fn1, A, density, viscousity, Fdsf, Fdpf);
             
             //Accumulate
-            _Fds += Fds;
-            _Tds += (fc - p).cross(Fds); 
-            _Fdp += Fdp; 
-            _Tdp += (fc - p).cross(Fdp);
+            _Fds += Fdsf;
+            _Tds += (fc - p).cross(Fdsf);
+            _Fdp += Fdpf;
+            _Tdp += (fc - p).cross(Fdpf);
         }
     }
 
@@ -1229,9 +1264,16 @@ void SolidEntity::ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, c
     uint64_t start = GetTimeInMicroseconds();
 #endif
     
+    //Damping forces
+    _Fds.setZero();
+    _Tds.setZero();
+    _Fdp.setZero();
+    _Tdp.setZero();
+    
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
     Scalar viscousity = liquid->getLiquid()->viscosity;
+    Scalar density = liquid->getLiquid()->density;
     
     //Loop through all faces...
     for(unsigned int i=0; i<mesh->faces.size(); ++i)
@@ -1256,24 +1298,17 @@ void SolidEntity::ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, c
         Vector3 fn1 = fn/len; //Normalised normal (length = 1)
         Scalar A = len/Scalar(2); //Area of the face (triangle)
         
-        //Skin drag force
+        //Damping forces
         Vector3 vc = liquid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
-        Vector3 vt = vc - (vc.dot(fn)*fn)/fn.length2(); //Water velocity projected on face (tangent to face)
-        Vector3 Fds = viscousity * vt * A / Scalar(0.0001);
-        //Vector3 Fds = vt.safeNormalize()*Scalar(0.5)*fluid->getFluid()->density*Scalar(1.328)/1000.0*vt.length2()*fn.length()/Scalar(2);
-            
-        //Pressure drag force
-        Vector3 vn = vc - vt; //Water velocity normal to face
-        Vector3 Fdp(0,0,0);
-            
-        if(fn.dot(vn) < Scalar(0))
-            Fdp = Scalar(0.5) * liquid->getLiquid()->density * vn * vn.safeNorm() * A;
-            
+        Vector3 Fdsf;
+        Vector3 Fdpf;
+        ComputeDampingForces(vc, fn1, A, density, viscousity, Fdsf, Fdpf);
+        
         //Accumulate
-        _Fds += Fds;
-        _Tds += (fc - p).cross(Fds);
-        _Fdp += Fdp;
-        _Tdp += (fc - p).cross(Fdp);
+        _Fds += Fdsf;
+        _Tds += (fc - p).cross(Fdsf);
+        _Fdp += Fdpf;
+        _Tdp += (fc - p).cross(Fdpf);
     }
     
 #ifdef DEBUG
@@ -1329,7 +1364,8 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liqu
     
 void SolidEntity::CorrectDampingForces()
 {
-    Vector3 Fdp_H = T_CG2H.getBasis().inverse() * Fdp; //Transform force to proxy frame
+    Vector3 Fdpn = (T_CG2H.getBasis().inverse() * Fdp).safeNormalize(); //Transform force to proxy frame
+    Scalar corFactor(1.0);
     
     switch(hydroProxyType)
     {
@@ -1340,7 +1376,7 @@ void SolidEntity::CorrectDampingForces()
         case HYDRO_PROXY_CYLINDER:
         {
             Vector3 Cd(0.5, 0.5, 1.0);
-            Fdp_H = Vector3(Cd.x()*Fdp_H.x(), Cd.y()*Fdp_H.y(), Cd.z()*Fdp_H.z());
+            corFactor = Cd.dot(Fdpn);
         }
             break;
                 
@@ -1349,18 +1385,244 @@ void SolidEntity::CorrectDampingForces()
             Vector3 Cd(Scalar(1)/hydroProxyParams[0] , Scalar(1)/hydroProxyParams[1], Scalar(1)/hydroProxyParams[2]);
             Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
             Cd /= maxCd;
-            Fdp_H = Vector3(Cd.x()*Fdp_H.x(), Cd.y()*Fdp_H.y(), Cd.z()*Fdp_H.z());
+            corFactor = Cd.dot(Fdpn);
         }
             break;
     }
     
-    Fdp = T_CG2H.getBasis() * Fdp_H;
+    Fdp *= corFactor;
 }
 
 void SolidEntity::ApplyFluidForces()
 {
-    ApplyCentralForce(Fb + Fds + Fdp);
-    ApplyTorque(Tb + Tds + Tdp);
+    ApplyCentralForce(Fb + Fdp + Fds);
+    ApplyTorque(Tb + Tdp + Tds);
+}
+    
+void SolidEntity::ComputePhysicalProperties(Mesh *mesh, Scalar wallThickness, Material mat, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot)
+{
+    //1.Calculate mesh volume and CG
+    CG = Vector3(0,0,0);
+    volume = 0;
+    
+    if(wallThickness > Scalar(0)) //Shell
+    {
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Get triangle, convert from OpenGL to physics
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            
+            //Calculate volume of shell triangle
+            Scalar A = (v2-v1).cross(v3-v1).length()/Scalar(2);
+            Vector3 triCG = (v1+v2+v3)/Scalar(3);
+            Scalar triVolume = A * wallThickness;
+            CG += triCG * triVolume;
+            volume += triVolume;
+        }
+        
+        //Compute mesh CG
+        if(volume > Scalar(0))
+            CG /= volume;
+        else
+            CG = Vector3(0,0,0);
+    }
+    else //Solid body
+    {
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Get triangle, convert from OpenGL to physics
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            
+            //Calculate signed volume of a tetrahedra
+            Vector3 tetraCG = (v1+v2+v3)/Scalar(4);
+            Scalar tetraVolume6 = v1.dot(v2.cross(v3));
+            CG += tetraCG * tetraVolume6;
+            volume += tetraVolume6;
+        }
+        
+        //Compute mesh CG
+        if(volume > Scalar(0))
+            CG /= volume;
+        else
+            CG = Vector3(0,0,0);
+        
+        //Compute mesh volume
+        volume /= Scalar(6);
+    }
+    
+    //2.Calculate moments of inertia for local coordinate system located in CG (not necessarily principal)
+    Matrix3 I;
+    
+    if(wallThickness > Scalar(0)) //Shell - I have doubts if it is correct!
+    {
+        //Compute properties a shell by subtracting the inner solid from the outer solid
+        //Outer solid -> eternal surface
+        Scalar Pxx = Scalar(0);
+        Scalar Pyy = Scalar(0);
+        Scalar Pzz = Scalar(0);
+        Scalar Pxy = Scalar(0);
+        Scalar Pxz = Scalar(0);
+        Scalar Pyz = Scalar(0);
+        
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to CG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            Vector3 n = (v2-v1).cross(v3-v1).normalize();
+            v1 = v1 + n*wallThickness/Scalar(2) - CG;
+            v2 = v2 + n*wallThickness/Scalar(2) - CG;
+            v3 = v3 + n*wallThickness/Scalar(2) - CG;
+            
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            Scalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+        
+        Pxx *= mat.density / Scalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= mat.density / Scalar(120);
+        Pzz *= mat.density / Scalar(120);
+        Pxy *= mat.density / Scalar(120);
+        Pxz *= mat.density / Scalar(120);
+        Pyz *= mat.density / Scalar(120);
+        
+        I = Matrix3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+        
+        //Inner solid -> internal surface
+        Pxx = Scalar(0);
+        Pyy = Scalar(0);
+        Pzz = Scalar(0);
+        Pxy = Scalar(0);
+        Pxz = Scalar(0);
+        Pyz = Scalar(0); //products of inertia
+        
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to CG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            Vector3 n = (v2-v1).cross(v3-v1).normalize();
+            v1 = v1 - n*wallThickness/Scalar(2) - CG;
+            v2 = v2 - n*wallThickness/Scalar(2) - CG;
+            v3 = v3 - n*wallThickness/Scalar(2) - CG;
+            
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            Scalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+        
+        Pxx *= mat.density / Scalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= mat.density / Scalar(120);
+        Pzz *= mat.density / Scalar(120);
+        Pxy *= mat.density / Scalar(120);
+        Pxz *= mat.density / Scalar(120);
+        Pyz *= mat.density / Scalar(120);
+        
+        I -= Matrix3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+    }
+    else
+    {
+        Scalar Pxx = Scalar(0);
+        Scalar Pyy = Scalar(0);
+        Scalar Pzz = Scalar(0);
+        Scalar Pxy = Scalar(0);
+        Scalar Pxz = Scalar(0);
+        Scalar Pyz = Scalar(0);
+        
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to CG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            v1 -= CG;
+            v2 -= CG;
+            v3 -= CG;
+            
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            Scalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+        
+        Pxx *= mat.density / Scalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= mat.density / Scalar(120);
+        Pzz *= mat.density / Scalar(120);
+        Pxy *= mat.density / Scalar(120);
+        Pxz *= mat.density / Scalar(120);
+        Pyz *= mat.density / Scalar(120);
+        
+        I = Matrix3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+    }
+    
+    //3. Find primary moments of inertia
+    Ipri = Vector3(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
+    Irot = I3();
+    
+    //Check if inertia matrix is not diagonal
+    if(!(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
+         && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
+         && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY())))
+    {
+        //3.1. Calculate principal moments of inertia
+        Scalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
+        Scalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
+        Scalar U = btSqrt(T*T-Scalar(3)*II)/Scalar(3);
+        Scalar theta = btAcos((-Scalar(2)*T*T*T + Scalar(9)*T*II - Scalar(27)*I.determinant())/(Scalar(54)*U*U*U));
+        Scalar A = T/Scalar(3) - Scalar(2)*U*btCos(theta/Scalar(3));
+        Scalar B = T/Scalar(3) - Scalar(2)*U*btCos(theta/Scalar(3) - Scalar(2)*M_PI/Scalar(3));
+        Scalar C = T/Scalar(3) - Scalar(2)*U*btCos(theta/Scalar(3) + Scalar(2)*M_PI/Scalar(3));
+        Ipri = Vector3(A, B, C);
+        
+        //3.2. Calculate principal axes of inertia
+        Matrix3 L;
+        Vector3 axis1,axis2,axis3;
+        axis1 = findInertiaAxis(I, A);
+        axis2 = findInertiaAxis(I, B);
+        axis3 = axis1.cross(axis2);
+        axis2 = axis3.cross(axis1);
+        
+        //3.3. Rotate body so that principal axes are parallel to (x,y,z) system
+        Irot = Matrix3(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
+    }
 }
 
 }

@@ -19,8 +19,9 @@ namespace sf
     class DepthCamera : public Camera
     {
     public:
-        DepthCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
-        virtual ~DepthCamera();
+        DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg,
+                    Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
+        ~DepthCamera();
         
         void InternalUpdate(Scalar dt);
         void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up);
@@ -30,6 +31,8 @@ namespace sf
         glm::vec2 getDepthRange();
         
     private:
+        void InitGraphics();
+        
         OpenGLDepthCamera* glCamera;
         GLfloat* imageData;
         glm::vec2 depthRange;

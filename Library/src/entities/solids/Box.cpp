@@ -13,8 +13,8 @@
 namespace sf
 {
 
-Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m, int lookId, Scalar thickness, bool isBuoyant)
-         : SolidEntity(uniqueName, m, lookId, thickness, isBuoyant)
+Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
+         : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
 {
     halfExtents = dimensions * Scalar(0.5);
     T_O2G = T_O2C = origin;
@@ -59,7 +59,7 @@ Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& ori
 
 SolidType Box::getSolidType()
 {
-    return SOLID_BOX;
+    return SolidType::SOLID_BOX;
 }
 
 btCollisionShape* Box::BuildCollisionShape()

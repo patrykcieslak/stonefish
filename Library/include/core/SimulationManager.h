@@ -12,6 +12,7 @@
 #include <SDL2/SDL_mutex.h>
 #include "StonefishCommon.h"
 #include "entities/forcefields/Ocean.h"
+#include "entities/forcefields/Atmosphere.h"
 
 namespace sf
 {
@@ -25,7 +26,6 @@ namespace sf
     class StaticEntity;
     class SolidEntity;
     class FeatherstoneEntity;
-    class Atmosphere;
     class Joint;
     class Actuator;
     class Sensor;
@@ -363,6 +363,9 @@ namespace sf
         
         //! A method informing if the simulation is freshly started.
         bool isSimulationFresh();
+        
+        //! A method informing if the ocean is enabled in the simulation.
+        bool isOceanEnabled();
         
         //! A method returning a pointer to the Bullet dynamics world.
         btMultiBodyDynamicsWorld* getDynamicsWorld();

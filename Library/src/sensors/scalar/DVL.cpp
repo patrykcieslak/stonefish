@@ -18,10 +18,10 @@
 namespace sf
 {
 
-DVL::DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+DVL::DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     range[0] = range[1] = range[2] = range[3] = Scalar(0.);
-    beamAngle = beamSpreadAngle;
+    beamAngle = beamSpreadAngleDeg/Scalar(180)*M_PI;
     channels.push_back(SensorChannel("Velocity X", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QUANTITY_VELOCITY));
     channels.push_back(SensorChannel("Velocity Z", QUANTITY_VELOCITY));

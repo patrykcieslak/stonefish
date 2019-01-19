@@ -16,20 +16,13 @@
 namespace sf
 {
 
-ColorCamera::ColorCamera(std::string uniqueName, uint32_t resX, uint32_t resY, Scalar horizFOVDeg, Scalar frequency, uint32_t spp, bool ao)
-    : Camera(uniqueName, resX, resY, horizFOVDeg, frequency)
+ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, unsigned char spp, Scalar frequency)
+    : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
 {
-    spp = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
+    samples = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     newDataCallback = NULL;
     imageData = new uint8_t[resX*resY*3]; //RGB color
     memset(imageData, 0, resX*resY*3);
-    
-    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)horizFOVDeg, 1000.f, spp, ao);
-    glCamera->setCamera(this);
-    UpdateTransform();
-    glCamera->UpdateTransform();
-    InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
 }
 
 ColorCamera::~ColorCamera()
@@ -43,6 +36,16 @@ ColorCamera::~ColorCamera()
 uint8_t* ColorCamera::getDataPointer()
 {
     return imageData;
+}
+    
+void ColorCamera::InitGraphics()
+{
+    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, 1000.f, samples, true);
+    glCamera->setCamera(this);
+    UpdateTransform();
+    glCamera->UpdateTransform();
+    InternalUpdate(0);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
 }
 
 void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

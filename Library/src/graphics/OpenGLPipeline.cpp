@@ -269,6 +269,31 @@ void OpenGLPipeline::DrawHelpers()
         }
     }
     
+    //Forces
+    if(hSettings.showForces)
+    {
+        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        {
+            switch(drawingQueueCopy[h].type)
+            {
+                case RenderableType::FORCE_BUOYANCY:
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
+                    break;
+        
+                case RenderableType::FORCE_LINEAR_DRAG:
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(0.f,1.f,1.f,1.f), drawingQueueCopy[h].model);
+                    break;
+                    
+                case RenderableType::FORCE_QUADRATIC_DRAG:
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
+                    break;
+        
+                default:
+                    break;
+            }
+        }
+    }
+    
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
@@ -388,7 +413,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Drawing underwater without stencil test
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
-                    glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix());
+                    glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix());
                     
                     //Draw surface (disable depth testing but write to depth buffer)
                     glEnable(GL_BLEND);
@@ -482,7 +507,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     /*atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,0,200,200));
                     atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(200,0,200,200));
                     atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
-                    atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.05f);*/
+                    atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);*/
                     
                     //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
                     //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));

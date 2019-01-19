@@ -18,13 +18,15 @@
 namespace sf
 {
 
-OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 _direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, color, illuminance)
+OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, color, illuminance)
 {
-    direction = glm::normalize(_direction);
     coneAngle = coneAngleDeg/180.f*M_PI;
     clipSpace = glm::mat4();
 	zNear = 0.1f;
 	zFar = 100.f;
+    UpdatePosition(position);
+    UpdateDirection(direction);
+    UpdateTransform();
 }
 
 OpenGLSpotLight::~OpenGLSpotLight()
@@ -55,7 +57,7 @@ LightType OpenGLSpotLight::getType()
 
 glm::vec3 OpenGLSpotLight::getDirection()
 {
-    return getOrientation() * direction;
+    return dir;
 }
 
 GLfloat OpenGLSpotLight::getAngle()
@@ -67,6 +69,17 @@ glm::mat4 OpenGLSpotLight::getClipSpace()
 {
 	return clipSpace;
 }
+    
+void OpenGLSpotLight::UpdateDirection(glm::vec3 d)
+{
+    tempDir = d;
+}
+    
+void OpenGLSpotLight::UpdateTransform()
+{
+    OpenGLLight::UpdateTransform();
+    dir = tempDir;
+}
 
 void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
@@ -75,57 +88,10 @@ void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 	shader->SetUniform(lightUni + "radius", glm::vec2(0.01f,0.01f));
 	shader->SetUniform(lightUni + "color", getColor());
 	shader->SetUniform(lightUni + "direction", getDirection());
-	shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()));
+	shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()/2.f));
 	shader->SetUniform(lightUni + "clipSpace", getClipSpace());
 	shader->SetUniform(lightUni + "zNear", zNear);
 	shader->SetUniform(lightUni + "zFar", zFar);
-}
-
-void OpenGLSpotLight::RenderDummy()
-{
-    //transformation
-	glm::vec3 org = getPosition();
-	glm::vec3 left = getDirection();
-	glm::vec3 up(0,1,0);
-	if(fabsf(left.y) > 0.8f)
-		up = glm::vec3(0,0,1);
-	
-    glm::vec3 front = glm::normalize(glm::cross(left, up));
-    up = glm::cross(front, left);
-    
-	glm::mat4 model(left.x, left.y, left.z, 0, 
-				    up.x, up.y, up.z, 0,
-				    front.x, front.y, front.z, 0,
-				    org.x, org.y, org.z, 1);
-	
-    //rendering
-    GLfloat iconSize = 5.f;
-    unsigned int steps = 24;
-    
-    GLfloat r = iconSize*tanf(coneAngle);
-    
-    std::vector<glm::vec3> vertices;
-	vertices.push_back(glm::vec3(0,0,0));
-	vertices.push_back(glm::vec3(iconSize, 0, 0));
-	vertices.push_back(glm::vec3(0,0,0));
-	vertices.push_back(glm::vec3(iconSize, r, 0));
-	vertices.push_back(glm::vec3(0,0,0));
-	vertices.push_back(glm::vec3(iconSize,-r, 0));
-	vertices.push_back(glm::vec3(0,0,0));
-	vertices.push_back(glm::vec3(iconSize, 0, r));
-	vertices.push_back(glm::vec3(0,0,0));
-	vertices.push_back(glm::vec3(iconSize, 0, -r));
-	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINES, vertices, DUMMY_COLOR, model);
-	vertices.clear();
-	
-	for(unsigned int i=0; i<=steps; ++i)
-		vertices.push_back(glm::vec3(iconSize/2.f, cosf(i/(GLfloat)steps*2.f*M_PI)*r/2.f, sinf(i/(GLfloat)steps*2.f*M_PI)*r/2.f));
-	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
-	vertices.clear();
-	
-	for(unsigned int i=0; i<=steps; ++i)
-		vertices.push_back(glm::vec3(iconSize, cosf(i/(GLfloat)steps*2.f*M_PI)*r, sinf(i/(GLfloat)steps*2.f*M_PI)*r));
-	//OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, DUMMY_COLOR, model);
 }
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)

@@ -1,5 +1,7 @@
 #version 330
 
+#define MEAN_SUN_ILLUMINANCE 107527.0
+
 uniform vec3 eyePos;
 uniform vec3 sunDir;
 uniform mat4 invProj;
@@ -62,14 +64,14 @@ void main()
 
 	//Sky
 	vec3 transmittance;
-    vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance);
+    vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance)/MEAN_SUN_ILLUMINANCE; ///1
 
 	//Sun
-	luminance += smoothstep(cosSunSize*0.99999, cosSunSize, dot(viewDir, sunDir)) * transmittance * GetSolarLuminance()/30000.0;
+    luminance += smoothstep(cosSunSize*0.99999, cosSunSize, dot(viewDir, sunDir)) * transmittance * GetSolarLuminance()/MEAN_SUN_ILLUMINANCE; //30000.0;
 
 	//Mix
 	luminance = mix(luminance, groundLuminance, groundAlpha);
 
 	//Color correction
-    fragColor = luminance/whitePoint/10000.0;
+    fragColor = luminance/whitePoint; //10000.0
 }

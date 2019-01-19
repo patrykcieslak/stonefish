@@ -65,7 +65,7 @@ public:
     int AddRevoluteJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks = false);
     int AddPrismaticJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& axis, bool collisionBetweenJointLinks = false);
 	int AddFixedJoint(std::string name, unsigned int parent, unsigned int child, const Vector3& pivot);
-    void AddJointMotor(unsigned int index, Scalar maxImpulse);
+    void AddJointMotor(unsigned int index, Scalar maxForceTorque);
     void AddJointLimit(unsigned int index, Scalar lower, Scalar upper);
 	
     //Multibody control
@@ -85,7 +85,7 @@ public:
     void getJointPosition(unsigned int index, Scalar& position, btMultibodyLink::eFeatherstoneJointType& jointType);
     void getJointVelocity(unsigned int index, Scalar& velocity, btMultibodyLink::eFeatherstoneJointType& jointType);
     Scalar getJointTorque(unsigned int index); //Only shows sum of manually applied torques
-    Scalar getMotorImpulse(unsigned int index); 
+    Scalar getMotorForceTorque(unsigned int index); 
     Vector3 getJointAxis(unsigned int index);
     
     /*

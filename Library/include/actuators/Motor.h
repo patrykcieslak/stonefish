@@ -25,7 +25,7 @@ namespace sf
         
         //! A method used to update the internal state of the actuator.
         /*!
-         \param dt a time step of the simulation [s]
+         \param dt the time step of the simulation [s]
          */
         virtual void Update(Scalar dt);
         

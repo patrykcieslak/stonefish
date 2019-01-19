@@ -57,26 +57,10 @@ bool Ocean::hasWaves()
 {
     return waves;
 }
-    
-void Ocean::setWaterType(Scalar t)
-{
-    waterType = t > Scalar(1) ? Scalar(1) : (t < Scalar(0) ? Scalar(0) : t);
-    
-    if(glOcean != NULL)
-        glOcean->setWaterType((float)waterType);
-}
 
 Scalar Ocean::getWaterType()
 {
     return waterType;
-}
-
-void Ocean::setTurbidity(Scalar t)
-{
-    turbidity = t < Scalar(0) ? Scalar(0) : t;
-    
-    if(glOcean != NULL)
-        glOcean->setTurbidity((float)turbidity);
 }
     
 Scalar Ocean::getTurbidity()
@@ -97,6 +81,18 @@ ForcefieldType Ocean::getForcefieldType()
 const Fluid* Ocean::getLiquid() const
 {
     return liquid;
+}
+    
+void Ocean::SetupWaterProperties(Scalar type, Scalar turb)
+{
+    waterType = type > Scalar(1) ? Scalar(1) : (type < Scalar(0) ? Scalar(0) : type);
+    turbidity = turb < Scalar(0) ? Scalar(0) : turb;
+    
+    if(glOcean != NULL)
+    {
+        glOcean->setWaterType((float)waterType);
+        glOcean->setTurbidity((float)turbidity);
+    }
 }
 
 void Ocean::AddVelocityField(VelocityField* field)
@@ -188,16 +184,8 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
     {
         if(recompute)
         {
-            settings.addedMassForces = true;
             settings.dampingForces = true;
             settings.reallisticBuoyancy = true;
-            ((SolidEntity*)ent)->ComputeFluidForces(settings, this);
-        }
-        else
-        {
-            settings.addedMassForces = true;
-            settings.dampingForces = false;
-            settings.reallisticBuoyancy = false;
             ((SolidEntity*)ent)->ComputeFluidForces(settings, this);
         }
         
@@ -208,7 +196,7 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
 	glOcean = new OpenGLOcean(waves, hydrodynamics);
-    setWaterType(Scalar(0.5));
+    SetupWaterProperties(0.0, 1.0);
 }
 
 std::vector<Renderable> Ocean::Render()

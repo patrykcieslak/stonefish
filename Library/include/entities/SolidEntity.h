@@ -17,7 +17,7 @@
 namespace sf
 {
     //! An enum designating the type of solid that the body represents.
-    typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND} SolidType;
+    typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND, SOLID_WING} SolidType;
     //! An enum designating the type of proxy shape used for hydrodynamic coefficient approximation.
     typedef enum {HYDRO_PROXY_NONE = 0, HYDRO_PROXY_SPHERE, HYDRO_PROXY_CYLINDER, HYDRO_PROXY_ELLIPSOID} HydrodynamicProxyType;
     //! An enum used to define if the body is submerged.
@@ -36,9 +36,11 @@ namespace sf
          \param m a metarial the body is made of
          \param lookId an index of the graphical material
          \param thickness body wall thickness, if provided the body is considered a shell
-         \param isBuoyant defines if the buoyancy force should be calculated for the body
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
+         \param isBuoyant a flag to enable computation of buoyancy force
          */
-        SolidEntity(std::string uniqueName, Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        SolidEntity(std::string uniqueName, Material m, int lookId = -1, Scalar thickness = Scalar(-1),
+                    bool enableHydrodynamicForces = true, bool isBuoyant = true);
         
         //! A destructor.
         virtual ~SolidEntity();
@@ -157,7 +159,7 @@ namespace sf
          \param damping a matrix of damping factors
          \param G2CB a transformation between the geometry frame and the CB frame
          */
-        void SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB);
+        //void SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB);
         
         //! A method used to update the acceleration of the body.
         /*!
@@ -165,9 +167,6 @@ namespace sf
          \param ang an angular part of the acceleration
          */
         void SetAcceleration(const Vector3& lin, const Vector3& ang);
-        
-        //! A method to switch on/off computation of fluid dynamics for the body.
-        void setComputeHydrodynamics(bool flag);
         
         //! A method to set the body pose in the world frame.
         void setCGTransform(const Transform& trans);
@@ -247,6 +246,9 @@ namespace sf
         //! A method informing if the body is using buoyancy computation.
         bool isBuoyant() const;
         
+        //! A method informing if the hydrodynamic forces should be computed for the body.
+        bool hydrodynamicsEnabled() const;
+        
         //Rendering
         //! A method used to build the graphical representation of the body.
         virtual void BuildGraphicalObject();
@@ -276,9 +278,6 @@ namespace sf
         //! A method returning the index of the graphical object used in rendering.
         int getObject() const;
         
-        //! A method informing if the body CG will be rendered.
-        bool isCoordSysVisible() const;
-        
     protected:
         BodyFluidPosition CheckBodyFluidPosition(Ocean* liquid);
         void ComputeHydrodynamicProxy(HydrodynamicProxyType t);
@@ -286,6 +285,9 @@ namespace sf
         void ComputeProxyCylinder();
         void ComputeProxyEllipsoid();
         void CorrectDampingForces();
+        static void ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Scalar rho, Scalar mu, Vector3& linear, Vector3& quadratic);
+        static void ComputePhysicalProperties(Mesh* mesh, Scalar wallThickness, Material mat, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot);
+        
         Scalar LambKFactor(Scalar r1, Scalar r2);
         virtual void BuildRigidBody();
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
@@ -337,7 +339,6 @@ namespace sf
         int lookId;
         int graObjectId;
         int phyObjectId;
-        bool dispCoordSys;
         
     private:
         friend class FeatherstoneEntity;

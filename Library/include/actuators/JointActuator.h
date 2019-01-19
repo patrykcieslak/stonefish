@@ -31,13 +31,13 @@ namespace sf
          \param multibody a pointer to the multibody
          \param jointId the index of the multibody joint to be actuated
          */
-        void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
+        virtual void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
         
         //! A method used to attach the actuator to a discrete joint.
         /*!
          \param joint a pointer to a joint object
          */
-        void AttachToJoint(Joint* joint);
+        virtual void AttachToJoint(Joint* joint);
         
         //! A method returning the type of the actuator.
         ActuatorType getType();

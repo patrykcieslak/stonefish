@@ -17,7 +17,7 @@ namespace sf
     class DVL : public LinkSensor
     {
     public:
-        DVL(std::string uniqueName, Scalar beamSpreadAngle, Scalar frequency = Scalar(-1), int historyLength = -1);
+        DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         void InternalUpdate(Scalar dt);
         void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);

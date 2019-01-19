@@ -26,10 +26,11 @@ namespace sf
          \param m a material of the torus
          \param lookId an index of the graphical material used to render the torus
          \param thickness defines the thickness of the torus walls, if positive the torus is treated as shell
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if the torus should be subject to buoyancy force
          */
         Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
-              Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+              Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool enableHydrodynamicForces = true, bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

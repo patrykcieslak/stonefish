@@ -31,6 +31,9 @@ namespace sf
         virtual Transform getSensorFrame();
         virtual SensorType getType();
         
+    protected:
+        virtual void InitGraphics() = 0;
+        
     private:
         SolidEntity* attach;
         Transform o2s;

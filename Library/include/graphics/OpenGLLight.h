@@ -33,19 +33,17 @@ namespace sf
         virtual void SetupShader(GLSLShader* shader, unsigned int lightId) = 0;
         virtual void BakeShadowmap(OpenGLPipeline* pipe) = 0;
         
-        virtual void RenderDummy() = 0;
         virtual void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h) = 0;
         virtual LightType getType() = 0;
         
-        void Update(glm::vec3 pos, glm::quat ori);
-        void UpdateTransform();
+        void UpdatePosition(glm::vec3 p);
+        virtual void UpdateTransform();
         void Activate();
         void Deactivate();
         void setLightSurfaceDistance(GLfloat dist);
         glm::vec3 getColor();
         glm::vec3 getPosition();
         glm::quat getOrientation();
-        glm::mat4 getTransform();
         bool isActive();
         
         //Static methods
@@ -64,10 +62,8 @@ namespace sf
         
     private:
         bool active;
-        glm::vec3 position;
-        glm::quat orientation;
+        glm::vec3 pos;
         glm::vec3 tempPos;
-        glm::quat tempOri;
         glm::vec3 color;
     };
 }

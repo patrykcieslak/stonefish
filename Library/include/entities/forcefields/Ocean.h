@@ -21,7 +21,6 @@ namespace sf
     struct HydrodynamicsSettings
     {
         HydrodynamicsType algorithm;
-        bool addedMassForces;
         bool dampingForces;
         bool reallisticBuoyancy;
     };
@@ -35,6 +34,8 @@ namespace sf
         Ocean(std::string uniqueName, bool simulateWaves, Fluid* l);
         ~Ocean();
         
+        void SetupWaterProperties(Scalar type, Scalar turbidity);
+        
         //Forces
         void AddVelocityField(VelocityField* field);
         virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
@@ -45,10 +46,8 @@ namespace sf
         Scalar GetPressure(const Vector3& point);
         Scalar GetDepth(const Vector3& point);
         
-        //Getters
-        void setWaterType(Scalar t);
+        //Accessors
         Scalar getWaterType();
-        void setTurbidity(Scalar t);
         Scalar getTurbidity();
         bool hasWaves();
         const Fluid* getLiquid() const;

@@ -35,8 +35,6 @@
 #include "entities/Entity.h"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
-#include "entities/forcefields/Ocean.h"
-#include "entities/forcefields/Atmosphere.h"
 #include "entities/solids/Compound.h"
 #include "entities/StaticEntity.h"
 #include "entities/ForcefieldEntity.h"
@@ -517,6 +515,11 @@ void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsi
     icLinTolerance = linearTolerance > SIMD_EPSILON ? linearTolerance : Scalar(1e-6);
     icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : Scalar(1e-6);
 }
+    
+bool SimulationManager::isOceanEnabled()
+{
+    return ocean != NULL;
+}
 
 void SimulationManager::InitializeSolver()
 {
@@ -622,7 +625,7 @@ void SimulationManager::InitializeScenario()
 	if(SimulationApp::getApp()->hasGraphics())
 	{
 		GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-        trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,1.f), 1.0, glm::vec3(0.f,0.f,1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 10000.f, 4, true);
+        trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,1.f), 1.0, glm::vec3(0.f,0.f,1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
         trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
 	}
@@ -1257,19 +1260,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
             multibody->ApplyGravity(mbDynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
-       /* else if(ent->getType() == ENTITY_CABLE)
-        {
-            CableEntity* cable = (CableEntity*)ent;
-            cable->ApplyGravity();
-        }*/
-        /*else if(ent->getType() == ENTITY_SYSTEM)
-        {
-            SystemEntity* system = (SystemEntity*)ent;
-            system->UpdateActuators(timeStep);
-            system->ApplyGravity(mbDynamicsWorld->getGravity());
-			system->ApplyDamping();
-        }*/
-		else if(ent->getType() == ENTITY_FORCEFIELD)
+        else if(ent->getType() == ENTITY_FORCEFIELD)
 		{
 			ForcefieldEntity* ff = (ForcefieldEntity*)ent;
 			if(ff->getForcefieldType() == FORCEFIELD_TRIGGER)

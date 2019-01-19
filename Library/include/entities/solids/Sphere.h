@@ -25,9 +25,11 @@ namespace sf
          \param m a material of the sphere
          \param lookId an index of the graphical material used to render the sphere
          \param thickness defines the thickness of the sphere walls, if positive the sphere is treated as shell
+         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if the sphere should be subject to buoyancy force
          */
-        Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, int lookId = -1, Scalar thickness = Scalar(-1),
+               bool enableHydrodynamicForces = true, bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

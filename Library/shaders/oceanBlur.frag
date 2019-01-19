@@ -125,7 +125,7 @@ void main(void)
     //vec3 c = lightAbsorption + 0.1 * b; //Full attenuation coefficient
     
     //Sample color based on b
-    vec2 r = dot(color, b) * blurScale * blurShape;
+    vec2 r = dot(normalize(color), b) * blurScale * blurShape;
     vec3 blur = vec3(0.0);
     float w = 0.0;
     
@@ -137,5 +137,6 @@ void main(void)
         w += wi;
     }
     
-    fragColor.rgb = mix(color, blur/w, 1.0-exp(-b*depth));
+    float maxBlurDist = 1.0/turbidity;
+    fragColor.rgb = mix(color, blur/w, clamp(depth, 0.0, maxBlurDist)/maxBlurDist);
 }

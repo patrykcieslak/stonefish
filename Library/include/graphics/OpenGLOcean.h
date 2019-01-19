@@ -54,7 +54,7 @@ namespace sf
         void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
         
         //! Method that draws the distant background of the ocean.
-        void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+        void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 infProjection);
         
         //! Method that generates the stencil mask.
         void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::mat4 infProjection);

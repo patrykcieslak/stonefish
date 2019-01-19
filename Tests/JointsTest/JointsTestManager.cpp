@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "JointsTestManager.h"
@@ -46,6 +46,8 @@ void JointsTestManager::BuildScenario()
     int green = CreateLook(sf::Color(0.5f,1.0f,0.4f), 0.5f);
     
     ////////OBJECTS
+    getAtmosphere()->SetupSunPosition(0.0, 70.0);
+    
     sf::Plane* floor = new sf::Plane("Floor", 1000.f, getMaterialManager()->getMaterial("Steel"), grid);
     AddStaticEntity(floor, sf::I4());
     
@@ -58,7 +60,6 @@ void JointsTestManager::BuildScenario()
     
     sf::FixedJoint* fixed = new sf::FixedJoint("Fix", box, sph);
     AddJoint(fixed);
-    
     
     //----Revolute Joint----
     box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), getMaterialManager()->getMaterial("Plastic"), green);

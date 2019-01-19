@@ -1,10 +1,9 @@
 #version 330
 
 //---------------Definitions--------------------
+#define MEAN_SUN_ILLUMINANCE 107527.0
 #define MAX_POINT_LIGHTS 	32
 #define MAX_SPOT_LIGHTS 	32
-#define SHADOWMAP_SIZE 		2048.0
-#define SUN_SHADOWMAP_SIZE	4096.0
 #define NUM_SAMPLES 		32
 #define INV_NUM_SAMPLES 	(1.0/32.0)
 #define NUM_SPIRAL_TURNS 	7
@@ -331,13 +330,14 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 	float distance = length(toLight);
 	toLight /= distance;
 	
-	float spotEffect = dot(spotLights[id].direction, -toLight);
-	float NdotL = dot(N, -spotLights[id].direction);
+	float spotEffect = dot(spotLights[id].direction, -toLight); //Angle between spot direction and point-light vector
+    float NdotL = dot(N, toLight);
         
 	if(spotEffect > spotLights[id].angle && NdotL > 0.0)
 	{
 		float attenuation = 1.0/(distance*distance);
-		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id) * pow(spotEffect, 10.0) * attenuation;
+        float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].angle);
+		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * calcSpotShadow(id) * edge * attenuation;
 	}
 	else
 		return vec3(0.0);
@@ -385,10 +385,10 @@ void main()
 	{
 		//Ambient
 		sunIlluminance = GetSunAndSkyIlluminance(vec3(fragPos.xy, 0.0) - center, N, sunDirection, skyIlluminance);
-		fragColor += albedo * skyIlluminance/whitePoint/30000.0;
+		fragColor += albedo * skyIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
 		//Sun
-		fragColor += calcSunContribution(N, toEye, depth, albedo, sunIlluminance/whitePoint/30000.0);
+		fragColor += calcSunContribution(N, toEye, depth, albedo, sunIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE);
 		
 		//Absorption
         float lSurface = depth/N.z;
@@ -398,12 +398,12 @@ void main()
     //2. Inscatter
     sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
     vec3 inFactor = exp(-c * depth) * (N.z + 1.0)/2.0 * b;
-    fragColor += albedo * (sunIlluminance + skyIlluminance)/whitePoint/30000.0 * inFactor * 0.1;
+    fragColor += albedo * (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.1;
     
     //vec3 inFactor = (exp(-lightAbsorption * (depth - lSurface * N.z + lSurface)) - exp(-lightAbsorption * depth))/(lightAbsorption * (N.z-1.0));
-    //fragColor += albedo * skyIlluminance/whitePoint/30000.0 * inFactor * (N.z + 1.0)/2.0;
+    //fragColor += albedo * skyIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * (N.z + 1.0)/2.0;
     //vec3 inFactor = exp(-lightAbsorption * depth) * (exp((N.z - 1.0)*lightAbsorption*lSurface) - 1.0)/((N.z - 1.0) * lightAbsorption);
-    //fragColor += albedo * skyIlluminance/whitePoint/30000.0 * inFactor;
+    //fragColor += albedo * skyIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor;
     
 	//--> Point lights
 	for(int i=0; i<numPointLights; ++i)
@@ -426,7 +426,7 @@ void main()
      
     //Inscattering
     inFactor = exp(-c * max(-eyePos.z,0.0)) * (exp((-toEye.z - 1.0)* c * d) - 1.0)/((-toEye.z - 1.0) * c) * b;
-    fragColor += (sunIlluminance + skyIlluminance)/whitePoint/30000.0 * inFactor * 0.01;
+    fragColor += (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
     
     //Normal
 	fragNormal = vec4(normalize(eyeSpaceNormal) * 0.5 + 0.5, reflectivity);

@@ -22,8 +22,7 @@
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
 
-#define SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
-#define SUN_SKY_FACTOR 10.f //Sun illuminance to sky illuminance factor (sky treated as reference)
+#define MEAN_SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
 
 #define TEX_BASE                ((GLint)0)
 #define TEX_GUI1                ((GLint)1)
@@ -252,7 +251,12 @@ namespace sf
     };
     
     //! An enum used to designate type of helper objecy to be drawn.
-    typedef enum {SOLID = 0, SOLID_CS, MULTIBODY_AXIS, HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES} RenderableType;
+    typedef enum {
+        SOLID = 0, SOLID_CS, MULTIBODY_AXIS,
+        HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP,
+        SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES,
+        FORCE_GRAVITY, FORCE_BUOYANCY, FORCE_LINEAR_DRAG, FORCE_QUADRATIC_DRAG
+    } RenderableType;
     
     //! A structure that represents a renderable object.
     struct Renderable
@@ -297,9 +301,8 @@ namespace sf
         bool showJoints;
         bool showActuators;
         bool showSensors;
-        bool showLightMeshes;
-        bool showCameraFrustums;
         bool showFluidDynamics;
+        bool showForces;
         bool showBulletDebugInfo;
         
         HelperSettings()
@@ -308,9 +311,8 @@ namespace sf
             showJoints = false;
             showActuators = false;
             showSensors = false;
-            showLightMeshes = false;
-            showCameraFrustums = false;
             showFluidDynamics = false;
+            showForces = false;
             showBulletDebugInfo = false;
         }
     };

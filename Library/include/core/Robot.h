@@ -55,9 +55,8 @@ namespace sf
          \param origin frame of the joint
          \param axis an axis of the joint
          \param positionLimits a pair of min and max limit of joint position
-         \param torqueLimit a limit of available motor torque
          */
-        void DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar, Scalar> positionLimits, Scalar torqueLimit);
+        void DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar, Scalar> positionLimits);
         
         //! A method used to define a prismatic joint between two mechanical parts of the robot.
         /*!
@@ -67,9 +66,8 @@ namespace sf
          \param origin frame of the joint
          \param axis an axis of the joint
          \param positionLimits a pair of min and max limit of joint position
-         \param forceLimit a limit of available motor force
          */
-        void DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar, Scalar> positionLimits, Scalar forceLimit);
+        void DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar, Scalar> positionLimits);
         
         //! A method used to define a fixed joint between two mechanical parts of the robot.
         /*!
@@ -127,6 +125,12 @@ namespace sf
          \param origin a trasformation from the world origin to the robot origin
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
+        
+        //! A method returning a pointer to the actuator with a given name.
+        Actuator* getActuator(std::string name);
+        
+        //! A method returning a pointer to the sensor with a given name.
+        Sensor* getSensor(std::string name);
         
         //! A method returning the pose of the robot in the world frame.
         virtual Transform getTransform() const;

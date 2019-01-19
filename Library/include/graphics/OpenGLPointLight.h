@@ -25,7 +25,6 @@ namespace sf
         
         //Debugging
         void ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
-        void RenderDummy();
         
         //Field access
         LightType getType();

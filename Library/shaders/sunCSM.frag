@@ -8,5 +8,6 @@ uniform float shadowmapLayer;
 
 void main()
 {
-    fragcolor = texture(shadowmapArray, vec3(texcoord, shadowmapLayer));
+    float depth = texture(shadowmapArray, vec3(texcoord, shadowmapLayer)).r;
+    fragcolor = vec4(vec3(depth), 1.0);
 }

@@ -1673,6 +1673,321 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
 	
 	return mesh;
 }
+    
+Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength)
+{
+    Mesh* mesh = new Mesh;
+    mesh->hasUVs = true;
+
+    GLfloat T = profileThickness/100.f;
+    GLfloat m = maxCamber/100.f;
+    GLfloat p = maxCamberPos/100.f;
+    GLfloat taper = tipChordLength/baseChordLength;
+    GLfloat offset = baseChordLength/2.f;
+    
+    int div = 20;
+    GLfloat xt[div+1];
+    GLfloat yt[div+1];
+    for(int i=0; i<=div; ++i)
+    {
+        GLfloat beta = (GLfloat)i/(GLfloat)div * M_PI;
+        xt[i] = 0.5f * (1.f-cosf(beta));
+        yt[i] = T/0.2f * (0.2969*sqrtf(xt[i])
+                          -0.1260*xt[i]
+                          -0.3516*xt[i]*xt[i]
+                          +0.2843*xt[i]*xt[i]*xt[i]
+                          -0.1036*xt[i]*xt[i]*xt[i]*xt[i]);
+    }
+    
+    GLfloat xu[div+1];
+    GLfloat xl[div+1];
+    GLfloat yu[div+1];
+    GLfloat yl[div+1];
+    
+    if(m == 0.f || p == 0.f) //No camber
+    {
+        for(int i=0; i<=div; ++i)
+        {
+            xu[i] = xl[i] = xt[i];
+            yu[i] = yt[i];
+            yl[i] = -yt[i];
+        }
+    }
+    else //Camber
+    {
+        GLfloat yc[div+1];
+        GLfloat dyc_dx[div+1];
+        
+        for(int i=0; i<=div; ++i)
+        {
+            if(xt[i] <= p)
+            {
+                yc[i] = (m/(p*p))*(2.f*p*xt[i]-xt[i]*xt[i]);
+                dyc_dx[i] = (m/(p*p))*(2.f*p-2.f*xt[i]);
+            }
+            else //p < xt[i] < 1.0
+            {
+                yc[i] = m/((1.f-p)*(1.f-p))*(1.f-2.f*p+2.f*p*xt[i]-xt[i]*xt[i]);
+                dyc_dx[i] = m/((1.f-p)*(1.f-p))*(2.f*p-2.f*xt[i]);
+            }
+            
+            GLfloat theta = atan(dyc_dx[i]);
+            xu[i] = xt[i] - yt[i] * sinf(theta);
+            yu[i] = yc[i] + yt[i] * cosf(theta);
+            xl[i] = xt[i] + yt[i] * sinf(theta);
+            yl[i] = yc[i] - yt[i] * cosf(theta);
+            
+            cInfo("%1.3f\n", xu[i]);
+        }
+    }
+    
+    //Vertices
+    Vertex v;
+    
+    //----Top side
+    //Front base
+    v.pos = glm::vec3(offset-xu[0]*baseChordLength,0.f,0.f);
+    v.normal = glm::vec3(1.f,0.f,0.f);
+    v.uv = glm::vec2(0.f,0.f);
+    mesh->vertices.push_back(v);
+    
+    //Front tip
+    v.pos = glm::vec3(offset*taper-xu[0]*tipChordLength,wingLength,0.f);
+    v.uv = glm::vec2(0.f,1.f);
+    mesh->vertices.push_back(v);
+    
+    //Middle
+    v.normal = glm::vec3(0.f,0.f,-1.f);
+    GLfloat dint = 0.f;
+    
+    for(int i=1; i<div; ++i)
+    {
+        //Calculate UV
+        glm::vec2 dUV(xu[i]-xu[i-1], yu[i]-yu[i-1]);
+        dint += dUV.length();
+        
+        //Base vertex
+        v.pos = glm::vec3(offset-xu[i]*baseChordLength,0.f,-yu[i]*baseChordLength);
+        v.uv = glm::vec2(dint, 0.f);
+        mesh->vertices.push_back(v);
+        
+        //Tip vertex
+        v.pos = glm::vec3(offset*taper-xu[i]*tipChordLength,wingLength,-yu[i]*tipChordLength);
+        v.uv = glm::vec2(dint, 1.f);
+        mesh->vertices.push_back(v);
+    }
+    
+    glm::vec2 dUVe(1.f-xu[div-1], 0.f-yu[div-1]);
+    dint += dUVe.length();
+    
+    //Normalize UVs
+    for(int i=1; i<div; ++i)
+    {
+        mesh->vertices[i*2].normal.x /= dint*2.f;
+        mesh->vertices[i*2+1].normal.x /= dint*2.f;
+    }
+    
+    //Trailing edge base
+    v.pos = glm::vec3(offset-xu[div]*baseChordLength,0.f,0.f);
+    v.uv = glm::vec2(0.5f,0.f);
+    mesh->vertices.push_back(v);
+    
+    //Trailing edge tip
+    v.pos = glm::vec3(offset*taper-xu[div]*tipChordLength,wingLength,0.f);
+    v.uv = glm::vec2(0.5f,1.f);
+    mesh->vertices.push_back(v);
+    
+    //Faces
+    for(int i=0; i<div; ++i)
+    {
+        Face f;
+        f.vertexID[0] = i*2;
+        f.vertexID[1] = i*2+2;
+        f.vertexID[2] = i*2+1;
+        mesh->faces.push_back(f);
+        f.vertexID[0] = i*2+2;
+        f.vertexID[1] = i*2+3;
+        f.vertexID[2] = i*2+1;
+        mesh->faces.push_back(f);
+    }
+    
+    //----Bottom side
+    //Front base
+    v.pos = glm::vec3(offset-xl[0]*baseChordLength,0.f,0.f);
+    v.normal = glm::vec3(1.f,0.f,0.f);
+    v.uv = glm::vec2(0.5f,0.f);
+    mesh->vertices.push_back(v);
+    
+    //Front tip
+    v.pos = glm::vec3(offset*taper-xl[0]*tipChordLength,wingLength,0.f);
+    v.uv = glm::vec2(0.5f,1.f);
+    mesh->vertices.push_back(v);
+    
+    //Middle
+    v.normal = glm::vec3(0.f,0.f,1.f);
+    dint = 0.f;
+    
+    for(int i=1; i<div; ++i)
+    {
+        //Calculate UV
+        glm::vec2 dUV(xl[i]-xl[i-1], yl[i]-yl[i-1]);
+        dint += dUV.length();
+        
+        v.pos = glm::vec3(offset-xl[i]*baseChordLength,0.f,-yl[i]*baseChordLength);
+        v.uv = glm::vec2(dint, 0.f);
+        mesh->vertices.push_back(v);
+        
+        v.pos = glm::vec3(offset*taper-xl[i]*tipChordLength,wingLength,-yl[i]*tipChordLength);
+        v.uv = glm::vec2(dint, 1.f);
+        mesh->vertices.push_back(v);
+    }
+    
+    dUVe = glm::vec2(1.f-xl[div-1], 0.f-yl[div-1]);
+    dint += dUVe.length();
+    
+    //Normalize UVs
+    for(int i=div+2; i<=2*div; ++i)
+    {
+        mesh->vertices[i*2].normal.x = mesh->vertices[i*2].normal.x/(dint*2.f) + 0.5f;
+        mesh->vertices[i*2+1].normal.x = mesh->vertices[i*2+1].normal.x/(dint*2.f) + 0.5f;
+    }
+    
+    //Trailing edge base
+    v.pos = glm::vec3(offset-xl[div]*baseChordLength,0.f,0.f);
+    v.uv = glm::vec2(1.f,0.f);
+    mesh->vertices.push_back(v);
+    
+    //Trailing edge tip
+    v.pos = glm::vec3(offset*taper-xl[div]*tipChordLength,wingLength,0.f);
+    v.uv = glm::vec2(1.f,1.f);
+    mesh->vertices.push_back(v);
+    
+    //Faces
+    for(int i=div+1; i<=2*div; ++i)
+    {
+        Face f;
+        f.vertexID[0] = i*2;
+        f.vertexID[1] = i*2+1;
+        f.vertexID[2] = i*2+2;
+        mesh->faces.push_back(f);
+        f.vertexID[0] = i*2+2;
+        f.vertexID[1] = i*2+1;
+        f.vertexID[2] = i*2+3;
+        mesh->faces.push_back(f);
+    }
+    
+    //Smooth the profile normals
+    SmoothNormals(mesh);
+
+    //Base cap
+    v.normal = glm::vec3(0.f,-1.f,0.f);
+    v.uv = glm::vec2(0.f,0.f); //No UVs for the caps
+    
+    //Vertices
+    for(int i=0; i<div; ++i)
+    {
+        v.pos = glm::vec3(offset-xu[i]*baseChordLength,0.f,-yu[i]*baseChordLength);
+        mesh->vertices.push_back(v);
+        
+        v.pos = glm::vec3(offset-xl[i]*baseChordLength,0.f,-yl[i]*baseChordLength);
+        mesh->vertices.push_back(v);
+    }
+    
+    v.pos = glm::vec3(offset-xu[div]*baseChordLength,0.f,0.f);
+    mesh->vertices.push_back(v);
+    
+    v.pos = glm::vec3(offset-xl[div]*baseChordLength,0.f,0.f);
+    mesh->vertices.push_back(v);
+    
+    //Faces
+    for(int i=2*div+2; i<=3*div+1; ++i)
+    {
+        Face f;
+        f.vertexID[0] = i*2;
+        f.vertexID[1] = i*2+1;
+        f.vertexID[2] = i*2+2;
+        mesh->faces.push_back(f);
+        f.vertexID[0] = i*2+2;
+        f.vertexID[1] = i*2+1;
+        f.vertexID[2] = i*2+3;
+        mesh->faces.push_back(f);
+    }
+    
+    //Tip cap
+    v.normal = glm::vec3(0.f,1.f,0.f);
+    v.uv = glm::vec2(0.f,0.f); //No UVs for the caps
+    
+    //Vertices
+    for(int i=0; i<div; ++i)
+    {
+        v.pos = glm::vec3(offset*taper-xl[i]*tipChordLength,wingLength,-yl[i]*tipChordLength);
+        mesh->vertices.push_back(v);
+        
+        v.pos = glm::vec3(offset*taper-xu[i]*tipChordLength,wingLength,-yu[i]*tipChordLength);
+        mesh->vertices.push_back(v);
+    }
+    
+    v.pos = glm::vec3(offset*taper-xl[div]*tipChordLength,wingLength,0.f);
+    mesh->vertices.push_back(v);
+    
+    v.pos = glm::vec3(offset*taper-xu[div]*tipChordLength,wingLength,0.f);
+    mesh->vertices.push_back(v);
+    
+    //Faces
+    for(int i=3*div+3; i<=4*div+2; ++i)
+    {
+        Face f;
+        f.vertexID[0] = i*2;
+        f.vertexID[1] = i*2+1;
+        f.vertexID[2] = i*2+2;
+        mesh->faces.push_back(f);
+        f.vertexID[0] = i*2+2;
+        f.vertexID[1] = i*2+1;
+        f.vertexID[2] = i*2+3;
+        mesh->faces.push_back(f);
+    }
+    
+    return mesh;
+}
+    
+Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight)
+{
+    Mesh* mesh = new Mesh;
+    mesh->hasUVs = true;
+    
+    Face f;
+    Vertex vt;
+    
+    GLfloat fullSizeX = (sizeX-1) * scaleX;
+    GLfloat fullSizeY = (sizeY-1) * scaleY;
+    GLfloat offsetX = fullSizeX/2.f;
+    GLfloat offsetY = fullSizeY/2.f;
+    
+    for(int i=0; i<sizeY; ++i)
+        for(int j=0; j<sizeX; ++j)
+        {
+            vt.pos = glm::vec3((GLfloat)j/(GLfloat)(sizeX-1)*fullSizeX-offsetX, (GLfloat)i/(GLfloat)(sizeY-1)*fullSizeY-offsetY, heightfield[i*sizeX + j]-maxHeight/2.f);
+            vt.normal = glm::vec3(0.f,0.f,-1.f);
+            vt.uv = glm::vec2((GLfloat)j/(GLfloat)(sizeX-1), (GLfloat)i/(GLfloat)(sizeY-1));
+            mesh->vertices.push_back(vt);
+        }
+    
+    for(int i=0; i<sizeY-1; ++i)
+        for(int j=0; j<sizeX-1; ++j)
+        {
+            f.vertexID[0] = i*sizeX + j;
+            f.vertexID[1] = (i+1)*sizeX + j;
+            f.vertexID[2] = i*sizeX + j + 1;
+            mesh->faces.push_back(f);
+            f.vertexID[0] = f.vertexID[1];
+            f.vertexID[1] = (i+1)*sizeX + j + 1;
+            mesh->faces.push_back(f);
+        }
+    
+    SmoothNormals(mesh);
+    
+    return mesh;
+}
 
 Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
