@@ -11,7 +11,7 @@
 #include "core/Console.h"
 #include "core/GraphicalSimulationApp.h"
 #include "entities/SolidEntity.h"
-#include "sensors/vision/DepthCamera.h"
+#include "sensors/vision/Camera.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -24,20 +24,30 @@ GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
 
 OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                      GLint originX, GLint originY, GLint width, GLint height,
-                                     GLfloat horizontalFovDeg, GLfloat minDepth, GLfloat maxDepth)
+                                     GLfloat horizontalFOVDeg, GLfloat minDepth, GLfloat maxDepth,
+                                     GLfloat verticalFOVDeg)
  : OpenGLView(originX, originY, width, height)
 {
     _needsUpdate = false;
     update = false;
     camera = NULL;
+    idx = 0;
     range.x = minDepth;
     range.y = maxDepth;
     
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
     
-    GLfloat fovx = horizontalFovDeg/180.f*M_PI;
-    projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
+    GLfloat fovx = horizontalFOVDeg/180.f*M_PI;
+    //projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
+    GLfloat fovy;
+    
+    if(verticalFOVDeg > 0.f)
+        fovy = verticalFOVDeg/180.f*M_PI;
+    else
+        fovy = (GLfloat)viewportHeight/(GLfloat)viewportWidth * fovx;
+    
+    projection = glm::perspective(fovy, fovx/fovy, range.x, range.y);
     
     //Render depth
     glGenTextures(1, &renderDepthTex);
@@ -143,9 +153,10 @@ bool OpenGLDepthCamera::needsUpdate()
     return update && enabled;
 }
 
-void OpenGLDepthCamera::setCamera(DepthCamera* cam)
+void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
 {
     camera = cam;
+    idx = index;
 }
 
 ViewType OpenGLDepthCamera::getType()
@@ -188,7 +199,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
        
         //LDR drawing
         glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
-        glViewport(0, 0, viewportWidth, viewportHeight);
+        glViewport(originX, originY, viewportWidth, viewportHeight);
         depthVisualizeShader->Use();
         depthVisualizeShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         depthVisualizeShader->SetUniform("range", range);
@@ -207,11 +218,11 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
             LinearizeDepth();
         
         glBindTexture(GL_TEXTURE_2D, linearDepthTex);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, camera->getDataPointer());
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, camera->getImageDataPointer(idx));
         glBindTexture(GL_TEXTURE_2D, 0);
          
         //Inform camera to run callback
-        camera->NewDataReady();
+        camera->NewDataReady(idx);
     }
     
     update = false;

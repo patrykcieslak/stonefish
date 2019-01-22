@@ -26,8 +26,11 @@ namespace sf
         void InternalUpdate(Scalar dt);
         void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up);
         void InstallNewDataHandler(std::function<void(ColorCamera*)> callback);
-        void NewDataReady();
-        uint8_t* getDataPointer(); //Should be only used in the callback
+        void NewDataReady(unsigned int index = 0);
+        
+        void setExposureCompensation(Scalar comp);
+        Scalar getExposureCompensation();
+        void* getImageDataPointer(unsigned int index = 0);
         
     private:
         void InitGraphics();

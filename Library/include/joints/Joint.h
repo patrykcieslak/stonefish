@@ -12,15 +12,15 @@
 #include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
 #include "StonefishCommon.h"
 
-#define CONSTRAINT_ERP 0.2
-#define CONSTRAINT_CFM 0.0
-#define CONSTRAINT_STOP_ERP 1.0
-#define CONSTRAINT_STOP_CFM 0.0
+//#define CONSTRAINT_ERP 0.1
+//#define CONSTRAINT_CFM 0.0
+//#define CONSTRAINT_STOP_ERP 1.0
+//#define CONSTRAINT_STOP_CFM 0.0
 
 namespace sf
 {
     //! An enum representing the type of joint.
-    typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL, JOINT_GEAR, JOINT_BELT, JOINT_SCREW} JointType;
+    typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL} JointType;
     
     struct Renderable;
     class SimulationManager;
@@ -32,9 +32,9 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the joint
-         \param collideLinkedEntities a flag that sets if the bodies connected by the joint should coliide
+         \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        Joint(std::string uniqueName, bool collideLinkedEntities = true);
+        Joint(std::string uniqueName, bool collideLinked = true);
         
         //! A destructor.
         virtual ~Joint();

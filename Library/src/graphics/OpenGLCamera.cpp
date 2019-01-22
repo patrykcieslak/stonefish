@@ -38,6 +38,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
     far = horizon;
     near = 0.1f;
 	activePostprocessTexture = 0;
+    exposureComp = 0.f;
     
     if(!GLEW_VERSION_4_3)
         aoFactor = 0;
@@ -398,6 +399,16 @@ glm::vec3 OpenGLCamera::Ray(GLint x, GLint y)
     
     return rayTo;
 }
+    
+void OpenGLCamera::setExposureCompensation(GLfloat ec)
+{
+    exposureComp = ec;
+}
+    
+GLfloat OpenGLCamera::getExposureCompensation()
+{
+    return exposureComp;
+}
 
 GLuint OpenGLCamera::getColorTexture()
 {
@@ -753,7 +764,7 @@ void OpenGLCamera::DrawSSR()
     ssrShader[0]->SetUniform("pixelZSize", 1.0f);
     ssrShader[0]->SetUniform("pixelStride", 1.f);
     ssrShader[0]->SetUniform("pixelStrideZCutoff", 50.f);
-    ssrShader[0]->SetUniform("maxRayDistance", 1000.f);
+    ssrShader[0]->SetUniform("maxRayDistance", 500.f);
     ssrShader[0]->SetUniform("screenEdgeFadeStart", 0.9f);
     ssrShader[0]->SetUniform("eyeFadeStart", 0.2f);
     ssrShader[0]->SetUniform("eyeFadeEnd", 0.8f);
@@ -823,6 +834,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
     tonemapShader->Use();
     tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
     tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
+    tonemapShader->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -859,6 +871,7 @@ void OpenGLCamera::Init()
     tonemapShader = new GLSLShader("tonemapping.frag");
     tonemapShader->AddUniform("texHDR", ParameterType::INT);
     tonemapShader->AddUniform("texAverage", ParameterType::INT);
+    tonemapShader->AddUniform("exposureComp", ParameterType::FLOAT);
 	
     /////Linear depth////
     depthLinearizeShader = new GLSLShader*[2];

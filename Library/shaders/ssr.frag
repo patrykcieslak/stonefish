@@ -252,6 +252,7 @@ void main(void)
     hitPixel = mix(texcoord, hitPixel, float(intersect));
     
     fragColor = vec4(mix(texture(texColor, texcoord).rgb, texture(texColor, hitPixel).rgb, alpha * reflectionStrength), 1.0);
+    //fragColor = vec4(vec3(alpha * reflectionStrength), 1.0);
     //fragColor = vec4(vsNormal, 1.0);
     //fragColor = vec4(vec3(-vsRayOrigin.z), 1.0);
     //fragColor = vec4(normalReflection.xyz, 1.0);

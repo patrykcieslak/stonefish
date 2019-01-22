@@ -11,12 +11,13 @@
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
+#include "graphics/OpenGLDepthCamera.h"
 
 namespace sf
 {
 
-DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
-    : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
+DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizontalFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
+    : Camera(uniqueName, resolutionX, resolutionY, horizontalFOVDeg, frequency)
 {
     newDataCallback = NULL;
     depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
@@ -32,7 +33,7 @@ DepthCamera::~DepthCamera()
     glCamera = NULL;
 }
 
-GLfloat* DepthCamera::getDataPointer()
+void* DepthCamera::getImageDataPointer(unsigned int index)
 {
     return imageData;
 }
@@ -65,7 +66,7 @@ void DepthCamera::InstallNewDataHandler(std::function<void(DepthCamera*)> callba
     newDataCallback = callback;
 }
 
-void DepthCamera::NewDataReady()
+void DepthCamera::NewDataReady(unsigned int index)
 {
     if(newDataCallback != NULL)
         newDataCallback(this);

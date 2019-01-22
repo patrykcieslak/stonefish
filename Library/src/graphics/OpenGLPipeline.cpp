@@ -20,8 +20,6 @@
 #include "core/Console.h"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
-#include "controllers/PathGenerator.h"
-#include "controllers/PathFollowingController.h"
 
 namespace sf
 {
@@ -200,9 +198,9 @@ void OpenGLPipeline::DrawHelpers()
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::MULTIBODY_AXIS)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f));
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::JOINT_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f));
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
         }
     }
     
@@ -343,13 +341,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                 glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                 glClear(GL_DEPTH_BUFFER_BIT); //Only depth is rendered
-                
                 camera->SetViewport();
                 content->SetCurrentView(camera);
                 content->SetDrawingMode(DrawingMode::FLAT);
                 DrawObjects();
                 
-                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
                 camera->DrawLDR(screenFBO);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 
@@ -511,7 +507,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
                     //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
-                    //camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200));
+                    //camera->ShowLinearDepthTexture(glm::vec4(0,0,300,200), true);
+                    //camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200), false);
                     
                     //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);
                     //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 8);

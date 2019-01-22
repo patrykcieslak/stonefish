@@ -30,7 +30,6 @@ namespace sf
     class Actuator;
     class Sensor;
     class Contact;
-    class Controller;
     class OpenGLTrackball;
     class OpenGLDebugDrawer;
     
@@ -153,12 +152,6 @@ namespace sf
          \param sens a pointer to the sensor object
          */
         void AddSensor(Sensor* sens);
-        
-        //! A method that adds a controller to the simulation world.
-        /*!
-         \param cntl a pointer to the controller object
-         */
-        void AddController(Controller* cntl);
         
         //! A method that adds contact monitoring between two entities.
         /*!
@@ -320,20 +313,6 @@ namespace sf
          */
         Sensor* getSensor(std::string name);
         
-        //! A method returning a controller by index.
-        /*!
-         \param index an id of the controller
-         \return a pointer to a controller object
-         */
-        Controller* getController(unsigned int index);
-        
-        //! A method returning a controller by name.
-        /*!
-         \param name a name of the controller
-         \return a pointer to an controller object
-         */
-        Controller* getController(std::string name);
-        
         //! A method returning a pointer to the ocean object.
         Ocean* getOcean();
         
@@ -430,7 +409,6 @@ namespace sf
         std::vector<Joint*> joints;
         std::vector<Sensor*> sensors;
         std::vector<Actuator*> actuators;
-        std::vector<Controller*> controllers;
         std::vector<Contact*> contacts;
         std::vector<Collision> collisions;
         Ocean* ocean;

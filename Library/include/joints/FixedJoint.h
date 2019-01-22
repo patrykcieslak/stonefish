@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_FixedJoint__
@@ -38,6 +38,9 @@ namespace sf
          \param pivot a connection point
          */
         FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot);
+        
+        //! A method implementing the rendering of the fixed joint.
+        std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
         JointType getType();

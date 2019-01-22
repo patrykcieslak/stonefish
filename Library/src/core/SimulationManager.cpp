@@ -46,7 +46,6 @@
 #include "sensors/Sensor.h"
 #include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
-#include "controllers/Controller.h"
 
 extern ContactAddedCallback gContactAddedCallback;
 
@@ -191,12 +190,6 @@ void SimulationManager::AddSensor(Sensor *sens)
 {
     if(sens != NULL)
         sensors.push_back(sens);
-}
-
-void SimulationManager::AddController(Controller *cntrl)
-{
-    if(cntrl != NULL)
-        controllers.push_back(cntrl);
 }
 
 void SimulationManager::AddJoint(Joint *jnt)
@@ -384,23 +377,6 @@ Sensor* SimulationManager::getSensor(std::string name)
     return NULL;
 }
 
-Controller* SimulationManager::getController(unsigned int index)
-{
-    if(index < controllers.size())
-        return controllers[index];
-    else
-        return NULL;
-}
-
-Controller* SimulationManager::getController(std::string name)
-{
-    for(unsigned int i = 0; i < controllers.size(); i++)
-        if(controllers[i]->getName() == name)
-            return controllers[i];
-    
-    return NULL;
-}
-
 Ocean* SimulationManager::getOcean()
 {
 	return ocean;
@@ -577,9 +553,9 @@ void SimulationManager::InitializeSolver()
 	
     //Quality/stability
 	dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.25);  //non-contact constraint error reduction
-    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(0.75); //contact constraint error reduction
-    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.5); //friction constraint error reduction
+    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.25);  //non-contact constraint error reduction //0.25
+    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(0.75); //contact constraint error reduction //0.75
+    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.5); //friction constraint error reduction //0.5
     dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
     dynamicsWorld->getSolverInfo().m_sor = Scalar(1.0); //not used
     dynamicsWorld->getSolverInfo().m_maxErrorReduction = Scalar(0.); //not used
@@ -701,10 +677,6 @@ void SimulationManager::DestroyScenario()
         delete actuators[i];
     actuators.clear();
     
-    for(unsigned int i=0; i<controllers.size(); i++)
-        delete controllers[i];
-    controllers.clear();
-	
 	if(nameManager != NULL)
 		nameManager->ClearNames();
 		
@@ -736,10 +708,6 @@ bool SimulationManager::StartSimulation()
     for(unsigned int i = 0; i < sensors.size(); i++)
         sensors[i]->Reset();
     
-    //Turn on controllers
-    for(unsigned int i = 0; i < controllers.size(); i++)
-        controllers[i]->Start();
-    
     return true;
 }
 
@@ -748,18 +716,11 @@ void SimulationManager::ResumeSimulation()
     if(!icProblemSolved)
         StartSimulation();
     else
-    {
         currentTime = 0;
-
-        for(unsigned int i = 0; i < controllers.size(); i++)
-            controllers[i]->Start();
-    }
 }
 
 void SimulationManager::StopSimulation()
 {
-    for(unsigned int i=0; i < controllers.size(); i++)
-        controllers[i]->Stop();
 }
 
 bool SimulationManager::SolveICProblem()
@@ -1353,10 +1314,6 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
 	//loop through all sensors -> update measurements
     for(unsigned int i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
-    
-    //loop through all controllers
-    for(unsigned int i = 0; i < simManager->controllers.size(); ++i)
-        simManager->controllers[i]->Update(timeStep);
     
     //Update simulation time
     simManager->simulationTime += timeStep;

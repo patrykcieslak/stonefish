@@ -72,7 +72,6 @@ namespace sf
         
     private:
         Mesh *graMesh; //Mesh used for rendering
-        //Vector3 aabb[2];
     };
 }
 

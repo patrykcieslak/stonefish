@@ -140,7 +140,7 @@ void main()
     fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;  //10000.0;
 	
     //Water properties
-    vec3 b = turbidity * rayleigh; //Scattering coefficient
+    vec3 b = turbidity * rayleigh * 0.5; //Scattering coefficient
     vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
     
     //Attenuation

@@ -14,7 +14,7 @@
 namespace sf
 {
     class GLSLShader;
-    class DepthCamera;
+    class Camera;
     class SolidEntity;
     
     //!
@@ -23,7 +23,8 @@ namespace sf
     public:
         OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                           GLint originX, GLint originY, GLint width, GLint height,
-                          GLfloat horizontalFovDeg, GLfloat minDepth, GLfloat maxDepth);
+                          GLfloat horizontalFOVDeg, GLfloat minDepth, GLfloat maxDepth,
+                          GLfloat verticalFOVDeg = -1.f);
         ~OpenGLDepthCamera();
         
         void DrawLDR(GLuint destinationFBO);
@@ -37,7 +38,8 @@ namespace sf
         void UpdateTransform();
         void Update();
         bool needsUpdate();
-        void setCamera(DepthCamera* cam);
+        
+        void setCamera(Camera* cam, unsigned int index = 0);
         ViewType getType();
         
         static void Init();
@@ -46,7 +48,8 @@ namespace sf
     protected:
         void LinearizeDepth();
         
-        DepthCamera* camera;
+        Camera* camera;
+        unsigned int idx;
         glm::mat4 cameraTransform;
         glm::vec3 eye;
         glm::vec3 dir;

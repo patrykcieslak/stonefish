@@ -36,6 +36,7 @@
 #include <sensors/Contact.h>
 #include <sensors/vision/ColorCamera.h>
 #include <sensors/vision/DepthCamera.h>
+#include <sensors/vision/Multibeam2.h>
 #include <actuators/Light.h>
 #include <sensors/scalar/RotaryEncoder.h>
 #include <sensors/scalar/Accelerometer.h>
@@ -88,14 +89,14 @@ void UnderwaterTestManager::BuildScenario()
     //Create environment
 	EnableOcean(false);
     getOcean()->SetupWaterProperties(0.2, 1.0);
-    getAtmosphere()->SetupSunPosition(0.0, 0.0);
+    getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
     sf::Plane* plane = new sf::Plane("Bottom", 10000.0, getMaterialManager()->getMaterial("Rock"), seabed);
     AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,4.0)));
     
-    //sf::Terrain* terrain = new sf::Terrain("Terrain", sf::GetDataPath() + "terrain_small.png",
-    //                                       sf::Scalar(1), sf::Scalar(1), sf::Scalar(5), getMaterialManager()->getMaterial("Rock"), seabed);
-    //AddStaticEntity(terrain, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
+    sf::Terrain* terrain = new sf::Terrain("Terrain", sf::GetDataPath() + "terrain_small.png",
+                                           sf::Scalar(1), sf::Scalar(1), sf::Scalar(5), getMaterialManager()->getMaterial("Rock"), seabed);
+    AddStaticEntity(terrain, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
     
     //sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(0.2,0.2,0.2), getMaterialManager()->getMaterial("Rock"), seabed);
     //AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
@@ -187,9 +188,15 @@ void UnderwaterTestManager::BuildScenario()
     fog->SetNoise(0.01);
     sf::GPS* gps = new sf::GPS("GPS", 41.77737, 3.03376);
     gps->SetNoise(0.5);
-    //sf::ColorCamera* cam = new sf::ColorCamera("Camera", 800, 600, 50.0);
+    //sf::ColorCamera* cam = new sf::ColorCamera("Camera", 300, 200, 50.0);
     //cam->setDisplayOnScreen(true);
-
+    sf::Multibeam2* mb = new sf::Multibeam2("MB", 400, 200, 170.0, 30.0, 0.5, 5.0);
+    mb->setDisplayOnScreen(true);
+    //sf::DepthCamera* dcam = new sf::DepthCamera("Camera", 200, 200, 90.0, 0.5, 5.0);
+    //dcam->setDisplayOnScreen(false);
+    //sf::DepthCamera* dcam2 = new sf::DepthCamera("Camera", 200, 200, 90.0, 0.5, 5.0);
+    //dcam2->setDisplayOnScreen(true);
+    
     //Create gripper body
     /*sf::Polyhedron* eeBase = new sf::Polyhedron("EEBase", sf::GetDataPath() + "eeprobe_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), eeLook, false);
     sf::Sphere* eeTip = new sf::Sphere("EETip", 0.015, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), eeLook);
@@ -233,8 +240,12 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(M_PI_2,0,M_PI_2), sf::Vector3(0.5,0.0,-0.35)));
+    auv->AddVisionSensor(mb, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
+    //auv->AddVisionSensor(dcam, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
+    //auv->AddVisionSensor(dcam2, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
+
     
-    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(0,0,1)));
+    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(5,0,1)));
     
     /*sf::Box* baseLink2 = new sf::Box("BaseLink", sf::Vector3(0.01,0.01,0.01), sf::I4(), getMaterialManager()->getMaterial("Rock"), red);
     sf::Box* link12 = new sf::Box("Link1", sf::Vector3(0.01,0.01,0.5), sf::I4(), getMaterialManager()->getMaterial("Rock"), red);
@@ -286,6 +297,8 @@ void UnderwaterTestManager::BuildScenario()
 	//trig->AddActiveSolid(comp);
 	//trig->setRenderable(false);
      //AddEntity(trig);
+    
+    
 }
 
 void UnderwaterTestManager::SimulationStepCompleted()

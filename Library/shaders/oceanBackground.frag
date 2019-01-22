@@ -22,7 +22,7 @@ void main()
     vec3 center = vec3(0,0,-planetRadius);
 	
     //Water properties
-    vec3 b = turbidity * rayleigh; //Scattering coefficient
+    vec3 b = turbidity * rayleigh * 0.5; //Scattering coefficient
     vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
     
     //Inscattering

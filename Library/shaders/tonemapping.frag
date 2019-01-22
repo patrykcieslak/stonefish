@@ -4,13 +4,7 @@ in vec2 texcoord;
 out vec4 fragcolor;
 uniform sampler2D texHDR;
 uniform sampler2D texAverage;
-
-const float A = 0.15;
-const float B = 0.50;
-const float C = 0.10;
-const float D = 0.20;
-const float E = 0.02;
-const float F = 0.30;
+uniform float exposureComp;
 
 vec3 rgb2hsv(vec3 c)
 {
@@ -29,14 +23,23 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-vec3 Uncharted2Tonemap(vec3 c)
+vec3 Uncharted2TonemapFunction(const vec3 x)
 {
-    return ((c * (A * c + vec3(C * B)) + vec3(D * E))/(c * (A * c + vec3(B)) + vec3(D * F))) - vec3(E / F);
+    const float A = 0.15;
+    const float B = 0.50;
+    const float C = 0.10;
+    const float D = 0.20;
+    const float E = 0.02;
+    const float F = 0.30;
+    return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
 }
 
-float Uncharted2TonemapValue(float v)
+vec3 Uncharted2Tonemap(const float exposure, const vec3 color)
 {
-    return ((v * (A * v + C * B) + D * E)/(v * (A * v + B) + D * F)) - E/F;
+    const float W = 11.2;
+    vec3 curr = Uncharted2TonemapFunction(exposure * color);
+    vec3 whiteScale = 1.0 / Uncharted2TonemapFunction(vec3(W));
+    return curr * whiteScale;
 }
 
 void main(void)
@@ -46,11 +49,7 @@ void main(void)
     vec3 rgbColor = texture(texHDR, texcoord).rgb;
     
     //Correct exposure and tonemap
-    float exposure = clamp(0.5/lumAvg, 0.0, 10.0);
-    rgbColor = Uncharted2Tonemap(exposure * rgbColor);
-    vec3 whitePoint = Uncharted2Tonemap(vec3(1.0)); //1.0 is the saturated color of sun in the sky
-    rgbColor /= whitePoint;
-    
-    //Correct Gamma
-    fragcolor = vec4(pow(rgbColor, vec3(1.0/2.2)), 1.0);
+    float exposure = exposureComp * 7.0/lumAvg;
+    rgbColor = Uncharted2Tonemap(exposure, rgbColor);
+    fragcolor = vec4(rgbColor, 1.0);
 }

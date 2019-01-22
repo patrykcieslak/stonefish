@@ -23,10 +23,10 @@ int main(int argc, const char * argv[])
     sf::HelperSettings h;
     h.showJoints = true;
     
-    JointsTestManager* simulationManager = new JointsTestManager(100.0);
+    JointsTestManager* simulationManager = new JointsTestManager(200.0);
     JointsTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/",
                       s, h, simulationManager);
-    app.Run();
+    app.Run(false);
     
     return 0;
 }

@@ -83,14 +83,14 @@ void Joint::AddToSimulation(SimulationManager* sm)
 		constraint->enableFeedback(true);
 		constraint->setJointFeedback(fb);
     
-		//Joint limits damping - avoid explosion
-		if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE
-				&& constraint->getConstraintType() != GEAR_CONSTRAINT_TYPE)
-		{
-			constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
-			constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
+        constraint->setParam(BT_CONSTRAINT_ERP, 0.75);
+        constraint->setParam(BT_CONSTRAINT_STOP_ERP, 1.0);
+        constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
+        constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
+        
+		//Avoid explosion by softening the joint limits
+		if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE)
 			constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
-		}
     
 		//Add joint to dynamics world
 		sm->getDynamicsWorld()->addConstraint(constraint, !collisionEnabled);
@@ -103,12 +103,12 @@ void Joint::AddToSimulation(SimulationManager* sm)
     
 void Joint::ApplyDamping()
 {
-        //Not applicable.
+    //Not applicable.
 }
     
 bool Joint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
 {
-        return true; //Nothing to solve
+    return true; //Nothing to solve
 }
 
 std::vector<Renderable> Joint::Render()

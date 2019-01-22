@@ -64,7 +64,7 @@ void main()
 
 	//Sky
 	vec3 transmittance;
-    vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance)/MEAN_SUN_ILLUMINANCE; ///1
+    vec3 luminance = GetSkyLuminance(P, viewDir, 0.0, sunDir, transmittance)/MEAN_SUN_ILLUMINANCE * 2.0; ///1
 
 	//Sun
     luminance += smoothstep(cosSunSize*0.99999, cosSunSize, dot(viewDir, sunDir)) * transmittance * GetSolarLuminance()/MEAN_SUN_ILLUMINANCE; //30000.0;

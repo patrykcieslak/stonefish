@@ -669,10 +669,22 @@ void GraphicalSimulationApp::DoHUD()
         
         id.item = 1;
         turbidity = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0.1), Scalar(10.0), turbidity, "Turbidity");
-        offset += 50.f;
+        offset += 61.f;
         
         ocn->SetupWaterProperties(waterType, turbidity);
     }
+    
+    //Main view exposure
+    gui->DoPanel(10.f, offset, 160.f, 75.f);
+    offset += 5.f;
+    gui->DoLabel(15.f, offset, "RENDERING");
+    offset += 15.f;
+    
+    id.owner = 3;
+    id.index = 0;
+    id.item = 0;
+    getSimulationManager()->getTrackball()->setExposureCompensation(gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-3), Scalar(3), getSimulationManager()->getTrackball()->getExposureCompensation(), "Exposure[EV]"));
+    offset += 50.f;
     
     //Bottom panel
     char buffer[256];

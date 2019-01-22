@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/Camera.h"
@@ -15,11 +15,9 @@ namespace sf
 
 Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
 {
-    fovH = horizFOVDeg > Scalar(0) ? horizFOVDeg : Scalar(90);
+    fovH = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
     resX = resolutionX > 0 ? resolutionX : 1;
     resY = resolutionY > 0 ? resolutionY : 1;
-    pan = Scalar(0);
-    tilt = Scalar(0);
     display = false;
 }
     
@@ -48,47 +46,12 @@ bool Camera::getDisplayOnScreen()
     return display;
 }
 
-void Camera::setPan(Scalar value)
-{
-    pan = value;
-    //SetupCamera();
-}
-
-void Camera::setTilt(Scalar value)
-{
-    tilt = value;
-    //SetupCamera();
-}
-
-Scalar Camera::getPan()
-{
-    return pan;
-}
-
-Scalar Camera::getTilt()
-{
-    return tilt;
-}
-
 void Camera::UpdateTransform()
 {
     Transform cameraTransform = getSensorFrame();
     Vector3 eyePosition = cameraTransform.getOrigin(); //O
     Vector3 direction = cameraTransform.getBasis().getColumn(2); //Z
     Vector3 cameraUp = -cameraTransform.getBasis().getColumn(1); //-Y
-    
-    //additional camera rotation
-    /*glm::vec3 tiltAxis = glm::normalize(glm::cross(dir, up));
-    glm::vec3 panAxis = glm::normalize(glm::cross(tiltAxis, dir));
-    
-    //rotate
-	lookingDir = glm::rotate(lookingDir, tilt, tiltAxis);
-	lookingDir = glm::rotate(lookingDir, pan, panAxis);
-    lookingDir = glm::normalize(lookingDir);
-    
-    currentUp = glm::rotate(currentUp, tilt, tiltAxis);
-    currentUp = glm::rotate(currentUp, pan, panAxis);
-	currentUp = glm::normalize(currentUp);*/
     
     Matrix3 rotation;
     rotation.setEulerYPR(0,M_PI,0);
@@ -107,7 +70,7 @@ std::vector<Renderable> Camera::Render()
     item.type = RenderableType::SENSOR_LINES;
     
     //Create camera dummy
-    GLfloat iconSize = 1.f;
+    GLfloat iconSize = 0.5f;
     GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
     GLfloat aspect = (GLfloat)resX/(GLfloat)resY;
     GLfloat y = x/aspect;

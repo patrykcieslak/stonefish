@@ -32,8 +32,22 @@ ColorCamera::~ColorCamera()
     
     glCamera = NULL;
 }
+    
+void ColorCamera::setExposureCompensation(Scalar comp)
+{
+    if(glCamera != NULL)
+        glCamera->setExposureCompensation((GLfloat)comp);
+}
+    
+Scalar ColorCamera::getExposureCompensation()
+{
+    if(glCamera != NULL)
+        return (Scalar)glCamera->getExposureCompensation();
+    else
+        return Scalar(0);
+}
 
-uint8_t* ColorCamera::getDataPointer()
+void* ColorCamera::getImageDataPointer(unsigned int index)
 {
     return imageData;
 }
@@ -61,7 +75,7 @@ void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callba
     newDataCallback = callback;
 }
 
-void ColorCamera::NewDataReady()
+void ColorCamera::NewDataReady(unsigned int index)
 {
     if(newDataCallback != NULL)
         newDataCallback(this);

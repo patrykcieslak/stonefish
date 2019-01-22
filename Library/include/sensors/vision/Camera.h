@@ -13,8 +13,6 @@
 
 namespace sf
 {
-    class SolidEntity;
-    
     //!
     class Camera : public VisionSensor
     {
@@ -23,23 +21,19 @@ namespace sf
         virtual ~Camera();
         
         virtual void InternalUpdate(Scalar dt) = 0;
+        virtual void NewDataReady(unsigned int index = 0) = 0;
         virtual void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up) = 0;
+        virtual void UpdateTransform();
+        virtual std::vector<Renderable> Render();
         
-        void UpdateTransform();
         void setDisplayOnScreen(bool screen);
-        void setPan(Scalar value);
-        void setTilt(Scalar value);
-        Scalar getPan();
-        Scalar getTilt();
+        bool getDisplayOnScreen();
         Scalar getHorizontalFOV();
         void getResolution(unsigned int& x, unsigned int& y);
-        bool getDisplayOnScreen();
-        std::vector<Renderable> Render();
+        virtual void* getImageDataPointer(unsigned int index = 0) = 0;
         
     protected:
         Scalar fovH;
-        Scalar pan;
-        Scalar tilt;
         unsigned int resX;
         unsigned int resY;
         bool display;

@@ -291,7 +291,7 @@ float calcSunShadow(float waterDepth)
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
 	
 	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
-	radiusUV *= exp(waterDepth/5.0);// * turbidity/10.0; //Underwater shadow blur
+    radiusUV *= exp(waterDepth/2.0) * (1.0-exp(-turbidity/2.0)); //Underwater shadow blur
 	
 	// STEP 1: blocker search
     float accumBlockerDepth, numBlockers, maxBlockers;
@@ -371,7 +371,7 @@ void main()
 	}
     
     //Water properties
-    vec3 b = turbidity * rayleigh; //Scattering coefficient
+    vec3 b = turbidity * rayleigh * 0.5; //Scattering coefficient
     vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
     
 	//Water is assumed to be a flat plane so... 

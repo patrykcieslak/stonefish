@@ -154,11 +154,12 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
             tonemapShader->Use();
             tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
             tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
+            tonemapShader->SetUniform("exposureComp", 1.f);
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             glUseProgram(0);
         
             //Copy to camera data
-            glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getDataPointer());
+            glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
         
             //Unbind
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -170,7 +171,7 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
         {
             OpenGLCamera::DrawLDR(cameraFBO);
             glBindFramebuffer(GL_FRAMEBUFFER, cameraFBO);
-            glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getDataPointer());
+            glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
         

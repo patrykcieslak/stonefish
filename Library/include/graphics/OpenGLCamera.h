@@ -88,6 +88,8 @@ namespace sf
         GLfloat GetNearClip();
         GLfloat GetFarClip();
         
+        void setExposureCompensation(GLfloat ec);
+        GLfloat getExposureCompensation();
         GLuint getColorTexture();
         GLuint getFinalTexture();
         GLuint getAOTexture();
@@ -107,6 +109,7 @@ namespace sf
         //Float texture
         GLuint lightMeterFBO;
         GLuint lightMeterTex;
+        GLfloat exposureComp;
         
         //Postprocessing
         GLuint postprocessFBO;
