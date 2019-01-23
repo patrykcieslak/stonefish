@@ -3,12 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Stream.h"
 
-using namespace sf;
+namespace sf
+{
 
 Stream::Stream(const std::vector<Vector3>& streamline, const std::vector<Scalar>& radius, Scalar inputVelocity, Scalar exponent)
 {
@@ -26,4 +27,6 @@ Vector3 Stream::GetVelocityAtPoint(const Vector3& p)
 std::vector<Renderable> Stream::Render()
 {
     return std::vector<Renderable>(0);
+}
+    
 }

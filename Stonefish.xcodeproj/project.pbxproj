@@ -410,6 +410,7 @@
 		F70AF90821F0D3D900700A8B /* Wing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Wing.cpp; sourceTree = "<group>"; };
 		F70AF90A21F616ED00700A8B /* Multibeam2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Multibeam2.h; sourceTree = "<group>"; };
 		F70AF90C21F61B9100700A8B /* Multibeam2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Multibeam2.cpp; sourceTree = "<group>"; };
+		F70AF90E21F8768400700A8B /* depth2Ranges.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = depth2Ranges.frag; sourceTree = "<group>"; };
 		F70CDA0F21C15319009550C0 /* water_absorption.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = water_absorption.dat; sourceTree = "<group>"; };
 		F716029D2191A5E800E83606 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F71603922191A9E100E83606 /* RotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotaryEncoder.h; sourceTree = "<group>"; };
@@ -928,11 +929,11 @@
 		F71603D12191A9E100E83606 /* graphics */ = {
 			isa = PBXGroup;
 			children = (
+				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
+				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F755750F21A05A0100AE8956 /* OpenGLDataStructs.h */,
 				F71603D72191A9E100E83606 /* GLSLShader.h */,
 				F71603D32191A9E100E83606 /* IMGUI.h */,
-				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
-				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F71603DC2191A9E100E83606 /* OpenGLContent.h */,
 				F71603D52191A9E100E83606 /* OpenGLView.h */,
 				F71603E02191A9E100E83606 /* OpenGLCamera.h */,
@@ -954,10 +955,10 @@
 			isa = PBXGroup;
 			children = (
 				F71603FD2191A9E100E83606 /* Entity.h */,
-				F71603FC2191A9E100E83606 /* FeatherstoneEntity.h */,
-				F71604052191A9E100E83606 /* ForcefieldEntity.h */,
 				F71603F42191A9E100E83606 /* SolidEntity.h */,
 				F71603EF2191A9E100E83606 /* StaticEntity.h */,
+				F71603FC2191A9E100E83606 /* FeatherstoneEntity.h */,
+				F71604052191A9E100E83606 /* ForcefieldEntity.h */,
 				F71603F52191A9E100E83606 /* forcefields */,
 				F71604062191A9E100E83606 /* solids */,
 				F71603F02191A9E100E83606 /* statics */,
@@ -980,8 +981,8 @@
 			children = (
 				F77015D221B4458D00585FD1 /* Atmosphere.h */,
 				F71603F72191A9E100E83606 /* Ocean.h */,
-				F71603FB2191A9E100E83606 /* VelocityField.h */,
 				F71603F82191A9E100E83606 /* Trigger.h */,
+				F71603FB2191A9E100E83606 /* VelocityField.h */,
 				F71603F92191A9E100E83606 /* Stream.h */,
 				F71603FA2191A9E100E83606 /* Pipe.h */,
 				F71603F62191A9E100E83606 /* Jet.h */,
@@ -1447,6 +1448,7 @@
 				F71605602191AA1C00E83606 /* depthAwareBlur2.frag */,
 				F716055B2191AA1C00E83606 /* depthLinearize.frag */,
 				F71605892191AA1C00E83606 /* depthLinearizeMSAA.frag */,
+				F70AF90E21F8768400700A8B /* depth2Ranges.frag */,
 				F716057E2191AA1C00E83606 /* depthVisualize.frag */,
 				F71605992191AA1D00E83606 /* hbaoBlur.frag */,
 				F716056A2191AA1C00E83606 /* hbaoBlur2.frag */,

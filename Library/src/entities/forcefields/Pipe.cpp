@@ -3,12 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Pipe.h"
 
-using namespace sf;
+namespace sf
+{
 
 Pipe::Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar radius2, Scalar inletVelocity, Scalar exponent)
 {
@@ -88,4 +89,6 @@ std::vector<Renderable> Pipe::Render()
     items.push_back(outlet);
     items.push_back(pipe);
     return items;
+}
+
 }

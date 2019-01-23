@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright(c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPipeline.h"
@@ -455,11 +455,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
                     camera->GenerateLinearDepth(0, false);
                     
-                    //Go to postprocessing stage to copy color texture
+                    //Go to postprocessing stage
                     camera->EnterPostprocessing();
-                    
-                    //Go back to rendering framebuffer
-                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
                     
                     //Draw reflections
                     glDisable(GL_DEPTH_TEST);
@@ -469,14 +466,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glEnable(GL_STENCIL_TEST);
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
                     glOcean->DrawVolume(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(),
-                                        camera->getColorTexture(), camera->getLinearDepthTexture(true), viewport);
+                                        camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true), viewport);
                     glDisable(GL_STENCIL_TEST);
-                    
-                    //Go to postprocessing for good
-                    camera->EnterPostprocessing();
                 }
             
-                //Post-processing
+                //Tone mapping
                 glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
                 camera->DrawLDR(screenFBO);
             

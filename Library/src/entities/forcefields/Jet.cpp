@@ -3,12 +3,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Jet.h"
 
-using namespace sf;
+namespace sf
+{
 
 Jet::Jet(const Vector3& point, const Vector3& direction, Scalar radius, Scalar outletVelocity)
 {
@@ -86,4 +87,6 @@ std::vector<Renderable> Jet::Render()
     items.push_back(cone);
 
     return items;
+}
+
 }

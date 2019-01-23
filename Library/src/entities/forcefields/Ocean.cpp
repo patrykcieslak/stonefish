@@ -138,22 +138,6 @@ Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
     return fv;
 }
 
-void Ocean::GetSurface(Vector3& normal, Vector3& position) const
-{
-    normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
-    position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
-}
-
-void Ocean::GetSurfaceEquation(double* plane4) const
-{
-    Vector3 normal = -ghost->getWorldTransform().getBasis().getColumn(2).normalized();
-    Vector3 position = ghost->getWorldTransform().getOrigin()+normal*(depth/2.0);
-    plane4[0] = normal.x();
-    plane4[1] = normal.y();
-    plane4[2] = normal.z();
-    plane4[3] = -normal.dot(position);
-}
-
 void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;

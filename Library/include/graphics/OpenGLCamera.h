@@ -71,7 +71,6 @@ namespace sf
         void SetViewTransform();
         glm::vec3 Ray(GLint x, GLint y);
         void GenerateLinearDepth(int sampleId, bool frontFace);
-        void GenerateBlurArray();
         void EnterPostprocessing();
         
         void ShowSceneTexture(glm::vec4 rect);
@@ -113,7 +112,8 @@ namespace sf
         
         //Postprocessing
         GLuint postprocessFBO;
-        GLuint postprocessTex[3];
+        GLuint postprocessTex[2];
+        GLuint postprocessStencilTex;
         int activePostprocessTexture;
         
         GLuint linearDepthFBO;

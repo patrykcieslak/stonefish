@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLPipeline__
@@ -25,7 +25,8 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param s a structure containing render settings
+         \param s a structure containing the render settings
+         \param h a structure containing the helper rendering options
          */
         OpenGLPipeline(RenderSettings s, HelperSettings h);
         

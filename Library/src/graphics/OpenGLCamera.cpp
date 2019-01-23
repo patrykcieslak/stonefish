@@ -138,7 +138,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
 	glGenFramebuffers(1, &postprocessFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, postprocessFBO);
 	
-	glGenTextures(3, postprocessTex);
+	glGenTextures(2, postprocessTex);
     glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, viewportWidth, viewportHeight, 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -148,21 +148,22 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessTex[0], 0);
 	
 	glBindTexture(GL_TEXTURE_2D, postprocessTex[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex[1], 0);
 	
-	glBindTexture(GL_TEXTURE_2D_ARRAY, postprocessTex[2]);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB16F, viewportWidth, viewportHeight, 5, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
+    glGenTextures(1, &postprocessStencilTex);
+    glBindTexture(GL_TEXTURE_2D, postprocessStencilTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, postprocessStencilTex, 0);
+    
 	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Postprocess FBO initialization failed!");
@@ -306,6 +307,8 @@ OpenGLCamera::~OpenGLCamera()
 	glDeleteTextures(1, &renderDepthStencilTex);
 	glDeleteTextures(1, &lightMeterTex);
 	glDeleteTextures(2, linearDepthTex);
+    glDeleteTextures(2, postprocessTex);
+    glDeleteTextures(1, &postprocessStencilTex);
 	
 	glDeleteFramebuffers(1, &renderFBO);
 	glDeleteFramebuffers(1, &postprocessFBO);
@@ -475,49 +478,6 @@ void OpenGLCamera::ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index)
 {
 	if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
 		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex, index);
-}
-
-void OpenGLCamera::GenerateBlurArray()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, postprocessFBO);
-	glViewport(0,0,viewportWidth,viewportHeight);
-	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
-	
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, getLinearDepthTexture(true)); //Always attached
-	
-	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[2], 0, 0); //First layer
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-    glBindTexture(GL_TEXTURE_2D, postprocessTex[0]); //Initial texture to use as source
-	
-	depthAwareBlurShader[0]->Use();
-	depthAwareBlurShader[0]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
-	depthAwareBlurShader[0]->SetUniform("texSource", TEX_POSTPROCESS2);
-	depthAwareBlurShader[0]->SetUniform("texelOffset", glm::vec2(1.f/(GLfloat)viewportWidth, 0.f)); //Horizontal blur
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glUseProgram(0);
-	
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, postprocessTex[2]); //Attach blur array
-	
-	depthAwareBlurShader[1]->Use();
-	depthAwareBlurShader[1]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
-	depthAwareBlurShader[1]->SetUniform("texSource", TEX_POSTPROCESS2);
-	
-	for(int i=1; i<8; ++i)
-	{
-		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[2], 0, i%2 == 0 ? 0 : i/2+1); //First layer
-		depthAwareBlurShader[1]->SetUniform("texelOffset", i%2 == 0 ? glm::vec2(1.f/(GLfloat)viewportWidth, 0.f) : glm::vec2(0.f, ((GLfloat)viewportHeight/(GLfloat)viewportWidth)/(GLfloat)viewportWidth));
-		depthAwareBlurShader[1]->SetUniform("sourceLayer", i%2 == 0 ? i/2 : 0);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	}
-    
-	glUseProgram(0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-	glBindVertexArray(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void OpenGLCamera::GenerateLinearDepth(int sampleId, bool frontFace)
@@ -722,9 +682,9 @@ void OpenGLCamera::DrawSSR()
 {
     //Assumes that postprocessing FBO is selected
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, renderColorTex);
+    glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-    glBindTexture(GL_TEXTURE_2D, renderViewNormalTex);
+    glBindTexture(GL_TEXTURE_2D, postprocessTex[1]);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
     glBindTexture(GL_TEXTURE_2D, getLinearDepthTexture(true));
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS4);
@@ -796,14 +756,23 @@ void OpenGLCamera::EnterPostprocessing()
 	//Blit multisampled to non-multisampled texture
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderFBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postprocessFBO);
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, postprocessTex[0], 0);
-	glBlitFramebuffer(0, 0, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glBlitFramebuffer(0, 0, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight,
+                      GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+    
+    glReadBuffer(GL_COLOR_ATTACHMENT1);
+    glDrawBuffer(GL_COLOR_ATTACHMENT1);
+    glBlitFramebuffer(0, 0, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
 GLuint OpenGLCamera::getPostprocessTexture(unsigned int id)
 {
-	if(id < 3)
+	if(id < 2)
 		return postprocessTex[id];
 	else
 		return 0;
