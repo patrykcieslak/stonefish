@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 31/07/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Profiler.h"
@@ -97,15 +97,15 @@ std::vector<Renderable> Profiler::Render()
     return items;
 }
 
-void Profiler::SetRange(Scalar distanceMin, Scalar distanceMax)
+void Profiler::SetRange(Scalar rangeMin, Scalar rangeMax)
 {
-    channels[1].rangeMin = distanceMin;
-    channels[1].rangeMax = distanceMax;
+    channels[1].rangeMin = rangeMin;
+    channels[1].rangeMax = rangeMax;
 }
 
-void Profiler::SetNoise(Scalar distanceStdDev)
+void Profiler::SetNoise(Scalar stdDev)
 {
-    channels[1].setStdDev(distanceStdDev);
+    channels[1].setStdDev(stdDev);
 }
 
 }

@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/ScalarSensor.h"
@@ -52,7 +52,7 @@ unsigned short ScalarSensor::getNumOfChannels()
     return channels.size();
 }
 
-Scalar ScalarSensor::getValueExternal(unsigned long int index, unsigned int channel)
+Scalar ScalarSensor::getValue(unsigned long int index, unsigned int channel)
 {
     if(index < history.size() && channel < channels.size())
     {
@@ -64,9 +64,9 @@ Scalar ScalarSensor::getValueExternal(unsigned long int index, unsigned int chan
     return Scalar(0);
 }
 
-Scalar ScalarSensor::getLastValueExternal(unsigned int channel)
+Scalar ScalarSensor::getLastValue(unsigned int channel)
 {
-    return getValueExternal(history.size() - 1, channel);
+    return getValue(history.size() - 1, channel);
 }
 
 SensorChannel ScalarSensor::getSensorChannelDescription(unsigned int channel)
@@ -96,22 +96,26 @@ void ScalarSensor::AddSampleToHistory(const Sample& s)
         history.pop_front();
     }
     //else == 0 --> unlimited history
-        
-    for(unsigned int i=0; i<s.nDim; ++i)
+    
+    Sample* sample = new Sample(s);
+    
+    for(unsigned int i=0; i<sample->getNumOfDimensions(); ++i)
     {
+        Scalar* data = sample->getDataPointer();
+        
         //Add noise
         if(channels[i].stdDev > Scalar(0))
-            s.data[i] += channels[i].noise(randomGenerator);
+            data[i] += channels[i].noise(randomGenerator);
     
         //Limit readings
-        if(s.data[i] > channels[i].rangeMax)
-            s.data[i] = channels[i].rangeMax;
-        else if(s.data[i] < channels[i].rangeMin)
-            s.data[i] = channels[i].rangeMin;
+        if(data[i] > channels[i].rangeMax)
+            data[i] = channels[i].rangeMax;
+        else if(data[i] < channels[i].rangeMin)
+            data[i] = channels[i].rangeMin;
     }
     
     //Add to history
-    history.push_back(new Sample(s));
+    history.push_back(sample);
 }
 
 void ScalarSensor::ClearHistory()

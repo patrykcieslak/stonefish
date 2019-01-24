@@ -15,7 +15,7 @@
 namespace sf
 {
 
-Gyroscope::Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage, Scalar driftSpeed, Scalar noisePSD, ADC* adc, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage, Scalar driftSpeed, ADC* adc, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
     
@@ -25,7 +25,6 @@ Gyroscope::Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, S
     drift = driftSpeed;
 
     zeroV = zeroVoltage;
-    this->noisePSD = noisePSD;
     this->adc = adc;
 }
 

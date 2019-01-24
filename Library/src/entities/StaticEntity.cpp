@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/StaticEntity.h"
@@ -21,8 +21,7 @@ StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : En
     mat = m;
 	objectId = -1;
     lookId = _lookId;
-    wireframe = false;
-	rigidBody = NULL;
+    rigidBody = NULL;
     phyMesh = NULL;
 }
 
@@ -65,16 +64,6 @@ Transform StaticEntity::getTransform()
 btRigidBody* StaticEntity::getRigidBody()
 {
     return rigidBody;
-}
-
-void StaticEntity::SetLook(int newLookId)
-{
-    lookId = newLookId;
-}
-
-void StaticEntity::SetWireframe(bool enabled)
-{
-    wireframe = enabled;
 }
 
 void StaticEntity::getAABB(Vector3& min, Vector3& max)

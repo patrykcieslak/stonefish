@@ -32,26 +32,6 @@ OpenGLLight::~OpenGLLight()
 {
 }
 
-void OpenGLLight::UpdatePosition(glm::vec3 p)
-{
-    tempPos = p;
-}
-    
-void OpenGLLight::UpdateTransform()
-{
-    pos = tempPos;
-}
-    
-void OpenGLLight::Activate()
-{
-    active = true;
-}
-
-void OpenGLLight::Deactivate()
-{
-    active = false;
-}
-
 bool OpenGLLight::isActive()
 {
     return active;
@@ -71,7 +51,39 @@ glm::vec3 OpenGLLight::getPosition()
 {
     return pos;
 }
+
+void OpenGLLight::UpdatePosition(glm::vec3 p)
+{
+    tempPos = p;
+}
+
+void OpenGLLight::UpdateTransform()
+{
+    pos = tempPos;
+}
+
+void OpenGLLight::Activate()
+{
+    active = true;
+}
+
+void OpenGLLight::Deactivate()
+{
+    active = false;
+}
+
+void OpenGLLight::InitShadowmap(GLint shadowmapLayer)
+{
+}
     
+void OpenGLLight::BakeShadowmap(OpenGLPipeline* pipe)
+{
+}
+
+void OpenGLLight::ShowShadowMap(glm::vec4 rect)
+{
+}
+
 //////////////////static//////////////////////////////
 void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 {

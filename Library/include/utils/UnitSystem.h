@@ -23,6 +23,7 @@ namespace sf
     class UnitSystem
     {
     public:
+        //! A constructor.
         UnitSystem();
         
         static Scalar Length(UnitSystems from, UnitSystems to, Scalar value);               //0

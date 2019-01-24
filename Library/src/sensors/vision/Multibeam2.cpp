@@ -17,11 +17,11 @@ namespace sf
 {
 
 Multibeam2::Multibeam2(std::string uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
-                       Scalar minDepth, Scalar maxDepth, Scalar frequency) : Camera(uniqueName, horizontalRes, verticalRes, horizontalFOVDeg, frequency)
+                       Scalar minRange, Scalar maxRange, Scalar frequency) : Camera(uniqueName, horizontalRes, verticalRes, horizontalFOVDeg, frequency)
 {
     fovV = verticalFOVDeg > Scalar(0) ? verticalFOVDeg : Scalar(90);
-    depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
-    depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
+    range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
+    range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 1.f;
     newDataCallback = NULL;
     dataCounter = 0;
     imageData = new GLfloat[resX*resY]; //Buffer for storing image data
@@ -52,9 +52,9 @@ float* Multibeam2::getRangeDataPointer()
     return rangeData;
 }
     
-glm::vec2 Multibeam2::getDepthRange()
+glm::vec2 Multibeam2::getRangeLimits()
 {
-    return depthRange;
+    return range;
 }
     
 void Multibeam2::InitGraphics()
@@ -115,7 +115,7 @@ void Multibeam2::InitGraphics()
     for(int i=0; i<cameras.size(); ++i)
     {
         cameras[i].cam = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                                                            accResX, 0, cameras[i].width, resY, cameras[i].fovH, depthRange.x, depthRange.y, true, (GLfloat)fovV);
+                                                            accResX, 0, cameras[i].width, resY, cameras[i].fovH, range.x, range.y, true, (GLfloat)fovV);
         cameras[i].cam->setCamera(this, i);
         cameras[i].dataOffset = accResX*resY;
         accResX += cameras[i].width;

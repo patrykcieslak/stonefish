@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPointLight.h"
@@ -23,25 +23,11 @@ LightType OpenGLPointLight::getType()
 	return POINT_LIGHT;
 }
 
-void OpenGLPointLight::InitShadowmap(GLint shadowmapLayer)
-{
-}
-
 void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
-	std::string lightUni = "pointLights[" + std::to_string(lightId) + "].";
+    std::string lightUni = "pointLights[" + std::to_string(lightId) + "].";
     shader->SetUniform(lightUni + "position", getPosition());
-	shader->SetUniform(lightUni + "color", getColor());
+    shader->SetUniform(lightUni + "color", getColor());
 }
-
-void OpenGLPointLight::BakeShadowmap(OpenGLPipeline* pipe)
-{
     
-}
-
-void OpenGLPointLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
-{
-    
-}
-
 }

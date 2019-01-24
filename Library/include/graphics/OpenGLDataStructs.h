@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLDataStructs__
@@ -53,10 +53,10 @@ class btTransform;
 
 namespace sf
 {
-    //!
+    //! An enum defining a type of a rendered primitive.
     typedef enum {POINTS, LINES, LINE_STRIP} PrimitiveType;
     
-    //!
+    //! A structure containing single vertex data.
     struct Vertex
     {
         glm::vec3 pos;
@@ -78,7 +78,7 @@ namespace sf
         };
     };
     
-    //!
+    //! A structure containing single face data.
     struct Face
     {
         GLuint vertexID[3];
@@ -91,7 +91,7 @@ namespace sf
         };
     };
     
-    //!
+    //! A structure containing mesh data.
     struct Mesh
     {
         std::vector<Vertex> vertices;
@@ -106,7 +106,7 @@ namespace sf
         }
     };
     
-    //!
+    //! A structure containing object data.
     struct Object
     {
         Mesh* mesh;
@@ -115,14 +115,15 @@ namespace sf
         GLuint vboIndex;
     };
     
-    //!
+    //! An enum used in quad tree traversal.
     typedef enum {NW, NE, SW, SE} Quadrant;
     
-    //!
+    //! An enum used in quad tree traversal.
     typedef enum {E, N, W, S} Direction;
     
     struct QuadTree;
     
+    //! A structure representing a single node of a quad tree.
     struct QuadTreeNode
     {
         QuadTree* tree;
@@ -144,7 +145,7 @@ namespace sf
         void Grow(glm::vec3 eye, glm::mat4 VP);
     };
     
-    //!
+    //! A structure representing a quad tree.
     struct QuadTree
     {
         QuadTreeNode* root;
@@ -163,13 +164,13 @@ namespace sf
         void Draw();
     };
     
-    //!
+    //! An enum representing the type of look of an object.
     typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
     
-    //!
+    //! An enum representing the rendering mode.
     typedef enum {FLAT, FULL, UNDERWATER} DrawingMode;
     
-    //!
+    //! A structure containing data of a graphical material.
     struct Look
     {
         LookType type;
@@ -179,7 +180,7 @@ namespace sf
         GLfloat reflectivity;
     };
     
-    //!
+    //! A structure containing data of a view frustum.
     struct ViewFrustum
     {
         GLfloat near;
@@ -198,6 +199,7 @@ namespace sf
         GLfloat xWhite, yWhite; //White point x, y
         GLfloat gamma;          //Gamma correction for system
         
+        //! A static method returning the sRGB color space structure.
         static ColorSystem sRGB()
         {
             ColorSystem cs;
@@ -219,16 +221,36 @@ namespace sf
     {
         glm::vec3 rgb;
         
+        //! A constructor.
+        /*!
+         \param R red component value
+         \param G green component value
+         \param B blue component value
+         */
         Color(GLfloat R, GLfloat G, GLfloat B)
         {
             rgb = glm::vec3(R,G,B);
         }
         
+        //! A static method used to create a new color based on RGB triplet.
+        /*!
+         \param R red component value
+         \param G green component value
+         \param B blue component value
+         \return color structure
+         */
         static Color RGB(GLfloat R, GLfloat G, GLfloat B)
         {
             return Color(R,G,B);
         }
         
+        //! A static method used to create a new color based on HSV triplet.
+        /*!
+         \param H hue component value
+         \param S staturation component value
+         \param V value component value
+         \return color structure
+         */
         static Color HSV(GLfloat H, GLfloat S, GLfloat V)
         {
             const glm::vec4 K(1.f, 2.f/3.f, 1.f/3.f, 3.f);
@@ -237,6 +259,11 @@ namespace sf
             return Color(c.r, c.g, c.b);
         }
         
+        //! A static method used to create a new color based on color temperature (black body temperature).
+        /*!
+         \param Kelvins the color temperature [K]
+         \return color structure
+         */
         static Color BlackBody(GLfloat Kelvins)
         {
             GLfloat c1, c2, c3;
@@ -245,12 +272,13 @@ namespace sf
             return Color(c1, c2, c3);
         }
         
+    private:
         static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
         static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
         static void xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b, ColorSystem cs);
     };
     
-    //! An enum used to designate type of helper objecy to be drawn.
+    //! An enum used to designate type of helper object to be drawn.
     typedef enum {
         SOLID = 0, SOLID_CS, MULTIBODY_AXIS,
         HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP,
@@ -282,6 +310,7 @@ namespace sf
         RenderQuality ocean;
         bool msaa;
         
+        //! A constructor.
         RenderSettings()
         {
             windowW = 800;
@@ -305,6 +334,7 @@ namespace sf
         bool showForces;
         bool showBulletDebugInfo;
         
+        //! A constructor.
         HelperSettings()
         {
             showCoordSys = false;
@@ -318,6 +348,12 @@ namespace sf
     };
     
     typedef btTransform Transform;
+    
+    //! A method converting a physics engine transform into an OpenGL matrix.
+    /*!
+     \param T transform
+     \return OpenGL 4x4 matrix
+     */
     glm::mat4 glMatrixFromTransform(const Transform& T);
 }
 

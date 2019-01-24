@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sample.h"
@@ -38,6 +38,16 @@ Sample::~Sample()
 Scalar Sample::getTimestamp()
 {
     return timestamp;
+}
+    
+unsigned short Sample::getNumOfDimensions()
+{
+    return nDim;
+}
+    
+Scalar* Sample::getDataPointer()
+{
+    return data;
 }
 
 Scalar Sample::getValue(unsigned short dimension)

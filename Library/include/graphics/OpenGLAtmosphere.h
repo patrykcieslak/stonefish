@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLAtmosphere__
@@ -35,6 +35,7 @@ namespace sf
         DensityProfileLayer layers[2];
     };
     
+    //! An enum definind id's of atmosphere textures.
     enum AtmosphereTextures
     {
         TRANSMITTANCE = 0,
@@ -47,28 +48,94 @@ namespace sf
     class OpenGLPipeline;
     class OpenGLCamera;
     
+    //! A class implementing a physically correct atmosphere in OpenGL.
     class OpenGLAtmosphere
     {
     public:
+        //! A constructor.
+        /*!
+         \param quality a rendering quality of the sky
+         \param shadow a rendering quality od the shadow
+         */
         OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow);
+        
+        //! A destructor.
         ~OpenGLAtmosphere();
         
+        //! A method that draws the sky and sun.
+        /*!
+         \param view a pointer to the current view
+         */
         void DrawSkyAndSun(const OpenGLCamera* view);
+        
+        //! A method that bakes the shadow maps for the sun.
+        /*!
+         \param pipe a pointer to the rendering pipeline
+         \param view a pointer to the current view
+         */
         void BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view);
+        
+        //! A method to setup a material shader.
+        /*!
+         \param shader a pointer to the material shader
+         */
         void SetupMaterialShader(GLSLShader* shader);
+        
+        //! A method to setup an ocean shader.
+        /*!
+         \param shader a pointer to the ocean shader.
+         */
         void SetupOceanShader(GLSLShader* shader);
         
+        //! A method to set position of the sun in the sky.
+        /*!
+         \param azimuthDeg the azimuth of the sun [deg]
+         \param elevationDeg the elevation of the sun [deg]
+         */
         void SetSunPosition(GLfloat azimuthDeg, GLfloat elevationDeg);
+        
+        //! A method to get position of the sun in the sky.
+        /*!
+         \param azimuthDeg a reference to a variable to store the sun azimuth [deg]
+         \param elevationDeg a reference to a variable to store the sun elevation [deg]
+         */
         void GetSunPosition(GLfloat& azimuthDeg, GLfloat& elevationDeg);
+        
+        //! A method returning the OpenGL id of a texture.
+        /*!
+         \param id the atmosphere texture to get id for
+         \return OpenGL id of the requested texture
+         */
         GLuint getAtmosphereTexture(AtmosphereTextures id);
+        
+        //! A method returning the sun direction.
         glm::vec3 GetSunDirection();
+        
+        //! A method returning the bottom radius of the atmosphere.
         GLfloat getAtmosphereBottomRadius();
         
-        //Debugging
+        //! A method displaying a texture.
+        /*!
+         \param id the type of texture to display
+         \param rect a rectangle in which the texture will be displayed
+         */
         void ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 rect);
+        
+        //! A method displaying the sun shadow maps.
+        /*!
+         \param x the x coordinate of the origin of the shadow map display on screen
+         \param y the y coordinate of the origin of the shadow map display on screen
+         \param scale a scale to use when displaying the shadow map
+         */
         void ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale);
         
+        //! A static method that builds the atmosphere rendering API.
+        /*!
+         \param quality the quality of generated sky
+         */
         static void BuildAtmosphereAPI(RenderQuality quality);
+        
+        //! A static method returning the OpenGL id of the compiled API shader.
         static GLuint getAtmosphereAPI();
         
     private:

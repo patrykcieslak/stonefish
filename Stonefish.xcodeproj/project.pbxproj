@@ -63,7 +63,6 @@
 		F716043B2191A9E100E83606 /* CylindricalJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C12191A9E100E83606 /* CylindricalJoint.h */; };
 		F716043C2191A9E100E83606 /* FixedJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C22191A9E100E83606 /* FixedJoint.h */; };
 		F716043D2191A9E100E83606 /* SphericalJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C32191A9E100E83606 /* SphericalJoint.h */; };
-		F716043E2191A9E100E83606 /* Polynomials.hpp in Headers */ = {isa = PBXBuildFile; fileRef = F71603C52191A9E100E83606 /* Polynomials.hpp */; };
 		F71604402191A9E100E83606 /* SystemUtil.hpp in Headers */ = {isa = PBXBuildFile; fileRef = F71603C72191A9E100E83606 /* SystemUtil.hpp */; };
 		F71604412191A9E100E83606 /* stb_image.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C82191A9E100E83606 /* stb_image.h */; };
 		F71604422191A9E100E83606 /* ScientificFileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603C92191A9E100E83606 /* ScientificFileUtil.h */; };
@@ -457,7 +456,6 @@
 		F71603C12191A9E100E83606 /* CylindricalJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CylindricalJoint.h; sourceTree = "<group>"; };
 		F71603C22191A9E100E83606 /* FixedJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FixedJoint.h; sourceTree = "<group>"; };
 		F71603C32191A9E100E83606 /* SphericalJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SphericalJoint.h; sourceTree = "<group>"; };
-		F71603C52191A9E100E83606 /* Polynomials.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Polynomials.hpp; sourceTree = "<group>"; };
 		F71603C72191A9E100E83606 /* SystemUtil.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SystemUtil.hpp; sourceTree = "<group>"; };
 		F71603C82191A9E100E83606 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		F71603C92191A9E100E83606 /* ScientificFileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScientificFileUtil.h; sourceTree = "<group>"; };
@@ -900,7 +898,6 @@
 			isa = PBXGroup;
 			children = (
 				F71603B02191A9E100E83606 /* UnitSystem.h */,
-				F71603C52191A9E100E83606 /* Polynomials.hpp */,
 				F71603C72191A9E100E83606 /* SystemUtil.hpp */,
 				F71603C92191A9E100E83606 /* ScientificFileUtil.h */,
 				F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */,
@@ -929,11 +926,12 @@
 		F71603D12191A9E100E83606 /* graphics */ = {
 			isa = PBXGroup;
 			children = (
-				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
-				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F755750F21A05A0100AE8956 /* OpenGLDataStructs.h */,
 				F71603D72191A9E100E83606 /* GLSLShader.h */,
+				F71603DA2191A9E100E83606 /* OpenGLPrinter.h */,
 				F71603D32191A9E100E83606 /* IMGUI.h */,
+				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
+				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F71603DC2191A9E100E83606 /* OpenGLContent.h */,
 				F71603D52191A9E100E83606 /* OpenGLView.h */,
 				F71603E02191A9E100E83606 /* OpenGLCamera.h */,
@@ -943,7 +941,6 @@
 				F71603DD2191A9E100E83606 /* OpenGLLight.h */,
 				F71603DB2191A9E100E83606 /* OpenGLPointLight.h */,
 				F71603D42191A9E100E83606 /* OpenGLSpotLight.h */,
-				F71603DA2191A9E100E83606 /* OpenGLPrinter.h */,
 				F71603DE2191A9E100E83606 /* OpenGLOcean.h */,
 				F71603DF2191A9E100E83606 /* OpenGLAtmosphere.h */,
 				F71603E22191A9E100E83606 /* OpenGLDebugDrawer.h */,
@@ -1562,7 +1559,6 @@
 				F71604402191A9E100E83606 /* SystemUtil.hpp in Headers */,
 				F71604432191A9E100E83606 /* StonefishCommon.h in Headers */,
 				F71604222191A9E100E83606 /* ColorCamera.h in Headers */,
-				F716043E2191A9E100E83606 /* Polynomials.hpp in Headers */,
 				F716046D2191A9E100E83606 /* Pipe.h in Headers */,
 				F71604452191A9E100E83606 /* Motor.h in Headers */,
 				F71604542191A9E100E83606 /* OpenGLLight.h in Headers */,

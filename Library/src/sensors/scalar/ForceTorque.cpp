@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/ForceTorque.h"
@@ -16,10 +16,10 @@
 namespace sf
 {
 
-ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& geomToSensor, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     attach = attachment;
-    g2s = geomToSensor;
+    o2s = origin;
     lastFrame = Transform::getIdentity();
     
     channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
@@ -30,14 +30,14 @@ ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const 
     channels.push_back(SensorChannel("Torque Z", QUANTITY_TORQUE));
 }
 
-ForceTorque::ForceTorque(std::string uniqueName, const Transform& geomToSensor, Scalar frequency, int historyLength) :
-    ForceTorque(uniqueName, NULL, geomToSensor, frequency, historyLength)
+ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar frequency, int historyLength) :
+    ForceTorque(uniqueName, NULL, origin, frequency, historyLength)
 {
 }
 
 void ForceTorque::InternalUpdate(Scalar dt)
 {
-    if(j != NULL)
+    if(j != NULL && attach != NULL)
     {
         Vector3 force(j->getFeedback(0), j->getFeedback(1), j->getFeedback(2));
         Vector3 torque(j->getFeedback(3), j->getFeedback(4), j->getFeedback(5));
@@ -48,7 +48,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
             torque /= dt;
         }
     
-        lastFrame = attach->getOTransform() * g2s;
+        lastFrame = attach->getOTransform() * o2s;
         Matrix3 toSensor = lastFrame.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
@@ -61,7 +61,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
     {   
         Vector3 force, torque;
         unsigned int childId = fe->getJointFeedback(jId, force, torque);
-        lastFrame = fe->getLink(childId).solid->getCG2OTransform() * g2s;
+        lastFrame = fe->getLink(childId).solid->getCG2OTransform() * o2s;
         Matrix3 toSensor = lastFrame.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;

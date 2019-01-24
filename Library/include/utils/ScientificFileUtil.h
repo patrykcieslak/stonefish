@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/07/2014.
-//  Copyright (c) 2014 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScientificFileUtil__
@@ -14,66 +14,150 @@
 
 namespace sf
 {
-
-typedef enum {DATA_SCALAR, DATA_VECTOR, DATA_MATRIX} ScientificDataType;
-
-struct ScientificDataItem
-{
-    std::string name;
-    ScientificDataType type;
-    void* value;
+    //! An enum defining supported types of data.
+    typedef enum {DATA_SCALAR, DATA_VECTOR, DATA_MATRIX} ScientificDataType;
     
-    ScientificDataItem() : value(NULL) {}
-    
-    ~ScientificDataItem()
+    //! A structure representing a single data item.
+    struct ScientificDataItem
     {
-        if(value != NULL)
+        std::string name;
+        ScientificDataType type;
+        void* value;
+        
+        //! A constructor.
+        ScientificDataItem() : value(NULL) {}
+        
+        //! A destructor.
+        ~ScientificDataItem()
         {
-            switch(type)
+            if(value != NULL)
             {
-                case DATA_SCALAR:
-                    delete ((Scalar*)value);
-                    break;
-                    
-                case DATA_VECTOR:
-                    delete ((btVectorXu*)value);
-                    break;
-                    
-                case DATA_MATRIX:
-                    delete ((btMatrixXu*)value);
-                    break;
+                switch(type)
+                {
+                    case DATA_SCALAR:
+                        delete ((Scalar*)value);
+                        break;
+                        
+                    case DATA_VECTOR:
+                        delete ((btVectorXu*)value);
+                        break;
+                        
+                    case DATA_MATRIX:
+                        delete ((btMatrixXu*)value);
+                        break;
+                }
             }
         }
-    }
-};
-
-class ScientificData
-{
-public:
-    ScientificData(std::string filepath);
-    virtual ~ScientificData();
+    };
     
-    void addItem(ScientificDataItem* it);
-    const ScientificDataItem* getItem(std::string name) const;
-    const ScientificDataItem* getItem(unsigned int index) const;
-    unsigned int getItemsCount() const;
-    Scalar getScalar(std::string name);
-    btVectorXu getVector(std::string name);
-    btMatrixXu getMatrix(std::string name);
-
-private:
-    std::string path;
-    std::vector<ScientificDataItem*> items;
-};
-
-ScientificData* LoadOctaveData(const char* path);
-bool LoadOctaveScalar(std::ifstream& file, ScientificDataItem* it, bool isFloat = false);
-bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat = false);
-
-bool SaveOctaveData(const char* path, const ScientificData& data);
-void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it);
-void SaveOctaveMatrix(std::ofstream& file, const ScientificDataItem& it);
+    //! A class representing scientific data structure.
+    class ScientificData
+    {
+    public:
+        //! A constructor.
+        /*!
+         \param filepath the path of the output file
+         */
+        ScientificData(std::string filepath);
+        
+        //! A destructor.
+        virtual ~ScientificData();
+        
+        //! A method to add a data item to the list
+        /*!
+         \param it a pointer to a data item
+         */
+        void addItem(ScientificDataItem* it);
+        
+        //! A method returning a data item.
+        /*!
+         \param name the name of the item
+         \return a pointer to the data item
+         */
+        const ScientificDataItem* getItem(std::string name) const;
+        
+        //! A method returning a data item.
+        /*!
+         \param index the id of the data item on the list
+         \return a pointer to the data item
+         */
+        const ScientificDataItem* getItem(unsigned int index) const;
+        
+        //! A method returning the total number of items.
+        unsigned int getItemsCount() const;
+        
+        //! A method to get value of a single scalar data item.
+        /*!
+         \param name the name of the data item
+         \return value
+         */
+        Scalar getScalar(std::string name);
+        
+        //! A method to get value of a vector data item.
+        /*!
+         \param name the name of the data item
+         \return value
+         */
+        btVectorXu getVector(std::string name);
+        
+        //! A method to get value of a matrix data item.
+        /*!
+         \param name the name of the data item
+         \return value
+         */
+        btMatrixXu getMatrix(std::string name);
+        
+    private:
+        std::string path;
+        std::vector<ScientificDataItem*> items;
+    };
     
+    //! A function to load data from an Octave file.
+    /*!
+     \param path the path to the file
+     \return a pointer to a data structure
+     */
+    ScientificData* LoadOctaveData(const char* path);
+    
+    //! A function to load scalar data from an Octave file.
+    /*!
+     \param file the path to the file
+     \param it a pointer to the new data item
+     \param isFloat defines if value type is float (single precision)
+     \return success
+     */
+    bool LoadOctaveScalar(std::ifstream& file, ScientificDataItem* it, bool isFloat = false);
+    
+    //! A function to load matrix data from an Octave file.
+    /*!
+     \param file the path to the file
+     \param it a pointer to the new data item
+     \param isFloat defines if value type is float (single precision)
+     \return success
+     */
+    bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat = false);
+    
+    //! A function to save data to an Octave file.
+    /*!
+     \param path the path to the file
+     \param data a reference to the data structure
+     \return success
+     */
+    bool SaveOctaveData(const char* path, const ScientificData& data);
+    
+    //! A function to save scalar data to an Octave file.
+    /*!
+     \param file the path to the file
+     \param it reference to the data item
+     */
+    void SaveOctaveScalar(std::ofstream& file, const ScientificDataItem& it);
+    
+    //! A function to save matrix data to an Octave file.
+    /*!
+     \param file the path to the file
+     \param it a reference to the data item
+     */
+    void SaveOctaveMatrix(std::ofstream& file, const ScientificDataItem& it);
 }
 
 #endif

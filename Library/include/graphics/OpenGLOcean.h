@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOcean__
@@ -14,7 +14,7 @@
 
 namespace sf
 {
-    //!
+    //! A structure holding parameters of ocean generation and rendering.
     struct OceanParams
     {
         unsigned int passes;
@@ -34,44 +34,117 @@ namespace sf
     
     class GLSLShader;
     
-    //!
+    //! A class implementing ocean simulation in OpenGL.
     class OpenGLOcean
     {
     public:
+        //! A constructor.
+        /*!
+         \param geometricWaves a flag that specifies if ocean should be rendered with geometric waves or as a plane with wave texture
+         \param hydrodynamics a pointer to a mutex
+         */
         OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics);
+        
+        //! A destructor.
         ~OpenGLOcean();
         
-        //! Method that simulates wave propagation.
+        //! A method that simulates wave propagation.
         void Simulate();
         
-        //! Method that updates the wave mesh.
+        //! A method that updates the wave mesh.
+        /*!
+         \param eyePos the eye position of the active camera
+         \param view the view matrix of the active camera
+         \param projection the projection matrix of the active camera
+         */
         void UpdateSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
         
-        //! Method that draws the surface of the ocean.
+        //! A method that draws the surface of the ocean.
+        /*!
+         \param eyePos the eye position of the active camera
+         \param view the view matrix of the active camera
+         \param projection the projection matrix of the active camera
+         \param viewport a pointer to viewport data
+         */
         void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
         
-        //! Method that draws the surface of the ocean, seen from underwater.
+        //! A method that draws the surface of the ocean, seen from underwater.
+        /*!
+         \param eyePos the eye position of the active camera
+         \param view the view matrix of the active camera
+         \param projection the projection matrix of the active camera
+         \param viewport a pointer to viewport data
+         */
         void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
         
-        //! Method that draws the distant background of the ocean.
+        //! A method that draws the distant background of the ocean.
+        /*!
+         \param eyePos the eye position of the active camera
+         \param view the view matrix of the active camera
+         \param projection the projection matrix of the active camera
+         */
         void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 infProjection);
         
-        //! Method that generates the stencil mask.
+        //! A method that generates the stencil mask.
+        /*!
+         \param view the view matrix of the active camera
+         \param projection the projection matrix of the active camera
+         \param infProjection the infinite projection matrix of the active camera
+         */
         void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::mat4 infProjection);
         
         //! Method that draws the particles in the ocean and the blur (scattering).
+        /*!
+         \param eyePos the eye position of the active camera
+         \param view the view matrix of the active camera
+         \param projection the projection matrix of the active camera
+         \param sceneTexture an id of the color texture
+         \param linearDepthTex an id of the depth map texture
+         \param viewport a pointer to viewport data
+         */
         void DrawVolume(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint sceneTexture, GLuint linearDepthTex, GLint* viewport);
         
-        //! Method that draws the waterline when the camera is crossing the water surface.
+        //! A method that draws the waterline when the camera is crossing the water surface.
         void DrawWaterline();
         
+        //! A method that drawsd the spectrum of waves.
+        /*!
+         \param viewportSize size of the active viewport
+         \param rect a rectangle in which to draw the spectrum on screen
+         */
         void ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
+        
+        //! A method used to display a specified texture.
+        /*!
+         \param id the id of the texture to display
+         \param rect a rectangle in which to draw the tecture on screen
+         */
         void ShowTexture(int id, glm::vec4 rect);
        
+        //! A method to set the type of ocean water.
+        /*!
+         \param t type of water
+         */
         void setWaterType(GLfloat t);
+        
+        //! A method to set the turbidity of ocean water.
+        /*!
+         \param t water turbidity
+         */
         void setTurbidity(GLfloat t);
+        
+        //! A method to get wave height at a specified coordinate.
+        /*!
+         \param x the x coordinate in world frame [m]
+         \param y the y coordinate in world frame [m]
+         \return wave height [m]
+         */
         GLfloat getWaveHeight(GLfloat x, GLfloat y);
+        
+        //! A method returning calculated light absorption coefficients.
         glm::vec3 getLightAbsorption();
+        
+        //! A method returning the turbidity of the water.
         GLfloat getTurbidity();
         
     private:

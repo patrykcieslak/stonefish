@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSpotLight.h"
@@ -124,7 +124,7 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void OpenGLSpotLight::ShowShadowMap(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+void OpenGLSpotLight::ShowShadowMap(glm::vec4 rect)
 {
 	/*glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D, shadowMap);

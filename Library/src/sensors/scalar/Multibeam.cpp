@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/08/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Multibeam.h"
@@ -83,19 +83,19 @@ std::vector<Renderable> Multibeam::Render()
     return items;
 }
 
-void Multibeam::SetRange(Scalar distanceMin, Scalar distanceMax)
+void Multibeam::SetRange(Scalar rangeMin, Scalar rangeMax)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
     {
-        channels[i].rangeMin = distanceMin;
-        channels[i].rangeMax = distanceMax;
+        channels[i].rangeMin = rangeMin;
+        channels[i].rangeMax = rangeMax;
     }
 }
 
-void Multibeam::SetNoise(Scalar distanceStdDev)
+void Multibeam::SetNoise(Scalar stdDev)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
-        channels[i].setStdDev(distanceStdDev);
+        channels[i].setStdDev(stdDev);
 }
 
 }

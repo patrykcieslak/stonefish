@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLCamera__
@@ -21,7 +21,7 @@
 
 namespace sf
 {
-    //!
+    //! A structure holding data for HBAO algorithm.
     struct AOData
     {
         GLfloat RadiusToScreen;
@@ -49,54 +49,160 @@ namespace sf
     class GLSLShader;
     class SolidEntity;
     
-    //!
+    //! An abstract class implementing a camera view.
     class OpenGLCamera : public OpenGLView
     {
     public:
+        //! A constructor.
+        /*!
+         \param originX the x coordinate of the view origin in the program window
+         \param originY the y coordinate of the view origin in the program window
+         \param width the width of the view
+         \param height the height of the view
+         \param horizon the distance to the far plane of the camera [m]
+         \param spp number of samples used when rendering (>1 means multisampling)
+         \param ao a flag to set if the ambient occlusion should be rendered
+         */
         OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
+        
+        //! A destructor.
         virtual ~OpenGLCamera();
         
+        //! A method to render the low dynamic range (final) image to the screen.
+        /*!
+         \param destinationFBO the id of the framebuffer used as the destination for rendering
+         */
         virtual void DrawLDR(GLuint destinationFBO);
+        
+        //! A method drawing the ambient occlusion effect.
+        /*!
+         \param intensity a factor defining how much of AO should be applied
+         */
         void DrawAO(GLfloat intensity);
+        
+        //! A method drawing the screen-space refflections effect.
         void DrawSSR();
         
-        virtual glm::mat4 GetViewMatrix() const = 0;
-        virtual glm::vec3 GetEyePosition() const = 0;
-        virtual glm::vec3 GetLookingDirection() const = 0;
-        virtual glm::vec3 GetUpDirection() const = 0;
-        virtual ViewType getType() = 0;
-        
-        void SetupViewport(GLint x, GLint y, GLint width);
+        //! A method to set current projection matrix.
         void SetProjection();
+        
+        //! A method to set current view matrix.
         void SetViewTransform();
+        
+        //! A method to generate a ray in camera space (picking).
+        /*!
+         \param x the x coordinate
+         \param x the y coordinate
+         \return a unit vector constituting the ray
+         */
         glm::vec3 Ray(GLint x, GLint y);
+        
+        //! A method to generate the linearised depth textures.
+        /*!
+         \param sampleId the index of the sample to read (important for multisampled rendering buffers)
+         \param frontFace a flag defining if the depth should be generated for front or back faces
+         */
         void GenerateLinearDepth(int sampleId, bool frontFace);
+         
+        //! A method which blits the rendering buffer to screen for postprocessing.
         void EnterPostprocessing();
         
+        //! A method to show the color texture.
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         */
         void ShowSceneTexture(glm::vec4 rect);
+        
+        //! A method to show the depth texture.
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         \param frontFace a flag to decide if front or back face depth should be displayed
+         */
         void ShowLinearDepthTexture(glm::vec4 rect, bool frontFace);
+        
+        //! A method to show the view/normal texture.
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         */
         void ShowViewNormalTexture(glm::vec4 rect);
+        
+        //! A method to show the deinterleaved depth texture (HBAO).
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         \param index the id of the sample
+         */
         void ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index);
+        
+        //! A method to show the deinterleaved ambient occlusion texture (HBAO).
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         \param index the id of the sample
+         */
         void ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index);
+        
+        //! A method to show the ambient occlusion texture (HBAO).
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         */
         void ShowAmbientOcclusion(glm::vec4 rect);
         
+        //! A method that returns the projection matrix.
         glm::mat4 GetProjectionMatrix() const;
+        
+        //! A method that returns the infinite projection matrix.
         glm::mat4 GetInfiniteProjectionMatrix() const;
+        
+        //! A method that returns the horizontal field of view.
         GLfloat GetFOVX() const;
+        
+        //! A method that returns the vertical field of view.
         GLfloat GetFOVY() const;
+        
+        //! A method that returns the near clip plane distance.
         GLfloat GetNearClip();
+        
+        //! A method that returns the far clip plane distance.
         GLfloat GetFarClip();
         
+        //! A method to set the exposure compensation factor.
+        /*!
+         \param ec exposure compensation factor
+         */
         void setExposureCompensation(GLfloat ec);
+        
+        //! A method returning the exposure compensation factor.
         GLfloat getExposureCompensation();
+        
+        //! A method returning the id of the color texture.
         GLuint getColorTexture();
+        
+        //! A method returning the id of the final texture.
         GLuint getFinalTexture();
+        
+        //! A method returning the id of the ambient occlusion texture.
         GLuint getAOTexture();
+        
+        //! A method returning the id of the linear depth texture.
+        /*!
+         \param frontFace a flag to decide if front or back face depth is requested
+         \return OpenGL id of the texture
+         */
         GLuint getLinearDepthTexture(bool frontFace);
-        GLuint getPostprocessTexture(unsigned int id);
+        
+        //! A method returning the id of a postprocessing texture
+        /*!
+         \param index the id of the texture in the list
+         \return OpenGL id of the texture
+         */
+        GLuint getPostprocessTexture(unsigned int index);
+        
+        //! A method informing if view is using ambient occlusion.
         bool hasAO();
         
+        //! A static method to load common data.
         static void Init();
+        
+        //! A static method to destroy common data.
         static void Destroy();
         
     protected:

@@ -428,15 +428,6 @@ bool OpenGLCamera::hasAO()
     return aoFactor > 0;
 }
 
-void OpenGLCamera::SetupViewport(GLint x, GLint y, GLint width)
-{
-    originX = x;
-    originY = y;
-    GLint oldWidth = viewportWidth;
-    viewportWidth = width;
-    viewportHeight = ((GLfloat)viewportHeight/(GLfloat)oldWidth)*width;
-}
-
 void OpenGLCamera::SetProjection()
 {
 	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(projection);
