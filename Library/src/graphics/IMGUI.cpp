@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/IMGUI.h"
@@ -58,7 +58,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     Resize(windowWidth, windowHeight);
     
     //Create printers
-    plainPrinter = new OpenGLPrinter(FONT_NAME, FONT_SIZE);
+    plainPrinter = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
     backgroundMargin = 5.f;
     
     //Load logo texture - can't use material class because it writes to the console
@@ -336,17 +336,17 @@ void IMGUI::End()
     glDisable(GL_BLEND);
 }
 
-void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const char *text)
+void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text)
 {
-    plainPrinter->Print(text, color, x, windowH - y - FONT_BASELINE, FONT_SIZE);
+    plainPrinter->Print(text, color, x, windowH - y - STANDARD_FONT_BASELINE, STANDARD_FONT_SIZE);
 }
 
-GLfloat IMGUI::PlainTextLength(const char* text)
+GLfloat IMGUI::PlainTextLength(const std::string& text)
 {
     return plainPrinter->TextLength(text);
 }
 
-glm::vec2 IMGUI::PlainTextDimensions(const char *text)
+glm::vec2 IMGUI::PlainTextDimensions(const std::string& text)
 {
     return plainPrinter->TextDimensions(text);
 }
@@ -501,19 +501,15 @@ void IMGUI::DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 	DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
 }
 
-void IMGUI::DoLabel(GLfloat x, GLfloat y, const char* text, GLfloat* color)
+void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color)
 {
-    glm::vec4 c;
-    
-    if(color == NULL)
-        c = theme[ACTIVE_TEXT_COLOR];
+    if(color.r < 0.f)
+        DrawPlainText(x, y, theme[ACTIVE_TEXT_COLOR], text);
     else
-        c = glm::make_vec4(color);
-       
-    DrawPlainText(x, y, c, text);
+        DrawPlainText(x, y, color, text);
 }
 
-bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const char* title)
+bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const std::string& title)
 {
     bool result = false;
     
@@ -549,7 +545,7 @@ bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const
     return result;
 }
 
-Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const char* title)
+Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title)
 {
 	//Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
@@ -558,13 +554,13 @@ Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Sc
 	GLfloat railH = 5.f;
 	GLfloat sliderW = 5.f;
 	GLfloat sliderH = 20.f;
-    GLfloat h = sliderH + 2.f * backgroundMargin + 5.f + FONT_SIZE;
+    GLfloat h = sliderH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
 	
     //Check mouse position
     Scalar result = value;
     GLfloat sliderPosition = (value-min)/(max-min);
     
-    if(MouseInRect(x + backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin + FONT_SIZE + 5.f, sliderW, sliderH))
+    if(MouseInRect(x + backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, sliderW, sliderH))
         setHot(ID);
     
     if(isActive(ID))
@@ -599,27 +595,27 @@ Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Sc
     DrawPlainText(x + railW + 3.f*backgroundMargin - textDim.x, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
     
     //Bar
-	DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+FONT_SIZE+5.f+sliderH/2.f-railH/2.f, sliderPosition * railW, railH, theme[FILLED_COLOR]);
-    DrawRect(x+backgroundMargin*2.f + sliderPosition * railW, y + backgroundMargin+FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme[EMPTY_COLOR]);
+	DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, sliderPosition * railW, railH, theme[FILLED_COLOR]);
+    DrawRect(x+backgroundMargin*2.f + sliderPosition * railW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme[EMPTY_COLOR]);
     
 	//Slider
 	if(isActive(ID))
-        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+FONT_SIZE+5.f, sliderW, sliderH, theme[PUSHED_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[PUSHED_CONTROL_COLOR]);
     else if(isHot(ID))
-        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+FONT_SIZE+5.f, sliderW, sliderH, theme[HOT_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[HOT_CONTROL_COLOR]);
     else
-        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+FONT_SIZE+5.f, sliderW, sliderH, theme[ACTIVE_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[ACTIVE_CONTROL_COLOR]);
 	
     return result;
 }
 
-void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const char* title)
+void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const std::string& title)
 {
 	//Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
 	GLfloat barW = w - 4.f*backgroundMargin;
 	GLfloat barH = 5.f;
-	GLfloat h =  barH + 2.f * backgroundMargin + 5.f + FONT_SIZE;
+	GLfloat h =  barH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
 	
     //Check and correct progress value
     progress = progress < Scalar(0.) ? Scalar(0.) : (progress > Scalar(1.) ? Scalar(1.) : progress);
@@ -634,11 +630,11 @@ void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, cons
     DrawPlainText(x + 3.f*backgroundMargin + barW - len, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
     
 	//Draw bar
-	DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+FONT_SIZE+5.f-barH/2.f, progress * barW, barH, theme[FILLED_COLOR]);
-    DrawRect(x+backgroundMargin*2.f + progress * barW, y + backgroundMargin+FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme[EMPTY_COLOR]);
+	DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, progress * barW, barH, theme[FILLED_COLOR]);
+    DrawRect(x+backgroundMargin*2.f + progress * barW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme[EMPTY_COLOR]);
 }
 
-bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const char* title)
+bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title)
 {
     bool result = value;
 	GLfloat size = 14.f;
@@ -682,7 +678,7 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
     return result;
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const char* title, Scalar fixedRange[2])
+bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2])
 {
     bool result = false;
 	GLfloat pltW = w/windowW * 2.f;
@@ -838,7 +834,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
     return result;
 }
 
-bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const char* title)
+bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title)
 {
     bool result = false;
     GLfloat pltW = w/windowW * 2.f;

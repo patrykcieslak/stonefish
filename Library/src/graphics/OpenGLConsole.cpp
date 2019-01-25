@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLConsole.h"
@@ -95,7 +95,7 @@ void OpenGLConsole::Init(int w, int h)
     texQuadShader->AddUniform("tex", ParameterType::INT);
     texQuadShader->AddUniform("color", ParameterType::VEC4);
     
-    printer = new OpenGLPrinter(FONT_NAME, FONT_SIZE);
+    printer = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
 }
     
 void OpenGLConsole::Scroll(GLfloat amount)
@@ -122,7 +122,7 @@ void OpenGLConsole::Render(bool overlay)
         return;
         
     //Calculate visible lines range
-    long int maxVisibleLines = (long int)floorf((GLfloat)windowH/(GLfloat)(FONT_SIZE + 5)) + 1;
+    long int maxVisibleLines = (long int)floorf((GLfloat)windowH/(GLfloat)(STANDARD_FONT_SIZE + 5)) + 1;
     long int linesCount = lines.size();
     long int visibleLines = maxVisibleLines;
     long int scrolledLines = 0;
@@ -142,7 +142,7 @@ void OpenGLConsole::Render(bool overlay)
     }
     else //there is more lines than can appear on screen at once
     {
-        scrolledLines = (long int)floorf(-scrollOffset /(GLfloat)(FONT_SIZE + 5));
+        scrolledLines = (long int)floorf(-scrollOffset /(GLfloat)(STANDARD_FONT_SIZE + 5));
         scrolledLines = scrolledLines < 0 ? 0 : scrolledLines;
         if(linesCount < scrolledLines + visibleLines)
             visibleLines = linesCount - scrolledLines;
@@ -214,7 +214,7 @@ void OpenGLConsole::Render(bool overlay)
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
             ConsoleMessage* msg = &lines[linesCount-1-i];
-            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE);
+            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
         }
         
         glBindVertexArray(0);
@@ -242,7 +242,7 @@ void OpenGLConsole::Render(bool overlay)
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
             ConsoleMessage* msg = &lines[linesCount-1-i];
-            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (FONT_SIZE + 5), FONT_SIZE);
+            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
         }
     }
     

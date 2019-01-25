@@ -33,12 +33,12 @@ std::vector<ConsoleMessage> Console::getLines()
     return lines;
 }
 
-void Console::Print(int messageType, const char *format, ...)
+void Console::Print(int messageType, std::string format, ...)
 {
 	va_list args;
     char buffer[4096];
     va_start(args, format);
-    vsnprintf(buffer, sizeof(buffer), format, args);
+    vsnprintf(buffer, sizeof(buffer), format.c_str(), args);
     va_end(args);
 	
 #ifdef COLOR_CONSOLE

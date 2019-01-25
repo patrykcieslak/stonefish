@@ -410,6 +410,8 @@
 		F70AF90A21F616ED00700A8B /* Multibeam2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Multibeam2.h; sourceTree = "<group>"; };
 		F70AF90C21F61B9100700A8B /* Multibeam2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Multibeam2.cpp; sourceTree = "<group>"; };
 		F70AF90E21F8768400700A8B /* depth2Ranges.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = depth2Ranges.frag; sourceTree = "<group>"; };
+		F70AF91421FB251300700A8B /* CooperHewitt-Book.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CooperHewitt-Book.otf"; sourceTree = "<group>"; };
+		F70AF91621FB26C100700A8B /* Lato-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lato-Medium.ttf"; sourceTree = "<group>"; };
 		F70CDA0F21C15319009550C0 /* water_absorption.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = water_absorption.dat; sourceTree = "<group>"; };
 		F716029D2191A5E800E83606 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F71603922191A9E100E83606 /* RotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotaryEncoder.h; sourceTree = "<group>"; };
@@ -823,6 +825,17 @@
 			path = AcrobotTest;
 			sourceTree = "<group>";
 		};
+		F70AF90F21FB1F8400700A8B /* data */ = {
+			isa = PBXGroup;
+			children = (
+				F70AF91421FB251300700A8B /* CooperHewitt-Book.otf */,
+				F70AF91621FB26C100700A8B /* Lato-Medium.ttf */,
+				F70CDA0F21C15319009550C0 /* water_absorption.dat */,
+				F716057B2191AA1C00E83606 /* grid.png */,
+			);
+			name = data;
+			sourceTree = "<group>";
+		};
 		F716029C2191A5E800E83606 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -931,8 +944,8 @@
 				F71603DA2191A9E100E83606 /* OpenGLPrinter.h */,
 				F71603D32191A9E100E83606 /* IMGUI.h */,
 				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
-				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F71603DC2191A9E100E83606 /* OpenGLContent.h */,
+				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F71603D52191A9E100E83606 /* OpenGLView.h */,
 				F71603E02191A9E100E83606 /* OpenGLCamera.h */,
 				F71603D62191A9E100E83606 /* OpenGLRealCamera.h */,
@@ -1018,6 +1031,7 @@
 		F71605582191AA1C00E83606 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				F70AF90F21FB1F8400700A8B /* data */,
 				F7C8895A21B96EE100FF2109 /* ocean */,
 				F7C8895921B96E8000FF2109 /* gui */,
 				F7C8895821B96E6B00FF2109 /* post-processing */,
@@ -1433,7 +1447,6 @@
 				F716055A2191AA1C00E83606 /* saq.vert */,
 				F716057A2191AA1C00E83606 /* quadTree.tesc */,
 				F71605932191AA1D00E83606 /* quadTree.vert */,
-				F716057B2191AA1C00E83606 /* grid.png */,
 			);
 			name = basic;
 			sourceTree = "<group>";
@@ -1496,7 +1509,6 @@
 				F71605782191AA1C00E83606 /* oceanSpectrum.frag */,
 				F71605922191AA1D00E83606 /* oceanVariance.frag */,
 				F71605752191AA1C00E83606 /* infiniteSurface.vert */,
-				F70CDA0F21C15319009550C0 /* water_absorption.dat */,
 			);
 			name = ocean;
 			sourceTree = "<group>";

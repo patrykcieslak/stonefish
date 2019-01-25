@@ -44,7 +44,7 @@ namespace sf
          \param format a format string
          \param ... a set of variables refering to the format string (like printf() from standard library)
         */
-        void Print(int messageType, const char* format, ...);
+        void Print(int messageType, std::string format, ...);
     
         //! A method to add messages to the console
         /*!

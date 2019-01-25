@@ -126,14 +126,14 @@ void ScalarSensor::ClearHistory()
     history.clear();
 }
 
-void ScalarSensor::SaveMeasurementsToTextFile(const char* path, bool includeTime, unsigned int fixedPrecision)
+void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool includeTime, unsigned int fixedPrecision)
 {
     if(history.size() == 0)
         return;
     
-    cInfo("Saving %s measurements to: %s", getName().c_str(), path);
+    cInfo("Saving %s measurements to: %s", getName().c_str(), path.c_str());
     
-    FILE* fp = fopen(path, "wt");
+    FILE* fp = fopen(path.c_str(), "wt");
     if(fp == NULL)
     {
         cError("File could not be opened!");
@@ -195,7 +195,7 @@ void ScalarSensor::SaveMeasurementsToTextFile(const char* path, bool includeTime
     fclose(fp);
 }
 
-void ScalarSensor::SaveMeasurementsToOctaveFile(const char* path, bool includeTime, bool separateChannels)
+void ScalarSensor::SaveMeasurementsToOctaveFile(const std::string& path, bool includeTime, bool separateChannels)
 {
     if(history.size() == 0)
         return;

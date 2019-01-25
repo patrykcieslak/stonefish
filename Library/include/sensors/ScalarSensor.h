@@ -100,7 +100,7 @@ namespace sf
          \param includeTime a flag specifying if the timestamp should be written
          \param fixedPrecision number of decimal places to write
          */
-        void SaveMeasurementsToTextFile(const char* path, bool includeTime = true, unsigned int fixedPrecision = 6);
+        void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, unsigned int fixedPrecision = 6);
         
         //! A method used to save the measurements to an Octave file.
         /*!
@@ -108,7 +108,7 @@ namespace sf
          \param includeTime a flag specifying if the timestamp should be written
          \param separateChannels
          */
-        void SaveMeasurementsToOctaveFile(const char* path, bool includeTime = true, bool separateChannels = false);
+        void SaveMeasurementsToOctaveFile(const std::string& path, bool includeTime = true, bool separateChannels = false);
         
         //! A method returning the number of channels of the sensor.
         unsigned short getNumOfChannels();

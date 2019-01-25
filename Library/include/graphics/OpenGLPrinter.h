@@ -14,16 +14,9 @@
 #include <map>
 #include "graphics/OpenGLDataStructs.h"
 
-//Standard font
-#ifdef __linux__
-#define FONT_NAME "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf"
-#define FONT_SIZE 12
-#define FONT_BASELINE 9
-#elif __APPLE__
-#define FONT_NAME "/Library/Fonts/Andale Mono.ttf"
-#define FONT_SIZE 12
-#define FONT_BASELINE 9
-#endif
+#define STANDARD_FONT_NAME "Lato-Medium.ttf"
+#define STANDARD_FONT_SIZE 11
+#define STANDARD_FONT_BASELINE 9
 
 namespace sf
 {
@@ -44,37 +37,37 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param fontPath the path to the font file
+         \param fontPath a path to the font file
          \param size the native size of the font
          */
-        OpenGLPrinter(const char* fontPath, GLuint size);
+        OpenGLPrinter(const std::string& fontPath, GLuint size);
         
         //! A destructor.
         ~OpenGLPrinter();
         
         //! A method used to print text.
         /*!
-         \param text a pointer to the string to be printed
+         \param text a string to be printed
          \param color the desired color of the text
          \param x the x position of the text in window
          \param y the y position of the text in window
          \param size the size of the font
          */
-        void Print(const char* text, glm::vec4 color, GLuint x, GLuint y, GLuint size);
+        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLuint size);
         
         //! A method used to measure the length of a string in pixels.
         /*!
-         \param text a pointer to the string
+         \param text the string to be measured
          \return the length of the string in pixels
          */
-        GLuint TextLength(const char* text);
+        GLuint TextLength(const std::string& text);
         
         //! A method used to measure the sise of the string in pixels.
         /*!
-         \param text a pointer to the string
+         \param text the string to be measured
          \return a 2D vector containing width and height of the text in pixels
          */
-        glm::ivec2 TextDimensions(const char* text);
+        glm::ivec2 TextDimensions(const std::string& text);
         
         //! A static method used to set the widow size for the printers.
         /*!

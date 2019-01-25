@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/06/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPrinter.h"
@@ -24,7 +24,7 @@ void OpenGLPrinter::SetWindowSize(GLuint width, GLuint height)
     windowH = height;
 }
 
-OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLuint size)
+OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
 {
 	initialized = false;
 	fontVBO = 0;
@@ -39,9 +39,9 @@ OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLuint size)
 		printf("Freetype: Could not init library!\n");
 	else
 	{
-		if((error = FT_New_Face(ft, fontPath, 0, &face))) 
+		if((error = FT_New_Face(ft, fontPath.c_str(), 0, &face)))
 		{
-			printf("Freetype: Could not open font from file: %s!\n", fontPath);
+			printf("Freetype: Could not open font from file: %s!\n", fontPath.c_str());
 			FT_Done_FreeType(ft);
 		}
 	}
@@ -87,8 +87,8 @@ OpenGLPrinter::OpenGLPrinter(const char* fontPath, GLuint size)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             
 			//Load all characters
             GLuint x = 0;
@@ -132,7 +132,7 @@ OpenGLPrinter::~OpenGLPrinter()
 		glDeleteBuffers(1, &fontVBO);
 }
 
-void OpenGLPrinter::Print(const char* text, glm::vec4 color, GLuint x, GLuint y, GLuint size)
+void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLuint size)
 {
 	if(!initialized)
 		return;
@@ -143,7 +143,7 @@ void OpenGLPrinter::Print(const char* text, glm::vec4 color, GLuint x, GLuint y,
         GLfloat y;
         GLfloat s;
         GLfloat t;
-    } coords[6 * strlen(text)];
+    } coords[6 * text.length()];
     
     memset(coords, 0, sizeof coords);
     
@@ -162,7 +162,8 @@ void OpenGLPrinter::Print(const char* text, glm::vec4 color, GLuint x, GLuint y,
 	printShader->SetUniform("color", color);
 	printShader->SetUniform("tex", TEX_GUI1);
 
-	for(const char *c = text; *c; ++c) 
+    const char* ctext = text.c_str();
+	for(const char *c = ctext; *c; ++c)
 	{
 		Character ch = chars[*c-32];
 		GLfloat x2 = xf + ch.bearing.x * scale * sx;
@@ -194,15 +195,16 @@ void OpenGLPrinter::Print(const char* text, glm::vec4 color, GLuint x, GLuint y,
 	glUseProgram(0);
 }
 
-GLuint OpenGLPrinter::TextLength(const char *text)
+GLuint OpenGLPrinter::TextLength(const std::string& text)
 {
 	GLuint length = 0;
-	for(const char *c = text; *c; ++c) 
+    const char* ctext = text.c_str();
+	for(const char *c = ctext; *c; ++c)
         length += chars[*c].advance.x;
     return length;
 }
 
-glm::ivec2 OpenGLPrinter::TextDimensions(const char *text)
+glm::ivec2 OpenGLPrinter::TextDimensions(const std::string& text)
 {
     return glm::ivec2(TextLength(text), nativeFontSize);
 }

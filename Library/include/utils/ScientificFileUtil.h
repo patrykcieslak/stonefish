@@ -58,7 +58,7 @@ namespace sf
         /*!
          \param filepath the path of the output file
          */
-        ScientificData(std::string filepath);
+        ScientificData(const std::string& filepath);
         
         //! A destructor.
         virtual ~ScientificData();
@@ -117,7 +117,7 @@ namespace sf
      \param path the path to the file
      \return a pointer to a data structure
      */
-    ScientificData* LoadOctaveData(const char* path);
+    ScientificData* LoadOctaveData(const std::string& path);
     
     //! A function to load scalar data from an Octave file.
     /*!
@@ -143,7 +143,7 @@ namespace sf
      \param data a reference to the data structure
      \return success
      */
-    bool SaveOctaveData(const char* path, const ScientificData& data);
+    bool SaveOctaveData(const std::string& path, const ScientificData& data);
     
     //! A function to save scalar data to an Octave file.
     /*!

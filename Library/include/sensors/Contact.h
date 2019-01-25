@@ -78,7 +78,7 @@ namespace sf
          \param path a path to the output file
          \param includeTime a flag to specify if time should be written
          */
-        void SaveContactDataToOctaveFile(const char* path, bool includeTime = true);
+        void SaveContactDataToOctaveFile(const std::string& path, bool includeTime = true);
         
         //! A method that implements rendering of the contact.
         std::vector<Renderable> Render();

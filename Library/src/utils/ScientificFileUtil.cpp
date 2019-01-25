@@ -15,7 +15,7 @@
 namespace sf
 {
 
-ScientificData::ScientificData(std::string filepath) : path(filepath)
+ScientificData::ScientificData(const std::string& filepath) : path(filepath)
 {
 }
 
@@ -82,13 +82,13 @@ btMatrixXu ScientificData::getMatrix(std::string name)
         return btMatrixXu();
 }
 
-ScientificData* LoadOctaveData(const char* path)
+ScientificData* LoadOctaveData(const std::string& path)
 {
     //Open file
-    cInfo("Loading scientific data from: %s", path);
+    cInfo("Loading scientific data from: %s", path.c_str());
     
     std::ifstream file;
-    file.open(path);
+    file.open(path.c_str());
     if(!file.is_open())
     {
         cError("File could not be opened!");
@@ -381,13 +381,13 @@ bool LoadOctaveMatrix(std::ifstream& file, ScientificDataItem* it, bool isFloat)
     return true;
 }
 
-bool SaveOctaveData(const char* path, const ScientificData& data)
+bool SaveOctaveData(const std::string& path, const ScientificData& data)
 {
     //open file
-    cInfo("Saving scientific data to: %s", path);
+    cInfo("Saving scientific data to: %s", path.c_str());
     
     std::ofstream file;
-    file.open(path);
+    file.open(path.c_str());
     if(!file.is_open())
     {
         cError("File could not be opened!");

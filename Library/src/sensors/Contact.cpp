@@ -102,7 +102,7 @@ void Contact::ClearHistory()
     points.clear();
 }
 
-void Contact::SaveContactDataToOctaveFile(const char* path, bool includeTime)
+void Contact::SaveContactDataToOctaveFile(const std::string& path, bool includeTime)
 {
     if(points.size() == 0)
         return;
