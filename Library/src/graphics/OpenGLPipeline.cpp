@@ -37,8 +37,8 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glPointSize(2.f);
-    glLineWidth(2.f);
+    glPointSize(1.f);
+    glLineWidth(1.f);
     glLineStipple(3, 0xE4E4);
     glPatchParameteri(GL_PATCH_VERTICES, 4);
     glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
@@ -46,12 +46,15 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     if(s.msaa) glEnable(GL_MULTISAMPLE); else glDisable(GL_MULTISAMPLE);
     
     GLint texUnits;
+    GLint maxTexSize;
     GLint maxTexLayers;
     GLint maxUniforms;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
     glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTexLayers);
     glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniforms);
     cInfo("%d texture units available.", texUnits);
+    cInfo("%d texture size supported.", maxTexSize);
     cInfo("%d texture layers allowed.", maxTexLayers);
     cInfo("%d uniforms in fragment shader allowed.", maxUniforms);
     

@@ -45,7 +45,7 @@ namespace sf
          \param baseLink a solid contituting the base of the robot
          \param otherLinks a vector of subsequent links
          */
-        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks);
+        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0));
         
         //! A method used to define a revolute joint between two mechanical parts of the robot.
         /*!

@@ -6,55 +6,54 @@
     </Plugin>
   </Plugins>
   <VirtualDirectory Name="src">
-    <VirtualDirectory Name="controllers">
-      <File Name="src/controllers/PathGenerator.cpp"/>
-      <File Name="src/controllers/SignalMux.cpp"/>
-      <File Name="src/controllers/Controller.cpp"/>
-      <File Name="src/controllers/FeedbackController.cpp"/>
-      <File Name="src/controllers/PathGenerator2D.cpp"/>
-      <File Name="src/controllers/PathFollowingController.cpp"/>
-      <File Name="src/controllers/MISOStateSpaceController.cpp"/>
-      <File Name="src/controllers/ServoController.cpp"/>
-      <File Name="src/controllers/SignalGenerator.cpp"/>
-      <File Name="src/controllers/SpeedController.cpp"/>
-    </VirtualDirectory>
     <VirtualDirectory Name="sensors">
-      <File Name="src/sensors/ColorCamera.cpp"/>
-      <File Name="src/sensors/ForceTorque.cpp"/>
-      <File Name="src/sensors/DVL.cpp"/>
+      <VirtualDirectory Name="vision">
+        <File Name="src/sensors/vision/Multibeam2.cpp"/>
+        <File Name="src/sensors/vision/DepthCamera.cpp"/>
+        <File Name="src/sensors/vision/ColorCamera.cpp"/>
+        <File Name="src/sensors/vision/Camera.cpp"/>
+      </VirtualDirectory>
+      <VirtualDirectory Name="scalar">
+        <File Name="src/sensors/scalar/Trajectory.cpp"/>
+        <File Name="src/sensors/scalar/Torque.cpp"/>
+        <File Name="src/sensors/scalar/RotaryEncoder.cpp"/>
+        <File Name="src/sensors/scalar/RealRotaryEncoder.cpp"/>
+        <File Name="src/sensors/scalar/Profiler.cpp"/>
+        <File Name="src/sensors/scalar/Pressure.cpp"/>
+        <File Name="src/sensors/scalar/Odometry.cpp"/>
+        <File Name="src/sensors/scalar/Mux.cpp"/>
+        <File Name="src/sensors/scalar/Multibeam.cpp"/>
+        <File Name="src/sensors/scalar/LinkSensor.cpp"/>
+        <File Name="src/sensors/scalar/JointSensor.cpp"/>
+        <File Name="src/sensors/scalar/IMU.cpp"/>
+        <File Name="src/sensors/scalar/Gyroscope.cpp"/>
+        <File Name="src/sensors/scalar/GPS.cpp"/>
+        <File Name="src/sensors/scalar/ForceTorque.cpp"/>
+        <File Name="src/sensors/scalar/FOG.cpp"/>
+        <File Name="src/sensors/scalar/DVL.cpp"/>
+        <File Name="src/sensors/scalar/Current.cpp"/>
+        <File Name="src/sensors/scalar/ADC.cpp"/>
+        <File Name="src/sensors/scalar/Accelerometer.cpp"/>
+      </VirtualDirectory>
+      <File Name="src/sensors/VisionSensor.cpp"/>
       <File Name="src/sensors/Sensor.cpp"/>
-      <File Name="src/sensors/Torque.cpp"/>
-      <File Name="src/sensors/FOG.cpp"/>
-      <File Name="src/sensors/GPS.cpp"/>
-      <File Name="src/sensors/DepthCamera.cpp"/>
-      <File Name="src/sensors/Mux.cpp"/>
-      <File Name="src/sensors/Accelerometer.cpp"/>
-      <File Name="src/sensors/Actuator.cpp"/>
-      <File Name="src/sensors/Contact.cpp"/>
-      <File Name="src/sensors/SimpleSensor.cpp"/>
-      <File Name="src/sensors/Trajectory.cpp"/>
-      <File Name="src/sensors/NED.cpp"/>
-      <File Name="src/sensors/FakeRotaryEncoder.cpp"/>
-      <File Name="src/sensors/Odometry.cpp"/>
+      <File Name="src/sensors/ScalarSensor.cpp"/>
       <File Name="src/sensors/Sample.cpp"/>
-      <File Name="src/sensors/Camera.cpp"/>
-      <File Name="src/sensors/Profiler.cpp"/>
-      <File Name="src/sensors/Current.cpp"/>
-      <File Name="src/sensors/Pressure.cpp"/>
-      <File Name="src/sensors/ADC.cpp"/>
-      <File Name="src/sensors/TrueRotaryEncoder.cpp"/>
-      <File Name="src/sensors/Multibeam.cpp"/>
-      <File Name="src/sensors/IMU.cpp"/>
-      <File Name="src/sensors/Gyroscope.cpp"/>
-      <File Name="src/sensors/RotaryEncoder.cpp"/>
+      <File Name="src/sensors/Contact.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="src/actuators/ServoMotor.cpp"/>
+      <File Name="src/actuators/LinkActuator.cpp"/>
+      <File Name="src/actuators/JointActuator.cpp"/>
+      <File Name="src/actuators/Actuator.cpp"/>
       <File Name="src/actuators/Motor.cpp"/>
       <File Name="src/actuators/DCMotor.cpp"/>
       <File Name="src/actuators/Thruster.cpp"/>
       <File Name="src/actuators/Light.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
+      <File Name="src/core/NED.cpp"/>
+      <File Name="src/core/Console.cpp"/>
       <File Name="src/core/SimulationManager.cpp"/>
       <File Name="src/core/NameManager.cpp"/>
       <File Name="src/core/TorusShape.cpp"/>
@@ -62,7 +61,6 @@
       <File Name="src/core/MaterialManager.cpp"/>
       <File Name="src/core/ResearchConstraintSolver.cpp"/>
       <File Name="src/core/GraphicalSimulationApp.cpp"/>
-      <File Name="src/core/UnitSystem.cpp"/>
       <File Name="src/core/FilteredCollisionDispatcher.cpp"/>
       <File Name="src/core/SimulationApp.cpp"/>
       <File Name="src/core/ResearchDynamicsWorld.cpp"/>
@@ -72,17 +70,20 @@
     <VirtualDirectory Name="joints">
       <File Name="src/joints/CylindricalJoint.cpp"/>
       <File Name="src/joints/RevoluteJoint.cpp"/>
-      <File Name="src/joints/BeltJoint.cpp"/>
-      <File Name="src/joints/GearJoint.cpp"/>
       <File Name="src/joints/SphericalJoint.cpp"/>
       <File Name="src/joints/Joint.cpp"/>
       <File Name="src/joints/PrismaticJoint.cpp"/>
       <File Name="src/joints/FixedJoint.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="utils">
+      <File Name="src/utils/UnitSystem.cpp"/>
+      <File Name="src/utils/tinyxml2.cpp"/>
+      <File Name="src/utils/GeometryFileUtil.cpp"/>
       <File Name="src/utils/ScientificFileUtil.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="src/graphics/OpenGLDataStructs.cpp"/>
+      <File Name="src/graphics/OpenGLConsole.cpp"/>
       <File Name="src/graphics/OpenGLCamera.cpp"/>
       <File Name="src/graphics/IMGUI.cpp"/>
       <File Name="src/graphics/OpenGLSpotLight.cpp"/>
@@ -95,7 +96,6 @@
       <File Name="src/graphics/OpenGLTrackball.cpp"/>
       <File Name="src/graphics/OpenGLAtmosphere.cpp"/>
       <File Name="src/graphics/OpenGLDepthCamera.cpp"/>
-      <File Name="src/graphics/Console.cpp"/>
       <File Name="src/graphics/OpenGLPointLight.cpp"/>
       <File Name="src/graphics/OpenGLView.cpp"/>
       <File Name="src/graphics/OpenGLLight.cpp"/>
@@ -103,13 +103,12 @@
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <File Name="src/entities/SolidEntity.cpp"/>
-      <File Name="src/entities/SystemEntity.cpp"/>
       <File Name="src/entities/Entity.cpp"/>
       <File Name="src/entities/StaticEntity.cpp"/>
       <File Name="src/entities/FeatherstoneEntity.cpp"/>
-      <File Name="src/entities/CableEntity.cpp"/>
       <File Name="src/entities/ForcefieldEntity.cpp"/>
       <VirtualDirectory Name="solids">
+        <File Name="src/entities/solids/Wing.cpp"/>
         <File Name="src/entities/solids/Polyhedron.cpp"/>
         <File Name="src/entities/solids/Torus.cpp"/>
         <File Name="src/entities/solids/Box.cpp"/>
@@ -118,19 +117,13 @@
         <File Name="src/entities/solids/Cylinder.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
+        <File Name="src/entities/forcefields/Atmosphere.cpp"/>
         <File Name="src/entities/forcefields/Stream.cpp"/>
         <File Name="src/entities/forcefields/Ocean.cpp"/>
         <File Name="src/entities/forcefields/Jet.cpp"/>
         <File Name="src/entities/forcefields/VelocityField.cpp"/>
         <File Name="src/entities/forcefields/Trigger.cpp"/>
         <File Name="src/entities/forcefields/Pipe.cpp"/>
-      </VirtualDirectory>
-      <VirtualDirectory Name="systems">
-        <File Name="src/entities/systems/UnderwaterVehicle.cpp"/>
-        <File Name="src/entities/systems/FixedGripper.cpp"/>
-        <File Name="src/entities/systems/Manipulator.cpp"/>
-        <File Name="src/entities/systems/TwoFingerGripper.cpp"/>
-        <File Name="src/entities/systems/Gripper.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="statics">
         <File Name="src/entities/statics/Plane.cpp"/>
@@ -143,31 +136,25 @@
   <Dependencies/>
   <VirtualDirectory Name="include">
     <VirtualDirectory Name="utils">
+      <File Name="include/utils/UnitSystem.h"/>
+      <File Name="include/utils/tinyxml2.h"/>
       <File Name="include/utils/SystemUtil.hpp"/>
+      <File Name="include/utils/stb_image_write.h"/>
       <File Name="include/utils/stb_image.h"/>
       <File Name="include/utils/ScientificFileUtil.h"/>
-      <File Name="include/utils/Polynomials.hpp"/>
-      <File Name="include/utils/MathsUtil.hpp"/>
+      <File Name="include/utils/GeometryFileUtil.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="joints">
       <File Name="include/joints/SphericalJoint.h"/>
       <File Name="include/joints/RevoluteJoint.h"/>
       <File Name="include/joints/PrismaticJoint.h"/>
       <File Name="include/joints/Joint.h"/>
-      <File Name="include/joints/GearJoint.h"/>
       <File Name="include/joints/FixedJoint.h"/>
       <File Name="include/joints/CylindricalJoint.h"/>
-      <File Name="include/joints/BeltJoint.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
-      <VirtualDirectory Name="systems">
-        <File Name="include/entities/systems/UnderwaterVehicle.h"/>
-        <File Name="include/entities/systems/TwoFingerGripper.h"/>
-        <File Name="include/entities/systems/Manipulator.h"/>
-        <File Name="include/entities/systems/Gripper.h"/>
-        <File Name="include/entities/systems/FixedGripper.h"/>
-      </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
+        <File Name="include/entities/forcefields/Atmosphere.h"/>
         <File Name="include/entities/forcefields/VelocityField.h"/>
         <File Name="include/entities/forcefields/Trigger.h"/>
         <File Name="include/entities/forcefields/Stream.h"/>
@@ -181,6 +168,7 @@
         <File Name="include/entities/statics/Obstacle.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="solids">
+        <File Name="include/entities/solids/Wing.h"/>
         <File Name="include/entities/solids/Torus.h"/>
         <File Name="include/entities/solids/Sphere.h"/>
         <File Name="include/entities/solids/Polyhedron.h"/>
@@ -188,27 +176,15 @@
         <File Name="include/entities/solids/Compound.h"/>
         <File Name="include/entities/solids/Box.h"/>
       </VirtualDirectory>
-      <File Name="include/entities/SystemEntity.h"/>
       <File Name="include/entities/StaticEntity.h"/>
       <File Name="include/entities/SolidEntity.h"/>
       <File Name="include/entities/ForcefieldEntity.h"/>
       <File Name="include/entities/FeatherstoneEntity.h"/>
       <File Name="include/entities/Entity.h"/>
-      <File Name="include/entities/CableEntity.h"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="controllers">
-      <File Name="include/controllers/SpeedController.h"/>
-      <File Name="include/controllers/SignalMux.h"/>
-      <File Name="include/controllers/SignalGenerator.h"/>
-      <File Name="include/controllers/ServoController.h"/>
-      <File Name="include/controllers/PathGenerator2D.h"/>
-      <File Name="include/controllers/PathGenerator.h"/>
-      <File Name="include/controllers/PathFollowingController.h"/>
-      <File Name="include/controllers/MISOStateSpaceController.h"/>
-      <File Name="include/controllers/FeedbackController.h"/>
-      <File Name="include/controllers/Controller.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="include/graphics/OpenGLDataStructs.h"/>
+      <File Name="include/graphics/OpenGLConsole.h"/>
       <File Name="include/graphics/OpenGLView.h"/>
       <File Name="include/graphics/OpenGLTrackball.h"/>
       <File Name="include/graphics/OpenGLSpotLight.h"/>
@@ -225,10 +201,10 @@
       <File Name="include/graphics/OpenGLAtmosphere.h"/>
       <File Name="include/graphics/IMGUI.h"/>
       <File Name="include/graphics/GLSLShader.h"/>
-      <File Name="include/graphics/Console.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
-      <File Name="include/core/UnitSystem.h"/>
+      <File Name="include/core/NED.h"/>
+      <File Name="include/core/Console.h"/>
       <File Name="include/core/TorusShape.h"/>
       <File Name="include/core/SimulationManager.h"/>
       <File Name="include/core/SimulationApp.h"/>
@@ -243,35 +219,44 @@
       <File Name="include/core/ConsoleSimulationApp.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="sensors">
-      <File Name="include/sensors/TrueRotaryEncoder.h"/>
-      <File Name="include/sensors/Trajectory.h"/>
-      <File Name="include/sensors/Torque.h"/>
-      <File Name="include/sensors/SimpleSensor.h"/>
+      <VirtualDirectory Name="vision">
+        <File Name="include/sensors/vision/Multibeam2.h"/>
+        <File Name="include/sensors/vision/DepthCamera.h"/>
+        <File Name="include/sensors/vision/ColorCamera.h"/>
+        <File Name="include/sensors/vision/Camera.h"/>
+      </VirtualDirectory>
+      <VirtualDirectory Name="scalar">
+        <File Name="include/sensors/scalar/Trajectory.h"/>
+        <File Name="include/sensors/scalar/Torque.h"/>
+        <File Name="include/sensors/scalar/RotaryEncoder.h"/>
+        <File Name="include/sensors/scalar/RealRotaryEncoder.h"/>
+        <File Name="include/sensors/scalar/Profiler.h"/>
+        <File Name="include/sensors/scalar/Pressure.h"/>
+        <File Name="include/sensors/scalar/Odometry.h"/>
+        <File Name="include/sensors/scalar/Mux.h"/>
+        <File Name="include/sensors/scalar/Multibeam.h"/>
+        <File Name="include/sensors/scalar/LinkSensor.h"/>
+        <File Name="include/sensors/scalar/JointSensor.h"/>
+        <File Name="include/sensors/scalar/IMU.h"/>
+        <File Name="include/sensors/scalar/Gyroscope.h"/>
+        <File Name="include/sensors/scalar/GPS.h"/>
+        <File Name="include/sensors/scalar/ForceTorque.h"/>
+        <File Name="include/sensors/scalar/FOG.h"/>
+        <File Name="include/sensors/scalar/DVL.h"/>
+        <File Name="include/sensors/scalar/Current.h"/>
+        <File Name="include/sensors/scalar/ADC.h"/>
+        <File Name="include/sensors/scalar/Accelerometer.h"/>
+      </VirtualDirectory>
+      <File Name="include/sensors/VisionSensor.h"/>
       <File Name="include/sensors/Sensor.h"/>
+      <File Name="include/sensors/ScalarSensor.h"/>
       <File Name="include/sensors/Sample.h"/>
-      <File Name="include/sensors/RotaryEncoder.h"/>
-      <File Name="include/sensors/Profiler.h"/>
-      <File Name="include/sensors/Pressure.h"/>
-      <File Name="include/sensors/Odometry.h"/>
-      <File Name="include/sensors/NED.h"/>
-      <File Name="include/sensors/Mux.h"/>
-      <File Name="include/sensors/Multibeam.h"/>
-      <File Name="include/sensors/IMU.h"/>
-      <File Name="include/sensors/Gyroscope.h"/>
-      <File Name="include/sensors/GPS.h"/>
-      <File Name="include/sensors/ForceTorque.h"/>
-      <File Name="include/sensors/FOG.h"/>
-      <File Name="include/sensors/FakeRotaryEncoder.h"/>
-      <File Name="include/sensors/DVL.h"/>
-      <File Name="include/sensors/DepthCamera.h"/>
-      <File Name="include/sensors/Current.h"/>
       <File Name="include/sensors/Contact.h"/>
-      <File Name="include/sensors/ColorCamera.h"/>
-      <File Name="include/sensors/Camera.h"/>
-      <File Name="include/sensors/ADC.h"/>
-      <File Name="include/sensors/Accelerometer.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="include/actuators/ServoMotor.h"/>
+      <File Name="include/actuators/LinkActuator.h"/>
+      <File Name="include/actuators/JointActuator.h"/>
       <File Name="include/actuators/Thruster.h"/>
       <File Name="include/actuators/Motor.h"/>
       <File Name="include/actuators/Light.h"/>

@@ -108,7 +108,10 @@ bool SimulationManager::LoadSDF(const std::string& path)
 void SimulationManager::AddRobot(Robot* robot, const Transform& worldTransform)
 {
     if(robot != NULL)
+    {
+        robots.push_back(robot);
         robot->AddToSimulation(this, worldTransform);
+    }
 }
 
 void SimulationManager::AddEntity(Entity *ent)
@@ -307,6 +310,23 @@ SolverType SimulationManager::getSolverType()
 HydrodynamicsType SimulationManager::getHydrodynamicsType()
 {
 	return hydroType;
+}
+
+Robot* SimulationManager::getRobot(unsigned int index)
+{
+    if(index < robots.size())
+        return robots[index];
+    else
+        return NULL;
+}
+
+Robot* SimulationManager::getRobot(std::string name)
+{
+    for(unsigned int i = 0; i < robots.size(); i++)
+        if(robots[i]->getName() == name)
+            return robots[i];
+    
+    return NULL;
 }
 
 Entity* SimulationManager::getEntity(unsigned int index)
@@ -651,7 +671,11 @@ void SimulationManager::DestroyScenario()
     }
     
     //remove sim manager objects
-    for(unsigned int i=0; i<entities.size(); i++)
+    for(size_t i=0; i<entities.size(); ++i)
+        delete robots[i];
+    robots.clear();
+    
+    for(size_t i=0; i<entities.size(); ++i)
         delete entities[i];
     entities.clear();
     
@@ -661,19 +685,19 @@ void SimulationManager::DestroyScenario()
 		ocean = NULL;
 	}
     
-    for(unsigned int i=0; i<joints.size(); i++)
+    for(size_t i=0; i<joints.size(); ++i)
         delete joints[i];
     joints.clear();
     
-    for(unsigned int i=0; i<contacts.size(); i++)
+    for(size_t i=0; i<contacts.size(); ++i)
         delete contacts[i];
     contacts.clear();
     
-    for(unsigned int i=0; i<sensors.size(); i++)
+    for(size_t i=0; i<sensors.size(); ++i)
         delete sensors[i];
     sensors.clear();
     
-    for(unsigned int i=0; i<actuators.size(); i++)
+    for(size_t i=0; i<actuators.size(); ++i)
         delete actuators[i];
     actuators.clear();
     

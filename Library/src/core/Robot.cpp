@@ -34,6 +34,11 @@ Robot::~Robot()
 	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
+std::string Robot::getName()
+{
+    return name;
+}
+
 void Robot::getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId)
 {
 	if(dynamics == NULL)

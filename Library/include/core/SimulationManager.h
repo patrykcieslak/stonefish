@@ -242,6 +242,20 @@ namespace sf
         //! A method returning the type of hydrodynamic computations used.
         HydrodynamicsType getHydrodynamicsType();
         
+        //! A method returning a robot by index
+        /*!
+         \param index an id of the robot
+         \return a pointer to a robot object
+         */
+        Robot* getRobot(unsigned int index);
+        
+        //! A method returning a robot by name.
+        /*!
+         \param name a name of the robot
+         \return a pointer to a robot object
+         */
+        Robot* getRobot(std::string name);
+        
         //! A method returning an entity by index.
         /*!
          \param index an id of the entity
@@ -405,6 +419,7 @@ namespace sf
         bool simulationFresh;
         
         NameManager* nameManager;
+        std::vector<Robot*> robots;
         std::vector<Entity*> entities;
         std::vector<Joint*> joints;
         std::vector<Sensor*> sensors;

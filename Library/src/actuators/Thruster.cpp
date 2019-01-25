@@ -22,8 +22,8 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diamet
     D = diameter;
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = Scalar(15.0);
-    ki = Scalar(3.0);
+    kp = Scalar(0.01); //Scalar(15.0);
+    ki = Scalar(0.0); //Scalar(3.0);
     iLim = Scalar(10.0);
     omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
     
@@ -118,6 +118,8 @@ void Thruster::Update(Scalar dt)
             attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
             attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
             attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+            
+            printf("Thrust: %1.3f Torque: %1.3f\n Speed: % 1.3f", thrustV.getX(), torqueV.getX(), omega);
         }
     }
 }
