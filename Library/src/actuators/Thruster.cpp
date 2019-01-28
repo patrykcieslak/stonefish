@@ -22,8 +22,8 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diamet
     D = diameter;
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = Scalar(0.01); //Scalar(15.0);
-    ki = Scalar(0.0); //Scalar(3.0);
+    kp = Scalar(5.0);
+    ki = Scalar(3.0);
     iLim = Scalar(10.0);
     omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
     
@@ -74,7 +74,7 @@ void Thruster::Update(Scalar dt)
     //Update thruster velocity
     Scalar error = setpoint * omegaLim - omega;
     Scalar motorTorque = kp * error + ki * iError; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
-    omega += (motorTorque - torque)/prop->getInertia().x() * dt; //Damping due to axial torque
+    omega += (motorTorque - torque)*dt; ///prop->getInertia().x() * dt; //Damping due to axial torque
     theta += omega * dt; //Just for animation
     
     //Integrate error
@@ -100,6 +100,7 @@ void Thruster::Update(Scalar dt)
             Scalar k2(-0.3);
             Scalar k3 = Scalar(2)*kT/M_PI;
             Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
+            
             Scalar rate = omega/(Scalar(2) * M_PI);
             thrust = Scalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*rate + k3*D*D*rate*rate);
             
@@ -118,8 +119,6 @@ void Thruster::Update(Scalar dt)
             attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
             attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
             attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
-            
-            printf("Thrust: %1.3f Torque: %1.3f\n Speed: % 1.3f", thrustV.getX(), torqueV.getX(), omega);
         }
     }
 }

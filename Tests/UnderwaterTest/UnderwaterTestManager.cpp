@@ -91,8 +91,8 @@ void UnderwaterTestManager::BuildScenario()
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
-    sf::Plane* plane = new sf::Plane("Bottom", 10000.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,4.0)));
+    //sf::Plane* plane = new sf::Plane("Bottom", 10000.0, getMaterialManager()->getMaterial("Rock"), seabed);
+    //AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
     
     sf::Terrain* terrain = new sf::Terrain("Terrain", sf::GetDataPath() + "terrain_small.png",
                                            sf::Scalar(1), sf::Scalar(1), sf::Scalar(5), getMaterialManager()->getMaterial("Rock"), seabed);
@@ -144,7 +144,7 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* link4 = new sf::Polyhedron("ArmLink4", sf::GetDataPath() + "link4ft_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), link4Look);
     
     //Create a fin
-    sf::Wing* wing = new sf::Wing("Wing1", 0.3, 0.2, "0010", 0.3, sf::I4(), getMaterialManager()->getMaterial("Dummy"), red);
+    //sf::Wing* wing = new sf::Wing("Wing1", 0.3, 0.2, "0010", 0.3, sf::I4(), getMaterialManager()->getMaterial("Dummy"), red);
     
     std::vector<sf::SolidEntity*> arm;
     arm.push_back(baseLink);
@@ -152,7 +152,7 @@ void UnderwaterTestManager::BuildScenario()
     arm.push_back(link2);
     arm.push_back(link3);
     arm.push_back(link4);
-    arm.push_back(wing);
+    //arm.push_back(wing);
     
     //Create manipulator servomotors
     sf::ServoMotor* srv1 = new sf::ServoMotor("Servo1", 1.0, 1.0, 10.0);
@@ -174,7 +174,7 @@ void UnderwaterTestManager::BuildScenario()
     
     //Create ligths
     //sf::Light* spot1 = new sf::Light("Spot1", sf::Color::BlackBody(4000.0), 100000.0); //OMNI
-    sf::Light* spot1 = new sf::Light("Spot1", 30.0, sf::Color::BlackBody(4000.0), 100000.0);
+    //sf::Light* spot1 = new sf::Light("Spot1", 30.0, sf::Color::BlackBody(4000.0), 100000.0);
     
     //Create sensors
     sf::Odometry* odom = new sf::Odometry("Odom");
@@ -190,8 +190,8 @@ void UnderwaterTestManager::BuildScenario()
     gps->SetNoise(0.5);
     //sf::ColorCamera* cam = new sf::ColorCamera("Camera", 300, 200, 50.0);
     //cam->setDisplayOnScreen(true);
-    sf::Multibeam2* mb = new sf::Multibeam2("MB", 400, 200, 170.0, 30.0, 0.5, 5.0);
-    mb->setDisplayOnScreen(true);
+    //sf::Multibeam2* mb = new sf::Multibeam2("MB", 400, 200, 170.0, 30.0, 0.5, 5.0);
+    //mb->setDisplayOnScreen(true);
     //sf::DepthCamera* dcam = new sf::DepthCamera("Camera", 200, 200, 90.0, 0.5, 5.0);
     //dcam->setDisplayOnScreen(false);
     //sf::DepthCamera* dcam2 = new sf::DepthCamera("Camera", 200, 200, 90.0, 0.5, 5.0);
@@ -214,7 +214,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->DefineRevoluteJoint("Joint2", "ArmLink1", "ArmLink2", sf::Transform(sf::IQ(), sf::Vector3(0.1065, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(1.0, -1.0));
     auv->DefineRevoluteJoint("Joint3", "ArmLink2", "ArmLink3", sf::Transform(sf::IQ(), sf::Vector3(0.23332, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(1.0, -1.0));
     auv->DefineRevoluteJoint("Joint4", "ArmLink3", "ArmLink4", sf::Transform(sf::IQ(), sf::Vector3(0.103, 0.0, 0.201)), sf::Vector3(0.0, 0.0, 1.0), std::make_pair(1.0, -1.0));
-    auv->DefineRevoluteJoint("WingJoint", "Vehicle", "Wing1", sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,1.0)), sf::Vector3(0.0,1.0,0.0), std::make_pair(1.0, -1.0));
+    //auv->DefineRevoluteJoint("WingJoint", "Vehicle", "Wing1", sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,1.0)), sf::Vector3(0.0,1.0,0.0), std::make_pair(1.0, -1.0));
     
     //Joint motors
     auv->AddJointActuator(srv1, "Joint1");
@@ -230,7 +230,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkActuator(thHeaveB, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(0.5837,0.0,-0.6747)));
   
     //Lights
-    auv->AddLinkActuator(spot1, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,2.5)));
+    //auv->AddLinkActuator(spot1, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,2.5)));
     
     //Sensors
     auv->AddLinkSensor(odom, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
@@ -240,7 +240,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(M_PI_2,0,M_PI_2), sf::Vector3(0.5,0.0,-0.35)));
-    auv->AddVisionSensor(mb, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
+    //auv->AddVisionSensor(mb, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
     //auv->AddVisionSensor(dcam, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
     //auv->AddVisionSensor(dcam2, "Vehicle", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.7,0.0,0.3)));
 
@@ -297,8 +297,6 @@ void UnderwaterTestManager::BuildScenario()
 	//trig->AddActiveSolid(comp);
 	//trig->setRenderable(false);
      //AddEntity(trig);
-    
-    
 }
 
 void UnderwaterTestManager::SimulationStepCompleted()

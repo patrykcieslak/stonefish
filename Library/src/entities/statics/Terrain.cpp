@@ -31,10 +31,10 @@ Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar sca
     for(int i=0; i<h; ++i)
         for(int j=0; j<w; ++j)
         {
-            Scalar localHeight = -(Scalar)dataBuffer[i*w+j]/Scalar(255) * height;
+            Scalar localHeight = (Scalar(1)-(Scalar)dataBuffer[i*w+j]/Scalar(255)) * height;
             terrainHeight[i*w+j] = localHeight;
             heightfield[i*w+j] = (GLfloat)localHeight;
-            maxHeight = localHeight < maxHeight ? localHeight : maxHeight;
+            maxHeight = localHeight > maxHeight ? localHeight : maxHeight;
         }
 
     phyMesh = OpenGLContent::BuildTerrain(heightfield, w, h, scaleX, scaleY, maxHeight);
@@ -71,7 +71,7 @@ void Terrain::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     if(rigidBody != NULL)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,maxHeight/Scalar(2))));
+        btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,-maxHeight/Scalar(2))));
         rigidBody->setMotionState(motionState);
         sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_STATIC | MASK_DEFAULT);
     }

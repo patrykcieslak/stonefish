@@ -1357,8 +1357,8 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liqu
         if(!isBuoyant()) settings.reallisticBuoyancy = false;
         ComputeFluidForcesSurface(settings, getPhysicsMesh(), liquid, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fds, Tds, Fdp, Tdp);
     }
-    
-    if(settings.dampingForces)
+
+   if(settings.dampingForces)
         CorrectDampingForces();
 }
     
@@ -1390,12 +1390,12 @@ void SolidEntity::CorrectDampingForces()
             break;
     }
     
-    Fdp *= corFactor;
+    Fdp *= btFabs(corFactor);
 }
 
 void SolidEntity::ApplyFluidForces()
 {
-    ApplyCentralForce(Fb + Fdp + Fds);
+    ApplyCentralForce(Fb + Fds + Fdp);
     ApplyTorque(Tb + Tdp + Tds);
 }
     

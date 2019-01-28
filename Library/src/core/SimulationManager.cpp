@@ -671,7 +671,7 @@ void SimulationManager::DestroyScenario()
     }
     
     //remove sim manager objects
-    for(size_t i=0; i<entities.size(); ++i)
+    for(size_t i=0; i<robots.size(); ++i)
         delete robots[i];
     robots.clear();
     

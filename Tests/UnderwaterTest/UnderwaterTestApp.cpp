@@ -8,9 +8,9 @@
 
 #include "UnderwaterTestApp.h"
 
-#include <Stonefish/actuators/Thruster.h>
-#include <Stonefish/core/Robot.h>
-#include <Stonefish/graphics/IMGUI.h>
+#include <actuators/Thruster.h>
+#include <core/Robot.h>
+#include <graphics/IMGUI.h>
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, UnderwaterTestManager* sim)
     : GraphicalSimulationApp("Underwater Test", dataDirPath, s, h, sim)
@@ -26,6 +26,9 @@ void UnderwaterTestApp::DoHUD()
     id.index = 0;
     id.item = 0;
     
-    sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterSway");
-    th->setSetpoint(getGUI()->DoSlider(id, 180.f, 5.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "Sway"));
+    sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveStern");
+    sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveBow");
+    sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 5.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterHeaveStern"));
+    th->setSetpoint(sp);
+    th2->setSetpoint(sp);
 }

@@ -28,12 +28,13 @@ int main(int argc, const char * argv[])
     h.showFluidDynamics = false;
     h.showCoordSys = true;
     h.showBulletDebugInfo = false;
-    h.showSensors = true;
+    h.showSensors = false;
     h.showActuators = true;
-    h.showForces = true;
+    h.showForces = false;
     
-    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(400.0);
-    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, h, simulationManager);
+    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(200.0);
+    //UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, h, simulationManager);
+    UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, h, simulationManager);
     app.Run(false);
     
     return 0;
