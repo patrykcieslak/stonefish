@@ -26,6 +26,11 @@ SensorType JointSensor::getType()
     return SensorType::SENSOR_JOINT;
 }
 
+Transform JointSensor::getSensorFrame()
+{
+    return I4();
+}
+
 void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
     if(multibody != NULL && jointId < multibody->getNumOfJoints())

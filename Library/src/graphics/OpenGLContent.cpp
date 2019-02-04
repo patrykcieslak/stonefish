@@ -1181,13 +1181,13 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     return mesh;
 }
 
-Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
+Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, unsigned int uvMode)
 {
     //Build mesh
     Mesh* mesh = new Mesh();
     Face f;
     Vertex vt;
-	mesh->hasUVs = false;
+	mesh->hasUVs = true;
 	
     /////VERTICES
 	glm::vec3 v1(-halfExtents.x, -halfExtents.y, -halfExtents.z);
@@ -1204,16 +1204,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
 	vt.normal = glm::vec3(0,0,-1.f);
     //vertices
     vt.pos = v1;
-    vt.uv = glm::vec2(1.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //0
 	vt.pos = v2;
-    vt.uv = glm::vec2(1.f/3.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //1
 	vt.pos = v3;
-    vt.uv = glm::vec2(2.f/3.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 2.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //2
 	vt.pos = v4;
-    vt.uv = glm::vec2(2.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //3
 	//faces
 	f.vertexID[0] = 0;
@@ -1229,16 +1229,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
 	vt.normal =  glm::vec3(1.f,0,0);
     //vertices
 	vt.pos = v4;
-    vt.uv = glm::vec2(0.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(0.f, 1.f/3.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //4
 	vt.pos = v3;
-    vt.uv = glm::vec2(0.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(0.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //5
 	vt.pos = v5;
-    vt.uv = glm::vec2(1.f/3.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 2.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //6
 	vt.pos = v6;
-    vt.uv = glm::vec2(1.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //7
 	//faces
 	f.vertexID[0] = 4;
@@ -1254,16 +1254,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
 	vt.normal = glm::vec3(-1.f,0,0);
 	//vertices
 	vt.pos = v7;
-    vt.uv = glm::vec2(2.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f/3.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //8
 	vt.pos = v8;
-    vt.uv = glm::vec2(2.f/3.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //9
 	vt.pos = v2;
-    vt.uv = glm::vec2(1.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f, 2.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //10
 	vt.pos = v1;
-    vt.uv = glm::vec2(1.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f, 1.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //11
 	//faces
 	f.vertexID[0] = 8;
@@ -1279,16 +1279,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
     vt.normal = glm::vec3(0,0,1.f);
 	//vertices
 	vt.pos = v6;
-    vt.uv = glm::vec2(0.f, 0.0f);
+    vt.uv = uvMode == 0 ? glm::vec2(0.f, 0.0f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //12
 	vt.pos = v5;
-    vt.uv = glm::vec2(0.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(0.f, 1.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //13
 	vt.pos = v8;
-    vt.uv = glm::vec2(1.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //14
 	vt.pos = v7;
-    vt.uv = glm::vec2(1.f/3.f, 0.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 0.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //15
 	//faces
 	f.vertexID[0] = 12;
@@ -1304,16 +1304,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
     vt.normal = glm::vec3(0,1.f,0);
 	//vertices
 	vt.pos = v5;
-    vt.uv = glm::vec2(1.f/3.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //16
 	vt.pos = v3;
-    vt.uv = glm::vec2(1.f/3.f, 1.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //17
 	vt.pos = v2;
-    vt.uv = glm::vec2(2.f/3.f, 1.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //18
 	vt.pos = v8;
-    vt.uv = glm::vec2(2.f/3.f, 2.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 2.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //19
 	//faces
 	f.vertexID[0] = 16;
@@ -1329,16 +1329,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions)
     vt.normal = glm::vec3(0,-1.f,0);
     //vertices
 	vt.pos = v4;
-    vt.uv = glm::vec2(1.f/3.f, 0.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 0.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //20
 	vt.pos = v6;
-    vt.uv = glm::vec2(1.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //21
 	vt.pos = v7;
-    vt.uv = glm::vec2(2.f/3.f, 1.f/3.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //22
 	vt.pos = v1;
-    vt.uv = glm::vec2(2.f/3.f, 0.f);
+    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 0.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //23
 	//faces
 	f.vertexID[0] = 20;

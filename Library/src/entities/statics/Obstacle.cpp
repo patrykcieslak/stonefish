@@ -73,11 +73,11 @@ Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, Material m, int 
     BuildRigidBody(shape);
 }
 
-Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId, unsigned int uvMode) : StaticEntity(uniqueName, m, lookId)
 {
     Vector3 halfExtents = boxDimensions/Scalar(2);
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
-	phyMesh = OpenGLContent::BuildBox(glHalfExtents);
+	phyMesh = OpenGLContent::BuildBox(glHalfExtents, 0, uvMode);
     graMesh = phyMesh;
 	
     btBoxShape* shape = new btBoxShape(halfExtents);

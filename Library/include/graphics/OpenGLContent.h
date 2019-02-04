@@ -265,9 +265,10 @@ namespace sf
         /*!
          \param halfExtents the dimensions of the box (half of side lengths) [m]
          \param subdivisions number of subdivisions used when generating the mesh (needed for hydrodynamics)
+         \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3);
+        static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3, unsigned int uvMode = 0);
         
         //! A static method to build a graphical sphere object.
         /*!

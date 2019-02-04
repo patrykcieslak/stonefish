@@ -35,6 +35,11 @@ ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar
 {
 }
 
+Transform ForceTorque::getSensorFrame()
+{
+    return lastFrame;
+}
+
 void ForceTorque::InternalUpdate(Scalar dt)
 {
     if(j != NULL && attach != NULL)

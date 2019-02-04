@@ -87,7 +87,7 @@ void UnderwaterTestManager::BuildScenario()
     
     ////////OBJECTS    
     //Create environment
-	EnableOcean(false);
+	EnableOcean(true);
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
@@ -106,8 +106,8 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), yellow, false, sf::Scalar(0.003), true, false);
     sf::Polyhedron* hullP = new sf::Polyhedron("HullPort", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), yellow, false, sf::Scalar(0.003), true, false);
     sf::Polyhedron* hullS = new sf::Polyhedron("HullStarboard", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), yellow, false, sf::Scalar(0.003), true, false);
-    sf::Polyhedron* vBarStern = new sf::Polyhedron("VBarStern", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), grey, false);
-    sf::Polyhedron* vBarBow = new sf::Polyhedron("VBarBow", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), grey, false);
+    sf::Polyhedron* vBarStern = new sf::Polyhedron("VBarStern", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), grey, false, sf::Scalar(0.003), true, false);
+    sf::Polyhedron* vBarBow = new sf::Polyhedron("VBarBow", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), grey, false, sf::Scalar(0.003), true, false);
     sf::Polyhedron* ductSway = new sf::Polyhedron("DuctSway", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), ductLook, false);
     sf::Polyhedron* ductSurgeP = new sf::Polyhedron("DuctSurgePort", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), ductLook, false);
     sf::Polyhedron* ductSurgeS = new sf::Polyhedron("DuctSurgeStarboard", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), ductLook, false);
@@ -115,11 +115,11 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* ductHeaveB = new sf::Polyhedron("DuctHeaveBow", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), ductLook, false);
     //Internals
     sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", 0.13, 0.6, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);
-    batteryCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(47));
+    batteryCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(70));
     sf::Cylinder* portCyl = new sf::Cylinder("PortCylinder", 0.13, 1.0, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);
-    portCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(35));
+    portCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(20));
     sf::Cylinder* starboardCyl = new sf::Cylinder("StarboardCylinder", 0.13, 1.0, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);
-    starboardCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(35));
+    starboardCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(20));
     
     //Build whole body
     sf::Compound* vehicle = new sf::Compound("Vehicle", hullB, sf::I4());
@@ -137,7 +137,7 @@ void UnderwaterTestManager::BuildScenario()
     vehicle->AddInternalPart(starboardCyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.35,-0.7)));
     
     //Manipulator bodies
-    sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", sf::GetDataPath() + "base_link_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);
+    sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", sf::GetDataPath() + "base_link_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook, false, -1, true, true, sf::HYDRO_PROXY_SPHERE);
     sf::Polyhedron* link1 = new sf::Polyhedron("ArmLink1", sf::GetDataPath() + "link1_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);
     sf::Polyhedron* link2 = new sf::Polyhedron("ArmLink2", sf::GetDataPath() + "link2_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);
     sf::Polyhedron* link3 = new sf::Polyhedron("ArmLink3", sf::GetDataPath() + "link3_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), manipLook);

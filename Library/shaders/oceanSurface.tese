@@ -1,4 +1,4 @@
-#version 330
+#version 400
 
 layout(quads, equal_spacing, ccw) in;
 

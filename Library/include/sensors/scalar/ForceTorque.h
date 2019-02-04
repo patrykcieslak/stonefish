@@ -61,6 +61,9 @@ namespace sf
         //! A method that implements rendering of the sensor.
         std::vector<Renderable> Render();
         
+        //! A method returning the current sensor frame in world.
+        Transform getSensorFrame();
+        
     private:
         SolidEntity* attach;
         Transform o2s;

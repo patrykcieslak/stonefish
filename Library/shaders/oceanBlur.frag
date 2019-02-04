@@ -114,6 +114,7 @@ const vec2 Poisson64[64] = vec2[](
                                   vec2(0.95294, 0.156896)
                                   );
 
+
 void main(void)
 {
     fragColor = vec4(1.0);
@@ -121,7 +122,7 @@ void main(void)
     vec3 color = texture(texScene, texcoord).rgb;
     
     //Water properties
-    vec3 b = turbidity * rayleigh; //Scattering coefficient
+    vec3 b = 0.2 * turbidity * rayleigh; //Scattering coefficient
     //vec3 c = lightAbsorption + 0.1 * b; //Full attenuation coefficient
     
     //Sample color based on b
@@ -137,6 +138,6 @@ void main(void)
         w += wi;
     }
     
-    float maxBlurDist = 1.0/turbidity;
+    float maxBlurDist = 10.0/(turbidity+0.1);
     fragColor.rgb = mix(color, blur/w, clamp(depth, 0.0, maxBlurDist)/maxBlurDist);
 }

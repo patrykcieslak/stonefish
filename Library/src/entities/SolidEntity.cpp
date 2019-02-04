@@ -167,9 +167,7 @@ std::vector<Renderable> SolidEntity::Render()
         Vector3 cbWorld = getCGTransform() * P_CB;
         item.type = RenderableType::HYDRO_CS;
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
-        item.points.push_back(glm::vec3(volume, volume, volume));
         items.push_back(item);
-        item.points.clear();
         
         switch(hydroProxyType)
         {
@@ -453,7 +451,7 @@ void SolidEntity::ComputeHydrodynamicProxy(HydrodynamicProxyType t)
 {
     if(!computeHydro)
         return;
-    
+        
     switch(t)
     {
         case HYDRO_PROXY_NONE:
@@ -476,37 +474,87 @@ void SolidEntity::ComputeHydrodynamicProxy(HydrodynamicProxyType t)
 void SolidEntity::ComputeProxySphere()
 {
     //Get vertices of solid
-    std::vector<Vertex>* vertices = getMeshVertices();
-    if(vertices->size() < 2)
+	std::vector<Vertex>* vertices = getMeshVertices();
+    if(vertices->size() < 9)
     {
         delete vertices;
         return;
     }
     
-    //Fit spherical envelope aligned with CG
-    Scalar radius = 0;
-    
-    for(unsigned int i=0; i<vertices->size(); ++i)
+	//Fill points matrix
+	MatrixXEigen P(vertices->size(), 3);
+	for(unsigned int i=0; i<vertices->size(); ++i)
     {
         Vector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
         vpos = T_CG2C * vpos;
-        
-        Scalar tmp = vpos.length2();
-        
-        if(radius < tmp)
-            radius = tmp;
+		P.row(i) << vpos.x(), vpos.y(), vpos.z();
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
     
-    //Set parameters
+    //Ellipsoid fit
+    //Compute contraints -> axis aligned, three radii
+	MatrixXEigen A(P.rows(), 4);
+	A.col(0) = 2 * P.col(0);
+	A.col(1) = 2 * P.col(1);
+	A.col(2) = 2 * P.col(2);
+	A.col(3) = MatrixXEigen::Ones(P.rows(), 1);
+		
+	//Solve Least-Squares problem Ax=b
+	MatrixXEigen b(P.rows(), 1);
+	MatrixXEigen x(A.cols(), 1);	
+	//squared norm
+	b = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() + P.col(2).array() * P.col(2).array();
+	//solution
+	x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b); 
+    
+	//Find ellipsoid parameters
+	MatrixXEigen p(10, 1);
+    p(0) = -1.0;
+    p(1) = -1.0;
+    p(2) = -1.0;
+    p(3) = 0.0;
+    p(4) = 0.0;
+    p(5) = 0.0;
+    p(6) = x(0);
+    p(7) = x(1);
+    p(8) = x(2);
+    p(9) = x(3);
+	
+	MatrixXEigen E(4, 4);
+	E << p(0), p(3), p(4), p(6),
+		 p(3), p(1), p(5), p(7),
+		 p(4), p(5), p(2), p(8),
+		 p(6), p(7), p(8), p(9);
+		 
+	//Compute center
+	MatrixXEigen c(3, 1);
+	c = -E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
+	
+	//Compute transform matrix
+	Matrix4Eigen T;
+	T.setIdentity();
+	T.block(3, 0, 1, 3) = c.transpose();
+	T = T * E * T.transpose();
+	
+	//Compute axes
+	Eigen::SelfAdjointEigenSolver<MatrixXEigen> eigenSolver(T.block(0, 0, 3, 3)/(-T(3,3)));
+	if(eigenSolver.info() != Eigen::Success) 
+	{
+		cError("Error computing sphere for %s!", getName().c_str());
+		return;
+	}
+	
+    //Ellipsoid radii
+	MatrixXEigen r(3, 1);
+	r = Eigen::sqrt(1.0/Eigen::abs(eigenSolver.eigenvalues().array()));
+    
     hydroProxyType = HYDRO_PROXY_SPHERE;
     hydroProxyParams.resize(1);
-    hydroProxyParams[0] = btSqrt(radius);
-    T_CG2H.setIdentity();
+    hydroProxyParams[0] = r(0);
     
     //Added mass and inertia
     Scalar rho = Scalar(1000);
-    Scalar m = Scalar(2)*M_PI*rho*radius*radius*radius/Scalar(3);
+    Scalar m = Scalar(2)*M_PI*rho*r(0)*r(0)*r(0)/Scalar(3);
     Scalar I = Scalar(0);
     
     aMass(0,0) = m;
@@ -515,6 +563,11 @@ void SolidEntity::ComputeProxySphere()
     aMass(3,3) = I;
     aMass(4,4) = I;
     aMass(5,5) = I;
+    
+    //Set transform with respect to geometry
+    Transform sphereTransform = I4();
+    sphereTransform.setOrigin(Vector3(c(0), c(1), c(2)));
+    T_CG2H = sphereTransform;
     
 #ifdef DEBUG
     //std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
@@ -531,61 +584,71 @@ void SolidEntity::ComputeProxyCylinder()
         return;
     }
     
-    //Fit cylindrical envelope alinged with x,y,z axes
-    Scalar cylinders[6] = {0,0,0,0,0,0};
-    
-    for(unsigned int i=0; i<vertices->size(); ++i)
+    //Fill points matrix
+	MatrixXEigen P(vertices->size(), 3);
+	for(unsigned int i=0; i<vertices->size(); ++i)
     {
         Vector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
         vpos = T_CG2C * vpos;
-        
-        Scalar tmp;
-        
-        //Along X
-        if(cylinders[0] < (tmp = vpos.z()*vpos.z() + vpos.y()*vpos.y()))
-            cylinders[0] = tmp;
-        if(cylinders[1] < (tmp = btFabs(vpos.x())))
-            cylinders[1] = tmp;
-        //Along Y
-        if(cylinders[2] < (tmp = vpos.x()*vpos.x() + vpos.z()*vpos.z()))
-            cylinders[2] = tmp;
-        if(cylinders[3] < (tmp = btFabs(vpos.y())))
-            cylinders[3] = tmp;
-        //Along Z
-        if(cylinders[4] < (tmp = vpos.x()*vpos.x() + vpos.y()*vpos.y()))
-            cylinders[4] = tmp;
-        if(cylinders[5] < (tmp = btFabs(vpos.z())))
-            cylinders[5] = tmp;
+		P.row(i) << vpos.x(), vpos.y(), vpos.z();
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
     
-    //Calculate volume
-    Scalar volume[3];
-    volume[0] = cylinders[0] * cylinders[1];
-    volume[1] = cylinders[2] * cylinders[3];
-    volume[2] = cylinders[4] * cylinders[5];
+    //Radius
+    Scalar r[3] = {0,0,0};
+    for(unsigned int i=0; i < P.rows(); ++i)
+    {
+        Scalar d;
+        
+        //X
+        d = sqrt(P(i,1)*P(i,1) + P(i,2)*P(i,2));
+        r[0] = d > r[0] ? d : r[0];
+        
+        //Y
+        d = sqrt(P(i,0)*P(i,0) + P(i,2)*P(i,2));
+        r[1] = d > r[1] ? d : r[1];
+        
+        //Z
+        d = sqrt(P(i,0)*P(i,0) + P(i,1)*P(i,1));
+        r[2] = d > r[2] ? d : r[2];
+    }
     
-    //Choose smallest volume
+    unsigned int axis = 0;
+    
+    if(r[0] <= r[1] && r[0] <= r[2]) //X cylinder
+        axis = 0;
+    else if(r[1] <= r[0] && r[1] <= r[2]) //Y cylinder
+        axis = 1;
+    else //Z cylinder
+        axis = 2;
+    
+    Scalar l_2 = 0;
+    for(unsigned int i=0; i<P.rows(); ++i)
+    {
+        Scalar d = fabs(P(i,axis));
+        l_2 = d > l_2 ? d : l_2;
+    }
+    
     hydroProxyType = HYDRO_PROXY_CYLINDER;
     hydroProxyParams.resize(2);
     
-    if(volume[0] <= volume[1] && volume[0] <= volume[2]) //X cylinder smallest
+    if(axis == 0) //X axis
     {
-        hydroProxyParams[0] = btSqrt(cylinders[0]);
-        hydroProxyParams[1] = cylinders[1]*Scalar(2);
-        T_CG2H = Transform(Quaternion(-M_PI_2, 0, 0), Vector3(0,0,0));
+        hydroProxyParams[0] = r[0];
+        hydroProxyParams[1] = l_2*Scalar(2);
+        T_CG2H = Transform(Quaternion(0,M_PI_2,0), Vector3(0,0,0));
     }
-    else if(volume[1] <= volume[0] && volume[1] <= volume[2]) //Y cylinder smallest
+    else if(axis == 1) //Y axis
     {
-        hydroProxyParams[0] = btSqrt(cylinders[2]);
-        hydroProxyParams[1] = cylinders[3]*Scalar(2);
-        T_CG2H = Transform(Quaternion(0, M_PI_2, 0), Vector3(0,0,0));
+        hydroProxyParams[0] = r[1];
+        hydroProxyParams[1] = l_2*Scalar(2);
+        T_CG2H = Transform(Quaternion(0,0,M_PI_2), Vector3(0,0,0));
     }
-    else //Z cylinder smallest
+    else
     {
-        hydroProxyParams[0] = btSqrt(cylinders[4]);
-        hydroProxyParams[1] = cylinders[5]*Scalar(2);
-        T_CG2H = Transform::getIdentity();
+        hydroProxyParams[0] = r[2];
+        hydroProxyParams[1] = l_2*Scalar(2);
+        T_CG2H = I4();
     }
     
     //Added mass and inertia
@@ -604,8 +667,6 @@ void SolidEntity::ComputeProxyCylinder()
     aMass(3,3) = btFabs(I.x());
     aMass(4,4) = btFabs(I.y());
     aMass(5,5) = btFabs(I.z());
-    
-    T_CG2H = T_CG2C.inverse() * T_CG2H;
     
 #ifdef DEBUG
     //std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
@@ -642,18 +703,6 @@ void SolidEntity::ComputeProxyEllipsoid()
 	A.col(4) = 2 * P.col(2);
 	A.col(5) = MatrixXEigen::Ones(P.rows(), 1);
 	
-	//Compute contraints -> arbitrary axes, three radii
-	/*MatrixXEigen A(P.rows(), 9);
-	A.col(0) = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() - 2 * P.col(2).array() * P.col(2).array();
-	A.col(1) = P.col(0).array() * P.col(0).array() + P.col(2).array() * P.col(2).array() - 2 * P.col(1).array() * P.col(1).array();
-	A.col(2) = 2 * P.col(0).array() * P.col(1).array();
-	A.col(3) = 2 * P.col(0).array() * P.col(2).array();
-	A.col(4) = 2 * P.col(1).array() * P.col(2).array();
-	A.col(5) = 2 * P.col(0);
-	A.col(6) = 2 * P.col(1);
-	A.col(7) = 2 * P.col(2);
-	A.col(8) = eigMatrix::Ones(P.rows(), 1);*/
-	
 	//Solve Least-Squares problem Ax=b
 	MatrixXEigen b(P.rows(), 1);
 	MatrixXEigen x(A.cols(), 1);	
@@ -675,18 +724,6 @@ void SolidEntity::ComputeProxyEllipsoid()
     p(7) = x(3);
     p(8) = x(4);
     p(9) = x(5);
-    
-    /*
-	p(0) = x(0) + x(1) - 1;
-	p(1) = x(0) - 2 * x(1) - 1;
-	p(2) = x(1) - 2 * x(0) - 1;
-	p(3) = x(2);
-	p(4) = x(3);
-	p(5) = x(4);
-	p(6) = x(5);
-	p(7) = x(6);
-	p(8) = x(7);
-	p(9) = x(8);*/
 	
 	MatrixXEigen E(4, 4);
 	E << p(0), p(3), p(4), p(6),
@@ -696,7 +733,7 @@ void SolidEntity::ComputeProxyEllipsoid()
 		 
 	//Compute center
 	MatrixXEigen c(3, 1);
-	c = E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
+	c = -E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
 	
 	//Compute transform matrix
 	Matrix4Eigen T;
@@ -756,7 +793,7 @@ void SolidEntity::ComputeProxyEllipsoid()
     
     //Set transform with respect to geometry
     ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
-    ellipsoidTransform.setOrigin(Vector3(-c(0), -c(1), -c(2)));
+    ellipsoidTransform.setOrigin(Vector3(c(0), c(1), c(2)));
     T_CG2H = ellipsoidTransform;
     
 #ifdef DEBUG

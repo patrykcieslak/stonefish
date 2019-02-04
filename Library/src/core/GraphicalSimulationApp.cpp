@@ -652,22 +652,31 @@ void GraphicalSimulationApp::DoHUD()
         Scalar waterType = ocn->getWaterType();
         Scalar turbidity = ocn->getTurbidity();
         
-        gui->DoPanel(10.f, offset, 160.f, 125.f);
-        offset += 5.f;
-        gui->DoLabel(15.f, offset, "OCEAN");
-        offset += 15.f;
+        bool oceanOn = ocn->isRenderable();
         
+        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 132.f : 33.f);
+        offset += 5.f;
+       
         id.owner = 2;
         id.index = 0;
         id.item = 0;
-        waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Water Type");
-        offset += 50.f;
+        ocn->setRenderable(gui->DoCheckBox(id, 15.f, offset, 110.f, oceanOn, "OCEAN"));
+        offset += 26.f;
         
-        id.item = 1;
-        turbidity = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0.1), Scalar(10.0), turbidity, "Turbidity");
-        offset += 61.f;
+        if(oceanOn)
+        {
+            id.item = 1;
+            waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Water Type");
+            offset += 50.f;
         
-        ocn->SetupWaterProperties(waterType, turbidity);
+            id.item = 2;
+            turbidity = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0.1), Scalar(100.0), turbidity, "Turbidity");
+            offset += 50.f;
+        
+            ocn->SetupWaterProperties(waterType, turbidity);
+        }
+        
+        offset += 7.f;
     }
     
     //Main view exposure

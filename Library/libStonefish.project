@@ -135,6 +135,7 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="include">
+    <File Name="include/StonefishCommon.h"/>
     <VirtualDirectory Name="utils">
       <File Name="include/utils/UnitSystem.h"/>
       <File Name="include/utils/tinyxml2.h"/>
@@ -266,7 +267,7 @@
   </VirtualDirectory>
   <VirtualDirectory Name="shaders">
     <VirtualDirectory Name="ocean">
-      <File Name="shaders/oceanSurface.tes"/>
+      <File Name="shaders/oceanSurface.tese"/>
       <File Name="shaders/oceanFFTX.frag"/>
       <File Name="shaders/oceanFFTY.frag"/>
       <File Name="shaders/oceanVariance.frag"/>
@@ -307,6 +308,7 @@
       <File Name="shaders/depthAwareBlur2.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
+      <File Name="shaders/quadTree.tesc"/>
       <File Name="shaders/flat.frag"/>
       <File Name="shaders/flat.vert"/>
       <File Name="shaders/helpers.frag"/>
@@ -318,7 +320,6 @@
       <File Name="shaders/texQuad.vert"/>
       <File Name="shaders/texLayerQuad.frag"/>
       <File Name="shaders/texQuadMS.frag"/>
-      <File Name="shaders/quadTree.tcs"/>
       <File Name="shaders/quadTree.vert"/>
       <File Name="shaders/texLevelQuad.frag"/>
       <File Name="shaders/pass.vert"/>

@@ -16,8 +16,8 @@ int main(int argc, const char * argv[])
     //feenableexcept(FE_INVALID | FE_OVERFLOW);
     
     sf::RenderSettings s;
-    s.windowW = 800;
-    s.windowH = 600;
+    s.windowW = 1200;
+    s.windowH = 900;
     s.msaa = false;
     s.shadows = sf::RenderQuality::QUALITY_MEDIUM;
     s.ao = sf::RenderQuality::QUALITY_LOW;
@@ -33,8 +33,8 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(200.0);
-    //UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, h, simulationManager);
-    UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, h, simulationManager);
+    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, h, simulationManager);
+    //UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, h, simulationManager);
     app.Run(false);
     
     return 0;

@@ -61,6 +61,7 @@ namespace sf
         Scalar getEffort();
         
     private:
+        bool velocityMode;
         Scalar pSetpoint;
         Scalar vSetpoint;
         Scalar Kp;

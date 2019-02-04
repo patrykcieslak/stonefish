@@ -67,7 +67,7 @@ namespace sf
         //! A method that returns the type of solid.
         SolidType getSolidType();
         
-        //! A method that returns a copy of all physics mesh vertices.
+        //! A method that returns a copy of all physics mesh vertices in body origin frame.
         std::vector<Vertex>* getMeshVertices();
         
         //! A method that constructs a collision shape for the body.

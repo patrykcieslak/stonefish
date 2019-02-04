@@ -22,6 +22,7 @@ ServoMotor::ServoMotor(std::string uniqueName, Scalar positionGain, Scalar veloc
     tauMax = maxTorque > Scalar(0) ? maxTorque : Scalar(0);
     pSetpoint = Scalar(0);
     vSetpoint = Scalar(0);
+    velocityMode = false;
 }
     
 Scalar ServoMotor::getPosition()
@@ -113,19 +114,30 @@ void ServoMotor::Update(Scalar dt)
     else if(fe != NULL)
     {
         //Use internal multibody motors
-        fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-        fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+        if(velocityMode) //Velocity mode
+        {
+            fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
+            fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+        }
+        else //Position mode
+        {
+            fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
+            fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+        }
     }
 }
 
 void ServoMotor::setDesiredPosition(Scalar pos)
 {
     pSetpoint = pos;
+    vSetpoint = Scalar(0);
+    velocityMode = false;
 }
 
 void ServoMotor::setDesiredVelocity(Scalar vel)
 {
     vSetpoint = vel;
+    velocityMode = true;
 }
 
 }

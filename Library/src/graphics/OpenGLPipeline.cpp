@@ -241,7 +241,7 @@ void OpenGLPipeline::DrawHelpers()
             switch(drawingQueueCopy[h].type)
             {
                 case RenderableType::HYDRO_CS:
-                    content->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.02f), glm::vec4(0.2f, 0.5f, 1.f, 1.f)); //drawingQueueCopy[h].scale*2.f);
+                    content->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.005f), glm::vec4(0.3f, 0.7f, 1.f, 1.f));
                     break;
                     
                 case RenderableType::HYDRO_CYLINDER:
@@ -309,7 +309,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(ocean != NULL)
     {
         ocean->getOpenGLOcean()->Simulate();
-        renderMode = rSettings.ocean > RenderQuality::QUALITY_DISABLED ? 1 : 0;
+        renderMode = rSettings.ocean > RenderQuality::QUALITY_DISABLED && ocean->isRenderable() ? 1 : 0;
     }
     Atmosphere* atm = sim->getAtmosphere();
     

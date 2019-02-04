@@ -62,8 +62,9 @@ namespace sf
          \param boxDimensions a vector of box dimensions (side lengths)
          \param m a material of the body
          \param lookId a graphical material defining how the body is rendered
+         \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          */
-        Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId = -1);
+        Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId = -1, unsigned int uvMode = 0);
         
         //! A constructor building a cylindrical obstacle.
         /*!

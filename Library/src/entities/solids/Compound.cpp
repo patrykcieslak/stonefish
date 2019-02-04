@@ -63,10 +63,7 @@ std::vector<Vertex>* Compound::getMeshVertices()
         if(parts[i].isExternal)
         {
             std::vector<Vertex>* pPartVert = parts[i].solid->getMeshVertices();
-            Transform phyMeshTrans = (parts[i].origin
-                                     * parts[i].solid->getCG2OTransform().inverse()
-                                     * parts[i].solid->getCG2CTransform());
-            
+            Transform phyMeshTrans = parts[i].origin * parts[i].solid->getO2GTransform();
             glm::mat4 glTrans = glMatrixFromTransform(phyMeshTrans);
             
             for(size_t h=0; h < pPartVert->size(); ++h)
