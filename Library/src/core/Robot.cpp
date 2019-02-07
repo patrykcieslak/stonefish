@@ -82,7 +82,7 @@ int Robot::getJoint(const std::string& name)
     if(dynamics == NULL)
         cCritical("Robot links not defined!");
     
-    for(int i=0; i<dynamics->getNumOfJoints(); ++i)
+    for(unsigned int i=0; i<dynamics->getNumOfJoints(); ++i)
         if(dynamics->getJointName(i) == name) return i;
     
     return -1;

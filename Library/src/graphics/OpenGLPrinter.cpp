@@ -61,8 +61,8 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
             //Calculate texture atlas dimensions
 			FT_Set_Pixel_Sizes(face, 0, nativeFontSize);
 			
-            GLint w = 0;
-            GLint h = 0;
+            unsigned int w = 0;
+            unsigned int h = 0;
             
             for(int i = 32; i < 128; ++i)
             {
@@ -84,7 +84,7 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
             glGenTextures(1, &fontTexture);
             glBindTexture(GL_TEXTURE_2D, fontTexture);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, (GLint)w, (GLint)h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -200,7 +200,7 @@ GLuint OpenGLPrinter::TextLength(const std::string& text)
 	GLuint length = 0;
     const char* ctext = text.c_str();
 	for(const char *c = ctext; *c; ++c)
-        length += chars[*c].advance.x;
+        length += chars[(size_t)(*c)].advance.x;
     return length;
 }
 

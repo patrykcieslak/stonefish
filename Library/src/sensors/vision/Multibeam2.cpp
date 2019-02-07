@@ -112,7 +112,7 @@ void Multibeam2::InitGraphics()
     
     //Create depth cameras
     GLint accResX = 0;
-    for(int i=0; i<cameras.size(); ++i)
+    for(size_t i=0; i<cameras.size(); ++i)
     {
         cameras[i].cam = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
                                                             accResX, 0, cameras[i].width, resY, cameras[i].fovH, range.x, range.y, true, (GLfloat)fovV);
@@ -219,7 +219,7 @@ std::vector<Renderable> Multibeam2::Render()
     item.model = glMatrixFromTransform(getSensorFrame());
     item.type = RenderableType::SENSOR_LINES;
     
-    int div = (int)ceil(fovH/5.0);
+    unsigned int div = (unsigned int)ceil(fovH/5.0);
     GLfloat iconSize = 0.5f;
     GLfloat cosFovV2 = cosf(fovV/360.f*M_PI);
     GLfloat sinFovV2 = sinf(fovV/360.f*M_PI);
@@ -228,7 +228,7 @@ std::vector<Renderable> Multibeam2::Render()
     GLfloat offset = -fovH/360.f * M_PI;
     GLfloat y = sinFovV2 * r;
     
-    for(int i=0; i<div; ++i)
+    for(unsigned int i=0; i<div; ++i)
     {
         GLfloat theta1 = i*thetaDiv + offset;
         GLfloat theta2 = theta1 + thetaDiv;

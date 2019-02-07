@@ -54,9 +54,10 @@ namespace sf
          \param childName a name of the child link
          \param origin frame of the joint
          \param axis an axis of the joint
-         \param positionLimits a pair of min and max limit of joint position
+         \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
          */
-        void DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar, Scalar> positionLimits);
+        void DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, 
+                                 const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)));
         
         //! A method used to define a prismatic joint between two mechanical parts of the robot.
         /*!
@@ -65,9 +66,10 @@ namespace sf
          \param childName a name of the child link
          \param origin frame of the joint
          \param axis an axis of the joint
-         \param positionLimits a pair of min and max limit of joint position
+         \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
          */
-        void DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar, Scalar> positionLimits);
+        void DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, 
+                                  const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)));
         
         //! A method used to define a fixed joint between two mechanical parts of the robot.
         /*!

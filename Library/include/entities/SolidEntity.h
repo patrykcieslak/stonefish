@@ -153,6 +153,14 @@ namespace sf
          */
         virtual void SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& CG);
         
+        //! A method used to enable compliant contact and set the contact response.
+        /*!
+         \param soft a flag to designate if compliant contact should be used
+         \param stiffness a stiffness coefficient used when simulating compliant contact [N m^-1]
+         \param damping a damping coefficient used when simulating compliant contact [N s m^-1]
+         */
+        void SetContactProperties(bool soft, Scalar stiffness = Scalar(0), Scalar damping = Scalar(0));
+        
         //! A method used to set arbitrary hydrodynamic coefficients and CB of the body.
         /*!
          \param addedMass a complete added mass matrix (only diagonal element are used)
@@ -160,13 +168,6 @@ namespace sf
          \param G2CB a transformation between the geometry frame and the CB frame
          */
         //void SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB);
-        
-        //! A method used to update the acceleration of the body.
-        /*!
-         \param lin a linear part of the acceleration
-         \param ang an angular part of the acceleration
-         */
-        void SetAcceleration(const Vector3& lin, const Vector3& ang);
         
         //! A method to set the body pose in the world frame.
         void setCGTransform(const Transform& trans);
@@ -303,6 +304,8 @@ namespace sf
         
         Scalar mass;  //Mass of solid
         Vector3 Ipri; //Principal moments of inertia
+        Scalar contactK; //Contact stiffness
+        Scalar contactD; //Contact damping
         
         //CG is the point important for the simulation
         Transform T_CG2C; //Transform between CG and physics origin

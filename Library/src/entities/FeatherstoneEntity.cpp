@@ -648,7 +648,7 @@ std::vector<Renderable> FeatherstoneEntity::Render()
     item.type = RenderableType::MULTIBODY_AXIS;
     item.model = glm::mat4(1.f);
     
-    for(int i = 1; i < links.size(); ++i)
+    for(size_t i = 1; i < links.size(); ++i)
     {
         btMultibodyLink& link = multiBody->getLink(i-1);
         Vector3 pivot = getLinkTransform(link.m_parent+1) * link.m_eVector;

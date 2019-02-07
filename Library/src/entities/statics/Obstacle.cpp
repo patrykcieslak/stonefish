@@ -90,7 +90,7 @@ Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinde
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);
     graMesh = phyMesh;
     
-    btCylinderShape* shape = new btCylinderShape(Vector3(cylinderRadius, halfHeight, cylinderRadius));
+    btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
     BuildRigidBody(shape);
 }
     

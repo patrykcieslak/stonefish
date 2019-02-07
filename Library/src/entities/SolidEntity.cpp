@@ -39,6 +39,8 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar
     mass = Scalar(0);
     aMass = Matrix6Eigen::Zero();
     Ipri.setZero();
+    contactK = Scalar(-1);
+    contactD = Scalar(0);
     volume = Scalar(0);
     hydroProxyType = HYDRO_PROXY_NONE;
     hydroProxyParams = std::vector<Scalar>(0);
@@ -102,6 +104,43 @@ void SolidEntity::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& ine
     T_CG2G = T_CG2O * T_O2G;
     T_CG2H = T_CG_old_new.inverse() * T_CG2H;
     P_CB = T_CG_old_new.inverse() * P_CB;
+}
+
+void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar damping)
+{
+    if(soft)
+    {
+        contactK = stiffness > Scalar(0) ? stiffness : Scalar(1000);
+        contactD = damping >= Scalar(0) ? damping : Scalar(0); 
+    }
+    else
+    {
+        contactK = Scalar(-1);
+        contactD = Scalar(0);
+    }
+    
+    if(rigidBody != NULL)
+    {
+        if(soft)
+            rigidBody->setContactStiffnessAndDamping(contactK, contactD);
+        else
+        {
+            int cflags = rigidBody->getCollisionFlags();
+            cflags &= ~(btCollisionObject::CollisionFlags::CF_HAS_CONTACT_STIFFNESS_DAMPING);
+            rigidBody->setCollisionFlags(cflags);
+        }
+    }
+    else if(multibodyCollider != NULL)
+    {
+        if(soft)
+            multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
+        else
+        {
+            int cflags = multibodyCollider->getCollisionFlags();
+            cflags &= ~(btCollisionObject::CollisionFlags::CF_HAS_CONTACT_STIFFNESS_DAMPING);
+            multibodyCollider->setCollisionFlags(cflags);
+        }
+    }
 }
 
 //void SolidEntity::SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB)
@@ -861,6 +900,9 @@ void SolidEntity::BuildRigidBody()
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
         
+        if(contactK > Scalar(0))
+            rigidBody->setContactStiffnessAndDamping(contactK, contactD);
+        
         cInfo("Built rigid body %s [mass: %1.3lf; inertia: %1.3lf, %1.3lf, %1.3lf; volume: %1.1lf]", getName().c_str(), mass, Ipri.x(), Ipri.y(), Ipri.z(), volume*1e6);
     }
 }
@@ -908,6 +950,9 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
             mb->setBaseCollider(multibodyCollider);
         
         world->addCollisionObject(multibodyCollider, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
+        
+        if(contactK > Scalar(0))
+            multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
         
         //Graphics
         BuildGraphicalObject();
@@ -958,12 +1003,6 @@ void SolidEntity::UpdateAcceleration(Scalar dt)
 	//Update filtered
 	filteredLinearVel = currentLinearVel;
 	filteredAngularVel = currentAngularVel;
-}
-
-void SolidEntity::SetAcceleration(const Vector3& lin, const Vector3& ang)
-{
-	linearAcc = lin;
-	angularAcc = ang;
 }
 
 void SolidEntity::ApplyGravity(const Vector3& g)

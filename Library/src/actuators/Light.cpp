@@ -95,7 +95,7 @@ std::vector<Renderable> Light::Render()
     item.type = RenderableType::ACTUATOR_LINES;
     
     GLfloat iconSize = 1.f;
-    int div = 24;
+    unsigned int div = 24;
     
     if(coneAngle > Scalar(0))
     {
