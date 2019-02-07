@@ -24,7 +24,7 @@ int main(int argc, const char * argv[])
     h.showJoints = true;
     
     JointsTestManager* simulationManager = new JointsTestManager(200.0);
-    JointsTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/",
+    JointsTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/",
                       s, h, simulationManager);
     app.Run(false);
     

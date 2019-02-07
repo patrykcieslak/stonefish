@@ -28,7 +28,7 @@ int main(int argc, const char * argv[])
     h.showForces = true;
     
     AcrobotTestManager* simulationManager = new AcrobotTestManager(2000.0);
-    AcrobotTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, h, simulationManager);
+    AcrobotTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/", s, h, simulationManager);
     app.Run();
     
     return 0;

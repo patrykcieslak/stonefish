@@ -20,7 +20,7 @@ int main(int argc, const char * argv[])
     s.ocean = RenderQuality::QUALITY_DISABLED;
     
     SlidingTestManager* simulationManager = new SlidingTestManager(500.0);
-    SlidingTestApp app("/home/pcieslak/Documents/stonefish/Library/data", s, simulationManager);
+    SlidingTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/", s, simulationManager);
     app.Run(false);
     
     return 0;

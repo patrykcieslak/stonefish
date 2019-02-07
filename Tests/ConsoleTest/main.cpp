@@ -12,7 +12,7 @@
 int main(int argc, const char * argv[])
 {
     ConsoleTestManager* simulationManager = new ConsoleTestManager(500.0);
-    ConsoleTestApp app("/home/parallels/Documents/stonefish/Library/data/", simulationManager);
+    ConsoleTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/", simulationManager);
     app.Run(false);
     
     return 0;

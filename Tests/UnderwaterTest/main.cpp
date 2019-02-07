@@ -33,8 +33,8 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     
     UnderwaterTestManager* simulationManager = new UnderwaterTestManager(200.0);
-    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Library/data/", s, h, simulationManager);
-    //UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Library/data/", s, h, simulationManager);
+    UnderwaterTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/", s, h, simulationManager);
+    //UnderwaterTestApp app("/Users/zbuffer/Documents/Projects/Stonefish/stonefish/Tests/Data/", s, h, simulationManager);
     app.Run(false);
     
     return 0;
