@@ -18,6 +18,8 @@
 #include "graphics/OpenGLTrackball.h"
 #include "utils/SystemUtil.hpp"
 #include "entities/Entity.h"
+#include "entities/StaticEntity.h"
+#include "entities/SolidEntity.h"
 
 namespace sf
 {
@@ -506,14 +508,17 @@ void GraphicalSimulationApp::Loop()
         //workaround for checking if IMGUI is being manipulated
         if(mouseWasDown && !gui->isAnyActive())
         {
-            lastPicked = getSimulationManager()->PickEntity(event.button.x, event.button.y);
+            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             
-            //Trackball
-            if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
+            if(trackball->isEnabled())
             {
-                OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-                
-                if(trackball->isEnabled())
+                if(event.button.button == SDL_BUTTON_LEFT)
+                {
+                    glm::vec3 eye = trackball->GetEyePosition();
+                    glm::vec3 ray = trackball->Ray(event.button.x, event.button.y);
+                    lastPicked = getSimulationManager()->PickEntity(Vector3(-eye.x, eye.y, -eye.z), Vector3(-ray.x, ray.y, -ray.z));
+                }
+                else //RIGHT OR MIDDLE
                 {
                     GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
                     GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
@@ -579,6 +584,8 @@ void GraphicalSimulationApp::RenderLoop()
 
 void GraphicalSimulationApp::DoHUD()
 {
+    char buf[256];
+    
     //Helper settings
     HelperSettings& hs = getHelperSettings();
     Ocean* ocn = getSimulationManager()->getOcean();
@@ -689,27 +696,70 @@ void GraphicalSimulationApp::DoHUD()
     id.index = 0;
     id.item = 0;
     getSimulationManager()->getTrackball()->setExposureCompensation(gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-3), Scalar(3), getSimulationManager()->getTrackball()->getExposureCompensation(), "Exposure[EV]"));
-    offset += 50.f;
+    offset += 61.f;
     
-    //Bottom panel
-    char buffer[256];
-    
-    gui->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
-    
-	sprintf(buffer, "Drawing time: %1.2lf ms", getDrawingTime());
-    gui->DoLabel(10, getWindowHeight() - 20.f, buffer);
-    
-    sprintf(buffer, "Realtime: %1.2fx", getSimulationManager()->getRealtimeFactor());
-    gui->DoLabel(170, getWindowHeight() - 20.f, buffer);
-    
-    sprintf(buffer, "Simulation time: %1.2f s", getSimulationManager()->getSimulationTime());
-    gui->DoLabel(290, getWindowHeight() - 20.f, buffer);
-    
+    //Picked entity information
     if(lastPicked != NULL)
     {
-        sprintf(buffer, "Last picked entity: %s", lastPicked->getName().c_str());
-        gui->DoLabel(660, getWindowHeight() - 20.f, buffer);
+        switch(lastPicked->getType())
+        {
+            case EntityType::ENTITY_STATIC:
+            {
+                StaticEntity* ent = (StaticEntity*)lastPicked;
+                
+                gui->DoPanel(10.f, offset, 160.f, 66.f);
+                offset += 5.f;
+                gui->DoLabel(15.f, offset, "SELECTION INFO");
+                offset += 16.f;
+                gui->DoLabel(18.f, offset, std::string("Name: ") + ent->getName());
+                offset += 14.f;
+                gui->DoLabel(18.f, offset, std::string("Type: Static"));
+                offset += 14.f;
+                gui->DoLabel(18.f, offset, std::string("Material: ") + ent->getMaterial().name);
+            }
+                break;
+                
+            case EntityType::ENTITY_SOLID:
+            {
+                SolidEntity* ent = (SolidEntity*)lastPicked;
+                
+                gui->DoPanel(10.f, offset, 160.f, 109.f);
+                offset += 5.f;
+                gui->DoLabel(15.f, offset, "SELECTION INFO");
+                offset += 16.f;
+                gui->DoLabel(18.f, offset, std::string("Name: ") + ent->getName());
+                offset += 14.f;
+                gui->DoLabel(18.f, offset, std::string("Type: Dynamic"));
+                offset += 14.f;
+                gui->DoLabel(18.f, offset, ent->getSolidType() == SolidType::SOLID_COMPOUND ? std::string("Material: Compound") : std::string("Material: ") + ent->getMaterial().name);
+                offset += 14.f;
+                std::sprintf(buf, "%1.3lf", ent->getMass());
+                gui->DoLabel(18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
+                offset += 14.f;
+                gui->DoLabel(18.f, offset, std::string("Inertia[kgm2]: "));
+                offset += 14.f;
+                Vector3 I = ent->getInertia();
+                std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
+                gui->DoLabel(23.f, offset, std::string(buf));
+            }
+                break;
+                
+            default:
+                break;
+        }
     }
+    
+    //Bottom panel
+    gui->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
+    
+	std::sprintf(buf, "Drawing time: %1.2lf ms", getDrawingTime());
+    gui->DoLabel(10, getWindowHeight() - 20.f, buf);
+    
+    std::sprintf(buf, "Realtime: %1.2fx", getSimulationManager()->getRealtimeFactor());
+    gui->DoLabel(170, getWindowHeight() - 20.f, buf);
+    
+    std::sprintf(buf, "Simulation time: %1.2f s", getSimulationManager()->getSimulationTime());
+    gui->DoLabel(290, getWindowHeight() - 20.f, buf);
 }
 
 void GraphicalSimulationApp::StartSimulation()

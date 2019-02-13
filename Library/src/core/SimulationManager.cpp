@@ -951,31 +951,19 @@ void SimulationManager::UpdateDrawingQueue()
     }
 }
 
-Entity* SimulationManager::PickEntity(int x, int y)
+Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
 {
-	/*
-    for(int i = 0; i < views.size(); i++)
-    {
-        if(views[i]->isActive())
-        {
-            Vector3 ray = views[i]->Ray(x, y);
-            if(ray.length2() > 0)
-            {
-                btCollisionWorld::ClosestRayResultCallback rayCallback(views[i]->GetEyePosition(), ray);
-                dynamicsWorld->rayTest(views[i]->GetEyePosition(), ray, rayCallback);
+    ray *= Scalar(100000);
+    btCollisionWorld::ClosestRayResultCallback rayCallback(eye, eye+ray);
+    dynamicsWorld->rayTest(eye, eye+ray, rayCallback);
                 
-                if (rayCallback.hasHit())
-                {
-                    Entity* ent = (Entity*)rayCallback.m_collisionObject->getUserPointer();
-                    return ent;
-                }
-                else
-                    return NULL;
-            }
-        }
+    if(rayCallback.hasHit())
+    {
+        Entity* ent = (Entity*)rayCallback.m_collisionObject->getUserPointer();
+        return ent;
     }
-    */
-    return NULL;
+    else
+        return NULL;
 }
 
 void SimulationManager::RenderBulletDebug()

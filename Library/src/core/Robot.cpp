@@ -114,7 +114,7 @@ Transform Robot::getTransform() const
 		return Transform::getIdentity();
 }
 
-void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks)
+void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks, bool selfCollision)
 {
 	if(dynamics != NULL)
 		cCritical("Robot cannot be redefined!");
@@ -122,6 +122,7 @@ void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLi
     links.push_back(baseLink);
     detachedLinks = otherLinks;
 	dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
+    dynamics->setSelfCollision(selfCollision);
 }
 
 void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits)

@@ -44,8 +44,9 @@ namespace sf
         /*!
          \param baseLink a solid contituting the base of the robot
          \param otherLinks a vector of subsequent links
+         \param selfCollision a flag determining if self collision between multibody links should be enabled (subsequent links never collide)
          */
-        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0));
+        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false);
         
         //! A method used to define a revolute joint between two mechanical parts of the robot.
         /*!

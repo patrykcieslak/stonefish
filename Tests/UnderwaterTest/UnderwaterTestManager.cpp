@@ -87,7 +87,7 @@ void UnderwaterTestManager::BuildScenario()
     
     ////////OBJECTS    
     //Create environment
-	EnableOcean(true);
+	EnableOcean(false);
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     

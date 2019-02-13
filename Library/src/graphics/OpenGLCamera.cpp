@@ -368,15 +368,22 @@ GLfloat OpenGLCamera::GetFarClip()
 
 glm::vec3 OpenGLCamera::Ray(GLint x, GLint y)
 {
-    //translate point to view
+    //Translate point to view space
     x -= originX;
     y -= originY;
     
-    //check if point in view
+    //Check if point in view
     if((x < 0) || (x >= viewportWidth) || (y < 0) || (y >= viewportHeight))
         return glm::vec3(0);
-    
-    //calculate ray from point
+        
+    glm::vec2 pixPos = glm::vec2((GLfloat)x/(GLfloat)viewportWidth, (GLfloat)(viewportHeight-y)/(GLfloat)viewportHeight);
+    pixPos = (pixPos - glm::vec2(0.5f)) * 2.f;
+    glm::vec4 deviceRay = glm::vec4(pixPos, 0.f, 1.f);
+    glm::vec3 eyeRay = glm::vec3(glm::normalize((glm::inverse(GetProjectionMatrix()) * deviceRay)));
+    glm::vec3 worldRay = glm::normalize(glm::inverse(glm::mat3(GetViewMatrix())) * eyeRay);
+        
+    /*
+    //Calculate ray from point
 	glm::vec3 _eye = GetEyePosition();
 	glm::vec3 _lookingDir = GetLookingDirection();
 	glm::vec3 _up = GetUpDirection();
@@ -399,8 +406,8 @@ glm::vec3 OpenGLCamera::Ray(GLint x, GLint y)
     glm::vec3 rayTo = rayToCenter - 0.5f * horizontal + 0.5f * vertical;
     rayTo += Scalar(x) * dH;
     rayTo -= Scalar(y) * dV;
-    
-    return rayTo;
+    */
+    return worldRay;
 }
     
 void OpenGLCamera::setExposureCompensation(GLfloat ec)

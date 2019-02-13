@@ -89,10 +89,10 @@ namespace sf
         //! A method to set current view matrix.
         void SetViewTransform();
         
-        //! A method to generate a ray in camera space (picking).
+        //! A method to generate a ray in world space (picking).
         /*!
-         \param x the x coordinate
-         \param x the y coordinate
+         \param x the x coordinate in window frame
+         \param y the y coordinate in window frame
          \return a unit vector constituting the ray
          */
         glm::vec3 Ray(GLint x, GLint y);

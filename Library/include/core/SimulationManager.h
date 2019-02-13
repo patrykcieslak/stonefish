@@ -196,11 +196,11 @@ namespace sf
         
         //! A method used to pick an entity by shooting a camera ray.
         /*!
-         \param x horizontal coordinate of the window pixel used to generate ray
-         \param y vertical coordinate of the window pixel used to generate ray
+         \param eye the position of the camera eye in the world frame
+         \param ray a unit vector representing the ray generated in the world frame
          \return a pointer to the hit entity
          */
-        Entity* PickEntity(int x, int y);
+        Entity* PickEntity(Vector3 eye, Vector3 ray);
         
         //! A method that sets new valve for the amount of simulation steps in a second.
         /*!

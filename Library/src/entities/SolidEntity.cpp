@@ -895,7 +895,7 @@ void SolidEntity::BuildRigidBody()
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
-		//rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+		rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
@@ -940,8 +940,7 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         multibodyCollider->setRestitution(Scalar(0));
         multibodyCollider->setRollingFriction(Scalar(0));
         multibodyCollider->setSpinningFriction(Scalar(0));
-		//multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-		//multibodyCollider->setContactStiffnessAndDamping(1000000.0,0.1);
+		multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
 		multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
