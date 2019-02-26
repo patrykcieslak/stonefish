@@ -41,7 +41,6 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     UpdateTransform();
     
     GLfloat fovx = horizontalFOVDeg/180.f*M_PI;
-    //projection = glm::perspectiveFov(fovx, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
     GLfloat fovy;
     
     if(verticalFOVDeg > 0.f)
