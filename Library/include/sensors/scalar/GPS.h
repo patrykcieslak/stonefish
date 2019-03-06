@@ -40,9 +40,12 @@ namespace sf
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param nedDev standard deviation of the NED position measurement noise
+         \param nedDev standard deviation of the NED position measurement noise [m]
          */
-        void SetNoise(Scalar nedDev);
+        void setNoise(Scalar nedDev);
+        
+        //! A method that returns the standard deviation of position in meters.
+        Scalar getNoise();
         
     private:
         NED* ned;

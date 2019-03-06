@@ -70,10 +70,15 @@ void GPS::InternalUpdate(Scalar dt)
     }
 }
 
-void GPS::SetNoise(Scalar nedDev)
+void GPS::setNoise(Scalar nedDev)
 {
     nedStdDev = nedDev > Scalar(0) ? nedDev : Scalar(0);
     noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
+}
+
+Scalar GPS::getNoise()
+{
+    return nedStdDev;
 }
 
 }

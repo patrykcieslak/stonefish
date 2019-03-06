@@ -36,13 +36,13 @@ void Torque::InternalUpdate(Scalar dt)
     }
 }
 
-void Torque::SetRange(Scalar max)
+void Torque::setRange(Scalar max)
 {
     channels[0].rangeMin = -max;
     channels[0].rangeMax = max;
 }
 
-void Torque::SetNoise(Scalar stdDev)
+void Torque::setNoise(Scalar stdDev)
 {
     channels[0].setStdDev(stdDev);
 }

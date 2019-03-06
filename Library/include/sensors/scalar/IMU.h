@@ -35,14 +35,14 @@ namespace sf
         /*!
          \param angularVelocityMax the maximum measured angular velocity [rad s^-1]
          */
-        void SetRange(Scalar angularVelocityMax);
+        void setRange(Scalar angularVelocityMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param angleStdDev standard deviation of the angle measurement noise
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise
          */
-        void SetNoise(Scalar angleStdDev, Scalar angularVelocityStdDev);
+        void setNoise(Scalar angleStdDev, Scalar angularVelocityStdDev);
     };
 }
 

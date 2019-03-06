@@ -179,15 +179,15 @@ void UnderwaterTestManager::BuildScenario()
     //Create sensors
     sf::Odometry* odom = new sf::Odometry("Odom");
     sf::Pressure* press = new sf::Pressure("Pressure");
-    press->SetNoise(1.0);
+    press->setNoise(1.0);
     sf::DVL* dvl = new sf::DVL("DVL", 30.0);
-    dvl->SetNoise(0.02, 0.05);
+    dvl->setNoise(0.02, 0.05);
     sf::IMU* imu = new sf::IMU("IMU");
-    imu->SetNoise(0.01, 0.05);
+    imu->setNoise(0.01, 0.05);
     sf::FOG* fog = new sf::FOG("FOG");
-    fog->SetNoise(0.01);
+    fog->setNoise(0.01);
     sf::GPS* gps = new sf::GPS("GPS", 41.77737, 3.03376);
-    gps->SetNoise(0.5);
+    gps->setNoise(0.5);
     //sf::ColorCamera* cam = new sf::ColorCamera("Camera", 300, 200, 50.0);
     //cam->setDisplayOnScreen(true);
     //sf::Multibeam2* mb = new sf::Multibeam2("MB", 400, 200, 170.0, 30.0, 0.5, 5.0);

@@ -97,13 +97,13 @@ std::vector<Renderable> Profiler::Render()
     return items;
 }
 
-void Profiler::SetRange(Scalar rangeMin, Scalar rangeMax)
+void Profiler::setRange(Scalar rangeMin, Scalar rangeMax)
 {
     channels[1].rangeMin = rangeMin;
     channels[1].rangeMax = rangeMax;
 }
 
-void Profiler::SetNoise(Scalar stdDev)
+void Profiler::setNoise(Scalar stdDev)
 {
     channels[1].setStdDev(stdDev);
 }

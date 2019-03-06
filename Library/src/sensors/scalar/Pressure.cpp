@@ -33,13 +33,13 @@ void Pressure::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-void Pressure::SetRange(Scalar max)
+void Pressure::setRange(Scalar max)
 {
     channels[0].rangeMin = Scalar(0);
     channels[0].rangeMax = max;
 }
     
-void Pressure::SetNoise(Scalar pressureStdDev)
+void Pressure::setNoise(Scalar pressureStdDev)
 {
     channels[0].setStdDev(pressureStdDev);
 }

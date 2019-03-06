@@ -49,14 +49,14 @@ namespace sf
          \param forceMax a vector representing the maximum measured forces [N]
          \param torqueMax a vector representing the maximum mesured torque [Nm]
          */
-        void SetRange(const Vector3& forceMax, const Vector3& torqueMax);
+        void setRange(const Vector3& forceMax, const Vector3& torqueMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param forceStdDev standard deviation of force measurement noise
          \param toqueStdDev standard deviation of torque measurement noise
          */
-        void SetNoise(Scalar forceStdDev, Scalar torqueStdDev);
+        void setNoise(Scalar forceStdDev, Scalar torqueStdDev);
         
         //! A method that implements rendering of the sensor.
         std::vector<Renderable> Render();

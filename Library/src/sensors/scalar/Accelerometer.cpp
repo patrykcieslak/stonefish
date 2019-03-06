@@ -41,7 +41,7 @@ void Accelerometer::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-void Accelerometer::SetRange(Scalar linearAccMax, Scalar angularAccMax)
+void Accelerometer::setRange(Scalar linearAccMax, Scalar angularAccMax)
 {
 	channels[0].rangeMin = -linearAccMax;
     channels[1].rangeMin = -linearAccMax;
@@ -58,7 +58,7 @@ void Accelerometer::SetRange(Scalar linearAccMax, Scalar angularAccMax)
     channels[5].rangeMax = angularAccMax;
 }
     
-void Accelerometer::SetNoise(Scalar linearAccStdDev, Scalar angularAccStdDev)
+void Accelerometer::setNoise(Scalar linearAccStdDev, Scalar angularAccStdDev)
 {
     channels[0].setStdDev(linearAccStdDev);
     channels[1].setStdDev(linearAccStdDev);

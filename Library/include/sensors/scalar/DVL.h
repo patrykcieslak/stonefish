@@ -38,14 +38,14 @@ namespace sf
          \param altitudeMin the minimum measured altitude [m]
          \param altitudeMax the maximum measured altitude [m]
          */
-        void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
+        void setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param velocityStdDev standard deviation of the linear velocity measurement noise
          \param altitudeStdDev standard deviation of the altitude measurement noise
          */
-        void SetNoise(Scalar velocityStdDev, Scalar altitudeStdDev);
+        void setNoise(Scalar velocityStdDev, Scalar altitudeStdDev);
         
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();

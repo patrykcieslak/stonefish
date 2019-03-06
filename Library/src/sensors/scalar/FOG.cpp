@@ -29,7 +29,7 @@ void FOG::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-void FOG::SetNoise(Scalar headingStdDev)
+void FOG::setNoise(Scalar headingStdDev)
 {
     channels[0].setStdDev(headingStdDev);
 }

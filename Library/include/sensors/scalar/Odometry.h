@@ -38,7 +38,7 @@ namespace sf
          \param orientationStdDev standard deviation of the orientation measurement noise
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise
          */
-        void SetNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev);
+        void setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev);
     };
 }
     

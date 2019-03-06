@@ -48,7 +48,7 @@ void Odometry::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
    
-void Odometry::SetNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev)
+void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev)
 {
     channels[0].setStdDev(positionStdDev);
     channels[1].setStdDev(positionStdDev);

@@ -36,14 +36,14 @@ namespace sf
          \param linearAccMax the maximum measured linear acceleration [m s^-2]
          \param angularAccMax the maximum measured angular acceleration [rad s^-2]
          */
-        void SetRange(Scalar linearAccMax, Scalar angularAccMax);
+        void setRange(Scalar linearAccMax, Scalar angularAccMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param linearAccStdDev standard deviation of the linear acceleration measurement noise
          \param angularAccStdDev standard deviation of the angular acceleration measurement noise
          */
-        void SetNoise(Scalar linearAccStdDev, Scalar angularAccStdDev);
+        void setNoise(Scalar linearAccStdDev, Scalar angularAccStdDev);
     };
 }
 

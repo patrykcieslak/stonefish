@@ -35,13 +35,13 @@ namespace sf
         /*!
          \param max the maximum measured pressure [Pa]
          */
-        void SetRange(Scalar max);
+        void setRange(Scalar max);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param pressureStdDev standard deviation of the pressure measurement noise
          */
-        void SetNoise(Scalar pressureStdDev);
+        void setNoise(Scalar pressureStdDev);
     };
 }
 

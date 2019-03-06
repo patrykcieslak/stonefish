@@ -26,6 +26,16 @@ ActuatorType JointActuator::getType()
     return ActuatorType::ACTUATOR_JOINT;
 }
 
+std::string JointActuator::getJointName()
+{
+    if(fe != NULL)
+        return fe->getJointName(jId);
+    else if(j != NULL)
+        return j->getName();
+    else
+        return std::string("");
+}
+
 void JointActuator::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
     if(multibody != NULL && jointId < multibody->getNumOfJoints())

@@ -35,13 +35,13 @@ namespace sf
         /*!
          \param max the maximum measured torque [Nm]
          */
-        void SetRange(Scalar max);
+        void setRange(Scalar max);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param stdDev standard deviation of torque measurement noise
          */
-        void SetNoise(Scalar stdDev);
+        void setNoise(Scalar stdDev);
     };
 }
 

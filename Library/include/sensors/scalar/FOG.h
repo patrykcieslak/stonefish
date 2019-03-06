@@ -35,7 +35,7 @@ namespace sf
         /*!
          \param headingStdDev standard deviation of the heading measurement noise
          */
-        void SetNoise(Scalar headingStdDev);
+        void setNoise(Scalar headingStdDev);
     };
 }
 

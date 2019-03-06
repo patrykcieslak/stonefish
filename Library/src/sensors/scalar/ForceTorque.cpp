@@ -78,7 +78,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
     }
 }
 
-void ForceTorque::SetRange(const Vector3& forceMax, const Vector3& torqueMax)
+void ForceTorque::setRange(const Vector3& forceMax, const Vector3& torqueMax)
 {
     channels[0].rangeMin = -forceMax.getX();
     channels[1].rangeMin = -forceMax.getY();
@@ -95,7 +95,7 @@ void ForceTorque::SetRange(const Vector3& forceMax, const Vector3& torqueMax)
     channels[5].rangeMax = torqueMax.getZ();
 }
     
-void ForceTorque::SetNoise(Scalar forceStdDev, Scalar torqueStdDev)
+void ForceTorque::setNoise(Scalar forceStdDev, Scalar torqueStdDev)
 {
     channels[0].setStdDev(forceStdDev);
     channels[1].setStdDev(forceStdDev);
