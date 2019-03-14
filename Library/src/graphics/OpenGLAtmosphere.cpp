@@ -485,7 +485,7 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
 //Computes the near and far distances for every frustum slice in camera eye space
 void OpenGLAtmosphere::UpdateSplitDist(GLfloat nd, GLfloat fd)
 {
-    fd = fd > 1000.f ? 1000.f : fd; //Limit camera frustum to max 1000.0 m (to avoid shadow bluring)
+    fd = fd > 250.f ? 250.f : fd; //Limit camera frustum to max 250.0 m (to avoid shadow blocks)
     GLfloat lambda = 0.95f;
     GLfloat ratio = fd/nd;
     sunShadowFrustum[0].near = nd;

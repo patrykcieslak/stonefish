@@ -91,12 +91,12 @@ void UnderwaterTestManager::BuildScenario()
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
-    //sf::Plane* plane = new sf::Plane("Bottom", 10000.0, getMaterialManager()->getMaterial("Rock"), seabed);
-    //AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
+    sf::Plane* plane = new sf::Plane("Bottom", 10000.0, getMaterialManager()->getMaterial("Rock"), seabed);
+    AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
     
-    sf::Terrain* terrain = new sf::Terrain("Terrain", sf::GetDataPath() + "terrain_small.png",
-                                           sf::Scalar(1), sf::Scalar(1), sf::Scalar(5), getMaterialManager()->getMaterial("Rock"), seabed);
-    AddStaticEntity(terrain, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
+    //sf::Terrain* terrain = new sf::Terrain("Terrain", sf::GetDataPath() + "terrain_small.png",
+    //                                       sf::Scalar(1), sf::Scalar(1), sf::Scalar(5), getMaterialManager()->getMaterial("Rock"), seabed);
+    //AddStaticEntity(terrain, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
     
     //sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(0.2,0.2,0.2), getMaterialManager()->getMaterial("Rock"), seabed);
     //AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));

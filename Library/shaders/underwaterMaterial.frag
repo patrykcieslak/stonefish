@@ -291,7 +291,7 @@ float calcSpotShadow(int id)
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float calcSunShadow(float waterDepth)
+float calcSunShadow()
 {
 	float depth = dot(fragPos-eyePos, viewDir); 
 	
@@ -308,13 +308,11 @@ float calcSunShadow(float waterDepth)
 	vec3 shadowCoord = fragPosLight.xyz; //Orthographic projection doesn't need division by w
 	shadowCoord.z += 0.001; //Bias
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
-	
-	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
-    radiusUV *= waterDepth * turbidity/10.0; //(1.0-exp(-turbidity/2.0));
-   
+	vec2 radiusUV = vec2(0.0002) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
+    
     // STEP 1: check distance between blocker and fragment
     float accumBlockerDepth, numBlockers, maxBlockers;
-    vec2 searchRegionRadiusUV = radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
+    vec2 searchRegionRadiusUV = 50.0 * radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
     findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
     
     //Early out if not in shadow
@@ -322,8 +320,7 @@ float calcSunShadow(float waterDepth)
         return 1.0;
     
     float avgBlockerDepth = accumBlockerDepth / numBlockers;
-    float avgBlockerDepthWorld = sunFrustumFar[index] * sunFrustumNear[index] / (sunFrustumFar[index] - avgBlockerDepth * (sunFrustumFar[index] - sunFrustumNear[index]));
-    radiusUV *= exp(shadowCoord.z - avgBlockerDepthWorld);
+    radiusUV *= exp((shadowCoord.z - avgBlockerDepth) * (sunFrustumFar[index] - sunFrustumNear[index])) * turbidity * turbidity/10.0;
     
 	// STEP 2: blocker search
     searchRegionRadiusUV = radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
@@ -369,13 +366,13 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 		return vec3(0.0);
 }
 
-vec3 calcSunContribution(vec3 N, vec3 toEye, float waterDepth, vec3 albedo, vec3 illuminance)
+vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 {
 	float NdotL = dot(N, sunDirection);
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow(waterDepth);
+		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow();
 	}
 	else
 		return vec3(0.0);
@@ -414,7 +411,7 @@ void main()
 		fragColor += albedo * skyIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
 		//Sun
-		fragColor += calcSunContribution(N, toEye, depth, albedo, sunIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE);
+		fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE);
 		
 		//Absorption
         float lSurface = depth/N.z;
