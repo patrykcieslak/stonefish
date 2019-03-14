@@ -56,6 +56,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
 {
     //Initialize simulation world
     realtimeFactor = Scalar(1);
+    cpuUsage = Scalar(0);
     solver = st;
     collisionFilter = cft;
     hydroType = ht;
@@ -466,6 +467,14 @@ Scalar SimulationManager::getPhysicsTimeInMiliseconds()
     return t;
 }
 
+Scalar SimulationManager::getCpuUsage()
+{
+    SDL_LockMutex(simInfoMutex);
+    Scalar cpu = cpuUsage;
+    SDL_UnlockMutex(simInfoMutex);
+	return cpu;
+}
+
 Scalar SimulationManager::getRealtimeFactor()
 {
     SDL_LockMutex(simInfoMutex);
@@ -823,7 +832,7 @@ void SimulationManager::AdvanceSimulation()
     //Calculate and adjust delta
     deltaTime = timeInMicroseconds - currentTime;
     currentTime = timeInMicroseconds;
-	
+    
     if(deltaTime < ssus)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(ssus - deltaTime));
@@ -841,6 +850,7 @@ void SimulationManager::AdvanceSimulation()
     
     SDL_LockMutex(simInfoMutex);
     physicsTime = physicsEnd - physicsStart;
+    cpuUsage = Scalar(physicsTime)/Scalar(deltaTime) * Scalar(100);
     
     /*Scalar factor1 = (Scalar)deltaTime/(Scalar)physicsTime;
     Scalar factor2 = Scalar(1000000.0/60.0)/(Scalar)physicsTime;

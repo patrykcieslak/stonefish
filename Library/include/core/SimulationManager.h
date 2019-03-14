@@ -223,6 +223,9 @@ namespace sf
         //! A method returning the physics computation time in ms.
         Scalar getPhysicsTimeInMiliseconds();
         
+        //! A method returning the usage of the CPU by the physics computation in percent.
+        Scalar getCpuUsage();
+        
         //! A method returning the current number of steps per second used.
         Scalar getStepsPerSecond();
         
@@ -398,6 +401,7 @@ namespace sf
         HydrodynamicsType hydroType;
         Scalar sps;
         Scalar realtimeFactor;
+        Scalar cpuUsage;
         unsigned int hydroPrescaler;
         unsigned int hydroCounter;
         SDL_mutex* simSettingsMutex;

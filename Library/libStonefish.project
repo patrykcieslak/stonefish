@@ -275,8 +275,6 @@
       <File Name="shaders/oceanInit.frag"/>
       <File Name="shaders/oceanSurface.frag"/>
       <File Name="shaders/oceanBacksurface.frag"/>
-      <File Name="shaders/oceanVolume.frag"/>
-      <File Name="shaders/oceanVolume.geom"/>
       <File Name="shaders/oceanBackground.frag"/>
       <File Name="shaders/oceanBlur.frag"/>
     </VirtualDirectory>

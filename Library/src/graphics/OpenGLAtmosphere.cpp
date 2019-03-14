@@ -249,12 +249,12 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
         
         case RenderQuality::QUALITY_LOW:
             sunShadowmapSize = 1024;
-            sunShadowmapSplits = 2;
+            sunShadowmapSplits = 4;
             break;
         
         case RenderQuality::QUALITY_MEDIUM:
             sunShadowmapSize = 2048;
-            sunShadowmapSplits = 3;
+            sunShadowmapSplits = 4;
             break;
         
         case RenderQuality::QUALITY_HIGH:

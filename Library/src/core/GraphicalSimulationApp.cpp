@@ -755,10 +755,10 @@ void GraphicalSimulationApp::DoHUD()
 	std::sprintf(buf, "Drawing time: %1.2lf ms", getDrawingTime());
     gui->DoLabel(10, getWindowHeight() - 20.f, buf);
     
-    std::sprintf(buf, "Realtime: %1.2fx", getSimulationManager()->getRealtimeFactor());
+    std::sprintf(buf, "CPU usage: %1.0lf%%", getSimulationManager()->getCpuUsage());
     gui->DoLabel(170, getWindowHeight() - 20.f, buf);
     
-    std::sprintf(buf, "Simulation time: %1.2f s", getSimulationManager()->getSimulationTime());
+    std::sprintf(buf, "Simulation time: %1.2lf s", getSimulationManager()->getSimulationTime());
     gui->DoLabel(290, getWindowHeight() - 20.f, buf);
 }
 

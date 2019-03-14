@@ -25,8 +25,9 @@ namespace sf
          \param thrustCoeff the thrust coefficient
          \param torqueCoeff the torque coefficient
          \param maxRPM the maximum rotational speed of the thruster [rpm]
+         \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
         */
-        Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM);
+        Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand);
         
         //! A destructor.
         ~Thruster();
@@ -69,6 +70,7 @@ namespace sf
         Scalar iLim;
         Scalar omegaLim;
         SolidEntity* prop;
+        bool RH;
         
         //States
         Scalar theta;

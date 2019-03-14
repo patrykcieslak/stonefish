@@ -17,16 +17,17 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM) : LinkActuator(uniqueName)
+Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand) : LinkActuator(uniqueName)
 {
     D = diameter;
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = Scalar(5.0);
-    ki = Scalar(3.0);
+    kp = Scalar(3.0);
+    ki = Scalar(2.0);
     iLim = Scalar(10.0);
-    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
-    
+    RH = rightHand;
+    omegaLim = (RH ? Scalar(1.0) : Scalar(-1.0)) *  maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
+
     theta = Scalar(0);
     omega = Scalar(0);
     thrust = Scalar(0);
@@ -101,17 +102,20 @@ void Thruster::Update(Scalar dt)
             Scalar k3 = Scalar(2)*kT/M_PI;
             Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
             
-            Scalar rate = omega/(Scalar(2) * M_PI);
+            Scalar rate = (RH ? Scalar(1.0) : Scalar(-1.0)) * omega/(Scalar(2) * M_PI);
             thrust = Scalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*rate + k3*D*D*rate*rate);
             
-            if(omega < Scalar(0))
+            if( (RH && omega < Scalar(0)) || (!RH && omega > Scalar(0)) )
                 thrust = -thrust;
             
             //Scalar kt = thrust/(liquid->getFluid()->density * D*D*D*D * btFabs(omega)*omega);
             //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
-            
             //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
+            
             torque = liquid->getLiquid()->density * kQ * btFabs(rate)*rate * D*D*D*D*D;
+            if(!RH)
+                torque = -torque;
+            
             Vector3 thrustV(thrust, 0, 0);
             Vector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
             
@@ -119,6 +123,8 @@ void Thruster::Update(Scalar dt)
             attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
             attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
             attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+            
+            //printf("%s setpoint: %1.3lf thrust: %1.3lf torque: %1.3lf\n", getName().c_str(), setpoint, thrust, torque);
         }
     }
 }

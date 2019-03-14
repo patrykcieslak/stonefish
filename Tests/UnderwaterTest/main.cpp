@@ -19,7 +19,7 @@ int main(int argc, const char * argv[])
     s.windowW = 1200;
     s.windowH = 900;
     s.msaa = false;
-    s.shadows = sf::RenderQuality::QUALITY_MEDIUM;
+    s.shadows = sf::RenderQuality::QUALITY_HIGH;
     s.ao = sf::RenderQuality::QUALITY_LOW;
     s.atmosphere = sf::RenderQuality::QUALITY_MEDIUM;
     s.ocean = sf::RenderQuality::QUALITY_HIGH;

@@ -8,6 +8,25 @@
 #define INV_NUM_SAMPLES 	(1.0/32.0)
 #define NUM_SPIRAL_TURNS 	7
 
+const vec2 Poisson16[16] = vec2[]( 
+   vec2(-0.94201624, -0.39906216), 
+   vec2(0.94558609, -0.76890725), 
+   vec2(-0.094184101, -0.92938870), 
+   vec2(0.34495938, 0.29387760), 
+   vec2(-0.91588581, 0.45771432), 
+   vec2(-0.81544232, -0.87912464), 
+   vec2(-0.38277543, 0.27676845), 
+   vec2(0.97484398, 0.75648379), 
+   vec2(0.44323325, -0.97511554), 
+   vec2(0.53742981, -0.47373420), 
+   vec2(-0.26496911, -0.41893023), 
+   vec2(0.79197514, 0.19090188), 
+   vec2(-0.24188840, 0.99706507), 
+   vec2(-0.81409955, 0.91437590), 
+   vec2(0.19984126, 0.78641367), 
+   vec2(0.14383161, -0.14100790) 
+);
+
 const vec2 Poisson32[32] = vec2[](
     vec2(-0.975402, -0.0711386),
     vec2(-0.920347, -0.41142),
@@ -215,11 +234,11 @@ void findBlocker(int layer, sampler2DArray tex, out float accumBlockerDepth, out
 {
     accumBlockerDepth = 0.0;
     numBlockers = 0.0;
-	maxBlockers = 32.0;
+	maxBlockers = 16.0;
 	
-    for (int i = 0; i < 32; ++i)
+    for (int i = 0; i < 16; ++i)
     {
-		vec2 offset = Poisson32[i] * searchRegionRadiusUV;
+		vec2 offset = Poisson16[i] * searchRegionRadiusUV;
         float shadowMapDepth = borderDepthTexture(layer, tex, uv + offset);
         float z = biasedZ(z0, dz_duv, offset);
         
@@ -291,25 +310,32 @@ float calcSunShadow(float waterDepth)
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
 	
 	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
-    radiusUV *= exp(waterDepth/2.0) * (1.0-exp(-turbidity/2.0)); //Underwater shadow blur
-	
-	// STEP 1: blocker search
+    radiusUV *= waterDepth * turbidity/10.0; //(1.0-exp(-turbidity/2.0));
+   
+    // STEP 1: check distance between blocker and fragment
     float accumBlockerDepth, numBlockers, maxBlockers;
     vec2 searchRegionRadiusUV = radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
+    findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
+    
+    //Early out if not in shadow
+    if (numBlockers == 0.0)
+        return 1.0;
+    
+    float avgBlockerDepth = accumBlockerDepth / numBlockers;
+    float avgBlockerDepthWorld = sunFrustumFar[index] * sunFrustumNear[index] / (sunFrustumFar[index] - avgBlockerDepth * (sunFrustumFar[index] - sunFrustumNear[index]));
+    radiusUV *= exp(shadowCoord.z - avgBlockerDepthWorld);
+    
+	// STEP 2: blocker search
+    searchRegionRadiusUV = radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
     findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
 
     // Early out if not in the penumbra
     if (numBlockers == 0.0)
         return 1.0;
+    else if(numBlockers == maxBlockers)
+        return 0.0;
 
-	//Constant penumbra for now!!!!
-    //STEP: penumbra size
-    //float avgBlockerDepth = accumBlockerDepth / numBlockers;
-    //float avgBlockerDepthWorld = sunFrustumFar[index] * sunFrustumNear[index] / (sunFrustumFar[index] - avgBlockerDepth * (sunFrustumFar[index] - sunFrustumNear[index]));
-    //vec2 penumbraRadius = radiusUV * (shadowCoord.z - avgBlockerDepthWorld) / avgBlockerDepthWorld;
-    //vec2 filterRadius = penumbraRadius * sunFrustumNear[index] / shadowCoord.z;
-
-    // STEP 2: filtering
+    // STEP 3: filter border
     return pcfFilter(index, sunShadowMap, shadowCoord.xy, shadowCoord.z, dz_duv, radiusUV);
 }
 
