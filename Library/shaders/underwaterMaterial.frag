@@ -291,7 +291,7 @@ float calcSpotShadow(int id)
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float calcSunShadow()
+float calcSunShadow(float waterDepth)
 {
 	float depth = dot(fragPos-eyePos, viewDir); 
 	
@@ -312,7 +312,7 @@ float calcSunShadow()
     
     // STEP 1: check distance between blocker and fragment
     float accumBlockerDepth, numBlockers, maxBlockers;
-    vec2 searchRegionRadiusUV = 50.0 * radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
+    vec2 searchRegionRadiusUV = 50.0 * radiusUV;// * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
     findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
     
     //Early out if not in shadow
@@ -323,7 +323,7 @@ float calcSunShadow()
     radiusUV *= exp((shadowCoord.z - avgBlockerDepth) * (sunFrustumFar[index] - sunFrustumNear[index])) * turbidity * turbidity/10.0;
     
 	// STEP 2: blocker search
-    searchRegionRadiusUV = radiusUV * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
+    searchRegionRadiusUV = radiusUV;// * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;
     findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, shadowCoord.xy, shadowCoord.z, dz_duv, searchRegionRadiusUV);
 
     // Early out if not in the penumbra
@@ -366,13 +366,13 @@ vec3 calcSpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
 		return vec3(0.0);
 }
 
-vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
+vec3 calcSunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance, float waterDepth)
 {
 	float NdotL = dot(N, sunDirection);
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow();
+		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * calcSunShadow(waterDepth);
 	}
 	else
 		return vec3(0.0);
@@ -411,7 +411,7 @@ void main()
 		fragColor += albedo * skyIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
 		//Sun
-		fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE);
+		fragColor += calcSunContribution(N, toEye, albedo, sunIlluminance/whitePoint/MEAN_SUN_ILLUMINANCE, depth);
 		
 		//Absorption
         float lSurface = depth/N.z;
@@ -450,7 +450,7 @@ void main()
     //Inscattering
     inFactor = exp(-lightAbsorption * max(-eyePos.z,0.0)) * (exp((-toEye.z - 1.0)* c * d) - 1.0)/((-toEye.z - 1.0) * c) * b;
     fragColor += (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
-    
+ 
     //Normal
 	fragNormal = vec4(normalize(eyeSpaceNormal) * 0.5 + 0.5, reflectivity);
 }

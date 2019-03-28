@@ -32,11 +32,11 @@ DVL::DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, Scalar frequency, in
     
 void DVL::InternalUpdate(Scalar dt)
 {
-    //check hit with bottom
-    Scalar minRange = channels[3].rangeMax;
+    //Check hit with bottom
+    Scalar minRange(-1);
     Transform dvlTrans = getSensorFrame();
     
-    //simulate 4 beam DVL (typical design)
+    //Simulate 4 beam DVL (typical design)
     Vector3 dir[4];
     Vector3 from[4];
     Vector3 to[4];
@@ -59,19 +59,23 @@ void DVL::InternalUpdate(Scalar dt)
             range[i] = (p - dvlTrans.getOrigin()).length();
         }
         else
-            range[i] = channels[3].rangeMax;
+            range[i] = Scalar(-1);
             
-        if(range[i] < minRange)
+        if(range[i] > Scalar(0) && (range[i] < minRange || minRange < Scalar(0)))
             minRange = range[i];
     }
    
-    //get velocity
+    //Get velocity
     Vector3 v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getCGTransform().getOrigin());
     
-    //record sample
+    //Record sample
     Scalar data[4] = {v.x(),v.y(),v.z(), minRange * btCos(beamAngle/Scalar(2))};
     Sample s(4, data);
     AddSampleToHistory(s);
+    
+    //Hack to set invalid altitude when all of the beams miss (needed because range limit is applied when adding sample to history)
+    if(minRange < Scalar(0))
+        history.back()->getDataPointer()[3] = Scalar(-1); 
 }
 
 std::vector<Renderable> DVL::Render()
@@ -87,14 +91,31 @@ std::vector<Renderable> DVL::Render()
     Renderable item;
     item.type = RenderableType::SENSOR_LINES;
     item.model = glMatrixFromTransform(getSensorFrame());
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-dir[1].x()*range[1], -dir[1].y()*range[1], -dir[1].z()*range[1]));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-dir[2].x()*range[2], -dir[2].y()*range[2], -dir[2].z()*range[2]));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
+    
+    if(range[0] > Scalar(0))
+    {
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
+    }
+    
+    if(range[1] > Scalar(0))
+    {
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(-dir[1].x()*range[1], -dir[1].y()*range[1], -dir[1].z()*range[1]));
+    }
+    
+    if(range[2] > Scalar(0))
+    {
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(-dir[2].x()*range[2], -dir[2].y()*range[2], -dir[2].z()*range[2]));
+    }
+    
+    if(range[3] > Scalar(0))
+    {
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
+    }
+    
     items.push_back(item);
 
     return items;
