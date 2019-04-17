@@ -22,7 +22,6 @@ ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDir
 {
 	simulationThread = NULL;
     console = new Console();
-    Init();
 }
 
 ConsoleSimulationApp::~ConsoleSimulationApp()

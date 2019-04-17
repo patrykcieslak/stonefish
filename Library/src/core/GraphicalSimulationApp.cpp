@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -48,7 +48,8 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
 	drawingTime = 0.0;
     windowW = r.windowW;
     windowH = r.windowH;
-    Init(r, h);
+    rSettings = r;
+    hSettings = h;
 }
 
 GraphicalSimulationApp::~GraphicalSimulationApp()
@@ -135,7 +136,7 @@ HelperSettings& GraphicalSimulationApp::getHelperSettings()
     return glPipeline->getHelperSettings();
 }
 
-void GraphicalSimulationApp::Init(RenderSettings r, HelperSettings h)
+void GraphicalSimulationApp::Init()
 {
     //Basics
     loading = true;
@@ -146,7 +147,8 @@ void GraphicalSimulationApp::Init(RenderSettings r, HelperSettings h)
     cInfo("Initializing rendering pipeline:");
     cInfo("Loading GUI...");
     gui = new IMGUI(windowW, windowH);
-    glPipeline = new OpenGLPipeline(r, h);
+    InitializeGUI(); //Initialize non-standard graphical elements
+    glPipeline = new OpenGLPipeline(rSettings, hSettings);
     ShowHUD();
     
     cInfo("Initializing simulation:");
@@ -243,6 +245,10 @@ void GraphicalSimulationApp::InitializeSDL()
                                                                       SDL_JoystickNumHats(joystick),
                                                                       SDL_JoystickNumButtons(joystick));
     }
+}
+
+void GraphicalSimulationApp::InitializeGUI()
+{
 }
 
 void GraphicalSimulationApp::WindowEvent(SDL_Event* event)

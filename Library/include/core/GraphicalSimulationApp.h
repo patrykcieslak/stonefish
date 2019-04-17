@@ -3,7 +3,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GraphicalSimulationApp__
@@ -11,11 +11,10 @@
 
 #include <SDL2/SDL.h>
 #include "core/SimulationApp.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
-    struct RenderSettings;
-    struct HelperSettings;
     class OpenGLConsole;
     class IMGUI;
     class OpenGLPipeline;
@@ -151,10 +150,11 @@ namespace sf
         void ResumeSimulation();
         void StopSimulation();
         
+        virtual void InitializeGUI();
+        
     private:
-        void Init(RenderSettings r, HelperSettings h);
+        void Init();
         void InitializeSDL();
-        void InitializeGUI();
         void RenderLoop();
         
         SDL_GLContext glMainContext;
@@ -178,6 +178,8 @@ namespace sf
         double drawingTime;
         int windowW;
         int windowH;
+        RenderSettings rSettings;
+        HelperSettings hSettings;
         
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);

@@ -76,6 +76,7 @@ void SimulationApp::InitializeSimulation()
 
 void SimulationApp::Run(bool autostart)
 {
+    Init();
     if(autostart) StartSimulation();
 	Loop();
 	CleanUp();

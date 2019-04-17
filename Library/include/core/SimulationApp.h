@@ -65,6 +65,7 @@ namespace sf
         static SimulationApp* getApp();
         
     protected:
+        virtual void Init() = 0;
         virtual void Loop() = 0;
         virtual void CleanUp();
         virtual void Quit();
