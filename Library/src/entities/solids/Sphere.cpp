@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Sphere.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Sphere.h"
@@ -13,8 +30,8 @@
 namespace sf
 {
 
-Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
-    : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
+Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
+    : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     r = radius;
     T_O2G = T_O2C = origin;
@@ -44,7 +61,7 @@ Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, M
     phyMesh = OpenGLContent::BuildSphere((GLfloat)r);
     
     //Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_SPHERE);
+    ComputeFluidDynamicsProxy(FD_PROXY_SPHERE);
     //dragCoeff = Vector3(Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius);
 }
 

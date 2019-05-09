@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Gyroscope.cpp
 //  Stonefish
@@ -37,7 +54,7 @@ void Gyroscope::Reset()
 void Gyroscope::InternalUpdate(Scalar dt)
 {
     //calculate transformation from global to gyro frame
-    Matrix3 toGyroFrame = getSensorFrame().inverse().getBasis();
+    Matrix3 toGyroFrame = getSensorFrame().getBasis().inverse();
     
     //get angular velocity
     Vector3 actualAV = attach->getAngularVelocity();

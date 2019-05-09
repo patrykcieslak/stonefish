@@ -1,17 +1,3 @@
-#version 430
-
-layout(binding=0) uniform sampler2DArray texResultArray;
-layout(location=0,index=0) out vec4 fragColor;
-
-void main() 
-{
-	ivec2 FullResPos = ivec2(gl_FragCoord.xy);
-	ivec2 Offset = FullResPos & 3;
-	int SliceId = Offset.y * 4 + Offset.x;
-	ivec2 QuarterResPos = FullResPos >> 2;
-	fragColor = vec4(texelFetch(texResultArray, ivec3(QuarterResPos, SliceId), 0).xy, 0, 0);
-}
-
 /*-----------------------------------------------------------------------
   Copyright (c) 2014, NVIDIA. All rights reserved.
 
@@ -36,3 +22,17 @@ void main()
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------*/
+
+#version 430
+
+layout(binding=0) uniform sampler2DArray texResultArray;
+layout(location=0,index=0) out vec4 fragColor;
+
+void main() 
+{
+	ivec2 FullResPos = ivec2(gl_FragCoord.xy);
+	ivec2 Offset = FullResPos & 3;
+	int SliceId = Offset.y * 4 + Offset.x;
+	ivec2 QuarterResPos = FullResPos >> 2;
+	fragColor = vec4(texelFetch(texResultArray, ivec3(QuarterResPos, SliceId), 0).xy, 0, 0);
+}

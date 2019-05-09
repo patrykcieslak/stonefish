@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  SimulationManager.cpp
 //  Stonefish
@@ -52,7 +69,7 @@ extern ContactAddedCallback gContactAddedCallback;
 namespace sf
 {
 
-SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft, HydrodynamicsType ht)
+SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft, FluidDynamicsType ht)
 {
     //Initialize simulation world
     realtimeFactor = Scalar(1);
@@ -60,7 +77,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     solver = st;
     collisionFilter = cft;
     hydroType = ht;
-    hydroCounter = 0;
+    fdCounter = 0;
     currentTime = 0;
     physicsTime = 0;
     simulationTime = 0;
@@ -151,12 +168,12 @@ void SimulationManager::AddSolidEntity(SolidEntity* ent, const Transform& origin
      }
  }
     
-void SimulationManager::EnableOcean(bool waves, Fluid* f)
+void SimulationManager::EnableOcean(Scalar waves, Fluid f)
 {
 	if(ocean != NULL)
 		return;
 	
-    if(f == NULL)
+    if(f.name == "")
     {
         std::string water = getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55); 
         f = getMaterialManager()->getFluid(water);
@@ -178,7 +195,7 @@ void SimulationManager::EnableAtmosphere()
         return;
     
     std::string air = getMaterialManager()->CreateFluid("Air", 1.0, 1e-6, 1.0);
-    Fluid* f = getMaterialManager()->getFluid(air);
+    Fluid f = getMaterialManager()->getFluid(air);
     
     atmosphere = new Atmosphere("Atmosphere", f);
     atmosphere->AddToSimulation(this);
@@ -308,7 +325,7 @@ SolverType SimulationManager::getSolverType()
     return solver;
 }
 
-HydrodynamicsType SimulationManager::getHydrodynamicsType()
+FluidDynamicsType SimulationManager::getFluidDynamicsType()
 {
 	return hydroType;
 }
@@ -449,8 +466,8 @@ void SimulationManager::setStepsPerSecond(Scalar steps)
     SDL_LockMutex(simSettingsMutex);
     sps = steps;
     ssus = (uint64_t)(1000000.0/steps);
-    hydroPrescaler = (unsigned int)round(sps/Scalar(50));
-    hydroPrescaler = hydroPrescaler == 0 ? 1 : hydroPrescaler;
+    fdPrescaler = (unsigned int)round(sps/Scalar(50));
+    fdPrescaler = fdPrescaler == 0 ? 1 : fdPrescaler;
     SDL_UnlockMutex(simSettingsMutex);
 }
 
@@ -629,10 +646,14 @@ void SimulationManager::InitializeScenario()
     
 	if(SimulationApp::getApp()->hasGraphics())
 	{
-		GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-        trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,1.f), 1.0, glm::vec3(0.f,0.f,1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
-        trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
+        OpenGLView* view = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0);
+        if(view == NULL)
+        {
+            GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
+            trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,1.f), 1.0, glm::vec3(0.f,0.f,1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, 1000.f, 4, true);
+            trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
+            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
+        }
 	}
 }
 
@@ -694,6 +715,12 @@ void SimulationManager::DestroyScenario()
 		ocean = NULL;
 	}
     
+    if(atmosphere != NULL)
+    {
+        delete atmosphere;
+        atmosphere = NULL;
+    }
+        
     for(size_t i=0; i<joints.size(); ++i)
         delete joints[i];
     joints.clear();
@@ -727,7 +754,7 @@ bool SimulationManager::StartSimulation()
     physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
-    hydroCounter = 0;
+    fdCounter = 0;
     
     //Solve initial conditions problem
     if(!SolveICProblem())
@@ -1120,7 +1147,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
     if(simManager->icUseGravity)
     {
         //Apply gravity to bodies
-        for(unsigned int i = 0; i < simManager->entities.size(); i++)
+        for(size_t i = 0; i < simManager->entities.size(); ++i)
         {
             if(simManager->entities[i]->getType() == ENTITY_SOLID)
             {
@@ -1139,7 +1166,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
         else
         {
             //Check if objects settled
-            for(unsigned int i = 0; i < simManager->entities.size(); i++)
+            for(size_t i = 0; i < simManager->entities.size(); ++i)
             {
                 if(simManager->entities[i]->getType() == ENTITY_SOLID)
                 {
@@ -1165,7 +1192,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                     }
                     
                     //Loop through all joints
-                    for(unsigned int h = 0; h < multibody->getNumOfJoints(); h++)
+                    for(size_t h = 0; h < multibody->getNumOfJoints(); ++h)
                     {
                         Scalar jVelocity;
                         btMultibodyLink::eFeatherstoneJointType jType;
@@ -1198,7 +1225,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
     //Solve for joint initial conditions
     bool jointsICSolved = true;
     
-    for(unsigned int i = 0; i < simManager->joints.size(); i++)
+    for(size_t i = 0; i < simManager->joints.size(); ++i)
         if(!simManager->joints[i]->SolvePositionIC(simManager->icLinTolerance, simManager->icAngTolerance))
             jointsICSolved = false;
 
@@ -1220,15 +1247,15 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     mbDynamicsWorld->clearForces(); //Includes clearing of multibody forces!
         
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
-    for(unsigned int i = 0; i < simManager->actuators.size(); ++i)
+    for(size_t i = 0; i < simManager->actuators.size(); ++i)
         simManager->actuators[i]->Update(timeStep);
     
     //loop through all joints -> apply damping forces to bodies connected by joints
-    for(unsigned int i = 0; i < simManager->joints.size(); ++i)
+    for(size_t i = 0; i < simManager->joints.size(); ++i)
         simManager->joints[i]->ApplyDamping();
     
     //loop through all entities that may need special actions
-    for(unsigned int i = 0; i < simManager->entities.size(); ++i)
+    for(size_t i = 0; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];
         
@@ -1251,9 +1278,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 				Trigger* trigger = (Trigger*)ff;
 				trigger->Clear();
 				btBroadphasePairArray& pairArray = trigger->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-				int numPairs = pairArray.size();
+				size_t numPairs = pairArray.size();
 					
-				for(int h=0; h<numPairs; h++)
+				for(size_t h = 0; h < numPairs; ++h)
 				{
 					const btBroadphasePair& pair = pairArray[h];
 					btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
@@ -1272,26 +1299,48 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 		}
     }
     
+    //Geometry-based forces
+    bool recompute = simManager->fdCounter % simManager->fdPrescaler == 0;
+    ++simManager->fdCounter;
+        
     //Aerodynamic forces
     if(simManager->atmosphere != NULL)
     {
+        btBroadphasePairArray& pairArray = simManager->atmosphere->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+        size_t numPairs = pairArray.size();
+        if(numPairs > 0)
+        {    
+            for(size_t h=0; h<numPairs; ++h)
+            {
+                const btBroadphasePair& pair = pairArray[h];
+                btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
+                if (!colPair)
+                    continue;
+                    
+                btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
+                btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                
+                if(co1 == simManager->atmosphere->getGhost())
+                    simManager->atmosphere->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co2, recompute);
+                else if(co2 == simManager->ocean->getGhost())
+                    simManager->atmosphere->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co1, recompute);
+            }
+        }
     }
     
 	//Hydrodynamic forces
     if(simManager->ocean != NULL)
     {
-        bool recompute = simManager->hydroCounter % simManager->hydroPrescaler == 0;
-        
         if(recompute) SDL_LockMutex(simManager->simHydroMutex);
         
         btBroadphasePairArray& pairArray = simManager->ocean->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-        int numPairs = pairArray.size();
+        size_t numPairs = pairArray.size();
         if(numPairs > 0)
         {    
-            for(int h=0; h<numPairs; h++)
+            for(size_t h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
-                btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
+                btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
                 if (!colPair)
                     continue;
                     
@@ -1299,13 +1348,11 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
                 if(co1 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co2, recompute);
+                    simManager->ocean->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co2, recompute);
                 else if(co2 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(simManager->getHydrodynamicsType(), world, co1, recompute);
+                    simManager->ocean->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co1, recompute);
             }
         }
-        
-        ++simManager->hydroCounter;
         
         if(recompute) SDL_UnlockMutex(simManager->simHydroMutex);
     }
@@ -1317,7 +1364,7 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
 	
 	//Update acceleration data
-	for(unsigned int i = 0 ; i < simManager->entities.size(); ++i)
+	for(size_t i = 0; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];
             
@@ -1334,7 +1381,7 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     }
 	
 	//loop through all sensors -> update measurements
-    for(unsigned int i = 0; i < simManager->sensors.size(); ++i)
+    for(size_t i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
     
     //Update simulation time

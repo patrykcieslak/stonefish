@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  IMGUI.cpp
 //  Stonefish
@@ -709,9 +726,9 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
     DrawRoundedRect(x, y, w, h, theme[PLOT_COLOR]);
     
     //data
-    const std::deque<Sample*>& data = sens->getHistory();
+    const std::vector<Sample>* data = sens->getHistory();
     
-    if(data.size() > 1)
+    if(data->size() > 1)
     {
         GLfloat minValue;
         GLfloat maxValue;
@@ -726,11 +743,11 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
             minValue = 1000.f;
             maxValue = -1000.f;
         
-            for(unsigned int i = 0; i < data.size(); i++)
+            for(unsigned int i = 0; i < data->size(); i++)
             {
                 for(unsigned int n = 0; n < dims.size(); n++)
                 {
-                    GLfloat value = (GLfloat)data[i]->getValue(dims[n]);
+                    GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
                     if(value > maxValue)
                         maxValue = value;
                     else if(value < minValue)
@@ -748,10 +765,10 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
         GLfloat dy = (pltH-2.f*pltMargin)/(maxValue-minValue);
         
         //autostretch
-        GLfloat dt = pltW/(GLfloat)(data.size()-1);
+        GLfloat dt = pltW/(GLfloat)(data->size()-1);
     
         //drawing
-        for(unsigned int n = 0; n < dims.size(); n++)
+        for(size_t n = 0; n < dims.size(); n++)
         {
             //set color
             glm::vec4 color;
@@ -763,9 +780,9 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
             
             //draw graph
 			std::vector<glm::vec2> points;
-			for(unsigned long i = 0;  i < data.size(); ++i)
+			for(size_t i = 0;  i < data->size(); ++i)
             {
-				GLfloat value = (GLfloat)data[i]->getValue(dims[n]);
+				GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
 				points.push_back(glm::vec2(pltX + dt*i, pltY - pltH + pltMargin + (value-minValue) * dy));
 			}
 			
@@ -826,6 +843,8 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
             DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[PLOT_TEXT_COLOR], buffer);
         }
     }
+    
+    delete data;
         
     //title
     glm::vec2 titleDim = PlainTextDimensions(title);
@@ -865,23 +884,23 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     DrawRoundedRect(x, y, w, h, theme[PLOT_COLOR]);
     
     //data
-    const std::deque<Sample*>& dataX = sensX->getHistory();
-    const std::deque<Sample*>& dataY = sensY->getHistory();
+    const std::vector<Sample>* dataX = sensX->getHistory();
+    const std::vector<Sample>* dataY = sensY->getHistory();
     
-    if((dataX.size() > 1) && (dataY.size() > 1))
+    if((dataX->size() > 1) && (dataY->size() > 1))
     {
         //common sample count
-        unsigned long dataCount = dataX.size();
-        if(dataY.size() < dataCount)
-            dataCount = dataY.size();
+        unsigned long dataCount = dataX->size();
+        if(dataY->size() < dataCount)
+            dataCount = dataY->size();
         
         //autoscale X axis
         GLfloat minValueX = 1000;
         GLfloat maxValueX = -1000;
         
-        for(unsigned long i = 0; i < dataCount; ++i)
+        for(size_t i = 0; i < dataCount; ++i)
         {
-            GLfloat value = dataX[i]->getValue(dimX);
+            GLfloat value = (GLfloat)((*dataX)[i].getValue(dimX));
             if(value > maxValueX)
                 maxValueX = value;
             else if(value < minValueX)
@@ -900,9 +919,9 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         GLfloat minValueY = 1000;
         GLfloat maxValueY = -1000;
         
-        for(unsigned long i = 0; i < dataCount; ++i)
+        for(size_t i = 0; i < dataCount; ++i)
         {
-            GLfloat value = dataY[i]->getValue(dimY);
+            GLfloat value = (GLfloat)((*dataY)[i].getValue(dimY));
             if(value > maxValueY)
                 maxValueY = value;
             else if(value < minValueY)
@@ -920,10 +939,10 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         //draw graph
 		std::vector<glm::vec2> points;
 		
-        for(unsigned long i = 0;  i < dataCount; ++i)
+        for(size_t i = 0;  i < dataCount; ++i)
         {
-			GLfloat valueX = dataX[i]->getValue(dimX);
-            GLfloat valueY = dataY[i]->getValue(dimY);
+			GLfloat valueX = (GLfloat)((*dataX)[i].getValue(dimX));
+            GLfloat valueY = (GLfloat)((*dataY)[i].getValue(dimY));
 			points.push_back(glm::vec2(pltX + (valueX - minValueX) * dx, pltY - pltH + (valueY - minValueY) * dy));
         }
         
@@ -977,6 +996,9 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
 			glDeleteBuffers(1, &vbo);
 		}
     }
+    
+    delete dataX;
+    delete dataY;
     
     //title
     glm::vec2 titleDim = PlainTextDimensions(title);

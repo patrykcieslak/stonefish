@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  FeatherstoneEntity.cpp
 //  Stonefish
@@ -18,15 +35,9 @@ namespace sf
 
 FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int totalNumOfLinks, SolidEntity* baseSolid, bool fixedBase) : Entity(uniqueName)
 {
-    //baseRenderable = fixedBase ? false : true;
-    baseRenderable = true;
-	
-    Matrix6Eigen aMass = baseSolid->getAddedMass();
-    Scalar M = baseSolid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    Vector3 I = baseSolid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
-    
+    Scalar M = baseSolid->getAugmentedMass();
+    Vector3 I = baseSolid->getAugmentedInertia();
     multiBody = new btMultiBody(totalNumOfLinks - 1, M, I, fixedBase, true);
-    
     multiBody->setBaseWorldTransform(Transform::getIdentity());
     multiBody->setAngularDamping(Scalar(0));
     multiBody->setLinearDamping(Scalar(0));
@@ -40,6 +51,8 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
    
     AddLink(baseSolid, Transform::getIdentity());
 	multiBody->finalizeMultiDof();
+    
+    baseRenderable = true;
 }
 
 FeatherstoneEntity::~FeatherstoneEntity()
@@ -385,10 +398,9 @@ int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, 
     Vector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (pivot - getLinkTransform(parent).getOrigin());
     Vector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - pivot);
     
-    //Get mass properties (including addem mass)
-    Matrix6Eigen aMass = links[child].solid->getAddedMass();
-    Scalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    Vector3 I = links[child].solid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    //Get mass properties (including added mass)
+    Scalar M = links[child].solid->getAugmentedMass();
+    Vector3 I = links[child].solid->getAugmentedInertia();
     
     //Setup joint
     joint.axisInChild = getLinkTransform(child).getBasis().inverse() * axis.normalized();
@@ -425,10 +437,9 @@ int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent,
     Vector3 parentComToPivotOffset = Vector3(0,0,0);
     Vector3 pivotToChildComOffset = getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin()-getLinkTransform(parent).getOrigin());
     
-    //Get mass properties (including addem mass)
-    Matrix6Eigen aMass = links[child].solid->getAddedMass();
-    Scalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    Vector3 I = links[child].solid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    //Get mass properties (including added mass)
+    Scalar M = links[child].solid->getAugmentedMass();
+    Vector3 I = links[child].solid->getAugmentedInertia();
     
     //Check if pivot offset is ok!
     joint.axisInChild = getLinkTransform(child).getBasis().inverse() * axis.normalized();
@@ -464,10 +475,9 @@ int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, uns
     Vector3 parentComToPivotOffset = getLinkTransform(parent).getBasis().inverse() * (pivot - getLinkTransform(parent).getOrigin());
     Vector3 pivotToChildComOffset =  getLinkTransform(child).getBasis().inverse() * (getLinkTransform(child).getOrigin() - pivot);
     
-    //Get mass properties (including addem mass)
-    Matrix6Eigen aMass = links[child].solid->getAddedMass();
-    Scalar M = links[child].solid->getMass() + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-    Vector3 I = links[child].solid->getInertia() + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
+    //Get mass properties (including added mass)
+    Scalar M = links[child].solid->getAugmentedMass();
+    Vector3 I = links[child].solid->getAugmentedInertia();
     
     //Setup joint
     joint.axisInChild = Vector3(0,0,0);

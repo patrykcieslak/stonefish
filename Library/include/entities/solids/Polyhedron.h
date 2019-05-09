@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Polyhedron.h
 //  Stonefish
@@ -27,18 +44,18 @@ namespace sf
          \param physicsScale a scale factor to be used when reading the mesh file
          \param physicsOrigin a pose of the mesh with respect to the body origin frame
          \param m a material of which the body is made
+         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param lookId a graphical material defining how the mesh is rendered
          \param smoothGraphicsNormals defines if the graphics mesh normals should be smoothed after loading
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
-         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param proxy defines what time of hydrodynamic approximation of body shape should be used
          */
         Polyhedron(std::string uniqueName,
                    std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                    std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                   Material m, int lookId = -1, bool smoothGraphicsNormals = false, Scalar thickness = Scalar(-1),
-                   bool enableHydrodynamicForces = true, bool isBuoyant = true, HydrodynamicProxyType proxy = HYDRO_PROXY_ELLIPSOID);
+                   Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothGraphicsNormals = false, 
+                   Scalar thickness = Scalar(-1), bool isBuoyant = true, FluidDynamicsProxyType proxy = FD_PROXY_ELLIPSOID);
         
         //! A constructor.
         /*!
@@ -47,16 +64,16 @@ namespace sf
          \param scale a scale factor to be used when reading the mesh file
          \param origin a pose of the mesh with respect to the body origin frame
          \param m a material of which the body is made
+         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param lookId a graphical material defining how the mesh is rendered
          \param smoothNormals defines if the model normals should be smoothed after loading
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
-         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param proxy defines what time of hydrodynamic approximation of body shape should be used
          */
         Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
-                   Material m, int lookId = -1, bool smoothNormals = true, Scalar thickness = Scalar(-1),
-                   bool enableHydrodynamicForces = true, bool isBuoyant = true, HydrodynamicProxyType proxy = HYDRO_PROXY_ELLIPSOID);
+                   Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothNormals = true, 
+                   Scalar thickness = Scalar(-1), bool isBuoyant = true, FluidDynamicsProxyType proxy = FD_PROXY_ELLIPSOID);
         
         //! A destructor.
         ~Polyhedron();

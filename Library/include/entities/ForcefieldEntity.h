@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  ForcefieldEntity.h
 //  Stonefish
@@ -15,7 +32,10 @@
 namespace sf
 {
     //! An enum specifying the type of forcefield.
-    typedef enum {FORCEFIELD_POOL, FORCEFIELD_OCEAN, FORCEFIELD_TRIGGER, FORCEFIELD_ATMOSPHERE} ForcefieldType;
+    typedef enum {FORCEFIELD_POOL = 0, FORCEFIELD_OCEAN, FORCEFIELD_TRIGGER, FORCEFIELD_ATMOSPHERE} ForcefieldType;
+    
+     //! An enum specifying the type of hydrodynamics computation that is used in the simulation
+    typedef enum {GEOMETRY_BASED = 0} FluidDynamicsType; //TRIFOLD_SYMMETRY, FULLY_COUPLED
     
     //! An abstract class representing some kind of a force field.
     class ForcefieldEntity : public Entity

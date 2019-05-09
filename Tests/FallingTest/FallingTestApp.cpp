@@ -1,19 +1,36 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  FallingTestApp.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestApp.h"
 
-#include <sensors/scalar/IMU.h>
+#include <sensors/ScalarSensor.h>
+#include <graphics/IMGUI.h>
 
-FallingTestApp::FallingTestApp(std::string dataDirPath, sf::RenderSettings s, FallingTestManager* sim)
-    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, sim)
+FallingTestApp::FallingTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, FallingTestManager* sim)
+    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, h, sim)
 {
-    checked = false;
 }
 
 void FallingTestApp::DoHUD()
@@ -24,53 +41,8 @@ void FallingTestApp::DoHUD()
     slider.owner = 1;
     slider.item = 0;
 	slider.index = 0;
-	getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 5.f, 5.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+	getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
-	//slider.item = 1;
-	//std::vector<unsigned short> dims;
-    //dims.push_back(2);
-	//Accelerometer* acc = (Accelerometer*)getSimulationManager()->getSensor("Acc");
-    //IMGUI::getInstance()->DoTimePlot(slider, getWindowWidth()-310, 10, 300, 200, acc, dims, "Acceleration", new Scalar[2]{0.0, 1000.0});
-    
-    //Left side
-    /*ui_id button;
-    button.owner = 1;
-    button.item = 1;
-    button.index = 0;
-    IMGUI::getInstance()->DoButton(button, 5.f, 59.f, 120.f, 30.f, "Restart");
-	
-    ui_id check;
-    check.owner = 1;
-    check.item = 2;
-    check.index = 0;
-    checked = IMGUI::getInstance()->DoCheckBox(check, 5.f, 95.f, 120.f, checked, "Test");
-    
-    IMGUI::getInstance()->DoProgressBar(5.f, 125.f, 120.f, 0.3f, "Progress");
-    */
-	
-	
-	/*Manipulator* manipA = (Manipulator*)getSimulationManager()->getEntity("ArmA");
-    ui_id slider;
-    
-	slider.owner = 1;
-    slider.index = 0;
-    
-	slider.item = 1;
-	manipA->setDesiredJointPosition(0, IMGUI::getInstance()->DoSlider(slider, 5.f, 55.f, 100.0, -10.f, 10.f, manipA->getDesiredJointPosition(0), "Joint 0"));
-    */
-	
-    /*
-	 * Look l = solid->getLook();
-    
-	 * sliderMat.item = 2;
-	l.data[1] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 105.f, 100.0, 5.f, 5.f, 20.f, 0.0, 1.0, l.data[1], "Roughness");
-    
-    sliderMat.item = 3;
-    l.data[2] = (GLfloat)IMGUI::getInstance()->DoSlider(sliderMat, 5.f, 155.f, 100.0, 5.f, 5.f, 20.f, 0.0, 3.0, l.data[2], "IOR");
-    
-	*/
-	
-    //Right side
     sf::ui_id plot;
     plot.owner = 1;
     plot.item = 1;
@@ -84,5 +56,5 @@ void FallingTestApp::DoHUD()
     dims.clear();
     dims.push_back(0);
     plot.item = 2;
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 440, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Encoder"), dims, "Angle");
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 450, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Encoder"), dims, "Angle");
 }

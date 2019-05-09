@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Cylinder.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Cylinder.h"
@@ -13,8 +30,8 @@
 namespace sf
 {
 
-Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
-    : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
+Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
+    : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     r = radius;
     halfHeight = height/Scalar(2);
@@ -51,7 +68,7 @@ Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const T
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2));
     
     //Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_CYLINDER);
+    ComputeFluidDynamicsProxy(FD_PROXY_CYLINDER);
     //dragCoeff = Vector3(radius*halfHeight*Scalar(4*0.5), M_PI*radius*radius*Scalar(0.9), radius*halfHeight*Scalar(4*0.5));
 }
 

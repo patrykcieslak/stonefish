@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Atmosphere.cpp
 //  Stonefish
@@ -7,26 +24,38 @@
 //
 
 #include "entities/forcefields/Atmosphere.h"
+#include "graphics/OpenGLAtmosphere.h"
+#include "entities/forcefields/VelocityField.h"
+#include "entities/SolidEntity.h"
 
 namespace sf
 {
     
-Atmosphere::Atmosphere(std::string uniqueName, Fluid* f) : ForcefieldEntity(uniqueName)
+Atmosphere::Atmosphere(std::string uniqueName, Fluid g) : ForcefieldEntity(uniqueName)
 {
     ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     
-    Scalar size(10000);
+    Scalar size(100000);
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
-    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface
+    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface and ground (z=0)
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
-    gas = f;
+    gas = g;
+    wind = std::vector<VelocityField*>(0);
     glAtmosphere = NULL;
 }
     
 Atmosphere::~Atmosphere()
 {
-    if(glAtmosphere != NULL) delete glAtmosphere;
+    if(wind.size() > 0)
+    {
+        for(unsigned int i=0; i<wind.size(); ++i)
+            delete wind[i];
+        wind.clear();
+    }
+    
+    if(glAtmosphere != NULL) 
+        delete glAtmosphere;
 }
     
 OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
@@ -37,6 +66,11 @@ OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
 ForcefieldType Atmosphere::getForcefieldType()
 {
     return ForcefieldType::FORCEFIELD_ATMOSPHERE;
+}
+
+Fluid Atmosphere::getGas() const
+{
+    return gas;
 }
 
 void Atmosphere::InitGraphics(const RenderSettings& s)
@@ -70,6 +104,11 @@ void Atmosphere::SetupSunPosition(Scalar azimuthDeg, Scalar elevationDeg)
     
     glAtmosphere->SetSunPosition((float)azimuthDeg, (float)elevationDeg);
 }
+
+void Atmosphere::AddVelocityField(VelocityField* field)
+{
+    wind.push_back(field);
+}
     
 void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)
 {
@@ -81,6 +120,53 @@ void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)
         glAtmosphere->GetSunPosition(az, elev);
         azimuthDeg = Scalar(az);
         elevationDeg = Scalar(elev);
+    }
+}
+
+Vector3 Atmosphere::GetFluidVelocity(const Vector3& point) const
+{
+    Vector3 fv(0,0,0);
+    for(size_t i=0; i<wind.size(); ++i)
+        fv += wind[i]->GetVelocityAtPoint(point);
+    return fv;    
+}
+
+bool Atmosphere::IsInsideFluid(const Vector3& point) const
+{
+    return true;
+}
+
+void Atmosphere::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
+{
+    Entity* ent;
+	btRigidBody* rb = btRigidBody::upcast(co);
+	btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
+	
+	if(rb != 0)
+	{
+		if(rb->isStaticOrKinematicObject())
+			return;
+		else
+			ent = (Entity*)rb->getUserPointer();
+	}
+	else if(mbl != 0)
+	{
+		if(mbl->isStaticOrKinematicObject())
+			return;
+		else
+			ent = (Entity*)mbl->getUserPointer();
+	}
+	else
+		return;
+	
+    if(ent->getType() == ENTITY_SOLID)
+    {
+        if(recompute)
+        {
+            ((SolidEntity*)ent)->ComputeAerodynamicForces(this);
+        }
+        
+        ((SolidEntity*)ent)->ApplyAerodynamicForces();
     }
 }
 

@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Compound.cpp
 //  Stonefish
@@ -14,8 +31,8 @@
 namespace sf
 {
 
-Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, bool enableHydrodynamicForces)
-    : SolidEntity(uniqueName, Material(), 0, Scalar(-1), enableHydrodynamicForces)
+Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, BodyPhysicsType bpt)
+    : SolidEntity(uniqueName, Material(), bpt, 0, Scalar(-1), true)
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
     phyMesh = NULL; // There is no single mesh
@@ -208,7 +225,7 @@ void Compound::RecalculatePhysicalProperties()
 	volume = compoundVolume;
 	Ipri = compoundPriInertia;
     
-    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
@@ -228,11 +245,11 @@ btCollisionShape* Compound::BuildCollisionShape()
 	return colShape;
 }
 
-void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
+void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(!computeHydro) return;
+    if(phyType != BodyPhysicsType::FLOATING_BODY && phyType != BodyPhysicsType::SUBMERGED_BODY) return;
     
-    BodyFluidPosition bf = CheckBodyFluidPosition(liquid);
+    BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
     //If completely outside fluid just set all torques and forces to 0
     if(bf == BodyFluidPosition::OUTSIDE_FLUID)
@@ -251,7 +268,7 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
         //Compute buoyancy based on CB position
         if(isBuoyant())
         {
-            Fb = -volume*liquid->getLiquid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            Fb = -volume*ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
             Tb = (getCGTransform() * P_CB - getCGTransform().getOrigin()).cross(Fb);
         }
         
@@ -277,7 +294,7 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
                 if(parts[i].isExternal) //Compute drag only for external parts
                 {
                     Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
-                    ComputeFluidForcesSubmerged(parts[i].solid->getPhysicsMesh(), liquid, getCGTransform(), T_C_part, v, omega, Fdsp, Tdsp, Fdpp, Tdpp);
+                    ComputeHydrodynamicForcesSubmerged(parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdsp, Tdsp, Fdpp, Tdpp);
                     Fds += Fdsp;
                     Tds += Tdsp;
                     Fdp += Fdpp;
@@ -324,7 +341,7 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
                 
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
-                    ComputeFluidForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), liquid, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
                     Fb += Fbp;
                     Tb += Tbp;
                     Fds += Fdsp;
@@ -335,7 +352,7 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
                 else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
                     pSettings.dampingForces = false;
-                    ComputeFluidForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), liquid, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdsp, Tdsp, Fdpp, Tdpp);
                     Fb += Fbp;
                     Tb += Tbp;
                 }
@@ -344,7 +361,35 @@ void Compound::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
     }
         
     if(settings.dampingForces)
-        CorrectDampingForces();
+        CorrectHydrodynamicForces(ocn);
+}
+
+void Compound::ComputeAerodynamicForces(Atmosphere* atm)
+{
+    if(phyType != BodyPhysicsType::AERODYNAMIC_BODY) return;
+    
+    //Set zero
+    Fda.setZero();
+    Tda.setZero();
+            
+    //Get velocity data
+    Vector3 v = getLinearVelocity();
+    Vector3 omega = getAngularVelocity();
+            
+    //Create temporary vectors for summing
+    Vector3 Fdap(0,0,0);
+    Vector3 Tdap(0,0,0);
+            
+    for(size_t i=0; i<parts.size(); ++i) //Go through all parts
+        if(parts[i].isExternal) //Compute drag only for external parts
+        {
+            Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
+            SolidEntity::ComputeAerodynamicForces(parts[i].solid->getPhysicsMesh(), atm, getCGTransform(), T_C_part, v, omega, Fdap, Tdap);
+            Fda += Fdap;
+            Tda += Tdap;
+        }
+        
+    CorrectAerodynamicForces(atm);
 }
 
 void Compound::BuildGraphicalObject()
@@ -373,7 +418,7 @@ std::vector<Renderable> Compound::Render()
         
         item.type = RenderableType::HYDRO_ELLIPSOID;
         item.model = glMatrixFromTransform(getHTransform());
-        item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
+        item.points.push_back(glm::vec3((GLfloat)fdProxyParams[0], (GLfloat)fdProxyParams[1], (GLfloat)fdProxyParams[2]));
         items.push_back(item);
         item.points.clear();
         

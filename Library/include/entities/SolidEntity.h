@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  SolidEntity.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright(c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SolidEntity__
@@ -18,13 +35,22 @@ namespace sf
 {
     //! An enum designating the type of solid that the body represents.
     typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND, SOLID_WING} SolidType;
-    //! An enum designating the type of proxy shape used for hydrodynamic coefficient approximation.
-    typedef enum {HYDRO_PROXY_NONE = 0, HYDRO_PROXY_SPHERE, HYDRO_PROXY_CYLINDER, HYDRO_PROXY_ELLIPSOID} HydrodynamicProxyType;
+    //! An enum designating the type of proxy shape used for fluid dynamics coefficient approximation.
+    typedef enum {FD_PROXY_NONE = 0, FD_PROXY_SPHERE, FD_PROXY_CYLINDER, FD_PROXY_ELLIPSOID} FluidDynamicsProxyType;
     //! An enum used to define if the body is submerged.
     typedef enum {INSIDE_FLUID = 0, OUTSIDE_FLUID, CROSSING_FLUID_SURFACE} BodyFluidPosition;
+    //! An enum defining what is the medium in which the body moves (affects which forces are computed, needed because it is not possible to change mass during simulation)
+    /*!
+     SURFACE_BODY -> no aerodynamics or hydrodynamics
+     FLOATING_BODY -> hydrodynamics with buoyancy
+     SUBMERGED_BODY -> hydrodynamics with buoyancy and added mass
+     AERODYNAMIC_BODY -> aerodynamics
+    */
+    typedef enum {SURFACE_BODY = 0, FLOATING_BODY, SUBMERGED_BODY, AERODYNAMIC_BODY} BodyPhysicsType;
     
     struct HydrodynamicsSettings;
     class Ocean;
+    class Atmosphere;
     
     //! An abstract class representing a rigid body.
     class SolidEntity : public Entity
@@ -34,13 +60,12 @@ namespace sf
         /*!
          \param uniqueName a name for the body
          \param m a metarial the body is made of
+         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param lookId an index of the graphical material
          \param thickness body wall thickness, if provided the body is considered a shell
-         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
          \param isBuoyant a flag to enable computation of buoyancy force
          */
-        SolidEntity(std::string uniqueName, Material m, int lookId = -1, Scalar thickness = Scalar(-1),
-                    bool enableHydrodynamicForces = true, bool isBuoyant = true);
+        SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant);
         
         //! A destructor.
         virtual ~SolidEntity();
@@ -79,9 +104,9 @@ namespace sf
         //! A method that computes fluid dynamics based on selected settings.
         /*!
          \param settings a structure holding settings of fluid dynamics computation
-         \param liquid a pointer to the fluid entity generating forces (currently only Ocean supported)
+         \param ocn a pointer to the ocean entity
          */
-        virtual void ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid);
+        virtual void ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn);
         
         //! A static method that computes fluid dynamics when a body is crossing the fluid surface.
         /*!
@@ -99,13 +124,13 @@ namespace sf
          \param _Fdp output of the damping force resulting from pressure drag
          \param _Tdp output of the torque induced by pressure drag
          */
-        static void ComputeFluidForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
-                                              const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
+        static void ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
+                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
         
         //! A static method that computes fluid dynamics when a body is completely submerged.
         /*!
          \param mesh a pointer to the body physics mesh data
-         \param liquid a pointer to the fluid entity generating forces (currently only Ocean supported)
+         \param liquid a pointer to the fluid entity generating forces
          \param T_CG a transform from the world frame to the body CG frame
          \param T_C a transform from the world frame to the body physics frame
          \param linearV the linear velocity of the body in the world frame
@@ -115,8 +140,28 @@ namespace sf
          \param _Fdp output of the damping force resulting from pressure drag
          \param _Tdp output of the torque induced by pressure drag
          */
-        static void ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
-                                                const Vector3& linearV, const Vector3& angularV, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
+        static void ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
+                                                       const Vector3& linearV, const Vector3& angularV, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp);
+        
+        //! A method that computes aerodynamics.
+        /*!
+         \param atm a pointer to the atmosphere entity
+        */
+        virtual void ComputeAerodynamicForces(Atmosphere* atm);
+         
+        //! A static method that computes aerodynamics for a body
+        /*!
+         \param mesh a pointer to the body physics mesh data
+         \param atm a pointer to the atmosphere object
+         \param T_CG a transform from the world frame to the body CG frame
+         \param T_C a transform from the world frame to the body physics frame
+         \param linearV the linear velocity of the body in the world frame
+         \param angularV the angular velocity of the body in the world frame
+         \param _Fda output of the damping force resulting from pressure drag
+         \param _Tda output of the torque induced by pressure drag
+         */
+        static void ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, const Transform& T_CG, const Transform& T_C,
+                                             const Vector3& linearV, const Vector3& angularV, Vector3& _Fda, Vector3& _Tda);
         
         //! A method which applies given force to the body CG.
         /*!
@@ -136,8 +181,11 @@ namespace sf
          */
         void ApplyGravity(const Vector3& g);
         
-        //! A method which applies precomputed fluid forces to the body.
-        virtual void ApplyFluidForces();
+        //! A method which applies precomputed hydrodynamic forces to the body.
+        virtual void ApplyHydrodynamicForces();
+        
+        //! A method which applies precomputed aerodynamic forces to the body.
+        virtual void ApplyAerodynamicForces();
         
         //! A method used to scale the inertia of the body by comparing actual and given mass.
         /*!
@@ -223,11 +271,17 @@ namespace sf
         //! A method returning the angular acceleration of the body.
         Vector3 getAngularAcceleration() const;
         
+        //! A method returning the mass of the body.
+        Scalar getMass() const;
+        
         //! A method returning the inertia of the body.
         Vector3 getInertia() const;
         
-        //! A method returning the mass of the body.
-        Scalar getMass() const;
+        //! A method returning the mass or the sum of mass and added mass (depending on type of body).
+        Scalar getAugmentedMass() const;
+        
+        //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
+        Vector3 getAugmentedInertia() const;
         
         //! A method returning the hydrodynamic added mass of the body.
         Matrix6Eigen getAddedMass() const;
@@ -247,8 +301,8 @@ namespace sf
         //! A method informing if the body is using buoyancy computation.
         bool isBuoyant() const;
         
-        //! A method informing if the hydrodynamic forces should be computed for the body.
-        bool hydrodynamicsEnabled() const;
+        //! A method informing what kind of physics computations are performed for the body.
+        BodyPhysicsType getBodyPhysicsType() const;
         
         //Rendering
         //! A method used to build the graphical representation of the body.
@@ -280,13 +334,14 @@ namespace sf
         int getObject() const;
         
     protected:
-        BodyFluidPosition CheckBodyFluidPosition(Ocean* liquid);
-        void ComputeHydrodynamicProxy(HydrodynamicProxyType t);
+        BodyFluidPosition CheckBodyFluidPosition(Ocean* ocn);
+        void ComputeFluidDynamicsProxy(FluidDynamicsProxyType t);
         void ComputeProxySphere();
         void ComputeProxyCylinder();
         void ComputeProxyEllipsoid();
-        void CorrectDampingForces();
-        static void ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Scalar rho, Scalar mu, Vector3& linear, Vector3& quadratic);
+        void CorrectHydrodynamicForces(Ocean* ocn);
+        void CorrectAerodynamicForces(Atmosphere* atm);
+        static void ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Vector3& linear, Vector3& quadratic);
         static void ComputePhysicalProperties(Mesh* mesh, Scalar wallThickness, Material mat, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot);
         
         Scalar LambKFactor(Scalar r1, Scalar r2);
@@ -318,12 +373,11 @@ namespace sf
         Transform T_O2C; //Transform between body origin and physics origin
         
         Matrix6Eigen aMass; //Hydrodynamic added mass matrix
-        Matrix6Eigen dCS; //Hydrodynamic damping coefficients multiplied by cross sections
-        HydrodynamicProxyType hydroProxyType;
-        std::vector<Scalar> hydroProxyParams;
+        FluidDynamicsProxyType fdProxyType;
+        std::vector<Scalar> fdProxyParams;
         Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame
         
-        bool computeHydro;
+        BodyPhysicsType phyType;
         bool buoyant;
         Vector3 Fb;
         Vector3 Tb;
@@ -331,6 +385,8 @@ namespace sf
         Vector3 Tds;
         Vector3 Fdp;
         Vector3 Tdp;
+        Vector3 Fda;
+        Vector3 Tda;
         
         //Motion
         Vector3 filteredLinearVel;

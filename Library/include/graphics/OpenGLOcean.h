@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  OpenGLOcean.h
 //  Stonefish
@@ -23,12 +40,12 @@ namespace sf
         glm::vec4 gridSizes;
         float* spectrum12;
         float* spectrum34;
-        bool propagate;
-        float wind;
-        float omega;
+        bool propagate; //wave propagation
+        float wind; //wind speed in meters per second (at 10m above surface)
+        float omega; //sea state (inverse wave age)
+        float A; //wave amplitude
         float km;
         float cm;
-        float A;
         float t;
     };
     
@@ -40,10 +57,10 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param geometricWaves a flag that specifies if ocean should be rendered with geometric waves or as a plane with wave texture
+         \param geometricWaves the state of the ocean, if >0 the ocean is rendered with geometric waves otherwise as a plane with wave texture
          \param hydrodynamics a pointer to a mutex
          */
-        OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics);
+        OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics);
         
         //! A destructor.
         ~OpenGLOcean();
@@ -170,6 +187,7 @@ namespace sf
         GLfloat* fftData;
         OceanParams params;
         QuadTree* qt;
+        int tesselation;
         int64_t lastTime;
         GLuint vao;
         GLuint vbo;

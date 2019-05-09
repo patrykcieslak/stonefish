@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  OpenGLPipeline.cpp
 //  Stonefish
@@ -396,10 +413,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 }
                 else if(renderMode == 1) //OCEAN
                 {
-                    /////////////////
-                    //// ADD AO !!! /////
-                    /////////////////////
-                    
                     OpenGLOcean* glOcean = ocean->getOpenGLOcean();
                     
                     //Update ocean for this camera
@@ -414,21 +427,26 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     DrawObjects();
                     glOcean->DrawBackground(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix());
                     
-                    //Draw surface (disable depth testing but write to depth buffer)
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    glDepthFunc(GL_ALWAYS);
+                    //a) Surface with waves
                     if(ocean->hasWaves())
-                        glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), viewport);
-                    else
+                    {
+                        glEnable(GL_BLEND);
+                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                         glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), viewport);
-                    glDisable(GL_BLEND);
-                    glDepthFunc(GL_LESS);
-                    if(ocean->hasWaves())
-                        glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), viewport);
-                    else
+                        glDisable(GL_BLEND);
                         glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), viewport);
-                    glDepthFunc(GL_LEQUAL);
+                    }
+                    else //b) Surface without waves (disable depth testing but write to depth buffer)
+                    {
+                        glEnable(GL_BLEND);
+                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                        glDepthFunc(GL_ALWAYS);
+                        glOcean->DrawSurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), viewport);
+                        glDisable(GL_BLEND);
+                        glDepthFunc(GL_LESS);
+                        glOcean->DrawBacksurface(camera->GetEyePosition(), camera->GetViewMatrix(), camera->GetInfiniteProjectionMatrix(), viewport);
+                        glDepthFunc(GL_LEQUAL);
+                    }
                     
                     //Stencil masking
                     glEnable(GL_STENCIL_TEST);
@@ -438,6 +456,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw all objects as above surface (depth testing will secure drawing only what is above water)
                     content->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
+                    
+                    //Ambient occlusion
+                    if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
+                        camera->DrawAO(1.f);
                     
                     //Render sky (left for the end to only fill empty spaces)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);

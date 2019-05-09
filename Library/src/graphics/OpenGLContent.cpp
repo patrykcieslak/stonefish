@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  OpenGLContent.cpp
 //  Stonefish
@@ -489,6 +506,11 @@ OpenGLContent::~OpenGLContent()
 	for(unsigned int i=0; i<materialShaders.size(); ++i)
 		delete materialShaders[i];
 	materialShaders.clear();
+    
+    //Views
+    if(views.size() == 1) //Trackball left after destroying content
+        delete views[0];
+    views.clear();
 }
 
 void OpenGLContent::Finalize()
@@ -499,14 +521,14 @@ void OpenGLContent::Finalize()
 
 void OpenGLContent::DestroyContent()
 {
-	for(unsigned int i=0; i<looks.size(); ++i)
+	for(size_t i=0; i<looks.size(); ++i)
 	{
-		for(unsigned int h=0; h<looks[i].textures.size(); ++h)
+		for(size_t h=0; h<looks[i].textures.size(); ++h)
 			glDeleteTextures(1, &looks[i].textures[h]);
 	}
 	looks.clear();
 			
-	for(unsigned int i=0; i<objects.size(); ++i)
+	for(size_t i=0; i<objects.size(); ++i)
 	{
 		glDeleteBuffers(1, &objects[i].vboVertex);
 		glDeleteBuffers(1, &objects[i].vboIndex);
@@ -514,11 +536,20 @@ void OpenGLContent::DestroyContent()
 	}	
 	objects.clear();
 	
-	for(unsigned int i=0; i<views.size(); ++i)
-        delete views[i];
-    views.clear();
+    if(views.size() > 0 && views[0]->getType() == ViewType::TRACKBALL)
+    {
+        for(size_t i=1; i<views.size(); ++i)
+            delete views[i];
+        views.erase(views.begin()+1, views.end());
+    }
+    else
+    {
+        for(size_t i=0; i<views.size(); ++i)
+            delete views[i];
+        views.clear();
+    }
     
-    for(unsigned int i=0; i<lights.size(); ++i)
+    for(size_t i=0; i<lights.size(); ++i)
         delete lights[i];
     lights.clear();
 	OpenGLLight::Destroy();
@@ -1204,16 +1235,12 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
 	vt.normal = glm::vec3(0,0,-1.f);
     //vertices
     vt.pos = v1;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //0
 	vt.pos = v2;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //1
 	vt.pos = v3;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 2.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //2
 	vt.pos = v4;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //3
 	//faces
 	f.vertexID[0] = 0;
@@ -1229,16 +1256,12 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
 	vt.normal =  glm::vec3(1.f,0,0);
     //vertices
 	vt.pos = v4;
-    vt.uv = uvMode == 0 ? glm::vec2(0.f, 1.f/3.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //4
 	vt.pos = v3;
-    vt.uv = uvMode == 0 ? glm::vec2(0.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //5
 	vt.pos = v5;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 2.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //6
 	vt.pos = v6;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //7
 	//faces
 	f.vertexID[0] = 4;
@@ -1254,16 +1277,12 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
 	vt.normal = glm::vec3(-1.f,0,0);
 	//vertices
 	vt.pos = v7;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f/3.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //8
 	vt.pos = v8;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //9
 	vt.pos = v2;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f, 2.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //10
 	vt.pos = v1;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f, 1.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //11
 	//faces
 	f.vertexID[0] = 8;
@@ -1279,16 +1298,12 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     vt.normal = glm::vec3(0,0,1.f);
 	//vertices
 	vt.pos = v6;
-    vt.uv = uvMode == 0 ? glm::vec2(0.f, 0.0f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //12
 	vt.pos = v5;
-    vt.uv = uvMode == 0 ? glm::vec2(0.f, 1.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //13
 	vt.pos = v8;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //14
 	vt.pos = v7;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 0.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //15
 	//faces
 	f.vertexID[0] = 12;
@@ -1304,16 +1319,12 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     vt.normal = glm::vec3(0,1.f,0);
 	//vertices
 	vt.pos = v5;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 2.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //16
 	vt.pos = v3;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //17
 	vt.pos = v2;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //18
 	vt.pos = v8;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 2.f/3.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //19
 	//faces
 	f.vertexID[0] = 16;
@@ -1329,16 +1340,12 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     vt.normal = glm::vec3(0,-1.f,0);
     //vertices
 	vt.pos = v4;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 0.f) : glm::vec2(0.f, 0.f);
 	mesh->vertices.push_back(vt); //20
 	vt.pos = v6;
-    vt.uv = uvMode == 0 ? glm::vec2(1.f/3.f, 1.f/3.f) : glm::vec2(0.f, 1.f);
 	mesh->vertices.push_back(vt); //21
 	vt.pos = v7;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 1.f/3.f) : glm::vec2(1.f, 1.f);
 	mesh->vertices.push_back(vt); //22
 	vt.pos = v1;
-    vt.uv = uvMode == 0 ? glm::vec2(2.f/3.f, 0.f) : glm::vec2(1.f, 0.f);
 	mesh->vertices.push_back(vt); //23
 	//faces
 	f.vertexID[0] = 20;
@@ -1348,7 +1355,109 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
 	f.vertexID[1] = 22;
 	f.vertexID[2] = 23;
 	mesh->faces.push_back(f);
-	
+    
+    //Texture coordinates
+    switch(uvMode)
+    {
+        default:
+        case 0:
+            mesh->vertices[0].uv = glm::vec2(1.f/3.f, 1.f/3.f);
+            mesh->vertices[1].uv = glm::vec2(1.f/3.f, 2.f/3.f);
+            mesh->vertices[2].uv = glm::vec2(2.f/3.f, 2.f/3.f);
+            mesh->vertices[3].uv = glm::vec2(2.f/3.f, 1.f/3.f);
+            
+            mesh->vertices[4].uv = glm::vec2(0.f, 1.f/3.f);
+            mesh->vertices[5].uv = glm::vec2(0.f, 2.f/3.f);
+            mesh->vertices[6].uv = glm::vec2(1.f/3.f, 2.f/3.f);
+            mesh->vertices[7].uv = glm::vec2(1.f/3.f, 1.f/3.f);
+            
+            mesh->vertices[8].uv = glm::vec2(2.f/3.f, 1.f/3.f);
+            mesh->vertices[9].uv = glm::vec2(2.f/3.f, 2.f/3.f);
+            mesh->vertices[10].uv = glm::vec2(1.f, 2.f/3.f);
+            mesh->vertices[11].uv = glm::vec2(1.f, 1.f/3.f);
+            
+            mesh->vertices[12].uv = glm::vec2(0.f, 0.0f);
+            mesh->vertices[13].uv = glm::vec2(0.f, 1.f/3.f);
+            mesh->vertices[14].uv = glm::vec2(1.f/3.f, 1.f/3.f);
+            mesh->vertices[15].uv = glm::vec2(1.f/3.f, 0.f);
+            
+            mesh->vertices[16].uv = glm::vec2(1.f/3.f, 2.f/3.f);
+            mesh->vertices[17].uv = glm::vec2(1.f/3.f, 1.f);
+            mesh->vertices[18].uv = glm::vec2(2.f/3.f, 1.f);
+            mesh->vertices[19].uv = glm::vec2(2.f/3.f, 2.f/3.f);
+            
+            mesh->vertices[20].uv = glm::vec2(1.f/3.f, 0.f);
+            mesh->vertices[21].uv = glm::vec2(1.f/3.f, 1.f/3.f);
+            mesh->vertices[22].uv = glm::vec2(2.f/3.f, 1.f/3.f);
+            mesh->vertices[23].uv = glm::vec2(2.f/3.f, 0.f);
+            break;
+            
+        case 1:
+            mesh->vertices[0].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[1].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[2].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[3].uv = glm::vec2(1.f, 0.f);
+            
+            mesh->vertices[4].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[5].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[6].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[7].uv = glm::vec2(1.f, 0.f);
+            
+            mesh->vertices[8].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[9].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[10].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[11].uv = glm::vec2(1.f, 0.f);
+            
+            mesh->vertices[12].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[13].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[14].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[15].uv = glm::vec2(1.f, 0.f);
+            
+            mesh->vertices[16].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[17].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[18].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[19].uv = glm::vec2(1.f, 0.f);
+            
+            mesh->vertices[20].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[21].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[22].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[23].uv = glm::vec2(1.f, 0.f);
+            break;
+            
+        case 2:
+            mesh->vertices[0].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[1].uv = glm::vec2(0.f, halfExtents.y*2.f);
+            mesh->vertices[2].uv = glm::vec2(halfExtents.x*2.f, halfExtents.y*2.f);
+            mesh->vertices[3].uv = glm::vec2(halfExtents.x*2.f, 0.f);
+            
+            mesh->vertices[4].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[5].uv = glm::vec2(0.f, halfExtents.y*2.f);
+            mesh->vertices[6].uv = glm::vec2(halfExtents.z*2.f, halfExtents.y*2.f);
+            mesh->vertices[7].uv = glm::vec2(halfExtents.z*2.f, 0.f);
+            
+            mesh->vertices[8].uv = glm::vec2(halfExtents.z*2.f, 0.f);
+            mesh->vertices[9].uv = glm::vec2(halfExtents.z*2.f, halfExtents.y*2.f);
+            mesh->vertices[10].uv = glm::vec2(0.f, halfExtents.y*2.f);
+            mesh->vertices[11].uv = glm::vec2(0.f, 0.f);
+            
+            mesh->vertices[12].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[13].uv = glm::vec2(0.f, halfExtents.y*2.f);
+            mesh->vertices[14].uv = glm::vec2(halfExtents.x*2.f, halfExtents.y*2.f);
+            mesh->vertices[15].uv = glm::vec2(halfExtents.x*2.f, 0.f);
+            
+            mesh->vertices[16].uv = glm::vec2(0.f, halfExtents.z*2.f);
+            mesh->vertices[17].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[18].uv = glm::vec2(halfExtents.x*2.f, 0.f);
+            mesh->vertices[19].uv = glm::vec2(halfExtents.x*2.f, halfExtents.z*2.f);
+            
+            mesh->vertices[20].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[21].uv = glm::vec2(0.f, halfExtents.z*2.f);
+            mesh->vertices[22].uv = glm::vec2(halfExtents.x*2.f, halfExtents.z*2.f);
+            mesh->vertices[23].uv = glm::vec2(halfExtents.x*2.f, 0.f);
+            break;
+    }
+    
+    //Subdivide
 	for(unsigned int i=0; i<subdivisions; ++i)
 		Subdivide(mesh);
 		

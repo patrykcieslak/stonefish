@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  MaterialManager.cpp
 //  Stonefish
@@ -152,21 +169,21 @@ Material MaterialManager::getMaterial(int index)
         return materials[0];
 }
 
-Fluid* MaterialManager::getFluid(std::string name)
+Fluid MaterialManager::getFluid(std::string name)
 {
     for(unsigned int i=0; i<fluids.size(); ++i)
         if(fluids[i].name == name)
-            return &fluids[i];
+            return fluids[i];
     
-    return NULL;
+    return Fluid();
 }
 
-Fluid* MaterialManager::getFluid(int index)
+Fluid MaterialManager::getFluid(int index)
 {
     if(index >= 0 && index < (int)fluids.size())
-        return &fluids[index];
+        return fluids[index];
     else
-        return NULL;
+        return Fluid();
 }
 
 std::vector<std::string> MaterialManager::GetMaterialsList()

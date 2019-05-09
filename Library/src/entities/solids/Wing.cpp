@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Wing.cpp
 //  Stonefish
@@ -15,8 +32,8 @@ namespace sf
 
 Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength,
            Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength,
-           const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
-           : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
+           const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
+           : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     T_O2G = T_O2C = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
@@ -40,7 +57,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //3. Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
     
     //4. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
@@ -49,8 +66,8 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
 }
     
 Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength,
-           const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
-           : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
+           const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
+           : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     T_O2G = T_O2C = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
@@ -95,7 +112,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //4. Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
     
     //5. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();

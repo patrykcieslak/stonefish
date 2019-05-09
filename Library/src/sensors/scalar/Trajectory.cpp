@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Trajectory.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Trajectory.h"
@@ -35,23 +52,6 @@ void Trajectory::InternalUpdate(Scalar dt)
     Scalar values[6] = {trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw};
     Sample s(6, values);
     AddSampleToHistory(s);
-}
-
-std::vector<Renderable> Trajectory::Render()
-{
-    std::vector<Renderable> items(0);
-    
-    /*if(history.size() > 1)
-	{
-		std::vector<glm::vec3> vertices;
-		
-		for(unsigned int i = 0; i < history.size(); ++i)
-            vertices.push_back(glm::vec3(history[i]->getValue(0), history[i]->getValue(1), history[i]->getValue(2)));
-    
-		OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::LINE_STRIP, vertices, CONTACT_COLOR);
-	}*/
-    
-    return items;
 }
 
 }

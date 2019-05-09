@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  SolidEntity.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/SolidEntity.h"
@@ -15,15 +32,21 @@
 #include "graphics/OpenGLContent.h"
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
+#include "entities/forcefields/Atmosphere.h"
 
 namespace sf
 {
 
-SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt, int _lookId, Scalar thickness, bool isBuoyant) : Entity(uniqueName)
 {
 	mat = m;
     thick = thickness;
-    computeHydro = SimulationApp::getApp()->getSimulationManager()->isOceanEnabled() ? enableHydrodynamicForces : false;
+    
+    if((bpt == BodyPhysicsType::SUBMERGED_BODY || bpt == BodyPhysicsType::FLOATING_BODY) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        phyType = BodyPhysicsType::SURFACE_BODY;
+    else
+        phyType = bpt;
+    
     buoyant = isBuoyant;
     lookId = _lookId;
     
@@ -42,8 +65,8 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar
     contactK = Scalar(-1);
     contactD = Scalar(0);
     volume = Scalar(0);
-    hydroProxyType = HYDRO_PROXY_NONE;
-    hydroProxyParams = std::vector<Scalar>(0);
+    fdProxyType = FD_PROXY_NONE;
+    fdProxyParams = std::vector<Scalar>(0);
     T_CG2H = Transform::getIdentity();
     
     //Set vectors to zero
@@ -53,6 +76,8 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, int _lookId, Scalar
     Tds.setZero();
     Fdp.setZero();
     Tdp.setZero();
+    Fda.setZero();
+    Tda.setZero();
 	filteredLinearVel.setZero();
 	filteredAngularVel.setZero();
     linearAcc.setZero();
@@ -143,10 +168,6 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
     }
 }
 
-//void SolidEntity::SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB)
-//{
-//}
-
 void SolidEntity::setLook(int newLookId)
 {
     lookId = newLookId;
@@ -167,9 +188,9 @@ bool SolidEntity::isBuoyant() const
     return buoyant;
 }
     
-bool SolidEntity::hydrodynamicsEnabled() const
+BodyPhysicsType SolidEntity::getBodyPhysicsType() const
 {
-    return computeHydro;
+    return phyType;
 }
 
 void SolidEntity::getAABB(Vector3& min, Vector3& max)
@@ -208,29 +229,29 @@ std::vector<Renderable> SolidEntity::Render()
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         items.push_back(item);
         
-        switch(hydroProxyType)
+        switch(fdProxyType)
         {
-            case HYDRO_PROXY_NONE:
+            case FD_PROXY_NONE:
                 break;
                 
-            case HYDRO_PROXY_SPHERE:
+            case FD_PROXY_SPHERE:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
                 item.model = glMatrixFromTransform(getHTransform());
-                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0]));
+                item.points.push_back(glm::vec3((GLfloat)fdProxyParams[0], (GLfloat)fdProxyParams[0], (GLfloat)fdProxyParams[0]));
                 items.push_back(item);
                 break;
                 
-            case HYDRO_PROXY_CYLINDER:
+            case FD_PROXY_CYLINDER:
                 item.type = RenderableType::HYDRO_CYLINDER;
                 item.model = glMatrixFromTransform(getHTransform());
-                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1]));
+                item.points.push_back(glm::vec3((GLfloat)fdProxyParams[0], (GLfloat)fdProxyParams[0], (GLfloat)fdProxyParams[1]));
                 items.push_back(item);
                 break;
                 
-            case HYDRO_PROXY_ELLIPSOID:
+            case FD_PROXY_ELLIPSOID:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
                 item.model = glMatrixFromTransform(getHTransform());
-                item.points.push_back(glm::vec3((GLfloat)hydroProxyParams[0], (GLfloat)hydroProxyParams[1], (GLfloat)hydroProxyParams[2]));
+                item.points.push_back(glm::vec3((GLfloat)fdProxyParams[0], (GLfloat)fdProxyParams[1], (GLfloat)fdProxyParams[2]));
                 items.push_back(item);
                 break;
         }
@@ -466,6 +487,22 @@ Matrix6Eigen SolidEntity::getAddedMass() const
     return aMass;
 }
 
+Scalar SolidEntity::getAugmentedMass() const
+{
+    if(phyType == BodyPhysicsType::SUBMERGED_BODY)
+        return mass + (aMass(0,0) + aMass(1,1) + aMass(2,2))/Scalar(3);
+    else
+        return mass;
+}
+
+Vector3 SolidEntity::getAugmentedInertia() const
+{
+    if(phyType == BodyPhysicsType::SUBMERGED_BODY)
+        return Ipri + Vector3(aMass(3,3), aMass(4,4), aMass(5,5)); 
+    else
+        return Ipri;
+}
+
 Material SolidEntity::getMaterial() const
 {
     return mat;
@@ -486,25 +523,22 @@ const Mesh* SolidEntity::getPhysicsMesh()
     return phyMesh;
 }
 
-void SolidEntity::ComputeHydrodynamicProxy(HydrodynamicProxyType t)
+void SolidEntity::ComputeFluidDynamicsProxy(FluidDynamicsProxyType t)
 {
-    if(!computeHydro)
-        return;
-        
     switch(t)
     {
-        case HYDRO_PROXY_NONE:
+        case FD_PROXY_NONE:
             break;
             
-        case HYDRO_PROXY_SPHERE:
+        case FD_PROXY_SPHERE:
             ComputeProxySphere();
             break;
             
-        case HYDRO_PROXY_CYLINDER:
+        case FD_PROXY_CYLINDER:
             ComputeProxyCylinder();
             break;
             
-        case HYDRO_PROXY_ELLIPSOID:
+        case FD_PROXY_ELLIPSOID:
             ComputeProxyEllipsoid();
             break;
     }
@@ -587,9 +621,9 @@ void SolidEntity::ComputeProxySphere()
 	MatrixXEigen r(3, 1);
 	r = Eigen::sqrt(1.0/Eigen::abs(eigenSolver.eigenvalues().array()));
     
-    hydroProxyType = HYDRO_PROXY_SPHERE;
-    hydroProxyParams.resize(1);
-    hydroProxyParams[0] = r(0);
+    fdProxyType = FD_PROXY_SPHERE;
+    fdProxyParams.resize(1);
+    fdProxyParams[0] = r(0);
     
     //Added mass and inertia
     Scalar rho = Scalar(1000);
@@ -668,34 +702,34 @@ void SolidEntity::ComputeProxyCylinder()
         l_2 = d > l_2 ? d : l_2;
     }
     
-    hydroProxyType = HYDRO_PROXY_CYLINDER;
-    hydroProxyParams.resize(2);
+    fdProxyType = FD_PROXY_CYLINDER;
+    fdProxyParams.resize(2);
     
     if(axis == 0) //X axis
     {
-        hydroProxyParams[0] = r[0];
-        hydroProxyParams[1] = l_2*Scalar(2);
+        fdProxyParams[0] = r[0];
+        fdProxyParams[1] = l_2*Scalar(2);
         T_CG2H = Transform(Quaternion(0,M_PI_2,0), Vector3(0,0,0));
     }
     else if(axis == 1) //Y axis
     {
-        hydroProxyParams[0] = r[1];
-        hydroProxyParams[1] = l_2*Scalar(2);
+        fdProxyParams[0] = r[1];
+        fdProxyParams[1] = l_2*Scalar(2);
         T_CG2H = Transform(Quaternion(0,0,M_PI_2), Vector3(0,0,0));
     }
     else
     {
-        hydroProxyParams[0] = r[2];
-        hydroProxyParams[1] = l_2*Scalar(2);
+        fdProxyParams[0] = r[2];
+        fdProxyParams[1] = l_2*Scalar(2);
         T_CG2H = I4();
     }
     
     //Added mass and inertia
     Scalar rho = Scalar(1000);
-    Scalar m1 = rho*M_PI*hydroProxyParams[0]*hydroProxyParams[0]; //Parallel to axis
-    Scalar m2 = rho*M_PI*hydroProxyParams[0]*hydroProxyParams[0]*Scalar(2)*hydroProxyParams[1]; //Perpendicular to axis
+    Scalar m1 = rho*M_PI*fdProxyParams[0]*fdProxyParams[0]; //Parallel to axis
+    Scalar m2 = rho*M_PI*fdProxyParams[0]*fdProxyParams[0]*Scalar(2)*fdProxyParams[1]; //Perpendicular to axis
     Scalar I1 = Scalar(0);
-    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*hydroProxyParams[1]*hydroProxyParams[1]*btPow(hydroProxyParams[0], Scalar(3));
+    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*fdProxyParams[1]*fdProxyParams[1]*btPow(fdProxyParams[0], Scalar(3));
     
     Vector3 M = T_CG2H.getBasis() * Vector3(m2, m2, m1);
     Vector3 I = T_CG2H.getBasis() * Vector3(I2, I2, I1);
@@ -803,11 +837,11 @@ void SolidEntity::ComputeProxyEllipsoid()
     ellipsoidTransform.setBasis(Matrix3(axes(0,0), axes(0,1), axes(0,2), axes(1,0), axes(1,1), axes(1,2), axes(2,0), axes(2,1), axes(2,2)));
     ellipsoidR = ellipsoidTransform.getBasis() * ellipsoidR;
     
-    hydroProxyType = HYDRO_PROXY_ELLIPSOID;
-    hydroProxyParams.resize(3);
-    hydroProxyParams[0] = ellipsoidR.getX();
-    hydroProxyParams[1] = ellipsoidR.getY();
-    hydroProxyParams[2] = ellipsoidR.getZ();
+    fdProxyType = FD_PROXY_ELLIPSOID;
+    fdProxyParams.resize(3);
+    fdProxyParams[0] = ellipsoidR.getX();
+    fdProxyParams[1] = ellipsoidR.getY();
+    fdProxyParams[2] = ellipsoidR.getZ();
     
     //Compute added mass
     //Search for the longest semiaxis
@@ -883,8 +917,8 @@ void SolidEntity::BuildRigidBody()
         colShape->setMargin(Scalar(0));
         
         //Construct Bullet rigid body
-        Scalar M = mass + btMin(btMin(aMass(0,0), aMass(1,1)), aMass(2,2));
-        Vector3 I = Ipri + Vector3(aMass(3,3), aMass(4,4), aMass(5,5));
+        Scalar M = getAugmentedMass();
+        Vector3 I = getAugmentedInertia();
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0.); //not used
@@ -1044,21 +1078,21 @@ void SolidEntity::ApplyTorque(const Vector3& torque)
     }
 }
 
-BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* liquid)
+BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* ocn)
 {
     Vector3 aabbMin, aabbMax;
     getAABB(aabbMin, aabbMax);
     Vector3 d = aabbMax-aabbMin;
     
     unsigned int submerged = 0;
-    if(liquid->GetDepth(aabbMin) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMax) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMin + Vector3(d.x(), 0, 0)) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMin + Vector3(0, d.y(), 0)) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMin + Vector3(d.x(), d.y(), 0)) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMin + Vector3(0, 0, d.z())) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMin + Vector3(d.x(), 0, d.z())) > Scalar(0)) ++submerged;
-    if(liquid->GetDepth(aabbMin + Vector3(0, d.y(), d.z())) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMax) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin + Vector3(d.x(), 0, 0)) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), 0)) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin + Vector3(d.x(), d.y(), 0)) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin + Vector3(0, 0, d.z())) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin + Vector3(d.x(), 0, d.z())) > Scalar(0)) ++submerged;
+    if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), d.z())) > Scalar(0)) ++submerged;
     
     if(submerged == 0)
         return BodyFluidPosition::OUTSIDE_FLUID;
@@ -1068,20 +1102,62 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* liquid)
         return BodyFluidPosition::CROSSING_FLUID_SURFACE;
 }
     
-void SolidEntity::ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Scalar rho, Scalar mu, Vector3& linear, Vector3& quadratic)
+void SolidEntity::ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Vector3& linear, Vector3& quadratic)
 {
     Vector3 vn = vc.dot(fn) * fn; //Normal velocity
-    Vector3 vt = vc - vn; //Tangent velocity
+    //Vector3 vt = vc - vn; //Tangent velocity
+    //linear = mu * vt * A / Scalar(0.0001);
     
-    linear = mu * vt * A / Scalar(0.0001);
-    
-    if(fn.dot(vn) > Scalar(0))
-        quadratic = Scalar(0.5) * rho * vn * vn.safeNorm() * A;
+    if(fn.dot(vn) < Scalar(0))
+    {
+        Scalar vmag = vn.safeNorm();
+        linear = vn * btExp(-0.5*vmag*vmag) * A; //0.5*rho in CorrectDampingForces
+        quadratic = vn * vmag * A; // 0.5*rho in CorrectDampingForces
+    }
     else
+    {
+        linear = Vector3(0,0,0);
         quadratic = Vector3(0,0,0);
+    }
 }
 
-void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
+void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn)
+{
+    Vector3 Fdpn = (T_CG2H.getBasis().inverse() * Fdp).safeNormalize(); //Transform force to proxy frame
+    Scalar corFactor(1.0);
+    
+    switch(fdProxyType)
+    {
+        case FD_PROXY_NONE:
+        case FD_PROXY_SPHERE:
+            break;
+                
+        case FD_PROXY_CYLINDER:
+        {
+            Vector3 Cd(0.5, 0.5, 1.0);
+            corFactor = Cd.dot(Fdpn);
+        }
+            break;
+                
+        case FD_PROXY_ELLIPSOID:
+        {
+            Vector3 Cd(Scalar(1)/fdProxyParams[0] , Scalar(1)/fdProxyParams[1], Scalar(1)/fdProxyParams[2]);
+            Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+            Cd /= maxCd;
+            corFactor = Cd.dot(Fdpn);
+        }
+            break;
+    }
+    
+    corFactor *= 2.0;
+    
+    Fdp *= btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    Fds *= 0.1 * btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    Tdp *= btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    Tds *= 0.1 * btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+}
+
+void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
                                             const Vector3& v, const Vector3& omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp)
 {
     //Buoyancy
@@ -1109,8 +1185,6 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
       
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
-    Scalar viscousity = liquid->getLiquid()->viscosity;
-    Scalar density = liquid->getLiquid()->density;
  
 	//Loop through all faces...
     for(size_t i=0; i<mesh->faces.size(); ++i)
@@ -1125,9 +1199,9 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
         
         //Check if face underwater
         Scalar depth[3];
-        depth[0] = liquid->GetDepth(p1);
-        depth[1] = liquid->GetDepth(p2);
-        depth[2] = liquid->GetDepth(p3);
+        depth[0] = ocn->GetDepth(p1);
+        depth[1] = ocn->GetDepth(p2);
+        depth[2] = ocn->GetDepth(p3);
         
         if(depth[0] < Scalar(0) && depth[1] < Scalar(0) && depth[2] < Scalar(0))
             continue;
@@ -1296,7 +1370,7 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
             A = len/Scalar(2); //Area of the face (triangle)
         }
         
-        Scalar pressure = liquid->GetPressure(fc);
+        Scalar pressure = ocn->GetPressure(fc);
         
         //Buoyancy force
         if(settings.reallisticBuoyancy)
@@ -1311,10 +1385,10 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
         //Damping force
         if(settings.dampingForces)
 		{
-            Vector3 vc = liquid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
+            Vector3 vc = ocn->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
             Vector3 Fdsf;
             Vector3 Fdpf;
-            ComputeDampingForces(vc, fn1, A, density, viscousity, Fdsf, Fdpf);
+            ComputeDampingForces(vc, fn1, A, Fdsf, Fdpf);
             
             //Accumulate
             _Fds += Fdsf;
@@ -1330,7 +1404,7 @@ void SolidEntity::ComputeFluidForcesSurface(const HydrodynamicsSettings& setting
 #endif
 }
 
-void SolidEntity::ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
+void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
                                               const Vector3& v, const Vector3& omega, Vector3& _Fds, Vector3& _Tds, Vector3& _Fdp, Vector3& _Tdp)
 {
     if(mesh == NULL) return;
@@ -1347,8 +1421,6 @@ void SolidEntity::ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, c
     
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
-    Scalar viscousity = liquid->getLiquid()->viscosity;
-    Scalar density = liquid->getLiquid()->density;
     
     //Loop through all faces...
     for(unsigned int i=0; i<mesh->faces.size(); ++i)
@@ -1374,10 +1446,10 @@ void SolidEntity::ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, c
         Scalar A = len/Scalar(2); //Area of the face (triangle)
         
         //Damping forces
-        Vector3 vc = liquid->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
+        Vector3 vc = ocn->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
         Vector3 Fdsf;
         Vector3 Fdpf;
-        ComputeDampingForces(vc, fn1, A, density, viscousity, Fdsf, Fdpf);
+        ComputeDampingForces(vc, fn1, A, Fdsf, Fdpf);
         
         //Accumulate
         _Fds += Fdsf;
@@ -1392,11 +1464,11 @@ void SolidEntity::ComputeFluidForcesSubmerged(const Mesh* mesh, Ocean* liquid, c
 #endif
 }
 
-void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid)
+void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(!computeHydro) return;
+    if(phyType != BodyPhysicsType::FLOATING_BODY && phyType != BodyPhysicsType::SUBMERGED_BODY) return;
     
-    BodyFluidPosition bf = CheckBodyFluidPosition(liquid);
+    BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
     //If completely outside fluid just set all torques and forces to 0
     if(bf == BodyFluidPosition::OUTSIDE_FLUID)
@@ -1420,58 +1492,131 @@ void SolidEntity::ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liqu
         //Compute buoyancy based on CB position
         if(isBuoyant())
         {
-            Fb = -volume*liquid->getLiquid()->density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            Fb = -volume*ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
             Tb = (getCGTransform() * P_CB - getCGTransform().getOrigin()).cross(Fb);
         }
         
         if(settings.dampingForces)
-            ComputeFluidForcesSubmerged(getPhysicsMesh(), liquid, getCGTransform(), getCTransform(), v, omega, Fds, Tds, Fdp, Tdp);
+            ComputeHydrodynamicForcesSubmerged(getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fds, Tds, Fdp, Tdp);
     }
     else //CROSSING_FLUID_SURFACE
     {
         if(!isBuoyant()) settings.reallisticBuoyancy = false;
-        ComputeFluidForcesSurface(settings, getPhysicsMesh(), liquid, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fds, Tds, Fdp, Tdp);
+        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fds, Tds, Fdp, Tdp);
     }
 
    if(settings.dampingForces)
-        CorrectDampingForces();
+        CorrectHydrodynamicForces(ocn);
 }
-    
-void SolidEntity::CorrectDampingForces()
+
+void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    Vector3 Fdpn = (T_CG2H.getBasis().inverse() * Fdp).safeNormalize(); //Transform force to proxy frame
+    if(phyType != BodyPhysicsType::AERODYNAMIC_BODY) return;
+    
+    //Get velocities and transformations
+    Vector3 v = getLinearVelocity();
+    Vector3 omega = getAngularVelocity();
+	
+    //Compute drag
+    ComputeAerodynamicForces(getPhysicsMesh(), atm, getCGTransform(), getCTransform(), v, omega, Fda, Tda);
+    CorrectAerodynamicForces(atm);
+}
+
+void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, const Transform& T_CG, const Transform& T_C,
+                                           const Vector3& v, const Vector3& omega, Vector3& _Fda, Vector3& _Tda)
+{
+    if(mesh == NULL) return;
+        
+    _Fda.setZero();
+    _Tda.setZero();
+    
+    //Calculate fluid dynamics forces and torques
+    Vector3 p = T_CG.getOrigin();
+    Scalar density = atm->getGas().density;
+  
+    //Loop through all faces...
+    for(size_t i=0; i<mesh->faces.size(); ++i)
+    {
+        //Global coordinates
+        glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+        glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+        glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+        Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
+        Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
+        Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
+        
+        //Calculate face properties
+        Vector3 fv1 = p2-p1; //One side of the face (triangle)
+        Vector3 fv2 = p3-p1; //Another side of the face (triangle)
+        Vector3 fn = fv1.cross(fv2); //Normal of the face (length != 1)
+        Scalar len = fn.safeNorm();
+        
+        if(len == Scalar(0)) continue; //If triangle is incorrect (two sides parallel)
+        
+        Vector3 fc = (p1+p2+p3)/Scalar(3); //Face centroid
+        Vector3 fn1 = fn/len; //Normalised normal (length = 1)
+        Scalar A = len/Scalar(2); //Area of the face (triangle)
+        
+        //Damping forces
+        Vector3 vc = atm->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Air velocity at face center
+        Vector3 vn = vc.dot(fn1) * fn1; //Normal velocity
+        Vector3 Fdaf(0,0,0);
+        
+        if(fn1.dot(vn) < Scalar(0))
+            Fdaf = vn * vn.safeNorm() * A;
+        
+        //Accumulate
+        _Fda += Fdaf;
+        _Tda += (fc - p).cross(Fdaf);
+    }
+    
+    _Fda *= Scalar(0.5) * density;
+    _Tda *= Scalar(0.5) * density;
+}
+
+void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm)
+{
+     //Correct forces
+    Vector3 Fdan = (T_CG2H.getBasis().inverse() * Fda).safeNormalize(); //Transform force to proxy frame
     Scalar corFactor(1.0);
     
-    switch(hydroProxyType)
+    switch(fdProxyType)
     {
-        case HYDRO_PROXY_NONE:
-        case HYDRO_PROXY_SPHERE:
+        case FD_PROXY_NONE:
+        case FD_PROXY_SPHERE:
             break;
                 
-        case HYDRO_PROXY_CYLINDER:
+        case FD_PROXY_CYLINDER:
         {
             Vector3 Cd(0.5, 0.5, 1.0);
-            corFactor = Cd.dot(Fdpn);
+            corFactor = Cd.dot(Fdan);
         }
             break;
                 
-        case HYDRO_PROXY_ELLIPSOID:
+        case FD_PROXY_ELLIPSOID:
         {
-            Vector3 Cd(Scalar(1)/hydroProxyParams[0] , Scalar(1)/hydroProxyParams[1], Scalar(1)/hydroProxyParams[2]);
+            Vector3 Cd(Scalar(1)/fdProxyParams[0] , Scalar(1)/fdProxyParams[1], Scalar(1)/fdProxyParams[2]);
             Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
             Cd /= maxCd;
-            corFactor = Cd.dot(Fdpn);
+            corFactor = Cd.dot(Fdan);
         }
             break;
     }
     
-    Fdp *= btFabs(corFactor);
+    Fda *= btFabs(corFactor);
+    Tda *= btFabs(corFactor);
 }
 
-void SolidEntity::ApplyFluidForces()
+void SolidEntity::ApplyHydrodynamicForces()
 {
     ApplyCentralForce(Fb + Fds + Fdp);
     ApplyTorque(Tb + Tdp + Tds);
+}
+
+void SolidEntity::ApplyAerodynamicForces()
+{
+    ApplyCentralForce(Fda);
+    ApplyTorque(Tda);
 }
     
 void SolidEntity::ComputePhysicalProperties(Mesh *mesh, Scalar wallThickness, Material mat, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot)

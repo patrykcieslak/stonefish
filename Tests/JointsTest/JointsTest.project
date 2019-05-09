@@ -8,14 +8,15 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="JointsTestApp.cpp"/>
     <File Name="JointsTestManager.cpp"/>
     <File Name="main.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
-    <File Name="JointsTestApp.h"/>
     <File Name="JointsTestManager.h"/>
   </VirtualDirectory>
+  <Dependencies Name="Debug">
+    <Project Name="libStonefish"/>
+  </Dependencies>
   <Dependencies Name="Release">
     <Project Name="libStonefish"/>
   </Dependencies>
@@ -30,12 +31,12 @@
         <IncludePath Value="/usr/local/include/bullet"/>
         <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>
         <Preprocessor Value="BT_EULER_DEFAULT_ZYX"/>
+        <Preprocessor Value="DATA_DIR_PATH=\&quot;$(WorkspacePath)/Tests/Data/\&quot;"/>
       </Compiler>
       <Linker Options="">
         <LibraryPath Value="/usr/lib"/>
         <LibraryPath Value="/usr/local/lib"/>
         <LibraryPath Value="/usr/lib/x86_64-linux-gnu"/>
-        <Library Value="Stonefish"/>
         <Library Value="BulletCollision"/>
         <Library Value="BulletDynamics"/>
         <Library Value="LinearMath"/>
@@ -131,7 +132,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug">
-    <Project Name="libStonefish"/>
-  </Dependencies>
 </CodeLite_Project>

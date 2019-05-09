@@ -42,6 +42,7 @@
       <File Name="src/sensors/Contact.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="src/actuators/Propeller.cpp"/>
       <File Name="src/actuators/ServoMotor.cpp"/>
       <File Name="src/actuators/LinkActuator.cpp"/>
       <File Name="src/actuators/JointActuator.cpp"/>
@@ -117,6 +118,7 @@
         <File Name="src/entities/solids/Cylinder.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="forcefields">
+        <File Name="src/entities/forcefields/Uniform.cpp"/>
         <File Name="src/entities/forcefields/Atmosphere.cpp"/>
         <File Name="src/entities/forcefields/Stream.cpp"/>
         <File Name="src/entities/forcefields/Ocean.cpp"/>
@@ -155,6 +157,7 @@
     </VirtualDirectory>
     <VirtualDirectory Name="entities">
       <VirtualDirectory Name="forcefields">
+        <File Name="include/entities/forcefields/Uniform.h"/>
         <File Name="include/entities/forcefields/Atmosphere.h"/>
         <File Name="include/entities/forcefields/VelocityField.h"/>
         <File Name="include/entities/forcefields/Trigger.h"/>
@@ -255,6 +258,7 @@
       <File Name="include/sensors/Contact.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="include/actuators/Propeller.h"/>
       <File Name="include/actuators/ServoMotor.h"/>
       <File Name="include/actuators/LinkActuator.h"/>
       <File Name="include/actuators/JointActuator.h"/>
@@ -287,13 +291,13 @@
       <File Name="shaders/printer.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="postprocessing">
+      <File Name="shaders/manualTonemapping.frag"/>
       <File Name="shaders/depthVisualize.frag"/>
       <File Name="shaders/lightMeter.frag"/>
       <File Name="shaders/tonemapping.frag"/>
       <File Name="shaders/depthLinearizeMSAA.frag"/>
       <File Name="shaders/depthLinearize.frag"/>
       <File Name="shaders/hbaoDeinterleave.frag"/>
-      <File Name="shaders/hbaoSaq.geom"/>
       <File Name="shaders/hbaoCalc.frag"/>
       <File Name="shaders/hbaoReinterleave.frag"/>
       <File Name="shaders/hbaoBlur.frag"/>
@@ -454,4 +458,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  OpenGLContent.h
 //  Stonefish
@@ -265,7 +282,7 @@ namespace sf
         /*!
          \param halfExtents the dimensions of the box (half of side lengths) [m]
          \param subdivisions number of subdivisions used when generating the mesh (needed for hydrodynamics)
-         \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
+         \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces, 2 - coordinates synced with dimensions (for grid))
          \return a pointer to the allocated mesh structure
          */
         static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3, unsigned int uvMode = 0);

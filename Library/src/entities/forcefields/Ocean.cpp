@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Ocean.cpp
 //  Stonefish
@@ -17,25 +34,25 @@
 namespace sf
 {
 
-Ocean::Ocean(std::string uniqueName, bool simulateWaves, Fluid* l) : ForcefieldEntity(uniqueName)
+Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    
-	Scalar size(10000);
+    oceanState = waves > Scalar(1.0) ? Scalar(1.0) : waves;
+     
+	Scalar size(100000);
 	depth = size;
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
-    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,size/Scalar(2)))); //Surface at 0
+    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0, 0, size/Scalar(2) - oceanState*Scalar(3)))); //Move ocean influence zone a bit up to account for waves
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
     currents = std::vector<VelocityField*>(0);
 	
-	glOcean = NULL;
     liquid = l;
-    waves = simulateWaves;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
     waterType = Scalar(0.5);
     turbidity = 1.0;
+    glOcean = NULL;
 }
 
 Ocean::~Ocean()
@@ -46,16 +63,14 @@ Ocean::~Ocean()
             delete currents[i];
         currents.clear();
     }
-    
-    liquid = NULL;
 	
 	if(glOcean != NULL)
 		delete glOcean;
 }
 
-bool Ocean::hasWaves()
+bool Ocean::hasWaves() const
 {
-    return waves;
+    return oceanState > Scalar(0);
 }
 
 Scalar Ocean::getWaterType()
@@ -78,7 +93,7 @@ ForcefieldType Ocean::getForcefieldType()
     return FORCEFIELD_OCEAN;
 }
 
-const Fluid* Ocean::getLiquid() const
+Fluid Ocean::getLiquid() const
 {
     return liquid;
 }
@@ -107,7 +122,7 @@ bool Ocean::IsInsideFluid(const Vector3& point)
 
 Scalar Ocean::GetDepth(const Vector3& point)
 {
-    if(waves) //Geometric waves
+    if(hasWaves()) //Geometric waves
     {
         GLfloat waveHeight = glOcean->getWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
         glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), waveHeight);
@@ -126,19 +141,19 @@ Scalar Ocean::GetPressure(const Vector3& point)
 {
     Scalar g = 9.81;
     Scalar d = GetDepth(point);
-    Scalar pressure = d > Scalar(0) ? d*liquid->density*g : Scalar(0);
+    Scalar pressure = d > Scalar(0) ? d*liquid.density*g : Scalar(0);
     return pressure;
 }
 
 Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
 {
     Vector3 fv(0,0,0);
-    for(unsigned int i=0; i<currents.size(); ++i)
+    for(size_t i=0; i<currents.size(); ++i)
         fv += currents[i]->GetVelocityAtPoint(point);
     return fv;
 }
 
-void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
+void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
 	btRigidBody* rb = btRigidBody::upcast(co);
@@ -162,7 +177,7 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
 		return;
 	
 	HydrodynamicsSettings settings;
-	settings.algorithm = ht;
+	settings.algorithm = fdt;
 	
     if(ent->getType() == ENTITY_SOLID)
     {
@@ -170,16 +185,16 @@ void Ocean::ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world,
         {
             settings.dampingForces = true;
             settings.reallisticBuoyancy = true;
-            ((SolidEntity*)ent)->ComputeFluidForces(settings, this);
+            ((SolidEntity*)ent)->ComputeHydrodynamicForces(settings, this);
         }
         
-        ((SolidEntity*)ent)->ApplyFluidForces();
+        ((SolidEntity*)ent)->ApplyHydrodynamicForces();
     }
 }
 
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
-	glOcean = new OpenGLOcean(waves, hydrodynamics);
+	glOcean = new OpenGLOcean((float)oceanState, hydrodynamics);
     SetupWaterProperties(0.0, 1.0);
 }
 

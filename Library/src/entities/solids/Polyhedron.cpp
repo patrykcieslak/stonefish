@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Polyhedron.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Polyhedron.h"
@@ -18,9 +35,9 @@ namespace sf
 Polyhedron::Polyhedron(std::string uniqueName,
                        std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                        std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                       Material m, int lookId, bool smoothGraphicsNormals, Scalar thickness,
-                       bool enableHydrodynamicForces, bool isBuoyant, HydrodynamicProxyType proxy)
-                        : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
+                       Material m, BodyPhysicsType bpt, int lookId, bool smoothGraphicsNormals, Scalar thickness,
+                       bool isBuoyant, FluidDynamicsProxyType proxy)
+                        : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     //1.Load geometry from file
     graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, smoothGraphicsNormals);
@@ -46,7 +63,7 @@ Polyhedron::Polyhedron(std::string uniqueName,
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //3.Calculate equivalent ellipsoid for hydrodynamic force computation
-    ComputeHydrodynamicProxy(proxy);
+    ComputeFluidDynamicsProxy(proxy);
     
     //4. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
@@ -56,8 +73,8 @@ Polyhedron::Polyhedron(std::string uniqueName,
     
 Polyhedron::Polyhedron(std::string uniqueName,
                        std::string modelFilename, Scalar scale, const Transform& origin,
-                       Material m, int lookId, bool smoothNormals, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant, HydrodynamicProxyType proxy)
-    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, m, lookId, smoothNormals, thickness, enableHydrodynamicForces, isBuoyant, proxy)
+                       Material m, BodyPhysicsType bpt, int lookId, bool smoothNormals, Scalar thickness, bool isBuoyant, FluidDynamicsProxyType proxy)
+    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, m, bpt, lookId, smoothNormals, thickness, isBuoyant, proxy)
 {
 }
 

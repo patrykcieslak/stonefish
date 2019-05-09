@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Thruster.cpp
 //  Stonefish
@@ -103,7 +120,7 @@ void Thruster::Update(Scalar dt)
             Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
             
             Scalar rate = (RH ? Scalar(1.0) : Scalar(-1.0)) * omega/(Scalar(2) * M_PI);
-            thrust = Scalar(2) * liquid->getLiquid()->density * A * (k1*u*u + k2*u*D*rate + k3*D*D*rate*rate);
+            thrust = Scalar(2) * liquid->getLiquid().density * A * (k1*u*u + k2*u*D*rate + k3*D*D*rate*rate);
             
             if( (RH && omega < Scalar(0)) || (!RH && omega > Scalar(0)) )
                 thrust = -thrust;
@@ -112,7 +129,7 @@ void Thruster::Update(Scalar dt)
             //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
             //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
             
-            torque = liquid->getLiquid()->density * kQ * btFabs(rate)*rate * D*D*D*D*D;
+            torque = liquid->getLiquid().density * kQ * btFabs(rate)*rate * D*D*D*D*D;
             if(!RH)
                 torque = -torque;
             

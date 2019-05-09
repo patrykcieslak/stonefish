@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Sensor.cpp
 //  Stonefish
@@ -27,11 +44,13 @@ Sensor::Sensor(std::string uniqueName, Scalar frequency)
     eleapsedTime = Scalar(0);
     renderable = false;
     newDataAvailable = false;
+    updateMutex = SDL_CreateMutex();
 }
 
 Sensor::~Sensor()
 {
 	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    SDL_DestroyMutex(updateMutex);
 }
 
 std::string Sensor::getName()
@@ -72,6 +91,8 @@ void Sensor::Reset()
 
 void Sensor::Update(Scalar dt)
 {
+    SDL_LockMutex(updateMutex);
+    
     if(freq <= Scalar(0.)) // Every simulation tick
     {
         InternalUpdate(dt);
@@ -89,6 +110,8 @@ void Sensor::Update(Scalar dt)
             newDataAvailable = true;
         }
     }
+    
+    SDL_UnlockMutex(updateMutex);
 }
 
 std::vector<Renderable> Sensor::Render()

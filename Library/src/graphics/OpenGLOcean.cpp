@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  OpenGLOcean.cpp
 //  Stonefish
@@ -16,6 +33,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
+#include "graphics/OpenGLAtmosphere.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image_write.h"
 #include "entities/forcefields/Atmosphere.h"
@@ -23,7 +41,7 @@
 namespace sf
 {
 
-OpenGLOcean::OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics)
+OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
 {
     cInfo("Generating ocean waves...");
     
@@ -36,9 +54,9 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics)
     vboEdge = 0;
     vaoMask = 0;
     vboMask = 0;
+    tesselation = 8;
     
     //Params
-    waves = geometricWaves;
     hydroMutex = hydrodynamics;
     qt = NULL;
     fftData = NULL;
@@ -46,15 +64,28 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics)
     params.slopeVarianceSize = 4;
     params.fftSize = 1 << params.passes;
     params.propagate = true;
-    params.wind = 5.f;
-    params.omega = 2.f;
     params.km = 370.f;
     params.cm = 0.23f;
-    params.A = 1.0f;
     params.t = 0.f;
     params.gridSizes = glm::vec4(893.f, 101.f, 21.f, 11.f);
     params.spectrum12 = NULL;
     params.spectrum34 = NULL;
+    
+    if(geometricWaves > 0.f)
+    {
+        params.wind = geometricWaves*5.f + 2.f;
+        params.A = 1.f;
+        params.omega = 5.f*expf(-geometricWaves) + 0.2f;
+        waves = true;
+    }
+    else
+    {
+        params.wind = 5.f;
+        params.A = 1.0f;
+        params.omega = 2.f;
+        waves = false;
+    }
+    
     GenerateWavesSpectrum();
     
     float maxAnisotropy;
@@ -421,7 +452,7 @@ OpenGLOcean::OpenGLOcean(bool geometricWaves, SDL_mutex* hydrodynamics)
 
 OpenGLOcean::~OpenGLOcean()
 {
-    for(unsigned int i=0; i<oceanShaders.size(); ++i) delete oceanShaders[i];
+    for(size_t i=0; i<oceanShaders.size(); ++i) delete oceanShaders[i];
 	glDeleteFramebuffers(3, oceanFBOs);
     glDeleteTextures(6, oceanTextures);
 	if(vaoMask > 0) glDeleteVertexArrays(1, &vaoMask);
@@ -648,7 +679,7 @@ void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::
     
         oceanShaders[7]->Use();
         oceanShaders[7]->SetUniform("MVP", projection * view);
-        oceanShaders[7]->SetUniform("tessDiv", 8.f);
+        oceanShaders[7]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[7]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[7]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     
@@ -754,14 +785,17 @@ void OpenGLOcean::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projec
         oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
         oceanShaders[0]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
         oceanShaders[0]->SetUniform("eyePos", eyePos);
-        oceanShaders[0]->SetUniform("tessDiv", 8.f);
+        oceanShaders[0]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
         SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[0]);
         
+        //glCullFace(GL_BACK);
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         qt->Draw();
+        
+        
         //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glUseProgram(0);
@@ -843,7 +877,7 @@ void OpenGLOcean::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pr
         oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
         oceanShaders[1]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
         oceanShaders[1]->SetUniform("eyePos", eyePos);
-        oceanShaders[1]->SetUniform("tessDiv", 8.f);
+        oceanShaders[1]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
         oceanShaders[1]->SetUniform("turbidity", turbidity);

@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Box.cpp
 //  Stonefish
@@ -13,8 +30,8 @@
 namespace sf
 {
 
-Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m, int lookId, Scalar thickness, bool enableHydrodynamicForces, bool isBuoyant)
-         : SolidEntity(uniqueName, m, lookId, thickness, enableHydrodynamicForces, isBuoyant)
+Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
+         : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     halfExtents = dimensions * Scalar(0.5);
     T_O2G = T_O2C = origin;
@@ -53,7 +70,7 @@ Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& ori
 	phyMesh = OpenGLContent::BuildBox(glHalfExtents);
     
     //Compute hydrodynamic properties
-    ComputeHydrodynamicProxy(HYDRO_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
     //dragCoeff = Vector3(halfExtents.y()*halfExtents.z()*Scalar(4*1.05), halfExtents.x()*halfExtents.z()*Scalar(4*1.05), halfExtents.y()*halfExtents.x()*Scalar(4*1.05));
 }
 

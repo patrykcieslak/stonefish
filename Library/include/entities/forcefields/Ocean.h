@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Ocean.h
 //  Stonefish
@@ -16,13 +33,10 @@
 
 namespace sf
 {
-    //! An enum specifying the type of hydrodynamics computation that is used in the simulation
-    typedef enum {TRIFOLD_SYMMETRY, FULLY_COUPLED, GEOMETRY_BASED} HydrodynamicsType;
-    
     //! A structure holding the settings of the hydrodynamics computation.
     struct HydrodynamicsSettings
     {
-        HydrodynamicsType algorithm;
+        FluidDynamicsType algorithm;
         bool dampingForces;
         bool reallisticBuoyancy;
     };
@@ -37,10 +51,10 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the ocean
-         \param simulateWaves a flag to decide if waves should be simulated
-         \param l a pointer to the fluid that is filling the ocean (normally water)
+         \param waves the state of the ocean (waves enabled when >0)
+         \param l a pointer to the liquid that is filling the ocean (normally water)
          */
-        Ocean(std::string uniqueName, bool simulateWaves, Fluid* l);
+        Ocean(std::string uniqueName, Scalar waves, Fluid l);
         
         //! A destructor.
         ~Ocean();
@@ -60,19 +74,19 @@ namespace sf
         
         //! A method running the hydrodynamics computation.
         /*!
-         \param ht type of hydrodynamics computations
+         \param fdt type of fluid dynamics computations
          \param world a pointer to the dynamics world
          \param co a pointer to the collision object
          \param recompute a flag deciding if hydrodynamic forces need to be recomputed
          */
-        virtual void ApplyFluidForces(const HydrodynamicsType ht, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
+        void ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
         
         //! A method returning the water velocity.
         /*!
          \param point the point in the ocean where the velocity should be measured [m]
          \return fluid velocity at specified point [m/s]
          */
-        virtual Vector3 GetFluidVelocity(const Vector3& point) const;
+        Vector3 GetFluidVelocity(const Vector3& point) const;
         
         //! A method checking if a point is inside fluid
         /*!
@@ -102,10 +116,10 @@ namespace sf
         Scalar getTurbidity();
         
         //! A method informing if the ocean waves are simulated.
-        bool hasWaves();
+        bool hasWaves() const;
         
         //! A method returning a pointer to the fluid filling the ocean.
-        const Fluid* getLiquid() const;
+        Fluid getLiquid() const;
         
         //! A method returning a pointer to the OpenGL object implementing the ocean.
         OpenGLOcean* getOpenGLOcean();
@@ -123,13 +137,13 @@ namespace sf
         std::vector<Renderable> Render();
         
     private:
-        Fluid* liquid;
+        Fluid liquid;
         std::vector<VelocityField*> currents;
         OpenGLOcean* glOcean;
         Scalar depth;
         Scalar waterType;
         Scalar turbidity;
-        bool waves;
+        Scalar oceanState;
         Renderable wavesDebug;
     };
 }

@@ -16,12 +16,6 @@
     <File Name="FallingTestApp.h"/>
     <File Name="FallingTestManager.h"/>
   </VirtualDirectory>
-  <Dependencies Name="Release">
-    <Project Name="libStonefish"/>
-  </Dependencies>
-  <Dependencies Name="Debug">
-    <Project Name="libStonefish"/>
-  </Dependencies>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-std=c++14" C_Options="" Assembler="">
@@ -33,6 +27,7 @@
         <IncludePath Value="/usr/local/include/glm"/>
         <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>
         <Preprocessor Value="BT_EULER_DEFAULT_ZYX"/>
+        <Preprocessor Value="DATA_DIR_PATH=\&quot;$(WorkspacePath)/Tests/Data/\&quot;"/>
       </Compiler>
       <Linker Options="">
         <LibraryPath Value="/usr/lib"/>
@@ -134,4 +129,10 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug">
+    <Project Name="libStonefish"/>
+  </Dependencies>
+  <Dependencies Name="Release">
+    <Project Name="libStonefish"/>
+  </Dependencies>
 </CodeLite_Project>

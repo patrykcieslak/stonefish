@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  MaterialManager.h
 //  Stonefish
@@ -29,6 +46,14 @@ namespace sf
         Scalar density;
         Scalar viscosity;
         Scalar IOR;
+        
+        Fluid()
+        {
+            name = "";
+            density = Scalar(0);
+            viscosity = Scalar(0);
+            IOR = Scalar(1);
+        }
     };
     
     //! A strcture holding friction coefficients.
@@ -139,16 +164,16 @@ namespace sf
         //! A method returning a fluid by name.
         /*!
          \param name a name of the fluid
-         \return a pointer to the fluid structure
+         \return a the fluid structure
          */
-        Fluid* getFluid(std::string name);
+        Fluid getFluid(std::string name);
         
         //! A method returning a fluid by id.
         /*!
          \param index an id of the fluid
-         \return a pointer to the fluid structure
+         \return a the fluid structure
          */
-        Fluid* getFluid(int index);
+        Fluid getFluid(int index);
         
         //! A method that deletes all materials and fluids from the manager.
         void ClearMaterialsAndFluids();

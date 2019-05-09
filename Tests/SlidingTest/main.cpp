@@ -1,9 +1,26 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  main.cpp
 //  SlidingTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "SlidingTestApp.h"
@@ -11,16 +28,26 @@
 
 int main(int argc, const char * argv[])
 {
-    RenderSettings s;
-    s.windowW = 800;
-    s.windowH = 600;
-    s.shadows = RenderQuality::QUALITY_MEDIUM;
-    s.ao = RenderQuality::QUALITY_DISABLED;
-    s.atmosphere = RenderQuality::QUALITY_MEDIUM;
-    s.ocean = RenderQuality::QUALITY_DISABLED;
+    sf::RenderSettings s;
+    s.windowW = 1200;
+    s.windowH = 900;
+    s.msaa = true;
+    s.shadows = sf::RenderQuality::QUALITY_HIGH;
+    s.ao = sf::RenderQuality::QUALITY_HIGH;
+    s.atmosphere = sf::RenderQuality::QUALITY_HIGH;
+    s.ocean = sf::RenderQuality::QUALITY_DISABLED;
+    
+    sf::HelperSettings h;
+    h.showFluidDynamics = false;
+    h.showCoordSys = false;
+    h.showBulletDebugInfo = false;
+    h.showSensors = false;
+    h.showActuators = false;
+    h.showForces = false;
+    h.showJoints = false;
     
     SlidingTestManager* simulationManager = new SlidingTestManager(500.0);
-    SlidingTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/", s, simulationManager);
+    SlidingTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
     app.Run(false);
     
     return 0;

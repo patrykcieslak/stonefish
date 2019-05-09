@@ -1,3 +1,37 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  SimulationManager.h
 //  Stonefish
@@ -59,7 +93,7 @@ namespace sf
          \param cft type of collision filtering used
          \param ht type of hydrodynamics computations
          */
-        SimulationManager(Scalar stepsPerSecond = Scalar(60), SolverType st = SOLVER_SI, CollisionFilteringType cft = COLLISION_EXCLUSIVE, HydrodynamicsType ht = GEOMETRY_BASED);
+        SimulationManager(Scalar stepsPerSecond = Scalar(60), SolverType st = SOLVER_SI, CollisionFilteringType cft = COLLISION_EXCLUSIVE, FluidDynamicsType ht = GEOMETRY_BASED);
         
         //! A destructor.
         virtual ~SimulationManager();
@@ -186,10 +220,10 @@ namespace sf
         
         //! A method used to enable ocean simulation.
         /*!
-         \param waves a flag that informs if geometric waves should be simulated
+         \param waves the state of the ocean (waves enabled when >0)
          \param f a pointer to a liquid that will feel the ocean (if left blank defaults to water)
          */
-        void EnableOcean(bool waves = false, Fluid* f = NULL);
+        void EnableOcean(Scalar waves = Scalar(0), Fluid f = Fluid());
         
         //! A method used to enable atmosphere simulation.
         void EnableAtmosphere();
@@ -242,8 +276,8 @@ namespace sf
         //! A method returning the type of solver used.
         SolverType getSolverType();
         
-        //! A method returning the type of hydrodynamic computations used.
-        HydrodynamicsType getHydrodynamicsType();
+        //! A method returning the type of fluid dynamics computations used.
+        FluidDynamicsType getFluidDynamicsType();
         
         //! A method returning a robot by index
         /*!
@@ -398,12 +432,12 @@ namespace sf
         
         SolverType solver;
         CollisionFilteringType collisionFilter;
-        HydrodynamicsType hydroType;
+        FluidDynamicsType hydroType;
         Scalar sps;
         Scalar realtimeFactor;
         Scalar cpuUsage;
-        unsigned int hydroPrescaler;
-        unsigned int hydroCounter;
+        unsigned int fdPrescaler;
+        unsigned int fdCounter;
         SDL_mutex* simSettingsMutex;
         SDL_mutex* simInfoMutex;
         SDL_mutex* simHydroMutex;

@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  main.cpp
 //  JointsTest
@@ -6,7 +23,7 @@
 //  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
-#include "JointsTestApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "JointsTestManager.h"
 
 int main(int argc, const char * argv[])
@@ -15,17 +32,22 @@ int main(int argc, const char * argv[])
     s.windowW = 800;
     s.windowH = 600;
     s.shadows = sf::RenderQuality::QUALITY_HIGH;
-    s.ao = sf::RenderQuality::QUALITY_DISABLED;
-    s.atmosphere = sf::RenderQuality::QUALITY_MEDIUM;
+    s.ao = sf::RenderQuality::QUALITY_HIGH;
+    s.atmosphere = sf::RenderQuality::QUALITY_HIGH;
     s.ocean = sf::RenderQuality::QUALITY_DISABLED;
     s.msaa = false;
     
     sf::HelperSettings h;
+    h.showFluidDynamics = false;
+    h.showCoordSys = false;
+    h.showBulletDebugInfo = false;
+    h.showSensors = false;
+    h.showActuators = false;
+    h.showForces = false;
     h.showJoints = true;
     
-    JointsTestManager* simulationManager = new JointsTestManager(200.0);
-    JointsTestApp app("/home/pcieslak/Documents/stonefish/Tests/Data/",
-                      s, h, simulationManager);
+    JointsTestManager* simulationManager = new JointsTestManager(1000.0);
+    sf::GraphicalSimulationApp app("JointTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
     app.Run(false);
     
     return 0;

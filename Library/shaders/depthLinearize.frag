@@ -1,27 +1,3 @@
-#version 330
-
-uniform vec4 clipInfo;
-uniform sampler2D texDepth;
-out float fragColor;
-
-/*layout(location=0) uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
-layout(binding=0)  uniform sampler2D texDepth;
-layout(location=0,index=0) out float fragColor;*/
-
-float reconstructCSZ(float d, vec4 clipInfo) 
-{
-	if(clipInfo[3] != 0)
-		return (clipInfo[0] / (clipInfo[1] * d + clipInfo[2]));
-	else
-		return (clipInfo[1]+clipInfo[2] - d * clipInfo[1]);
-}
-
-void main() 
-{
-    float depth = texelFetch(texDepth, ivec2(gl_FragCoord.xy), 0).x;
-	fragColor = reconstructCSZ(depth, clipInfo);
-}
-
 /*-----------------------------------------------------------------------
   Copyright (c) 2014, NVIDIA. All rights reserved.
 
@@ -46,3 +22,29 @@ void main()
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------*/
+
+#version 330
+
+uniform vec4 clipInfo;
+uniform sampler2D texDepth;
+out float fragColor;
+
+/*layout(location=0) uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
+layout(binding=0)  uniform sampler2D texDepth;
+layout(location=0,index=0) out float fragColor;*/
+
+float reconstructCSZ(float d, vec4 clipInfo) 
+{
+	if(clipInfo[3] != 0)
+		return (clipInfo[0] / (clipInfo[1] * d + clipInfo[2]));
+	else
+		return (clipInfo[1]+clipInfo[2] - d * clipInfo[1]);
+}
+
+void main() 
+{
+    float depth = texelFetch(texDepth, ivec2(gl_FragCoord.xy), 0).x;
+	fragColor = reconstructCSZ(depth, clipInfo);
+}
+
+

@@ -1,3 +1,20 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //
 //  Compound.h
 //  Stonefish
@@ -30,9 +47,9 @@ namespace sf
          \param uniqueName a name for the body
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
-         \param enableHydrodynamicForces a flag to enable computation of hydrodynamic forces
+         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          */
-        Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, bool enableHydrodynamicForces = true);
+        Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, BodyPhysicsType bpt);
         
         //! A destructor.
         ~Compound();
@@ -54,9 +71,15 @@ namespace sf
         //! A method which computes hydrodynamic forces acting on the compound body.
         /*!
          \param settings a structure holding settings of the hydrodynamic computation
-         \param liquid a pointer to a fluid entity (only Ocean supported now)
+         \param ocn a pointer to a fluid entity (only Ocean supported now)
          */
-        void ComputeFluidForces(HydrodynamicsSettings settings, Ocean* liquid);
+        void ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn);
+        
+        //! A method that computes aerodynamics.
+        /*!
+         \param atm a pointer to the atmosphere entity
+        */
+        void ComputeAerodynamicForces(Atmosphere* atm);
         
         //! A method returning the material of the body.
         Material getMaterial(size_t partId) const;
