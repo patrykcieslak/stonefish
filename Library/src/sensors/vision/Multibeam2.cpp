@@ -133,7 +133,7 @@ void Multibeam2::InitGraphics()
     {
         cameras[i].cam = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
                                                             accResX, 0, cameras[i].width, resY, cameras[i].fovH, range.x, range.y, true, (GLfloat)fovV);
-        cameras[i].cam->setCamera(this, i);
+        cameras[i].cam->setCamera(this, (unsigned int)i);
         cameras[i].dataOffset = accResX*resY;
         accResX += cameras[i].width;
     }

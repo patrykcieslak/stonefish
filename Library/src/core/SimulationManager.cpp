@@ -1196,7 +1196,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                     {
                         Scalar jVelocity;
                         btMultibodyLink::eFeatherstoneJointType jType;
-                        multibody->getJointVelocity(h, jVelocity, jType);
+                        multibody->getJointVelocity((unsigned int)h, jVelocity, jType);
                         
                         switch(jType)
                         {
@@ -1278,9 +1278,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 				Trigger* trigger = (Trigger*)ff;
 				trigger->Clear();
 				btBroadphasePairArray& pairArray = trigger->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-				size_t numPairs = pairArray.size();
+				int numPairs = pairArray.size();
 					
-				for(size_t h = 0; h < numPairs; ++h)
+				for(int h = 0; h < numPairs; ++h)
 				{
 					const btBroadphasePair& pair = pairArray[h];
 					btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
@@ -1307,10 +1307,11 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     if(simManager->atmosphere != NULL)
     {
         btBroadphasePairArray& pairArray = simManager->atmosphere->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-        size_t numPairs = pairArray.size();
+        int numPairs = pairArray.size();
+        
         if(numPairs > 0)
         {    
-            for(size_t h=0; h<numPairs; ++h)
+            for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
                 btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
@@ -1334,10 +1335,11 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         if(recompute) SDL_LockMutex(simManager->simHydroMutex);
         
         btBroadphasePairArray& pairArray = simManager->ocean->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-        size_t numPairs = pairArray.size();
+        int numPairs = pairArray.size();
+        
         if(numPairs > 0)
         {    
-            for(size_t h=0; h<numPairs; ++h)
+            for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
                 btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);

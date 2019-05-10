@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "F776647919213D6500996CF3"
-               BuildableName = "UnderwaterTest"
-               BlueprintName = "UnderwaterTest"
+               BlueprintIdentifier = "F70FA748228494AE00528AD1"
+               BuildableName = "FloatingTest"
+               BlueprintName = "FloatingTest"
                ReferencedContainer = "container:Stonefish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F776647919213D6500996CF3"
-            BuildableName = "UnderwaterTest"
-            BlueprintName = "UnderwaterTest"
+            BlueprintIdentifier = "F70FA748228494AE00528AD1"
+            BuildableName = "FloatingTest"
+            BlueprintName = "FloatingTest"
             ReferencedContainer = "container:Stonefish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -55,9 +55,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F776647919213D6500996CF3"
-            BuildableName = "UnderwaterTest"
-            BlueprintName = "UnderwaterTest"
+            BlueprintIdentifier = "F70FA748228494AE00528AD1"
+            BuildableName = "FloatingTest"
+            BlueprintName = "FloatingTest"
             ReferencedContainer = "container:Stonefish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -74,9 +74,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F776647919213D6500996CF3"
-            BuildableName = "UnderwaterTest"
-            BlueprintName = "UnderwaterTest"
+            BlueprintIdentifier = "F70FA748228494AE00528AD1"
+            BuildableName = "FloatingTest"
+            BlueprintName = "FloatingTest"
             ReferencedContainer = "container:Stonefish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

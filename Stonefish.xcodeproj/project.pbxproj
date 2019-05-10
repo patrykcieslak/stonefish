@@ -7,16 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F7037CEA191AA88600A1FA98 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CBD191AA77600A1FA98 /* main.cpp */; };
-		F7037CEB191AA88600A1FA98 /* AcrobotTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */; };
-		F7037CEC191AA88600A1FA98 /* AcrobotTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */; };
 		F70AF90621F0CF0E00700A8B /* Wing.h in Headers */ = {isa = PBXBuildFile; fileRef = F70AF90521F0CF0E00700A8B /* Wing.h */; };
 		F70AF90921F0D3D900700A8B /* Wing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70AF90821F0D3D900700A8B /* Wing.cpp */; };
 		F70AF90B21F616ED00700A8B /* Multibeam2.h in Headers */ = {isa = PBXBuildFile; fileRef = F70AF90A21F616ED00700A8B /* Multibeam2.h */; };
 		F70AF90D21F61B9100700A8B /* Multibeam2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70AF90C21F61B9100700A8B /* Multibeam2.cpp */; };
+		F70FA74022848F9B00528AD1 /* Uniform.h in Headers */ = {isa = PBXBuildFile; fileRef = F70FA73F22848F9A00528AD1 /* Uniform.h */; };
+		F70FA74222848FD000528AD1 /* Propeller.h in Headers */ = {isa = PBXBuildFile; fileRef = F70FA74122848FD000528AD1 /* Propeller.h */; };
+		F70FA7452284910600528AD1 /* Uniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70FA7442284910600528AD1 /* Uniform.cpp */; };
+		F70FA7472284912D00528AD1 /* Propeller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70FA7462284912D00528AD1 /* Propeller.cpp */; };
+		F70FA750228494AE00528AD1 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F70FA75F228494CB00528AD1 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
+		F70FA76C228494FE00528AD1 /* FlyingTestManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F70FA769228494FE00528AD1 /* FlyingTestManager.h */; };
+		F70FA7762284953600528AD1 /* FloatingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70FA7702284951900528AD1 /* FloatingTestManager.cpp */; };
+		F70FA7772284953D00528AD1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70FA7722284951900528AD1 /* main.cpp */; };
+		F70FA7782284954600528AD1 /* FlyingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70FA767228494FE00528AD1 /* FlyingTestManager.cpp */; };
+		F70FA7792284954B00528AD1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F70FA76A228494FE00528AD1 /* main.cpp */; };
 		F716028C2191A48E00E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
 		F716028F2191A49100E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
-		F71602902191A49100E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
 		F71602912191A49200E83606 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
 		F716029E2191A5E800E83606 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F716029D2191A5E800E83606 /* OpenGL.framework */; };
 		F716040E2191A9E100E83606 /* RotaryEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603922191A9E100E83606 /* RotaryEncoder.h */; };
@@ -203,7 +210,6 @@
 		F71605E8219272B400E83606 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71605CF219271EF00E83606 /* main.cpp */; };
 		F73B0A9418C5407300E128CF /* FallingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9218C5407300E128CF /* FallingTestApp.cpp */; };
 		F73B0A9918C5424500E128CF /* FallingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9718C5424500E128CF /* FallingTestManager.cpp */; };
-		F74CEC1918E56FCB00D0C42D /* JointsTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */; };
 		F74CEC1A18E56FCB00D0C42D /* JointsTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */; };
 		F74CEC1B18E56FCB00D0C42D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1818E56FCB00D0C42D /* main.cpp */; };
 		F755751021A05A0100AE8956 /* OpenGLDataStructs.h in Headers */ = {isa = PBXBuildFile; fileRef = F755750F21A05A0100AE8956 /* OpenGLDataStructs.h */; };
@@ -241,7 +247,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F7037CC4191AA86A00A1FA98 /* PBXContainerItemProxy */ = {
+		F70FA74A228494AE00528AD1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7AB71B518C3D8EC0077F07D;
+			remoteInfo = Stonefish;
+		};
+		F70FA759228494CB00528AD1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F7AB71AE18C3D8EC0077F07D /* Project object */;
 			proxyType = 1;
@@ -286,7 +299,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		F7037CCF191AA86A00A1FA98 /* CopyFiles */ = {
+		F70FA751228494AE00528AD1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
 			dstPath = Shaders;
@@ -295,7 +308,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F7037CE3191AA86A00A1FA98 /* CopyFiles */ = {
+		F70FA752228494AE00528AD1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Data;
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F70FA760228494CB00528AD1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = Shaders;
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F70FA761228494CB00528AD1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = Data;
@@ -397,12 +428,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		F7037CBD191AA77600A1FA98 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AcrobotTestApp.cpp; sourceTree = "<group>"; };
-		F7037CBF191AA77600A1FA98 /* AcrobotTestApp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AcrobotTestApp.h; sourceTree = "<group>"; };
-		F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AcrobotTestManager.cpp; sourceTree = "<group>"; };
-		F7037CC1191AA77600A1FA98 /* AcrobotTestManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AcrobotTestManager.h; sourceTree = "<group>"; };
-		F7037CE9191AA86A00A1FA98 /* AcrobotTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AcrobotTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F70AF8FF21EE1E6700700A8B /* terrain.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = terrain.png; sourceTree = "<group>"; };
 		F70AF90021EE2C2500700A8B /* terrain_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = terrain_small.png; sourceTree = "<group>"; };
 		F70AF90521F0CF0E00700A8B /* Wing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Wing.h; sourceTree = "<group>"; };
@@ -413,6 +438,19 @@
 		F70AF91421FB251300700A8B /* CooperHewitt-Book.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CooperHewitt-Book.otf"; sourceTree = "<group>"; };
 		F70AF91621FB26C100700A8B /* Lato-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lato-Medium.ttf"; sourceTree = "<group>"; };
 		F70CDA0F21C15319009550C0 /* water_absorption.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = water_absorption.dat; sourceTree = "<group>"; };
+		F70FA73F22848F9A00528AD1 /* Uniform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Uniform.h; sourceTree = "<group>"; };
+		F70FA74122848FD000528AD1 /* Propeller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Propeller.h; sourceTree = "<group>"; };
+		F70FA743228490D200528AD1 /* manualTonemapping.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = manualTonemapping.frag; sourceTree = "<group>"; };
+		F70FA7442284910600528AD1 /* Uniform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Uniform.cpp; sourceTree = "<group>"; };
+		F70FA7462284912D00528AD1 /* Propeller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Propeller.cpp; sourceTree = "<group>"; };
+		F70FA756228494AE00528AD1 /* FloatingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FloatingTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F70FA765228494CB00528AD1 /* FlyingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FlyingTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F70FA767228494FE00528AD1 /* FlyingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FlyingTestManager.cpp; sourceTree = "<group>"; };
+		F70FA769228494FE00528AD1 /* FlyingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlyingTestManager.h; sourceTree = "<group>"; };
+		F70FA76A228494FE00528AD1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F70FA7702284951900528AD1 /* FloatingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FloatingTestManager.cpp; sourceTree = "<group>"; };
+		F70FA7712284951900528AD1 /* FloatingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FloatingTestManager.h; sourceTree = "<group>"; };
+		F70FA7722284951900528AD1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F716029D2191A5E800E83606 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F71603922191A9E100E83606 /* RotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotaryEncoder.h; sourceTree = "<group>"; };
 		F71603932191A9E100E83606 /* GPS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPS.h; sourceTree = "<group>"; };
@@ -668,11 +706,9 @@
 		F71605A52191AA2C00E83606 /* link1_hydro.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = link1_hydro.obj; sourceTree = "<group>"; };
 		F71605A62191AA2C00E83606 /* vbar_hydro.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vbar_hydro.obj; sourceTree = "<group>"; };
 		F71605A72191AA2C00E83606 /* link4ft_hydro.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = link4ft_hydro.obj; sourceTree = "<group>"; };
-		F71605A82191AA2C00E83606 /* torpedo.stl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = torpedo.stl; sourceTree = "<group>"; };
 		F71605A92191AA2C00E83606 /* cone.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cone.obj; sourceTree = "<group>"; };
 		F71605AA2191AA2C00E83606 /* dragon.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dragon.obj; sourceTree = "<group>"; };
 		F71605AB2191AA2C00E83606 /* torus_R=1_r=025.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "torus_R=1_r=025.obj"; sourceTree = "<group>"; };
-		F71605AC2191AA2C00E83606 /* sculpt.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sculpt.obj; sourceTree = "<group>"; };
 		F71605AD2191AA2C00E83606 /* checker.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = checker.png; sourceTree = "<group>"; };
 		F71605AE2191AA2C00E83606 /* hinge.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = hinge.obj; sourceTree = "<group>"; };
 		F71605AF2191AA2C00E83606 /* terrain.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = terrain.obj; sourceTree = "<group>"; };
@@ -704,8 +740,6 @@
 		F73B0A9718C5424500E128CF /* FallingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestManager.cpp; sourceTree = "<group>"; };
 		F73B0A9818C5424500E128CF /* FallingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestManager.h; sourceTree = "<group>"; };
 		F74CEC1218E56EEB00D0C42D /* JointsTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = JointsTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JointsTestApp.cpp; sourceTree = "<group>"; };
-		F74CEC1518E56FCB00D0C42D /* JointsTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JointsTestApp.h; sourceTree = "<group>"; };
 		F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JointsTestManager.cpp; sourceTree = "<group>"; };
 		F74CEC1718E56FCB00D0C42D /* JointsTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JointsTestManager.h; sourceTree = "<group>"; };
 		F74CEC1818E56FCB00D0C42D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -754,11 +788,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		F7037CC9191AA86A00A1FA98 /* Frameworks */ = {
+		F70FA74F228494AE00528AD1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F71602902191A49100E83606 /* libStonefish.dylib in Frameworks */,
+				F70FA750228494AE00528AD1 /* libStonefish.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F70FA75E228494CB00528AD1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F70FA75F228494CB00528AD1 /* libStonefish.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -813,27 +855,38 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		F7037CBC191AA77600A1FA98 /* AcrobotTest */ = {
-			isa = PBXGroup;
-			children = (
-				F7037CBD191AA77600A1FA98 /* main.cpp */,
-				F7037CBE191AA77600A1FA98 /* AcrobotTestApp.cpp */,
-				F7037CBF191AA77600A1FA98 /* AcrobotTestApp.h */,
-				F7037CC0191AA77600A1FA98 /* AcrobotTestManager.cpp */,
-				F7037CC1191AA77600A1FA98 /* AcrobotTestManager.h */,
-			);
-			path = AcrobotTest;
-			sourceTree = "<group>";
-		};
 		F70AF90F21FB1F8400700A8B /* data */ = {
 			isa = PBXGroup;
 			children = (
+				F716056F2191AA1C00E83606 /* logo_color_64.png */,
+				F716057F2191AA1C00E83606 /* logo_gray_64.png */,
+				F716056E2191AA1C00E83606 /* gui.png */,
 				F70AF91421FB251300700A8B /* CooperHewitt-Book.otf */,
 				F70AF91621FB26C100700A8B /* Lato-Medium.ttf */,
 				F70CDA0F21C15319009550C0 /* water_absorption.dat */,
 				F716057B2191AA1C00E83606 /* grid.png */,
 			);
 			name = data;
+			sourceTree = "<group>";
+		};
+		F70FA766228494FE00528AD1 /* FlyingTest */ = {
+			isa = PBXGroup;
+			children = (
+				F70FA767228494FE00528AD1 /* FlyingTestManager.cpp */,
+				F70FA769228494FE00528AD1 /* FlyingTestManager.h */,
+				F70FA76A228494FE00528AD1 /* main.cpp */,
+			);
+			path = FlyingTest;
+			sourceTree = "<group>";
+		};
+		F70FA76E2284951900528AD1 /* FloatingTest */ = {
+			isa = PBXGroup;
+			children = (
+				F70FA7702284951900528AD1 /* FloatingTestManager.cpp */,
+				F70FA7712284951900528AD1 /* FloatingTestManager.h */,
+				F70FA7722284951900528AD1 /* main.cpp */,
+			);
+			path = FloatingTest;
 			sourceTree = "<group>";
 		};
 		F716029C2191A5E800E83606 /* Frameworks */ = {
@@ -924,6 +977,7 @@
 		F71603CB2191A9E100E83606 /* actuators */ = {
 			isa = PBXGroup;
 			children = (
+				F70FA74122848FD000528AD1 /* Propeller.h */,
 				F71603D02191A9E100E83606 /* Actuator.h */,
 				F7E965B321A85F7B0067D12C /* LinkActuator.h */,
 				F71603CE2191A9E100E83606 /* Thruster.h */,
@@ -989,6 +1043,7 @@
 		F71603F52191A9E100E83606 /* forcefields */ = {
 			isa = PBXGroup;
 			children = (
+				F70FA73F22848F9A00528AD1 /* Uniform.h */,
 				F77015D221B4458D00585FD1 /* Atmosphere.h */,
 				F71603F72191A9E100E83606 /* Ocean.h */,
 				F71603F82191A9E100E83606 /* Trigger.h */,
@@ -1041,7 +1096,7 @@
 			path = shaders;
 			sourceTree = "<group>";
 		};
-		F71605A22191AA2C00E83606 /* data */ = {
+		F71605A22191AA2C00E83606 /* Data */ = {
 			isa = PBXGroup;
 			children = (
 				F70AF90021EE2C2500700A8B /* terrain_small.png */,
@@ -1051,11 +1106,9 @@
 				F71605A52191AA2C00E83606 /* link1_hydro.obj */,
 				F71605A62191AA2C00E83606 /* vbar_hydro.obj */,
 				F71605A72191AA2C00E83606 /* link4ft_hydro.obj */,
-				F71605A82191AA2C00E83606 /* torpedo.stl */,
 				F71605A92191AA2C00E83606 /* cone.obj */,
 				F71605AA2191AA2C00E83606 /* dragon.obj */,
 				F71605AB2191AA2C00E83606 /* torus_R=1_r=025.obj */,
-				F71605AC2191AA2C00E83606 /* sculpt.obj */,
 				F71605AD2191AA2C00E83606 /* checker.png */,
 				F71605AE2191AA2C00E83606 /* hinge.obj */,
 				F71605AF2191AA2C00E83606 /* terrain.obj */,
@@ -1077,7 +1130,7 @@
 				F71605BF2191AA2C00E83606 /* link4_hydro.obj */,
 				F71605C02191AA2C00E83606 /* propeller_tex.png */,
 			);
-			path = data;
+			path = Data;
 			sourceTree = "<group>";
 		};
 		F71605C12191C67700E83606 /* core */ = {
@@ -1171,6 +1224,7 @@
 		F71605C72192322100E83606 /* actuators */ = {
 			isa = PBXGroup;
 			children = (
+				F70FA7462284912D00528AD1 /* Propeller.cpp */,
 				F71604E42191AA0D00E83606 /* Actuator.cpp */,
 				F7E965B721A863B20067D12C /* LinkActuator.cpp */,
 				F71604A72191AA0D00E83606 /* Thruster.cpp */,
@@ -1210,8 +1264,6 @@
 			isa = PBXGroup;
 			children = (
 				F74CEC1818E56FCB00D0C42D /* main.cpp */,
-				F74CEC1418E56FCB00D0C42D /* JointsTestApp.cpp */,
-				F74CEC1518E56FCB00D0C42D /* JointsTestApp.h */,
 				F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */,
 				F74CEC1718E56FCB00D0C42D /* JointsTestManager.h */,
 			);
@@ -1322,10 +1374,11 @@
 				F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */,
 				F7AB71CB18C3E19D0077F07D /* FallingTest */,
 				F74CEC1218E56EEB00D0C42D /* JointsTest */,
-				F7037CE9191AA86A00A1FA98 /* AcrobotTest */,
 				F776649C19213D6500996CF3 /* UnderwaterTest */,
 				F71605E52192728900E83606 /* ConsoleTest */,
 				F7BD9E7B219E4FEF0003E389 /* SlidingTest */,
+				F70FA756228494AE00528AD1 /* FloatingTest */,
+				F70FA765228494CB00528AD1 /* FlyingTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1333,11 +1386,13 @@
 		F7AB71BE18C3DC950077F07D /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F71605A22191AA2C00E83606 /* Data */,
 				F71605CA219271EF00E83606 /* ConsoleTest */,
 				F7AB71CC18C3E19D0077F07D /* FallingTest */,
 				F7DE5F6D193E7899007FEE22 /* SlidingTest */,
 				F74CEC1318E56FCB00D0C42D /* JointsTest */,
-				F7037CBC191AA77600A1FA98 /* AcrobotTest */,
+				F70FA766228494FE00528AD1 /* FlyingTest */,
+				F70FA76E2284951900528AD1 /* FloatingTest */,
 				F776646E19213CC000996CF3 /* UnderwaterTest */,
 			);
 			path = Tests;
@@ -1346,7 +1401,6 @@
 		F7AB71BF18C3DCA90077F07D /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				F71605A22191AA2C00E83606 /* data */,
 				F716038F2191A9E100E83606 /* include */,
 				F71605582191AA1C00E83606 /* shaders */,
 				F716047F2191AA0D00E83606 /* src */,
@@ -1393,6 +1447,7 @@
 		F7BD9E6B219DDBB50003E389 /* forcefields */ = {
 			isa = PBXGroup;
 			children = (
+				F70FA7442284910600528AD1 /* Uniform.cpp */,
 				F71604C02191AA0D00E83606 /* Stream.cpp */,
 				F71604C32191AA0D00E83606 /* Trigger.cpp */,
 				F71604DB2191AA0D00E83606 /* VelocityField.cpp */,
@@ -1470,6 +1525,7 @@
 				F716059A2191AA1D00E83606 /* hbaoReinterleave.frag */,
 				F71605662191AA1C00E83606 /* lightMeter.frag */,
 				F71605862191AA1C00E83606 /* tonemapping.frag */,
+				F70FA743228490D200528AD1 /* manualTonemapping.frag */,
 				F77015CD21B2E4F100585FD1 /* ssr.frag */,
 				F71605902191AA1C00E83606 /* simpleDownsample.frag */,
 			);
@@ -1481,9 +1537,6 @@
 			children = (
 				F71605632191AA1C00E83606 /* printer.frag */,
 				F71605852191AA1C00E83606 /* printer.vert */,
-				F716056F2191AA1C00E83606 /* logo_color_64.png */,
-				F716057F2191AA1C00E83606 /* logo_gray_64.png */,
-				F716056E2191AA1C00E83606 /* gui.png */,
 				F71605802191AA1C00E83606 /* guiFlat.frag */,
 				F716056B2191AA1C00E83606 /* guiFlat.vert */,
 				F716056D2191AA1C00E83606 /* guiTex.frag */,
@@ -1561,6 +1614,7 @@
 				F71604682191A9E100E83606 /* SolidEntity.h in Headers */,
 				F71604522191A9E100E83606 /* OpenGLPointLight.h in Headers */,
 				F716044E2191A9E100E83606 /* GLSLShader.h in Headers */,
+				F70FA76C228494FE00528AD1 /* FlyingTestManager.h in Headers */,
 				F716041D2191A9E100E83606 /* Odometry.h in Headers */,
 				F71604512191A9E100E83606 /* OpenGLPrinter.h in Headers */,
 				F716041C2191A9E100E83606 /* Accelerometer.h in Headers */,
@@ -1574,6 +1628,7 @@
 				F716046D2191A9E100E83606 /* Pipe.h in Headers */,
 				F71604452191A9E100E83606 /* Motor.h in Headers */,
 				F71604542191A9E100E83606 /* OpenGLLight.h in Headers */,
+				F70FA74222848FD000528AD1 /* Propeller.h in Headers */,
 				F716044D2191A9E100E83606 /* OpenGLRealCamera.h in Headers */,
 				F71604282191A9E100E83606 /* Pressure.h in Headers */,
 				F71604172191A9E100E83606 /* RealRotaryEncoder.h in Headers */,
@@ -1599,6 +1654,7 @@
 				F716047D2191A9E200E83606 /* Compound.h in Headers */,
 				F71604772191A9E100E83606 /* ForcefieldEntity.h in Headers */,
 				F71604502191A9E100E83606 /* OpenGLDepthCamera.h in Headers */,
+				F70FA74022848F9B00528AD1 /* Uniform.h in Headers */,
 				F71604152191A9E100E83606 /* Mux.h in Headers */,
 				F716041E2191A9E100E83606 /* Trajectory.h in Headers */,
 				F716046C2191A9E100E83606 /* Stream.h in Headers */,
@@ -1643,23 +1699,42 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		F7037CC2191AA86A00A1FA98 /* AcrobotTest */ = {
+		F70FA748228494AE00528AD1 /* FloatingTest */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F7037CE6191AA86A00A1FA98 /* Build configuration list for PBXNativeTarget "AcrobotTest" */;
+			buildConfigurationList = F70FA753228494AE00528AD1 /* Build configuration list for PBXNativeTarget "FloatingTest" */;
 			buildPhases = (
-				F7037CC5191AA86A00A1FA98 /* Sources */,
-				F7037CC9191AA86A00A1FA98 /* Frameworks */,
-				F7037CCF191AA86A00A1FA98 /* CopyFiles */,
-				F7037CE3191AA86A00A1FA98 /* CopyFiles */,
+				F70FA74B228494AE00528AD1 /* Sources */,
+				F70FA74F228494AE00528AD1 /* Frameworks */,
+				F70FA751228494AE00528AD1 /* CopyFiles */,
+				F70FA752228494AE00528AD1 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				F7037CC3191AA86A00A1FA98 /* PBXTargetDependency */,
+				F70FA749228494AE00528AD1 /* PBXTargetDependency */,
 			);
-			name = AcrobotTest;
+			name = FloatingTest;
 			productName = FallingTest;
-			productReference = F7037CE9191AA86A00A1FA98 /* AcrobotTest */;
+			productReference = F70FA756228494AE00528AD1 /* FloatingTest */;
+			productType = "com.apple.product-type.tool";
+		};
+		F70FA757228494CB00528AD1 /* FlyingTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F70FA762228494CB00528AD1 /* Build configuration list for PBXNativeTarget "FlyingTest" */;
+			buildPhases = (
+				F70FA75A228494CB00528AD1 /* Sources */,
+				F70FA75E228494CB00528AD1 /* Frameworks */,
+				F70FA760228494CB00528AD1 /* CopyFiles */,
+				F70FA761228494CB00528AD1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F70FA758228494CB00528AD1 /* PBXTargetDependency */,
+			);
+			name = FlyingTest;
+			productName = FallingTest;
+			productReference = F70FA765228494CB00528AD1 /* FlyingTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		F71605D72192728900E83606 /* ConsoleTest */ = {
@@ -1780,12 +1855,12 @@
 		F7AB71AE18C3D8EC0077F07D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1010;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "Patryk Cieslak";
 			};
 			buildConfigurationList = F7AB71B118C3D8EC0077F07D /* Build configuration list for PBXProject "Stonefish" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -1800,20 +1875,29 @@
 				F7AB71CA18C3E19D0077F07D /* FallingTest */,
 				F7BD9E6D219E4FEF0003E389 /* SlidingTest */,
 				F74CEBED18E56EEB00D0C42D /* JointsTest */,
-				F7037CC2191AA86A00A1FA98 /* AcrobotTest */,
+				F70FA757228494CB00528AD1 /* FlyingTest */,
+				F70FA748228494AE00528AD1 /* FloatingTest */,
 				F776647919213D6500996CF3 /* UnderwaterTest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		F7037CC5191AA86A00A1FA98 /* Sources */ = {
+		F70FA74B228494AE00528AD1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7037CEA191AA88600A1FA98 /* main.cpp in Sources */,
-				F7037CEB191AA88600A1FA98 /* AcrobotTestApp.cpp in Sources */,
-				F7037CEC191AA88600A1FA98 /* AcrobotTestManager.cpp in Sources */,
+				F70FA7772284953D00528AD1 /* main.cpp in Sources */,
+				F70FA7762284953600528AD1 /* FloatingTestManager.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F70FA75A228494CB00528AD1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F70FA7782284954600528AD1 /* FlyingTestManager.cpp in Sources */,
+				F70FA7792284954B00528AD1 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1832,7 +1916,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F74CEC1A18E56FCB00D0C42D /* JointsTestManager.cpp in Sources */,
-				F74CEC1918E56FCB00D0C42D /* JointsTestApp.cpp in Sources */,
 				F74CEC1B18E56FCB00D0C42D /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1869,6 +1952,7 @@
 				F71604F62191AA0D00E83606 /* Current.cpp in Sources */,
 				F71604F32191AA0D00E83606 /* FixedJoint.cpp in Sources */,
 				F71605062191AA0D00E83606 /* OpenGLContent.cpp in Sources */,
+				F70FA7472284912D00528AD1 /* Propeller.cpp in Sources */,
 				F71605532191AA0E00E83606 /* ScalarSensor.cpp in Sources */,
 				F77015D121B421EB00585FD1 /* OpenGLConsole.cpp in Sources */,
 				F7E965B821A863B20067D12C /* LinkActuator.cpp in Sources */,
@@ -1935,6 +2019,7 @@
 				F716053B2191AA0D00E83606 /* DepthCamera.cpp in Sources */,
 				F71605552191AA0E00E83606 /* ADC.cpp in Sources */,
 				F716051A2191AA0D00E83606 /* Robot.cpp in Sources */,
+				F70FA7452284910600528AD1 /* Uniform.cpp in Sources */,
 				F71605482191AA0D00E83606 /* SphericalJoint.cpp in Sources */,
 				F71605292191AA0D00E83606 /* DCMotor.cpp in Sources */,
 				F716052E2191AA0D00E83606 /* ForcefieldEntity.cpp in Sources */,
@@ -1978,10 +2063,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		F7037CC3191AA86A00A1FA98 /* PBXTargetDependency */ = {
+		F70FA749228494AE00528AD1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
-			targetProxy = F7037CC4191AA86A00A1FA98 /* PBXContainerItemProxy */;
+			targetProxy = F70FA74A228494AE00528AD1 /* PBXContainerItemProxy */;
+		};
+		F70FA758228494CB00528AD1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7AB71B518C3D8EC0077F07D /* Stonefish */;
+			targetProxy = F70FA759228494CB00528AD1 /* PBXContainerItemProxy */;
 		};
 		F71605D82192728900E83606 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2011,35 +2101,55 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		F7037CE7191AA86A00A1FA98 /* Debug */ = {
+		F70FA754228494AE00528AD1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Library/include,
-				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_LDFLAGS = "$(inherited)";
-				PRODUCT_NAME = AcrobotTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		F7037CE8191AA86A00A1FA98 /* Release */ = {
+		F70FA755228494AE00528AD1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Library/include,
-				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_LDFLAGS = "$(inherited)";
-				PRODUCT_NAME = AcrobotTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		F70FA763228494CB00528AD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		F70FA764228494CB00528AD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -2174,7 +2284,7 @@
 					"DEBUG=1",
 					BT_EULER_DEFAULT_ZYX,
 					BT_USE_DOUBLE_PRECISION,
-					"DATA_DIR_PATH=\\\"$(PROJECT_DIR)/Library/data/\\\"",
+					"DATA_DIR_PATH=\\\"$(PROJECT_DIR)/Tests/Data/\\\"",
 					"SHADER_DIR_PATH=\\\"$(PROJECT_DIR)/Library/shaders/\\\"",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
@@ -2247,6 +2357,7 @@
 					BT_EULER_DEFAULT_ZYX,
 					BT_USE_DOUBLE_PRECISION,
 					"SHADER_DIR_PATH=\\\"$(PROJECT_DIR)/Library/shaders/\\\"",
+					"DATA_DIR_PATH=\\\"$(PROJECT_DIR)/Tests/Data/\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2390,11 +2501,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F7037CE6191AA86A00A1FA98 /* Build configuration list for PBXNativeTarget "AcrobotTest" */ = {
+		F70FA753228494AE00528AD1 /* Build configuration list for PBXNativeTarget "FloatingTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F7037CE7191AA86A00A1FA98 /* Debug */,
-				F7037CE8191AA86A00A1FA98 /* Release */,
+				F70FA754228494AE00528AD1 /* Debug */,
+				F70FA755228494AE00528AD1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F70FA762228494CB00528AD1 /* Build configuration list for PBXNativeTarget "FlyingTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F70FA763228494CB00528AD1 /* Debug */,
+				F70FA764228494CB00528AD1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

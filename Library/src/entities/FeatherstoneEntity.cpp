@@ -660,18 +660,18 @@ std::vector<Renderable> FeatherstoneEntity::Render()
     
     for(size_t i = 1; i < links.size(); ++i)
     {
-        btMultibodyLink& link = multiBody->getLink(i-1);
+        btMultibodyLink& link = multiBody->getLink((int)i-1);
         Vector3 pivot = getLinkTransform(link.m_parent+1) * link.m_eVector;
         Vector3 axisEnd = pivot;
         
         if(link.m_jointType == btMultibodyLink::eFeatherstoneJointType::eRevolute)
         {
-            Vector3 axisInWorld = getLinkTransform(i).getBasis() * link.getAxisTop(0);
+            Vector3 axisInWorld = getLinkTransform((unsigned int)i).getBasis() * link.getAxisTop(0);
             axisEnd += axisInWorld * Scalar(0.3);
         }
         else if(link.m_jointType == btMultibodyLink::eFeatherstoneJointType::ePrismatic)
         {
-            Vector3 axisInWorld = getLinkTransform(i).getBasis() * link.getAxisBottom(0);
+            Vector3 axisInWorld = getLinkTransform((unsigned int)i).getBasis() * link.getAxisBottom(0);
             axisEnd += axisInWorld * Scalar(0.3);
         }
         

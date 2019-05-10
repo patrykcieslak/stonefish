@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1010"
+   LastUpgradeVersion = "1020"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "F7037CC2191AA86A00A1FA98"
-               BuildableName = "AcrobotTest"
-               BlueprintName = "AcrobotTest"
+               BlueprintIdentifier = "F70FA757228494CB00528AD1"
+               BuildableName = "FlyingTest"
+               BlueprintName = "FlyingTest"
                ReferencedContainer = "container:Stonefish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F7037CC2191AA86A00A1FA98"
-            BuildableName = "AcrobotTest"
-            BlueprintName = "AcrobotTest"
+            BlueprintIdentifier = "F70FA757228494CB00528AD1"
+            BuildableName = "FlyingTest"
+            BlueprintName = "FlyingTest"
             ReferencedContainer = "container:Stonefish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -55,9 +55,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F7037CC2191AA86A00A1FA98"
-            BuildableName = "AcrobotTest"
-            BlueprintName = "AcrobotTest"
+            BlueprintIdentifier = "F70FA757228494CB00528AD1"
+            BuildableName = "FlyingTest"
+            BlueprintName = "FlyingTest"
             ReferencedContainer = "container:Stonefish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -74,9 +74,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F7037CC2191AA86A00A1FA98"
-            BuildableName = "AcrobotTest"
-            BlueprintName = "AcrobotTest"
+            BlueprintIdentifier = "F70FA757228494CB00528AD1"
+            BuildableName = "FlyingTest"
+            BlueprintName = "FlyingTest"
             ReferencedContainer = "container:Stonefish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
