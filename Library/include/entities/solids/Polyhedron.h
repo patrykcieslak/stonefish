@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Polyhedron__
@@ -49,7 +49,7 @@ namespace sf
          \param smoothGraphicsNormals defines if the graphics mesh normals should be smoothed after loading
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
          \param isBuoyant defines if buoyancy forces should be calculated for the body
-         \param proxy defines what time of hydrodynamic approximation of body shape should be used
+         \param proxy defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
         Polyhedron(std::string uniqueName,
                    std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
@@ -69,7 +69,7 @@ namespace sf
          \param smoothNormals defines if the model normals should be smoothed after loading
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
          \param isBuoyant defines if buoyancy forces should be calculated for the body
-         \param proxy defines what time of hydrodynamic approximation of body shape should be used
+         \param proxy defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
         Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
                    Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothNormals = true, 

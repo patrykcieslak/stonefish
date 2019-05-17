@@ -8,8 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="UnderwaterTestApp.cpp"/>
     <File Name="UnderwaterTestManager.cpp"/>
+    <File Name="UnderwaterTestApp.cpp"/>
     <File Name="main.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
