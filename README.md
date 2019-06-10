@@ -43,7 +43,9 @@ simulator templates and facilitates easy integration with ROS architecture.
     3. Open "docs/html/index.html".
     
 ### Credits
-This software was written by Patryk Cieślak. If you find it useful in your research, please cite:
+This software was written and is continuously developed by Patryk Cieślak. Small parts of the software based on code developed by other authors are marked clearly as such.
+
+If you find this software useful in your research, please cite:
 
 *Patryk Cieślak, "Stonefish: An Advanced Open-Source Simulation Tool Designed for Marine Robotics, With a ROS Interface", In Proceedings of MTS/IEEE OCEANS 2019, June 2019, Marseille, France*
 ```
