@@ -11,36 +11,36 @@ simulator templates and facilitates easy integration with ROS architecture.
 
 ### Installation
 1. Dependencies
-    * **Bullet Physics library** (version 2.87, from source)
-        1. git clone https://github.com/bulletphysics/bullet3.git -b 2.87
-        2. cd bullet3
-        3. mkdir build
-        4. cd build
-        5. cmake -DBUILD_PYBULLET=OFF -DBUILD_SHARED_LIBS=ON -DUSE_DOUBLE_PRECISION=ON -DCMAKE_BUILD_TYPE=Release .. 
-        6. make -j4
-        7. sudo make install     
+    * **Bullet Physics library** (version 2.88, from source)
+        1. `git clone https://github.com/bulletphysics/bullet3.git -b 2.88`
+        2. `cd bullet3`
+        3. `mkdir build`
+        4. `cd build`
+        5. `cmake -DBUILD_PYBULLET=OFF -DBUILD_SHARED_LIBS=ON -DUSE_DOUBLE_PRECISION=ON -DCMAKE_BUILD_TYPE=Release ..`
+        6. `make -j4`
+        7. `sudo make install`
     * **OpenGL Mathematics library** (libglm-dev, version >= 0.9.9.0)
     * **SDL2 library** (libsdl2-dev, may need the following fix!)
-        1. Install SDL2 library from the repository
-        2. cd /usr/lib/x86_64-linux-gnu/cmake/SDL2/
-        3. sudo vim sdl2-config.cmake
-        4. Remove space after "-lSDL2"
-        5. Save file
+        1. Install SDL2 library from the repository.
+        2. `cd /usr/lib/x86_64-linux-gnu/cmake/SDL2/`
+        3. `sudo vim sdl2-config.cmake`
+        4. Remove space after "-lSDL2".
+        5. Save file.
     * **Eigen3 library** (libeigen3-dev, version >= 3.3.0)
 
 2. Building
-    1. clone stonefish repository
-    2. cd stonefish
-    3. mkdir build
-    4. cd build
-    5. cmake ..
-    6. make -j4
-    7. sudo make install
+    1. Clone _stonefish_ repository.
+    2. `cd stonefish`
+    3. `mkdir build`
+    4. `cd build`
+    5. `cmake ..`
+    6. `make -j4`
+    7. `sudo make install`
 
 3. Documentation
-    1. go to stonefish directory
-    2. doxygen doxygen
-    3. open docs/html/index.html
+    1. Go to "stonefish" directory.
+    2. `doxygen doxygen`
+    3. Open "docs/html/index.html".
     
 ### Credits
 This software was written by Patryk Cieślak. If you find it useful in your research, please cite:
