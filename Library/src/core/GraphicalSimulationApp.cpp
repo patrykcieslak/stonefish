@@ -615,7 +615,7 @@ void GraphicalSimulationApp::DoHUD()
     gui->DoLabel(15.f, offset, "HELPERS");
     offset += 15.f;
     
-    ui_id id;
+    Uid id;
     id.owner = 0;
     id.index = 0;
     id.item = 1;

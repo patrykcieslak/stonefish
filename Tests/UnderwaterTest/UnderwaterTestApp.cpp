@@ -44,7 +44,7 @@ void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
     
-    sf::ui_id id;
+    sf::Uid id;
     id.owner = 5;
     id.index = 0;
     id.item = 0;

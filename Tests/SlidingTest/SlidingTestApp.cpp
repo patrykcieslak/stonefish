@@ -36,7 +36,7 @@ void SlidingTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
     
-    sf::ui_id plot;
+    sf::Uid plot;
     plot.owner = 1;
     plot.item = 0;
     plot.index = 0;

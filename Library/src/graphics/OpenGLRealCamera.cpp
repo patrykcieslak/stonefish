@@ -50,8 +50,9 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
     UpdateTransform();
 
     //Setup projection
-    fovx = horizontalFovDeg/180.f*M_PI;
-    projection = glm::perspectiveFov(fovx*(GLfloat)viewportHeight/(GLfloat)viewportWidth, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
+    fovx = horizontalFovDeg/180.f * M_PI;
+    GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
+    projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
 }
 
 OpenGLRealCamera::~OpenGLRealCamera()

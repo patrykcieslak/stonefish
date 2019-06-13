@@ -216,34 +216,34 @@ IMGUI::~IMGUI()
 		glDeleteFramebuffers(1, &translucentFBO);
 }
 
-ui_id IMGUI::getHot()
+Uid IMGUI::getHot()
 {
     return hot;
 }
 
-ui_id IMGUI::getActive()
+Uid IMGUI::getActive()
 {
     return active;
 }
 
-void IMGUI::setHot(ui_id newHot)
+void IMGUI::setHot(Uid newHot)
 {
     hot = newHot;
 }
 
-void IMGUI::setActive(ui_id newActive)
+void IMGUI::setActive(Uid newActive)
 {
     active = newActive;
 }
 
-bool IMGUI::isHot(ui_id ID)
+bool IMGUI::isHot(Uid id)
 {
-    return (hot.owner == ID.owner && hot.item == ID.item && hot.index == ID.index);
+    return (hot.owner == id.owner && hot.item == id.item && hot.index == id.index);
 }
 
-bool IMGUI::isActive(ui_id ID)
+bool IMGUI::isActive(Uid id)
 {
-    return (active.owner == ID.owner && active.item == ID.item && active.index == ID.index);
+    return (active.owner == id.owner && active.item == id.item && active.index == id.index);
 }
 
 bool IMGUI::isAnyActive()
@@ -353,9 +353,9 @@ void IMGUI::End()
     glDisable(GL_BLEND);
 }
 
-void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text)
+void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale)
 {
-    plainPrinter->Print(text, color, x, windowH - y - STANDARD_FONT_BASELINE, STANDARD_FONT_SIZE);
+    plainPrinter->Print(text, color, x, windowH - y - STANDARD_FONT_BASELINE * scale, STANDARD_FONT_SIZE * scale);
 }
 
 GLfloat IMGUI::PlainTextLength(const std::string& text)
@@ -518,40 +518,40 @@ void IMGUI::DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 	DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
 }
 
-void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color)
+void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color, GLfloat scale)
 {
     if(color.r < 0.f)
-        DrawPlainText(x, y, theme[ACTIVE_TEXT_COLOR], text);
+        DrawPlainText(x, y, theme[ACTIVE_TEXT_COLOR], text, scale);
     else
-        DrawPlainText(x, y, color, text);
+        DrawPlainText(x, y, color, text, scale);
 }
 
-bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const std::string& title)
+bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const std::string& title)
 {
     bool result = false;
     
     if(MouseInRect(x, y, w, h))
-        setHot(ID);
+        setHot(id);
     
-    if(isActive(ID))
+    if(isActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(ID))
+            if(isHot(id))
                 result = true;
             clearActive();
         }
     }
-    else if(isHot(ID))
+    else if(isHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(ID);
+            setActive(id);
     }
     
     //drawing
-    if(isActive(ID))
+    if(isActive(id))
         DrawRoundedRect(x, y, w, h, theme[PUSHED_CONTROL_COLOR]);
-    else if(isHot(ID))
+    else if(isHot(id))
         DrawRoundedRect(x, y, w, h, theme[HOT_CONTROL_COLOR]);
     else
         DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
@@ -562,7 +562,7 @@ bool IMGUI::DoButton(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const
     return result;
 }
 
-Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title)
+Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title)
 {
 	//Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
@@ -578,9 +578,9 @@ Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Sc
     GLfloat sliderPosition = (value-min)/(max-min);
     
     if(MouseInRect(x + backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, sliderW, sliderH))
-        setHot(ID);
+        setHot(id);
     
-    if(isActive(ID))
+    if(isActive(id))
     {
         GLfloat mouseX = getMouseX();
         if(mouseX <= x + backgroundMargin*2.f)
@@ -595,10 +595,10 @@ Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Sc
         if(!MouseIsDown(true)) //mouse went up
             clearActive();
     }
-    else if(isHot(ID))
+    else if(isHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(ID);
+            setActive(id);
     }
     
     //Drawing
@@ -616,9 +616,9 @@ Scalar IMGUI::DoSlider(ui_id ID, GLfloat x, GLfloat y, GLfloat w, Scalar min, Sc
     DrawRect(x+backgroundMargin*2.f + sliderPosition * railW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme[EMPTY_COLOR]);
     
 	//Slider
-	if(isActive(ID))
+	if(isActive(id))
         DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[PUSHED_CONTROL_COLOR]);
-    else if(isHot(ID))
+    else if(isHot(id))
         DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[HOT_CONTROL_COLOR]);
     else
         DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[ACTIVE_CONTROL_COLOR]);
@@ -651,7 +651,7 @@ void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, cons
     DrawRect(x+backgroundMargin*2.f + progress * barW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme[EMPTY_COLOR]);
 }
 
-bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title)
+bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title)
 {
     bool result = value;
 	GLfloat size = 14.f;
@@ -659,22 +659,22 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
 	GLfloat h = size + 2.f * backgroundMargin;
     
 	if(MouseInRect(x + backgroundMargin, y + backgroundMargin, size, size))
-        setHot(ID);
+        setHot(id);
     
-    if(isActive(ID))
+    if(isActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(ID))
+            if(isHot(id))
                 result = !result;
                 
             clearActive();
         }
     }
-    else if(isHot(ID))
+    else if(isHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(ID);
+            setActive(id);
     }
     
     //drawing
@@ -682,9 +682,9 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
     DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
     DrawPlainText(x + size + backgroundMargin + 5.f, y + backgroundMargin + size/2.f - textDim.y/2.f, theme[ACTIVE_TEXT_COLOR], title);
     
-    if(isActive(ID))
+    if(isActive(id))
         DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[PUSHED_CONTROL_COLOR]);
-    else if(isHot(ID))
+    else if(isHot(id))
         DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[HOT_CONTROL_COLOR]);
     else
         DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[ACTIVE_CONTROL_COLOR]);
@@ -695,7 +695,7 @@ bool IMGUI::DoCheckBox(ui_id ID, GLfloat x, GLfloat y, GLfloat w, bool value, co
     return result;
 }
 
-bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2])
+bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2])
 {
     bool result = false;
 	GLfloat pltW = w/windowW * 2.f;
@@ -705,21 +705,21 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
 	GLfloat pltMargin = 10.f/windowH*2.f; 
 	
     if(MouseInRect(x, y, w, h))
-        setHot(ID);
+        setHot(id);
     
-    if(isActive(ID))
+    if(isActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(ID))
+            if(isHot(id))
                 result = true;
             clearActive();
         }
     }
-    else if(isHot(ID))
+    else if(isHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(ID);
+            setActive(id);
     }
     
     //Drawing
@@ -853,7 +853,7 @@ bool IMGUI::DoTimePlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Sca
     return result;
 }
 
-bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title)
+bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title)
 {
     bool result = false;
     GLfloat pltW = w/windowW * 2.f;
@@ -862,21 +862,21 @@ bool IMGUI::DoXYPlot(ui_id ID, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
 	GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
 	
     if(MouseInRect(x, y, w, h))
-        setHot(ID);
+        setHot(id);
     
-    if(isActive(ID))
+    if(isActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(ID))
+            if(isHot(id))
                 result = true;
             clearActive();
         }
     }
-    else if(isHot(ID))
+    else if(isHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(ID);
+            setActive(id);
     }
     
     //drawing

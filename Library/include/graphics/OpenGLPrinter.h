@@ -68,9 +68,9 @@ namespace sf
          \param color the desired color of the text
          \param x the x position of the text in window
          \param y the y position of the text in window
-         \param size the size of the font
+         \param size the height of the font
          */
-        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLuint size);
+        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size);
         
         //! A method used to measure the length of a string in pixels.
         /*!

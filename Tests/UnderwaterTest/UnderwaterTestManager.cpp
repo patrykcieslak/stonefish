@@ -86,9 +86,6 @@ void UnderwaterTestManager::BuildScenario()
     getMaterialManager()->SetMaterialsInteraction("Rock", "Fiberglass", 0.6, 0.4);
     
     ///////LOOKS///////////
-    int red = CreateLook(sf::Color::RGB(1.f, 0.f, 0.f), 0.5f, 0.f);
-    int green = CreateLook(sf::Color::RGB(0.f, 1.f, 0.f), 0.5f, 0.f);
-    int blue = CreateLook(sf::Color::RGB(0.f, 0.f, 1.f), 0.5f, 0.f);
     int yellow = CreateLook(sf::Color::RGB(1.f, 0.9f, 0.f), 0.3f, 0.f);
     int grey = CreateLook(sf::Color::RGB(0.3f, 0.3f, 0.3f), 0.4f, 0.5f);
     int seabed = CreateLook(sf::Color::RGB(0.7f, 0.7f, 0.5f), 0.9f, 0.f);
@@ -96,8 +93,6 @@ void UnderwaterTestManager::BuildScenario()
     int ductLook = CreateLook(sf::Color::RGB(0.1f, 0.1f, 0.1f), 0.4f, 0.5f);
     int manipLook = CreateLook(sf::Color::RGB(0.2f, 0.15f, 0.1f), 0.6f, 0.8f);
     int link4Look = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.6f, 0.8f, 0.f, sf::GetDataPath() + "link4_tex.png");
-    int eeLook = CreateLook(sf::Color::RGB(0.59f, 0.56f, 0.51f), 0.6f, 0.8f);
-    int grid = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.5f, 0.f, 0.f, sf::GetShaderPath() + "grid.png");
     
     ////////OBJECTS    
     //Create environment

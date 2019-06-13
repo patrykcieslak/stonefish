@@ -149,7 +149,7 @@ OpenGLPrinter::~OpenGLPrinter()
 		glDeleteBuffers(1, &fontVBO);
 }
 
-void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLuint size)
+void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size)
 {
 	if(!initialized)
 		return;
