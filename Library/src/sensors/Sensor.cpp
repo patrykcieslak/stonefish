@@ -49,7 +49,8 @@ Sensor::Sensor(std::string uniqueName, Scalar frequency)
 
 Sensor::~Sensor()
 {
-	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::getApp() != NULL)
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
     SDL_DestroyMutex(updateMutex);
 }
 

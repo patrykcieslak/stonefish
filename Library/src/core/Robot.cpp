@@ -48,7 +48,8 @@ Robot::Robot(std::string uniqueName, bool fixedBase)
 
 Robot::~Robot()
 {
-	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::getApp() != NULL)
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 std::string Robot::getName()

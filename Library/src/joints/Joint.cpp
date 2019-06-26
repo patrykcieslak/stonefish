@@ -42,7 +42,8 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 
 Joint::~Joint(void)
 {
-	SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::getApp() != NULL)
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 bool Joint::isMultibodyJoint()

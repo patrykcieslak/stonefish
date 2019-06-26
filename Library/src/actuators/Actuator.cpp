@@ -39,7 +39,8 @@ Actuator::Actuator(std::string uniqueName)
 
 Actuator::~Actuator()
 {
-    SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::getApp() != NULL)
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 std::string Actuator::getName()

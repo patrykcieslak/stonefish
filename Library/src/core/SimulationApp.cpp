@@ -45,6 +45,8 @@ SimulationApp::SimulationApp(std::string name, std::string dataDirPath, Simulati
 
 SimulationApp::~SimulationApp()
 {
+    if(SimulationApp::handle == this)
+        SimulationApp::handle = NULL;
 }
 
 SimulationManager* SimulationApp::getSimulationManager()
@@ -125,8 +127,6 @@ void SimulationApp::Quit()
 
 void SimulationApp::CleanUp()
 {
-    if(simulation != NULL)
-        delete simulation;
 }
 
 //Static

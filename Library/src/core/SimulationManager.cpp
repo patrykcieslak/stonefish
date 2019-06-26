@@ -743,7 +743,7 @@ void SimulationManager::DestroyScenario()
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
 
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::getApp() != NULL && SimulationApp::getApp()->hasGraphics())
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
 }
 

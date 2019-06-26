@@ -40,7 +40,8 @@ Entity::Entity(std::string uniqueName)
 
 Entity::~Entity(void)
 {
-    SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::getApp() != NULL)
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 void Entity::setRenderable(bool render)
