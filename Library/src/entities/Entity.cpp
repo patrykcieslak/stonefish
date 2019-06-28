@@ -49,12 +49,12 @@ void Entity::setRenderable(bool render)
     renderable = render;
 }
 
-bool Entity::isRenderable()
+bool Entity::isRenderable() const
 {
     return renderable;
 }
 
-std::string Entity::getName()
+std::string Entity::getName() const
 {
     return name;
 }

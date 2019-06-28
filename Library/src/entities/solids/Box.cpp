@@ -34,7 +34,7 @@ Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& ori
          : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     halfExtents = dimensions * Scalar(0.5);
-    T_O2G = T_O2C = origin;
+    T_O2G = T_O2C = T_O2H = origin;
     T_CG2O = origin.inverse();
     T_CG2C = T_CG2G = I4();
     P_CB = Vector3(0,0,0);
@@ -70,7 +70,7 @@ Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& ori
 	phyMesh = OpenGLContent::BuildBox(glHalfExtents);
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsApprox(FD_APPROX_ELLIPSOID);
     //dragCoeff = Vector3(halfExtents.y()*halfExtents.z()*Scalar(4*1.05), halfExtents.x()*halfExtents.z()*Scalar(4*1.05), halfExtents.y()*halfExtents.x()*Scalar(4*1.05));
 }
 

@@ -57,11 +57,12 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //3. Compute hydrodynamic properties
-    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsApprox(FD_APPROX_ELLIPSOID);
     
     //4. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
     T_CG2G = T_CG2O * T_O2G;
+    T_O2H = T_CG2O.inverse() * T_CG2H;
     P_CB = Vector3(0,0,0);
 }
     
@@ -112,11 +113,12 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //4. Compute hydrodynamic properties
-    ComputeFluidDynamicsProxy(FD_PROXY_ELLIPSOID);
+    ComputeFluidDynamicsApprox(FD_APPROX_ELLIPSOID);
     
     //5. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
     T_CG2G = T_CG2O * T_O2G;
+    T_O2H = T_CG2O.inverse() * T_CG2H;
     P_CB = Vector3(0,0,0);
 }
     

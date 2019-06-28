@@ -34,7 +34,7 @@ Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, M
     : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     r = radius;
-    T_O2G = T_O2C = origin;
+    T_O2G = T_O2C = T_O2H = origin;
     T_CG2O = origin.inverse();
     T_CG2C = T_CG2G = I4();
     P_CB = Vector3(0,0,0);
@@ -61,7 +61,7 @@ Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, M
     phyMesh = OpenGLContent::BuildSphere((GLfloat)r);
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsProxy(FD_PROXY_SPHERE);
+    ComputeFluidDynamicsApprox(FD_APPROX_SPHERE);
     //dragCoeff = Vector3(Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius);
 }
 

@@ -35,7 +35,7 @@ Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const T
 {
     r = radius;
     halfHeight = height/Scalar(2);
-    T_O2G = T_O2C = origin;
+    T_O2G = T_O2C = T_O2H = origin;
     T_CG2O = origin.inverse();
     T_CG2C = T_CG2G = I4();
     P_CB = Vector3(0,0,0);
@@ -68,7 +68,7 @@ Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const T
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2));
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsProxy(FD_PROXY_CYLINDER);
+    ComputeFluidDynamicsApprox(FD_APPROX_CYLINDER);
     //dragCoeff = Vector3(radius*halfHeight*Scalar(4*0.5), M_PI*radius*radius*Scalar(0.9), radius*halfHeight*Scalar(4*0.5));
 }
 

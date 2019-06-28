@@ -742,7 +742,7 @@ void GraphicalSimulationApp::DoHUD()
             {
                 SolidEntity* ent = (SolidEntity*)lastPicked;
                 
-                gui->DoPanel(10.f, offset, 160.f, 109.f);
+                gui->DoPanel(10.f, offset, 160.f, 122.f);
                 offset += 5.f;
                 gui->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
@@ -760,6 +760,9 @@ void GraphicalSimulationApp::DoHUD()
                 Vector3 I = ent->getInertia();
                 std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
                 gui->DoLabel(23.f, offset, std::string(buf));
+                offset += 14.f;
+                std::sprintf(buf, "%1.3lf", ent->getVolume()*1e3);
+                gui->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
             }
                 break;
                 

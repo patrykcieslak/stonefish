@@ -36,7 +36,7 @@ Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, con
 {
     MR = majorRadius;
     mR = minorRadius;
-    T_O2G = T_O2C = origin;
+    T_O2G = T_O2C = T_O2H = origin;
     T_CG2O = origin.inverse();
     T_CG2C = T_CG2G = I4();
     P_CB = Vector3(0,0,0);
@@ -67,7 +67,7 @@ Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, con
     phyMesh = OpenGLContent::BuildTorus(MR, mR);
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsProxy(FD_PROXY_CYLINDER);
+    ComputeFluidDynamicsApprox(FD_APPROX_CYLINDER);
     //dragCoeff = Vector3(0.5, 0.5, 0.5);//Vector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
 }
 

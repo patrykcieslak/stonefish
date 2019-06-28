@@ -67,10 +67,10 @@ namespace sf
         void setRenderable(bool render);
         
         //! A method informing if the entity is renderable.
-        bool isRenderable();
+        bool isRenderable() const;
         
         //! A method returning the name of the entity.
-        std::string getName();
+        std::string getName() const;
         
         //! A method returning the type of the entity.
         virtual EntityType getType() = 0;

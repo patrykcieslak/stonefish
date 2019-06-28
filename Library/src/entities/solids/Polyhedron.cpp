@@ -36,7 +36,7 @@ Polyhedron::Polyhedron(std::string uniqueName,
                        std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                        std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
                        Material m, BodyPhysicsType bpt, int lookId, bool smoothGraphicsNormals, Scalar thickness,
-                       bool isBuoyant, FluidDynamicsProxyType proxy)
+                       bool isBuoyant, GeometryApproxType approx)
                         : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
 {
     //1.Load geometry from file
@@ -63,18 +63,19 @@ Polyhedron::Polyhedron(std::string uniqueName,
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //3.Calculate equivalent ellipsoid for hydrodynamic force computation
-    ComputeFluidDynamicsProxy(proxy);
+    ComputeFluidDynamicsApprox(approx);
     
     //4. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
     T_CG2G = T_CG2O * T_O2G;
+    T_O2H = T_CG2O.inverse() * T_CG2H;
     P_CB = Vector3(0,0,0);
 }
     
 Polyhedron::Polyhedron(std::string uniqueName,
                        std::string modelFilename, Scalar scale, const Transform& origin,
-                       Material m, BodyPhysicsType bpt, int lookId, bool smoothNormals, Scalar thickness, bool isBuoyant, FluidDynamicsProxyType proxy)
-    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, m, bpt, lookId, smoothNormals, thickness, isBuoyant, proxy)
+                       Material m, BodyPhysicsType bpt, int lookId, bool smoothNormals, Scalar thickness, bool isBuoyant, GeometryApproxType approx)
+    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, m, bpt, lookId, smoothNormals, thickness, isBuoyant, approx)
 {
 }
 

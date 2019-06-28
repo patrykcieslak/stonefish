@@ -81,6 +81,12 @@ namespace sf
         */
         void ComputeAerodynamicForces(Atmosphere* atm);
         
+        //! A method returning the mass or the sum of mass and added mass (depending on type of body).
+        Scalar getAugmentedMass() const;
+        
+        //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
+        Vector3 getAugmentedInertia() const;
+        
         //! A method returning the material of the body.
         Material getMaterial(size_t partId) const;
         
