@@ -471,6 +471,13 @@ void SimulationManager::setStepsPerSecond(Scalar steps)
     SDL_UnlockMutex(simSettingsMutex);
 }
 
+void SimulationManager::setRealtimeFactor(Scalar f)
+{
+    SDL_LockMutex(simInfoMutex);
+    realtimeFactor = f;
+    SDL_UnlockMutex(simInfoMutex);
+}
+
 Scalar SimulationManager::getStepsPerSecond()
 {
     return sps;
@@ -883,7 +890,7 @@ void SimulationManager::AdvanceSimulation()
     Scalar factor2 = Scalar(1000000.0/60.0)/(Scalar)physicsTime;
     realtimeFactor *=  factor1*factor2;
     realtimeFactor = realtimeFactor < Scalar(0.05) ? Scalar(0.05) : (realtimeFactor > Scalar(1) ? Scalar(1) : realtimeFactor);*/
-	realtimeFactor = Scalar(1);
+	//realtimeFactor = Scalar(1);
     
     //Inform about MLCP failures
 	if(solver != SolverType::SOLVER_SI)

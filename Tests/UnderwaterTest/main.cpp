@@ -49,8 +49,9 @@ int main(int argc, const char * argv[])
     h.showActuators = true;
     h.showForces = false;
     
-    UnderwaterTestManager* simulationManager = new UnderwaterTestManager(200.0);
-    UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
+    UnderwaterTestManager simulationManager(200.0);
+    simulationManager.setRealtimeFactor(1.0);
+    UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run(false);
     
     return 0;

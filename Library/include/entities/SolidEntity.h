@@ -139,7 +139,7 @@ namespace sf
          \param _Tds output of the torque induced by skin friction
         */
         static void ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
-                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds);
+                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Renderable& debug);
         
         //! A static method that computes fluid dynamics when a body is completely submerged.
         /*!
@@ -433,6 +433,7 @@ namespace sf
         int lookId;
         int graObjectId;
         int phyObjectId;
+        Renderable submerged;
         
     private:
         friend class FeatherstoneEntity;

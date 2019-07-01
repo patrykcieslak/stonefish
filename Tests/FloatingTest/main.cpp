@@ -45,7 +45,7 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    FloatingTestManager* simulationManager = new FloatingTestManager(200.0);
+    FloatingTestManager* simulationManager = new FloatingTestManager(500.0);
     sf::GraphicalSimulationApp app("FloatingTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
     app.Run(false);
     

@@ -89,6 +89,7 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt
     multibodyCollider = NULL;
 	phyMesh = NULL;
     graObjectId = -1;
+    submerged.type = RenderableType::HYDRO_LINES;
 }
 
 SolidEntity::~SolidEntity()
@@ -229,7 +230,12 @@ std::vector<Renderable> SolidEntity::Render()
         item.type = RenderableType::HYDRO_CS;
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         items.push_back(item);
-        
+#ifdef DEBUG
+        //Surface crossing debug
+        submerged.model = glMatrixFromTransform(sf::I4());
+        items.push_back(submerged);
+#else
+        //Geometry approximation
         switch(fdApproxType)
         {
             case FD_APPROX_AUTO:
@@ -256,7 +262,7 @@ std::vector<Renderable> SolidEntity::Render()
                 items.push_back(item);
                 break;
         }
-        
+#endif
         //Forces
         Vector3 cg = getCGTransform().getOrigin();
         glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
@@ -1162,18 +1168,18 @@ void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdl, Vector3& 
             break;
     }
     
-    corFactor *= 2.0;
+    //corFactor *= 2.0;
     
     _Fdl *= 0.1 * btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
     _Tdl *= 0.1 * btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
     _Fdq *= btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
     _Tdq *= btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
-    _Fds *= 0.05 * 0.5 * ocn->getLiquid().density;
-    _Tds *= 0.05 * 0.5 * ocn->getLiquid().density;
+    _Fds *= 0.1 * 0.5 * ocn->getLiquid().density;
+    _Tds *= 0.1 * 0.5 * ocn->getLiquid().density;
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
-                                            const Vector3& v, const Vector3& omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
+                                            const Vector3& v, const Vector3& omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Renderable& debug)
 {
     //Buoyancy
     if(settings.reallisticBuoyancy)
@@ -1229,9 +1235,9 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         Vector3 fn1;
         Scalar A;
         
-        if(depth[0] < Scalar(0))
+        if(depth[0] < Scalar(0)) //Vertex 1 above water
         {
-            if(depth[1] < Scalar(0))
+            if(depth[1] < Scalar(0)) //Two vertices above water (triangle)
             {
                 p1 = p3 + (p1-p3) * (depth[2]/(btFabs(depth[0]) + depth[2]));
                 p2 = p3 + (p2-p3) * (depth[2]/(btFabs(depth[1]) + depth[2]));
@@ -1245,16 +1251,24 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 fn = fv1.cross(fv2); //Normal of the face (length != 1)
                 Scalar len = fn.length();
                 
-                if(btFuzzyZero(len))
+                if(btFuzzyZero(len)) //Check for invalid triangle
                     continue;
                 
                 fn1 = fn/len; //Normalised normal (length = 1)
-                A = len/Scalar(2); //Area of the face (triangle)
+                A = len/Scalar(2); //Area of the face (triangle)                
+#ifdef DEBUG
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif
             }
-            else if(depth[2] < Scalar(0))
+            else if(depth[2] < Scalar(0)) //Two vertices above water (triangle)
             {
                 p1 = p2 + (p1-p2) * (depth[1]/(btFabs(depth[0]) + depth[1]));
-                //p2 withour change
+                //p2 without change
                 p3 = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
                 
                 //Calculate
@@ -1265,13 +1279,21 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 fn = fv1.cross(fv2); //Normal of the face (length != 1)
                 Scalar len = fn.length();
                 
-                if(btFuzzyZero(len))
+                if(btFuzzyZero(len)) //Check for invalid triangle
                     continue;
                 
                 fn1 = fn/len; //Normalised normal (length = 1)
-                A = len/Scalar(2); //Area of the face (triangle)
+                A = len/Scalar(2); //Area of the face (triangle)         
+#ifdef DEBUG
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif
             }
-            else //depth[1] >= 0 && depth[2] >= 0
+            else //depth[1] >= 0 && depth[2] >= 0 --> Two vertices under water (quad = two triangles)
             {
                 //Quad!!!!
                 Vector3 p1temp = p2 + (p1-p2) * (depth[1]/(btFabs(depth[0]) + depth[1]));
@@ -1282,19 +1304,30 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 
                 //Calculate
                 Vector3 fv1 = p2-p1;
-                Vector3 fv2 = p3-p1;
-                Vector3 fv3 = p4-p1;
+                Vector3 fv2 = p4-p1;
+                Vector3 fv3 = p2-p3;
+                Vector3 fv4 = p4-p3;
                 
                 fc = (p1 + p2 + p3 + p4)/Scalar(4);
                 fn = fv1.cross(fv2);
                 Scalar len = fn.length();
                 
-                if(btFuzzyZero(len))
+                if(btFuzzyZero(len)) //Check validity
                     continue;
                 
                 fn1 = fn/len;
-                A = len + fv2.cross(fv3).length();
+                A = (len + fv3.cross(fv4).length())/Scalar(2); //Quad
                 fn = fn1 * A;
+#ifdef DEBUG
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif  
             }
         }
         else if(depth[1] < Scalar(0))
@@ -1318,12 +1351,20 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/Scalar(2); //Area of the face (triangle)
+#ifdef DEBUG
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif                
             }
             else
             {
                 //Quad!!!!
+                //p1 without change
                 Vector3 p2temp = p1 + (p2-p1) * (depth[0]/(btFabs(depth[1]) + depth[0]));
-                //p2 without change
                 //p3 without change
                 Vector3 p4 = p3 + (p2-p3) * (depth[2]/(btFabs(depth[1]) + depth[2]));
                 p2 = p2temp;
@@ -1331,45 +1372,66 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 //Calculate
                 Vector3 fv1 = p2-p1;
                 Vector3 fv2 = p3-p1;
-                Vector3 fv3 = p4-p1;
+                Vector3 fv3 = p2-p3;
+                Vector3 fv4 = p4-p3;
                 
                 fc = (p1 + p2 + p3 + p4)/Scalar(4);
-                fn = fv1.cross(fv2);
+                fn = fv1.cross(fv2); //Triangle 1
                 Scalar len = fn.length();
                 
-                if(btFuzzyZero(len))
+                if(btFuzzyZero(len)) //Check validity
                     continue;
                 
                 fn1 = fn/len;
-                A = len + fv2.cross(fv3).length();
+                A = (len + fv3.cross(fv4).length())/Scalar(2); //Quad
                 fn = fn1 * A;
+#ifdef DEBUG
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif                 
             }
         }
         else if(depth[2] < Scalar(0))
         {
-            
             //Quad!!!!
-            Vector3 p3temp = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
+            //p1 without change
             //p2 without change
-            //p3 without change
+            Vector3 p3temp = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
             Vector3 p4 = p1 + (p3-p1) * (depth[0]/(btFabs(depth[2]) + depth[0]));
             p3 = p3temp;
                 
             //Calculate
             Vector3 fv1 = p2-p1;
-            Vector3 fv2 = p3-p1;
-            Vector3 fv3 = p4-p1;
+            Vector3 fv2 = p4-p1;
+            Vector3 fv3 = p2-p3;
+            Vector3 fv4 = p4-p3;
                 
             fc = (p1 + p2 + p3 + p4)/Scalar(4);
             fn = fv1.cross(fv2);
             Scalar len = fn.length();
             
-            if(btFuzzyZero(len))
+            if(btFuzzyZero(len)) //Check validity
                 continue;
             
             fn1 = fn/len;
-            A = len + fv2.cross(fv3).length();
+            A = (len + fv3.cross(fv4).length())/Scalar(2); //Quad
             fn = fn1 * A;
+#ifdef DEBUG
+            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif             
         }
         else //All underwater
         {
@@ -1385,6 +1447,14 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
             
             fn1 = fn/len; //Normalised normal (length = 1)
             A = len/Scalar(2); //Area of the face (triangle)
+#ifdef DEBUGG
+            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
+            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#endif             
         }
         
         Scalar pressure = ocn->GetPressure(fc);
@@ -1494,6 +1564,10 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 {
     if(phyType != BodyPhysicsType::FLOATING_BODY && phyType != BodyPhysicsType::SUBMERGED_BODY) return;
     
+#ifdef DEBUG
+    submerged.points.clear();
+#endif
+    
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
     //If completely outside fluid just set all torques and forces to 0
@@ -1530,7 +1604,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     else //CROSSING_FLUID_SURFACE
     {
         if(!isBuoyant()) settings.reallisticBuoyancy = false;
-        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fdl, Tdl, Fdq, Tdq, Fds, Tds);
+        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fdl, Tdl, Fdq, Tdq, Fds, Tds, submerged);
     }
     
     if(settings.dampingForces)
@@ -1638,6 +1712,7 @@ void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vecto
 void SolidEntity::ApplyHydrodynamicForces()
 {
     ApplyCentralForce(Fb + Fdl + Fdq + Fds);
+    //printf("Fb: %1.3lf, %1.3lf, %1.3lf\n", Fb.x(), Fb.y(), Fb.z());
     ApplyTorque(Tb + Tdq + Tdl + Tds);
 }
 

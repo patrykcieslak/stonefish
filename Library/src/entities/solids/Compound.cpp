@@ -264,6 +264,8 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
     
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
+    submerged.points.clear();
+    
     //If completely outside fluid just set all torques and forces to 0
     if(bf == BodyFluidPosition::OUTSIDE_FLUID)
     {
@@ -368,7 +370,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                 
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, submerged);
                     parts[i].solid->CorrectHydrodynamicForces(ocn, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
                     Fb += Fbp;
                     Tb += Tbp;
@@ -382,7 +384,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                 else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
                     pSettings.dampingForces = false;
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, submerged);
                     Fb += Fbp;
                     Tb += Tbp;
                 }

@@ -52,7 +52,7 @@ void FloatingTestManager::BuildScenario()
 
     ////////OBJECTS    
     //Create environment
-    EnableOcean(0.1);
+    EnableOcean(0.0);
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
@@ -68,11 +68,11 @@ void FloatingTestManager::BuildScenario()
     
     sf::Robot* boat = new sf::Robot("Boat");
     boat->DefineLinks(hull);
-    boat->AddLinkActuator(thrust, "Hull", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-0.8,0.0,0.3)));
+    boat->AddLinkActuator(thrust, "Hull", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-0.8,0.02,0.3)));
     boat->AddLinkSensor(odom, "Hull", sf::I4());
     AddRobot(boat, sf::Transform(sf::IQ(), sf::Vector3(0,0,-1.0)));
     
-    thrust->setSetpoint(0.1);
+    thrust->setSetpoint(0.2);
 }
 
 void FloatingTestManager::SimulationStepCompleted()

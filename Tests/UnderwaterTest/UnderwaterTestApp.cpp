@@ -43,7 +43,7 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
-    
+    /*
     sf::Uid id;
     id.owner = 5;
     id.index = 0;
@@ -53,5 +53,5 @@ void UnderwaterTestApp::DoHUD()
     sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveBow");
     sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterHeaveStern"));
     th->setSetpoint(sp);
-    th2->setSetpoint(sp);
+    th2->setSetpoint(sp);*/
 }

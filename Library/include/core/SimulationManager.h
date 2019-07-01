@@ -225,6 +225,12 @@ namespace sf
          */
         void setStepsPerSecond(Scalar steps);
         
+        //! A method that sets how simulation time relates to real time.
+        /*!
+         \param f a multiple of real time (1.0 = real time)
+         */
+        void setRealtimeFactor(Scalar f);
+        
         //! A method used to setup the initial conditions solver.
         /*!
          \param useGravity specifies if gravity should be enabled during IC solving
