@@ -39,6 +39,7 @@ Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const
     volume = 0;
 	mass = 0;
 	Ipri = Vector3(0,0,0);
+    displayInternals = false;
     
 	AddExternalPart(firstExternalPart, origin);
 }
@@ -48,6 +49,16 @@ Compound::~Compound()
     for(unsigned int i=0; i<parts.size(); ++i)
         delete parts[i].solid;
     parts.clear();
+}
+
+void Compound::setDisplayInternalParts(bool enabled)
+{
+    displayInternals = enabled;
+}
+
+bool Compound::isDisplayingInternalParts()
+{
+    return displayInternals;
 }
 
 Scalar Compound::getAugmentedMass() const
@@ -448,12 +459,27 @@ std::vector<Renderable> Compound::Render()
         
 		for(size_t i=0; i<parts.size(); ++i)
 		{
-			Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
-			item.type = RenderableType::SOLID;
-            item.objectId = parts[i].solid->getObject();
-			item.lookId = parts[i].solid->getLook();
-			item.model = glMatrixFromTransform(oTrans);
-			items.push_back(item);
+            if((parts[i].isExternal && !displayInternals) || (!parts[i].isExternal && displayInternals))
+            {
+                if(dm == DisplayMode::DISPLAY_GRAPHICAL)
+                {
+                    Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
+                    item.type = RenderableType::SOLID;
+                    item.objectId = parts[i].solid->getGraphicalObject();
+                    item.lookId = parts[i].solid->getLook();
+                    item.model = glMatrixFromTransform(oTrans);
+                    items.push_back(item);
+                }
+                else if(dm == DisplayMode::DISPLAY_PHYSICAL)
+                {
+                    Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2CTransform();
+                    item.type = RenderableType::SOLID;
+                    item.objectId = parts[i].solid->getPhysicalObject();
+                    item.lookId = -1;
+                    item.model = glMatrixFromTransform(oTrans);
+                    items.push_back(item);
+                }
+            }
             
             GeometryApproxType atype;
             std::vector<Scalar> aparams;

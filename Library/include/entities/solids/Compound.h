@@ -81,6 +81,12 @@ namespace sf
         */
         void ComputeAerodynamicForces(Atmosphere* atm);
         
+        //! A method that sets if the internal or the external parts of the body should be displayed.
+        /*!
+         \param enabled a flag that informs if the internal parts should be displayed
+         */
+        void setDisplayInternalParts(bool enabled);
+        
         //! A method returning the mass or the sum of mass and added mass (depending on type of body).
         Scalar getAugmentedMass() const;
         
@@ -99,6 +105,9 @@ namespace sf
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
         std::vector<Vertex>* getMeshVertices();
         
+        //! A method that informs if the internal parts of the body are displayed.
+        bool isDisplayingInternalParts();
+        
         //! A method that constructs a collision shape for the body.
         btCollisionShape* BuildCollisionShape();
         
@@ -111,6 +120,7 @@ namespace sf
     private:
         std::vector<CompoundPart> parts; //Parts of the compound solid
         std::vector<size_t> collisionPartId;
+        bool displayInternals;
         
         void RecalculatePhysicalProperties();
     };

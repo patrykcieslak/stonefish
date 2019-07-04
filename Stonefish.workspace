@@ -10,10 +10,10 @@
   <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
   <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
   <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
-  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="No"/>
+  <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="Yes"/>
   <Project Name="ConsoleTest" Path="Tests/ConsoleTest/ConsoleTest.project" Active="No"/>
   <Project Name="SlidingTest" Path="Tests/SlidingTest/SlidingTest.project" Active="No"/>
-  <Project Name="FloatingTest" Path="Tests/FloatingTest/FloatingTest.project" Active="Yes"/>
+  <Project Name="FloatingTest" Path="Tests/FloatingTest/FloatingTest.project" Active="No"/>
   <Project Name="FlyingTest" Path="Tests/FlyingTest/FlyingTest.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">

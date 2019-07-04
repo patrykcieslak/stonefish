@@ -107,7 +107,7 @@ void UnderwaterTestManager::BuildScenario()
     box->ScalePhysicalPropertiesToArbitraryMass(100.0);
     AddSolidEntity(box, sf::Transform(sf::Quaternion(0.0,0.3,0.0), sf::Vector3(0,0,1.0)));*/
     
-    sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", 0.13, 0.6, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), sf::BodyPhysicsType::SUBMERGED_BODY, manipLook);
+    /*sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", 0.13, 0.6, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), sf::BodyPhysicsType::SUBMERGED_BODY, manipLook);
     batteryCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(25));
     
     sf::Cylinder* batteryCyl2 = new sf::Cylinder("BatteryCylinder2", 0.13, 0.6, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), sf::BodyPhysicsType::SUBMERGED_BODY, manipLook);
@@ -116,7 +116,7 @@ void UnderwaterTestManager::BuildScenario()
     sf::Compound* vehicle = new sf::Compound("Vehicle", batteryCyl, sf::I4(), sf::BodyPhysicsType::SUBMERGED_BODY);
     vehicle->AddExternalPart(batteryCyl2, sf::Transform(sf::IQ(), sf::Vector3(0,0.5,0)));
     
-    AddSolidEntity(vehicle, sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));
+    AddSolidEntity(vehicle, sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));*/
     
     //sf::Terrain* terrain = new sf::Terrain("Terrain", sf::GetDataPath() + "terrain_small.png",
     //                                       sf::Scalar(1), sf::Scalar(1), sf::Scalar(5), getMaterialManager()->getMaterial("Rock"), seabed);
@@ -127,7 +127,7 @@ void UnderwaterTestManager::BuildScenario()
     
 	//Create underwater vehicle body
     //Externals
-    /*sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), sf::BodyPhysicsType::SUBMERGED_BODY, yellow, false, sf::Scalar(0.003), false);
+    sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), sf::BodyPhysicsType::SUBMERGED_BODY, yellow, false, sf::Scalar(0.003), false);
     sf::Polyhedron* hullP = new sf::Polyhedron("HullPort", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), sf::BodyPhysicsType::SUBMERGED_BODY, yellow, false, sf::Scalar(0.003), false);
     sf::Polyhedron* hullS = new sf::Polyhedron("HullStarboard", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), sf::BodyPhysicsType::SUBMERGED_BODY, yellow, false, sf::Scalar(0.003), false);
     sf::Polyhedron* vBarStern = new sf::Polyhedron("VBarStern", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Dummy"), sf::BodyPhysicsType::SUBMERGED_BODY, grey, false, sf::Scalar(0.003), false);
@@ -159,6 +159,8 @@ void UnderwaterTestManager::BuildScenario()
     vehicle->AddInternalPart(batteryCyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(-0.1,0,0)));
     vehicle->AddInternalPart(portCyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.35,-0.7)));
     vehicle->AddInternalPart(starboardCyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.35,-0.7)));
+    
+    vehicle->setDisplayInternalParts(false);
     
     //Manipulator bodies
     sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", sf::GetDataPath() + "base_link_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), sf::BodyPhysicsType::SUBMERGED_BODY, manipLook);
@@ -209,7 +211,7 @@ void UnderwaterTestManager::BuildScenario()
     fog->setNoise(0.01);
     sf::GPS* gps = new sf::GPS("GPS", 41.77737, 3.03376);
     gps->setNoise(0.5);
-    */
+    
     //Create gripper body
     /*sf::Polyhedron* eeBase = new sf::Polyhedron("EEBase", sf::GetDataPath() + "eeprobe_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), eeLook, false);
     sf::Sphere* eeTip = new sf::Sphere("EETip", 0.015, sf::Transform::getIdentity(), getMaterialManager()->getMaterial("Dummy"), eeLook);
@@ -218,7 +220,7 @@ void UnderwaterTestManager::BuildScenario()
     */
     
     //Create AUV
-    /*sf::Robot* auv = new sf::Robot("GIRONA500");
+    sf::Robot* auv = new sf::Robot("GIRONA500");
     
     //Mechanical structure
     auv->DefineLinks(vehicle, arm);
@@ -250,5 +252,5 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     
-    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(5,0,1)));*/
+    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(5,0,1)));
 }

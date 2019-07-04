@@ -72,7 +72,7 @@ namespace sf
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
         Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
-                   Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothNormals = true, 
+                   Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothNormals = false, 
                    Scalar thickness = Scalar(-1), bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
         
         //! A destructor.

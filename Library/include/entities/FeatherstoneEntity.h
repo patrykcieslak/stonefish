@@ -32,11 +32,10 @@
 #include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
-#include "entities/Entity.h"
+#include "entities/SolidEntity.h"
 
 namespace sf
 {
-    class SolidEntity;
     class StaticEntity;
     
     //! A structure holding data of a single multibody link.
@@ -333,6 +332,12 @@ namespace sf
         
         //! A method used to set if self collision is enabled for the whole multibody.
         void setSelfCollision(bool enabled);
+        
+        //! A method used to set the display mode of the links.
+        /*!
+         \param m a flag that defines the display style.
+         */
+        void setDisplayMode(DisplayMode m);
         
         //! A method used to add the multibody to the simulation.
         /*!

@@ -30,6 +30,7 @@
 #include "StonefishCommon.h"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
+#include "entities/SolidEntity.h"
 
 namespace sf
 {
@@ -41,7 +42,6 @@ namespace sf
     class ResearchConstraintSolver;
     class Entity;
     class StaticEntity;
-    class SolidEntity;
     class FeatherstoneEntity;
     class Joint;
     class Actuator;
@@ -242,6 +242,18 @@ namespace sf
          */
         void setICSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000,
                                Scalar maxTime = BT_LARGE_FLOAT, Scalar linearTolerance = Scalar(1e-6), Scalar angularTolerance = Scalar(1e-6));
+        
+        //! A method that sets the display mode of dynamical rigid bodies.
+        /*!
+         \param m a flag that defines the display style of dynamical bodies
+         */
+        void setSolidDisplayMode(DisplayMode m);
+        
+        //! A method that returns the display style of dynamical podies.
+        /*!
+         \return flag defining the display style
+         */
+        DisplayMode getSolidDisplayMode();
         
         //! A method returning the physics computation time in ms.
         Scalar getPhysicsTimeInMiliseconds();
@@ -456,6 +468,7 @@ namespace sf
         Ocean* ocean;
         Atmosphere* atmosphere;
         Scalar g;
+        DisplayMode sdm;
         
         //graphics
         OpenGLTrackball* trackball;

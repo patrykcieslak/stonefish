@@ -89,6 +89,8 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt
     multibodyCollider = NULL;
 	phyMesh = NULL;
     graObjectId = -1;
+    phyObjectId = -1;
+    dm = DisplayMode::DISPLAY_GRAPHICAL;
     submerged.type = RenderableType::HYDRO_LINES;
 }
 
@@ -170,6 +172,11 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
     }
 }
 
+void SolidEntity::setDisplayMode(DisplayMode m)
+{
+    dm = m;
+}
+
 void SolidEntity::setLook(int newLookId)
 {
     lookId = newLookId;
@@ -180,9 +187,14 @@ int SolidEntity::getLook() const
     return lookId;
 }
 
-int SolidEntity::getObject() const
+int SolidEntity::getGraphicalObject() const
 {
 	return graObjectId;
+}
+
+int SolidEntity::getPhysicalObject() const
+{
+    return phyObjectId;
 }
 
 bool SolidEntity::isBuoyant() const
@@ -212,14 +224,26 @@ std::vector<Renderable> SolidEntity::Render()
 {
 	std::vector<Renderable> items(0);
 	
-	if((rigidBody != NULL || multibodyCollider != NULL) && graObjectId >= 0 && isRenderable())
+	if( (rigidBody != NULL || multibodyCollider != NULL)  && isRenderable() )
 	{
-		Renderable item;
-		item.type = RenderableType::SOLID;
-        item.objectId = graObjectId;
-		item.lookId = lookId;
-		item.model = glMatrixFromTransform(getGTransform());
-		items.push_back(item);
+        Renderable item;
+        
+        if(dm == DisplayMode::DISPLAY_GRAPHICAL && graObjectId >= 0)
+        { 
+            item.type = RenderableType::SOLID;
+            item.objectId = graObjectId;
+            item.lookId = lookId;
+            item.model = glMatrixFromTransform(getGTransform());
+            items.push_back(item);
+        }
+        else if(dm == DisplayMode::DISPLAY_PHYSICAL && phyObjectId >= 0)
+        {
+            item.type = RenderableType::SOLID;
+            item.objectId = phyObjectId;
+            item.lookId = -1;
+            item.model = glMatrixFromTransform(getCTransform());
+            items.push_back(item);
+        }
         
         item.type = RenderableType::SOLID_CS;
         item.model = glMatrixFromTransform(getCGTransform());
@@ -903,6 +927,7 @@ void SolidEntity::BuildGraphicalObject()
 		return;
 		
 	graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+    phyObjectId = graObjectId;
 }
 
 void SolidEntity::BuildRigidBody()

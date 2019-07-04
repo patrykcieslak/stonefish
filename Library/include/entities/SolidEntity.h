@@ -39,7 +39,7 @@ namespace sf
     typedef enum {FD_APPROX_AUTO = 0, FD_APPROX_SPHERE, FD_APPROX_CYLINDER, FD_APPROX_ELLIPSOID} GeometryApproxType;
     //! An enum used to define if the body is submerged.
     typedef enum {INSIDE_FLUID = 0, OUTSIDE_FLUID, CROSSING_FLUID_SURFACE} BodyFluidPosition;
-    //! An enum defining what is the medium in which the body moves (affects which forces are computed, needed because it is not possible to change mass during simulation)
+    //! An enum defining what is the medium in which the body moves (affects which forces are computed, needed because it is not possible to change mass during simulation).
     /*!
      SURFACE_BODY -> no aerodynamics or hydrodynamics
      FLOATING_BODY -> hydrodynamics with buoyancy
@@ -47,6 +47,8 @@ namespace sf
      AERODYNAMIC_BODY -> aerodynamics
     */
     typedef enum {SURFACE_BODY = 0, FLOATING_BODY, SUBMERGED_BODY, AERODYNAMIC_BODY} BodyPhysicsType;
+    //! An enum defining how the body is displayed.
+    typedef enum {DISPLAY_GRAPHICAL = 0, DISPLAY_PHYSICAL} DisplayMode;
     
     struct HydrodynamicsSettings;
     class Ocean;
@@ -361,11 +363,20 @@ namespace sf
         //! A method used to set if the body CG should be rendered.
         void setDisplayCoordSys(bool enabled);
         
+        //! A method used to set display mode used for the body.
+        /*!
+         \param m flag defining the display mode
+         */
+        void setDisplayMode(DisplayMode m);
+        
         //! A method returning the index of the graphical material used in rendering.
         int getLook() const;
         
         //! A method returning the index of the graphical object used in rendering.
-        int getObject() const;
+        int getGraphicalObject() const;
+        
+        //! A method returning the index of the physical object used in rendering.
+        int getPhysicalObject() const;
         
     protected:
         BodyFluidPosition CheckBodyFluidPosition(Ocean* ocn);
@@ -433,6 +444,7 @@ namespace sf
         int lookId;
         int graObjectId;
         int phyObjectId;
+        DisplayMode dm;
         Renderable submerged;
         
     private:

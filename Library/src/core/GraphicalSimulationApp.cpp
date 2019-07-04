@@ -37,6 +37,7 @@
 #include "entities/Entity.h"
 #include "entities/StaticEntity.h"
 #include "entities/SolidEntity.h"
+#include "entities/solids/Compound.h"
 
 namespace sf
 {
@@ -610,14 +611,21 @@ void GraphicalSimulationApp::DoHUD()
     Ocean* ocn = getSimulationManager()->getOcean();
     
     GLfloat offset = 10.f;
-    gui->DoPanel(10.f, offset, 160.f, ocn != NULL ? 182.f : 137.f);
+    gui->DoPanel(10.f, offset, 160.f, ocn != NULL ? 204.f : 159.f);
     offset += 5.f;
-    gui->DoLabel(15.f, offset, "HELPERS");
+    gui->DoLabel(15.f, offset, "DEBUG");
     offset += 15.f;
     
     Uid id;
     id.owner = 0;
     id.index = 0;
+    
+    id.item = 0;
+    bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::DISPLAY_PHYSICAL; 
+    displayPhysical = gui->DoCheckBox(id, 15.f, offset, 110.f, displayPhysical, "Physical objects");
+    getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::DISPLAY_PHYSICAL : DisplayMode::DISPLAY_GRAPHICAL);
+    offset += 22.f;
+    
     id.item = 1;
     hs.showCoordSys = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showCoordSys, "Frames");
     offset += 22.f;
@@ -742,7 +750,7 @@ void GraphicalSimulationApp::DoHUD()
             {
                 SolidEntity* ent = (SolidEntity*)lastPicked;
                 
-                gui->DoPanel(10.f, offset, 160.f, 122.f);
+                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::SOLID_COMPOUND ? 143.f : 122.f);
                 offset += 5.f;
                 gui->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
@@ -763,6 +771,17 @@ void GraphicalSimulationApp::DoHUD()
                 offset += 14.f;
                 std::sprintf(buf, "%1.3lf", ent->getVolume()*1e3);
                 gui->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
+                offset += 11.f;
+                
+                if(ent->getSolidType() == SolidType::SOLID_COMPOUND)
+                {
+                    Compound* cmp = (Compound*)ent;
+                    id.owner = 4;
+                    id.index = 0;
+                    id.item = 0;
+                    cmp->setDisplayInternalParts(gui->DoCheckBox(id, 15.f, offset, 110.f, cmp->isDisplayingInternalParts(), "Show internals"));
+                    offset += 22.f;
+                }
             }
                 break;
                 

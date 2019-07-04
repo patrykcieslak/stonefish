@@ -111,6 +111,7 @@ void Polyhedron::BuildGraphicalObject()
         return;
     
     graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh);
+    phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
 }
 
 }

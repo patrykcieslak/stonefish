@@ -50,7 +50,6 @@
 #include "utils/tinyxml2.h"
 #include "utils/UnitSystem.h"
 #include "entities/Entity.h"
-#include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
 #include "entities/solids/Compound.h"
 #include "entities/StaticEntity.h"
@@ -90,6 +89,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     ocean = NULL;
     atmosphere = NULL;
 	trackball = NULL;
+    sdm = DisplayMode::DISPLAY_GRAPHICAL;
     simHydroMutex = SDL_CreateMutex();
     simSettingsMutex = SDL_CreateMutex();
     simInfoMutex = SDL_CreateMutex();
@@ -543,6 +543,27 @@ void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsi
     icMaxTime = maxTime > SIMD_EPSILON ? maxTime : BT_LARGE_FLOAT;
     icLinTolerance = linearTolerance > SIMD_EPSILON ? linearTolerance : Scalar(1e-6);
     icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : Scalar(1e-6);
+}
+
+void SimulationManager::setSolidDisplayMode(DisplayMode m)
+{
+    if(sdm == m)
+        return;
+        
+    for(size_t i=0; i<entities.size(); ++i)
+    {
+        if(entities[i]->getType() == EntityType::ENTITY_SOLID)
+            ((SolidEntity*)entities[i])->setDisplayMode(m);
+        else if(entities[i]->getType() == EntityType::ENTITY_FEATHERSTONE)
+            ((FeatherstoneEntity*)entities[i])->setDisplayMode(m);
+    }
+    
+    sdm = m;
+}
+
+DisplayMode SimulationManager::getSolidDisplayMode()
+{
+    return sdm;
 }
     
 bool SimulationManager::isOceanEnabled()

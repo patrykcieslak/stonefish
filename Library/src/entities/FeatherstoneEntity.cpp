@@ -27,7 +27,6 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "entities/SolidEntity.h"
 #include "entities/StaticEntity.h"
 
 namespace sf
@@ -119,6 +118,12 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform&
 void FeatherstoneEntity::setSelfCollision(bool enabled)
 {
 	multiBody->setHasSelfCollision(enabled);
+}
+
+void FeatherstoneEntity::setDisplayMode(DisplayMode m)
+{
+    for(size_t i=0; i<links.size(); ++i)
+        links[i].solid->setDisplayMode(m);
 }
 
 void FeatherstoneEntity::setBaseRenderable(bool render)
