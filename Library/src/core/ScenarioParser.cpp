@@ -38,6 +38,19 @@
 #include "entities/solids/Wing.h"
 #include "entities/solids/Polyhedron.h"
 #include "entities/solids/Compound.h"
+#include "sensors/scalar/IMU.h"
+#include "sensors/scalar/DVL.h"
+#include "sensors/scalar/GPS.h"
+#include "sensors/scalar/FOG.h"
+#include "sensors/scalar/Odometry.h"
+#include "sensors/scalar/Pressure.h"
+#include "sensors/scalar/RotaryEncoder.h"
+#include "sensors/scalar/ForceTorque.h"
+#include "sensors/scalar/Profiler.h"
+#include "sensors/scalar/Multibeam.h"
+#include "sensors/vision/ColorCamera.h"
+#include "sensors/vision/DepthCamera.h"
+#include "sensors/vision/Multibeam2.h"
 
 namespace sf
 {
@@ -434,42 +447,95 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
     const char* type = nullptr;
     const char* phyType = nullptr;
     bool buoyant;
+    BodyPhysicsType ePhyType;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
         return false;
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
         return false;
     if(element->QueryStringAttribute("physics", &phyType) != XML_SUCCESS)
-        return false;
+    {
+        ePhyType = BodyPhysicsType::SUBMERGED_BODY;
+    }
+    else
+    {
+        std::string phyTypeStr(phyType);
+        if(phyTypeStr == "surface")
+            ePhyType = BodyPhysicsType::SURFACE_BODY;
+        else if(phyTypeStr == "floating")
+            ePhyType = BodyPhysicsType::FLOATING_BODY;
+        else if(phyTypeStr == "submerged")
+            ePhyType = BodyPhysicsType::SUBMERGED_BODY;
+        else if(phyTypeStr == "aerodynamic")
+            ePhyType = BodyPhysicsType::AERODYNAMIC_BODY;
+        else 
+            return false;
+    }
     if(element->QueryAttribute("buoyant", &buoyant) != XML_SUCCESS)
         buoyant = true;
         
     std::string typeStr(type);
-    std::string phyTypeStr(phyType);
-    
-    BodyPhysicsType ePhyType;
-    if(phyTypeStr == "surface")
-        ePhyType = BodyPhysicsType::SURFACE_BODY;
-    else if(phyTypeStr == "floating")
-        ePhyType = BodyPhysicsType::FLOATING_BODY;
-    else if(phyTypeStr == "submerged")
-        ePhyType = BodyPhysicsType::SUBMERGED_BODY;
-    else if(phyTypeStr == "aerodynamic")
-        ePhyType = BodyPhysicsType::AERODYNAMIC_BODY;
-    else 
-        return false;
         
     if(typeStr == "compound")
     {
+        XMLElement* item;
         
+        //First external part
+        SolidEntity* part = nullptr;
+        Compound* comp = nullptr;
+        Transform partOrigin;
+        bool external;
+      
+        if((item = element->FirstChildElement("external_part")) == nullptr)
+            return false;
+        if(!ParseSolid(item, part))
+            return false;
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
+            return false;
+        comp = new Compound(std::string(name), part, partOrigin, ePhyType);
         
+        //Iterate through all external parts
+        item = item->NextSiblingElement("external_part");
+        while(item != nullptr)
+        {
+            if(!ParseSolid(item, part))
+            {
+                delete comp;
+                return false;
+            }
+            if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
+            {
+                delete part;
+                delete comp;
+                return false;
+            }
+                
+            comp->AddExternalPart(part, partOrigin);
+            item = item->NextSiblingElement("external_part");
+        }
         
+        //Iterate through all internal parts
+        item = element->FirstChildElement("internal_part");
+        while(item != nullptr)
+        {
+            if(!ParseSolid(item, part))
+            {
+                delete comp;
+                return false;
+            }
+            if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
+            {
+                delete part;
+                delete comp;
+                return false;
+            }
+                
+            comp->AddInternalPart(part, partOrigin);
+            item = item->NextSiblingElement("internal_part");
+        }
         
-        
-        
-        
-        
-        
+        solid = comp;
     }
     else
     {
@@ -713,11 +779,312 @@ bool ScenarioParser::ParseLink(XMLElement* element, SolidEntity*& link)
         
 bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
 {
+    const char* name = nullptr;
+    const char* type = nullptr;
+    const char* parentName = nullptr;
+    const char* childName = nullptr; 
+    Transform origin;
+    
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return false;
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+        return false;
+    std::string typeStr(type);
+    XMLElement* item;
+    if((item = element->FirstChildElement("parent")) == nullptr)
+        return false;
+    if(item->QueryStringAttribute("name", &parentName) != XML_SUCCESS)
+        return false;
+    if((item = element->FirstChildElement("child")) == nullptr)
+        return false;
+    if(item->QueryStringAttribute("name", &childName) != XML_SUCCESS)
+        return false;    
+    if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+        return false;
+        
+    if(typeStr == "fixed")
+    {
+        robot->DefineFixedJoint(std::string(name), std::string(parentName), std::string(childName), origin);
+    }
+    else if(typeStr == "prismatic" || typeStr == "revolute")
+    {
+        const char* vec = nullptr;
+        Scalar x, y, z;
+        Scalar posMin = Scalar(1);
+        Scalar posMax = Scalar(-1);
+        
+        if((item = element->FirstChildElement("axis")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("xyz", &vec) != XML_SUCCESS)
+            return false;
+        if(sscanf(vec, "%lf %lf %lf", &x, &y, &z) != 3)
+            return false;
+        if((item = element->FirstChildElement("limits")) != nullptr) //Optional
+        {
+            if((item->QueryAttribute("min", &posMin) != XML_SUCCESS) || (item->QueryAttribute("max", &posMax) != XML_SUCCESS))
+                return false;
+        }
+        
+        if(typeStr == "prismatic")
+            robot->DefinePrismaticJoint(std::string(name), std::string(parentName), std::string(childName), origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
+        else
+            robot->DefineRevoluteJoint(std::string(name), std::string(parentName), std::string(childName), origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
+    }
+    else
+        return false;
+    
     return true;
 }
         
 bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
 {
+    //---- Common ----
+    const char* name = nullptr;
+    const char* type = nullptr;
+    Scalar rate;
+    
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return false;
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+        return false;
+    if(element->QueryAttribute("rate", &rate) != XML_SUCCESS)
+        rate = Scalar(-1);
+    std::string typeStr(type);
+    
+    //---- Specific ----
+    XMLElement* item;
+    if(typeStr == "imu")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        IMU* imu = new IMU(std::string(name), rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar velocity;
+            if(item->QueryAttribute("angular_velocity", &velocity) != XML_SUCCESS)
+            {
+                delete imu;
+                return false;
+            }
+            imu->setRange(velocity);
+        }
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar angle;
+            Scalar velocity;
+            if(item->QueryAttribute("angle", &angle) != XML_SUCCESS || item->QueryAttribute("angular_velocity", &velocity) != XML_SUCCESS)
+            {
+                delete imu;
+                return false;
+            }
+            imu->setNoise(angle, velocity);
+        }
+        
+        robot->AddLinkSensor(imu, std::string(linkName), origin);
+    }
+    else if(typeStr == "dvl")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        Scalar beamAngle;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("properties")) == nullptr || item->QueryAttribute("beam_angle", &beamAngle) != XML_SUCCESS)
+            return false;
+            
+        DVL* dvl = new DVL(std::string(name), beamAngle, rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            const char* velocity = nullptr;
+            Scalar velx, vely, velz;
+            Scalar altMin, altMax;
+            
+            if(item->QueryStringAttribute("velocity", &velocity) != XML_SUCCESS || sscanf(velocity, "%lf %lf %lf", &velx, &vely, &velz) != 3)
+            {
+                delete dvl;
+                return false;
+            }
+            if(item->QueryAttribute("altitude_min", &altMin) != XML_SUCCESS
+               || item->QueryAttribute("altitude_max", &altMax) != XML_SUCCESS)
+            {
+                delete dvl;
+                return false;
+            }
+            dvl->setRange(Vector3(velx, vely, velz), altMin, altMax);
+        }
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar velocity;
+            Scalar altitude;
+            if(item->QueryAttribute("velocity", &velocity) != XML_SUCCESS || item->QueryAttribute("altitude", &altitude) != XML_SUCCESS)
+            {
+                delete dvl;
+                return false;
+            }
+            dvl->setNoise(velocity, altitude);
+        }
+        
+        robot->AddLinkSensor(dvl, std::string(linkName), origin);
+    }
+    else if(typeStr == "gps")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        GPS* gps = new GPS(std::string(name), rate, history);
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar ned;
+            if(item->QueryAttribute("ned_position", &ned) != XML_SUCCESS)
+            {
+                delete gps;
+                return false;
+            }
+            gps->setNoise(ned);
+        }
+        
+        robot->AddLinkSensor(gps, std::string(linkName), origin);
+    }
+    else if(typeStr == "pressure")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        Pressure* press = new Pressure(std::string(name), rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar pressure;
+            if(item->QueryAttribute("pressure", &pressure) != XML_SUCCESS)
+            {
+                delete press;
+                return false;
+            }
+            press->setRange(pressure);
+        }
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar pressure;
+            if(item->QueryAttribute("pressure", &pressure) != XML_SUCCESS)
+            {
+                delete press;
+                return false;
+            }
+            press->setNoise(pressure);
+        }
+        
+        robot->AddLinkSensor(press, std::string(linkName), origin);
+    }
+    else if(typeStr == "odometry")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        Odometry* odom = new Odometry(std::string(name), rate, history);
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar position, velocity, angle, aVelocity;
+            if(item->QueryAttribute("position", &position) != XML_SUCCESS
+              || item->QueryAttribute("velocity", &velocity) != XML_SUCCESS
+              || item->QueryAttribute("angle", &angle) != XML_SUCCESS
+              || item->QueryAttribute("angular_velocity", &aVelocity) != XML_SUCCESS)
+            {
+                delete odom;
+                return false;
+            }
+            odom->setNoise(position, velocity, angle, aVelocity);
+        }
+        
+        robot->AddLinkSensor(odom, std::string(linkName), origin);
+    }
+    else if(typeStr == "fog")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        FOG* fog = new FOG(std::string(name), rate, history);
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar heading;
+            if(item->QueryAttribute("heading", &heading) != XML_SUCCESS)
+            {
+                delete fog;
+                return false;
+            }
+            fog->setNoise(heading);
+        }
+        
+        robot->AddLinkSensor(fog, std::string(linkName), origin);
+    }
+    else
+        return false;
+    
     return true;
 }
         
