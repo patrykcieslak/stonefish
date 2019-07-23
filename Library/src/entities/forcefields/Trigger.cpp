@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	ghost->setWorldTransform(worldTransform);
@@ -40,15 +40,20 @@ Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTr
 	active = false;
 	
     Mesh* mesh = OpenGLContent::BuildSphere((GLfloat)radius);
-    look = lookId;
     
     if(SimulationApp::getApp()->hasGraphics())
+    {
         objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    }
     else
+    {
         objectId = 0;
+        lookId = -1;
+    }
 }
 
-Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	ghost->setWorldTransform(worldTransform);
@@ -56,15 +61,20 @@ Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Tra
 	active = false;
 	
 	Mesh* mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
-	look = lookId;
     
     if(SimulationApp::getApp()->hasGraphics())
+    {
         objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    }
     else
+    {
         objectId = 0;
+        lookId = -1;
+    }
 }
 
-Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, int lookId) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	ghost->setWorldTransform(worldTransform);
@@ -73,12 +83,17 @@ Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transf
 	
 	glm::vec3 halfExt((GLfloat)(dimensions.x()/Scalar(2)), (GLfloat)(dimensions.y()/Scalar(2)), (GLfloat)(dimensions.z()/Scalar(2)));
 	Mesh* mesh = OpenGLContent::BuildBox(halfExt);
-	look = lookId;
-    
+	
     if(SimulationApp::getApp()->hasGraphics())
+    {
         objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    }
     else
+    {
         objectId = 0;
+        lookId = -1;
+    }
 }
 
 ForcefieldType Trigger::getForcefieldType()
@@ -149,7 +164,7 @@ std::vector<Renderable> Trigger::Render()
 		Renderable item;
         item.type = RenderableType::SOLID;
 		item.objectId = objectId;
-		item.lookId = look;
+		item.lookId = lookId;
 		item.model = glMatrixFromTransform(trans);
 		items.push_back(item);
     }

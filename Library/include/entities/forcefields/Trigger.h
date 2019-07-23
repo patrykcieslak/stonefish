@@ -40,9 +40,9 @@ namespace sf
          \param uniqueName a name for the trigger
          \param radius the radius of the sphere [m]
          \param origin the position of the trigger in the world frame
-         \param lookId an id of the material used when rendering the trigger
+         \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, Scalar radius, const Transform& origin, int lookId = -1);
+        Trigger(std::string uniqueName, Scalar radius, const Transform& origin, std::string look = "");
         
         //! A constructor of a cylindrical trigger object.
         /*!
@@ -50,18 +50,18 @@ namespace sf
          \param radius the radius of the cylinder [m]
          \param length the length of the cylinder [m]
          \param origin the position of the trigger in the world frame
-         \param lookId an id of the material used when rendering the trigger
+         \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& origin, int lookId = -1);
+        Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& origin, std::string look = "");
         
         //! A constructor of a box-shaped trigger object.
         /*!
          \param uniqueName a name for the trigger
          \param dimensions the length of the box sides [m]
          \param origin the position of the trigger in the world frame
-         \param lookId an id of the material used when rendering the trigger
+         \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& origin, int lookId = -1);
+        Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& origin, std::string look = "");
         
         //! A method used to add solids that will call actions if they come in contact with the trigger.
         /*!
@@ -91,7 +91,7 @@ namespace sf
         bool active;
         std::vector<SolidEntity*> solids;
         int objectId;
-        int look;
+        int lookId;
     };
 }
 
