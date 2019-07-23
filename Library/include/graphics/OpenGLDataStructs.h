@@ -190,6 +190,7 @@ namespace sf
     //! A structure containing data of a graphical material.
     struct Look
     {
+        std::string name;
         LookType type;
         glm::vec3 color;
         std::vector<GLfloat> params;

@@ -50,24 +50,24 @@ void FallingTestManager::BuildScenario()
     setICSolverParams(false);
 	
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
-    getMaterialManager()->CreateMaterial("Steel", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.0), 0.1);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
-    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
+    CreateMaterial("Ground", 1000.0, 1.0);
+    CreateMaterial("Steel", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.0), 0.1);
+    SetMaterialsInteraction("Ground", "Ground", 0.5, 0.3);
+    SetMaterialsInteraction("Ground", "Steel", 0.5, 0.3);
+    SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
 	///////LOOKS///////////
-    int grid = CreateLook(sf::Color::Gray(1.f), 0.8f, 0.f, 0.f, sf::GetShaderPath() + "grid.png");
-    int green = CreateLook(sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
+    CreateLook("Grid", sf::Color::Gray(1.f), 0.8f, 0.f, 0.f, sf::GetShaderPath() + "grid.png");
+    CreateLook("Green", sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
 	
     ////////OBJECTS
-    sf::Plane* floor = new sf::Plane("Floor", 10000.f, getMaterialManager()->getMaterial("Ground"), grid);
+    sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
     
     //Mechanical parts
-    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), getMaterialManager()->getMaterial("Steel"), sf::BodyPhysicsType::SURFACE_BODY, green);
-    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), sf::BodyPhysicsType::SURFACE_BODY, green);
-    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), getMaterialManager()->getMaterial("Steel"), sf::BodyPhysicsType::SURFACE_BODY, green);
+    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "Green");
+    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "");
+    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "Green");
  	
     std::vector<sf::SolidEntity*> links;
     links.push_back(link1);

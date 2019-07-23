@@ -43,10 +43,10 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the entity
-         \param m the material of the entity
-         \param lookId index of the material used when rendering the entity
+         \param material the name of the material the entity is made of
+         \param look the name of the graphical material used for rendering
          */
-        StaticEntity(std::string uniqueName, Material m, int lookId = -1);
+        StaticEntity(std::string uniqueName, std::string material, std::string look);
         
         //! A destructor.
         virtual ~StaticEntity();

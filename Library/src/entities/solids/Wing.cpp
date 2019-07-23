@@ -32,8 +32,8 @@ namespace sf
 
 Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength,
            Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength,
-           const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
-           : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
+           const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
+           : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
 {
     T_O2G = T_O2C = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
@@ -51,7 +51,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, m, CG, volume, Ipri, Irot);
+    ComputePhysicalProperties(phyMesh, thickness, mat, CG, volume, Ipri, Irot);
     mass = volume*mat.density;
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
@@ -67,8 +67,8 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
 }
     
 Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength,
-           const Transform& origin, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant)
-           : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
+           const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
+           : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
 {
     T_O2G = T_O2C = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
@@ -107,7 +107,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     //3. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, m, CG, volume, Ipri, Irot);
+    ComputePhysicalProperties(phyMesh, thickness, mat, CG, volume, Ipri, Irot);
     mass = volume*mat.density;
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia

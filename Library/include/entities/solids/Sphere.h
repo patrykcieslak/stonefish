@@ -39,14 +39,14 @@ namespace sf
          \param uniqueName a name for the sphere
          \param radius a radius of the sphere
          \param origin a transformation of the physical mesh (graphical is the same for sphere)
-         \param m a material of the sphere
+         \param material the name of the material the sphere is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material used to render the sphere
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the sphere walls, if positive the sphere is treated as shell
          \param isBuoyant defines if the sphere should be subject to buoyancy force
          */
-        Sphere(std::string uniqueName, Scalar radius, const Transform& origin, Material m, BodyPhysicsType bpt, 
-               int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Sphere(std::string uniqueName, Scalar radius, const Transform& origin, std::string material, BodyPhysicsType bpt, 
+               std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

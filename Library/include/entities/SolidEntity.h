@@ -61,13 +61,13 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the body
-         \param m a metarial the body is made of
+         \param material the name of the material the body is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material
+         \param look the name of the graphical material used for rendering
          \param thickness body wall thickness, if provided the body is considered a shell
          \param isBuoyant a flag to enable computation of buoyancy force
          */
-        SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt, int lookId, Scalar thickness, bool isBuoyant);
+        SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant);
         
         //! A destructor.
         virtual ~SolidEntity();

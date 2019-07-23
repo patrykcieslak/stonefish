@@ -34,10 +34,9 @@
 namespace sf
 {
 
-Propeller::Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar pitch, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand) : LinkActuator(uniqueName)
+Propeller::Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand) : LinkActuator(uniqueName)
 {
     D = diameter;
-    p = pitch;
     kT0 = thrustCoeff;
     kQ0 = torqueCoeff;
     kp = Scalar(3.0);

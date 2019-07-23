@@ -40,14 +40,14 @@ namespace sf
          \param radius a radius of the cylinder
          \param height a height of the cylinder
          \param origin a transformation of the physical mesh (graphical is the same for cylinder)
-         \param m a material of the cylinder
+         \param material the name of the material the cylinder is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material used to render the cylinder
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the cylinder walls, if positive the cylinder is treated as shell
          \param isBuoyant defines if the cylinder should be subject to buoyancy force
          */
-        Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, Material m, BodyPhysicsType bpt,
-                                         int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, std::string material, BodyPhysicsType bpt,
+                                         std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

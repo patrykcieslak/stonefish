@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Plane::Plane(std::string uniqueName, Scalar planeSize, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Plane::Plane(std::string uniqueName, Scalar planeSize, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     phyMesh = OpenGLContent::BuildPlane(planeSize/2.f);
     btCollisionShape* shape = new btStaticPlaneShape(Vector3(0,0,-1), 0);

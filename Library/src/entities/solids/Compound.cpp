@@ -32,7 +32,7 @@ namespace sf
 {
 
 Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, BodyPhysicsType bpt)
-    : SolidEntity(uniqueName, Material(), bpt, 0, Scalar(-1), true)
+    : SolidEntity(uniqueName, "", bpt, "", Scalar(-1), true)
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
     phyMesh = NULL; // There is no single mesh

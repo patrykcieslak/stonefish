@@ -1,0 +1,114 @@
+<scenario>
+	<environment>
+		<ned latitude="20.0" longitude="50.0"/>
+		<sun azimuth="20.0" elevation="30.0"/> <!-- or <sun date="dd.mm.yyyy" time="hh.mm.ss"/> -->
+		<ocean enabled="true" waves="0.0"/>
+	</environment>
+
+	<materials>
+		<material name="concrete" density="800.0" restitution="0.7"/>
+		<material name="steel" density="7980.0" restitution="0.9"/>
+		<friction_table>
+			<friction material1="concrete" material2="concrete" static="0.9" dynamic="0.8"/>
+			<friction material1="steel" material2="steel" static="0.5" dynamic="0.2"/>
+			<friction material1="concrete" material2="steel" static="0.7" dynamic="0.5"/>
+		</friction_table>
+	</materials>
+
+	<looks>
+		<look name="blue" color="0.0 0.0 1.0" roughness="0.2" metalness="0.5"/>
+		<look name="red" color="1.0 1.0 1.0" roughness="0.1" metalness="0.0"/> 
+	</looks>
+
+	<static name="Box1" type="box">
+		<dimensions xyz="1 1 1"/>
+		<material name="concrete"/>
+		<look name="blue"/>
+		<world_transform xyz="1.0 0.0 0.0" rpy="0.0 0.0 1.0"/>
+	</static>
+
+	<dynamic name="Cylinder1" type="cylinder" physics="submerged" buoyant="true">
+		<dimensions radius="1.0" height="0.2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<material name="steel"/>
+		<look name="red"/>
+		<world_transform xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+	</dynamic>
+
+	<dynamic name="Comp" type="compound" physics="submerged">
+		<external_part name="CompBox" type="box" physics="submerged" buoyant="true">
+			<dimensions xyz="0.5 0.5 0.5"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<material name="concrete"/>
+			<look name="blue"/>
+			<compound_transform xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+		</external_part>
+		<external_part name="CompCylinder" type="cylinder" physics="submerged" buoyant="true">
+			<dimensions radius="0.5" height="1.0"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<material name="concrete"/>
+			<look name="red"/>
+			<compound_transform xyz="0.0 0.0 -1.0" rpy="0.0 0.0 0.0"/>
+		</external_part>
+		<world_transform xyz="2.0 2.0 3.0" rpy="0.0 0.0 0.0"/>
+	</dynamic>
+
+	<robot name="Robot1" fixed="false" self_collisions="false">
+		<base_link name="L1" type="cylinder" physics="submerged" buoyant="true">
+			<dimensions radius="1.0" height="0.2"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<material name="concrete"/>
+			<look name="blue"/>
+		</base_link>
+
+		<link name="L2" type="cylinder" physics="submerged" buoyant="true">
+			<dimensions radius="1.0" height="0.2" thickness="0.01"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<material name="concrete"/>
+			<look name="blue"/>
+		</link>
+		
+		<joint name="J1" type="revolute">
+			<parent name="L1"/>
+			<child name="L2"/>
+			<origin xyz="0 2.0 0" rpy="0 0 0"/>
+			<axis xyz="0 1 0"/>
+			<limits min="-1.0" max="1.0"/>
+		</joint>
+
+		<sensor name="IMU" type="imu" rate="10">
+			<link name="L1"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<range angular_velocity="10"/>
+			<noise angle="0.1" angular_velocity="0.1"/>
+			<history samples="1000"/>
+			<ros_topic value="robot/imu"/>
+		</sensor>
+
+		<actuator name="Servo1" type="servo">
+			<joint name="J1"/>
+			<controller position_gain="1.0" velocity_gain="2.0" max_torque="100.0"/>
+			<ros_topic value="robot/desired_joint_state"/>
+		</actuator>
+
+		<actuator name="Light1" type="light">
+			<link name="L1"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<specs cone_angle="20.0" illuminance="10000.0"/>
+			<color temperature="4300.0"/>		
+		</actuator>
+
+		<actuator name="Thrust1" type="thruster">
+			<link name="L1"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<specs thrust_coeff="0.2" torque_coeff="0.02" max_rpm="1000.0"/>
+			<propeller diameter="0.2" right="true">
+				<mesh filename="propeller.obj" scale="1.0"/>
+				<material name="steel"/>
+				<look name="red"/>
+			</propeller>
+		</actuator>
+
+		<world_transform xyz="5.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+	</robot>
+</scenario>

@@ -35,12 +35,12 @@ namespace sf
 Polyhedron::Polyhedron(std::string uniqueName,
                        std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                        std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                       Material m, BodyPhysicsType bpt, int lookId, bool smoothGraphicsNormals, Scalar thickness,
+                       std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness,
                        bool isBuoyant, GeometryApproxType approx)
-                        : SolidEntity(uniqueName, m, bpt, lookId, thickness, isBuoyant)
+                        : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
 {
     //1.Load geometry from file
-    graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, smoothGraphicsNormals);
+    graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
     T_O2G = graphicsOrigin;
     
     if(physicsFilename != "")
@@ -57,7 +57,7 @@ Polyhedron::Polyhedron(std::string uniqueName,
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, m, CG, volume, Ipri, Irot);
+    ComputePhysicalProperties(phyMesh, thickness, mat, CG, volume, Ipri, Irot);
     mass = volume*mat.density;
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
@@ -74,8 +74,8 @@ Polyhedron::Polyhedron(std::string uniqueName,
     
 Polyhedron::Polyhedron(std::string uniqueName,
                        std::string modelFilename, Scalar scale, const Transform& origin,
-                       Material m, BodyPhysicsType bpt, int lookId, bool smoothNormals, Scalar thickness, bool isBuoyant, GeometryApproxType approx)
-    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, m, bpt, lookId, smoothNormals, thickness, isBuoyant, approx)
+                       std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant, GeometryApproxType approx)
+    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, material, bpt, look, thickness, isBuoyant, approx)
 {
 }
 

@@ -55,13 +55,13 @@ namespace sf
          \param rangeMin the minimum measured range [m]
          \param rangeMax the maximum measured range [m]
          */
-        void SetRange(Scalar rangeMin, Scalar rangeMax);
+        void setRange(Scalar rangeMin, Scalar rangeMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param stdDev standard deviation of the range measurement noise
          */
-        void SetNoise(Scalar stdDev);
+        void setNoise(Scalar stdDev);
         
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();

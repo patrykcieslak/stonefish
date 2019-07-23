@@ -38,6 +38,7 @@ namespace sf
     class SolidEntity;
     class Sensor;
     class Actuator;
+    struct Color;
   
     //! A class that implements parsing of XML files describing a simulation scenario.
     class ScenarioParser
@@ -82,6 +83,7 @@ namespace sf
         
     private:
         bool ParseTransform(XMLElement* element, Transform& T);
+        bool ParseColor(XMLElement* element, Color& c);
     
         XMLDocument doc;
         SimulationManager* sm;

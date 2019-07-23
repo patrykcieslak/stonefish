@@ -34,20 +34,14 @@
 namespace sf
 {
 
-GPS::GPS(std::string uniqueName, Scalar latitudeDeg, Scalar longitudeDeg, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+GPS::GPS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    ned = new NED(latitudeDeg, longitudeDeg, Scalar(0.0));
     nedStdDev = Scalar(0);
     
     channels.push_back(SensorChannel("Latitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Longitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("North", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("East", QUANTITY_LENGTH));
-}
-
-GPS::~GPS()
-{
-    delete ned;
 }
 
 void GPS::InternalUpdate(Scalar dt)
@@ -78,7 +72,7 @@ void GPS::InternalUpdate(Scalar dt)
         double latitude;
         double longitude;
         double height;
-        ned->ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
+        SimulationApp::getApp()->getSimulationManager()->getNED()->Ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
         
         //record sample
         Scalar data[4] = {latitude, longitude, gpsPos.x(), gpsPos.y()};

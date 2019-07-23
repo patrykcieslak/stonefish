@@ -35,10 +35,10 @@ namespace sf
 Obstacle::Obstacle(std::string uniqueName,
          std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
          std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-         Material m, int lookId, bool smoothGraphicsNormals) : StaticEntity(uniqueName, m, lookId)
+         std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     
-    graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, smoothGraphicsNormals);
+    graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
     OpenGLContent::TransformMesh(graMesh, graphicsOrigin);
     
     if(physicsFilename != "")
@@ -76,12 +76,12 @@ Obstacle::Obstacle(std::string uniqueName,
     //delete triangleArray;
 }
     
-Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, Material m, int lookId, bool smoothNormals)
-    : Obstacle(uniqueName, modelFilename, scale, origin, "", scale, origin, m, lookId, smoothNormals)
+Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, std::string material, std::string look)
+    : Obstacle(uniqueName, modelFilename, scale, origin, "", scale, origin, material, look)
 {
 }
 
-Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     phyMesh = OpenGLContent::BuildSphere(sphereRadius);
     graMesh = phyMesh;
@@ -90,7 +90,7 @@ Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, Material m, int 
     BuildRigidBody(shape);
 }
 
-Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId, unsigned int uvMode) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string material, std::string look, unsigned int uvMode) : StaticEntity(uniqueName, material, look)
 {
     Vector3 halfExtents = boxDimensions/Scalar(2);
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
@@ -101,7 +101,7 @@ Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, in
     BuildRigidBody(shape);
 }
 
-Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     Scalar halfHeight = cylinderHeight/Scalar(2);
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);

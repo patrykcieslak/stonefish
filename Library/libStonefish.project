@@ -53,6 +53,7 @@
       <File Name="src/actuators/Light.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
+      <File Name="src/core/ScenarioParser.cpp"/>
       <File Name="src/core/NED.cpp"/>
       <File Name="src/core/Console.cpp"/>
       <File Name="src/core/SimulationManager.cpp"/>
@@ -207,6 +208,7 @@
       <File Name="include/graphics/GLSLShader.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="core">
+      <File Name="include/core/ScenarioParser.h"/>
       <File Name="include/core/NED.h"/>
       <File Name="include/core/Console.h"/>
       <File Name="include/core/TorusShape.h"/>

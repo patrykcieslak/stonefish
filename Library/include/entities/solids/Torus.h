@@ -40,14 +40,14 @@ namespace sf
          \param majorRadius a major radius of the torus
          \param minorRadius a minor radius of the torus
          \param origin a transformation of the physical mesh (graphical is the same for torus)
-         \param m a material of the torus
+         \param material the name of the material the torus is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material used to render the torus
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the torus walls, if positive the torus is treated as shell
          \param isBuoyant defines if the torus should be subject to buoyancy force
          */
         Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
-              Material m, BodyPhysicsType bpt, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+              std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

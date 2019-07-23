@@ -44,7 +44,7 @@ namespace sf
          \param maxRPM the maximum rotational speed of the motor [rpm]
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
         */
-        Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar pitch, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand);
+        Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand);
         
         //! A destructor.
         ~Propeller();
@@ -79,7 +79,6 @@ namespace sf
     private:
         //Params
         Scalar D;
-        Scalar p;
         Scalar I;
         Scalar kT0;
         Scalar kQ0;

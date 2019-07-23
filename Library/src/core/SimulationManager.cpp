@@ -42,6 +42,7 @@
 #include "core/ResearchDynamicsWorld.h"
 #include "core/ResearchConstraintSolver.h"
 #include "core/Console.h"
+#include "core/NED.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLTrackball.h"
@@ -103,6 +104,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     //Create managers
     nameManager = new NameManager();
     materialManager = new MaterialManager();
+    ned = new NED();
 }
 
 SimulationManager::~SimulationManager()
@@ -114,6 +116,7 @@ SimulationManager::~SimulationManager()
     SDL_DestroyMutex(simHydroMutex);
 	delete materialManager;
 	delete nameManager;
+    delete ned;
 }
 
 bool SimulationManager::LoadSDF(const std::string& path)
@@ -413,6 +416,11 @@ Sensor* SimulationManager::getSensor(std::string name)
             return sensors[i];
     
     return NULL;
+}
+
+NED* SimulationManager::getNED()
+{
+    return ned;
 }
 
 Ocean* SimulationManager::getOcean()
@@ -1036,13 +1044,23 @@ void SimulationManager::RenderBulletDebug()
     dynamicsWorld->debugDrawWorld();
     debugDrawer->Render();
 }
-    
-int SimulationManager::CreateLook(Color color, float roughness, float metalness, float reflectivity, std::string texturePath)
+ 
+std::string SimulationManager::CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution)
+{
+    return getMaterialManager()->CreateMaterial(uniqueName, density, restitution);
+}
+
+bool SimulationManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
+{
+    return getMaterialManager()->SetMaterialsInteraction(firstMaterialName, secondMaterialName, staticFricCoeff, dynamicFricCoeff);
+}
+
+std::string SimulationManager::CreateLook(std::string name, Color color, float roughness, float metalness, float reflectivity, std::string texturePath)
 {
     if(SimulationApp::getApp()->hasGraphics())
-        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(color.rgb, roughness, metalness, reflectivity, texturePath);
+        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, texturePath);
     else
-        return -1;
+        return "";
 }
 
 bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)

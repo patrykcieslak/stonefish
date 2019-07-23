@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLContent__
 
 #include "graphics/OpenGLDataStructs.h"
+#include "core/NameManager.h"
 
 namespace sf
 {
@@ -201,25 +202,27 @@ namespace sf
         
         //! A method to create a new simple look.
         /*!
+         \param name the name of the look
          \param rgbColor the diffuse color
          \param specular the specular strength
          \param shininess the shininess factor
          \param reflectivity the amount of reflection
          \param texturePath a path to the texture file
-         \return an id of the created look
+         \return the actual name of the created look
          */
-        unsigned int CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity = 0.f, std::string texturePath = "");
+        std::string CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity = 0.f, std::string texturePath = "");
         
         //! A method to create a new physical look.
         /*!
+         \param name the name of the look
          \param rgbColor the diffuse color
          \param roughness the roughness of the surface
          \param metalness the amount of metal look
          \param relfectivity the amount of reflection
          \param texturePath a path to the texture file
-         \return and id of the created look
+         \return the actual name of the created look
          */
-        unsigned int CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, GLfloat reflectivity = 0.f, std::string texturePath = "");
+        std::string CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, GLfloat reflectivity = 0.f, std::string texturePath = "");
         
         //! A method to use a look.
         /*!
@@ -247,6 +250,13 @@ namespace sf
         
         //! A method returning the number of lights.
         unsigned int getLightsCount();
+        
+        //! A method returing the id of a look.
+        /*!
+         \param name the name of the look
+         \return the id of the corresponding look structure
+         */
+        int getLookId(std::string name);
         
         //! A static method to load a texture.
         /*!
@@ -383,6 +393,8 @@ namespace sf
         std::vector<OpenGLLight*> lights;
         std::vector<Object> objects; //VBAs
         std::vector<Look> looks; //OpenGL materials
+        NameManager lookNameManager;
+        
         glm::vec3 eyePos;
         glm::vec3 viewDir;
         glm::mat4 view; //Current view matrix;

@@ -33,11 +33,14 @@
 namespace sf
 {
 
-StaticEntity::StaticEntity(std::string uniqueName, Material m, int _lookId) : Entity(uniqueName)
+StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::string look) : Entity(uniqueName)
 {
-    mat = m;
-	objectId = -1;
-    lookId = _lookId;
+    mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
+	if(SimulationApp::getApp()->hasGraphics())
+        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    else
+        lookId = -1;
+    objectId = -1;
     rigidBody = NULL;
     phyMesh = NULL;
 }

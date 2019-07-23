@@ -100,7 +100,7 @@ std::vector<Renderable> Multibeam::Render()
     return items;
 }
 
-void Multibeam::SetRange(Scalar rangeMin, Scalar rangeMax)
+void Multibeam::setRange(Scalar rangeMin, Scalar rangeMax)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
     {
@@ -109,7 +109,7 @@ void Multibeam::SetRange(Scalar rangeMin, Scalar rangeMax)
     }
 }
 
-void Multibeam::SetNoise(Scalar stdDev)
+void Multibeam::setNoise(Scalar stdDev)
 {
     for(unsigned int i=0; i<=angSteps; ++i)
         channels[i].setStdDev(stdDev);

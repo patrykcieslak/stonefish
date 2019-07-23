@@ -43,10 +43,9 @@ namespace sf
          \param physicsFilename a path to the 3d model used for physics computation (collisions, fluid dynamics)
          \param physicsScale a scale factor to be used when reading the mesh file
          \param physicsOrigin a pose of the mesh with respect to the body origin frame
-         \param m a material of which the body is made
+         \param material the name of the material the body is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId a graphical material defining how the mesh is rendered
-         \param smoothGraphicsNormals defines if the graphics mesh normals should be smoothed after loading
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
          \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
@@ -54,8 +53,8 @@ namespace sf
         Polyhedron(std::string uniqueName,
                    std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                    std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                   Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothGraphicsNormals = false, 
-                   Scalar thickness = Scalar(-1), bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
+                   std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), 
+                   bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
         
         //! A constructor.
         /*!
@@ -63,17 +62,16 @@ namespace sf
          \param modelFilename a path to the 3d model used for both physics and rendering
          \param scale a scale factor to be used when reading the mesh file
          \param origin a pose of the mesh with respect to the body origin frame
-         \param m a material of which the body is made
+         \param material the name of the material the body is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId a graphical material defining how the mesh is rendered
-         \param smoothNormals defines if the model normals should be smoothed after loading
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
          \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
         Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
-                   Material m, BodyPhysicsType bpt, int lookId = -1, bool smoothNormals = false, 
-                   Scalar thickness = Scalar(-1), bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
+                   std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), 
+                   bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
         
         //! A destructor.
         ~Polyhedron();

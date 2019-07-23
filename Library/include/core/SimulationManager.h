@@ -37,6 +37,7 @@ namespace sf
     class NameManager;
     class MaterialManager;
     class Console;
+    class NED;
     class Robot;
     class ResearchDynamicsWorld;
     class ResearchConstraintSolver;
@@ -365,6 +366,9 @@ namespace sf
          */
         Sensor* getSensor(std::string name);
         
+        //! A method returning a pointer to the NED object.
+        NED* getNED();
+        
         //! A method returning a pointer to the ocean object.
         Ocean* getOcean();
         
@@ -401,16 +405,38 @@ namespace sf
         //! A method returning a pointer to the Bullet dynamics world.
         btMultiBodyDynamicsWorld* getDynamicsWorld();
         
+        //------ Aliases created to shorten the code needed to build the scenario ------
+        
+        //! A method that creates a new material.
+        /*!
+         \param uniqueName a name for the material
+         \param density a density of the material [kg*m^-3]
+         \param restitution a restitution factor <0,1>
+         \return a name of the created material
+         */
+        std::string CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution);
+        
+        //! A method that sets interaction between a pair of materials.
+        /*!
+         \param firstMaterialName a name of the first material
+         \param secondMaterialName a name of the second material
+         \param staticFricCoeff a coefficient of static friction between materials
+         \param dynamicFricCoeff a coefficient of dynamic friction between materials
+         \return was the interaction was set properly?
+         */
+        bool SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        
         //! A method used to create a rendering look.
         /*!
+         \param name the name of the look
          \param color a color of the material
          \param roughness how smooth the material looks
          \param metalness how metallic the material looks
          \param reflectivity how reflective the material is
          \param texturePath a path to a texture
-         \return an id of the created look
+         \return the actual name of the created look
          */
-        static int CreateLook(Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, std::string texturePath = "");
+        std::string CreateLook(std::string name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, std::string texturePath = "");
         
     protected:
         static void SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep);
@@ -465,6 +491,7 @@ namespace sf
         std::vector<Actuator*> actuators;
         std::vector<Contact*> contacts;
         std::vector<Collision> collisions;
+        NED* ned;
         Ocean* ocean;
         Atmosphere* atmosphere;
         Scalar g;

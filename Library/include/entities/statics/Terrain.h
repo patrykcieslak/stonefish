@@ -42,10 +42,10 @@ namespace sf
          \param scaleX the scale in the X direction [m/pix]
          \param scaleY the scale in the Y direction [m/pix]
          \param height the height at the maximum possible heightmap value [m]
-         \param m the material that the terrain is made of
-         \param lookId the id of the material used to render the terrain
+         \param material the name of the material the terrain is made of
+         \param look the name of the graphical material used for rendering
          */
-        Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, Material m, int lookId = -1);
+        Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string material, std::string look = "");
         
         //! A destructor.
         ~Terrain();

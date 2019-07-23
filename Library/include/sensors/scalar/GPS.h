@@ -30,8 +30,6 @@
 
 namespace sf
 {
-    class NED;
-    
     //! A class representing a global positioning system (GPS) sensor.
     class GPS : public LinkSensor
     {
@@ -39,15 +37,10 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the sensor
-         \param latitudeDeg latitude of the world origin [deg]
-         \param longitudeDeg longitude of the world origin [deg]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        GPS(std::string uniqueName, Scalar latitudeDeg, Scalar longitudeDeg, Scalar frequency = Scalar(-1), int historyLength = -1);
-        
-        //! A destructor.
-        ~GPS();
+        GPS(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -65,8 +58,6 @@ namespace sf
         Scalar getNoise();
         
     private:
-        NED* ned;
-        
         //Custom noise generation specific to GPS
         Scalar nedStdDev;
         std::normal_distribution<Scalar> noise;

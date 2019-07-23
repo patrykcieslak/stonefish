@@ -41,26 +41,26 @@ SlidingTestManager::SlidingTestManager(sf::Scalar stepsPerSecond)
 void SlidingTestManager::BuildScenario()
 {
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Ground", 1000.0, 1.0);
-    getMaterialManager()->CreateMaterial("Steel", 1000.0, 0.0);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Ground", 0.0, 0.0);
-    getMaterialManager()->SetMaterialsInteraction("Ground", "Steel", 0.25, 0.1);
-    getMaterialManager()->SetMaterialsInteraction("Steel", "Steel", 0.25, 0.2);
+    CreateMaterial("Ground", 1000.0, 1.0);
+    CreateMaterial("Steel", 1000.0, 0.0);
+    SetMaterialsInteraction("Ground", "Ground", 0.0, 0.0);
+    SetMaterialsInteraction("Ground", "Steel", 0.25, 0.1);
+    SetMaterialsInteraction("Steel", "Steel", 0.25, 0.2);
     
     ///////LOOKS///////////
-    int grid = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.f, 0.1f, 0.f, sf::GetShaderPath() + "grid.png");
-    int green = CreateLook(sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
+    CreateLook("grid", sf::Color::RGB(1.f, 1.f, 1.f), 0.f, 0.1f, 0.f, sf::GetShaderPath() + "grid.png");
+    CreateLook("green", sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
     
     ////////OBJECTS
     sf::Scalar angle = M_PI/180.0 * 14.9;
     
-    sf::Plane* floor = new sf::Plane("Floor", sf::Scalar(10000), getMaterialManager()->getMaterial("Ground"), grid);
+    sf::Plane* floor = new sf::Plane("Floor", sf::Scalar(10000), "Ground", "grid");
     AddStaticEntity(floor, sf::I4());
   
-    sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), getMaterialManager()->getMaterial("Ground"), grid, 2);
+    sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), "Ground", "grid", 2);
     AddStaticEntity(ramp, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
   
-    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), getMaterialManager()->getMaterial("Steel"), sf::BodyPhysicsType::SURFACE_BODY, green);
+    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "green");
     AddSolidEntity(box, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -2.0)));
     
     sf::Trajectory* traj = new sf::Trajectory("Trajectory", -1, 1000);

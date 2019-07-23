@@ -33,7 +33,7 @@
 namespace sf
 {
 
-Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, Material m, int lookId) : StaticEntity(uniqueName, m, lookId)
+Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     int w,h,ch;
     unsigned char* dataBuffer = stbi_load(pathToHeightmap.c_str(), &w, &h, &ch, 1);

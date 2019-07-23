@@ -43,14 +43,13 @@ namespace sf
          \param physicsFilename a path to the 3d model used for physics computation (collisions, fluid dynamics)
          \param physicsScale a scale factor to be used when reading the mesh file
          \param physicsOrigin a pose of the mesh with respect to the body origin frame
-         \param m a material of which the body is made
-         \param lookId a graphical material defining how the mesh is rendered
-         \param smoothGraphicsNormals defines if the graphics mesh normals should be smoothed after loading
+         \param material the name of the material the body is made of
+         \param look the name of the graphical material used for rendering
          */
         Obstacle(std::string uniqueName,
                  std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                  std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                 Material m, int lookId = -1, bool smoothGraphicsNormals = false);
+                 std::string material, std::string look = "");
         
         //! A constructor building an obstacle based on a mesh file.
         /*!
@@ -58,40 +57,39 @@ namespace sf
          \param modelFilename a path to the 3d model used for both physics and rendering
          \param scale a scale factor to be used when reading the mesh file
          \param origin a pose of the mesh with respect to the body origin frame
-         \param m a material of which the body is made
-         \param lookId a graphical material defining how the mesh is rendered
-         \param smoothNormals defines if the model normals should be smoothed after loading
+         \param material the name of the material the body is made of
+         \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, Material m, int lookId = -1, bool smoothNormals = false);
+        Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, std::string material, std::string look = "");
         
         //! A constructor building a spherical obstacle.
         /*!
          \param uniqueName a name for the body
          \param sphereRadius a radius of the spherical body
-         \param m a material of the body
-         \param lookId a graphical material defining how the body is rendered
+         \param material the name of the material the body is made of
+         \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar sphereRadius, Material m, int lookId = -1);
+        Obstacle(std::string uniqueName, Scalar sphereRadius, std::string material, std::string look = "");
     
         //! A constructor building a box obstacle.
         /*!
          \param uniqueName a name for the body
          \param boxDimensions a vector of box dimensions (side lengths)
-         \param m a material of the body
-         \param lookId a graphical material defining how the body is rendered
+         \param material the name of the material the body is made of
+         \param look the name of the graphical material used for rendering
          \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          */
-        Obstacle(std::string uniqueName, Vector3 boxDimensions, Material m, int lookId = -1, unsigned int uvMode = 0);
+        Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string material, std::string look = "", unsigned int uvMode = 0);
         
         //! A constructor building a cylindrical obstacle.
         /*!
          \param uniqueName a name for the body
          \param cylinderRadius a radius of the cylindrical body
          \param cylinderHeight a height of the cylindrical body
-         \param m a material of the body
-         \param lookId a graphical material defining how the body is rendered
+         \param material the name of the material the body is made of
+         \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, Material m, int lookId = -1);
+        Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, std::string material, std::string look = "");
         
         //! A destructor.
         ~Obstacle();

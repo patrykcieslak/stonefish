@@ -37,9 +37,9 @@
 namespace sf
 {
 
-SolidEntity::SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt, int _lookId, Scalar thickness, bool isBuoyant) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant) : Entity(uniqueName)
 {
-	mat = m;
+	mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     thick = thickness;
     
     if((bpt == BodyPhysicsType::SUBMERGED_BODY || bpt == BodyPhysicsType::FLOATING_BODY) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
@@ -48,7 +48,10 @@ SolidEntity::SolidEntity(std::string uniqueName, Material m, BodyPhysicsType bpt
         phyType = bpt;
     
     buoyant = isBuoyant;
-    lookId = _lookId;
+    if(SimulationApp::getApp()->hasGraphics())
+        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    else
+        lookId = -1;
     
     //Set transformations to identity
     T_O2G = I4();

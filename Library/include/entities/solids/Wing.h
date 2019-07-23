@@ -44,15 +44,15 @@ namespace sf
          \param profileThickness the thickness of the profile as percent of chord length
          \param wingLength the length of the wing [m]
          \param origin a transformation of the physical mesh (graphical is the same for wing)
-         \param m a material of the wing
+         \param material the name of the material the wing is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material used to render the wing
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell [m]
          \param isBuoyant defines if the wing should be subject to buoyancy force
          */
         Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength,
-             Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, Material m,
-             BodyPhysicsType bpt, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+             Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, std::string material,
+             BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
         
         //! A constructor.
         /*!
@@ -62,14 +62,14 @@ namespace sf
          \param NACA the code of the profile in 4-digit NACA system
          \param wingLength the length of the wing [m]
          \param origin a transformation of the physical mesh (graphical is the same for wing)
-         \param m a material of the wing
+         \param material the name of the material the wing is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material used to render the wing
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell
          \param isBuoyant defines if the wing should be subject to buoyancy force
          */
         Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
-             Material m, BodyPhysicsType bpt, int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+             std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

@@ -42,13 +42,12 @@ FloatingTestManager::FloatingTestManager(sf::Scalar stepsPerSecond)
 void FloatingTestManager::BuildScenario()
 {
     ///////MATERIALS////////
-    getMaterialManager()->CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.3);
-    
-    getMaterialManager()->SetMaterialsInteraction("Fiberglass", "Fiberglass", 0.5, 0.2);
+    CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.3);
+    SetMaterialsInteraction("Fiberglass", "Fiberglass", 0.5, 0.2);
     
     ///////LOOKS///////////
-    int white = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.9f, 0.0f, 0.f);
-    int propLook = CreateLook(sf::Color::RGB(1.f, 1.f, 1.f), 0.3f, 0.f, 0.f, sf::GetDataPath() + "propeller_tex.png");
+    CreateLook("white", sf::Color::Gray(1.f), 0.9f, 0.0f, 0.f);
+    CreateLook("propeller", sf::Color::Gray(1.f), 0.3f, 0.f, 0.f, sf::GetDataPath() + "propeller_tex.png");
 
     ////////OBJECTS    
     //Create environment
@@ -56,11 +55,11 @@ void FloatingTestManager::BuildScenario()
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
-    sf::Polyhedron* hull = new sf::Polyhedron("Hull", sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), 
-                                              sf::BodyPhysicsType::FLOATING_BODY, white, false, sf::Scalar(0.05), true);
+    sf::Polyhedron* hull = new sf::Polyhedron("Hull", sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
+                                              sf::BodyPhysicsType::FLOATING_BODY, "white", sf::Scalar(0.05), true);
     
-    sf::Polyhedron* prop = new sf::Polyhedron("Propeller", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), getMaterialManager()->getMaterial("Fiberglass"), 
-                                              sf::BodyPhysicsType::SUBMERGED_BODY, propLook, false);
+    sf::Polyhedron* prop = new sf::Polyhedron("Propeller", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
+                                              sf::BodyPhysicsType::SUBMERGED_BODY, "propeller");
     
     sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.18, 0.48, 0.05, 10000.0, false);
     

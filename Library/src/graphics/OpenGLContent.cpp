@@ -527,6 +527,7 @@ void OpenGLContent::DestroyContent()
 			glDeleteTextures(1, &looks[i].textures[h]);
 	}
 	looks.clear();
+    lookNameManager.ClearNames();
 			
 	for(size_t i=0; i<objects.size(); ++i)
 	{
@@ -1060,9 +1061,10 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 	return (unsigned int)objects.size()-1;
 }
 
-unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity, std::string textureName)
+std::string OpenGLContent::CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity, std::string textureName)
 {
     Look look;
+    look.name = lookNameManager.AddName(name);
 	look.type = LookType::SIMPLE;
     look.color = rgbColor;
     look.reflectivity = reflectivity;
@@ -1074,12 +1076,13 @@ unsigned int OpenGLContent::CreateSimpleLook(glm::vec3 rgbColor, GLfloat specula
     
 	looks.push_back(look);
 	
-	return (unsigned int)looks.size()-1;
+	return look.name;
 }
 
-unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, GLfloat reflectivity, std::string textureName)
+std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, GLfloat reflectivity, std::string textureName)
 {
 	Look look;
+    look.name = lookNameManager.AddName(name);
 	look.type = LookType::PHYSICAL;
 	look.color = rgbColor;
     look.reflectivity = reflectivity;
@@ -1091,7 +1094,7 @@ unsigned int OpenGLContent::CreatePhysicalLook(glm::vec3 rgbColor, GLfloat rough
 		
 	looks.push_back(look);
 	
-	return (unsigned int)looks.size()-1;
+	return look.name;
 }
 
 void OpenGLContent::AddView(OpenGLView *view)
@@ -1128,6 +1131,15 @@ OpenGLLight* OpenGLContent::getLight(unsigned int id)
 unsigned int OpenGLContent::getLightsCount()
 {
 	return (unsigned int)lights.size();
+}
+
+int OpenGLContent::getLookId(std::string name)
+{
+    for(size_t i=0; i<looks.size(); ++i)
+        if(looks[i].name == name)
+            return (int)i;
+            
+    return -1;
 }
 	
 //Static methods

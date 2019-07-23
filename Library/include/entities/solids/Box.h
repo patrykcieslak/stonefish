@@ -39,14 +39,14 @@ namespace sf
          \param uniqueName a name for the box
          \param dimensions a vector of box dimensions (side lengths)
          \param origin a transformation of the physical mesh (graphical is the same for box)
-         \param m a material of the box
+         \param material the name of the material the box is made of
          \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
-         \param lookId an index of the graphical material used to render the box
+         \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the box walls, if positive the box is treated as shell
          \param isBuoyant defines if the box should be subject to buoyancy force
         */
-        Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, Material m, BodyPhysicsType bpt,
-                                    int lookId = -1, Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, std::string material, BodyPhysicsType bpt,
+                                    std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

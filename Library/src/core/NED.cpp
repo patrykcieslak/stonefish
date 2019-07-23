@@ -25,7 +25,8 @@
 
 #include "core/NED.h"
 
-using namespace sf;
+namespace sf
+{
 
 const Scalar NED::a = Scalar(6378137);
 const Scalar NED::b = Scalar(6356752.3142);
@@ -33,7 +34,12 @@ const Scalar NED::esq = Scalar(6.69437999014 * 0.001);
 const Scalar NED::e1sq = Scalar(6.73949674228 * 0.001);
 const Scalar NED::f = Scalar(1.0 / 298.257223563);
 
-NED::NED(const Scalar lat, const Scalar lon, const Scalar height)
+NED::NED()
+{
+    Init(50.0, 20.0, 0.0); //Krakow, Poland
+}
+
+void NED::Init(const Scalar lat, const Scalar lon, const Scalar height)
 {
 	// Save NED origin
 	_init_lat = lat/180.0 * M_PI;
@@ -41,7 +47,7 @@ NED::NED(const Scalar lat, const Scalar lon, const Scalar height)
 	_init_h = height;
 
 	// Compute ECEF of NED origin
-	geodetic2Ecef(lat, lon, height, _init_ecef_x, _init_ecef_y, _init_ecef_z);
+	Geodetic2Ecef(lat, lon, height, _init_ecef_x, _init_ecef_y, _init_ecef_z);
 
 	// Compute ECEF to NED and NED to ECEF matrices
 	Scalar phiP = btAtan2(_init_ecef_z, btSqrt(_init_ecef_x*_init_ecef_x + _init_ecef_y*_init_ecef_y));
@@ -50,8 +56,8 @@ NED::NED(const Scalar lat, const Scalar lon, const Scalar height)
 	_ned_to_ecef_matrix = __nRe__(_init_lat, _init_lon).transpose();
 }
 
-void NED::geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
-                        Scalar& x, Scalar& y, Scalar& z)
+void NED::Geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
+                        Scalar& x, Scalar& y, Scalar& z) const
 {
 	// Convert geodetic coordinates to ECEF.
 	// http://code.google.com/p/pysatel/source/browse/trunk/coord.py?r=22
@@ -63,8 +69,8 @@ void NED::geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
 	z = (a / xi * (1 - esq) + height) * btSin(lat_rad);
 }
 
-void NED::ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
-                        Scalar& lat, Scalar& lon, Scalar& height)
+void NED::Ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
+                        Scalar& lat, Scalar& lon, Scalar& height) const
 {
 	// Convert ECEF coordinates to geodetic.
 	// J. Zhu, "Conversion of Earth-centered Earth-fixed coordinates
@@ -87,8 +93,8 @@ void NED::ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
 	lon = (btAtan2(y, x))/M_PI * 180.0;
 }
 
-void NED::ecef2Ned(const Scalar x, const Scalar y, const Scalar z,
-                   Scalar& north, Scalar& east, Scalar& depth)
+void NED::Ecef2Ned(const Scalar x, const Scalar y, const Scalar z,
+                   Scalar& north, Scalar& east, Scalar& depth) const
 {
 	// Converts ECEF coordinate pos into local-tangent-plane ENU
 	// coordinates relative to another ECEF coordinate ref. Returns a tuple
@@ -103,8 +109,8 @@ void NED::ecef2Ned(const Scalar x, const Scalar y, const Scalar z,
 	depth = -ret.getZ();
 }
 
-void NED::ned2Ecef(const Scalar north, const Scalar east, const Scalar depth,
-                   Scalar& x, Scalar& y, Scalar& z)
+void NED::Ned2Ecef(const Scalar north, const Scalar east, const Scalar depth,
+                   Scalar& x, Scalar& y, Scalar& z) const
 {
 	// NED (north/east/down) to ECEF coordinate system conversion.
 	Vector3 ned, ret;
@@ -117,25 +123,25 @@ void NED::ned2Ecef(const Scalar north, const Scalar east, const Scalar depth,
 	z = ret.getZ() + _init_ecef_z;
 }
 
-void NED::geodetic2Ned(const Scalar lat, const Scalar lon, const Scalar height,
-                       Scalar& north, Scalar& east, Scalar& depth)
+void NED::Geodetic2Ned(const Scalar lat, const Scalar lon, const Scalar height,
+                       Scalar& north, Scalar& east, Scalar& depth) const
 {
 	// Geodetic position to a local NED system """
 	Scalar x, y, z;
-	geodetic2Ecef(lat, lon, height, x, y, z);
-	ecef2Ned(x, y, z, north, east, depth);
+	Geodetic2Ecef(lat, lon, height, x, y, z);
+	Ecef2Ned(x, y, z, north, east, depth);
 }
 
-void NED::ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth,
-                       Scalar& lat, Scalar& lon, Scalar& height)
+void NED::Ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth,
+                       Scalar& lat, Scalar& lon, Scalar& height) const
 {
 	// Local NED position to geodetic
 	Scalar x, y, z;
-	ned2Ecef(north, east, depth, x, y, z);
-	ecef2Geodetic(x, y, z, lat, lon, height);
+	Ned2Ecef(north, east, depth, x, y, z);
+	Ecef2Geodetic(x, y, z, lat, lon, height);
 }
 
-Scalar NED::__cbrt__(const Scalar x)
+Scalar NED::__cbrt__(const Scalar x) const
 {
 	if(x >= 0.0)
 		return btPow(x, 1.0/3.0);
@@ -143,7 +149,7 @@ Scalar NED::__cbrt__(const Scalar x)
 		return -btPow(btFabs(x), 1.0/3.0);
 }
 
-Matrix3 NED::__nRe__(const Scalar lat_rad, const Scalar lon_rad)
+Matrix3 NED::__nRe__(const Scalar lat_rad, const Scalar lon_rad) const
 {
 	Scalar sLat = btSin(lat_rad);
 	Scalar sLon = btSin(lon_rad);
@@ -155,4 +161,6 @@ Matrix3 NED::__nRe__(const Scalar lat_rad, const Scalar lon_rad)
 				     cLat*cLon,  cLat*sLon, sLat);
 
     return ret;
+}
+
 }

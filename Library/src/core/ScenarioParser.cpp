@@ -45,12 +45,18 @@
 #include "sensors/scalar/Odometry.h"
 #include "sensors/scalar/Pressure.h"
 #include "sensors/scalar/RotaryEncoder.h"
+#include "sensors/scalar/Torque.h"
 #include "sensors/scalar/ForceTorque.h"
 #include "sensors/scalar/Profiler.h"
 #include "sensors/scalar/Multibeam.h"
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
+#include "actuators/Light.h"
+#include "actuators/ServoMotor.h"
+#include "actuators/Propeller.h"
+#include "actuators/Thruster.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
@@ -635,10 +641,8 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
                 return false;
             if(item->QueryStringAttribute("filename", &phyMesh) != XML_SUCCESS)
                 return false;
-            if((item = item->NextSiblingElement("scale")) == nullptr)
-                return false;
-            if(item->QueryAttribute("value", &phyScale) != XML_SUCCESS)
-                return false;
+            if(item->QueryAttribute("scale", &phyScale) != XML_SUCCESS)
+                phyScale = Scalar(1);
             if((item = item->NextSiblingElement("thickness")) != nullptr)
             {
                 if(item->QueryAttribute("value", &thickness) != XML_SUCCESS)
@@ -659,10 +663,8 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
                     return false;
                 if(item->QueryStringAttribute("filename", &graMesh) != XML_SUCCESS)
                     return false;
-                if((item = item->NextSiblingElement("scale")) == nullptr)
-                    return false;
-                if(item->QueryAttribute("value", &graScale) != XML_SUCCESS)
-                    return false;
+                if(item->QueryAttribute("scale", &graScale) != XML_SUCCESS)
+                    graScale = Scalar(1);
                 if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                     return false;
           
@@ -910,7 +912,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             return false;
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
-        if((item = element->FirstChildElement("properties")) == nullptr || item->QueryAttribute("beam_angle", &beamAngle) != XML_SUCCESS)
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("beam_angle", &beamAngle) != XML_SUCCESS)
             return false;
             
         DVL* dvl = new DVL(std::string(name), beamAngle, rate, history);
@@ -1082,6 +1084,259 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         robot->AddLinkSensor(fog, std::string(linkName), origin);
     }
+    else if(typeStr == "profiler")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        Scalar fov;
+        int steps;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
+            return false;
+            
+        Profiler* prof = new Profiler(std::string(name), fov, steps, rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar distMin, distMax;
+            
+            if(item->QueryAttribute("distance_min", &distMin) != XML_SUCCESS
+               || item->QueryAttribute("distance_max", &distMax) != XML_SUCCESS)
+            {
+                delete prof;
+                return false;
+            }
+            prof->setRange(distMin, distMax);
+        }
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar distance;
+            if(item->QueryAttribute("distance", &distance) != XML_SUCCESS)
+            {
+                delete prof;
+                return false;
+            }
+            prof->setNoise(distance);
+        }
+        
+        robot->AddLinkSensor(prof, std::string(linkName), origin);
+    }
+    else if(typeStr == "multibeam1d")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int history;
+        Scalar fov;
+        int steps;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
+            return false;
+            
+        Multibeam* mult = new Multibeam(std::string(name), fov, steps, rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar distMin, distMax;
+            
+            if(item->QueryAttribute("distance_min", &distMin) != XML_SUCCESS
+               || item->QueryAttribute("distance_max", &distMax) != XML_SUCCESS)
+            {
+                delete mult;
+                return false;
+            }
+            mult->setRange(distMin, distMax);
+        }
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar distance;
+            if(item->QueryAttribute("distance", &distance) != XML_SUCCESS)
+            {
+                delete mult;
+                return false;
+            }
+            mult->setNoise(distance);
+        }
+        
+        robot->AddLinkSensor(mult, std::string(linkName), origin);
+    }
+    else if(typeStr == "torque")
+    {
+        const char* jointName = nullptr;
+        int history;
+        
+        if((item = element->FirstChildElement("joint")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        Torque* torque = new Torque(std::string(name), rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar tau;
+            if(item->QueryAttribute("torque", &tau) != XML_SUCCESS)
+            {
+                delete torque;
+                return false;
+            }
+            torque->setRange(tau);
+        }
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar tau;
+            if(item->QueryAttribute("torque", &tau) != XML_SUCCESS)
+            {
+                delete torque;
+                return false;
+            }
+            torque->setNoise(tau);
+        }
+        
+        robot->AddJointSensor(torque, std::string(jointName));
+    }
+    else if(typeStr == "forcetorque")
+    {
+        const char* jointName = nullptr;
+        Transform origin;
+        int history;
+        
+        if((item = element->FirstChildElement("joint")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        ForceTorque* ft = new ForceTorque(std::string(name), origin, rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            const char* force = nullptr;
+            const char* torque = nullptr;
+            Scalar fx, fy, fz, tx, ty, tz;
+            
+            if(item->QueryStringAttribute("force", &force) != XML_SUCCESS || sscanf(force, "%lf %lf %lf", &fx, &fy, &fz) != 3)
+            {
+                delete ft;
+                return false;
+            }
+            if(item->QueryStringAttribute("torque", &torque) != XML_SUCCESS || sscanf(torque, "%lf %lf %lf", &tx, &ty, &tz) != 3)
+            {
+                delete ft;
+                return false;
+            }
+            ft->setRange(Vector3(fx, fy, fz), Vector3(tx, ty, tz));
+        }
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar force;
+            Scalar torque;
+            if(item->QueryAttribute("force", &force) != XML_SUCCESS || item->QueryAttribute("torque", &torque) != XML_SUCCESS)
+            {
+                delete ft;
+                return false;
+            }
+            ft->setNoise(force, torque);
+        }
+        
+        robot->AddJointSensor(ft, std::string(jointName));    
+    }
+    else if(typeStr == "camera")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int resX, resY;
+        Scalar hFov;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("horizonal_fov", &hFov) != XML_SUCCESS)
+            return false;
+        
+        ColorCamera* cam = new ColorCamera(std::string(name), resX, resY, hFov, 1, rate);
+        robot->AddVisionSensor(cam, linkName, origin);
+    }
+    else if(typeStr == "depthcamera")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int resX, resY;
+        Scalar hFov;
+        Scalar depthMin, depthMax;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("horizonal_fov", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
+            || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
+            return false;
+        
+        DepthCamera* dcam = new DepthCamera(std::string(name), resX, resY, hFov, depthMin, depthMax, rate);
+        robot->AddVisionSensor(dcam, linkName, origin);
+    }
+    else if(typeStr == "multibeam2d")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        int resX, resY;
+        Scalar hFov, vFov;
+        Scalar depthMin, depthMax;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("fov_x", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("fov_y", &vFov) != XML_SUCCESS
+            || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
+            || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
+            return false;
+        
+        Multibeam2* mb = new Multibeam2(std::string(name), resX, resY, hFov, vFov, depthMin, depthMax, rate);
+        robot->AddVisionSensor(mb, linkName, origin);
+        
+    }
     else
         return false;
     
@@ -1090,6 +1345,119 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
 bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 {
+    //---- Common ----
+    const char* name = nullptr;
+    const char* type = nullptr;
+    Scalar rate;
+    
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return false;
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+        return false;
+    std::string typeStr(type);
+    
+    //---- Specific ----
+    XMLElement* item;
+    if(typeStr == "servo")
+    {
+        const char* jointName = nullptr;
+        Scalar kp, kv, maxTau;
+        
+        if((item = element->FirstChildElement("joint")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("controller")) == nullptr 
+            || item->QueryAttribute("position_gain", &kp) != XML_SUCCESS 
+            || item->QueryAttribute("velocity_gain", &kv) != XML_SUCCESS
+            || item->QueryAttribute("max_torque", &maxTau) != XML_SUCCESS)
+            return false;
+        
+        ServoMotor* srv = new ServoMotor(std::string(name), kp, kv, maxTau);
+        robot->AddJointActuator(srv, std::string(jointName));
+    }
+    else if(typeStr == "thruster" || typeStr == "propeller")
+    {
+        const char* linkName = nullptr;
+        const char* propFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        Scalar diameter, cThrust, cTorque, maxRpm, propScale;
+        bool rightHand;
+        Transform origin;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("thrust_coeff", &cThrust) != XML_SUCCESS 
+            || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
+            || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
+            return false;   
+        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
+            return false;
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
+            return false;
+        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
+            propScale = Scalar(1);
+        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+            return false;
+        if((item2 = item->FirstChildElement("look")) == nullptr || item2->QueryStringAttribute("name", &look) != XML_SUCCESS)
+            return false;
+
+        if(typeStr == "thruster")
+        {
+            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Thruster* th = new Thruster(std::string(name), prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            robot->AddLinkActuator(th, std::string(linkName), origin);
+        }
+        else //propeller
+        {
+            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Propeller* p = new Propeller(std::string(name), prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            robot->AddLinkActuator(p, std::string(linkName), origin);
+        }
+    }
+    else if(typeStr == "light")
+    {
+        const char* linkName = nullptr;
+        Scalar illu, cone;
+        Color color = Color::Gray(1.f);
+        Transform origin;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            if(item->QueryAttribute("illuminance", &illu) != XML_SUCCESS)
+                return false;
+            if(item->QueryAttribute("cone_angle", &cone) != XML_SUCCESS)
+                cone = Scalar(-1);
+        } 
+        else
+            return false;
+        if((item = element->FirstChildElement("color")) == nullptr || !ParseColor(item, color))
+            return false;
+            
+        Light* light;
+        if(cone > Scalar(0))
+            light = new Light(std::string(name), cone, color, illu);
+        else
+            light = new Light(std::string(name), color, illu);
+            
+        robot->AddLinkActuator(light, std::string(linkName), origin);
+    }
+    else
+        return false;
+    
     return true;
 }
 
@@ -1109,6 +1477,23 @@ bool ScenarioParser::ParseTransform(XMLElement* element, Transform& T)
         return false;
         
     T = Transform(Quaternion(yaw, pitch, roll), Vector3(x, y, z));
+    return true;
+}
+
+bool ScenarioParser::ParseColor(XMLElement* element, Color& c)
+{
+    const char* components = nullptr;
+    float c1, c2, c3;
+    
+    if(element->QueryStringAttribute("rgb", &components) == XML_SUCCESS && sscanf(components, "%f %f %f", &c1, &c2, &c3) == 3)
+        c = Color::RGB(c1, c2, c3);
+    else if(element->QueryStringAttribute("hsv", &components) == XML_SUCCESS && sscanf(components, "%f %f %f", &c1, &c2, &c3) == 3)
+        c = Color::HSV(c1, c2, c3);
+    else if(element->QueryAttribute("temperature", &c1) == XML_SUCCESS)
+        c = Color::BlackBody(c1);
+    else
+        return false;
+        
     return true;
 }
 

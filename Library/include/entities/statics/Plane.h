@@ -38,10 +38,10 @@ namespace sf
         /*!
          \param uniqueName a name for the plane
          \param size of the rendered plane [m]
-         \param m the material of the plane
-         \param lookId the id of the material used to render the plane
+         \param material the name of the material the plane is made of
+         \param look the name of the graphical material used for rendering
          */
-        Plane(std::string uniqueName, Scalar size, Material m, int lookId = -1);
+        Plane(std::string uniqueName, Scalar size, std::string material, std::string look = "");
         
         //! A method returning the extents of the plane axis alligned bounding box.
         /*!
