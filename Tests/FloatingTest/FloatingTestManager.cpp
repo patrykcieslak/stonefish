@@ -73,15 +73,3 @@ void FloatingTestManager::BuildScenario()
     
     thrust->setSetpoint(0.2);
 }
-
-void FloatingTestManager::SimulationStepCompleted()
-{
-    /*sf::Robot* boat = getRobot("Boat");
-    sf::Sample s = ((sf::Odometry*)boat->getSensor("Odom"))->getLastSample();
-    printf("Velocity: %1.3lf, %1.3lf, %1.3lf\n", s.getValue(3), s.getValue(4), s.getValue(5));
-    
-    sf::FeatherstoneEntity* fe = (sf::FeatherstoneEntity*)getEntity("Boat_Dynamics");
-    sf::Vector3 v = fe->getLink(0).solid->getLinearVelocityInLocalPoint(sf::Vector3(0,0,-0.5));
-    printf("FE Velocity: %1.3lf, %1.3lf, %1.3lf\n", v.x(), v.y(), v.z());
-    */
-}

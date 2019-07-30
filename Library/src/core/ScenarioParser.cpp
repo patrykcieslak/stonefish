@@ -57,6 +57,7 @@
 #include "actuators/Propeller.h"
 #include "actuators/Thruster.h"
 #include "graphics/OpenGLDataStructs.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
@@ -67,6 +68,8 @@ ScenarioParser::ScenarioParser(SimulationManager* sm) : sm(sm)
  
 bool ScenarioParser::Parse(std::string filename)
 {
+    filename = GetDataPath() + filename;
+    
     cInfo("Loading scenario from: %s", filename.c_str());
     
     //Open file
@@ -273,27 +276,26 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
     while(look != nullptr)
     {
         const char* name = nullptr;
-        const char* color = nullptr;
-        float R, G, B;
+        Color color = Color::Gray(1.f);
         Scalar roughness;
         Scalar metalness;
         Scalar reflectivity;
         const char* texture = nullptr;
+        std::string textureStr = "";
+        
         if(look->QueryStringAttribute("name", &name) != XML_SUCCESS)
             return false;
-        if(look->QueryStringAttribute("color", &color) != XML_SUCCESS)
-            return false;
-        if(sscanf(color, "%f %f %f", &R, &G, &B) != 3)
-            return false;
+        if(!ParseColor(look, color))
+            return false;    
         if(look->QueryAttribute("roughness", &roughness) != XML_SUCCESS)
             return false;
         if(look->QueryAttribute("metalness", &metalness) != XML_SUCCESS)
             metalness = Scalar(0);
         if(look->QueryAttribute("reflectivity", &reflectivity) != XML_SUCCESS)
             reflectivity = Scalar(0);
-        if(look->QueryStringAttribute("texture", &texture) != XML_SUCCESS)
-            texture = "";
-        sm->CreateLook(name, Color::RGB(R, G, B), roughness, metalness, reflectivity, texture);
+        if(look->QueryStringAttribute("texture", &texture) == XML_SUCCESS)
+            textureStr = GetDataPath() + std::string(texture);
+        sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr);
         look = look->NextSiblingElement("look");
     }
     
@@ -378,20 +380,18 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         Scalar phyScale;
         Transform phyOrigin;
         
-        if((item = element->FirstChildElement("physics")) == nullptr)
+        if((item = element->FirstChildElement("physical")) == nullptr)
             return false;
         if((item = item->FirstChildElement("mesh")) == nullptr)
             return false;
         if(item->QueryStringAttribute("filename", &phyMesh) != XML_SUCCESS)
             return false;
-        if((item = item->NextSiblingElement("scale")) == nullptr)
-            return false;
-        if(item->QueryAttribute("value", &phyScale) != XML_SUCCESS)
-            return false;
+        if(item->QueryAttribute("scale", &phyScale) != XML_SUCCESS)
+            phyScale = Scalar(1);
         if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, phyOrigin))
             return false;
         
-        if((item = element->FirstChildElement("graphics")) != nullptr)
+        if((item = element->FirstChildElement("visual")) != nullptr)
         {
             const char* graMesh = nullptr;
             Scalar graScale;
@@ -401,18 +401,16 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
                 return false;
             if(item->QueryStringAttribute("filename", &graMesh) != XML_SUCCESS)
                 return false;
-            if((item = item->NextSiblingElement("scale")) == nullptr)
-                return false;
-            if(item->QueryAttribute("value", &graScale) != XML_SUCCESS)
-                return false;
+            if(item->QueryAttribute("scale", &graScale) != XML_SUCCESS)
+                graScale = Scalar(1);
             if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                 return false;
           
-            object = new Obstacle(std::string(name), std::string(graMesh), graScale, graOrigin, std::string(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
+            object = new Obstacle(std::string(name), GetDataPath() + std::string(graMesh), graScale, graOrigin, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
         }
         else
         {
-            object = new Obstacle(std::string(name), std::string(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
+            object = new Obstacle(std::string(name), GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
         }
     }
     else if(typestr == "plane")
@@ -490,7 +488,6 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
         SolidEntity* part = nullptr;
         Compound* comp = nullptr;
         Transform partOrigin;
-        bool external;
       
         if((item = element->FirstChildElement("external_part")) == nullptr)
             return false;
@@ -549,7 +546,13 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
         XMLElement* item;
         const char* mat = nullptr;
         const char* look = nullptr;
+        const char* inertia = nullptr;
         Transform origin;
+        Transform cg;
+        Scalar mass;
+        Scalar ix, iy, iz;
+        Vector3 I;
+        bool cgok;
         
         //Material
         if((item = element->FirstChildElement("material")) == nullptr)
@@ -561,6 +564,17 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
             return false;
         if(item->QueryStringAttribute("name", &look) != XML_SUCCESS)
             return false;
+        //Dynamic parameters  
+        if((item = element->FirstChildElement("mass")) == nullptr || item->QueryAttribute("value", &mass) != XML_SUCCESS)
+            mass = Scalar(-1);
+        if((item = element->FirstChildElement("inertia")) == nullptr 
+            || item->QueryStringAttribute("xyz", &inertia) != XML_SUCCESS 
+            || sscanf(inertia, "%lf %lf %lf", &ix, &iy, &iz) != 3)
+            I = V0();
+        else
+            I = Vector3(ix, iy, iz);
+        cgok = (item = element->FirstChildElement("cg")) != nullptr && !ParseTransform(item, cg);
+        
         //Origin    
         if(typeStr != "model")
         {
@@ -635,25 +649,26 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
             Transform phyOrigin;
             Scalar thickness;
         
-            if((item = element->FirstChildElement("physics")) == nullptr)
+            if((item = element->FirstChildElement("physical")) == nullptr)
                 return false;
-            if((item = item->FirstChildElement("mesh")) == nullptr)
+            XMLElement* item2;
+            if((item2 = item->FirstChildElement("mesh")) == nullptr)
                 return false;
-            if(item->QueryStringAttribute("filename", &phyMesh) != XML_SUCCESS)
+            if(item2->QueryStringAttribute("filename", &phyMesh) != XML_SUCCESS)
                 return false;
-            if(item->QueryAttribute("scale", &phyScale) != XML_SUCCESS)
+            if(item2->QueryAttribute("scale", &phyScale) != XML_SUCCESS)
                 phyScale = Scalar(1);
-            if((item = item->NextSiblingElement("thickness")) != nullptr)
+            if((item2 = item->FirstChildElement("thickness")) != nullptr)
             {
-                if(item->QueryAttribute("value", &thickness) != XML_SUCCESS)
+                if(item2->QueryAttribute("value", &thickness) != XML_SUCCESS)
                     thickness = Scalar(-1);
             }
             else
                 thickness = Scalar(-1);
-            if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, phyOrigin))
+            if((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, phyOrigin))
                 return false;
         
-            if((item = element->FirstChildElement("graphics")) != nullptr)
+            if((item = element->FirstChildElement("visual")) != nullptr)
             {
                 const char* graMesh = nullptr;
                 Scalar graScale;
@@ -668,15 +683,26 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
                 if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                     return false;
           
-                solid = new Polyhedron(std::string(name), std::string(graMesh), graScale, graOrigin, std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(std::string(name), GetDataPath() + std::string(graMesh), graScale, graOrigin, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
             }
             else
             {
-                solid = new Polyhedron(std::string(name), std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(std::string(name), GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
             }
         }
         else
             return false;
+         
+        //Modify automatically calculated dynamical properties
+        if(mass > Scalar(0) && btFuzzyZero(I.length2()) && !cgok)
+            solid->ScalePhysicalPropertiesToArbitraryMass(mass);
+        else if(mass > Scalar(0) || !btFuzzyZero(I.length2()) || cgok)
+        {
+            Scalar newMass = mass > Scalar(0) ? mass : solid->getMass();
+            Vector3 newI = !btFuzzyZero(I.length2()) ? I : solid->getInertia();
+            Transform newCg = cgok ? cg : solid->getCG2OTransform().inverse();  
+            solid->SetArbitraryPhysicalProperties(newMass, newI, newCg);
+        }
     }
  
     return true;
@@ -724,7 +750,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     {
         if(!ParseLink(item, link))
         {
-            cError("Scenario parser: link of robot '%s' not properly defined!");
+            cError("Scenario parser: link of robot '%s' not properly defined!", name);
             return false;
         }        
         links.push_back(link);
@@ -740,7 +766,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     {
         if(!ParseJoint(item, robot))
         {
-            cError("Scenario parser: joint of robot '%s' not properly defined!");
+            cError("Scenario parser: joint of robot '%s' not properly defined!", name);
             return false;
         }
         item = item->NextSiblingElement("joint");
@@ -752,7 +778,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     {
         if(!ParseSensor(item, robot))
         {
-            cError("Scenario parser: sensor of robot '%s' not properly defined!");
+            cError("Scenario parser: sensor of robot '%s' not properly defined!", name);
             return false;
         }
         item = item->NextSiblingElement("sensor");
@@ -764,7 +790,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     {
         if(!ParseActuator(item, robot))
         {
-            cError("Scenario parser: actuator of robot '%s' not properly defined!");
+            cError("Scenario parser: actuator of robot '%s' not properly defined!", name);
             return false;
         }
         item = item->NextSiblingElement("actuator");
@@ -1279,7 +1305,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizonal_fov", &hFov) != XML_SUCCESS)
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
             return false;
         
         ColorCamera* cam = new ColorCamera(std::string(name), resX, resY, hFov, 1, rate);
@@ -1348,7 +1374,6 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     //---- Common ----
     const char* name = nullptr;
     const char* type = nullptr;
-    Scalar rate;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
         return false;
@@ -1411,13 +1436,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
             Thruster* th = new Thruster(std::string(name), prop, diameter, cThrust, cTorque, maxRpm, rightHand);
             robot->AddLinkActuator(th, std::string(linkName), origin);
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
             Propeller* p = new Propeller(std::string(name), prop, diameter, cThrust, cTorque, maxRpm, rightHand);
             robot->AddLinkActuator(p, std::string(linkName), origin);
         }
@@ -1491,6 +1516,8 @@ bool ScenarioParser::ParseColor(XMLElement* element, Color& c)
         c = Color::HSV(c1, c2, c3);
     else if(element->QueryAttribute("temperature", &c1) == XML_SUCCESS)
         c = Color::BlackBody(c1);
+    else if(element->QueryAttribute("gray", &c1) == XML_SUCCESS)
+        c = Color::Gray(c1);
     else
         return false;
         

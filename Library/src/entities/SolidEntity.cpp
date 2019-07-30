@@ -33,6 +33,7 @@
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
+#include <iostream>
 
 namespace sf
 {
@@ -582,9 +583,22 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
             
         case FD_APPROX_AUTO:
         case FD_APPROX_ELLIPSOID:
+        {
             ComputeEllipsoidalApprox();
+            
+            //Check if added mass makes sense
+            if(fdApproxParams[0]/fdApproxParams[1] > Scalar(100) 
+            || fdApproxParams[0]/fdApproxParams[2] > Scalar(100) 
+            || fdApproxParams[1]/fdApproxParams[0] > Scalar(100)
+            || fdApproxParams[1]/fdApproxParams[2] > Scalar(100)
+            || fdApproxParams[2]/fdApproxParams[0] > Scalar(100)
+            || fdApproxParams[2]/fdApproxParams[1] > Scalar(100))
+                ComputeCylindricalApprox();
+        }
             break;
     }
+    
+    cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass(0,0), aMass(1,1), aMass(2,2), aMass(3,3), aMass(4,4), aMass(5,5));
 }
 
 void SolidEntity::ComputeSphericalApprox()
@@ -846,7 +860,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
 		 p(3), p(1), p(5), p(7),
 		 p(4), p(5), p(2), p(8),
 		 p(6), p(7), p(8), p(9);
-		 
+         		 
 	//Compute center
 	MatrixXEigen c(3, 1);
 	c = -E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
@@ -889,13 +903,13 @@ void SolidEntity::ComputeEllipsoidalApprox()
     //Compute added mass
     //Search for the longest semiaxis
     Scalar rho = Scalar(1000); //Fluid density
-    Scalar r12 = (r(1) + r(2))/Scalar(2);
-    Scalar m1 = LambKFactor(r(0), r12)*Scalar(4)/Scalar(3)*M_PI*rho*r(0)*r12*r12;
-    Scalar m2 = Scalar(4)/Scalar(3)*M_PI*rho*r(2)*r(2)*r(0);
-    Scalar m3 = Scalar(4)/Scalar(3)*M_PI*rho*r(1)*r(1)*r(0);
+    Scalar r12 = (ellipsoidR.getY() + ellipsoidR.getZ())/Scalar(2);
+    Scalar m1 = LambKFactor(ellipsoidR.getX(), r12)*Scalar(4)/Scalar(3)*M_PI*rho*ellipsoidR.getX()*r12*r12;
+    Scalar m2 = Scalar(4)/Scalar(3)*M_PI*rho*ellipsoidR.getZ()*ellipsoidR.getZ()*ellipsoidR.getX();
+    Scalar m3 = Scalar(4)/Scalar(3)*M_PI*rho*ellipsoidR.getY()*ellipsoidR.getY()*ellipsoidR.getX();
     Scalar I1 = Scalar(0); //THIS SHOULD BE > 0
-    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*r(1)*r(1)*btPow(r(0), Scalar(3));
-    Scalar I3 = Scalar(1)/Scalar(12)*M_PI*rho*r(2)*r(2)*btPow(r(0), Scalar(3));
+    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*ellipsoidR.getY()*ellipsoidR.getY()*btPow(ellipsoidR.getX(), Scalar(3));
+    Scalar I3 = Scalar(1)/Scalar(12)*M_PI*rho*ellipsoidR.getZ()*ellipsoidR.getZ()*btPow(ellipsoidR.getX(), Scalar(3));
     
     Vector3 M = ellipsoidTransform.getBasis() * Vector3(m1,m2,m3);
     Vector3 I = ellipsoidTransform.getBasis() * Vector3(I1,I2,I3);
@@ -920,8 +934,15 @@ void SolidEntity::ComputeEllipsoidalApprox()
 Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)
 {
     Scalar e = Scalar(1) - r2*r2/r1;
-    Scalar alpha0 = Scalar(2)*(Scalar(1)-e*e)/(e*e) * (Scalar(0.5)*btLog((Scalar(1)+e)/(Scalar(1)-e)) - e);
-    return alpha0/(Scalar(2)-alpha0);
+    Scalar elog = (Scalar(1)+e)/(Scalar(1)-e);
+    
+    if(elog > Scalar(0))
+    {
+        Scalar alpha0 = Scalar(2)*(Scalar(1)-e*e)/(e*e) * (Scalar(0.5)*btLog((Scalar(1)+e)/(Scalar(1)-e)) - e);
+        return alpha0/(Scalar(2)-alpha0);
+    }
+    else 
+        return Scalar(1);
 }
 
 void SolidEntity::BuildGraphicalObject()

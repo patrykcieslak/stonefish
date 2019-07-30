@@ -75,7 +75,7 @@ UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
 void UnderwaterTestManager::BuildScenario()
 {
     //sf::ScenarioParser parser(this);
-    //parser.Parse(sf::GetDataPath() + "simple.scn");
+    //parser.Parse("girona500auv.scn");
     
     ///////MATERIALS////////
     CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.5);
@@ -148,11 +148,15 @@ void UnderwaterTestManager::BuildScenario()
     vehicle->setDisplayInternalParts(false);
     
     //Manipulator bodies
-    sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", sf::GetDataPath() + "base_link_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
-    sf::Polyhedron* link1 = new sf::Polyhedron("ArmLink1", sf::GetDataPath() + "link1_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
-    sf::Polyhedron* link2 = new sf::Polyhedron("ArmLink2", sf::GetDataPath() + "link2_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
-    sf::Polyhedron* link3 = new sf::Polyhedron("ArmLink3", sf::GetDataPath() + "link3_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
-    sf::Polyhedron* link4 = new sf::Polyhedron("ArmLink4", sf::GetDataPath() + "link4ft_hydro.obj", sf::Scalar(1), sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "link4");
+    sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", sf::GetDataPath() + "base_link_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Polyhedron* link1 = new sf::Polyhedron("ArmLink1", sf::GetDataPath() + "link1_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Polyhedron* link2 = new sf::Polyhedron("ArmLink2", sf::GetDataPath() + "link2_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Polyhedron* link3 = new sf::Polyhedron("ArmLink3", sf::GetDataPath() + "link3_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Polyhedron* link4 = new sf::Polyhedron("ArmLink4", sf::GetDataPath() + "link4ft_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "link4");
+    sf::Polyhedron* ee = new sf::Polyhedron("EE", sf::GetDataPath() + "eeprobe_hydro.obj", sf::Scalar(1), sf::I4(), "Neutral", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Polyhedron* finger1 = new sf::Polyhedron("Finger1", sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Polyhedron* finger2 = new sf::Polyhedron("Finger2", sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    
     
     std::vector<sf::SolidEntity*> arm;
     arm.push_back(baseLink);
@@ -160,12 +164,17 @@ void UnderwaterTestManager::BuildScenario()
     arm.push_back(link2);
     arm.push_back(link3);
     arm.push_back(link4);
+    arm.push_back(ee);
+    arm.push_back(finger1);
+    arm.push_back(finger2);
     
     //Create manipulator servomotors
-    sf::ServoMotor* srv1 = new sf::ServoMotor("Servo1", 1.0, 1.0, 10.0);
-    sf::ServoMotor* srv2 = new sf::ServoMotor("Servo2", 1.0, 1.0, 10.0);
-    sf::ServoMotor* srv3 = new sf::ServoMotor("Servo3", 1.0, 1.0, 10.0);
-    sf::ServoMotor* srv4 = new sf::ServoMotor("Servo4", 1.0, 1.0, 10.0);
+    sf::ServoMotor* srv1 = new sf::ServoMotor("Servo1", 1.0, 1.0, 100.0);
+    sf::ServoMotor* srv2 = new sf::ServoMotor("Servo2", 1.0, 1.0, 100.0);
+    sf::ServoMotor* srv3 = new sf::ServoMotor("Servo3", 1.0, 1.0, 100.0);
+    sf::ServoMotor* srv4 = new sf::ServoMotor("Servo4", 1.0, 1.0, 100.0);
+    sf::ServoMotor* srv5 = new sf::ServoMotor("FServo1", 1.0, 1.0, 10.0);
+    sf::ServoMotor* srv6 = new sf::ServoMotor("FServo2", 1.0, 1.0, 10.0);
     
     //Create thrusters
     sf::Polyhedron* prop1 = new sf::Polyhedron("Propeller1", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "propeller");
@@ -202,10 +211,14 @@ void UnderwaterTestManager::BuildScenario()
     //Mechanical structure
     auv->DefineLinks(vehicle, arm);
     auv->DefineFixedJoint("VehicleToArm", "Vehicle", "ArmBaseLink", sf::Transform(sf::IQ(), sf::Vector3(0.74,0.0,0.0)));
-    auv->DefineRevoluteJoint("Joint1", "ArmBaseLink", "ArmLink1", sf::I4(), sf::Vector3(0.0, 0.0, 1.0), std::make_pair(1.0, -1.0));
-    auv->DefineRevoluteJoint("Joint2", "ArmLink1", "ArmLink2", sf::Transform(sf::IQ(), sf::Vector3(0.1065, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(1.0, -1.0));
-    auv->DefineRevoluteJoint("Joint3", "ArmLink2", "ArmLink3", sf::Transform(sf::IQ(), sf::Vector3(0.23332, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(1.0, -1.0));
-    auv->DefineRevoluteJoint("Joint4", "ArmLink3", "ArmLink4", sf::Transform(sf::IQ(), sf::Vector3(0.103, 0.0, 0.201)), sf::Vector3(0.0, 0.0, 1.0), std::make_pair(1.0, -1.0));
+    auv->DefineRevoluteJoint("Joint1", "ArmBaseLink", "ArmLink1", sf::I4(), sf::Vector3(0.0, 0.0, 1.0));//, std::make_pair(-1.0, 1.0));
+    auv->DefineRevoluteJoint("Joint2", "ArmLink1", "ArmLink2", sf::Transform(sf::IQ(), sf::Vector3(0.1065, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0));//, std::make_pair(-1.0, 1.0));
+    auv->DefineRevoluteJoint("Joint3", "ArmLink2", "ArmLink3", sf::Transform(sf::IQ(), sf::Vector3(0.23332, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0));//, std::make_pair(-1.0, 1.0));
+    auv->DefineRevoluteJoint("Joint4", "ArmLink3", "ArmLink4", sf::Transform(sf::IQ(), sf::Vector3(0.103, 0.0, 0.201)), sf::Vector3(0.0, 0.0, 1.0),  std::make_pair(-1.0, 1.0));
+    auv->DefineFixedJoint("Fix", "ArmLink4", "EE", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.05)));
+    auv->DefineRevoluteJoint("Joint5", "EE", "Finger1", sf::Transform(sf::IQ(), sf::Vector3(0.03,0,0.1)), sf::VY(), std::make_pair(0.0, 1.0));
+    auv->DefineRevoluteJoint("Joint6", "EE", "Finger2", sf::Transform(sf::Quaternion(M_PI, 0.0, 0.0), sf::Vector3(-0.03,0,0.1)), sf::VY(), std::make_pair(0.0, 1.0));
+    
     //auv->DefineRevoluteJoint("WingJoint", "Vehicle", "Wing1", sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,1.0)), sf::Vector3(0.0,1.0,0.0), std::make_pair(1.0, -1.0));
     
     //Joint motors
@@ -213,6 +226,8 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddJointActuator(srv2, "Joint2");
     auv->AddJointActuator(srv3, "Joint3");
     auv->AddJointActuator(srv4, "Joint4");
+    auv->AddJointActuator(srv5, "Joint5");
+    auv->AddJointActuator(srv6, "Joint6");
     
     //Thrusters
     auv->AddLinkActuator(thSway, "Vehicle", sf::Transform(sf::Quaternion(M_PI_2,M_PI,0), sf::Vector3(-0.0137, 0.0307, -0.38)));
@@ -229,6 +244,8 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     
-    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(0,0,-5)));
+    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(0,0,1.0)));
     
+    srv5->setDesiredVelocity(0.2);
+    srv6->setDesiredVelocity(0.2);
 }

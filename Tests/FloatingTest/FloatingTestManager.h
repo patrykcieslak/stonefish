@@ -34,7 +34,6 @@ public:
     FloatingTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario();
-    void SimulationStepCompleted();
 };
 
 #endif

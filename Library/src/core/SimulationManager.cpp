@@ -938,7 +938,7 @@ void SimulationManager::AdvanceSimulation()
     SDL_UnlockMutex(simInfoMutex);
 }
 
-void SimulationManager::SimulationStepCompleted()
+void SimulationManager::SimulationStepCompleted(Scalar timeStep)
 {
 #ifdef DEBUG
 	if(!SimulationApp::getApp()->hasGraphics())
@@ -1436,7 +1436,7 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     simManager->simulationTime += timeStep;
     
     //Optional method to update some post simulation data (like ROS messages...)
-    simManager->SimulationStepCompleted();
+    simManager->SimulationStepCompleted(timeStep);
 }
 
 }

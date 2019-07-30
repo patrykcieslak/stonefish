@@ -93,7 +93,10 @@ namespace sf
         bool LoadSDF(const std::string& path);
         
         //! A method called after the simulation step is completed. Useful to implement interaction with outside code.
-        virtual void SimulationStepCompleted();
+        /*!
+         \param timeStep amount of time that passed in the simulation world
+         */
+        virtual void SimulationStepCompleted(Scalar timeStep);
         
         //! A method solving the initial conditions problem.
         bool SolveICProblem();
