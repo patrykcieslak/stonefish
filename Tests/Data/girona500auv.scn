@@ -1,0 +1,163 @@
+<scenario>
+	<environment>
+		<ned latitude="40.0" longitude="3.0"/>
+		<sun azimuth="20.0" elevation="50.0"/>
+		<ocean enabled="true" waves="0.0"/>
+	</environment>
+
+	<materials>
+		<material name="Neutral" density="1000.0" restitution="0.5"/>
+		<material name="Rock" density="3000.0" restitution="0.8"/>
+		<material name="Fiberglass" density="1500.0" restitution="0.3"/>
+		<material name="Aluminium" density="2710.0" restitution="0.7"/>
+		<friction_table>
+			<friction material1="Neutral" material2="Neutral" static="0.5" dynamic="0.2"/>
+			<friction material1="Neutral" material2="Rock" static="0.2" dynamic="0.1"/>
+			<friction material1="Neutral" material2="Fiberglass" static="0.5" dynamic="0.2"/>
+			<friction material1="Neutral" material2="Aluminium" static="0.5" dynamic="0.2"/>
+			<friction material1="Rock" material2="Rock" static="0.9" dynamic="0.7"/>
+			<friction material1="Rock" material2="Fiberglass" static="0.6" dynamic="0.4"/>
+			<friction material1="Rock" material2="Aluminium" static="0.6" dynamic="0.3"/>
+			<friction material1="Fiberglass" material2="Fiberglass" static="0.5" dynamic="0.2"/>
+			<friction material1="Fiberglass" material2="Aluminium" static="0.5" dynamic="0.2"/>
+			<friction material1="Aluminium" material2="Aluminium" static="0.8" dynamic="0.5"/>
+		</friction_table>
+	</materials>
+
+	<looks>
+		<look name="yellow" rgb="1.0 0.9 0.0" roughness="0.3"/>
+		<look name="gray" gray="0.3" roughness="0.4" metalness="0.5"/>
+		<look name="seabed" rgb="0.7 0.7 0.5" roughness="0.9"/>
+		<look name="propeller" gray="1.0" roughness="0.3" texture="propeller_tex.png"/>
+		<look name="duct" gray="0.1" roughness="0.4" metalness="0.5"/>
+		<look name="dark" rgb="0.2 0.15 0.1" roughness="0.6" metalness="0.8"/>
+		<look name="pipe" rgb="1.0 0.2 0.0" roughness="0.2" metalness="0.3"/> 
+	</looks>
+
+	<static name="Bottom" type="plane">
+		<material name="Rock"/>
+		<look name="seabed"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 5.0"/>
+	</static>
+
+	<static name="HorizontalPipe" type="cylinder">
+		<dimensions radius="0.25" height="4.0"/>
+		<material name="Fiberglass"/>
+		<look name="pipe"/>
+		<world_transform rpy="1.57 0.0 0.0" xyz="0.0 0.0 3.5"/>
+	</static>
+
+	<robot name="GIRONA500" fixed="false" self_collisions="false">
+		<base_link name="Vehicle" type="compound" physics="submerged">
+			<!-- Hulls -->
+			<external_part name="HullBottom" type="model" physics="submerged" buoyant="false">
+				<physics>
+					<mesh filename="hull_hydro.obj" scale="1.0"/>
+					<thickness value="0.003"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Fiberglass"/>
+				<look name="yellow"/>
+				<compound_transform rpy="0.0 0.0 0.0" xyz="-0.049 0.0 0.361"/>
+			</external_part>
+
+			<external_part name="HullPort" type="model" physics="submerged" buoyant="false">
+				<physics>
+					<mesh filename="hull_hydro.obj" scale="1.0"/>
+					<thickness value="0.003"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Fiberglass"/>
+				<look name="yellow"/>
+				<compound_transform rpy="0.0 0.0 0.0" xyz="-0.049 -0.35 -0.339"/>
+			</external_part>
+
+			<external_part name="HullStarboard" type="model" physics="submerged" buoyant="false">
+				<physics>
+					<mesh filename="hull_hydro.obj" scale="1.0"/>
+					<thickness value="0.003"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Fiberglass"/>
+				<look name="yellow"/>
+				<compound_transform rpy="0.0 0.0 0.0" xyz="-0.049 0.35 -0.339"/>
+			</external_part>
+
+			<!-- V-bars -->
+			<external_part name="VBarStern" type="model" physics="submerged" buoyant="false">
+				<physics>
+					<mesh filename="vbar_hydro.obj" scale="1.0"/>
+					<thickness value="0.003"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Aluminium"/>
+				<look name="gray"/>
+				<compound_transform rpy="0.0 0.0 0.0" xyz="-0.299 0.0 0.211"/>
+			</external_part>
+
+			<external_part name="VBarBow" type="model" physics="submerged" buoyant="false">
+				<physics>
+					<mesh filename="vbar_hydro.obj" scale="1.0"/>
+					<thickness value="0.003"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Aluminium"/>
+				<look name="gray"/>
+				<compound_transform rpy="0.0 0.0 0.0" xyz="0.251 0.0 0.211"/>
+			</external_part>
+
+			<!-- Thruster ducts -->
+			<external_part name="DuctSway" type="model" physics="submerged" buoyant="true">
+				<physics>
+					<mesh filename="duct_hydro.obj" scale="1.0"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Neutral"/>
+				<look name="duct"/>
+				<compound_transform rpy="0.0 3.14 1.57" xyz="-0.0627 0.0307 -0.019"/>
+			</external_part>
+
+			<external_part name="DuctSurgePort" type="model" physics="submerged" buoyant="true">
+				<physics>
+					<mesh filename="duct_hydro.obj" scale="1.0"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Neutral"/>
+				<look name="duct"/>
+				<compound_transform rpy="3.14 0.0 0.0" xyz="-0.3297 -0.2587 -0.019"/>
+			</external_part>
+
+			<external_part name="DuctSurgeStarboard" type="model" physics="submerged" buoyant="true">
+				<physics>
+					<mesh filename="duct_hydro.obj" scale="1.0"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Neutral"/>
+				<look name="duct"/>
+				<compound_transform rpy="0.0 0.0 0.0" xyz="-0.3297 0.2587 -0.019"/>
+			</external_part>
+
+			<external_part name="DuctHeaveStern" type="model" physics="submerged" buoyant="true">
+				<physics>
+					<mesh filename="duct_hydro.obj" scale="1.0"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Neutral"/>
+				<look name="duct"/>
+				<compound_transform rpy="0.0 -1.57 1.57" xyz="-0.5827 0.0 -0.3137"/>
+			</external_part>
+
+			<external_part name="DuctHeaveBow" type="model" physics="submerged" buoyant="true">
+				<physics>
+					<mesh filename="duct_hydro.obj" scale="1.0"/>
+					<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+				</physics>
+				<material name="Neutral"/>
+				<look name="duct"/>
+				<compound_transform rpy="0.0 -1.57 -1.57" xyz="0.5347 0.0 -0.3137"/>
+			</external_part>
+
+		</base_link>
+		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+	</robot>
+</scenario>

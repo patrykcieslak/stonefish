@@ -27,7 +27,7 @@
       <Project Name="FloatingTest" ConfigName="Debug"/>
       <Project Name="FlyingTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="libStonefish" ConfigName="Release"/>
       <Project Name="FallingTest" ConfigName="Release"/>

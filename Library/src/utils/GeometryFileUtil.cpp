@@ -41,7 +41,7 @@ Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
     else if(extension == "obj" || extension == "OBJ")
         mesh = LoadOBJ(path, scale);
     else
-        cError("Unsupported model file type: %s!", extension.c_str());
+        cError("Unsupported geometry file type: %s!", extension.c_str());
     
     return mesh;
 }
@@ -49,9 +49,16 @@ Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
 Mesh* LoadOBJ(const std::string& path, GLfloat scale)
 {
     //Read OBJ data
-    cInfo("Loading model from: %s", path.c_str());
-    
     FILE* file = fopen(path.c_str(), "rb");
+    
+    if(file == NULL)
+    {
+        cCritical("Failed to open geometry file: %s", path.c_str());
+        return NULL;
+    }
+    
+    cInfo("Loading geometry from: %s", path.c_str());
+    
     char line[128];
     Mesh* mesh = new Mesh();
     std::vector<glm::vec3> normals;
@@ -214,9 +221,16 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
 Mesh* LoadSTL(const std::string& path, GLfloat scale)
 {
     //Read STL data
-    cInfo("Loading model from: %s", path.c_str());
+    FILE* file = fopen(path.c_str(), "rb");   
     
-    FILE* file = fopen(path.c_str(), "rb");
+    if(file == NULL)
+    {
+        cCritical("Failed to open geometry file: %s", path.c_str());
+        return NULL;
+    }
+    
+    cInfo("Loading geometry from: %s", path.c_str());
+    
     char line[128];
     char keyword[10];
     Mesh *mesh = new Mesh();

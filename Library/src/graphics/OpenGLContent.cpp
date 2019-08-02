@@ -1149,14 +1149,14 @@ GLuint OpenGLContent::LoadTexture(std::string filename)
     GLuint texture;
     
     // Allocate image; fail out on error
-    cInfo("Loading texture from: %s", filename.c_str());
-    
     unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, 3);
     if(dataBuffer == NULL)
     {
-        cError("Failed to load texture!");
+        cError("Failed to load texture from: %s", filename.c_str());
         return -1;
     }
+    
+    cInfo("Loading texture from: %s", filename.c_str());
     
     GLfloat maxAniso = 0.0f;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
@@ -2113,11 +2113,12 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
 Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
     Mesh* mesh = LoadGeometryFromFile(filename, scale);
-    if(mesh != NULL && smooth)
+    if(mesh == NULL)
+        abort();
+    if(smooth)
         SmoothNormals(mesh);
     return mesh;
 }
-    
 
 void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
 {

@@ -597,8 +597,9 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
         }
             break;
     }
-    
+//#ifdef DEBUG
     cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass(0,0), aMass(1,1), aMass(2,2), aMass(3,3), aMass(4,4), aMass(5,5));
+//#endif
 }
 
 void SolidEntity::ComputeSphericalApprox()

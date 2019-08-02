@@ -16,6 +16,12 @@
     <File Name="UnderwaterTestApp.h"/>
     <File Name="UnderwaterTestManager.h"/>
   </VirtualDirectory>
+  <Dependencies Name="Debug">
+    <Project Name="libStonefish"/>
+  </Dependencies>
+  <Dependencies Name="Release">
+    <Project Name="libStonefish"/>
+  </Dependencies>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-std=c++14" C_Options="" Assembler="">
@@ -93,7 +99,8 @@
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
       <Linker Options="" Required="yes">
-        <Library Value="Stonefish"/>
+        <LibraryPath Value="../../Library/build/Release"/>
+        <Library Value="Stonefish_release"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./build/Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
@@ -130,10 +137,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug">
-    <Project Name="libStonefish"/>
-  </Dependencies>
-  <Dependencies Name="Release">
-    <Project Name="libStonefish"/>
-  </Dependencies>
 </CodeLite_Project>
