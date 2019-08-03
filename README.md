@@ -28,7 +28,6 @@ There are two sources of documentation for the library: a [repository Wiki](http
         3. `sudo vim sdl2-config.cmake`
         4. Remove space after "-lSDL2".
         5. Save file.
-    * **Eigen3 library** (libeigen3-dev, version >= 3.3.0)
 
 2. Building
     1. Clone _stonefish_ repository.
