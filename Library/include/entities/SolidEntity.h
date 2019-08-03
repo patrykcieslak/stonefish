@@ -235,14 +235,6 @@ namespace sf
          */
         void SetContactProperties(bool soft, Scalar stiffness = Scalar(0), Scalar damping = Scalar(0));
         
-        //! A method used to set arbitrary hydrodynamic coefficients and CB of the body.
-        /*!
-         \param addedMass a complete added mass matrix (only diagonal element are used)
-         \param damping a matrix of damping factors
-         \param G2CB a transformation between the geometry frame and the CB frame
-         */
-        //void SetHydrodynamicProperties(const Matrix6Eigen& addedMass, const Matrix6Eigen& damping, const Transform& G2CB);
-        
         //! A method to set the body pose in the world frame.
         void setCGTransform(const Transform& trans);
         
@@ -311,10 +303,13 @@ namespace sf
         
         //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
         virtual Vector3 getAugmentedInertia() const;
-        
-        //! A method returning the hydrodynamic added mass of the body.
-        Matrix6Eigen getAddedMass() const;
-        
+      
+		//! A method returning the hydrodynamic added mass (diagonal elements).
+		Vector3 getAddedMass() const;
+	  
+		//! A method returning the hydrodynamic added inertia (diagonal elements).
+		Vector3 getAddedInertia() const;
+	  
         //! A method returning the material of the body.
         Material getMaterial() const;
         
@@ -416,7 +411,8 @@ namespace sf
         Transform T_O2C; //Transform between body origin and physics origin
         Transform T_O2H; //Transform between body origin and geometry approximation origin
         
-        Matrix6Eigen aMass; //Hydrodynamic added mass matrix
+        Vector3 aMass; //Hydrodynamic added mass
+		Vector3 aI; //Hydrodynamic added inertia
         GeometryApproxType fdApproxType;
         std::vector<Scalar> fdApproxParams;
         Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame

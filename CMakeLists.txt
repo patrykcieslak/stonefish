@@ -7,7 +7,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -DBT_EULER_DEFAULT_ZYX -DBT_USE_DO
 
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Bullet REQUIRED)
 
@@ -16,7 +15,6 @@ include_directories(
     ${OPENGL_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
-    ${Eigen3_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
 )
 

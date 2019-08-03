@@ -34,6 +34,7 @@
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
 #include <iostream>
+#include <algorithm>
 
 namespace sf
 {
@@ -65,7 +66,8 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     
     //Set properties
     mass = Scalar(0);
-    aMass = Matrix6Eigen::Zero();
+    aMass.setZero();
+	aI.setZero();
     Ipri.setZero();
     contactK = Scalar(-1);
     contactD = Scalar(0);
@@ -258,7 +260,7 @@ std::vector<Renderable> SolidEntity::Render()
         item.type = RenderableType::HYDRO_CS;
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         items.push_back(item);
-#ifdef DEBUG
+#ifndef DEBUG
         //Surface crossing debug
         submerged.model = glMatrixFromTransform(sf::I4());
         items.push_back(submerged);
@@ -522,15 +524,20 @@ Scalar SolidEntity::getMass() const
     return mass;
 }
 
-Matrix6Eigen SolidEntity::getAddedMass() const
+Vector3 SolidEntity::getAddedMass() const
 {
     return aMass;
+}
+
+Vector3 SolidEntity::getAddedInertia() const
+{
+	return aI;
 }
 
 Scalar SolidEntity::getAugmentedMass() const
 {
     if(phyType == BodyPhysicsType::SUBMERGED_BODY)
-        return mass + (aMass(0,0) + aMass(1,1) + aMass(2,2))/Scalar(3);
+        return mass + (aMass.x() + aMass.y() + aMass.z())/Scalar(3);
     else
         return mass;
 }
@@ -538,7 +545,7 @@ Scalar SolidEntity::getAugmentedMass() const
 Vector3 SolidEntity::getAugmentedInertia() const
 {
     if(phyType == BodyPhysicsType::SUBMERGED_BODY)
-        return Ipri + Vector3(aMass(3,3), aMass(4,4), aMass(5,5)); 
+        return Ipri + aI;
     else
         return Ipri;
 }
@@ -581,128 +588,55 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
             ComputeCylindricalApprox();
             break;
             
-        case FD_APPROX_AUTO:
+		case FD_APPROX_AUTO:
         case FD_APPROX_ELLIPSOID:
-        {
             ComputeEllipsoidalApprox();
-            
-            //Check if added mass makes sense
-            if(fdApproxParams[0]/fdApproxParams[1] > Scalar(100) 
-            || fdApproxParams[0]/fdApproxParams[2] > Scalar(100) 
-            || fdApproxParams[1]/fdApproxParams[0] > Scalar(100)
-            || fdApproxParams[1]/fdApproxParams[2] > Scalar(100)
-            || fdApproxParams[2]/fdApproxParams[0] > Scalar(100)
-            || fdApproxParams[2]/fdApproxParams[1] > Scalar(100))
-                ComputeCylindricalApprox();
-        }
             break;
     }
-//#ifdef DEBUG
-    cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass(0,0), aMass(1,1), aMass(2,2), aMass(3,3), aMass(4,4), aMass(5,5));
-//#endif
+#ifdef DEBUG
+    cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass.x(), aMass.y(), aMass.z(), aI.x(), aI.y(), aI.z());
+#endif
 }
 
 void SolidEntity::ComputeSphericalApprox()
 {
     //Get vertices of solid
 	std::vector<Vertex>* vertices = getMeshVertices();
-    if(vertices->size() < 9)
+    if(vertices->size() < 2)
     {
         delete vertices;
         return;
     }
-    
-	//Fill points matrix
-	MatrixXEigen P(vertices->size(), 3);
-	for(unsigned int i=0; i<vertices->size(); ++i)
+	
+	std::vector<Vector3> x(vertices->size());
+    for(size_t i=0; i<vertices->size(); ++i)
     {
-        Vector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
-        vpos = T_CG2C * vpos;
-		P.row(i) << vpos.x(), vpos.y(), vpos.z();
+        Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
+        x[i] = T_CG2C * vp - P_CB;
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
-    
-    //Ellipsoid fit
-    //Compute contraints -> axis aligned, three radii
-	MatrixXEigen A(P.rows(), 4);
-	A.col(0) = 2 * P.col(0);
-	A.col(1) = 2 * P.col(1);
-	A.col(2) = 2 * P.col(2);
-	A.col(3) = MatrixXEigen::Ones(P.rows(), 1);
-		
-	//Solve Least-Squares problem Ax=b
-	MatrixXEigen b(P.rows(), 1);
-	MatrixXEigen x(A.cols(), 1);	
-	//squared norm
-	b = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() + P.col(2).array() * P.col(2).array();
-	//solution
-	x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b); 
-    
-	//Find ellipsoid parameters
-	MatrixXEigen p(10, 1);
-    p(0) = -1.0;
-    p(1) = -1.0;
-    p(2) = -1.0;
-    p(3) = 0.0;
-    p(4) = 0.0;
-    p(5) = 0.0;
-    p(6) = x(0);
-    p(7) = x(1);
-    p(8) = x(2);
-    p(9) = x(3);
 	
-	MatrixXEigen E(4, 4);
-	E << p(0), p(3), p(4), p(6),
-		 p(3), p(1), p(5), p(7),
-		 p(4), p(5), p(2), p(8),
-		 p(6), p(7), p(8), p(9);
-		 
-	//Compute center
-	MatrixXEigen c(3, 1);
-	c = -E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
-	
-	//Compute transform matrix
-	Matrix4Eigen T;
-	T.setIdentity();
-	T.block(3, 0, 1, 3) = c.transpose();
-	T = T * E * T.transpose();
-	
-	//Compute axes
-	Eigen::SelfAdjointEigenSolver<MatrixXEigen> eigenSolver(T.block(0, 0, 3, 3)/(-T(3,3)));
-	if(eigenSolver.info() != Eigen::Success) 
+	Scalar r(0);
+	for(size_t i=0; i<x.size(); ++i)
 	{
-		cError("Error computing sphere for %s!", getName().c_str());
-		return;
+		Scalar rc = x[i].length2();
+		if(rc > r)
+			r = rc;
 	}
 	
-    //Ellipsoid radii
-	MatrixXEigen r(3, 1);
-	r = Eigen::sqrt(1.0/Eigen::abs(eigenSolver.eigenvalues().array()));
-    
-    fdApproxType = FD_APPROX_SPHERE;
+	fdApproxType = FD_APPROX_SPHERE;
     fdApproxParams.resize(1);
-    fdApproxParams[0] = r(0);
-    
-    //Added mass and inertia
-    Scalar rho = Scalar(1000);
-    Scalar m = Scalar(2)*M_PI*rho*r(0)*r(0)*r(0)/Scalar(3);
-    Scalar I = Scalar(0);
-    
-    aMass(0,0) = m;
-    aMass(1,1) = m;
-    aMass(2,2) = m;
-    aMass(3,3) = I;
-    aMass(4,4) = I;
-    aMass(5,5) = I;
+    fdApproxParams[0] = btSqrt(r);
+	
+	Scalar rho = Scalar(1000);
+    Scalar m = Scalar(2)*M_PI*rho*r*r*r/Scalar(3);
+    aMass = Vector3(m,m,m);
+	aI = V0();
     
     //Set transform with respect to geometry
     Transform sphereTransform = I4();
-    sphereTransform.setOrigin(Vector3(c(0), c(1), c(2)));
+    sphereTransform.setOrigin(P_CB);
     T_CG2H = sphereTransform;
-    
-#ifdef DEBUG
-    //std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
-#endif
 }
 
 void SolidEntity::ComputeCylindricalApprox()
@@ -715,32 +649,30 @@ void SolidEntity::ComputeCylindricalApprox()
         return;
     }
     
-    //Fill points matrix
-	MatrixXEigen P(vertices->size(), 3);
-	for(unsigned int i=0; i<vertices->size(); ++i)
+	std::vector<Vector3> x(vertices->size());
+    for(size_t i=0; i<vertices->size(); ++i)
     {
-        Vector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
-        vpos = T_CG2C * vpos;
-		P.row(i) << vpos.x(), vpos.y(), vpos.z();
+        Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
+        x[i] = T_CG2C * vp - P_CB;
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
-    
+	    
     //Radius
     Scalar r[3] = {0,0,0};
-    for(unsigned int i=0; i < P.rows(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
     {
         Scalar d;
         
         //X
-        d = sqrt(P(i,1)*P(i,1) + P(i,2)*P(i,2));
+        d = btSqrt(x[i].y()*x[i].y() + x[i].z()*x[i].z());
         r[0] = d > r[0] ? d : r[0];
         
         //Y
-        d = sqrt(P(i,0)*P(i,0) + P(i,2)*P(i,2));
+        d = btSqrt(x[i].x()*x[i].x() + x[i].z()*x[i].z());
         r[1] = d > r[1] ? d : r[1];
         
         //Z
-        d = sqrt(P(i,0)*P(i,0) + P(i,1)*P(i,1));
+        d = btSqrt(x[i].x()*x[i].x() + x[i].y()*x[i].y());
         r[2] = d > r[2] ? d : r[2];
     }
     
@@ -754,9 +686,9 @@ void SolidEntity::ComputeCylindricalApprox()
         axis = 2;
     
     Scalar l_2 = 0;
-    for(unsigned int i=0; i<P.rows(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
     {
-        Scalar d = fabs(P(i,axis));
+        Scalar d = btFabs(x[i].m_floats[axis]);
         l_2 = d > l_2 ? d : l_2;
     }
     
@@ -767,19 +699,19 @@ void SolidEntity::ComputeCylindricalApprox()
     {
         fdApproxParams[0] = r[0]; 
         fdApproxParams[1] = l_2*Scalar(2);
-        T_CG2H = Transform(Quaternion(0,M_PI_2,0), Vector3(0,0,0));
+        T_CG2H = Transform(Quaternion(0,M_PI_2,0), P_CB);
     }
     else if(axis == 1) //Y axis
     {
         fdApproxParams[0] = r[1];
         fdApproxParams[1] = l_2*Scalar(2);
-        T_CG2H = Transform(Quaternion(0,0,M_PI_2), Vector3(0,0,0));
+        T_CG2H = Transform(Quaternion(0,0,M_PI_2), P_CB);
     }
     else
     {
         fdApproxParams[0] = r[2];
         fdApproxParams[1] = l_2*Scalar(2);
-        T_CG2H = I4();
+        T_CG2H = Transform(IQ(), P_CB);
     }
     
     //Added mass and inertia
@@ -789,146 +721,228 @@ void SolidEntity::ComputeCylindricalApprox()
     Scalar I1 = Scalar(0);
     Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3));
     
-    Vector3 M = T_CG2H.getBasis() * Vector3(m2, m2, m1);
-    Vector3 I = T_CG2H.getBasis() * Vector3(I2, I2, I1);
-    
-    aMass(0,0) = btFabs(M.x());
-    aMass(1,1) = btFabs(M.y());
-    aMass(2,2) = btFabs(M.z());
-    aMass(3,3) = btFabs(I.x());
-    aMass(4,4) = btFabs(I.y());
-    aMass(5,5) = btFabs(I.z());
-    
-#ifdef DEBUG
-    //std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
-#endif
+    aMass = T_CG2H.getBasis() * Vector3(m2, m2, m1);
+    aI = T_CG2H.getBasis() * Vector3(I2, I2, I1);
 }
 
 void SolidEntity::ComputeEllipsoidalApprox()
 {
-    //Get vertices of solid
+#ifdef DEBUG
+	cInfo("---- Computing ellipsoidal approximation of geometry for %s ----", getName().c_str());
+#endif
+	//Get vertices of solid
 	std::vector<Vertex>* vertices = getMeshVertices();
-    if(vertices->size() < 9)
+	if(vertices->size() < 2)
     {
         delete vertices;
         return;
     }
-    
-	//Fill points matrix
-	MatrixXEigen P(vertices->size(), 3);
-	for(unsigned int i=0; i<vertices->size(); ++i)
+
+    std::vector<Vector3> x(vertices->size());
+    for(size_t i=0; i<vertices->size(); ++i)
     {
-        Vector3 vpos((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
-        vpos = T_CG2C * vpos;
-		P.row(i) << vpos.x(), vpos.y(), vpos.z();
+        Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
+        x[i] = T_CG2C * vp - P_CB;
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
-    
-    //Ellipsoid fit
-    //Compute contraints -> axis aligned, three radii
-	MatrixXEigen A(P.rows(), 6);
-	A.col(0) = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() - 2 * P.col(2).array() * P.col(2).array();
-	A.col(1) = P.col(0).array() * P.col(0).array() + P.col(2).array() * P.col(2).array() - 2 * P.col(1).array() * P.col(1).array();
-	A.col(2) = 2 * P.col(0);
-	A.col(3) = 2 * P.col(1);
-	A.col(4) = 2 * P.col(2);
-	A.col(5) = MatrixXEigen::Ones(P.rows(), 1);
+
+    //Initial volume approximation algorithm
+    std::vector<Vector3> x0;
+    for(size_t k=0; k<3; ++k) //3 dimensions
+    {
+        std::vector<Scalar> x_k(x.size());
+        for(size_t i=0; i<x.size(); ++i)
+            x_k[i] = x[i].m_floats[k];
+
+        auto result = std::minmax_element(x_k.begin(), x_k.end());
+        x0.push_back(x[result.first - x_k.begin()]);
+        x0.push_back(x[result.second - x_k.begin()]);
+    }
+
+    //Minimum-volume enclosing axis-aligned ellipsoid algorithm
+    std::vector<Scalar> sigma(x.size());
+    for(size_t i=0; i<x.size(); ++i)
+    {
+        std::vector<Vector3>::iterator it;
+        it = std::find(x0.begin(), x0.end(), x[i]);
+        if(it != x0.end())
+            sigma[i] = Scalar(1)/Scalar(x0.size());
+        else
+            sigma[i] = Scalar(0);
+    }
 	
-	//Solve Least-Squares problem Ax=b
-	MatrixXEigen b(P.rows(), 1);
-	MatrixXEigen x(A.cols(), 1);	
-	//squared norm
-	b = P.col(0).array() * P.col(0).array() + P.col(1).array() * P.col(1).array() + P.col(2).array() * P.col(2).array();
-	//solution
-	//x = (A.transpose() * A).ldlt().solve(A.transpose() * b); //normal equations
-	x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b); 
-    
-	//Find ellipsoid parameters
-	MatrixXEigen p(10, 1);
-    p(0) = x(0) + x(1) - 1.0;
-    p(1) = x(0) - 2*x(1) - 1.0;
-    p(2) = x(1) - 2*x(0) - 1.0;
-    p(3) = 0.0;
-    p(4) = 0.0;
-    p(5) = 0.0;
-    p(6) = x(2);
-    p(7) = x(3);
-    p(8) = x(4);
-    p(9) = x(5);
-	
-	MatrixXEigen E(4, 4);
-	E << p(0), p(3), p(4), p(6),
-		 p(3), p(1), p(5), p(7),
-		 p(4), p(5), p(2), p(8),
-		 p(6), p(7), p(8), p(9);
-         		 
-	//Compute center
-	MatrixXEigen c(3, 1);
-	c = -E.block(0, 0, 3, 3).jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(p.block(6, 0, 3, 1));
-	
-	//Compute transform matrix
-	Matrix4Eigen T;
-	T.setIdentity();
-	T.block(3, 0, 1, 3) = c.transpose();
-	T = T * E * T.transpose();
-	
-	//Compute axes
-	Eigen::SelfAdjointEigenSolver<MatrixXEigen> eigenSolver(T.block(0, 0, 3, 3)/(-T(3,3)));
-	if(eigenSolver.info() != Eigen::Success) 
+	auto u = [](auto j, auto& x, auto& sigma)
 	{
-		cError("Error computing ellipsoid for %s!", getName().c_str());
-		return;
+		auto sum = Scalar(0);
+		for(size_t i=0; i<x.size(); ++i)
+			sum += sigma[i] * x[i].m_floats[j] * x[i].m_floats[j]; 
+		return sum;
+	};
+	
+	auto v = [](auto j, auto& x, auto& sigma)
+	{
+		auto sum = Scalar(0);
+		for(size_t i=0; i<x.size(); ++i)
+			sum += sigma[i] * x[i].m_floats[j]; 
+		return sum;	
+	};
+	
+	auto lambda = [&x, &sigma, &u, &v](int i)
+	{
+		auto sum = Scalar(0);
+		for(int j=0; j<3; ++j)
+		{
+			auto vj = v(j, x, sigma);
+			auto uj = u(j, x, sigma);
+			sum += (x[i].m_floats[j] - vj)*(x[i].m_floats[j] - vj)/(3*(uj - vj*vj));
+		}
+		return sum;
+	};
+	
+	Scalar epsilon0 = btPow(Scalar(1) + Scalar(0.1), Scalar(2)/Scalar(3)) - Scalar(1);
+	
+	int k = 0;
+	Scalar epsilon;
+	
+	while(0) //DISABLED!!!!
+	{
+		std::vector<Scalar> xk(x.size());
+		for(size_t i=0; i<xk.size(); ++i) xk[i] = lambda(i);
+	
+		std::vector<Scalar>::iterator ik = std::max_element(xk.begin(), xk.end());
+		size_t max_id = ik - xk.begin();
+		Scalar epsilon_upper = xk[max_id] - Scalar(1);
+	
+		size_t min_id = 0;
+		Scalar min_v(10e9);
+		for(size_t i=0; i<xk.size(); ++i)
+		{
+			if(xk[i] < min_v && sigma[i] > Scalar(0))
+			{
+				min_v = xk[i];
+				min_id = i;
+			}
+		}
+		Scalar epsilon_lower = Scalar(1) - min_v;
+		
+		//Scalar epsilon = std::max(epsilon_upper, epsilon_lower);
+		epsilon = epsilon_upper;
+		
+		if(epsilon <= epsilon0)
+			break;
+			
+		++k;
+			
+		if(epsilon == epsilon_upper)
+		{
+#ifdef DEBUG
+			cInfo("Iteration: %d  Epsilon(+): %1.3lf", k, epsilon);
+#endif
+			x0.push_back(x[max_id]);
+			
+			Scalar sum = Scalar(0);
+			for(int j=0; j<3; ++j)
+			{
+				auto vj = v(j, x, sigma);
+				auto uj = u(j, x, sigma);
+				sum += btPow((x[max_id].m_floats[j] - vj)*(x[max_id].m_floats[j] - vj)/(3*(uj - vj*vj)), Scalar(2));
+			}
+			
+			Scalar beta = epsilon/(Scalar(1) + Scalar(3)*sum);
+			
+			std::vector<Scalar> e(sigma.size(), Scalar(0));
+			e[max_id] = Scalar(1);
+		
+			for(size_t i=0; i<sigma.size(); ++i)
+				sigma[i] = (Scalar(1) - beta)*sigma[i] + beta*e[i];  
+		}
+		else
+		{
+#ifdef DEBUG
+			cInfo("Iteration: %d  Epsilon(-): %1.3lf", k, epsilon);
+#endif
+			Scalar maxwj(-10e9);
+			for(int j=0; j<3; ++j)
+			{
+				auto vj = v(j, x, sigma);
+				auto uj = u(j, x, sigma);
+				Scalar wj = (x[min_id].m_floats[j] - vj)*(x[min_id].m_floats[j] - vj)/(3*(uj - vj*vj));
+				if(wj > maxwj)
+					maxwj = wj;
+			}
+			
+			Scalar beta = std::min(epsilon/(Scalar(1)-epsilon+Scalar(3)*maxwj), sigma[min_id]/(Scalar(1)-sigma[min_id])                    );
+			
+			/*if(beta == sigma[min_id]/(Scalar(1)-sigma[min_id]))
+			{
+				std::vector<Vector3>::iterator it;
+				it = std::find(x0.begin(), x0.end(), x[min_id]);
+				x0.erase(it);
+			}*/
+			
+			std::vector<Scalar> e(sigma.size(), Scalar(0));
+			e[min_id] = Scalar(1);
+		
+			for(size_t i=0; i<sigma.size(); ++i)
+				sigma[i] = (Scalar(1) + beta)*sigma[i] - beta*e[i];
+		}
 	}
 	
-    //Ellipsoid radii
-	MatrixXEigen r(3, 1);
-	r = Eigen::sqrt(1.0/Eigen::abs(eigenSolver.eigenvalues().array()));
-    Vector3 ellipsoidR(r(0), r(1), r(2));
-    
-    //Ellipsoid axes
-	MatrixXEigen axes(3, 3);
-	axes = eigenSolver.eigenvectors().array();
-    
-    //Reorder radii
-    Transform ellipsoidTransform;
-    ellipsoidTransform.setIdentity();
-    ellipsoidTransform.setBasis(Matrix3(axes(0,0), axes(0,1), axes(0,2), axes(1,0), axes(1,1), axes(1,2), axes(2,0), axes(2,1), axes(2,2)));
-    ellipsoidR = ellipsoidTransform.getBasis() * ellipsoidR;
-    
+	Vector3 c;
+	Vector3 d;
+	
+	if(k == 0)
+	{
+		c.setX((x0[0].x() + x0[1].x())/Scalar(2)); 
+		c.setY((x0[2].y() + x0[3].y())/Scalar(2)); 
+		c.setZ((x0[4].z() + x0[5].z())/Scalar(2));
+
+		d.setX(btFabs(x0[0].x()-c.x()));
+		d.setY(btFabs(x0[2].y()-c.y()));
+		d.setZ(btFabs(x0[4].z()-c.z()));
+	}
+	else
+	{
+		c.setX(v(0,x,sigma));
+		c.setY(v(1,x,sigma));
+		c.setZ(v(2,x,sigma));
+	
+		for(int j=0; j<3; ++j)
+		{
+			d.m_floats[j] = Scalar(1)/(Scalar(3)*(u(j,x,sigma) - v(j,x,sigma)*v(j,x,sigma)));
+			d.m_floats[j] = Scalar(1)/btSqrt(d.m_floats[j]);
+		}
+	}
+	
+#ifdef DEBUG
+	cInfo("Ellipsoid center: %1.3lf %1.3lf %1.3lf", c.x(), c.y(), c.z());
+	cInfo("Ellipsoid axis: %1.3lf %1.3lf %1.3lf", d.x(), d.y(), d.z());
+	cInfo("Ellipsoid core points: %d", x0.size());
+#endif
+	
     fdApproxType = FD_APPROX_ELLIPSOID;
     fdApproxParams.resize(3);
-    fdApproxParams[0] = ellipsoidR.getX();
-    fdApproxParams[1] = ellipsoidR.getY();
-    fdApproxParams[2] = ellipsoidR.getZ();
+    fdApproxParams[0] = d.getX();
+    fdApproxParams[1] = d.getY();
+    fdApproxParams[2] = d.getZ();
     
     //Compute added mass
-    //Search for the longest semiaxis
     Scalar rho = Scalar(1000); //Fluid density
-    Scalar r12 = (ellipsoidR.getY() + ellipsoidR.getZ())/Scalar(2);
-    Scalar m1 = LambKFactor(ellipsoidR.getX(), r12)*Scalar(4)/Scalar(3)*M_PI*rho*ellipsoidR.getX()*r12*r12;
-    Scalar m2 = Scalar(4)/Scalar(3)*M_PI*rho*ellipsoidR.getZ()*ellipsoidR.getZ()*ellipsoidR.getX();
-    Scalar m3 = Scalar(4)/Scalar(3)*M_PI*rho*ellipsoidR.getY()*ellipsoidR.getY()*ellipsoidR.getX();
-    Scalar I1 = Scalar(0); //THIS SHOULD BE > 0
-    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*ellipsoidR.getY()*ellipsoidR.getY()*btPow(ellipsoidR.getX(), Scalar(3));
-    Scalar I3 = Scalar(1)/Scalar(12)*M_PI*rho*ellipsoidR.getZ()*ellipsoidR.getZ()*btPow(ellipsoidR.getX(), Scalar(3));
+    Scalar r12 = (fdApproxParams[1] + fdApproxParams[2])/Scalar(2);
+    aMass.setX(LambKFactor(fdApproxParams[0], r12)*Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[0]*r12*r12);
+    aMass.setY(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[2]*fdApproxParams[2]*fdApproxParams[0]);
+    aMass.setZ(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*fdApproxParams[0]);
+    aI.setX(0); //THIS SHOULD BE > 0
+    aI.setY(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3)));
+    aI.setZ(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[2]*fdApproxParams[2]*btPow(fdApproxParams[0], Scalar(3)));
     
-    Vector3 M = ellipsoidTransform.getBasis() * Vector3(m1,m2,m3);
-    Vector3 I = ellipsoidTransform.getBasis() * Vector3(I1,I2,I3);
-    
-    aMass(0,0) = M.x();
-    aMass(1,1) = M.y();
-    aMass(2,2) = M.z();
-    aMass(3,3) = I.x();
-    aMass(4,4) = I.y();
-    aMass(5,5) = I.z();
-    
-    //Set transform with respect to geometry
-    ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
-    ellipsoidTransform.setOrigin(Vector3(c(0), c(1), c(2)));
+	//Set transform with respect to geometry
+    Transform ellipsoidTransform;
+	ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
+    ellipsoidTransform.setOrigin(P_CB);
     T_CG2H = ellipsoidTransform;
-    
 #ifdef DEBUG
-    //std::cout << getName() << " added mass: " << aMass << std::endl << std::endl;
+	cInfo("--------------------------------------------------------------------");
 #endif
 }
 

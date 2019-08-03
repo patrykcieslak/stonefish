@@ -76,7 +76,7 @@ void UnderwaterTestManager::BuildScenario()
 {
     //sf::ScenarioParser parser(this);
     //parser.Parse("girona500auv.scn");
-    
+	
     ///////MATERIALS////////
     CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.5);
     CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.3);
@@ -103,7 +103,7 @@ void UnderwaterTestManager::BuildScenario()
     getOcean()->SetupWaterProperties(0.2, 1.0);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
-    
+	
     //sf::Plane* plane = new sf::Plane("Bottom", 10000.0, "Rock", seabed);
     //AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
     
@@ -123,11 +123,11 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* ductHeaveS = new sf::Polyhedron("DuctHeaveStern", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "black");
     sf::Polyhedron* ductHeaveB = new sf::Polyhedron("DuctHeaveBow", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "black");
     //Internals
-    sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", 0.13, 0.6, sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", 0.13, 0.6, sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
     batteryCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(70));
-    sf::Cylinder* portCyl = new sf::Cylinder("PortCylinder", 0.13, 1.0, sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Cylinder* portCyl = new sf::Cylinder("PortCylinder", 0.13, 1.0, sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
     portCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(20));
-    sf::Cylinder* starboardCyl = new sf::Cylinder("StarboardCylinder", 0.13, 1.0, sf::Transform::getIdentity(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
+    sf::Cylinder* starboardCyl = new sf::Cylinder("StarboardCylinder", 0.13, 1.0, sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "manipulator");
     starboardCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(20));
     
     //Build whole body

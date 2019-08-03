@@ -63,7 +63,7 @@ bool Compound::isDisplayingInternalParts()
 
 Scalar Compound::getAugmentedMass() const
 {
-    return mass + aMass(0,0);
+    return mass + aMass.x();
 }
         
 Vector3 Compound::getAugmentedInertia() const
@@ -247,7 +247,9 @@ void Compound::RecalculatePhysicalProperties()
     P_CB = T_CG2O * compoundCB;
     
 	mass = compoundMass;
-    aMass(0,0) = aMass(1,1) = aMass(2,2) = compoundAugmentedMass - compoundMass;
+	aMass.setX(compoundAugmentedMass - compoundMass);
+	aMass.setY(compoundAugmentedMass - compoundMass);
+	aMass.setZ(compoundAugmentedMass - compoundMass);
 	volume = compoundVolume;
 	Ipri = compoundPriInertia;
 }

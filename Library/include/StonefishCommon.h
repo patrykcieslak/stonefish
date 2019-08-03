@@ -36,9 +36,6 @@
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 #include <LinearMath/btMatrixX.h>
 
-//Eigen matrix library
-#include <eigen3/Eigen/Dense>
-
 namespace sf
 {
     typedef btScalar Scalar;
@@ -48,19 +45,7 @@ namespace sf
     typedef btTransform Transform;
     typedef btVectorXu VectorX;
     typedef btMatrixXu MatrixX;
-    
-#ifdef BT_USE_DOUBLE_PRECISION
-    typedef Eigen::MatrixXd MatrixXEigen;
-    typedef Eigen::Matrix3d Matrix3Eigen;
-    typedef Eigen::Matrix4d Matrix4Eigen;
-    typedef Eigen::Matrix<double, 6, 6> Matrix6Eigen;
-#else
-    typedef Eigen::MatrixXf MatrixXEigen;
-    typedef Eigen::Matrix3f Matrix3Eigen;
-    typedef Eigen::Matrix4f Matrix4Eigen;
-    typedef Eigen::Matrix<float, 6, 6> Matrix6Eigen;
-#endif
-    
+        
     inline Transform I4() { return Transform::getIdentity(); }
     inline Matrix3 I3() { return Matrix3::getIdentity(); }
     inline Quaternion IQ() { return Quaternion::getIdentity(); }

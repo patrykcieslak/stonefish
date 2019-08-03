@@ -417,7 +417,11 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::stri
     
 	std::string basePath = GetShaderPath();
 	std::string sourcePath = basePath + filename;
+	
 	std::ifstream sourceFile(sourcePath);
+	if(!sourceFile) 
+		cCritical("Shader file not found: %s", sourcePath.c_str());
+	
 	std::string source = header + "\n";
 	std::string line;
 

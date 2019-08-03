@@ -25,6 +25,7 @@
 
 #include "utils/GeometryFileUtil.h"
 
+#include <algorithm>
 #include "core/Console.h"
 #include "utils/SystemUtil.hpp"
 
