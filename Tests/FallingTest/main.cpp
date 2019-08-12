@@ -47,7 +47,7 @@ int main(int argc, const char * argv[])
     
     FallingTestManager* simulationManager = new FallingTestManager(200.0);
     FallingTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
-    app.Run(false);
+    app.Run();
 	
     return 0;
 }

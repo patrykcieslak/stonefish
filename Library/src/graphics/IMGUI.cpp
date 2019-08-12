@@ -740,25 +740,25 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         }
         else //Autoscale
         {
-            minValue = 1000.f;
-            maxValue = -1000.f;
+            minValue = 10e12;
+            maxValue = -10e12;
         
-            for(unsigned int i = 0; i < data->size(); i++)
+            for(size_t i = 0; i < data->size(); ++i)
             {
-                for(unsigned int n = 0; n < dims.size(); n++)
+                for(size_t n = 0; n < dims.size(); ++n)
                 {
                     GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
                     if(value > maxValue)
                         maxValue = value;
-                    else if(value < minValue)
+                    if(value < minValue)
                         minValue = value;
                 }
             }
         
             if(maxValue == minValue) //secure division by zero
             {
-                maxValue += 1.f;
-                minValue -= 1.f;
+                maxValue += 0.1f * maxValue;
+                minValue -= 0.1f * minValue;
             }
         }
         
@@ -768,7 +768,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         GLfloat dt = pltW/(GLfloat)(data->size()-1);
     
         //drawing
-        for(size_t n = 0; n < dims.size(); n++)
+        for(size_t n = 0; n < dims.size(); ++n)
         {
             //set color
             glm::vec4 color;
@@ -807,7 +807,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         }
         
         //Grid
-		if(minValue < 0 && maxValue > 0)
+		if(minValue < 0.f && maxValue > 0.f)
 		{
 			GLfloat axisData[2][2] = {{pltX, pltY - pltH + pltMargin - minValue * dy},
 									  {pltX + pltW, pltY - pltH + pltMargin - minValue * dy}};
@@ -895,43 +895,43 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
             dataCount = dataY->size();
         
         //autoscale X axis
-        GLfloat minValueX = 1000;
-        GLfloat maxValueX = -1000;
+        GLfloat minValueX = 10e12;
+        GLfloat maxValueX = -10e12;
         
         for(size_t i = 0; i < dataCount; ++i)
         {
             GLfloat value = (GLfloat)((*dataX)[i].getValue(dimX));
             if(value > maxValueX)
                 maxValueX = value;
-            else if(value < minValueX)
+			if(value < minValueX)
                 minValueX = value;
         }
         
         if(maxValueX == minValueX) //secure division by zero
         {
-            maxValueX += 1.f;
-            minValueX -= 1.f;
+            maxValueX += 0.1f * maxValueX;
+            minValueX -= 0.1f * minValueX;
         }
         
         GLfloat dx = pltW/(maxValueX - minValueX);
         
         //autoscale Y axis
-        GLfloat minValueY = 1000;
-        GLfloat maxValueY = -1000;
+        GLfloat minValueY = 10e12;
+        GLfloat maxValueY = -10e12;
         
         for(size_t i = 0; i < dataCount; ++i)
         {
             GLfloat value = (GLfloat)((*dataY)[i].getValue(dimY));
             if(value > maxValueY)
                 maxValueY = value;
-            else if(value < minValueY)
+            if(value < minValueY)
                 minValueY = value;
         }
         
         if(maxValueY == minValueY) //secure division by zero
         {
-            maxValueY += 1.f;
-            minValueY -= 1.f;
+            maxValueY += 0.1f * maxValueY;
+            minValueY -= 0.1f * minValueY;
         }
         
         GLfloat dy = pltH/(maxValueY - minValueY);
@@ -965,13 +965,13 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
 		//draw axes
 		std::vector<glm::vec2> axes;
 		
-		if(minValueX * maxValueX < 0)
+		if(minValueX * maxValueX < 0.f)
 		{
 			axes.push_back(glm::vec2(pltX - minValueX * dx, pltY));
 			axes.push_back(glm::vec2(pltX - minValueX * dx, pltY - pltH));
 		}
 		
-		if(minValueY * maxValueY < 0)
+		if(minValueY * maxValueY < 0.f)
 		{
 			axes.push_back(glm::vec2(pltX, pltY - pltH - minValueY * dy));
 			axes.push_back(glm::vec2(pltX + pltW, pltY - pltH - minValueY * dy));

@@ -26,6 +26,7 @@
 #ifndef __Stonefish_OpenGLOcean__
 #define __Stonefish_OpenGLOcean__
 
+#include <map>
 #include <SDL2/SDL_mutex.h>
 #include "graphics/OpenGLDataStructs.h"
 
@@ -50,7 +51,9 @@ namespace sf
     };
     
     class GLSLShader;
-    
+	class OpenGLCamera;
+	class OpenGLOceanParticles;
+	
     //! A class implementing ocean simulation in OpenGL.
     class OpenGLOcean
     {
@@ -66,60 +69,55 @@ namespace sf
         ~OpenGLOcean();
         
         //! A method that simulates wave propagation.
-        void Simulate();
+		/*!
+		 \param dt time since last update
+		 */
+        void Simulate(GLfloat dt);
         
         //! A method that updates the wave mesh.
         /*!
-         \param eyePos the eye position of the active camera
-         \param view the view matrix of the active camera
-         \param projection the projection matrix of the active camera
+         \param cam a pointer to the active camera
          */
-        void UpdateSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection);
+        void UpdateSurface(OpenGLCamera* cam);
         
         //! A method that draws the surface of the ocean.
         /*!
-         \param eyePos the eye position of the active camera
-         \param view the view matrix of the active camera
-         \param projection the projection matrix of the active camera
-         \param viewport a pointer to viewport data
+         \param cam a pointer to the active camera
          */
-        void DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
+        void DrawSurface(OpenGLCamera* cam);
         
         //! A method that draws the surface of the ocean, seen from underwater.
         /*!
-         \param eyePos the eye position of the active camera
-         \param view the view matrix of the active camera
-         \param projection the projection matrix of the active camera
-         \param viewport a pointer to viewport data
+         \param cam a pointer to the active camera
          */
-        void DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport);
+        void DrawBacksurface(OpenGLCamera* cam);
         
         //! A method that draws the distant background of the ocean.
         /*!
-         \param eyePos the eye position of the active camera
-         \param view the view matrix of the active camera
-         \param projection the projection matrix of the active camera
+         \param cam a pointer to the active camera
          */
-        void DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 infProjection);
+        void DrawBackground(OpenGLCamera* cam);
         
         //! A method that generates the stencil mask.
         /*!
-         \param view the view matrix of the active camera
-         \param projection the projection matrix of the active camera
-         \param infProjection the infinite projection matrix of the active camera
+         \param cam a pointer to the active camera
          */
-        void DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::mat4 infProjection);
+        void DrawUnderwaterMask(OpenGLCamera* cam);
         
-        //! Method that draws the particles in the ocean and the blur (scattering).
+		//! A method that draws underwater particles.
+		/*!
+		 \param cam a pointer to the active camera
+		 \param dt time since last rendering
+		 */
+		void DrawParticles(OpenGLCamera* cam, GLfloat dt);
+		
+        //! A method that draws the underwater blur (scattering).
         /*!
-         \param eyePos the eye position of the active camera
-         \param view the view matrix of the active camera
-         \param projection the projection matrix of the active camera
+         \param cam a pointer to the active camera
          \param sceneTexture an id of the color texture
          \param linearDepthTex an id of the depth map texture
-         \param viewport a pointer to viewport data
          */
-        void DrawVolume(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint sceneTexture, GLuint linearDepthTex, GLint* viewport);
+        void DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint linearDepthTex);
         
         //! A method that draws the waterline when the camera is crossing the water surface.
         void DrawWaterline();
@@ -177,6 +175,7 @@ namespace sf
         float omega(float k);
         float sqr(float x);
         
+		std::map<OpenGLCamera*, OpenGLOceanParticles*> oceanParticles;
         std::vector<GLSLShader*> oceanShaders;
         GLuint oceanFBOs[3];
         GLuint oceanTextures[6];

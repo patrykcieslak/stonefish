@@ -57,7 +57,7 @@ void FallingTestManager::BuildScenario()
     SetMaterialsInteraction("Steel", "Steel", 0.5, 0.3);
     
 	///////LOOKS///////////
-    CreateLook("Grid", sf::Color::Gray(1.f), 0.8f, 0.f, 0.f, sf::GetShaderPath() + "grid.png");
+    CreateLook("Grid", sf::Color::Gray(1.f), 0.8f, 0.f, 0.0f, sf::GetShaderPath() + "grid.png");
     CreateLook("Green", sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
 	
     ////////OBJECTS

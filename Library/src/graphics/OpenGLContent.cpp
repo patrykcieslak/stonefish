@@ -76,7 +76,6 @@ OpenGLContent::OpenGLContent()
     materialShaders = std::vector<GLSLShader*>(0);
 
     //Initialize shaders and buffers
-    cInfo("Loading shaders...");
     glGenVertexArrays(1, &baseVertexArray);
     
     //Build quad texture VBO
@@ -998,13 +997,6 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
         Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
         shader->SetUniform("turbidity", ocean->getOpenGLOcean()->getTurbidity());
 		shader->SetUniform("lightAbsorption", ocean->getOpenGLOcean()->getLightAbsorption());
-        
-        /*if(SimulationApp::getApp()->getSimulationManager()->getOcean()->getForcefieldType() == ForcefieldType::FORCEFIELD_POOL)
-        {
-            Pool* pool = (Pool*)SimulationApp::getApp()->getSimulationManager()->getOcean();
-            shader->SetUniform("lightAbsorption", pool->getOpenGLPool()->getLightAbsorptionCoeff());
-			shader->SetUniform("turbidity", pool->getOpenGLPool()->getTurbidity());
-        }*/
 	}
 	
 	SetupLights(shader);

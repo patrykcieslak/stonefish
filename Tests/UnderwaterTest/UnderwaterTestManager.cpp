@@ -101,6 +101,7 @@ void UnderwaterTestManager::BuildScenario()
     //Create environment
 	EnableOcean(0.0);
     getOcean()->SetupWaterProperties(0.2, 1.0);
+	getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 0.5));
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
 	

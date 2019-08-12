@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOcean.h"
@@ -33,6 +33,8 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
+#include "graphics/OpenGLCamera.h"
+#include "graphics/OpenGLOceanParticles.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image_write.h"
@@ -468,6 +470,10 @@ OpenGLOcean::~OpenGLOcean()
     
     if(fftData != NULL)
         delete [] fftData;
+		
+	for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
+		delete it->second;
+	oceanParticles.clear();
 }
 
 void OpenGLOcean::setWaterType(GLfloat t)
@@ -553,7 +559,7 @@ glm::vec3 OpenGLOcean::getLightAbsorption()
     return lightAbsorption;
 }
 
-void OpenGLOcean::Simulate()
+void OpenGLOcean::Simulate(GLfloat dt)
 {	
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -653,22 +659,19 @@ void OpenGLOcean::Simulate()
         }
     }
     
-	//Advance time
-	int64_t now = GetTimeInMicroseconds();
-	params.t += (now-lastTime)/1000000.f;
-	lastTime = now;
+	params.t += dt;
 }
 
-void OpenGLOcean::UpdateSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection)
+void OpenGLOcean::UpdateSurface(OpenGLCamera* cam)
 {
     if(!waves)
         return;
-    
+		
     qt->Cut();
-    qt->Update(eyePos, projection * view);
+    qt->Update(cam->GetEyePosition(), cam->GetProjectionMatrix() * cam->GetViewMatrix());
 }
 
-void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::mat4 infProjection)
+void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
 {
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     
@@ -678,7 +681,7 @@ void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::
         glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
     
         oceanShaders[7]->Use();
-        oceanShaders[7]->SetUniform("MVP", projection * view);
+        oceanShaders[7]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[7]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[7]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[7]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
@@ -701,7 +704,7 @@ void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::
         
         //3. Draw box around whole ocean
         oceanShaders[8]->Use();
-        oceanShaders[8]->SetUniform("MVP", infProjection * view);
+        oceanShaders[8]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
         
         glBindVertexArray(vaoMask);
         glDrawArrays(GL_TRIANGLES, 0, 30);
@@ -715,7 +718,7 @@ void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::
     else
     {
         oceanShaders[7]->Use();
-        oceanShaders[7]->SetUniform("MVP", infProjection * view);
+        oceanShaders[7]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
         
         //1. Draw surface to depth buffer
         glBindVertexArray(vao);
@@ -736,7 +739,7 @@ void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::
         
         //3. Draw box around whole ocean
         oceanShaders[8]->Use();
-        oceanShaders[8]->SetUniform("MVP", infProjection * view);
+        oceanShaders[8]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
         
         glBindVertexArray(vaoMask);
         glDrawArrays(GL_TRIANGLES, 0, 30);
@@ -752,11 +755,11 @@ void OpenGLOcean::DrawUnderwaterMask(glm::mat4 view, glm::mat4 projection, glm::
     glClear(GL_DEPTH_BUFFER_BIT);
 }
     
-void OpenGLOcean::DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 infProjection)
+void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
 {
     oceanShaders[11]->Use();
-    oceanShaders[11]->SetUniform("MVP", infProjection * view);
-    oceanShaders[11]->SetUniform("eyePos", eyePos);
+    oceanShaders[11]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
+    oceanShaders[11]->SetUniform("eyePos", cam->GetEyePosition());
     oceanShaders[11]->SetUniform("lightAbsorption", lightAbsorption);
     oceanShaders[11]->SetUniform("turbidity", turbidity);
     SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[11]);
@@ -770,21 +773,23 @@ void OpenGLOcean::DrawBackground(glm::vec3 eyePos, glm::mat4 view, glm::mat4 inf
     glUseProgram(0);
 }
 
-void OpenGLOcean::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport)
+void OpenGLOcean::DrawSurface(OpenGLCamera* cam)
 {
+	GLint* viewport = cam->GetViewport();
+	
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
     glBindTexture(GL_TEXTURE_3D, oceanTextures[2]);
-    
+	
     if(waves)
     {
         //Draw mesh
         oceanShaders[0]->Use();
-        oceanShaders[0]->SetUniform("MVP", projection * view);
-        oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
+        oceanShaders[0]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[0]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-        oceanShaders[0]->SetUniform("eyePos", eyePos);
+        oceanShaders[0]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[0]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
@@ -842,10 +847,10 @@ void OpenGLOcean::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projec
     else //Flat surface (infinite plane)
     {
         oceanShaders[0]->Use();
-        oceanShaders[0]->SetUniform("MVP", projection * view);
-        oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
+        oceanShaders[0]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[0]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-        oceanShaders[0]->SetUniform("eyePos", eyePos);
+        oceanShaders[0]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
@@ -861,11 +866,15 @@ void OpenGLOcean::DrawSurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projec
     glBindTexture(GL_TEXTURE_3D, 0);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	
+	delete [] viewport;
 }
 
-void OpenGLOcean::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLint* viewport)
+void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
 {
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
+    GLint* viewport = cam->GetViewport();
+	
+	glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D_ARRAY, oceanTextures[4]);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
     glBindTexture(GL_TEXTURE_3D, oceanTextures[2]);
@@ -873,10 +882,10 @@ void OpenGLOcean::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pr
     if(waves)
     {
         oceanShaders[1]->Use();
-        oceanShaders[1]->SetUniform("MVP", projection * view);
-        oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
+        oceanShaders[1]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[1]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-        oceanShaders[1]->SetUniform("eyePos", eyePos);
+        oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
@@ -896,9 +905,9 @@ void OpenGLOcean::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pr
     else
     {
         oceanShaders[1]->Use();
-        oceanShaders[1]->SetUniform("MVP", projection * view);
-        oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
-        oceanShaders[1]->SetUniform("eyePos", eyePos);
+        oceanShaders[1]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
+        oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
         oceanShaders[1]->SetUniform("turbidity", turbidity);
@@ -918,10 +927,32 @@ void OpenGLOcean::DrawBacksurface(glm::vec3 eyePos, glm::mat4 view, glm::mat4 pr
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     glUseProgram(0);
+	
+	delete [] viewport;
 }
 
-void OpenGLOcean::DrawVolume(glm::vec3 eyePos, glm::mat4 view, glm::mat4 projection, GLuint sceneTexture, GLuint linearDepthTex, GLint* viewport)
+void OpenGLOcean::DrawParticles(OpenGLCamera* cam, GLfloat dt)
 {
+	OpenGLOceanParticles* particles;
+	
+	try
+	{
+		particles = oceanParticles.at(cam);
+	}
+	catch(const std::out_of_range& e)
+	{
+		particles = new OpenGLOceanParticles(50000, 5.0);
+		oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLOceanParticles*>(cam, particles));
+	}
+	
+	particles->Update(cam, SimulationApp::getApp()->getSimulationManager()->getOcean(), dt);
+	particles->Draw(cam);
+}
+
+void OpenGLOcean::DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint linearDepthTex)
+{
+	GLint* viewport = cam->GetViewport();
+	
 	glDisable(GL_DEPTH_TEST);
 	
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
@@ -944,6 +975,8 @@ void OpenGLOcean::DrawVolume(glm::vec3 eyePos, glm::mat4 view, glm::mat4 project
     glBindTexture(GL_TEXTURE_2D, 0);
 	
 	glEnable(GL_DEPTH_TEST);
+	
+	delete [] viewport;
 }
 
 void OpenGLOcean::ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect)

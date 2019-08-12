@@ -112,10 +112,10 @@ namespace sf
         //! A method returning the type of the view.
         ViewType getType();
         
-        //! A static method to load common data.
+        //! A static method to load shaders.
         static void Init();
         
-        //! A static method to destroy common data.
+        //! A static method to destroy shaders.
         static void Destroy();
         
     protected:

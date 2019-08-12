@@ -84,6 +84,8 @@
       <File Name="src/utils/ScientificFileUtil.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="src/graphics/OpenGLOceanParticles.cpp"/>
+      <File Name="src/graphics/OpenGLParticles.cpp"/>
       <File Name="src/graphics/OpenGLDataStructs.cpp"/>
       <File Name="src/graphics/OpenGLConsole.cpp"/>
       <File Name="src/graphics/OpenGLCamera.cpp"/>
@@ -188,6 +190,8 @@
       <File Name="include/entities/Entity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="include/graphics/OpenGLOceanParticles.h"/>
+      <File Name="include/graphics/OpenGLParticles.h"/>
       <File Name="include/graphics/OpenGLDataStructs.h"/>
       <File Name="include/graphics/OpenGLConsole.h"/>
       <File Name="include/graphics/OpenGLView.h"/>
@@ -293,6 +297,7 @@
       <File Name="shaders/printer.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="postprocessing">
+      <File Name="shaders/ssr.frag"/>
       <File Name="shaders/manualTonemapping.frag"/>
       <File Name="shaders/depthVisualize.frag"/>
       <File Name="shaders/lightMeter.frag"/>
@@ -312,6 +317,8 @@
       <File Name="shaders/depthAwareBlur2.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
+      <File Name="shaders/billboard.frag"/>
+      <File Name="shaders/billboard.vert"/>
       <File Name="shaders/quadTree.tesc"/>
       <File Name="shaders/flat.frag"/>
       <File Name="shaders/flat.vert"/>

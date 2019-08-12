@@ -216,10 +216,10 @@ namespace sf
         //! A method informing if view is using ambient occlusion.
         bool hasAO();
         
-        //! A static method to load common data.
+        //! A static method to load shaders.
         static void Init();
         
-        //! A static method to destroy common data.
+        //! A static method to destroy shaders.
         static void Destroy();
         
     protected:

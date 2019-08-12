@@ -98,6 +98,7 @@ namespace sf
         GLuint screenFBO;
         GLuint screenTex;
         OpenGLContent* content;
+		int64_t lastTime;
     };
 }
 
