@@ -254,7 +254,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     }
     
     Precompute();
-    atmBottomRadius = 6360000.f;
+    atmBottomRadius = -6360000.f;
 
     //Set shadow quality
     switch(shadow)
@@ -396,10 +396,10 @@ void OpenGLAtmosphere::SetSunPosition(float azimuthDeg, float elevationDeg)
     //Calculate sun dir vector
     float sunAzimuthAngle = -sunAzimuth/180.f*M_PI + M_PI;
     float sunZenithAngle =  (90.f - sunElevation)/180.f*M_PI;
-    sunDirection = glm::normalize(glm::vec3(cos(sunAzimuthAngle) * sin(sunZenithAngle), sin(sunAzimuthAngle) * sin(sunZenithAngle), cos(sunZenithAngle)));
-
+    sunDirection = glm::normalize(glm::rotate(glm::vec3(cos(sunAzimuthAngle) * sin(sunZenithAngle), sin(sunAzimuthAngle) * sin(sunZenithAngle), cos(sunZenithAngle)), (float)M_PI, glm::vec3(0,1.f,0)));
+	
     //Build sun modelview matrix
-    glm::vec3 up(0,0,1.f);
+    glm::vec3 up(0,0,-1.f);
     glm::vec3 right = glm::cross(sunDirection, up);
     right = glm::normalize(right);
     up = glm::normalize(glm::cross(right, sunDirection));
@@ -649,7 +649,7 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
         lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
     }
 
-    shader->SetUniform("planetRadius", atmBottomRadius+1.f);
+    shader->SetUniform("planetRadius", atmBottomRadius-1.f);
     shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
     shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
@@ -682,7 +682,7 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
 
 void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
 {
-    shader->SetUniform("planetRadius", atmBottomRadius+1.f);
+    shader->SetUniform("planetRadius", atmBottomRadius-1.f);
     shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);

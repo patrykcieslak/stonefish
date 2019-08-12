@@ -117,7 +117,7 @@ void main()
 	vec3 pos = fragPos.xyz/fragPos.w;
 	vec3 toEye = normalize(eyePos - pos);
 	vec3 center = vec3(0, 0, -planetRadius);
-	vec3 P = -center;
+	vec3 P = pos-center;
     float d = length(eyePos - pos);
 	
 	//Wave slope (layers 1,2)
@@ -128,7 +128,7 @@ void main()
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 2.0)).zw;
 		
 	//Normals
-	vec3 normal = normalize(vec3(-slopes.x, -slopes.y, -1.0));
+	vec3 normal = normalize(vec3(slopes.x, slopes.y, 1.0));
     
     //
 	float Jxx = dFdx(waveCoord.x);
@@ -154,7 +154,7 @@ void main()
     //Sky
     vec3 Lsky = vec3(0.);
 	vec3 ray = refract(-toEye, normal, w2a);
-	if(ray.z > 0.0)
+	if(ray.z < 0.0)
 	{
 		vec3 trans;
 		Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
@@ -174,8 +174,8 @@ void main()
     
     //Inscattering
     vec3 skyIlluminance;
-    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 inFactor = exp(-lightAbsorption * max(-eyePos.z,0.0)) * (exp((-toEye.z - 1.0)* c * d) - 1.0)/((-toEye.z - 1.0) * c) * b;
+    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,-1.0), sunDirection, skyIlluminance);
+    vec3 inFactor = exp(-lightAbsorption * max(eyePos.z,0.0)) * (exp((toEye.z - 1.0)* c * d) - 1.0)/((toEye.z - 1.0) * c) * b;
     fragColor += (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
     
 	//Absorption

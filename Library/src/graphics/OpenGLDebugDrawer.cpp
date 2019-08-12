@@ -52,8 +52,6 @@ void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const V
 {
     glm::vec3 p1 = glm::vec3(from.getX(), from.getY(), from.getZ());
     glm::vec3 p2 = glm::vec3(to.getX(), to.getY(), to.getZ());
-    p1 = glm::vec3(glm::rotate((GLfloat)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(p1, 1.f));
-    p2 = glm::vec3(glm::rotate((GLfloat)M_PI, glm::vec3(0,1.f,0)) * glm::vec4(p2, 1.f));
     lineVertices.push_back(p1);
     lineVertices.push_back(p2);
 }

@@ -157,9 +157,14 @@ OpenGLContent* OpenGLPipeline::getContent()
     return content;
 }
 
-void OpenGLPipeline::AddToDrawingQueue(Renderable r)
+void OpenGLPipeline::AddToDrawingQueue(const Renderable& r)
 {
 	drawingQueue.push_back(r);
+}
+
+void OpenGLPipeline::AddToDrawingQueue(const std::vector<Renderable>& r)
+{
+	drawingQueue.insert(drawingQueue.end(), r.begin(), r.end());
 }
 
 bool OpenGLPipeline::isDrawingQueueEmpty()
@@ -211,7 +216,7 @@ void OpenGLPipeline::DrawHelpers()
     //Coordinate systems
     if(hSettings.showCoordSys)
     {
-        content->DrawCoordSystem(glm::rotate((float)M_PI, glm::vec3(0,1.f,0)), 1.f);
+        content->DrawCoordSystem(glm::mat4(), 1.f);
         
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
@@ -416,10 +421,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
-                        camera->DrawAO(1.f);
+                        camera->DrawAO(0.5f);
             
                     //Render sky (at the end to take profit of early bailing)
-                    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
+				    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
 					
                     //Go to postprocessing stage
                     camera->EnterPostprocessing();
@@ -472,7 +477,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
-                        camera->DrawAO(1.f);
+                        camera->DrawAO(0.5f);
                     
                     //Render sky (left for the end to only fill empty spaces)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);

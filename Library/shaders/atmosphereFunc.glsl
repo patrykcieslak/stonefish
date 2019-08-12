@@ -500,7 +500,7 @@ RadianceDensitySpectrum ComputeScatteringDensity(const in AtmosphereParameters a
 	//assert(scattering_order >= 2);
 	// Compute unit direction vectors for the zenith, the view direction omega and and the sun direction omega_s, such that the cosine of the view-zenith
 	// angle is mu, the cosine of the sun-zenith angle is mu_s, and the cosine of the view-sun angle is nu. The goal is to simplify computations below.
-	vec3 zenith_direction = vec3(0.0, 0.0, 1.0);
+	vec3 zenith_direction = vec3(0.0, 0.0, -1.0);
 	vec3 omega = vec3(sqrt(1.0 - mu * mu), 0.0, mu);
 	Number sun_dir_x = omega.x == 0.0 ? 0.0 : (nu - mu * mu_s) / omega.x;
 	Number sun_dir_y = sqrt(max(1.0 - sun_dir_x * sun_dir_x - mu_s * mu_s, 0.0));

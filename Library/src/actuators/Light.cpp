@@ -89,15 +89,13 @@ void Light::Update(Scalar dt)
 void Light::UpdateTransform()
 {
     Transform lightTransform = getActuatorFrame();
-    Matrix3 rotation;
-    rotation.setEulerYPR(0,M_PI,0);
-    Vector3 pos = rotation * lightTransform.getOrigin();
+    Vector3 pos = lightTransform.getOrigin();
     glm::vec3 glPos((GLfloat)pos.x(), (GLfloat)pos.y(), (GLfloat)pos.z());
     glLight->UpdatePosition(glPos);
     
     if(coneAngle > Scalar(0))
     {
-        Vector3 dir = rotation * lightTransform.getBasis().getColumn(2);
+        Vector3 dir = lightTransform.getBasis().getColumn(2);
         glm::vec3 glDir((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
         ((OpenGLSpotLight*)glLight)->UpdateDirection(glDir);
     }

@@ -237,13 +237,13 @@ void QuadTreeNode::Grow(glm::vec3 eye, glm::mat4 VP)
             //Adjust edge factors
             glm::vec3 neighborOrigin;
             neighborOrigin = origin + glm::vec3(0.f, size, 0.f);
-            if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.x = 2.f;
-            neighborOrigin = origin + glm::vec3(-size, 0.f, 0.f);
-            if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.y = 2.f;
-            neighborOrigin = origin + glm::vec3(0.f, -size, 0.f);
-            if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.z = 2.f;
-            neighborOrigin = origin + glm::vec3(size, 0.f, 0.f);
             if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.w = 2.f;
+            neighborOrigin = origin + glm::vec3(-size, 0.f, 0.f);
+            if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.z = 2.f;
+            neighborOrigin = origin + glm::vec3(0.f, -size, 0.f);
+            if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.y = 2.f;
+            neighborOrigin = origin + glm::vec3(size, 0.f, 0.f);
+            if(NeedsSubdivision(eye, neighborOrigin)) edgeFactors.x = 2.f;
             
             //Add to list of rendered quads
             tree->leafs.push_back(this);
@@ -285,10 +285,10 @@ void QuadTree::Update(glm::vec3 eye, glm::mat4 VP)
     {
         glm::vec3 origin = leafs[i]->origin;
         GLfloat half = leafs[i]->size/2.f;
-        data.push_back(origin + glm::vec3(half, half, 0.f));
+		data.push_back(origin + glm::vec3(half, half, 0.f));
+		data.push_back(origin + glm::vec3(half, -half, 0.f));
+		data.push_back(origin + glm::vec3(-half, -half, 0.f));
         data.push_back(origin + glm::vec3(-half, half, 0.f));
-        data.push_back(origin + glm::vec3(-half, -half, 0.f));
-        data.push_back(origin + glm::vec3(half, -half, 0.f));
         data2.push_back(leafs[i]->edgeFactors);
     }
     

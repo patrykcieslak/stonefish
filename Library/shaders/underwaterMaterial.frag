@@ -417,8 +417,8 @@ void main()
     vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
     
 	//Water is assumed to be a flat plane so... 
-	float depth = -min(0.0,fragPos.z);
-    vec3 toSky = normalize(refract(N, vec3(0.0,0.0,-1.0), water2Air));
+	float depth = max(0.0, fragPos.z);
+    vec3 toSky = normalize(refract(N, vec3(0.0,0.0,1.0), water2Air));
 	vec3 skyIlluminance;
 	vec3 sunIlluminance;
     
@@ -434,8 +434,8 @@ void main()
     fragColor *= exp(-c * depth);
         
     //2. Inscatter
-    sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,1.0), sunDirection, skyIlluminance);
-    vec3 inFactor = exp(-c * depth) * (N.z + 1.0)/2.0 * b;
+    sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,-1.0), sunDirection, skyIlluminance);
+    vec3 inFactor = exp(-c * depth) * (-N.z + 1.0)/2.0 * b;
     fragColor += albedo * (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.1;
     
     //vec3 inFactor = (exp(-lightAbsorption * (depth - lSurface * N.z + lSurface)) - exp(-lightAbsorption * depth))/(lightAbsorption * (N.z-1.0));
@@ -454,8 +454,8 @@ void main()
     //Absorption
     float d = 0.0;
     
-    if(eyePos.z > 0.0 && toEye.z > 0.0)
-        d = depth/toEye.z;
+    if(eyePos.z < 0.0 && toEye.z < 0.0)
+        d = depth/-toEye.z;
     else
         d = length(eyePos - fragPos);
     
@@ -463,7 +463,7 @@ void main()
     fragColor *= aFactor;
      
     //Inscattering
-    inFactor = exp(-lightAbsorption * max(-eyePos.z,0.0)) * (exp((-toEye.z - 1.0)* c * d) - 1.0)/((-toEye.z - 1.0) * c) * b;
+    inFactor = exp(-lightAbsorption * max(eyePos.z,0.0)) * (exp((toEye.z - 1.0)* c * d) - 1.0)/((toEye.z - 1.0) * c) * b;
     fragColor += (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
  
     //Normal

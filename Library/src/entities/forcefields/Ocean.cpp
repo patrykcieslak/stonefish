@@ -37,7 +37,7 @@ namespace sf
 Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
 {
 	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    oceanState = waves > Scalar(1.0) ? Scalar(1.0) : waves;
+    oceanState = waves > Scalar(2.0) ? Scalar(2.0) : waves;
      
 	Scalar size(100000);
 	depth = size;

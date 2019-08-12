@@ -121,7 +121,7 @@ void main()
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 2.0)).zw;
 	
 	//Normals
-	vec3 normal = normalize(vec3(-slopes.x, -slopes.y, 1.0));
+	vec3 normal = normalize(vec3(-slopes.x, -slopes.y, -1.0));
 	if(dot(toEye, normal) < 0.0)
 		normal = normalize(reflect(normal, toEye)); //Reflect backfacing normals
 	
@@ -156,7 +156,7 @@ void main()
     outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
 	//Sky and scene reflection
-	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, 3.0)));
+	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, -3.0)));
 	vec3 trans;
 	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
     outColor += Lsky/whitePoint/MEAN_SUN_ILLUMINANCE; //fresnel *

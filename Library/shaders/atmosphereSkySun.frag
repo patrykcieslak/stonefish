@@ -60,7 +60,7 @@ uniform float cosSunSize;
 
 out vec3 fragColor;
 
-const vec3 center = vec3(0, 0, -6360000.0);
+const vec3 center = vec3(0, 0, 6360000.0);
 const float kGroundAlbedo = 0.5;
 const float PI = 3.14159265358979323846;
 

@@ -60,8 +60,14 @@ namespace sf
         /*!
          \param r a renderable object
          */
-        void AddToDrawingQueue(Renderable r);
-        
+        void AddToDrawingQueue(const Renderable& r);
+		
+		//! A method to add multiple renderable objects to the rendering queue.
+		/*!
+		 \param r a vector of renderable objects
+		 */
+        void AddToDrawingQueue(const std::vector<Renderable>& r);
+		
         //! A method that draws all normal objects.
         void DrawObjects();
         

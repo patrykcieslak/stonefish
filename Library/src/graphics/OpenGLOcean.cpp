@@ -354,17 +354,17 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     
     //Surface (infinite plane)
     GLfloat surfData[12][4] = {{0.f, 0.f,  0.f, 1.f},
+        {0.f, 1.f,  0.f, 0.f},
         {1.f, 0.f,  0.f, 0.f},
-        {0.f, 1.f,  0.f, 0.f},
         {0.f, 0.f,  0.f, 1.f},
-        {0.f, 1.f,  0.f, 0.f},
-        {-1.f, 0.f, 0.f, 0.f},
-        {0.f, 0.f,  0.f, 1.f},
-        {-1.f, 0.f, 0.f, 0.f},
-        {0.f, -1.f, 0.f, 0.f},
+        {-1.f, 0.f,  0.f, 0.f},
+        {0.f, 1.f, 0.f, 0.f},
         {0.f, 0.f,  0.f, 1.f},
         {0.f, -1.f, 0.f, 0.f},
-        {1.f, 0.f,  0.f, 0.f}};
+        {-1.f, 0.f, 0.f, 0.f},
+        {0.f, 0.f,  0.f, 1.f},
+        {1.f, 0.f, 0.f, 0.f},
+        {0.f, -1.f,  0.f, 0.f}};
     
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -377,51 +377,50 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     glBindVertexArray(0);
     
     //Box around ocean (background)
-    glm::vec4 v1(-1.f, -1.f, -1.f, 0.f);
-    glm::vec4 v2(-1.f,  1.f, -1.f, 0.f);
-    glm::vec4 v3(1.f,   1.f, -1.f, 0.f);
-    glm::vec4 v4(1.f,  -1.f, -1.f, 0.f);
+    glm::vec4 v1(-1.f, -1.f, 1.f, 0.f);
+    glm::vec4 v2(-1.f,  1.f, 1.f, 0.f);
+    glm::vec4 v3(1.f,   1.f, 1.f, 0.f);
+    glm::vec4 v4(1.f,  -1.f, 1.f, 0.f);
     glm::vec4 v5(1.f,   1.f,  0.f, 0.f);
     glm::vec4 v6(1.f,  -1.f,  0.f, 0.f);
     glm::vec4 v7(-1.f, -1.f,  0.f, 0.f);
     glm::vec4 v8(-1.f,  1.f,  0.f, 0.f);
     std::vector<glm::vec4> boxData;
     
-    //Z -
-    boxData.push_back(v1);
-    boxData.push_back(v2);
-    boxData.push_back(v3);
     boxData.push_back(v1);
     boxData.push_back(v3);
+	boxData.push_back(v2);
+    boxData.push_back(v1);
     boxData.push_back(v4);
+	boxData.push_back(v3);
     
+	boxData.push_back(v5);
+	boxData.push_back(v3);
     boxData.push_back(v4);
-    boxData.push_back(v3);
-    boxData.push_back(v5);
+	boxData.push_back(v5);
     boxData.push_back(v4);
-    boxData.push_back(v5);
     boxData.push_back(v6);
     
     boxData.push_back(v7);
-    boxData.push_back(v8);
-    boxData.push_back(v2);
-    boxData.push_back(v7);
-    boxData.push_back(v2);
-    boxData.push_back(v1);
-    
-    boxData.push_back(v5);
-    boxData.push_back(v3);
-    boxData.push_back(v2);
-    boxData.push_back(v5);
     boxData.push_back(v2);
     boxData.push_back(v8);
-    
-    boxData.push_back(v4);
-    boxData.push_back(v6);
-    boxData.push_back(v7);
-    boxData.push_back(v4);
-    boxData.push_back(v7);
+	boxData.push_back(v7);
     boxData.push_back(v1);
+    boxData.push_back(v2);
+    
+    boxData.push_back(v5);
+    boxData.push_back(v2);
+	boxData.push_back(v3);
+    boxData.push_back(v5);
+    boxData.push_back(v8);
+    boxData.push_back(v2);
+	
+    boxData.push_back(v4);
+    boxData.push_back(v7);
+	boxData.push_back(v6);
+    boxData.push_back(v4);
+    boxData.push_back(v1);
+    boxData.push_back(v7);
     
     glGenVertexArrays(1, &vaoMask);
     glGenBuffers(1, &vboMask);
@@ -543,11 +542,11 @@ GLfloat OpenGLOcean::getWaveHeight(GLfloat x, GLfloat y)
     {
         //Z,X are reversed because the coordinate system used to draw ocean has Z axis pointing up!
         GLfloat z = 0.f;
-        z -= ComputeInterpolatedWaveData(-x/params.gridSizes.x, y/params.gridSizes.x, 0);
-        z -= ComputeInterpolatedWaveData(-x/params.gridSizes.y, y/params.gridSizes.y, 1);
+        z -= ComputeInterpolatedWaveData(x/params.gridSizes.x, y/params.gridSizes.x, 0);
+        z -= ComputeInterpolatedWaveData(x/params.gridSizes.y, y/params.gridSizes.y, 1);
         //The components below have low importance and were excluded to lower the computational cost
-        //z -= ComputeInterpolatedWaveData(-x/params.gridSizes.z, y/params.gridSizes.z, 2);
-        //z -= ComputeInterpolatedWaveData(-x/params.gridSizes.w, y/params.gridSizes.w, 3);
+        //z -= ComputeInterpolatedWaveData(x/params.gridSizes.z, y/params.gridSizes.z, 2);
+        //z -= ComputeInterpolatedWaveData(x/params.gridSizes.w, y/params.gridSizes.w, 3);
         return z;
     }
     else
@@ -799,8 +798,6 @@ void OpenGLOcean::DrawSurface(OpenGLCamera* cam)
         //glCullFace(GL_BACK);
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         qt->Draw();
-        
-        
         //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glUseProgram(0);
@@ -847,7 +844,7 @@ void OpenGLOcean::DrawSurface(OpenGLCamera* cam)
     else //Flat surface (infinite plane)
     {
         oceanShaders[0]->Use();
-        oceanShaders[0]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        oceanShaders[0]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[0]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
         oceanShaders[0]->SetUniform("eyePos", cam->GetEyePosition());
@@ -905,7 +902,7 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
     else
     {
         oceanShaders[1]->Use();
-        oceanShaders[1]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+        oceanShaders[1]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);

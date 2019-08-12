@@ -247,7 +247,7 @@ void main(void)
     int iterationCount;
     bool intersect = traceScreenSpaceRay(vsRayOrigin, vsRayDirection, jitter, hitPixel, hitPoint, iterationCount, texcoord.x > 0.5);
     float alpha = calculateAlphaForIntersection(intersect, iterationCount, reflectionStrength, hitPixel, hitPoint, vsRayOrigin, vsRayDirection);
-    
+
     //Add sky fallback or underwater background fallback
     hitPixel = mix(texcoord, hitPixel, float(intersect));
     
@@ -262,4 +262,5 @@ void main(void)
     //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
     //fragColor = vec4(vec3(float(iterationCount)/maxIterations), 1.0);
     //fragColor = vec4(vec3(depth), 1.0);
+	//fragColor = vec4(texture(texColor, texcoord).rgb, 1.0);
 }

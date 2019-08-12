@@ -69,13 +69,7 @@ void Camera::UpdateTransform()
     Vector3 eyePosition = cameraTransform.getOrigin(); //O
     Vector3 direction = cameraTransform.getBasis().getColumn(2); //Z
     Vector3 cameraUp = -cameraTransform.getBasis().getColumn(1); //-Y
-    
-    Matrix3 rotation;
-    rotation.setEulerYPR(0,M_PI,0);
-    Vector3 rotEyePosition = rotation * eyePosition;
-    Vector3 rotDirection = rotation * direction;
-    Vector3 rotCameraUp = rotation * cameraUp;
-    SetupCamera(rotEyePosition, rotDirection, rotCameraUp);
+    SetupCamera(eyePosition, direction, cameraUp);
 }
 
 std::vector<Renderable> Camera::Render()

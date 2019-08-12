@@ -48,10 +48,10 @@ void main()
 
     //Basic wave height (layer 0)
 	float dz = 0.0;
-    dz += texture(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0)).x;
-    dz += texture(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0)).y;
-    dz += texture(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0)).z;
-    dz += texture(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0)).w;
+    dz -= texture(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0)).x;
+    dz -= texture(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0)).y;
+    dz -= texture(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0)).z;
+    dz -= texture(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0)).w;
 
     /*
     //Make use of anisotropic filtering -> not working properly -> cracks!
