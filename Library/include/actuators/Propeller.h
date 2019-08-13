@@ -79,7 +79,6 @@ namespace sf
     private:
         //Params
         Scalar D;
-        Scalar I;
         Scalar kT0;
         Scalar kQ0;
         Scalar kp;

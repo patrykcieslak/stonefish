@@ -540,7 +540,7 @@ void GraphicalSimulationApp::Loop()
                 {
                     glm::vec3 eye = trackball->GetEyePosition();
                     glm::vec3 ray = trackball->Ray(event.button.x, event.button.y);
-                    lastPicked = getSimulationManager()->PickEntity(Vector3(-eye.x, eye.y, -eye.z), Vector3(-ray.x, ray.y, -ray.z));
+                    lastPicked = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
                 }
                 else //RIGHT OR MIDDLE
                 {

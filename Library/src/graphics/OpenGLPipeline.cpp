@@ -116,7 +116,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
-	lastTime = GetTimeInMicroseconds();
+	lastSimTime = Scalar(0);
 }
 
 OpenGLPipeline::~OpenGLPipeline()
@@ -331,10 +331,10 @@ void OpenGLPipeline::DrawHelpers()
 void OpenGLPipeline::Render(SimulationManager* sim)
 {	
 	//Update time step for animation purposes
-	int64_t now = GetTimeInMicroseconds();
-	GLfloat dt = (now-lastTime)/1000000.f;
-	lastTime = now;
-	
+	Scalar now = sim->getSimulationTime();
+	Scalar dt = now-lastSimTime;
+	lastSimTime = now;
+
 	//Double-buffering of drawing queue
     PerformDrawingQueueCopy();
     
