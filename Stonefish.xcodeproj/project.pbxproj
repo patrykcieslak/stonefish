@@ -208,6 +208,10 @@
 		F71605E6219272B400E83606 /* ConsoleTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71605CB219271EF00E83606 /* ConsoleTestApp.cpp */; };
 		F71605E7219272B400E83606 /* ConsoleTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71605CE219271EF00E83606 /* ConsoleTestManager.cpp */; };
 		F71605E8219272B400E83606 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71605CF219271EF00E83606 /* main.cpp */; };
+		F736501F2302423100AE7B03 /* OpenGLOceanParticles.h in Headers */ = {isa = PBXBuildFile; fileRef = F736501D2302423100AE7B03 /* OpenGLOceanParticles.h */; };
+		F73650202302423100AE7B03 /* OpenGLParticles.h in Headers */ = {isa = PBXBuildFile; fileRef = F736501E2302423100AE7B03 /* OpenGLParticles.h */; };
+		F73650232302426400AE7B03 /* OpenGLParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73650212302426400AE7B03 /* OpenGLParticles.cpp */; };
+		F73650242302426400AE7B03 /* OpenGLOceanParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73650222302426400AE7B03 /* OpenGLOceanParticles.cpp */; };
 		F73B0A9418C5407300E128CF /* FallingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9218C5407300E128CF /* FallingTestApp.cpp */; };
 		F73B0A9918C5424500E128CF /* FallingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F73B0A9718C5424500E128CF /* FallingTestManager.cpp */; };
 		F74CEC1A18E56FCB00D0C42D /* JointsTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F74CEC1618E56FCB00D0C42D /* JointsTestManager.cpp */; };
@@ -735,6 +739,13 @@
 		F71605CE219271EF00E83606 /* ConsoleTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ConsoleTestManager.cpp; sourceTree = "<group>"; };
 		F71605CF219271EF00E83606 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F71605E52192728900E83606 /* ConsoleTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ConsoleTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F736501D2302423100AE7B03 /* OpenGLOceanParticles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLOceanParticles.h; sourceTree = "<group>"; };
+		F736501E2302423100AE7B03 /* OpenGLParticles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLParticles.h; sourceTree = "<group>"; };
+		F73650212302426400AE7B03 /* OpenGLParticles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLParticles.cpp; sourceTree = "<group>"; };
+		F73650222302426400AE7B03 /* OpenGLOceanParticles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLOceanParticles.cpp; sourceTree = "<group>"; };
+		F73650252302429300AE7B03 /* billboard.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = billboard.vert; sourceTree = "<group>"; };
+		F73650272302D32900AE7B03 /* flake.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = flake.png; sourceTree = "<group>"; };
+		F73650282302D76400AE7B03 /* oceanParticle.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = oceanParticle.frag; sourceTree = "<group>"; };
 		F73B0A9218C5407300E128CF /* FallingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestApp.cpp; sourceTree = "<group>"; };
 		F73B0A9318C5407300E128CF /* FallingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FallingTestApp.h; sourceTree = "<group>"; };
 		F73B0A9718C5424500E128CF /* FallingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FallingTestManager.cpp; sourceTree = "<group>"; };
@@ -858,6 +869,7 @@
 		F70AF90F21FB1F8400700A8B /* data */ = {
 			isa = PBXGroup;
 			children = (
+				F73650272302D32900AE7B03 /* flake.png */,
 				F716056F2191AA1C00E83606 /* logo_color_64.png */,
 				F716057F2191AA1C00E83606 /* logo_gray_64.png */,
 				F716056E2191AA1C00E83606 /* gui.png */,
@@ -1010,6 +1022,8 @@
 				F71603D42191A9E100E83606 /* OpenGLSpotLight.h */,
 				F71603DE2191A9E100E83606 /* OpenGLOcean.h */,
 				F71603DF2191A9E100E83606 /* OpenGLAtmosphere.h */,
+				F736501E2302423100AE7B03 /* OpenGLParticles.h */,
+				F736501D2302423100AE7B03 /* OpenGLOceanParticles.h */,
 				F71603E22191A9E100E83606 /* OpenGLDebugDrawer.h */,
 			);
 			path = graphics;
@@ -1175,6 +1189,8 @@
 				F71604D92191AA0D00E83606 /* OpenGLPrinter.cpp */,
 				F71604B42191AA0D00E83606 /* OpenGLTrackball.cpp */,
 				F71604DF2191AA0D00E83606 /* OpenGLView.cpp */,
+				F73650212302426400AE7B03 /* OpenGLParticles.cpp */,
+				F73650222302426400AE7B03 /* OpenGLOceanParticles.cpp */,
 			);
 			path = graphics;
 			sourceTree = "<group>";
@@ -1502,6 +1518,7 @@
 				F716055A2191AA1C00E83606 /* saq.vert */,
 				F716057A2191AA1C00E83606 /* quadTree.tesc */,
 				F71605932191AA1D00E83606 /* quadTree.vert */,
+				F73650252302429300AE7B03 /* billboard.vert */,
 			);
 			name = basic;
 			sourceTree = "<group>";
@@ -1562,6 +1579,7 @@
 				F71605782191AA1C00E83606 /* oceanSpectrum.frag */,
 				F71605922191AA1D00E83606 /* oceanVariance.frag */,
 				F71605752191AA1C00E83606 /* infiniteSurface.vert */,
+				F73650282302D76400AE7B03 /* oceanParticle.frag */,
 			);
 			name = ocean;
 			sourceTree = "<group>";
@@ -1648,6 +1666,7 @@
 				F71604242191A9E100E83606 /* DepthCamera.h in Headers */,
 				F716042D2191A9E100E83606 /* FilteredCollisionDispatcher.h in Headers */,
 				F716043A2191A9E100E83606 /* RevoluteJoint.h in Headers */,
+				F73650202302423100AE7B03 /* OpenGLParticles.h in Headers */,
 				F70AF90B21F616ED00700A8B /* Multibeam2.h in Headers */,
 				F716046A2191A9E100E83606 /* Ocean.h in Headers */,
 				F7E965B421A85F7B0067D12C /* LinkActuator.h in Headers */,
@@ -1685,6 +1704,7 @@
 				F71604702191A9E100E83606 /* Entity.h in Headers */,
 				F716046E2191A9E100E83606 /* VelocityField.h in Headers */,
 				F71604132191A9E100E83606 /* Current.h in Headers */,
+				F736501F2302423100AE7B03 /* OpenGLOceanParticles.h in Headers */,
 				F71604792191A9E100E83606 /* Polyhedron.h in Headers */,
 				F71604482191A9E100E83606 /* Actuator.h in Headers */,
 				F71604122191A9E100E83606 /* Multibeam.h in Headers */,
@@ -1978,6 +1998,7 @@
 				F71604F52191AA0D00E83606 /* MaterialManager.cpp in Sources */,
 				F716050A2191AA0D00E83606 /* OpenGLDepthCamera.cpp in Sources */,
 				F755751221A06FF100AE8956 /* OpenGLDataStructs.cpp in Sources */,
+				F73650242302426400AE7B03 /* OpenGLOceanParticles.cpp in Sources */,
 				F71605262191AA0D00E83606 /* OpenGLOcean.cpp in Sources */,
 				F716050B2191AA0D00E83606 /* NED.cpp in Sources */,
 				F71605472191AA0D00E83606 /* VelocityField.cpp in Sources */,
@@ -2014,6 +2035,7 @@
 				F716054E2191AA0E00E83606 /* NameManager.cpp in Sources */,
 				F71605042191AA0D00E83606 /* Jet.cpp in Sources */,
 				F71605152191AA0D00E83606 /* Mux.cpp in Sources */,
+				F73650232302426400AE7B03 /* OpenGLParticles.cpp in Sources */,
 				F71605032191AA0D00E83606 /* Entity.cpp in Sources */,
 				F71605322191AA0D00E83606 /* Sensor.cpp in Sources */,
 				F716053B2191AA0D00E83606 /* DepthCamera.cpp in Sources */,

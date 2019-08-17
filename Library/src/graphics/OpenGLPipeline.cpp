@@ -509,7 +509,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glEnable(GL_STENCIL_TEST);
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
                     glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
-					//glOcean->DrawParticles(camera, dt);
+                    glOcean->DrawParticles(camera);
                     glDisable(GL_STENCIL_TEST);
                 }
             

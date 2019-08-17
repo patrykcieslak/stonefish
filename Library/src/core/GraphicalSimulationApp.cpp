@@ -313,7 +313,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 		{
 			OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(trackball->GetLookingDirection() * 0.1);
+                trackball->MoveCenter(trackball->GetLookingDirection() * 0.1f);
 		}
 			break;
 			
@@ -321,7 +321,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 		{
 			OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1);
+                trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1f);
 		}
 			break;
 			
@@ -331,7 +331,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             if(trackball->isEnabled())
             {
                 glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-                trackball->MoveCenter(-axis * 0.1);
+                trackball->MoveCenter(-axis * 0.1f);
             }
 		}
 			break;
@@ -342,7 +342,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             if(trackball->isEnabled())
             {
                 glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-                trackball->MoveCenter(axis * 0.1);
+                trackball->MoveCenter(axis * 0.1f);
             }
 		}
 			break;
@@ -351,7 +351,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(glm::vec3(0,0,0.1));
+                trackball->MoveCenter(glm::vec3(0,0,-0.1f));
         }
             break;
             
@@ -359,7 +359,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(glm::vec3(0,0,-0.1));
+                trackball->MoveCenter(glm::vec3(0,0,0.1f));
         }
             break;
 

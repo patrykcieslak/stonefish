@@ -1174,7 +1174,7 @@ GLuint OpenGLContent::LoadTexture(std::string filename)
 
 GLuint OpenGLContent::LoadInternalTexture(std::string filename)
 {
-    return LoadTexture(GetDataPath() + filename);
+    return LoadTexture(GetShaderPath() + filename);
 }
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)

@@ -251,6 +251,12 @@ namespace sf
         //! A method returning the number of lights.
         unsigned int getLightsCount();
         
+        //! A method that sets up shader uniforms with light information.
+        /*!
+         \param shader a pointer to a shader
+         */
+        void SetupLights(GLSLShader* shader);
+        
         //! A method returing the id of a look.
         /*!
          \param name the name of the look
@@ -423,7 +429,6 @@ namespace sf
         
         //Methods
         void UseStandardLook(const glm::mat4& M);
-        void SetupLights(GLSLShader* shader);
     };
 }
 

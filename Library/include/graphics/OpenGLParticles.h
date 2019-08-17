@@ -45,24 +45,18 @@ namespace sf
         //! A destructor.
         virtual ~OpenGLParticles();	
 		
-		//! A method drawing the particles.
-		/*!
-		 \param cam a pointer to the active camera
-		 */
-		virtual void Draw(OpenGLCamera* cam) = 0;
-		
 		//! A method returning the number of particles.
 		size_t getNumOfParticles();
 		
-		//! A method returning the pointer to the position buffer.
-		glm::vec3* getPositions();
+		//! A method returning the pointer to the position/size buffer.
+		glm::vec4* getPositionsSizes();
 		
 		//! A method returning the pointer to the velocity buffer.
 		glm::vec3* getVelocities();
 		
 	protected:
 		size_t nParticles;
-        glm::vec3* positions;
+        glm::vec4* positionsSizes;
 		glm::vec3* velocities;
 	};
 }

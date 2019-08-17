@@ -33,6 +33,7 @@ namespace sf
 {
 	class GLSLShader;
 	class Ocean;
+    class OpenGLOcean;
 
 	//! A class implementing a particle system simulating underwater snow effect.
 	class OpenGLOceanParticles : public OpenGLParticles
@@ -51,7 +52,7 @@ namespace sf
 		//! A method updating the positions/velocities of the particles.
 		/*!
          \param cam a pointer to the active camera
-		 \param ocn a pointer to the ocean field
+		 \param ocn a pointer to the ocean entity
 		 \param dt time passed since last update
          */
 		void Update(OpenGLCamera* cam, Ocean* ocn, GLfloat dt);
@@ -59,8 +60,9 @@ namespace sf
 		//! A method drawing the particles.
 		/*!
 		 \param cam a pointer to the active camera
+         \param glOcn a pointer to the OpenGL ocean object
 		 */
-		void Draw(OpenGLCamera* cam);
+		void Draw(OpenGLCamera* cam, OpenGLOcean* glOcn);
 		
 		//! A method used to load particle shaders.
 		static void Init();
@@ -79,8 +81,9 @@ namespace sf
 		glm::vec3 lastEyePos;
 		GLuint vao;
 		GLuint vboParticle;
-		GLuint vboPosition;
-		
+		GLuint vboPositionSize;
+        GLuint flakeTexture;
+        
 		static GLSLShader* particleShader;
 	};
 }

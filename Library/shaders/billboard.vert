@@ -20,18 +20,22 @@
 #version 330
 
 layout(location = 0) in vec3 billboardCorner;
-layout(location = 1) in vec3 billboardCenter;
+layout(location = 1) in vec4 billboardCenterSize;
 uniform mat4 MVP;
 uniform vec3 camRight;
 uniform vec3 camUp;
-uniform float billboardSize;
+
+out vec2 texcoord;
+out vec3 fragPos;
 
 void main()
 {
 	vec3 vertex = 
-		billboardCenter
-		+ camRight * billboardCorner.x * billboardSize
-		+ camUp * billboardCorner.y * billboardSize;
+		billboardCenterSize.xyz
+		+ camRight * billboardCorner.x * billboardCenterSize.w
+		+ camUp * billboardCorner.y * billboardCenterSize.w;
 
 	gl_Position = MVP * vec4(vertex, 1.0);
+    texcoord = billboardCorner.xy + vec2(0.5, 0.5);
+    fragPos = vertex;
 }

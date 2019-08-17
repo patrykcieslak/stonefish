@@ -31,13 +31,13 @@ namespace sf
 OpenGLParticles::OpenGLParticles(size_t numOfParticles)	
 {
 	nParticles = numOfParticles;
-	positions = new glm::vec3[numOfParticles];
+	positionsSizes = new glm::vec4[numOfParticles];
 	velocities = new glm::vec3[numOfParticles];
 }
 
 OpenGLParticles::~OpenGLParticles()
 {
-	delete [] positions;
+	delete [] positionsSizes;
 	delete [] velocities;
 }
 
@@ -46,9 +46,9 @@ size_t OpenGLParticles::getNumOfParticles()
 	return nParticles;
 }
 	
-glm::vec3* OpenGLParticles::getPositions()
+glm::vec4* OpenGLParticles::getPositionsSizes()
 {
-	return positions;
+	return positionsSizes;
 }
 	
 glm::vec3* OpenGLParticles::getVelocities()

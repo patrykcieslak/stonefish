@@ -446,6 +446,8 @@ void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
     skySunShader->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     glUseProgram(0);
+    
+    delete [] viewport;
 }
 
 void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)

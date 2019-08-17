@@ -107,9 +107,8 @@ namespace sf
 		//! A method that draws underwater particles.
 		/*!
 		 \param cam a pointer to the active camera
-		 \param dt time since last rendering
 		 */
-		void DrawParticles(OpenGLCamera* cam, GLfloat dt);
+		void DrawParticles(OpenGLCamera* cam);
 		
         //! A method that draws the underwater blur (scattering).
         /*!

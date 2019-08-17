@@ -173,7 +173,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     
     //Shaders
     std::vector<GLuint> precompiled;
-    precompiled.push_back(SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->getAtmosphereAPI());
+    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
     //Surface rendering
     GLSLShader* shader;
@@ -659,6 +659,9 @@ void OpenGLOcean::Simulate(GLfloat dt)
     }
     
 	params.t += dt;
+    
+    for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
+        it->second->Update(it->first, SimulationApp::getApp()->getSimulationManager()->getOcean(), dt);
 }
 
 void OpenGLOcean::UpdateSurface(OpenGLCamera* cam)
@@ -928,7 +931,7 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
 	delete [] viewport;
 }
 
-void OpenGLOcean::DrawParticles(OpenGLCamera* cam, GLfloat dt)
+void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
 {
 	OpenGLOceanParticles* particles;
 	
@@ -938,19 +941,16 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam, GLfloat dt)
 	}
 	catch(const std::out_of_range& e)
 	{
-		particles = new OpenGLOceanParticles(50000, 5.0);
+		particles = new OpenGLOceanParticles(10000, 3.0);
 		oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLOceanParticles*>(cam, particles));
 	}
 	
-	particles->Update(cam, SimulationApp::getApp()->getSimulationManager()->getOcean(), dt);
-	particles->Draw(cam);
+	particles->Draw(cam, this);
 }
 
 void OpenGLOcean::DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint linearDepthTex)
 {
 	GLint* viewport = cam->GetViewport();
-	
-	glDisable(GL_DEPTH_TEST);
 	
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
@@ -970,8 +970,6 @@ void OpenGLOcean::DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint line
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glEnable(GL_DEPTH_TEST);
 	
 	delete [] viewport;
 }
