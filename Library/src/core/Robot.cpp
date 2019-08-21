@@ -154,10 +154,7 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
     links.push_back(detachedLinks[childId]);
     detachedLinks.erase(detachedLinks.begin()+childId);
 	dynamics->AddRevoluteJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
-       
-	if(positionLimits.first < positionLimits.second)
-		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
-	
+	dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 
@@ -172,10 +169,7 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
     links.push_back(detachedLinks[childId]);
 	detachedLinks.erase(detachedLinks.begin()+childId);
     dynamics->AddPrismaticJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getBasis() * axis);
-       
-	if(positionLimits.first < positionLimits.second)
-		dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
-	
+	dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
 	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
 }
 

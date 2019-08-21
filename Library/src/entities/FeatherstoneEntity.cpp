@@ -49,7 +49,6 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
     multiBody->setCanSleep(true);
    
     AddLink(baseSolid, Transform::getIdentity());
-	multiBody->finalizeMultiDof();
     
     baseRenderable = true;
 }
@@ -101,18 +100,48 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm)
 
 void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
+	//Creating joint limit constraints
+	for(size_t i=0; i<joints.size(); ++i)
+	{    
+		if(joints[i].limit != NULL)
+            sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].limit);
+	}
+	
+	//Creating motors (has to be after joint limits and not interleaved!)
+	for(size_t i=0; i<joints.size(); ++i)
+	{
+		if(joints[i].motor != NULL)
+			sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].motor);
+	}
+	
+	//Resize matrices
+	multiBody->finalizeMultiDof();
+	
+	//Set origin position
     setBaseTransform(origin);
     multiBody->setBaseVel(Vector3(0,0,0));
     multiBody->setBaseOmega(Vector3(0,0,0));
-    sm->getDynamicsWorld()->addMultiBody(multiBody);
-    
-    for(unsigned int i=0; i<joints.size(); ++i)
-    {
-        if(joints[i].limit != NULL)
-            sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].limit);
-        if(joints[i].motor != NULL)
-            sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].motor);
-    }
+	
+	//Move joints to the limits
+	for(size_t i=0; i<joints.size(); ++i)
+	{
+		if(joints[i].limit != NULL)
+		{
+			if(joints[i].lowerLimit > Scalar(0))
+				multiBody->setJointPos(i, joints[i].lowerLimit);
+			else if(joints[i].upperLimit < Scalar(0))
+				multiBody->setJointPos(i, joints[i].upperLimit);
+		}
+	}
+	
+	//Calculate constrained link positions to avoid jump at the start of simulation
+	btAlignedObjectArray<Quaternion> scratchQ;
+	btAlignedObjectArray<Vector3> scratchM;
+	multiBody->forwardKinematics(scratchQ, scratchM);
+	multiBody->updateCollisionObjectWorldTransforms(scratchQ, scratchM);
+	
+	//Add multibody to the world
+	sm->getDynamicsWorld()->addMultiBody(multiBody);
 }
 
 void FeatherstoneEntity::setSelfCollision(bool enabled)
@@ -411,10 +440,7 @@ int FeatherstoneEntity::AddRevoluteJoint(std::string name, unsigned int parent, 
     joint.axisInChild = getLinkTransform(child).getBasis().inverse() * axis.normalized();
     joint.pivotInChild = pivotToChildComOffset;
     multiBody->setupRevolute(child - 1, M, I, parent - 1, ornParentToChild, joint.axisInChild, parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
-    multiBody->finalizeMultiDof();
-    multiBody->setJointPos((int)child - 1, Scalar(0));
-    multiBody->setJointVel((int)child - 1, Scalar(0));
-    
+   
     //Add feedback
     joint.feedback = new btMultiBodyJointFeedback();
     multiBody->getLink((int)child - 1).m_jointFeedback = joint.feedback;
@@ -450,9 +476,6 @@ int FeatherstoneEntity::AddPrismaticJoint(std::string name, unsigned int parent,
     joint.axisInChild = getLinkTransform(child).getBasis().inverse() * axis.normalized();
     joint.pivotInChild = pivotToChildComOffset;
     multiBody->setupPrismatic(child - 1, M, I, parent - 1, ornParentToChild, joint.axisInChild, parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
-    multiBody->finalizeMultiDof();
-    multiBody->setJointPos(child - 1, Scalar(0.));
-    multiBody->setJointVel(child - 1, Scalar(0.));
     
     //Add feedback
     joint.feedback = new btMultiBodyJointFeedback();
@@ -488,7 +511,6 @@ int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, uns
     joint.axisInChild = Vector3(0,0,0);
     joint.pivotInChild = pivotToChildComOffset;
 	multiBody->setupFixed(child - 1, M, I, parent - 1, ornParentToChild, parentComToPivotOffset, pivotToChildComOffset);
-	multiBody->finalizeMultiDof();
 	
     //Add feedback
     joint.feedback = new btMultiBodyJointFeedback();
@@ -500,14 +522,15 @@ int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, uns
 
 void FeatherstoneEntity::AddJointLimit(unsigned int index, Scalar lower, Scalar upper)
 {
-    if(index >= joints.size())
-        return;
-        
-    if(joints[index].limit != NULL)
+    if(joints[index].limit != NULL
+	   || index >= joints.size()
+	   || lower > upper)
         return;
         
     btMultiBodyJointLimitConstraint* jlc = new btMultiBodyJointLimitConstraint(multiBody, index, lower, upper);
     joints[index].limit = jlc;
+	joints[index].lowerLimit = lower;
+	joints[index].upperLimit = upper;
 }
 
 void FeatherstoneEntity::AddJointMotor(unsigned int index, Scalar maxForceTorque)

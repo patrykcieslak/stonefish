@@ -212,15 +212,13 @@ void UnderwaterTestManager::BuildScenario()
     //Mechanical structure
     auv->DefineLinks(vehicle, arm);
     auv->DefineFixedJoint("VehicleToArm", "Vehicle", "ArmBaseLink", sf::Transform(sf::IQ(), sf::Vector3(0.74,0.0,0.0)));
-    auv->DefineRevoluteJoint("Joint1", "ArmBaseLink", "ArmLink1", sf::I4(), sf::Vector3(0.0, 0.0, 1.0));//, std::make_pair(-1.0, 1.0));
-    auv->DefineRevoluteJoint("Joint2", "ArmLink1", "ArmLink2", sf::Transform(sf::IQ(), sf::Vector3(0.1065, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0));//, std::make_pair(-1.0, 1.0));
-    auv->DefineRevoluteJoint("Joint3", "ArmLink2", "ArmLink3", sf::Transform(sf::IQ(), sf::Vector3(0.23332, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0));//, std::make_pair(-1.0, 1.0));
+    auv->DefineRevoluteJoint("Joint1", "ArmBaseLink", "ArmLink1", sf::I4(), sf::Vector3(0.0, 0.0, 1.0), std::make_pair(-1.0, 1.0));
+    auv->DefineRevoluteJoint("Joint2", "ArmLink1", "ArmLink2", sf::Transform(sf::IQ(), sf::Vector3(0.1065, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(-1.0, 1.0));
+    auv->DefineRevoluteJoint("Joint3", "ArmLink2", "ArmLink3", sf::Transform(sf::IQ(), sf::Vector3(0.23332, 0.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(-1.0, 1.0));
     auv->DefineRevoluteJoint("Joint4", "ArmLink3", "ArmLink4", sf::Transform(sf::IQ(), sf::Vector3(0.103, 0.0, 0.201)), sf::Vector3(0.0, 0.0, 1.0),  std::make_pair(-1.0, 1.0));
     auv->DefineFixedJoint("Fix", "ArmLink4", "EE", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.05)));
     auv->DefineRevoluteJoint("Joint5", "EE", "Finger1", sf::Transform(sf::IQ(), sf::Vector3(0.03,0,0.1)), sf::VY(), std::make_pair(0.0, 1.0));
     auv->DefineRevoluteJoint("Joint6", "EE", "Finger2", sf::Transform(sf::Quaternion(M_PI, 0.0, 0.0), sf::Vector3(-0.03,0,0.1)), sf::VY(), std::make_pair(0.0, 1.0));
-    
-    //auv->DefineRevoluteJoint("WingJoint", "Vehicle", "Wing1", sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,1.0)), sf::Vector3(0.0,1.0,0.0), std::make_pair(1.0, -1.0));
     
     //Joint motors
     auv->AddJointActuator(srv1, "Joint1");
@@ -248,6 +246,6 @@ void UnderwaterTestManager::BuildScenario()
     
     AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(0,0,1.0)));
     
-    srv5->setDesiredVelocity(0.2);
-    srv6->setDesiredVelocity(0.2);
+    srv5->setDesiredVelocity(0.1);
+    srv6->setDesiredVelocity(0.1);
 }

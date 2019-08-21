@@ -63,7 +63,7 @@ namespace sf
          \param c the id of the child link
          */
         FeatherstoneJoint(std::string n, btMultibodyLink::eFeatherstoneJointType t, unsigned int p, unsigned int c)
-        : name(n), type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(Scalar(0)), velDamping(Scalar(0))  {}
+        : name(n), type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(0), velDamping(0), lowerLimit(10e9), upperLimit(-10e9) {}
         
         std::string name;
         btMultibodyLink::eFeatherstoneJointType type;
@@ -77,6 +77,8 @@ namespace sf
         Vector3 pivotInChild;
         Scalar sigDamping;
         Scalar velDamping;
+		Scalar lowerLimit;
+		Scalar upperLimit;
     };
     
     //! A class that implements simplified creation of multi-body trees, using Roy Featherstone's algorithm.
