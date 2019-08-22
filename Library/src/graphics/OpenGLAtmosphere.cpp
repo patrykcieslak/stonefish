@@ -859,7 +859,7 @@ void OpenGLAtmosphere::Precompute()
 
 #ifdef DEBUG
     int64_t stop = GetTimeInMicroseconds();
-    //std::cout << "Precomputed in " << std::to_string((stop-start)/1000) << "ms." << std::endl;
+	cInfo("Precomputed in %d ms.", (stop-start)/1000);
 #else
     GLSLShader::Verbose();
 #endif

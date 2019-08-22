@@ -260,11 +260,11 @@ std::vector<Renderable> SolidEntity::Render()
         item.type = RenderableType::HYDRO_CS;
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         items.push_back(item);
-#ifndef DEBUG
+
         //Surface crossing debug
-        submerged.model = glMatrixFromTransform(sf::I4());
-        items.push_back(submerged);
-#else
+        //submerged.model = glMatrixFromTransform(sf::I4());
+        //items.push_back(submerged);
+
         //Geometry approximation
         switch(fdApproxType)
         {
@@ -292,7 +292,7 @@ std::vector<Renderable> SolidEntity::Render()
                 items.push_back(item);
                 break;
         }
-#endif
+
         //Forces
         Vector3 cg = getCGTransform().getOrigin();
         glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
@@ -771,6 +771,8 @@ void SolidEntity::ComputeEllipsoidalApprox()
             sigma[i] = Scalar(0);
     }
 	
+	int k = 0;
+	
 	auto u = [](auto j, auto& x, auto& sigma)
 	{
 		auto sum = Scalar(0);
@@ -787,6 +789,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
 		return sum;	
 	};
 	
+	/*
 	auto lambda = [&x, &sigma, &u, &v](int i)
 	{
 		auto sum = Scalar(0);
@@ -800,11 +803,9 @@ void SolidEntity::ComputeEllipsoidalApprox()
 	};
 	
 	Scalar epsilon0 = btPow(Scalar(1) + Scalar(0.1), Scalar(2)/Scalar(3)) - Scalar(1);
-	
-	int k = 0;
 	Scalar epsilon;
 	
-	while(0) //DISABLED!!!!
+	while(1)
 	{
 		std::vector<Scalar> xk(x.size());
 		for(size_t i=0; i<xk.size(); ++i) xk[i] = lambda(i);
@@ -825,7 +826,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
 		}
 		Scalar epsilon_lower = Scalar(1) - min_v;
 		
-		//Scalar epsilon = std::max(epsilon_upper, epsilon_lower);
+		Scalar epsilon = std::max(epsilon_upper, epsilon_lower);
 		epsilon = epsilon_upper;
 		
 		if(epsilon <= epsilon0)
@@ -872,14 +873,14 @@ void SolidEntity::ComputeEllipsoidalApprox()
 			}
 			
 			Scalar beta = std::min(epsilon/(Scalar(1)-epsilon+Scalar(3)*maxwj), sigma[min_id]/(Scalar(1)-sigma[min_id])                    );
-			
+			*/
 			/*if(beta == sigma[min_id]/(Scalar(1)-sigma[min_id]))
 			{
 				std::vector<Vector3>::iterator it;
 				it = std::find(x0.begin(), x0.end(), x[min_id]);
 				x0.erase(it);
 			}*/
-			
+			/*
 			std::vector<Scalar> e(sigma.size(), Scalar(0));
 			e[min_id] = Scalar(1);
 		
@@ -887,6 +888,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
 				sigma[i] = (Scalar(1) + beta)*sigma[i] - beta*e[i];
 		}
 	}
+	*/
 	
 	Vector3 c;
 	Vector3 d;
@@ -1265,10 +1267,6 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
 	
     //Set zeros
 	if(mesh == NULL) return;
-    
-#ifdef DEBUG    
-    uint64_t start = GetTimeInMicroseconds();
-#endif
       
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
@@ -1551,21 +1549,12 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
             _Tds += (fc - p).cross(Fdsf);
         }
     }
-    
-#ifdef DEBUG
-    uint64_t elapsed = GetTimeInMicroseconds() - start;
-    //std::cout << getName() << ": " <<  elapsed << std::endl; 
-#endif
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
                                               const Vector3& v, const Vector3& omega, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
 {
     if(mesh == NULL) return;
-    
-#ifdef DEBUG
-    uint64_t start = GetTimeInMicroseconds();
-#endif
     
     //Damping forces
     _Fdl.setZero();
@@ -1617,11 +1606,6 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
         _Tds += (fc - p).cross(Fdsf);
         
     }
-    
-#ifdef DEBUG
-    uint64_t elapsed = GetTimeInMicroseconds() - start;
-    //std::cout << getName() << ": " <<  elapsed << std::endl;
-#endif
 }
 
 void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)

@@ -49,10 +49,10 @@ namespace sf
     inline Transform I4() { return Transform::getIdentity(); }
     inline Matrix3 I3() { return Matrix3::getIdentity(); }
     inline Quaternion IQ() { return Quaternion::getIdentity(); }
-    inline Vector3 V0() { return Vector3(0.0,0.0,0.0); }
-    inline Vector3 VX() { return Vector3(1.0,0.0,0.0); }
-    inline Vector3 VY() { return Vector3(0.0,1.0,0.0); }
-    inline Vector3 VZ() { return Vector3(0.0,0.0,1.0); }
+    inline Vector3 V0() { return Vector3(0,0,0); }
+    inline Vector3 VX() { return Vector3(1,0,0); }
+    inline Vector3 VY() { return Vector3(0,1,0); }
+    inline Vector3 VZ() { return Vector3(0,0,1); }
 }
 
 #endif
