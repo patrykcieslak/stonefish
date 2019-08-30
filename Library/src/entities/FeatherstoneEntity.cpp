@@ -128,9 +128,9 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform&
 		if(joints[i].limit != NULL)
 		{
 			if(joints[i].lowerLimit > Scalar(0))
-				multiBody->setJointPos(i, joints[i].lowerLimit);
+				multiBody->setJointPos((int)i, joints[i].lowerLimit);
 			else if(joints[i].upperLimit < Scalar(0))
-				multiBody->setJointPos(i, joints[i].upperLimit);
+				multiBody->setJointPos((int)i, joints[i].upperLimit);
 		}
 	}
 	

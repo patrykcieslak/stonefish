@@ -115,11 +115,18 @@ namespace sf
         std::vector<Face> faces;
         bool hasUVs;
         
-        glm::vec3 computeFaceNormal(unsigned int faceID)
+        glm::vec3 computeFaceNormal(size_t faceID)
         {
             glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
             glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
             return glm::normalize(glm::cross(v12,v13));
+        }
+        
+        GLfloat computeFaceArea(size_t faceID)
+        {
+            glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
+            glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
+            return glm::length(glm::cross(v12,v13))/2.f;
         }
     };
     

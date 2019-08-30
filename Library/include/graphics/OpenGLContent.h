@@ -367,12 +367,25 @@ namespace sf
          */
         static void SmoothNormals(Mesh* mesh);
         
+        //! A method to compute average face size.
+        /*!
+         \param mesh a pointer to a mesh structure
+         */
+        static GLfloat ComputeAverageFaceArea(Mesh* mesh);
+        
         //! A method to subdivide the mesh.
         /*!
          \param mesh a pointer to a mesh structure
          \param icoMode the icosahedron mode flag
          */
         static void Subdivide(Mesh* mesh, bool icoMode = false);
+        
+        //! A method to uniformize mesh face sizes.
+        /*!
+         \param mesh a pointer to a mesh structure
+         \param sizeThreshold faces with an area larger than this parameter multiplied by average face size are subdivided
+         */
+        static void Refine(Mesh* mesh, GLfloat sizeThreshold);
         
         //! A method to compute the axis-aligned bounding box of a mesh.
         /*!

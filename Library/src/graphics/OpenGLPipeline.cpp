@@ -211,8 +211,6 @@ void OpenGLPipeline::DrawObjects()
     
 void OpenGLPipeline::DrawHelpers()
 {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
     //Coordinate systems
     if(hSettings.showCoordSys)
     {
@@ -324,8 +322,6 @@ void OpenGLPipeline::DrawHelpers()
             }
         }
     }
-    
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void OpenGLPipeline::Render(SimulationManager* sim)
@@ -443,7 +439,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Drawing underwater without stencil test
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
-					glOcean->DrawBackground(camera);
+                    glOcean->DrawBackground(camera);
 					
                     //a) Surface with waves
                     if(ocean->hasWaves())
@@ -527,8 +523,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glDisable(GL_CULL_FACE);
                     
                     //Simulation debugging
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    if(sim->getSolidDisplayMode() == DisplayMode::DISPLAY_PHYSICAL) DrawObjects();
                     DrawHelpers();
                     if(hSettings.showBulletDebugInfo) sim->RenderBulletDebug();
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     
                     //Graphics debugging
                     /*if(ocean != NULL)

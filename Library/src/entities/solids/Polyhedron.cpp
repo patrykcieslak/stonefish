@@ -54,6 +54,8 @@ Polyhedron::Polyhedron(std::string uniqueName,
         T_O2C = T_O2G;
     }
     
+    OpenGLContent::Refine(phyMesh, 3.f);
+    
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;

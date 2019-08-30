@@ -1012,8 +1012,8 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
 	shader->SetUniform("clipPlane", clipPlane);
 	shader->SetUniform("eyePos", eyePos);
 	shader->SetUniform("viewDir", viewDir);
-	shader->SetUniform("color", glm::vec4(0.5f,0.5f,0.5f,0.f));
-	shader->SetUniform("shininess", 0.5f);
+	shader->SetUniform("color", glm::vec4(0.25f,0.25f,0.25f,0.f));
+	shader->SetUniform("shininess", 0.2f);
 	shader->SetUniform("specularStrength", 0.1f);
     shader->SetUniform("reflectivity", 0.f);
 	shader->SetUniform("tex", TEX_BASE);
@@ -1629,8 +1629,8 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     //Side vertices
     for(unsigned int i=0; i<slices; ++i)
     {
-		vt.normal = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0), -cos(i/(GLfloat)slices*M_PI*2.0), 0.0);
-		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -cos(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight);
+		vt.normal = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f), -cosf(i/(GLfloat)slices*M_PI*2.f), 0.0);
+		vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, halfHeight);
         mesh->vertices.push_back(vt);
 		vt.pos.z = -halfHeight;
         mesh->vertices.push_back(vt);
@@ -1651,7 +1651,7 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     
 	//Last side
     int i = slices-1;
-	vt.normal = glm::vec3(sin((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), -cos((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.0), 0.0);
+	vt.normal = glm::vec3(sinf((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.f), -cosf((GLfloat)(slices-1)/(GLfloat)slices*M_PI*2.f), 0.0);
     f.vertexID[0] = i*2;
     f.vertexID[1] = i*2+1;
     f.vertexID[2] = 0;
@@ -1669,7 +1669,7 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
 	//vertices
 	for(unsigned int i=0; i<slices; ++i)
     {
-		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -cos(i/(GLfloat)slices*M_PI*2.0)*radius, halfHeight);
+		vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, halfHeight);
         mesh->vertices.push_back(vt);
     }
 	//faces
@@ -1694,7 +1694,7 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
 	//vertices
 	for(unsigned int i=0; i<slices; ++i)
     {
-		vt.pos = glm::vec3(sin(i/(GLfloat)slices*M_PI*2.0)*radius, -cos(i/(GLfloat)slices*M_PI*2.0)*radius, -halfHeight);
+		vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, -halfHeight);
         mesh->vertices.push_back(vt);
     }
 	//faces
@@ -2211,6 +2211,14 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
 	
 	return inserted.first->second;
 }
+    
+GLfloat OpenGLContent::ComputeAverageFaceArea(Mesh* mesh)
+{
+    GLfloat area = 0.f;
+    for(size_t i=0; i<mesh->faces.size(); ++i)
+        area += mesh->computeFaceArea(i);
+    return area/(GLfloat)mesh->faces.size();
+}
 
 void OpenGLContent::Subdivide(Mesh* mesh, bool icoMode)
 {
@@ -2254,9 +2262,74 @@ void OpenGLContent::Subdivide(Mesh* mesh, bool icoMode)
 		newFaces.push_back(f);
 	}
 	
+    mesh->faces.clear();
 	mesh->faces = newFaces;
 }
 
+void OpenGLContent::Refine(Mesh* mesh, GLfloat sizeThreshold)
+{
+    const GLfloat minArea = 0.01f*0.01f;
+    GLfloat avgFaceArea = std::max(ComputeAverageFaceArea(mesh), minArea);
+    size_t nSubdivided = 0;
+    size_t nFaceBefore = mesh->faces.size();
+    
+    while(1)
+    {
+        std::vector<Face> newFaces;
+        
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            if(mesh->computeFaceArea(i) > sizeThreshold * avgFaceArea)
+            {
+                GLuint mid[3];
+                std::map<std::pair<GLuint, GLuint>, GLuint> lookup;
+                
+                for(unsigned int edge = 0; edge<3; ++edge)
+                    mid[edge] = vertex4Edge(lookup, mesh, mesh->faces[i].vertexID[edge], mesh->faces[i].vertexID[(edge+1)%3]);
+                
+                Face f;
+                f.vertexID[0] = mesh->faces[i].vertexID[0];
+                f.vertexID[1] = mid[0];
+                f.vertexID[2] = mid[2];
+                newFaces.push_back(f);
+                
+                f.vertexID[0] = mesh->faces[i].vertexID[1];
+                f.vertexID[1] = mid[1];
+                f.vertexID[2] = mid[0];
+                newFaces.push_back(f);
+                
+                f.vertexID[0] = mesh->faces[i].vertexID[2];
+                f.vertexID[1] = mid[2];
+                f.vertexID[2] = mid[1];
+                newFaces.push_back(f);
+                
+                f.vertexID[0] = mid[0];
+                f.vertexID[1] = mid[1];
+                f.vertexID[2] = mid[2];
+                newFaces.push_back(f);
+                
+                ++nSubdivided;
+            }
+            else
+                newFaces.push_back(mesh->faces[i]);
+        }
+        
+        if(nSubdivided > 0)
+        {
+            mesh->faces.clear();
+            mesh->faces = newFaces;
+            avgFaceArea = std::max(ComputeAverageFaceArea(mesh), minArea);
+            nSubdivided = 0;
+        }
+        else
+            break;
+    }
+    
+#ifdef DEBUG
+    cInfo("Mesh refined (%ld/%ld).", nFaceBefore, mesh->faces.size());
+#endif
+}
+    
 void OpenGLContent::AABB(Mesh* mesh, glm::vec3& min, glm::vec3& max)
 {
     GLfloat minX=BT_LARGE_FLOAT, maxX=-BT_LARGE_FLOAT;
