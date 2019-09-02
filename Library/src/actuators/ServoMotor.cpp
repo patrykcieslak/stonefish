@@ -39,7 +39,34 @@ ServoMotor::ServoMotor(std::string uniqueName, Scalar positionGain, Scalar veloc
     tauMax = maxTorque > Scalar(0) ? maxTorque : Scalar(0);
     pSetpoint = Scalar(0);
     vSetpoint = Scalar(0);
-    velocityMode = false;
+    mode = ServoControlMode::POSITION_CTRL;
+}
+    
+
+void ServoMotor::setControlMode(ServoControlMode m)
+{
+    mode = m;
+}
+
+void ServoMotor::setDesiredPosition(Scalar pos)
+{
+    pSetpoint = pos;
+}
+
+void ServoMotor::setDesiredVelocity(Scalar vel)
+{
+    vSetpoint = vel;
+}
+
+void ServoMotor::setDesiredTorque(Scalar tau)
+{
+    vSetpoint = tau > Scalar(0) ? Scalar(1000) : (tau < Scalar(0) ? Scalar(-1000) : Scalar(0));
+    tau = tau < -tauMax ? -tauMax : (tau > tauMax ? tauMax : tau);
+    
+    if(fe != NULL)
+    {
+        fe->setMaxMotorForceTorque(jId, tau);
+    }
 }
     
 Scalar ServoMotor::getPosition()
@@ -131,30 +158,20 @@ void ServoMotor::Update(Scalar dt)
     else if(fe != NULL)
     {
         //Use internal multibody motors
-        if(velocityMode) //Velocity mode
+        switch(mode)
         {
-            fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
-            fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
-        }
-        else //Position mode
-        {
-            fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-            fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+            case POSITION_CTRL: 
+                fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
+                fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+                break;
+                
+            case VELOCITY_CTRL:
+            case TORQUE_CTRL:
+                fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
+                fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+                break;
         }
     }
-}
-
-void ServoMotor::setDesiredPosition(Scalar pos)
-{
-    pSetpoint = pos;
-    vSetpoint = Scalar(0);
-    velocityMode = false;
-}
-
-void ServoMotor::setDesiredVelocity(Scalar vel)
-{
-    vSetpoint = vel;
-    velocityMode = true;
 }
 
 }

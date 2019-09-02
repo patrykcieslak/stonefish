@@ -287,6 +287,17 @@ Scalar FeatherstoneEntity::getJointTorque(unsigned int index)
         return multiBody->getJointTorque(joints[index].child - 1);
 }
 
+void FeatherstoneEntity::setMaxMotorForceTorque(unsigned int index, Scalar maxT)
+{
+    if(index >= joints.size())
+        return;
+        
+    if(joints[index].motor == NULL)
+        return;
+        
+    joints[index].motor->setMaxAppliedImpulse(maxT * Scalar(1)/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+}
+
 Scalar FeatherstoneEntity::getMotorForceTorque(unsigned int index)
 {
     if(index >= joints.size() || joints[index].motor == NULL)
@@ -556,7 +567,10 @@ void FeatherstoneEntity::MotorPositionSetpoint(unsigned int index, Scalar pos, S
         
     if(joints[index].motor == NULL)
         return;
-        
+    
+    if(joints[index].lowerLimit < joints[index].upperLimit) //if joint limits exist the desired position has to be restricted to avoid violating constraints!
+        pos = pos < joints[index].lowerLimit ? joints[index].lowerLimit : (pos > joints[index].upperLimit ? joints[index].upperLimit : pos);
+    
     joints[index].motor->setPositionTarget(pos, kp);
 }
 

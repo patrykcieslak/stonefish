@@ -1004,20 +1004,22 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 
 void OpenGLContent::UseStandardLook(const glm::mat4& M)
 {
-	GLSLShader* shader = materialShaders[0];
-	shader->Use();
+	GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
+    
+    shader->Use();
 	shader->SetUniform("MVP", viewProjection*M);
 	shader->SetUniform("M", M);
 	shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+	shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
 	shader->SetUniform("clipPlane", clipPlane);
 	shader->SetUniform("eyePos", eyePos);
 	shader->SetUniform("viewDir", viewDir);
-	shader->SetUniform("color", glm::vec4(0.25f,0.25f,0.25f,0.f));
-	shader->SetUniform("shininess", 0.2f);
-	shader->SetUniform("specularStrength", 0.1f);
+	shader->SetUniform("roughness", 0.5f);
+	shader->SetUniform("metallic", 0.f);
     shader->SetUniform("reflectivity", 0.f);
 	shader->SetUniform("tex", TEX_BASE);
-	
+    shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));			
+			
 	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	

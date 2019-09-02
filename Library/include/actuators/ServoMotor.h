@@ -30,6 +30,9 @@
 
 namespace sf
 {
+    //! An enum defining possible control modes.
+    typedef enum {POSITION_CTRL, VELOCITY_CTRL, TORQUE_CTRL} ServoControlMode;
+    
     //! A class implementing a position/velocity servo motor.
     class ServoMotor : public JointActuator
     {
@@ -56,6 +59,12 @@ namespace sf
          */
         virtual void Update(Scalar dt);
         
+        //! A method to set the desired control mode.
+        /*!
+         \param m control mode
+         */
+        void setControlMode(ServoControlMode m);
+        
         //! A method to set the desired position setpoint.
         /*!
          \param pos the desired angular pos [rad]
@@ -68,6 +77,12 @@ namespace sf
          */
         void setDesiredVelocity(Scalar vel);
         
+        //! A method to set the desired torque setpoint.
+        /*!
+         \param tau the desired torque [Nm]
+         */
+        void setDesiredTorque(Scalar tau);
+        
         //! A method returning the position of the servo motor.
         Scalar getPosition();
         
@@ -78,7 +93,7 @@ namespace sf
         Scalar getEffort();
         
     private:
-        bool velocityMode;
+        ServoControlMode mode;
         Scalar pSetpoint;
         Scalar vSetpoint;
         Scalar Kp;
