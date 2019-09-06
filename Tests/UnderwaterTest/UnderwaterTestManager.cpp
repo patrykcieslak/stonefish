@@ -105,12 +105,9 @@ void UnderwaterTestManager::BuildScenario()
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
 	
-    //sf::Plane* plane = new sf::Plane("Bottom", 10000.0, "Rock", seabed);
-    //AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,5)));
-    
     sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
     AddStaticEntity(tank, sf::I4());
-    
+        
 	//Create underwater vehicle body
     //Externals
     sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SUBMERGED_BODY, "yellow", sf::Scalar(0.003), false);
