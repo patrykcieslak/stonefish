@@ -59,9 +59,6 @@ namespace sf
         //! A method returning the name of the joint that the actuator is driving.
         std::string getJointName();
         
-        //! A method returning the type of the actuator.
-        ActuatorType getType();
-        
     protected:
         FeatherstoneEntity* fe;
         unsigned int jId;

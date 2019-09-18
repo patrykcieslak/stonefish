@@ -61,6 +61,9 @@ namespace sf
          \param angularAccStdDev standard deviation of the angular acceleration measurement noise
          */
         void setNoise(Scalar linearAccStdDev, Scalar angularAccStdDev);
+        
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
     };
 }
 

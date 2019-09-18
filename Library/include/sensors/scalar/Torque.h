@@ -59,6 +59,9 @@ namespace sf
          \param stdDev standard deviation of torque measurement noise
          */
         void setNoise(Scalar stdDev);
+        
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
     };
 }
 

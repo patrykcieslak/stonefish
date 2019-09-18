@@ -66,6 +66,9 @@ namespace sf
         //! A method that resets the sensor.
         virtual void Reset();
         
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
+        
     protected:
         Scalar GetRawAngle();
         Scalar GetRawAngularVelocity();

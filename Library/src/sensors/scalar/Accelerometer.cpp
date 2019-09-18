@@ -84,5 +84,10 @@ void Accelerometer::setNoise(Scalar linearAccStdDev, Scalar angularAccStdDev)
     channels[4].setStdDev(angularAccStdDev);
     channels[5].setStdDev(angularAccStdDev);
 }
+
+ScalarSensorType Accelerometer::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_ACC;
+}
     
 }

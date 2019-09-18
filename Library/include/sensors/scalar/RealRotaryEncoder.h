@@ -51,6 +51,9 @@ namespace sf
         //! A method that resets the sensor state.
         void Reset();
         
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
+        
     private:
         unsigned int cpr_res;
         unsigned int abs;

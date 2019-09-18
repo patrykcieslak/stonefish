@@ -60,6 +60,9 @@ namespace sf
         //! A method resetting the state of the sensor.
         void Reset();
         
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
+        
     private:
         Scalar range[2];
         Scalar sens;

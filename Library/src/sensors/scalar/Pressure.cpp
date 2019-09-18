@@ -61,4 +61,9 @@ void Pressure::setNoise(Scalar pressureStdDev)
     channels[0].setStdDev(pressureStdDev);
 }
 
+ScalarSensorType Pressure::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_PRESSURE;
+}
+
 }

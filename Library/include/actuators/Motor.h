@@ -61,6 +61,9 @@ namespace sf
         //! A method returning the angular velocity of the motor.
         virtual Scalar getAngularVelocity();
         
+        //! A method returning the type of the actuator.
+        ActuatorType getType();
+        
     protected:
         Scalar torque;
     };

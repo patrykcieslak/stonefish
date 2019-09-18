@@ -73,6 +73,11 @@ glm::vec2 Multibeam2::getRangeLimits()
 {
     return range;
 }
+
+VisionSensorType Multibeam2::getVisionSensorType()
+{
+    return VisionSensorType::SENSOR_MULTIBEAM2;
+}
     
 void Multibeam2::InitGraphics()
 {

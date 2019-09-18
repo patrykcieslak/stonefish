@@ -16,14 +16,14 @@
 */
 
 //
-//  ServoMotor.cpp
+//  Servo.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
 //  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
 //
 
-#include "actuators/ServoMotor.h"
+#include "actuators/Servo.h"
 
 #include "entities/FeatherstoneEntity.h"
 #include "joints/Joint.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
 
-ServoMotor::ServoMotor(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
+Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
 {
     Kp = positionGain > Scalar(0) ? positionGain : Scalar(1);
     Kv = velocityGain > Scalar(0) ? velocityGain : Scalar(1);
@@ -41,24 +41,28 @@ ServoMotor::ServoMotor(std::string uniqueName, Scalar positionGain, Scalar veloc
     vSetpoint = Scalar(0);
     mode = ServoControlMode::POSITION_CTRL;
 }
-    
 
-void ServoMotor::setControlMode(ServoControlMode m)
+ActuatorType Servo::getType()
+{
+    return ActuatorType::ACTUATOR_SERVO;
+}    
+
+void Servo::setControlMode(ServoControlMode m)
 {
     mode = m;
 }
 
-void ServoMotor::setDesiredPosition(Scalar pos)
+void Servo::setDesiredPosition(Scalar pos)
 {
     pSetpoint = pos;
 }
 
-void ServoMotor::setDesiredVelocity(Scalar vel)
+void Servo::setDesiredVelocity(Scalar vel)
 {
     vSetpoint = vel;
 }
 
-void ServoMotor::setDesiredTorque(Scalar tau)
+void Servo::setDesiredTorque(Scalar tau)
 {
     vSetpoint = tau > Scalar(0) ? Scalar(1000) : (tau < Scalar(0) ? Scalar(-1000) : Scalar(0));
     tau = tau < -tauMax ? -tauMax : (tau > tauMax ? tauMax : tau);
@@ -69,7 +73,7 @@ void ServoMotor::setDesiredTorque(Scalar tau)
     }
 }
     
-Scalar ServoMotor::getPosition()
+Scalar Servo::getPosition()
 {
     if(j != NULL)
     {
@@ -93,7 +97,7 @@ Scalar ServoMotor::getPosition()
         return Scalar(0);
 }
     
-Scalar ServoMotor::getVelocity()
+Scalar Servo::getVelocity()
 {
     if(j != NULL)
     {
@@ -117,7 +121,7 @@ Scalar ServoMotor::getVelocity()
         return Scalar(0);
 }
     
-Scalar ServoMotor::getEffort()
+Scalar Servo::getEffort()
 {
     if(fe != NULL)
         return fe->getMotorForceTorque(jId);
@@ -125,7 +129,7 @@ Scalar ServoMotor::getEffort()
         return Scalar(0);
 }
 
-void ServoMotor::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
+void Servo::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
     JointActuator::AttachToJoint(multibody, jointId);
     
@@ -137,7 +141,7 @@ void ServoMotor::AttachToJoint(FeatherstoneEntity* multibody, unsigned int joint
     }
 }
     
-void ServoMotor::Update(Scalar dt)
+void Servo::Update(Scalar dt)
 {
     if(j != NULL)
     {

@@ -67,6 +67,9 @@ namespace sf
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();
         
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
+        
     private:
         Scalar beamAngle;
         Scalar range[4];

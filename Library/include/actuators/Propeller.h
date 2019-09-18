@@ -76,6 +76,9 @@ namespace sf
         //! A method returning the angular velocity of the propeller [rad/s]
         Scalar getOmega();
         
+        //! A method returning the type of the actuator.
+        ActuatorType getType();
+        
     private:
         //Params
         Scalar D;

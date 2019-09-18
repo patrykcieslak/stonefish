@@ -64,4 +64,9 @@ void Torque::setNoise(Scalar stdDev)
     channels[0].setStdDev(stdDev);
 }
 
+ScalarSensorType Torque::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_TORQUE;
+}
+
 }

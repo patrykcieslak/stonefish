@@ -36,11 +36,6 @@ LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
     attach = NULL;
     o2a = Transform::getIdentity();
 }
-
-ActuatorType LinkActuator::getType()
-{
-    return ActuatorType::ACTUATOR_LINK;
-}
     
 Transform LinkActuator::getActuatorFrame()
 {

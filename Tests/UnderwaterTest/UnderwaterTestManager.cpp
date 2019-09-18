@@ -43,11 +43,11 @@
 #include <entities/statics/Obstacle.h>
 #include <entities/statics/Terrain.h>
 #include <actuators/Thruster.h>
-#include <actuators/ServoMotor.h>
+#include <actuators/Servo.h>
 #include <sensors/scalar/Pressure.h>
 #include <sensors/scalar/Odometry.h>
 #include <sensors/scalar/DVL.h>
-#include <sensors/scalar/FOG.h>
+#include <sensors/scalar/Compass.h>
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/GPS.h>
 #include <sensors/Contact.h>
@@ -167,12 +167,12 @@ void UnderwaterTestManager::BuildScenario()
     arm.push_back(finger2);
     
     //Create manipulator servomotors
-    sf::ServoMotor* srv1 = new sf::ServoMotor("Servo1", 1.0, 1.0, 100.0);
-    sf::ServoMotor* srv2 = new sf::ServoMotor("Servo2", 1.0, 1.0, 100.0);
-    sf::ServoMotor* srv3 = new sf::ServoMotor("Servo3", 1.0, 1.0, 100.0);
-    sf::ServoMotor* srv4 = new sf::ServoMotor("Servo4", 1.0, 1.0, 100.0);
-    sf::ServoMotor* srv5 = new sf::ServoMotor("FServo1", 1.0, 1.0, 10.0);
-    sf::ServoMotor* srv6 = new sf::ServoMotor("FServo2", 1.0, 1.0, 10.0);
+    sf::Servo* srv1 = new sf::Servo("Servo1", 1.0, 1.0, 100.0);
+    sf::Servo* srv2 = new sf::Servo("Servo2", 1.0, 1.0, 100.0);
+    sf::Servo* srv3 = new sf::Servo("Servo3", 1.0, 1.0, 100.0);
+    sf::Servo* srv4 = new sf::Servo("Servo4", 1.0, 1.0, 100.0);
+    sf::Servo* srv5 = new sf::Servo("FServo1", 1.0, 1.0, 10.0);
+    sf::Servo* srv6 = new sf::Servo("FServo2", 1.0, 1.0, 10.0);
     
     //Create thrusters
     sf::Polyhedron* prop1 = new sf::Polyhedron("Propeller1", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED_BODY, "propeller");
@@ -198,7 +198,7 @@ void UnderwaterTestManager::BuildScenario()
     dvl->setNoise(0.02, 0.05);
     sf::IMU* imu = new sf::IMU("IMU");
     imu->setNoise(0.01, 0.05);
-    sf::FOG* fog = new sf::FOG("FOG");
+    sf::Compass* fog = new sf::Compass("FOG");
     fog->setNoise(0.01);
     sf::GPS* gps = new sf::GPS("GPS");
     gps->setNoise(0.5);

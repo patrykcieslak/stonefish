@@ -120,6 +120,9 @@ namespace sf
         //! A method returning a pointer to range data.
         float* getRangeDataPointer();
         
+        //! A method returning the type of the vision sensor.
+        VisionSensorType getVisionSensorType();
+        
     private:
         void InitGraphics();
         

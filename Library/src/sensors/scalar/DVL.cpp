@@ -160,4 +160,9 @@ void DVL::setNoise(Scalar velocityStdDev, Scalar altitudeStdDev)
     channels[3].setStdDev(altitudeStdDev);
 }
 
+ScalarSensorType DVL::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_DVL;
+}
+
 }

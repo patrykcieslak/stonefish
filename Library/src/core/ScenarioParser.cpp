@@ -41,7 +41,7 @@
 #include "sensors/scalar/IMU.h"
 #include "sensors/scalar/DVL.h"
 #include "sensors/scalar/GPS.h"
-#include "sensors/scalar/FOG.h"
+#include "sensors/scalar/Compass.h"
 #include "sensors/scalar/Odometry.h"
 #include "sensors/scalar/Pressure.h"
 #include "sensors/scalar/RotaryEncoder.h"
@@ -53,7 +53,7 @@
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
 #include "actuators/Light.h"
-#include "actuators/ServoMotor.h"
+#include "actuators/Servo.h"
 #include "actuators/Propeller.h"
 #include "actuators/Thruster.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -65,11 +65,14 @@ namespace sf
 ScenarioParser::ScenarioParser(SimulationManager* sm) : sm(sm) 
 {
 }
+
+SimulationManager* ScenarioParser::getSimulationManager()
+{
+    return sm;
+}
  
 bool ScenarioParser::Parse(std::string filename)
 {
-    filename = GetDataPath() + filename;
-    
     cInfo("Loading scenario from: %s", filename.c_str());
     
     //Open file
@@ -444,7 +447,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     return true;
 }
 
-bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
+bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns)
 {
     //---- Basic ----
     const char* name = nullptr;
@@ -477,9 +480,10 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
     }
     if(element->QueryAttribute("buoyant", &buoyant) != XML_SUCCESS)
         buoyant = true;
-        
+    
     std::string typeStr(type);
-        
+    std::string solidName = ns != "" ? ns + "/" + std::string(name) : std::string(name);
+    
     if(typeStr == "compound")
     {
         XMLElement* item;
@@ -491,18 +495,18 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
       
         if((item = element->FirstChildElement("external_part")) == nullptr)
             return false;
-        if(!ParseSolid(item, part))
+        if(!ParseSolid(item, part, solidName))
             return false;
         XMLElement* item2;
         if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
             return false;
-        comp = new Compound(std::string(name), part, partOrigin, ePhyType);
+        comp = new Compound(solidName, part, partOrigin, ePhyType);
         
         //Iterate through all external parts
         item = item->NextSiblingElement("external_part");
         while(item != nullptr)
         {
-            if(!ParseSolid(item, part))
+            if(!ParseSolid(item, part, solidName))
             {
                 delete comp;
                 return false;
@@ -522,7 +526,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
         item = element->FirstChildElement("internal_part");
         while(item != nullptr)
         {
-            if(!ParseSolid(item, part))
+            if(!ParseSolid(item, part, solidName))
             {
                 delete comp;
                 return false;
@@ -597,7 +601,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
             
-            solid = new Box(std::string(name), Vector3(dimX, dimY, dimZ), origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Box(solidName, Vector3(dimX, dimY, dimZ), origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
         }
         else if(typeStr == "cylinder")
         {
@@ -612,7 +616,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
                 
-            solid = new Cylinder(std::string(name), radius, height, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Cylinder(solidName, radius, height, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
         }
         else if(typeStr == "sphere")
         {
@@ -625,7 +629,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
             
-            solid = new Sphere(std::string(name), radius, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Sphere(solidName, radius, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
         }
         else if(typeStr == "torus")
         {
@@ -640,7 +644,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
             
-            solid = new Torus(std::string(name), radiusMaj, radiusMin, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Torus(solidName, radiusMaj, radiusMin, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
         }
         else if(typeStr == "model")
         {
@@ -683,11 +687,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid)
                 if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                     return false;
           
-                solid = new Polyhedron(std::string(name), GetDataPath() + std::string(graMesh), graScale, graOrigin, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(solidName, GetDataPath() + std::string(graMesh), graScale, graOrigin, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
             }
             else
             {
-                solid = new Polyhedron(std::string(name), GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(solidName, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
             }
         }
         else
@@ -726,6 +730,8 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
         return false;
 
+    Robot* robot = new Robot(std::string(name), fixed);
+
     //---- Links ----
     //Base link
     SolidEntity* baseLink = nullptr;
@@ -735,7 +741,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         cError("Scenario parser: base link of robot '%s' missing!", name);
         return false;
     }
-    if(!ParseLink(item, baseLink))
+    if(!ParseLink(item, robot, baseLink))
     {
         cError("Scenario parser: base link of robot '%s' not properly defined!", name);
         return false;
@@ -748,7 +754,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     item = element->FirstChildElement("link");
     while(item != nullptr)
     {
-        if(!ParseLink(item, link))
+        if(!ParseLink(item, robot, link))
         {
             cError("Scenario parser: link of robot '%s' not properly defined!", name);
             return false;
@@ -757,7 +763,6 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         item = item->NextSiblingElement("link");
     }
     
-    Robot* robot = new Robot(std::string(name), fixed);
     robot->DefineLinks(baseLink, links, selfCollisions);
     
     //---- Joints ----
@@ -800,17 +805,17 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     return true;
 }
 
-bool ScenarioParser::ParseLink(XMLElement* element, SolidEntity*& link)
+bool ScenarioParser::ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link)
 {
-    return ParseSolid(element, link);
+    return ParseSolid(element, link, robot->getName());
 }
         
 bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
 {
     const char* name = nullptr;
     const char* type = nullptr;
-    const char* parentName = nullptr;
-    const char* childName = nullptr; 
+    const char* parent = nullptr;
+    const char* child = nullptr; 
     Transform origin;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
@@ -821,18 +826,22 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
     XMLElement* item;
     if((item = element->FirstChildElement("parent")) == nullptr)
         return false;
-    if(item->QueryStringAttribute("name", &parentName) != XML_SUCCESS)
+    if(item->QueryStringAttribute("name", &parent) != XML_SUCCESS)
         return false;
     if((item = element->FirstChildElement("child")) == nullptr)
         return false;
-    if(item->QueryStringAttribute("name", &childName) != XML_SUCCESS)
+    if(item->QueryStringAttribute("name", &child) != XML_SUCCESS)
         return false;    
     if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
         return false;
-        
+    
+    std::string jointName = robot->getName() + "/" + std::string(name);
+    std::string parentName = robot->getName() + "/" + std::string(parent);
+    std::string childName = robot->getName() + "/" + std::string(child);
+
     if(typeStr == "fixed")
     {
-        robot->DefineFixedJoint(std::string(name), std::string(parentName), std::string(childName), origin);
+        robot->DefineFixedJoint(jointName, parentName, childName, origin);
     }
     else if(typeStr == "prismatic" || typeStr == "revolute")
     {
@@ -854,9 +863,9 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
         }
         
         if(typeStr == "prismatic")
-            robot->DefinePrismaticJoint(std::string(name), std::string(parentName), std::string(childName), origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
+            robot->DefinePrismaticJoint(jointName, parentName, childName, origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
         else
-            robot->DefineRevoluteJoint(std::string(name), std::string(parentName), std::string(childName), origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
+            robot->DefineRevoluteJoint(jointName, parentName, childName, origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
     }
     else
         return false;
@@ -879,6 +888,8 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         rate = Scalar(-1);
     std::string typeStr(type);
     
+    std::string sensorName = robot->getName() + "/" + std::string(name);
+    
     //---- Specific ----
     XMLElement* item;
     if(typeStr == "imu")
@@ -896,7 +907,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        IMU* imu = new IMU(std::string(name), rate, history);
+        IMU* imu = new IMU(sensorName, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -921,7 +932,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             imu->setNoise(angle, velocity);
         }
         
-        robot->AddLinkSensor(imu, std::string(linkName), origin);
+        robot->AddLinkSensor(imu, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "dvl")
     {
@@ -941,7 +952,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("beam_angle", &beamAngle) != XML_SUCCESS)
             return false;
             
-        DVL* dvl = new DVL(std::string(name), beamAngle, rate, history);
+        DVL* dvl = new DVL(sensorName, beamAngle, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -974,7 +985,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             dvl->setNoise(velocity, altitude);
         }
         
-        robot->AddLinkSensor(dvl, std::string(linkName), origin);
+        robot->AddLinkSensor(dvl, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "gps")
     {
@@ -991,7 +1002,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        GPS* gps = new GPS(std::string(name), rate, history);
+        GPS* gps = new GPS(sensorName, rate, history);
         
         if((item = element->FirstChildElement("noise")) != nullptr)    
         {
@@ -1004,7 +1015,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             gps->setNoise(ned);
         }
         
-        robot->AddLinkSensor(gps, std::string(linkName), origin);
+        robot->AddLinkSensor(gps, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "pressure")
     {
@@ -1021,7 +1032,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Pressure* press = new Pressure(std::string(name), rate, history);
+        Pressure* press = new Pressure(sensorName, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -1045,7 +1056,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             press->setNoise(pressure);
         }
         
-        robot->AddLinkSensor(press, std::string(linkName), origin);
+        robot->AddLinkSensor(press, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "odometry")
     {
@@ -1062,7 +1073,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Odometry* odom = new Odometry(std::string(name), rate, history);
+        Odometry* odom = new Odometry(sensorName, rate, history);
         
         if((item = element->FirstChildElement("noise")) != nullptr)    
         {
@@ -1078,9 +1089,9 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             odom->setNoise(position, velocity, angle, aVelocity);
         }
         
-        robot->AddLinkSensor(odom, std::string(linkName), origin);
+        robot->AddLinkSensor(odom, robot->getName() + "/" + std::string(linkName), origin);
     }
-    else if(typeStr == "fog")
+    else if(typeStr == "compass")
     {
         const char* linkName = nullptr;
         Transform origin;
@@ -1095,20 +1106,20 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        FOG* fog = new FOG(std::string(name), rate, history);
+        Compass* compass = new Compass(sensorName, rate, history);
         
         if((item = element->FirstChildElement("noise")) != nullptr)    
         {
             Scalar heading;
             if(item->QueryAttribute("heading", &heading) != XML_SUCCESS)
             {
-                delete fog;
+                delete compass;
                 return false;
             }
-            fog->setNoise(heading);
+            compass->setNoise(heading);
         }
         
-        robot->AddLinkSensor(fog, std::string(linkName), origin);
+        robot->AddLinkSensor(compass, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "profiler")
     {
@@ -1129,7 +1140,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
             return false;
             
-        Profiler* prof = new Profiler(std::string(name), fov, steps, rate, history);
+        Profiler* prof = new Profiler(sensorName, fov, steps, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -1154,7 +1165,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             prof->setNoise(distance);
         }
         
-        robot->AddLinkSensor(prof, std::string(linkName), origin);
+        robot->AddLinkSensor(prof, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "multibeam1d")
     {
@@ -1175,7 +1186,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
             return false;
             
-        Multibeam* mult = new Multibeam(std::string(name), fov, steps, rate, history);
+        Multibeam* mult = new Multibeam(sensorName, fov, steps, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -1200,7 +1211,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             mult->setNoise(distance);
         }
         
-        robot->AddLinkSensor(mult, std::string(linkName), origin);
+        robot->AddLinkSensor(mult, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "torque")
     {
@@ -1214,7 +1225,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Torque* torque = new Torque(std::string(name), rate, history);
+        Torque* torque = new Torque(sensorName, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -1238,7 +1249,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             torque->setNoise(tau);
         }
         
-        robot->AddJointSensor(torque, std::string(jointName));
+        robot->AddJointSensor(torque, robot->getName() + "/" + std::string(jointName));
     }
     else if(typeStr == "forcetorque")
     {
@@ -1255,7 +1266,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        ForceTorque* ft = new ForceTorque(std::string(name), origin, rate, history);
+        ForceTorque* ft = new ForceTorque(sensorName, origin, rate, history);
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
@@ -1287,7 +1298,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             ft->setNoise(force, torque);
         }
         
-        robot->AddJointSensor(ft, std::string(jointName));    
+        robot->AddJointSensor(ft, robot->getName() + "/" + std::string(jointName));    
     }
     else if(typeStr == "camera")
     {
@@ -1308,8 +1319,8 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
             return false;
         
-        ColorCamera* cam = new ColorCamera(std::string(name), resX, resY, hFov, 1, rate);
-        robot->AddVisionSensor(cam, linkName, origin);
+        ColorCamera* cam = new ColorCamera(sensorName, resX, resY, hFov, 1, rate);
+        robot->AddVisionSensor(cam, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "depthcamera")
     {
@@ -1333,8 +1344,8 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
             return false;
         
-        DepthCamera* dcam = new DepthCamera(std::string(name), resX, resY, hFov, depthMin, depthMax, rate);
-        robot->AddVisionSensor(dcam, linkName, origin);
+        DepthCamera* dcam = new DepthCamera(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
+        robot->AddVisionSensor(dcam, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "multibeam2d")
     {
@@ -1359,8 +1370,8 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
             return false;
         
-        Multibeam2* mb = new Multibeam2(std::string(name), resX, resY, hFov, vFov, depthMin, depthMax, rate);
-        robot->AddVisionSensor(mb, linkName, origin);
+        Multibeam2* mb = new Multibeam2(sensorName, resX, resY, hFov, vFov, depthMin, depthMax, rate);
+        robot->AddVisionSensor(mb, robot->getName() + "/" + std::string(linkName), origin);
         
     }
     else
@@ -1381,6 +1392,8 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         return false;
     std::string typeStr(type);
     
+    std::string actuatorName = robot->getName() + "/" + std::string(name);
+    
     //---- Specific ----
     XMLElement* item;
     if(typeStr == "servo")
@@ -1398,8 +1411,8 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             || item->QueryAttribute("max_torque", &maxTau) != XML_SUCCESS)
             return false;
         
-        ServoMotor* srv = new ServoMotor(std::string(name), kp, kv, maxTau);
-        robot->AddJointActuator(srv, std::string(jointName));
+        Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
+        robot->AddJointActuator(srv, robot->getName() + "/" + std::string(jointName));
     }
     else if(typeStr == "thruster" || typeStr == "propeller")
     {
@@ -1436,15 +1449,15 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
-            Thruster* th = new Thruster(std::string(name), prop, diameter, cThrust, cTorque, maxRpm, rightHand);
-            robot->AddLinkActuator(th, std::string(linkName), origin);
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(std::string(name) + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
-            Propeller* p = new Propeller(std::string(name), prop, diameter, cThrust, cTorque, maxRpm, rightHand);
-            robot->AddLinkActuator(p, std::string(linkName), origin);
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
     }
     else if(typeStr == "light")
@@ -1474,11 +1487,11 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             
         Light* light;
         if(cone > Scalar(0))
-            light = new Light(std::string(name), cone, color, illu);
+            light = new Light(actuatorName, cone, color, illu);
         else
-            light = new Light(std::string(name), color, illu);
+            light = new Light(actuatorName, color, illu);
             
-        robot->AddLinkActuator(light, std::string(linkName), origin);
+        robot->AddLinkActuator(light, robot->getName() + "/" + std::string(linkName), origin);
     }
     else
         return false;

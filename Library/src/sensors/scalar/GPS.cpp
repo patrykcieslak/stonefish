@@ -92,4 +92,9 @@ Scalar GPS::getNoise()
     return nedStdDev;
 }
 
+ScalarSensorType GPS::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_GPS;
+}
+
 }

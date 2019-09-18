@@ -72,4 +72,10 @@ void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar ori
     channels[2].setStdDev(positionStdDev);
 }
 
+ScalarSensorType Odometry::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_ODOM;
+}
+
+
 }

@@ -38,11 +38,6 @@ JointActuator::JointActuator(std::string uniqueName) : Actuator(uniqueName)
     j = NULL;
 }
 
-ActuatorType JointActuator::getType()
-{
-    return ActuatorType::ACTUATOR_JOINT;
-}
-
 std::string JointActuator::getJointName()
 {
     if(fe != NULL)

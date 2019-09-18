@@ -147,10 +147,32 @@ namespace sf
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
         
         //! A method returning a pointer to the actuator with a given name.
+        /*!
+         \param name the name of the actuator
+         \return a pointer to the actuator object
+         */
         Actuator* getActuator(std::string name);
         
+        //! A method returning a pointer to the actuator by index.
+        /*!
+         \param index the id of the actuator
+         \return a pointer to the actuator object
+         */
+        Actuator* getActuator(unsigned int index);
+        
         //! A method returning a pointer to the sensor with a given name.
+        /*!
+         \param name the name of the sensor
+         \return a pointer to the sensor object
+         */
         Sensor* getSensor(std::string name);
+        
+        //! A method returning a pointer to the sensor by index.
+        /*!
+         \param index the id of the sensor
+         \return a pointer to the sensor object
+         */
+        Sensor* getSensor(unsigned int index);
         
         //! A method returning the pose of the robot in the world frame.
         virtual Transform getTransform() const;

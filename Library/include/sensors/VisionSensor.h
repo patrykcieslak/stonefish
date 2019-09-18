@@ -30,6 +30,9 @@
 
 namespace sf
 {
+    //! An enum defining types of vision sensors.
+    typedef enum {SENSOR_COLOR_CAMERA = 0, SENSOR_DEPTH_CAMERA, SENSOR_MULTIBEAM2} VisionSensorType;
+    
     class SolidEntity;
     class FeatherstoneEntity;
     
@@ -76,6 +79,9 @@ namespace sf
         
         //! A method returning the type of the sensor.
         virtual SensorType getType();
+        
+        //! A method returning the type of the vision sensor.
+        virtual VisionSensorType getVisionSensorType() = 0;
         
     protected:
         virtual void InitGraphics() = 0;

@@ -60,6 +60,9 @@ namespace sf
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise
          */
         void setNoise(Scalar angleStdDev, Scalar angularVelocityStdDev);
+        
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
     };
 }
 

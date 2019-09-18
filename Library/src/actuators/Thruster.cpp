@@ -62,6 +62,11 @@ Thruster::~Thruster()
         delete prop;
 }
 
+ActuatorType Thruster::getType()
+{
+    return ActuatorType::ACTUATOR_THRUSTER;
+}
+
 void Thruster::setSetpoint(Scalar s)
 {
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);

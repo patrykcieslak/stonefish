@@ -16,7 +16,7 @@
 */
 
 //
-//  ServoMotor.h
+//  Servo.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
@@ -34,7 +34,7 @@ namespace sf
     typedef enum {POSITION_CTRL, VELOCITY_CTRL, TORQUE_CTRL} ServoControlMode;
     
     //! A class implementing a position/velocity servo motor.
-    class ServoMotor : public JointActuator
+    class Servo : public JointActuator
     {
     public:
         //! A constructor.
@@ -44,7 +44,7 @@ namespace sf
          \param velocityGain a gain factor used in velocity control
          \param maxTorque the maximum torque that the motor can generate [Nm]
          */
-        ServoMotor(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque);
+        Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque);
         
         //! A method used to attach the actuator to the specified joint of a rigid multibody.
         /*!
@@ -91,6 +91,9 @@ namespace sf
         
         //! A method returning the effort of the servo motor (force or torque).
         Scalar getEffort();
+        
+        //! A method returning the type of the actuator.
+        ActuatorType getType();
         
     private:
         ServoControlMode mode;

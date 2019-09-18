@@ -115,4 +115,10 @@ void Multibeam::setNoise(Scalar stdDev)
         channels[i].setStdDev(stdDev);
 }
 
+ScalarSensorType Multibeam::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_MULTIBEAM;
+}
+
+
 }

@@ -114,6 +114,14 @@ Actuator* Robot::getActuator(std::string name)
 
     return NULL;
 }
+
+Actuator* Robot::getActuator(unsigned int index)
+{
+    if(index < actuators.size())
+        return actuators[index];
+    else
+        return NULL;
+}
     
 Sensor* Robot::getSensor(std::string name)
 {
@@ -122,6 +130,14 @@ Sensor* Robot::getSensor(std::string name)
             return sensors[i];
     
     return NULL;
+}
+
+Sensor* Robot::getSensor(unsigned int index)
+{
+    if(index < sensors.size())
+        return sensors[index];
+    else
+        return NULL;
 }
 
 Transform Robot::getTransform() const

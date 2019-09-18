@@ -14,6 +14,7 @@
         <File Name="src/sensors/vision/Camera.cpp"/>
       </VirtualDirectory>
       <VirtualDirectory Name="scalar">
+        <File Name="src/sensors/scalar/Compass.cpp"/>
         <File Name="src/sensors/scalar/Trajectory.cpp"/>
         <File Name="src/sensors/scalar/Torque.cpp"/>
         <File Name="src/sensors/scalar/RotaryEncoder.cpp"/>
@@ -29,7 +30,6 @@
         <File Name="src/sensors/scalar/Gyroscope.cpp"/>
         <File Name="src/sensors/scalar/GPS.cpp"/>
         <File Name="src/sensors/scalar/ForceTorque.cpp"/>
-        <File Name="src/sensors/scalar/FOG.cpp"/>
         <File Name="src/sensors/scalar/DVL.cpp"/>
         <File Name="src/sensors/scalar/Current.cpp"/>
         <File Name="src/sensors/scalar/ADC.cpp"/>
@@ -42,8 +42,8 @@
       <File Name="src/sensors/Contact.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="src/actuators/Servo.cpp"/>
       <File Name="src/actuators/Propeller.cpp"/>
-      <File Name="src/actuators/ServoMotor.cpp"/>
       <File Name="src/actuators/LinkActuator.cpp"/>
       <File Name="src/actuators/JointActuator.cpp"/>
       <File Name="src/actuators/Actuator.cpp"/>
@@ -236,6 +236,7 @@
         <File Name="include/sensors/vision/Camera.h"/>
       </VirtualDirectory>
       <VirtualDirectory Name="scalar">
+        <File Name="include/sensors/scalar/Compass.h"/>
         <File Name="include/sensors/scalar/Trajectory.h"/>
         <File Name="include/sensors/scalar/Torque.h"/>
         <File Name="include/sensors/scalar/RotaryEncoder.h"/>
@@ -251,7 +252,6 @@
         <File Name="include/sensors/scalar/Gyroscope.h"/>
         <File Name="include/sensors/scalar/GPS.h"/>
         <File Name="include/sensors/scalar/ForceTorque.h"/>
-        <File Name="include/sensors/scalar/FOG.h"/>
         <File Name="include/sensors/scalar/DVL.h"/>
         <File Name="include/sensors/scalar/Current.h"/>
         <File Name="include/sensors/scalar/ADC.h"/>
@@ -264,8 +264,8 @@
       <File Name="include/sensors/Contact.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="include/actuators/Servo.h"/>
       <File Name="include/actuators/Propeller.h"/>
-      <File Name="include/actuators/ServoMotor.h"/>
       <File Name="include/actuators/LinkActuator.h"/>
       <File Name="include/actuators/JointActuator.h"/>
       <File Name="include/actuators/Thruster.h"/>

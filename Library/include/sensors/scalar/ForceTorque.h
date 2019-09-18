@@ -81,6 +81,9 @@ namespace sf
         //! A method returning the current sensor frame in world.
         Transform getSensorFrame();
         
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
+        
     private:
         SolidEntity* attach;
         Transform o2s;

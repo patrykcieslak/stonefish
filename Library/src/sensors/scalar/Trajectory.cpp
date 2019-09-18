@@ -54,4 +54,9 @@ void Trajectory::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
+ScalarSensorType Trajectory::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_TRAJECTORY;
+}
+
 }

@@ -31,6 +31,10 @@
 
 namespace sf
 {
+    //! An enum defining types of scalar sensors.
+    typedef enum {SENSOR_ACC = 0, SENSOR_CURRENT, SENSOR_DVL, SENSOR_COMPASS, SENSOR_FT, SENSOR_GPS, SENSOR_GYRO, SENSOR_IMU, 
+                  SENSOR_MULTIBEAM, SENSOR_ODOM, SENSOR_PRESSURE, SENSOR_PROFILER, SENSOR_ENCODER, SENSOR_TORQUE, SENSOR_TRAJECTORY} ScalarSensorType;
+    
     //! An enum defining the type of quantity represented by the measurement.
     typedef enum
     {
@@ -157,6 +161,9 @@ namespace sf
          \return a structure discribing the channel
          */
         SensorChannel getSensorChannelDescription(unsigned int channel);
+        
+        //! A method returning the type of scalar sensor.
+        virtual ScalarSensorType getScalarSensorType() = 0;
         
     protected:
         void AddSampleToHistory(const Sample& s);

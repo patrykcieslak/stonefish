@@ -60,6 +60,11 @@ glm::vec2 DepthCamera::getDepthRange()
     return depthRange;
 }
     
+VisionSensorType DepthCamera::getVisionSensorType()
+{
+    return VisionSensorType::SENSOR_DEPTH_CAMERA;
+}
+
 void DepthCamera::InitGraphics()
 {
     glCamera = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange.x, depthRange.y);

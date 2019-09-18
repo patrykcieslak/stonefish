@@ -90,6 +90,9 @@ namespace sf
          */
         void* getImageDataPointer(unsigned int index = 0);
         
+        //! A method returning the type of the vision sensor.
+        VisionSensorType getVisionSensorType();
+        
     private:
         void InitGraphics();
         

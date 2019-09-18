@@ -59,6 +59,9 @@ namespace sf
         //! A method returning the type of the sensor.
         SensorType getType();
         
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
+        
     private:
         DCMotor* motor;
     };

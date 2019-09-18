@@ -59,6 +59,9 @@ namespace sf
          \param pressureStdDev standard deviation of the pressure measurement noise
          */
         void setNoise(Scalar pressureStdDev);
+        
+        //! A method returning the type of the scalar sensor.
+        ScalarSensorType getScalarSensorType();
     };
 }
 

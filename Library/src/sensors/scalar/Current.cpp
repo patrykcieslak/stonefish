@@ -60,4 +60,9 @@ SensorType Current::getType()
     return SensorType::SENSOR_OTHER;
 }
 
+ScalarSensorType Current::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_CURRENT;
+}
+
 }

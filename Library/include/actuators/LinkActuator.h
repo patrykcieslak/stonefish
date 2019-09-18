@@ -60,10 +60,7 @@ namespace sf
         
         //! A method returning actuator frame in the world frame.
         Transform getActuatorFrame();
-        
-        //! A method returning the type of the actuator.
-        virtual ActuatorType getType();
-        
+       
     protected:
         SolidEntity* attach;
         Transform o2a;

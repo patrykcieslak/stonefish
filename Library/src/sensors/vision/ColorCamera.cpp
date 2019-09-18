@@ -68,6 +68,11 @@ void* ColorCamera::getImageDataPointer(unsigned int index)
 {
     return imageData;
 }
+
+VisionSensorType ColorCamera::getVisionSensorType()
+{
+    return VisionSensorType::SENSOR_COLOR_CAMERA;
+}
     
 void ColorCamera::InitGraphics()
 {

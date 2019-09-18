@@ -76,4 +76,9 @@ void Gyroscope::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
+ScalarSensorType Gyroscope::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_GYRO;
+}
+
 }

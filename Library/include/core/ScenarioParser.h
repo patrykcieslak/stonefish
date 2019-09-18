@@ -45,40 +45,86 @@ namespace sf
     {
     public:
         //! A constructor.
+        /*!
+         \param sm a pointer to the simulation manager
+         */
         ScenarioParser(SimulationManager* sm);
         
-        //!
+        //! A method used to parse a scenario description file.
+        /*!
+         \param filename path to the scenario description file
+         */
         virtual bool Parse(std::string filename);
         
+        //! A method used to get the pointer to the associated simulation manager.
+        SimulationManager* getSimulationManager();
+        
     protected:
-        //!
+        //! A method used to parse environment configuration.
+        /*!
+         \param element a pointer to the XML node
+         */
         virtual bool ParseEnvironment(XMLElement* element);
         
-        //!
+        //! A method used to parse the physical materials information.
+        /*!
+         \param element a pointer to the XML node
+         */
         virtual bool ParseMaterials(XMLElement* element);
         
-        //!
+        //! A method used to parse the graphical materials information.
+        /*!
+         \param element a pointer to the XML node
+         */
         virtual bool ParseLooks(XMLElement* element);
         
-        //!
+        //! A method used to parse a static object description.
+        /*!
+         \param element a pointer to the XML node
+         */
         virtual bool ParseStatic(XMLElement* element);
         
-        //!
-        virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid);
+        //! A method used to parse a dynamic object description.
+        /*!
+         \param element a pointer to the XML node
+         \param solid a reference to the loaded solid entity
+         \param ns an optional namespace
+         */
+        virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns = "");
         
-        //!
+        //! A method used to parse a robot description.
+        /*!
+         \param element a pointer to the XML node
+         */
         virtual bool ParseRobot(XMLElement* element);
         
-        //!
-        virtual bool ParseLink(XMLElement* element, SolidEntity*& link);
+        //! A method used to parse a single robot link description.
+        /*!
+         \param element a pointer to the XML node
+         \param robot a pointer to the robot object
+         \param link a reference to the loaded robot link
+         */
+        virtual bool ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link);
         
-        //!
+        //! A method used to parse a single robot joint description.
+        /*!
+         \param element a pointer to the XML node
+         \param robot a pointer to the robot object
+         */
         virtual bool ParseJoint(XMLElement* element, Robot* robot);
         
-        //!
+        //! A method used to parse a single robot sensor description.
+        /*!
+         \param element a pointer to the XML node
+         \param robot a pointer to the robot object
+         */
         virtual bool ParseSensor(XMLElement* element, Robot* robot);
         
-        //!
+        //! A method used to parse a single robot actuator description.
+        /*!
+         \param element a pointer to the XML node
+         \param robot a pointer to the robot object
+         */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
         
     private:

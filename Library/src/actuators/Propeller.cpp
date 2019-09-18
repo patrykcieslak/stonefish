@@ -62,6 +62,11 @@ Propeller::~Propeller()
         delete prop;
 }
 
+ActuatorType Propeller::getType()
+{
+    return ActuatorType::ACTUATOR_PROPELLER;
+}
+
 void Propeller::setSetpoint(Scalar s)
 {
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);

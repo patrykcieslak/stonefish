@@ -36,6 +36,11 @@ Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
     torque = Scalar(0);
 }
 
+ActuatorType Motor::getType()
+{
+    return ActuatorType::ACTUATOR_MOTOR;
+}
+
 void Motor::setIntensity(Scalar tau)
 {
     torque = tau;

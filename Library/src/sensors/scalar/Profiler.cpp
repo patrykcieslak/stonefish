@@ -125,4 +125,9 @@ void Profiler::setNoise(Scalar stdDev)
     channels[1].setStdDev(stdDev);
 }
 
+ScalarSensorType Profiler::getScalarSensorType()
+{
+    return ScalarSensorType::SENSOR_PROFILER;
+}
+
 }
