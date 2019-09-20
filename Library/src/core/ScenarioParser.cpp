@@ -847,8 +847,9 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
     {
         const char* vec = nullptr;
         Scalar x, y, z;
-        Scalar posMin = Scalar(1);
-        Scalar posMax = Scalar(-1);
+        Scalar posMin(1);
+        Scalar posMax(-1);
+        Scalar damping(-1);
         
         if((item = element->FirstChildElement("axis")) == nullptr)
             return false;
@@ -861,11 +862,16 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
             if((item->QueryAttribute("min", &posMin) != XML_SUCCESS) || (item->QueryAttribute("max", &posMax) != XML_SUCCESS))
                 return false;
         }
+        if((item = element->FirstChildElement("damping")) != nullptr) //Optional
+        {
+            if(item->QueryAttribute("value", &damping) != XML_SUCCESS)
+                return false;
+        }
         
         if(typeStr == "prismatic")
-            robot->DefinePrismaticJoint(jointName, parentName, childName, origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
+            robot->DefinePrismaticJoint(jointName, parentName, childName, origin, Vector3(x, y, z), std::make_pair(posMin, posMax), damping);
         else
-            robot->DefineRevoluteJoint(jointName, parentName, childName, origin, Vector3(x, y, z), std::make_pair(posMin, posMax));
+            robot->DefineRevoluteJoint(jointName, parentName, childName, origin, Vector3(x, y, z), std::make_pair(posMin, posMax), damping);
     }
     else
         return false;

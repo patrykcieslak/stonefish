@@ -39,7 +39,7 @@ Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, S
     tauMax = maxTorque > Scalar(0) ? maxTorque : Scalar(0);
     pSetpoint = Scalar(0);
     vSetpoint = Scalar(0);
-    mode = ServoControlMode::POSITION_CTRL;
+    mode = ServoControlMode::VELOCITY_CTRL;
 }
 
 ActuatorType Servo::getType()
@@ -54,11 +54,27 @@ void Servo::setControlMode(ServoControlMode m)
 
 void Servo::setDesiredPosition(Scalar pos)
 {
+    if(btFuzzyZero(pSetpoint - pos)) //Check if setpoint changed
+        return;
+    
+    if(fe != NULL)
+    {
+        FeatherstoneJoint jnt = fe->getJoint(jId);
+        if(jnt.lowerLimit < jnt.upperLimit) //Does it have joint limits?
+            pos = pos < jnt.lowerLimit ? jnt.lowerLimit : (pos > jnt.upperLimit ? jnt.upperLimit : pos);
+    }
+    
     pSetpoint = pos;
 }
 
 void Servo::setDesiredVelocity(Scalar vel)
 {
+    if(btFuzzyZero(vSetpoint - vel)) //Check if setpoint changed
+        return;
+        
+    if(btFuzzyZero(vel))
+        pSetpoint = getPosition();
+        
     vSetpoint = vel;
 }
 
@@ -136,8 +152,8 @@ void Servo::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
     if(fe != NULL) //Actuator succesfully attached?
     {
         fe->AddJointMotor(jId, tauMax);
-        fe->MotorPositionSetpoint(jId, btScalar(0), Kp);
-        fe->MotorVelocitySetpoint(jId, btScalar(0), Kv);
+        fe->MotorPositionSetpoint(jId, Scalar(0), Kp);
+        fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
     }
 }
     
@@ -165,14 +181,37 @@ void Servo::Update(Scalar dt)
         switch(mode)
         {
             case POSITION_CTRL: 
+            {
                 fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-                fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+                fe->MotorVelocitySetpoint(jId, Scalar(0), Scalar(0));
+            }
                 break;
                 
             case VELOCITY_CTRL:
             case TORQUE_CTRL:
-                fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
-                fe->MotorVelocitySetpoint(jId, vSetpoint, Kv);
+            {
+                if(btFuzzyZero(vSetpoint))
+                { 
+                    fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
+                    fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
+                }
+                else
+                {
+                    Scalar vSetpoint2 = vSetpoint;
+                    
+                    //Do not allow to cross limits by changing velocity setpoint
+                    FeatherstoneJoint jnt = fe->getJoint(jId);
+                    if(jnt.lowerLimit < jnt.upperLimit)
+                    {
+                        Scalar jpos = getPosition();
+                        Scalar jpos2 = jpos + vSetpoint2 * dt;
+                        vSetpoint2 = jpos2 < jnt.lowerLimit ? (jnt.lowerLimit - jpos)/dt : (jpos2 > jnt.upperLimit ? (jnt.upperLimit - jpos)/dt : vSetpoint2);
+                    }
+                    
+                    fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
+                    fe->MotorVelocitySetpoint(jId, vSetpoint2, Kv);
+                }
+            }
                 break;
         }
     }

@@ -73,9 +73,10 @@ namespace sf
          \param origin frame of the joint
          \param axis an axis of the joint
          \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
+         \param damping joint motion damping (works when there is no actuator attached to the joint) 
          */
         void DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, 
-                                 const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)));
+                                 const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)), Scalar damping = Scalar(-1));
         
         //! A method used to define a prismatic joint between two mechanical parts of the robot.
         /*!
@@ -85,9 +86,10 @@ namespace sf
          \param origin frame of the joint
          \param axis an axis of the joint
          \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
+         \param damping joint motion damping (works when there is no actuator attached to the joint)
          */
         void DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, 
-                                  const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)));
+                                  const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)), Scalar damping = Scalar(-1));
         
         //! A method used to define a fixed joint between two mechanical parts of the robot.
         /*!

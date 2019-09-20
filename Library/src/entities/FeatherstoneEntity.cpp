@@ -217,6 +217,11 @@ void FeatherstoneEntity::setJointDamping(unsigned int index, Scalar constantFact
     joints[index].velDamping = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
 }
 
+FeatherstoneJoint FeatherstoneEntity::getJoint(unsigned int index)
+{
+    return joints[index];
+}
+
 std::string FeatherstoneEntity::getJointName(unsigned int index)
 {
     if(index >= joints.size())

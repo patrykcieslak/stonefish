@@ -159,7 +159,7 @@ void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLi
     dynamics->setSelfCollision(selfCollision);
 }
 
-void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits)
+void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
@@ -171,10 +171,16 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
     detachedLinks.erase(detachedLinks.begin()+childId);
 	dynamics->AddRevoluteJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
 	dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
-	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
+	
+    if(damping > Scalar(0))
+    {
+        dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, damping);
+        dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
+        dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+    }
 }
 
-void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits)
+void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {
 	unsigned int parentId, childId;
 	getFreeLinkPair(parentName, childName, parentId, childId);
@@ -186,7 +192,13 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 	detachedLinks.erase(detachedLinks.begin()+childId);
     dynamics->AddPrismaticJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getBasis() * axis);
 	dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
-	//dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0, 0.5);
+    
+    if(damping > Scalar(0))
+    {
+        dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, damping);
+        dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
+        dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+    }
 }
 
 void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin)

@@ -220,6 +220,13 @@ namespace sf
          */
         void setJointDamping(unsigned int index, Scalar constantFactor, Scalar viscousFactor);
      
+        //! A method returning the structure containing joint information.
+        /*!
+         \param index an id of the joint
+         \return a structure containing joint information
+         */
+        FeatherstoneJoint getJoint(unsigned int index);
+     
         //! A method returning the name of the joint.
         /*!
          \param index an id of the joint
