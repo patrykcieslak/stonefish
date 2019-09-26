@@ -78,6 +78,9 @@ namespace sf
         //! A method returning the type of the sensor.
         SensorType getType();
         
+        //! A method returning the name of the link that the sensor is attached to.
+        std::string getLinkName();
+        
     protected:
         SolidEntity* attach;
         Transform o2s;

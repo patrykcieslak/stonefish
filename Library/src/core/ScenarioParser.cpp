@@ -1306,6 +1306,21 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         robot->AddJointSensor(ft, robot->getName() + "/" + std::string(jointName));    
     }
+    else if(typeStr == "encoder")
+    {
+        const char* jointName = nullptr;
+        int history;
+        
+        if((item = element->FirstChildElement("joint")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        RotaryEncoder* enc = new RotaryEncoder(sensorName, rate, history);
+        robot->AddJointSensor(enc, robot->getName() + "/" + std::string(jointName));
+    }
     else if(typeStr == "camera")
     {
         const char* linkName = nullptr;

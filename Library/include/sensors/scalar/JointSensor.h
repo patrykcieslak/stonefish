@@ -70,6 +70,9 @@ namespace sf
         //! A method returning the type of the sensor.
         SensorType getType();
         
+        //! A method returning the name of the joint that the sensor is attached to.
+        std::string getJointName();
+        
     protected:
         FeatherstoneEntity* fe;
         unsigned int jId;

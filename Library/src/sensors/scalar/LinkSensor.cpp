@@ -54,6 +54,14 @@ SensorType LinkSensor::getType()
     return SensorType::SENSOR_LINK;
 }
 
+std::string LinkSensor::getLinkName()
+{
+    if(attach != NULL)
+        return attach->getName();
+    else
+        return std::string("");
+}
+
 void LinkSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
 {
     if(multibody != NULL && linkId < multibody->getNumOfLinks())

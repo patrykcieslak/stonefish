@@ -48,6 +48,16 @@ Transform JointSensor::getSensorFrame()
     return I4();
 }
 
+std::string JointSensor::getJointName()
+{
+    if(j != NULL)
+        return j->getName();
+    else if(fe != NULL)
+        return fe->getJointName(jId);
+    else
+        return std::string("");
+}
+
 void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
     if(multibody != NULL && jointId < multibody->getNumOfJoints())
