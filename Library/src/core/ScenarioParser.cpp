@@ -577,7 +577,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             I = V0();
         else
             I = Vector3(ix, iy, iz);
-        cgok = (item = element->FirstChildElement("cg")) != nullptr && !ParseTransform(item, cg);
+        cgok = (item = element->FirstChildElement("cg")) != nullptr && ParseTransform(item, cg);
         
         //Origin    
         if(typeStr != "model")

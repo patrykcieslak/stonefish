@@ -74,9 +74,10 @@ UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
 
 void UnderwaterTestManager::BuildScenario()
 {
-    //sf::ScenarioParser parser(this);
-    //parser.Parse("girona500auv.scn");
-	
+#ifdef PARSED_SCENARIO
+    sf::ScenarioParser parser(this);
+    parser.Parse(sf::GetDataPath() + "girona500auv.scn");
+#else
     ///////MATERIALS////////
     CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.5);
     CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.3);
@@ -245,4 +246,5 @@ void UnderwaterTestManager::BuildScenario()
     
     srv5->setDesiredVelocity(0.1);
     srv6->setDesiredVelocity(0.1);
+#endif
 }

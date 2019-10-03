@@ -35,7 +35,6 @@
 		F71604152191A9E100E83606 /* Mux.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603992191A9E100E83606 /* Mux.h */; };
 		F71604162191A9E100E83606 /* Camera.h in Headers */ = {isa = PBXBuildFile; fileRef = F716039A2191A9E100E83606 /* Camera.h */; };
 		F71604172191A9E100E83606 /* RealRotaryEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = F716039B2191A9E100E83606 /* RealRotaryEncoder.h */; };
-		F71604182191A9E100E83606 /* FOG.h in Headers */ = {isa = PBXBuildFile; fileRef = F716039C2191A9E100E83606 /* FOG.h */; };
 		F71604192191A9E100E83606 /* Gyroscope.h in Headers */ = {isa = PBXBuildFile; fileRef = F716039D2191A9E100E83606 /* Gyroscope.h */; };
 		F716041A2191A9E100E83606 /* IMU.h in Headers */ = {isa = PBXBuildFile; fileRef = F716039E2191A9E100E83606 /* IMU.h */; };
 		F716041B2191A9E100E83606 /* ForceTorque.h in Headers */ = {isa = PBXBuildFile; fileRef = F716039F2191A9E100E83606 /* ForceTorque.h */; };
@@ -186,7 +185,6 @@
 		F71605392191AA0D00E83606 /* Terrain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604CD2191AA0D00E83606 /* Terrain.cpp */; };
 		F716053A2191AA0D00E83606 /* OpenGLLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604CE2191AA0D00E83606 /* OpenGLLight.cpp */; };
 		F716053B2191AA0D00E83606 /* DepthCamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604CF2191AA0D00E83606 /* DepthCamera.cpp */; };
-		F716053C2191AA0D00E83606 /* FOG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604D02191AA0D00E83606 /* FOG.cpp */; };
 		F716053F2191AA0D00E83606 /* Pressure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604D32191AA0D00E83606 /* Pressure.cpp */; };
 		F71605402191AA0D00E83606 /* Sphere.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604D42191AA0D00E83606 /* Sphere.cpp */; };
 		F71605412191AA0D00E83606 /* Trajectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604D52191AA0D00E83606 /* Trajectory.cpp */; };
@@ -237,8 +235,12 @@
 		F7BD9E7C219E502A0003E389 /* SlidingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F6E193E7899007FEE22 /* SlidingTestApp.cpp */; };
 		F7BD9E7D219E502A0003E389 /* SlidingTestManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F70193E7899007FEE22 /* SlidingTestManager.cpp */; };
 		F7BD9E7E219E502A0003E389 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F72193E7899007FEE22 /* main.cpp */; };
-		F7BFFB8621E4B95B008FA3A8 /* ServoMotor.h in Headers */ = {isa = PBXBuildFile; fileRef = F7BFFB8521E4B95B008FA3A8 /* ServoMotor.h */; };
-		F7BFFB8821E4C3CB008FA3A8 /* ServoMotor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7BFFB8721E4C3CB008FA3A8 /* ServoMotor.cpp */; };
+		F7BD9F4823463FF600D4ED5F /* ScenarioParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7BD9F4723463FF600D4ED5F /* ScenarioParser.cpp */; };
+		F7BD9F4A2346400400D4ED5F /* ScenarioParser.h in Headers */ = {isa = PBXBuildFile; fileRef = F7BD9F492346400400D4ED5F /* ScenarioParser.h */; };
+		F7E30A2523450847000BB596 /* Compass.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E30A2423450847000BB596 /* Compass.h */; };
+		F7E30A272345085C000BB596 /* Compass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E30A262345085C000BB596 /* Compass.cpp */; };
+		F7E30A29234508AC000BB596 /* Servo.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E30A28234508AC000BB596 /* Servo.h */; };
+		F7E30A2B234508C1000BB596 /* Servo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E30A2A234508C1000BB596 /* Servo.cpp */; };
 		F7E965AB21A6C0310067D12C /* tinyxml2.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965AA21A6C0310067D12C /* tinyxml2.h */; };
 		F7E965AD21A6C0580067D12C /* tinyxml2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965AC21A6C0580067D12C /* tinyxml2.cpp */; };
 		F7E965AF21A6CA760067D12C /* GeometryFileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */; };
@@ -465,7 +467,6 @@
 		F71603992191A9E100E83606 /* Mux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mux.h; sourceTree = "<group>"; };
 		F716039A2191A9E100E83606 /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
 		F716039B2191A9E100E83606 /* RealRotaryEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RealRotaryEncoder.h; sourceTree = "<group>"; };
-		F716039C2191A9E100E83606 /* FOG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FOG.h; sourceTree = "<group>"; };
 		F716039D2191A9E100E83606 /* Gyroscope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gyroscope.h; sourceTree = "<group>"; };
 		F716039E2191A9E100E83606 /* IMU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMU.h; sourceTree = "<group>"; };
 		F716039F2191A9E100E83606 /* ForceTorque.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForceTorque.h; sourceTree = "<group>"; };
@@ -616,7 +617,6 @@
 		F71604CD2191AA0D00E83606 /* Terrain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Terrain.cpp; sourceTree = "<group>"; };
 		F71604CE2191AA0D00E83606 /* OpenGLLight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLLight.cpp; sourceTree = "<group>"; };
 		F71604CF2191AA0D00E83606 /* DepthCamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DepthCamera.cpp; sourceTree = "<group>"; };
-		F71604D02191AA0D00E83606 /* FOG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FOG.cpp; sourceTree = "<group>"; };
 		F71604D32191AA0D00E83606 /* Pressure.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Pressure.cpp; sourceTree = "<group>"; };
 		F71604D42191AA0D00E83606 /* Sphere.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sphere.cpp; sourceTree = "<group>"; };
 		F71604D52191AA0D00E83606 /* Trajectory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Trajectory.cpp; sourceTree = "<group>"; };
@@ -780,13 +780,21 @@
 		F7AB71CB18C3E19D0077F07D /* FallingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FallingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CD18C3E19D0077F07D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F7BD9E7B219E4FEF0003E389 /* SlidingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SlidingTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F7BFFB8521E4B95B008FA3A8 /* ServoMotor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ServoMotor.h; sourceTree = "<group>"; };
-		F7BFFB8721E4C3CB008FA3A8 /* ServoMotor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ServoMotor.cpp; sourceTree = "<group>"; };
+		F7BD9F4723463FF600D4ED5F /* ScenarioParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScenarioParser.cpp; sourceTree = "<group>"; };
+		F7BD9F492346400400D4ED5F /* ScenarioParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScenarioParser.h; sourceTree = "<group>"; };
+		F7BD9F4B234642D500D4ED5F /* girona500auv.scn */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = girona500auv.scn; sourceTree = "<group>"; };
+		F7BD9F4C23464A7E00D4ED5F /* uv_grid_tex.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = uv_grid_tex.png; sourceTree = "<group>"; };
+		F7BD9F4D23464A7E00D4ED5F /* uv_grid_cube_tex.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = uv_grid_cube_tex.png; sourceTree = "<group>"; };
+		F7BD9F4E23464A7E00D4ED5F /* cirs_tank.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cirs_tank.obj; sourceTree = "<group>"; };
 		F7DE5F6E193E7899007FEE22 /* SlidingTestApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SlidingTestApp.cpp; sourceTree = "<group>"; };
 		F7DE5F6F193E7899007FEE22 /* SlidingTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlidingTestApp.h; sourceTree = "<group>"; };
 		F7DE5F70193E7899007FEE22 /* SlidingTestManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SlidingTestManager.cpp; sourceTree = "<group>"; };
 		F7DE5F71193E7899007FEE22 /* SlidingTestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlidingTestManager.h; sourceTree = "<group>"; };
 		F7DE5F72193E7899007FEE22 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F7E30A2423450847000BB596 /* Compass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Compass.h; sourceTree = "<group>"; };
+		F7E30A262345085C000BB596 /* Compass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Compass.cpp; sourceTree = "<group>"; };
+		F7E30A28234508AC000BB596 /* Servo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Servo.h; sourceTree = "<group>"; };
+		F7E30A2A234508C1000BB596 /* Servo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Servo.cpp; sourceTree = "<group>"; };
 		F7E965AA21A6C0310067D12C /* tinyxml2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyxml2.h; sourceTree = "<group>"; };
 		F7E965AC21A6C0580067D12C /* tinyxml2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxml2.cpp; sourceTree = "<group>"; };
 		F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeometryFileUtil.h; sourceTree = "<group>"; };
@@ -941,6 +949,7 @@
 		F71603AD2191A9E100E83606 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				F7BD9F492346400400D4ED5F /* ScenarioParser.h */,
 				F71603D22191A9E100E83606 /* Console.h */,
 				F71603AF2191A9E100E83606 /* SimulationApp.h */,
 				F71603AE2191A9E100E83606 /* GraphicalSimulationApp.h */,
@@ -989,6 +998,7 @@
 		F71603CB2191A9E100E83606 /* actuators */ = {
 			isa = PBXGroup;
 			children = (
+				F7E30A28234508AC000BB596 /* Servo.h */,
 				F70FA74122848FD000528AD1 /* Propeller.h */,
 				F71603D02191A9E100E83606 /* Actuator.h */,
 				F7E965B321A85F7B0067D12C /* LinkActuator.h */,
@@ -997,7 +1007,6 @@
 				F7E965B521A85F8B0067D12C /* JointActuator.h */,
 				F71603CD2191A9E100E83606 /* Motor.h */,
 				F71603CF2191A9E100E83606 /* DCMotor.h */,
-				F7BFFB8521E4B95B008FA3A8 /* ServoMotor.h */,
 			);
 			path = actuators;
 			sourceTree = "<group>";
@@ -1113,6 +1122,10 @@
 		F71605A22191AA2C00E83606 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				F7BD9F4E23464A7E00D4ED5F /* cirs_tank.obj */,
+				F7BD9F4D23464A7E00D4ED5F /* uv_grid_cube_tex.png */,
+				F7BD9F4C23464A7E00D4ED5F /* uv_grid_tex.png */,
+				F7BD9F4B234642D500D4ED5F /* girona500auv.scn */,
 				F70AF90021EE2C2500700A8B /* terrain_small.png */,
 				F70AF8FF21EE1E6700700A8B /* terrain.png */,
 				F71605A32191AA2C00E83606 /* base_link_hydro.obj */,
@@ -1150,6 +1163,7 @@
 		F71605C12191C67700E83606 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				F7BD9F4723463FF600D4ED5F /* ScenarioParser.cpp */,
 				F71604992191AA0D00E83606 /* Console.cpp */,
 				F71604C72191AA0D00E83606 /* SimulationApp.cpp */,
 				F716049F2191AA0D00E83606 /* NED.cpp */,
@@ -1240,6 +1254,7 @@
 		F71605C72192322100E83606 /* actuators */ = {
 			isa = PBXGroup;
 			children = (
+				F7E30A2A234508C1000BB596 /* Servo.cpp */,
 				F70FA7462284912D00528AD1 /* Propeller.cpp */,
 				F71604E42191AA0D00E83606 /* Actuator.cpp */,
 				F7E965B721A863B20067D12C /* LinkActuator.cpp */,
@@ -1247,7 +1262,6 @@
 				F71604A32191AA0D00E83606 /* Light.cpp */,
 				F7E965B921A863C30067D12C /* JointActuator.cpp */,
 				F71604C82191AA0D00E83606 /* Motor.cpp */,
-				F7BFFB8721E4C3CB008FA3A8 /* ServoMotor.cpp */,
 				F71604BD2191AA0D00E83606 /* DCMotor.cpp */,
 			);
 			path = actuators;
@@ -1301,6 +1315,7 @@
 		F7895B8521A46F0A0014722C /* scalar */ = {
 			isa = PBXGroup;
 			children = (
+				F7E30A2423450847000BB596 /* Compass.h */,
 				F71603992191A9E100E83606 /* Mux.h */,
 				F71603942191A9E100E83606 /* ADC.h */,
 				F7895B8721A472850014722C /* JointSensor.h */,
@@ -1317,7 +1332,6 @@
 				F71603932191A9E100E83606 /* GPS.h */,
 				F71603AC2191A9E100E83606 /* Pressure.h */,
 				F71603962191A9E100E83606 /* Multibeam.h */,
-				F716039C2191A9E100E83606 /* FOG.h */,
 				F71603AA2191A9E100E83606 /* Profiler.h */,
 				F71603A52191A9E100E83606 /* DVL.h */,
 				F71603972191A9E100E83606 /* Current.h */,
@@ -1339,13 +1353,13 @@
 		F7895B8921A476EA0014722C /* scalar */ = {
 			isa = PBXGroup;
 			children = (
+				F7E30A262345085C000BB596 /* Compass.cpp */,
 				F7895B8F21A5686A0014722C /* JointSensor.cpp */,
 				F71604C52191AA0D00E83606 /* RotaryEncoder.cpp */,
 				F71604A52191AA0D00E83606 /* RealRotaryEncoder.cpp */,
 				F71604822191AA0D00E83606 /* Torque.cpp */,
 				F71604832191AA0D00E83606 /* ForceTorque.cpp */,
 				F7895B8D21A568550014722C /* LinkSensor.cpp */,
-				F71604D02191AA0D00E83606 /* FOG.cpp */,
 				F71604BF2191AA0D00E83606 /* Gyroscope.cpp */,
 				F71604D52191AA0D00E83606 /* Trajectory.cpp */,
 				F716048A2191AA0D00E83606 /* Current.cpp */,
@@ -1614,7 +1628,6 @@
 				F716046F2191A9E100E83606 /* FeatherstoneEntity.h in Headers */,
 				F716042B2191A9E100E83606 /* UnitSystem.h in Headers */,
 				F716043D2191A9E100E83606 /* SphericalJoint.h in Headers */,
-				F71604182191A9E100E83606 /* FOG.h in Headers */,
 				F716042A2191A9E100E83606 /* SimulationApp.h in Headers */,
 				F71604572191A9E100E83606 /* OpenGLCamera.h in Headers */,
 				F71604492191A9E100E83606 /* Console.h in Headers */,
@@ -1662,6 +1675,7 @@
 				F716041A2191A9E100E83606 /* IMU.h in Headers */,
 				F71604232191A9E100E83606 /* Torque.h in Headers */,
 				F71604652191A9E100E83606 /* Plane.h in Headers */,
+				F7E30A29234508AC000BB596 /* Servo.h in Headers */,
 				F716047A2191A9E100E83606 /* Torus.h in Headers */,
 				F71604242191A9E100E83606 /* DepthCamera.h in Headers */,
 				F716042D2191A9E100E83606 /* FilteredCollisionDispatcher.h in Headers */,
@@ -1671,13 +1685,14 @@
 				F716046A2191A9E100E83606 /* Ocean.h in Headers */,
 				F7E965B421A85F7B0067D12C /* LinkActuator.h in Headers */,
 				F716047D2191A9E200E83606 /* Compound.h in Headers */,
+				F7BD9F4A2346400400D4ED5F /* ScenarioParser.h in Headers */,
 				F71604772191A9E100E83606 /* ForcefieldEntity.h in Headers */,
 				F71604502191A9E100E83606 /* OpenGLDepthCamera.h in Headers */,
+				F7E30A2523450847000BB596 /* Compass.h in Headers */,
 				F70FA74022848F9B00528AD1 /* Uniform.h in Headers */,
 				F71604152191A9E100E83606 /* Mux.h in Headers */,
 				F716041E2191A9E100E83606 /* Trajectory.h in Headers */,
 				F716046C2191A9E100E83606 /* Stream.h in Headers */,
-				F7BFFB8621E4B95B008FA3A8 /* ServoMotor.h in Headers */,
 				F716047B2191A9E100E83606 /* Sphere.h in Headers */,
 				F71604352191A9E100E83606 /* MaterialManager.h in Headers */,
 				F71604332191A9E100E83606 /* SimulationManager.h in Headers */,
@@ -1954,11 +1969,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7BFFB8821E4C3CB008FA3A8 /* ServoMotor.cpp in Sources */,
 				F71604F42191AA0D00E83606 /* Pipe.cpp in Sources */,
 				F71604FA2191AA0D00E83606 /* Joint.cpp in Sources */,
 				F716052C2191AA0D00E83606 /* Stream.cpp in Sources */,
 				F71604F02191AA0D00E83606 /* Multibeam.cpp in Sources */,
+				F7BD9F4823463FF600D4ED5F /* ScenarioParser.cpp in Sources */,
 				F716052F2191AA0D00E83606 /* Trigger.cpp in Sources */,
 				F71605182191AA0D00E83606 /* OpenGLSpotLight.cpp in Sources */,
 				F71604ED2191AA0D00E83606 /* Ocean.cpp in Sources */,
@@ -1993,7 +2008,6 @@
 				F71605072191AA0D00E83606 /* OpenGLDebugDrawer.cpp in Sources */,
 				F71605562191AA0E00E83606 /* OpenGLPipeline.cpp in Sources */,
 				F7895B8C21A566660014722C /* VisionSensor.cpp in Sources */,
-				F716053C2191AA0D00E83606 /* FOG.cpp in Sources */,
 				F71605162191AA0D00E83606 /* Sample.cpp in Sources */,
 				F71604F52191AA0D00E83606 /* MaterialManager.cpp in Sources */,
 				F716050A2191AA0D00E83606 /* OpenGLDepthCamera.cpp in Sources */,
@@ -2048,6 +2062,8 @@
 				F71604F82191AA0D00E83606 /* DVL.cpp in Sources */,
 				F716054F2191AA0E00E83606 /* RevoluteJoint.cpp in Sources */,
 				F71605092191AA0D00E83606 /* FilteredCollisionDispatcher.cpp in Sources */,
+				F7E30A2B234508C1000BB596 /* Servo.cpp in Sources */,
+				F7E30A272345085C000BB596 /* Compass.cpp in Sources */,
 				F71605052191AA0D00E83606 /* Console.cpp in Sources */,
 				F71605362191AA0D00E83606 /* SolidEntity.cpp in Sources */,
 				F716052B2191AA0D00E83606 /* Gyroscope.cpp in Sources */,
