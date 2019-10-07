@@ -142,6 +142,7 @@
   <VirtualDirectory Name="include">
     <File Name="include/StonefishCommon.h"/>
     <VirtualDirectory Name="utils">
+      <File Name="include/utils/icon.h"/>
       <File Name="include/utils/UnitSystem.h"/>
       <File Name="include/utils/tinyxml2.h"/>
       <File Name="include/utils/SystemUtil.hpp"/>
