@@ -34,7 +34,7 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand) : LinkActuator(uniqueName)
+Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
     D = diameter;
     kT = thrustCoeff;
@@ -43,6 +43,7 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diamet
     ki = Scalar(2.0);
     iLim = Scalar(10.0);
     RH = rightHand;
+    inv = inverted;
     omegaLim = (RH ? Scalar(1.0) : Scalar(-1.0)) *  maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
 
     theta = Scalar(0);
@@ -69,12 +70,13 @@ ActuatorType Thruster::getType()
 
 void Thruster::setSetpoint(Scalar s)
 {
+    if(inv) s *= Scalar(-1);
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
 }
 
 Scalar Thruster::getSetpoint()
 {
-    return setpoint;
+    return inv ? -setpoint : setpoint;
 }
 
 Scalar Thruster::getAngle()

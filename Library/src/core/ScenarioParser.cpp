@@ -1443,6 +1443,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         const char* look = nullptr;
         Scalar diameter, cThrust, cTorque, maxRpm, propScale;
         bool rightHand;
+        bool inverted = false;
         Transform origin;
         
         if((item = element->FirstChildElement("link")) == nullptr)
@@ -1455,7 +1456,8 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             || item->QueryAttribute("thrust_coeff", &cThrust) != XML_SUCCESS 
             || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
             || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
-            return false;   
+            return false;
+        item->QueryAttribute("inverted", &inverted); //Optional
         if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
             return false;
         XMLElement* item2;
@@ -1471,13 +1473,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         if(typeStr == "thruster")
         {
             Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
-            Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
             Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
-            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
     }
