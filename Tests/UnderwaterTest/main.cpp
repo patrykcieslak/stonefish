@@ -37,19 +37,19 @@ int main(int argc, const char * argv[])
     s.windowH = 900;
     s.msaa = false;
     s.shadows = sf::RenderQuality::QUALITY_HIGH;
-    s.ao = sf::RenderQuality::QUALITY_LOW;
+    s.ao = sf::RenderQuality::QUALITY_HIGH;
     s.atmosphere = sf::RenderQuality::QUALITY_MEDIUM;
     s.ocean = sf::RenderQuality::QUALITY_HIGH;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;
-    h.showCoordSys = true;
+    h.showCoordSys = false;
     h.showBulletDebugInfo = false;
     h.showSensors = false;
-    h.showActuators = true;
+    h.showActuators = false;
     h.showForces = false;
     
-    UnderwaterTestManager simulationManager(500.0);
+    UnderwaterTestManager simulationManager(200.0);
     simulationManager.setRealtimeFactor(1.0);
     UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run(false);
