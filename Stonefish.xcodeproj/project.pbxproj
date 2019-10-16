@@ -250,6 +250,7 @@
 		F7E965B821A863B20067D12C /* LinkActuator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965B721A863B20067D12C /* LinkActuator.cpp */; };
 		F7E965BA21A863C30067D12C /* JointActuator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965B921A863C30067D12C /* JointActuator.cpp */; };
 		F7EB2DA721AB3BE90080364F /* stb_image_write.h in Headers */ = {isa = PBXBuildFile; fileRef = F7EB2DA621AB3BE90080364F /* stb_image_write.h */; };
+		F7F199E8234DF78A00141B6B /* icon.h in Headers */ = {isa = PBXBuildFile; fileRef = F7F199E7234DF78A00141B6B /* icon.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -804,6 +805,7 @@
 		F7E965B721A863B20067D12C /* LinkActuator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LinkActuator.cpp; sourceTree = "<group>"; };
 		F7E965B921A863C30067D12C /* JointActuator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = JointActuator.cpp; sourceTree = "<group>"; };
 		F7EB2DA621AB3BE90080364F /* stb_image_write.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
+		F7F199E7234DF78A00141B6B /* icon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = icon.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -984,6 +986,7 @@
 		F71603C42191A9E100E83606 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				F7F199E7234DF78A00141B6B /* icon.h */,
 				F71603B02191A9E100E83606 /* UnitSystem.h */,
 				F71603C72191A9E100E83606 /* SystemUtil.hpp */,
 				F71603C92191A9E100E83606 /* ScientificFileUtil.h */,
@@ -1654,6 +1657,7 @@
 				F71604532191A9E100E83606 /* OpenGLContent.h in Headers */,
 				F71604662191A9E100E83606 /* Terrain.h in Headers */,
 				F71604402191A9E100E83606 /* SystemUtil.hpp in Headers */,
+				F7F199E8234DF78A00141B6B /* icon.h in Headers */,
 				F71604432191A9E100E83606 /* StonefishCommon.h in Headers */,
 				F71604222191A9E100E83606 /* ColorCamera.h in Headers */,
 				F716046D2191A9E100E83606 /* Pipe.h in Headers */,
