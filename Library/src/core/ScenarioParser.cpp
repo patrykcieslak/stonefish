@@ -1339,8 +1339,23 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
             || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
             return false;
+            
+        ColorCamera* cam;
         
-        ColorCamera* cam = new ColorCamera(sensorName, resX, resY, hFov, 1, rate);
+        if((item = element->FirstChildElement("rendering")) != nullptr) //Optional parameters
+        {
+            int spp = 1;
+            Scalar minDist(0.1);
+            Scalar maxDist(1000.0);
+            item->QueryAttribute("spp", &spp);
+            item->QueryAttribute("minimum_distance", &minDist);
+            item->QueryAttribute("maximum_distance", &maxDist);
+            cam = new ColorCamera(sensorName, resX, resY, hFov, rate, spp, minDist, maxDist);
+        }
+        else
+        {
+            cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+        }
         robot->AddVisionSensor(cam, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "depthcamera")

@@ -47,18 +47,18 @@ GLSLShader* OpenGLCamera::aoReinterleaveShader = NULL;
 GLSLShader** OpenGLCamera::aoBlurShader = NULL;
 GLSLShader** OpenGLCamera::ssrShader = NULL;
 
-OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao) : OpenGLView(x, y, width, height)
+OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec2 range, GLuint spp) : OpenGLView(x, y, width, height)
 {
     fovx = 0.785f;
-    aoFactor = ao ? 1 : 0;
-	samples = spp < 1 ? 1 : (spp > 8 ? 8 : spp);
-    far = horizon;
-    near = 0.1f;
+    samples = spp < 1 ? 1 : (spp > 8 ? 8 : spp);
+    near = range.x;
+    far = range.y;
 	activePostprocessTexture = 0;
     exposureComp = 0.f;
     
-    if(!GLEW_VERSION_4_3)
-        aoFactor = 0;
+    if(GLEW_VERSION_4_3 
+       && ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::QUALITY_DISABLED)
+        aoFactor = 1;
     
     if(!((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().msaa)
         samples = 1;

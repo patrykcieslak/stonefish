@@ -72,15 +72,14 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param originX the x coordinate of the view origin in the program window
-         \param originY the y coordinate of the view origin in the program window
-         \param width the width of the view
-         \param height the height of the view
-         \param horizon the distance to the far plane of the camera [m]
+         \param originX the x coordinate of the view origin in the program window [px]
+         \param originY the y coordinate of the view origin in the program window [px]
+         \param width the width of the view [px]
+         \param height the height of the view [px]
+         \param range the minimum and maximum rendering distance of the camera [m]
          \param spp number of samples used when rendering (>1 means multisampling)
-         \param ao a flag to set if the ambient occlusion should be rendered
          */
-        OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, GLfloat horizon, GLuint spp, bool ao);
+        OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, glm::vec2 range, GLuint spp);
         
         //! A destructor.
         virtual ~OpenGLCamera();
