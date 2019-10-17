@@ -101,6 +101,11 @@ bool ScenarioParser::CopyNode(XMLNode* p_dest_parent, const XMLNode* p_src)
 
     return true;
 }
+
+bool ScenarioParser::PreProcess(XMLNode* root)
+{
+    return true;
+}
  
 bool ScenarioParser::Parse(std::string filename)
 {
@@ -121,6 +126,12 @@ bool ScenarioParser::Parse(std::string filename)
         return false;
     }
 
+    if (!PreProcess(root))
+    {
+        cError("Scenario parser: pre-processing of %s failed!", filename.c_str());
+        return false;
+    }
+
     //Include other scenario files
     XMLElement* element = root->FirstChildElement("include");
     while(element != nullptr)
@@ -136,6 +147,11 @@ bool ScenarioParser::Parse(std::string filename)
         if(included_doc.LoadFile(fullPath.c_str()) != XML_SUCCESS)
         {
             cError("Scenario parser: included file not found!");
+            return false;
+        }
+        if (!PreProcess(&included_doc))
+        {
+            cError("Scenario parser: pre-processing of %s failed!", fullPath.c_str());
             return false;
         }
         root->DeleteChild(element);

@@ -60,6 +60,12 @@ namespace sf
         SimulationManager* getSimulationManager();
         
     protected:
+        //! A method used to pre-process the xml description tree after parsing.
+        /*!
+         \param element a pointer to the XML root node
+         */
+        virtual bool PreProcess(XMLNode* root);
+
         //! A method used to parse environment configuration.
         /*!
          \param element a pointer to the XML node
