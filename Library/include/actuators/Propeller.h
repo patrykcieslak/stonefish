@@ -43,8 +43,9 @@ namespace sf
          \param torqueCoeff the torque coefficient
          \param maxRPM the maximum rotational speed of the motor [rpm]
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
+         \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand);
+        Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A destructor.
         ~Propeller();
@@ -90,6 +91,7 @@ namespace sf
         Scalar omegaLim;
         SolidEntity* prop;
         bool RH;
+        bool inv;
         
         //States
         Scalar theta;

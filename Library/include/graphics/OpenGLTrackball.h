@@ -39,18 +39,17 @@ namespace sf
          \param centerPosition the position of the camera orbit center in world space [m]
          \param orbitRadius the radius of the camera orbit [m]
          \param up a unit vector pointing to the top edge of the image
-         \param originX the x coordinate of the view origin in the program window
-         \param originY the y coordinate of the view origin in the program window
-         \param width the width of the view
-         \param height the height of the view
+         \param originX the x coordinate of the view origin in the program window [px]
+         \param originY the y coordinate of the view origin in the program window [px]
+         \param width the width of the view [px]
+         \param height the height of the view [px]
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
-         \param horizonDistance the distance to the camera far plane [m]
+         \param range the minimum and maximum rendering distance of the camera [m]
          \param spp number of samples used (>1 means multisampling)
-         \param ao a flag to decide if ambient occlusion should be rendered
          */
         OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
                         GLint originX, GLint originY, GLint width, GLint height,
-                        GLfloat horizontalFovDeg, GLfloat horizonDistance, GLuint spp = 1, bool ao = false);
+                        GLfloat horizontalFovDeg, glm::vec2 range, GLuint spp = 1);
         
         //! A method to apply a rotation to the trackball.
         /*!

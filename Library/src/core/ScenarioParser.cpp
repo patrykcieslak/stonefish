@@ -637,7 +637,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             I = V0();
         else
             I = Vector3(ix, iy, iz);
-        cgok = (item = element->FirstChildElement("cg")) != nullptr && !ParseTransform(item, cg);
+        cgok = (item = element->FirstChildElement("cg")) != nullptr && ParseTransform(item, cg);
         
         //Origin    
         if(typeStr != "model")
@@ -1399,8 +1399,23 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
             || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
             return false;
+            
+        ColorCamera* cam;
         
-        ColorCamera* cam = new ColorCamera(sensorName, resX, resY, hFov, 1, rate);
+        if((item = element->FirstChildElement("rendering")) != nullptr) //Optional parameters
+        {
+            int spp = 1;
+            Scalar minDist(0.1);
+            Scalar maxDist(1000.0);
+            item->QueryAttribute("spp", &spp);
+            item->QueryAttribute("minimum_distance", &minDist);
+            item->QueryAttribute("maximum_distance", &maxDist);
+            cam = new ColorCamera(sensorName, resX, resY, hFov, rate, spp, minDist, maxDist);
+        }
+        else
+        {
+            cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+        }
         robot->AddVisionSensor(cam, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "depthcamera")
@@ -1503,6 +1518,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         const char* look = nullptr;
         Scalar diameter, cThrust, cTorque, maxRpm, propScale;
         bool rightHand;
+        bool inverted = false;
         Transform origin;
         
         if((item = element->FirstChildElement("link")) == nullptr)
@@ -1515,7 +1531,8 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             || item->QueryAttribute("thrust_coeff", &cThrust) != XML_SUCCESS 
             || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
             || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
-            return false;   
+            return false;
+        item->QueryAttribute("inverted", &inverted); //Optional
         if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
             return false;
         XMLElement* item2;
@@ -1531,13 +1548,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         if(typeStr == "thruster")
         {
             Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
-            Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
             Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
-            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand);
+            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
     }

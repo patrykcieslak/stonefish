@@ -41,18 +41,17 @@ namespace sf
          \param eyePosition the position of the camera eye in world space [m]
          \param direction a unit vector parallel to the camera optical axis
          \param cameraUp a unit vector pointing to the top edge of the image
-         \param originX the x coordinate of the view origin in the program window
-         \param originY the y coordinate of the view origin in the program window
-         \param width the width of the view
-         \param height the height of the view
+         \param originX the x coordinate of the view origin in the program window [px]
+         \param originY the y coordinate of the view origin in the program window [px]
+         \param width the width of the view [px]
+         \param height the height of the view [px]
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
-         \param horizonDistance the distance to the camera far plane [m]
+         \param range the minimum and maximum rendering distance of the camera [m]
          \param spp number of samples used (>1 means multisampling)
-         \param ao a flag to decide if ambient occlusion should be rendered
          */
         OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                          GLint originX, GLint originY, GLint width, GLint height,
-                         GLfloat horizontalFovDeg, GLfloat horizonDistance, GLuint spp = 1, bool ao = false);
+                         GLfloat horizontalFovDeg, glm::vec2 range, GLuint spp = 1);
         
         //! A destructor.
         ~OpenGLRealCamera();

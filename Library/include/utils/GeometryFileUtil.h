@@ -19,7 +19,7 @@
 //  GeometryFileUtil.h
 //  Stonefish
 //
-//  Created by Patryk Cieślak on 22/11/2018.
+//  Created by Patryk Cieslak on 22/11/2018.
 //  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
