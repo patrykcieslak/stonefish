@@ -139,7 +139,6 @@ bool ScenarioParser::Parse(std::string filename)
             return false;
         }
         root->DeleteChild(element);
-        element = root->FirstChildElement("include");
         for (const XMLNode* child = included_doc.FirstChild(); child != nullptr; child = child->NextSibling())
         {
             if (!CopyNode(root, child))
@@ -148,6 +147,7 @@ bool ScenarioParser::Parse(std::string filename)
                 return false;
             }
         }
+        element = root->FirstChildElement("include");
     }
     
     //Load environment settings
