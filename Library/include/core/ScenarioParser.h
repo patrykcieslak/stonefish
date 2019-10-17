@@ -62,7 +62,7 @@ namespace sf
     protected:
         //! A method used to pre-process the xml description tree after parsing.
         /*!
-         \param element a pointer to the XML root node
+         \param root a pointer to the XML root node
          */
         virtual bool PreProcess(XMLNode* root);
 
@@ -132,6 +132,12 @@ namespace sf
          \param robot a pointer to the robot object
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
+
+        //! A method used to qualify a path either relative to a folder, or keep it absolute
+        /*!
+         \param path a relative or absolute path, which will be mapped to an absolute path
+         */
+        std::string QualifyPath(const std::string& path);
         
     private:
 

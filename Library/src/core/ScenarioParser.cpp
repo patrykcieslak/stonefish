@@ -71,6 +71,18 @@ SimulationManager* ScenarioParser::getSimulationManager()
     return sm;
 }
 
+std::string ScenarioParser::QualifyPath(const std::string& path)
+{
+    // since ROS is not supported on Windows yet, this should be OK
+    // it should also be strictly better than the previous approach
+    if (!path.empty() && (path[0] == '/' || path[0] == '~'))
+    {
+        return path; // this is already an absolute path
+    }
+
+    return GetDataPath() + path;
+}
+
 bool ScenarioParser::CopyNode(XMLNode* p_dest_parent, const XMLNode* p_src)
 {
     // Should not happen, could maybe return false
@@ -142,7 +154,7 @@ bool ScenarioParser::Parse(std::string filename)
             cError("Scenario parser: include not properly defined!");
             return false;
         }
-        std::string fullPath = GetDataPath() + path;
+        std::string fullPath = QualifyPath(path);
         XMLDocument included_doc;
         if(included_doc.LoadFile(fullPath.c_str()) != XML_SUCCESS)
         {
@@ -373,7 +385,7 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         if(look->QueryAttribute("reflectivity", &reflectivity) != XML_SUCCESS)
             reflectivity = Scalar(0);
         if(look->QueryStringAttribute("texture", &texture) == XML_SUCCESS)
-            textureStr = GetDataPath() + std::string(texture);
+            textureStr = QualifyPath(texture);
         sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr);
         look = look->NextSiblingElement("look");
     }
@@ -485,11 +497,11 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                 return false;
           
-            object = new Obstacle(std::string(name), GetDataPath() + std::string(graMesh), graScale, graOrigin, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
+            object = new Obstacle(std::string(name), QualifyPath(graMesh), graScale, graOrigin, QualifyPath(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
         }
         else
         {
-            object = new Obstacle(std::string(name), GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
+            object = new Obstacle(std::string(name), QualifyPath(phyMesh), phyScale, phyOrigin, std::string(mat), std::string(look));
         }
     }
     else if(typestr == "plane")
@@ -514,7 +526,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         if(item->QueryAttribute("height", &height) != XML_SUCCESS)
             return false;
             
-        object = new Terrain(std::string(name), std::string(heightmap), scaleX, scaleY, height, std::string(mat), std::string(look));
+        object = new Terrain(std::string(name), QualifyPath(heightmap), scaleX, scaleY, height, std::string(mat), std::string(look));
     }
     else
         return false;
@@ -763,11 +775,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                     return false;
           
-                solid = new Polyhedron(solidName, GetDataPath() + std::string(graMesh), graScale, graOrigin, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(solidName, QualifyPath(graMesh), graScale, graOrigin, QualifyPath(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
             }
             else
             {
-                solid = new Polyhedron(solidName, GetDataPath() + std::string(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(solidName, QualifyPath(phyMesh), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
             }
         }
         else
@@ -1563,13 +1575,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", QualifyPath(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
             Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", QualifyPath(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
