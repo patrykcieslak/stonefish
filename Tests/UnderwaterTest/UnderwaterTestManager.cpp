@@ -76,7 +76,7 @@ void UnderwaterTestManager::BuildScenario()
 {
 #ifdef PARSED_SCENARIO
     sf::ScenarioParser parser(this);
-    parser.Parse(sf::GetDataPath() + "girona500auv.scn");
+    parser.Parse(sf::GetDataPath() + "underwater_pipe.scn");
 #else
     ///////MATERIALS////////
     CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.5);
