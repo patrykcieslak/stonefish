@@ -83,10 +83,16 @@ bool ScenarioParser::Parse(std::string filename)
     }
     
     //Find root node
-    XMLElement* root = doc.FirstChildElement("scenario");
+    XMLNode* root = doc.FirstChildElement("scenario");
     if(root == nullptr)
     {
         cError("Scenario parser: root node not found!");
+        return false;
+    }
+    
+    if(!PreProcess(root))
+    {
+        cError("Scenario parser: pre-processing failed!");
         return false;
     }
 
@@ -101,10 +107,11 @@ bool ScenarioParser::Parse(std::string filename)
             return false;
         }
         
+        std::string includedPath = GetFullPath(std::string(path));
         XMLDocument includedDoc;
-        if(includedDoc.LoadFile(GetFullPath(std::string(path)).c_str()) != XML_SUCCESS)
+        if(includedDoc.LoadFile(includedPath.c_str()) != XML_SUCCESS)
         {
-            cError("Scenario parser: included file not found! '%s'", GetFullPath(std::string(path)).c_str());
+            cError("Scenario parser: included file '%s' not found!", includedPath.c_str());
             return false;
         }
         
@@ -113,13 +120,19 @@ bool ScenarioParser::Parse(std::string filename)
         XMLNode* includedRoot = includedDoc.FirstChildElement("scenario");
         if(includedRoot == nullptr)
         {
-            cError("Scenario parser: root node not found in included file!");
+            cError("Scenario parser: root node not found in included file '%s'!", includedPath.c_str());
             return false;
         }
         
-        for (const XMLNode* child = includedRoot->FirstChild(); child != nullptr; child = child->NextSibling())
+        if(!PreProcess(includedRoot))
         {
-            if (!CopyNode(root, child))
+            cError("Scenario parser: pre-processing of included file '%s' failed!", includedPath.c_str());
+            return false;
+        }
+        
+        for(const XMLNode* child = includedRoot->FirstChild(); child != nullptr; child = child->NextSibling())
+        {
+            if(!CopyNode(root, child))
             {
                 cError("Scenario parser: could not copy included xml elements!");
                 return false;
@@ -212,6 +225,11 @@ bool ScenarioParser::Parse(std::string filename)
         element = element->NextSiblingElement("robot");
     }
     
+    return true;
+}
+
+bool ScenarioParser::PreProcess(XMLNode* root)
+{
     return true;
 }
 
@@ -335,7 +353,7 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         if(look->QueryAttribute("reflectivity", &reflectivity) != XML_SUCCESS)
             reflectivity = Scalar(0);
         if(look->QueryStringAttribute("texture", &texture) == XML_SUCCESS)
-            textureStr = GetDataPath() + std::string(texture);
+            textureStr = GetFullPath(std::string(texture));
         sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr);
         look = look->NextSiblingElement("look");
     }
@@ -1525,13 +1543,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
             Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetDataPath() + std::string(propFile), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
@@ -1575,15 +1593,15 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     return true;
 }
 
-//Private
 std::string ScenarioParser::GetFullPath(const std::string& path)
 {
-    if(path.at(0) == '/') //Absolute path?
+    if(path.at(0) == '/' || path.at(0) == '~') //Absolute path?
         return path;
     else
         return GetDataPath() + path;
 }
 
+//Private
 bool ScenarioParser::CopyNode(XMLNode* destParent, const XMLNode* src)
 {
     //Should not happen, could maybe return false

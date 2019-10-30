@@ -60,6 +60,12 @@ namespace sf
         SimulationManager* getSimulationManager();
         
     protected:
+        //! A method used to pre-process the xml description file after loading.
+        /*!
+         \param root a pointer to a root node
+         */
+        virtual bool PreProcess(XMLNode* root);
+    
         //! A method used to parse environment configuration.
         /*!
          \param element a pointer to the XML node
@@ -127,8 +133,13 @@ namespace sf
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
         
-    private:
+        //! A method to get the full file path depending on the format of the passed string.
+        /*!
+         \param path a file path candidate
+         */
         std::string GetFullPath(const std::string& path);
+        
+    private:
         bool CopyNode(XMLNode* destParent, const XMLNode* src);
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
