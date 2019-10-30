@@ -128,6 +128,8 @@ namespace sf
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
         
     private:
+
+        bool CopyNode(XMLNode* p_dest_parent, const XMLNode* p_src);
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
     

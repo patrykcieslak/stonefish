@@ -70,6 +70,37 @@ SimulationManager* ScenarioParser::getSimulationManager()
 {
     return sm;
 }
+
+bool ScenarioParser::CopyNode(XMLNode* p_dest_parent, const XMLNode* p_src)
+{
+    // Should not happen, could maybe return false
+    if (p_dest_parent == nullptr || p_src == nullptr)
+    {
+        return true;
+    }
+
+    // Get the document context where new memory will be allocated from
+    tinyxml2::XMLDocument* p_doc = p_dest_parent->GetDocument();
+
+    // Make the copy
+    tinyxml2::XMLNode* p_copy = p_src->ShallowClone(p_doc);
+    if (p_copy == nullptr)
+    {
+        // Error handling required (e.g. throw)
+        return false;
+    }
+
+    // Add this child
+    p_dest_parent->InsertEndChild(p_copy);
+
+    // Add the grandkids
+    for (const tinyxml2::XMLNode* p_node = p_src->FirstChild(); p_node != nullptr; p_node = p_node->NextSibling())
+    {
+        CopyNode(p_copy, p_node);
+    }
+
+    return true;
+}
  
 bool ScenarioParser::Parse(std::string filename)
 {
@@ -89,9 +120,38 @@ bool ScenarioParser::Parse(std::string filename)
         cError("Scenario parser: root node not found!");
         return false;
     }
+
+    //Include other scenario files
+    XMLElement* element = root->FirstChildElement("include");
+    while(element != nullptr)
+    {
+        const char* path = nullptr;
+        if(element->QueryStringAttribute("file", &path) != XML_SUCCESS)
+        {
+            cError("Scenario parser: include not properly defined!");
+            return false;
+        }
+        std::string fullPath = GetDataPath() + path;
+        XMLDocument included_doc;
+        if(included_doc.LoadFile(fullPath.c_str()) != XML_SUCCESS)
+        {
+            cError("Scenario parser: included file not found!");
+            return false;
+        }
+        root->DeleteChild(element);
+        for (const XMLNode* child = included_doc.FirstChild(); child != nullptr; child = child->NextSibling())
+        {
+            if (!CopyNode(root, child))
+            {
+                cError("Scenario parser: could not copy included xml elements!");
+                return false;
+            }
+        }
+        element = root->FirstChildElement("include");
+    }
     
     //Load environment settings
-    XMLElement* element = root->FirstChildElement("environment");
+    element = root->FirstChildElement("environment");
     if(element == nullptr)
     {
         cError("Scenario parser: environment settings not defined!");
