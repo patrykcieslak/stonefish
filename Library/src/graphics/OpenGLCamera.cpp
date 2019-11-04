@@ -55,6 +55,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     far = range.y;
 	activePostprocessTexture = 0;
     exposureComp = 0.f;
+    aoFactor = 0;
     
     if(GLEW_VERSION_4_3 
        && ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::QUALITY_DISABLED)

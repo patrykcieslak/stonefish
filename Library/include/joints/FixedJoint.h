@@ -45,6 +45,16 @@ namespace sf
          */
         FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
         
+        //! A constructor to create fixed joint between a solid body and a link of a multibody.
+        /*!
+         \param uniqueName a name for the joint
+         \param solid a pointer to the solid body
+         \param fe a pointer to the multibody
+         \param linkId an index of the link of the multibody
+         \param pivot a connection point
+         */
+        FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot);
+        
         //! A constructor to create fixed joint between two multibodies.
         /*!
          \param uniqueName a name for the joint
