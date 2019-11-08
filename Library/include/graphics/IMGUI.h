@@ -187,9 +187,10 @@ namespace sf
          \param max the maximum value of the slider
          \param value the current value of the slider
          \param title the title string
+         \param decimalPlaces a display precision of the current slider value 
          \return new value
          */
-        Scalar DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title);
+        Scalar DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces = 2);
         
         //! A method used to create a checkbox widget.
         /*!

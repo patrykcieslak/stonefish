@@ -26,10 +26,20 @@
 #ifndef __Stonefish_GeometryFileUtil__
 #define __Stonefish_GeometryFileUtil__
 
+#include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
+    struct MeshProperties
+    {
+        Scalar mass;
+        Vector3 CG;
+        Scalar volume;
+        Vector3 Ipri;
+        Matrix3 Irot;
+    };
+    
     //! A function to load geometry from a file.
     /*!
      \param path a path to the file
@@ -53,6 +63,36 @@ namespace sf
      \return a pointer to an allocated mesh structure
      */
     Mesh* LoadOBJ(const std::string& path, GLfloat scale);
+    
+    //! A function to compute all physical properties of a mesh.
+    /*!
+     \param mesh a pointer to the mesh structure
+     \param thickness a value of the wall thickness [m]
+     \param desity the density of the material the mesh is made of [kg/m3]
+     \param mass output of the computed mass [kg]
+     \param CG output of the computed location of the centre of gravity [m]
+     \param volume output of the computed volume [m3]
+     \param Ipri output of the computed moments of inertia [kgm2]
+     \param Irot output of the rotation matrix between mesh origin and the computed principal inertial axes
+     */
+    void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot);
+    
+    //! A function to compute all physical properties of a mesh.
+    /*!
+     \param mesh a pointer to the mesh structure
+     \param thickness a value of the wall thickness [m]
+     \param desity the density of the material the mesh is made of [kg/m3]
+     \return a structure containing properties of the mesh
+     */
+    MeshProperties ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density);
+    
+    //! A function to compute inertial axis for a given moment of inertia.
+    /*!
+     \param I the inertia tensor
+     \param value the moment of inertia for which to find inertial axis
+     \return versor of the inertial axis
+     */
+    Vector3 FindInertialAxis(Matrix3 I, Scalar value);
 }
 
 #endif

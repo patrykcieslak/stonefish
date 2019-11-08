@@ -42,6 +42,7 @@
       <File Name="src/sensors/Contact.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="src/actuators/VariableBuoyancy.cpp"/>
       <File Name="src/actuators/Servo.cpp"/>
       <File Name="src/actuators/Propeller.cpp"/>
       <File Name="src/actuators/LinkActuator.cpp"/>
@@ -265,6 +266,7 @@
       <File Name="include/sensors/Contact.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="actuators">
+      <File Name="include/actuators/VariableBuoyancy.h"/>
       <File Name="include/actuators/Servo.h"/>
       <File Name="include/actuators/Propeller.h"/>
       <File Name="include/actuators/LinkActuator.h"/>

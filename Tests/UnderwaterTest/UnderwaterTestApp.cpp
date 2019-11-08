@@ -26,6 +26,7 @@
 #include "UnderwaterTestApp.h"
 
 #include <actuators/Thruster.h>
+#include <actuators/VariableBuoyancy.h>
 #include <core/Robot.h>
 #include <graphics/IMGUI.h>
 #include <utils/SystemUtil.hpp>
@@ -43,15 +44,20 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
-    /*
+    
     sf::Uid id;
     id.owner = 5;
     id.index = 0;
     id.item = 0;
     
+    //sf::VariableBuoyancy* vbs = (sf::VariableBuoyancy*)getSimulationManager()->getRobot("GIRONA500")->getActuator("VBS");
+    //vbs->setFlowRate((getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-0.0005), sf::Scalar(0.0005), vbs->getFlowRate(), "VBS flow rate", 4)));
+    
+    /*
     sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveStern");
     sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveBow");
     sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterHeaveStern"));
     th->setSetpoint(sp);
-    th2->setSetpoint(sp);*/
+    th2->setSetpoint(sp);
+    */
 }

@@ -133,6 +133,16 @@
 				<compound_transform rpy="0.0 1.571 0.0" xyz="-0.049 0.35 -0.339"/>
 			</internal_part>
 		</base_link>
+        
+        <actuator name="VBS" type="vbs">
+            <link name="Vehicle"/>
+            <volume initial="0.001">
+                <mesh filename="vbs_min.obj"/>
+                <mesh filename="vbs_max.obj"/>
+            </volume>
+            <origin rpy="0.0 0.0 0.0" xyz="-0.5 0.0 0.0"/>
+        </actuator>
+        
 		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
 	</robot>
 </scenario>

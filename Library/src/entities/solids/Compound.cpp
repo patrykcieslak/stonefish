@@ -27,6 +27,7 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "utils/GeometryFileUtil.h"
 
 namespace sf
 {
@@ -231,8 +232,8 @@ void Compound::RecalculatePhysicalProperties()
 		//3.2. Calculate principal axes of inertia
 		Matrix3 L;
 		Vector3 axis1,axis2,axis3;
-		axis1 = findInertiaAxis(I, A);
-		axis2 = findInertiaAxis(I, B);
+		axis1 = FindInertialAxis(I, A);
+		axis2 = FindInertialAxis(I, B);
 		axis3 = axis1.cross(axis2);
 		axis2 = axis3.cross(axis1);
     

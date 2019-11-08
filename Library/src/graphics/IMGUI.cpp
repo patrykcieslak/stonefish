@@ -562,7 +562,7 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
     return result;
 }
 
-Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title)
+Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces)
 {
 	//Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
@@ -607,7 +607,8 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
     DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
     
     char buffer[16];
-    sprintf(buffer, "%1.2lf", result);
+    std::string format = "%1." + std::to_string(decimalPlaces) + "lf";
+    sprintf(buffer, format.c_str(), result);
     glm::vec2 textDim = PlainTextDimensions(buffer);
     DrawPlainText(x + railW + 3.f*backgroundMargin - textDim.x, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
     

@@ -91,9 +91,6 @@ namespace sf
          */
         virtual void getAABB(Vector3& min, Vector3& max) = 0;
         
-    protected:
-        static Vector3 findInertiaAxis(Matrix3 I, Scalar value);
-        
     private:
         bool renderable;
         std::string name;

@@ -44,6 +44,7 @@
 #include <entities/statics/Terrain.h>
 #include <actuators/Thruster.h>
 #include <actuators/Servo.h>
+#include <actuators/VariableBuoyancy.h>
 #include <sensors/scalar/Pressure.h>
 #include <sensors/scalar/Odometry.h>
 #include <sensors/scalar/DVL.h>
@@ -106,8 +107,8 @@ void UnderwaterTestManager::BuildScenario()
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
 	
-    sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
-    AddStaticEntity(tank, sf::I4());
+    //sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
+    //AddStaticEntity(tank, sf::I4());
         
 	//Create underwater vehicle body
     //Externals
@@ -187,6 +188,12 @@ void UnderwaterTestManager::BuildScenario()
     sf::Thruster* thHeaveS = new sf::Thruster("ThrusterHeaveStern", prop4, 0.18, 0.48, 0.05, 1000.0, false);
     sf::Thruster* thHeaveB = new sf::Thruster("ThrusterHeaveBow", prop5, 0.18, 0.48, 0.05, 1000.0, true);
     
+    //Create VBS
+    std::vector<std::string> vmeshes;
+    vmeshes.push_back(sf::GetDataPath() + "vbs_max.obj");
+    vmeshes.push_back(sf::GetDataPath() + "vbs_min.obj");
+    sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", vmeshes, 0.002);
+    
     //Create ligths
     //sf::Light* spot1 = new sf::Light("Spot1", sf::Color::BlackBody(4000.0), 100000.0); //OMNI
     //sf::Light* spot1 = new sf::Light("Spot1", 30.0, sf::Color::BlackBody(4000.0), 100000.0);
@@ -233,6 +240,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkActuator(thHeaveS, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(-0.5337,0.0,-0.6747)));
     auv->AddLinkActuator(thHeaveB, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(0.5837,0.0,-0.6747)));
     //auv->AddLinkActuator(spot1, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));
+    auv->AddLinkActuator(vbs, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0.0,0.0)));
     
     //Sensors
     auv->AddLinkSensor(odom, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
@@ -243,8 +251,5 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     
     AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(0,0,1.0)));
-    
-    srv5->setDesiredVelocity(0.1);
-    srv6->setDesiredVelocity(0.1);
 #endif
 }
