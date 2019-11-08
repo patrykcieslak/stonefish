@@ -120,5 +120,25 @@ ScalarSensorType Multibeam::getScalarSensorType()
     return ScalarSensorType::SENSOR_MULTIBEAM;
 }
 
+Scalar Multibeam::getAngleRangeDeg()
+{
+    return angRange;
+}
+
+unsigned int Multibeam::getAngleSteps()
+{
+    return angSteps;
+}
+
+Scalar* Multibeam::getAnglesDataPointer()
+{
+    return &angles[0];
+}
+
+Scalar* Multibeam::getDistancesDataPointer()
+{
+    return &distances[0];
+}
+
 
 }

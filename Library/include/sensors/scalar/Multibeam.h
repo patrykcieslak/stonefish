@@ -68,6 +68,18 @@ namespace sf
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();
+
+        //! A method returning the angleRangeDeg parameter
+        Scalar getAngleRangeDeg();
+
+        //! A method returning the angleSteps parameter
+        unsigned int getAngleSteps();
+
+        //! A method returning a pointer to the angles
+        Scalar* getAnglesDataPointer();
+
+        //! A method returning a pointer to the distances
+        Scalar* getDistancesDataPointer();
         
     private:
         Scalar angRange;
