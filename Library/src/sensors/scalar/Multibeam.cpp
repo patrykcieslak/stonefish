@@ -120,7 +120,7 @@ ScalarSensorType Multibeam::getScalarSensorType()
     return ScalarSensorType::SENSOR_MULTIBEAM;
 }
 
-Scalar Multibeam::getAngleRangeDeg()
+Scalar Multibeam::getAngleRange()
 {
     return angRange;
 }

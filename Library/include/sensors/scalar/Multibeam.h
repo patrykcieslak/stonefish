@@ -70,7 +70,7 @@ namespace sf
         ScalarSensorType getScalarSensorType();
 
         //! A method returning the angleRangeDeg parameter
-        Scalar getAngleRangeDeg();
+        Scalar getAngleRange();
 
         //! A method returning the angleSteps parameter
         unsigned int getAngleSteps();
