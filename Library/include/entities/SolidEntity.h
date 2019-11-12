@@ -380,7 +380,6 @@ namespace sf
         void ComputeCylindricalApprox();
         void ComputeEllipsoidalApprox();
         static void ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Vector3& linear, Vector3& quadratic, Vector3& skin);
-        static void ComputePhysicalProperties(Mesh* mesh, Scalar wallThickness, Material mat, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot);
         
         Scalar LambKFactor(Scalar r1, Scalar r2);
         virtual void BuildRigidBody();

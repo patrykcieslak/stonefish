@@ -56,6 +56,7 @@
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
 #include "actuators/Thruster.h"
+#include "actuators/VariableBuoyancy.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 
@@ -1553,6 +1554,39 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
+    }
+    else if(typeStr == "vbs")
+    {
+        const char* linkName = nullptr;
+        Scalar initialV;
+        std::vector<std::string> vMeshes;
+        Transform origin;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("volume")) == nullptr || item->QueryAttribute("initial", &initialV) != XML_SUCCESS)
+            return false;
+        XMLElement* item2;
+        const char* meshFile;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &meshFile) != XML_SUCCESS)
+            return false;
+        vMeshes.push_back(GetFullPath(std::string(meshFile)));
+        while((item2 = item2->NextSiblingElement("mesh")) != nullptr)
+        {
+            const char* meshFile2;
+            if(item2->QueryStringAttribute("filename", &meshFile2) != XML_SUCCESS)
+                return false;
+            vMeshes.push_back(GetFullPath(std::string(meshFile2)));
+        }
+        if(vMeshes.size() < 2)
+            return false;
+        
+        VariableBuoyancy* vbs = new VariableBuoyancy(actuatorName, vMeshes, initialV);
+        robot->AddLinkActuator(vbs, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "light")
     {

@@ -26,6 +26,7 @@
 #include "entities/solids/Wing.h"
 
 #include "graphics/OpenGLContent.h"
+#include "utils/GeometryFileUtil.h"
 
 namespace sf
 {
@@ -51,8 +52,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat, CG, volume, Ipri, Irot);
-    mass = volume*mat.density;
+    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, Ipri, Irot);
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
@@ -107,8 +107,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     //3. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat, CG, volume, Ipri, Irot);
-    mass = volume*mat.density;
+    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, Ipri, Irot);
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     

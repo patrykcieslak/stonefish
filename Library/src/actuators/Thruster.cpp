@@ -96,18 +96,18 @@ Scalar Thruster::getThrust()
 
 void Thruster::Update(Scalar dt)
 {
-    //Update thruster velocity
-    Scalar error = setpoint * omegaLim - omega;
-    Scalar motorTorque = kp * error + ki * iError; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
-    omega += (motorTorque - torque)*dt; ///prop->getInertia().x() * dt; //Damping due to axial torque
-    theta += omega * dt; //Just for animation
-    
-    //Integrate error
-    iError += error * dt;
-    iError = iError > iLim ? iLim : iError;
-    
     if(attach != NULL)
     {
+        //Update thruster velocity
+        Scalar error = setpoint * omegaLim - omega;
+        Scalar motorTorque = kp * error + ki * iError; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
+        omega += (motorTorque - torque)*dt; ///prop->getInertia().x() * dt; //Damping due to axial torque
+        theta += omega * dt; //Just for animation
+    
+        //Integrate error
+        iError += error * dt;
+        iError = iError > iLim ? iLim : iError;
+        
         //Get transforms
         Transform solidTrans = attach->getCGTransform();
         Transform thrustTrans = attach->getOTransform() * o2a;

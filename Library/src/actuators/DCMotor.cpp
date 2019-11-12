@@ -25,7 +25,8 @@
 
 #include "actuators/DCMotor.h"
 
-using namespace sf;
+namespace sf
+{
 
 DCMotor::DCMotor(std::string uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction) : Motor(uniqueName)
 {
@@ -128,4 +129,6 @@ void DCMotor::SetupGearbox(bool enable, Scalar ratio, Scalar efficiency)
     gearEnabled = enable;
     gearRatio = ratio > 0.0 ? ratio : 1.0;
     gearEff = efficiency > 0.0 ? (efficiency <= 1.0 ? efficiency : 1.0) : 1.0;
+}
+
 }

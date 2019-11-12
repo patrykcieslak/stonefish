@@ -11,6 +11,14 @@ simulator templates and facilitates easy integration with ROS architecture.
 
 There are two sources of documentation for the library: a [repository Wiki](https://github.com/patrykcieslak/stonefish/wiki) and a doxygen generated website, based on comments in the code (instructions below).
 
+### Requirements
+
+The simulation is CPU heavy and requires a recent GPU. The minimum requirement is the support for *OpenGL 3.3*. 
+
+Install official manufacturer drivers for your graphics card before using _Stonefish_!
+
+The software is developed and tested on *Linux Ubuntu*. There is also an Xcode project file provided, to compile and run the software on *Mac OSX*. It should work on any Unix based platform. A version for Windows is not available at this time.
+
 ### Installation
 1. Dependencies
     * **Bullet Physics library** (version 2.88, from source)
@@ -22,6 +30,7 @@ There are two sources of documentation for the library: a [repository Wiki](http
         6. `make -j4`
         7. `sudo make install`
     * **OpenGL Mathematics library** (libglm-dev, version >= 0.9.9.0)
+    * **GLEW library** (libglew-dev)
     * **SDL2 library** (libsdl2-dev, may need the following fix!)
         1. Install SDL2 library from the repository.
         2. `cd /usr/lib/x86_64-linux-gnu/cmake/SDL2/`
@@ -52,10 +61,11 @@ If you find this software useful in your research, please cite:
 ```
 @inproceedings{stonefish,
    author = {Cie{\'s}lak, Patryk},
-   booktitle = {Proceedings of MTS/IEEE OCEANS 2019},
+   booktitle = {OCEANS 2019 - Marseille},
    title = {{Stonefish: An Advanced Open-Source Simulation Tool Designed for Marine Robotics, With a ROS Interface}},
    month = jun,
-   year = {2019}}
+   year = {2019},
+   doi={10.1109/OCEANSE.2019.8867434}}
 ```
 ### Funding
 This work was part of a project titled ”Force/position control system to enable compliant manipulation from a floating I-AUV”, which received funding from the European Community H2020 Programme, under the Marie Sklodowska-Curie grant agreement no. 750063. The work is continued under a project titled ”EU Marine Robots”, which received funding from the European Community H2020 Programme, grant agreement no. 731103.

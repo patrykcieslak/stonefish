@@ -272,4 +272,281 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     return mesh;
 }
 
+void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot)
+{
+    //1.Calculate mesh volume, CG and mass
+    CG = Vector3(0,0,0);
+    volume = 0;
+    
+    if(thickness > Scalar(0)) //Shell
+    {
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Get triangle, convert from OpenGL to physics
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            
+            //Calculate volume of shell triangle
+            Scalar A = (v2-v1).cross(v3-v1).length()/Scalar(2);
+            Vector3 triCG = (v1+v2+v3)/Scalar(3);
+            Scalar triVolume = A * thickness;
+            CG += triCG * triVolume;
+            volume += triVolume;
+        }
+        
+        //Compute mesh CG
+        if(volume > Scalar(0))
+            CG /= volume;
+        else
+            CG = Vector3(0,0,0);
+    }
+    else //Solid body
+    {
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Get triangle, convert from OpenGL to physics
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            
+            //Calculate signed volume of a tetrahedra
+            Vector3 tetraCG = (v1+v2+v3)/Scalar(4);
+            Scalar tetraVolume6 = v1.dot(v2.cross(v3));
+            CG += tetraCG * tetraVolume6;
+            volume += tetraVolume6;
+        }
+        
+        //Compute mesh CG
+        if(volume > Scalar(0))
+            CG /= volume;
+        else
+            CG = Vector3(0,0,0);
+        
+        //Compute mesh volume
+        volume /= Scalar(6);
+    }
+    
+    mass = volume * density;
+    
+    //2.Calculate moments of inertia for local coordinate system located in CG (not necessarily principal)
+    Matrix3 I;
+    
+    if(thickness > Scalar(0)) //Shell - I have doubts if it is correct!
+    {
+        //Compute properties a shell by subtracting the inner solid from the outer solid
+        //Outer solid -> eternal surface
+        Scalar Pxx = Scalar(0);
+        Scalar Pyy = Scalar(0);
+        Scalar Pzz = Scalar(0);
+        Scalar Pxy = Scalar(0);
+        Scalar Pxz = Scalar(0);
+        Scalar Pyz = Scalar(0);
+        
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to CG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            Vector3 n = (v2-v1).cross(v3-v1).normalize();
+            v1 = v1 + n*thickness/Scalar(2) - CG;
+            v2 = v2 + n*thickness/Scalar(2) - CG;
+            v3 = v3 + n*thickness/Scalar(2) - CG;
+            
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            Scalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+        
+        Pxx *= density / Scalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= density / Scalar(120);
+        Pzz *= density / Scalar(120);
+        Pxy *= density / Scalar(120);
+        Pxz *= density / Scalar(120);
+        Pyz *= density / Scalar(120);
+        
+        I = Matrix3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+        
+        //Inner solid -> internal surface
+        Pxx = Scalar(0);
+        Pyy = Scalar(0);
+        Pzz = Scalar(0);
+        Pxy = Scalar(0);
+        Pxz = Scalar(0);
+        Pyz = Scalar(0); //products of inertia
+        
+        for(unsigned int i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to CG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            Vector3 n = (v2-v1).cross(v3-v1).normalize();
+            v1 = v1 - n*thickness/Scalar(2) - CG;
+            v2 = v2 - n*thickness/Scalar(2) - CG;
+            v3 = v3 - n*thickness/Scalar(2) - CG;
+            
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            Scalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+        
+        Pxx *= density / Scalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= density / Scalar(120);
+        Pzz *= density / Scalar(120);
+        Pxy *= density / Scalar(120);
+        Pxz *= density / Scalar(120);
+        Pyz *= density / Scalar(120);
+        
+        I -= Matrix3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+    }
+    else
+    {
+        Scalar Pxx = Scalar(0);
+        Scalar Pyy = Scalar(0);
+        Scalar Pzz = Scalar(0);
+        Scalar Pxy = Scalar(0);
+        Scalar Pxz = Scalar(0);
+        Scalar Pyz = Scalar(0);
+        
+        for(size_t i=0; i<mesh->faces.size(); ++i)
+        {
+            //Triangle verticies with respect to CG
+            glm::vec3 v1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+            glm::vec3 v2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+            glm::vec3 v3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+            
+            Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+            Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+            Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            v1 -= CG;
+            v2 -= CG;
+            v3 -= CG;
+            
+            //Pjk = const * dV * (2*Aj*Ak + 2*Bj*Bk + 2*Cj*Ck + Aj*Bk + Ak*Bj + Aj*Ck + Ak*Cj + Bj*Ck + Bk*Cj)
+            Scalar V6 = v1.dot(v2.cross(v3));
+            Pxx += V6 * 2 *(v1.x()*v1.x() + v2.x()*v2.x() + v3.x()*v3.x() + v1.x()*v2.x() + v1.x()*v3.x() + v2.x()*v3.x());
+            Pyy += V6 * 2 *(v1.y()*v1.y() + v2.y()*v2.y() + v3.y()*v3.y() + v1.y()*v2.y() + v1.y()*v3.y() + v2.y()*v3.y());
+            Pzz += V6 * 2 *(v1.z()*v1.z() + v2.z()*v2.z() + v3.z()*v3.z() + v1.z()*v2.z() + v1.z()*v3.z() + v2.z()*v3.z());
+            Pxy += V6 * (2*(v1.x()*v1.y() + v2.x()*v2.y() + v3.x()*v3.y()) + v1.x()*v2.y() + v1.y()*v2.x() + v1.x()*v3.y() + v1.y()*v3.x() + v2.x()*v3.y() + v2.y()*v3.x());
+            Pxz += V6 * (2*(v1.x()*v1.z() + v2.x()*v2.z() + v3.x()*v3.z()) + v1.x()*v2.z() + v1.z()*v2.x() + v1.x()*v3.z() + v1.z()*v3.x() + v2.x()*v3.z() + v2.z()*v3.x());
+            Pyz += V6 * (2*(v1.y()*v1.z() + v2.y()*v2.z() + v3.y()*v3.z()) + v1.y()*v2.z() + v1.z()*v2.y() + v1.y()*v3.z() + v1.z()*v3.y() + v2.y()*v3.z() + v2.z()*v3.y());
+        }
+        
+        Pxx *= density / Scalar(120); //20 from formula and 6 from polyhedron volume
+        Pyy *= density / Scalar(120);
+        Pzz *= density / Scalar(120);
+        Pxy *= density / Scalar(120);
+        Pxz *= density / Scalar(120);
+        Pyz *= density / Scalar(120);
+        
+        I = Matrix3(Pyy+Pzz, -Pxy, -Pxz, -Pxy, Pxx+Pzz, -Pyz, -Pxz, -Pyz, Pxx+Pyy);
+    }
+    
+    //3. Find primary moments of inertia
+    Ipri = Vector3(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
+    Irot = I3();
+    
+    //Check if inertia matrix is not diagonal
+    if(!(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
+         && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
+         && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY())))
+    {
+        //3.1. Calculate principal moments of inertia
+        Scalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
+        Scalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
+        Scalar U = btSqrt(T*T-Scalar(3)*II)/Scalar(3);
+        Scalar theta = btAcos((-Scalar(2)*T*T*T + Scalar(9)*T*II - Scalar(27)*I.determinant())/(Scalar(54)*U*U*U));
+        Scalar A = T/Scalar(3) - Scalar(2)*U*btCos(theta/Scalar(3));
+        Scalar B = T/Scalar(3) - Scalar(2)*U*btCos(theta/Scalar(3) - Scalar(2)*M_PI/Scalar(3));
+        Scalar C = T/Scalar(3) - Scalar(2)*U*btCos(theta/Scalar(3) + Scalar(2)*M_PI/Scalar(3));
+        Ipri = Vector3(A, B, C);
+        
+        //3.2. Calculate principal axes of inertia
+        Matrix3 L;
+        Vector3 axis1,axis2,axis3;
+        axis1 = FindInertialAxis(I, A);
+        axis2 = FindInertialAxis(I, B);
+        axis3 = axis1.cross(axis2);
+        axis2 = axis3.cross(axis1);
+        
+        //3.3. Rotate body so that principal axes are parallel to (x,y,z) system
+        Irot = Matrix3(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
+    }   
+}
+
+MeshProperties ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density)
+{
+    MeshProperties mp;
+    ComputePhysicalProperties(mesh, thickness, density, mp.mass, mp.CG, mp.volume, mp.Ipri, mp.Irot);
+    return mp;
+}
+
+Vector3 FindInertialAxis(Matrix3 I, Scalar value)
+{
+    //Check if not I matrix already diagonal
+    if(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
+       && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
+       && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY()))
+    {
+        return Vector3(0,0,0);
+    }
+    
+    //Diagonalize
+    Matrix3 L;
+    Vector3 candidates[3];
+    Vector3 axis;
+    
+    //Characteristic matrix
+    L = I - Matrix3::getIdentity().scaled(Vector3(value,value,value));
+    
+    //Candidates (orthogonal vectors)
+    candidates[0] = (L.getRow(0).cross(L.getRow(1)));
+    candidates[1] = (L.getRow(0).cross(L.getRow(2)));
+    candidates[2] = (L.getRow(1).cross(L.getRow(2)));
+    
+    //Find best candidate
+    if(candidates[0].length2() >= candidates[1].length2())
+    {
+        if(candidates[0].length2() >= candidates[2].length2())
+            axis = candidates[0].normalized();
+        else
+            axis = candidates[2].normalized();
+    }
+    else
+    {
+        if(candidates[1].length2() >= candidates[2].length2())
+            axis = candidates[1].normalized();
+        else
+            axis = candidates[2].normalized();
+    }
+    
+    return axis;
+}
+
 }
