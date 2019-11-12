@@ -65,7 +65,7 @@ std::vector<Renderable> Jet::Render()
     
     //Model matrix
     glm::vec3 z_(n.x(), n.y(), n.z());
-    glm::vec3 x_(n.y(), n.x(), n.z());
+    glm::vec3 x_(-n.y(), n.x(), n.z());
     glm::vec3 y_ = glm::cross(z_,x_);
     glm::mat4 model(glm::vec4(x_, 0.f), glm::vec4(y_, 0.f), glm::vec4(z_, 0.f), glm::vec4(c.x(), c.y(), c.z(), 1));    
     
@@ -88,13 +88,13 @@ std::vector<Renderable> Jet::Render()
     cone.points.push_back(glm::vec3(0, 0, 0));
     cone.points.push_back(glm::vec3(0, 0, vout));
     
-    Scalar r_ = Scalar(1)/Scalar(5)*(vout + Scalar(5)*r);
+    Scalar r_ = Scalar(1)/Scalar(5)*(Scalar(10)*r + Scalar(5)*r);
     
     for(unsigned int i=0; i<12; ++i)
     {
         Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
         Vector3 v1(btCos(alpha)*r, btSin(alpha)*r, 0);
-        Vector3 v2(v1.x()*r_/r, v1.y()*r_/r, vout);
+        Vector3 v2(v1.x()*r_/r, v1.y()*r_/r, Scalar(10)*r);
         cone.points.push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
         cone.points.push_back(glm::vec3(v2.x(), v2.y(), v2.z()));
     }

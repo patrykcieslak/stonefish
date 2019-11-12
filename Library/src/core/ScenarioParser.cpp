@@ -38,6 +38,8 @@
 #include "entities/solids/Wing.h"
 #include "entities/solids/Polyhedron.h"
 #include "entities/solids/Compound.h"
+#include "entities/forcefields/Uniform.h"
+#include "entities/forcefields/Jet.h"
 #include "sensors/scalar/IMU.h"
 #include "sensors/scalar/DVL.h"
 #include "sensors/scalar/GPS.h"
@@ -261,14 +263,79 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
     sm->getAtmosphere()->SetupSunPosition(az, elev);
     
     //Setup ocean
+    XMLElement* item;
     bool oceanEnabled;
-    Scalar oceanWaves;
+    Scalar wavesHeight(0);
+    
+    //Basic setup
     if(ocean->QueryAttribute("enabled", &oceanEnabled) != XML_SUCCESS)
         return false;
-    if(oceanEnabled && ocean->QueryAttribute("waves", &oceanWaves) != XML_SUCCESS)
+    if((item = ocean->FirstChildElement("waves")) != nullptr 
+        && item->QueryAttribute("height", &wavesHeight) != XML_SUCCESS)
         return false;
     if(oceanEnabled)
-        sm->EnableOcean(oceanWaves);
+        sm->EnableOcean(wavesHeight);
+    
+    //Currents
+    if((item = ocean->FirstChildElement("current")) != nullptr)
+    {
+        Ocean* ocn = sm->getOcean();
+        XMLElement* item2;
+        do
+        {
+            //Get type of current
+            const char* currentType;
+            if(item->QueryStringAttribute("type", &currentType) != XML_SUCCESS)
+                return false;
+            std::string currentTypeStr(currentType);
+            
+            //Create current
+            if(currentTypeStr == "uniform")
+            {
+                const char* vel;
+                Scalar vx,vy,vz;
+        
+                if((item2 = item->FirstChildElement("velocity")) == nullptr)
+                    return false;
+                if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
+                    return false;
+                if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
+                    return false;
+       
+                ocn->AddVelocityField(new Uniform(Vector3(vx, vy, vz)));
+            }
+            else if(currentTypeStr == "jet")
+            {
+                const char* center;
+                const char* vel;
+                Scalar cx, cy, cz;
+                Scalar vx, vy, vz;
+                Scalar radius;
+                
+                if((item2 = item->FirstChildElement("center")) == nullptr)
+                    return false;
+                if(item2->QueryStringAttribute("xyz", &center) != XML_SUCCESS)
+                    return false;
+                if(sscanf(center, "%lf %lf %lf", &cx, &cy, &cz) != 3)
+                    return false;
+                if((item2 = item->FirstChildElement("outlet")) == nullptr)
+                    return false;
+                if(item2->QueryAttribute("radius", &radius) != XML_SUCCESS)
+                    return false;
+                if((item2 = item->FirstChildElement("velocity")) == nullptr)
+                    return false;
+                if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
+                    return false;
+                if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
+                    return false;
+                
+                Vector3 velocity(vx, vy, vz);
+                Vector3 dir = velocity.normalized();
+                ocn->AddVelocityField(new Jet(Vector3(cx, cy, cz), dir, radius, velocity.norm()));
+            }
+        }
+        while((item = item->NextSiblingElement("current")) != nullptr);
+    }
     
     return true;
 }
@@ -377,6 +444,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     XMLElement* item;
     const char* mat = nullptr;
     const char* look = nullptr;
+    unsigned int uvMode = 0;
     Transform trans;
     
     //Material
@@ -389,6 +457,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         return false;
     if(item->QueryStringAttribute("name", &look) != XML_SUCCESS)
         return false;
+    item->QueryAttribute("uv_mode", &uvMode); //Optional
     //Transform
     if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
         return false;
@@ -408,7 +477,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         if(sscanf(dims, "%lf %lf %lf", &dimX, &dimY, &dimZ) != 3)
             return false;
             
-        object = new Obstacle(std::string(name), Vector3(dimX, dimY, dimZ), std::string(mat), std::string(look));
+        object = new Obstacle(std::string(name), Vector3(dimX, dimY, dimZ), std::string(mat), std::string(look), uvMode);
     }
     else if(typestr == "cylinder")
     {
