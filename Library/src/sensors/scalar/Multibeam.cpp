@@ -125,20 +125,4 @@ Scalar Multibeam::getAngleRange()
     return angRange;
 }
 
-unsigned int Multibeam::getAngleSteps()
-{
-    return angSteps;
-}
-
-Scalar* Multibeam::getAnglesDataPointer()
-{
-    return &angles[0];
-}
-
-Scalar* Multibeam::getDistancesDataPointer()
-{
-    return &distances[0];
-}
-
-
 }
