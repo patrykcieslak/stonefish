@@ -68,6 +68,9 @@ namespace sf
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();
+
+        //! A method returning the angleRangeDeg parameter
+        Scalar getAngleRange();
         
     private:
         Scalar angRange;
