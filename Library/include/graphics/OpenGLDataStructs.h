@@ -368,6 +368,7 @@ namespace sf
         bool showFluidDynamics;
         bool showForces;
         bool showBulletDebugInfo;
+        bool followRobotMode;
         
         //! A constructor.
         HelperSettings()
@@ -379,6 +380,7 @@ namespace sf
             showFluidDynamics = false;
             showForces = false;
             showBulletDebugInfo = false;
+            followRobotMode = false;
         }
     };
     

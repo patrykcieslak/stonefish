@@ -28,6 +28,7 @@
 #include <chrono>
 #include <thread>
 #include "core/SimulationManager.h"
+#include "core/Robot.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLConsole.h"
@@ -432,8 +433,15 @@ void GraphicalSimulationApp::Loop()
     
     while(!hasFinished())
     {
+
+        if (getHelperSettings().followRobotMode) {
+            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
+            Vector3 trans = getSimulationManager()->getRobot(0)->getTransform().getOrigin();
+            trackball->SetCenter(glm::vec3(trans.getX(), trans.getY(), trans.getZ()));
+        }
+
         SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
-            
+
         while(SDL_PollEvent(&event))
         {
             switch(event.type)
@@ -679,6 +687,10 @@ void GraphicalSimulationApp::DoHUD()
         hs.showFluidDynamics = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
         offset += 22.f;
     }
+
+    id.item = 8;
+    hs.followRobotMode = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.followRobotMode, "Follow robot");
+    offset += 22.f;
     
     offset += 14.f;
     

@@ -62,6 +62,12 @@ namespace sf
          \param step a position step [m]
          */
         void MoveCenter(glm::vec3 step);
+
+        //! A method to set the center of the trackball orbit.
+        /*!
+         \param set a position [m]
+         */
+        void SetCenter(glm::vec3 new_center);
         
         //! A method to glue the trackball to a rigid body.
         /*!

@@ -164,6 +164,12 @@ void OpenGLTrackball::MoveCenter(glm::vec3 step)
     UpdateTrackballTransform();
 }
 
+void OpenGLTrackball::SetCenter(glm::vec3 new_center)
+{
+    center = new_center;
+    UpdateTrackballTransform();
+}
+
 void OpenGLTrackball::GlueToEntity(SolidEntity* solid)
 {
     holdingEntity = solid;
