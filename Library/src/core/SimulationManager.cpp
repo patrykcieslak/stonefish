@@ -560,7 +560,9 @@ void SimulationManager::setSolidDisplayMode(DisplayMode m)
         
     for(size_t i=0; i<entities.size(); ++i)
     {
-        if(entities[i]->getType() == EntityType::ENTITY_SOLID)
+        if(entities[i]->getType() == EntityType::ENTITY_STATIC)
+            ((StaticEntity*)entities[i])->setDisplayMode(m);
+        else if(entities[i]->getType() == EntityType::ENTITY_SOLID)
             ((SolidEntity*)entities[i])->setDisplayMode(m);
         else if(entities[i]->getType() == EntityType::ENTITY_FEATHERSTONE)
             ((FeatherstoneEntity*)entities[i])->setDisplayMode(m);

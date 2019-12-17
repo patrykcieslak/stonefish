@@ -52,7 +52,7 @@ namespace sf
         virtual ~StaticEntity();
         
         //! A method implementing the rendering of the entity.
-        std::vector<Renderable> Render();
+        virtual std::vector<Renderable> Render();
         
         //! A method used to add the static entity to the simulation.
         /*!
@@ -95,6 +95,12 @@ namespace sf
         //! A method returninf the type of the static entity.
         virtual StaticEntityType getStaticType() = 0;
         
+        //! A method used to set display mode used for the body.
+        /*!
+         \param m flag defining the display mode
+         */
+        void setDisplayMode(DisplayMode m);
+        
         //! A static method used to transform a group of static entities together (useful to change the position of multiple linked objects).
         /*!
          \param objects a vector holiding a list of pointers to the objects that are to be transformed
@@ -111,8 +117,9 @@ namespace sf
         Material mat;
         Mesh* phyMesh;
         
-        int objectId;
         int lookId;
+        int phyObjectId;
+        DisplayMode dm;
     };
 }
 

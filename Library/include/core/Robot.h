@@ -100,6 +100,9 @@ namespace sf
          */
         void DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin);
         
+        //! A method which uses links and joints definitions to build the kinematic structure of the robot.
+        void BuildKinematicTree();
+        
         //PERCEPTION
         //! A method used to attach a sensor to a specified link of the robot.
         /*!
@@ -183,6 +186,18 @@ namespace sf
         std::string getName();
         
     private:
+        struct JointData
+        {
+            int jtype;
+            std::string name;
+            std::string parent;
+            std::string child;
+            Transform origin;
+            Vector3 axis;
+            std::pair<Scalar, Scalar> posLim;
+            Scalar damping;
+        };
+        
         void getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId);
         SolidEntity* getLink(const std::string& name);
         int getJoint(const std::string& name);
@@ -191,6 +206,7 @@ namespace sf
         bool fixed;
         std::vector<SolidEntity*> detachedLinks;
         std::vector<SolidEntity*> links;
+        std::vector<JointData> joints;
         std::vector<Sensor*> sensors;
         std::vector<Actuator*> actuators;
         std::string name;

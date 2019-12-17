@@ -85,7 +85,7 @@ void FallingTestManager::BuildScenario()
                                sf::Transform(sf::IQ(), sf::Vector3(0,0.25,-0.2)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0));
     robot->DefineRevoluteJoint("Joint2", "Base", "Link2",
                                sf::Transform(sf::IQ(), sf::Vector3(0,-0.25,-0.2)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0));
-    
+    robot->BuildKinematicTree();
     robot->AddLinkSensor(imu, "Link2", sf::I4());
     robot->AddJointSensor(enc, "Joint2");
     

@@ -44,6 +44,9 @@ namespace sf
     }
     CollisionMask;
     
+    //! An enum defining how the body is displayed.
+    typedef enum {DISPLAY_GRAPHICAL = 0, DISPLAY_PHYSICAL} DisplayMode;
+    
     struct Renderable;
     class SimulationManager;
     

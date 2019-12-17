@@ -368,7 +368,6 @@
     <GlobalSettings>
       <Compiler Options="-std=c++14;-fPIC" C_Options="-fPIC" Assembler="">
         <IncludePath Value="."/>
-        <IncludePath Value="3rdparty"/>
         <IncludePath Value="include"/>
         <IncludePath Value="/usr/include"/>
         <IncludePath Value="/usr/local/include"/>

@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="FlyingTest" Version="10.0.0" InternalType="Console">
-  <VirtualDirectory Name="include">
-    <File Name="FlyingTestManager.h"/>
-  </VirtualDirectory>
   <Plugins>
     <Plugin Name="qmake">
       <![CDATA[00010001N0005Debug000000000000]]>
     </Plugin>
   </Plugins>
+  <VirtualDirectory Name="include">
+    <File Name="FlyingTestManager.h"/>
+  </VirtualDirectory>
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
     <File Name="FlyingTestManager.cpp"/>
     <File Name="main.cpp"/>
   </VirtualDirectory>
+  <Dependencies Name="Debug">
+    <Project Name="libStonefish"/>
+  </Dependencies>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-std=c++14" C_Options="" Assembler="">
         <IncludePath Value="."/>
         <IncludePath Value="../../Library/include"/>
         <IncludePath Value="/usr/include/freetype2"/>
-        <IncludePath Value="/usr/include/eigen3"/>
         <IncludePath Value="/usr/local/include/bullet"/>
         <IncludePath Value="/usr/local/include/glm"/>
         <Preprocessor Value="BT_USE_DOUBLE_PRECISION"/>
@@ -125,7 +127,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug">
-    <Project Name="libStonefish"/>
-  </Dependencies>
 </CodeLite_Project>

@@ -47,8 +47,6 @@ namespace sf
      AERODYNAMIC_BODY -> aerodynamics
     */
     typedef enum {SURFACE_BODY = 0, FLOATING_BODY, SUBMERGED_BODY, AERODYNAMIC_BODY} BodyPhysicsType;
-    //! An enum defining how the body is displayed.
-    typedef enum {DISPLAY_GRAPHICAL = 0, DISPLAY_PHYSICAL} DisplayMode;
     
     struct HydrodynamicsSettings;
     class Ocean;

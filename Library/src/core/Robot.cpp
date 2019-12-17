@@ -161,57 +161,140 @@ void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLi
 
 void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {
-	unsigned int parentId, childId;
-	getFreeLinkPair(parentName, childName, parentId, childId);
-	
-	//Add link to the dynamic tree
-    Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * origin;
-	dynamics->AddLink(detachedLinks[childId], linkTrans);
-    links.push_back(detachedLinks[childId]);
-    detachedLinks.erase(detachedLinks.begin()+childId);
-	dynamics->AddRevoluteJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin(), linkTrans.getBasis() * axis);
-	dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
-	
-    if(damping > Scalar(0))
-    {
-        dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, damping);
-        dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
-        dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
-    }
+    JointData jd;
+    jd.jtype = 1;
+    jd.name = jointName;
+    jd.parent = parentName;
+    jd.child = childName;
+    jd.origin = origin;
+    jd.axis = axis;
+    jd.posLim = positionLimits;
+    jd.damping = damping;
+    joints.push_back(jd);
 }
 
 void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {
-	unsigned int parentId, childId;
-	getFreeLinkPair(parentName, childName, parentId, childId);
-	
-	//Add link to the dynamic tree
-	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * origin;
-	dynamics->AddLink(detachedLinks[childId], linkTrans);
-    links.push_back(detachedLinks[childId]);
-	detachedLinks.erase(detachedLinks.begin()+childId);
-    dynamics->AddPrismaticJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getBasis() * axis);
-	dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, positionLimits.first, positionLimits.second);
-    
-    if(damping > Scalar(0))
-    {
-        dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, damping);
-        dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
-        dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
-    }
+	JointData jd;
+    jd.jtype = 2;
+    jd.name = jointName;
+    jd.parent = parentName;
+    jd.child = childName;
+    jd.origin = origin;
+    jd.axis = axis;
+    jd.posLim = positionLimits;
+    jd.damping = damping;
+    joints.push_back(jd);
 }
 
 void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin)
 {
-	unsigned int parentId, childId;
-	getFreeLinkPair(parentName, childName, parentId, childId);
-	
-	//Add link to the dynamic tree
-	Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * origin;
-	dynamics->AddLink(detachedLinks[childId], linkTrans);
-    links.push_back(detachedLinks[childId]);
-    detachedLinks.erase(detachedLinks.begin()+childId);
-	dynamics->AddFixedJoint(jointName, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin());
+	JointData jd;
+    jd.jtype = 0;
+    jd.name = jointName;
+    jd.parent = parentName;
+    jd.child = childName;
+    jd.origin = origin;
+    joints.push_back(jd);
+}
+
+void Robot::BuildKinematicTree()
+{
+    cInfo("Building kinematic tree of robot '%s', consisting of %d links and %d joints.", getName().c_str(), detachedLinks.size()+1, joints.size());
+    
+    //Sort joints
+    std::vector<JointData> sortedJoints;
+    
+    //---Add joints connected to base
+    for(int i=joints.size()-1; i>=0; --i)
+    {
+        if(joints[i].parent == links[0]->getName())
+        {
+            sortedJoints.push_back(joints[i]);
+            joints.erase(joints.begin() + i);
+            cInfo("Joint %ld: %s<-->%s", sortedJoints.size(), 
+                                         sortedJoints.back().parent.c_str(), 
+                                         sortedJoints.back().child.c_str());
+        }
+    }
+    
+    //---Traverse through tree
+    size_t i0=0;
+    size_t i1=sortedJoints.size()-1;
+    
+    while(joints.size() > 0)
+    {
+        for(size_t i=i0; i<=i1; ++i)
+        {
+            for(int k=joints.size()-1; k>=0; --k)
+            {
+                if(joints[k].parent == sortedJoints[i].child)
+                {
+                    sortedJoints.push_back(joints[k]);
+                    joints.erase(joints.begin() + k);
+                    cInfo("Joint %ld: %s<-->%s", sortedJoints.size(), 
+                                         sortedJoints.back().parent.c_str(), 
+                                         sortedJoints.back().child.c_str());
+                }
+            }
+        }
+        i0 = i1+1;
+        i1 = sortedJoints.size()-1;
+    }
+    
+    joints = sortedJoints;
+    
+    //Build kinematic tree
+    for(size_t i=0; i<joints.size(); ++i)
+    {
+        unsigned int parentId, childId;
+        getFreeLinkPair(joints[i].parent, joints[i].child, parentId, childId);
+        
+        Transform linkTrans = dynamics->getLinkTransform(parentId) * dynamics->getLink(parentId).solid->getCG2OTransform() * joints[i].origin;
+        dynamics->AddLink(detachedLinks[childId], linkTrans);
+        links.push_back(detachedLinks[childId]);
+        detachedLinks.erase(detachedLinks.begin()+childId);
+        
+        switch(joints[i].jtype)
+        {
+            case 0: //FIXED
+            {
+                dynamics->AddFixedJoint(joints[i].name, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin());
+            }
+                break;
+            
+            case 1: //REVOLUTE
+            {
+                dynamics->AddRevoluteJoint(joints[i].name, parentId, dynamics->getNumOfLinks()-1, linkTrans.getOrigin(), linkTrans.getBasis() * joints[i].axis);
+                dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, joints[i].posLim.first, joints[i].posLim.second);
+        
+                if(joints[i].damping > Scalar(0))
+                {
+                    dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, joints[i].damping);
+                    dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
+                    dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+                }
+            }
+                break;
+            
+            case 2: //PRISMATIC
+            {
+                dynamics->AddPrismaticJoint(joints[i].name, parentId, dynamics->getNumOfLinks()-1, linkTrans.getBasis() * joints[i].axis);
+                dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, joints[i].posLim.first, joints[i].posLim.second);
+        
+                if(joints[i].damping > Scalar(0))
+                {
+                    dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, joints[i].damping);
+                    dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
+                    dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+                }
+            }
+                break;
+                
+            default:
+                break;
+        }
+    }
 }
 
 void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const Transform& origin)

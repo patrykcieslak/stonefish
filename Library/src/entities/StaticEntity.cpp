@@ -40,7 +40,8 @@ StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::st
         lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
         lookId = -1;
-    objectId = -1;
+    phyObjectId = -1;
+    dm = DisplayMode::DISPLAY_GRAPHICAL;
     rigidBody = NULL;
     phyMesh = NULL;
 }
@@ -92,18 +93,23 @@ void StaticEntity::getAABB(Vector3& min, Vector3& max)
 		rigidBody->getAabb(min, max);
 }
 
+void StaticEntity::setDisplayMode(DisplayMode m)
+{
+    dm = m;
+}
+
 std::vector<Renderable> StaticEntity::Render()
 {
 	std::vector<Renderable> items(0);
 	
-    if(rigidBody != NULL && objectId >= 0 && isRenderable())
+    if(rigidBody != NULL && phyObjectId >= 0 && isRenderable())
     {
 		Transform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
 		
 		Renderable item;
         item.type = RenderableType::SOLID;
-		item.objectId = objectId;
+		item.objectId = phyObjectId;
 		item.lookId = lookId;
 		item.model = glMatrixFromTransform(trans);
 		items.push_back(item);
@@ -117,7 +123,7 @@ void StaticEntity::BuildGraphicalObject()
 	if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
 		return;
 	
-    objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+    phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
 }
 
 void StaticEntity::BuildRigidBody(btCollisionShape* shape)

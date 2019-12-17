@@ -903,6 +903,8 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         item = item->NextSiblingElement("joint");
     }
     
+    robot->BuildKinematicTree();
+    
     //---- Sensors ----
     item = element->FirstChildElement("sensor");
     while(item != nullptr)

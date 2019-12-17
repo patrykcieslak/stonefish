@@ -94,12 +94,16 @@ namespace sf
         //! A destructor.
         ~Obstacle();
         
+        //! A method implementing the rendering of the entity.
+        std::vector<Renderable> Render();
+        
         //! A method that returns the static body type.
         StaticEntityType getStaticType();
         
     private:
         void BuildGraphicalObject();
         Mesh* graMesh;
+        int graObjectId;
     };
 }
 

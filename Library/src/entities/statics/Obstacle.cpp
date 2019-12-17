@@ -37,7 +37,6 @@ Obstacle::Obstacle(std::string uniqueName,
          std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
          std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
-    
     graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
     OpenGLContent::TransformMesh(graMesh, graphicsOrigin);
     
@@ -48,6 +47,8 @@ Obstacle::Obstacle(std::string uniqueName,
     }
     else
         phyMesh = graMesh;
+        
+    graObjectId = -1;
     
     Scalar* vertices = new Scalar[phyMesh->vertices.size()*3];
     int* indices = new int[phyMesh->faces.size()*3];
@@ -85,6 +86,7 @@ Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, std::string mate
 {
     phyMesh = OpenGLContent::BuildSphere(sphereRadius);
     graMesh = phyMesh;
+    graObjectId = -1;
     
     btSphereShape* shape = new btSphereShape(sphereRadius);
     BuildRigidBody(shape);
@@ -96,7 +98,8 @@ Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string ma
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
 	phyMesh = OpenGLContent::BuildBox(glHalfExtents, 0, uvMode);
     graMesh = phyMesh;
-	
+	graObjectId = -1;
+    
     btBoxShape* shape = new btBoxShape(halfExtents);
     BuildRigidBody(shape);
 }
@@ -106,6 +109,7 @@ Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinde
     Scalar halfHeight = cylinderHeight/Scalar(2);
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);
     graMesh = phyMesh;
+    graObjectId = -1;
     
     btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
     BuildRigidBody(shape);
@@ -130,7 +134,37 @@ void Obstacle::BuildGraphicalObject()
     if(graMesh == NULL || !SimulationApp::getApp()->hasGraphics())
         return;
         
-    objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh);
+    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh);
+    phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+}
+
+std::vector<Renderable> Obstacle::Render()
+{
+    std::vector<Renderable> items(0);
+	
+    if(rigidBody != NULL && isRenderable())
+    {
+        Renderable item;
+        
+        if(dm == DisplayMode::DISPLAY_GRAPHICAL && graObjectId >= 0)
+        { 
+            item.type = RenderableType::SOLID;
+            item.objectId = graObjectId;
+            item.lookId = lookId;
+            item.model = glMatrixFromTransform(getTransform());
+            items.push_back(item);
+        }
+        else if(dm == DisplayMode::DISPLAY_PHYSICAL && phyObjectId >= 0)
+        {
+            item.type = RenderableType::SOLID;
+            item.objectId = phyObjectId;
+            item.lookId = -1;
+            item.model = glMatrixFromTransform(getTransform());
+            items.push_back(item);
+        }
+    }
+	
+	return items;
 }
 
 }
