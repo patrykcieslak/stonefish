@@ -304,7 +304,6 @@ float calcSunShadow()
 	vec3 shadowCoord = fragPosLight.xyz; //Orthographic projection doesn't need division by w
 	shadowCoord.z += 0.001; //Bias
 	vec2 dz_duv = depthGradient(shadowCoord.xy, shadowCoord.z);
-	
 	vec2 radiusUV = vec2(0.001) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
 	
 	// STEP 1: blocker search

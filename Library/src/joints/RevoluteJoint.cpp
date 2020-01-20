@@ -169,14 +169,14 @@ std::vector<Renderable> RevoluteJoint::Render()
     Vector3 C1 = pivot + e1 * axis;
     Vector3 C2 = pivot + e2 * axis;
     
-	item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-	item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-	item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-	item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	
-	item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-	item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-	
+    item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+    item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+    item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+    item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+    
+    item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+    item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+    
     items.push_back(item);
     
     return items;

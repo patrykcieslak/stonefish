@@ -38,11 +38,11 @@ Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
     phyMesh = NULL; // There is no single mesh
     volume = 0;
-	mass = 0;
-	Ipri = Vector3(0,0,0);
+    mass = 0;
+    Ipri = Vector3(0,0,0);
     displayInternals = false;
     
-	AddExternalPart(firstExternalPart, origin);
+    AddExternalPart(firstExternalPart, origin);
 }
 
 Compound::~Compound()
@@ -129,7 +129,7 @@ void Compound::AddInternalPart(SolidEntity* solid, const Transform& origin)
         part.origin = origin;
         part.isExternal = false;
         parts.push_back(part);
-		RecalculatePhysicalProperties();
+        RecalculatePhysicalProperties();
     }
 }
 
@@ -142,13 +142,13 @@ void Compound::AddExternalPart(SolidEntity* solid, const Transform& origin)
         part.origin = origin;
         part.isExternal = true;
         parts.push_back(part);
-		RecalculatePhysicalProperties();
+        RecalculatePhysicalProperties();
     }
 }
 
 void Compound::RecalculatePhysicalProperties()
 {
-	//Calculate rigid body properties
+    //Calculate rigid body properties
     /*
       1. Calculate compound mass and compound CG (sum of location - local * m / M)
       2. Calculate inertia of part in global frame and compound CG (rotate and translate inertia tensor) 3x3
@@ -163,7 +163,7 @@ void Compound::RecalculatePhysicalProperties()
     Vector3 compoundCB(0,0,0); //In compound body origin frame
     Scalar compoundMass = 0;
     Scalar compoundAugmentedMass = 0;
-	Scalar compoundVolume = 0;
+    Scalar compoundVolume = 0;
     
     T_CG2O = T_CG2C = T_CG2G = Transform::getIdentity();
     P_CB = Vector3(0,0,0);
@@ -210,54 +210,54 @@ void Compound::RecalculatePhysicalProperties()
         //Accumulate inertia tensor
         I += solidInertia;
     }
-	
-	//3. Find compound moments of inertia
-	Vector3 compoundPriInertia(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
-	
-	//Check if inertia matrix is not diagonal
-	if(!(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
-	     && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
-	     && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY())))
-	{
-		//3.1. Calculate principal moments of inertia
-		Scalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
-		Scalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
-		Scalar U = btSqrt(T*T-Scalar(3.)*II)/Scalar(3.);
-		Scalar theta = btAcos((-Scalar(2.)*T*T*T + Scalar(9.)*T*II - Scalar(27.)*I.determinant())/(Scalar(54.)*U*U*U));
-		Scalar A = T/Scalar(3.) - Scalar(2.)*U*btCos(theta/Scalar(3.));
-		Scalar B = T/Scalar(3.) - Scalar(2.)*U*btCos(theta/Scalar(3.) - Scalar(2.)*M_PI/Scalar(3.));
-		Scalar C = T/Scalar(3.) - Scalar(2.)*U*btCos(theta/Scalar(3.) + Scalar(2.)*M_PI/Scalar(3.));
-		compoundPriInertia = Vector3(A, B, C);
     
-		//3.2. Calculate principal axes of inertia
-		Matrix3 L;
-		Vector3 axis1,axis2,axis3;
-		axis1 = FindInertialAxis(I, A);
-		axis2 = FindInertialAxis(I, B);
-		axis3 = axis1.cross(axis2);
-		axis2 = axis3.cross(axis1);
+    //3. Find compound moments of inertia
+    Vector3 compoundPriInertia(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
     
-		//3.3. Rotate body so that principal axes are parallel to (x,y,z) system
-		Matrix3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-		T_CG2O = Transform(rotMat, Vector3(0,0,0)).inverse() * T_CG2O;
+    //Check if inertia matrix is not diagonal
+    if(!(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
+         && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
+         && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY())))
+    {
+        //3.1. Calculate principal moments of inertia
+        Scalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
+        Scalar II = I[0][0]*I[1][1] + I[0][0]*I[2][2] + I[1][1]*I[2][2] - I[0][1]*I[0][1] - I[0][2]*I[0][2] - I[1][2]*I[1][2]; //Ixx Iyy + Ixx Izz + Iyy Izz - Ixy^2 - Ixz^2 - Iyz^2
+        Scalar U = btSqrt(T*T-Scalar(3.)*II)/Scalar(3.);
+        Scalar theta = btAcos((-Scalar(2.)*T*T*T + Scalar(9.)*T*II - Scalar(27.)*I.determinant())/(Scalar(54.)*U*U*U));
+        Scalar A = T/Scalar(3.) - Scalar(2.)*U*btCos(theta/Scalar(3.));
+        Scalar B = T/Scalar(3.) - Scalar(2.)*U*btCos(theta/Scalar(3.) - Scalar(2.)*M_PI/Scalar(3.));
+        Scalar C = T/Scalar(3.) - Scalar(2.)*U*btCos(theta/Scalar(3.) + Scalar(2.)*M_PI/Scalar(3.));
+        compoundPriInertia = Vector3(A, B, C);
+    
+        //3.2. Calculate principal axes of inertia
+        Matrix3 L;
+        Vector3 axis1,axis2,axis3;
+        axis1 = FindInertialAxis(I, A);
+        axis2 = FindInertialAxis(I, B);
+        axis3 = axis1.cross(axis2);
+        axis2 = axis3.cross(axis1);
+    
+        //3.3. Rotate body so that principal axes are parallel to (x,y,z) system
+        Matrix3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
+        T_CG2O = Transform(rotMat, Vector3(0,0,0)).inverse() * T_CG2O;
     }
-	
+    
     T_CG2C = T_CG2G = T_CG2O;
     
     //Move CB to compound CG frame
     P_CB = T_CG2O * compoundCB;
     
-	mass = compoundMass;
-	aMass.setX(compoundAugmentedMass - compoundMass);
-	aMass.setY(compoundAugmentedMass - compoundMass);
-	aMass.setZ(compoundAugmentedMass - compoundMass);
-	volume = compoundVolume;
-	Ipri = compoundPriInertia;
+    mass = compoundMass;
+    aMass.setX(compoundAugmentedMass - compoundMass);
+    aMass.setY(compoundAugmentedMass - compoundMass);
+    aMass.setZ(compoundAugmentedMass - compoundMass);
+    volume = compoundVolume;
+    Ipri = compoundPriInertia;
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
 {
-	//Build collision shape from external parts
+    //Build collision shape from external parts
     btCompoundShape* colShape = new btCompoundShape();
     for(size_t i = 0; i<parts.size(); ++i)
     {
@@ -269,7 +269,7 @@ btCollisionShape* Compound::BuildCollisionShape()
             collisionPartId.push_back(i);
         }
     }
-	return colShape;
+    return colShape;
 }
 
 void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
@@ -436,16 +436,16 @@ void Compound::ComputeAerodynamicForces(Atmosphere* atm)
 
 void Compound::BuildGraphicalObject()
 {
-	for(unsigned int i=0; i<parts.size(); ++i)
-		parts[i].solid->BuildGraphicalObject();
+    for(unsigned int i=0; i<parts.size(); ++i)
+        parts[i].solid->BuildGraphicalObject();
 }
 
 std::vector<Renderable> Compound::Render()
 {
-	std::vector<Renderable> items(0);
-	
-	if(isRenderable())
-	{
+    std::vector<Renderable> items(0);
+    
+    if(isRenderable())
+    {
         Renderable item;
         item.type = RenderableType::SOLID_CS;
         item.model = glMatrixFromTransform(getCGTransform());
@@ -460,8 +460,8 @@ std::vector<Renderable> Compound::Render()
         
         Transform oCompoundTrans = getOTransform();
         
-		for(size_t i=0; i<parts.size(); ++i)
-		{
+        for(size_t i=0; i<parts.size(); ++i)
+        {
             if((parts[i].isExternal && !displayInternals) || (!parts[i].isExternal && displayInternals))
             {
                 if(dm == DisplayMode::DISPLAY_GRAPHICAL)
@@ -514,7 +514,7 @@ std::vector<Renderable> Compound::Render()
             }
             
             item.points.clear();
-		}
+        }
         
         //Forces
         Vector3 cg = getCGTransform().getOrigin();
@@ -536,9 +536,9 @@ std::vector<Renderable> Compound::Render()
         item.type = RenderableType::FORCE_QUADRATIC_DRAG;
         item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
         items.push_back(item);
-	}
-		
-	return items;
+    }
+        
+    return items;
 }
 
 }

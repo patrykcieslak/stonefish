@@ -90,11 +90,11 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
         cCritical("OpenGL 3.3 not supported - minimum requirements not met!");
     
     //Load shaders and create rendering buffers
-	cInfo("Loading shaders...");
+    cInfo("Loading shaders...");
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
     OpenGLCamera::Init();
     OpenGLDepthCamera::Init();
-	OpenGLOceanParticles::Init();
+    OpenGLOceanParticles::Init();
     content = new OpenGLContent();
     
     //Create display framebuffer
@@ -112,18 +112,18 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
-		cError("Display FBO initialization failed!");
+        cError("Display FBO initialization failed!");
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
-	lastSimTime = Scalar(0);
+    
+    lastSimTime = Scalar(0);
 }
 
 OpenGLPipeline::~OpenGLPipeline()
 {
     OpenGLCamera::Destroy();
-	OpenGLDepthCamera::Destroy();
-	OpenGLOceanParticles::Destroy();
+    OpenGLDepthCamera::Destroy();
+    OpenGLOceanParticles::Destroy();
     OpenGLLight::Destroy();
     delete content;
     
@@ -159,17 +159,17 @@ OpenGLContent* OpenGLPipeline::getContent()
 
 void OpenGLPipeline::AddToDrawingQueue(const Renderable& r)
 {
-	drawingQueue.push_back(r);
+    drawingQueue.push_back(r);
 }
 
 void OpenGLPipeline::AddToDrawingQueue(const std::vector<Renderable>& r)
 {
-	drawingQueue.insert(drawingQueue.end(), r.begin(), r.end());
+    drawingQueue.insert(drawingQueue.end(), r.begin(), r.end());
 }
 
 bool OpenGLPipeline::isDrawingQueueEmpty()
 {
-	return drawingQueue.empty();
+    return drawingQueue.empty();
 }
     
 void OpenGLPipeline::PerformDrawingQueueCopy()
@@ -195,7 +195,7 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
 
 void OpenGLPipeline::DrawDisplay()
 {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, rSettings.windowW, rSettings.windowH, 0, 0, rSettings.windowW, rSettings.windowH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
@@ -326,12 +326,12 @@ void OpenGLPipeline::DrawHelpers()
 
 void OpenGLPipeline::Render(SimulationManager* sim)
 {	
-	//Update time step for animation purposes
-	Scalar now = sim->getSimulationTime();
-	Scalar dt = now-lastSimTime;
-	lastSimTime = now;
+    //Update time step for animation purposes
+    Scalar now = sim->getSimulationTime();
+    Scalar dt = now-lastSimTime;
+    lastSimTime = now;
 
-	//Double-buffering of drawing queue
+    //Double-buffering of drawing queue
     PerformDrawingQueueCopy();
     
     //Choose rendering mode
@@ -346,11 +346,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     
     //Bake shadow maps for lights (independent of view)
     if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
-	{
-		content->SetDrawingMode(DrawingMode::FLAT);
+    {
+        content->SetDrawingMode(DrawingMode::FLAT);
         for(unsigned int i=0; i<content->getLightsCount(); ++i)
             content->getLight(i)->BakeShadowmap(this);
-	}
+    }
     
     //Clear display framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
@@ -420,8 +420,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         camera->DrawAO(0.5f);
             
                     //Render sky (at the end to take profit of early bailing)
-				    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
-					
+                    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
+                    
                     //Go to postprocessing stage
                     camera->EnterPostprocessing();
                 }
@@ -440,7 +440,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
                     glOcean->DrawBackground(camera);
-					
+                    
                     //a) Surface with waves
                     if(ocean->hasWaves())
                     {
@@ -500,7 +500,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw reflections
                     glDisable(GL_DEPTH_TEST);
                     camera->DrawSSR();
-					
+                    
                     //Draw blur only below surface
                     glEnable(GL_STENCIL_TEST);
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
@@ -563,7 +563,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         {
             GLint* viewport = view->GetViewport();
             glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-			view->DrawLDR(screenFBO);
+            view->DrawLDR(screenFBO);
             delete [] viewport;
         }
     }

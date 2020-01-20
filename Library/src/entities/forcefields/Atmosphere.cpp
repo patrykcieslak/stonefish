@@ -139,26 +139,26 @@ bool Atmosphere::IsInsideFluid(const Vector3& point) const
 void Atmosphere::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
-	btRigidBody* rb = btRigidBody::upcast(co);
-	btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
-	
-	if(rb != 0)
-	{
-		if(rb->isStaticOrKinematicObject())
-			return;
-		else
-			ent = (Entity*)rb->getUserPointer();
-	}
-	else if(mbl != 0)
-	{
-		if(mbl->isStaticOrKinematicObject())
-			return;
-		else
-			ent = (Entity*)mbl->getUserPointer();
-	}
-	else
-		return;
-	
+    btRigidBody* rb = btRigidBody::upcast(co);
+    btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
+    
+    if(rb != 0)
+    {
+        if(rb->isStaticOrKinematicObject())
+            return;
+        else
+            ent = (Entity*)rb->getUserPointer();
+    }
+    else if(mbl != 0)
+    {
+        if(mbl->isStaticOrKinematicObject())
+            return;
+        else
+            ent = (Entity*)mbl->getUserPointer();
+    }
+    else
+        return;
+    
     if(ent->getType() == ENTITY_SOLID)
     {
         if(recompute)

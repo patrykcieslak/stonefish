@@ -36,7 +36,7 @@ namespace sf
 StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::string look) : Entity(uniqueName)
 {
     mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
-	if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::getApp()->hasGraphics())
         lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
         lookId = -1;
@@ -89,8 +89,8 @@ btRigidBody* StaticEntity::getRigidBody()
 
 void StaticEntity::getAABB(Vector3& min, Vector3& max)
 {
-	if(rigidBody != NULL)
-		rigidBody->getAabb(min, max);
+    if(rigidBody != NULL)
+        rigidBody->getAabb(min, max);
 }
 
 void StaticEntity::setDisplayMode(DisplayMode m)
@@ -100,49 +100,49 @@ void StaticEntity::setDisplayMode(DisplayMode m)
 
 std::vector<Renderable> StaticEntity::Render()
 {
-	std::vector<Renderable> items(0);
-	
+    std::vector<Renderable> items(0);
+    
     if(rigidBody != NULL && phyObjectId >= 0 && isRenderable())
     {
-		Transform trans;
+        Transform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
-		
-		Renderable item;
+        
+        Renderable item;
         item.type = RenderableType::SOLID;
-		item.objectId = phyObjectId;
-		item.lookId = lookId;
-		item.model = glMatrixFromTransform(trans);
-		items.push_back(item);
+        item.objectId = phyObjectId;
+        item.lookId = lookId;
+        item.model = glMatrixFromTransform(trans);
+        items.push_back(item);
     }
-	
-	return items;
+    
+    return items;
 }
 
 void StaticEntity::BuildGraphicalObject()
 {
-	if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
-		return;
-	
+    if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
+        return;
+    
     phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
 }
 
 void StaticEntity::BuildRigidBody(btCollisionShape* shape)
 {
-	btDefaultMotionState* motionState = new btDefaultMotionState();
+    btDefaultMotionState* motionState = new btDefaultMotionState();
     
     shape->setMargin(0.0);
     
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState, shape, Vector3(0,0,0));
     rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0); //not used
     rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0); //not used
-	rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0); //not used
+    rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0); //not used
     rigidBodyCI.m_additionalDamping = false;
     
     rigidBody = new btRigidBody(rigidBodyCI);
     rigidBody->setUserPointer(this);
     rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-	
-	BuildGraphicalObject();
+    
+    BuildGraphicalObject();
 }
 
 void StaticEntity::AddToSimulation(SimulationManager* sm)

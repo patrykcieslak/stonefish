@@ -58,11 +58,11 @@ void OpenGLView::SetViewport()
 
 GLint* OpenGLView::GetViewport() const
 {
-	GLint* view = new GLint[4];
-	view[0] = originX;
-	view[1] = originY;
-	view[2] = viewportWidth;
-	view[3] = viewportHeight;
+    GLint* view = new GLint[4];
+    view[0] = originX;
+    view[1] = originY;
+    view[2] = viewportWidth;
+    view[3] = viewportHeight;
     return view;
 }
 

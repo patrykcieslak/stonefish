@@ -195,25 +195,25 @@ void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
 IMGUI::~IMGUI()
 {
     if(plainPrinter != NULL)
-		delete plainPrinter;
+        delete plainPrinter;
     if(logoTexture > 0)
-		glDeleteTextures(1, &logoTexture);
+        glDeleteTextures(1, &logoTexture);
     if(guiTexture > 0) 
-		glDeleteTextures(1, &guiTexture);
- 	if(downsampleShader != NULL)
-		delete downsampleShader;
+        glDeleteTextures(1, &guiTexture);
+    if(downsampleShader != NULL)
+        delete downsampleShader;
     if(gaussianShader != NULL)
-		delete gaussianShader;
-	if(guiShader[0] != NULL)
-		delete guiShader[0];
-	if(guiShader[1] != NULL)
-		delete guiShader[1];
+        delete gaussianShader;
+    if(guiShader[0] != NULL)
+        delete guiShader[0];
+    if(guiShader[1] != NULL)
+        delete guiShader[1];
     if(translucentTexture[0] > 0)
-		glDeleteTextures(2, translucentTexture);
-	if(guiVAO > 0)
-		glDeleteVertexArrays(1, &guiVAO);
+        glDeleteTextures(2, translucentTexture);
+    if(guiVAO > 0)
+        glDeleteVertexArrays(1, &guiVAO);
     if(translucentFBO > 0)
-		glDeleteFramebuffers(1, &translucentFBO);
+        glDeleteFramebuffers(1, &translucentFBO);
 }
 
 Uid IMGUI::getHot()
@@ -289,15 +289,15 @@ GLuint IMGUI::getTranslucentTexture()
 void IMGUI::GenerateBackground()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
-	glViewport(0, 0, windowW/4, windowH/4);
+    glViewport(0, 0, windowW/4, windowH/4);
     
-	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
     glBindTexture(GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
     downsampleShader->Use();
     downsampleShader->SetUniform("source", 0);
     downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
-	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-	glUseProgram(0);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    glUseProgram(0);
     
     for(int i=0; i<3; i++)
     {
@@ -319,37 +319,37 @@ void IMGUI::GenerateBackground()
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         glUseProgram(0);
     }
-	
-	glBindTexture(GL_TEXTURE_2D, 0);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void IMGUI::Begin()
 {
-	clearHot();
-	
+    clearHot();
+    
     glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glScissor(0, 0, windowW, windowH);
     glViewport(0, 0, windowW, windowH);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW, windowH);
-	glBindVertexArray(guiVAO);
+    glBindVertexArray(guiVAO);
 }
 
 void IMGUI::End()
 {
-	glBindVertexArray(0);
-	
+    glBindVertexArray(0);
+    
     //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
-	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture, glm::vec4(1.f,1.f,1.f,0.2f));
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture, glm::vec4(1.f,1.f,1.f,0.2f));
    
     glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 }
 
@@ -417,105 +417,150 @@ void IMGUI::KeyUp(SDL_Keycode key)
 {
 }
 
+void IMGUI::DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color)
+{
+    y = windowH - y;
+    
+    GLfloat hx = h/windowW * 2.f;
+    GLfloat hy = h/windowH * 2.f;
+    x = x/windowW * 2.f - 1.f;
+    y = y/windowH * 2.f - 1.f;
+    
+    GLfloat triData[3][2];
+    if(up)
+    {
+        triData[1][0] = x-hx/2.f;
+        triData[1][1] = y-hy/2.f;
+        triData[0][0] = x+hx/2.f;
+        triData[0][1] = y-hy/2.f;
+        triData[2][0] = x;
+        triData[2][1] = y+hy/2.f;
+    }
+    else
+    {
+        triData[1][0] = x-hx/2.f;
+        triData[1][1] = y+hy/2.f;
+        triData[0][0] = x+hx/2.f;
+        triData[0][1] = y+hy/2.f;
+        triData[2][0] = x;
+        triData[2][1] = y-hy/2.f;
+    }
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+        
+    guiShader[0]->Use();
+    guiShader[0]->SetUniform("color", color);
+        
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triData), triData, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+    
+    glUseProgram(0);
+    glDeleteBuffers(1, &vbo);
+}
+
 void IMGUI::DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color)
 {
-	y = windowH - y;
-	
-	w = w/windowW * 2.f;
-	h = h/windowH * 2.f;
-	x = x/windowW * 2.f - 1.f;
-	y = y/windowH * 2.f - 1.f;
-	
-	GLfloat rectData[4][2]= {{x,     y},
-							 {x,   y-h},
-							 {x+w,   y},
-							 {x+w, y-h}};
-							 
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-		
-	guiShader[0]->Use();
-	guiShader[0]->SetUniform("color", color);
-		
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rectData), rectData, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
-	glUseProgram(0);
-	glDeleteBuffers(1, &vbo);
+    y = windowH - y;
+    
+    w = w/windowW * 2.f;
+    h = h/windowH * 2.f;
+    x = x/windowW * 2.f - 1.f;
+    y = y/windowH * 2.f - 1.f;
+    
+    GLfloat rectData[4][2]= {{x,     y},
+                             {x,   y-h},
+                             {x+w,   y},
+                             {x+w, y-h}};
+                             
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+        
+    guiShader[0]->Use();
+    guiShader[0]->SetUniform("color", color);
+        
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rectData), rectData, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    
+    glUseProgram(0);
+    glDeleteBuffers(1, &vbo);
 }
 
 void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color)
 {
-	w = w < 4.f*CORNER_RADIUS ? 4.f*CORNER_RADIUS : w;
-	h = h < 4.f*CORNER_RADIUS ? 4.f*CORNER_RADIUS : h;
-	y = windowH - y;
-	
-	glm::vec2 cs(CORNER_RADIUS/windowW*2.f, CORNER_RADIUS/windowH*2.f);
-	w = w/windowW * 2.f;
-	h = h/windowH * 2.f;
-	x = x/windowW * 2.f - 1.f;
-	y = y/windowH * 2.f - 1.f;
-	
-	GLfloat rectData[24][4]= {{x,             y, 0.f, 0.f},
-							  {x,        y-cs.y, 0.f, 0.333f},
-							  {x+cs.x,        y, 0.333f, 0.f},
-							  {x+cs.x,   y-cs.y, 0.333f, 0.333f},
-							  {x+w-cs.x,      y, 0.666f, 0.f},
-							  {x+w-cs.x, y-cs.y, 0.666f, 0.333f},
-							  {x+w,           y, 1.f, 0.f},
-							  {x+w,      y-cs.y, 1.f, 0.333f},
-							  
-							  {x,          y-cs.y, 0.f, 0.333f},
-							  {x,        y-h+cs.y, 0.f, 0.666f},
-							  {x+cs.x,     y-cs.y, 0.333f, 0.333f},
-							  {x+cs.x,   y-h+cs.y, 0.333f, 0.666f},
-							  {x+w-cs.x,   y-cs.y, 0.666f, 0.333f},
-							  {x+w-cs.x, y-h+cs.y, 0.666f, 0.666f},
-							  {x+w,        y-cs.y, 1.f, 0.333f},
-							  {x+w,      y-h+cs.y, 1.f, 0.666f},
-							  
-							  {x,        y-h+cs.y, 0.f, 0.666f},
-							  {x,             y-h, 0.f, 1.f},
-							  {x+cs.x,   y-h+cs.y, 0.333f, 0.666f},
-							  {x+cs.x,        y-h, 0.333f, 1.f},
-							  {x+w-cs.x, y-h+cs.y, 0.666f, 0.666f},
-							  {x+w-cs.x,      y-h, 0.666f, 1.f},
-							  {x+w,      y-h+cs.y, 1.f, 0.666f},
-							  {x+w,           y-h, 1.f, 1.f}};
-	
+    w = w < 4.f*CORNER_RADIUS ? 4.f*CORNER_RADIUS : w;
+    h = h < 4.f*CORNER_RADIUS ? 4.f*CORNER_RADIUS : h;
+    y = windowH - y;
+    
+    glm::vec2 cs(CORNER_RADIUS/windowW*2.f, CORNER_RADIUS/windowH*2.f);
+    w = w/windowW * 2.f;
+    h = h/windowH * 2.f;
+    x = x/windowW * 2.f - 1.f;
+    y = y/windowH * 2.f - 1.f;
+    
+    GLfloat rectData[24][4]= {{x,             y, 0.f, 0.f},
+                              {x,        y-cs.y, 0.f, 0.333f},
+                              {x+cs.x,        y, 0.333f, 0.f},
+                              {x+cs.x,   y-cs.y, 0.333f, 0.333f},
+                              {x+w-cs.x,      y, 0.666f, 0.f},
+                              {x+w-cs.x, y-cs.y, 0.666f, 0.333f},
+                              {x+w,           y, 1.f, 0.f},
+                              {x+w,      y-cs.y, 1.f, 0.333f},
+                              
+                              {x,          y-cs.y, 0.f, 0.333f},
+                              {x,        y-h+cs.y, 0.f, 0.666f},
+                              {x+cs.x,     y-cs.y, 0.333f, 0.333f},
+                              {x+cs.x,   y-h+cs.y, 0.333f, 0.666f},
+                              {x+w-cs.x,   y-cs.y, 0.666f, 0.333f},
+                              {x+w-cs.x, y-h+cs.y, 0.666f, 0.666f},
+                              {x+w,        y-cs.y, 1.f, 0.333f},
+                              {x+w,      y-h+cs.y, 1.f, 0.666f},
+                              
+                              {x,        y-h+cs.y, 0.f, 0.666f},
+                              {x,             y-h, 0.f, 1.f},
+                              {x+cs.x,   y-h+cs.y, 0.333f, 0.666f},
+                              {x+cs.x,        y-h, 0.333f, 1.f},
+                              {x+w-cs.x, y-h+cs.y, 0.666f, 0.666f},
+                              {x+w-cs.x,      y-h, 0.666f, 1.f},
+                              {x+w,      y-h+cs.y, 1.f, 0.666f},
+                              {x+w,           y-h, 1.f, 1.f}};
+    
     //Get translucent texture
-	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-	glBindTexture(GL_TEXTURE_2D, guiTexture);
-	
+    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+    glBindTexture(GL_TEXTURE_2D, guiTexture);
+    
     glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
     glBindTexture(GL_TEXTURE_2D, getTranslucentTexture());
-	
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-		
-	guiShader[1]->Use();
-	guiShader[1]->SetUniform("tex", 0);
-	guiShader[1]->SetUniform("backTex", 1);
-	guiShader[1]->SetUniform("color", color);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rectData), rectData, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
-	glDrawArrays(GL_TRIANGLE_STRIP, 8, 8);
-	glDrawArrays(GL_TRIANGLE_STRIP, 16, 8);
-	
-	glUseProgram(0);
-	glDeleteBuffers(1, &vbo);
+    
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+        
+    guiShader[1]->Use();
+    guiShader[1]->SetUniform("tex", 0);
+    guiShader[1]->SetUniform("backTex", 1);
+    guiShader[1]->SetUniform("color", color);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rectData), rectData, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
+    glDrawArrays(GL_TRIANGLE_STRIP, 8, 8);
+    glDrawArrays(GL_TRIANGLE_STRIP, 16, 8);
+    
+    glUseProgram(0);
+    glDeleteBuffers(1, &vbo);
 }
 
 void IMGUI::DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 {
-	DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
+    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
 }
 
 void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color, GLfloat scale)
@@ -555,7 +600,7 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
         DrawRoundedRect(x, y, w, h, theme[HOT_CONTROL_COLOR]);
     else
         DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
-		
+        
     glm::vec2 textDim = PlainTextDimensions(title);
     DrawPlainText(x + floorf((w - textDim.x)/2.f), y + floorf((h - textDim.y)/2.f), theme[ACTIVE_TEXT_COLOR], title);
     
@@ -564,15 +609,15 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
 
 Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces)
 {
-	//Check and correct dimensions
+    //Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
-	
-	GLfloat railW = w - 4.f*backgroundMargin;
-	GLfloat railH = 5.f;
-	GLfloat sliderW = 5.f;
-	GLfloat sliderH = 20.f;
+    
+    GLfloat railW = w - 4.f*backgroundMargin;
+    GLfloat railH = 5.f;
+    GLfloat sliderW = 5.f;
+    GLfloat sliderH = 20.f;
     GLfloat h = sliderH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
-	
+    
     //Check mouse position
     Scalar result = value;
     GLfloat sliderPosition = (value-min)/(max-min);
@@ -613,28 +658,28 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
     DrawPlainText(x + railW + 3.f*backgroundMargin - textDim.x, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
     
     //Bar
-	DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, sliderPosition * railW, railH, theme[FILLED_COLOR]);
+    DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, sliderPosition * railW, railH, theme[FILLED_COLOR]);
     DrawRect(x+backgroundMargin*2.f + sliderPosition * railW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme[EMPTY_COLOR]);
     
-	//Slider
-	if(isActive(id))
+    //Slider
+    if(isActive(id))
         DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[PUSHED_CONTROL_COLOR]);
     else if(isHot(id))
         DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[HOT_CONTROL_COLOR]);
     else
         DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[ACTIVE_CONTROL_COLOR]);
-	
+    
     return result;
 }
 
 void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const std::string& title)
 {
-	//Check and correct dimensions
+    //Check and correct dimensions
     w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
-	GLfloat barW = w - 4.f*backgroundMargin;
-	GLfloat barH = 5.f;
-	GLfloat h =  barH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
-	
+    GLfloat barW = w - 4.f*backgroundMargin;
+    GLfloat barH = 5.f;
+    GLfloat h =  barH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
+    
     //Check and correct progress value
     progress = progress < Scalar(0.) ? Scalar(0.) : (progress > Scalar(1.) ? Scalar(1.) : progress);
     
@@ -647,19 +692,19 @@ void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, cons
     GLfloat len = PlainTextLength(buffer);
     DrawPlainText(x + 3.f*backgroundMargin + barW - len, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
     
-	//Draw bar
-	DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, progress * barW, barH, theme[FILLED_COLOR]);
+    //Draw bar
+    DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, progress * barW, barH, theme[FILLED_COLOR]);
     DrawRect(x+backgroundMargin*2.f + progress * barW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme[EMPTY_COLOR]);
 }
 
 bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title)
 {
     bool result = value;
-	GLfloat size = 14.f;
-	w = w < size + 2.f*backgroundMargin ? size + 2.f*backgroundMargin : w;
-	GLfloat h = size + 2.f * backgroundMargin;
+    GLfloat size = 14.f;
+    w = w < size + 2.f*backgroundMargin ? size + 2.f*backgroundMargin : w;
+    GLfloat h = size + 2.f * backgroundMargin;
     
-	if(MouseInRect(x + backgroundMargin, y + backgroundMargin, size, size))
+    if(MouseInRect(x + backgroundMargin, y + backgroundMargin, size, size))
         setHot(id);
     
     if(isActive(id))
@@ -691,20 +736,143 @@ bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, cons
         DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[ACTIVE_CONTROL_COLOR]);
     
     if(result)
-		DrawRect(x+backgroundMargin + 0.2f*size, y+backgroundMargin+0.2f*size, 0.6*size, 0.6*size, theme[FILLED_COLOR]);
+        DrawRect(x+backgroundMargin + 0.2f*size, y+backgroundMargin+0.2f*size, 0.6*size, 0.6*size, theme[FILLED_COLOR]);
     
+    return result;
+}
+
+size_t IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, size_t value, const std::string& title)
+{
+    value = value >= options.size() ? 0 : value;
+    size_t result = value;
+    GLfloat size = 14.f;
+    
+    //drawing
+    glm::vec2 maxTextDim(0.f,(GLfloat)STANDARD_FONT_SIZE);
+    
+    for(size_t i=0; i<options.size(); ++i)
+    {
+        glm::vec2 textDim = PlainTextDimensions(options[i]);
+        if(textDim.x > maxTextDim.x) maxTextDim.x = textDim.x;
+        if(textDim.y > maxTextDim.y) maxTextDim.y = textDim.y;
+    }
+    
+    GLfloat comboW = maxTextDim.x + 10.f;
+    GLfloat comboH = maxTextDim.y + 10.f;
+    GLfloat minW = comboW + 2.f*backgroundMargin + 2.f*size + 5.f;
+    GLfloat h = comboH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
+    
+    if(w <= minW)
+        w = minW;
+    else
+        comboW = w - (minW - comboW);
+    
+    //Background and title
+    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
+    DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
+    
+    //Combo box
+    if(options.size() == 0)
+    {
+        DrawRect(x + backgroundMargin, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, comboW, comboH, theme[EMPTY_COLOR]);
+    }
+    else
+    {
+        DrawRect(x + backgroundMargin, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, comboW, comboH, theme[FILLED_COLOR]);
+        DrawPlainText(x + backgroundMargin + 5.f, y + backgroundMargin + STANDARD_FONT_SIZE + 10.f, theme[ACTIVE_TEXT_COLOR], options[value]);
+    }
+    
+    //Buttons
+    if(options.size() <= 1)
+    {
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[INACTIVE_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[INACTIVE_CONTROL_COLOR]);
+        return 0;
+    }
+    
+    if(MouseInRect(x + backgroundMargin + comboW + 5.f, y + backgroundMargin + STANDARD_FONT_SIZE + 10.f, size, size))
+    {
+        id.index = 0;
+        setHot(id);
+    }
+    else if(MouseInRect(x + backgroundMargin + comboW + 5.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 10.f, size, size))
+    {
+        id.index = 1;
+        setHot(id);
+    }
+    
+    int change = 0;
+    
+    //Arrow down
+    id.index = 0;
+    
+    if(isActive(id))
+    {
+        if(!MouseIsDown(true)) //mouse went up
+        {
+            if(isHot(id))
+                change = 1;
+            clearActive();
+        }
+    }
+    else if(isHot(id))
+    {
+        if(MouseIsDown(true)) //mouse went down
+            setActive(id);
+    }
+    
+    if(isActive(id))
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[PUSHED_CONTROL_COLOR]);
+    else if(isHot(id))
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[HOT_CONTROL_COLOR]);  
+    else
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[ACTIVE_CONTROL_COLOR]);
+    
+    //Arrow up
+    id.index = 1;
+    
+    if(isActive(id))
+    {
+        if(!MouseIsDown(true)) //mouse went up
+        {
+            if(isHot(id))
+                change = -1;
+            clearActive();
+        }
+    }
+    else if(isHot(id))
+    {
+        if(MouseIsDown(true)) //mouse went down
+            setActive(id);
+    }
+    
+    if(isActive(id))
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[PUSHED_CONTROL_COLOR]);
+    else if(isHot(id))
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[HOT_CONTROL_COLOR]);  
+    else
+        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[ACTIVE_CONTROL_COLOR]);
+    
+    if(options.size() > 1)
+    {
+        if(change == -1 && result > 0)
+            --result;
+        else if(change == 1 && result < options.size()-1)
+            ++result;
+    }
+        
     return result;
 }
 
 bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2])
 {
     bool result = false;
-	GLfloat pltW = w/windowW * 2.f;
-	GLfloat pltH = h/windowH * 2.f;
-	GLfloat pltX = x/windowW * 2.f - 1.f;
-	GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
-	GLfloat pltMargin = 10.f/windowH*2.f; 
-	
+    GLfloat pltW = w/windowW * 2.f;
+    GLfloat pltH = h/windowH * 2.f;
+    GLfloat pltX = x/windowW * 2.f - 1.f;
+    GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
+    GLfloat pltMargin = 10.f/windowH*2.f; 
+    
     if(MouseInRect(x, y, w, h))
         setHot(id);
     
@@ -780,55 +948,55 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
                 color = theme[FILLED_COLOR];
             
             //draw graph
-			std::vector<glm::vec2> points;
-			for(size_t i = 0;  i < data->size(); ++i)
+            std::vector<glm::vec2> points;
+            for(size_t i = 0;  i < data->size(); ++i)
             {
-				GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
-				points.push_back(glm::vec2(pltX + dt*i, pltY - pltH + pltMargin + (value-minValue) * dy));
-			}
-			
-			GLuint vbo;
-			glGenBuffers(1, &vbo);
-		
-			guiShader[0]->Use();
-			guiShader[0]->SetUniform("color", color);
-		
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-			glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
-			
-			glUseProgram(0);
-			glDeleteBuffers(1, &vbo);
-			
-			//legend
+                GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
+                points.push_back(glm::vec2(pltX + dt*i, pltY - pltH + pltMargin + (value-minValue) * dy));
+            }
+            
+            GLuint vbo;
+            glGenBuffers(1, &vbo);
+        
+            guiShader[0]->Use();
+            guiShader[0]->SetUniform("color", color);
+        
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
+            
+            glUseProgram(0);
+            glDeleteBuffers(1, &vbo);
+            
+            //legend
             DrawRect(x - 10.f, y+n*10.f+5.f, 10.f, 10.f, color);
         }
         
         //Grid
-		if(minValue < 0.f && maxValue > 0.f)
-		{
-			GLfloat axisData[2][2] = {{pltX, pltY - pltH + pltMargin - minValue * dy},
-									  {pltX + pltW, pltY - pltH + pltMargin - minValue * dy}};
-			
-			GLuint vbo;
-			glGenBuffers(1, &vbo);
-		
-			guiShader[0]->Use();
-			guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
-		
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(axisData), axisData, GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-			glDrawArrays(GL_LINES, 0, 2);
-			
-			glUseProgram(0);
-			glDeleteBuffers(1, &vbo);
-		}
+        if(minValue < 0.f && maxValue > 0.f)
+        {
+            GLfloat axisData[2][2] = {{pltX, pltY - pltH + pltMargin - minValue * dy},
+                                      {pltX + pltW, pltY - pltH + pltMargin - minValue * dy}};
+            
+            GLuint vbo;
+            glGenBuffers(1, &vbo);
+        
+            guiShader[0]->Use();
+            guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
+        
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(axisData), axisData, GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+            glDrawArrays(GL_LINES, 0, 2);
+            
+            glUseProgram(0);
+            glDeleteBuffers(1, &vbo);
+        }
         
         //Check if mouse cursor above legend item and display signal info
         if(MouseInRect(x - 10.f, y + 5.f, 10.f, dims.size() * 10.f)) //mouse above legend
@@ -858,10 +1026,10 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
 {
     bool result = false;
     GLfloat pltW = w/windowW * 2.f;
-	GLfloat pltH = h/windowH * 2.f;
-	GLfloat pltX = x/windowW * 2.f - 1.f;
-	GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
-	
+    GLfloat pltH = h/windowH * 2.f;
+    GLfloat pltX = x/windowW * 2.f - 1.f;
+    GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
+    
     if(MouseInRect(x, y, w, h))
         setHot(id);
     
@@ -904,7 +1072,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
             GLfloat value = (GLfloat)((*dataX)[i].getValue(dimX));
             if(value > maxValueX)
                 maxValueX = value;
-			if(value < minValueX)
+            if(value < minValueX)
                 minValueX = value;
         }
         
@@ -938,64 +1106,64 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         GLfloat dy = pltH/(maxValueY - minValueY);
         
         //draw graph
-		std::vector<glm::vec2> points;
-		
+        std::vector<glm::vec2> points;
+        
         for(size_t i = 0;  i < dataCount; ++i)
         {
-			GLfloat valueX = (GLfloat)((*dataX)[i].getValue(dimX));
+            GLfloat valueX = (GLfloat)((*dataX)[i].getValue(dimX));
             GLfloat valueY = (GLfloat)((*dataY)[i].getValue(dimY));
-			points.push_back(glm::vec2(pltX + (valueX - minValueX) * dx, pltY - pltH + (valueY - minValueY) * dy));
+            points.push_back(glm::vec2(pltX + (valueX - minValueX) * dx, pltY - pltH + (valueY - minValueY) * dy));
         }
         
-		GLuint vbo;
-		glGenBuffers(1, &vbo);
-		
-		guiShader[0]->Use();
-		guiShader[0]->SetUniform("color", theme[FILLED_COLOR]);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-		glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
-		
-		glUseProgram(0);
-		glDeleteBuffers(1, &vbo);
-		
-		//draw axes
-		std::vector<glm::vec2> axes;
-		
-		if(minValueX * maxValueX < 0.f)
-		{
-			axes.push_back(glm::vec2(pltX - minValueX * dx, pltY));
-			axes.push_back(glm::vec2(pltX - minValueX * dx, pltY - pltH));
-		}
-		
-		if(minValueY * maxValueY < 0.f)
-		{
-			axes.push_back(glm::vec2(pltX, pltY - pltH - minValueY * dy));
-			axes.push_back(glm::vec2(pltX + pltW, pltY - pltH - minValueY * dy));
-		}
-		
-		if(axes.size() > 0)
-		{
-			GLuint vbo;
-			glGenBuffers(1, &vbo);
-		
-			guiShader[0]->Use();
-			guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
-		
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*axes.size(), &axes[0].x, GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-			glDrawArrays(GL_LINES, 0, (GLsizei)axes.size());
-			
-			glUseProgram(0);
-			glDeleteBuffers(1, &vbo);
-		}
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+        
+        guiShader[0]->Use();
+        guiShader[0]->SetUniform("color", theme[FILLED_COLOR]);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
+        
+        glUseProgram(0);
+        glDeleteBuffers(1, &vbo);
+        
+        //draw axes
+        std::vector<glm::vec2> axes;
+        
+        if(minValueX * maxValueX < 0.f)
+        {
+            axes.push_back(glm::vec2(pltX - minValueX * dx, pltY));
+            axes.push_back(glm::vec2(pltX - minValueX * dx, pltY - pltH));
+        }
+        
+        if(minValueY * maxValueY < 0.f)
+        {
+            axes.push_back(glm::vec2(pltX, pltY - pltH - minValueY * dy));
+            axes.push_back(glm::vec2(pltX + pltW, pltY - pltH - minValueY * dy));
+        }
+        
+        if(axes.size() > 0)
+        {
+            GLuint vbo;
+            glGenBuffers(1, &vbo);
+        
+            guiShader[0]->Use();
+            guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
+        
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*axes.size(), &axes[0].x, GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+            glDrawArrays(GL_LINES, 0, (GLsizei)axes.size());
+            
+            glUseProgram(0);
+            glDeleteBuffers(1, &vbo);
+        }
     }
     
     delete dataX;

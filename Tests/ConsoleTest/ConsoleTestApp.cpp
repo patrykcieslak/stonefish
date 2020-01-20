@@ -34,11 +34,11 @@ ConsoleTestApp::ConsoleTestApp(std::string dataDirPath, ConsoleTestManager* sim)
 
 void ConsoleTestApp::Loop()
 {
-	cInfo("Press ENTER to start simulation.");
-	
-	while(!hasFinished())
-	{
-		if(!isRunning() && std::cin.get())
-			StartSimulation();
-	}
+    cInfo("Press ENTER to start simulation.");
+    
+    while(!hasFinished())
+    {
+        if(!isRunning() && std::cin.get())
+            StartSimulation();
+    }
 }

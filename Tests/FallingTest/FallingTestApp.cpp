@@ -40,8 +40,8 @@ void FallingTestApp::DoHUD()
     sf::Uid slider;
     slider.owner = 1;
     slider.item = 0;
-	slider.index = 0;
-	getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    slider.index = 0;
+    getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
     sf::Uid plot;
     plot.owner = 1;
@@ -49,7 +49,7 @@ void FallingTestApp::DoHUD()
     plot.index = 0;
     std::vector<unsigned short> dims;
     dims.push_back(0);
-	dims.push_back(1);
+    dims.push_back(1);
     dims.push_back(2);
     getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("IMU"), dims, "RPY");
     

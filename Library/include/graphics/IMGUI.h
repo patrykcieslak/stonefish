@@ -46,12 +46,16 @@
 
 namespace sf
 {
-    //! A structure holiding widget data.
-    struct Uid
+    //! A class holiding widget id.
+    class Uid
     {
+    public:
         int owner;
         int item;
-        int index;
+        
+    private:
+        int index = 0;
+        friend class IMGUI;
     };
     
     class GLSLShader;
@@ -204,6 +208,19 @@ namespace sf
          */
         bool DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title);
         
+        //! A method used to create a combo box.
+        /*!
+         \param id a Uid structure
+         \param x the x coordinate of the combobox origin
+         \param y the y coordinate of the combobox origin
+         \param w the width of the combobox
+         \param options a list of items of the combobox
+         \param value the current value of the combobox
+         \param title the title string
+         \return new combobox value
+         */
+        size_t DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, size_t value, const std::string& title);
+        
         //! A method used to create a time plot widget.
         /*!
          \param id a Uid structure
@@ -252,6 +269,7 @@ namespace sf
         glm::vec2 PlainTextDimensions(const std::string& text);
         void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
+        void DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color = glm::vec4(1));
         
         GLint windowW,windowH;
         bool shaders;

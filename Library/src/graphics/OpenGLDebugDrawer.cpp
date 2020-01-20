@@ -35,7 +35,7 @@ namespace sf
 
 OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode)
 {
-	setDebugMode(debugMode);
+    setDebugMode(debugMode);
 }
 
 void OpenGLDebugDrawer::setDebugMode(int debugMode)

@@ -82,24 +82,24 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
-	dynamicsWorld = NULL;
+    dynamicsWorld = NULL;
     dwSolver = NULL;
     dwBroadphase = NULL;
     dwCollisionConfig = NULL;
     dwDispatcher = NULL;
     ocean = NULL;
     atmosphere = NULL;
-	trackball = NULL;
+    trackball = NULL;
     sdm = DisplayMode::DISPLAY_GRAPHICAL;
     simHydroMutex = SDL_CreateMutex();
     simSettingsMutex = SDL_CreateMutex();
     simInfoMutex = SDL_CreateMutex();
     setStepsPerSecond(stepsPerSecond);
-	
+    
     //Set IC solver params
     icProblemSolved = false;
     setICSolverParams(false);
-	simulationFresh = false;
+    simulationFresh = false;
     
     //Create managers
     nameManager = new NameManager();
@@ -109,13 +109,13 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
 
 SimulationManager::~SimulationManager()
 {
-	DestroyScenario();
+    DestroyScenario();
     if(atmosphere != NULL) delete atmosphere;
     SDL_DestroyMutex(simSettingsMutex);
     SDL_DestroyMutex(simInfoMutex);
     SDL_DestroyMutex(simHydroMutex);
-	delete materialManager;
-	delete nameManager;
+    delete materialManager;
+    delete nameManager;
     delete ned;
 }
 
@@ -173,23 +173,23 @@ void SimulationManager::AddSolidEntity(SolidEntity* ent, const Transform& origin
     
 void SimulationManager::EnableOcean(Scalar waves, Fluid f)
 {
-	if(ocean != NULL)
-		return;
-	
+    if(ocean != NULL)
+        return;
+    
     if(f.name == "")
     {
         std::string water = getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55); 
         f = getMaterialManager()->getFluid(water);
     }
     
-	ocean = new Ocean("Ocean", waves, f);
-	ocean->AddToSimulation(this);
-	
-	if(SimulationApp::getApp()->hasGraphics())
-	{
-		ocean->InitGraphics(simHydroMutex);
-		ocean->setRenderable(true);
-	}
+    ocean = new Ocean("Ocean", waves, f);
+    ocean->AddToSimulation(this);
+    
+    if(SimulationApp::getApp()->hasGraphics())
+    {
+        ocean->InitGraphics(simHydroMutex);
+        ocean->setRenderable(true);
+    }
 }
     
 void SimulationManager::EnableAtmosphere()
@@ -330,7 +330,7 @@ SolverType SimulationManager::getSolverType()
 
 FluidDynamicsType SimulationManager::getFluidDynamicsType()
 {
-	return hydroType;
+    return hydroType;
 }
 
 Robot* SimulationManager::getRobot(unsigned int index)
@@ -425,7 +425,7 @@ NED* SimulationManager::getNED()
 
 Ocean* SimulationManager::getOcean()
 {
-	return ocean;
+    return ocean;
 }
 
 Atmosphere* SimulationManager::getAtmosphere()
@@ -440,7 +440,7 @@ btMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
 
 bool SimulationManager::isSimulationFresh()
 {
-	return simulationFresh;
+    return simulationFresh;
 }
 
 Scalar SimulationManager::getSimulationTime()
@@ -458,7 +458,7 @@ MaterialManager* SimulationManager::getMaterialManager()
 
 NameManager* SimulationManager::getNameManager()
 {
-	return nameManager;
+    return nameManager;
 }
 
 OpenGLTrackball* SimulationManager::getTrackball()
@@ -504,7 +504,7 @@ Scalar SimulationManager::getCpuUsage()
     SDL_LockMutex(simInfoMutex);
     Scalar cpu = cpuUsage;
     SDL_UnlockMutex(simInfoMutex);
-	return cpu;
+    return cpu;
 }
 
 Scalar SimulationManager::getRealtimeFactor()
@@ -512,7 +512,7 @@ Scalar SimulationManager::getRealtimeFactor()
     SDL_LockMutex(simInfoMutex);
     Scalar rf = realtimeFactor;
     SDL_UnlockMutex(simInfoMutex);
-	return rf;
+    return rf;
 }
 
 void SimulationManager::getWorldAABB(Vector3& min, Vector3& max)
@@ -600,32 +600,32 @@ void SimulationManager::InitializeSolver()
     
     //Choose constraint solver
     if(solver == SolverType::SOLVER_SI)
-	{
-		dwSolver = new btMultiBodyConstraintSolver();
-	}
-	else
-	{
-		btMLCPSolverInterface* mlcp;
+    {
+        dwSolver = new btMultiBodyConstraintSolver();
+    }
+    else
+    {
+        btMLCPSolverInterface* mlcp;
     
-		switch(solver)
-		{
+        switch(solver)
+        {
             default:
-			case SolverType::SOLVER_DANTZIG:
-				mlcp = new btDantzigSolver();
-				break;
+            case SolverType::SOLVER_DANTZIG:
+                mlcp = new btDantzigSolver();
+                break;
             
-			case SolverType::SOLVER_PGS:
-				mlcp = new btSolveProjectedGaussSeidel();
-				break;
+            case SolverType::SOLVER_PGS:
+                mlcp = new btSolveProjectedGaussSeidel();
+                break;
             
-			case SolverType::SOLVER_LEMKE:
-				mlcp = new btLemkeSolver();
-				//((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
-				break;
-		}
-		
-		dwSolver = new ResearchConstraintSolver(mlcp);
-	}
+            case SolverType::SOLVER_LEMKE:
+                mlcp = new btLemkeSolver();
+                //((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
+                break;
+        }
+        
+        dwSolver = new ResearchConstraintSolver(mlcp);
+    }
     
     //Create dynamics world
     dynamicsWorld = new btMultiBodyDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
@@ -634,9 +634,9 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_RANDMIZE_ORDER; // | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = Scalar(1.);
     dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 256;
-	
+    
     //Quality/stability
-	dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
+    dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
     dynamicsWorld->getSolverInfo().m_erp = Scalar(0.25);  //non-contact constraint error reduction //0.25
     dynamicsWorld->getSolverInfo().m_erp2 = Scalar(0.75); //contact constraint error reduction //0.75
     dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.5); //friction constraint error reduction //0.5
@@ -651,7 +651,7 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
     dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = Scalar(0.0);
     dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
-	dynamicsWorld->getSolverInfo().m_restitutionVelocityThreshold = Scalar(0.05); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
+    dynamicsWorld->getSolverInfo().m_restitutionVelocityThreshold = Scalar(0.05); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
     
     //Special forces
     dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = Scalar(1e30); //gyroscopic effect
@@ -682,8 +682,8 @@ void SimulationManager::InitializeScenario()
 {
     EnableAtmosphere();
     
-	if(SimulationApp::getApp()->hasGraphics())
-	{
+    if(SimulationApp::getApp()->hasGraphics())
+    {
         OpenGLView* view = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0);
         if(view == NULL)
         {
@@ -692,7 +692,7 @@ void SimulationManager::InitializeScenario()
             trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
         }
-	}
+    }
 }
 
 void SimulationManager::RestartScenario()
@@ -704,8 +704,8 @@ void SimulationManager::RestartScenario()
     
     if(SimulationApp::getApp()->hasGraphics())
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->Finalize();
-	
-	simulationFresh = true;
+
+    simulationFresh = true;
 }
 
 void SimulationManager::DestroyScenario()
@@ -748,10 +748,10 @@ void SimulationManager::DestroyScenario()
     entities.clear();
     
     if(ocean != NULL)
-	{
+    {
         delete ocean;
-		ocean = NULL;
-	}
+        ocean = NULL;
+    }
     
     if(atmosphere != NULL)
     {
@@ -775,9 +775,9 @@ void SimulationManager::DestroyScenario()
         delete actuators[i];
     actuators.clear();
     
-	if(nameManager != NULL)
-		nameManager->ClearNames();
-		
+    if(nameManager != NULL)
+        nameManager->ClearNames();
+        
     if(materialManager != NULL)
         materialManager->ClearMaterialsAndFluids();
 
@@ -787,7 +787,7 @@ void SimulationManager::DestroyScenario()
 
 bool SimulationManager::StartSimulation()
 {
-	simulationFresh = false;
+    simulationFresh = false;
     currentTime = 0;
     physicsTime = 0;
     simulationTime = 0;
@@ -881,18 +881,18 @@ void SimulationManager::AdvanceSimulation()
     //Check if initial conditions solved
     if(!icProblemSolved)
         return;
-		
+        
     //Calculate eleapsed time
-	uint64_t timeInMicroseconds = GetTimeInMicroseconds();
-	uint64_t deltaTime;
+    uint64_t timeInMicroseconds = GetTimeInMicroseconds();
+    uint64_t deltaTime;
     
     //Start of simulation
     if(currentTime == 0)
-	{
+    {
         deltaTime = 0.0;
-		currentTime = timeInMicroseconds;
-		return;
-	}
+        currentTime = timeInMicroseconds;
+        return;
+    }
     
     //Calculate and adjust delta
     deltaTime = timeInMicroseconds - currentTime;
@@ -921,21 +921,21 @@ void SimulationManager::AdvanceSimulation()
     Scalar factor2 = Scalar(1000000.0/60.0)/(Scalar)physicsTime;
     realtimeFactor *=  factor1*factor2;
     realtimeFactor = realtimeFactor < Scalar(0.05) ? Scalar(0.05) : (realtimeFactor > Scalar(1) ? Scalar(1) : realtimeFactor);*/
-	//realtimeFactor = Scalar(1);
+    //realtimeFactor = Scalar(1);
     
     //Inform about MLCP failures
-	if(solver != SolverType::SOLVER_SI)
-	{
-		int numFallbacks = ((ResearchConstraintSolver*)dwSolver)->getNumFallbacks();
-		if(numFallbacks)
-		{
-			mlcpFallbacks += numFallbacks;
+    if(solver != SolverType::SOLVER_SI)
+    {
+        int numFallbacks = ((ResearchConstraintSolver*)dwSolver)->getNumFallbacks();
+        if(numFallbacks)
+        {
+            mlcpFallbacks += numFallbacks;
 #ifdef DEBUG
             cWarning("MLCP solver failed %d times.\n", mlcpFallbacks);
 #endif
-		}
-		((ResearchConstraintSolver*)dwSolver)->resetNumFallbacks();
-	}
+        }
+        ((ResearchConstraintSolver*)dwSolver)->resetNumFallbacks();
+    }
     
     SDL_UnlockMutex(simInfoMutex);
 }
@@ -943,28 +943,28 @@ void SimulationManager::AdvanceSimulation()
 void SimulationManager::SimulationStepCompleted(Scalar timeStep)
 {
 #ifdef DEBUG
-	if(!SimulationApp::getApp()->hasGraphics())
-		cInfo("Simulation time: %1.3lf s", getSimulationTime());
+    if(!SimulationApp::getApp()->hasGraphics())
+        cInfo("Simulation time: %1.3lf s", getSimulationTime());
 #endif	
 }
 
 void SimulationManager::UpdateDrawingQueue()
 {
-	//Build new drawing queue
+    //Build new drawing queue
     OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
     
     //Solids, manipulators, systems....
-	for(size_t i=0; i<entities.size(); ++i)
-		glPipeline->AddToDrawingQueue(entities[i]->Render());
+    for(size_t i=0; i<entities.size(); ++i)
+        glPipeline->AddToDrawingQueue(entities[i]->Render());
     
     //Joints
     for(size_t i=0; i<joints.size(); ++i)
-		glPipeline->AddToDrawingQueue(joints[i]->Render());
-		
+        glPipeline->AddToDrawingQueue(joints[i]->Render());
+        
     //Motors, thrusters, propellers, fins....
     for(size_t i=0; i<actuators.size(); ++i)
     {
-		glPipeline->AddToDrawingQueue(actuators[i]->Render());
+        glPipeline->AddToDrawingQueue(actuators[i]->Render());
         if(actuators[i]->getType() == ActuatorType::ACTUATOR_LIGHT)
             ((Light*)actuators[i])->UpdateTransform();
     }
@@ -974,8 +974,12 @@ void SimulationManager::UpdateDrawingQueue()
     {
         glPipeline->AddToDrawingQueue(sensors[i]->Render());
         if(sensors[i]->getType() == SensorType::SENSOR_VISION)
-			((VisionSensor*)sensors[i])->UpdateTransform();
+            ((VisionSensor*)sensors[i])->UpdateTransform();
     }
+    
+    //Trackball
+    if(trackball != NULL)
+        trackball->UpdateTransform();
     
     //Contacts
     for(size_t i=0; i<contacts.size(); ++i)
@@ -983,7 +987,7 @@ void SimulationManager::UpdateDrawingQueue()
     
     //Ocean currents
     if(ocean != NULL)
-		glPipeline->AddToDrawingQueue(ocean->Render());
+        glPipeline->AddToDrawingQueue(ocean->Render());
 }
 
 Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
@@ -1038,15 +1042,15 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
-	MaterialManager* mm = SimulationApp::getApp()->getSimulationManager()->getMaterialManager();
-	
+    MaterialManager* mm = SimulationApp::getApp()->getSimulationManager()->getMaterialManager();
+    
     Material mat0;
     Vector3 contactVelocity0;
     Scalar contactAngularVelocity0;
     
     if(ent0->getType() == ENTITY_STATIC)
     {
-		StaticEntity* sent0 = (StaticEntity*)ent0;
+        StaticEntity* sent0 = (StaticEntity*)ent0;
         mat0 = sent0->getMaterial();
         contactVelocity0.setZero();
         contactAngularVelocity0 = Scalar(0);
@@ -1059,9 +1063,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         else
             mat0 = sent0->getMaterial();
         //Vector3 localPoint0 = sent0->getTransform().getBasis() * cp.m_localPointA;
-		Vector3 localPoint0 = sent0->getCGTransform().inverse() * cp.getPositionWorldOnA();
-		contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
-		contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
+        Vector3 localPoint0 = sent0->getCGTransform().inverse() * cp.getPositionWorldOnA();
+        contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
+        contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
     }
     else
     {
@@ -1077,7 +1081,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     
     if(ent1->getType() == ENTITY_STATIC)
     {
-		StaticEntity* sent1 = (StaticEntity*)ent1;
+        StaticEntity* sent1 = (StaticEntity*)ent1;
         mat1 = sent1->getMaterial();
         contactVelocity1.setZero();
         contactAngularVelocity1 = Scalar(0);
@@ -1090,7 +1094,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         else
             mat1 = sent1->getMaterial();
         //Vector3 localPoint1 = sent1->getTransform().getBasis() * cp.m_localPointB;
-		Vector3 localPoint1 = sent1->getCGTransform().inverse() * cp.getPositionWorldOnB();
+        Vector3 localPoint1 = sent1->getCGTransform().inverse() * cp.getPositionWorldOnB();
         contactVelocity1 = sent1->getLinearVelocityInLocalPoint(localPoint1);
         contactAngularVelocity1 = sent1->getAngularVelocity().dot(cp.m_normalWorldOnB);
     }
@@ -1108,9 +1112,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     Scalar slipVelMod = slipVel.length();
     Scalar sigma = 100;
     // f = (static - dynamic)/(sigma * v^2 + 1) + dynamic
-	Friction f = mm->GetMaterialsInteraction(mat0.name, mat1.name);
-	cp.m_combinedFriction = (f.fStatic - f.fDynamic)/(sigma * slipVelMod * slipVelMod + Scalar(1)) + f.fDynamic;
-	
+    Friction f = mm->GetMaterialsInteraction(mat0.name, mat1.name);
+    cp.m_combinedFriction = (f.fStatic - f.fDynamic)/(sigma * slipVelMod * slipVelMod + Scalar(1)) + f.fDynamic;
+    
     //Rolling friction not possible to generalize - needs special treatment
     cp.m_combinedRollingFriction = Scalar(0);
     
@@ -1250,7 +1254,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
     btMultiBodyDynamicsWorld* mbDynamicsWorld = (btMultiBodyDynamicsWorld*)world;
-    	
+        
     //Clear all forces to ensure that no summing occurs
     mbDynamicsWorld->clearForces(); //Includes clearing of multibody forces!
         
@@ -1279,32 +1283,32 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
             multibody->ApplyDamping();
         }
         else if(ent->getType() == ENTITY_FORCEFIELD)
-		{
-			ForcefieldEntity* ff = (ForcefieldEntity*)ent;
-			if(ff->getForcefieldType() == FORCEFIELD_TRIGGER)
-			{				
-				Trigger* trigger = (Trigger*)ff;
-				trigger->Clear();
-				btBroadphasePairArray& pairArray = trigger->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
-				int numPairs = pairArray.size();
-					
-				for(int h = 0; h < numPairs; ++h)
-				{
-					const btBroadphasePair& pair = pairArray[h];
-					btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
-					if(!colPair)
-						continue;
+        {
+            ForcefieldEntity* ff = (ForcefieldEntity*)ent;
+            if(ff->getForcefieldType() == FORCEFIELD_TRIGGER)
+            {				
+                Trigger* trigger = (Trigger*)ff;
+                trigger->Clear();
+                btBroadphasePairArray& pairArray = trigger->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+                int numPairs = pairArray.size();
                     
-					btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
-					btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                for(int h = 0; h < numPairs; ++h)
+                {
+                    const btBroadphasePair& pair = pairArray[h];
+                    btBroadphasePair* colPair = world->getPairCache()->findPair(pair.m_pProxy0, pair.m_pProxy1);
+                    if(!colPair)
+                        continue;
+                    
+                    btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
+                    btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
-					if(co1 == trigger->getGhost())
-						trigger->Activate(co2);
-					else if(co2 == trigger->getGhost())
-						trigger->Activate(co1);
-				}
-			}
-		}
+                    if(co1 == trigger->getGhost())
+                        trigger->Activate(co2);
+                    else if(co2 == trigger->getGhost())
+                        trigger->Activate(co1);
+                }
+            }
+        }
     }
     
     //Geometry-based forces
@@ -1337,7 +1341,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         }
     }
     
-	//Hydrodynamic forces
+    //Hydrodynamic forces
     if(simManager->ocean != NULL)
     {
         if(recompute) SDL_LockMutex(simManager->simHydroMutex);
@@ -1372,9 +1376,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-	
-	//Update acceleration data
-	for(size_t i = 0; i < simManager->entities.size(); ++i)
+    
+    //Update acceleration data
+    for(size_t i = 0; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];
             
@@ -1383,14 +1387,14 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
             SolidEntity* solid = (SolidEntity*)ent;
             solid->UpdateAcceleration(timeStep);
         }
-		else if(ent->getType() == ENTITY_FEATHERSTONE)
-		{
-			FeatherstoneEntity* fe = (FeatherstoneEntity*)ent;
-			fe->UpdateAcceleration(timeStep);
-		}
+        else if(ent->getType() == ENTITY_FEATHERSTONE)
+        {
+            FeatherstoneEntity* fe = (FeatherstoneEntity*)ent;
+            fe->UpdateAcceleration(timeStep);
+        }
     }
-	
-	//loop through all sensors -> update measurements
+    
+    //loop through all sensors -> update measurements
     for(size_t i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
     

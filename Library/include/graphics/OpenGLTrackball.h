@@ -69,6 +69,9 @@ namespace sf
          */
         void GlueToEntity(SolidEntity* solid);
         
+        //! A method used to update the trasformation of the trackball.
+        void UpdateTransform();
+        
         //! A method servicing the mouse down event.
         /*!
          \param x the x coordinate of the mouse pointer
@@ -112,7 +115,6 @@ namespace sf
         bool needsUpdate();
         
     private:
-        void UpdateTrackballTransform();
         GLfloat calculateZ(GLfloat x, GLfloat y);
         
         SolidEntity* holdingEntity;

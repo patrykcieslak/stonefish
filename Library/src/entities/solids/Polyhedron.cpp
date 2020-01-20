@@ -99,11 +99,11 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
 {
     btConvexHullShape* convex = new btConvexHullShape();
     for(size_t i=0; i<phyMesh->vertices.size(); ++i)
-	{
-		Vector3 v(phyMesh->vertices[i].pos.x, phyMesh->vertices[i].pos.y, phyMesh->vertices[i].pos.z);
+    {
+        Vector3 v(phyMesh->vertices[i].pos.x, phyMesh->vertices[i].pos.y, phyMesh->vertices[i].pos.z);
         convex->addPoint(v);
-	}
-	convex->optimizeConvexHull();
+    }
+    convex->optimizeConvexHull();
     return convex;
 }
 

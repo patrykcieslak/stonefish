@@ -165,50 +165,50 @@ std::vector<Renderable> Contact::Render()
     if(points.size() == 0)
         return items;
     
-	//Drawing points
+    //Drawing points
     /*if(displayMask & CONTACT_DISPLAY_LAST_A)
         vertices.push_back(glm::vec3((GLfloat)points.back().locationA.getX(), (GLfloat)points.back().locationA.getY(), (GLfloat)points.back().locationA.getZ()));
     
     if(displayMask & CONTACT_DISPLAY_LAST_B)
         vertices.push_back(glm::vec3((GLfloat)points.back().locationB.getX(), (GLfloat)points.back().locationB.getY(), (GLfloat)points.back().locationB.getZ()));
-	
-	OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);*/
-	
-	//Drawing lines
+    
+    OpenGLContent::getInstance()->DrawPrimitives(PrimitiveType::POINTS, vertices, CONTACT_COLOR);*/
+    
+    //Drawing lines
     std::vector<glm::vec3> vertices;
     
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A)
     {
-		Vector3 p1 = points.back().locationA;
-		Vector3 p2 = points.back().locationA + points.back().slippingVelocityA;
-		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
-		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        Vector3 p1 = points.back().locationA;
+        Vector3 p2 = points.back().locationA + points.back().slippingVelocityA;
+        vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+        vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_B)
     {
         Vector3 p1 = points.back().locationB;
-		Vector3 p2 = points.back().locationB - points.back().slippingVelocityA;
-		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
-		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        Vector3 p2 = points.back().locationB - points.back().slippingVelocityA;
+        vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+        vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_A)
     {
         Vector3 p1 = points.back().locationA;
-		Vector3 p2 = points.back().locationA + points.back().normalForceA;
-		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
-		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        Vector3 p2 = points.back().locationA + points.back().normalForceA;
+        vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+        vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_B)
     {
         Vector3 p1 = points.back().locationB;
-		Vector3 p2 = points.back().locationB - points.back().normalForceA;
-		vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
-		vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        Vector3 p2 = points.back().locationB - points.back().normalForceA;
+        vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+        vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
-	
+    
     if(vertices.size() > 0)
     {
         Renderable item;
@@ -217,36 +217,36 @@ std::vector<Renderable> Contact::Render()
         item.type = RenderableType::SENSOR_LINES;
         items.push_back(item);
     }
-    	
-	//Drawing line strips
-	if(displayMask & CONTACT_DISPLAY_PATH_A)
+        
+    //Drawing line strips
+    if(displayMask & CONTACT_DISPLAY_PATH_A)
     {
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         
-		for(unsigned int i = 0; i < points.size(); ++i)
+        for(unsigned int i = 0; i < points.size(); ++i)
         {	
-			Vector3 p = points[i].locationA;
-			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
-		}
-		
-		items.push_back(item);
-	}
-	
+            Vector3 p = points[i].locationA;
+            item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+        }
+        
+        items.push_back(item);
+    }
+    
     if(displayMask & CONTACT_DISPLAY_PATH_B)
     {
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         
-		for(unsigned int i = 0; i < points.size(); ++i)
+        for(unsigned int i = 0; i < points.size(); ++i)
         {	
-			Vector3 p = points[i].locationB;
-			item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
-		}
-		
-		items.push_back(item);
+            Vector3 p = points[i].locationB;
+            item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+        }
+        
+        items.push_back(item);
     }
     
     return items;

@@ -397,7 +397,7 @@ void OpenGLAtmosphere::SetSunPosition(float azimuthDeg, float elevationDeg)
     float sunAzimuthAngle = -sunAzimuth/180.f*M_PI + M_PI;
     float sunZenithAngle =  (90.f - sunElevation)/180.f*M_PI;
     sunDirection = glm::normalize(glm::rotate(glm::vec3(cos(sunAzimuthAngle) * sin(sunZenithAngle), sin(sunAzimuthAngle) * sin(sunZenithAngle), cos(sunZenithAngle)), (float)M_PI, glm::vec3(0,1.f,0)));
-	
+    
     //Build sun modelview matrix
     glm::vec3 up(0,0,-1.f);
     glm::vec3 right = glm::cross(sunDirection, up);
@@ -859,7 +859,7 @@ void OpenGLAtmosphere::Precompute()
 
 #ifdef DEBUG
     int64_t stop = GetTimeInMicroseconds();
-	cInfo("Precomputed in %d ms.", (stop-start)/1000);
+    cInfo("Precomputed in %d ms.", (stop-start)/1000);
 #else
     GLSLShader::Verbose();
 #endif

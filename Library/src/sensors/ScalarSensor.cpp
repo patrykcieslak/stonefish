@@ -104,7 +104,7 @@ SensorChannel ScalarSensor::getSensorChannelDescription(unsigned int channel)
 
 void ScalarSensor::Reset()
 {
-	ClearHistory();
+    ClearHistory();
     Sensor::Reset();
 }
 

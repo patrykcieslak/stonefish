@@ -35,16 +35,16 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
                                  GLint x, GLint y, GLint width, GLint height, GLfloat horizontalFovDeg,
                                  glm::vec2 range, GLuint spp) : OpenGLCamera(x, y, width, height, range, spp)
 {
-	this->up = glm::normalize(up);
+    this->up = glm::normalize(up);
     rotation = glm::rotation(this->up, glm::vec3(0,0,1.f));
     center = centerPosition;
-	radius = orbitRadius;
+    radius = orbitRadius;
     fovx = horizontalFovDeg/180.f*M_PI;
     projection = glm::perspectiveFov(fovx*(GLfloat)viewportHeight/(GLfloat)viewportWidth, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
-	dragging = false;
+    dragging = false;
     transMode = false;
     holdingEntity = NULL;
-    UpdateTrackballTransform();
+    UpdateTransform();
 }
 
 ViewType OpenGLTrackball::getType()
@@ -69,19 +69,19 @@ glm::vec3 OpenGLTrackball::GetLookingDirection() const
 
 glm::vec3 OpenGLTrackball::GetUpDirection() const
 {
-	glm::vec3 localUp = glm::vec3(0,0,1.f);	
+    glm::vec3 localUp = glm::vec3(0,0,1.f);	
     return glm::normalize(glm::vec3(glm::rotate(glm::inverse(rotation), glm::vec4(localUp, 1.f))));
 }
 
-void OpenGLTrackball::UpdateTrackballTransform()
+void OpenGLTrackball::UpdateTransform()
 {
-	if(holdingEntity != NULL)
+    if(holdingEntity != NULL)
     {
-		glm::mat4 solidTrans = glMatrixFromTransform(holdingEntity->getCGTransform());
+        glm::mat4 solidTrans = glMatrixFromTransform(holdingEntity->getCGTransform());
         center = glm::vec3(solidTrans[3]);
-	}
-	
-	trackballTransform = glm::lookAt(GetEyePosition(), center, GetUpDirection());
+    }
+    
+    trackballTransform = glm::lookAt(GetEyePosition(), center, GetUpDirection());
 }
 
 GLfloat OpenGLTrackball::calculateZ(GLfloat x, GLfloat y)
@@ -133,7 +133,7 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
             rotation = rotation_new * rotation_start;
         }
         
-        UpdateTrackballTransform();
+        UpdateTransform();
     }
 }
 
@@ -144,24 +144,24 @@ void OpenGLTrackball::MouseScroll(GLfloat s)
     
     radius += s * factor;
     if(radius < 0.1) radius = 0.1;
-    UpdateTrackballTransform();
+    UpdateTransform();
 }
 
 glm::mat4 OpenGLTrackball::GetViewMatrix() const
 {
-	return trackballTransform;
+    return trackballTransform;
 }
 
 void OpenGLTrackball::Rotate(glm::quat rot)
 {
-	rotation = glm::rotation(up,  glm::vec3(0,0,1.f)) * rot;
-    UpdateTrackballTransform();
+    rotation = glm::rotation(up,  glm::vec3(0,0,1.f)) * rot;
+    UpdateTransform();
 }
 
 void OpenGLTrackball::MoveCenter(glm::vec3 step)
 {
     center += step;
-    UpdateTrackballTransform();
+    UpdateTransform();
 }
 
 void OpenGLTrackball::GlueToEntity(SolidEntity* solid)

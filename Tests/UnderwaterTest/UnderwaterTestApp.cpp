@@ -45,10 +45,17 @@ void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
     
+    /*
     sf::Uid id;
     id.owner = 5;
-    id.index = 0;
     id.item = 0;
+    
+    std::vector<std::string> robotNames;
+    robotNames.push_back("Girona500");
+    robotNames.push_back("Girona1000");
+    robotNames.push_back("Girona2000");
+    option = getGUI()->DoComboBox(id, 180.f, 200.f, 150.f, robotNames, option, "Trackball center");
+    */
     
     //sf::VariableBuoyancy* vbs = (sf::VariableBuoyancy*)getSimulationManager()->getRobot("GIRONA500")->getActuator("VBS");
     //vbs->setFlowRate((getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-0.0005), sf::Scalar(0.0005), vbs->getFlowRate(), "VBS flow rate", 4)));

@@ -68,9 +68,9 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
     Vector3 pivotInA = linkATransform.inverse() * pivot;
     Vector3 pivotInB = linkBTransform.inverse() * pivot;
     Matrix3 frameInB = linkBTransform.getBasis().inverse() * linkATransform.getBasis();	
-	
-	btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
-	setConstraint(fixed);
+    
+    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
+    setConstraint(fixed);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
 
     //Disable collision

@@ -179,6 +179,9 @@ namespace sf
          */
         Sensor* getSensor(unsigned int index);
         
+        //! A method returning a pointer to the base link solid.
+        SolidEntity* getBaseLink();
+        
         //! A method returning the pose of the robot in the world frame.
         virtual Transform getTransform() const;
         

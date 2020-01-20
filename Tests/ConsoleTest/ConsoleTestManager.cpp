@@ -37,28 +37,28 @@ ConsoleTestManager::ConsoleTestManager(sf::Scalar stepsPerSecond)
 
 void ConsoleTestManager::BuildScenario()
 {
-	//Create materials
-	CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);
-	SetMaterialsInteraction("Rock", "Rock", 0.9, 0.7);
-	
-	//Build scene	
-	sf::Plane* plane = new sf::Plane("Bottom", 1000.0, "Rock");
+    //Create materials
+    CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);
+    SetMaterialsInteraction("Rock", "Rock", 0.9, 0.7);
+    
+    //Build scene	
+    sf::Plane* plane = new sf::Plane("Bottom", 1000.0, "Rock");
     AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
-	
-	sf::Sphere* sph1 = new sf::Sphere("Sphere1", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE_BODY);
-	sf::Sphere* sph2 = new sf::Sphere("Sphere2", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE_BODY);
-	
-	std::vector<sf::SolidEntity*> links(0);
-	links.push_back(sph2);
-	
-	sf::Robot* robot = new sf::Robot("Robot", false);
-	robot->DefineLinks(sph1, links);
-	robot->DefineRevoluteJoint("Joint1", 
-							   "Sphere1", 
-							   "Sphere2", 
-							   sf::Transform(sf::IQ(), sf::Vector3(0.5,0,0.0)), 
-							   sf::Vector3(0.0,1.0,0.0), 
-							   std::make_pair<sf::Scalar,sf::Scalar>(-1.0,1.0));
-							   
-	AddRobot(robot, sf::I4());
+    
+    sf::Sphere* sph1 = new sf::Sphere("Sphere1", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE_BODY);
+    sf::Sphere* sph2 = new sf::Sphere("Sphere2", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE_BODY);
+    
+    std::vector<sf::SolidEntity*> links(0);
+    links.push_back(sph2);
+    
+    sf::Robot* robot = new sf::Robot("Robot", false);
+    robot->DefineLinks(sph1, links);
+    robot->DefineRevoluteJoint("Joint1", 
+                               "Sphere1", 
+                               "Sphere2", 
+                               sf::Transform(sf::IQ(), sf::Vector3(0.5,0,0.0)), 
+                               sf::Vector3(0.0,1.0,0.0), 
+                               std::make_pair<sf::Scalar,sf::Scalar>(-1.0,1.0));
+                               
+    AddRobot(robot, sf::I4());
 }

@@ -40,124 +40,120 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
     valid = false;
     GLint compiled = 0;
     GLuint vs;
-	GLuint tcs;
-	GLuint tes;
+    GLuint tcs;
+    GLuint tes;
     GLuint gs;
-	GLuint fs;
-	std::string emptyHeader = "";
+    GLuint fs;
+    std::string emptyHeader = "";
     
     if(vertex == "")
         vs = saqVertexShader;
     else
         vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
     
-	if(tesselation.first == "" || tesselation.second == "")
-	{
-		tcs = 0;
-		tes = 0;
-	}
-	else
-	{
-		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
-		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
-	}
-	
-	if(geometry == "")
-		gs = 0;
-	else
-		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
-	
+    if(tesselation.first == "" || tesselation.second == "")
+    {
+        tcs = 0;
+        tes = 0;
+    }
+    else
+    {
+        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
+        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
+    }
+
+    if(geometry == "")
+        gs = 0;
+    else
+        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
+
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
-    
-	shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
-		
+    shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
     valid = true;
 }
 
 GLSLShader::GLSLShader(GLSLHeader& header, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
 {
-	valid = false;
+    valid = false;
     GLint compiled = 0;
     GLuint vs;
-	GLuint tcs;
-	GLuint tes;
+    GLuint tcs;
+    GLuint tes;
     GLuint gs;
-	GLuint fs;
-	std::string emptyHeader = "";
+    GLuint fs;
+    std::string emptyHeader = "";
     
     if(vertex == "")
         vs = saqVertexShader;
     else
         vs = LoadShader(GL_VERTEX_SHADER, vertex, header.useInVertex ? header.code : emptyHeader, &compiled);
     
-	if(tesselation.first == "" || tesselation.second == "")
-	{
-		tcs = 0;
-		tes = 0;
-	}
-	else
-	{
-		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, header.useInTessCtrl ? header.code : emptyHeader, &compiled);
-		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, header.useInTessEval ? header.code : emptyHeader, &compiled);
-	}
-	
-	if(geometry == "")
-		gs = 0;
-	else
-		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
-	
+    if(tesselation.first == "" || tesselation.second == "")
+    {
+        tcs = 0;
+        tes = 0;
+    }
+    else
+    {
+        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, header.useInTessCtrl ? header.code : emptyHeader, &compiled);
+        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, header.useInTessEval ? header.code : emptyHeader, &compiled);
+    }
+
+    if(geometry == "")
+        gs = 0;
+    else
+        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
+
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
-    
-	shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
-		
+    shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
     valid = true;
 }
 
 GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
 {
-	valid = false;
+    valid = false;
     GLint compiled = 0;
     GLuint vs;
-	GLuint tcs;
-	GLuint tes;
+    GLuint tcs;
+    GLuint tes;
     GLuint gs;
-	GLuint fs;
-	std::string emptyHeader = "";
+    GLuint fs;
+    std::string emptyHeader = "";
     
     if(vertex == "")
-		vs = 0;
-	else
-		vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
+        vs = 0;
+    else
+        vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
     
-	if(tesselation.first == "" || tesselation.second == "")
-	{
-		tcs = 0;
-		tes = 0;
-	}
-	else
-	{
-		tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
-		tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
-	}
-	
-	if(geometry == "")
-		gs = 0;
-	else
-		gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
-	
+    if(tesselation.first == "" || tesselation.second == "")
+    {
+        tcs = 0;
+        tes = 0;
+    }
+    else
+    {
+        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
+        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
+    }
+    
+    if(geometry == "")
+        gs = 0;
+    else
+        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
+    
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
     
-	std::vector<GLuint> cShaders = compiledShaders;
-	cShaders.push_back(vs);
-	cShaders.push_back(gs);
-	cShaders.push_back(fs);
-	cShaders.push_back(tcs);
-	cShaders.push_back(tes);	
-	shader = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
-		
+    std::vector<GLuint> cShaders = compiledShaders;
+    cShaders.push_back(vs);
+    cShaders.push_back(gs);
+    cShaders.push_back(fs);
+    cShaders.push_back(tcs);
+    cShaders.push_back(tes);	
+    shader = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
+        
     valid = true;
 }
-	
+    
 GLSLShader::~GLSLShader()
 {
     if(valid)
@@ -200,15 +196,15 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     
     Use();
     uni.location = glGetUniformLocation(shader, name.c_str());
-	glUseProgram(0);
+    glUseProgram(0);
     
     if(uni.location < 0)
-	{
+    {
 #ifdef DEBUG
-		cError("Uniform '%s' doesn't exist!", name.c_str());
+        cError("Uniform '%s' doesn't exist!", name.c_str());
 #endif
         return false;
-	}
+    }
     
     uniforms.push_back(uni);
     return true;
@@ -390,7 +386,7 @@ bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index
 bool GLSLShader::Init()
 {
     GLint compiled;
-	std::string emptyHeader = "";
+    std::string emptyHeader = "";
     saqVertexShader = LoadShader(GL_VERTEX_SHADER, "saq.vert", emptyHeader, &compiled);
     return compiled;
 }
@@ -403,129 +399,129 @@ void GLSLShader::Destroy()
 
 void GLSLShader::Silent()
 {
-	verbose = false;
+    verbose = false;
 }
 
 void GLSLShader::Verbose()
 {
-	verbose = true;
+    verbose = true;
 }
 
 GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint *shaderCompiled)
 {
-	GLuint shader = 0;
+    GLuint shader = 0;
     
-	std::string basePath = GetShaderPath();
-	std::string sourcePath = basePath + filename;
-	
-	std::ifstream sourceFile(sourcePath);
-	if(!sourceFile) 
-		cCritical("Shader file not found: %s", sourcePath.c_str());
-	
-	std::string source = header + "\n";
-	std::string line;
+    std::string basePath = GetShaderPath();
+    std::string sourcePath = basePath + filename;
+    
+    std::ifstream sourceFile(sourcePath);
+    if(!sourceFile) 
+        cCritical("Shader file not found: %s", sourcePath.c_str());
+    
+    std::string source = header + "\n";
+    std::string line;
 
 #ifdef DEBUG
-	if(verbose)
-		cInfo("Loading shader from: %s", sourcePath.c_str());
+    if(verbose)
+        cInfo("Loading shader from: %s", sourcePath.c_str());
 #endif
-	while(!sourceFile.eof())
-	{
-		std::getline(sourceFile, line);
-		
-		if(line.find("#inject") == std::string::npos)
-			source.append(line + "\n");
-		else //inject code from another source file
-		{
-			size_t pos1 = line.find("\"");
-			size_t pos2 = line.find("\"", pos1+1);
-			
-			if(pos1 > 0 && pos2 > pos1)
-			{
-				std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
-				std::ifstream injectedFile(injectedPath);
+    while(!sourceFile.eof())
+    {
+        std::getline(sourceFile, line);
+        
+        if(line.find("#inject") == std::string::npos)
+            source.append(line + "\n");
+        else //inject code from another source file
+        {
+            size_t pos1 = line.find("\"");
+            size_t pos2 = line.find("\"", pos1+1);
+            
+            if(pos1 > 0 && pos2 > pos1)
+            {
+                std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
+                std::ifstream injectedFile(injectedPath);
 #ifdef DEBUG
-				if(verbose)
-					cInfo("--> Injecting source from: %s", injectedPath.c_str());
+                if(verbose)
+                    cInfo("--> Injecting source from: %s", injectedPath.c_str());
 #endif
-				while(!injectedFile.eof())
-				{
-					std::getline(injectedFile, line);
-					source.append(line + "\n");
-				}
-				injectedFile.close();
-			}
-		}
-	}
-	sourceFile.close();
-	
-	const char* shaderSource = source.c_str();
-	
-	if(shaderSource != NULL)
-	{
-		shader = glCreateShader(shaderType);
-		glShaderSource(shader, 1, (const GLchar**)&shaderSource, NULL);
-		glCompileShader(shader);
+                while(!injectedFile.eof())
+                {
+                    std::getline(injectedFile, line);
+                    source.append(line + "\n");
+                }
+                injectedFile.close();
+            }
+        }
+    }
+    sourceFile.close();
+    
+    const char* shaderSource = source.c_str();
+    
+    if(shaderSource != NULL)
+    {
+        shader = glCreateShader(shaderType);
+        glShaderSource(shader, 1, (const GLchar**)&shaderSource, NULL);
+        glCompileShader(shader);
         glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
-		if(*shaderCompiled == 0)
-			cError("Failed to compile shader: %s", shaderSource);
+        if(*shaderCompiled == 0)
+            cError("Failed to compile shader: %s", shaderSource);
 #ifdef DEBUG	
         GLint infoLogLength = 0;	
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-		if(infoLogLength > 0)
-		{
-			std::vector<char> infoLog(infoLogLength+1);
-			glGetShaderInfoLog(shader, infoLogLength, NULL, &infoLog[0]);
-			cWarning("Shader compile log: %s", &infoLog[0]);
-		}
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+        if(infoLogLength > 0)
+        {
+            std::vector<char> infoLog(infoLogLength+1);
+            glGetShaderInfoLog(shader, infoLogLength, NULL, &infoLog[0]);
+            cWarning("Shader compile log: %s", &infoLog[0]);
+        }
 #endif
-	}
-	else
-		*shaderCompiled = 0;
+    }
+    else
+        *shaderCompiled = 0;
     
-	return shader;
+    return shader;
 }
 
 GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, unsigned int doNotDeleteNFirstShaders)
 {
-	GLint programLinked = 0;
-	GLuint program = glCreateProgram();
-	
-	for(unsigned int i=0; i<compiledShaders.size(); ++i)
-		if(compiledShaders[i] > 0)
-			glAttachShader(program, compiledShaders[i]);
-	
-	glLinkProgram(program);
-#ifdef DEBUG
-	GLint infoLogLength = 0;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
-	if(infoLogLength > 0)
-	{
-		std::vector<char> infoLog(infoLogLength+1);
-		glGetProgramInfoLog(program, infoLogLength, NULL, &infoLog[0]);
-		cWarning("Program link log: %s", &infoLog[0]);
-	}
-#endif
-	glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
+    GLint programLinked = 0;
+    GLuint program = glCreateProgram();
     
-	for(unsigned int i=0; i<compiledShaders.size(); ++i)
-	{
-		if(compiledShaders[i] > 0)
-		{
-			glDetachShader(program, compiledShaders[i]);
-			if(i > doNotDeleteNFirstShaders-1)
-				glDeleteShader(compiledShaders[i]);
-		}
-	}
-	
-	if(programLinked == 0)
+    for(unsigned int i=0; i<compiledShaders.size(); ++i)
+        if(compiledShaders[i] > 0)
+            glAttachShader(program, compiledShaders[i]);
+    
+    glLinkProgram(program);
+#ifdef DEBUG
+    GLint infoLogLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+    if(infoLogLength > 0)
     {
-		cError("Failed to link program: %s", (GLuint*)&program);
-		glDeleteProgram(program);
-		program = 0;
-	}
-	
-	return program;
+        std::vector<char> infoLog(infoLogLength+1);
+        glGetProgramInfoLog(program, infoLogLength, NULL, &infoLog[0]);
+        cWarning("Program link log: %s", &infoLog[0]);
+    }
+#endif
+    glGetProgramiv(program, GL_LINK_STATUS, &programLinked);
+    
+    for(unsigned int i=0; i<compiledShaders.size(); ++i)
+    {
+        if(compiledShaders[i] > 0)
+        {
+            glDetachShader(program, compiledShaders[i]);
+            if(i > doNotDeleteNFirstShaders-1)
+                glDeleteShader(compiledShaders[i]);
+        }
+    }
+    
+    if(programLinked == 0)
+    {
+        cError("Failed to link program: %s", (GLuint*)&program);
+        glDeleteProgram(program);
+        program = 0;
+    }
+    
+    return program;
 }
 
 }

@@ -37,7 +37,7 @@ OpenGLPointLight::OpenGLPointLight(glm::vec3 position, glm::vec3 color, GLfloat 
 
 LightType OpenGLPointLight::getType()
 {
-	return POINT_LIGHT;
+    return POINT_LIGHT;
 }
 
 void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)

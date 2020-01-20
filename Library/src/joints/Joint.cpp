@@ -36,8 +36,8 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     collisionEnabled = collideLinkedEntities;
-	mbConstraint = NULL;
-	constraint = NULL;
+    mbConstraint = NULL;
+    constraint = NULL;
 }
 
 Joint::~Joint(void)
@@ -94,29 +94,29 @@ Scalar Joint::getFeedback(unsigned int dof)
 
 void Joint::AddToSimulation(SimulationManager* sm)
 {
-	if(constraint != NULL)
-	{
-		//Force feedback
-		btJointFeedback* fb = new btJointFeedback();
-		constraint->enableFeedback(true);
-		constraint->setJointFeedback(fb);
+    if(constraint != NULL)
+    {
+        //Force feedback
+        btJointFeedback* fb = new btJointFeedback();
+        constraint->enableFeedback(true);
+        constraint->setJointFeedback(fb);
     
         constraint->setParam(BT_CONSTRAINT_ERP, 0.75);
         constraint->setParam(BT_CONSTRAINT_STOP_ERP, 1.0);
         constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
         constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
         
-		//Avoid explosion by softening the joint limits
-		if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE)
-			constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
+        //Avoid explosion by softening the joint limits
+        if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE)
+            constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
     
-		//Add joint to dynamics world
-		sm->getDynamicsWorld()->addConstraint(constraint, !collisionEnabled);
-	}
-	else if(mbConstraint != NULL)
-	{
-		sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
-	}
+        //Add joint to dynamics world
+        sm->getDynamicsWorld()->addConstraint(constraint, !collisionEnabled);
+    }
+    else if(mbConstraint != NULL)
+    {
+        sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
+    }
 }
     
 void Joint::ApplyDamping()

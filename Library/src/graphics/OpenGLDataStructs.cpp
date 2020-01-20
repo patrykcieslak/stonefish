@@ -285,9 +285,9 @@ void QuadTree::Update(glm::vec3 eye, glm::mat4 VP)
     {
         glm::vec3 origin = leafs[i]->origin;
         GLfloat half = leafs[i]->size/2.f;
-		data.push_back(origin + glm::vec3(half, half, 0.f));
-		data.push_back(origin + glm::vec3(half, -half, 0.f));
-		data.push_back(origin + glm::vec3(-half, -half, 0.f));
+        data.push_back(origin + glm::vec3(half, half, 0.f));
+        data.push_back(origin + glm::vec3(half, -half, 0.f));
+        data.push_back(origin + glm::vec3(-half, -half, 0.f));
         data.push_back(origin + glm::vec3(-half, half, 0.f));
         data2.push_back(leafs[i]->edgeFactors);
     }

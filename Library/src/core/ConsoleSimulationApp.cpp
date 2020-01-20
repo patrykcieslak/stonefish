@@ -37,7 +37,7 @@ namespace sf
 ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)
 {
-	simulationThread = NULL;
+    simulationThread = NULL;
     console = new Console();
 }
 
@@ -48,25 +48,25 @@ ConsoleSimulationApp::~ConsoleSimulationApp()
 
 bool ConsoleSimulationApp::hasGraphics()
 {
-	return false;
+    return false;
 }
 
 void ConsoleSimulationApp::Init()
 {
-	cInfo("Initializing simulation:");
+    cInfo("Initializing simulation:");
     InitializeSimulation();
     cInfo("Ready for running...");
 }
 
 void ConsoleSimulationApp::Loop()
 {
-	while(!hasFinished());
+    while(!hasFinished());
 }
 
 void ConsoleSimulationApp::StartSimulation()
 {
-	SimulationApp::StartSimulation();
-	
+    SimulationApp::StartSimulation();
+    
     ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData();
     data->app = this;
     simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
@@ -75,7 +75,7 @@ void ConsoleSimulationApp::StartSimulation()
 void ConsoleSimulationApp::ResumeSimulation()
 {
     SimulationApp::ResumeSimulation();
-	
+    
     ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData();
     data->app = this;
     simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
@@ -85,7 +85,7 @@ void ConsoleSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
     
-	int status;
+    int status;
     SDL_WaitThread(simulationThread, &status);
     simulationThread = NULL;
 }
@@ -98,8 +98,8 @@ int ConsoleSimulationApp::RunSimulation(void* data)
     
     while(stdata->app->isRunning())
         sim->AdvanceSimulation();
-	
-	return 0;
+
+    return 0;
 }
 
 }

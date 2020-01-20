@@ -41,7 +41,7 @@ namespace sf
 
 SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant) : Entity(uniqueName)
 {
-	mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
+    mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     thick = thickness;
     
     if((bpt == BodyPhysicsType::SUBMERGED_BODY || bpt == BodyPhysicsType::FLOATING_BODY) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
@@ -67,7 +67,7 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     //Set properties
     mass = Scalar(0);
     aMass.setZero();
-	aI.setZero();
+    aI.setZero();
     Ipri.setZero();
     contactK = Scalar(-1);
     contactD = Scalar(0);
@@ -85,15 +85,15 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     Tdq.setZero();
     Fda.setZero();
     Tda.setZero();
-	filteredLinearVel.setZero();
-	filteredAngularVel.setZero();
+    filteredLinearVel.setZero();
+    filteredAngularVel.setZero();
     linearAcc.setZero();
     angularAcc.setZero();
-	
+    
     //Set pointers
     rigidBody = NULL;
     multibodyCollider = NULL;
-	phyMesh = NULL;
+    phyMesh = NULL;
     graObjectId = -1;
     phyObjectId = -1;
     dm = DisplayMode::DISPLAY_GRAPHICAL;
@@ -195,7 +195,7 @@ int SolidEntity::getLook() const
 
 int SolidEntity::getGraphicalObject() const
 {
-	return graObjectId;
+    return graObjectId;
 }
 
 int SolidEntity::getPhysicalObject() const
@@ -228,10 +228,10 @@ void SolidEntity::getAABB(Vector3& min, Vector3& max)
 
 std::vector<Renderable> SolidEntity::Render()
 {
-	std::vector<Renderable> items(0);
-	
-	if( (rigidBody != NULL || multibodyCollider != NULL)  && isRenderable() )
-	{
+    std::vector<Renderable> items(0);
+    
+    if( (rigidBody != NULL || multibodyCollider != NULL)  && isRenderable() )
+    {
         Renderable item;
         
         if(dm == DisplayMode::DISPLAY_GRAPHICAL && graObjectId >= 0)
@@ -314,8 +314,8 @@ std::vector<Renderable> SolidEntity::Render()
         item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
         items.push_back(item);
     }
-	
-	return items;
+    
+    return items;
 }
     
 Transform SolidEntity::getCG2GTransform() const
@@ -412,7 +412,7 @@ Vector3 SolidEntity::getLinearVelocity() const
         //Get multibody and link id
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
         int index = multibodyCollider->m_link;
-		
+        
         //Start with base velocity
         Vector3 linVelocity = multiBody->getBaseVel(); //Global
         Vector3 angVelocity = multiBody->getBaseOmega(); //Global
@@ -446,7 +446,7 @@ Vector3 SolidEntity::getLinearVelocity() const
             }
         }
         
-		return linVelocity;
+        return linVelocity;
     }
     else
         return Vector3(0,0,0);
@@ -531,7 +531,7 @@ Vector3 SolidEntity::getAddedMass() const
 
 Vector3 SolidEntity::getAddedInertia() const
 {
-	return aI;
+    return aI;
 }
 
 Scalar SolidEntity::getAugmentedMass() const
@@ -588,7 +588,7 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
             ComputeCylindricalApprox();
             break;
             
-		case FD_APPROX_AUTO:
+        case FD_APPROX_AUTO:
         case FD_APPROX_ELLIPSOID:
             ComputeEllipsoidalApprox();
             break;
@@ -601,37 +601,37 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
 void SolidEntity::ComputeSphericalApprox()
 {
     //Get vertices of solid
-	std::vector<Vertex>* vertices = getMeshVertices();
+    std::vector<Vertex>* vertices = getMeshVertices();
     if(vertices->size() < 2)
     {
         delete vertices;
         return;
     }
-	
-	std::vector<Vector3> x(vertices->size());
+    
+    std::vector<Vector3> x(vertices->size());
     for(size_t i=0; i<vertices->size(); ++i)
     {
         Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
         x[i] = T_CG2C * vp - P_CB;
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
-	
-	Scalar r(0);
-	for(size_t i=0; i<x.size(); ++i)
-	{
-		Scalar rc = x[i].length2();
-		if(rc > r)
-			r = rc;
-	}
-	
-	fdApproxType = FD_APPROX_SPHERE;
+    
+    Scalar r(0);
+    for(size_t i=0; i<x.size(); ++i)
+    {
+        Scalar rc = x[i].length2();
+        if(rc > r)
+            r = rc;
+    }
+    
+    fdApproxType = FD_APPROX_SPHERE;
     fdApproxParams.resize(1);
     fdApproxParams[0] = btSqrt(r);
-	
-	Scalar rho = Scalar(1000);
+    
+    Scalar rho = Scalar(1000);
     Scalar m = Scalar(2)*M_PI*rho*r*r*r/Scalar(3);
     aMass = Vector3(m,m,m);
-	aI = V0();
+    aI = V0();
     
     //Set transform with respect to geometry
     Transform sphereTransform = I4();
@@ -642,21 +642,21 @@ void SolidEntity::ComputeSphericalApprox()
 void SolidEntity::ComputeCylindricalApprox()
 {
     //Get vertices of solid
-	std::vector<Vertex>* vertices = getMeshVertices(); //Get a copy of vertices
+    std::vector<Vertex>* vertices = getMeshVertices(); //Get a copy of vertices
     if(vertices->size() < 2)
     {
         delete vertices;
         return;
     }
     
-	std::vector<Vector3> x(vertices->size());
+    std::vector<Vector3> x(vertices->size());
     for(size_t i=0; i<vertices->size(); ++i)
     {
         Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
         x[i] = T_CG2C * vp - P_CB;
     }
     delete vertices; //Clear allocated memory so it doesn't leak!
-	    
+        
     //Radius
     Scalar r[3] = {0,0,0};
     for(size_t i=0; i<x.size(); ++i)
@@ -728,11 +728,11 @@ void SolidEntity::ComputeCylindricalApprox()
 void SolidEntity::ComputeEllipsoidalApprox()
 {
 #ifdef DEBUG
-	cInfo("---- Computing ellipsoidal approximation of geometry for %s ----", getName().c_str());
+    cInfo("---- Computing ellipsoidal approximation of geometry for %s ----", getName().c_str());
 #endif
-	//Get vertices of solid
-	std::vector<Vertex>* vertices = getMeshVertices();
-	if(vertices->size() < 2)
+    //Get vertices of solid
+    std::vector<Vertex>* vertices = getMeshVertices();
+    if(vertices->size() < 2)
     {
         delete vertices;
         return;
@@ -770,158 +770,158 @@ void SolidEntity::ComputeEllipsoidalApprox()
         else
             sigma[i] = Scalar(0);
     }
-	
-	int k = 0;
-	
-	auto u = [](auto j, auto& x, auto& sigma)
-	{
-		auto sum = Scalar(0);
-		for(size_t i=0; i<x.size(); ++i)
-			sum += sigma[i] * x[i].m_floats[j] * x[i].m_floats[j]; 
-		return sum;
-	};
-	
-	auto v = [](auto j, auto& x, auto& sigma)
-	{
-		auto sum = Scalar(0);
-		for(size_t i=0; i<x.size(); ++i)
-			sum += sigma[i] * x[i].m_floats[j]; 
-		return sum;	
-	};
-	
-	/*
-	auto lambda = [&x, &sigma, &u, &v](int i)
-	{
-		auto sum = Scalar(0);
-		for(int j=0; j<3; ++j)
-		{
-			auto vj = v(j, x, sigma);
-			auto uj = u(j, x, sigma);
-			sum += (x[i].m_floats[j] - vj)*(x[i].m_floats[j] - vj)/(3*(uj - vj*vj));
-		}
-		return sum;
-	};
-	
-	Scalar epsilon0 = btPow(Scalar(1) + Scalar(0.1), Scalar(2)/Scalar(3)) - Scalar(1);
-	Scalar epsilon;
-	
-	while(1)
-	{
-		std::vector<Scalar> xk(x.size());
-		for(size_t i=0; i<xk.size(); ++i) xk[i] = lambda(i);
-	
-		std::vector<Scalar>::iterator ik = std::max_element(xk.begin(), xk.end());
-		size_t max_id = ik - xk.begin();
-		Scalar epsilon_upper = xk[max_id] - Scalar(1);
-	
-		size_t min_id = 0;
-		Scalar min_v(10e9);
-		for(size_t i=0; i<xk.size(); ++i)
-		{
-			if(xk[i] < min_v && sigma[i] > Scalar(0))
-			{
-				min_v = xk[i];
-				min_id = i;
-			}
-		}
-		Scalar epsilon_lower = Scalar(1) - min_v;
-		
-		Scalar epsilon = std::max(epsilon_upper, epsilon_lower);
-		epsilon = epsilon_upper;
-		
-		if(epsilon <= epsilon0)
-			break;
-			
-		++k;
-			
-		if(epsilon == epsilon_upper)
-		{
+    
+    int k = 0;
+    
+    auto u = [](auto j, auto& x, auto& sigma)
+    {
+        auto sum = Scalar(0);
+        for(size_t i=0; i<x.size(); ++i)
+            sum += sigma[i] * x[i].m_floats[j] * x[i].m_floats[j]; 
+        return sum;
+    };
+    
+    auto v = [](auto j, auto& x, auto& sigma)
+    {
+        auto sum = Scalar(0);
+        for(size_t i=0; i<x.size(); ++i)
+            sum += sigma[i] * x[i].m_floats[j]; 
+        return sum;	
+    };
+    
+    /*
+    auto lambda = [&x, &sigma, &u, &v](int i)
+    {
+        auto sum = Scalar(0);
+        for(int j=0; j<3; ++j)
+        {
+            auto vj = v(j, x, sigma);
+            auto uj = u(j, x, sigma);
+            sum += (x[i].m_floats[j] - vj)*(x[i].m_floats[j] - vj)/(3*(uj - vj*vj));
+        }
+        return sum;
+    };
+    
+    Scalar epsilon0 = btPow(Scalar(1) + Scalar(0.1), Scalar(2)/Scalar(3)) - Scalar(1);
+    Scalar epsilon;
+    
+    while(1)
+    {
+        std::vector<Scalar> xk(x.size());
+        for(size_t i=0; i<xk.size(); ++i) xk[i] = lambda(i);
+    
+        std::vector<Scalar>::iterator ik = std::max_element(xk.begin(), xk.end());
+        size_t max_id = ik - xk.begin();
+        Scalar epsilon_upper = xk[max_id] - Scalar(1);
+    
+        size_t min_id = 0;
+        Scalar min_v(10e9);
+        for(size_t i=0; i<xk.size(); ++i)
+        {
+            if(xk[i] < min_v && sigma[i] > Scalar(0))
+            {
+                min_v = xk[i];
+                min_id = i;
+            }
+        }
+        Scalar epsilon_lower = Scalar(1) - min_v;
+        
+        Scalar epsilon = std::max(epsilon_upper, epsilon_lower);
+        epsilon = epsilon_upper;
+        
+        if(epsilon <= epsilon0)
+            break;
+            
+        ++k;
+            
+        if(epsilon == epsilon_upper)
+        {
 #ifdef DEBUG
-			cInfo("Iteration: %d  Epsilon(+): %1.3lf", k, epsilon);
+            cInfo("Iteration: %d  Epsilon(+): %1.3lf", k, epsilon);
 #endif
-			x0.push_back(x[max_id]);
-			
-			Scalar sum = Scalar(0);
-			for(int j=0; j<3; ++j)
-			{
-				auto vj = v(j, x, sigma);
-				auto uj = u(j, x, sigma);
-				sum += btPow((x[max_id].m_floats[j] - vj)*(x[max_id].m_floats[j] - vj)/(3*(uj - vj*vj)), Scalar(2));
-			}
-			
-			Scalar beta = epsilon/(Scalar(1) + Scalar(3)*sum);
-			
-			std::vector<Scalar> e(sigma.size(), Scalar(0));
-			e[max_id] = Scalar(1);
-		
-			for(size_t i=0; i<sigma.size(); ++i)
-				sigma[i] = (Scalar(1) - beta)*sigma[i] + beta*e[i];  
-		}
-		else
-		{
+            x0.push_back(x[max_id]);
+            
+            Scalar sum = Scalar(0);
+            for(int j=0; j<3; ++j)
+            {
+                auto vj = v(j, x, sigma);
+                auto uj = u(j, x, sigma);
+                sum += btPow((x[max_id].m_floats[j] - vj)*(x[max_id].m_floats[j] - vj)/(3*(uj - vj*vj)), Scalar(2));
+            }
+            
+            Scalar beta = epsilon/(Scalar(1) + Scalar(3)*sum);
+            
+            std::vector<Scalar> e(sigma.size(), Scalar(0));
+            e[max_id] = Scalar(1);
+        
+            for(size_t i=0; i<sigma.size(); ++i)
+                sigma[i] = (Scalar(1) - beta)*sigma[i] + beta*e[i];  
+        }
+        else
+        {
 #ifdef DEBUG
-			cInfo("Iteration: %d  Epsilon(-): %1.3lf", k, epsilon);
+            cInfo("Iteration: %d  Epsilon(-): %1.3lf", k, epsilon);
 #endif
-			Scalar maxwj(-10e9);
-			for(int j=0; j<3; ++j)
-			{
-				auto vj = v(j, x, sigma);
-				auto uj = u(j, x, sigma);
-				Scalar wj = (x[min_id].m_floats[j] - vj)*(x[min_id].m_floats[j] - vj)/(3*(uj - vj*vj));
-				if(wj > maxwj)
-					maxwj = wj;
-			}
-			
-			Scalar beta = std::min(epsilon/(Scalar(1)-epsilon+Scalar(3)*maxwj), sigma[min_id]/(Scalar(1)-sigma[min_id])                    );
-			*/
-			/*if(beta == sigma[min_id]/(Scalar(1)-sigma[min_id]))
-			{
-				std::vector<Vector3>::iterator it;
-				it = std::find(x0.begin(), x0.end(), x[min_id]);
-				x0.erase(it);
-			}*/
-			/*
-			std::vector<Scalar> e(sigma.size(), Scalar(0));
-			e[min_id] = Scalar(1);
-		
-			for(size_t i=0; i<sigma.size(); ++i)
-				sigma[i] = (Scalar(1) + beta)*sigma[i] - beta*e[i];
-		}
-	}
-	*/
-	
-	Vector3 c;
-	Vector3 d;
-	
-	if(k == 0)
-	{
-		c.setX((x0[0].x() + x0[1].x())/Scalar(2)); 
-		c.setY((x0[2].y() + x0[3].y())/Scalar(2)); 
-		c.setZ((x0[4].z() + x0[5].z())/Scalar(2));
+            Scalar maxwj(-10e9);
+            for(int j=0; j<3; ++j)
+            {
+                auto vj = v(j, x, sigma);
+                auto uj = u(j, x, sigma);
+                Scalar wj = (x[min_id].m_floats[j] - vj)*(x[min_id].m_floats[j] - vj)/(3*(uj - vj*vj));
+                if(wj > maxwj)
+                    maxwj = wj;
+            }
+            
+            Scalar beta = std::min(epsilon/(Scalar(1)-epsilon+Scalar(3)*maxwj), sigma[min_id]/(Scalar(1)-sigma[min_id])                    );
+            */
+            /*if(beta == sigma[min_id]/(Scalar(1)-sigma[min_id]))
+            {
+                std::vector<Vector3>::iterator it;
+                it = std::find(x0.begin(), x0.end(), x[min_id]);
+                x0.erase(it);
+            }*/
+            /*
+            std::vector<Scalar> e(sigma.size(), Scalar(0));
+            e[min_id] = Scalar(1);
+        
+            for(size_t i=0; i<sigma.size(); ++i)
+                sigma[i] = (Scalar(1) + beta)*sigma[i] - beta*e[i];
+        }
+    }
+    */
+    
+    Vector3 c;
+    Vector3 d;
+    
+    if(k == 0)
+    {
+        c.setX((x0[0].x() + x0[1].x())/Scalar(2)); 
+        c.setY((x0[2].y() + x0[3].y())/Scalar(2)); 
+        c.setZ((x0[4].z() + x0[5].z())/Scalar(2));
 
-		d.setX(btFabs(x0[0].x()-c.x()));
-		d.setY(btFabs(x0[2].y()-c.y()));
-		d.setZ(btFabs(x0[4].z()-c.z()));
-	}
-	else
-	{
-		c.setX(v(0,x,sigma));
-		c.setY(v(1,x,sigma));
-		c.setZ(v(2,x,sigma));
-	
-		for(int j=0; j<3; ++j)
-		{
-			d.m_floats[j] = Scalar(1)/(Scalar(3)*(u(j,x,sigma) - v(j,x,sigma)*v(j,x,sigma)));
-			d.m_floats[j] = Scalar(1)/btSqrt(d.m_floats[j]);
-		}
-	}
-	
+        d.setX(btFabs(x0[0].x()-c.x()));
+        d.setY(btFabs(x0[2].y()-c.y()));
+        d.setZ(btFabs(x0[4].z()-c.z()));
+    }
+    else
+    {
+        c.setX(v(0,x,sigma));
+        c.setY(v(1,x,sigma));
+        c.setZ(v(2,x,sigma));
+    
+        for(int j=0; j<3; ++j)
+        {
+            d.m_floats[j] = Scalar(1)/(Scalar(3)*(u(j,x,sigma) - v(j,x,sigma)*v(j,x,sigma)));
+            d.m_floats[j] = Scalar(1)/btSqrt(d.m_floats[j]);
+        }
+    }
+    
 #ifdef DEBUG
-	cInfo("Ellipsoid center: %1.3lf %1.3lf %1.3lf", c.x(), c.y(), c.z());
-	cInfo("Ellipsoid axis: %1.3lf %1.3lf %1.3lf", d.x(), d.y(), d.z());
-	cInfo("Ellipsoid core points: %d", x0.size());
+    cInfo("Ellipsoid center: %1.3lf %1.3lf %1.3lf", c.x(), c.y(), c.z());
+    cInfo("Ellipsoid axis: %1.3lf %1.3lf %1.3lf", d.x(), d.y(), d.z());
+    cInfo("Ellipsoid core points: %d", x0.size());
 #endif
-	
+    
     fdApproxType = FD_APPROX_ELLIPSOID;
     fdApproxParams.resize(3);
     fdApproxParams[0] = d.getX();
@@ -938,13 +938,13 @@ void SolidEntity::ComputeEllipsoidalApprox()
     aI.setY(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3)));
     aI.setZ(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[2]*fdApproxParams[2]*btPow(fdApproxParams[0], Scalar(3)));
     
-	//Set transform with respect to geometry
+    //Set transform with respect to geometry
     Transform ellipsoidTransform;
-	ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
+    ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
     ellipsoidTransform.setOrigin(P_CB);
     T_CG2H = ellipsoidTransform;
 #ifdef DEBUG
-	cInfo("--------------------------------------------------------------------");
+    cInfo("--------------------------------------------------------------------");
 #endif
 }
 
@@ -964,10 +964,10 @@ Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)
 
 void SolidEntity::BuildGraphicalObject()
 {
-	if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
-		return;
-		
-	graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+    if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
+        return;
+        
+    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
     phyObjectId = graObjectId;
 }
 
@@ -1005,13 +1005,13 @@ void SolidEntity::BuildRigidBody()
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0.); //not used
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0.); //not used
-		rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0.); //not used
+        rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0.); //not used
         rigidBodyCI.m_additionalDamping = false;
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
-		rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
@@ -1056,8 +1056,8 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         multibodyCollider->setRestitution(Scalar(0));
         multibodyCollider->setRollingFriction(Scalar(0));
         multibodyCollider->setSpinningFriction(Scalar(0));
-		multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-		multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
+        multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
             mb->getLink(child - 1).m_collider = multibodyCollider;
@@ -1086,7 +1086,7 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
     if(rigidBody == NULL)
     {
         BuildRigidBody();
-		BuildGraphicalObject();
+        BuildGraphicalObject();
         
         rigidBody->setMotionState(new btDefaultMotionState(origin * T_CG2O.inverse()));
         //rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
@@ -1106,18 +1106,18 @@ void SolidEntity::RemoveFromSimulation(SimulationManager* sm)
 
 void SolidEntity::UpdateAcceleration(Scalar dt)
 {
-	//Filter velocity
-	Scalar alpha = 0.5;
-	Vector3 currentLinearVel = alpha * getLinearVelocity() + (Scalar(1)-alpha) * filteredLinearVel;
-	Vector3 currentAngularVel = alpha * getAngularVelocity() + (Scalar(1)-alpha) * filteredAngularVel;
-		
-	//Compute derivative
-	linearAcc = (currentLinearVel - filteredLinearVel)/dt;
-	angularAcc = (currentAngularVel - filteredAngularVel)/dt;
-		
-	//Update filtered
-	filteredLinearVel = currentLinearVel;
-	filteredAngularVel = currentAngularVel;
+    //Filter velocity
+    Scalar alpha = 0.5;
+    Vector3 currentLinearVel = alpha * getLinearVelocity() + (Scalar(1)-alpha) * filteredLinearVel;
+    Vector3 currentAngularVel = alpha * getAngularVelocity() + (Scalar(1)-alpha) * filteredAngularVel;
+        
+    //Compute derivative
+    linearAcc = (currentLinearVel - filteredLinearVel)/dt;
+    angularAcc = (currentAngularVel - filteredAngularVel)/dt;
+        
+    //Update filtered
+    filteredLinearVel = currentLinearVel;
+    filteredAngularVel = currentAngularVel;
 }
 
 void SolidEntity::ApplyGravity(const Vector3& g)
@@ -1264,20 +1264,20 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         _Fds.setZero();
         _Tds.setZero();
     }
-	
+    
     //Set zeros
-	if(mesh == NULL) return;
+    if(mesh == NULL) return;
       
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
  
-	//Loop through all faces...
+    //Loop through all faces...
     for(size_t i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
-		glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
-		glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
-		glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+        glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
+        glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
+        glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
         Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
         Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
         Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
@@ -1533,7 +1533,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         
         //Damping force
         if(settings.dampingForces)
-		{
+        {
             Vector3 vc = ocn->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
             Vector3 Fdlf;
             Vector3 Fdqf;
@@ -1635,7 +1635,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     //Get velocities and transformations
     Vector3 v = getLinearVelocity();
     Vector3 omega = getAngularVelocity();
-	
+    
     //Check if fully submerged --> simplifies buoyancy calculation
     if(bf == BodyFluidPosition::INSIDE_FLUID)
     {
@@ -1666,7 +1666,7 @@ void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
     //Get velocities and transformations
     Vector3 v = getLinearVelocity();
     Vector3 omega = getAngularVelocity();
-	
+    
     //Compute drag
     ComputeAerodynamicForces(getPhysicsMesh(), atm, getCGTransform(), getCTransform(), v, omega, Fda, Tda);
     CorrectAerodynamicForces(atm, Fda, Tda);

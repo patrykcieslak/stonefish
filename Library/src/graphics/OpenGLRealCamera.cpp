@@ -123,9 +123,9 @@ glm::vec3 OpenGLRealCamera::GetUpDirection() const
 
 void OpenGLRealCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-	tempDir = _dir;
-	tempEye = _eye;
-	tempUp = _up;
+    tempDir = _dir;
+    tempEye = _eye;
+    tempUp = _up;
 }
 
 void OpenGLRealCamera::UpdateTransform()
@@ -138,7 +138,7 @@ void OpenGLRealCamera::UpdateTransform()
 
 void OpenGLRealCamera::SetupCamera()
 {
-	cameraTransform = glm::lookAt(eye, eye+dir, up);
+    cameraTransform = glm::lookAt(eye, eye+dir, up);
 }
 
 glm::mat4 OpenGLRealCamera::GetViewMatrix() const

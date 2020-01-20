@@ -36,17 +36,17 @@ namespace sf
 
 Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
 {
-	ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     oceanState = waves > Scalar(2.0) ? Scalar(2.0) : waves;
      
-	Scalar size(100000);
-	depth = size;
+    Scalar size(100000);
+    depth = size;
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
     ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0, 0, size/Scalar(2) - oceanState*Scalar(3)))); //Move ocean influence zone a bit up to account for waves
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
     currents = std::vector<VelocityField*>(0);
-	
+    
     liquid = l;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
@@ -63,9 +63,9 @@ Ocean::~Ocean()
             delete currents[i];
         currents.clear();
     }
-	
-	if(glOcean != NULL)
-		delete glOcean;
+    
+    if(glOcean != NULL)
+        delete glOcean;
 }
 
 bool Ocean::hasWaves() const
@@ -156,29 +156,29 @@ Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
 void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
-	btRigidBody* rb = btRigidBody::upcast(co);
-	btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
-	
-	if(rb != 0)
-	{
-		if(rb->isStaticOrKinematicObject())
-			return;
-		else
-			ent = (Entity*)rb->getUserPointer();
-	}
-	else if(mbl != 0)
-	{
-		if(mbl->isStaticOrKinematicObject())
-			return;
-		else
-			ent = (Entity*)mbl->getUserPointer();
-	}
-	else
-		return;
-	
-	HydrodynamicsSettings settings;
-	settings.algorithm = fdt;
-	
+    btRigidBody* rb = btRigidBody::upcast(co);
+    btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
+    
+    if(rb != 0)
+    {
+        if(rb->isStaticOrKinematicObject())
+            return;
+        else
+            ent = (Entity*)rb->getUserPointer();
+    }
+    else if(mbl != 0)
+    {
+        if(mbl->isStaticOrKinematicObject())
+            return;
+        else
+            ent = (Entity*)mbl->getUserPointer();
+    }
+    else
+        return;
+    
+    HydrodynamicsSettings settings;
+    settings.algorithm = fdt;
+    
     if(ent->getType() == ENTITY_SOLID)
     {
         if(recompute)
@@ -194,7 +194,7 @@ void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world
 
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
-	glOcean = new OpenGLOcean((float)oceanState, hydrodynamics);
+    glOcean = new OpenGLOcean((float)oceanState, hydrodynamics);
     SetupWaterProperties(0.0, 1.0);
 }
 

@@ -43,41 +43,41 @@ void OpenGLPrinter::SetWindowSize(GLuint width, GLuint height)
 
 OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
 {
-	initialized = false;
-	fontVBO = 0;
-	nativeFontSize = size;
-	
-	FT_Error error = 0;
-	FT_Library ft;
-	FT_Face face;
-	
-	//Load Freetype library and font
-	if((error = FT_Init_FreeType(&ft))) 
-		printf("Freetype: Could not init library!\n");
-	else
-	{
-		if((error = FT_New_Face(ft, fontPath.c_str(), 0, &face)))
-		{
-			printf("Freetype: Could not open font from file: %s!\n", fontPath.c_str());
-			FT_Done_FreeType(ft);
-		}
-	}
-	
-	if(!error)
-	{
-		//Load shader if not already loaded
-		if(printShader == NULL)
-		{
-			printShader = new GLSLShader("printer.frag","printer.vert");
-			printShader->AddUniform("tex", ParameterType::INT);
-			printShader->AddUniform("color", ParameterType::VEC4);
-		}
-				
-		if(printShader->isValid())
-		{
+    initialized = false;
+    fontVBO = 0;
+    nativeFontSize = size;
+    
+    FT_Error error = 0;
+    FT_Library ft;
+    FT_Face face;
+    
+    //Load Freetype library and font
+    if((error = FT_Init_FreeType(&ft))) 
+        printf("Freetype: Could not init library!\n");
+    else
+    {
+        if((error = FT_New_Face(ft, fontPath.c_str(), 0, &face)))
+        {
+            printf("Freetype: Could not open font from file: %s!\n", fontPath.c_str());
+            FT_Done_FreeType(ft);
+        }
+    }
+    
+    if(!error)
+    {
+        //Load shader if not already loaded
+        if(printShader == NULL)
+        {
+            printShader = new GLSLShader("printer.frag","printer.vert");
+            printShader->AddUniform("tex", ParameterType::INT);
+            printShader->AddUniform("color", ParameterType::VEC4);
+        }
+                
+        if(printShader->isValid())
+        {
             //Calculate texture atlas dimensions
-			FT_Set_Pixel_Sizes(face, 0, nativeFontSize);
-			
+            FT_Set_Pixel_Sizes(face, 0, nativeFontSize);
+            
             unsigned int w = 0;
             unsigned int h = 0;
             
@@ -107,13 +107,13 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             
-			//Load all characters
+            //Load all characters
             GLuint x = 0;
             
-			for(int i = 32; i < 128; ++i)
-			{
-				if(FT_Load_Char(face, i, FT_LOAD_RENDER))
-					continue;
+            for(int i = 32; i < 128; ++i)
+            {
+                if(FT_Load_Char(face, i, FT_LOAD_RENDER))
+                    continue;
                 
                 glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, face->glyph->bitmap.width, face->glyph->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
                 
@@ -123,36 +123,36 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
                             (GLfloat)x/texWidth};
                 
                 x += face->glyph->bitmap.width;
-			}
+            }
             
             glBindTexture(GL_TEXTURE_2D, 0);
-			
-			//Freetype not needed any more
-			FT_Done_Face(face);
-			FT_Done_FreeType(ft);
-
-			glGenBuffers(1, &fontVBO); //Generate VBO for rendering textured quads
             
-			//Successfully initialized!
-			initialized = true;
-		}
-	}
+            //Freetype not needed any more
+            FT_Done_Face(face);
+            FT_Done_FreeType(ft);
+
+            glGenBuffers(1, &fontVBO); //Generate VBO for rendering textured quads
+            
+            //Successfully initialized!
+            initialized = true;
+        }
+    }
 }
 
 OpenGLPrinter::~OpenGLPrinter()
 {
-	//Destroy all textures
-	if(fontTexture != 0)
+    //Destroy all textures
+    if(fontTexture != 0)
         glDeleteTextures(1, &fontTexture);
-		
-	if(fontVBO != 0)
-		glDeleteBuffers(1, &fontVBO);
+        
+    if(fontVBO != 0)
+        glDeleteBuffers(1, &fontVBO);
 }
 
 void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size)
 {
-	if(!initialized)
-		return;
+    if(!initialized)
+        return;
     
     struct Point
     {
@@ -166,7 +166,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     
     unsigned int n = 0;
     
-	GLfloat scale = (GLfloat)size/(GLfloat)nativeFontSize;
+    GLfloat scale = (GLfloat)size/(GLfloat)nativeFontSize;
     GLfloat xf = (GLfloat)x/(GLfloat)windowW * 2.f - 1.f;
     GLfloat yf = (GLfloat)y/(GLfloat)windowH * 2.f - 1.f;
     GLfloat sx = 2.f/(GLfloat)windowW;
@@ -175,21 +175,21 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
     glBindTexture(GL_TEXTURE_2D, fontTexture);
     
-	printShader->Use();
-	printShader->SetUniform("color", color);
-	printShader->SetUniform("tex", TEX_GUI1);
+    printShader->Use();
+    printShader->SetUniform("color", color);
+    printShader->SetUniform("tex", TEX_GUI1);
 
     const char* ctext = text.c_str();
-	for(const char *c = ctext; *c; ++c)
-	{
-		Character ch = chars[*c-32];
-		GLfloat x2 = xf + ch.bearing.x * scale * sx;
-		GLfloat y2 = -yf - ch.bearing.y * scale * sy;
-		GLfloat w = ch.size.x * scale * sx;
-		GLfloat h = ch.size.y * scale * sy;
+    for(const char *c = ctext; *c; ++c)
+    {
+        Character ch = chars[*c-32];
+        GLfloat x2 = xf + ch.bearing.x * scale * sx;
+        GLfloat y2 = -yf - ch.bearing.y * scale * sy;
+        GLfloat w = ch.size.x * scale * sx;
+        GLfloat h = ch.size.y * scale * sy;
         xf += ch.advance.x * scale * sx;
         yf += ch.advance.y * scale * sy;
-		
+        
         if(!w || !h)
             continue;
         
@@ -208,15 +208,15 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
  
     glDrawArrays(GL_TRIANGLES, 0, n);
  
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glUseProgram(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
 }
 
 GLuint OpenGLPrinter::TextLength(const std::string& text)
 {
-	GLuint length = 0;
+    GLuint length = 0;
     const char* ctext = text.c_str();
-	for(const char *c = ctext; *c; ++c)
+    for(const char *c = ctext; *c; ++c)
         length += chars[*c-32].advance.x + chars[*c-32].bearing.x;
     return length;
 }

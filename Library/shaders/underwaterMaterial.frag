@@ -339,7 +339,8 @@ float calcSunShadow(float waterDepth)
         return 1.0;
     
     float avgBlockerDepth = accumBlockerDepth / numBlockers;
-    radiusUV *= exp((shadowCoord.z - avgBlockerDepth) * (sunFrustumFar[index] - sunFrustumNear[index])) * turbidity * turbidity/10.0;
+    float turb2 = (turbidity+1.0)*(turbidity+1.0);
+    radiusUV *= exp((shadowCoord.z - avgBlockerDepth) * (sunFrustumFar[index] - sunFrustumNear[index])) * turb2;
     
 	// STEP 2: blocker search
     searchRegionRadiusUV = radiusUV;// * (shadowCoord.z - sunFrustumNear[index]) / shadowCoord.z;

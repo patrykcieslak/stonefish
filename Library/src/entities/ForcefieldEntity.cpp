@@ -58,7 +58,7 @@ void ForcefieldEntity::AddToSimulation(SimulationManager* sm)
 
 std::vector<Renderable> ForcefieldEntity::Render()
 {
-	return std::vector<Renderable>(0);
+    return std::vector<Renderable>(0);
 }
 
 void ForcefieldEntity::getAABB(Vector3& min, Vector3& max)

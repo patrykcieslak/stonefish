@@ -46,9 +46,9 @@ void Accelerometer::InternalUpdate(Scalar dt)
     //calculate transformation from global to imu frame
     Transform accTrans = getSensorFrame();
     
-	//get acceleration
-	Vector3 la = accTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(accTrans.getOrigin() - attach->getCGTransform().getOrigin()));
-	
+    //get acceleration
+    Vector3 la = accTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(accTrans.getOrigin() - attach->getCGTransform().getOrigin()));
+    
     //get angular acceleration
     Vector3 aa = accTrans.getBasis().inverse() * attach->getAngularAcceleration();
     
@@ -60,13 +60,13 @@ void Accelerometer::InternalUpdate(Scalar dt)
 
 void Accelerometer::setRange(Scalar linearAccMax, Scalar angularAccMax)
 {
-	channels[0].rangeMin = -linearAccMax;
+    channels[0].rangeMin = -linearAccMax;
     channels[1].rangeMin = -linearAccMax;
     channels[2].rangeMin = -linearAccMax;
     channels[0].rangeMax = linearAccMax;
     channels[1].rangeMax = linearAccMax;
     channels[2].rangeMax = linearAccMax;
-	
+    
     channels[3].rangeMin = -angularAccMax;
     channels[4].rangeMin = -angularAccMax;
     channels[5].rangeMin = -angularAccMax;

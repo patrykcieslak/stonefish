@@ -43,7 +43,7 @@ Robot::Robot(std::string uniqueName, bool fixedBase)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     dynamics = NULL;
-	fixed = fixedBase;
+    fixed = fixedBase;
 }
 
 Robot::~Robot()
@@ -59,29 +59,29 @@ std::string Robot::getName()
 
 void Robot::getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId)
 {
-	if(dynamics == NULL)
-		cCritical("Robot links not defined!");
-		
-	if(detachedLinks.size() == 0)
-		cCritical("No more free links allocated!");
-	
-	//Find parent ID
-	parentId = UINT32_MAX;
-	for(unsigned int i=0; i<dynamics->getNumOfLinks(); ++i)
-		if(dynamics->getLink(i).solid->getName() == parentName)
-			parentId = i;
-	
-	if(parentId >= dynamics->getNumOfLinks())
-		cCritical("Parent link '%s' not yet joined with robot!", parentName.c_str());
-	
-	//Find child ID
-	childId = UINT32_MAX;
-	for(unsigned int i=0; i<detachedLinks.size(); ++i)
-		if(detachedLinks[i]->getName() == childName)
-			childId = i;
-			
-	if(childId >= detachedLinks.size())
-		cCritical("Child link '%s' doesn't exist!", childName.c_str());
+    if(dynamics == NULL)
+        cCritical("Robot links not defined!");
+        
+    if(detachedLinks.size() == 0)
+        cCritical("No more free links allocated!");
+    
+    //Find parent ID
+    parentId = UINT32_MAX;
+    for(unsigned int i=0; i<dynamics->getNumOfLinks(); ++i)
+        if(dynamics->getLink(i).solid->getName() == parentName)
+            parentId = i;
+    
+    if(parentId >= dynamics->getNumOfLinks())
+        cCritical("Parent link '%s' not yet joined with robot!", parentName.c_str());
+    
+    //Find child ID
+    childId = UINT32_MAX;
+    for(unsigned int i=0; i<detachedLinks.size(); ++i)
+        if(detachedLinks[i]->getName() == childName)
+            childId = i;
+            
+    if(childId >= detachedLinks.size())
+        cCritical("Child link '%s' doesn't exist!", childName.c_str());
 }
 
 SolidEntity* Robot::getLink(const std::string& name)
@@ -140,22 +140,27 @@ Sensor* Robot::getSensor(unsigned int index)
         return NULL;
 }
 
+SolidEntity* Robot::getBaseLink()
+{
+    return links[0];
+}
+
 Transform Robot::getTransform() const
 {
-	if(dynamics != NULL)
-		return dynamics->getLinkTransform(0);
-	else
-		return Transform::getIdentity();
+    if(dynamics != NULL)
+        return dynamics->getLinkTransform(0);
+    else
+        return Transform::getIdentity();
 }
 
 void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks, bool selfCollision)
 {
-	if(dynamics != NULL)
-		cCritical("Robot cannot be redefined!");
-	
+    if(dynamics != NULL)
+        cCritical("Robot cannot be redefined!");
+    
     links.push_back(baseLink);
     detachedLinks = otherLinks;
-	dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
+    dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
     dynamics->setSelfCollision(selfCollision);
 }
 
@@ -175,7 +180,7 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
 
 void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {
-	JointData jd;
+    JointData jd;
     jd.jtype = 2;
     jd.name = jointName;
     jd.parent = parentName;
@@ -189,7 +194,7 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
 
 void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin)
 {
-	JointData jd;
+    JointData jd;
     jd.jtype = 0;
     jd.name = jointName;
     jd.parent = parentName;

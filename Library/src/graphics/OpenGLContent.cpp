@@ -50,29 +50,29 @@ namespace sf
 
 OpenGLContent::OpenGLContent()
 {
-	//Initialize members
+    //Initialize members
     baseVertexArray = 0;
-	quadBuf = 0;
-	cubeBuf = 0;
-	csBuf[0] = 0;
-	csBuf[1] = 0;
+    quadBuf = 0;
+    cubeBuf = 0;
+    csBuf[0] = 0;
+    csBuf[1] = 0;
     ellipsoid.mesh = NULL;
     cylinder.mesh = NULL;
-	helperShader = NULL;
-	texQuadShader = NULL;
-	texQuadMSShader = NULL;
-	texLayerQuadShader = NULL;
-	texLevelQuadShader = NULL;
-	texCubeShader = NULL;
-	flatShader = NULL;
-	eyePos = glm::vec3();
-	viewDir = glm::vec3(1.f,0,0);
-	viewProjection = glm::mat4();
-	view = glm::mat4();
-	projection = glm::mat4();
-	viewportSize = glm::vec2(800.f,600.f);
-	mode = DrawingMode::FULL;
-	clipPlane = glm::vec4();
+    helperShader = NULL;
+    texQuadShader = NULL;
+    texQuadMSShader = NULL;
+    texLayerQuadShader = NULL;
+    texLevelQuadShader = NULL;
+    texCubeShader = NULL;
+    flatShader = NULL;
+    eyePos = glm::vec3();
+    viewDir = glm::vec3(1.f,0,0);
+    viewProjection = glm::mat4();
+    view = glm::mat4();
+    projection = glm::mat4();
+    viewportSize = glm::vec2(800.f,600.f);
+    mode = DrawingMode::FULL;
+    clipPlane = glm::vec4();
     materialShaders = std::vector<GLSLShader*>(0);
 
     //Initialize shaders and buffers
@@ -488,23 +488,23 @@ OpenGLContent::OpenGLContent()
 
 OpenGLContent::~OpenGLContent()
 {
-	//Base shaders
-	if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
-	if(quadBuf != 0) glDeleteBuffers(1, &quadBuf);
-	if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
-	if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
-	if(helperShader != NULL) delete helperShader;
-	if(texQuadShader != NULL) delete texQuadShader;
-	if(texQuadMSShader != NULL) delete texQuadMSShader;
-	if(texLayerQuadShader != NULL) delete texLayerQuadShader;
-	if(texLevelQuadShader != NULL) delete texLevelQuadShader;
-	if(texCubeShader != NULL) delete texCubeShader;
-	if(flatShader != NULL) delete flatShader;
-	
-	//Material shaders
-	for(unsigned int i=0; i<materialShaders.size(); ++i)
-		delete materialShaders[i];
-	materialShaders.clear();
+    //Base shaders
+    if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
+    if(quadBuf != 0) glDeleteBuffers(1, &quadBuf);
+    if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
+    if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
+    if(helperShader != NULL) delete helperShader;
+    if(texQuadShader != NULL) delete texQuadShader;
+    if(texQuadMSShader != NULL) delete texQuadMSShader;
+    if(texLayerQuadShader != NULL) delete texLayerQuadShader;
+    if(texLevelQuadShader != NULL) delete texLevelQuadShader;
+    if(texCubeShader != NULL) delete texCubeShader;
+    if(flatShader != NULL) delete flatShader;
+    
+    //Material shaders
+    for(unsigned int i=0; i<materialShaders.size(); ++i)
+        delete materialShaders[i];
+    materialShaders.clear();
     
     //Views
     if(views.size() == 1) //Trackball left after destroying content
@@ -514,28 +514,28 @@ OpenGLContent::~OpenGLContent()
 
 void OpenGLContent::Finalize()
 {
-	cInfo("Finalizing OpenGL rendering pipeline...");
-	OpenGLLight::Init(lights);
+    cInfo("Finalizing OpenGL rendering pipeline...");
+    OpenGLLight::Init(lights);
 }
 
 void OpenGLContent::DestroyContent()
 {
-	for(size_t i=0; i<looks.size(); ++i)
-	{
-		for(size_t h=0; h<looks[i].textures.size(); ++h)
-			glDeleteTextures(1, &looks[i].textures[h]);
-	}
-	looks.clear();
+    for(size_t i=0; i<looks.size(); ++i)
+    {
+        for(size_t h=0; h<looks[i].textures.size(); ++h)
+            glDeleteTextures(1, &looks[i].textures[h]);
+    }
+    looks.clear();
     lookNameManager.ClearNames();
-			
-	for(size_t i=0; i<objects.size(); ++i)
-	{
-		glDeleteBuffers(1, &objects[i].vboVertex);
-		glDeleteBuffers(1, &objects[i].vboIndex);
-		glDeleteVertexArrays(1, &objects[i].vao);
-	}	
-	objects.clear();
-	
+            
+    for(size_t i=0; i<objects.size(); ++i)
+    {
+        glDeleteBuffers(1, &objects[i].vboVertex);
+        glDeleteBuffers(1, &objects[i].vboIndex);
+        glDeleteVertexArrays(1, &objects[i].vao);
+    }	
+    objects.clear();
+    
     if(views.size() > 0 && views[0]->getType() == ViewType::TRACKBALL)
     {
         for(size_t i=1; i<views.size(); ++i)
@@ -552,243 +552,243 @@ void OpenGLContent::DestroyContent()
     for(size_t i=0; i<lights.size(); ++i)
         delete lights[i];
     lights.clear();
-	OpenGLLight::Destroy();
+    OpenGLLight::Destroy();
 }
 
 void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
 {
-	viewportSize = glm::vec2(width, height);
+    viewportSize = glm::vec2(width, height);
 }
 
 void OpenGLContent::SetProjectionMatrix(glm::mat4 P)
 {
-	projection = P;
-	viewProjection = projection * view;
+    projection = P;
+    viewProjection = projection * view;
 }
 
 void OpenGLContent::SetViewMatrix(glm::mat4 V)
 {
-	view = V;
-	viewProjection = projection * view;
+    view = V;
+    viewProjection = projection * view;
 }
 
 glm::mat4 OpenGLContent::GetViewMatrix()
 {
-	return view;
+    return view;
 }
 
 void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
 {
-	if(mirror)
-	{
-		glm::vec3 n(0,0,-1.f);
-		GLfloat D = 0;
-		glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, -2.f*n.x*D,
-										-2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, -2.f*n.y*D,
-										-2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, -2.f*n.z*D,
-													0,			  0,			   0,		   1);
-													
-		/*glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, 0,
-										 -2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, 0,
-										 -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, 0,
-										 -2.f*n.x*D,   -2.f*n.y*D,   -2.f*n.z*D,      1);*/									
-													
-		//glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
-		
-		eyePos = v->GetEyePosition();
-		eyePos.z = -eyePos.z;
-		viewDir = v->GetLookingDirection();
-		viewDir.z = -viewDir.z;
-		view = v->GetViewMatrix() * reflection;// * flip;// * reflection;// * glm::transpose(flip);
-	}
-	else
-	{
-		eyePos = v->GetEyePosition();
-		viewDir = v->GetLookingDirection();
-		view = v->GetViewMatrix();
-	}
-	
-	projection = v->GetProjectionMatrix();
-	viewProjection = projection * view;
+    if(mirror)
+    {
+        glm::vec3 n(0,0,-1.f);
+        GLfloat D = 0;
+        glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, -2.f*n.x*D,
+                                        -2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, -2.f*n.y*D,
+                                        -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, -2.f*n.z*D,
+                                                    0,			  0,			   0,		   1);
+                                                    
+        /*glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, 0,
+                                         -2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, 0,
+                                         -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, 0,
+                                         -2.f*n.x*D,   -2.f*n.y*D,   -2.f*n.z*D,      1);*/									
+                                                    
+        //glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
+        
+        eyePos = v->GetEyePosition();
+        eyePos.z = -eyePos.z;
+        viewDir = v->GetLookingDirection();
+        viewDir.z = -viewDir.z;
+        view = v->GetViewMatrix() * reflection;// * flip;// * reflection;// * glm::transpose(flip);
+    }
+    else
+    {
+        eyePos = v->GetEyePosition();
+        viewDir = v->GetLookingDirection();
+        view = v->GetViewMatrix();
+    }
+    
+    projection = v->GetProjectionMatrix();
+    viewProjection = projection * view;
 }
 
 void OpenGLContent::SetDrawingMode(DrawingMode m)
 {
-	mode = m;
+    mode = m;
 }
 
 void OpenGLContent::EnableClipPlane(glm::vec4 clipPlaneCoeff)
 {
-	clipPlane = clipPlaneCoeff;
-	glEnable(GL_CLIP_DISTANCE0);
+    clipPlane = clipPlaneCoeff;
+    glEnable(GL_CLIP_DISTANCE0);
 }
 
 void OpenGLContent::DisableClipPlane()
 {
-	clipPlane = glm::vec4();
-	glDisable(GL_CLIP_DISTANCE0);
+    clipPlane = glm::vec4();
+    glDisable(GL_CLIP_DISTANCE0);
 }
 
 void OpenGLContent::BindBaseVertexArray()
 {
-	glBindVertexArray(baseVertexArray);
+    glBindVertexArray(baseVertexArray);
 }
 
 void OpenGLContent::DrawSAQ()
 {
-	glBindVertexArray(baseVertexArray);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glBindVertexArray(0);
+    glBindVertexArray(baseVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
 {
-	if(texQuadShader != NULL)
-	{
-		y = viewportSize.y-y-height;
-		
-		texQuadShader->Use();
-		texQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-		texQuadShader->SetUniform("tex", TEX_BASE);
-		texQuadShader->SetUniform("color", color);
-		
+    if(texQuadShader != NULL)
+    {
+        y = viewportSize.y-y-height;
+        
+        texQuadShader->Use();
+        texQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        texQuadShader->SetUniform("tex", TEX_BASE);
+        texQuadShader->SetUniform("color", color);
+        
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(GL_TEXTURE_2D, texture);
-		glBindVertexArray(baseVertexArray);
+        glBindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
- 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
-		glUseProgram(0);
-	}
+        glUseProgram(0);
+    }
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
 {
-	if((array && texLayerQuadShader != NULL)||(!array && texLevelQuadShader != NULL))
-	{
-		y = viewportSize.y-y-height;
-		
-		if(array)
-		{
-			texLayerQuadShader->Use();
-			texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-			texLayerQuadShader->SetUniform("tex", TEX_BASE);
-			texLayerQuadShader->SetUniform("layer", z);
-		}
-		else
-		{
-			texLevelQuadShader->Use();
-			texLevelQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-			texLevelQuadShader->SetUniform("tex", TEX_BASE);
-			texLevelQuadShader->SetUniform("level", z);
-		}
-		
-		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
-		
-		glBindVertexArray(baseVertexArray);
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
- 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(0);
-		glBindVertexArray(0);
-		
-		glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, 0);
-		glUseProgram(0);
-	}
+    if((array && texLayerQuadShader != NULL)||(!array && texLevelQuadShader != NULL))
+    {
+        y = viewportSize.y-y-height;
+        
+        if(array)
+        {
+            texLayerQuadShader->Use();
+            texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+            texLayerQuadShader->SetUniform("tex", TEX_BASE);
+            texLayerQuadShader->SetUniform("layer", z);
+        }
+        else
+        {
+            texLevelQuadShader->Use();
+            texLevelQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+            texLevelQuadShader->SetUniform("tex", TEX_BASE);
+            texLevelQuadShader->SetUniform("level", z);
+        }
+        
+        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+        glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
+        
+        glBindVertexArray(baseVertexArray);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDisableVertexAttribArray(0);
+        glBindVertexArray(0);
+        
+        glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, 0);
+        glUseProgram(0);
+    }
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize)
 {
-	if(texQuadMSShader != NULL)
-	{
-		y = viewportSize.y-y-height;
-		
-		texQuadMSShader->Use();
-		texQuadMSShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-		texQuadMSShader->SetUniform("tex", TEX_BASE);
-		texQuadMSShader->SetUniform("texSize", texSize);
-		
-		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
-		
-		glBindVertexArray(baseVertexArray);
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
- 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(0);
-		glBindVertexArray(0);
-		
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-		glUseProgram(0);
-	}
+    if(texQuadMSShader != NULL)
+    {
+        y = viewportSize.y-y-height;
+        
+        texQuadMSShader->Use();
+        texQuadMSShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        texQuadMSShader->SetUniform("tex", TEX_BASE);
+        texQuadMSShader->SetUniform("texSize", texSize);
+        
+        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
+        
+        glBindVertexArray(baseVertexArray);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDisableVertexAttribArray(0);
+        glBindVertexArray(0);
+        
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glUseProgram(0);
+    }
 }	
 
 void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
-	if(cubeBuf != 0 && texCubeShader != NULL)
-	{
-		texCubeShader->Use();
-		texCubeShader->SetUniform("tex", TEX_BASE);
-		
-		glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-		
-		glBindVertexArray(baseVertexArray);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
- 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
-		glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
-		glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
-		
-		glBindVertexArray(0);
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-		glUseProgram(0);
-	}
+    if(cubeBuf != 0 && texCubeShader != NULL)
+    {
+        texCubeShader->Use();
+        texCubeShader->SetUniform("tex", TEX_BASE);
+        
+        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+        
+        glBindVertexArray(baseVertexArray);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
+        glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
+        glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
+        
+        glBindVertexArray(0);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        glUseProgram(0);
+    }
 }
 
 void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 {
-	if(csBuf[0] != 0 && helperShader != NULL)
-	{
-		helperShader->Use();
-		helperShader->SetUniform("MVP", viewProjection*M);
-		helperShader->SetUniform("scale", glm::vec3(size));
-		
-		glBindVertexArray(baseVertexArray);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-		glDrawArrays(GL_LINES, 0, 6);
-		glBindVertexArray(0);
-		
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glUseProgram(0);
-	}
+    if(csBuf[0] != 0 && helperShader != NULL)
+    {
+        helperShader->Use();
+        helperShader->SetUniform("MVP", viewProjection*M);
+        helperShader->SetUniform("scale", glm::vec3(size));
+        
+        glBindVertexArray(baseVertexArray);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        glDrawArrays(GL_LINES, 0, 6);
+        glBindVertexArray(0);
+        
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glUseProgram(0);
+    }
 }
 
 void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
@@ -796,9 +796,9 @@ void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
     if(helperShader != NULL && cylinder.mesh != NULL)
     {
         helperShader->Use();
-		helperShader->SetUniform("MVP", viewProjection*M);
-		helperShader->SetUniform("scale", dims);
-		
+        helperShader->SetUniform("MVP", viewProjection*M);
+        helperShader->SetUniform("scale", dims);
+        
         glBindVertexArray(cylinder.vao);
         glVertexAttrib4fv(1, &color.r);
         glDrawElements(GL_TRIANGLES, 3 * (GLsizei)cylinder.mesh->faces.size(), GL_UNSIGNED_INT, 0);
@@ -812,9 +812,9 @@ void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
     if(helperShader != NULL && ellipsoid.mesh != NULL)
     {
         helperShader->Use();
-		helperShader->SetUniform("MVP", viewProjection*M);
-		helperShader->SetUniform("scale", radii);
-		
+        helperShader->SetUniform("MVP", viewProjection*M);
+        helperShader->SetUniform("scale", radii);
+        
         glBindVertexArray(ellipsoid.vao);
         glVertexAttrib4fv(1, &color.r);
         glDrawElements(GL_TRIANGLES, 3 * (GLsizei)ellipsoid.mesh->faces.size(), GL_UNSIGNED_INT, 0);
@@ -825,270 +825,270 @@ void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 
 void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
 {
-	if(helperShader != NULL && vertices.size() > 0)
-	{
-		GLuint vbo;
-		glGenBuffers(1, &vbo);
-		
-		helperShader->Use();
-		helperShader->SetUniform("MVP", viewProjection*M);
-		helperShader->SetUniform("scale", glm::vec3(1.f));
-		
-		glBindVertexArray(baseVertexArray);
+    if(helperShader != NULL && vertices.size() > 0)
+    {
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+        
+        helperShader->Use();
+        helperShader->SetUniform("MVP", viewProjection*M);
+        helperShader->SetUniform("scale", glm::vec3(1.f));
+        
+        glBindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-		glVertexAttrib4fv(1, &color.r);
-		
-		switch(type)
-		{
-			case LINES:
-				glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
-				break;
-			
-			case LINE_STRIP:
-				glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
-				break;
-				
-			case POINTS:
-			default:
-				glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
-				break;
-		}
-		glBindVertexArray(0);
-		glDisableVertexAttribArray(0);
-		glUseProgram(0);
-		
-		glDeleteBuffers(1, &vbo);
-	}
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        glVertexAttrib4fv(1, &color.r);
+        
+        switch(type)
+        {
+            case LINES:
+                glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
+                break;
+            
+            case LINE_STRIP:
+                glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
+                break;
+                
+            case POINTS:
+            default:
+                glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
+                break;
+        }
+        glBindVertexArray(0);
+        glDisableVertexAttribArray(0);
+        glUseProgram(0);
+        
+        glDeleteBuffers(1, &vbo);
+    }
 }
 
 void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
-	if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
-	{
-		if(mode == DrawingMode::FLAT)
-		{
-			flatShader->Use();
-			flatShader->SetUniform("MVP", viewProjection*M);
-			glBindVertexArray(objects[objectId].vao);
-			glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-			glUseProgram(0);
-		}
-		else
-		{
-			if(lookId >= 0 && lookId < (int)looks.size())
-				UseLook(lookId, M);
-			else
-				UseStandardLook(M);
-	
-			glBindVertexArray(objects[objectId].vao);
-			glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-			glUseProgram(0);
-		}
-	}
+    if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
+    {
+        if(mode == DrawingMode::FLAT)
+        {
+            flatShader->Use();
+            flatShader->SetUniform("MVP", viewProjection*M);
+            glBindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+            glUseProgram(0);
+        }
+        else
+        {
+            if(lookId >= 0 && lookId < (int)looks.size())
+                UseLook(lookId, M);
+            else
+                UseStandardLook(M);
+    
+            glBindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+            glUseProgram(0);
+        }
+    }
 }
 
 void OpenGLContent::SetupLights(GLSLShader* shader)
 {
-	int pointId = 0;
-	int spotId = 0;
-	
-	for(unsigned int i=0; i<lights.size(); ++i)
-	{
-		if(lights[i]->getType() == POINT_LIGHT)
-		{
-			lights[i]->SetupShader(shader, pointId);
-			++pointId;
-		}
-		else
-		{
-			lights[i]->SetupShader(shader, spotId);
-			++spotId;
-		}
-	}
-	
-	shader->SetUniform("numPointLights", pointId);
-	shader->SetUniform("numSpotLights", spotId);
-	OpenGLLight::SetupShader(shader);
-	SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupMaterialShader(shader);
+    int pointId = 0;
+    int spotId = 0;
+    
+    for(unsigned int i=0; i<lights.size(); ++i)
+    {
+        if(lights[i]->getType() == POINT_LIGHT)
+        {
+            lights[i]->SetupShader(shader, pointId);
+            ++pointId;
+        }
+        else
+        {
+            lights[i]->SetupShader(shader, spotId);
+            ++spotId;
+        }
+    }
+    
+    shader->SetUniform("numPointLights", pointId);
+    shader->SetUniform("numSpotLights", spotId);
+    OpenGLLight::SetupShader(shader);
+    SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupMaterialShader(shader);
 }
 
 void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 {	
     Look& l = looks[lookId];
-	GLSLShader* shader;
-	
-	switch(l.type)
-	{		
+    GLSLShader* shader;
+    
+    switch(l.type)
+    {		
         default:
-		case SIMPLE: //Blinn-Phong
-		{
-			shader = mode == DrawingMode::FULL ? materialShaders[0] : materialShaders[2];
-			shader->Use();
-			shader->SetUniform("MVP", viewProjection*M);
-			shader->SetUniform("M", M);
-			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-			shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-			shader->SetUniform("clipPlane", clipPlane);
-			shader->SetUniform("eyePos", eyePos);
-			shader->SetUniform("viewDir", viewDir);
-			shader->SetUniform("specularStrength", l.params[0]);
-			shader->SetUniform("shininess", l.params[1]);
+        case SIMPLE: //Blinn-Phong
+        {
+            shader = mode == DrawingMode::FULL ? materialShaders[0] : materialShaders[2];
+            shader->Use();
+            shader->SetUniform("MVP", viewProjection*M);
+            shader->SetUniform("M", M);
+            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+            shader->SetUniform("clipPlane", clipPlane);
+            shader->SetUniform("eyePos", eyePos);
+            shader->SetUniform("viewDir", viewDir);
+            shader->SetUniform("specularStrength", l.params[0]);
+            shader->SetUniform("shininess", l.params[1]);
             shader->SetUniform("reflectivity", l.reflectivity);
-			shader->SetUniform("tex", TEX_BASE);
+            shader->SetUniform("tex", TEX_BASE);
             
-			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-			
-			if(l.textures.size() > 0)
-			{
-				glBindTexture(GL_TEXTURE_2D, l.textures[0]);
-				shader->SetUniform("color", glm::vec4(l.color, 1.f));
-			}
-			else
-			{
-				glBindTexture(GL_TEXTURE_2D, 0);
-				shader->SetUniform("color", glm::vec4(l.color, 0.f));			
-			}
-		}
-			break;
-			
-		case PHYSICAL: //Cook-Torrance
-		{
-			shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
-			shader->Use();
-			shader->SetUniform("MVP", viewProjection*M);
-			shader->SetUniform("M", M);
-			shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-			shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-			shader->SetUniform("clipPlane", clipPlane);
-			shader->SetUniform("eyePos", eyePos);
-			shader->SetUniform("viewDir", viewDir);
-			shader->SetUniform("roughness", l.params[0]);
-			shader->SetUniform("metallic", l.params[1]);
+            glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+            
+            if(l.textures.size() > 0)
+            {
+                glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+            }
+            else
+            {
+                glBindTexture(GL_TEXTURE_2D, 0);
+                shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+            }
+        }
+            break;
+            
+        case PHYSICAL: //Cook-Torrance
+        {
+            shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
+            shader->Use();
+            shader->SetUniform("MVP", viewProjection*M);
+            shader->SetUniform("M", M);
+            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+            shader->SetUniform("clipPlane", clipPlane);
+            shader->SetUniform("eyePos", eyePos);
+            shader->SetUniform("viewDir", viewDir);
+            shader->SetUniform("roughness", l.params[0]);
+            shader->SetUniform("metallic", l.params[1]);
             shader->SetUniform("reflectivity", l.reflectivity);
-			shader->SetUniform("tex", TEX_BASE);
-			
-			glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-			
-			if(l.textures.size() > 0)
-			{
-				glBindTexture(GL_TEXTURE_2D, l.textures[0]);
-				shader->SetUniform("color", glm::vec4(l.color, 1.f));
-			}
-			else
-			{
-				glBindTexture(GL_TEXTURE_2D, 0);
-				shader->SetUniform("color", glm::vec4(l.color, 0.f));			
-			}
-		}
-			break;
-	}
-	
-	if(mode == DrawingMode::UNDERWATER)
-	{
+            shader->SetUniform("tex", TEX_BASE);
+            
+            glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+            
+            if(l.textures.size() > 0)
+            {
+                glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+            }
+            else
+            {
+                glBindTexture(GL_TEXTURE_2D, 0);
+                shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+            }
+        }
+            break;
+    }
+    
+    if(mode == DrawingMode::UNDERWATER)
+    {
         Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
         shader->SetUniform("turbidity", ocean->getOpenGLOcean()->getTurbidity());
-		shader->SetUniform("lightAbsorption", ocean->getOpenGLOcean()->getLightAbsorption());
-	}
-	
-	SetupLights(shader);
+        shader->SetUniform("lightAbsorption", ocean->getOpenGLOcean()->getLightAbsorption());
+    }
+    
+    SetupLights(shader);
 }
 
 void OpenGLContent::UseStandardLook(const glm::mat4& M)
 {
-	GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
+    GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
     
     shader->Use();
-	shader->SetUniform("MVP", viewProjection*M);
-	shader->SetUniform("M", M);
-	shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-	shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-	shader->SetUniform("clipPlane", clipPlane);
-	shader->SetUniform("eyePos", eyePos);
-	shader->SetUniform("viewDir", viewDir);
-	shader->SetUniform("roughness", 0.5f);
-	shader->SetUniform("metallic", 0.f);
+    shader->SetUniform("MVP", viewProjection*M);
+    shader->SetUniform("M", M);
+    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+    shader->SetUniform("clipPlane", clipPlane);
+    shader->SetUniform("eyePos", eyePos);
+    shader->SetUniform("viewDir", viewDir);
+    shader->SetUniform("roughness", 0.5f);
+    shader->SetUniform("metallic", 0.f);
     shader->SetUniform("reflectivity", 0.f);
-	shader->SetUniform("tex", TEX_BASE);
+    shader->SetUniform("tex", TEX_BASE);
     shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));			
-			
-	glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	SetupLights(shader);
+            
+    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    SetupLights(shader);
 }
 
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 {
-	Object obj;
-	obj.mesh = mesh;
-	
-	glGenVertexArrays(1, &obj.vao);
-	glGenBuffers(1, &obj.vboVertex);
-	glGenBuffers(1, &obj.vboIndex);
-	
-	glBindVertexArray(obj.vao);	
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
-	glBindVertexArray(0);
-	
-	objects.push_back(obj);
-	return (unsigned int)objects.size()-1;
+    Object obj;
+    obj.mesh = mesh;
+    
+    glGenVertexArrays(1, &obj.vao);
+    glGenBuffers(1, &obj.vboVertex);
+    glGenBuffers(1, &obj.vboIndex);
+    
+    glBindVertexArray(obj.vao);	
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBindVertexArray(0);
+    
+    objects.push_back(obj);
+    return (unsigned int)objects.size()-1;
 }
 
 std::string OpenGLContent::CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity, std::string textureName)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
-	look.type = LookType::SIMPLE;
+    look.type = LookType::SIMPLE;
     look.color = rgbColor;
     look.reflectivity = reflectivity;
-	look.params.push_back(specular);
-	look.params.push_back(shininess);
+    look.params.push_back(specular);
+    look.params.push_back(shininess);
     
-	if(textureName != "") 
-		look.textures.push_back(LoadTexture(textureName));
+    if(textureName != "") 
+        look.textures.push_back(LoadTexture(textureName));
     
-	looks.push_back(look);
-	
-	return look.name;
+    looks.push_back(look);
+    
+    return look.name;
 }
 
 std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, GLfloat reflectivity, std::string textureName)
 {
-	Look look;
+    Look look;
     look.name = lookNameManager.AddName(name);
-	look.type = LookType::PHYSICAL;
-	look.color = rgbColor;
+    look.type = LookType::PHYSICAL;
+    look.color = rgbColor;
     look.reflectivity = reflectivity;
-	look.params.push_back(roughness);
-	look.params.push_back(metalness);
-	
-	if(textureName != "")
-		look.textures.push_back(LoadTexture(textureName));
-		
-	looks.push_back(look);
-	
-	return look.name;
+    look.params.push_back(roughness);
+    look.params.push_back(metalness);
+    
+    if(textureName != "")
+        look.textures.push_back(LoadTexture(textureName));
+        
+    looks.push_back(look);
+    
+    return look.name;
 }
 
 void OpenGLContent::AddView(OpenGLView *view)
@@ -1106,7 +1106,7 @@ OpenGLView* OpenGLContent::getView(unsigned int id)
 
 unsigned int OpenGLContent::getViewsCount()
 {
-	return (unsigned int)views.size();
+    return (unsigned int)views.size();
 }
 
 void OpenGLContent::AddLight(OpenGLLight* light)
@@ -1124,7 +1124,7 @@ OpenGLLight* OpenGLContent::getLight(unsigned int id)
 
 unsigned int OpenGLContent::getLightsCount()
 {
-	return (unsigned int)lights.size();
+    return (unsigned int)lights.size();
 }
 
 int OpenGLContent::getLookId(std::string name)
@@ -1135,7 +1135,7 @@ int OpenGLContent::getLookId(std::string name)
             
     return -1;
 }
-	
+    
 //Static methods
 GLuint OpenGLContent::LoadTexture(std::string filename)
 {
@@ -1183,14 +1183,14 @@ GLuint OpenGLContent::LoadInternalTexture(std::string filename)
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 {
     Mesh* mesh = new Mesh;
-	mesh->hasUVs = true;
+    mesh->hasUVs = true;
     Face f;
     Vertex vt;
-	
-	//Only one normal
-	vt.pos.z = 0;
+    
+    //Only one normal
+    vt.pos.z = 0;
     vt.normal = glm::vec3(0,0,-1.f);
-	
+    
     vt.pos.x = -halfExtents;
     vt.pos.y = -halfExtents;
     vt.uv = glm::vec2(0.f,0.f);
@@ -1224,143 +1224,143 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     Mesh* mesh = new Mesh();
     Face f;
     Vertex vt;
-	mesh->hasUVs = true;
-	
+    mesh->hasUVs = true;
+    
     /////VERTICES
-	glm::vec3 v1(-halfExtents.x, -halfExtents.y, -halfExtents.z);
+    glm::vec3 v1(-halfExtents.x, -halfExtents.y, -halfExtents.z);
     glm::vec3 v2(-halfExtents.x, halfExtents.y, -halfExtents.z);
     glm::vec3 v3(halfExtents.x, halfExtents.y, -halfExtents.z);
     glm::vec3 v4(halfExtents.x, -halfExtents.y, -halfExtents.z);
     glm::vec3 v5(halfExtents.x, halfExtents.y, halfExtents.z);
     glm::vec3 v6(halfExtents.x, -halfExtents.y, halfExtents.z);
-	glm::vec3 v7(-halfExtents.x, -halfExtents.y, halfExtents.z);
+    glm::vec3 v7(-halfExtents.x, -halfExtents.y, halfExtents.z);
     glm::vec3 v8(-halfExtents.x, halfExtents.y, halfExtents.z);
     
     /////TOP
     //normal
-	vt.normal = glm::vec3(0,0,-1.f);
+    vt.normal = glm::vec3(0,0,-1.f);
     //vertices
     vt.pos = v1;
-	mesh->vertices.push_back(vt); //0
-	vt.pos = v2;
-	mesh->vertices.push_back(vt); //1
-	vt.pos = v3;
-	mesh->vertices.push_back(vt); //2
-	vt.pos = v4;
-	mesh->vertices.push_back(vt); //3
-	//faces
-	f.vertexID[0] = 0;
-	f.vertexID[1] = 1;
-	f.vertexID[2] = 2;
-	mesh->faces.push_back(f);
-	f.vertexID[1] = 2;
-	f.vertexID[2] = 3;
+    mesh->vertices.push_back(vt); //0
+    vt.pos = v2;
+    mesh->vertices.push_back(vt); //1
+    vt.pos = v3;
+    mesh->vertices.push_back(vt); //2
+    vt.pos = v4;
+    mesh->vertices.push_back(vt); //3
+    //faces
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 1;
+    f.vertexID[2] = 2;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 3;
     mesh->faces.push_back(f);
     
     /////FRONT
     //normal
-	vt.normal =  glm::vec3(1.f,0,0);
+    vt.normal =  glm::vec3(1.f,0,0);
     //vertices
-	vt.pos = v4;
-	mesh->vertices.push_back(vt); //4
-	vt.pos = v3;
-	mesh->vertices.push_back(vt); //5
-	vt.pos = v5;
-	mesh->vertices.push_back(vt); //6
-	vt.pos = v6;
-	mesh->vertices.push_back(vt); //7
-	//faces
-	f.vertexID[0] = 4;
-	f.vertexID[1] = 5;
-	f.vertexID[2] = 6;
-	mesh->faces.push_back(f);
-	f.vertexID[1] = 6;
-	f.vertexID[2] = 7;
-	mesh->faces.push_back(f);
-	
+    vt.pos = v4;
+    mesh->vertices.push_back(vt); //4
+    vt.pos = v3;
+    mesh->vertices.push_back(vt); //5
+    vt.pos = v5;
+    mesh->vertices.push_back(vt); //6
+    vt.pos = v6;
+    mesh->vertices.push_back(vt); //7
+    //faces
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 5;
+    f.vertexID[2] = 6;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 6;
+    f.vertexID[2] = 7;
+    mesh->faces.push_back(f);
+    
     /////BACK
     //normal
-	vt.normal = glm::vec3(-1.f,0,0);
-	//vertices
-	vt.pos = v7;
-	mesh->vertices.push_back(vt); //8
-	vt.pos = v8;
-	mesh->vertices.push_back(vt); //9
-	vt.pos = v2;
-	mesh->vertices.push_back(vt); //10
-	vt.pos = v1;
-	mesh->vertices.push_back(vt); //11
-	//faces
-	f.vertexID[0] = 8;
-	f.vertexID[1] = 9;
-	f.vertexID[2] = 10;
-	mesh->faces.push_back(f);
-	f.vertexID[1] = 10;
-	f.vertexID[2] = 11;
-	mesh->faces.push_back(f);
-	
+    vt.normal = glm::vec3(-1.f,0,0);
+    //vertices
+    vt.pos = v7;
+    mesh->vertices.push_back(vt); //8
+    vt.pos = v8;
+    mesh->vertices.push_back(vt); //9
+    vt.pos = v2;
+    mesh->vertices.push_back(vt); //10
+    vt.pos = v1;
+    mesh->vertices.push_back(vt); //11
+    //faces
+    f.vertexID[0] = 8;
+    f.vertexID[1] = 9;
+    f.vertexID[2] = 10;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 10;
+    f.vertexID[2] = 11;
+    mesh->faces.push_back(f);
+    
     /////BOTTOM
     //normal
     vt.normal = glm::vec3(0,0,1.f);
-	//vertices
-	vt.pos = v6;
-	mesh->vertices.push_back(vt); //12
-	vt.pos = v5;
-	mesh->vertices.push_back(vt); //13
-	vt.pos = v8;
-	mesh->vertices.push_back(vt); //14
-	vt.pos = v7;
-	mesh->vertices.push_back(vt); //15
-	//faces
-	f.vertexID[0] = 12;
-	f.vertexID[1] = 13;
-	f.vertexID[2] = 14;
-	mesh->faces.push_back(f);
-	f.vertexID[1] = 14;
-	f.vertexID[2] = 15;
-	mesh->faces.push_back(f);
-	
+    //vertices
+    vt.pos = v6;
+    mesh->vertices.push_back(vt); //12
+    vt.pos = v5;
+    mesh->vertices.push_back(vt); //13
+    vt.pos = v8;
+    mesh->vertices.push_back(vt); //14
+    vt.pos = v7;
+    mesh->vertices.push_back(vt); //15
+    //faces
+    f.vertexID[0] = 12;
+    f.vertexID[1] = 13;
+    f.vertexID[2] = 14;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 14;
+    f.vertexID[2] = 15;
+    mesh->faces.push_back(f);
+    
     //////LEFT
     //normal
     vt.normal = glm::vec3(0,1.f,0);
-	//vertices
-	vt.pos = v5;
-	mesh->vertices.push_back(vt); //16
-	vt.pos = v3;
-	mesh->vertices.push_back(vt); //17
-	vt.pos = v2;
-	mesh->vertices.push_back(vt); //18
-	vt.pos = v8;
-	mesh->vertices.push_back(vt); //19
-	//faces
-	f.vertexID[0] = 16;
-	f.vertexID[1] = 17;
-	f.vertexID[2] = 18;
-	mesh->faces.push_back(f);
-	f.vertexID[1] = 18;
-	f.vertexID[2] = 19;
-	mesh->faces.push_back(f);
-	
+    //vertices
+    vt.pos = v5;
+    mesh->vertices.push_back(vt); //16
+    vt.pos = v3;
+    mesh->vertices.push_back(vt); //17
+    vt.pos = v2;
+    mesh->vertices.push_back(vt); //18
+    vt.pos = v8;
+    mesh->vertices.push_back(vt); //19
+    //faces
+    f.vertexID[0] = 16;
+    f.vertexID[1] = 17;
+    f.vertexID[2] = 18;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 18;
+    f.vertexID[2] = 19;
+    mesh->faces.push_back(f);
+    
     /////RIGHT
     //normal
     vt.normal = glm::vec3(0,-1.f,0);
     //vertices
-	vt.pos = v4;
-	mesh->vertices.push_back(vt); //20
-	vt.pos = v6;
-	mesh->vertices.push_back(vt); //21
-	vt.pos = v7;
-	mesh->vertices.push_back(vt); //22
-	vt.pos = v1;
-	mesh->vertices.push_back(vt); //23
-	//faces
-	f.vertexID[0] = 20;
-	f.vertexID[1] = 21;
-	f.vertexID[2] = 22;
-	mesh->faces.push_back(f);
-	f.vertexID[1] = 22;
-	f.vertexID[2] = 23;
-	mesh->faces.push_back(f);
+    vt.pos = v4;
+    mesh->vertices.push_back(vt); //20
+    vt.pos = v6;
+    mesh->vertices.push_back(vt); //21
+    vt.pos = v7;
+    mesh->vertices.push_back(vt); //22
+    vt.pos = v1;
+    mesh->vertices.push_back(vt); //23
+    //faces
+    f.vertexID[0] = 20;
+    f.vertexID[1] = 21;
+    f.vertexID[2] = 22;
+    mesh->faces.push_back(f);
+    f.vertexID[1] = 22;
+    f.vertexID[2] = 23;
+    mesh->faces.push_back(f);
     
     //Texture coordinates
     switch(uvMode)
@@ -1464,176 +1464,176 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     }
     
     //Subdivide
-	for(unsigned int i=0; i<subdivisions; ++i)
-		Subdivide(mesh);
-		
-	//SmoothNormals(mesh);
-	
-	return mesh;
+    for(unsigned int i=0; i<subdivisions; ++i)
+        Subdivide(mesh);
+        
+    //SmoothNormals(mesh);
+    
+    return mesh;
 }
 
 Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions) 
 {
-	Mesh* mesh = new Mesh;
+    Mesh* mesh = new Mesh;
     Face f;
     Vertex vt;
-	vt.normal = glm::vec3(1,0,0);
-	mesh->hasUVs = false;
-	vt.uv = glm::vec2(0,0);
+    vt.normal = glm::vec3(1,0,0);
+    mesh->hasUVs = false;
+    vt.uv = glm::vec2(0,0);
     
     //Basuc icosahedron
-	const GLfloat X = -.525731112119133606f;
-	const GLfloat Z = -.850650808352039932f;
-	const GLfloat N = 0.f;
-	
-	vt.pos = glm::vec3(-X,N,Z);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(X,N,Z);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(-X,N,-Z);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(X,N,-Z);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-	
-    vt.pos = glm::vec3(N,Z,X);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(N,Z,-X);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(N,-Z,X);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(N,-Z,-X);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-	
-	vt.pos = glm::vec3(Z,X,N);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(-Z,X,N);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(Z,-X,N);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
-    vt.pos = glm::vec3(-Z,-X,N);
-	vt.normal = vt.pos;
-	mesh->vertices.push_back(vt);
+    const GLfloat X = -.525731112119133606f;
+    const GLfloat Z = -.850650808352039932f;
+    const GLfloat N = 0.f;
     
-	f.vertexID[0] = 0;
-	f.vertexID[1] = 4;
-	f.vertexID[2] = 1;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 0;
-	f.vertexID[1] = 9;
-	f.vertexID[2] = 4;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 9;
-	f.vertexID[1] = 5;
-	f.vertexID[2] = 4;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 4;
-	f.vertexID[1] = 5;
-	f.vertexID[2] = 8;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 4;
-	f.vertexID[1] = 8;
-	f.vertexID[2] = 1;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 8;
-	f.vertexID[1] = 10;
-	f.vertexID[2] = 1;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 8;
-	f.vertexID[1] = 3;
-	f.vertexID[2] = 10;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 5;
-	f.vertexID[1] = 3;
-	f.vertexID[2] = 8;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 5;
-	f.vertexID[1] = 2;
-	f.vertexID[2] = 3;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 2;
-	f.vertexID[1] = 7;
-	f.vertexID[2] = 3;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 7;
-	f.vertexID[1] = 10;
-	f.vertexID[2] = 3;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 7;
-	f.vertexID[1] = 6;
-	f.vertexID[2] = 10;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 7;
-	f.vertexID[1] = 11;
-	f.vertexID[2] = 6;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 11;
-	f.vertexID[1] = 0;
-	f.vertexID[2] = 6;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 0;
-	f.vertexID[1] = 1;
-	f.vertexID[2] = 6;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 6;
-	f.vertexID[1] = 1;
-	f.vertexID[2] = 10;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 9;
-	f.vertexID[1] = 0;
-	f.vertexID[2] = 11;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 9;
-	f.vertexID[1] = 11;
-	f.vertexID[2] = 2;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 9;
-	f.vertexID[1] = 2;
-	f.vertexID[2] = 5;
-	mesh->faces.push_back(f);
-	f.vertexID[0] = 7;
-	f.vertexID[1] = 2;
-	f.vertexID[2] = 11;
-	mesh->faces.push_back(f);
-	
-	//Subdivide to get smooth sphere
-	for(unsigned int i=0; i<subdivisions; ++i)
-		Subdivide(mesh, true);
-		
-	//Scale by radius
-	for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-		mesh->vertices[i].pos *= radius;
-	
-	return mesh;
+    vt.pos = glm::vec3(-X,N,Z);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(X,N,Z);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(-X,N,-Z);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(X,N,-Z);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    
+    vt.pos = glm::vec3(N,Z,X);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(N,Z,-X);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(N,-Z,X);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(N,-Z,-X);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    
+    vt.pos = glm::vec3(Z,X,N);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(-Z,X,N);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(Z,-X,N);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    vt.pos = glm::vec3(-Z,-X,N);
+    vt.normal = vt.pos;
+    mesh->vertices.push_back(vt);
+    
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 4;
+    f.vertexID[2] = 1;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 9;
+    f.vertexID[2] = 4;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 9;
+    f.vertexID[1] = 5;
+    f.vertexID[2] = 4;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 5;
+    f.vertexID[2] = 8;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 8;
+    f.vertexID[2] = 1;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 8;
+    f.vertexID[1] = 10;
+    f.vertexID[2] = 1;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 8;
+    f.vertexID[1] = 3;
+    f.vertexID[2] = 10;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 5;
+    f.vertexID[1] = 3;
+    f.vertexID[2] = 8;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 5;
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 3;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 2;
+    f.vertexID[1] = 7;
+    f.vertexID[2] = 3;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 7;
+    f.vertexID[1] = 10;
+    f.vertexID[2] = 3;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 7;
+    f.vertexID[1] = 6;
+    f.vertexID[2] = 10;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 7;
+    f.vertexID[1] = 11;
+    f.vertexID[2] = 6;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 11;
+    f.vertexID[1] = 0;
+    f.vertexID[2] = 6;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 1;
+    f.vertexID[2] = 6;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 6;
+    f.vertexID[1] = 1;
+    f.vertexID[2] = 10;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 9;
+    f.vertexID[1] = 0;
+    f.vertexID[2] = 11;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 9;
+    f.vertexID[1] = 11;
+    f.vertexID[2] = 2;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 9;
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 5;
+    mesh->faces.push_back(f);
+    f.vertexID[0] = 7;
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 11;
+    mesh->faces.push_back(f);
+    
+    //Subdivide to get smooth sphere
+    for(unsigned int i=0; i<subdivisions; ++i)
+        Subdivide(mesh, true);
+        
+    //Scale by radius
+    for(unsigned int i=0; i<mesh->vertices.size(); ++i)
+        mesh->vertices[i].pos *= radius;
+    
+    return mesh;
 }
 
 Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices)
 {
     Mesh* mesh = new Mesh;
     GLfloat halfHeight = height/2.f;
-	Vertex vt;
-	Face f;
-	mesh->hasUVs = true;
-	
-	//SIDE
+    Vertex vt;
+    Face f;
+    mesh->hasUVs = true;
+    
+    //SIDE
     //Side vertices
     for(unsigned int i=0; i<=slices; ++i)
     {
-		vt.normal = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f), -cosf(i/(GLfloat)slices*M_PI*2.f), 0.0);
-		vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, halfHeight);
+        vt.normal = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f), -cosf(i/(GLfloat)slices*M_PI*2.f), 0.0);
+        vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, halfHeight);
         vt.uv = glm::vec2(1.f-i/(GLfloat)slices, 0.f);
         mesh->vertices.push_back(vt);
-		vt.pos.z = -halfHeight;
+        vt.pos.z = -halfHeight;
         vt.uv = glm::vec2(1.f-i/(GLfloat)slices, 1.f);
         mesh->vertices.push_back(vt);
     }
@@ -1653,63 +1653,63 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     
     //BOTTOM CAP
     vt.normal = glm::vec3(0,0,1.f);
-	vt.pos = glm::vec3(0,0,halfHeight);
+    vt.pos = glm::vec3(0,0,halfHeight);
     vt.uv = glm::vec2(0.5f, 0.5f);
-	mesh->vertices.push_back(vt);
-	unsigned int centerIndex = (unsigned int)mesh->vertices.size()-1;
-	//vertices
-	for(unsigned int i=0; i<=slices; ++i)
+    mesh->vertices.push_back(vt);
+    unsigned int centerIndex = (unsigned int)mesh->vertices.size()-1;
+    //vertices
+    for(unsigned int i=0; i<=slices; ++i)
     {
-		vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, halfHeight);
+        vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, halfHeight);
         vt.uv = glm::vec2(cosf(i/(GLfloat)slices*M_PI*2.f)/2.f+0.5f, sinf(i/(GLfloat)slices*M_PI*2.f)/2.f+0.5f);
         mesh->vertices.push_back(vt);
     }
-	//faces
-	for(unsigned int i=0; i<slices; ++i)
-	{
-		f.vertexID[0] = centerIndex;
-		f.vertexID[1] = centerIndex + i + 1;
-		f.vertexID[2] = centerIndex + i + 2;
-		mesh->faces.push_back(f);
-	}
-    
-	//TOP CAP
-    vt.normal = glm::vec3(0,0,-1.f);
-	vt.pos = glm::vec3(0,0,-halfHeight);
-    vt.uv = glm::vec2(0.5f, 0.5f);
-	mesh->vertices.push_back(vt);
-	centerIndex = (unsigned int)mesh->vertices.size()-1;
-	//vertices
-	for(unsigned int i=0; i<=slices; ++i)
+    //faces
+    for(unsigned int i=0; i<slices; ++i)
     {
-		vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, -halfHeight);
+        f.vertexID[0] = centerIndex;
+        f.vertexID[1] = centerIndex + i + 1;
+        f.vertexID[2] = centerIndex + i + 2;
+        mesh->faces.push_back(f);
+    }
+    
+    //TOP CAP
+    vt.normal = glm::vec3(0,0,-1.f);
+    vt.pos = glm::vec3(0,0,-halfHeight);
+    vt.uv = glm::vec2(0.5f, 0.5f);
+    mesh->vertices.push_back(vt);
+    centerIndex = (unsigned int)mesh->vertices.size()-1;
+    //vertices
+    for(unsigned int i=0; i<=slices; ++i)
+    {
+        vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*radius, -cosf(i/(GLfloat)slices*M_PI*2.f)*radius, -halfHeight);
         vt.uv = glm::vec2(-cosf(i/(GLfloat)slices*M_PI*2.f)/2.f+0.5f, sinf(i/(GLfloat)slices*M_PI*2.f)/2.f+0.5f);
         mesh->vertices.push_back(vt);
     }
     
-	//faces
-	for(unsigned int i=0; i<slices; ++i)
-	{
-		f.vertexID[0] = centerIndex;
-		f.vertexID[1] = centerIndex+ i + 2;
-		f.vertexID[2] = centerIndex+ i + 1;
-		mesh->faces.push_back(f);
-	}
-	
-	Subdivide(mesh);
-	Subdivide(mesh);
-	return mesh;
+    //faces
+    for(unsigned int i=0; i<slices; ++i)
+    {
+        f.vertexID[0] = centerIndex;
+        f.vertexID[1] = centerIndex+ i + 2;
+        f.vertexID[2] = centerIndex+ i + 1;
+        mesh->faces.push_back(f);
+    }
+    
+    Subdivide(mesh);
+    Subdivide(mesh);
+    return mesh;
 }
 
 Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices, unsigned int minorSlices)
 {
-	Mesh* mesh = new Mesh;
-	mesh->hasUVs = true;
-	Face f;
-	Vertex vt;
+    Mesh* mesh = new Mesh;
+    mesh->hasUVs = true;
+    Face f;
+    Vertex vt;
 
     //Vertices
-	for(unsigned int i=0; i<=majorSlices; ++i)
+    for(unsigned int i=0; i<=majorSlices; ++i)
     {
         GLfloat alpha = i/(GLfloat)majorSlices*M_PI*2.f;
         
@@ -1718,16 +1718,17 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
             GLfloat ry = cosf(h/(GLfloat)minorSlices*M_PI*2.f) * minorRadius;
             GLfloat rx = sinf(h/(GLfloat)minorSlices*M_PI*2.f) * minorRadius;
             
-			vt.pos = glm::vec3((rx + majorRadius)*cosf(alpha), ry, (rx + majorRadius)*sinf(alpha));
-			vt.normal = glm::vec3(sinf(h/(GLfloat)minorSlices*M_PI*2.f)*cosf(alpha), cosf(h/(GLfloat)minorSlices*M_PI*2.f), sinf(h/(GLfloat)minorSlices*M_PI*2.f)*sinf(alpha));
-			vt.uv = glm::vec2(i/(GLfloat)majorSlices, h/(GLfloat)minorSlices);
-			mesh->vertices.push_back(vt);
-			
-		}
+            vt.pos = glm::vec3((rx + majorRadius)*cosf(alpha), ry, (rx + majorRadius)*sinf(alpha));
+            vt.normal = glm::vec3(sinf(h/(GLfloat)minorSlices*M_PI*2.f)*cosf(alpha), cosf(h/(GLfloat)minorSlices*M_PI*2.f), sinf(h/(GLfloat)minorSlices*M_PI*2.f)*sinf(alpha));
+            vt.uv = glm::vec2(i/(GLfloat)majorSlices, h/(GLfloat)minorSlices);
+            mesh->vertices.push_back(vt);
+            
+        }
     }
     
     //Faces
     for(unsigned int i=0; i<majorSlices; ++i)
+    {
         for(unsigned int h=0; h<minorSlices; ++h)
         {
             f.vertexID[0] = i*(minorSlices+1) + h;
@@ -1739,8 +1740,9 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
             f.vertexID[2] = i*(minorSlices+1) + (h+1);
             mesh->faces.push_back(f);
         }
+    }
         
-	return mesh;
+    return mesh;
 }
     
 Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength)
@@ -2123,49 +2125,49 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
 
 GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* mesh, GLuint firstID, GLuint secondID)
 {
-	std::map<std::pair<GLuint, GLuint>, GLuint>::key_type key(firstID, secondID);
-	if(key.first > key.second)
-		std::swap(key.first, key.second);
-		
-	auto inserted=lookup.insert({key, mesh->vertices.size()});
-	if(inserted.second)
-	{
-		glm::vec3 edge0 = mesh->vertices[firstID].pos;
-		glm::vec3 edge1 = mesh->vertices[secondID].pos;
-		Vertex vt;
-		vt.pos =  glm::normalize(edge0 + edge1);
-		vt.normal = vt.pos;
-		vt.uv = glm::vec2(0,0);
-		mesh->vertices.push_back(vt);
-	}
-	
-	return inserted.first->second;
+    std::map<std::pair<GLuint, GLuint>, GLuint>::key_type key(firstID, secondID);
+    if(key.first > key.second)
+        std::swap(key.first, key.second);
+        
+    auto inserted=lookup.insert({key, mesh->vertices.size()});
+    if(inserted.second)
+    {
+        glm::vec3 edge0 = mesh->vertices[firstID].pos;
+        glm::vec3 edge1 = mesh->vertices[secondID].pos;
+        Vertex vt;
+        vt.pos =  glm::normalize(edge0 + edge1);
+        vt.normal = vt.pos;
+        vt.uv = glm::vec2(0,0);
+        mesh->vertices.push_back(vt);
+    }
+    
+    return inserted.first->second;
 }
 
 GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* mesh, GLuint firstID, GLuint secondID)
 {
-	std::map<std::pair<GLuint, GLuint>, GLuint>::key_type key(firstID, secondID);
-	if(key.first > key.second)
-		std::swap(key.first, key.second);
-		
-	auto inserted=lookup.insert({key, mesh->vertices.size()});
-	if(inserted.second)
-	{
-		glm::vec3 edge0 = mesh->vertices[firstID].pos;
-		glm::vec3 edge1 = mesh->vertices[secondID].pos;
-		glm::vec3 edge0n = mesh->vertices[firstID].normal;
-		glm::vec3 edge1n = mesh->vertices[secondID].normal;
-		glm::vec2 edge0uv = mesh->vertices[firstID].uv;
-		glm::vec2 edge1uv = mesh->vertices[secondID].uv;
-		
-		Vertex vt;
-		vt.pos = (edge0 + edge1)/(GLfloat)2;
-		vt.normal = glm::normalize(edge0n + edge1n);
-		vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
-		mesh->vertices.push_back(vt);
-	}
-	
-	return inserted.first->second;
+    std::map<std::pair<GLuint, GLuint>, GLuint>::key_type key(firstID, secondID);
+    if(key.first > key.second)
+        std::swap(key.first, key.second);
+        
+    auto inserted=lookup.insert({key, mesh->vertices.size()});
+    if(inserted.second)
+    {
+        glm::vec3 edge0 = mesh->vertices[firstID].pos;
+        glm::vec3 edge1 = mesh->vertices[secondID].pos;
+        glm::vec3 edge0n = mesh->vertices[firstID].normal;
+        glm::vec3 edge1n = mesh->vertices[secondID].normal;
+        glm::vec2 edge0uv = mesh->vertices[firstID].uv;
+        glm::vec2 edge1uv = mesh->vertices[secondID].uv;
+        
+        Vertex vt;
+        vt.pos = (edge0 + edge1)/(GLfloat)2;
+        vt.normal = glm::normalize(edge0n + edge1n);
+        vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
+        mesh->vertices.push_back(vt);
+    }
+    
+    return inserted.first->second;
 }
     
 GLfloat OpenGLContent::ComputeAverageFaceArea(Mesh* mesh)
@@ -2178,48 +2180,48 @@ GLfloat OpenGLContent::ComputeAverageFaceArea(Mesh* mesh)
 
 void OpenGLContent::Subdivide(Mesh* mesh, bool icoMode)
 {
-	std::map<std::pair<GLuint, GLuint>, GLuint> lookup;
-	std::vector<Face> newFaces;
-	
-	for(GLuint i=0; i<mesh->faces.size(); ++i)
-	{
-		GLuint mid[3];
-		
-		if(icoMode)
-		{
-			for(int edge = 0; edge<3; ++edge)
-				mid[edge] = vertex4EdgeIco(lookup, mesh, mesh->faces[i].vertexID[edge], mesh->faces[i].vertexID[(edge+1)%3]);
-		}
-		else
-		{
-			for(int edge = 0; edge<3; ++edge)
-				mid[edge] = vertex4Edge(lookup, mesh, mesh->faces[i].vertexID[edge], mesh->faces[i].vertexID[(edge+1)%3]);
-		}
-			
-		Face f;
-		f.vertexID[0] = mesh->faces[i].vertexID[0];
-		f.vertexID[1] = mid[0];
-		f.vertexID[2] = mid[2];
-		newFaces.push_back(f);
-		
-		f.vertexID[0] = mesh->faces[i].vertexID[1];
-		f.vertexID[1] = mid[1];
-		f.vertexID[2] = mid[0];
-		newFaces.push_back(f);
-		
-		f.vertexID[0] = mesh->faces[i].vertexID[2];
-		f.vertexID[1] = mid[2];
-		f.vertexID[2] = mid[1];
-		newFaces.push_back(f);
-		
-		f.vertexID[0] = mid[0];
-		f.vertexID[1] = mid[1];
-		f.vertexID[2] = mid[2];
-		newFaces.push_back(f);
-	}
-	
+    std::map<std::pair<GLuint, GLuint>, GLuint> lookup;
+    std::vector<Face> newFaces;
+    
+    for(GLuint i=0; i<mesh->faces.size(); ++i)
+    {
+        GLuint mid[3];
+        
+        if(icoMode)
+        {
+            for(int edge = 0; edge<3; ++edge)
+                mid[edge] = vertex4EdgeIco(lookup, mesh, mesh->faces[i].vertexID[edge], mesh->faces[i].vertexID[(edge+1)%3]);
+        }
+        else
+        {
+            for(int edge = 0; edge<3; ++edge)
+                mid[edge] = vertex4Edge(lookup, mesh, mesh->faces[i].vertexID[edge], mesh->faces[i].vertexID[(edge+1)%3]);
+        }
+            
+        Face f;
+        f.vertexID[0] = mesh->faces[i].vertexID[0];
+        f.vertexID[1] = mid[0];
+        f.vertexID[2] = mid[2];
+        newFaces.push_back(f);
+        
+        f.vertexID[0] = mesh->faces[i].vertexID[1];
+        f.vertexID[1] = mid[1];
+        f.vertexID[2] = mid[0];
+        newFaces.push_back(f);
+        
+        f.vertexID[0] = mesh->faces[i].vertexID[2];
+        f.vertexID[1] = mid[2];
+        f.vertexID[2] = mid[1];
+        newFaces.push_back(f);
+        
+        f.vertexID[0] = mid[0];
+        f.vertexID[1] = mid[1];
+        f.vertexID[2] = mid[2];
+        newFaces.push_back(f);
+    }
+    
     mesh->faces.clear();
-	mesh->faces = newFaces;
+    mesh->faces = newFaces;
 }
 
 void OpenGLContent::Refine(Mesh* mesh, GLfloat sizeThreshold)

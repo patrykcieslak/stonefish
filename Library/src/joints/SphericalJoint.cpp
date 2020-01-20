@@ -107,11 +107,11 @@ std::vector<Renderable> SphericalJoint::Render()
     Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
     
-	item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-	item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-	item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-	item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-	
+    item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+    item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+    item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+    item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+    
     items.push_back(item);
     return items;
 }
