@@ -1584,7 +1584,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         const char* propFile = nullptr;
         const char* mat = nullptr;
         const char* look = nullptr;
-        Scalar diameter, cThrust, cTorque, maxRpm, propScale;
+        Scalar diameter, cThrust, cTorque, maxRpm, propScale, cThrustBack;
         bool rightHand;
         bool inverted = false;
         Transform origin;
@@ -1600,6 +1600,8 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
             || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
             return false;
+        cThrustBack = cThrust;
+        item->QueryAttribute("thrust_coeff_backward", &cThrustBack); //Optional
         item->QueryAttribute("inverted", &inverted); //Optional
         if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
             return false;
@@ -1616,7 +1618,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         if(typeStr == "thruster")
         {
             Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
-            Thruster* th = new Thruster(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
+            Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller

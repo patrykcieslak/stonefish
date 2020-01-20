@@ -39,13 +39,13 @@ namespace sf
          \param uniqueName a name for the thruster
          \param propeller a pointer to a rigid body representing the propeller
          \param diameter the diameter of the propeller [m]
-         \param thrustCoeff the thrust coefficient
+         \param thrustCoeff the thrust coefficient (forward and backward)
          \param torqueCoeff the torque coefficient
          \param maxRPM the maximum rotational speed of the thruster [rpm]
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
+        Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, std::pair<Scalar, Scalar> thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A destructor.
         ~Thruster();
@@ -83,7 +83,7 @@ namespace sf
     private:
         //Params
         Scalar D;
-        Scalar kT;
+        std::pair<Scalar, Scalar> kT;
         Scalar kQ;
         Scalar kp;
         Scalar ki;
