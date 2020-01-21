@@ -266,6 +266,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
     XMLElement* item;
     bool oceanEnabled;
     Scalar wavesHeight(0);
+    Scalar waterDensity(1000);
     
     //Basic setup
     if(ocean->QueryAttribute("enabled", &oceanEnabled) != XML_SUCCESS)
@@ -273,8 +274,14 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
     if((item = ocean->FirstChildElement("waves")) != nullptr 
         && item->QueryAttribute("height", &wavesHeight) != XML_SUCCESS)
         return false;
+    if((item = ocean->FirstChildElement("water")) != nullptr
+        && item->QueryAttribute("density", &waterDensity) != XML_SUCCESS)
+        return false;
     if(oceanEnabled)
-        sm->EnableOcean(wavesHeight);
+    {
+        std::string waterName = sm->getMaterialManager()->CreateFluid("Water", waterDensity, 1.308e-3, 1.55); 
+        sm->EnableOcean(wavesHeight, sm->getMaterialManager()->getFluid(waterName));
+    }
     
     //Currents
     if((item = ocean->FirstChildElement("current")) != nullptr)

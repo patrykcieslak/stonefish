@@ -178,7 +178,7 @@ void SimulationManager::EnableOcean(Scalar waves, Fluid f)
     
     if(f.name == "")
     {
-        std::string water = getMaterialManager()->CreateFluid("Water", UnitSystem::Density(CGS, MKS, 1.0), 1.308e-3, 1.55); 
+        std::string water = getMaterialManager()->CreateFluid("Water", 1000.0, 1.308e-3, 1.55); 
         f = getMaterialManager()->getFluid(water);
     }
     

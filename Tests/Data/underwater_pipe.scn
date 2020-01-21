@@ -3,6 +3,7 @@
 		<ned latitude="40.0" longitude="3.0"/>
 		<sun azimuth="20.0" elevation="50.0"/>
 		<ocean enabled="true">
+			<water density="1025.0"/>
 			<waves height="0.5"/>
 			<current type="uniform">
 				<velocity xyz="1.0 0.0 0.0"/>
