@@ -2082,14 +2082,13 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
     }
 }
 
-
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
     //For all faces
     for(unsigned int i=0; i<mesh->faces.size(); ++i)
     {
         Face thisFace = mesh->faces[i];
-        glm::vec3 thisN = mesh->computeFaceNormal(i);
+        glm::vec3 thisN = mesh->ComputeFaceNormal(i);
         
         //For every vertex
         for(unsigned short int h=0; h<3; ++h)
@@ -2103,7 +2102,7 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
                 if(j != i) //Reject same face
                 {
                     Face thatFace = mesh->faces[j];
-                    glm::vec3 thatN = mesh->computeFaceNormal(j);
+                    glm::vec3 thatN = mesh->ComputeFaceNormal(j);
                     
                     for(unsigned short int k=0; k<3; k++)
                     {
@@ -2174,7 +2173,7 @@ GLfloat OpenGLContent::ComputeAverageFaceArea(Mesh* mesh)
 {
     GLfloat area = 0.f;
     for(size_t i=0; i<mesh->faces.size(); ++i)
-        area += mesh->computeFaceArea(i);
+        area += mesh->ComputeFaceArea(i);
     return area/(GLfloat)mesh->faces.size();
 }
 
@@ -2239,7 +2238,7 @@ void OpenGLContent::Refine(Mesh* mesh, GLfloat sizeThreshold)
         
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
-            if(mesh->computeFaceArea(i) > sizeThreshold * avgFaceArea)
+            if(mesh->ComputeFaceArea(i) > sizeThreshold * avgFaceArea)
             {
                 GLuint mid[3];
                 std::map<std::pair<GLuint, GLuint>, GLuint> lookup;

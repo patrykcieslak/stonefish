@@ -113,20 +113,36 @@ namespace sf
     {
         std::vector<Vertex> vertices;
         std::vector<Face> faces;
-        bool hasUVs;
+        bool hasUVs = true;
         
-        glm::vec3 computeFaceNormal(size_t faceID)
+        glm::vec3 ComputeFaceNormal(size_t faceID)
         {
             glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
             glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
             return glm::normalize(glm::cross(v12,v13));
         }
         
-        GLfloat computeFaceArea(size_t faceID)
+        GLfloat ComputeFaceArea(size_t faceID)
         {
             glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
             glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
             return glm::length(glm::cross(v12,v13))/2.f;
+        }
+        
+        void JoinMesh(Mesh* mesh)
+        {
+            size_t voffset = vertices.size();
+            size_t foffset = faces.size();
+            hasUVs = hasUVs && mesh->hasUVs;
+            vertices.insert(vertices.end(), mesh->vertices.begin(), mesh->vertices.end());
+            faces.insert(faces.end(), mesh->faces.begin(), mesh->faces.end());
+            
+            for(size_t i=foffset; i<faces.size(); ++i)
+            {
+                faces[i].vertexID[0] += voffset;
+                faces[i].vertexID[1] += voffset;
+                faces[i].vertexID[2] += voffset;
+            }
         }
     };
     

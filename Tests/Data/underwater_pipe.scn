@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <scenario>
 	<environment>
 		<ned latitude="40.0" longitude="3.0"/>
@@ -56,6 +57,16 @@
 		<material name="Fiberglass"/>
 		<look name="pipe"/>
 		<world_transform rpy="1.57 0.0 0.0" xyz="0.0 0.0 3.5"/>
+	</static>
+
+	<static name="Multiobj" type="model">
+		<physical>
+			<mesh filename="multi_object_test.obj" scale="1.0"/>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+		</physical>		
+		<material name="Aluminium"/>
+		<look name="gray"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="2.0 0.0 3.0"/>
 	</static>
 
     <include file="girona500auv.scn"/>

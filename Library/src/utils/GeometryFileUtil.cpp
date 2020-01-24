@@ -60,7 +60,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     
     cInfo("Loading geometry from: %s", path.c_str());
     
-    char line[128];
+    char line[1024];
     Mesh* mesh = new Mesh();
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> uvs;
@@ -70,7 +70,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     int64_t start = GetTimeInMicroseconds();
     
     //Read vertices
-    while(fgets(line, 128, file))
+    while(fgets(line, 1024, file))
     {
         if(line[0] == 'v')
         {
@@ -94,10 +94,6 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                 uvs.push_back(uv);
             }
         }
-        else if(line[0] == 'f')
-        {
-            break;
-        }
     }
     
     genVStart = mesh->vertices.size();
@@ -108,11 +104,13 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     printf("Vertices: %ld Normals: %ld\n", genVStart, normals.size());
 #endif
     
+    fseek(file, 0, SEEK_SET); //Go back to beginning of file
+    
     //Read faces
-    do
+    while(fgets(line, 1024, file))
     {
         if(line[0] != 'f')
-            break;
+            continue;
         
         Face face;
         
@@ -203,7 +201,6 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
         
         mesh->faces.push_back(face);
     }
-    while(fgets(line, 128, file));
     
     fclose(file);
     

@@ -40,13 +40,11 @@ void FallingTestApp::DoHUD()
     sf::Uid slider;
     slider.owner = 1;
     slider.item = 0;
-    slider.index = 0;
     getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
     sf::Uid plot;
     plot.owner = 1;
     plot.item = 1;
-    plot.index = 0;
     std::vector<unsigned short> dims;
     dims.push_back(0);
     dims.push_back(1);
