@@ -741,10 +741,10 @@ bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, cons
     return result;
 }
 
-size_t IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, size_t value, const std::string& title)
+unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, const std::string& title)
 {
     value = value >= options.size() ? 0 : value;
-    size_t result = value;
+    unsigned int result = value;
     GLfloat size = 14.f;
     
     //drawing

@@ -36,10 +36,7 @@ namespace sf
 VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
 {
     if(volumeMeshPaths.size() < 2)
-    {
         cCritical("VBS volume definition requires loading at least two meshes - for the full/empty states!");
-        abort();
-    }
     
     density = SimulationApp::getApp()->getSimulationManager()->getOcean()->getLiquid().density;
     gravity = SimulationApp::getApp()->getSimulationManager()->getGravity();

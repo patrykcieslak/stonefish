@@ -211,7 +211,7 @@ void Robot::BuildKinematicTree()
     std::vector<JointData> sortedJoints;
     
     //---Add joints connected to base
-    for(int i=joints.size()-1; i>=0; --i)
+    for(int i=(int)joints.size()-1; i>=0; --i)
     {
         if(joints[i].parent == links[0]->getName())
         {
@@ -231,7 +231,7 @@ void Robot::BuildKinematicTree()
     {
         for(size_t i=i0; i<=i1; ++i)
         {
-            for(int k=joints.size()-1; k>=0; --k)
+            for(int k=(int)joints.size()-1; k>=0; --k)
             {
                 if(joints[k].parent == sortedJoints[i].child)
                 {

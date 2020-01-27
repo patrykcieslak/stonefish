@@ -241,6 +241,8 @@
 		F7E30A272345085C000BB596 /* Compass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E30A262345085C000BB596 /* Compass.cpp */; };
 		F7E30A29234508AC000BB596 /* Servo.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E30A28234508AC000BB596 /* Servo.h */; };
 		F7E30A2B234508C1000BB596 /* Servo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E30A2A234508C1000BB596 /* Servo.cpp */; };
+		F7E9650D23DD7AFD00F46C2A /* VariableBuoyancy.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E9650C23DD7AFD00F46C2A /* VariableBuoyancy.h */; };
+		F7E9650F23DD7B0C00F46C2A /* VariableBuoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E9650E23DD7B0C00F46C2A /* VariableBuoyancy.cpp */; };
 		F7E965AB21A6C0310067D12C /* tinyxml2.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965AA21A6C0310067D12C /* tinyxml2.h */; };
 		F7E965AD21A6C0580067D12C /* tinyxml2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7E965AC21A6C0580067D12C /* tinyxml2.cpp */; };
 		F7E965AF21A6CA760067D12C /* GeometryFileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */; };
@@ -796,6 +798,8 @@
 		F7E30A262345085C000BB596 /* Compass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Compass.cpp; sourceTree = "<group>"; };
 		F7E30A28234508AC000BB596 /* Servo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Servo.h; sourceTree = "<group>"; };
 		F7E30A2A234508C1000BB596 /* Servo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Servo.cpp; sourceTree = "<group>"; };
+		F7E9650C23DD7AFD00F46C2A /* VariableBuoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VariableBuoyancy.h; sourceTree = "<group>"; };
+		F7E9650E23DD7B0C00F46C2A /* VariableBuoyancy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VariableBuoyancy.cpp; sourceTree = "<group>"; };
 		F7E965AA21A6C0310067D12C /* tinyxml2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyxml2.h; sourceTree = "<group>"; };
 		F7E965AC21A6C0580067D12C /* tinyxml2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxml2.cpp; sourceTree = "<group>"; };
 		F7E965AE21A6CA760067D12C /* GeometryFileUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeometryFileUtil.h; sourceTree = "<group>"; };
@@ -1001,6 +1005,7 @@
 		F71603CB2191A9E100E83606 /* actuators */ = {
 			isa = PBXGroup;
 			children = (
+				F7E9650C23DD7AFD00F46C2A /* VariableBuoyancy.h */,
 				F7E30A28234508AC000BB596 /* Servo.h */,
 				F70FA74122848FD000528AD1 /* Propeller.h */,
 				F71603D02191A9E100E83606 /* Actuator.h */,
@@ -1257,6 +1262,7 @@
 		F71605C72192322100E83606 /* actuators */ = {
 			isa = PBXGroup;
 			children = (
+				F7E9650E23DD7B0C00F46C2A /* VariableBuoyancy.cpp */,
 				F7E30A2A234508C1000BB596 /* Servo.cpp */,
 				F70FA7462284912D00528AD1 /* Propeller.cpp */,
 				F71604E42191AA0D00E83606 /* Actuator.cpp */,
@@ -1685,6 +1691,7 @@
 				F716042D2191A9E100E83606 /* FilteredCollisionDispatcher.h in Headers */,
 				F716043A2191A9E100E83606 /* RevoluteJoint.h in Headers */,
 				F73650202302423100AE7B03 /* OpenGLParticles.h in Headers */,
+				F7E9650D23DD7AFD00F46C2A /* VariableBuoyancy.h in Headers */,
 				F70AF90B21F616ED00700A8B /* Multibeam2.h in Headers */,
 				F716046A2191A9E100E83606 /* Ocean.h in Headers */,
 				F7E965B421A85F7B0067D12C /* LinkActuator.h in Headers */,
@@ -2015,6 +2022,7 @@
 				F7895B8C21A566660014722C /* VisionSensor.cpp in Sources */,
 				F71605162191AA0D00E83606 /* Sample.cpp in Sources */,
 				F71604F52191AA0D00E83606 /* MaterialManager.cpp in Sources */,
+				F7E9650F23DD7B0C00F46C2A /* VariableBuoyancy.cpp in Sources */,
 				F716050A2191AA0D00E83606 /* OpenGLDepthCamera.cpp in Sources */,
 				F755751221A06FF100AE8956 /* OpenGLDataStructs.cpp in Sources */,
 				F73650242302426400AE7B03 /* OpenGLOceanParticles.cpp in Sources */,

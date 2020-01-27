@@ -219,7 +219,7 @@ namespace sf
          \param title the title string
          \return new combobox value
          */
-        size_t DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, size_t value, const std::string& title);
+        unsigned int DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, const std::string& title);
         
         //! A method used to create a time plot widget.
         /*!

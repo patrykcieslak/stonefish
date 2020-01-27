@@ -222,7 +222,7 @@ void GraphicalSimulationApp::InitializeSDL()
     rmask = 0x000000ff;
     gmask = 0x0000ff00;
     bmask = 0x00ff0000;
-    amask = (icon_image.bytes_per_pixel == 3) ? 0 : 0xff000000;
+    amask = (icon_image.bytes_per_pixel == (3)) ? 0 : 0xff000000;
 #endif
                               
     SDL_Surface* icon = SDL_CreateRGBSurfaceFrom((void*)icon_image.pixel_data, icon_image.width, icon_image.height, 
@@ -745,9 +745,9 @@ void GraphicalSimulationApp::DoHUD()
     id.item = 0;
     std::vector<std::string> options;
     options.push_back("Free");
-    size_t selected = 0;
-    size_t newSelected = 0;
-    size_t rid = 0;
+    unsigned int selected = 0;
+    unsigned int newSelected = 0;
+    unsigned int rid = 0;
     Robot* rob;
     while((rob = getSimulationManager()->getRobot(rid)) != NULL)
     {
