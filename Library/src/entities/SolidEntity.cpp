@@ -1005,7 +1005,8 @@ void SolidEntity::BuildRigidBody()
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0.); //not used
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0.); //not used
-        rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0.); //not used
+        rigidBodyCI.m_linearSleepingThreshold = Scalar(0.5); //not used
+        rigidBodyCI.m_angularSleepingThreshold = Scalar(1.0); //not used
         rigidBodyCI.m_additionalDamping = false;
         
         rigidBody = new btRigidBody(rigidBodyCI);

@@ -30,7 +30,7 @@
 #include <entities/statics/Obstacle.h>
 #include <entities/solids/Box.h>
 #include <actuators/Light.h>
-#include <sensors/scalar/Trajectory.h>
+#include <sensors/scalar/Odometry.h>
 #include <utils/SystemUtil.hpp>
 
 SlidingTestManager::SlidingTestManager(sf::Scalar stepsPerSecond) 
@@ -44,7 +44,7 @@ void SlidingTestManager::BuildScenario()
     CreateMaterial("Ground", 1000.0, 1.0);
     CreateMaterial("Steel", 1000.0, 0.0);
     SetMaterialsInteraction("Ground", "Ground", 0.0, 0.0);
-    SetMaterialsInteraction("Ground", "Steel", 0.25, 0.1);
+    SetMaterialsInteraction("Ground", "Steel", 0.25, 0.2);
     SetMaterialsInteraction("Steel", "Steel", 0.25, 0.2);
     
     ///////LOOKS///////////
@@ -52,7 +52,7 @@ void SlidingTestManager::BuildScenario()
     CreateLook("green", sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
     
     ////////OBJECTS
-    sf::Scalar angle = M_PI/180.0 * 14.9;
+    sf::Scalar angle = M_PI/180.0 * 14.1;
     
     sf::Plane* floor = new sf::Plane("Floor", sf::Scalar(10000), "Ground", "grid");
     AddStaticEntity(floor, sf::I4());
@@ -61,9 +61,9 @@ void SlidingTestManager::BuildScenario()
     AddStaticEntity(ramp, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
   
     sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "green");
-    AddSolidEntity(box, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -2.0)));
+    AddSolidEntity(box, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -1.72)));
     
-    sf::Trajectory* traj = new sf::Trajectory("Trajectory", -1, 1000);
+    sf::Odometry* traj = new sf::Odometry("Odometry", -1, 1000);
     traj->AttachToSolid(box, sf::I4());
     traj->setRenderable(true);
     AddSensor(traj);

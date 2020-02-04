@@ -41,7 +41,7 @@ void FallingTestApp::DoHUD()
     slider.owner = 1;
     slider.item = 0;
     getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
-    
+    /*
     sf::Uid plot;
     plot.owner = 1;
     plot.item = 1;
@@ -55,4 +55,5 @@ void FallingTestApp::DoHUD()
     dims.push_back(0);
     plot.item = 2;
     getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 450, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Encoder"), dims, "Angle");
+    */
 }

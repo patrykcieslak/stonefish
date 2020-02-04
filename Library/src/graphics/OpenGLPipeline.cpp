@@ -524,7 +524,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     //Simulation debugging
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                    if(sim->getSolidDisplayMode() == DisplayMode::DISPLAY_PHYSICAL) DrawObjects();
+                    //if(sim->getSolidDisplayMode() == DisplayMode::DISPLAY_PHYSICAL) DrawObjects();
                     DrawHelpers();
                     if(hSettings.showBulletDebugInfo) sim->RenderBulletDebug();
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

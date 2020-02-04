@@ -45,9 +45,9 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    FallingTestManager* simulationManager = new FallingTestManager(200.0);
+    FallingTestManager* simulationManager = new FallingTestManager(100.0);
     FallingTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
-    app.Run();
+    app.Run(false);
     
     return 0;
 }

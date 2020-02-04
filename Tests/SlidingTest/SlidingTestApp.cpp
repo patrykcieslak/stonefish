@@ -39,9 +39,10 @@ void SlidingTestApp::DoHUD()
     sf::Uid plot;
     plot.owner = 1;
     plot.item = 0;
-    plot.index = 0;
   
     std::vector<unsigned short> dims;
-    dims.push_back(2);
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Trajectory"), dims, "Height");
+    dims.push_back(3);
+    dims.push_back(4);
+    dims.push_back(5);
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Odometry"), dims, "Velocity");
 }
