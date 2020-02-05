@@ -182,6 +182,13 @@ namespace sf
         //! A method returning a pointer to the base link solid.
         SolidEntity* getBaseLink();
         
+        //! A method returning a pointer to the link.
+        /*!
+         \param name a name of the link
+         \return a pointer to the link solid
+         */
+        SolidEntity* getLink(const std::string& name);
+        
         //! A method returning the pose of the robot in the world frame.
         virtual Transform getTransform() const;
         
@@ -202,7 +209,6 @@ namespace sf
         };
         
         void getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId);
-        SolidEntity* getLink(const std::string& name);
         int getJoint(const std::string& name);
         
         FeatherstoneEntity* dynamics;

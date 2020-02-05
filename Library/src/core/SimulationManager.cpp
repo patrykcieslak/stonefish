@@ -210,13 +210,13 @@ void SimulationManager::EnableAtmosphere()
     }
 }
 
-void SimulationManager::AddSensor(Sensor *sens)
+void SimulationManager::AddSensor(Sensor* sens)
 {
     if(sens != NULL)
         sensors.push_back(sens);
 }
 
-void SimulationManager::AddJoint(Joint *jnt)
+void SimulationManager::AddJoint(Joint* jnt)
 {
     if(jnt != NULL)
     {
@@ -231,23 +231,18 @@ void SimulationManager::AddActuator(Actuator *act)
         actuators.push_back(act);
 }
 
-Contact* SimulationManager::AddContact(Entity *entA, Entity *entB, size_t historyLength)
+void SimulationManager::AddContact(Contact* cnt)
 {
-    Contact* contact = getContact(entA, entB);
-    
-    if(contact == NULL)
+    if(cnt != NULL)
     {
-        contact = new Contact(entA, entB, (unsigned int)historyLength);
-        contacts.push_back(contact);
-        EnableCollision(entA, entB);
+        contacts.push_back(cnt);
+        EnableCollision(cnt->getEntityA(), cnt->getEntityB());
     }
-    
-    return contact;
 }
 
-int SimulationManager::CheckCollision(Entity *entA, Entity *entB)
+int SimulationManager::CheckCollision(const Entity *entA, const Entity *entB)
 {
-    for(unsigned int i = 0; i < collisions.size(); ++i)
+    for(size_t i = 0; i < collisions.size(); ++i)
     {
         if((collisions[i].A == entA && collisions[i].B == entB) 
             || (collisions[i].B == entA && collisions[i].A == entB))
@@ -257,15 +252,15 @@ int SimulationManager::CheckCollision(Entity *entA, Entity *entB)
     return -1;
 }
 
-void SimulationManager::EnableCollision(Entity* entA, Entity* entB)
+void SimulationManager::EnableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
     
     if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId == -1)
     {
         Collision c;
-        c.A = entA;
-        c.B = entB;
+        c.A = const_cast<Entity*>(entA);
+        c.B = const_cast<Entity*>(entB);
         collisions.push_back(c);
     }
     else if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId > -1)
@@ -274,15 +269,15 @@ void SimulationManager::EnableCollision(Entity* entA, Entity* entB)
     }
 }
     
-void SimulationManager::DisableCollision(Entity* entA, Entity* entB)
+void SimulationManager::DisableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
     
     if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId == -1)
     {
         Collision c;
-        c.A = entA;
-        c.B = entB;
+        c.A = const_cast<Entity*>(entA);
+        c.B = const_cast<Entity*>(entB);
         collisions.push_back(c);
     }
     else if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId > -1)
@@ -293,7 +288,7 @@ void SimulationManager::DisableCollision(Entity* entA, Entity* entB)
 
 Contact* SimulationManager::getContact(Entity* entA, Entity* entB)
 {
-    for(unsigned int i = 0; i < contacts.size(); i++)
+    for(size_t i = 0; i < contacts.size(); ++i)
     {
         if(contacts[i]->getEntityA() == entA)
         {
@@ -316,6 +311,15 @@ Contact* SimulationManager::getContact(unsigned int index)
         return contacts[index];
     else
         return NULL;
+}
+
+Contact* SimulationManager::getContact(std::string name)
+{
+    for(size_t i = 0; i < contacts.size(); ++i)
+        if(contacts[i]->getName() == name)
+            return contacts[i];
+    
+    return NULL;
 }
 
 CollisionFilteringType SimulationManager::getCollisionFilter()
@@ -343,7 +347,7 @@ Robot* SimulationManager::getRobot(unsigned int index)
 
 Robot* SimulationManager::getRobot(std::string name)
 {
-    for(unsigned int i = 0; i < robots.size(); i++)
+    for(size_t i = 0; i < robots.size(); ++i)
         if(robots[i]->getName() == name)
             return robots[i];
     
@@ -360,7 +364,7 @@ Entity* SimulationManager::getEntity(unsigned int index)
 
 Entity* SimulationManager::getEntity(std::string name)
 {
-    for(unsigned int i = 0; i < entities.size(); i++)
+    for(size_t i = 0; i < entities.size(); ++i)
         if(entities[i]->getName() == name)
             return entities[i];
     
@@ -377,7 +381,7 @@ Joint* SimulationManager::getJoint(unsigned int index)
 
 Joint* SimulationManager::getJoint(std::string name)
 {
-    for(unsigned int i = 0; i < joints.size(); i++)
+    for(size_t i = 0; i < joints.size(); ++i)
         if(joints[i]->getName() == name)
             return joints[i];
     
@@ -394,7 +398,7 @@ Actuator* SimulationManager::getActuator(unsigned int index)
 
 Actuator* SimulationManager::getActuator(std::string name)
 {
-    for(unsigned int i = 0; i < actuators.size(); i++)
+    for(size_t i = 0; i < actuators.size(); ++i)
         if(actuators[i]->getName() == name)
             return actuators[i];
     
@@ -411,7 +415,7 @@ Sensor* SimulationManager::getSensor(unsigned int index)
 
 Sensor* SimulationManager::getSensor(std::string name)
 {
-    for(unsigned int i = 0; i < sensors.size(); i++)
+    for(size_t i = 0; i < sensors.size(); ++i)
         if(sensors[i]->getName() == name)
             return sensors[i];
     

@@ -176,26 +176,23 @@ namespace sf
         
         //! A method that adds contact monitoring between two entities.
         /*!
-         \param entA a pointer to the first entity
-         \param entB a pointer to the second entity
-         \param historyLength a length of the history buffer
-         \return a pointer to the contact sensor
+          \param a pointer to the contact object
          */
-        Contact* AddContact(Entity* entA, Entity* entB, size_t historyLength = 1);
+        void AddContact(Contact* cnt);
         
         //! A method that enables collision between specified entities.
         /*!
          \param entA a pointer to the first entity
          \param entB a pointer to the second entity
          */
-        void EnableCollision(Entity* entA, Entity* entB);
+        void EnableCollision(const Entity* entA, const Entity* entB);
         
         //! A method that disables collision between specified entities.
         /*!
          \param entA a pointer to the first entity
          \param entB a pointer to the second entity
          */
-        void DisableCollision(Entity* entA, Entity* entB);
+        void DisableCollision(const Entity* entA, const Entity* entB);
         
         //! A method that checks if collision is enabled between specified entities.
         /*!
@@ -203,7 +200,7 @@ namespace sf
          \param entB a pointer to the second entity
          \return
          */
-        int CheckCollision(Entity* entA, Entity* entB);
+        int CheckCollision(const Entity* entA, const Entity* entB);
         
         //! A method used to enable ocean simulation.
         /*!
@@ -332,6 +329,13 @@ namespace sf
          \return a pointer to a contact object
          */
         Contact* getContact(unsigned int index);
+        
+        //! A method returning a contact by name.
+        /*!
+         \param name a name of the contact
+         \return a pointer to a contact object
+         */
+        Contact* getContact(std::string name);
         
         //! A method returning a contavt by entity pair.
         /*!

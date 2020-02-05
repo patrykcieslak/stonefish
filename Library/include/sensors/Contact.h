@@ -65,11 +65,12 @@ namespace sf
     public:
         //! A constructor.
         /*!
+         \param uniqueName a name for the contact
          \param entityA a pointer to the first entity
          \param entityB a pointer to the second entity
          \param historyLength defines: 0 -> unlimited history, >0 -> history with a specified length
          */
-        Contact(Entity* entityA, Entity* entityB, unsigned int historyLength = 1);
+        Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsigned int historyLength = 1);
         
         //! A destructor.
         ~Contact();
@@ -106,6 +107,9 @@ namespace sf
          */
         void setDisplayMask(int16_t mask);
         
+        //! A method returning the sensor name.
+        std::string getName();
+        
         //! A method returning a pointer to the first entity.
         const Entity* getEntityA();
         
@@ -116,6 +120,7 @@ namespace sf
         const std::deque<ContactPoint>& getHistory();
         
     private:
+        std::string name;
         Entity* A;
         Entity* B;
         std::deque<ContactPoint> points;

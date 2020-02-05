@@ -46,6 +46,7 @@ Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(u
     ghost->setCollisionShape(new btBoxShape(halfExtents));
     
     currents = std::vector<VelocityField*>(0);
+    currentsEnabled = false;
     
     liquid = l;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
@@ -147,10 +148,25 @@ Scalar Ocean::GetPressure(const Vector3& point)
 
 Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
 {
-    Vector3 fv(0,0,0);
-    for(size_t i=0; i<currents.size(); ++i)
-        fv += currents[i]->GetVelocityAtPoint(point);
-    return fv;
+    if(currentsEnabled)
+    {
+        Vector3 fv = V0();
+        for(size_t i=0; i<currents.size(); ++i)
+            fv += currents[i]->GetVelocityAtPoint(point);
+        return fv;
+    }
+    else
+        return V0();
+}
+
+void Ocean::EnableCurrents()
+{
+    currentsEnabled = true;
+}
+
+void Ocean::DisableCurrents()
+{
+    currentsEnabled = false;
 }
 
 void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)

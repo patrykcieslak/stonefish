@@ -133,6 +133,12 @@ namespace sf
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
         
+        //! A method used to parse a single contact description.
+        /*!
+         \param element a pointer to the XML node
+         */
+        virtual bool ParseContact(XMLElement* element);
+        
         //! A method to get the full file path depending on the format of the passed string.
         /*!
          \param path a file path candidate

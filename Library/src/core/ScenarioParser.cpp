@@ -54,6 +54,7 @@
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
+#include "sensors/Contact.h"
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
@@ -222,10 +223,22 @@ bool ScenarioParser::Parse(std::string filename)
     {
         if(!ParseRobot(element))
         {
-            cError("Scenario parser: robots not properly defined!");
+            cError("Scenario parser: robot not properly defined!");
             return false;
         }
         element = element->NextSiblingElement("robot");
+    }
+    
+    //Load contacts (optional)
+    element = root->FirstChildElement("contact");
+    while(element != nullptr)
+    {
+        if(!ParseContact(element))
+        {
+            cError("Scenario parser: contact not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("contact");
     }
     
     return true;
@@ -1703,6 +1716,90 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     }
     else
         return false;
+    
+    return true;
+}
+
+bool ScenarioParser::ParseContact(XMLElement* element)
+{
+    const char* name = nullptr;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return false;
+        
+    XMLElement* itemA;
+    XMLElement* itemB;
+    if((itemA = element->FirstChildElement("bodyA")) == nullptr
+        || (itemB = element->FirstChildElement("bodyB")) == nullptr)
+        return false;
+    
+    const char* nameA = nullptr;
+    const char* nameB = nullptr;
+    const char* dispA = nullptr;
+    const char* dispB = nullptr;
+    if(itemA->QueryStringAttribute("name", &nameA) != XML_SUCCESS
+        || itemB->QueryStringAttribute("name", &nameB) != XML_SUCCESS)
+        return false;
+    
+    Entity* entA;
+    Entity* entB;
+    entA = sm->getEntity(std::string(nameA));
+    entB = sm->getEntity(std::string(nameB));
+    if(entA == NULL)
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != NULL)
+        {
+            entA = rob->getLink(std::string(nameA));
+            if(entA != NULL)
+                break;
+        }
+    }
+    if(entB == NULL)
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != NULL)
+        {
+            entB = rob->getLink(std::string(nameB));
+            if(entB != NULL)
+                break;
+        }
+    }
+    if(entA == NULL || entB == NULL
+       || (entA->getType() != ENTITY_SOLID && entA->getType() != ENTITY_STATIC)
+       || (entB->getType() != ENTITY_SOLID && entB->getType() != ENTITY_STATIC))
+        return false;
+    
+    int16_t displayMask = 0;
+    if(itemA->QueryStringAttribute("display", &dispA) == XML_SUCCESS)
+    {
+        std::string dispAStr(dispA);
+        if(dispAStr == "force")
+            displayMask |= CONTACT_DISPLAY_NORMAL_FORCE_A;
+        else if(dispAStr == "slip")
+            displayMask |= CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A;
+        else if(dispAStr == "path")
+            displayMask |= CONTACT_DISPLAY_PATH_A;
+    }
+    if(itemB->QueryStringAttribute("display", &dispB) == XML_SUCCESS)
+    {
+        std::string dispBStr(dispB);
+        if(dispBStr == "force")
+            displayMask |= CONTACT_DISPLAY_NORMAL_FORCE_B;
+        else if(dispBStr == "slip")
+            displayMask |= CONTACT_DISPLAY_LAST_SLIP_VELOCITY_B;
+        else if(dispBStr == "path")
+            displayMask |= CONTACT_DISPLAY_PATH_B;
+    }
+    
+    unsigned int history = 0;
+    if((itemA = element->FirstChildElement("history")) != nullptr)
+        itemA->QueryAttribute("points", &history);
+    
+    Contact* cnt = new Contact(name, entA, entB, history);
+    cnt->setDisplayMask(displayMask);
+    sm->AddContact(cnt);
     
     return true;
 }

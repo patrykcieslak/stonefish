@@ -34,8 +34,9 @@
 namespace sf
 {
     
-Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
+Contact::Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
+    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     A = entityA;
     B = entityB;
     historyLen = inclusiveHistoryLength;
@@ -44,9 +45,16 @@ Contact::Contact(Entity* entityA, Entity* entityB, unsigned int inclusiveHistory
 
 Contact::~Contact()
 {
+    if(SimulationApp::getApp() != NULL)
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
     A = NULL;
     B = NULL;
     points.clear();
+}
+
+std::string Contact::getName()
+{
+    return name;
 }
 
 const Entity* Contact::getEntityA()

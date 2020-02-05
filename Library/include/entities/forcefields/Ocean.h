@@ -109,6 +109,12 @@ namespace sf
          */
         Scalar GetDepth(const Vector3& point);
         
+        //! A method to enable all defined currents.
+        void EnableCurrents();
+        
+        //! A method to disable all defined currents.
+        void DisableCurrents();
+        
         //! A method returning the type of the water.
         Scalar getWaterType();
         
@@ -144,6 +150,7 @@ namespace sf
         Scalar waterType;
         Scalar turbidity;
         Scalar oceanState;
+        bool currentsEnabled;
         Renderable wavesDebug;
     };
 }
