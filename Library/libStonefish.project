@@ -300,6 +300,7 @@
       <File Name="shaders/printer.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="postprocessing">
+      <File Name="shaders/depth2Ranges.frag"/>
       <File Name="shaders/ssr.frag"/>
       <File Name="shaders/manualTonemapping.frag"/>
       <File Name="shaders/depthVisualize.frag"/>

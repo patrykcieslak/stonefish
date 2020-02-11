@@ -110,6 +110,9 @@ namespace sf
         //! A method that returns the limits of measured range.
         glm::vec2 getRangeLimits();
         
+        //! A method that returns the vertical field of view of the sensor.
+        Scalar getVerticalFOV();
+        
         //! A method returning a pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested

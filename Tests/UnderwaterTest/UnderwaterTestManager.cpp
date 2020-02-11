@@ -107,8 +107,8 @@ void UnderwaterTestManager::BuildScenario()
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
-    //sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
-    //AddStaticEntity(tank, sf::I4());
+    sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
+    AddStaticEntity(tank, sf::I4());
         
     //Create underwater vehicle body
     //Externals
@@ -210,6 +210,10 @@ void UnderwaterTestManager::BuildScenario()
     fog->setNoise(0.01);
     sf::GPS* gps = new sf::GPS("GPS");
     gps->setNoise(0.5);
+    sf::Multibeam2* mb = new sf::Multibeam2("Multibeam", 1000, 300, 50.0, 40.0, 0.1, 10.0, 10.0);
+    mb->setDisplayOnScreen(true);
+    //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
+    //dc->setDisplayOnScreen(true);
     
     //Create AUV
     sf::Robot* auv = new sf::Robot("GIRONA500");
@@ -250,7 +254,10 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(imu, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.7)));
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
+    auv->AddVisionSensor(mb, "Vehicle", sf::Transform(sf::Quaternion(0.0, 0.0, 1.57), sf::Vector3(0.0,0.0,0.5)));
+    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(2.0,0,1.0)));
     
-    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0.5), sf::Vector3(0,0,1.0)));
+    thSurgeP->setSetpoint(0.5);
+    thSurgeS->setSetpoint(-0.5);
 #endif
 }

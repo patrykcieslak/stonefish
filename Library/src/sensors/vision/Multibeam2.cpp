@@ -74,6 +74,11 @@ glm::vec2 Multibeam2::getRangeLimits()
     return range;
 }
 
+Scalar Multibeam2::getVerticalFOV()
+{
+    return fovV;
+}
+
 VisionSensorType Multibeam2::getVisionSensorType()
 {
     return VisionSensorType::SENSOR_MULTIBEAM2;
@@ -164,16 +169,11 @@ void Multibeam2::UpdateTransform()
 {
     Transform mbTransform = getSensorFrame();
     Vector3 eyePosition = mbTransform.getOrigin(); //O
-    Vector3 direction = mbTransform.getBasis().getColumn(2).normalized(); //Z
-    Vector3 cameraUp = -mbTransform.getBasis().getColumn(1).normalized(); //-Y
-    
-    Matrix3 rotation;
-    rotation.setEulerYPR(0,M_PI,0);
-    Vector3 rotEyePosition = rotation * eyePosition;
-    Vector3 rotCameraUp = rotation * cameraUp;
+    Vector3 direction = mbTransform.getBasis().getColumn(2); //Z
+    Vector3 cameraUp = -mbTransform.getBasis().getColumn(1); //-Y
     Scalar accFov(0);
     Scalar offset = fovH/Scalar(360)*M_PI;
-    
+   
     for(size_t i=0; i<cameras.size(); ++i)
     {
         //Calculate i-th camera transform
@@ -182,8 +182,7 @@ void Multibeam2::UpdateTransform()
         accFov += Scalar(2)*halfFov;
         
         //Setup camera transformation
-        Vector3 rotDirection = rotation * dir;
-        SetupCamera(i, rotEyePosition, rotDirection, rotCameraUp);
+        SetupCamera(i, eyePosition, dir, cameraUp);
     }
 }
 
