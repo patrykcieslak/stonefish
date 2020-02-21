@@ -36,17 +36,17 @@ namespace sf
 DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizontalFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
     : Camera(uniqueName, resolutionX, resolutionY, horizontalFOVDeg, frequency)
 {
-    newDataCallback = NULL;
     depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
     depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
-    imageData = new GLfloat[resX*resY]; //float depth
+    newDataCallback = NULL;
+    imageData = new GLfloat[resX*resY]; // Buffer for storing depth data
     memset(imageData, 0, resX*resY*sizeof(GLfloat));
 }
 
 DepthCamera::~DepthCamera()
 {
     if(imageData != NULL)
-        delete imageData;
+        delete [] imageData;
     glCamera = NULL;
 }
 

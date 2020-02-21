@@ -32,6 +32,7 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
+#include "graphics/OpenGLFLS.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOceanParticles.h"
@@ -94,6 +95,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
     OpenGLCamera::Init();
     OpenGLDepthCamera::Init();
+    OpenGLFLS::Init();
     OpenGLOceanParticles::Init();
     content = new OpenGLContent();
     
@@ -185,6 +187,8 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
                 ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
             else if(content->getView(i)->getType() == ViewType::DEPTH_CAMERA)
                 ((OpenGLDepthCamera*)content->getView(i))->UpdateTransform();
+            else if(content->getView(i)->getType() == ViewType::SONAR)
+                ((OpenGLFLS*)content->getView(i))->UpdateTransform();
         //Update light transforms to ensure consistency
         for(unsigned int i=0; i < content->getLightsCount(); ++i)
             content->getLight(i)->UpdateTransform();
@@ -202,7 +206,7 @@ void OpenGLPipeline::DrawDisplay()
 
 void OpenGLPipeline::DrawObjects()
 {
-    for(unsigned int i=0; i<drawingQueueCopy.size(); ++i)
+    for(size_t i=0; i<drawingQueueCopy.size(); ++i)
     {
         if(drawingQueueCopy[i].type == RenderableType::SOLID)
             content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
@@ -384,6 +388,19 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 
                 delete [] viewport;
+            }
+            else if(view->getType() == SONAR)
+            {
+                OpenGLFLS* fls = (OpenGLFLS*)view;
+                
+                //Draw object and compute sonar data
+                fls->ComputeOutput(drawingQueueCopy);
+                
+                //Draw sonar output
+                GLint* viewport = fls->GetViewport();
+                content->SetViewportSize(viewport[2], viewport[3]);
+                fls->DrawLDR(screenFBO);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
             else if(view->getType() == CAMERA || view->getType() == TRACKBALL)
             {

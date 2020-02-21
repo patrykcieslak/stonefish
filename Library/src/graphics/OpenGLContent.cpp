@@ -872,7 +872,13 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
     if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
     {
-        if(mode == DrawingMode::FLAT)
+        if(mode == DrawingMode::RAW)
+        {
+            glBindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
+        else if(mode == DrawingMode::FLAT)
         {
             flatShader->Use();
             flatShader->SetUniform("MVP", viewProjection*M);

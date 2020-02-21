@@ -1,4 +1,6 @@
 /*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
     This file is a part of Stonefish.
 
     Stonefish is free software: you can redistribute it and/or modify
@@ -15,27 +17,21 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//
-//  UnderwaterTestManager.h
-//  Stonefish
-//
-//  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright(c) 2014-2019 Patryk Cieslak. All rights reserved.
-//
+#version 330
 
-#ifndef __Stonefish__UnderwaterTestManager__
-#define __Stonefish__UnderwaterTestManager__
+layout(location = 0) in vec3 vt;
+layout(location = 1) in vec3 n;
 
-#include <core/SimulationManager.h>
+out vec3 normal;
+out vec3 fragPos;
 
-//#define PARSED_SCENARIO
+uniform mat4 MVP;
+uniform mat4 M;
+uniform mat3 N;
 
-class UnderwaterTestManager : public sf::SimulationManager
+void main()
 {
-public:
-    UnderwaterTestManager(sf::Scalar stepsPerSecond);
-    
-    void BuildScenario();
-};
-
-#endif
+	normal = normalize(N * n);
+	fragPos = (M * vec4(vt, 1.0)).xyz;
+    gl_Position = MVP * vec4(vt, 1.0); 
+}

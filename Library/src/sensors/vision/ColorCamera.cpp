@@ -46,8 +46,7 @@ ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsig
 ColorCamera::~ColorCamera()
 {
     if(imageData != NULL)
-        delete imageData;
-    
+        delete [] imageData;
     glCamera = NULL;
 }
     

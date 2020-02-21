@@ -160,6 +160,7 @@ std::vector<Renderable> Propeller::Render()
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
+    item.materialName = prop->getMaterial().name;
     item.objectId = prop->getGraphicalObject();
     item.lookId = prop->getLook();
 	item.model = glMatrixFromTransform(propTrans);

@@ -8,6 +8,7 @@
   <VirtualDirectory Name="src">
     <VirtualDirectory Name="sensors">
       <VirtualDirectory Name="vision">
+        <File Name="src/sensors/vision/FLS.cpp"/>
         <File Name="src/sensors/vision/Multibeam2.cpp"/>
         <File Name="src/sensors/vision/DepthCamera.cpp"/>
         <File Name="src/sensors/vision/ColorCamera.cpp"/>
@@ -85,6 +86,7 @@
       <File Name="src/utils/ScientificFileUtil.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="src/graphics/OpenGLFLS.cpp"/>
       <File Name="src/graphics/OpenGLOceanParticles.cpp"/>
       <File Name="src/graphics/OpenGLParticles.cpp"/>
       <File Name="src/graphics/OpenGLDataStructs.cpp"/>
@@ -192,6 +194,7 @@
       <File Name="include/entities/Entity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="include/graphics/OpenGLFLS.h"/>
       <File Name="include/graphics/OpenGLOceanParticles.h"/>
       <File Name="include/graphics/OpenGLParticles.h"/>
       <File Name="include/graphics/OpenGLDataStructs.h"/>
@@ -232,6 +235,7 @@
     </VirtualDirectory>
     <VirtualDirectory Name="sensors">
       <VirtualDirectory Name="vision">
+        <File Name="include/sensors/vision/FLS.h"/>
         <File Name="include/sensors/vision/Multibeam2.h"/>
         <File Name="include/sensors/vision/DepthCamera.h"/>
         <File Name="include/sensors/vision/ColorCamera.h"/>
@@ -300,6 +304,10 @@
       <File Name="shaders/printer.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="postprocessing">
+      <File Name="shaders/sonarInput.vert"/>
+      <File Name="shaders/sonarVisualize.frag"/>
+      <File Name="shaders/sonarOutput.frag"/>
+      <File Name="shaders/sonarInput.frag"/>
       <File Name="shaders/depth2Ranges.frag"/>
       <File Name="shaders/ssr.frag"/>
       <File Name="shaders/manualTonemapping.frag"/>

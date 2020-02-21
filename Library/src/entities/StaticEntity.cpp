@@ -109,6 +109,7 @@ std::vector<Renderable> StaticEntity::Render()
         
         Renderable item;
         item.type = RenderableType::SOLID;
+        item.materialName = mat.name;
         item.objectId = phyObjectId;
         item.lookId = lookId;
         item.model = glMatrixFromTransform(trans);

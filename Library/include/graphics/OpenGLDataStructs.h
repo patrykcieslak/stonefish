@@ -208,7 +208,7 @@ namespace sf
     typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
     
     //! An enum representing the rendering mode.
-    typedef enum {FLAT, FULL, UNDERWATER} DrawingMode;
+    typedef enum {RAW, FLAT, FULL, UNDERWATER} DrawingMode;
     
     //! A structure containing data of a graphical material.
     struct Look
@@ -343,6 +343,7 @@ namespace sf
         RenderableType type;
         int lookId;
         int objectId;
+        std::string materialName;
         glm::mat4 model;
         std::vector<glm::vec3> points;
     };

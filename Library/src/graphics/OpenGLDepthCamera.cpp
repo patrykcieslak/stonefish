@@ -58,14 +58,20 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     UpdateTransform();
     
     GLfloat fovx = horizontalFOVDeg/180.f*M_PI;
-    GLfloat fovy;
     
     if(verticalFOVDeg > 0.f)
-        fovy = verticalFOVDeg/180.f*M_PI;
+    {
+        GLfloat fovy = verticalFOVDeg/180.f*M_PI;
+        projection[0] = glm::vec4(range.x/(range.x*tanf(fovx/2.f)), 0.f, 0.f, 0.f);
+        projection[1] = glm::vec4(0.f, range.x/(range.x*tanf(fovy/2.f)), 0.f, 0.f);
+        projection[2] = glm::vec4(0.f, 0.f, -(range.y + range.x)/(range.y-range.x), -1.f);
+        projection[3] = glm::vec4(0.f, 0.f, -2.f*range.y*range.x/(range.y-range.x), 0.f);
+    }
     else
-        fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
-    
-    projection = glm::perspective(fovy, fovx/fovy, range.x, range.y);
+    {
+        GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
+        projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
+    }
     
     //Render depth
     glGenTextures(1, &renderDepthTex);

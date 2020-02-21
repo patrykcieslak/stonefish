@@ -41,18 +41,18 @@ Multibeam2::Multibeam2(std::string uniqueName, unsigned int horizontalRes, unsig
     range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 1.f;
     newDataCallback = NULL;
     dataCounter = 0;
-    imageData = new GLfloat[resX*resY]; //Buffer for storing image data
+    imageData = new GLfloat[resX*resY]; // Buffer for storing image data
     memset(imageData, 0, resX*resY*sizeof(GLfloat));
-    rangeData = new GLfloat[resX*resY]; //Buffer for storing final data
+    rangeData = new GLfloat[resX*resY]; // Buffer for storing final data
     memset(rangeData, 0, resX*resY*sizeof(GLfloat));
 }
 
 Multibeam2::~Multibeam2()
 {
     if(imageData != NULL)
-        delete imageData;
+        delete [] imageData;
     if(rangeData != NULL)
-        delete rangeData;
+        delete [] rangeData;
     cameras.clear();
 }
     

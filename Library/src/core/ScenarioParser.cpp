@@ -54,6 +54,7 @@
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
+#include "sensors/vision/FLS.h"
 #include "sensors/Contact.h"
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
@@ -1523,7 +1524,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizonal_fov", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
             || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
             || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
             return false;
@@ -1537,7 +1538,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         Transform origin;
         int resX, resY;
         Scalar hFov, vFov;
-        Scalar depthMin, depthMax;
+        Scalar rangeMin, rangeMax;
         
         if((item = element->FirstChildElement("link")) == nullptr)
             return false;
@@ -1548,17 +1549,41 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("fov_x", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("fov_y", &vFov) != XML_SUCCESS
-            || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
-            || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("vertical_fov", &vFov) != XML_SUCCESS
+            || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
+            || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS)
             return false;
         
-        Multibeam2* mb = new Multibeam2(sensorName, resX, resY, hFov, vFov, depthMin, depthMax, rate);
+        Multibeam2* mb = new Multibeam2(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
         robot->AddVisionSensor(mb, robot->getName() + "/" + std::string(linkName), origin);
-        
     }
-    else
+    else if(typeStr == "fls")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        Scalar hFov, vFov;
+        int nBeams, nBins;
+        Scalar rangeMin, rangeMax;
+        
+         if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("beams", &nBeams) != XML_SUCCESS 
+            || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("vertical_fov", &vFov) != XML_SUCCESS
+            || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
+            || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS)
+            return false;
+        
+        FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, rate);
+        robot->AddVisionSensor(fls, robot->getName() + "/" + std::string(linkName), origin);
+    }
         return false;
     
     return true;

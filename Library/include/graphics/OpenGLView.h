@@ -31,7 +31,7 @@
 namespace sf
 {
     //! An enum defining types of views.
-    typedef enum {CAMERA, TRACKBALL, DEPTH_CAMERA} ViewType;
+    typedef enum {CAMERA, TRACKBALL, DEPTH_CAMERA, SONAR} ViewType;
     
     //! An abstract class representing an OpenGL view.
     class OpenGLView

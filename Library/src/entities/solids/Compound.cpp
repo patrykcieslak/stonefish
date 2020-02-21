@@ -464,10 +464,12 @@ std::vector<Renderable> Compound::Render()
         {
             if((parts[i].isExternal && !displayInternals) || (!parts[i].isExternal && displayInternals))
             {
+                item.type = RenderableType::SOLID;
+                item.materialName = parts[i].solid->getMaterial().name;
+                
                 if(dm == DisplayMode::DISPLAY_GRAPHICAL)
                 {
                     Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
-                    item.type = RenderableType::SOLID;
                     item.objectId = parts[i].solid->getGraphicalObject();
                     item.lookId = parts[i].solid->getLook();
                     item.model = glMatrixFromTransform(oTrans);
@@ -476,7 +478,6 @@ std::vector<Renderable> Compound::Render()
                 else if(dm == DisplayMode::DISPLAY_PHYSICAL)
                 {
                     Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2CTransform();
-                    item.type = RenderableType::SOLID;
                     item.objectId = parts[i].solid->getPhysicalObject();
                     item.lookId = -1;
                     item.model = glMatrixFromTransform(oTrans);

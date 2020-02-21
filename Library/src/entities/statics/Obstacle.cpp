@@ -145,10 +145,11 @@ std::vector<Renderable> Obstacle::Render()
     if(rigidBody != NULL && isRenderable())
     {
         Renderable item;
+        item.type = RenderableType::SOLID;
+        item.materialName = mat.name;
         
         if(dm == DisplayMode::DISPLAY_GRAPHICAL && graObjectId >= 0)
         { 
-            item.type = RenderableType::SOLID;
             item.objectId = graObjectId;
             item.lookId = lookId;
             item.model = glMatrixFromTransform(getTransform());
@@ -156,7 +157,6 @@ std::vector<Renderable> Obstacle::Render()
         }
         else if(dm == DisplayMode::DISPLAY_PHYSICAL && phyObjectId >= 0)
         {
-            item.type = RenderableType::SOLID;
             item.objectId = phyObjectId;
             item.lookId = -1;
             item.model = glMatrixFromTransform(getTransform());
