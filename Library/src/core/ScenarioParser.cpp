@@ -1584,6 +1584,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, rate);
         robot->AddVisionSensor(fls, robot->getName() + "/" + std::string(linkName), origin);
     }
+    else
         return false;
     
     return true;

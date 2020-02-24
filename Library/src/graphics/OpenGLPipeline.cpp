@@ -399,8 +399,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Draw sonar output
                 GLint* viewport = fls->GetViewport();
                 content->SetViewportSize(viewport[2], viewport[3]);
+                
                 fls->DrawLDR(screenFBO);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                
+                delete [] viewport;
             }
             else if(view->getType() == CAMERA || view->getType() == TRACKBALL)
             {

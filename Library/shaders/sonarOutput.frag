@@ -79,6 +79,14 @@ void main()
     //Calculate beam texture coordinate
     vec2 sampleCoord;
     float angle = gl_FragCoord.x * beamAngleStep - halfFOV;
+    /*float angle1 = angle-beamAngleStep;
+    float angle2 = angle+beamAngleStep;
+    
+    vec3 angleCoord;
+    angleCoord.x = d * tan(angle) + 0.5;
+    angleCoord.y = d * tan(angle1) + 0.5;
+    angleCoord.z = d * tan(angle2) + 0.5;*/
+    
     sampleCoord.x = d * tan(angle) + 0.5;
     
     //Calculate current bin ranges
@@ -92,10 +100,20 @@ void main()
     
     for(int i=0; i<beamSamples; ++i)
     {
+        /*vec2 rangeIntensity = vec2(0.0,0.0); 
+        sampleCoord.x = clamp(angleCoord.x, 0.0, 1.0);
+        rangeIntensity += texture(texRangeIntensity, sampleCoord).xy;
+        sampleCoord.x = clamp(angleCoord.y, 0.0, 1.0);
+        rangeIntensity += texture(texRangeIntensity, sampleCoord).xy*0.5;
+        sampleCoord.x = clamp(angleCoord.z, 0.0, 1.0);
+        rangeIntensity += texture(texRangeIntensity, sampleCoord).xy*0.5;
+        rangeIntensity /= 2.0;*/
+        
         vec2 rangeIntensity = texture(texRangeIntensity, sampleCoord).xy;
+        
         if(rangeIntensity.x >= binRangeMin && rangeIntensity.x < binRangeMax)
         {
-            sonarData += sigmoid(rangeIntensity.y);
+            sonarData += rangeIntensity.y; //sigmoid(rangeIntensity.y);
             ++binHits;
         }
         sampleCoord.y += beamSampleStep;

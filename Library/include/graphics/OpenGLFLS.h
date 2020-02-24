@@ -145,6 +145,8 @@ namespace sf
         GLuint inputDepthRBO;
         GLuint outputTex;
         GLuint outputFBO;
+        GLuint displayTex;
+        GLuint displayFBO;
         GLuint fanVAO;
         GLuint fanBuf;
         GLuint fanDiv;

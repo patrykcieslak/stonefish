@@ -89,12 +89,22 @@ namespace sf
         //! A method returning the range limits of the sonar.
         glm::vec2 getRangeLimits();
         
-        //! A method returning the pointer to the image data.
+        //! A method returning a pointer to the sonar data.
         /*!
          \param index the id of the OpenGL camera (here sonar) for which the data pointer is requested
          \return pointer to the image data buffer
          */
         void* getImageDataPointer(unsigned int index = 0);
+        
+        //! A method returning the resolution of the simulated display image.
+        /*!
+         \param x a reference to a variable that will store the horizontal resolution [pix]
+         \param y a reference to a variable that will store the vertical resolution [pix]
+         */
+        void getDisplayResolution(unsigned int& x, unsigned int& y);
+        
+        //! A method returning a pointer to the visualisation image data.
+        GLuint* getDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
         VisionSensorType getVisionSensorType();
@@ -104,6 +114,7 @@ namespace sf
         
         OpenGLFLS* glFLS;
         GLfloat* sonarData;
+        GLuint* displayData;
         glm::vec2 range;
         glm::ivec2 beamRes;
         Scalar fovV;

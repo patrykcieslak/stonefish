@@ -44,6 +44,7 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
     beamRes.y = beamVPix == 0 ? (GLint)ceil(fovV*beamRes.x*range.y) : (GLint)beamVPix;
     newDataCallback = NULL;
     sonarData = new GLfloat[resX*resY]; // Buffer for storing range data
+    displayData = NULL;
     memset(sonarData, 0, resX*resY*sizeof(GLfloat));
 }
 
@@ -51,12 +52,27 @@ FLS::~FLS()
 {
     if(sonarData != NULL)
         delete [] sonarData;
+    if(displayData != NULL)
+        delete [] displayData;
     glFLS = NULL;
 }
 
 void* FLS::getImageDataPointer(unsigned int index)
 {
     return sonarData;
+}
+
+void FLS::getDisplayResolution(unsigned int& x, unsigned int& y)
+{
+    GLint* viewport = glFLS->GetViewport();
+    x = viewport[2];
+    y = viewport[3];
+    delete [] viewport;
+}
+
+GLuint* FLS::getDisplayDataPointer()
+{
+    return displayData;
 }
 
 glm::vec2 FLS::getRangeLimits()
@@ -78,6 +94,10 @@ void FLS::InitGraphics()
     glFLS->UpdateTransform();
     InternalUpdate(0);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glFLS);
+    
+    GLint* viewport = glFLS->GetViewport();
+    displayData = new GLuint[viewport[2] * viewport[3] * 3];
+    delete [] viewport;
 }
 
 void FLS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

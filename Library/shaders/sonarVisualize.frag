@@ -20,7 +20,7 @@
 #version 330
 
 in vec2 texcoord;
-out vec4 fragcolor;
+out vec3 fragcolor;
 uniform sampler2D texSonarData;
 
 //Perula
@@ -31,7 +31,6 @@ uniform sampler2D texSonarData;
 void main()
 {
     float data = texture(texSonarData, texcoord).r;
-    fragcolor.a = 1.0;
     
     //Hot color map
     /*fragcolor.r = clamp(1.0/0.4*data, 0.0, 1.0);

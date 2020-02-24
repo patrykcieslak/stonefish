@@ -192,10 +192,10 @@ void UnderwaterTestManager::BuildScenario()
     sf::Thruster* thHeaveB = new sf::Thruster("ThrusterHeaveBow", prop5, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
     
     //Create VBS
-    std::vector<std::string> vmeshes;
-    vmeshes.push_back(sf::GetDataPath() + "vbs_max.obj");
-    vmeshes.push_back(sf::GetDataPath() + "vbs_min.obj");
-    sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", vmeshes, 0.002);
+    //std::vector<std::string> vmeshes;
+    //vmeshes.push_back(sf::GetDataPath() + "vbs_max.obj");
+    //vmeshes.push_back(sf::GetDataPath() + "vbs_min.obj");
+    //sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", vmeshes, 0.002);
     
     //Create ligths
     //sf::Light* spot1 = new sf::Light("Spot1", sf::Color::BlackBody(4000.0), 100000.0); //OMNI
@@ -217,7 +217,7 @@ void UnderwaterTestManager::BuildScenario()
     //mb->setDisplayOnScreen(true);
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
-    sf::FLS* fls = new sf::FLS("FLS", 256, 500, 120.0, 20.0, 1.0, 10.0);
+    sf::FLS* fls = new sf::FLS("FLS", 64, 500, 120.0, 20.0, 1.0, 10.0);
     fls->setDisplayOnScreen(true);
     
     //Create AUV
@@ -250,7 +250,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkActuator(thHeaveS, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(-0.5337,0.0,-0.6747)));
     auv->AddLinkActuator(thHeaveB, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(0.5837,0.0,-0.6747)));
     //auv->AddLinkActuator(spot1, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));
-    auv->AddLinkActuator(vbs, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0.0,0.0)));
+    //auv->AddLinkActuator(vbs, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0.0,0.0)));
     
     //Sensors
     auv->AddLinkSensor(odom, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
@@ -259,10 +259,10 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(imu, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.7)));
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
-    auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.2), sf::Vector3(0.0,0.0,1.0)));
+    auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(2.0,0,1.0)));
     
-    thSurgeP->setSetpoint(-0.5);
-    thSurgeS->setSetpoint(0.5);
+    thSurgeP->setSetpoint(-0.2);
+    thSurgeS->setSetpoint(0.2);
 #endif
 }

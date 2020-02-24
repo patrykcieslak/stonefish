@@ -101,6 +101,13 @@ namespace sf
         //! A method to draw a screen-aligned quad.
         void DrawSAQ();
         
+        //! A method to draw a textured screen-aligned quad.
+        /*! 
+         \param texture the id of the texture
+         \param color a color that is multiplied with the texture color
+         */
+        void DrawTexturedSAQ(GLuint texture, glm::vec4 color = glm::vec4(1.f));
+        
         //! A method to draw a textured quad (2D texture).
         /*!
          \param x the x coordinate of the quad origin
@@ -108,7 +115,7 @@ namespace sf
          \param width the width of the quad
          \param height the height of the quad
          \param texture the id of the texture
-         \param color a color that is multiplied with texture color
+         \param color a color that is multiplied with the texture color
          */
         void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color = glm::vec4(1.f));
         
@@ -432,6 +439,7 @@ namespace sf
         
         //Shaders
         GLSLShader* helperShader;
+        GLSLShader* texSaqShader;
         GLSLShader* texQuadShader;
         GLSLShader* texQuadMSShader;
         GLSLShader* texLayerQuadShader;

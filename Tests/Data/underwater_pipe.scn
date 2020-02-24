@@ -73,7 +73,7 @@
 
     <contact name="EEPipeContact">
 		<bodyA name="HorizontalPipe" display="path"/>
-		<bodyB name="GIRONA500/HullBottom"/>
+		<bodyB name="GIRONA500/Vehicle"/>
 		<history points="100"/>
 	</contact>
 </scenario>

@@ -186,6 +186,10 @@ OpenGLContent::OpenGLContent()
     helperShader->AddUniform("MVP", ParameterType::MAT4);
     helperShader->AddUniform("scale", ParameterType::VEC3);
     
+    texSaqShader = new GLSLShader("texQuad.frag");
+    texSaqShader->AddUniform("tex", ParameterType::INT);
+    texSaqShader->AddUniform("color", ParameterType::VEC4);
+    
     texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
     texQuadShader->AddUniform("rect", ParameterType::VEC4);
     texQuadShader->AddUniform("tex", ParameterType::INT);
@@ -494,6 +498,7 @@ OpenGLContent::~OpenGLContent()
     if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
     if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
     if(helperShader != NULL) delete helperShader;
+    if(texSaqShader != NULL) delete texSaqShader;
     if(texQuadShader != NULL) delete texQuadShader;
     if(texQuadMSShader != NULL) delete texQuadMSShader;
     if(texLayerQuadShader != NULL) delete texLayerQuadShader;
@@ -639,6 +644,23 @@ void OpenGLContent::DrawSAQ()
     glBindVertexArray(baseVertexArray);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
+}
+
+void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
+{
+    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    texSaqShader->Use();
+    texSaqShader->SetUniform("tex", TEX_BASE);
+    texSaqShader->SetUniform("color", color);
+    
+    glBindVertexArray(baseVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
