@@ -6,6 +6,11 @@
     </Plugin>
   </Plugins>
   <VirtualDirectory Name="src">
+    <VirtualDirectory Name="comms">
+      <File Name="src/comms/AcousticModem.cpp"/>
+      <File Name="src/comms/USBL.cpp"/>
+      <File Name="src/comms/Comm.cpp"/>
+    </VirtualDirectory>
     <VirtualDirectory Name="sensors">
       <VirtualDirectory Name="vision">
         <File Name="src/sensors/vision/FLS.cpp"/>
@@ -143,6 +148,11 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="include">
+    <VirtualDirectory Name="comms">
+      <File Name="include/comms/AcousticModem.h"/>
+      <File Name="include/comms/USBL.h"/>
+      <File Name="include/comms/Comm.h"/>
+    </VirtualDirectory>
     <File Name="include/StonefishCommon.h"/>
     <VirtualDirectory Name="utils">
       <File Name="include/utils/icon.h"/>

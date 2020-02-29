@@ -127,6 +127,11 @@ void Contact::ClearHistory()
     points.clear();
 }
 
+const std::deque<ContactPoint>& Contact::getHistory()
+{
+    return points;
+}
+
 void Contact::SaveContactDataToOctaveFile(const std::string& path, bool includeTime)
 {
     if(points.size() == 0)

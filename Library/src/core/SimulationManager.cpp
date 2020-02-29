@@ -61,6 +61,7 @@
 #include "actuators/Actuator.h"
 #include "actuators/Light.h"
 #include "sensors/Sensor.h"
+#include "comms/Comm.h"
 #include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
 
@@ -214,6 +215,12 @@ void SimulationManager::AddSensor(Sensor* sens)
 {
     if(sens != NULL)
         sensors.push_back(sens);
+}
+
+void SimulationManager::AddComm(Comm* comm)
+{
+    if(comm != NULL)
+        comms.push_back(comm);
 }
 
 void SimulationManager::AddJoint(Joint* jnt)
@@ -418,6 +425,23 @@ Sensor* SimulationManager::getSensor(std::string name)
     for(size_t i = 0; i < sensors.size(); ++i)
         if(sensors[i]->getName() == name)
             return sensors[i];
+    
+    return NULL;
+}
+
+Comm* SimulationManager::getComm(unsigned int index)
+{
+    if(index < comms.size())
+        return comms[index];
+    else
+        return NULL;
+}
+
+Comm* SimulationManager::getComm(std::string name)
+{
+    for(size_t i = 0; i < comms.size(); ++i)
+        if(comms[i]->getName() == name)
+            return comms[i];
     
     return NULL;
 }
@@ -776,6 +800,10 @@ void SimulationManager::DestroyScenario()
         delete sensors[i];
     sensors.clear();
     
+    for(size_t i=0; i<comms.size(); ++i)
+        delete comms[i];
+    comms.clear();
+    
     for(size_t i=0; i<actuators.size(); ++i)
         delete actuators[i];
     actuators.clear();
@@ -981,6 +1009,10 @@ void SimulationManager::UpdateDrawingQueue()
         if(sensors[i]->getType() == SensorType::SENSOR_VISION)
             ((VisionSensor*)sensors[i])->UpdateTransform();
     }
+    
+    //Comms
+    for(size_t i=0; i<comms.size(); ++i)
+        glPipeline->AddToDrawingQueue(comms[i]->Render());
     
     //Trackball
     if(trackball != NULL)
@@ -1403,6 +1435,10 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     //loop through all sensors -> update measurements
     for(size_t i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
+        
+    //loop through all comms -> update state and measurements
+    for(size_t i = 0; i < simManager->comms.size(); ++i)
+        simManager->comms[i]->Update(timeStep);
     
     //Update simulation time
     simManager->simulationTime += timeStep;

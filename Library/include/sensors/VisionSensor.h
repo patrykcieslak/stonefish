@@ -59,14 +59,6 @@ namespace sf
         //! A method performing sensor transformation update.
         virtual void UpdateTransform() = 0;
         
-        //! A method used to attach the sensor to a link of a multibody.
-        /*!
-         \param multibody a pointer to a multibody
-         \param linkId the id of the attachment link
-         \param origin the place where the sensor should be attached in the link origin frame
-         */
-        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
-        
         //! A method used to attach the sensor to a rigid body.
         /*!
          \param solid a pointer to the rigid body

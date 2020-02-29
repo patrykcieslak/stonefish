@@ -56,15 +56,7 @@ namespace sf
         
         //! A method implementing the rendering of the sensor.
         virtual std::vector<Renderable> Render();
-        
-        //! A method used to attach the sensor to a multibody link.
-        /*!
-         \param multibody a pointer to a multibody
-         \param linkId the id of the link
-         \param origin a transformation from the link frame to the sensor frame
-         */
-        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
-        
+      
         //! A method used to attach the sensor to a rigid body.
         /*!
          \param solid a pointer to a rigid body

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Robot__
@@ -36,6 +36,7 @@ namespace sf
     class FeatherstoneEntity;
     class Sensor;
     class Actuator;
+    class Comm;
     class LinkSensor;
     class JointSensor;
     class VisionSensor;
@@ -143,6 +144,15 @@ namespace sf
          */
         void AddJointActuator(JointActuator* a, const std::string& actuatedJointName);
         
+        //COMMUNICATION DEVICES
+        //! A method used to attach a communication device to a specified link of the robot.
+        /*!
+         \param s a pointer to a comm object
+         \param attachmentLinkName a name of the link to which the comm is attached
+         \param origin a transfromation from the link origin to the comm frame
+         */
+        void AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin);
+        
         //GENERAL
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
@@ -178,6 +188,21 @@ namespace sf
          \return a pointer to the sensor object
          */
         Sensor* getSensor(unsigned int index);
+        
+        //! A method returning a pointer to the communication device with a given name.
+        /*!
+         \param name the name of the communication device
+         \return a pointer to the comm object
+         */
+        Comm* getComm(std::string name);
+        
+        //! A method returning a pointer to the communication device by index.
+        /*!
+         \param index the id of the communication device
+         \return a pointer to the comm object
+         */
+        Comm* getComm(unsigned int index);
+        
         
         //! A method returning a pointer to the base link solid.
         SolidEntity* getBaseLink();
@@ -218,6 +243,7 @@ namespace sf
         std::vector<JointData> joints;
         std::vector<Sensor*> sensors;
         std::vector<Actuator*> actuators;
+        std::vector<Comm*> comms;
         std::string name;
     };
 }

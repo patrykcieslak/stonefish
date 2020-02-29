@@ -16,29 +16,27 @@
 */
 
 //
-//  Sensor.cpp
+//  Comm.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 5/6/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 25/02/20.
+//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 //
 
-#include "sensors/Sensor.h"
+#include "comms/Comm.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "core/Console.h"
 #include "graphics/OpenGLPipeline.h"
 
 namespace sf
 {
 
-std::random_device Sensor::randomDevice;
-std::mt19937 Sensor::randomGenerator(randomDevice());
-
-Sensor::Sensor(std::string uniqueName, Scalar frequency)
+Comm::Comm(std::string uniqueName, uint64_t deviceId, Scalar frequency)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    id = deviceId;
+    cId = 0;
     freq = frequency == Scalar(0) ? Scalar(1) : frequency;
     eleapsedTime = Scalar(0);
     renderable = false;
@@ -46,50 +44,76 @@ Sensor::Sensor(std::string uniqueName, Scalar frequency)
     updateMutex = SDL_CreateMutex();
 }
 
-Sensor::~Sensor()
+Comm::~Comm()
 {
     if(SimulationApp::getApp() != NULL)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
     SDL_DestroyMutex(updateMutex);
 }
 
-std::string Sensor::getName()
+Transform Comm::getDeviceFrame()
+{
+    if(attach != NULL)
+        return attach->getOTransform() * o2c;
+    else
+        return o2c;
+}
+
+std::string Comm::getName()
 {
     return name;
 }
 
-void Sensor::MarkDataOld()
+uint64_t Comm::getDeviceId()
+{
+    return id;
+}
+
+uint64_t Comm::getConnectedId()
+{
+    return cId;
+}
+
+void Comm::MarkDataOld()
 {
     newDataAvailable = false;
 }
 
-void Sensor::setUpdateFrequency(Scalar f)
+void Comm::setUpdateFrequency(Scalar f)
 {
     freq = f == Scalar(0) ? Scalar(1) : f;
 }
 
-bool Sensor::isNewDataAvailable()
+bool Comm::isNewDataAvailable()
 {
     return newDataAvailable;
 }
 
-void Sensor::setRenderable(bool render)
+void Comm::setRenderable(bool render)
 {
     renderable = render;
 }
 
-bool Sensor::isRenderable()
+bool Comm::isRenderable()
 {
     return renderable;
 }
 
-void Sensor::Reset()
+void Comm::Connect(uint64_t deviceId)
 {
-    eleapsedTime = Scalar(0.);
-    InternalUpdate(1.); //time delta should not affect initial measurement!!!
+    cId = deviceId;
 }
 
-void Sensor::Update(Scalar dt)
+void Comm::AttachToSolid(SolidEntity* solid, const Transform& origin)
+{
+    if(solid != NULL)
+    {
+        o2c = origin;
+        attach = solid;
+    }
+}
+
+void Comm::Update(Scalar dt)
 {
     SDL_LockMutex(updateMutex);
     
@@ -114,7 +138,7 @@ void Sensor::Update(Scalar dt)
     SDL_UnlockMutex(updateMutex);
 }
 
-std::vector<Renderable> Sensor::Render()
+std::vector<Renderable> Comm::Render()
 {
     std::vector<Renderable> items(0);
     return items;

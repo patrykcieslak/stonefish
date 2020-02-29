@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/Robot.h"
@@ -35,6 +35,7 @@
 #include "sensors/scalar/LinkSensor.h"
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
+#include "comms/Comm.h"
 
 namespace sf
 {
@@ -136,6 +137,23 @@ Sensor* Robot::getSensor(unsigned int index)
 {
     if(index < sensors.size())
         return sensors[index];
+    else
+        return NULL;
+}
+
+Comm* Robot::getComm(std::string name)
+{
+    for(size_t i=0; i<comms.size(); ++i)
+        if(comms[i]->getName() == name)
+            return comms[i];
+    
+    return NULL;
+}
+
+Comm* Robot::getComm(unsigned int index)
+{
+    if(index < comms.size())
+        return comms[index];
     else
         return NULL;
 }
@@ -362,6 +380,18 @@ void Robot::AddJointActuator(JointActuator* a, const std::string& actuatedJointN
         cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
 }
 
+void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin)
+{
+    SolidEntity* link = getLink(attachmentLinkName);
+    if(link != NULL)
+    {
+        c->AttachToSolid(link, origin);
+        comms.push_back(c);
+    }
+    else
+        cCritical("Link '%s' doesn't exist. Communication device '%s' cannot be attached!", attachmentLinkName.c_str(), c->getName().c_str());
+}
+
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     if(detachedLinks.size() > 0)
@@ -372,6 +402,8 @@ void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
         sm->AddSensor(sensors[i]);
     for(size_t i=0; i<actuators.size(); ++i)
         sm->AddActuator(actuators[i]);
+    for(size_t i=0; i<comms.size(); ++i)
+        sm->AddComm(comms[i]);
 }
 
 }

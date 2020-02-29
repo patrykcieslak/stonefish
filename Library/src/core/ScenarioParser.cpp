@@ -61,6 +61,8 @@
 #include "actuators/Propeller.h"
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
+#include "comms/AcousticModem.h"
+#include "comms/USBL.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 
@@ -1743,6 +1745,100 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     else
         return false;
     
+    return true;
+}
+
+bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
+{
+    /*
+    const char* name = nullptr;
+    const char* type = nullptr;
+    unsigned int devId;
+    Scalar rate;
+    
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return false;
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+        return false;
+    if(element->QueryAttribute("device_id", &devId) != XML_SUCCESS)
+        return false;
+    if(element->QueryAttribute("rate", &rate) != XML_SUCCESS)
+        rate = Scalar(-1);
+        
+    std::string typeStr(type);
+    std::string commName = robot != NULL ? robot->getName() + "/" + std::string(name) : std::string(name);
+    XMLElement* item;
+    Comm* comm;
+    Transform origin;
+    
+    if(typeStr == "acoustic_modem")
+    {
+        Scalar hFovDeg;
+        Scalar vFovDeg;
+        Scalar range;
+        
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("range", &range) != XML_SUCCESS)
+            return false;
+            
+        comm = new AcousticModem(commName, devId, hFovDeg, vFovDeg, range, rate);
+    }
+    else if(typeStr == "USBL")
+    {
+        Scalar hFovDeg;
+        Scalar vFovDeg;
+        Scalar range;
+        bool hasGPS = false;
+        bool hasPressureSensor = false;
+        
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("range", &range) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("modules")) != nullptr)
+        {
+            item->QueryAttribute("gps", &hasGPS);
+            item->QueryAttribute("pressure_sensor", &hasPressureSensor);
+        }
+       
+        comm = new USBL(commName, devId, hFovDeg, vFovDeg, range, hasGPS, hasPressureSensor, rate);
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)
+        {
+            Scalar rangeDev = Scalar(0);
+            Scalar angleDevDeg = Scalar(0_);
+            
+        }
+    }
+    
+    
+    if(robot != NULL)
+    {
+        attachmentType = 2;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+            
+        
+    }
+    else
+    {
+        
+    }
+    
+    
+    //robot?
+    //std::string actuatorName = robot->getName() + "/" + std::string(name);
+    */
     return true;
 }
 

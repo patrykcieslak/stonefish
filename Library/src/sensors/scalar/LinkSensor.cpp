@@ -62,15 +62,6 @@ std::string LinkSensor::getLinkName()
         return std::string("");
 }
 
-void LinkSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
-{
-    if(multibody != NULL && linkId < multibody->getNumOfLinks())
-    {
-        o2s = origin;
-        attach = multibody->getLink(linkId).solid;
-    }
-}
-
 void LinkSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)
 {
     if(solid != NULL)

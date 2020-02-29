@@ -38,6 +38,7 @@ namespace sf
     class SolidEntity;
     class Sensor;
     class Actuator;
+    class Comm;
     struct Color;
   
     //! A class that implements parsing of XML files describing a simulation scenario.
@@ -132,6 +133,13 @@ namespace sf
          \param robot a pointer to the robot object
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
+        
+        //! A method used to parse a communication device description.
+        /*!
+         \param element a pointer to the XML node
+         \param robot a pointer to the robot object
+         */
+        virtual bool ParseComm(XMLElement* element, Robot* robot);
         
         //! A method used to parse a single contact description.
         /*!

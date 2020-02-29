@@ -28,7 +28,6 @@
 #include "core/SimulationApp.h"
 #include "core/Console.h"
 #include "entities/SolidEntity.h"
-#include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
@@ -57,16 +56,6 @@ Transform VisionSensor::getSensorFrame()
 SensorType VisionSensor::getType()
 {
     return SensorType::SENSOR_VISION;
-}
-
-void VisionSensor::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
-{
-    if(multibody != NULL && linkId < multibody->getNumOfLinks())
-    {
-        o2s = origin;
-        attach = multibody->getLink(linkId).solid;
-        InitGraphics();
-    }
 }
 
 void VisionSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)

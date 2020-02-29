@@ -1,0 +1,165 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//
+//  AcousticModem.cpp
+//  Stonefish
+//
+//  Created by Patryk Cieślak on 26/02/2020.
+//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//
+
+#include "comms/AcousticModem.h"
+
+#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include "graphics/OpenGLPipeline.h"
+#include "core/Console.h"
+
+namespace sf
+{
+ 
+//Static
+std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
+
+void AcousticModem::addNode(AcousticModem* node)
+{
+    if(node->getDeviceId() == 0)
+    {
+        cError("Modem device ID=0 not allowed!");
+        return;
+    }
+        
+    if(nodes.find(node->getDeviceId()) != nodes.end())
+        cError("Modem node with ID=%d already exists!", node->getDeviceId());
+    else
+        nodes[node->getDeviceId()] = node;
+}
+
+void AcousticModem::removeNode(uint64_t deviceId)
+{
+    if(deviceId == 0)
+        return;
+        
+    std::map<uint64_t, AcousticModem*>::iterator it = nodes.find(deviceId);
+    if(it != nodes.end())
+        nodes.erase(it);
+}
+
+AcousticModem* AcousticModem::getNode(uint64_t deviceId)
+{
+    if(deviceId == 0)
+        return NULL;
+    
+    try
+    {
+        return nodes.at(deviceId);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        return NULL;
+    }
+}   
+
+bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
+{
+    AcousticModem* node1 = getNode(device1Id);
+    AcousticModem* node2 = getNode(device2Id);
+    
+    if(node1 == NULL || node2 == NULL)
+        return false;
+        
+    Vector3 pos1 = node1->getDeviceFrame().getOrigin();
+    Vector3 pos2 = node2->getDeviceFrame().getOrigin();
+    Vector3 dir = pos2-pos1;
+    Scalar distance = dir.length();
+    
+    if(!node1->isReceptionPossible(dir, distance) || !node2->isReceptionPossible(-dir, distance))
+        return false;
+        
+    btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
+    return !closest.hasHit();
+}
+
+//Member 
+AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, 
+                             Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange, Scalar frequency) 
+                             : Comm(uniqueName, deviceId, frequency)
+{
+    hFov2 = horizontalFOVDeg <= Scalar(0) || horizontalFOVDeg > Scalar(360) ? Scalar(M_PI) : horizontalFOVDeg/Scalar(180*2)*Scalar(M_PI);
+    vFov2 = verticalFOVDeg <= Scalar(0) || verticalFOVDeg > Scalar(360) ? Scalar(M_PI) : verticalFOVDeg/Scalar(180*2)*Scalar(M_PI);
+    range = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
+    connection = false;
+    position = V0();
+    frame = std::string("");
+    addNode(this);
+}
+
+AcousticModem::~AcousticModem()
+{
+    removeNode(this->getDeviceId());
+}
+
+bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
+{
+    //Check if modems are close enough
+    if(distance > range) return false;
+        
+    //Check if direction is in the FOV of the device
+    Vector3 dir = (getDeviceFrame().inverse() * worldDir).normalized();
+    Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
+    Scalar vAngle = atan2(d, dir.getZ());
+    Scalar hAngle = atan2(dir.getY(), dir.getX());
+    return fabs(hAngle) <= hFov2 && fabs(vAngle) <= vFov2;
+}
+
+void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
+{
+    pos = position;
+    referenceFrame = frame;
+}
+
+bool AcousticModem::isConnectionAlive()
+{
+    return connection;
+}
+
+CommType AcousticModem::getType()
+{
+    return CommType::COMM_ACOUSTIC;
+}
+
+void AcousticModem::InternalUpdate(Scalar dt)
+{
+    connection = mutualContact(getDeviceId(), getConnectedId());
+}
+
+void AcousticModem::UpdatePosition(Vector3 pos, bool absolute, std::string referenceFrame)
+{
+    position = pos;
+    if(absolute)
+        frame = std::string("");
+    else 
+        frame = referenceFrame;
+}
+
+std::vector<Renderable> AcousticModem::Render()
+{
+    std::vector<Renderable> items(0);
+    return items;
+}
+
+}
