@@ -41,6 +41,7 @@ Contact::Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsig
     B = entityB;
     historyLen = inclusiveHistoryLength;
     displayMask = CONTACT_DISPLAY_NONE;
+    newDataAvailable = false;
 }
 
 Contact::~Contact()
@@ -70,6 +71,16 @@ const Entity* Contact::getEntityB()
 void Contact::setDisplayMask(int16_t mask)
 {
     displayMask = mask;
+}
+
+void Contact::MarkDataOld()
+{
+    newDataAvailable = false;
+}
+
+bool Contact::isNewDataAvailable()
+{
+    return newDataAvailable;
 }
 
 void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped)
@@ -120,6 +131,8 @@ void Contact::AddContactPoint(ContactPoint p)
     
     p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
     points.push_back(p);
+    
+    newDataAvailable = true;
 }
 
 void Contact::ClearHistory()

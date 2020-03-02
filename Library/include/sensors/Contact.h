@@ -91,6 +91,12 @@ namespace sf
         //! A method clearing the contact history.
         void ClearHistory();
         
+        //! A method used to mark data as old.
+        void MarkDataOld();
+        
+        //! A method to check if new data is available.
+        bool isNewDataAvailable();
+        
         //! A method that saves contact data to an Octave file.
         /*!
          \param path a path to the output file
@@ -126,6 +132,7 @@ namespace sf
         std::deque<ContactPoint> points;
         unsigned int historyLen;
         int16_t displayMask;
+        bool newDataAvailable;
     };
 }
 
