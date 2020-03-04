@@ -33,9 +33,9 @@ void main()
     float data = texture(texSonarData, texcoord).r;
     
     //Hot color map
-    /*fragcolor.r = clamp(1.0/0.4*data, 0.0, 1.0);
+    fragcolor.r = clamp(1.0/0.4*data, 0.0, 1.0);
     fragcolor.g = clamp(1.0/0.4*(data-0.4), 0.0, 1.0);
-    fragcolor.b = clamp(1.0/0.2*(data-0.8), 0.0, 1.0);*/
+    fragcolor.b = clamp(1.0/0.2*(data-0.8), 0.0, 1.0);
 
     //Perula color map
     /*int i = int(clamp(data*255.0, 0.0, 255.0));
@@ -44,7 +44,7 @@ void main()
     fragcolor.b = perulaB[i];*/
     
     //Green-blue color map
-    fragcolor.r = clamp(cos((data-1.0)*2.0),0.0,1.0)*0.9;
-    fragcolor.g = clamp(cos((data-1.0)*1.57),0.0,1.0);
-    fragcolor.b = clamp(cos((data-0.3)*8.0)*0.5+0.5,0.0,1.0)*0.5;
+    //fragcolor.r = clamp(cos((data-1.0)*2.0),0.0,1.0)*0.9;
+    //fragcolor.g = clamp(cos((data-1.0)*1.57),0.0,1.0);
+    //fragcolor.b = clamp(cos((data-0.3)*8.0)*0.5+0.5,0.0,1.0)*0.5;
 }

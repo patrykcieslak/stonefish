@@ -139,7 +139,7 @@ namespace sf
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
          */
-        virtual bool ParseComm(XMLElement* element, Robot* robot);
+        virtual bool ParseComm(XMLElement* element, Robot* robot = nullptr);
         
         //! A method used to parse a single contact description.
         /*!

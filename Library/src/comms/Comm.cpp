@@ -28,6 +28,8 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
+#include "entities/SolidEntity.h"
+#include "entities/StaticEntity.h"
 
 namespace sf
 {
@@ -42,21 +44,32 @@ Comm::Comm(std::string uniqueName, uint64_t deviceId, Scalar frequency)
     renderable = false;
     newDataAvailable = false;
     updateMutex = SDL_CreateMutex();
+    attach = nullptr;
+    o2c = Transform();
 }
 
 Comm::~Comm()
 {
-    if(SimulationApp::getApp() != NULL)
+    if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
     SDL_DestroyMutex(updateMutex);
 }
 
 Transform Comm::getDeviceFrame()
 {
-    if(attach != NULL)
-        return attach->getOTransform() * o2c;
-    else
-        return o2c;
+    if(attach != nullptr)
+    {
+        if(attach->getType() == EntityType::ENTITY_STATIC)
+        {
+            return ((StaticEntity*)attach)->getTransform() * o2c;
+        }
+        else if(attach->getType() == EntityType::ENTITY_SOLID)
+        {
+            return ((SolidEntity*)attach)->getOTransform() * o2c;
+        }
+    }
+    
+    return o2c;
 }
 
 std::string Comm::getName()
@@ -104,12 +117,26 @@ void Comm::Connect(uint64_t deviceId)
     cId = deviceId;
 }
 
-void Comm::AttachToSolid(SolidEntity* solid, const Transform& origin)
+void Comm::AttachToWorld(const Transform& origin)
 {
-    if(solid != NULL)
+    o2c = origin;
+}
+
+void Comm::AttachToStatic(StaticEntity* body, const Transform& origin)
+{
+    if(body != nullptr)
     {
         o2c = origin;
-        attach = solid;
+        attach = body;
+    }
+}
+
+void Comm::AttachToSolid(SolidEntity* body, const Transform& origin)
+{
+    if(body != nullptr)
+    {
+        o2c = origin;
+        attach = body;
     }
 }
 
@@ -141,6 +168,12 @@ void Comm::Update(Scalar dt)
 std::vector<Renderable> Comm::Render()
 {
     std::vector<Renderable> items(0);
+    
+    Renderable item;
+    item.type = RenderableType::SENSOR_CS;
+    item.model = glMatrixFromTransform(getDeviceFrame());
+    items.push_back(item);
+    
     return items;
 }
     

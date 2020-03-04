@@ -232,6 +232,18 @@ bool ScenarioParser::Parse(std::string filename)
         element = element->NextSiblingElement("robot");
     }
     
+    //Load standalone communication devices (beacons)
+    element = root->FirstChildElement("comm");
+    while(element != nullptr)
+    {
+        if(!ParseComm(element))
+        {
+            cError("Scenario parser: communication device not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("comm");
+    }
+    
     //Load contacts (optional)
     element = root->FirstChildElement("contact");
     while(element != nullptr)
@@ -940,7 +952,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         item = item->NextSiblingElement("sensor");
     }
     
-    //---- Actuators -----
+    //---- Actuators ----
     item = element->FirstChildElement("actuator");
     while(item != nullptr)
     {
@@ -950,6 +962,18 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
             return false;
         }
         item = item->NextSiblingElement("actuator");
+    }
+    
+    //---- Comms ----
+    item = element->FirstChildElement("comm");
+    while(item != nullptr)
+    {
+        if(!ParseComm(item, robot))
+        {
+            cError("Scenario parser: comunication device of robot '%s' not properly defined!", name);
+            return false;
+        }
+        item = item->NextSiblingElement("comm");
     }
     
     sm->AddRobot(robot, trans);
@@ -1750,12 +1774,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
 bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
 {
-    /*
+    XMLElement* item;
     const char* name = nullptr;
     const char* type = nullptr;
     unsigned int devId;
     Scalar rate;
-    
+    Transform origin;
+
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
         return false;
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
@@ -1764,44 +1789,52 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         return false;
     if(element->QueryAttribute("rate", &rate) != XML_SUCCESS)
         rate = Scalar(-1);
-        
+    if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+        return false;
+     
     std::string typeStr(type);
-    std::string commName = robot != NULL ? robot->getName() + "/" + std::string(name) : std::string(name);
-    XMLElement* item;
+    std::string commName = robot != nullptr ? robot->getName() + "/" + std::string(name) : std::string(name);
     Comm* comm;
-    Transform origin;
     
     if(typeStr == "acoustic_modem")
     {
         Scalar hFovDeg;
         Scalar vFovDeg;
         Scalar range;
+        unsigned int cId = 0;
         
-        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-            return false;
         if((item = element->FirstChildElement("specs")) == nullptr
             || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
             || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS)
             return false;
+        if((item = element->FirstChildElement("connect")) == nullptr
+            || item->QueryAttribute("device_id", &cId) != XML_SUCCESS
+            || cId == 0)
+            return false;
             
         comm = new AcousticModem(commName, devId, hFovDeg, vFovDeg, range, rate);
+        comm->Connect(cId);
     }
-    else if(typeStr == "USBL")
+    else if(typeStr == "usbl")
     {
         Scalar hFovDeg;
         Scalar vFovDeg;
         Scalar range;
         bool hasGPS = false;
         bool hasPressureSensor = false;
+        unsigned int cId = 0;
         
-        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-            return false;
         if((item = element->FirstChildElement("specs")) == nullptr
             || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
             || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS)
             return false;
+        if((item = element->FirstChildElement("connect")) == nullptr
+            || item->QueryAttribute("device_id", &cId) != XML_SUCCESS
+            || cId == 0)
+            return false;
+            
         if((item = element->FirstChildElement("modules")) != nullptr)
         {
             item->QueryAttribute("gps", &hasGPS);
@@ -1809,36 +1842,68 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         }
        
         comm = new USBL(commName, devId, hFovDeg, vFovDeg, range, hasGPS, hasPressureSensor, rate);
+        comm->Connect(cId);
         
         if((item = element->FirstChildElement("noise")) != nullptr)
         {
             Scalar rangeDev = Scalar(0);
-            Scalar angleDevDeg = Scalar(0_);
-            
+            Scalar angleDevDeg = Scalar(0);
+            Scalar depthDev = Scalar(0);
+            Scalar nedDev = Scalar(0);
+            item->QueryAttribute("range", &rangeDev);
+            item->QueryAttribute("angle", &angleDevDeg);
+            item->QueryAttribute("depth", &depthDev);
+            item->QueryAttribute("ned", &nedDev);
+            ((USBL*)comm)->setNoise(rangeDev, angleDevDeg, depthDev, nedDev);
         }
     }
+    else 
+        return false;
     
+    //Attach communication device to a body if required
+    const char* attachName = nullptr;
     
-    if(robot != NULL)
+    if(robot != nullptr)
     {
-        attachmentType = 2;
-        
-        if((item = element->FirstChildElement("link")) == nullptr)
+        if((item = element->FirstChildElement("link")) != nullptr
+            && item->QueryStringAttribute("name", &attachName) == XML_SUCCESS)
+        {
+            robot->AddComm(comm, robot->getName() + "/" + std::string(attachName), origin);
+        }
+        else
+        {
+            delete comm;
             return false;
-        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
-            return false;
-            
-        
+        }
     }
-    else
+    else if((item = element->FirstChildElement("body")) != nullptr)
     {
-        
+        if(item->QueryStringAttribute("name", &attachName) == XML_SUCCESS)
+        {
+            Entity* body = sm->getEntity(std::string(attachName));
+            if(body->getType() == ENTITY_STATIC)
+            {
+                comm->AttachToStatic((StaticEntity*)body, origin);
+                sm->AddComm(comm);
+            }
+            else if(body->getType() == ENTITY_SOLID)
+            {
+                comm->AttachToSolid((SolidEntity*)body, origin);
+                sm->AddComm(comm);
+            }
+            else
+            {
+                delete comm;
+                return false;
+            }
+        }
+    }
+    else //Communication device attached to the world origin
+    {
+        comm->AttachToWorld(origin);
+        sm->AddComm(comm);
     }
     
-    
-    //robot?
-    //std::string actuatorName = robot->getName() + "/" + std::string(name);
-    */
     return true;
 }
 
@@ -1866,29 +1931,29 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     Entity* entB;
     entA = sm->getEntity(std::string(nameA));
     entB = sm->getEntity(std::string(nameB));
-    if(entA == NULL)
+    if(entA == nullptr)
     {
         Robot* rob;
         unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != NULL)
+        while((rob = sm->getRobot(i++)) != nullptr)
         {
             entA = rob->getLink(std::string(nameA));
-            if(entA != NULL)
+            if(entA != nullptr)
                 break;
         }
     }
-    if(entB == NULL)
+    if(entB == nullptr)
     {
         Robot* rob;
         unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != NULL)
+        while((rob = sm->getRobot(i++)) != nullptr)
         {
             entB = rob->getLink(std::string(nameB));
-            if(entB != NULL)
+            if(entB != nullptr)
                 break;
         }
     }
-    if(entA == NULL || entB == NULL
+    if(entA == nullptr || entB == nullptr
        || (entA->getType() != ENTITY_SOLID && entA->getType() != ENTITY_STATIC)
        || (entB->getType() != ENTITY_SOLID && entB->getType() != ENTITY_STATIC))
         return false;

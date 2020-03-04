@@ -30,6 +30,8 @@
 #include <core/Robot.h>
 #include <graphics/IMGUI.h>
 #include <utils/SystemUtil.hpp>
+#include <comms/AcousticModem.h>
+#include <core/Console.h>
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, UnderwaterTestManager* sim)
     : GraphicalSimulationApp("Underwater Test", dataDirPath, s, h, sim)
@@ -44,6 +46,13 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
+
+    /*
+    sf::Vector3 pos;
+    std::string frame;
+    ((sf::AcousticModem*)getSimulationManager()->getComm("Modem"))->getPosition(pos, frame); 
+    cInfo("Modem pos: %1.3lf, %1.3lf, %1.3lf frame: %s", pos.getX(), pos.getY(), pos.getZ(), frame.c_str());
+    */
     
     /*
     sf::Uid id;

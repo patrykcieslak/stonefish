@@ -159,6 +159,12 @@ void AcousticModem::UpdatePosition(Vector3 pos, bool absolute, std::string refer
 std::vector<Renderable> AcousticModem::Render()
 {
     std::vector<Renderable> items(0);
+    
+    Renderable item;
+    item.type = RenderableType::SENSOR_CS;
+    item.model = glMatrixFromTransform(getDeviceFrame());
+    items.push_back(item);
+    
     return items;
 }
 

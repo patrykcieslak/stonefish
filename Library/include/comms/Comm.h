@@ -35,6 +35,8 @@ namespace sf
     typedef enum {COMM_RADIO = 0, COMM_ACOUSTIC, COMM_VLC} CommType;
     
     struct Renderable;
+    class Entity;
+    class StaticEntity;
     class SolidEntity;
     
     //! An abstract class representing a communication device.
@@ -58,12 +60,25 @@ namespace sf
          */
         void Connect(uint64_t deviceId);
         
+        //! A method used to attach the comm device to the world origin.
+        /*!
+         \param origin the place where the comm should be attached in the world frame
+         */
+        void AttachToWorld(const Transform& origin);
+        
         //! A method used to attach the comm device to a rigid body.
         /*!
-         \param solid a pointer to the rigid body
-         \param origin the place where the sensor should be attached in the solid origin frame
+         \param body a pointer to the rigid body
+         \param origin the place where the comm should be attached in the solid origin frame
          */
-        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        void AttachToStatic(StaticEntity* body, const Transform& origin);
+        
+        //! A method used to attach the comm device to a rigid body.
+        /*!
+         \param body a pointer to the rigid body
+         \param origin the place where the comm should be attached in the solid origin frame
+         */
+        void AttachToSolid(SolidEntity* body, const Transform& origin);
         
         //! A method implementing the rendering of the comm device.
         virtual std::vector<Renderable> Render();
@@ -119,7 +134,7 @@ namespace sf
         uint64_t cId;
         Scalar freq;
         SDL_mutex* updateMutex;
-        SolidEntity* attach;
+        Entity* attach;
         Transform o2c;
         Scalar eleapsedTime;
         bool renderable;
