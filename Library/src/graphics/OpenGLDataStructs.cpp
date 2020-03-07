@@ -26,6 +26,7 @@
 #include "graphics/OpenGLDataStructs.h"
 
 #include "StonefishCommon.h"
+#include "graphics/OpenGLState.h"
 
 namespace sf
 {
@@ -255,10 +256,10 @@ QuadTree::QuadTree(glm::vec3 origin_, GLfloat size_, unsigned int maxLevel) : or
 {
     root = new QuadTreeNode(this, NULL, Quadrant::NW, origin, size);
     glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    OpenGLState::BindVertexArray(vao);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
 }
 
 QuadTree::~QuadTree()
@@ -312,7 +313,7 @@ void QuadTree::Cut()
 
 void QuadTree::Draw()
 {
-    glBindVertexArray(vao);
+    OpenGLState::BindVertexArray(vao);
     
     glBindBuffer(GL_ARRAY_BUFFER, vboVertex);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
@@ -324,7 +325,7 @@ void QuadTree::Draw()
     
     glDrawArrays(GL_PATCHES, 0, (GLsizei)(4 * leafs.size()));
     
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
 }
     
 glm::mat4 glMatrixFromTransform(const Transform& T)

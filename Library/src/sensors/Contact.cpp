@@ -113,7 +113,7 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
             return;
     }
     
-    if(mp->m_userPersistentData != NULL)
+    if(mp != NULL && mp->m_userPersistentData != NULL)
     {
         p.locationA = swapped ? mp->getPositionWorldOnB() : mp->getPositionWorldOnA();
         p.locationB = swapped ? mp->getPositionWorldOnA() : mp->getPositionWorldOnB();

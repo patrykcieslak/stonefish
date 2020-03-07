@@ -28,6 +28,7 @@
 #include "core/GraphicalSimulationApp.h"
 #include "core/Console.h"
 #include "sensors/vision/ColorCamera.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -88,7 +89,7 @@ void OpenGLRealCamera::setCamera(ColorCamera* cam)
     
     //Generate buffers
     glGenFramebuffers(1, &cameraFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, cameraFBO);
+    OpenGLState::BindFramebuffer(cameraFBO);
     
     glGenTextures(1, &cameraColorTex);
     glBindTexture(GL_TEXTURE_2D, cameraColorTex);
@@ -103,7 +104,7 @@ void OpenGLRealCamera::setCamera(ColorCamera* cam)
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Camera FBO initialization failed!");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 }
 
 glm::vec3 OpenGLRealCamera::GetEyePosition() const
@@ -167,20 +168,20 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
             glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
             glBindTexture(GL_TEXTURE_2D, lightMeterTex);
             
-            glBindFramebuffer(GL_FRAMEBUFFER, cameraFBO);
-            //glViewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::BindFramebuffer(cameraFBO);
+            //OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             tonemapShader->Use();
             tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
             tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
             tonemapShader->SetUniform("exposureComp", 1.f);
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-            glUseProgram(0);
+            OpenGLState::UseProgram(0);
         
             //Copy to camera data
             glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
         
             //Unbind
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            OpenGLState::BindFramebuffer(0);
             glBindTexture(GL_TEXTURE_2D, 0);
             glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -188,9 +189,9 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
         else
         {
             OpenGLCamera::DrawLDR(cameraFBO);
-            glBindFramebuffer(GL_FRAMEBUFFER, cameraFBO);
+            OpenGLState::BindFramebuffer(cameraFBO);
             glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            OpenGLState::BindFramebuffer(0);
         }
         
         //Inform camera to run callback

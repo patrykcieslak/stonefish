@@ -26,6 +26,7 @@
 #include "graphics/OpenGLConsole.h"
 
 #include "utils/SystemUtil.hpp"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/IMGUI.h"
 #include "graphics/OpenGLPrinter.h"
@@ -93,9 +94,9 @@ void OpenGLConsole::Init(int w, int h)
         logoTexture = 0;
     
     glGenVertexArrays(1, &consoleVAO);
-    glBindVertexArray(consoleVAO);
+    OpenGLState::BindVertexArray(consoleVAO);
     glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     GLfloat saqData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
         { 1.f, -1.f, 1.f, 0.f},
@@ -192,12 +193,12 @@ void OpenGLConsole::Render(bool overlay)
     
     //Setup viewport and ortho
     glScissor(0, 0, windowW, windowH);
-    glViewport(0, 0, windowW, windowH);
+    OpenGLState::Viewport(0, 0, windowW, windowH);
     
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    OpenGLState::DisableDepthTest();
+    OpenGLState::DisableCullFace();
     
-    glEnable(GL_BLEND);
+    OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     if(overlay)
@@ -210,7 +211,7 @@ void OpenGLConsole::Render(bool overlay)
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGUI()->getTranslucentTexture());
         
-        glBindVertexArray(consoleVAO);
+        OpenGLState::BindVertexArray(consoleVAO);
         
         glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
@@ -224,7 +225,7 @@ void OpenGLConsole::Render(bool overlay)
         
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         
         //Text rendering
@@ -234,7 +235,7 @@ void OpenGLConsole::Render(bool overlay)
             printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
         }
         
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
     }
     else //During loading of resources (displaying in second thread -> no VAO sharing)
     {
@@ -253,7 +254,7 @@ void OpenGLConsole::Render(bool overlay)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         
         glBindTexture(GL_TEXTURE_2D, 0);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
         
         //Text rendering
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
@@ -263,7 +264,7 @@ void OpenGLConsole::Render(bool overlay)
         }
     }
     
-    glDisable(GL_BLEND);
+    OpenGLState::DisableBlend();
 }
     
 }

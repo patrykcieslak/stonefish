@@ -29,6 +29,7 @@
 #include <sstream>
 #include "core/Console.h"
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLCamera.h"
@@ -337,7 +338,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
         
         //Create shadowmap framebuffer
         glGenFramebuffers(1, &sunShadowFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, sunShadowFBO);
+        OpenGLState::BindFramebuffer(sunShadowFBO);
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray, 0, 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
@@ -346,7 +347,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
         if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sun shadow FBO initialization failed!");
         
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        OpenGLState::BindFramebuffer(0);
     }
     else
     {
@@ -445,7 +446,7 @@ void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
     skySunShader->SetUniform("whitePoint", whitePoint);
     skySunShader->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     
     delete [] viewport;
 }
@@ -470,8 +471,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
     //Render maps
     glCullFace(GL_FRONT); //GL_FRONT -> no shadow acne but problems with filtering
 
-    glBindFramebuffer(GL_FRAMEBUFFER, sunShadowFBO);
-    glViewport(0, 0, sunShadowmapSize, sunShadowmapSize);
+    OpenGLState::BindFramebuffer(sunShadowFBO);
+    OpenGLState::Viewport(0, 0, sunShadowmapSize, sunShadowmapSize);
 
     glm::vec3 camPos = view->GetEyePosition();
     glm::vec3 camDir = view->GetLookingDirection();
@@ -496,7 +497,7 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
         pipe->DrawObjects();
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 
     glCullFace(GL_BACK);
 }
@@ -786,9 +787,9 @@ void OpenGLAtmosphere::Precompute()
     GLuint fbo;
     GLuint vao;
     glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    OpenGLState::BindFramebuffer(fbo);
     glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    OpenGLState::BindVertexArray(vao);
 
     // The actual precomputations depend on whether we want to store precomputed
     // irradiance or illuminance values.
@@ -841,15 +842,15 @@ void OpenGLAtmosphere::Precompute()
 
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[AtmosphereTextures::TRANSMITTANCE], 0);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glViewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
+        OpenGLState::Viewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
         transmittanceShader.Use();
         DrawBlendedSAQ({});
     }
 
     //Destroy temporary OpenGL resources
-    glUseProgram(0);
-    glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::UseProgram(0);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::BindFramebuffer(0);
     glDeleteVertexArrays(1, &vao);
     glDeleteFramebuffers(1, &fbo);
     glDeleteTextures(1, &delta_scattering_density_texture);
@@ -911,7 +912,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     //Compute the transmittance, and store it in transmittance_texture_.
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[AtmosphereTextures::TRANSMITTANCE], 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glViewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
+    OpenGLState::Viewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
     transmittanceShader.Use();
     DrawBlendedSAQ({});
 
@@ -922,7 +923,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_irradiance_texture, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, textures[AtmosphereTextures::IRRADIANCE], 0);
     glDrawBuffers(2, kDrawBuffers);
-    glViewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
+    OpenGLState::Viewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
     directIrradianceShader.Use();
     directIrradianceShader.SetUniform("texTransmittance", TEX_POSTPROCESS1);
     
@@ -940,7 +941,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, delta_mie_scattering_texture, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, textures[AtmosphereTextures::SCATTERING], 0);
     glDrawBuffers(3, kDrawBuffers);
-    glViewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
+    OpenGLState::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
     singleScatteringShader.Use();
     singleScatteringShader.SetUniform("texTransmittance", TEX_POSTPROCESS1);
     singleScatteringShader.SetUniform("luminanceFromRadiance", glm::mat3(luminance_from_radiance));
@@ -966,7 +967,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glViewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
+        OpenGLState::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
 
         scatteringDensityShader.Use();
         scatteringDensityShader.SetUniform("texTransmittance", TEX_POSTPROCESS1);
@@ -1003,7 +1004,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_irradiance_texture, 0);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, textures[AtmosphereTextures::IRRADIANCE], 0);
         glDrawBuffers(2, kDrawBuffers);
-        glViewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
+        OpenGLState::Viewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
 
         indirectIrradianceShader.Use();
         indirectIrradianceShader.SetUniform("texSingleRayleighScattering",	TEX_POSTPROCESS2);
@@ -1028,7 +1029,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_multiple_scattering_texture, 0);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, textures[AtmosphereTextures::SCATTERING], 0);
         glDrawBuffers(2, kDrawBuffers);
-        glViewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
+        OpenGLState::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
 
         multipleScatteringShader.Use();
         multipleScatteringShader.SetUniform("texTransmittance", TEX_POSTPROCESS1);
@@ -1320,18 +1321,18 @@ void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
     glActiveTexture(GL_TEXTURE0 + TEX_SUN_SHADOW);
     glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
+    OpenGLState::DisableBlend();
+    OpenGLState::DisableDepthTest();
 
     //Render the shadowmaps
     sunShadowmapShader->Use();
     sunShadowmapShader->SetUniform("shadowmapArray", TEX_SUN_SHADOW);
     for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {
-        glViewport(x + sunShadowmapSize * scale * i, y, sunShadowmapSize * scale, sunShadowmapSize * scale);
+        OpenGLState::Viewport(x + sunShadowmapSize * scale * i, y, sunShadowmapSize * scale, sunShadowmapSize * scale);
         sunShadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
 
     //Reset
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);

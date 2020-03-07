@@ -27,6 +27,7 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -55,7 +56,7 @@ void OpenGLSpotLight::InitShadowmap(GLint shadowmapLayer)
 {
     //Create shadowmap framebuffer
     glGenFramebuffers(1, &shadowFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+    OpenGLState::BindFramebuffer(shadowFBO);
     glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, spotShadowArrayTex, 0, shadowmapLayer);
     glReadBuffer(GL_NONE);
     glDrawBuffer(GL_NONE);
@@ -64,7 +65,7 @@ void OpenGLSpotLight::InitShadowmap(GLint shadowmapLayer)
     if(status != GL_FRAMEBUFFER_COMPLETE)
         printf("FBO initialization failed.\n");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 }
 
 LightType OpenGLSpotLight::getType()
@@ -113,8 +114,8 @@ void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 {
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    OpenGLState::EnableDepthTest();
+    OpenGLState::EnableCullFace();
     glCullFace(GL_FRONT);
 
     glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, zNear, zFar);
@@ -131,19 +132,19 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(proj);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(view);
     
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glViewport(0, 0, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE);
+    OpenGLState::BindFramebuffer(shadowFBO);
+    OpenGLState::Viewport(0, 0, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glEnable(GL_POLYGON_OFFSET_FILL);
     //glPolygonOffset(4.0f, 32.0f);
     pipe->DrawObjects();
     //glDisable(GL_POLYGON_OFFSET_FILL);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 }
 
 void OpenGLSpotLight::ShowShadowMap(glm::vec4 rect)
 {
-    /*glDisable(GL_BLEND);
+    /*OpenGLState::DisableBlend();
     glBindTexture(GL_TEXTURE_2D, shadowMap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);*/

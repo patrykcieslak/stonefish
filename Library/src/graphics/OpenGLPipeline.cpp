@@ -26,6 +26,7 @@
 #include "graphics/OpenGLPipeline.h"
 
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLOcean.h"
@@ -49,46 +50,9 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     drawingQueueMutex = SDL_CreateMutex();
     
     //Set default OpenGL options
-    cInfo("Setting up basic OpenGL parameters...");
+    cInfo("Initialising OpenGL rendering pipeline...");
     
-    //OpenGL flags and params
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-    glPointSize(1.f);
-    glLineWidth(1.f);
-    glLineStipple(3, 0xE4E4);
-    glPatchParameteri(GL_PATCH_VERTICES, 4);
-    glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
-    glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, new GLfloat[4]{1,1,1,1});
     if(s.msaa) glEnable(GL_MULTISAMPLE); else glDisable(GL_MULTISAMPLE);
-    
-    GLint texUnits;
-    GLint maxTexSize;
-    GLint maxTexLayers;
-    GLint maxUniforms;
-    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
-    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTexLayers);
-    glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniforms);
-    cInfo("%d texture units available.", texUnits);
-    cInfo("%d texture size supported.", maxTexSize);
-    cInfo("%d texture layers allowed.", maxTexLayers);
-    cInfo("%d uniforms in fragment shader allowed.", maxUniforms);
-    
-    if(GLEW_VERSION_3_3)
-    {
-        cInfo("OpenGL 3.3 supported.");
-        
-        if(GLEW_VERSION_4_3)
-            cInfo("OpenGL 4.3 supported.");
-        else
-            cWarning("OpenGL 4.3 not supported!");
-    }
-    else
-        cCritical("OpenGL 3.3 not supported - minimum requirements not met!");
     
     //Load shaders and create rendering buffers
     cInfo("Loading shaders...");
@@ -101,7 +65,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+    OpenGLState::BindFramebuffer(screenFBO);
     
     glGenTextures(1, &screenTex);
     glBindTexture(GL_TEXTURE_2D, screenTex);
@@ -116,7 +80,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Display FBO initialization failed!");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
     
     lastSimTime = Scalar(0);
 }
@@ -357,7 +321,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     }
     
     //Clear display framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+    OpenGLState::BindFramebuffer(screenFBO);
     glClear(GL_COLOR_BUFFER_BIT);
     
     //Loop through all views -> trackballs, cameras, depth cameras...
@@ -367,9 +331,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         
         if(view->needsUpdate())
         {
-            glDisable(GL_BLEND);
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
+            OpenGLState::DisableBlend();
+            OpenGLState::EnableDepthTest();
+            OpenGLState::EnableCullFace();
             
             if(view->getType() == DEPTH_CAMERA)
             {
@@ -377,7 +341,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 GLint* viewport = camera->GetViewport();
                 content->SetViewportSize(viewport[2],viewport[3]);
             
-                glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                OpenGLState::BindFramebuffer(camera->getRenderFBO());
                 glClear(GL_DEPTH_BUFFER_BIT); //Only depth is rendered
                 camera->SetViewport();
                 content->SetCurrentView(camera);
@@ -385,7 +349,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 DrawObjects();
                 
                 camera->DrawLDR(screenFBO);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                OpenGLState::BindFramebuffer(0);
                 
                 delete [] viewport;
             }
@@ -401,7 +365,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 content->SetViewportSize(viewport[2], viewport[3]);
                 
                 fls->DrawLDR(screenFBO);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                OpenGLState::BindFramebuffer(0);
                 
                 delete [] viewport;
             }
@@ -421,7 +385,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 }
             
                 //Clear main framebuffer and setup camera
-                glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                OpenGLState::BindFramebuffer(camera->getRenderFBO());
                 GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
                 glDrawBuffers(2, renderBuffs);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -464,26 +428,26 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //a) Surface with waves
                     if(ocean->hasWaves())
                     {
-                        glEnable(GL_BLEND);
+                        OpenGLState::EnableBlend();
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                         glOcean->DrawSurface(camera);
-                        glDisable(GL_BLEND);
+                        OpenGLState::DisableBlend();
                         glOcean->DrawBacksurface(camera);
                     }
                     else //b) Surface without waves (disable depth testing but write to depth buffer)
                     {
-                        glEnable(GL_BLEND);
+                        OpenGLState::EnableBlend();
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                         glDepthFunc(GL_ALWAYS);
                         glOcean->DrawSurface(camera);
-                        glDisable(GL_BLEND);
+                        OpenGLState::DisableBlend();
                         glDepthFunc(GL_LESS);
                         glOcean->DrawBacksurface(camera);
                         glDepthFunc(GL_LEQUAL);
                     }
                     
                     //Stencil masking
-                    glEnable(GL_STENCIL_TEST);
+                    OpenGLState::EnableStencilTest();
                     glStencilMask(0x00);
                     glStencilFunc(GL_EQUAL, 0, 0xFF);
                     
@@ -498,13 +462,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Render sky (left for the end to only fill empty spaces)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
                     
-                    glDisable(GL_STENCIL_TEST);
+                    OpenGLState::DisableStencilTest();
                     
                     //Linear depth front faces
                     camera->GenerateLinearDepth(0, true);
                     
                     //Linear depth back faces
-                    glBindFramebuffer(GL_FRAMEBUFFER, camera->getRenderFBO());
+                    OpenGLState::BindFramebuffer(camera->getRenderFBO());
                     glClear(GL_DEPTH_BUFFER_BIT);
                     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                     glCullFace(GL_FRONT);
@@ -518,29 +482,29 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     camera->EnterPostprocessing();
                     
                     //Draw reflections
-                    glDisable(GL_DEPTH_TEST);
+                    OpenGLState::DisableDepthTest();
                     camera->DrawSSR();
                     
                     //Draw blur only below surface
-                    glEnable(GL_STENCIL_TEST);
+                    OpenGLState::EnableStencilTest();
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
                     glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
                     glOcean->DrawParticles(camera);
-                    glDisable(GL_STENCIL_TEST);
+                    OpenGLState::DisableStencilTest();
                 }
             
                 //Tone mapping
-                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+                OpenGLState::Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
                 camera->DrawLDR(screenFBO);
             
                 //Helper objects
                 if(camera->getType() == ViewType::TRACKBALL)
                 {
                     //Overlay debugging info
-                    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO); //No depth buffer, just one color buffer
+                    OpenGLState::BindFramebuffer(screenFBO); //No depth buffer, just one color buffer
                     content->SetProjectionMatrix(camera->GetProjectionMatrix());
                     content->SetViewMatrix(camera->GetViewMatrix());
-                    glDisable(GL_CULL_FACE);
+                    OpenGLState::DisableCullFace();
                     
                     //Simulation debugging
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -572,8 +536,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //camera->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
                     //camera->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
                     
-                    glEnable(GL_CULL_FACE);
-                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                    OpenGLState::EnableCullFace();
+                    OpenGLState::BindFramebuffer(0);
                 }
             
                 delete [] viewport;
@@ -582,7 +546,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         else
         {
             GLint* viewport = view->GetViewport();
-            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            OpenGLState::Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
             view->DrawLDR(screenFBO);
             delete [] viewport;
         }

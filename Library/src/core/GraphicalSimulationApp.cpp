@@ -29,6 +29,7 @@
 #include <thread>
 #include "core/SimulationManager.h"
 #include "core/Robot.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLConsole.h"
@@ -254,6 +255,8 @@ void GraphicalSimulationApp::InitializeSDL()
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK)
         cCritical("Failed to initialize GLEW!");
+    
+    OpenGLState::Init();
     
     if(!GLSLShader::Init())
         cCritical("No shader support!");
@@ -907,7 +910,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     
     GLuint vao;
     glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    OpenGLState::BindVertexArray(vao);
     glEnableVertexAttribArray(0);
     
     while(ltdata->app->loading)
@@ -922,7 +925,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
         SDL_GL_SwapWindow(ltdata->app->window);
     }
     
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     glDeleteVertexArrays(1, &vao);
     
     //Detach thread from GL context

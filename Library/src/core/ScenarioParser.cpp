@@ -900,11 +900,13 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     if((item = element->FirstChildElement("base_link")) == nullptr)
     {
         cError("Scenario parser: base link of robot '%s' missing!", name);
+        delete robot;
         return false;
     }
     if(!ParseLink(item, robot, baseLink))
     {
         cError("Scenario parser: base link of robot '%s' not properly defined!", name);
+        delete robot;
         return false;
     }
     
@@ -918,6 +920,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         if(!ParseLink(item, robot, link))
         {
             cError("Scenario parser: link of robot '%s' not properly defined!", name);
+            delete robot;
             return false;
         }        
         links.push_back(link);
@@ -933,6 +936,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         if(!ParseJoint(item, robot))
         {
             cError("Scenario parser: joint of robot '%s' not properly defined!", name);
+            delete robot;
             return false;
         }
         item = item->NextSiblingElement("joint");
@@ -947,6 +951,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         if(!ParseSensor(item, robot))
         {
             cError("Scenario parser: sensor of robot '%s' not properly defined!", name);
+            delete robot;
             return false;
         }
         item = item->NextSiblingElement("sensor");
@@ -959,6 +964,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         if(!ParseActuator(item, robot))
         {
             cError("Scenario parser: actuator of robot '%s' not properly defined!", name);
+            delete robot;
             return false;
         }
         item = item->NextSiblingElement("actuator");
@@ -971,6 +977,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         if(!ParseComm(item, robot))
         {
             cError("Scenario parser: comunication device of robot '%s' not properly defined!", name);
+            delete robot;
             return false;
         }
         item = item->NextSiblingElement("comm");

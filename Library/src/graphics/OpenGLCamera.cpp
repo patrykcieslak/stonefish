@@ -28,6 +28,7 @@
 #include <random>
 #include "core/GraphicalSimulationApp.h"
 #include "core/Console.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -126,7 +127,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     }
     
     glGenFramebuffers(1, &renderFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
+    OpenGLState::BindFramebuffer(renderFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderColorTex, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, renderViewNormalTex, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, renderDepthStencilTex, 0);
@@ -137,7 +138,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
         
     //----Light metering (automatic exposure)----
     glGenFramebuffers(1, &lightMeterFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
+    OpenGLState::BindFramebuffer(lightMeterFBO);
     
     glGenTextures(1, &lightMeterTex);
     glBindTexture(GL_TEXTURE_2D, lightMeterTex);
@@ -154,7 +155,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     
     //----Non-multisampled postprocessing----
     glGenFramebuffers(1, &postprocessFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, postprocessFBO);
+    OpenGLState::BindFramebuffer(postprocessFBO);
     
     glGenTextures(2, postprocessTex);
     glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
@@ -186,7 +187,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Postprocess FBO initialization failed!");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
     
     //Linear depth
     glGenTextures(2, linearDepthTex);
@@ -208,7 +209,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     glBindTexture (GL_TEXTURE_2D, 0);
 
     glGenFramebuffers(1, &linearDepthFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+    OpenGLState::BindFramebuffer(linearDepthFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex[0], 0);
         
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -238,7 +239,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glGenFramebuffers(1, &aoFinalFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, aoFinalFBO);
+        OpenGLState::BindFramebuffer(aoFinalFBO);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultTex, 0);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, aoBlurTex, 0);
         
@@ -285,13 +286,13 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
             drawbuffers[layer] = GL_COLOR_ATTACHMENT0 + layer;
 
         glGenFramebuffers(1, &aoDeinterleaveFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, aoDeinterleaveFBO);
+        OpenGLState::BindFramebuffer(aoDeinterleaveFBO);
         glDrawBuffers(NUM_MRT, drawbuffers);
         
         glGenFramebuffers(1, &aoCalcFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, aoCalcFBO);
+        OpenGLState::BindFramebuffer(aoCalcFBO);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultArrayTex, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        OpenGLState::BindFramebuffer(0);
         
         glGenBuffers(1, &aoDataUBO);
         glNamedBufferStorageEXT(aoDataUBO, sizeof(AOData), NULL, GL_DYNAMIC_STORAGE_BIT);
@@ -498,9 +499,9 @@ void OpenGLCamera::ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index)
 
 void OpenGLCamera::GenerateLinearDepth(int sampleId, bool frontFace)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+    OpenGLState::BindFramebuffer(linearDepthFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frontFace ? linearDepthTex[0] : linearDepthTex[1], 0);
-    glViewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     
     if(samples>1)
@@ -525,8 +526,8 @@ void OpenGLCamera::GenerateLinearDepth(int sampleId, bool frontFace)
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     
-    glUseProgram(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::UseProgram(0);
+    OpenGLState::BindFramebuffer(0);
 }
 
 GLuint OpenGLCamera::getLinearDepthTexture(bool frontFace)
@@ -573,8 +574,8 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray(); //Previous function unbinds vertex array
         
             //Deinterleave
-            glBindFramebuffer(GL_FRAMEBUFFER, aoDeinterleaveFBO);
-            glViewport(0, 0, quarterWidth, quarterHeight);
+            OpenGLState::BindFramebuffer(aoDeinterleaveFBO);
+            OpenGLState::Viewport(0, 0, quarterWidth, quarterHeight);
 
             aoDeinterleaveShader->Use();
             aoDeinterleaveShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
@@ -593,8 +594,8 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
             glBindTexture(GL_TEXTURE_2D, 0);
             
             //Calculate HBAO
-            glBindFramebuffer(GL_FRAMEBUFFER, aoCalcFBO);
-            glViewport(0, 0, quarterWidth, quarterHeight);
+            OpenGLState::BindFramebuffer(aoCalcFBO);
+            OpenGLState::Viewport(0, 0, quarterWidth, quarterHeight);
             
             if(samples>1)
             {
@@ -632,13 +633,13 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
             
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::BindFramebuffer(0);
+            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
         
             //Reinterleave
-            glBindFramebuffer(GL_FRAMEBUFFER, aoFinalFBO);
+            OpenGLState::BindFramebuffer(aoFinalFBO);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
-            glViewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             aoReinterleaveShader->Use();
             aoReinterleaveShader->SetUniform("texResultArray", TEX_POSTPROCESS1);
         
@@ -659,11 +660,11 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
             glBindTexture(GL_TEXTURE_2D, 0);
 
             //Final output to main fbo
-            glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
+            OpenGLState::BindFramebuffer(renderFBO);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             glDepthMask(GL_FALSE);
-            glDisable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
+            OpenGLState::DisableDepthTest();
+            OpenGLState::EnableBlend();
             //glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);
             glBlendFunc(GL_ZERO, GL_SRC_COLOR);
             
@@ -682,15 +683,15 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
             glDrawArrays(GL_TRIANGLES, 0, 3);
             glBindTexture(GL_TEXTURE_2D, 0);
         
-            glEnable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
+            OpenGLState::EnableDepthTest();
+            OpenGLState::DisableBlend();
             glDepthMask(GL_TRUE);
             glDisable(GL_SAMPLE_MASK);
             glSampleMaski(0, ~0);
         }
-        glBindVertexArray(0);
-        glUseProgram(0);
-        glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
+        OpenGLState::BindVertexArray(0);
+        OpenGLState::UseProgram(0);
+        OpenGLState::BindFramebuffer(renderFBO);
     }
 }
 
@@ -746,7 +747,7 @@ void OpenGLCamera::DrawSSR()
     ssrShader[0]->SetUniform("eyeFadeEnd", 0.8f);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -801,29 +802,29 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
     glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
     
     //Matrix light metering
-    glBindFramebuffer(GL_FRAMEBUFFER, lightMeterFBO);
-    glViewport(0,0,2,2);
+    OpenGLState::BindFramebuffer(lightMeterFBO);
+    OpenGLState::Viewport(0,0,2,2);
     lightMeterShader->Use();
     lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
     lightMeterShader->SetUniform("samples", glm::ivec2(64,64));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
     
     //Bind exposure texture
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
     glBindTexture(GL_TEXTURE_2D, lightMeterTex);
     
     //LDR drawing
-    glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
-    glViewport(0,0,viewportWidth,viewportHeight);
+    OpenGLState::BindFramebuffer(destinationFBO);
+    OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
     tonemapShader->Use();
     tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
     tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
     tonemapShader->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
     
-    glUseProgram(0); //Disable shaders
+    OpenGLState::UseProgram(0); //Disable shaders
     
     //Unbind textures
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);

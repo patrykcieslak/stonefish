@@ -25,6 +25,8 @@
 
 #include "graphics/OpenGLView.h"
 
+#include "graphics/OpenGLState.h"
+
 namespace sf
 {
 
@@ -53,7 +55,7 @@ bool OpenGLView::isEnabled()
 
 void OpenGLView::SetViewport()
 {
-    glViewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
 }
 
 GLint* OpenGLView::GetViewport() const

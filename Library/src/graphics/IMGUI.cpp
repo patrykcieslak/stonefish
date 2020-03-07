@@ -26,6 +26,7 @@
 #include "graphics/IMGUI.h"
 
 #include "core/Console.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLPrinter.h"
@@ -79,7 +80,6 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     backgroundMargin = 5.f;
     
     //Load logo texture - can't use material class because it writes to the console
-    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
     int width, height, channels;
     std::string path = GetShaderPath() + "logo_gray_64.png";
     
@@ -89,7 +89,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     {
         // Allocate an OpenGL texture
         glGenTextures(1, &logoTexture);
-        glBindTexture(GL_TEXTURE_2D, logoTexture);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
         // Upload texture to memory
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
         // Set certain properties of texture
@@ -100,7 +100,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         // Release internal buffer
         stbi_image_free(dataBuffer);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
     }
     else
         logoTexture = 0;
@@ -114,7 +114,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     {
         // Allocate an OpenGL texture
         glGenTextures(1, &guiTexture);
-        glBindTexture(GL_TEXTURE_2D, guiTexture);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, guiTexture);
         // Upload texture to memory
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
         // Set certain properties of texture
@@ -125,16 +125,16 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         // Release internal buffer
         stbi_image_free(dataBuffer);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
     }
     else
         guiTexture = 0;
     
     //Generate VAO
     glGenVertexArrays(1, &guiVAO);
-    glBindVertexArray(guiVAO);
+    OpenGLState::BindVertexArray(guiVAO);
     glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     //Load translucent shaders
     downsampleShader = new GLSLShader("simpleDownsample.frag");
@@ -165,10 +165,10 @@ void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
     
     //Create translucent background resources
     glGenFramebuffers(1, &translucentFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
+    OpenGLState::BindFramebuffer(translucentFBO);
     
     glGenTextures(1, &translucentTexture[0]);
-    glBindTexture(GL_TEXTURE_2D, translucentTexture[0]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW/4, windowH/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -177,7 +177,7 @@ void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, translucentTexture[0], 0);
     
     glGenTextures(1, &translucentTexture[1]);
-    glBindTexture(GL_TEXTURE_2D, translucentTexture[1]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[1]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW/4, windowH/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -189,7 +189,7 @@ void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Translucent background FBO initialization failed!");
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 }
 
 IMGUI::~IMGUI()
@@ -288,69 +288,65 @@ GLuint IMGUI::getTranslucentTexture()
 
 void IMGUI::GenerateBackground()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, translucentFBO);
-    glViewport(0, 0, windowW/4, windowH/4);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-    glBindTexture(GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
+    OpenGLState::BindFramebuffer(translucentFBO);
+    OpenGLState::Viewport(0, 0, windowW/4, windowH/4);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
     downsampleShader->Use();
     downsampleShader->SetUniform("source", 0);
     downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     
     for(int i=0; i<3; i++)
     {
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        glBindTexture(GL_TEXTURE_2D, translucentTexture[0]);
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);
         gaussianShader->Use();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glBindTexture(GL_TEXTURE_2D, translucentTexture[1]);
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[1]);
         gaussianShader->Use();
         gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
     }
     
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::BindFramebuffer(0);
 }
 
 void IMGUI::Begin()
 {
     clearHot();
     
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
+    OpenGLState::DisableDepthTest();
+    OpenGLState::DisableCullFace();
+    OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glScissor(0, 0, windowW, windowH);
-    glViewport(0, 0, windowW, windowH);
+    OpenGLState::Viewport(0, 0, windowW, windowH);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW, windowH);
-    glBindVertexArray(guiVAO);
+    OpenGLState::BindVertexArray(guiVAO);
 }
 
 void IMGUI::End()
 {
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture, glm::vec4(1.f,1.f,1.f,0.2f));
    
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
+    OpenGLState::EnableDepthTest();
+    OpenGLState::EnableCullFace();
+    OpenGLState::DisableBlend();
 }
 
 void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale)
@@ -458,7 +454,7 @@ void IMGUI::DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
     
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     glDeleteBuffers(1, &vbo);
 }
 
@@ -488,7 +484,7 @@ void IMGUI::DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     glDeleteBuffers(1, &vbo);
 }
 
@@ -532,11 +528,8 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
                               {x+w,           y-h, 1.f, 1.f}};
     
     //Get translucent texture
-    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-    glBindTexture(GL_TEXTURE_2D, guiTexture);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
-    glBindTexture(GL_TEXTURE_2D, getTranslucentTexture());
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, guiTexture);
+    OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, getTranslucentTexture());
     
     GLuint vbo;
     glGenBuffers(1, &vbo);
@@ -554,7 +547,7 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
     glDrawArrays(GL_TRIANGLE_STRIP, 8, 8);
     glDrawArrays(GL_TRIANGLE_STRIP, 16, 8);
     
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     glDeleteBuffers(1, &vbo);
 }
 
@@ -968,7 +961,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         
             glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
             
-            glUseProgram(0);
+            OpenGLState::UseProgram(0);
             glDeleteBuffers(1, &vbo);
             
             //legend
@@ -994,7 +987,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         
             glDrawArrays(GL_LINES, 0, 2);
             
-            glUseProgram(0);
+            OpenGLState::UseProgram(0);
             glDeleteBuffers(1, &vbo);
         }
         
@@ -1128,7 +1121,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         
         glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
         
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
         glDeleteBuffers(1, &vbo);
         
         //draw axes
@@ -1161,7 +1154,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         
             glDrawArrays(GL_LINES, 0, (GLsizei)axes.size());
             
-            glUseProgram(0);
+            OpenGLState::UseProgram(0);
             glDeleteBuffers(1, &vbo);
         }
     }

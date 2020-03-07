@@ -218,7 +218,7 @@ void UnderwaterTestManager::BuildScenario()
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
     sf::FLS* fls = new sf::FLS("FLS", 64, 500, 120.0, 20.0, 1.0, 10.0);
-    fls->setDisplayOnScreen(true);
+    //fls->setDisplayOnScreen(true);
     
     //Create AUV
     sf::Robot* auv = new sf::Robot("GIRONA500");

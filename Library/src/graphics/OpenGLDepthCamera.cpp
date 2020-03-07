@@ -29,6 +29,7 @@
 #include "core/GraphicalSimulationApp.h"
 #include "entities/SolidEntity.h"
 #include "sensors/vision/Camera.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -84,7 +85,7 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glGenFramebuffers(1, &renderFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
+    OpenGLState::BindFramebuffer(renderFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, renderDepthTex, 0);
     glReadBuffer(GL_NONE);
     glDrawBuffer(GL_NONE);
@@ -104,7 +105,7 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     glBindTexture (GL_TEXTURE_2D, 0);
 
     glGenFramebuffers(1, &linearDepthFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
+    OpenGLState::BindFramebuffer(linearDepthFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, linearDepthTex, 0);
         
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -190,8 +191,8 @@ ViewType OpenGLDepthCamera::getType()
 
 void OpenGLDepthCamera::LinearizeDepth()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-    glViewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(linearDepthFBO);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D, renderDepthTex);
     
@@ -199,16 +200,16 @@ void OpenGLDepthCamera::LinearizeDepth()
     depthLinearizeShader->SetUniform("clipInfo", glm::vec4(range.x*range.y, range.x-range.y, range.y, 1.f));
     depthLinearizeShader->SetUniform("texDepth", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     
     glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 }
     
 void OpenGLDepthCamera::Depth2LinearRanges()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, linearDepthFBO);
-    glViewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(linearDepthFBO);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
     glBindTexture(GL_TEXTURE_2D, renderDepthTex);
     
@@ -226,10 +227,10 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     depth2RangesShader->SetUniform("rangeInfo", range);
     depth2RangesShader->SetUniform("texDepth", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     
     glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    OpenGLState::BindFramebuffer(0);
 }
 
 void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
@@ -250,14 +251,14 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
         glBindTexture(GL_TEXTURE_2D, linearDepthTex);
        
         //LDR drawing
-        glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
-        glViewport(originX, originY, viewportWidth, viewportHeight);
+        OpenGLState::BindFramebuffer(destinationFBO);
+        OpenGLState::Viewport(originX, originY, viewportWidth, viewportHeight);
         depthVisualizeShader->Use();
         depthVisualizeShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         depthVisualizeShader->SetUniform("range", range);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glUseProgram(0);
+        OpenGLState::BindFramebuffer(0);
+        OpenGLState::UseProgram(0);
         
         //Unbind textures
         glBindTexture(GL_TEXTURE_2D, 0);

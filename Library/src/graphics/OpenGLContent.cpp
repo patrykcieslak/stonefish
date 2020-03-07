@@ -29,6 +29,7 @@
 #include <algorithm>
 #include "core/Console.h"
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLView.h"
@@ -149,7 +150,7 @@ OpenGLContent::OpenGLContent()
     glGenBuffers(1, &cylinder.vboVertex);
     glGenBuffers(1, &cylinder.vboIndex);
     
-    glBindVertexArray(cylinder.vao);
+    OpenGLState::BindVertexArray(cylinder.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
@@ -159,7 +160,7 @@ OpenGLContent::OpenGLContent()
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*cylinder.mesh->faces.size(), &cylinder.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     //Ellipsoid helper
     ellipsoid.mesh = BuildSphere(1.f, 3);
@@ -168,7 +169,7 @@ OpenGLContent::OpenGLContent()
     glGenBuffers(1, &ellipsoid.vboVertex);
     glGenBuffers(1, &ellipsoid.vboIndex);
     
-    glBindVertexArray(ellipsoid.vao);
+    OpenGLState::BindVertexArray(ellipsoid.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
@@ -178,7 +179,7 @@ OpenGLContent::OpenGLContent()
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*ellipsoid.mesh->faces.size(), &ellipsoid.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     //Load shaders
     //Basic
@@ -636,14 +637,14 @@ void OpenGLContent::DisableClipPlane()
 
 void OpenGLContent::BindBaseVertexArray()
 {
-    glBindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray);
 }
 
 void OpenGLContent::DrawSAQ()
 {
-    glBindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
 }
 
 void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
@@ -655,12 +656,12 @@ void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
     texSaqShader->SetUniform("tex", TEX_BASE);
     texSaqShader->SetUniform("color", color);
     
-    glBindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
@@ -676,16 +677,16 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glBindVertexArray(baseVertexArray);
+        OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
     }
 }
 
@@ -713,17 +714,17 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
         
-        glBindVertexArray(baseVertexArray);
+        OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
         
         glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, 0);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
     }
 }
 
@@ -741,17 +742,17 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
         
-        glBindVertexArray(baseVertexArray);
+        OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
         
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
     }
 }	
 
@@ -765,7 +766,7 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
         glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
         
-        glBindVertexArray(baseVertexArray);
+        OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         
@@ -778,11 +779,11 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
         glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
         glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
         
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
     }
 }
 
@@ -794,7 +795,7 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
         helperShader->SetUniform("MVP", viewProjection*M);
         helperShader->SetUniform("scale", glm::vec3(size));
         
-        glBindVertexArray(baseVertexArray);
+        OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         
@@ -805,11 +806,11 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         
         glDrawArrays(GL_LINES, 0, 6);
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
         
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
     }
 }
 
@@ -821,11 +822,11 @@ void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
         helperShader->SetUniform("MVP", viewProjection*M);
         helperShader->SetUniform("scale", dims);
         
-        glBindVertexArray(cylinder.vao);
+        OpenGLState::BindVertexArray(cylinder.vao);
         glVertexAttrib4fv(1, &color.r);
         glDrawElements(GL_TRIANGLES, 3 * (GLsizei)cylinder.mesh->faces.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-        glUseProgram(0);
+        OpenGLState::BindVertexArray(0);
+        OpenGLState::UseProgram(0);
     }
 }
 
@@ -837,11 +838,11 @@ void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
         helperShader->SetUniform("MVP", viewProjection*M);
         helperShader->SetUniform("scale", radii);
         
-        glBindVertexArray(ellipsoid.vao);
+        OpenGLState::BindVertexArray(ellipsoid.vao);
         glVertexAttrib4fv(1, &color.r);
         glDrawElements(GL_TRIANGLES, 3 * (GLsizei)ellipsoid.mesh->faces.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-        glUseProgram(0);
+        OpenGLState::BindVertexArray(0);
+        OpenGLState::UseProgram(0);
     }
 }
 
@@ -856,7 +857,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
         helperShader->SetUniform("MVP", viewProjection*M);
         helperShader->SetUniform("scale", glm::vec3(1.f));
         
-        glBindVertexArray(baseVertexArray);
+        OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         
@@ -882,9 +883,9 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
                 glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
                 break;
         }
-        glBindVertexArray(0);
+        OpenGLState::BindVertexArray(0);
         glDisableVertexAttribArray(0);
-        glUseProgram(0);
+        OpenGLState::UseProgram(0);
         
         glDeleteBuffers(1, &vbo);
     }
@@ -896,18 +897,18 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
     {
         if(mode == DrawingMode::RAW)
         {
-            glBindVertexArray(objects[objectId].vao);
+            OpenGLState::BindVertexArray(objects[objectId].vao);
             glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
+            OpenGLState::BindVertexArray(0);
         }
         else if(mode == DrawingMode::FLAT)
         {
             flatShader->Use();
             flatShader->SetUniform("MVP", viewProjection*M);
-            glBindVertexArray(objects[objectId].vao);
+            OpenGLState::BindVertexArray(objects[objectId].vao);
             glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
-            glUseProgram(0);
+            OpenGLState::BindVertexArray(0);
+            OpenGLState::UseProgram(0);
         }
         else
         {
@@ -916,10 +917,10 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
             else
                 UseStandardLook(M);
     
-            glBindVertexArray(objects[objectId].vao);
+            OpenGLState::BindVertexArray(objects[objectId].vao);
             glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
-            glUseProgram(0);
+            OpenGLState::BindVertexArray(0);
+            OpenGLState::UseProgram(0);
         }
     }
 }
@@ -1063,7 +1064,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     glGenBuffers(1, &obj.vboVertex);
     glGenBuffers(1, &obj.vboIndex);
     
-    glBindVertexArray(obj.vao);	
+    OpenGLState::BindVertexArray(obj.vao);	
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -1077,7 +1078,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     objects.push_back(obj);
     return (unsigned int)objects.size()-1;

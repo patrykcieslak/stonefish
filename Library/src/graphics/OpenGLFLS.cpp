@@ -32,6 +32,7 @@
 #include "core/MaterialManager.h"
 #include "entities/SolidEntity.h"
 #include "sensors/vision/FLS.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -92,7 +93,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
     glGenFramebuffers(1, &renderFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
+    OpenGLState::BindFramebuffer(renderFBO);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, inputDepthRBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, inputRangeIntensityTex, 0);
     
@@ -111,7 +112,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glBindTexture(GL_TEXTURE_2D, 0);
     
     glGenFramebuffers(1, &outputFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, outputFBO);
+    OpenGLState::BindFramebuffer(outputFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, outputTex, 0);
     
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -130,7 +131,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glBindTexture(GL_TEXTURE_2D, 0);
     
     glGenFramebuffers(1, &displayFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
+    OpenGLState::BindFramebuffer(displayFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, displayTex, 0);
     
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -138,7 +139,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
         cError("Sonar display FBO initialization failed!");
     
     glGenVertexArrays(1, &fanVAO);
-    glBindVertexArray(fanVAO);
+    OpenGLState::BindVertexArray(fanVAO);
     glEnableVertexAttribArray(0);
     
     fanDiv = std::min((GLuint)ceil(horizontalFOVDeg), nBeams);
@@ -164,7 +165,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
 }
 
 OpenGLFLS::~OpenGLFLS()
@@ -252,8 +253,8 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
     content->SetDrawingMode(DrawingMode::RAW);
     
-    glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
-    glViewport(0, 0, inputWidth, inputHeight);
+    OpenGLState::BindFramebuffer(renderFBO);
+    OpenGLState::Viewport(0, 0, inputWidth, inputHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     sonarInputShader->Use();
@@ -274,8 +275,8 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
         }
     }
     
-    glBindFramebuffer(GL_FRAMEBUFFER, outputFBO);
-    glViewport(0, 0, nBeams, nBins);
+    OpenGLState::BindFramebuffer(outputFBO);
+    OpenGLState::Viewport(0, 0, nBeams, nBins);
     glClear(GL_COLOR_BUFFER_BIT);
     
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
@@ -296,8 +297,8 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.1f, 0.05f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
-    glBindFramebuffer(GL_FRAMEBUFFER, displayFBO);
-    glViewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(displayFBO);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glClear(GL_COLOR_BUFFER_BIT);
     
     glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
@@ -305,12 +306,12 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
      
     sonarVisualizeShader->Use();
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS1);
-    glBindVertexArray(fanVAO);
+    OpenGLState::BindVertexArray(fanVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, (fanDiv+1)*2);
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glUseProgram(0);
+    OpenGLState::BindFramebuffer(0);
+    OpenGLState::UseProgram(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -324,9 +325,9 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO)
     //Draw on screen
     if(display)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, destinationFBO);
+        OpenGLState::BindFramebuffer(destinationFBO);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(displayTex);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        OpenGLState::BindFramebuffer(0);
     }
     
     //Copy texture to sonar buffer

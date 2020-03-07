@@ -230,6 +230,18 @@
 		F7895B8C21A566660014722C /* VisionSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7895B8B21A566660014722C /* VisionSensor.cpp */; };
 		F7895B8E21A568550014722C /* LinkSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7895B8D21A568550014722C /* LinkSensor.cpp */; };
 		F7895B9021A5686A0014722C /* JointSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7895B8F21A5686A0014722C /* JointSensor.cpp */; };
+		F7A830D9241299BB00E00BC8 /* FLS.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A830D8241299BB00E00BC8 /* FLS.h */; };
+		F7A830DB241299CE00E00BC8 /* OpenGLFLS.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A830DA241299CE00E00BC8 /* OpenGLFLS.h */; };
+		F7A830E724129A1C00E00BC8 /* Comm.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A830E424129A1C00E00BC8 /* Comm.h */; };
+		F7A830E824129A1C00E00BC8 /* AcousticModem.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A830E524129A1C00E00BC8 /* AcousticModem.h */; };
+		F7A830E924129A1C00E00BC8 /* USBL.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A830E624129A1C00E00BC8 /* USBL.h */; };
+		F7A830EB24129A4300E00BC8 /* FLS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A830EA24129A4300E00BC8 /* FLS.cpp */; };
+		F7A830ED24129A4E00E00BC8 /* OpenGLFLS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A830EC24129A4E00E00BC8 /* OpenGLFLS.cpp */; };
+		F7A830F224129A5A00E00BC8 /* USBL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A830EF24129A5A00E00BC8 /* USBL.cpp */; };
+		F7A830F324129A5A00E00BC8 /* AcousticModem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A830F024129A5A00E00BC8 /* AcousticModem.cpp */; };
+		F7A830F424129A5A00E00BC8 /* Comm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A830F124129A5A00E00BC8 /* Comm.cpp */; };
+		F7A830FA2413F42900E00BC8 /* OpenGLState.h in Headers */ = {isa = PBXBuildFile; fileRef = F7A830F92413F42900E00BC8 /* OpenGLState.h */; };
+		F7A830FC2413F44700E00BC8 /* OpenGLState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7A830FB2413F44700E00BC8 /* OpenGLState.cpp */; };
 		F7AB71CE18C3E19D0077F07D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7AB71CD18C3E19D0077F07D /* main.cpp */; };
 		F7BD9E75219E4FEF0003E389 /* libStonefish.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */; };
 		F7BD9E7C219E502A0003E389 /* SlidingTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7DE5F6E193E7899007FEE22 /* SlidingTestApp.cpp */; };
@@ -779,6 +791,22 @@
 		F7895B8B21A566660014722C /* VisionSensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = VisionSensor.cpp; sourceTree = "<group>"; };
 		F7895B8D21A568550014722C /* LinkSensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LinkSensor.cpp; sourceTree = "<group>"; };
 		F7895B8F21A5686A0014722C /* JointSensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = JointSensor.cpp; sourceTree = "<group>"; };
+		F7A830D8241299BB00E00BC8 /* FLS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLS.h; sourceTree = "<group>"; };
+		F7A830DA241299CE00E00BC8 /* OpenGLFLS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLFLS.h; sourceTree = "<group>"; };
+		F7A830E424129A1C00E00BC8 /* Comm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Comm.h; sourceTree = "<group>"; };
+		F7A830E524129A1C00E00BC8 /* AcousticModem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AcousticModem.h; sourceTree = "<group>"; };
+		F7A830E624129A1C00E00BC8 /* USBL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBL.h; sourceTree = "<group>"; };
+		F7A830EA24129A4300E00BC8 /* FLS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLS.cpp; sourceTree = "<group>"; };
+		F7A830EC24129A4E00E00BC8 /* OpenGLFLS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLFLS.cpp; sourceTree = "<group>"; };
+		F7A830EF24129A5A00E00BC8 /* USBL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = USBL.cpp; sourceTree = "<group>"; };
+		F7A830F024129A5A00E00BC8 /* AcousticModem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AcousticModem.cpp; sourceTree = "<group>"; };
+		F7A830F124129A5A00E00BC8 /* Comm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Comm.cpp; sourceTree = "<group>"; };
+		F7A830F524129A8D00E00BC8 /* sonarVisualize.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sonarVisualize.frag; sourceTree = "<group>"; };
+		F7A830F624129A8D00E00BC8 /* sonarOutput.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sonarOutput.frag; sourceTree = "<group>"; };
+		F7A830F724129A8D00E00BC8 /* sonarInput.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sonarInput.vert; sourceTree = "<group>"; };
+		F7A830F824129A8D00E00BC8 /* sonarInput.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sonarInput.frag; sourceTree = "<group>"; };
+		F7A830F92413F42900E00BC8 /* OpenGLState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenGLState.h; sourceTree = "<group>"; };
+		F7A830FB2413F44700E00BC8 /* OpenGLState.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OpenGLState.cpp; sourceTree = "<group>"; };
 		F7AB71B618C3D8EC0077F07D /* libStonefish.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libStonefish.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CB18C3E19D0077F07D /* FallingTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FallingTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7AB71CD18C3E19D0077F07D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -932,6 +960,7 @@
 				F71603BB2191A9E100E83606 /* joints */,
 				F71603CB2191A9E100E83606 /* actuators */,
 				F71603912191A9E100E83606 /* sensors */,
+				F7A830E324129A1C00E00BC8 /* comms */,
 				F71603D12191A9E100E83606 /* graphics */,
 				F71603C42191A9E100E83606 /* utils */,
 			);
@@ -1023,16 +1052,18 @@
 			isa = PBXGroup;
 			children = (
 				F755750F21A05A0100AE8956 /* OpenGLDataStructs.h */,
+				F7A830F92413F42900E00BC8 /* OpenGLState.h */,
 				F71603D72191A9E100E83606 /* GLSLShader.h */,
+				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F71603DA2191A9E100E83606 /* OpenGLPrinter.h */,
 				F71603D32191A9E100E83606 /* IMGUI.h */,
 				F77015CE21B421C000585FD1 /* OpenGLConsole.h */,
 				F71603DC2191A9E100E83606 /* OpenGLContent.h */,
-				F71603D82191A9E100E83606 /* OpenGLPipeline.h */,
 				F71603D52191A9E100E83606 /* OpenGLView.h */,
 				F71603E02191A9E100E83606 /* OpenGLCamera.h */,
 				F71603D62191A9E100E83606 /* OpenGLRealCamera.h */,
 				F71603D92191A9E100E83606 /* OpenGLDepthCamera.h */,
+				F7A830DA241299CE00E00BC8 /* OpenGLFLS.h */,
 				F71603E12191A9E100E83606 /* OpenGLTrackball.h */,
 				F71603DD2191A9E100E83606 /* OpenGLLight.h */,
 				F71603DB2191A9E100E83606 /* OpenGLPointLight.h */,
@@ -1103,6 +1134,7 @@
 		F716047F2191AA0D00E83606 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F7A830EE24129A5A00E00BC8 /* comms */,
 				F71605C12191C67700E83606 /* core */,
 				F71605C52192315100E83606 /* entities */,
 				F71605C42192314300E83606 /* joints */,
@@ -1193,6 +1225,7 @@
 		F71605C221922E1700E83606 /* graphics */ = {
 			isa = PBXGroup;
 			children = (
+				F7A830FB2413F44700E00BC8 /* OpenGLState.cpp */,
 				F755751121A06FF100AE8956 /* OpenGLDataStructs.cpp */,
 				F71604BC2191AA0D00E83606 /* IMGUI.cpp */,
 				F716049C2191AA0D00E83606 /* GLSLShader.cpp */,
@@ -1202,6 +1235,7 @@
 				F716049A2191AA0D00E83606 /* OpenGLContent.cpp */,
 				F716049B2191AA0D00E83606 /* OpenGLDebugDrawer.cpp */,
 				F716049E2191AA0D00E83606 /* OpenGLDepthCamera.cpp */,
+				F7A830EC24129A4E00E00BC8 /* OpenGLFLS.cpp */,
 				F71604862191AA0D00E83606 /* OpenGLRealCamera.cpp */,
 				F71604CE2191AA0D00E83606 /* OpenGLLight.cpp */,
 				F71604E82191AA0D00E83606 /* OpenGLPointLight.cpp */,
@@ -1351,6 +1385,7 @@
 		F7895B8621A46FA70014722C /* vision */ = {
 			isa = PBXGroup;
 			children = (
+				F7A830D8241299BB00E00BC8 /* FLS.h */,
 				F716039A2191A9E100E83606 /* Camera.h */,
 				F71603A62191A9E100E83606 /* ColorCamera.h */,
 				F71603A82191A9E100E83606 /* DepthCamera.h */,
@@ -1389,12 +1424,33 @@
 		F7895B8A21A4773F0014722C /* vision */ = {
 			isa = PBXGroup;
 			children = (
+				F7A830EA24129A4300E00BC8 /* FLS.cpp */,
 				F71604952191AA0D00E83606 /* Camera.cpp */,
 				F71604A62191AA0D00E83606 /* ColorCamera.cpp */,
 				F71604CF2191AA0D00E83606 /* DepthCamera.cpp */,
 				F70AF90C21F61B9100700A8B /* Multibeam2.cpp */,
 			);
 			path = vision;
+			sourceTree = "<group>";
+		};
+		F7A830E324129A1C00E00BC8 /* comms */ = {
+			isa = PBXGroup;
+			children = (
+				F7A830E424129A1C00E00BC8 /* Comm.h */,
+				F7A830E524129A1C00E00BC8 /* AcousticModem.h */,
+				F7A830E624129A1C00E00BC8 /* USBL.h */,
+			);
+			path = comms;
+			sourceTree = "<group>";
+		};
+		F7A830EE24129A5A00E00BC8 /* comms */ = {
+			isa = PBXGroup;
+			children = (
+				F7A830EF24129A5A00E00BC8 /* USBL.cpp */,
+				F7A830F024129A5A00E00BC8 /* AcousticModem.cpp */,
+				F7A830F124129A5A00E00BC8 /* Comm.cpp */,
+			);
+			path = comms;
 			sourceTree = "<group>";
 		};
 		F7AB71AD18C3D8EC0077F07D = {
@@ -1549,6 +1605,10 @@
 		F7C8895821B96E6B00FF2109 /* post-processing */ = {
 			isa = PBXGroup;
 			children = (
+				F7A830F824129A8D00E00BC8 /* sonarInput.frag */,
+				F7A830F724129A8D00E00BC8 /* sonarInput.vert */,
+				F7A830F624129A8D00E00BC8 /* sonarOutput.frag */,
+				F7A830F524129A8D00E00BC8 /* sonarVisualize.frag */,
 				F716058B2191AA1C00E83606 /* depthAwareBlur.frag */,
 				F71605602191AA1C00E83606 /* depthAwareBlur2.frag */,
 				F716055B2191AA1C00E83606 /* depthLinearize.frag */,
@@ -1634,6 +1694,7 @@
 				F71604782191A9E100E83606 /* Box.h in Headers */,
 				F71604472191A9E100E83606 /* DCMotor.h in Headers */,
 				F716047C2191A9E200E83606 /* Cylinder.h in Headers */,
+				F7A830FA2413F42900E00BC8 /* OpenGLState.h in Headers */,
 				F716046F2191A9E100E83606 /* FeatherstoneEntity.h in Headers */,
 				F716042B2191A9E100E83606 /* UnitSystem.h in Headers */,
 				F716043D2191A9E100E83606 /* SphericalJoint.h in Headers */,
@@ -1646,6 +1707,7 @@
 				F716044F2191A9E100E83606 /* OpenGLPipeline.h in Headers */,
 				F7895B8221A46EB20014722C /* ScalarSensor.h in Headers */,
 				F716043C2191A9E100E83606 /* FixedJoint.h in Headers */,
+				F7A830E924129A1C00E00BC8 /* USBL.h in Headers */,
 				F71604272191A9E100E83606 /* Sample.h in Headers */,
 				F71604302191A9E100E83606 /* Robot.h in Headers */,
 				F71604672191A9E100E83606 /* Obstacle.h in Headers */,
@@ -1674,16 +1736,19 @@
 				F71604282191A9E100E83606 /* Pressure.h in Headers */,
 				F71604172191A9E100E83606 /* RealRotaryEncoder.h in Headers */,
 				F716043B2191A9E100E83606 /* CylindricalJoint.h in Headers */,
+				F7A830E724129A1C00E00BC8 /* Comm.h in Headers */,
 				F71604102191A9E100E83606 /* ADC.h in Headers */,
 				F7E965B621A85F8B0067D12C /* JointActuator.h in Headers */,
 				F71604442191A9E100E83606 /* Light.h in Headers */,
 				F7895B8021A4693B0014722C /* LinkSensor.h in Headers */,
 				F716040E2191A9E100E83606 /* RotaryEncoder.h in Headers */,
 				F716046B2191A9E100E83606 /* Trigger.h in Headers */,
+				F7A830D9241299BB00E00BC8 /* FLS.h in Headers */,
 				F716040F2191A9E100E83606 /* GPS.h in Headers */,
 				F71604562191A9E100E83606 /* OpenGLAtmosphere.h in Headers */,
 				F716041A2191A9E100E83606 /* IMU.h in Headers */,
 				F71604232191A9E100E83606 /* Torque.h in Headers */,
+				F7A830E824129A1C00E00BC8 /* AcousticModem.h in Headers */,
 				F71604652191A9E100E83606 /* Plane.h in Headers */,
 				F7E30A29234508AC000BB596 /* Servo.h in Headers */,
 				F716047A2191A9E100E83606 /* Torus.h in Headers */,
@@ -1730,6 +1795,7 @@
 				F71604702191A9E100E83606 /* Entity.h in Headers */,
 				F716046E2191A9E100E83606 /* VelocityField.h in Headers */,
 				F71604132191A9E100E83606 /* Current.h in Headers */,
+				F7A830DB241299CE00E00BC8 /* OpenGLFLS.h in Headers */,
 				F736501F2302423100AE7B03 /* OpenGLOceanParticles.h in Headers */,
 				F71604792191A9E100E83606 /* Polyhedron.h in Headers */,
 				F71604482191A9E100E83606 /* Actuator.h in Headers */,
@@ -1986,6 +2052,7 @@
 				F716052C2191AA0D00E83606 /* Stream.cpp in Sources */,
 				F71604F02191AA0D00E83606 /* Multibeam.cpp in Sources */,
 				F7BD9F4823463FF600D4ED5F /* ScenarioParser.cpp in Sources */,
+				F7A830F424129A5A00E00BC8 /* Comm.cpp in Sources */,
 				F716052F2191AA0D00E83606 /* Trigger.cpp in Sources */,
 				F71605182191AA0D00E83606 /* OpenGLSpotLight.cpp in Sources */,
 				F71604ED2191AA0D00E83606 /* Ocean.cpp in Sources */,
@@ -2002,6 +2069,7 @@
 				F70FA7472284912D00528AD1 /* Propeller.cpp in Sources */,
 				F71605532191AA0E00E83606 /* ScalarSensor.cpp in Sources */,
 				F77015D121B421EB00585FD1 /* OpenGLConsole.cpp in Sources */,
+				F7A830EB24129A4300E00BC8 /* FLS.cpp in Sources */,
 				F7E965B821A863B20067D12C /* LinkActuator.cpp in Sources */,
 				F7E965B121A6CC250067D12C /* GeometryFileUtil.cpp in Sources */,
 				F71605192191AA0D00E83606 /* ScientificFileUtil.cpp in Sources */,
@@ -2041,6 +2109,7 @@
 				F716051F2191AA0D00E83606 /* IMU.cpp in Sources */,
 				F71604EE2191AA0D00E83606 /* Torque.cpp in Sources */,
 				F71605002191AA0D00E83606 /* OpenGLAtmosphere.cpp in Sources */,
+				F7A830ED24129A4E00E00BC8 /* OpenGLFLS.cpp in Sources */,
 				F71605312191AA0D00E83606 /* RotaryEncoder.cpp in Sources */,
 				F71605132191AA0D00E83606 /* Thruster.cpp in Sources */,
 				F71605442191AA0D00E83606 /* GPS.cpp in Sources */,
@@ -2066,6 +2135,7 @@
 				F71605032191AA0D00E83606 /* Entity.cpp in Sources */,
 				F71605322191AA0D00E83606 /* Sensor.cpp in Sources */,
 				F716053B2191AA0D00E83606 /* DepthCamera.cpp in Sources */,
+				F7A830FC2413F44700E00BC8 /* OpenGLState.cpp in Sources */,
 				F71605552191AA0E00E83606 /* ADC.cpp in Sources */,
 				F716051A2191AA0D00E83606 /* Robot.cpp in Sources */,
 				F70FA7452284910600528AD1 /* Uniform.cpp in Sources */,
@@ -2088,6 +2158,8 @@
 				F71605252191AA0D00E83606 /* ConsoleSimulationApp.cpp in Sources */,
 				F71605522191AA0E00E83606 /* Polyhedron.cpp in Sources */,
 				F71604F72191AA0D00E83606 /* Cylinder.cpp in Sources */,
+				F7A830F324129A5A00E00BC8 /* AcousticModem.cpp in Sources */,
+				F7A830F224129A5A00E00BC8 /* USBL.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

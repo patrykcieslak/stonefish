@@ -35,7 +35,7 @@ namespace sf
     class SimulationManager;
     class OpenGLContent;
     class OpenGLCamera;
-    
+
     //! A class implementing the OpenGL rendering pipeline.
     class OpenGLPipeline
     {
@@ -104,7 +104,7 @@ namespace sf
         GLuint screenFBO;
         GLuint screenTex;
         OpenGLContent* content;
-		Scalar lastSimTime;
+        Scalar lastSimTime;
     };
 }
 

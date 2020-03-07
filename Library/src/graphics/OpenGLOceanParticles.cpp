@@ -27,6 +27,7 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLCamera.h"
@@ -47,7 +48,7 @@ OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibl
     lastEyePos = glm::vec3(0);
     
     glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    OpenGLState::BindVertexArray(vao);
     
     static const GLfloat billboard[] = { 
          -0.5f, -0.5f, 0.0f,
@@ -64,7 +65,7 @@ OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibl
     glBindBuffer(GL_ARRAY_BUFFER, vboPositionSize);
     glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(glm::vec4), NULL, GL_STREAM_DRAW);
 
-    glBindVertexArray(0);
+    OpenGLState::BindVertexArray(0);
     
     flakeTexture = OpenGLContent::LoadInternalTexture("flake.png");
 }
@@ -140,7 +141,7 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     glm::mat4 projection = cam->GetProjectionMatrix();
     glm::mat4 view = cam->GetViewMatrix();
     
-    glBindVertexArray(vao);
+    OpenGLState::BindVertexArray(vao);
     
     glBindBuffer(GL_ARRAY_BUFFER, vboPositionSize);
     glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(glm::vec4), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
@@ -160,7 +161,7 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     glActiveTexture(GL_TEXTURE0 + TEX_BASE);
     glBindTexture(GL_TEXTURE_2D, flakeTexture);
     
-    glEnable(GL_BLEND);
+    OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     particleShader->Use();
@@ -177,15 +178,15 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetupLights(particleShader);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, (GLsizei)nParticles);
     
-    glDisable(GL_BLEND);
+    OpenGLState::DisableBlend();
     
     glBindTexture(GL_TEXTURE_2D, 0);
     
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     
-    glUseProgram(0);
-    glBindVertexArray(0);
+    OpenGLState::UseProgram(0);
+    OpenGLState::BindVertexArray(0);
 }
     
 void OpenGLOceanParticles::Init()

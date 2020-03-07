@@ -25,6 +25,7 @@
 
 #include "graphics/OpenGLPrinter.h"
 
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include <stdio.h>
 
@@ -209,7 +210,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     glDrawArrays(GL_TRIANGLES, 0, n);
  
     glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
 }
 
 GLuint OpenGLPrinter::TextLength(const std::string& text)

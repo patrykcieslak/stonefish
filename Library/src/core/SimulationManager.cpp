@@ -253,7 +253,7 @@ int SimulationManager::CheckCollision(const Entity *entA, const Entity *entB)
     {
         if((collisions[i].A == entA && collisions[i].B == entB) 
             || (collisions[i].B == entA && collisions[i].A == entB))
-                return i;
+                return (int)i;
     }
     
     return -1;

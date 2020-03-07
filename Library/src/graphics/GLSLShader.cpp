@@ -27,6 +27,7 @@
 
 #include <fstream>
 #include "core/Console.h"
+#include "graphics/OpenGLState.h"
 #include "utils/SystemUtil.hpp"
 
 namespace sf
@@ -168,7 +169,7 @@ bool GLSLShader::isValid()
 void GLSLShader::Use()
 {
     if(valid)
-        glUseProgram(shader);
+        OpenGLState::UseProgram(shader);
 }
 
 bool GLSLShader::AddAttribute(std::string name, ParameterType type)
@@ -179,7 +180,7 @@ bool GLSLShader::AddAttribute(std::string name, ParameterType type)
     
     Use();
     att.index = glGetAttribLocation(shader, name.c_str());
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     
     if(att.index < 0)
         return false;
@@ -196,7 +197,7 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     
     Use();
     uni.location = glGetUniformLocation(shader, name.c_str());
-    glUseProgram(0);
+    OpenGLState::UseProgram(0);
     
     if(uni.location < 0)
     {
