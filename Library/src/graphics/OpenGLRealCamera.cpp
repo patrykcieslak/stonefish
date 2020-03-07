@@ -92,13 +92,14 @@ void OpenGLRealCamera::setCamera(ColorCamera* cam)
     OpenGLState::BindFramebuffer(cameraFBO);
     
     glGenTextures(1, &cameraColorTex);
-    glBindTexture(GL_TEXTURE_2D, cameraColorTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, cameraColorTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cameraColorTex, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
@@ -163,11 +164,8 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
     {
         if(display) //No need to calculate exposure again
         {
-            glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-            glBindTexture(GL_TEXTURE_2D, postprocessTex[0]);
-            glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-            glBindTexture(GL_TEXTURE_2D, lightMeterTex);
-            
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);
+            OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, lightMeterTex);
             OpenGLState::BindFramebuffer(cameraFBO);
             //OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             tonemapShader->Use();
@@ -182,9 +180,8 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
         
             //Unbind
             OpenGLState::BindFramebuffer(0);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+            OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         }
         else
         {

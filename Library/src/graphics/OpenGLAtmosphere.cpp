@@ -282,13 +282,10 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     }
     
     //Permanently bind atmosphere textures
-    glActiveTexture(GL_TEXTURE0 + TEX_ATM_TRANSMITTANCE);
-    glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    glActiveTexture(GL_TEXTURE0 + TEX_ATM_SCATTERING);
-    glBindTexture(GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
-    glActiveTexture(GL_TEXTURE0 + TEX_ATM_IRRADIANCE);
-    glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
-   
+    OpenGLState::BindTexture(TEX_ATM_TRANSMITTANCE, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
+    OpenGLState::BindTexture(TEX_ATM_SCATTERING, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
+    OpenGLState::BindTexture(TEX_ATM_IRRADIANCE, GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
+    
     //Build rendering shaders
     std::vector<GLuint> compiledShaders;
     compiledShaders.push_back(atmosphereAPI);
@@ -315,11 +312,10 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
         sunShadowmapShader->AddUniform("shadowmapLayer", ParameterType::FLOAT);
         
         //Generate shadowmap array
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glGenTextures(1, &sunShadowmapArray);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, sunShadowmapSize, sunShadowmapSize, sunShadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         
         //Generate samplers
         glGenSamplers(1, &sunDepthSampler);
@@ -352,15 +348,14 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     else
     {
         //Generate shadowmap array
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
         glGenTextures(1, &sunShadowmapArray);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, 1, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
     }
 }
 
@@ -674,12 +669,10 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
     shader->SetUniform("whitePoint", whitePoint);
 
     //Bind textures and samplers
-    glActiveTexture(GL_TEXTURE0 + TEX_SUN_SHADOW);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+    OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
     glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
 
-    glActiveTexture(GL_TEXTURE0 + TEX_SUN_DEPTH);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+    OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
     glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
 }
 
@@ -710,7 +703,7 @@ void OpenGLAtmosphere::Precompute()
     glGenTextures(AtmosphereTextures::TEXTURE_COUNT, textures);
 
     //Transmittance
-    glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -719,7 +712,7 @@ void OpenGLAtmosphere::Precompute()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL); //16F precision for the transmittance gives artifacts.
 
     //Scattering
-    glBindTexture(GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -729,7 +722,7 @@ void OpenGLAtmosphere::Precompute()
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGBA, GL_FLOAT, NULL);
 
     //Irradiance
-    glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -740,7 +733,7 @@ void OpenGLAtmosphere::Precompute()
     //Create temporary textures
     GLuint delta_irradiance_texture;
     glGenTextures(1, &delta_irradiance_texture);
-    glBindTexture(GL_TEXTURE_2D, delta_irradiance_texture);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, delta_irradiance_texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -750,7 +743,7 @@ void OpenGLAtmosphere::Precompute()
 
     GLuint delta_rayleigh_scattering_texture;
     glGenTextures(1, &delta_rayleigh_scattering_texture);
-    glBindTexture(GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -761,7 +754,7 @@ void OpenGLAtmosphere::Precompute()
 
     GLuint delta_mie_scattering_texture;
     glGenTextures(1, &delta_mie_scattering_texture);
-    glBindTexture(GL_TEXTURE_3D, delta_mie_scattering_texture);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_mie_scattering_texture);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -772,7 +765,7 @@ void OpenGLAtmosphere::Precompute()
 
     GLuint delta_scattering_density_texture;
     glGenTextures(1, &delta_scattering_density_texture);
-    glBindTexture(GL_TEXTURE_3D, delta_scattering_density_texture);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_scattering_density_texture);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -927,10 +920,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     directIrradianceShader.Use();
     directIrradianceShader.SetUniform("texTransmittance", TEX_POSTPROCESS1);
     
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
     DrawBlendedSAQ({false, blend});
 
     // Compute the rayleigh and mie single scattering, store them in
@@ -946,11 +936,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     singleScatteringShader.SetUniform("texTransmittance", TEX_POSTPROCESS1);
     singleScatteringShader.SetUniform("luminanceFromRadiance", glm::mat3(luminance_from_radiance));
     
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    
-    glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
     for(int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer)
     {
         singleScatteringShader.SetUniform("layer", layer);
@@ -977,23 +963,12 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         scatteringDensityShader.SetUniform("texIrradiance", TEX_POSTPROCESS5);
         scatteringDensityShader.SetUniform("scatteringOrder", (int)scattering_order);
         
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-        glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-        glBindTexture(GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
-        glBindTexture(GL_TEXTURE_3D, delta_mie_scattering_texture);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS4);
-        glBindTexture(GL_TEXTURE_3D, delta_multiple_scattering_texture);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS5);
-        glBindTexture(GL_TEXTURE_2D, delta_irradiance_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_3D, delta_mie_scattering_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS4, GL_TEXTURE_3D, delta_multiple_scattering_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS5, GL_TEXTURE_2D, delta_irradiance_texture);
         
-//        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-//        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
-//        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS3, GL_TEXTURE_3D, delta_mie_scattering_texture);
-//        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS4, GL_TEXTURE_3D, delta_multiple_scattering_texture);
-//        glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS5, GL_TEXTURE_2D, delta_irradiance_texture);
-
         for(int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer)
         {
             scatteringDensityShader.SetUniform("layer", layer);
@@ -1013,16 +988,10 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         indirectIrradianceShader.SetUniform("scatteringOrder", (int)scattering_order - 1);
         indirectIrradianceShader.SetUniform("luminanceFromRadiance", glm::mat3(luminance_from_radiance));
         
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-        glBindTexture(GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
-        glBindTexture(GL_TEXTURE_3D, delta_mie_scattering_texture);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS4);
-        glBindTexture(GL_TEXTURE_3D, delta_multiple_scattering_texture);
-        
-        //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
-        //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS3, GL_TEXTURE_3D, delta_mie_scattering_texture);
-        //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS4, GL_TEXTURE_3D, delta_multiple_scattering_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_3D, delta_mie_scattering_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS4, GL_TEXTURE_3D, delta_multiple_scattering_texture);
+    
         DrawBlendedSAQ({false, true});
 
         //Compute the multiple scattering, store it in delta_multiple_scattering_texture, and accumulate it in scattering_texture.
@@ -1036,35 +1005,20 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
         multipleScatteringShader.SetUniform("texScatteringDensity", TEX_POSTPROCESS2);
         multipleScatteringShader.SetUniform("luminanceFromRadiance", glm::mat3(luminance_from_radiance));
         
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-        glBindTexture(GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-        glBindTexture(GL_TEXTURE_3D, delta_scattering_density_texture);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_scattering_density_texture);
         
-        //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS1, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-        //glBindMultiTextureEXT(GL_TEXTURE0 + TEX_POSTPROCESS2, GL_TEXTURE_3D, delta_scattering_density_texture);
-
         for(int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
             multipleScatteringShader.SetUniform("layer", layer);
             DrawBlendedSAQ({false, true});
         }
     }
     
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS2);
-    glBindTexture(GL_TEXTURE_3D, 0);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS3);
-    glBindTexture(GL_TEXTURE_3D, 0);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS4);
-    glBindTexture(GL_TEXTURE_3D, 0);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS5);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS4);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS5);
     
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
@@ -1318,8 +1272,7 @@ void OpenGLAtmosphere::ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 re
 void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
 {
     //Texture setup
-    glActiveTexture(GL_TEXTURE0 + TEX_SUN_SHADOW);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+    OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     OpenGLState::DisableBlend();
     OpenGLState::DisableDepthTest();
@@ -1333,9 +1286,7 @@ void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
-
-    //Reset
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    OpenGLState::UnbindTexture(TEX_SUN_SHADOW);
 }
     
 void OpenGLAtmosphere::BuildAtmosphereAPI(RenderQuality quality)

@@ -98,9 +98,8 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
             texHeight = (GLfloat)h;
             
             //Create texture
-            glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
             glGenTextures(1, &fontTexture);
-            glBindTexture(GL_TEXTURE_2D, fontTexture);
+            OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, (GLint)w, (GLint)h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -126,7 +125,7 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
                 x += face->glyph->bitmap.width;
             }
             
-            glBindTexture(GL_TEXTURE_2D, 0);
+            OpenGLState::UnbindTexture(TEX_GUI1);
             
             //Freetype not needed any more
             FT_Done_Face(face);
@@ -173,9 +172,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     GLfloat sx = 2.f/(GLfloat)windowW;
     GLfloat sy = 2.f/(GLfloat)windowH;
     
-    glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
-    glBindTexture(GL_TEXTURE_2D, fontTexture);
-    
+    OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture);
     printShader->Use();
     printShader->SetUniform("color", color);
     printShader->SetUniform("tex", TEX_GUI1);
@@ -209,7 +206,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
  
     glDrawArrays(GL_TRIANGLES, 0, n);
  
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_GUI1);
     OpenGLState::UseProgram(0);
 }
 

@@ -78,7 +78,7 @@ void OpenGLConsole::Init(int w, int h)
     {
         // Allocate an OpenGL texture
         glGenTextures(1, &logoTexture);
-        glBindTexture(GL_TEXTURE_2D, logoTexture);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
         // Upload texture to memory
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
         // Set certain properties of texture
@@ -208,11 +208,8 @@ void OpenGLConsole::Render(bool overlay)
         texQuadShader->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
         texQuadShader->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
         
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-        glBindTexture(GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGUI()->getTranslucentTexture());
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGUI()->getTranslucentTexture());
         OpenGLState::BindVertexArray(consoleVAO);
-        
         glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -221,12 +218,10 @@ void OpenGLConsole::Render(bool overlay)
         texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
         texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
         
-        glBindTexture(GL_TEXTURE_2D, logoTexture);
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        
         OpenGLState::UseProgram(0);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         
         //Text rendering
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
@@ -244,16 +239,12 @@ void OpenGLConsole::Render(bool overlay)
         texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
         texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
         
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-        glBindTexture(GL_TEXTURE_2D, logoTexture);
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
         glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         OpenGLState::UseProgram(0);
         
         //Text rendering

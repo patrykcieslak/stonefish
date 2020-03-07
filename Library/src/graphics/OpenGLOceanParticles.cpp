@@ -158,9 +158,7 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     glVertexAttribDivisor(0, 0);
     glVertexAttribDivisor(1, 1);
     
-    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-    glBindTexture(GL_TEXTURE_2D, flakeTexture);
-    
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
@@ -177,16 +175,12 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(particleShader);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetupLights(particleShader);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, (GLsizei)nParticles);
-    
-    OpenGLState::DisableBlend();
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
-    
+    OpenGLState::DisableBlend();
     OpenGLState::UseProgram(0);
     OpenGLState::BindVertexArray(0);
+    OpenGLState::UnbindTexture(TEX_BASE);
 }
     
 void OpenGLOceanParticles::Init()

@@ -25,6 +25,7 @@
 
 #include "graphics/OpenGLLight.h"
 
+#include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLRealCamera.h"
@@ -114,9 +115,9 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
         
     //Generate shadowmap array
     glGenTextures(1, &spotShadowArrayTex);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE, numOfSpotLights, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
     
     //Generate samplers
     glGenSamplers(1, &spotDepthSampler);
@@ -139,12 +140,10 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
         if(lights[i]->getType() == LightType::SPOT_LIGHT) lights[i]->InitShadowmap(numOfSpotLights++);		
         
     //Bind textures and samplers
-    glActiveTexture(GL_TEXTURE0 + TEX_SPOT_SHADOW);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
+    OpenGLState::BindTexture(TEX_SPOT_SHADOW, GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
     glBindSampler(TEX_SPOT_SHADOW, spotShadowSampler);
     
-    glActiveTexture(GL_TEXTURE0 + TEX_SPOT_DEPTH);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
+    OpenGLState::BindTexture(TEX_SPOT_DEPTH, GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);
     glBindSampler(TEX_SPOT_DEPTH, spotDepthSampler);
 }
 

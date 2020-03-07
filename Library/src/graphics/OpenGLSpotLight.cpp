@@ -145,7 +145,7 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 void OpenGLSpotLight::ShowShadowMap(glm::vec4 rect)
 {
     /*OpenGLState::DisableBlend();
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, shadowMap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);*/
 }

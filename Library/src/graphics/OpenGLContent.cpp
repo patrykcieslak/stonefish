@@ -649,9 +649,7 @@ void OpenGLContent::DrawSAQ()
 
 void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 {
-    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
     texSaqShader->Use();
     texSaqShader->SetUniform("tex", TEX_BASE);
     texSaqShader->SetUniform("color", color);
@@ -660,7 +658,7 @@ void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
     glDrawArrays(GL_TRIANGLES, 0, 3);
     OpenGLState::BindVertexArray(0);
     
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
     OpenGLState::UseProgram(0);
 }
 
@@ -675,8 +673,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         texQuadShader->SetUniform("tex", TEX_BASE);
         texQuadShader->SetUniform("color", color);
         
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
         OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
@@ -685,7 +682,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
         OpenGLState::BindVertexArray(0);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         OpenGLState::UseProgram(0);
     }
 }
@@ -711,9 +708,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
             texLevelQuadShader->SetUniform("level", z);
         }
         
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-        glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
-        
+        OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
         OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
@@ -722,8 +717,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
         OpenGLState::BindVertexArray(0);
-        
-        glBindTexture(array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         OpenGLState::UseProgram(0);
     }
 }
@@ -739,9 +733,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         texQuadMSShader->SetUniform("tex", TEX_BASE);
         texQuadMSShader->SetUniform("texSize", texSize);
         
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureMS);
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_MULTISAMPLE, textureMS);
         OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
@@ -750,8 +742,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(0);
         OpenGLState::BindVertexArray(0);
-        
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         OpenGLState::UseProgram(0);
     }
 }	
@@ -763,9 +754,7 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
         texCubeShader->Use();
         texCubeShader->SetUniform("tex", TEX_BASE);
         
-        glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-        
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
         OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -782,7 +771,7 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
         OpenGLState::BindVertexArray(0);
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         OpenGLState::UseProgram(0);
     }
 }
@@ -974,16 +963,14 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             shader->SetUniform("reflectivity", l.reflectivity);
             shader->SetUniform("tex", TEX_BASE);
             
-            glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-            
             if(l.textures.size() > 0)
             {
-                glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+                OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, l.textures[0]);
                 shader->SetUniform("color", glm::vec4(l.color, 1.f));
             }
             else
             {
-                glBindTexture(GL_TEXTURE_2D, 0);
+                OpenGLState::UnbindTexture(TEX_BASE);
                 shader->SetUniform("color", glm::vec4(l.color, 0.f));			
             }
         }
@@ -1005,16 +992,14 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             shader->SetUniform("reflectivity", l.reflectivity);
             shader->SetUniform("tex", TEX_BASE);
             
-            glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-            
             if(l.textures.size() > 0)
             {
-                glBindTexture(GL_TEXTURE_2D, l.textures[0]);
+                OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, l.textures[0]);
                 shader->SetUniform("color", glm::vec4(l.color, 1.f));
             }
             else
             {
-                glBindTexture(GL_TEXTURE_2D, 0);
+                OpenGLState::UnbindTexture(TEX_BASE);
                 shader->SetUniform("color", glm::vec4(l.color, 0.f));			
             }
         }
@@ -1047,11 +1032,8 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
     shader->SetUniform("metallic", 0.f);
     shader->SetUniform("reflectivity", 0.f);
     shader->SetUniform("tex", TEX_BASE);
-    shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));			
-            
-    glActiveTexture(GL_TEXTURE0 + TEX_BASE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
+    shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
+    OpenGLState::UnbindTexture(TEX_BASE);
     SetupLights(shader);
 }
 
@@ -1187,7 +1169,7 @@ GLuint OpenGLContent::LoadTexture(std::string filename)
     
     // Allocate an OpenGL texture
     glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
     // Upload texture to memory
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
     // Set certain properties of texture
@@ -1198,6 +1180,7 @@ GLuint OpenGLContent::LoadTexture(std::string filename)
     // Wrap texture around
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    OpenGLState::UnbindTexture(TEX_BASE);
     // Release internal buffer
     stbi_image_free(dataBuffer);
     

@@ -76,13 +76,13 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     
     //Render depth
     glGenTextures(1, &renderDepthTex);
-    glBindTexture(GL_TEXTURE_2D, renderDepthTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, renderDepthTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewportWidth, viewportHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
 
     glGenFramebuffers(1, &renderFBO);
     OpenGLState::BindFramebuffer(renderFBO);
@@ -96,13 +96,13 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     
     //Linear depth
     glGenTextures(1, &linearDepthTex);
-    glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, linearDepthTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, viewportWidth, viewportHeight, 0, GL_RED, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture (GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
 
     glGenFramebuffers(1, &linearDepthFBO);
     OpenGLState::BindFramebuffer(linearDepthFBO);
@@ -111,6 +111,8 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Linear Depth FBO initialization failed!");
+    
+    OpenGLState::BindFramebuffer(0);
 }
 
 OpenGLDepthCamera::~OpenGLDepthCamera()
@@ -193,26 +195,18 @@ void OpenGLDepthCamera::LinearizeDepth()
 {
     OpenGLState::BindFramebuffer(linearDepthFBO);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, renderDepthTex);
-    
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthTex);
     depthLinearizeShader->Use();
     depthLinearizeShader->SetUniform("clipInfo", glm::vec4(range.x*range.y, range.x-range.y, range.y, 1.f));
     depthLinearizeShader->SetUniform("texDepth", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::BindFramebuffer(0);
 }
     
 void OpenGLDepthCamera::Depth2LinearRanges()
 {
-    OpenGLState::BindFramebuffer(linearDepthFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, renderDepthTex);
-    
     glm::mat4 proj = GetProjectionMatrix();
     glm::vec4 projInfo(
                        2.0f/proj[0].x,
@@ -221,6 +215,9 @@ void OpenGLDepthCamera::Depth2LinearRanges()
                        -(1.f+proj[1].z)/proj[1].y
                        );
     
+    OpenGLState::BindFramebuffer(linearDepthFBO);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthTex);
     depth2RangesShader->Use();
     depth2RangesShader->SetUniform("clipInfo", glm::vec4(range.x*range.y, range.x-range.y, range.y, 1.f));
     depth2RangesShader->SetUniform("projInfo", projInfo);
@@ -228,8 +225,7 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     depth2RangesShader->SetUniform("texDepth", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::BindFramebuffer(0);
 }
 
@@ -247,9 +243,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
         else LinearizeDepth();
         
         //Bind depth texture
-        glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-        glBindTexture(GL_TEXTURE_2D, linearDepthTex);
-       
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex);
         //LDR drawing
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::Viewport(originX, originY, viewportWidth, viewportHeight);
@@ -259,9 +253,8 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         OpenGLState::BindFramebuffer(0);
         OpenGLState::UseProgram(0);
-        
         //Unbind textures
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     }
     
     //Copy texture to camera buffer
@@ -273,9 +266,9 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
             else LinearizeDepth();
         }
         
-        glBindTexture(GL_TEXTURE_2D, linearDepthTex);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, camera->getImageDataPointer(idx));
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
          
         //Inform camera to run callback
         camera->NewDataReady(idx);

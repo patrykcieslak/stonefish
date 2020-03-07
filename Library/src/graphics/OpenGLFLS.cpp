@@ -76,7 +76,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     //glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
     
     glGenTextures(1, &inputRangeIntensityTex);
-    glBindTexture(GL_TEXTURE_2D, inputRangeIntensityTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, inputRangeIntensityTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, inputWidth, inputHeight, 0, GL_RG, GL_FLOAT, NULL); //2 float channels
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -85,7 +85,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
     
     glGenRenderbuffers(1, &inputDepthRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, inputDepthRBO); 
@@ -103,13 +103,13 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
         
     //Output shader: sonar range data
     glGenTextures(1, &outputTex);
-    glBindTexture(GL_TEXTURE_2D, outputTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, outputTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, nBeams, nBins, 0, GL_RED, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Interpolation for fan rendering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //Interpolation for fan rendering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
     
     glGenFramebuffers(1, &outputFBO);
     OpenGLState::BindFramebuffer(outputFBO);
@@ -121,14 +121,14 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
         
     //Sonar display fan
     glGenTextures(1, &displayTex);
-    glBindTexture(GL_TEXTURE_2D, displayTex);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, displayTex);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //No interpolation!
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //No interpolation!
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_BASE);
     
     glGenFramebuffers(1, &displayFBO);
     OpenGLState::BindFramebuffer(displayFBO);
@@ -137,6 +137,8 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Sonar display FBO initialization failed!");
+    
+    OpenGLState::BindFramebuffer(0);
     
     glGenVertexArrays(1, &fanVAO);
     OpenGLState::BindVertexArray(fanVAO);
@@ -278,10 +280,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindFramebuffer(outputFBO);
     OpenGLState::Viewport(0, 0, nBeams, nBins);
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, inputRangeIntensityTex);
-    
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, inputRangeIntensityTex);
     GLfloat d = 0.5f/tanf(fov.x/2.f);
     GLint beamSamples = inputHeight; //No linear interpolation means no sense to oversample
     sonarOutputShader->Use();
@@ -300,19 +299,15 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindFramebuffer(displayFBO);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    glActiveTexture(GL_TEXTURE0 + TEX_POSTPROCESS1);
-    glBindTexture(GL_TEXTURE_2D, outputTex);
-     
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex);
     sonarVisualizeShader->Use();
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS1);
     OpenGLState::BindVertexArray(fanVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, (fanDiv+1)*2);
     OpenGLState::BindVertexArray(0);
-    
     OpenGLState::BindFramebuffer(0);
     OpenGLState::UseProgram(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
 }
 
 void OpenGLFLS::DrawLDR(GLuint destinationFBO)
@@ -333,11 +328,11 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO)
     //Copy texture to sonar buffer
     if(sonar != NULL && update)
     {
-        glBindTexture(GL_TEXTURE_2D, outputTex);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, outputTex);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, sonar->getImageDataPointer(0));
-        glBindTexture(GL_TEXTURE_2D, displayTex);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, displayTex);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, sonar->getDisplayDataPointer());
-        glBindTexture(GL_TEXTURE_2D, 0);
+        OpenGLState::UnbindTexture(TEX_BASE);
         sonar->NewDataReady(0);
     }
     
