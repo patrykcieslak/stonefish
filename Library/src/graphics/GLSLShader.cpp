@@ -166,6 +166,11 @@ bool GLSLShader::isValid()
     return valid;
 }
 
+GLuint GLSLShader::getProgramHandle()
+{
+    return shader;
+}
+
 void GLSLShader::Use()
 {
     if(valid)

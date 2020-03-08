@@ -69,8 +69,9 @@ namespace sf
          \param x the x position of the text in window
          \param y the y position of the text in window
          \param size the height of the font
+         \param raw flag indicating if raw OpenGL calls should be used
          */
-        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size);
+        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw = false);
         
         //! A method used to measure the length of a string in pixels.
         /*!

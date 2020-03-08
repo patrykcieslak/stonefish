@@ -192,17 +192,15 @@ void OpenGLConsole::Render(bool overlay)
     }
     
     //Setup viewport and ortho
-    glScissor(0, 0, windowW, windowH);
-    OpenGLState::Viewport(0, 0, windowW, windowH);
-    
-    OpenGLState::DisableDepthTest();
-    OpenGLState::DisableCullFace();
-    
-    OpenGLState::EnableBlend();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
     if(overlay)
     {
+        glScissor(0, 0, windowW, windowH);
+        OpenGLState::Viewport(0, 0, windowW, windowH);
+        OpenGLState::DisableDepthTest();
+        OpenGLState::DisableCullFace();
+        OpenGLState::EnableBlend();
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
         texQuadShader->Use();
         texQuadShader->SetUniform("tex", 0);
         texQuadShader->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
@@ -231,31 +229,35 @@ void OpenGLConsole::Render(bool overlay)
         }
         
         OpenGLState::BindVertexArray(0);
+        OpenGLState::DisableBlend();
+        OpenGLState::EnableDepthTest();
+        OpenGLState::EnableCullFace();
     }
     else //During loading of resources (displaying in second thread -> no VAO sharing)
     {
-        texQuadShader->Use();
+        glUseProgram(texQuadShader->getProgramHandle());
         texQuadShader->SetUniform("tex", 0);
         texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
         texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
         
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, logoTexture);
         glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgram(0);
         
         //Text rendering
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
             ConsoleMessage* msg = &lines[linesCount-1-i];
-            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
+            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE, true);
         }
     }
     
-    OpenGLState::DisableBlend();
+    
 }
     
 }

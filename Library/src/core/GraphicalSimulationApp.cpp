@@ -907,10 +907,16 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     
     //Render loading screen
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glScissor(0, 0, ltdata->app->windowW, ltdata->app->windowH);
+    glViewport(0, 0, ltdata->app->windowW, ltdata->app->windowH);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     GLuint vao;
     glGenVertexArrays(1, &vao);
-    OpenGLState::BindVertexArray(vao);
+    glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     
     while(ltdata->app->loading)
@@ -925,7 +931,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
         SDL_GL_SwapWindow(ltdata->app->window);
     }
     
-    OpenGLState::BindVertexArray(0);
+    glBindVertexArray(0);
     glDeleteVertexArrays(1, &vao);
     
     //Detach thread from GL context

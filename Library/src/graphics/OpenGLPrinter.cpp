@@ -149,7 +149,7 @@ OpenGLPrinter::~OpenGLPrinter()
         glDeleteBuffers(1, &fontVBO);
 }
 
-void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size)
+void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw)
 {
     if(!initialized)
         return;
@@ -172,8 +172,18 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     GLfloat sx = 2.f/(GLfloat)windowW;
     GLfloat sy = 2.f/(GLfloat)windowH;
     
-    OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture);
-    printShader->Use();
+    if(raw)
+    {
+        glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
+        glBindTexture(GL_TEXTURE_2D, fontTexture);
+        glUseProgram(printShader->getProgramHandle());
+    }
+    else
+    {
+        OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture);
+        printShader->Use();
+    }
+    
     printShader->SetUniform("color", color);
     printShader->SetUniform("tex", TEX_GUI1);
 
@@ -206,8 +216,16 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
  
     glDrawArrays(GL_TRIANGLES, 0, n);
  
-    OpenGLState::UnbindTexture(TEX_GUI1);
-    OpenGLState::UseProgram(0);
+    if(raw)
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgram(0);
+    }
+    else
+    {
+        OpenGLState::UnbindTexture(TEX_GUI1);
+        OpenGLState::UseProgram(0);
+    }
 }
 
 GLuint OpenGLPrinter::TextLength(const std::string& text)

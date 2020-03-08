@@ -226,6 +226,9 @@ namespace sf
         //! A method to check if the shader is valid.
         bool isValid();
         
+        //! A method used to get the OpenGL program handle
+        GLuint getProgramHandle();
+        
         //! A static method to init shader environment.
         static bool Init();
         

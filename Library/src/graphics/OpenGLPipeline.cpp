@@ -312,13 +312,17 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         renderMode = rSettings.ocean > RenderQuality::QUALITY_DISABLED && ocean->isRenderable() ? 1 : 0;
     }
     Atmosphere* atm = sim->getAtmosphere();
+    OpenGLState::EnableDepthTest();
+    OpenGLState::EnableCullFace();
     
     //Bake shadow maps for lights (independent of view)
     if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
     {
+        glCullFace(GL_FRONT);
         content->SetDrawingMode(DrawingMode::FLAT);
         for(unsigned int i=0; i<content->getLightsCount(); ++i)
             content->getLight(i)->BakeShadowmap(this);
+        glCullFace(GL_BACK);
     }
     
     //Clear display framebuffer
@@ -332,10 +336,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         
         if(view->needsUpdate())
         {
-            OpenGLState::DisableBlend();
-            OpenGLState::EnableDepthTest();
-            OpenGLState::EnableCullFace();
-            
             if(view->getType() == DEPTH_CAMERA)
             {
                 OpenGLDepthCamera* camera = (OpenGLDepthCamera*)view;
@@ -364,10 +364,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Draw sonar output
                 GLint* viewport = fls->GetViewport();
                 content->SetViewportSize(viewport[2], viewport[3]);
-                
                 fls->DrawLDR(screenFBO);
-                OpenGLState::BindFramebuffer(0);
-                
                 delete [] viewport;
             }
             else if(view->getType() == CAMERA || view->getType() == TRACKBALL)
@@ -537,12 +534,15 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //camera->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
                     //camera->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
                     
-                    OpenGLState::EnableCullFace();
                     OpenGLState::BindFramebuffer(0);
                 }
             
                 delete [] viewport;
             }
+            
+            OpenGLState::EnableDepthTest();
+            OpenGLState::EnableCullFace();
+            OpenGLState::DisableBlend();
         }
         else
         {

@@ -114,10 +114,6 @@ void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 {
-    OpenGLState::EnableDepthTest();
-    OpenGLState::EnableCullFace();
-    glCullFace(GL_FRONT);
-
     glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle), 1.f, zNear, zFar);
     glm::mat4 view = glm::lookAt(getPosition(),
                                  getPosition() + getDirection(),
