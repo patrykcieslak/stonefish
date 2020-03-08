@@ -69,10 +69,10 @@ void FlyingTestManager::BuildScenario()
     sf::Polyhedron* propeller3 = new sf::Polyhedron("Propeller3", sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SURFACE_BODY, "propeller");
     sf::Polyhedron* propeller4 = new sf::Polyhedron("Propeller4", sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SURFACE_BODY, "propeller");
     
-    sf::Propeller* prop1 = new sf::Propeller("Prop1", propeller1, sf::Scalar(0.2), 0.1, 0.01, 10000, true);
-    sf::Propeller* prop2 = new sf::Propeller("Prop2", propeller2, sf::Scalar(0.2), 0.1, 0.01, 10000, true);
-    sf::Propeller* prop3 = new sf::Propeller("Prop3", propeller3, sf::Scalar(0.2), 0.1, 0.01, 10000, false);
-    sf::Propeller* prop4 = new sf::Propeller("Prop4", propeller4, sf::Scalar(0.2), 0.1, 0.01, 10000, false);
+    sf::Propeller* prop1 = new sf::Propeller("Prop1", propeller1, 0.2, 0.1, 0.01, 10000, true);
+    sf::Propeller* prop2 = new sf::Propeller("Prop2", propeller2, 0.2, 0.1, 0.01, 10000, true);
+    sf::Propeller* prop3 = new sf::Propeller("Prop3", propeller3, 0.2, 0.1, 0.01, 10000, false);
+    sf::Propeller* prop4 = new sf::Propeller("Prop4", propeller4, 0.2, 0.1, 0.01, 10000, false);
     
     sf::Box* arm1 = new sf::Box("Arm1", sf::Vector3(1.0,0.01,0.01), sf::I4(), "Fiberglass", sf::BodyPhysicsType::AERODYNAMIC_BODY, "white");
     sf::Box* arm2 = new sf::Box("Arm2", sf::Vector3(0.01,1.0,0.01), sf::I4(), "Fiberglass", sf::BodyPhysicsType::AERODYNAMIC_BODY, "white");

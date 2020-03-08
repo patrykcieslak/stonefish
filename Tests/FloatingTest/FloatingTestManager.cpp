@@ -61,7 +61,7 @@ void FloatingTestManager::BuildScenario()
     sf::Polyhedron* prop = new sf::Polyhedron("Propeller", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
                                               sf::BodyPhysicsType::SUBMERGED_BODY, "propeller");
     
-    sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.18, 0.48, 0.05, 10000.0, false);
+    sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.18, std::make_pair(0.48, 0.48), 0.05, 10000.0, false);
     
     sf::Odometry* odom = new sf::Odometry("Odom");
     

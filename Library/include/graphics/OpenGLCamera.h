@@ -246,7 +246,6 @@ namespace sf
         GLuint aoResultTex;
         GLuint aoDepthArrayTex;
         GLuint aoResultArrayTex;
-        GLuint aoDepthViewTex[HBAO_RANDOM_ELEMENTS];
         GLuint aoFinalFBO;
         GLuint aoDeinterleaveFBO;
         GLuint aoCalcFBO;

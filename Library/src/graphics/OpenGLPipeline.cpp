@@ -399,7 +399,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
-                        camera->DrawAO(0.5f);
+                        camera->DrawAO(1.0f);
             
                     //Render sky (at the end to take profit of early bailing)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			

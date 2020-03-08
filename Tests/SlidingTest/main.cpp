@@ -20,7 +20,7 @@
 //  SlidingTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "SlidingTestApp.h"
@@ -46,8 +46,8 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     h.showJoints = false;
     
-    SlidingTestManager* simulationManager = new SlidingTestManager(500.0);
-    SlidingTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
+    SlidingTestManager simulationManager(500.0);
+    SlidingTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run(false);
     
     return 0;

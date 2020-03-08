@@ -34,7 +34,6 @@
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
-#include <LinearMath/btMatrixX.h>
 
 namespace sf
 {
@@ -43,9 +42,7 @@ namespace sf
     typedef btVector3 Vector3;
     typedef btMatrix3x3 Matrix3;
     typedef btTransform Transform;
-    typedef btVectorXu VectorX;
-    typedef btMatrixXu MatrixX;
-        
+    
     inline Transform I4() { return Transform::getIdentity(); }
     inline Matrix3 I3() { return Matrix3::getIdentity(); }
     inline Quaternion IQ() { return Quaternion::getIdentity(); }

@@ -876,6 +876,8 @@ void GraphicalSimulationApp::ResumeSimulation()
 void GraphicalSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
+	lastPicked = NULL;
+	trackballCenter = NULL;
     
     int status;
     SDL_WaitThread(simulationThread, &status);

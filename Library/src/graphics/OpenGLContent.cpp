@@ -542,18 +542,9 @@ void OpenGLContent::DestroyContent()
     }	
     objects.clear();
     
-    if(views.size() > 0 && views[0]->getType() == ViewType::TRACKBALL)
-    {
-        for(size_t i=1; i<views.size(); ++i)
-            delete views[i];
-        views.erase(views.begin()+1, views.end());
-    }
-    else
-    {
-        for(size_t i=0; i<views.size(); ++i)
-            delete views[i];
-        views.clear();
-    }
+    for(size_t i=0; i<views.size(); ++i)
+		delete views[i];
+	views.clear();
     
     for(size_t i=0; i<lights.size(); ++i)
         delete lights[i];

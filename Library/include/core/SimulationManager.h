@@ -39,7 +39,6 @@ namespace sf
     class Console;
     class NED;
     class Robot;
-    class ResearchDynamicsWorld;
     class ResearchConstraintSolver;
     class Entity;
     class StaticEntity;

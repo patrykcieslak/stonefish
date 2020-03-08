@@ -39,10 +39,10 @@
 #include "core/NameManager.h"
 #include "core/MaterialManager.h"
 #include "core/Robot.h"
-#include "core/ResearchDynamicsWorld.h"
 #include "core/ResearchConstraintSolver.h"
 #include "core/Console.h"
 #include "core/NED.h"
+#include "graphics/OpenGLState.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLTrackball.h"
@@ -659,10 +659,11 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld = new btMultiBodyDynamicsWorld(dwDispatcher, dwBroadphase, dwSolver, dwCollisionConfig);
     
     //Basic configuration
-    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_RANDMIZE_ORDER; // SOLVER_USE_2_FRICTION_DIRECTIONS | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING; //| SOLVER_RANDMIZE_ORDER;
+    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS; //SOLVER_RANDMIZE_ORDER | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING;
     dynamicsWorld->getSolverInfo().m_warmstartingFactor = Scalar(1.);
     dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 256;
-    
+    dynamicsWorld->getSolverInfo().m_timeStep = Scalar(1)/getStepsPerSecond();
+	
     //Quality/stability
     dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
     dynamicsWorld->getSolverInfo().m_erp = Scalar(0.2);  //non-contact constraint error reduction //0.25
@@ -709,10 +710,10 @@ void SimulationManager::InitializeSolver()
 
 void SimulationManager::InitializeScenario()
 {
-    EnableAtmosphere();
-    
     if(SimulationApp::getApp()->hasGraphics())
     {
+		OpenGLState::Init();
+		
         OpenGLView* view = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0);
         if(view == NULL)
         {
@@ -722,6 +723,8 @@ void SimulationManager::InitializeScenario()
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
         }
     }
+	
+	EnableAtmosphere();
 }
 
 void SimulationManager::RestartScenario()
@@ -815,7 +818,10 @@ void SimulationManager::DestroyScenario()
         materialManager->ClearMaterialsAndFluids();
 
     if(SimulationApp::getApp() != NULL && SimulationApp::getApp()->hasGraphics())
+	{
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
+		trackball = NULL;
+	}
 }
 
 bool SimulationManager::StartSimulation()

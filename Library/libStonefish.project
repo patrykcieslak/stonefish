@@ -72,7 +72,6 @@
       <File Name="src/core/GraphicalSimulationApp.cpp"/>
       <File Name="src/core/FilteredCollisionDispatcher.cpp"/>
       <File Name="src/core/SimulationApp.cpp"/>
-      <File Name="src/core/ResearchDynamicsWorld.cpp"/>
       <File Name="src/core/ConsoleSimulationApp.cpp"/>
       <File Name="src/core/Robot.cpp"/>
     </VirtualDirectory>
@@ -91,6 +90,7 @@
       <File Name="src/utils/ScientificFileUtil.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="src/graphics/OpenGLState.cpp"/>
       <File Name="src/graphics/OpenGLFLS.cpp"/>
       <File Name="src/graphics/OpenGLOceanParticles.cpp"/>
       <File Name="src/graphics/OpenGLParticles.cpp"/>
@@ -204,6 +204,7 @@
       <File Name="include/entities/Entity.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="graphics">
+      <File Name="include/graphics/OpenGLState.h"/>
       <File Name="include/graphics/OpenGLFLS.h"/>
       <File Name="include/graphics/OpenGLOceanParticles.h"/>
       <File Name="include/graphics/OpenGLParticles.h"/>
@@ -235,7 +236,6 @@
       <File Name="include/core/SimulationApp.h"/>
       <File Name="include/core/ScrewConstraint.h"/>
       <File Name="include/core/Robot.h"/>
-      <File Name="include/core/ResearchDynamicsWorld.h"/>
       <File Name="include/core/ResearchConstraintSolver.h"/>
       <File Name="include/core/NameManager.h"/>
       <File Name="include/core/MaterialManager.h"/>

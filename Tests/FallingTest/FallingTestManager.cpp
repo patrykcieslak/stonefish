@@ -41,7 +41,7 @@
 #include <sensors/scalar/RotaryEncoder.h>
 
 FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) 
-    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
+    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
 {
 }
 
@@ -63,6 +63,9 @@ void FallingTestManager::BuildScenario()
     ////////OBJECTS
     sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
+	
+	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon.obj", 0.1, sf::I4(),"Steel", "Green");
+	AddStaticEntity(dragon, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0,0,0)));
     
     //---Robot---
     //Mechanical parts

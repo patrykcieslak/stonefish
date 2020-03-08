@@ -90,6 +90,7 @@ void OpenGLState::Init()
     glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
     glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, new GLfloat[4]{1,1,1,1});
     
+	textures.clear();
     for(GLint i=0; i<texUnits; ++i)
         textures.push_back(std::make_pair(0,0));
 }

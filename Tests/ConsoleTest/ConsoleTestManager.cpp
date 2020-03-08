@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/09/2018.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "ConsoleTestManager.h"
@@ -59,6 +59,6 @@ void ConsoleTestManager::BuildScenario()
                                sf::Transform(sf::IQ(), sf::Vector3(0.5,0,0.0)), 
                                sf::Vector3(0.0,1.0,0.0), 
                                std::make_pair<sf::Scalar,sf::Scalar>(-1.0,1.0));
-                               
+	robot->BuildKinematicTree();
     AddRobot(robot, sf::I4());
 }

@@ -252,17 +252,6 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         
-        glGenTextures(HBAO_RANDOM_ELEMENTS, aoDepthViewTex);
-        for(int i=0; i<HBAO_RANDOM_ELEMENTS; ++i)
-        {
-            glTextureView(aoDepthViewTex[i], GL_TEXTURE_2D, aoDepthArrayTex, GL_R32F, 0, 1, i, 1);
-            OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoDepthViewTex[i]);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        }
-        
         glGenTextures(1, &aoResultArrayTex);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
         glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG16F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
@@ -332,7 +321,6 @@ OpenGLCamera::~OpenGLCamera()
         glDeleteTextures(1, &aoBlurTex);
         glDeleteTextures(1, &aoDepthArrayTex);
         glDeleteTextures(1, &aoResultArrayTex);
-        glDeleteTextures(HBAO_RANDOM_ELEMENTS, aoDepthViewTex);
     
         glDeleteFramebuffers(1, &aoFinalFBO);
         glDeleteFramebuffers(1, &aoDeinterleaveFBO);
@@ -577,7 +565,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
                 aoDeinterleaveShader->SetUniform("info", glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, invFullRes.x, invFullRes.y));
             
                 for(int layer = 0; layer < NUM_MRT; ++layer)
-                    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthViewTex[i+layer], 0);
+					glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthArrayTex, 0, i+layer);
             
                 glDrawArrays(GL_TRIANGLES, 0, 3);
             }
