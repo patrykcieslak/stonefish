@@ -28,7 +28,7 @@
 
 #include <core/SimulationManager.h>
 
-//#define PARSED_SCENARIO
+#define PARSED_SCENARIO
 
 class UnderwaterTestManager : public sf::SimulationManager
 {

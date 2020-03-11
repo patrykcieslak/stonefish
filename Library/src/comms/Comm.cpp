@@ -34,18 +34,17 @@
 namespace sf
 {
 
-Comm::Comm(std::string uniqueName, uint64_t deviceId, Scalar frequency)
+Comm::Comm(std::string uniqueName, uint64_t deviceId)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     id = deviceId;
     cId = 0;
-    freq = frequency == Scalar(0) ? Scalar(1) : frequency;
-    eleapsedTime = Scalar(0);
     renderable = false;
     newDataAvailable = false;
     updateMutex = SDL_CreateMutex();
     attach = nullptr;
     o2c = Transform();
+    txSeq = 0;
 }
 
 Comm::~Comm()
@@ -92,11 +91,6 @@ void Comm::MarkDataOld()
     newDataAvailable = false;
 }
 
-void Comm::setUpdateFrequency(Scalar f)
-{
-    freq = f == Scalar(0) ? Scalar(1) : f;
-}
-
 bool Comm::isNewDataAvailable()
 {
     return newDataAvailable;
@@ -115,6 +109,33 @@ bool Comm::isRenderable()
 void Comm::Connect(uint64_t deviceId)
 {
     cId = deviceId;
+}
+
+void Comm::SendMessage(std::string data)
+{
+    CommDataFrame* msg = new CommDataFrame();
+    msg->seq = txSeq++;
+    msg->source = id;
+    msg->destination = cId;
+    msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+    msg->data = data;
+    txBuffer.push_back(msg);
+}
+
+CommDataFrame* Comm::ReadMessage()
+{
+    CommDataFrame* msg = nullptr;
+    if(rxBuffer.size() > 0)
+    {
+        msg = rxBuffer[0];
+        rxBuffer.pop_front();
+    }
+    return msg;
+}
+
+void Comm::MessageReceived(CommDataFrame* message)
+{
+    rxBuffer.push_back(message);
 }
 
 void Comm::AttachToWorld(const Transform& origin)
@@ -143,25 +164,8 @@ void Comm::AttachToSolid(SolidEntity* body, const Transform& origin)
 void Comm::Update(Scalar dt)
 {
     SDL_LockMutex(updateMutex);
-    
-    if(freq <= Scalar(0.)) // Every simulation tick
-    {
-        InternalUpdate(dt);
-        newDataAvailable = true;
-    }
-    else //Fixed rate
-    {
-        eleapsedTime += dt;
-        Scalar invFreq = Scalar(1.)/freq;
-        
-        if(eleapsedTime >= invFreq)
-        {
-            InternalUpdate(invFreq);
-            eleapsedTime -= invFreq;
-            newDataAvailable = true;
-        }
-    }
-    
+    ProcessMessages();
+    InternalUpdate(dt);
     SDL_UnlockMutex(updateMutex);
 }
 

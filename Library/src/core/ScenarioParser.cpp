@@ -1785,7 +1785,6 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
     const char* name = nullptr;
     const char* type = nullptr;
     unsigned int devId;
-    Scalar rate;
     Transform origin;
 
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
@@ -1794,8 +1793,6 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         return false;
     if(element->QueryAttribute("device_id", &devId) != XML_SUCCESS)
         return false;
-    if(element->QueryAttribute("rate", &rate) != XML_SUCCESS)
-        rate = Scalar(-1);
     if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
         return false;
      
@@ -1820,7 +1817,7 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
             || cId == 0)
             return false;
             
-        comm = new AcousticModem(commName, devId, hFovDeg, vFovDeg, range, rate);
+        comm = new AcousticModem(commName, devId, hFovDeg, vFovDeg, range);
         comm->Connect(cId);
     }
     else if(typeStr == "usbl")
@@ -1828,9 +1825,8 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         Scalar hFovDeg;
         Scalar vFovDeg;
         Scalar range;
-        bool hasGPS = false;
-        bool hasPressureSensor = false;
         unsigned int cId = 0;
+        Scalar pingRate;
         
         if((item = element->FirstChildElement("specs")) == nullptr
             || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
@@ -1842,14 +1838,12 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
             || cId == 0)
             return false;
             
-        if((item = element->FirstChildElement("modules")) != nullptr)
-        {
-            item->QueryAttribute("gps", &hasGPS);
-            item->QueryAttribute("pressure_sensor", &hasPressureSensor);
-        }
-       
-        comm = new USBL(commName, devId, hFovDeg, vFovDeg, range, hasGPS, hasPressureSensor, rate);
+        comm = new USBL(commName, devId, hFovDeg, vFovDeg, range);
         comm->Connect(cId);
+        
+        if((item = element->FirstChildElement("autoping")) != nullptr
+            && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
+            ((USBL*)comm)->EnableAutoPing(pingRate);
         
         if((item = element->FirstChildElement("noise")) != nullptr)
         {

@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <scenario>
     <robot name="GIRONA500" fixed="false" self_collisions="false">
 		<base_link name="Vehicle" type="compound" physical="submerged">
@@ -143,12 +144,12 @@
             <origin rpy="0.0 0.0 0.0" xyz="-0.5 0.0 0.0"/>
         </actuator>
 
-        <comm name="USBL" type="usbl" device_id="1" rate="10">
+        <comm name="USBL" type="usbl" device_id="1">
         	<connect device_id="2"/>
         	<link name="Vehicle"/>
         	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
         	<specs horizontal_fov="360.0" vertical_fov="220.0" range="1000.0"/>
-        	<modules gps="false" pressure_sensor="false"/>
+        	<autoping rate="10.0"/>
         	<noise range="0.01" angle="0.1" depth="0.0" ned="0.0"/>
         </comm>
         

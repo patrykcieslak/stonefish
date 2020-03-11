@@ -31,12 +31,10 @@ namespace sf
 std::random_device USBL::randomDevice;
 std::mt19937 USBL::randomGenerator(randomDevice());
     
-USBL::USBL(std::string uniqueName, uint64_t deviceId, 
-           Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange, bool hasGPS, bool hasPressureSensor, 
-           Scalar frequency) : AcousticModem(uniqueName, deviceId, horizontalFOVDeg, verticalFOVDeg, operatingRange, frequency)
+USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange) 
+           : AcousticModem(uniqueName, deviceId, horizontalFOVDeg, verticalFOVDeg, operatingRange)
 {
-    pressure = hasPressureSensor;
-    gps = hasGPS;
+    ping = false;
     noise = false;
 }
     
@@ -48,56 +46,101 @@ void USBL::setNoise(Scalar rangeDev, Scalar angleDevDeg, Scalar nedDev, Scalar d
     noiseDepth = std::normal_distribution<Scalar>(Scalar(0), fabs(depthDev));
     noise = true;
 }
-    
+
+std::map<uint64_t, std::pair<Scalar, Vector3>>& USBL::getTransponderPositions()
+{
+    return transponderPos;
+}
+
+void USBL::EnableAutoPing(Scalar rate)
+{
+     pingTime = Scalar(0);
+     pingRate = rate;
+     ping = true;
+     
+     if(pingRate <= Scalar(0)) //Auto pinging in continuous mode
+         SendMessage("PING");
+}
+ 
+void USBL::DisableAutoPing()
+{
+    ping = false;
+}
+
 void USBL::InternalUpdate(Scalar dt)
 {
     AcousticModem::InternalUpdate(dt);
     
-    if(isConnectionAlive())
+    //Auto pinging with fixed rate
+    if(ping && pingRate > Scalar(0))
     {
-        AcousticModem* cNode = getNode(getConnectedId());
+        pingTime += dt;
+        Scalar invRate = Scalar(1)/pingRate;
         
-        //Get range and direction
-        Transform cTrans = cNode->getDeviceFrame();
-        Transform trans = getDeviceFrame();
-        Vector3 dir = cTrans.getOrigin() - trans.getOrigin(); //In world frame
-        Scalar distance = dir.length();
-        dir = (trans.inverse() * dir).normalized(); //In device frame
-        
-        //Find ranging angles
-        Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
-        Scalar vAngle = atan2(d, dir.getZ());
-        Scalar hAngle = atan2(dir.getY(), dir.getX());
-        
-        //Find position of receiver
-        Vector3 pos;
-        
-        if(noise)
+        if(pingTime >= invRate)
         {
-            trans.getOrigin().setX(trans.getOrigin().getX() + noiseNED(randomGenerator));
-            trans.getOrigin().setY(trans.getOrigin().getY() + noiseNED(randomGenerator));
-            distance += noiseRange(randomGenerator);
-            vAngle += noiseAngle(randomGenerator);
-            hAngle += noiseAngle(randomGenerator);
-            
-            Vector3 corruptedDir;
-            corruptedDir.setX(btCos(hAngle) * btSin(vAngle));
-            corruptedDir.setY(btSin(hAngle) * btSin(vAngle));
-            corruptedDir.setZ(btCos(vAngle));
-            corruptedDir.normalize();
-            
-            pos = corruptedDir * distance;
+            SendMessage("PING");
+            pingTime -= invRate;
         }
-        else 
-            pos = dir * distance;
-        
-        if(gps)
-            cNode->UpdatePosition(trans * pos, true);
-        else
-            cNode->UpdatePosition(pos, false, getName());
     }
-    
-    //Connect(...)
+}
+
+void USBL::ProcessMessages()
+{
+    AcousticDataFrame* msg;
+    while((msg = (AcousticDataFrame*)ReadMessage()) != nullptr)
+    {
+        if(msg->data == "ACK")
+        {  
+            //Get message data
+            AcousticModem* cNode = getNode(msg->source);
+            Vector3 cO = msg->txPosition;
+            Transform dT = getDeviceFrame();
+            Vector3 dO = dT.getOrigin();
+            Vector3 dir = (getDeviceFrame().inverse() * (cO - dO)).normalized(); //Direction in device frame
+            Scalar distance = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
+            Scalar t = msg->timeStamp + distance/soundVelocity;
+            
+            //Find ranging angles
+            Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
+            Scalar vAngle = atan2(d, dir.getZ());
+            Scalar hAngle = atan2(dir.getY(), dir.getX());
+        
+            //Find position of receiver
+            Vector3 pos;
+        
+            if(noise)
+            {
+                dT.getOrigin().setX(dT.getOrigin().getX() + noiseNED(randomGenerator));
+                dT.getOrigin().setY(dT.getOrigin().getY() + noiseNED(randomGenerator));
+                dT.getOrigin().setZ(dT.getOrigin().getZ() + noiseDepth(randomGenerator));
+                distance += noiseRange(randomGenerator);
+                vAngle += noiseAngle(randomGenerator);
+                hAngle += noiseAngle(randomGenerator);
+            
+                Vector3 corruptedDir;
+                corruptedDir.setX(btCos(hAngle) * btSin(vAngle));
+                corruptedDir.setY(btSin(hAngle) * btSin(vAngle));
+                corruptedDir.setZ(btCos(vAngle));
+                corruptedDir.normalize();
+            
+                pos = corruptedDir * distance;
+            }
+            else 
+                pos = dir * distance;
+        
+            //Update position in the transponder and in the USBL
+            cNode->UpdatePosition(dT * pos, true);
+            transponderPos[msg->source] = std::make_pair(t, pos);
+            newDataAvailable = true;
+            
+            //Auto pinging in continuous mode
+            if(ping && pingRate <= Scalar(0)) 
+                SendMessage("PING");
+        }
+        
+        delete msg;
+    }
 }
 
 }

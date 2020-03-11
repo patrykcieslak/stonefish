@@ -71,7 +71,7 @@
 
     <include file="girona500auv.scn"/>
 
-    <comm name="Modem" type="acoustic_modem" device_id="2" rate="10">
+    <comm name="Modem" type="acoustic_modem" device_id="2">
 		<connect device_id="1"/>
 		<origin rpy="3.14159 0.0 0.0" xyz="10.0 0.0 4.0"/>
 		<specs horizontal_fov="360.0" vertical_fov="220.0" range="1000.0"/>

@@ -124,16 +124,16 @@ void OpenGLState::UseProgram(GLuint handle)
 
 void OpenGLState::Viewport(GLint x, GLint y, GLuint width, GLuint height)
 {
-    if(viewport[2] != width
-       || viewport[3] != height
+    if(viewport[2] != (GLint)width
+       || viewport[3] != (GLint)height
        || viewport[0] != x
        || viewport[1] != y)
     {
         glViewport(x, y, width, height);
         viewport[0] = x;
         viewport[1] = y;
-        viewport[2] = width;
-        viewport[3] = height;
+        viewport[2] = (GLint)width;
+        viewport[3] = (GLint)height;
     }
 }
 

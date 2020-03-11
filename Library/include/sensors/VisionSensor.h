@@ -43,7 +43,7 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the sensor
-         \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
+         \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          */
         VisionSensor(std::string uniqueName, Scalar frequency);
         

@@ -42,19 +42,23 @@ namespace sf
          \param horizontalFOVDeg the horizontal beam angle [deg]
          \param verticalFOVDeg the vertical beam angle [deg]
          \param operatingRange the operating range [m]
-         \param hasGPS a flag to indicate if the USBL is equipped with a GPS receiver
-         \param hasPressureSensor a flag to indicate if the USBL is equipped with a pressure sensor
-         \param frequency the update frequency of the comm device [Hz] (-1 if updated every simulation step)
          */
-        USBL(std::string uniqueName, uint64_t deviceId, 
-             Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange, bool hasGPS, bool hasPressureSensor,  
-             Scalar frequency = Scalar(-1));
+        USBL(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange);
         
         //! A method performing internal comm state update.
         /*!
          \param dt the step time of the simulation [s]
          */
-        virtual void InternalUpdate(Scalar dt);
+        void InternalUpdate(Scalar dt);
+        
+        //! A method used to enable the auto pinging of connected transponder to monitor its position.
+        /*!
+         \param rate how often the ping should be sent (0 for continuous mode) [Hz]
+         */
+        void EnableAutoPing(Scalar rate = Scalar(0));
+        
+        //! A method to diable the autp pinging funtion.
+        void DisableAutoPing();
         
         //! A method used to set the noise characteristics of the device.
         /*!
@@ -65,14 +69,22 @@ namespace sf
          */
         void setNoise(Scalar rangeDev, Scalar angleDevDeg, Scalar depthDev, Scalar nedDev);
         
+        //! A method to get the current estimated position of transponders
+        std::map<uint64_t, std::pair<Scalar, Vector3>>& getTransponderPositions(); 
+       
+    protected:
+        void ProcessMessages();
+    
     private:
-        bool gps;
-        bool pressure;
+        bool ping;
+        Scalar pingRate;
+        Scalar pingTime;
+        std::map<uint64_t, std::pair<Scalar, Vector3>> transponderPos;
         bool noise;
         std::normal_distribution<Scalar> noiseRange;
         std::normal_distribution<Scalar> noiseAngle;
-        std::normal_distribution<Scalar> noiseNED;
         std::normal_distribution<Scalar> noiseDepth;
+        std::normal_distribution<Scalar> noiseNED;
         
         static std::random_device randomDevice;
         static std::mt19937 randomGenerator;

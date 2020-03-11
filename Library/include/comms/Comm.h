@@ -27,6 +27,7 @@
 #define __Stonefish_Comm__
 
 #include <SDL2/SDL_mutex.h>
+#include <deque>
 #include "StonefishCommon.h"
 
 namespace sf
@@ -39,6 +40,15 @@ namespace sf
     class StaticEntity;
     class SolidEntity;
     
+    struct CommDataFrame
+    {
+        Scalar timeStamp;
+        uint64_t seq;
+        uint64_t source;
+        uint64_t destination;
+        std::string data;
+    };
+    
     //! An abstract class representing a communication device.
     class Comm
     {
@@ -47,9 +57,8 @@ namespace sf
         /*!
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
-         \param frequency the update frequency of the comm [Hz] (-1 if updated every simulation step)
          */
-        Comm(std::string uniqueName, uint64_t deviceId, Scalar frequency);
+        Comm(std::string uniqueName, uint64_t deviceId);
         
         //! A destructor.
         virtual ~Comm();
@@ -60,6 +69,18 @@ namespace sf
          */
         void Connect(uint64_t deviceId);
         
+        //! A method used to send a message.
+        /*!
+         \param data the data to be sent
+         */
+        virtual void SendMessage(std::string data);
+        
+        //! A method to read received data frames. The data frame has to be destroyed manually. 
+        /*!
+         \return a pointer to the data frame
+         */
+        CommDataFrame* ReadMessage();
+                
         //! A method used to attach the comm device to the world origin.
         /*!
          \param origin the place where the comm should be attached in the world frame
@@ -95,12 +116,6 @@ namespace sf
         //! A method to check if new data is available.
         bool isNewDataAvailable();
         
-        //! A method to set the update rate of the comm.
-        /*!
-         \param f the update frequency of the comm [Hz]
-         */
-        void setUpdateFrequency(Scalar f);
-        
         //! A method informing if the comm is renderable.
         bool isRenderable();
         
@@ -128,17 +143,25 @@ namespace sf
         //! A method returning the type of the comm.
         virtual CommType getType() = 0;
         
+    protected:
+        //! A method used for data reception.
+        void MessageReceived(CommDataFrame* message);
+        //! A method to proccess received messages.
+        virtual void ProcessMessages() = 0;
+    
+        bool newDataAvailable;
+        std::deque<CommDataFrame*> txBuffer;
+        std::deque<CommDataFrame*> rxBuffer;
+        uint64_t txSeq;
+        
     private:
         std::string name;
         uint64_t id;
         uint64_t cId;
-        Scalar freq;
         SDL_mutex* updateMutex;
         Entity* attach;
         Transform o2c;
-        Scalar eleapsedTime;
         bool renderable;
-        bool newDataAvailable;
     };
 }
 

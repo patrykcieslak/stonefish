@@ -39,7 +39,7 @@ std::mt19937 Sensor::randomGenerator(randomDevice());
 Sensor::Sensor(std::string uniqueName, Scalar frequency)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    freq = frequency == Scalar(0) ? Scalar(1) : frequency;
+    setUpdateFrequency(frequency);
     eleapsedTime = Scalar(0);
     renderable = false;
     newDataAvailable = false;
@@ -65,7 +65,7 @@ void Sensor::MarkDataOld()
 
 void Sensor::setUpdateFrequency(Scalar f)
 {
-    freq = f == Scalar(0) ? Scalar(1) : f;
+    freq = f;
 }
 
 bool Sensor::isNewDataAvailable()
@@ -93,7 +93,7 @@ void Sensor::Update(Scalar dt)
 {
     SDL_LockMutex(updateMutex);
     
-    if(freq <= Scalar(0.)) // Every simulation tick
+    if(freq <= Scalar(0)) // Every simulation tick
     {
         InternalUpdate(dt);
         newDataAvailable = true;
@@ -101,7 +101,7 @@ void Sensor::Update(Scalar dt)
     else //Fixed rate
     {
         eleapsedTime += dt;
-        Scalar invFreq = Scalar(1.)/freq;
+        Scalar invFreq = Scalar(1)/freq;
         
         if(eleapsedTime >= invFreq)
         {

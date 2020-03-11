@@ -31,6 +31,12 @@
 
 namespace sf
 {
+    struct AcousticDataFrame : public CommDataFrame
+    {
+        Vector3 txPosition;
+        Scalar travelled;
+    };
+    
     //! An abstract class representing an acoustic modem.
     class AcousticModem : public Comm
     {
@@ -42,12 +48,17 @@ namespace sf
          \param horizontalFOVDeg the horizontal beam angle [deg]
          \param verticalFOVDeg the vertical beam angle [deg]
          \param operatingRange the operating range [m]
-         \param frequency the update frequency of the comm device [Hz] (-1 if updated every simulation step)
          */
-        AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange, Scalar frequency = Scalar(-1));
+        AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange);
         
         //! A destructor.
         virtual ~AcousticModem();
+        
+        //! A method used to send a message.
+        /*!
+         \param data the data to be sent
+         */
+        void SendMessage(std::string data);
         
         //! A method performing internal comm state update.
         /*!
@@ -73,28 +84,30 @@ namespace sf
          */
         void getPosition(Vector3& pos, std::string& referenceFrame);
         
-        //! A method used to check if the device can talk to the connected device. 
-        bool isConnectionAlive();
-        
         //! A method returning the type of the comm.
         virtual CommType getType();
         
     protected:
+        virtual void ProcessMessages();
+        
         static AcousticModem* getNode(uint64_t deviceId);
         
+        static const Scalar soundVelocity;
+        
     private:
+        bool isReceptionPossible(Vector3 dir, Scalar distance);
+        
+        std::map<AcousticDataFrame*, Vector3> propagating;
         Scalar range;
         Scalar hFov2, vFov2;
         Vector3 position;
         std::string frame;
-        bool connection;
         
-        bool isReceptionPossible(Vector3 dir, Scalar distance);
-        
-        static std::map<uint64_t, AcousticModem*> nodes;
         static void addNode(AcousticModem* node);
         static void removeNode(uint64_t deviceId);
         static bool mutualContact(uint64_t device1Id, uint64_t device2Id);
+        
+        static std::map<uint64_t, AcousticModem*> nodes;
     };
 }
     

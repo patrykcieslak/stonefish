@@ -26,6 +26,8 @@
 #include "comms/AcousticModem.h"
 
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
 #include "core/Console.h"
 
@@ -34,6 +36,7 @@ namespace sf
  
 //Static
 std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
+const Scalar AcousticModem::soundVelocity = Scalar(1500);
 
 void AcousticModem::addNode(AcousticModem* node)
 {
@@ -96,13 +99,11 @@ bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
 
 //Member 
 AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, 
-                             Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange, Scalar frequency) 
-                             : Comm(uniqueName, deviceId, frequency)
+                             Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange) : Comm(uniqueName, deviceId)
 {
     hFov2 = horizontalFOVDeg <= Scalar(0) || horizontalFOVDeg > Scalar(360) ? Scalar(M_PI) : horizontalFOVDeg/Scalar(180*2)*Scalar(M_PI);
     vFov2 = verticalFOVDeg <= Scalar(0) || verticalFOVDeg > Scalar(360) ? Scalar(M_PI) : verticalFOVDeg/Scalar(180*2)*Scalar(M_PI);
     range = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
-    connection = false;
     position = V0();
     frame = std::string("");
     addNode(this);
@@ -132,19 +133,86 @@ void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
     referenceFrame = frame;
 }
 
-bool AcousticModem::isConnectionAlive()
-{
-    return connection;
-}
-
 CommType AcousticModem::getType()
 {
     return CommType::COMM_ACOUSTIC;
 }
 
+void AcousticModem::SendMessage(std::string data)
+{    
+    if(!mutualContact(getDeviceId(), getConnectedId()))
+        return;
+    
+    AcousticDataFrame* msg = new AcousticDataFrame();
+    msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+    msg->seq = txSeq++;
+    msg->source = getDeviceId();
+    msg->destination = getConnectedId();
+    msg->data = data;
+    msg->txPosition = getDeviceFrame().getOrigin();
+    msg->travelled = Scalar(0);
+    txBuffer.push_back(msg);
+}
+
+void AcousticModem::ProcessMessages()
+{
+    AcousticDataFrame* msg;
+    while((msg = (AcousticDataFrame*)ReadMessage()) != nullptr)
+    {
+        //Different responses to messages should be implemented here
+        if(msg->data != "ACK")
+        {
+            //timestamp and sequence don't change
+            msg->destination = msg->source;
+            msg->source = getDeviceId();
+            msg->data = "ACK";
+            msg->txPosition = getDeviceFrame().getOrigin();
+            txBuffer.push_back(msg);
+        }
+        else
+        {
+            delete msg;
+        }
+    }
+}
+
 void AcousticModem::InternalUpdate(Scalar dt)
 {
-    connection = mutualContact(getDeviceId(), getConnectedId());
+    //Propagate messages already sent
+    std::map<AcousticDataFrame*, Vector3>::iterator mIt;
+    for(mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
+    {
+        AcousticModem* dest = getNode(mIt->first->destination);
+        Vector3 dO = dest->getDeviceFrame().getOrigin();
+        Vector3 sO = mIt->second;
+        Vector3 dir = dO - sO;
+        Scalar d = dir.length();
+        
+        if(d <= soundVelocity*dt) //Message reached?
+        {
+            mIt->first->travelled += d;
+            dest->MessageReceived(mIt->first);
+            propagating.erase(mIt);
+        }
+        else //Advance pulse
+        {
+            dir /= d; //Normalize direction
+            mIt->second += dir * soundVelocity * dt;
+            mIt->first->travelled += d;
+        }
+    }
+    
+    //Send first message from the tx buffer
+    if(txBuffer.size() > 0)
+    {
+        AcousticDataFrame* msg = (AcousticDataFrame*)txBuffer[0];
+        if(mutualContact(msg->source, msg->destination))
+            propagating[msg] = msg->txPosition;
+        else
+            delete msg;
+            
+        txBuffer.pop_front();
+    }
 }
 
 void AcousticModem::UpdatePosition(Vector3 pos, bool absolute, std::string referenceFrame)
@@ -154,6 +222,7 @@ void AcousticModem::UpdatePosition(Vector3 pos, bool absolute, std::string refer
         frame = std::string("");
     else 
         frame = referenceFrame;
+    newDataAvailable = true;
 }
 
 std::vector<Renderable> AcousticModem::Render()

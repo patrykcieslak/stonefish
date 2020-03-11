@@ -30,7 +30,7 @@
 #include <core/Robot.h>
 #include <graphics/IMGUI.h>
 #include <utils/SystemUtil.hpp>
-#include <comms/AcousticModem.h>
+#include <comms/USBL.h>
 #include <core/Console.h>
 
 UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, UnderwaterTestManager* sim)
@@ -46,7 +46,17 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
-
+    
+    /*
+    sf::USBL* usbl = (sf::USBL*)getSimulationManager()->getComm("GIRONA500/USBL");
+    std::map<uint64_t, std::pair<sf::Scalar, sf::Vector3>>& transPos = usbl->getTransponderPositions();
+    std::map<uint64_t, std::pair<sf::Scalar, sf::Vector3>>::iterator it = transPos.begin();
+    sf::Vector3 pos = it->second.second;
+    uint64_t id = it->first;
+    
+    printf("Transponder %ld: %1.3lf, %1.3lf, %1.3lf\n", id, pos.getX(), pos.getY(), pos.getZ());
+    */
+    
     /*
     sf::Vector3 pos;
     std::string frame;
