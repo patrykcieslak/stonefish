@@ -47,12 +47,13 @@ namespace sf
          \param verticalFOVDeg the vertical beam width [deg]
          \param minRange the minimum measured range [m]
          \param maxRange the maximum measured range [m]
+         \param cm the color map used to display sonar data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param beamHPix the number of samples taken for each beam in the horizontal plane [pix]
          \param beamVPix the number of samples taken for each beam in the vertical plane [pix]
          */
         FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
-                    Scalar minRange, Scalar maxRange, Scalar frequency = Scalar(-1), unsigned int beamHPix = 0, unsigned int beamVPix = 0);
+                    Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1), unsigned int beamHPix = 0, unsigned int beamVPix = 0);
        
         //! A destructor.
         ~FLS();
@@ -118,6 +119,7 @@ namespace sf
         glm::vec2 range;
         glm::ivec2 beamRes;
         Scalar fovV;
+        ColorMap cMap;
         std::function<void(FLS*)> newDataCallback;
     };
 }

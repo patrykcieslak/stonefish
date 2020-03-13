@@ -34,7 +34,7 @@ namespace sf
     class GLSLShader;
     class FLS;
     class SolidEntity;
-    
+
     //! A class representing a forward looking sonar (FLS).
     class OpenGLFLS : public OpenGLView
     {
@@ -112,6 +112,12 @@ namespace sf
          */
         void setSonar(FLS* s);
         
+        //! A method to set the color map used during sonar data visulaization.
+        /*!
+         \param cm name of the color map to be used
+         */
+        void setColorMap(ColorMap cm);
+        
         //! A method returning the type of the view.
         ViewType getType();
         
@@ -141,6 +147,7 @@ namespace sf
         glm::vec2 range;
         std::default_random_engine randGen;
         std::uniform_real_distribution<float> randDist;
+        ColorMap cMap;
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;
         GLuint outputTex;

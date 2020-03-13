@@ -231,6 +231,9 @@ namespace sf
         glm::vec3 corners[8];
     };
     
+    //! An enum defining supported color maps.
+    typedef enum {COLORMAP_HOT = 0, COLORMAP_JET, COLORMAP_PERULA, COLORMAP_GREENBLUE} ColorMap;
+
     //! A structure representing a color system.
     struct ColorSystem
     {

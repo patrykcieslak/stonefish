@@ -1598,8 +1598,10 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         Scalar hFov, vFov;
         int nBeams, nBins;
         Scalar rangeMin, rangeMax;
+        const char* colorMap = nullptr;
+        ColorMap cMap = ColorMap::COLORMAP_HOT;
         
-         if((item = element->FirstChildElement("link")) == nullptr)
+        if((item = element->FirstChildElement("link")) == nullptr)
             return false;
         if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
             return false;
@@ -1613,8 +1615,19 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
             || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS)
             return false;
+        if((item = element->FirstChildElement("display")) != nullptr
+           && item->QueryStringAttribute("colormap", &colorMap) == XML_SUCCESS)
+        {
+            std::string colorMapStr(colorMap);
+            if(colorMapStr == "jet")
+                cMap = ColorMap::COLORMAP_JET;
+            else if(colorMapStr == "perula")
+                cMap = ColorMap::COLORMAP_PERULA;
+            else if(colorMapStr == "greenblue")
+                cMap = ColorMap::COLORMAP_GREENBLUE;
+        }
         
-        FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, rate);
+        FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, rate);
         robot->AddVisionSensor(fls, robot->getName() + "/" + std::string(linkName), origin);
     }
     else

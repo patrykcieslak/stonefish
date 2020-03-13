@@ -34,6 +34,13 @@ uniform vec3 noiseSeed;
 uniform vec2 noiseStddev;
 
 #define M_PI 3.1415926535897932384626433832795
+const vec2 samples[5]=vec2[](
+    vec2(-0.5, 0.023792),
+    vec2(-0.25, 0.094907),
+    vec2(0.0,  0.150342),
+    vec2(0.25,  0.094907),
+    vec2(0.5,  0.023792)
+);
 
 float sigmoid(float x)
 {
@@ -77,50 +84,44 @@ float gaussian(vec2 coord, float stddev, float mean)
 void main()
 {
     //Calculate beam texture coordinate
-    vec2 sampleCoord;
     float angle = gl_FragCoord.x * beamAngleStep - halfFOV;
-    /*float angle1 = angle-beamAngleStep;
-    float angle2 = angle+beamAngleStep;
+    vec2 sampleCoord;
+    //sampleCoord.x = d * tan(angle) + 0.5;
     
-    vec3 angleCoord;
-    angleCoord.x = d * tan(angle) + 0.5;
-    angleCoord.y = d * tan(angle1) + 0.5;
-    angleCoord.z = d * tan(angle2) + 0.5;*/
-    
-    sampleCoord.x = d * tan(angle) + 0.5;
+    float angleCoord[5];
+    for(int i=0; i<5; ++i)
+    {
+        angleCoord[i] = d * tan(angle + samples[i].x * beamAngleStep) + 0.5;
+        angleCoord[i] = clamp(angleCoord[i], 0.0, 1.0);
+    }
     
     //Calculate current bin ranges
     float binRangeMin = (gl_FragCoord.y-0.5) * binRangeStep + rangeMin;
     float binRangeMax = binRangeMin + binRangeStep;
     
     //Sample beam vertically
-    int binHits = 0;
+    float binHits = 0.0;
     sonarData = 0.0;
     sampleCoord.y = 0.0;
     
     for(int i=0; i<beamSamples; ++i)
     {
-        /*vec2 rangeIntensity = vec2(0.0,0.0); 
-        sampleCoord.x = clamp(angleCoord.x, 0.0, 1.0);
-        rangeIntensity += texture(texRangeIntensity, sampleCoord).xy;
-        sampleCoord.x = clamp(angleCoord.y, 0.0, 1.0);
-        rangeIntensity += texture(texRangeIntensity, sampleCoord).xy*0.5;
-        sampleCoord.x = clamp(angleCoord.z, 0.0, 1.0);
-        rangeIntensity += texture(texRangeIntensity, sampleCoord).xy*0.5;
-        rangeIntensity /= 2.0;*/
-        
-        vec2 rangeIntensity = texture(texRangeIntensity, sampleCoord).xy;
-        
-        if(rangeIntensity.x >= binRangeMin && rangeIntensity.x < binRangeMax)
+        for(int k=0; k<5; ++k)
         {
-            sonarData += rangeIntensity.y; //sigmoid(rangeIntensity.y);
-            ++binHits;
+            vec2 rangeIntensity = texture(texRangeIntensity, vec2(angleCoord[k], sampleCoord.y)).xy;
+            
+            if(rangeIntensity.x >= binRangeMin && rangeIntensity.x < binRangeMax)
+            {
+                sonarData += samples[k].y * sigmoid(rangeIntensity.y);
+                binHits += samples[k].y;
+            }
         }
+        
         sampleCoord.y += beamSampleStep;
     }
     
-    if(binHits > 0)
-        sonarData = sonarData/float(binHits)*gaussian(texcoord.xx, noiseStddev.x, 1.0); //Multiplicative noise
+    if(binHits > 0.0)
+        sonarData = sonarData/binHits*gaussian(texcoord.xx, noiseStddev.x, 1.0); //Multiplicative noise
     sonarData += gaussian(-texcoord, noiseStddev.y, 0.0); //Additive noise
     sonarData = clamp(sonarData, 0.0, 1.0);
 }

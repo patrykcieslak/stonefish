@@ -59,7 +59,6 @@
 		F716042F2191A9E100E83606 /* ResearchConstraintSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603B42191A9E100E83606 /* ResearchConstraintSolver.h */; };
 		F71604302191A9E100E83606 /* Robot.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603B52191A9E100E83606 /* Robot.h */; };
 		F71604312191A9E100E83606 /* NameManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603B62191A9E100E83606 /* NameManager.h */; };
-		F71604322191A9E100E83606 /* ResearchDynamicsWorld.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603B72191A9E100E83606 /* ResearchDynamicsWorld.h */; };
 		F71604332191A9E100E83606 /* SimulationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603B82191A9E100E83606 /* SimulationManager.h */; };
 		F71604342191A9E100E83606 /* ConsoleSimulationApp.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603B92191A9E100E83606 /* ConsoleSimulationApp.h */; };
 		F71604352191A9E100E83606 /* MaterialManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F71603BA2191A9E100E83606 /* MaterialManager.h */; };
@@ -173,7 +172,6 @@
 		F716052C2191AA0D00E83606 /* Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C02191AA0D00E83606 /* Stream.cpp */; };
 		F716052E2191AA0D00E83606 /* ForcefieldEntity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C22191AA0D00E83606 /* ForcefieldEntity.cpp */; };
 		F716052F2191AA0D00E83606 /* Trigger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C32191AA0D00E83606 /* Trigger.cpp */; };
-		F71605302191AA0D00E83606 /* ResearchDynamicsWorld.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C42191AA0D00E83606 /* ResearchDynamicsWorld.cpp */; };
 		F71605312191AA0D00E83606 /* RotaryEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C52191AA0D00E83606 /* RotaryEncoder.cpp */; };
 		F71605322191AA0D00E83606 /* Sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C62191AA0D00E83606 /* Sensor.cpp */; };
 		F71605332191AA0D00E83606 /* SimulationApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F71604C72191AA0D00E83606 /* SimulationApp.cpp */; };
@@ -506,7 +504,6 @@
 		F71603B42191A9E100E83606 /* ResearchConstraintSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResearchConstraintSolver.h; sourceTree = "<group>"; };
 		F71603B52191A9E100E83606 /* Robot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Robot.h; sourceTree = "<group>"; };
 		F71603B62191A9E100E83606 /* NameManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NameManager.h; sourceTree = "<group>"; };
-		F71603B72191A9E100E83606 /* ResearchDynamicsWorld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResearchDynamicsWorld.h; sourceTree = "<group>"; };
 		F71603B82191A9E100E83606 /* SimulationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimulationManager.h; sourceTree = "<group>"; };
 		F71603B92191A9E100E83606 /* ConsoleSimulationApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConsoleSimulationApp.h; sourceTree = "<group>"; };
 		F71603BA2191A9E100E83606 /* MaterialManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MaterialManager.h; sourceTree = "<group>"; };
@@ -620,7 +617,6 @@
 		F71604C02191AA0D00E83606 /* Stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stream.cpp; sourceTree = "<group>"; };
 		F71604C22191AA0D00E83606 /* ForcefieldEntity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ForcefieldEntity.cpp; sourceTree = "<group>"; };
 		F71604C32191AA0D00E83606 /* Trigger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Trigger.cpp; sourceTree = "<group>"; };
-		F71604C42191AA0D00E83606 /* ResearchDynamicsWorld.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ResearchDynamicsWorld.cpp; sourceTree = "<group>"; };
 		F71604C52191AA0D00E83606 /* RotaryEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RotaryEncoder.cpp; sourceTree = "<group>"; };
 		F71604C62191AA0D00E83606 /* Sensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sensor.cpp; sourceTree = "<group>"; };
 		F71604C72191AA0D00E83606 /* SimulationApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationApp.cpp; sourceTree = "<group>"; };
@@ -994,7 +990,6 @@
 				F71603B52191A9E100E83606 /* Robot.h */,
 				F71603B62191A9E100E83606 /* NameManager.h */,
 				F71603BA2191A9E100E83606 /* MaterialManager.h */,
-				F71603B72191A9E100E83606 /* ResearchDynamicsWorld.h */,
 				F71603B42191A9E100E83606 /* ResearchConstraintSolver.h */,
 				F71603B22191A9E100E83606 /* FilteredCollisionDispatcher.h */,
 				F71603B12191A9E100E83606 /* TorusShape.h */,
@@ -1214,7 +1209,6 @@
 				F71604902191AA0D00E83606 /* SimulationManager.cpp */,
 				F71604A02191AA0D00E83606 /* GraphicalSimulationApp.cpp */,
 				F716049D2191AA0D00E83606 /* FilteredCollisionDispatcher.cpp */,
-				F71604C42191AA0D00E83606 /* ResearchDynamicsWorld.cpp */,
 				F71604CC2191AA0D00E83606 /* ResearchConstraintSolver.cpp */,
 				F71604A22191AA0D00E83606 /* ScrewConstraint.cpp */,
 				F71604B72191AA0D00E83606 /* TorusShape.cpp */,
@@ -1788,7 +1782,6 @@
 				F716044C2191A9E100E83606 /* OpenGLView.h in Headers */,
 				F7E965AF21A6CA760067D12C /* GeometryFileUtil.h in Headers */,
 				F71604372191A9E100E83606 /* PrismaticJoint.h in Headers */,
-				F71604322191A9E100E83606 /* ResearchDynamicsWorld.h in Headers */,
 				F716042C2191A9E100E83606 /* TorusShape.h in Headers */,
 				F71604422191A9E100E83606 /* ScientificFileUtil.h in Headers */,
 				F7895B8821A472850014722C /* JointSensor.h in Headers */,
@@ -2127,7 +2120,6 @@
 				F716053F2191AA0D00E83606 /* Pressure.cpp in Sources */,
 				F716050E2191AA0D00E83606 /* ScrewConstraint.cpp in Sources */,
 				F71605112191AA0D00E83606 /* RealRotaryEncoder.cpp in Sources */,
-				F71605302191AA0D00E83606 /* ResearchDynamicsWorld.cpp in Sources */,
 				F716054E2191AA0E00E83606 /* NameManager.cpp in Sources */,
 				F71605042191AA0D00E83606 /* Jet.cpp in Sources */,
 				F71605152191AA0D00E83606 /* Mux.cpp in Sources */,

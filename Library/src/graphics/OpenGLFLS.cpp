@@ -58,6 +58,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     nBins = numOfBins;
     inputWidth = numOfBeams * beamHPix;
     inputHeight = beamVPix;
+    cMap = ColorMap::COLORMAP_HOT;
     
     SetupSonar(eyePosition, direction, sonarUp);
     UpdateTransform();
@@ -240,6 +241,11 @@ bool OpenGLFLS::needsUpdate()
     return update && enabled;
 }
 
+void OpenGLFLS::setColorMap(ColorMap cm)
+{
+    cMap = cm;
+}
+
 void OpenGLFLS::setSonar(FLS* s)
 {
     sonar = s;
@@ -302,6 +308,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex);
     sonarVisualizeShader->Use();
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS1);
+    sonarVisualizeShader->SetUniform("colormap", (GLint)cMap);
     OpenGLState::BindVertexArray(fanVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, (fanDiv+1)*2);
     OpenGLState::BindVertexArray(0);
@@ -363,6 +370,7 @@ void OpenGLFLS::Init()
     
     sonarVisualizeShader = new GLSLShader("sonarVisualize.frag", "printer.vert");
     sonarVisualizeShader->AddUniform("texSonarData", ParameterType::INT);
+    sonarVisualizeShader->AddUniform("colormap", ParameterType::INT);
 }
 
 void OpenGLFLS::Destroy()

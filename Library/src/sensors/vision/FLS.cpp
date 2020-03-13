@@ -34,13 +34,14 @@ namespace sf
 {
 
 FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
-    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, Scalar frequency, unsigned int beamHPix, unsigned int beamVPix)
+    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency, unsigned int beamHPix, unsigned int beamVPix)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
     range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
     range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
     fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(180) ? Scalar(180) : verticalFOVDeg);
-    beamRes.x = beamHPix == 0 ? 2 : (GLint)beamHPix;
+    cMap = cm;
+    beamRes.x = beamHPix == 0 ? 5 : (GLint)beamHPix;
     beamRes.y = beamVPix == 0 ? (GLint)ceil(fovV*beamRes.x*range.y) : (GLint)beamVPix;
     newDataCallback = NULL;
     sonarData = new GLfloat[resX*resY]; // Buffer for storing range data
@@ -90,6 +91,7 @@ void FLS::InitGraphics()
     glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, (GLfloat)fovH, (GLfloat)fovV, 
                           (GLint)resX, beamRes.x, beamRes.y, range.x, range.y, (GLint)resY);
     glFLS->setSonar(this);
+    glFLS->setColorMap(cMap);
     UpdateTransform();
     glFLS->UpdateTransform();
     InternalUpdate(0);
