@@ -1000,7 +1000,7 @@ void SimulationManager::UpdateDrawingQueue()
     for(size_t i=0; i<joints.size(); ++i)
         glPipeline->AddToDrawingQueue(joints[i]->Render());
         
-    //Motors, thrusters, propellers, fins....
+    //Actuators
     for(size_t i=0; i<actuators.size(); ++i)
     {
         glPipeline->AddToDrawingQueue(actuators[i]->Render());

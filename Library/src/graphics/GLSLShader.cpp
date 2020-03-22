@@ -413,7 +413,7 @@ void GLSLShader::Verbose()
     verbose = true;
 }
 
-GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint *shaderCompiled)
+GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, const std::string& header, GLint *shaderCompiled)
 {
     GLuint shader = 0;
     

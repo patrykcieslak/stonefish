@@ -38,11 +38,12 @@ namespace sf
         /*!
          \param position the position of the light in the world frame [m]
          \param direction a unit vector parallel to the light cone axis
+		 \param radius a radius of the light source [m]
          \param coneAngleDeg the angle of the light cone [deg]
          \param color the color of the light
          \param illuminance the brightness of the light [lx]
          */
-        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
+        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
         
         //! A destructor.
         ~OpenGLSpotLight();
@@ -64,6 +65,9 @@ namespace sf
          \param rect a rectangle in which to display the texture
          */
         void ShowShadowMap(glm::vec4 rect);
+		
+		//! A method implementing rendering of light surface.
+		void DrawLight();
     
         //! A method to set up light data in a shader.
         /*!

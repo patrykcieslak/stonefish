@@ -219,13 +219,21 @@ OpenGLContent::OpenGLContent()
     
     //Materials
     GLint compiled;
-    std::string header = "";
-    std::vector<GLuint> commonMaterialShaders;
+    std::string header1 = "#version 330\n";
+	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
+	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
+    std::string header2 = "#version 330\n";
+	header2 += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
+	
+	std::vector<GLuint> commonMaterialShaders;
     commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
-    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header, &compiled);
-    commonMaterialShaders.push_back(materialFragment);
-    
+	GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", header1, &compiled);
+	commonMaterialShaders.push_back(pcssFragment);
+	
+	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header2, &compiled);
+	commonMaterialShaders.push_back(materialFragment);
+	
     //Blinn-Phong shader
     GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
     blinnPhong->AddUniform("MVP", ParameterType::MAT4);
@@ -350,13 +358,10 @@ OpenGLContent::OpenGLContent()
     
     materialShaders.push_back(cookTorrance);
     glDeleteShader(materialFragment);
-    
+	
     //-------------Underwater shaders---------------------------
-    header = "";
-    commonMaterialShaders.clear();
-    commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
-    
-    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header, &compiled);
+    commonMaterialShaders.pop_back();
+    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
     commonMaterialShaders.push_back(materialFragment);
     
     //Blinn-Phong shader
@@ -508,7 +513,7 @@ OpenGLContent::~OpenGLContent()
     if(flatShader != NULL) delete flatShader;
     
     //Material shaders
-    for(unsigned int i=0; i<materialShaders.size(); ++i)
+    for(size_t i=0; i<materialShaders.size(); ++i)
         delete materialShaders[i];
     materialShaders.clear();
     
@@ -574,37 +579,11 @@ glm::mat4 OpenGLContent::GetViewMatrix()
     return view;
 }
 
-void OpenGLContent::SetCurrentView(OpenGLView* v, bool mirror)
+void OpenGLContent::SetCurrentView(OpenGLView* v)
 {
-    if(mirror)
-    {
-        glm::vec3 n(0,0,-1.f);
-        GLfloat D = 0;
-        glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, -2.f*n.x*D,
-                                        -2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, -2.f*n.y*D,
-                                        -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, -2.f*n.z*D,
-                                                    0,			  0,			   0,		   1);
-                                                    
-        /*glm::mat4 reflection = glm::mat4(1.f-2.f*n.x*n.x, -2.f*n.x*n.y, -2.f*n.x*n.z, 0,
-                                         -2.f*n.x*n.y, 1.f-2.f*n.y*n.y, -2.f*n.y*n.z, 0,
-                                         -2.f*n.x*n.z, -2.f*n.y*n.z, 1.f-2.f*n.z*n.z, 0,
-                                         -2.f*n.x*D,   -2.f*n.y*D,   -2.f*n.z*D,      1);*/									
-                                                    
-        //glm::mat4 flip = glm::mat4(1.f,0,0,0, 0,-1.f,0,0, 0,0,1.f,0, 0,0,0,1.f);											
-        
-        eyePos = v->GetEyePosition();
-        eyePos.z = -eyePos.z;
-        viewDir = v->GetLookingDirection();
-        viewDir.z = -viewDir.z;
-        view = v->GetViewMatrix() * reflection;// * flip;// * reflection;// * glm::transpose(flip);
-    }
-    else
-    {
-        eyePos = v->GetEyePosition();
-        viewDir = v->GetLookingDirection();
-        view = v->GetViewMatrix();
-    }
-    
+	eyePos = v->GetEyePosition();
+    viewDir = v->GetLookingDirection();
+    view = v->GetViewMatrix();
     projection = v->GetProjectionMatrix();
     viewProjection = projection * view;
 }

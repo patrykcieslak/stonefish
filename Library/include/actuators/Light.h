@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Light__
@@ -32,6 +32,7 @@
 namespace sf
 {
     class OpenGLLight;
+	class StaticEntity;
     
     //! A class representing a light of two common types: omni and spot.
     class Light : public LinkActuator
@@ -40,34 +41,41 @@ namespace sf
         //! A constructor of an omni light.
         /*!
          \param uniqueName a name of the light
+		 \param radius a radius of the light source [m]
          \param color a color of the light
          \param illuminance a value of luminous flux per unit area of light [lux]
          */
-        Light(std::string uniqueName, Color color, Scalar illuminance);
+        Light(std::string uniqueName, Scalar radius, Color color, Scalar illuminance);
         
         //! A constructor of a spot light.
         /*!
          \param uniqueName a name of the light
-         \param coneAngleDeg a cone angle of the spot light in degrees
+		 \param radius a radius of the light source [m]
+         \param coneAngleDeg a cone angle of the spot light in degrees [deg]
          \param color a color of the light
          \param illuminance a value of luminous flux per unit area of light [lux]
          */
-        Light(std::string uniqueName, Scalar coneAngleDeg, Color color, Scalar illuminance);
+        Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar illuminance);
         
-        //! A method used to attach the actuator to a specified link of a multibody tree.
+		//! A method used to attach the comm device to the world origin.
         /*!
-         \param multibody a pointer to a rigid multibody object
-         \param linkId an index of the link
-         \param origin a transformation from the link origin to the actuator origin
+         \param origin the place where the comm should be attached in the world frame
          */
-        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
+        void AttachToWorld(const Transform& origin);
         
+        //! A method used to attach the light to a static body.
+        /*!
+         \param body a pointer to the static body
+         \param origin the place where the light should be attached in the body origin frame
+         */
+        void AttachToStatic(StaticEntity* body, const Transform& origin);
+		
         //! A method used to attach the actuator to a specified rigid body.
         /*!
          \param solid a pointer to a rigid body
          \param origin a transformation from the body origin to the actuator origin
          */
-        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        void AttachToSolid(SolidEntity* body, const Transform& origin);
         
         //! A method which updates the pose of the light
         /*!
@@ -81,13 +89,18 @@ namespace sf
         //! A method implementing the rendering of the light dummy.
         std::vector<Renderable> Render();
         
+		//! A method returning actuator frame in the world frame.
+		Transform getActuatorFrame();
+		
         //! A method returning the type of the actuator.
         ActuatorType getType();
         
     private:
         void InitGraphics();
         
+		StaticEntity* attach2;
         Color c;
+		Scalar R;
         Scalar illum;
         Scalar coneAngle;
         OpenGLLight* glLight;

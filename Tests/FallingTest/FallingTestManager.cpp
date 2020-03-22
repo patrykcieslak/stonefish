@@ -39,6 +39,7 @@
 #include <graphics/OpenGLContent.h>
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/RotaryEncoder.h>
+#include <actuators/Light.h>
 
 FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) 
     : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
@@ -66,6 +67,13 @@ void FallingTestManager::BuildScenario()
 	
 	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon.obj", 0.1, sf::I4(),"Steel", "Green");
 	AddStaticEntity(dragon, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0,0,0)));
+	
+	sf::Obstacle* pillar = new sf::Obstacle("Pillar", sf::Vector3(0.5,0.3,4.0), "Steel", "Green");
+	AddStaticEntity(pillar, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-2.0)));
+	
+	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 1000000.0);
+	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,-1.0)));
+	AddActuator(spot);
     
     //---Robot---
     //Mechanical parts

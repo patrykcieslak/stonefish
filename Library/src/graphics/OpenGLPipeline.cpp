@@ -177,6 +177,13 @@ void OpenGLPipeline::DrawObjects()
             content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
     }
 }
+
+void OpenGLPipeline::DrawLights()
+{
+	content->SetDrawingMode(DrawingMode::RAW);
+	for(unsigned int i=0; i<content->getLightsCount(); ++i)
+		content->getLight(i)->DrawLight();
+}
     
 void OpenGLPipeline::DrawHelpers()
 {
@@ -396,11 +403,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Render all objects
                     content->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
-            
+					
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
                         camera->DrawAO(1.0f);
             
+					//Draw lights
+					DrawLights();
+					
                     //Render sky (at the end to take profit of early bailing)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
                     
@@ -422,7 +432,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
                     glOcean->DrawBackground(camera);
-                    
+					
+					//Draw lights
+					DrawLights();
+					
                     //a) Surface with waves
                     if(ocean->hasWaves())
                     {
@@ -453,10 +466,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     content->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
                     
-                    //Ambient occlusion
-                    if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
-                        camera->DrawAO(0.5f);
-                    
+					//Draw lights
+					DrawLights();
+					
                     //Render sky (left for the end to only fill empty spaces)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
                     

@@ -39,7 +39,8 @@
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
 
-#define MEAN_SUN_ILLUMINANCE 107527.f //Sun average illuminance Lux
+#define MEAN_SUN_ILLUMINANCE  107527.f //Sun average illuminance Lux
+#define MIN_ILLUMINANCE_THRESHOLD 0.1f //Minimum light illuminance to be considered
 
 #define TEX_BASE                ((GLint)0)
 #define TEX_GUI1                ((GLint)1)

@@ -249,7 +249,7 @@ namespace sf
          \param shaderCompiled a pointer to a variable that will hold the shader compilation output code
          \return an id of the new compiled shader
          */
-        static GLuint LoadShader(GLenum shaderType, std::string filename, std::string& header, GLint* shaderCompiled);
+        static GLuint LoadShader(GLenum shaderType, std::string filename, const std::string& header, GLint* shaderCompiled);
         
     private:
         bool GetAttribute(std::string name, ParameterType type, GLint& index);

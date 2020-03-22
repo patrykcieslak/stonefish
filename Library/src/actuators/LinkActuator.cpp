@@ -33,34 +33,37 @@ namespace sf
 
 LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
 {
-    attach = NULL;
+    attach = nullptr;
     o2a = Transform::getIdentity();
 }
     
 Transform LinkActuator::getActuatorFrame()
 {
-    if(attach != NULL)
+    if(attach != nullptr)
         return attach->getOTransform() * o2a;
     else
         return o2a;
 }
 
-void LinkActuator::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
+void LinkActuator::AttachToSolid(SolidEntity* body, const Transform& origin)
 {
-    if(multibody != NULL && linkId < multibody->getNumOfLinks())
+    if(body != nullptr)
     {
         o2a = origin;
-        attach = multibody->getLink(linkId).solid;
+        attach = body;
     }
 }
 
-void LinkActuator::AttachToSolid(SolidEntity* solid, const Transform& origin)
+std::vector<Renderable> LinkActuator::Render()
 {
-    if(solid != NULL)
-    {
-        o2a = origin;
-        attach = solid;
-    }
+    std::vector<Renderable> items(0);
+
+    Renderable item;
+    item.type = RenderableType::SENSOR_CS;
+    item.model = glMatrixFromTransform(getActuatorFrame());
+    items.push_back(item);
+
+    return items;
 }
     
 }

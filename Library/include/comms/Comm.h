@@ -87,10 +87,10 @@ namespace sf
          */
         void AttachToWorld(const Transform& origin);
         
-        //! A method used to attach the comm device to a rigid body.
+        //! A method used to attach the comm device to a static body.
         /*!
-         \param body a pointer to the rigid body
-         \param origin the place where the comm should be attached in the solid origin frame
+         \param body a pointer to the static body
+         \param origin the place where the comm should be attached in the static body origin frame
          */
         void AttachToStatic(StaticEntity* body, const Transform& origin);
         

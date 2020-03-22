@@ -36,28 +36,27 @@ namespace sf
 GLuint OpenGLLight::spotShadowArrayTex = 0;
 GLuint OpenGLLight::spotDepthSampler = 0;
 GLuint OpenGLLight::spotShadowSampler = 0;
-OpenGLCamera* OpenGLLight::activeView = NULL;
+OpenGLCamera* OpenGLLight::activeView = nullptr;
+GLSLShader* OpenGLLight::lightSourceShader = nullptr;
 
-OpenGLLight::OpenGLLight(glm::vec3 position, glm::vec3 c, GLfloat illuminance)
+OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloat illuminance)
 {
     pos = tempPos = position;
+	R = radius < 0.f ? 0.02f : radius;
     color = c * illuminance / MEAN_SUN_ILLUMINANCE;
     active = true;
-    surfaceDistance = 1.f; // attenuation = 1 / distance^2 * intesity [Lux]
+	lightMesh = nullptr;
 }
 
 OpenGLLight::~OpenGLLight()
 {
+	if(lightMesh != nullptr) 
+		delete lightMesh;
 }
 
 bool OpenGLLight::isActive()
 {
     return active;
-}
-
-void OpenGLLight::setLightSurfaceDistance(GLfloat dist)
-{
-    surfaceDistance = dist;
 }
 
 glm::vec3 OpenGLLight::getColor()
@@ -68,6 +67,11 @@ glm::vec3 OpenGLLight::getColor()
 glm::vec3 OpenGLLight::getPosition()
 {
     return pos;
+}
+
+GLfloat OpenGLLight::getSourceRadius()
+{
+	return R;
 }
 
 void OpenGLLight::UpdatePosition(glm::vec3 p)
@@ -102,12 +106,23 @@ void OpenGLLight::ShowShadowMap(glm::vec4 rect)
 {
 }
 
+void OpenGLLight::DrawLight()
+{
+	lightSourceShader->Use();
+	lightSourceShader->SetUniform("color", color);
+}
+
 //////////////////static//////////////////////////////
 void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 {
     if(lights.size() == 0)
         return;
     
+	//Load light source shader
+	lightSourceShader = new GLSLShader("light.frag", "flat.vert");
+	lightSourceShader->AddUniform("MVP", ParameterType::MAT4);
+	lightSourceShader->AddUniform("color", ParameterType::VEC3);
+	
     //Count spotlights
     unsigned int numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
@@ -152,6 +167,7 @@ void OpenGLLight::Destroy()
     if(spotShadowArrayTex != 0) glDeleteTextures(1, &spotShadowArrayTex);
     if(spotDepthSampler != 0) glDeleteSamplers(1, &spotDepthSampler);
     if(spotShadowSampler != 0) glDeleteSamplers(1, &spotShadowSampler);
+	if(lightSourceShader != nullptr) delete lightSourceShader;
 }
 
 void OpenGLLight::SetCamera(OpenGLCamera* view)

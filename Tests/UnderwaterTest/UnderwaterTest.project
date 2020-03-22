@@ -24,7 +24,7 @@
   </Dependencies>
   <Settings Type="Executable">
     <GlobalSettings>
-      <Compiler Options="-std=c++14" C_Options="" Assembler="">
+      <Compiler Options="-std=c++14;-Wall" C_Options="-std=c++14;-Wall" Assembler="">
         <IncludePath Value="."/>
         <IncludePath Value="../../Library/include"/>
         <IncludePath Value="/usr/include/freetype2"/>
@@ -38,19 +38,19 @@
         <LibraryPath Value="/usr/lib"/>
         <LibraryPath Value="/usr/lib/x86_64-linux-gnu"/>
         <LibraryPath Value="/usr/local/lib"/>
+        <Library Value="freetype"/>
+        <Library Value="SDL2"/>
+        <Library Value="LinearMath"/>
         <Library Value="BulletCollision"/>
         <Library Value="BulletDynamics"/>
-        <Library Value="LinearMath"/>
-        <Library Value="SDL2"/>
-        <Library Value="freetype"/>
         <Library Value="GL"/>
         <Library Value="GLU"/>
         <Library Value="GLEW"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="prepend" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="prepend" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g;-O0;-std=c++14;-Wall" C_Options="-g;-O0;-std=c++14;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
       </Compiler>
@@ -92,8 +92,8 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Release" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="prepend" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O2;-Wall" C_Options="-O2;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="prepend" BuildResWithGlobalSettings="append">
+      <Compiler Options="-O3;-std=c++14;-Wall" C_Options="-O3;-std=c++14;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>

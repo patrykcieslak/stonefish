@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSpotLight.h"
@@ -29,20 +29,26 @@
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
-#include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "entities/SolidEntity.h"
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLCamera.h"
 
 namespace sf
 {
 
-OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, color, illuminance)
+OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance) 
+	: OpenGLLight(position, radius, color, illuminance)
 {
     coneAngle = coneAngleDeg/180.f*M_PI;
     clipSpace = glm::mat4();
-    zNear = 0.1f;
-    zFar = 100.f;
-    UpdatePosition(position);
+	GLfloat near = getSourceRadius() / tanf(coneAngle/2.f);
+    zNear = near < 0.02f ? 0.02f : near;
+    zFar = sqrtf((illuminance / MEAN_SUN_ILLUMINANCE) / MIN_ILLUMINANCE_THRESHOLD);
+    
+	lightMesh = OpenGLContent::BuildCylinder(getSourceRadius(), getSourceRadius()/10.f);
+	lightObject = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(lightMesh);
+	
+	UpdatePosition(position);
     UpdateDirection(direction);
     UpdateTransform();
 }
@@ -103,7 +109,7 @@ void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
 {
     std::string lightUni = "spotLights[" + std::to_string(lightId) + "].";
     shader->SetUniform(lightUni + "position", getPosition());
-    shader->SetUniform(lightUni + "radius", glm::vec2(0.01f,0.01f));
+    shader->SetUniform(lightUni + "radius", glm::vec2(0.1f,0.1f));
     shader->SetUniform(lightUni + "color", getColor());
     shader->SetUniform(lightUni + "direction", getDirection());
     shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()/2.f));
@@ -144,6 +150,18 @@ void OpenGLSpotLight::ShowShadowMap(glm::vec4 rect)
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, shadowMap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);*/
+}
+
+void OpenGLSpotLight::DrawLight()
+{
+	OpenGLLight::DrawLight();
+	glm::vec3 pos = getPosition() + getDirection() * zNear;
+	glm::mat4 model = glm::inverse(glm::lookAt(pos, pos + getDirection(), glm::vec3(0,0,1.f)));
+	glm::mat4 view = activeView->GetViewMatrix();
+	glm::mat4 proj = activeView->GetProjectionMatrix();
+	glm::mat4 MVP = proj * view * model;
+	lightSourceShader->SetUniform("MVP", MVP);
+	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(lightObject, 0, glm::mat4());
 }
 
 }

@@ -82,9 +82,8 @@ namespace sf
         //! A method to set current view.
         /*!
          \param v a pointer to a view object
-         \param mirror a flag to determine if view should be mirrored
          */
-        void SetCurrentView(OpenGLView* v, bool mirror = false);
+        void SetCurrentView(OpenGLView* v);
         
         //! A method that binds the base vertex array.
         void BindBaseVertexArray();

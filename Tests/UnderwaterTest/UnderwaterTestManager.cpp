@@ -112,6 +112,10 @@ void UnderwaterTestManager::BuildScenario()
     AddStaticEntity(tank, sf::I4());
     sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 2.0, "Rock", "seabed");
     AddStaticEntity(cyl, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-3.0,0,2.0)));
+	
+	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 1000000.0);
+	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,1.0)));
+	AddActuator(spot);
     
     //Create underwater vehicle body
     //Externals
@@ -218,7 +222,7 @@ void UnderwaterTestManager::BuildScenario()
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
     sf::FLS* fls = new sf::FLS("FLS", 128, 500, 120.0, 20.0, 1.0, 10.0, sf::ColorMap::COLORMAP_JET);
-    fls->setDisplayOnScreen(true);
+    //fls->setDisplayOnScreen(true);
     
     //Create AUV
     sf::Robot* auv = new sf::Robot("GIRONA500");

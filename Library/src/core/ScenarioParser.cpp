@@ -1756,7 +1756,8 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     else if(typeStr == "light")
     {
         const char* linkName = nullptr;
-        Scalar illu, cone;
+        Scalar illu, radius;
+		Scalar cone = Scalar(0);
         Color color = Color::Gray(1.f);
         Transform origin;
         
@@ -1770,8 +1771,9 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         {
             if(item->QueryAttribute("illuminance", &illu) != XML_SUCCESS)
                 return false;
-            if(item->QueryAttribute("cone_angle", &cone) != XML_SUCCESS)
-                cone = Scalar(-1);
+			if(item->QueryAttribute("radius", &radius) != XML_SUCCESS)
+				return false;
+            item->QueryAttribute("cone_angle", &cone);
         } 
         else
             return false;
@@ -1780,9 +1782,9 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             
         Light* light;
         if(cone > Scalar(0))
-            light = new Light(actuatorName, cone, color, illu);
+            light = new Light(actuatorName, radius, cone, color, illu);
         else
-            light = new Light(actuatorName, color, illu);
+            light = new Light(actuatorName, radius, color, illu);
             
         robot->AddLinkActuator(light, robot->getName() + "/" + std::string(linkName), origin);
     }

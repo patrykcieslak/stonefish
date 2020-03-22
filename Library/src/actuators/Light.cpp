@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Light.h"
@@ -31,20 +31,24 @@
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
 #include "graphics/OpenGLContent.h"
+#include "entities/SolidEntity.h"
+#include "entities/StaticEntity.h"
 
 namespace sf
 {
 
-Light::Light(std::string uniqueName, Color color, Scalar illuminance) : LinkActuator(uniqueName), c(color), coneAngle(0)
+Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar illuminance) 
+	: LinkActuator(uniqueName), c(color), coneAngle(0), attach2(nullptr)
 {
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
+	R = radius < Scalar(0) ? Scalar(0.02) : radius;
     illum = illuminance < Scalar(0) ? Scalar(0) : illuminance;
 }
 
-Light::Light(std::string uniqueName, Scalar coneAngleDeg, Color color, Scalar illuminance) :
-    Light(uniqueName, color, illuminance)
+Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar illuminance) 
+	: Light(uniqueName, radius, color, illuminance)
 {
     coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
@@ -54,28 +58,46 @@ ActuatorType Light::getType()
     return ActuatorType::ACTUATOR_LIGHT;
 }
 
-void Light::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin)
+Transform Light::getActuatorFrame()
 {
-    LinkActuator::AttachToLink(multibody, linkId, origin);
+	if(attach != nullptr)
+        return attach->getOTransform() * o2a;
+    else if(attach2 != nullptr)
+		return attach2->getTransform() * o2a;
+	else
+        return o2a;
+}
+
+void Light::AttachToWorld(const Transform& origin)
+{
+	o2a = origin;
+	InitGraphics();
+}
+        
+void Light::AttachToStatic(StaticEntity* body, const Transform& origin)
+{
+	if(body != nullptr)
+	{
+		o2a = origin;
+		attach2 = body;
+		InitGraphics();
+	}
+}
+
+void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
+{
+    LinkActuator::AttachToSolid(body, origin);
     
-    if(attach != NULL)
+    if(attach != nullptr)
         InitGraphics();
 }
-    
-void Light::AttachToSolid(SolidEntity* solid, const Transform& origin)
-{
-    LinkActuator::AttachToSolid(solid, origin);
-    
-    if(attach != NULL)
-        InitGraphics();
-}
-   
+
 void Light::InitGraphics()
 {
     if(coneAngle > Scalar(0)) //Spot light
-        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)coneAngle, c.rgb, (GLfloat)illum);
+        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, c.rgb, (GLfloat)illum);
     else //Omnidirectional light
-        glLight = new OpenGLPointLight(glm::vec3(0.f), c.rgb, (GLfloat)illum);
+        glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, c.rgb, (GLfloat)illum);
     
     UpdateTransform();
     glLight->UpdateTransform();

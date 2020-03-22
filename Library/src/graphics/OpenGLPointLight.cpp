@@ -26,13 +26,19 @@
 #include "graphics/OpenGLPointLight.h"
 
 #include "core/SimulationManager.h"
+#include "core/GraphicalSimulationApp.h"
 #include "graphics/GLSLShader.h"
+#include "graphics/OpenGLContent.h"
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLCamera.h"
 
 namespace sf
 {
 
-OpenGLPointLight::OpenGLPointLight(glm::vec3 position, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, color, illuminance)
+OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, radius, color, illuminance)
 {
+	lightMesh = OpenGLContent::BuildSphere(getSourceRadius());
+	lightObject = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(lightMesh);
 }
 
 LightType OpenGLPointLight::getType()
@@ -46,5 +52,16 @@ void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)
     shader->SetUniform(lightUni + "position", getPosition());
     shader->SetUniform(lightUni + "color", getColor());
 }
-    
+ 
+void OpenGLPointLight::DrawLight()
+{
+	OpenGLLight::DrawLight();
+	glm::mat4 model = glm::translate(getPosition());
+	glm::mat4 view = activeView->GetViewMatrix();
+	glm::mat4 proj = activeView->GetProjectionMatrix();
+	glm::mat4 MVP = proj * view * model;
+	lightSourceShader->SetUniform("MVP", MVP);
+	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(lightObject, 0, glm::mat4());
+}
+   
 }

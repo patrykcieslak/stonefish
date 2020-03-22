@@ -43,23 +43,18 @@ namespace sf
          */
         LinkActuator(std::string uniqueName);
         
-        //! A method used to attach the actuator to a specified link of a multibody tree.
-        /*!
-         \param multibody a pointer to a rigid multibody object
-         \param linkId an index of the link
-         \param origin a transformation from the link origin to the actuator origin
-         */
-        virtual void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId, const Transform& origin);
-        
         //! A method used to attach the actuator to a specified rigid body.
         /*!
          \param solid a pointer to a rigid body
          \param origin a transformation from the body origin to the actuator origin
          */
-        virtual void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        virtual void AttachToSolid(SolidEntity* body, const Transform& origin);
         
+		//! A method implementing the rendering of the actuator.
+        virtual std::vector<Renderable> Render();
+		
         //! A method returning actuator frame in the world frame.
-        Transform getActuatorFrame();
+        virtual Transform getActuatorFrame();
        
     protected:
         SolidEntity* attach;

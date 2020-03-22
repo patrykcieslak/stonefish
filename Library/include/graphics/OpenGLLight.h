@@ -44,11 +44,12 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param position the position of the light in world frame
+         \param position the position of the light in world frame [m]
+		 \param radius the radius of the light source [m]
          \param color the color of the light
          \param illuminance the brightness of the light [lx]
          */
-        OpenGLLight(glm::vec3 position, glm::vec3 color, GLfloat illuminance);
+        OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat illuminance);
         
         //! A destructor.
         virtual ~OpenGLLight();
@@ -71,6 +72,9 @@ namespace sf
          */
         virtual void ShowShadowMap(glm::vec4 rect);
         
+		//! A method implementing rendering of light surface.
+		virtual void DrawLight();
+		
         //! A method to set up light data in a shader.
         /*!
          \param shader a pointer to a GLSL shader
@@ -96,17 +100,14 @@ namespace sf
         //! A method to switch off the light
         void Deactivate();
         
-        //! A method to set how far is the light surface from its center.
-        /*!
-         \param dist the distance from light center to its surface
-         */
-        void setLightSurfaceDistance(GLfloat dist);
-        
         //! A method returning the color of the light.
         glm::vec3 getColor();
         
         //! A method returning the position of the light.
         glm::vec3 getPosition();
+		
+		//! A method returning the radius of the light source.
+		GLfloat getSourceRadius();
         
         //! A method returning the orientation of the light.
         glm::quat getOrientation();
@@ -136,18 +137,20 @@ namespace sf
         static void SetCamera(OpenGLCamera* view);
         
     protected:
-        GLfloat surfaceDistance;
-        
+		Mesh* lightMesh;
+		unsigned int lightObject;
         static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
         static GLuint spotShadowSampler;
         static GLuint spotDepthSampler;
         static OpenGLCamera* activeView;
+		static GLSLShader* lightSourceShader;
         
     private:
         bool active;
         glm::vec3 pos;
         glm::vec3 tempPos;
         glm::vec3 color;
+		GLfloat R;
     };
 }
 

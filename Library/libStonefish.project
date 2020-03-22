@@ -339,6 +339,7 @@
       <File Name="shaders/depthAwareBlur2.frag"/>
     </VirtualDirectory>
     <VirtualDirectory Name="base">
+      <File Name="shaders/light.frag"/>
       <File Name="shaders/billboard.frag"/>
       <File Name="shaders/billboard.vert"/>
       <File Name="shaders/quadTree.tesc"/>
@@ -359,6 +360,7 @@
       <File Name="shaders/infiniteSurface.vert"/>
     </VirtualDirectory>
     <VirtualDirectory Name="materials">
+      <File Name="shaders/lighting.frag"/>
       <File Name="shaders/blinnPhong.frag"/>
       <File Name="shaders/cookTorrance.frag"/>
       <File Name="shaders/material.vert"/>
@@ -385,7 +387,7 @@
   <Dependencies Name="Release"/>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
-      <Compiler Options="-std=c++14;-fPIC" C_Options="-fPIC" Assembler="">
+      <Compiler Options="-std=c++14;-Wall;-fPIC;-Wno-reorder" C_Options="-std=c++14;-Wall;-fPIC;-Wno-reorder" Assembler="">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="/usr/include"/>
@@ -411,7 +413,7 @@
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="DEBUG"/>
@@ -452,7 +454,7 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Release" CompilerType="clang++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <Preprocessor Value="SHADER_DIR_PATH=\&quot;$(WorkspacePath)/Library/shaders/\&quot;"/>

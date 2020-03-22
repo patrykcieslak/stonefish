@@ -70,6 +70,9 @@ namespace sf
 		
         //! A method that draws all normal objects.
         void DrawObjects();
+		
+		//! A method that draws all lights.
+		void DrawLights();
         
         //! A method that blits the screen FBO to the main framebuffer.
         void DrawDisplay();

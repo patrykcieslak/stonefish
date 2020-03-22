@@ -37,11 +37,15 @@ namespace sf
         //! A constructor.
         /*!
          \param position the position of the light in the world frame [m]
+		 \param radius the radius of the light source [m]
          \param color the color of the light
          \param illuminance the brightness of the light [lx]
          */
-        OpenGLPointLight(glm::vec3 position, glm::vec3 color, GLfloat illuminance);
+        OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat illuminance);
         
+		//! A method implementing rendering of light surface.
+		void DrawLight();
+		
         //! A method to set up light data in a shader.
         /*!
          \param shader a pointer to a GLSL shader
