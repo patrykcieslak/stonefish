@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -19,9 +19,14 @@
 
 #version 330
 
+uniform mat4 invProj;
+uniform mat4 invView;
+out vec3 viewRay;
+
 void main() 
 {
 	int idx = gl_VertexID%3;
     vec4 pos = vec4(float(idx&1)*4.0-1.0, float((idx>>1)&1)*4.0-1.0, 1.0, 1.0);
-    gl_Position = pos;
+    viewRay = (invView * vec4((invProj * pos).xyz, 0.0)).xyz;
+	gl_Position = pos;
 }

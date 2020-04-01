@@ -627,7 +627,10 @@ void GraphicalSimulationApp::RenderLoop()
     }
     
     SDL_GL_SwapWindow(window);
-    drawingTime = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
+    
+	double dt = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
+	double f = 0.01;
+	drawingTime = f*dt + (1.0-f)*drawingTime;
 }
 
 void GraphicalSimulationApp::DoHUD()

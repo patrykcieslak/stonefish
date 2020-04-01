@@ -59,6 +59,15 @@ namespace sf
         bool useInTessEval;
         bool useInGeometry;
         bool useInFragment;
+		
+		GLSLHeader(): 
+			code(""), 
+			useInVertex(false), 
+			useInTessCtrl(false), 
+			useInTessEval(false), 
+			useInGeometry(false), 
+			useInFragment(false)
+		{};
     };
     
     //! A class representing a single GLSL shader.
@@ -105,6 +114,22 @@ namespace sf
                    std::string geometry = "",
                    std::pair<std::string, std::string> tesselation = std::make_pair("",""));
         
+		//! A constructor.
+        /*!
+         \param compiledShaders a list of compiled shaders that should be linked
+		 \param header a reference to a header structure
+         \param fragment path to the fragment shader
+         \param vertex path to the vertex shader
+         \param geometry path to the geometry shader
+         \param tesselation a pair of two path to the tesselation shaders
+         */
+        GLSLShader(std::vector<GLuint> compiledShaders,
+				   GLSLHeader& header,
+                   std::string fragment = "",
+                   std::string vertex = "",
+                   std::string geometry = "",
+                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
+				   
         //! A destructor.
         ~GLSLShader();
         

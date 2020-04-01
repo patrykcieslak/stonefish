@@ -25,6 +25,7 @@
 
 #include "graphics/OpenGLPipeline.h"
 
+#include <algorithm>
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
@@ -159,6 +160,9 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
             content->getLight(i)->UpdateTransform();
         drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
         SDL_UnlockMutex(drawingQueueMutex);
+			
+		//Sort objects by material to reduce uniform/texture switching
+        std::sort(drawingQueueCopy.begin(), drawingQueueCopy.end(), Renderable::SortByMaterial);
     }
 }
 
@@ -173,8 +177,8 @@ void OpenGLPipeline::DrawObjects()
 {
     for(size_t i=0; i<drawingQueueCopy.size(); ++i)
     {
-        if(drawingQueueCopy[i].type == RenderableType::SOLID)
-            content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
+		if(drawingQueueCopy[i].type == RenderableType::SOLID)
+			content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
     }
 }
 
@@ -309,7 +313,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 
     //Double-buffering of drawing queue
     PerformDrawingQueueCopy();
-    
+	
     //Choose rendering mode
     unsigned int renderMode = 0; //Defaults to rendering without ocean
     Ocean* ocean = sim->getOcean();
@@ -331,7 +335,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             content->getLight(i)->BakeShadowmap(this);
         glCullFace(GL_BACK);
     }
-    
+	
     //Clear display framebuffer
     OpenGLState::BindFramebuffer(screenFBO);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -402,8 +406,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 {
                     //Render all objects
                     content->SetDrawingMode(DrawingMode::FULL);
+					//int64_t timeStart = GetTimeInMicroseconds();
                     DrawObjects();
-					
+					//int64_t timeEnd = GetTimeInMicroseconds();
+					//printf("Draw objects time: %1.3lf ms\n", (timeEnd-timeStart)/1000.0);
+	
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
                         camera->DrawAO(1.0f);

@@ -350,6 +350,11 @@ namespace sf
         std::string materialName;
         glm::mat4 model;
         std::vector<glm::vec3> points;
+		
+		static bool SortByMaterial(const Renderable& r1, const Renderable& r2) 
+		{
+			return r1.lookId < r2.lookId;
+		}
     };
     
     //! An enum used to designate rendering quality.

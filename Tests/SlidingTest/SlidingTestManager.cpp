@@ -69,7 +69,7 @@ void SlidingTestManager::BuildScenario()
     AddSensor(traj);
     
     //////CAMERA & LIGHT//////
-    sf::Light* omni = new sf::Light("Omni", sf::Color::BlackBody(4000), 1000000);
+    sf::Light* omni = new sf::Light("Omni", sf::Scalar(0.1), sf::Color::BlackBody(4000), 1000000);
     omni->AttachToSolid(box, sf::Transform(sf::IQ(), sf::Vector3(0,0,-1)));
     AddActuator(omni);
 }

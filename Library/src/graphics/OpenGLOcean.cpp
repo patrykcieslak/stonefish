@@ -177,16 +177,21 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     //Shaders
     std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
-    
+	
     //Surface rendering
     GLSLShader* shader;
+	GLSLHeader header;
+	header.code = "#version 330\n";
+	header.code += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
+	header.useInFragment = true;
+	
     if(waves)
     {
-        shader = new GLSLShader(precompiled, "oceanSurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tesc", "oceanSurface.tese"));
+        shader = new GLSLShader(precompiled, header, "oceanSurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tesc", "oceanSurface.tese"));
         shader->AddUniform("tessDiv", ParameterType::FLOAT);
     }
     else
-        shader = new GLSLShader(precompiled, "oceanSurface.frag", "infiniteSurface.vert");
+        shader = new GLSLShader(precompiled, header, "oceanSurface.frag", "infiniteSurface.vert");
     
     shader->AddUniform("texWaveFFT", ParameterType::INT);
     shader->AddUniform("texSlopeVariance", ParameterType::INT);
@@ -199,20 +204,25 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader->AddUniform("scattering_texture", ParameterType::INT);
     shader->AddUniform("irradiance_texture", ParameterType::INT);
     shader->AddUniform("planetRadius", ParameterType::FLOAT);
+	shader->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
     shader->AddUniform("sunDirection", ParameterType::VEC3);
     shader->AddUniform("whitePoint", ParameterType::VEC3);
     shader->AddUniform("cosSunSize", ParameterType::FLOAT);
     oceanShaders.push_back(shader); //0
     
     //Backsurface rendering
-    if(waves)
+    GLint compiled;
+	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
+    precompiled.push_back(oceanOpticsFragment);
+	
+	if(waves)
     {
-        shader = new GLSLShader(precompiled, "oceanBacksurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tesc", "oceanSurface.tese"));
+        shader = new GLSLShader(precompiled, header, "oceanBacksurface.frag", "quadTree.vert", "", std::make_pair("quadTree.tesc", "oceanSurface.tese"));
         shader->AddUniform("tessDiv", ParameterType::FLOAT);
     }
     else
     {
-        shader = new GLSLShader(precompiled, "oceanBacksurface.frag", "infiniteSurface.vert");
+        shader = new GLSLShader(precompiled, header, "oceanBacksurface.frag", "infiniteSurface.vert");
     }
     
     shader->AddUniform("texWaveFFT", ParameterType::INT);
@@ -222,12 +232,12 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader->AddUniform("eyePos", ParameterType::VEC3);
     shader->AddUniform("MV", ParameterType::MAT3);
     shader->AddUniform("viewport", ParameterType::VEC2);
-    shader->AddUniform("lightAbsorption", ParameterType::VEC3);
-    shader->AddUniform("turbidity", ParameterType::FLOAT);
+    shader->AddUniform("tau", ParameterType::VEC3);
     shader->AddUniform("transmittance_texture", ParameterType::INT);
     shader->AddUniform("scattering_texture", ParameterType::INT);
     shader->AddUniform("irradiance_texture", ParameterType::INT);
     shader->AddUniform("planetRadius", ParameterType::FLOAT);
+	shader->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
     shader->AddUniform("sunDirection", ParameterType::VEC3);
     shader->AddUniform("whitePoint", ParameterType::VEC3);
     shader->AddUniform("cosSunSize", ParameterType::FLOAT);
@@ -327,6 +337,8 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader->AddUniform("cosSunSize", ParameterType::FLOAT);
     oceanShaders.push_back(shader); //11
     
+	glDeleteShader(oceanOpticsFragment);
+
     //Generate variances
     float slopeVarianceDelta = ComputeSlopeVariance();
     
@@ -499,6 +511,16 @@ GLfloat OpenGLOcean::getTurbidity()
     return turbidity;
 }
 
+glm::vec3 OpenGLOcean::getLightAbsorption()
+{
+    return lightAbsorption;
+}
+
+glm::vec3 OpenGLOcean::getOpticalThickness()
+{
+	return lightAbsorption * turbidity;
+}
+
 GLfloat OpenGLOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel)
 {
     //BILINEAR INTERPOLATION ACCORDING TO OPENGL SPECIFICATION (4.5)
@@ -555,11 +577,6 @@ GLfloat OpenGLOcean::getWaveHeight(GLfloat x, GLfloat y)
     }
     else
         return 0.f;
-}
-    
-glm::vec3 OpenGLOcean::getLightAbsorption()
-{
-    return lightAbsorption;
 }
 
 void OpenGLOcean::Simulate(GLfloat dt)
@@ -878,8 +895,7 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
         oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
-        oceanShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
-        oceanShaders[1]->SetUniform("turbidity", turbidity);
+        oceanShaders[1]->SetUniform("tau", getOpticalThickness());
         oceanShaders[1]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[1]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
         SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[1]);
@@ -899,8 +915,7 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
         oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
-        oceanShaders[1]->SetUniform("lightAbsorption", lightAbsorption);
-        oceanShaders[1]->SetUniform("turbidity", turbidity);
+        oceanShaders[1]->SetUniform("tau", getOpticalThickness());
         oceanShaders[1]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
         oceanShaders[1]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[1]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);

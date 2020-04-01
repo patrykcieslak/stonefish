@@ -199,7 +199,8 @@ constexpr double MAX_LUMINOUS_EFFICACY = 683.0; //The conversion factor between 
 constexpr double kLambdaR = 680.0;
 constexpr double kLambdaG = 550.0;
 constexpr double kLambdaB = 440.0;
-constexpr double kLengthUnitInMeters = 1.0; //Length unit used in OpenGL
+constexpr double kLengthUnitInMeters = 1000.0; //Length unit used in OpenGL
+constexpr double kBottomRadius = 6360000.0;
 
 GLuint OpenGLAtmosphere::atmosphereAPI = 0;
 std::string OpenGLAtmosphere::glslDefinitions = "";
@@ -254,9 +255,9 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
             nScatteringOrders = 6;
     }
     
+	atmBottomRadius = kBottomRadius;
     Precompute();
-    atmBottomRadius = -6360000.f;
-
+    
     //Set shadow quality
     switch(shadow)
     {
@@ -295,11 +296,12 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     skySunShader->AddUniform("single_mie_scattering_texture", ParameterType::INT);
     skySunShader->AddUniform("eyePos", ParameterType::VEC3);
     skySunShader->AddUniform("sunDir", ParameterType::VEC3);
-    skySunShader->AddUniform("invView", ParameterType::MAT3);
+    skySunShader->AddUniform("invView", ParameterType::MAT4);
     skySunShader->AddUniform("invProj", ParameterType::MAT4);
-    skySunShader->AddUniform("viewport", ParameterType::VEC2);
     skySunShader->AddUniform("whitePoint", ParameterType::VEC3);
     skySunShader->AddUniform("cosSunSize", ParameterType::FLOAT);
+	skySunShader->AddUniform("bottomRadius", ParameterType::FLOAT);
+	skySunShader->AddUniform("groundAlbedo", ParameterType::FLOAT);
 
     //Initialize shadows
     sunShadowFrustum = new ViewFrustum[sunShadowmapSplits];
@@ -425,25 +427,28 @@ GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
 
 void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
 {
-    glm::mat4 viewMatrix = view->GetViewMatrix();
-    glm::mat4 projection = view->GetProjectionMatrix();
-    GLint* viewport = view->GetViewport();
+	glm::vec3 eyePos = view->GetEyePosition()/kLengthUnitInMeters;
+	eyePos.z = eyePos.z > -0.5/kLengthUnitInMeters ? -0.5/kLengthUnitInMeters : eyePos.z;
+    glm::mat4 invViewMatrix = glm::inverse(view->GetViewMatrix());
+	invViewMatrix[3].x = eyePos.x;
+	invViewMatrix[3].y = eyePos.y;
+	invViewMatrix[3].z = eyePos.z;
+    glm::mat4 invProjectionMatrix = glm::inverse(view->GetProjectionMatrix());
 
     skySunShader->Use();
+	skySunShader->SetUniform("bottomRadius", (GLfloat)(atmBottomRadius/kLengthUnitInMeters));
+	skySunShader->SetUniform("groundAlbedo", 0.7f);
     skySunShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     skySunShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     skySunShader->SetUniform("single_mie_scattering_texture", TEX_ATM_SCATTERING);
-    skySunShader->SetUniform("eyePos", view->GetEyePosition());
+    skySunShader->SetUniform("eyePos", eyePos);
     skySunShader->SetUniform("sunDir", GetSunDirection());
-    skySunShader->SetUniform("invProj", glm::inverse(projection));
-    skySunShader->SetUniform("invView", glm::mat3(glm::inverse(viewMatrix)));
-    skySunShader->SetUniform("viewport", glm::vec2(viewport[2], viewport[3]));
+    skySunShader->SetUniform("invProj", invProjectionMatrix);
+    skySunShader->SetUniform("invView", invViewMatrix);
     skySunShader->SetUniform("whitePoint", whitePoint);
     skySunShader->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
-    
-    delete [] viewport;
 }
 
 void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
@@ -647,8 +652,9 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
         lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
     }
 
-    shader->SetUniform("planetRadius", atmBottomRadius-1.f);
-    shader->SetUniform("sunDirection", GetSunDirection());
+    shader->SetUniform("planetRadius", (GLfloat)(atmBottomRadius/kLengthUnitInMeters));
+    shader->SetUniform("skyLengthUnitInMeters", (GLfloat)kLengthUnitInMeters);
+	shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
     shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
     shader->SetUniform("sunClipSpace[2]", lightClipSpace[2]);
@@ -678,7 +684,8 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
 
 void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
 {
-    shader->SetUniform("planetRadius", atmBottomRadius-1.f);
+    shader->SetUniform("planetRadius", (GLfloat)(atmBottomRadius/kLengthUnitInMeters));
+	shader->SetUniform("skyLengthUnitInMeters", (GLfloat)kLengthUnitInMeters);
     shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
@@ -1055,7 +1062,6 @@ std::string OpenGLAtmosphere::EarthsAtmosphere(const glm::dvec3& lambdas)
     constexpr double kMaxOzoneNumberDensity = 300.0 * kDobsonUnit / 15000.0;
     // Wavelength independent solar irradiance "spectrum" (not physically realistic, but was used in the original implementation).
     //constexpr double kConstantSolarIrradiance = 1.5;
-    constexpr double kBottomRadius = 6360000.0;
     constexpr double kTopRadius = 6420000.0;
     constexpr double kRayleigh = 1.24062e-6;
     constexpr double kRayleighScaleHeight = 8000.0;

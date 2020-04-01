@@ -160,6 +160,9 @@ namespace sf
         
         //! A method returning the turbidity of the water.
         GLfloat getTurbidity();
+		
+		//! A method calculating ocean water optical thickness.
+		glm::vec3 getOpticalThickness();
         
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);

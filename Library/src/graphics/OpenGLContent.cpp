@@ -292,6 +292,7 @@ OpenGLContent::OpenGLContent()
     blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
     blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
     blinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
+	blinnPhong->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
     blinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
     
     materialShaders.push_back(blinnPhong);
@@ -354,6 +355,7 @@ OpenGLContent::OpenGLContent()
     cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
     cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
     cookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
+	cookTorrance->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
     cookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
     
     materialShaders.push_back(cookTorrance);
@@ -361,6 +363,8 @@ OpenGLContent::OpenGLContent()
 	
     //-------------Underwater shaders---------------------------
     commonMaterialShaders.pop_back();
+	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
+	commonMaterialShaders.push_back(oceanOpticsFragment);
     materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
     commonMaterialShaders.push_back(materialFragment);
     
@@ -378,8 +382,7 @@ OpenGLContent::OpenGLContent()
     uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("lightAbsorption", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("turbidity", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("tau", ParameterType::VEC3);
     
     uwBlinnPhong->AddUniform("numPointLights", ParameterType::INT);
     uwBlinnPhong->AddUniform("numSpotLights", ParameterType::INT);
@@ -425,6 +428,7 @@ OpenGLContent::OpenGLContent()
     uwBlinnPhong->AddUniform("scattering_texture", ParameterType::INT);
     uwBlinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
     uwBlinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
+	uwBlinnPhong->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
     
     materialShaders.push_back(uwBlinnPhong);
@@ -443,8 +447,7 @@ OpenGLContent::OpenGLContent()
     uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("lightAbsorption", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("turbidity", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("tau", ParameterType::VEC3);
     
     uwCookTorrance->AddUniform("numPointLights", ParameterType::INT);
     uwCookTorrance->AddUniform("numSpotLights", ParameterType::INT);
@@ -490,10 +493,13 @@ OpenGLContent::OpenGLContent()
     uwCookTorrance->AddUniform("scattering_texture", ParameterType::INT);
     uwCookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
     uwCookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
+	uwCookTorrance->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
     
     materialShaders.push_back(uwCookTorrance);
     glDeleteShader(materialFragment);
+	glDeleteShader(oceanOpticsFragment);
+	glDeleteShader(pcssFragment);
 }
 
 OpenGLContent::~OpenGLContent()
@@ -979,8 +985,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
     if(mode == DrawingMode::UNDERWATER)
     {
         Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        shader->SetUniform("turbidity", ocean->getOpenGLOcean()->getTurbidity());
-        shader->SetUniform("lightAbsorption", ocean->getOpenGLOcean()->getLightAbsorption());
+        shader->SetUniform("tau", ocean->getOpenGLOcean()->getOpticalThickness());
     }
     
     SetupLights(shader);

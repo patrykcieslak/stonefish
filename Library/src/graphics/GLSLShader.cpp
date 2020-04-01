@@ -154,6 +154,51 @@ GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, std::string fragment
         
     valid = true;
 }
+
+GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, GLSLHeader& header, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
+{
+    valid = false;
+    GLint compiled = 0;
+    GLuint vs;
+    GLuint tcs;
+    GLuint tes;
+    GLuint gs;
+    GLuint fs;
+    std::string emptyHeader = "";
+    
+    if(vertex == "")
+        vs = 0;
+    else
+        vs = LoadShader(GL_VERTEX_SHADER, vertex, header.useInVertex ? header.code : emptyHeader, &compiled);
+    
+    if(tesselation.first == "" || tesselation.second == "")
+    {
+        tcs = 0;
+        tes = 0;
+    }
+    else
+    {
+        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, header.useInTessCtrl ? header.code : emptyHeader, &compiled);
+        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, header.useInTessEval ? header.code : emptyHeader, &compiled);
+    }
+    
+    if(geometry == "")
+        gs = 0;
+    else
+        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
+    
+    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
+    
+    std::vector<GLuint> cShaders = compiledShaders;
+    cShaders.push_back(vs);
+    cShaders.push_back(gs);
+    cShaders.push_back(fs);
+    cShaders.push_back(tcs);
+    cShaders.push_back(tes);	
+    shader = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
+        
+    valid = true;
+}
     
 GLSLShader::~GLSLShader()
 {

@@ -4,8 +4,8 @@
   <WorkspaceParserPaths>
     <Include Path="/usr/local/include/bullet"/>
   </WorkspaceParserPaths>
-  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="Yes"/>
-  <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="No"/>
+  <Project Name="libStonefish" Path="Library/libStonefish.project" Active="No"/>
+  <Project Name="FallingTest" Path="Tests/FallingTest/FallingTest.project" Active="Yes"/>
   <Project Name="JointsTest" Path="Tests/JointsTest/JointsTest.project" Active="No"/>
   <Project Name="UnderwaterTest" Path="Tests/UnderwaterTest/UnderwaterTest.project" Active="No"/>
   <Project Name="ConsoleTest" Path="Tests/ConsoleTest/ConsoleTest.project" Active="No"/>
@@ -13,7 +13,7 @@
   <Project Name="FloatingTest" Path="Tests/FloatingTest/FloatingTest.project" Active="No"/>
   <Project Name="FlyingTest" Path="Tests/FlyingTest/FlyingTest.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="yes">
+    <WorkspaceConfiguration Name="Debug" Selected="no">
       <Environment>LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:$(WorkspacePath)/Library/build/Debug</Environment>
       <Project Name="libStonefish" ConfigName="Debug"/>
       <Project Name="FallingTest" ConfigName="Debug"/>
@@ -24,16 +24,16 @@
       <Project Name="FloatingTest" ConfigName="Debug"/>
       <Project Name="FlyingTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="no">
-      <Environment/>
-      <Project Name="libStonefish" ConfigName="Release"/>
-      <Project Name="FallingTest" ConfigName="Release"/>
-      <Project Name="JointsTest" ConfigName="Release"/>
-      <Project Name="UnderwaterTest" ConfigName="Release"/>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment>LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:$(WorkspacePath)/Library/build/Release</Environment>
       <Project Name="ConsoleTest" ConfigName="Release"/>
-      <Project Name="SlidingTest" ConfigName="Release"/>
+      <Project Name="FallingTest" ConfigName="Release"/>
       <Project Name="FloatingTest" ConfigName="Release"/>
       <Project Name="FlyingTest" ConfigName="Release"/>
+      <Project Name="JointsTest" ConfigName="Release"/>
+      <Project Name="libStonefish" ConfigName="Release"/>
+      <Project Name="SlidingTest" ConfigName="Release"/>
+      <Project Name="UnderwaterTest" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

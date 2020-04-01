@@ -1,15 +1,27 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10)
 project(Stonefish)
 
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION")
+# Options
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
+option(BUILD_TESTS "Build applications testing different features of the Stonefish library" OFF)
+
+# Set up CMAKE flags
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_FLAGS "-Wall -Wno-reorder -DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+# Find required libraries
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Bullet 2.88 EXACT REQUIRED)
 
+# Add include directories
 include_directories(
     Library/include
     ${OPENGL_INCLUDE_DIRS}
@@ -18,11 +30,19 @@ include_directories(
     ${BULLET_INCLUDE_DIRS}
 )
 
+# Build list of library source files
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
 
+# Create library target
 add_library(Stonefish SHARED ${SOURCES})
 target_link_libraries(Stonefish ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} GLEW)
 
+# Create tests (optional)
+if(BUILD_TESTS)
+    add_subdirectory(Tests)
+endif()
+
+# Install library in the system
 install(
     TARGETS Stonefish 
     LIBRARY DESTINATION /usr/local/lib

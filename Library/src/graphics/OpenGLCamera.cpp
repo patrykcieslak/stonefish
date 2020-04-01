@@ -38,7 +38,6 @@
 namespace sf
 {
 
-GLSLShader** OpenGLCamera::depthAwareBlurShader = NULL;
 GLSLShader* OpenGLCamera::lightMeterShader = NULL;
 GLSLShader* OpenGLCamera::tonemapShader = NULL;
 GLSLShader** OpenGLCamera::depthLinearizeShader = NULL;
@@ -56,6 +55,8 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     far = range.y;
     activePostprocessTexture = 0;
     exposureComp = 0.f;
+	autoExposure = true;
+	toneMapping = true;
     aoFactor = 0;
     
     if(GLEW_VERSION_4_3 
@@ -97,7 +98,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     {
         glGenTextures(1, &renderColorTex);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, renderColorTex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, viewportWidth, viewportHeight, 0, GL_RGB, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, viewportWidth, viewportHeight, 0, GL_RGB, GL_HALF_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -337,10 +338,11 @@ glm::mat4 OpenGLCamera::GetProjectionMatrix() const
 
 glm::mat4 OpenGLCamera::GetInfiniteProjectionMatrix() const
 {
+	GLfloat epsilon = 10e-7;
     glm::mat4 infProj = projection;
-    infProj[2][2] = -1.f;
+    infProj[2][2] = epsilon-1.f;
     infProj[2][3] = -1.f;
-    infProj[3][2] = -2.f*near;
+    infProj[3][2] = (epsilon-2.f)*near;
     return infProj;
 }
 
@@ -432,6 +434,16 @@ GLuint OpenGLCamera::getFinalTexture()
 bool OpenGLCamera::hasAO()
 {
     return aoFactor > 0;
+}
+
+bool OpenGLCamera::usingToneMapping()
+{
+	return toneMapping;
+}
+
+bool OpenGLCamera::usingAutoExposure()
+{
+	return autoExposure;
 }
 
 void OpenGLCamera::SetProjection()
@@ -761,54 +773,55 @@ GLuint OpenGLCamera::getPostprocessTexture(unsigned int id)
 
 void OpenGLCamera::DrawLDR(GLuint destinationFBO)
 {
-    //Bind HDR texture
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);
+	if(usingToneMapping())
+	{
+		//Bind HDR texture
+		OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);
+		
+		if(usingAutoExposure())
+		{
+			//Matrix light metering
+			OpenGLState::BindFramebuffer(lightMeterFBO);
+			OpenGLState::Viewport(0,0,2,2);
+			lightMeterShader->Use();
+			lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
+			lightMeterShader->SetUniform("samples", glm::ivec2(64,64));
+			((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+			OpenGLState::BindFramebuffer(0);
+		
+			//Bind exposure texture
+			OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, lightMeterTex);
+		}
     
-    //Matrix light metering
-    OpenGLState::BindFramebuffer(lightMeterFBO);
-    OpenGLState::Viewport(0,0,2,2);
-    lightMeterShader->Use();
-    lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
-    lightMeterShader->SetUniform("samples", glm::ivec2(64,64));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    OpenGLState::BindFramebuffer(0);
-    
-    //Bind exposure texture
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, lightMeterTex);
-    
-    //LDR drawing
-    OpenGLState::BindFramebuffer(destinationFBO);
-    OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
-    tonemapShader->Use();
-    tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
-    tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
-    tonemapShader->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    OpenGLState::BindFramebuffer(0);
-    
-    OpenGLState::UseProgram(0); //Disable shaders
-    
-    //Unbind textures
-    OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
-    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+		//LDR drawing
+		OpenGLState::BindFramebuffer(destinationFBO);
+		OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+		tonemapShader->Use();
+		tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
+		tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
+		tonemapShader->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
+		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+		OpenGLState::BindFramebuffer(0);
+		
+		OpenGLState::UseProgram(0); //Disable shaders
+		
+		//Unbind textures
+		OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+		OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+	}
+	else
+	{
+		OpenGLState::BindFramebuffer(destinationFBO);
+		OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(postprocessTex[0]);
+		OpenGLState::BindFramebuffer(0);
+	}
 }
 
 ///////////////////////// Static /////////////////////////////
 void OpenGLCamera::Init()
 {
     /////Tonemapping//////
-    depthAwareBlurShader = new GLSLShader*[2];
-    depthAwareBlurShader[0] = new GLSLShader("depthAwareBlur.frag", "gaussianBlur.vert");
-    depthAwareBlurShader[0]->AddUniform("texSource", ParameterType::INT);
-    depthAwareBlurShader[0]->AddUniform("texLinearDepth", ParameterType::INT);
-    depthAwareBlurShader[0]->AddUniform("texelOffset", ParameterType::VEC2);
-        
-    depthAwareBlurShader[1] = new GLSLShader("depthAwareBlur2.frag", "gaussianBlur.vert");
-    depthAwareBlurShader[1]->AddUniform("texSource", ParameterType::INT);
-    depthAwareBlurShader[1]->AddUniform("texLinearDepth", ParameterType::INT);
-    depthAwareBlurShader[1]->AddUniform("texelOffset", ParameterType::VEC2);
-    depthAwareBlurShader[1]->AddUniform("sourceLayer", ParameterType::INT);
-        
     lightMeterShader = new GLSLShader("lightMeter.frag");
     lightMeterShader->AddUniform("texHDR", ParameterType::INT);
     lightMeterShader->AddUniform("samples", ParameterType::IVEC2);

@@ -71,6 +71,13 @@ void FallingTestManager::BuildScenario()
 	sf::Obstacle* pillar = new sf::Obstacle("Pillar", sf::Vector3(0.5,0.3,4.0), "Steel", "Green");
 	AddStaticEntity(pillar, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-2.0)));
 	
+	for(int i=1; i<=30; ++i)
+		for(int k=0; k<5; ++k)
+		{
+			sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(0.45,0.45,sin(i/10.f)), "Steel", "Green");
+			AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.5*i+5.0,0.5*k,-sin(i/10.f)/2.0)));
+		}
+	
 	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 1000000.0);
 	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,-1.0)));
 	AddActuator(spot);

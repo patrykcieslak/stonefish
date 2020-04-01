@@ -214,7 +214,13 @@ namespace sf
         
         //! A method informing if view is using ambient occlusion.
         bool hasAO();
-        
+		
+		//! A method informing if HDR tone mapping is enabled.
+		bool usingToneMapping();
+		
+		//! A method informing if auto exposure function is enabled.
+        bool usingAutoExposure();
+		
         //! A static method to load shaders.
         static void Init();
         
@@ -231,6 +237,8 @@ namespace sf
         GLuint lightMeterFBO;
         GLuint lightMeterTex;
         GLfloat exposureComp;
+		bool autoExposure;
+		bool toneMapping;
         
         //Postprocessing
         GLuint postprocessFBO;
@@ -261,7 +269,6 @@ namespace sf
         glm::mat4 projection;
         
         //Shaders
-        static GLSLShader** depthAwareBlurShader;
         static GLSLShader* lightMeterShader;
         static GLSLShader* tonemapShader;
         static GLSLShader** depthLinearizeShader; //Two shaders -> no msaa/msaa

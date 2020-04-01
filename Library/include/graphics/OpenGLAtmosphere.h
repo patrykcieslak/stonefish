@@ -42,7 +42,7 @@ namespace sf
         float linear_term;
         float constant_term;
     };
-    
+	
     // An atmosphere density profile made of several layers on top of each other
     // (from bottom to top). The width of the last layer is ignored, i.e. it always
     // extend to the top atmosphere boundary. The profile values vary between 0
@@ -51,6 +51,12 @@ namespace sf
     {
         DensityProfileLayer layers[2];
     };
+	
+	//! A structure representing data of the material UBO (std140 padding).
+	struct SunSkyUBO
+	{
+		
+	};
     
     //! An enum definind id's of atmosphere textures.
     enum AtmosphereTextures
@@ -192,6 +198,7 @@ namespace sf
         glm::mat4x4 sunModelView;
         ViewFrustum* sunShadowFrustum;
         GLuint sunShadowFBO;
+		GLuint sunMaterialUBO;
         GLSLShader* sunShadowmapShader; //debug draw shadowmap
         
         //Rendering

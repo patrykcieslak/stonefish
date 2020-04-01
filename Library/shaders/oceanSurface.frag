@@ -23,10 +23,6 @@
     https://github.com/jdupuy/whitecaps
 */
 
-#version 330
-
-#define MEAN_SUN_ILLUMINANCE 107527.0
-
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance; 
 uniform vec2 viewport;
@@ -35,6 +31,7 @@ uniform vec3 eyePos;
 uniform mat3 MV;
 uniform vec3 sunDirection;
 uniform float planetRadius;
+uniform float skyLengthUnitInMeters;
 uniform vec3 whitePoint;
 
 in vec4 fragPos;
@@ -108,13 +105,13 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 
 void main()
 {
-    vec3 pos = fragPos.xyz/fragPos.w;
-	vec3 toEye = normalize(eyePos - pos);
-	vec3 center = vec3(0, 0, -planetRadius);
-	vec3 P = pos - center;
+    vec3 P = fragPos.xyz/fragPos.w;
+	vec3 toEye = normalize(eyePos - P);
+	vec3 center = vec3(0, 0, planetRadius);
+	vec3 Psky = vec3(P.xy/skyLengthUnitInMeters, clamp(P.z/skyLengthUnitInMeters, -100000.0/skyLengthUnitInMeters, -0.5/skyLengthUnitInMeters));
 	
 	//Wave slope (layers 1,2)
-    vec2 waveCoord = pos.xy;
+    vec2 waveCoord = P.xy;
 	vec2 slopes = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 1.0)).zw;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 2.0)).xy;
@@ -148,7 +145,7 @@ void main()
     //float fresnel = 0.02 + 0.98 * pow(1.0 - dot(toEye, normal), 5.0);
     
 	vec3 Isky;
-	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
+	vec3 Isun = GetSunAndSkyIlluminance(Psky - center, normal, sunDirection, Isky);
 	
 	vec3 outColor = vec3(0.0);
 	
@@ -158,11 +155,11 @@ void main()
 	//Sky and scene reflection
 	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, -3.0)));
 	vec3 trans;
-	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
+	vec3 Lsky = GetSkyLuminance(Psky - center, ray, 0.0, sunDirection, trans);
     outColor += Lsky/whitePoint/MEAN_SUN_ILLUMINANCE; //fresnel *
     
 	//Aerial perspective
-    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, P, 0.0, sunDirection, trans);///whitePoint/30000.0;
+    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, Psky - center, 0.0, sunDirection, trans);///whitePoint/30000.0;
     //outColor = L2P;//trans * outColor + L2P;
 	
 	//Sea contribution

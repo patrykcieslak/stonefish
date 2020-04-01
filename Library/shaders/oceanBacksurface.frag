@@ -23,20 +23,15 @@
     https://github.com/jdupuy/whitecaps
 */
 
-#version 330
-
-#define MEAN_SUN_ILLUMINANCE 107527.0
-
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
 uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
 uniform mat3 MV;
-uniform vec3 lightAbsorption;
-uniform float turbidity;
 uniform vec3 sunDirection;
 uniform float planetRadius;
+uniform float skyLengthUnitInMeters;
 uniform vec3 whitePoint;
 uniform float cosSunSize;
 
@@ -49,10 +44,13 @@ vec3 GetSolarLuminance();
 vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
+vec3 RefractToWater(vec3 I, vec3 N);
+vec3 RefractToAir(vec3 I, vec3 N);
+vec3 BeerLambert(float d);
+vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d);
 
 const float M_PI = 3.14159265358979323846;
-const float w2a = 1.33/1.0;
-const vec3 rayleigh = vec3(0.15023, 0.405565, 1.0);
+const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
 
 // assumes x>0
 float erfc(float x) 
@@ -114,14 +112,17 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 
 void main()
 {
-	vec3 pos = fragPos.xyz/fragPos.w;
-	vec3 toEye = normalize(eyePos - pos);
-	vec3 center = vec3(0, 0, -planetRadius);
-	vec3 P = pos-center;
-    float d = length(eyePos - pos);
+	vec3 P = fragPos.xyz/fragPos.w;
+	vec3 V = normalize(eyePos - P);
+	vec3 center = vec3(0, 0, planetRadius);
+	vec3 Psky = vec3(P.xy/skyLengthUnitInMeters, clamp(P.z/skyLengthUnitInMeters, -100000.0/skyLengthUnitInMeters, -0.5/skyLengthUnitInMeters));
+    float d = length(eyePos - P);
+	
+	if(eyePos.z < 0.0)
+		d = P.z/dot(V, waterSurfaceN);
 	
 	//Wave slope (layers 1,2)
-    vec2 waveCoord = pos.xy;
+    vec2 waveCoord = P.xy;
 	vec2 slopes = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 1.0)).zw;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 2.0)).xy;
@@ -149,46 +150,29 @@ void main()
 	vec3 Tx = cross(Ty, normal);
 
     //Reflection/refraction ratio
-	float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
+	float fresnel = 0.02 + 0.98 * meanFresnel(V, normal, sigmaSq);
     
     //Sky
     vec3 Lsky = vec3(0.);
-	vec3 ray = refract(-toEye, normal, w2a);
+	vec3 ray = RefractToAir(-V, normal); //refract(-V, normal, w2a);
 	if(ray.z < 0.0)
 	{
 		vec3 trans;
-		Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
+		Lsky = GetSkyLuminance(Psky - center, ray, 0.0, sunDirection, trans);
         Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/MEAN_SUN_ILLUMINANCE; ////1000.0;
 	}
 	
 	//Final color
     fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;  //10000.0;
 	
-    //Water properties
-    vec3 b = turbidity * rayleigh * 0.5; //Scattering coefficient
-    vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
-    
     //Attenuation
-    vec3 aFactor = exp(-c * d);
-    fragColor *= aFactor;
-    
-    //Inscattering
-    vec3 skyIlluminance;
-    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,-1.0), sunDirection, skyIlluminance);
-    vec3 inFactor = exp(-lightAbsorption * max(eyePos.z,0.0)) * (exp((toEye.z - 1.0)* c * d) - 1.0)/((toEye.z - 1.0) * c) * b;
-    fragColor += (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
-    
-	//Absorption
-	//fragColor *= exp(-lightAbsorption*(turbidity/100.0)*distance);
+	fragColor *= BeerLambert(d);
 	
-	//Inscatter
-	/*vec3 Isky;
-	vec3 Isun = GetSunAndSkyIlluminance(P, vec3(0,0,1.0), sunDirection, Isky);
-    vec3 fogColor = Isky/whitePoint/30000.0 * exp(-lightAbsorption * -min(-5.0, eyePos.z)) * 0.2;
-    float fogFactor = 1.0 - exp(-(turbidity/1000.0)*distance);
-    */
-    
-    //fragColor = mix(fragColor, fogColor, fogFactor);
-    //normal = vec3(0.0,0.0,1.0);
-    fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0); //fragNormal = vec4(normalize(MV * normal), 1.0);
+    //Inscattering
+	vec3 skyIlluminance;
+	vec3 sunIlluminance = GetSunAndSkyIlluminance(Psky - center, waterSurfaceN, sunDirection, skyIlluminance);
+	vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	fragColor += InScattering(L, -waterSurfaceN, V, max(eyePos.z, 0.0), d);
+	
+	fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);
 }
