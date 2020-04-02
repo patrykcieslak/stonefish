@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.10)
-project(Stonefish)
-
 add_definitions(-DDATA_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Data/\")
 
 add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestApp.cpp ConsoleTest/ConsoleTestManager.cpp)

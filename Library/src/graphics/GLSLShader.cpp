@@ -69,7 +69,7 @@ GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geo
         gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
 
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
-    shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
+    program = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
     valid = true;
 }
 
@@ -106,7 +106,7 @@ GLSLShader::GLSLShader(GLSLHeader& header, std::string fragment, std::string ver
         gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
 
     fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
-    shader = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
+    program = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
     valid = true;
 }
 
@@ -150,7 +150,7 @@ GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, std::string fragment
     cShaders.push_back(fs);
     cShaders.push_back(tcs);
     cShaders.push_back(tes);	
-    shader = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
+    program = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
         
     valid = true;
 }
@@ -195,7 +195,7 @@ GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, GLSLHeader& header, 
     cShaders.push_back(fs);
     cShaders.push_back(tcs);
     cShaders.push_back(tes);	
-    shader = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
+    program = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
         
     valid = true;
 }
@@ -203,7 +203,7 @@ GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, GLSLHeader& header, 
 GLSLShader::~GLSLShader()
 {
     if(valid)
-        glDeleteProgram(shader);
+        glDeleteProgram(program);
 }
 
 bool GLSLShader::isValid()
@@ -213,13 +213,13 @@ bool GLSLShader::isValid()
 
 GLuint GLSLShader::getProgramHandle()
 {
-    return shader;
+    return program;
 }
 
 void GLSLShader::Use()
 {
     if(valid)
-        OpenGLState::UseProgram(shader);
+        OpenGLState::UseProgram(program);
 }
 
 bool GLSLShader::AddAttribute(std::string name, ParameterType type)
@@ -229,7 +229,7 @@ bool GLSLShader::AddAttribute(std::string name, ParameterType type)
     att.type = type;
     
     Use();
-    att.index = glGetAttribLocation(shader, name.c_str());
+    att.index = glGetAttribLocation(program, name.c_str());
     OpenGLState::UseProgram(0);
     
     if(att.index < 0)
@@ -246,13 +246,13 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     uni.type = type;
     
     Use();
-    uni.location = glGetUniformLocation(shader, name.c_str());
+    uni.location = glGetUniformLocation(program, name.c_str());
     OpenGLState::UseProgram(0);
     
     if(uni.location < 0)
     {
 #ifdef DEBUG
-        cError("Uniform '%s' doesn't exist!", name.c_str());
+        //cError("Uniform '%s' doesn't exist!", name.c_str());
 #endif
         return false;
     }
@@ -431,6 +431,23 @@ bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index
         }
     
     return false;
+}
+
+bool GLSLShader::BindUniformBlock(std::string name, GLuint bindingPoint)
+{
+    GLuint blockIndex = glGetUniformBlockIndex(program, name.c_str());
+    if(blockIndex != GL_INVALID_INDEX)
+    {
+        glUniformBlockBinding(program, blockIndex, bindingPoint);
+        return true;
+    }
+    else
+    {
+#ifdef DEBUG
+        cError("Uniform block %s not found in program!", name.c_str());
+#endif
+        return false;
+    }
 }
 
 //// Statics

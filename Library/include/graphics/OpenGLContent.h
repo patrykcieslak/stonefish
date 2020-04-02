@@ -28,12 +28,24 @@
 
 #include "graphics/OpenGLDataStructs.h"
 #include "core/NameManager.h"
+#include "graphics/OpenGLPointLight.h"
+#include "graphics/OpenGLSpotLight.h"
 
 namespace sf
 {
+    //! A structure representing data of the Lights UBO (std140 aligned)
+    #pragma pack(1)
+    struct LightsUBO
+    {
+        PointLightUBO pointLights[MAX_POINT_LIGHTS];
+        SpotLightUBO spotLights[MAX_SPOT_LIGHTS];
+        GLint numPointLights;
+        GLint numSpotLights;
+    };
+    #pragma pack(0)
+
     class GLSLShader;
     class OpenGLView;
-    class OpenGLLight;
     
     //! A class implementing OpenGL content management and core rendering funtions.
     class OpenGLContent
@@ -257,11 +269,8 @@ namespace sf
         //! A method returning the number of lights.
         unsigned int getLightsCount();
         
-        //! A method that sets up shader uniforms with light information.
-        /*!
-         \param shader a pointer to a shader
-         */
-        void SetupLights(GLSLShader* shader);
+        //! A method that updates lights UBO.
+        void SetupLights();
         
         //! A method returing the id of a look.
         /*!
@@ -435,6 +444,8 @@ namespace sf
         GLuint csBuf[2]; //vertex data for drawing coord systems
         Object ellipsoid; //used for approximating fluid dynamics coeffs
         Object cylinder; //used for approximating fluid dynamics coeffs
+        GLuint lightsUBO;
+        LightsUBO lightsUBOData;
         
         //Shaders
         GLSLShader* helperShader;

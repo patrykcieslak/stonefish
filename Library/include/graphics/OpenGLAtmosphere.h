@@ -52,12 +52,20 @@ namespace sf
         DensityProfileLayer layers[2];
     };
 	
-	//! A structure representing data of the material UBO (std140 padding).
+	//! A structure representing data of the SunSky UBO (std140 aligned).
+    #pragma pack(1)
 	struct SunSkyUBO
 	{
-		
+		glm::mat4 sunClipSpace[4];      
+        glm::vec4 sunFrustumNear;       
+        glm::vec4 sunFrustumFar;        
+        glm::vec3 sunDirection;
+        GLfloat planetRadiusInUnits;  
+        glm::vec3 whitePoint;
+        GLfloat atmLengthUnitInMeters;
 	};
-    
+    #pragma pack(0)
+
     //! An enum definind id's of atmosphere textures.
     enum AtmosphereTextures
     {
@@ -98,11 +106,8 @@ namespace sf
          */
         void BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view);
         
-        //! A method to setup a material shader.
-        /*!
-         \param shader a pointer to the material shader
-         */
-        void SetupMaterialShader(GLSLShader* shader);
+        //! A method to setup a material shaders.
+        void SetupMaterialShaders();
         
         //! A method to setup an ocean shader.
         /*!
@@ -133,10 +138,7 @@ namespace sf
         
         //! A method returning the sun direction.
         glm::vec3 GetSunDirection();
-        
-        //! A method returning the bottom radius of the atmosphere.
-        GLfloat getAtmosphereBottomRadius();
-        
+         
         //! A method displaying a texture.
         /*!
          \param id the type of texture to display
@@ -198,13 +200,13 @@ namespace sf
         glm::mat4x4 sunModelView;
         ViewFrustum* sunShadowFrustum;
         GLuint sunShadowFBO;
-		GLuint sunMaterialUBO;
+		GLuint sunSkyUBO;
+        SunSkyUBO sunSkyUBOData;
         GLSLShader* sunShadowmapShader; //debug draw shadowmap
         
         //Rendering
         GLfloat sunAzimuth;
         GLfloat sunElevation;
-        GLfloat atmBottomRadius;
         GLSLShader* skySunShader;
         GLuint textures[AtmosphereTextures::TEXTURE_COUNT];
     };

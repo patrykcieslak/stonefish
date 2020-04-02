@@ -46,11 +46,11 @@ LightType OpenGLPointLight::getType()
     return POINT_LIGHT;
 }
 
-void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)
+void OpenGLPointLight::SetupShader(LightUBO* ubo)
 {
-    std::string lightUni = "pointLights[" + std::to_string(lightId) + "].";
-    shader->SetUniform(lightUni + "position", getPosition());
-    shader->SetUniform(lightUni + "color", getColor());
+    PointLightUBO* pointUbo = (PointLightUBO*)ubo;
+    pointUbo->position = getPosition();
+    pointUbo->color = getColor();
 }
  
 void OpenGLPointLight::DrawLight()

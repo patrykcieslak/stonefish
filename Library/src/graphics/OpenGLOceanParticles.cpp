@@ -173,7 +173,7 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     particleShader->SetUniform("turbidity", glOcn->getTurbidity());
     particleShader->SetUniform("lightAbsorption", glOcn->getLightAbsorption());
     SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(particleShader);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetupLights(particleShader);
+    //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetupLights(particleShader);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, (GLsizei)nParticles);
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);

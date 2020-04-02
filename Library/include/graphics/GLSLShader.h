@@ -247,7 +247,14 @@ namespace sf
          \return success
          */
         bool SetUniform(std::string name, glm::mat4 x);
-        
+
+        //! A method used to bind a GLSL uniform block.
+        /*!
+         \param name the name of the uniform block
+         \param bindingPoint the index of the binfing point
+         */
+        bool BindUniformBlock(std::string name, GLuint bindingPoint);
+
         //! A method to check if the shader is valid.
         bool isValid();
         
@@ -282,7 +289,7 @@ namespace sf
         
         std::vector<GLSLAttribute> attributes;
         std::vector<GLSLUniform> uniforms;
-        GLuint shader;
+        GLuint program;
         bool valid;
         
         static GLuint saqVertexShader;

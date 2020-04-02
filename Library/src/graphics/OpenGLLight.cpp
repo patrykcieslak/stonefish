@@ -175,12 +175,6 @@ void OpenGLLight::SetCamera(OpenGLCamera* view)
     activeView = view;
 }
 
-void OpenGLLight::SetupShader(GLSLShader* shader)
-{
-    shader->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
-    shader->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
-}
-
 }
 
 

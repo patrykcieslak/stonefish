@@ -30,6 +30,22 @@
 
 namespace sf
 {
+    //! A structure representing a spot light in the Ligths UBO (std140 aligned).
+    #pragma pack(1)
+    struct SpotLightUBO : public LightUBO
+    {
+        glm::mat4 clipSpace;
+        glm::vec3 position;
+        GLfloat frustumNear;
+        glm::vec3 direction;
+        GLfloat frustumFar;
+        glm::vec3 color;
+        GLfloat cone;
+        glm::vec2 radius;
+        uint8_t pad[8];
+    };
+    #pragma pack(0)
+
     //! A class implementing an OpenGL spot light with shadow.
     class OpenGLSpotLight : public OpenGLLight
     {
@@ -69,12 +85,11 @@ namespace sf
 		//! A method implementing rendering of light surface.
 		void DrawLight();
     
-        //! A method to set up light data in a shader.
+        //! A method to set up light data in Lights UBO.
         /*!
-         \param shader a pointer to a GLSL shader
-         \param lightId an id of the light
+         \param ubo a pointer to the light UBO structure
          */
-        void SetupShader(GLSLShader* shader, unsigned int lightId);
+        void SetupShader(LightUBO* ubo);
         
         //! A method used to update direction of the spot light.
         /*!

@@ -42,13 +42,14 @@
 #define MEAN_SUN_ILLUMINANCE  107527.f //Sun average illuminance Lux
 #define MIN_ILLUMINANCE_THRESHOLD 0.1f //Minimum light illuminance to be considered
 
+//Standard texture unit bindings
 #define TEX_BASE                ((GLint)0)
 #define TEX_GUI1                ((GLint)1)
 #define TEX_GUI2                ((GLinr)2)
 
-#define TEX_ATM_TRANSMITTANCE    ((GLint)3)
-#define TEX_ATM_SCATTERING         ((GLint)4)
-#define TEX_ATM_IRRADIANCE         ((GLint)5)
+#define TEX_ATM_TRANSMITTANCE   ((GLint)3)
+#define TEX_ATM_SCATTERING      ((GLint)4)
+#define TEX_ATM_IRRADIANCE      ((GLint)5)
 
 #define TEX_POSTPROCESS1        ((GLint)6)
 #define TEX_POSTPROCESS2        ((GLint)7)
@@ -56,16 +57,21 @@
 #define TEX_POSTPROCESS4        ((GLint)9)
 #define TEX_POSTPROCESS5        ((GLint)10)
 
-#define TEX_SUN_SHADOW            ((GLint)11)
-#define TEX_SUN_DEPTH            ((GLint)12)
-#define TEX_SPOT_SHADOW            ((GLint)13)
-#define TEX_SPOT_DEPTH            ((GLint)14)
+#define TEX_SUN_SHADOW          ((GLint)11)
+#define TEX_SUN_DEPTH           ((GLint)12)
+#define TEX_SPOT_SHADOW         ((GLint)13)
+#define TEX_SPOT_DEPTH          ((GLint)14)
 #define TEX_POINT_SHADOW        ((GLint)15) //Not used
 #define TEX_POINT_DEPTH         ((GLint)16) //Not used
 
-#define MAX_POINT_LIGHTS     32
-#define MAX_SPOT_LIGHTS     32
-#define SPOT_LIGHT_SHADOWMAP_SIZE    2048
+//Standard UBO bindings
+#define UBO_SUNSKY              ((GLuint)1)
+#define UBO_LIGHTS              ((GLuint)2)
+
+//Light params
+#define MAX_POINT_LIGHTS        ((GLint)32)
+#define MAX_SPOT_LIGHTS         ((GLint)32)
+#define SPOT_LIGHT_SHADOWMAP_SIZE   ((GLint)2048)
 
 class btTransform;
 

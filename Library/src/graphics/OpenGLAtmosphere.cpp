@@ -214,7 +214,6 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Prepare for rendering
     for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures[i] = 0;
     skySunShader = NULL;
-    atmBottomRadius = 0.f;
     whitePoint = glm::vec3(1.f);
 
     //Init shadow baking
@@ -225,6 +224,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     sunShadowmapSplits = 4;
     sunShadowmapSize = 4096;
     sunShadowFBO = 0;
+    sunSkyUBO = 0;
     sunDirection = glm::vec3(0,0,1.f);
     sunModelView = glm::mat4x4(0);
     sunShadowFrustum = NULL;
@@ -255,7 +255,6 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
             nScatteringOrders = 6;
     }
     
-	atmBottomRadius = kBottomRadius;
     Precompute();
     
     //Set shadow quality
@@ -346,18 +345,25 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
         cError("Sun shadow FBO initialization failed!");
         
         OpenGLState::BindFramebuffer(0);
-    }
-    else
-    {
-        //Generate shadowmap array
-        glGenTextures(1, &sunShadowmapArray);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, 1, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        OpenGLState::UnbindTexture(TEX_BASE);
+
+        //Permanently bind shadow textures and samplers
+        OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+        glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
+
+        OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+        glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
+
+        //Create sun & sky UBO
+        glGenBuffers(1, &sunSkyUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(SunSkyUBO), NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBufferRange(GL_UNIFORM_BUFFER, UBO_SUNSKY, sunSkyUBO, 0, sizeof(SunSkyUBO));
+
+        memset(&sunSkyUBOData, 0, sizeof(SunSkyUBO));
+        sunSkyUBOData.atmLengthUnitInMeters = (GLfloat)kLengthUnitInMeters;
+        sunSkyUBOData.planetRadiusInUnits = (GLfloat)(kBottomRadius/kLengthUnitInMeters);
+        sunSkyUBOData.whitePoint = whitePoint;
     }
 }
 
@@ -379,6 +385,7 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
         glDeleteSamplers(1, &sunDepthSampler);
         glDeleteSamplers(1, &sunShadowSampler);
         glDeleteFramebuffers(1, &sunShadowFBO);
+        glDeleteBuffers(1, &sunSkyUBO);
         delete sunShadowmapShader;
     }
 }
@@ -415,11 +422,6 @@ glm::vec3 OpenGLAtmosphere::GetSunDirection()
     return sunDirection;
 }
 
-GLfloat OpenGLAtmosphere::getAtmosphereBottomRadius()
-{
-    return atmBottomRadius;
-}
-
 GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
 {
     return textures[id];
@@ -436,7 +438,7 @@ void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
     glm::mat4 invProjectionMatrix = glm::inverse(view->GetProjectionMatrix());
 
     skySunShader->Use();
-	skySunShader->SetUniform("bottomRadius", (GLfloat)(atmBottomRadius/kLengthUnitInMeters));
+	skySunShader->SetUniform("bottomRadius", (GLfloat)(kBottomRadius/kLengthUnitInMeters));
 	skySunShader->SetUniform("groundAlbedo", 0.7f);
     skySunShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     skySunShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
@@ -625,7 +627,7 @@ glm::mat4 OpenGLAtmosphere::BuildCropProjMatrix(ViewFrustum &f)
     return shad_crop_proj;
 }
 
-void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
+void OpenGLAtmosphere::SetupMaterialShaders()
 {
     //Calculate shadow splits
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
@@ -634,14 +636,13 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
                    0.5f, 0.5f, 0.5f, 1.f);
     GLfloat frustumFar[4];
     GLfloat frustumNear[4];
-    glm::mat4 lightClipSpace[4];
 
     //For every inactive split
     for(unsigned int i = sunShadowmapSplits; i<4; ++i)
     {
         frustumNear[i] = 0;
         frustumFar[i] = 0;
-        lightClipSpace[i] = glm::mat4();
+        sunSkyUBOData.sunClipSpace[i] = glm::mat4();
     }
 
     //For every active split
@@ -649,42 +650,21 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
     {
         frustumNear[i] = sunShadowFrustum[i].near;
         frustumFar[i] = sunShadowFrustum[i].far;
-        lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
+        sunSkyUBOData.sunClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
     }
 
-    shader->SetUniform("planetRadius", (GLfloat)(atmBottomRadius/kLengthUnitInMeters));
-    shader->SetUniform("skyLengthUnitInMeters", (GLfloat)kLengthUnitInMeters);
-	shader->SetUniform("sunDirection", GetSunDirection());
-    shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
-    shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
-    shader->SetUniform("sunClipSpace[2]", lightClipSpace[2]);
-    shader->SetUniform("sunClipSpace[3]", lightClipSpace[3]);
-    shader->SetUniform("sunFrustumNear[0]", frustumNear[0]);
-    shader->SetUniform("sunFrustumNear[1]", frustumNear[1]);
-    shader->SetUniform("sunFrustumNear[2]", frustumNear[2]);
-    shader->SetUniform("sunFrustumNear[3]", frustumNear[3]);
-    shader->SetUniform("sunFrustumFar[0]", frustumFar[0]);
-    shader->SetUniform("sunFrustumFar[1]", frustumFar[1]);
-    shader->SetUniform("sunFrustumFar[2]", frustumFar[2]);
-    shader->SetUniform("sunFrustumFar[3]", frustumFar[3]);
-    shader->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
-    shader->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
-    shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-    shader->SetUniform("whitePoint", whitePoint);
+    sunSkyUBOData.sunFrustumNear = glm::vec4(frustumNear[0], frustumNear[1], frustumNear[2], frustumNear[3]);
+    sunSkyUBOData.sunFrustumFar = glm::vec4(frustumFar[0], frustumFar[1], frustumFar[2], frustumFar[3]);
+    sunSkyUBOData.sunDirection = GetSunDirection();
 
-    //Bind textures and samplers
-    OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-    glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
-
-    OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-    glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
+    glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(SunSkyUBO), &sunSkyUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
 {
-    shader->SetUniform("planetRadius", (GLfloat)(atmBottomRadius/kLengthUnitInMeters));
+    shader->SetUniform("planetRadius", (GLfloat)(kBottomRadius/kLengthUnitInMeters));
 	shader->SetUniform("skyLengthUnitInMeters", (GLfloat)kLengthUnitInMeters);
     shader->SetUniform("sunDirection", GetSunDirection());
     shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);

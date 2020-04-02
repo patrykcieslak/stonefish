@@ -30,6 +30,17 @@
 
 namespace sf
 {
+    //! A structure representing point light in the Lights UBO.
+    #pragma pack(1)
+    struct PointLightUBO : public LightUBO
+    {
+        glm::vec3 position;        
+        uint8_t pad1[4];
+        glm::vec3 color;
+        uint8_t pad2[4];
+    };
+    #pragma pack(0)
+
     //! A class implementing an OpenGL point light (shadow not supported).
     class OpenGLPointLight : public OpenGLLight
     {
@@ -46,12 +57,11 @@ namespace sf
 		//! A method implementing rendering of light surface.
 		void DrawLight();
 		
-        //! A method to set up light data in a shader.
+        //! A method to set up light data in Lights UBO.
         /*!
-         \param shader a pointer to a GLSL shader
-         \param lightId an id of the light
+         \param ubo a pointer to the light UBO structure
          */
-        void SetupShader(GLSLShader* shader, unsigned int lightId);
+        void SetupShader(LightUBO* ubo);
         
         //! A method returning the type of the light.
         LightType getType();

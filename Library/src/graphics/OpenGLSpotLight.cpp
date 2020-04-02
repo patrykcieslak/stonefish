@@ -105,17 +105,17 @@ void OpenGLSpotLight::UpdateTransform()
     dir = tempDir;
 }
 
-void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
+void OpenGLSpotLight::SetupShader(LightUBO* ubo)
 {
-    std::string lightUni = "spotLights[" + std::to_string(lightId) + "].";
-    shader->SetUniform(lightUni + "position", getPosition());
-    shader->SetUniform(lightUni + "radius", glm::vec2(0.1f,0.1f));
-    shader->SetUniform(lightUni + "color", getColor());
-    shader->SetUniform(lightUni + "direction", getDirection());
-    shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()/2.f));
-    shader->SetUniform(lightUni + "clipSpace", getClipSpace());
-    shader->SetUniform(lightUni + "zNear", zNear);
-    shader->SetUniform(lightUni + "zFar", zFar);
+    SpotLightUBO* spotUbo = (SpotLightUBO*)ubo;
+    spotUbo->position = getPosition();
+    spotUbo->color = getColor();
+    spotUbo->direction = getDirection();
+    spotUbo->cone = (GLfloat)cosf(getAngle()/2.f);
+    spotUbo->clipSpace = getClipSpace();
+    spotUbo->frustumNear = zNear;
+    spotUbo->frustumFar = zFar;
+    spotUbo->radius = glm::vec2(0.1f,0.1f);
 }
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)

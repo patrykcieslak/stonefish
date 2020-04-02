@@ -12,8 +12,8 @@ option(BUILD_TESTS "Build applications testing different features of the Stonefi
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "-Wall -Wno-reorder -DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # Find required libraries
 find_package(OpenGL REQUIRED)
@@ -37,8 +37,9 @@ file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
 add_library(Stonefish SHARED ${SOURCES})
 target_link_libraries(Stonefish ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} GLEW)
 
-# Create tests (optional)
+# Create tests and use library locally (has to be disabled when installing system-wide!)
 if(BUILD_TESTS)
+    add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Library/shaders/\") #Modifies shader path of the library
     add_subdirectory(Tests)
 endif()
 

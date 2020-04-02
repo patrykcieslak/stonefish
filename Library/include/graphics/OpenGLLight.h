@@ -33,6 +33,11 @@ namespace sf
     //! An enum defining supported light types.
     typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
     
+    //! A structure representing a generic light in the Lights UBO.
+    #pragma pack(1)
+    struct LightUBO {};
+    #pragma pack(0)
+
     class GLSLShader;
     class OpenGLPipeline;
     class OpenGLCamera;
@@ -75,12 +80,11 @@ namespace sf
 		//! A method implementing rendering of light surface.
 		virtual void DrawLight();
 		
-        //! A method to set up light data in a shader.
+        //! A method to set up light data in Lights UBO.
         /*!
-         \param shader a pointer to a GLSL shader
-         \param lightId an id of the light
+         \param ubo a pointer to the light UBO structure
          */
-        virtual void SetupShader(GLSLShader* shader, unsigned int lightId) = 0;
+        virtual void SetupShader(LightUBO* ubo) = 0;
         
         //! A method returning the type of the light.
         virtual LightType getType() = 0;
@@ -123,12 +127,6 @@ namespace sf
         
         //! A static method to destroy the common data.
         static void Destroy();
-        
-        //! A static method to setup light data in shaders.
-        /*!
-         \param shader a pointer to a GLSL shader object
-         */
-        static void SetupShader(GLSLShader* shader);
         
         //! A static method to set the current view.
         /*!

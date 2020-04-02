@@ -31,12 +31,42 @@ uniform vec4 color;
 uniform float reflectivity;
 uniform sampler2D tex;
 
-uniform vec3 sunDirection;
-uniform float planetRadius;
-uniform vec3 whitePoint;
-uniform float skyLengthUnitInMeters;
-uniform int numPointLights;
-uniform int numSpotLights;
+layout (std140) uniform SunSky
+{
+    mat4 sunClipSpace[4];
+    vec4 sunFrustumNear;
+    vec4 sunFrustumFar;
+    vec3 sunDirection;
+	float planetRadiusInUnits;
+	vec3 whitePoint;
+    float atmLengthUnitInMeters;
+};
+
+struct PointLight 
+{
+	vec3 position;
+	vec3 color;
+};
+
+struct SpotLight 
+{
+	mat4 clipSpace;
+    vec3 position;
+	float frustumNear;
+    vec3 direction;
+	float frustumFar;
+    vec3 color;
+	float cone;
+	vec2 radius;
+};
+
+layout (std140) uniform Lights
+{
+    PointLight pointLights[MAX_POINT_LIGHTS];
+    SpotLight spotLights[MAX_SPOT_LIGHTS];
+    int numPointLights;
+    int numSpotLights;
+};
 
 const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
 
@@ -80,8 +110,8 @@ void main()
 	
 	//1. Direct lighting + out-scattering
 	//Ambient
-	vec3 center = vec3(0.0, 0.0, planetRadius);
-	vec3 posSky = vec3(P.xy/skyLengthUnitInMeters,-0.5/skyLengthUnitInMeters);
+	vec3 center = vec3(0.0, 0.0, planetRadiusInUnits);
+	vec3 posSky = vec3(P.xy/atmLengthUnitInMeters,-0.5/atmLengthUnitInMeters);
 	vec3 skyIlluminance;
 	vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, N, sunDirection, skyIlluminance);
 	fragColor = albedo * skyIlluminance * BeerLambert(d+P.z);

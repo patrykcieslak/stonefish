@@ -327,6 +327,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     OpenGLState::EnableCullFace();
     
     //Bake shadow maps for lights (independent of view)
+    content->SetupLights();
     if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
     {
         glCullFace(GL_FRONT);
@@ -335,7 +336,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             content->getLight(i)->BakeShadowmap(this);
         glCullFace(GL_BACK);
     }
-	
+    
     //Clear display framebuffer
     OpenGLState::BindFramebuffer(screenFBO);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -392,6 +393,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     content->SetDrawingMode(DrawingMode::FLAT);
                     atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
                 }
+
+                atm->getOpenGLAtmosphere()->SetupMaterialShaders();
             
                 //Clear main framebuffer and setup camera
                 OpenGLState::BindFramebuffer(camera->getRenderFBO());
