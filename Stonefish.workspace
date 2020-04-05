@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Workspace Name="Stonefish" Database="" Version="10.0.0" SWTLW="Yes">
+<CodeLite_Workspace Name="Stonefish" Database="" Version="10.0.0">
   <WorkspaceParserMacros/>
   <WorkspaceParserPaths>
     <Include Path="/usr/local/include/bullet"/>
@@ -13,7 +13,7 @@
   <Project Name="FloatingTest" Path="Tests/FloatingTest/FloatingTest.project" Active="No"/>
   <Project Name="FlyingTest" Path="Tests/FlyingTest/FlyingTest.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment>LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:$(WorkspacePath)/Library/build/Debug</Environment>
       <Project Name="libStonefish" ConfigName="Debug"/>
       <Project Name="FallingTest" ConfigName="Debug"/>
@@ -24,7 +24,7 @@
       <Project Name="FloatingTest" ConfigName="Debug"/>
       <Project Name="FlyingTest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment>LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:$(WorkspacePath)/Library/build/Release</Environment>
       <Project Name="ConsoleTest" ConfigName="Release"/>
       <Project Name="FallingTest" ConfigName="Release"/>

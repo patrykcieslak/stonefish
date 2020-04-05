@@ -26,7 +26,7 @@
 #ifndef __Stonefish_OpenGLDataStructs__
 #define __Stonefish_OpenGLDataStructs__
 
-#include <GL/glew.h>
+#include "utils/glad.h"
 #define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -42,27 +42,26 @@
 #define MEAN_SUN_ILLUMINANCE  107527.f //Sun average illuminance Lux
 #define MIN_ILLUMINANCE_THRESHOLD 0.1f //Minimum light illuminance to be considered
 
-//Standard texture unit bindings
+//Standard texture unit bindings (OpenGL 3.x >=48; OpenGL 4.x >=80)
 #define TEX_BASE                ((GLint)0)
 #define TEX_GUI1                ((GLint)1)
-#define TEX_GUI2                ((GLinr)2)
-
-#define TEX_ATM_TRANSMITTANCE   ((GLint)3)
-#define TEX_ATM_SCATTERING      ((GLint)4)
-#define TEX_ATM_IRRADIANCE      ((GLint)5)
-
-#define TEX_POSTPROCESS1        ((GLint)6)
-#define TEX_POSTPROCESS2        ((GLint)7)
-#define TEX_POSTPROCESS3        ((GLint)8)
-#define TEX_POSTPROCESS4        ((GLint)9)
-#define TEX_POSTPROCESS5        ((GLint)10)
-
+#define TEX_GUI2                ((GLint)2)
+#define TEX_POSTPROCESS1        ((GLint)3)
+#define TEX_POSTPROCESS2        ((GLint)4)
+#define TEX_POSTPROCESS3        ((GLint)5)
+#define TEX_POSTPROCESS4        ((GLint)6)
+#define TEX_POSTPROCESS5        ((GLint)7)
+#define TEX_ATM_TRANSMITTANCE   ((GLint)8)
+#define TEX_ATM_SCATTERING      ((GLint)9)
+#define TEX_ATM_IRRADIANCE      ((GLint)10)
 #define TEX_SUN_SHADOW          ((GLint)11)
 #define TEX_SUN_DEPTH           ((GLint)12)
 #define TEX_SPOT_SHADOW         ((GLint)13)
 #define TEX_SPOT_DEPTH          ((GLint)14)
-#define TEX_POINT_SHADOW        ((GLint)15) //Not used
-#define TEX_POINT_DEPTH         ((GLint)16) //Not used
+#define TEX_MAT_DIFFUSE         ((GLint)15)
+#define TEX_MAT_NORMAL          ((GLint)16)
+//#define TEX_POINT_SHADOW        ((GLint)X) 
+//#define TEX_POINT_DEPTH         ((GLint)X)
 
 //Standard UBO bindings
 #define UBO_SUNSKY              ((GLuint)1)

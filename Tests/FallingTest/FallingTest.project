@@ -45,7 +45,6 @@
         <Library Value="freetype"/>
         <Library Value="GL"/>
         <Library Value="GLU"/>
-        <Library Value="GLEW"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>

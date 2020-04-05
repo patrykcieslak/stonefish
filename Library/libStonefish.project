@@ -155,6 +155,7 @@
     </VirtualDirectory>
     <File Name="include/StonefishCommon.h"/>
     <VirtualDirectory Name="utils">
+      <File Name="include/utils/glad.h"/>
       <File Name="include/utils/icon.h"/>
       <File Name="include/utils/UnitSystem.h"/>
       <File Name="include/utils/tinyxml2.h"/>
@@ -408,7 +409,6 @@
         <Library Value="BulletDynamics"/>
         <Library Value="GL"/>
         <Library Value="GLU"/>
-        <Library Value="GLEW"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>

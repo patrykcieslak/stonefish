@@ -59,7 +59,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
 	toneMapping = true;
     aoFactor = 0;
     
-    if(GLEW_VERSION_4_3 
+    if(GLAD_GL_VERSION_4_3 
        && ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::QUALITY_DISABLED)
         aoFactor = 1;
     
@@ -842,7 +842,7 @@ void OpenGLCamera::Init()
     depthLinearizeShader[1]->AddUniform("texDepth", ParameterType::INT);
     
     /////AO//////////////
-    if(GLEW_VERSION_4_3)
+    if(GLAD_GL_VERSION_4_3)
     {
         aoDeinterleaveShader = new GLSLShader("hbaoDeinterleave.frag");
         aoDeinterleaveShader->AddUniform("info", ParameterType::VEC4);

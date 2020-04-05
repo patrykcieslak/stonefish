@@ -58,11 +58,11 @@ void OpenGLState::Init()
     cInfo("Maximum number of texture layers: %d", maxTexLayers);
     cInfo("Maximum number of fragment shader uniforms: %d", maxUniforms);
     
-    if(GLEW_VERSION_3_3)
+    if(GLAD_GL_VERSION_3_3)
     {
         cInfo("OpenGL 3.3 supported.");
         
-        if(GLEW_VERSION_4_3)
+        if(GLAD_GL_VERSION_4_3)
             cInfo("OpenGL 4.3 supported.");
         else
             cWarning("OpenGL 4.3 not supported!");
@@ -81,7 +81,6 @@ void OpenGLState::Init()
     glFrontFace(GL_CCW);
     glPointSize(1.f);
     glLineWidth(1.f);
-    glLineStipple(3, 0xE4E4);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindVertexArray(0);
     glUseProgram(0);

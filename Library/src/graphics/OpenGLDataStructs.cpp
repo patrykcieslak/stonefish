@@ -23,8 +23,8 @@
 //  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
 //
 
+#define GLAD_GL_IMPLEMENTATION
 #include "graphics/OpenGLDataStructs.h"
-
 #include "StonefishCommon.h"
 #include "graphics/OpenGLState.h"
 

@@ -409,11 +409,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 {
                     //Render all objects
                     content->SetDrawingMode(DrawingMode::FULL);
-					//int64_t timeStart = GetTimeInMicroseconds();
                     DrawObjects();
-					//int64_t timeEnd = GetTimeInMicroseconds();
-					//printf("Draw objects time: %1.3lf ms\n", (timeEnd-timeStart)/1000.0);
-	
+                    
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
                         camera->DrawAO(1.0f);

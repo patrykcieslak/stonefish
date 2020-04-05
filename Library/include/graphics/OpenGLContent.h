@@ -100,15 +100,6 @@ namespace sf
         //! A method that binds the base vertex array.
         void BindBaseVertexArray();
         
-        //! A method to enable clipping plane.
-        /*!
-         \param clipPlaneCoeff coefficients of the plane equation
-         */
-        void EnableClipPlane(glm::vec4 clipPlaneCoeff);
-        
-        //! A method to disable clipping plane.
-        void DisableClipPlane();
-        
         //! A method to draw a screen-aligned quad.
         void DrawSAQ();
         
@@ -428,6 +419,7 @@ namespace sf
         std::vector<Object> objects; //VBAs
         std::vector<Look> looks; //OpenGL materials
         NameManager lookNameManager;
+        int currentLookId;
         
         glm::vec3 eyePos;
         glm::vec3 viewDir;
@@ -435,7 +427,6 @@ namespace sf
         glm::mat4 projection; //Current projection matrix
         glm::mat4 viewProjection; //Current view-projection matrix
         glm::vec2 viewportSize; //Current view-port size
-        glm::vec4 clipPlane;
         
         //Standard objects
         GLuint baseVertexArray; //base VAO

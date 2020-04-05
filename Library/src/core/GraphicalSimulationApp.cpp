@@ -245,19 +245,12 @@ void GraphicalSimulationApp::InitializeSDL()
     if(SDL_GL_SetSwapInterval(0) == -1)
         cError("SDL2: %s", SDL_GetError());
     
-    //Check OpenGL context version
-    int glVersionMajor, glVersionMinor;
-    glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
-    glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
-    cInfo("Window created. OpenGL %d.%d contexts created.", glVersionMajor, glVersionMinor);
+    //Initialize OpenGL function handlers 
+    int version = gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
+    cInfo("Window created. OpenGL %d.%d contexts created.", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
     
-    //Initialize basic drawing functions and console
-    glewExperimental = GL_TRUE;
-    if(glewInit() != GLEW_OK)
-        cCritical("Failed to initialize GLEW!");
-    
+    //Initialize OpenGL pipeline
     OpenGLState::Init();
-    
     if(!GLSLShader::Init())
         cCritical("No shader support!");
     

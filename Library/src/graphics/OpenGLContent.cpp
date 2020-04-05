@@ -74,8 +74,8 @@ OpenGLContent::OpenGLContent()
     projection = glm::mat4();
     viewportSize = glm::vec2(800.f,600.f);
     mode = DrawingMode::FULL;
-    clipPlane = glm::vec4();
     materialShaders = std::vector<GLSLShader*>(0);
+    currentLookId = -1;
 
     //Initialize shaders and buffers
     glGenVertexArrays(1, &baseVertexArray);
@@ -251,7 +251,6 @@ OpenGLContent::OpenGLContent()
     blinnPhong->AddUniform("M", ParameterType::MAT4);
     blinnPhong->AddUniform("N", ParameterType::MAT3);
     blinnPhong->AddUniform("MV", ParameterType::MAT3);
-    blinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
     blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
     blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
     blinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -277,7 +276,6 @@ OpenGLContent::OpenGLContent()
     cookTorrance->AddUniform("M", ParameterType::MAT4);
     cookTorrance->AddUniform("N", ParameterType::MAT3);
     cookTorrance->AddUniform("MV", ParameterType::MAT3);
-    cookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
     cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
     cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
     cookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -311,7 +309,6 @@ OpenGLContent::OpenGLContent()
     uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
     uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
     uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
-    uwBlinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
     uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
     uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
     uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -338,7 +335,6 @@ OpenGLContent::OpenGLContent()
     uwCookTorrance->AddUniform("M", ParameterType::MAT4);
     uwCookTorrance->AddUniform("N", ParameterType::MAT3);
     uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
-    uwCookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
     uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
     uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
     uwCookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -367,6 +363,7 @@ OpenGLContent::OpenGLContent()
     for(size_t i=0; i<materialShaders.size(); ++i)
     {
         materialShaders[i]->Use();
+        materialShaders[i]->SetUniform("tex", TEX_MAT_DIFFUSE);
         materialShaders[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
         materialShaders[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
         materialShaders[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
@@ -475,18 +472,6 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
 void OpenGLContent::SetDrawingMode(DrawingMode m)
 {
     mode = m;
-}
-
-void OpenGLContent::EnableClipPlane(glm::vec4 clipPlaneCoeff)
-{
-    clipPlane = clipPlaneCoeff;
-    glEnable(GL_CLIP_DISTANCE0);
-}
-
-void OpenGLContent::DisableClipPlane()
-{
-    clipPlane = glm::vec4();
-    glDisable(GL_CLIP_DISTANCE0);
 }
 
 void OpenGLContent::BindBaseVertexArray()
@@ -799,7 +784,9 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 {	
     Look& l = looks[lookId];
     GLSLShader* shader;
-    
+    bool updateMaterial = (int)lookId != currentLookId;
+    currentLookId = (int)lookId;
+
     switch(l.type)
     {		
         default:
@@ -811,23 +798,25 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             shader->SetUniform("M", M);
             shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
             shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("clipPlane", clipPlane);
             shader->SetUniform("eyePos", eyePos);
             shader->SetUniform("viewDir", viewDir);
-            shader->SetUniform("specularStrength", l.params[0]);
-            shader->SetUniform("shininess", l.params[1]);
-            shader->SetUniform("reflectivity", l.reflectivity);
-            shader->SetUniform("tex", TEX_BASE);
-            
-            if(l.textures.size() > 0)
+
+            if(updateMaterial)
             {
-                OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, l.textures[0]);
-                shader->SetUniform("color", glm::vec4(l.color, 1.f));
-            }
-            else
-            {
-                OpenGLState::UnbindTexture(TEX_BASE);
-                shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+                shader->SetUniform("specularStrength", l.params[0]);
+                shader->SetUniform("shininess", l.params[1]);
+                shader->SetUniform("reflectivity", l.reflectivity);
+               
+                if(l.textures.size() > 0)
+                {
+                    shader->SetUniform("color", glm::vec4(l.color, 1.f));
+                    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, l.textures[0]);
+                }
+                else
+                {
+                    shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+                    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+                }
             }
         }
             break;
@@ -840,23 +829,25 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             shader->SetUniform("M", M);
             shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
             shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("clipPlane", clipPlane);
             shader->SetUniform("eyePos", eyePos);
             shader->SetUniform("viewDir", viewDir);
-            shader->SetUniform("roughness", l.params[0]);
-            shader->SetUniform("metallic", l.params[1]);
-            shader->SetUniform("reflectivity", l.reflectivity);
-            shader->SetUniform("tex", TEX_BASE);
+
+            if(updateMaterial)
+            {
+                shader->SetUniform("roughness", l.params[0]);
+                shader->SetUniform("metallic", l.params[1]);
+                shader->SetUniform("reflectivity", l.reflectivity);
             
-            if(l.textures.size() > 0)
-            {
-                OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, l.textures[0]);
-                shader->SetUniform("color", glm::vec4(l.color, 1.f));
-            }
-            else
-            {
-                OpenGLState::UnbindTexture(TEX_BASE);
-                shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+                if(l.textures.size() > 0)
+                {
+                    shader->SetUniform("color", glm::vec4(l.color, 1.f));
+                    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, l.textures[0]);
+                }
+                else
+                {
+                    shader->SetUniform("color", glm::vec4(l.color, 0.f));			
+                    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+                }
             }
         }
             break;
@@ -871,22 +862,26 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
 
 void OpenGLContent::UseStandardLook(const glm::mat4& M)
 {
+    bool updateMaterial = currentLookId >= 0;
+    currentLookId = -1;
+
     GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
-    
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);
     shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
     shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-    shader->SetUniform("clipPlane", clipPlane);
     shader->SetUniform("eyePos", eyePos);
     shader->SetUniform("viewDir", viewDir);
-    shader->SetUniform("roughness", 0.5f);
-    shader->SetUniform("metallic", 0.f);
-    shader->SetUniform("reflectivity", 0.f);
-    shader->SetUniform("tex", TEX_BASE);
-    shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
-    OpenGLState::UnbindTexture(TEX_BASE);
+
+    if(updateMaterial)
+    {
+        shader->SetUniform("roughness", 0.5f);
+        shader->SetUniform("metallic", 0.f);
+        shader->SetUniform("reflectivity", 0.f);
+        shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
+        OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+    }
 }
 
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)

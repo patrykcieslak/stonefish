@@ -26,9 +26,9 @@
 #ifndef __Stonefish_GraphicalSimulationApp__
 #define __Stonefish_GraphicalSimulationApp__
 
+#include "graphics/OpenGLDataStructs.h"
 #include <SDL2/SDL.h>
 #include "core/SimulationApp.h"
-#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
