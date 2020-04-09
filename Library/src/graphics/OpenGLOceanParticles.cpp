@@ -67,7 +67,7 @@ OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibl
 
     OpenGLState::BindVertexArray(0);
     
-    flakeTexture = OpenGLContent::LoadInternalTexture("flake.png");
+    flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, 0.f);
 }
     
 OpenGLOceanParticles::~OpenGLOceanParticles()
@@ -158,75 +158,78 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     glVertexAttribDivisor(0, 0);
     glVertexAttribDivisor(1, 1);
     
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, flakeTexture);
+    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE);
     
     particleShader->Use();
     particleShader->SetUniform("MVP", projection * view);
     particleShader->SetUniform("camRight", glm::vec3(view[0][0], view[1][0], view[2][0]));
     particleShader->SetUniform("camUp", glm::vec3(view[0][1], view[1][1], view[2][1]));
-    particleShader->SetUniform("lookingDir", cam->GetLookingDirection());
     particleShader->SetUniform("eyePos", cam->GetEyePosition());
-    particleShader->SetUniform("tex", TEX_BASE);
-    particleShader->SetUniform("color", glm::vec4(0.5f));
-    particleShader->SetUniform("turbidity", glOcn->getTurbidity());
-    particleShader->SetUniform("lightAbsorption", glOcn->getLightAbsorption());
-    SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(particleShader);
-    //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetupLights(particleShader);
+    particleShader->SetUniform("viewDir", cam->GetLookingDirection());
+    particleShader->SetUniform("cWater", glOcn->getLightAttenuation());
+    particleShader->SetUniform("bWater", glOcn->getLightScattering());
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, (GLsizei)nParticles);
+
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     OpenGLState::DisableBlend();
     OpenGLState::UseProgram(0);
     OpenGLState::BindVertexArray(0);
-    OpenGLState::UnbindTexture(TEX_BASE);
 }
     
 void OpenGLOceanParticles::Init()
 {
-    std::vector<GLuint> precompiled;
-    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    GLint compiled;
+    std::string header1 = "#version 330\n";
+	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
+	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
+    std::string header2 = "#version 330\n";
+	header2 += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
+	header2 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
+	header2 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
     
-    particleShader = new GLSLShader(precompiled, "oceanParticle.frag", "billboard.vert");
+	std::vector<GLuint> commonMaterialShaders;
+    commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    
+	GLuint lightingFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightingNoShadow.frag", header1, &compiled);
+	commonMaterialShaders.push_back(lightingFragment);
+
+    GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
+	commonMaterialShaders.push_back(oceanOpticsFragment);
+    
+    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
+    commonMaterialShaders.push_back(materialFragment);
+
+    particleShader = new GLSLShader(commonMaterialShaders, "oceanParticle.frag", "billboard.vert");
     particleShader->AddUniform("MVP", ParameterType::MAT4);
     particleShader->AddUniform("camRight", ParameterType::VEC3);
     particleShader->AddUniform("camUp", ParameterType::VEC3);
     particleShader->AddUniform("eyePos", ParameterType::VEC3);
-    particleShader->AddUniform("lookingDir", ParameterType::VEC3);
-    particleShader->AddUniform("tex", ParameterType::INT);
+    particleShader->AddUniform("viewDir", ParameterType::VEC3);
     particleShader->AddUniform("color", ParameterType::VEC4);
-    particleShader->AddUniform("lightAbsorption", ParameterType::VEC3);
-    particleShader->AddUniform("turbidity", ParameterType::FLOAT);
+    particleShader->AddUniform("tex", ParameterType::INT);
+    particleShader->AddUniform("reflectivity", ParameterType::FLOAT);
+    particleShader->AddUniform("cWater", ParameterType::VEC3);
+    particleShader->AddUniform("bWater", ParameterType::VEC3);
     particleShader->AddUniform("transmittance_texture", ParameterType::INT);
     particleShader->AddUniform("scattering_texture", ParameterType::INT);
     particleShader->AddUniform("irradiance_texture", ParameterType::INT);
-    particleShader->AddUniform("planetRadius", ParameterType::FLOAT);
-    particleShader->AddUniform("sunDirection", ParameterType::VEC3);
-    particleShader->AddUniform("whitePoint", ParameterType::VEC3);
-    particleShader->AddUniform("cosSunSize", ParameterType::FLOAT);
-    particleShader->AddUniform("numPointLights", ParameterType::INT);
-    particleShader->AddUniform("numSpotLights", ParameterType::INT);
-    
-    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-    {
-        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-        particleShader->AddUniform(lightUni + "position", ParameterType::VEC3);
-        particleShader->AddUniform(lightUni + "color", ParameterType::VEC3);
-    }
-    
-    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-    {
-        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-        particleShader->AddUniform(lightUni + "position", ParameterType::VEC3);
-        particleShader->AddUniform(lightUni + "radius", ParameterType::VEC2);
-        particleShader->AddUniform(lightUni + "color", ParameterType::VEC3);
-        particleShader->AddUniform(lightUni + "direction", ParameterType::VEC3);
-        particleShader->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-        particleShader->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-        particleShader->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-        particleShader->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-    }
+    particleShader->BindUniformBlock("SunSky", UBO_SUNSKY);
+    particleShader->BindUniformBlock("Lights", UBO_LIGHTS);
+
+    glDeleteShader(lightingFragment);
+    glDeleteShader(oceanOpticsFragment);
+    glDeleteShader(materialFragment);
+
+    particleShader->Use();
+    particleShader->SetUniform("tex", TEX_MAT_DIFFUSE);
+    particleShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    particleShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    particleShader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+    particleShader->SetUniform("reflectivity", 0.f);
+    particleShader->SetUniform("color", glm::vec4(0.f,0.f,0.f,1.f));
 }
 
 void OpenGLOceanParticles::Destroy()

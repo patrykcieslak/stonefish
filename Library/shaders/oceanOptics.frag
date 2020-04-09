@@ -19,7 +19,8 @@
 
 #version 330
 
-uniform vec3 tau; //Beer-Lambert optical thickness
+uniform vec3 cWater;
+uniform vec3 bWater;
 
 const float water2air = 1.33/1.0;
 const float air2water = 1.0/1.33;
@@ -37,10 +38,29 @@ float MieLorenz(float cosTheta) //For large particles, thick media
 	return 1.0/(4.0*PI)*(1.0/2.0+33.0/2.0*pow((1.0+cosTheta)/2.0, 32.0));
 }
 
+float MieLorenzg(float cosTheta, float g) //For large particles
+{
+	return 1.0/(4.0*PI)*(1.0/2.0+g/2.0*pow((1.0+cosTheta)/2.0, g-1.0));
+}
+
 float HenyeyGreenstein(float cosTheta, float g)
 {
 	float f = 1.0+g*g-2.0*g*cosTheta;
 	return 1.0/(4.0*PI)*(1.0-g*g)/sqrt(f*f*f);
+}
+
+float FournierForand(float cosTheta, float n, float mu)
+{
+    float nu = (3.0 - mu)/2.0;
+    float theta = acos(cosTheta);
+    float sinTheta2 = pow(sin(theta/2.0),2.0);
+    float delta180 = 4.0/(3.0*pow(n-1.0, 2.0));
+    float delta = delta180 * sinTheta2;
+    float deltaNu = pow(delta, nu);
+    float delta180Nu = pow(delta180, nu);
+    float c1 = 1.0/(4.0*PI*pow(1.0-delta, 2.0)*deltaNu) * (nu*(1.0-delta)-(1.0-deltaNu)+(delta*(1.0-deltaNu)-nu*(1.0-delta))/(sinTheta2));
+    float c2 = (1.0-delta180Nu)/(16.0*PI*(delta180-1.0)*delta180Nu) * (3.0*pow(cosTheta, 2.0)-1.0);
+    return c1 + c2;
 }
 
 //Optical effects
@@ -56,11 +76,13 @@ vec3 RefractToAir(vec3 I, vec3 N)
 
 vec3 BeerLambert(float d)
 {
-	return exp(-tau*d);
+	return exp(-cWater*d);
 }
 
 vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d)
-{
-	float phase = MieLorenz(dot(D,V)); //HenyeyGreenstein(dot(D,V), 0.924);
-	return L*phase/(tau*(-V.z+1.0)) * exp(-tau*z) * (1.0 - exp(-tau*(-V.z*d+d)));
+{   
+    float phase = HenyeyGreenstein(dot(D,V), 0.924);
+	//float phase = MieLorenzg(dot(D,V), g*30.0+1.0); 
+    //float phase = FournierForand(dot(D,V), 1.08, 3.483);
+	return 10.0*L*phase*bWater/(cWater*(-V.z/D.z+1.0)) * exp(-cWater*z/D.z) * (1.0 - exp(-cWater*d*(-V.z/D.z+1.0)));
 }

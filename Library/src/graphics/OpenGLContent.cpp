@@ -77,6 +77,10 @@ OpenGLContent::OpenGLContent()
     materialShaders = std::vector<GLSLShader*>(0);
     currentLookId = -1;
 
+    //Get OpenGL capabilities
+    maxAnisotropy = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+
     //Initialize shaders and buffers
     glGenVertexArrays(1, &baseVertexArray);
     
@@ -303,7 +307,7 @@ OpenGLContent::OpenGLContent()
     materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
     commonMaterialShaders.push_back(materialFragment);
     
-    //Blinn-Phong shader
+    //Underwater Blinn-Phong shader
     GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
     uwBlinnPhong->AddUniform("MVP", ParameterType::MAT4);
     uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
@@ -316,7 +320,8 @@ OpenGLContent::OpenGLContent()
     uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("tau", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("cWater", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("bWater", ParameterType::VEC3);
     uwBlinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
     uwBlinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
     uwBlinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
@@ -342,7 +347,8 @@ OpenGLContent::OpenGLContent()
     uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("tau", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("cWater", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);
     uwCookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
     uwCookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
     uwCookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
@@ -856,7 +862,8 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
     if(mode == DrawingMode::UNDERWATER)
     {
         Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        shader->SetUniform("tau", ocean->getOpenGLOcean()->getOpticalThickness());
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
     }
 }
 
@@ -942,7 +949,7 @@ std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbCol
     look.params.push_back(metalness);
     
     if(textureName != "")
-        look.textures.push_back(LoadTexture(textureName));
+        look.textures.push_back(LoadTexture(textureName, false, maxAnisotropy));
         
     looks.push_back(look);
     
@@ -995,48 +1002,48 @@ int OpenGLContent::getLookId(std::string name)
 }
     
 //Static methods
-GLuint OpenGLContent::LoadTexture(std::string filename)
+GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
     int width, height, channels;
+    int reqChannels = hasAlphaChannel ? 4 : 3;
     GLuint texture;
     
     // Allocate image; fail out on error
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, 3);
+    unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, reqChannels);
     if(dataBuffer == NULL)
     {
         cError("Failed to load texture from: %s", filename.c_str());
-        return -1;
+        return 0;
     }
     
-    cInfo("Loading texture from: %s", filename.c_str());
+    if(channels != reqChannels)
+    {
+        cWarning("Texture has %d channels while expected %d channels!", channels, reqChannels);
+    }
+
+    cInfo("Loaded texture from: %s", filename.c_str());
     
-    GLfloat maxAniso = 0.0f;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-    
-    // Allocate an OpenGL texture
     glGenTextures(1, &texture);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    // Upload texture to memory
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
-    // Set certain properties of texture
-    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, reqChannels == 3 ? GL_RGB8 : GL_RGBA8, width, height, 0, reqChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-    // Wrap texture around
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    if(anisotropy > 0.f)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
     OpenGLState::UnbindTexture(TEX_BASE);
-    // Release internal buffer
+    
     stbi_image_free(dataBuffer);
     
     return texture;
 }
 
-GLuint OpenGLContent::LoadInternalTexture(std::string filename)
+GLuint OpenGLContent::LoadInternalTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
-    return LoadTexture(GetShaderPath() + filename);
+    return LoadTexture(GetShaderPath() + filename, hasAlphaChannel, anisotropy);
 }
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)

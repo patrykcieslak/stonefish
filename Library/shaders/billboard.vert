@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -21,12 +21,15 @@
 
 layout(location = 0) in vec3 billboardCorner;
 layout(location = 1) in vec4 billboardCenterSize;
+
+out vec3 normal;
+out vec2 texCoord;
+out vec4 fragPos;
+out vec3 eyeSpaceNormal;
+
 uniform mat4 MVP;
 uniform vec3 camRight;
 uniform vec3 camUp;
-
-out vec2 texcoord;
-out vec3 fragPos;
 
 void main()
 {
@@ -34,8 +37,9 @@ void main()
 		billboardCenterSize.xyz
 		+ camRight * billboardCorner.x * billboardCenterSize.w
 		+ camUp * billboardCorner.y * billboardCenterSize.w;
-
-	gl_Position = MVP * vec4(vertex, 1.0);
-    texcoord = billboardCorner.xy + vec2(0.5, 0.5);
-    fragPos = vertex;
+    normal = vec3(0.0,0.0,-1.0);
+    eyeSpaceNormal = vec3(0.0,0.0,1.0);
+    texCoord = billboardCorner.xy + vec2(0.5, 0.5);
+    fragPos = vec4(vertex, 1.0);
+    gl_Position = MVP * vec4(vertex, 1.0);
 }

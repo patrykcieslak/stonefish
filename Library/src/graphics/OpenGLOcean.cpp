@@ -50,7 +50,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     
     //Initialization
     lightAbsorption = glm::vec3(0.f);
-    turbidity = 0.f;
+    lightScattering = glm::vec3(0.f);
     vao = 0;
     vbo = 0;
     vaoEdge = 0;
@@ -203,13 +203,14 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader->AddUniform("transmittance_texture", ParameterType::INT);
     shader->AddUniform("scattering_texture", ParameterType::INT);
     shader->AddUniform("irradiance_texture", ParameterType::INT);
-    shader->AddUniform("planetRadius", ParameterType::FLOAT);
-	shader->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
-    shader->AddUniform("sunDirection", ParameterType::VEC3);
-    shader->AddUniform("whitePoint", ParameterType::VEC3);
-    shader->AddUniform("cosSunSize", ParameterType::FLOAT);
+    shader->BindUniformBlock("SunSky", UBO_SUNSKY);
     oceanShaders.push_back(shader); //0
-    
+
+    oceanShaders[0]->Use();
+    oceanShaders[0]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    oceanShaders[0]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    oceanShaders[0]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+
     //Backsurface rendering
     GLint compiled;
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
@@ -232,17 +233,19 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader->AddUniform("eyePos", ParameterType::VEC3);
     shader->AddUniform("MV", ParameterType::MAT3);
     shader->AddUniform("viewport", ParameterType::VEC2);
-    shader->AddUniform("tau", ParameterType::VEC3);
+    shader->AddUniform("cWater", ParameterType::VEC3);
+    shader->AddUniform("bWater", ParameterType::VEC3);
     shader->AddUniform("transmittance_texture", ParameterType::INT);
     shader->AddUniform("scattering_texture", ParameterType::INT);
     shader->AddUniform("irradiance_texture", ParameterType::INT);
-    shader->AddUniform("planetRadius", ParameterType::FLOAT);
-	shader->AddUniform("skyLengthUnitInMeters", ParameterType::FLOAT);
-    shader->AddUniform("sunDirection", ParameterType::VEC3);
-    shader->AddUniform("whitePoint", ParameterType::VEC3);
-    shader->AddUniform("cosSunSize", ParameterType::FLOAT);
+    shader->BindUniformBlock("SunSky", UBO_SUNSKY);
     oceanShaders.push_back(shader); //1
-    
+
+    oceanShaders[1]->Use();
+    oceanShaders[1]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    oceanShaders[1]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    oceanShaders[1]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+
     //Computation
     shader = new GLSLShader("oceanInit.frag"); //Using saq vertex shader
     shader->AddUniform("texSpectrum12", ParameterType::INT);
@@ -307,8 +310,8 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     
     //Blur
     shader = new GLSLShader("oceanBlur.frag");
-    shader->AddUniform("lightAbsorption", ParameterType::VEC3);
-    shader->AddUniform("turbidity", ParameterType::FLOAT);
+    shader->AddUniform("cWater", ParameterType::VEC3);
+    shader->AddUniform("bWater", ParameterType::VEC3);
     shader->AddUniform("blurScale", ParameterType::FLOAT);
     shader->AddUniform("blurShape", ParameterType::VEC2);
     shader->AddUniform("texScene", ParameterType::INT);
@@ -323,19 +326,21 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     oceanShaders.push_back(shader); //10
     
     //Background
-    shader = new GLSLShader(precompiled, "oceanBackground.frag", "infiniteSurface.vert");
+    shader = new GLSLShader(precompiled, header, "oceanBackground.frag", "infiniteSurface.vert");
     shader->AddUniform("MVP", ParameterType::MAT4);
     shader->AddUniform("eyePos", ParameterType::VEC3);
-    shader->AddUniform("lightAbsorption", ParameterType::VEC3);
-    shader->AddUniform("turbidity", ParameterType::FLOAT);
+    shader->AddUniform("cWater", ParameterType::VEC3);
+    shader->AddUniform("bWater", ParameterType::VEC3);
     shader->AddUniform("transmittance_texture", ParameterType::INT);
     shader->AddUniform("scattering_texture", ParameterType::INT);
     shader->AddUniform("irradiance_texture", ParameterType::INT);
-    shader->AddUniform("planetRadius", ParameterType::FLOAT);
-    shader->AddUniform("sunDirection", ParameterType::VEC3);
-    shader->AddUniform("whitePoint", ParameterType::VEC3);
-    shader->AddUniform("cosSunSize", ParameterType::FLOAT);
+    shader->BindUniformBlock("SunSky", UBO_SUNSKY);
     oceanShaders.push_back(shader); //11
+
+    oceanShaders[11]->Use();
+    oceanShaders[11]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    oceanShaders[11]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    oceanShaders[11]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);    
     
 	glDeleteShader(oceanOpticsFragment);
 
@@ -456,10 +461,11 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     }
     
     //Load absorption coefficient table
-    std::ifstream dataFile(GetShaderPath() + "water_absorption.dat", std::ios::in | std::ios::binary);
+    std::ifstream dataFile(GetShaderPath() + "jerlov.dat", std::ios::in | std::ios::binary);
     if(dataFile.is_open())
     {
         dataFile.read((char*)absorption, sizeof(absorption));
+        dataFile.read((char*)scattering, sizeof(scattering));
         dataFile.close();
     }
     
@@ -498,27 +504,22 @@ void OpenGLOcean::setWaterType(GLfloat t)
     float fPart = modff(t, &iPart);
     int id = (int)truncf(iPart);
     lightAbsorption = absorption[id];
-    if(fPart > 0.f) lightAbsorption += fPart * (absorption[id+1] - absorption[id]);
+    lightScattering = scattering[id];
+    if(fPart > 0.f) 
+    {
+        lightAbsorption += fPart * (absorption[id+1] - absorption[id]);
+        lightScattering += fPart * (scattering[id+1] - scattering[id]);
+    }
 }
     
-void OpenGLOcean::setTurbidity(GLfloat t)
+glm::vec3 OpenGLOcean::getLightAttenuation()
 {
-    turbidity = t;
-}
-    
-GLfloat OpenGLOcean::getTurbidity()
-{
-    return turbidity;
+    return lightAbsorption + getLightScattering();
 }
 
-glm::vec3 OpenGLOcean::getLightAbsorption()
+glm::vec3 OpenGLOcean::getLightScattering()
 {
-    return lightAbsorption;
-}
-
-glm::vec3 OpenGLOcean::getOpticalThickness()
-{
-	return lightAbsorption * turbidity;
+    return lightScattering;
 }
 
 GLfloat OpenGLOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel)
@@ -775,9 +776,8 @@ void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
     oceanShaders[11]->Use();
     oceanShaders[11]->SetUniform("MVP", cam->GetInfiniteProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders[11]->SetUniform("eyePos", cam->GetEyePosition());
-    oceanShaders[11]->SetUniform("lightAbsorption", lightAbsorption);
-    oceanShaders[11]->SetUniform("turbidity", turbidity);
-    SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[11]);
+    oceanShaders[11]->SetUniform("cWater", getLightAttenuation());
+    oceanShaders[11]->SetUniform("bWater", getLightScattering());
     
     glCullFace(GL_FRONT);
     OpenGLState::BindVertexArray(vaoMask);
@@ -807,7 +807,6 @@ void OpenGLOcean::DrawSurface(OpenGLCamera* cam)
         oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
-        SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[0]);
         
         //glCullFace(GL_BACK);
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -865,7 +864,6 @@ void OpenGLOcean::DrawSurface(OpenGLCamera* cam)
         oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[0]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[0]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
-        SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[0]);
         
         OpenGLState::BindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 12);
@@ -895,10 +893,10 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
         oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("tessDiv", (float)tesselation);
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
-        oceanShaders[1]->SetUniform("tau", getOpticalThickness());
+        oceanShaders[1]->SetUniform("cWater", getLightAttenuation());
+        oceanShaders[1]->SetUniform("bWater", getLightScattering());
         oceanShaders[1]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[1]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
-        SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[1]);
         
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glCullFace(GL_FRONT);
@@ -915,12 +913,12 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
         oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
-        oceanShaders[1]->SetUniform("tau", getOpticalThickness());
+        oceanShaders[1]->SetUniform("cWater", getLightAttenuation());
+        oceanShaders[1]->SetUniform("bWater", getLightScattering());
         oceanShaders[1]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
         oceanShaders[1]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
         oceanShaders[1]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
-        SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupOceanShader(oceanShaders[1]);
-    
+        
         OpenGLState::DisableCullFace();
         OpenGLState::BindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 12);
@@ -957,8 +955,8 @@ void OpenGLOcean::DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint line
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, sceneTexture);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, linearDepthTex);
     oceanShaders[9]->Use();
-    oceanShaders[9]->SetUniform("lightAbsorption", lightAbsorption);
-    oceanShaders[9]->SetUniform("turbidity", turbidity);
+    oceanShaders[9]->SetUniform("cWater", getLightAttenuation());
+    oceanShaders[9]->SetUniform("bWater", getLightScattering());
     oceanShaders[9]->SetUniform("blurScale", 0.002f);
     oceanShaders[9]->SetUniform("blurShape", glm::vec2(1.f, (GLfloat)viewport[2]/(GLfloat)viewport[3]));
     oceanShaders[9]->SetUniform("texScene", TEX_POSTPROCESS1);

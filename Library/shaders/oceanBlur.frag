@@ -22,14 +22,12 @@
 in vec2 texcoord;
 out vec4 fragColor;
 
-uniform vec3 lightAbsorption;
-uniform float turbidity;
+uniform vec3 cWater;
+uniform vec3 bWater;
 uniform vec2 blurShape;
 uniform float blurScale;
 uniform sampler2D texScene;
 uniform sampler2D texLinearDepth;
-
-const vec3 rayleigh = vec3(0.15023, 0.405565, 1.0);
 
 const vec2 Poisson32[32] = vec2[](
                                   vec2(-0.975402, -0.0711386),
@@ -139,13 +137,9 @@ void main(void)
     fragColor = vec4(1.0);
 	float depth = texture(texLinearDepth, texcoord).r;
     vec3 color = texture(texScene, texcoord).rgb;
-    
-    //Water properties
-    vec3 b = 0.2 * turbidity * rayleigh; //Scattering coefficient
-    //vec3 c = lightAbsorption + 0.1 * b; //Full attenuation coefficient
-    
+
     //Sample color based on b
-    vec2 r = dot(normalize(color), b) * blurScale * blurShape;
+    vec2 r = dot(normalize(color), bWater) * blurScale * blurShape;
     vec3 blur = vec3(0.0);
     float w = 0.0;
     
@@ -157,6 +151,6 @@ void main(void)
         w += wi;
     }
     
-    float maxBlurDist = 10.0/(turbidity+0.1);
+    float maxBlurDist = 10.0/(length(bWater)+0.1);
     fragColor.rgb = mix(color, blur/w, clamp(depth, 0.0, maxBlurDist)/maxBlurDist);
 }

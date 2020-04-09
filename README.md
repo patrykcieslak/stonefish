@@ -30,7 +30,6 @@ The software is developed and tested on *Linux Ubuntu*. There is also an Xcode p
         6. `make -j4`
         7. `sudo make install`
     * **OpenGL Mathematics library** (libglm-dev, version >= 0.9.9.0)
-    * **GLEW library** (libglew-dev)
     * **SDL2 library** (libsdl2-dev, may need the following fix!)
         1. Install SDL2 library from the repository.
         2. `cd /usr/lib/x86_64-linux-gnu/cmake/SDL2/`

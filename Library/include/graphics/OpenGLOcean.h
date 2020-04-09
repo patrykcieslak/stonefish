@@ -141,12 +141,6 @@ namespace sf
          */
         void setWaterType(GLfloat t);
         
-        //! A method to set the turbidity of ocean water.
-        /*!
-         \param t water turbidity
-         */
-        void setTurbidity(GLfloat t);
-        
         //! A method to get wave height at a specified coordinate.
         /*!
          \param x the x coordinate in world frame [m]
@@ -155,14 +149,11 @@ namespace sf
          */
         GLfloat getWaveHeight(GLfloat x, GLfloat y);
         
-        //! A method returning calculated light absorption coefficients.
-        glm::vec3 getLightAbsorption();
-        
-        //! A method returning the turbidity of the water.
-        GLfloat getTurbidity();
-		
-		//! A method calculating ocean water optical thickness.
-		glm::vec3 getOpticalThickness();
+        //! A method returning calculated light attenuation coefficient.
+        glm::vec3 getLightAttenuation();
+        	
+        //! A method calculating Henyey-Greenstein scattering factor.
+        glm::vec3 getLightScattering();
         
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
@@ -182,6 +173,7 @@ namespace sf
         GLuint oceanFBOs[3];
         GLuint oceanTextures[6];
         glm::vec3 absorption[64];
+        glm::vec3 scattering[64];
         
         bool waves;
         SDL_mutex* hydroMutex;
@@ -197,7 +189,7 @@ namespace sf
         GLuint vaoMask;
         GLuint vboMask;
         glm::vec3 lightAbsorption;
-        GLfloat turbidity;
+        glm::vec3 lightScattering;
     };
 }
 

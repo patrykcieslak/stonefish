@@ -706,11 +706,10 @@ void GraphicalSimulationApp::DoHUD()
     if(ocn != NULL)
     {
         Scalar waterType = ocn->getWaterType();
-        Scalar turbidity = ocn->getTurbidity();
         
         bool oceanOn = ocn->isRenderable();
         
-        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 132.f : 33.f);
+        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 82.f : 33.f);
         offset += 5.f;
        
         id.owner = 2;
@@ -721,14 +720,10 @@ void GraphicalSimulationApp::DoHUD()
         if(oceanOn)
         {
             id.item = 1;
-            waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Water Type");
+            waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
             offset += 50.f;
         
-            id.item = 2;
-            turbidity = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0.1), Scalar(100.0), turbidity, "Turbidity");
-            offset += 50.f;
-        
-            ocn->SetupWaterProperties(waterType, turbidity);
+            ocn->SetupWaterProperties(waterType);
         }
         
         offset += 7.f;

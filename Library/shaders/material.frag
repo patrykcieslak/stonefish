@@ -81,37 +81,41 @@ vec3 SunContribution(vec3 P, vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance);
 
 void main()
 {	
-	//Common
+	//Vectors
 	vec3 P = fragPos.xyz/fragPos.w;
 	vec3 N = normalize(normal);
 	vec3 toEye = normalize(eyePos - P);
-	vec3 albedo = color.rgb;
 	
+	vec4 albedo = vec4(color.rgb, 1.0);
 	if(color.a > 0.0)
 	{
 		vec4 texColor = texture(tex, texCoord);
-		albedo = mix(color.rgb, texColor.rgb, color.a*texColor.a);
+		albedo = vec4(mix(color.rgb, texColor.rgb, color.a), texColor.a);
 	}
 	
+	//1. Direct lighting
 	//Ambient
 	vec3 center = vec3(0.0, 0.0, planetRadiusInUnits);
 	vec3 posSky = vec3(P.xy/atmLengthUnitInMeters, clamp(P.z/atmLengthUnitInMeters, -100000.0/atmLengthUnitInMeters, -0.5/atmLengthUnitInMeters));
 	vec3 skyIlluminance;
     vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, N, sunDirection, skyIlluminance);
-    fragColor = albedo * skyIlluminance;
+    fragColor = albedo.rgb * skyIlluminance;
 	
 	//Sun
-	fragColor += SunContribution(P, N, toEye, albedo, sunIlluminance);
+	fragColor += SunContribution(P, N, toEye, albedo.rgb, sunIlluminance);
 	
 	fragColor = fragColor/whitePoint/MEAN_SUN_ILLUMINANCE; //Color correction and normalization
 	
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
-		fragColor += PointLightContribution(i, P, N, toEye, albedo).rgb;
+		fragColor += PointLightContribution(i, P, N, toEye, albedo.rgb).rgb;
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
-		fragColor += SpotLightContribution(i, P, N, toEye, albedo).rgb;
-		
+		fragColor += SpotLightContribution(i, P, N, toEye, albedo.rgb).rgb;
+	
+	//2. Apply transparency
+	fragColor *= albedo.a;
+
 	//Normal
 	fragNormal = vec4(normalize(eyeSpaceNormal) * 0.5 + 0.5, reflectivity);
 }

@@ -17,39 +17,40 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#version 330
-
-#define MEAN_SUN_ILLUMINANCE 107527.0
-
+in vec4 fragPos;
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec4 fragNormal;
 
 uniform vec3 eyePos;
-uniform vec3 sunDirection;
-uniform float planetRadius;
-uniform vec3 whitePoint;
-uniform vec3 lightAbsorption;
-uniform float turbidity;
+
+layout (std140) uniform SunSky
+{
+    mat4 sunClipSpace[4];
+    vec4 sunFrustumNear;
+    vec4 sunFrustumFar;
+    vec3 sunDirection;
+	float planetRadiusInUnits;
+	vec3 whitePoint;
+    float atmLengthUnitInMeters;
+};
 
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
+vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d);
 
-const float d = 100000.0;
-const vec3 rayleigh = vec3(0.15023, 0.405565, 1.0);
+const float d = 1000000.0;
+const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
 
 void main() 
 {
-    vec3 center = vec3(0,0,-planetRadius);
+    vec3 P = fragPos.xyz * d;
+	vec3 V = normalize(eyePos - P);
+    vec3 center = vec3(0,0,planetRadiusInUnits);
 	
-    //Water properties
-    vec3 b = turbidity * rayleigh * 0.5; //Scattering coefficient
-    vec3 c = lightAbsorption + b * 0.1; //Full attenuation coefficient
-    
     //Inscattering
     vec3 skyIlluminance;
-    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, vec3(0,0,-1.0), sunDirection, skyIlluminance);
-    vec3 inFactor = exp(-lightAbsorption * max(eyePos.z,0.0)) * b / c;
-    fragColor = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE * inFactor * 0.01;
+	vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, waterSurfaceN, sunDirection, skyIlluminance);
+	vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	fragColor = InScattering(L, -waterSurfaceN, V, max(eyePos.z, 0.0), d);
     
-    //Normal
     fragNormal = vec4(vec3(0.0,0.0,-1.0) * 0.5 + 0.5, 0.0);
 }

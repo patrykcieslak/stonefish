@@ -505,7 +505,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw blur only below surface
                     OpenGLState::EnableStencilTest();
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
-                    glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
+                    //glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
                     glOcean->DrawParticles(camera);
                     OpenGLState::DisableStencilTest();
                 }

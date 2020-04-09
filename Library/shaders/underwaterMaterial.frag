@@ -94,18 +94,17 @@ void main()
 	vec3 toEye = eyePos - P;
 	float d = length(toEye);
 	vec3 V = toEye/d;
-	vec3 R = RefractToAir(N, -waterSurfaceN);
-	vec3 S = RefractToWater(sunDirection, waterSurfaceN);
+	vec3 S = RefractToWater(-sunDirection, waterSurfaceN);
 	
 	if(eyePos.z < 0.0)
 		d = P.z/dot(V, waterSurfaceN);
 	
 	//Diffuse color
-	vec3 albedo = color.rgb;
+	vec4 albedo = vec4(color.rgb, 1.0);
 	if(color.a > 0.0)
 	{
 		vec4 texColor = texture(tex, texCoord);
-		albedo = mix(color.rgb, texColor.rgb, color.a*texColor.a);
+		albedo = vec4(mix(color.rgb, texColor.rgb, color.a), texColor.a);
 	}
 	
 	//1. Direct lighting + out-scattering
@@ -114,32 +113,40 @@ void main()
 	vec3 posSky = vec3(P.xy/atmLengthUnitInMeters,-0.5/atmLengthUnitInMeters);
 	vec3 skyIlluminance;
 	vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, N, sunDirection, skyIlluminance);
-	fragColor = albedo * skyIlluminance * BeerLambert(d+P.z);
+	fragColor = albedo.rgb * skyIlluminance * BeerLambert(d+P.z);
 	
 	//Sun
 	if(S.z > 0.0)
-		fragColor += SunContribution(P, N, V, albedo, sunIlluminance) * BeerLambert(d+P.z/S.z);
+		fragColor += SunContribution(P, N, V, albedo.rgb, sunIlluminance) * BeerLambert(d+P.z/S.z);
 	
 	fragColor = fragColor/whitePoint/MEAN_SUN_ILLUMINANCE; //Color correction and normalization
 	
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
 	{
-		vec4 Ld = PointLightContribution(i, P, N, V, albedo);
+		vec4 Ld = PointLightContribution(i, P, N, V, albedo.rgb);
 		fragColor += Ld.rgb * BeerLambert(d + Ld.a);
 	}
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
 	{
-		vec4 Ld = SpotLightContribution(i, P, N, V, albedo);
+		vec4 Ld = SpotLightContribution(i, P, N, V, albedo.rgb);
 		fragColor += Ld.rgb * BeerLambert(d + Ld.a);
 	}
 	
 	//2. In-scattering
-	sunIlluminance = GetSunAndSkyIlluminance(posSky - center, waterSurfaceN, sunDirection, skyIlluminance);
-	vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
-	fragColor += InScattering(L, -waterSurfaceN, V, max(eyePos.z, 0.0), d);
-	
+    vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
+    if(R.z > 0.0)
+    {
+	    vec3 skyIlluminance;
+	    vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, waterSurfaceN, sunDirection, skyIlluminance);
+	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	    fragColor += InScattering(L, R, V, max(eyePos.z, 0.0), d);
+    }
+
+	//3. Apply transparency
+	fragColor *= albedo.a;
+
     //Normal
 	fragNormal = vec4(normalize(eyeSpaceNormal) * 0.5 + 0.5, reflectivity);
 }

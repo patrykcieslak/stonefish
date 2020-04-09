@@ -108,13 +108,7 @@ namespace sf
         
         //! A method to setup a material shaders.
         void SetupMaterialShaders();
-        
-        //! A method to setup an ocean shader.
-        /*!
-         \param shader a pointer to the ocean shader.
-         */
-        void SetupOceanShader(GLSLShader* shader);
-        
+         
         //! A method to set position of the sun in the sky.
         /*!
          \param azimuthDeg the azimuth of the sun [deg]

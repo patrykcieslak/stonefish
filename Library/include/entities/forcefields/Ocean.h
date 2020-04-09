@@ -61,10 +61,9 @@ namespace sf
         
         //! A method used to setup the properties of the water.
         /*!
-         \param type the type of the water <0,1>
-         \param turbidity the turbidity of the water
+         \param jerlov the type of water according to Jerlov (I-9C) <0,1>
          */
-        void SetupWaterProperties(Scalar type, Scalar turbidity);
+        void SetupWaterProperties(Scalar jerlov);
         
         //! A method used to add a velocity field to the ocean.
         /*!
@@ -117,10 +116,7 @@ namespace sf
         
         //! A method returning the type of the water.
         Scalar getWaterType();
-        
-        //! A method returning the turbidity of the water.
-        Scalar getTurbidity();
-        
+          
         //! A method informing if the ocean waves are simulated.
         bool hasWaves() const;
         
@@ -148,7 +144,6 @@ namespace sf
         OpenGLOcean* glOcean;
         Scalar depth;
         Scalar waterType;
-        Scalar turbidity;
         Scalar oceanState;
         bool currentsEnabled;
         Renderable wavesDebug;

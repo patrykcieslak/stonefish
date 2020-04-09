@@ -51,8 +51,7 @@ Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(u
     liquid = l;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
-    waterType = Scalar(0.5);
-    turbidity = 1.0;
+    waterType = Scalar(0.0);
     glOcean = NULL;
 }
 
@@ -78,12 +77,7 @@ Scalar Ocean::getWaterType()
 {
     return waterType;
 }
-    
-Scalar Ocean::getTurbidity()
-{
-    return turbidity;
-}
-    
+        
 OpenGLOcean* Ocean::getOpenGLOcean()
 {
     return glOcean;
@@ -99,15 +93,12 @@ Fluid Ocean::getLiquid() const
     return liquid;
 }
     
-void Ocean::SetupWaterProperties(Scalar type, Scalar turb)
-{
-    waterType = type > Scalar(1) ? Scalar(1) : (type < Scalar(0) ? Scalar(0) : type);
-    turbidity = turb < Scalar(0) ? Scalar(0) : turb;
-    
+void Ocean::SetupWaterProperties(Scalar jerlov)
+{ 
     if(glOcean != NULL)
     {
+        waterType = jerlov > Scalar(1) ? Scalar(1) : (jerlov < Scalar(0) ? Scalar(0) : jerlov);
         glOcean->setWaterType((float)waterType);
-        glOcean->setTurbidity((float)turbidity);
     }
 }
 
@@ -211,7 +202,7 @@ void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
     glOcean = new OpenGLOcean((float)oceanState, hydrodynamics);
-    SetupWaterProperties(0.0, 1.0);
+    SetupWaterProperties(0.0);
 }
 
 std::vector<Renderable> Ocean::Render()

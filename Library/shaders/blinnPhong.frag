@@ -22,7 +22,6 @@
 //Blinn-Phong model
 uniform float shininess;
 uniform float specularStrength;
-const float PI = 3.14159265359;
 
 vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
 {

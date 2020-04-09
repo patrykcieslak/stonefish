@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -23,21 +23,27 @@
     https://github.com/jdupuy/whitecaps
 */
 
+in vec4 fragPos;
+layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec4 fragNormal;
+
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance;
 uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
 uniform mat3 MV;
-uniform vec3 sunDirection;
-uniform float planetRadius;
-uniform float skyLengthUnitInMeters;
-uniform vec3 whitePoint;
-uniform float cosSunSize;
 
-in vec4 fragPos;
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec4 fragNormal;
+layout (std140) uniform SunSky
+{
+    mat4 sunClipSpace[4];
+    vec4 sunFrustumNear;
+    vec4 sunFrustumFar;
+    vec3 sunDirection;
+	float planetRadiusInUnits;
+	vec3 whitePoint;
+    float atmLengthUnitInMeters;
+};
 
 //Atmosphere
 vec3 GetSolarLuminance();
@@ -109,13 +115,12 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
     return fresnel * p / ((1.0 + Lambda(zL, sigmaL2) + Lambda(zV, sigmaV2)) * zV * zH2 * zH2 * 4.0);
 }
 
-
 void main()
 {
 	vec3 P = fragPos.xyz/fragPos.w;
 	vec3 V = normalize(eyePos - P);
-	vec3 center = vec3(0, 0, planetRadius);
-	vec3 Psky = vec3(P.xy/skyLengthUnitInMeters, clamp(P.z/skyLengthUnitInMeters, -100000.0/skyLengthUnitInMeters, -0.5/skyLengthUnitInMeters));
+	vec3 center = vec3(0, 0, planetRadiusInUnits);
+	vec3 Psky = vec3(P.xy/atmLengthUnitInMeters, clamp(P.z/atmLengthUnitInMeters, -100000.0/atmLengthUnitInMeters, -0.5/atmLengthUnitInMeters));
     float d = length(eyePos - P);
 	
 	if(eyePos.z < 0.0)
@@ -154,25 +159,30 @@ void main()
     
     //Sky
     vec3 Lsky = vec3(0.);
-	vec3 ray = RefractToAir(-V, normal); //refract(-V, normal, w2a);
+	vec3 ray = RefractToAir(-V, normal);
 	if(ray.z < 0.0)
 	{
 		vec3 trans;
 		Lsky = GetSkyLuminance(Psky - center, ray, 0.0, sunDirection, trans);
-        Lsky += smoothstep(cosSunSize*0.99999, cosSunSize, dot(ray, sunDirection)) * trans * GetSolarLuminance()/MEAN_SUN_ILLUMINANCE; ////1000.0;
+        /*if(dot(ray, sunDirection) > cosSunSize)
+		    Lsky += trans * GetSolarLuminance();*/
 	}
 	
 	//Final color
-    fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;  //10000.0;
+    fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
     //Attenuation
 	fragColor *= BeerLambert(d);
 	
     //Inscattering
-	vec3 skyIlluminance;
-	vec3 sunIlluminance = GetSunAndSkyIlluminance(Psky - center, waterSurfaceN, sunDirection, skyIlluminance);
-	vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
-	fragColor += InScattering(L, -waterSurfaceN, V, max(eyePos.z, 0.0), d);
+    vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
+    if(R.z > 0.0)
+    {
+	    vec3 skyIlluminance;
+	    vec3 sunIlluminance = GetSunAndSkyIlluminance(Psky - center, waterSurfaceN, sunDirection, skyIlluminance);
+	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	    fragColor += InScattering(L, R, V, max(eyePos.z, 0.0), d);
+    }
 	
 	fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);
 }

@@ -23,20 +23,27 @@
     https://github.com/jdupuy/whitecaps
 */
 
+in vec4 fragPos;
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 fragNormal;
+
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance; 
 uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
 uniform mat3 MV;
-uniform vec3 sunDirection;
-uniform float planetRadius;
-uniform float skyLengthUnitInMeters;
-uniform vec3 whitePoint;
 
-in vec4 fragPos;
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 fragNormal;
+layout (std140) uniform SunSky
+{
+    mat4 sunClipSpace[4];
+    vec4 sunFrustumNear;
+    vec4 sunFrustumFar;
+    vec3 sunDirection;
+	float planetRadiusInUnits;
+	vec3 whitePoint;
+    float atmLengthUnitInMeters;
+};
 
 //Atmosphere
 vec3 GetSolarLuminance();
@@ -107,8 +114,8 @@ void main()
 {
     vec3 P = fragPos.xyz/fragPos.w;
 	vec3 toEye = normalize(eyePos - P);
-	vec3 center = vec3(0, 0, planetRadius);
-	vec3 Psky = vec3(P.xy/skyLengthUnitInMeters, clamp(P.z/skyLengthUnitInMeters, -100000.0/skyLengthUnitInMeters, -0.5/skyLengthUnitInMeters));
+	vec3 center = vec3(0, 0, planetRadiusInUnits);
+	vec3 Psky = vec3(P.xy/atmLengthUnitInMeters, clamp(P.z/atmLengthUnitInMeters, -100000.0/atmLengthUnitInMeters, -0.5/atmLengthUnitInMeters));
 	
 	//Wave slope (layers 1,2)
     vec2 waveCoord = P.xy;

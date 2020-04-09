@@ -662,18 +662,6 @@ void OpenGLAtmosphere::SetupMaterialShaders()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
-{
-    shader->SetUniform("planetRadius", (GLfloat)(kBottomRadius/kLengthUnitInMeters));
-	shader->SetUniform("skyLengthUnitInMeters", (GLfloat)kLengthUnitInMeters);
-    shader->SetUniform("sunDirection", GetSunDirection());
-    shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-    shader->SetUniform("whitePoint", whitePoint);
-    shader->SetUniform("cosSunSize", (GLfloat)cos(0.00935/2.0));
-}
-
 void OpenGLAtmosphere::Precompute()
 {
     cInfo("Precomputing atmosphere...");
