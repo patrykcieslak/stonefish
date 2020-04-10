@@ -1,50 +1,38 @@
-/*-----------------------------------------------------------------------
-  Copyright (c) 2014, NVIDIA. All rights reserved.
+/*   
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Neither the name of its contributors may be used to endorse 
-     or promote products derived from this software without specific
-     prior written permission.
+    This file is a part of Stonefish.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
-  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-  OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------*/
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #version 330
 
-uniform vec4 clipInfo;
-uniform sampler2D texDepth;
-out float fragColor;
+layout(location = 0) out float fragColor;
 
-/*layout(location=0) uniform vec4 clipInfo; // z_n * z_f,  z_n - z_f,  z_f, perspective = 1 : 0
-layout(binding=0)  uniform sampler2D texDepth;
-layout(location=0,index=0) out float fragColor;*/
+uniform sampler2D texLogDepth;
+uniform float FC;
 
-float reconstructCSZ(float d, vec4 clipInfo) 
+float linearDepth(float logd)
 {
-	if(clipInfo[3] != 0)
-		return (clipInfo[0] / (clipInfo[1] * d + clipInfo[2]));
-	else
-		return (clipInfo[1]+clipInfo[2] - d * clipInfo[1]);
+    return pow(2, logd/FC) - 1.0;
 }
 
 void main() 
 {
-    float depth = texelFetch(texDepth, ivec2(gl_FragCoord.xy), 0).x;
-	fragColor = reconstructCSZ(depth, clipInfo);
+    float depth = texelFetch(texLogDepth, ivec2(gl_FragCoord.xy), 0).x;
+	  fragColor = linearDepth(depth);
 }
 
 

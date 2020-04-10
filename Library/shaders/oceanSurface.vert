@@ -19,12 +19,18 @@
 
 #version 330
 
-layout(location = 0) in vec4 vertex;
+layout(location = 0) in vec3 vt;
+
 out vec4 fragPos;
+out float logz;
+
 uniform mat4 MVP;
+uniform float FC;
 
 void main()
 {
-	fragPos = vertex;
-	gl_Position = MVP * vertex;
+	fragPos = vec4(vt * 10000.0, 1.0);
+	gl_Position = MVP * fragPos;
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
+    logz = 1.0 + gl_Position.w;
 }

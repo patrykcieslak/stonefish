@@ -81,6 +81,9 @@ namespace sf
         
         //! A method returning the view matrix.
         glm::mat4 GetViewMatrix() const;
+
+        //! A method that returns the far clip plane distance.
+        GLfloat GetFarClip() const;
         
         //! A method that sets up the camera.
         void SetupCamera();

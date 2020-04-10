@@ -61,6 +61,7 @@ void OpenGLPointLight::DrawLight()
 	glm::mat4 proj = activeView->GetProjectionMatrix();
 	glm::mat4 MVP = proj * view * model;
 	lightSourceShader->SetUniform("MVP", MVP);
+    lightSourceShader->SetUniform("FC", activeView->GetLogDepthConstant());
 	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(lightObject, 0, glm::mat4());
 }
    

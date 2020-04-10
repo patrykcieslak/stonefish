@@ -79,6 +79,7 @@ void OpenGLState::Init()
     glDepthFunc(GL_LEQUAL);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    glEnable(GL_DEPTH_CLAMP);
     glPointSize(1.f);
     glLineWidth(1.f);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

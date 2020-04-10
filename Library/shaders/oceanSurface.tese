@@ -29,10 +29,12 @@ layout(quads, equal_spacing, ccw) in;
 
 uniform sampler2DArray texWaveFFT;
 uniform mat4 MVP;
+uniform float FC;
 uniform vec4 gridSizes;
 uniform float tessDiv;
 
 out vec4 fragPos;
+out float logz;
 
 vec4 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
 {
@@ -67,4 +69,6 @@ void main()
 
 	fragPos = vec4(P.xy, dz, 1.0); //Position of deformed vertex in world space
 	gl_Position = MVP * fragPos; //Screen space position
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
+    logz = 1.0 + gl_Position.w;
 }

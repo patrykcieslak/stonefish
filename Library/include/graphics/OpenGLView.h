@@ -69,6 +69,12 @@ namespace sf
         
         //! A method that returns the view matrix.
         virtual glm::mat4 GetViewMatrix() const = 0;
+
+        //! A method that returns the far clip plane distance.
+        virtual GLfloat GetFarClip() const = 0;
+
+        //! A method that return logarithmic depth constant.
+        GLfloat GetLogDepthConstant() const;
         
         //! A method that checks if the view needs to be updated.
         virtual bool needsUpdate() = 0;

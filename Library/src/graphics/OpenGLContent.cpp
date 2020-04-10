@@ -67,11 +67,13 @@ OpenGLContent::OpenGLContent()
     texLevelQuadShader = NULL;
     texCubeShader = NULL;
     flatShader = NULL;
+    shadowShader = NULL;
     eyePos = glm::vec3();
     viewDir = glm::vec3(1.f,0,0);
     viewProjection = glm::mat4();
     view = glm::mat4();
     projection = glm::mat4();
+    FC = 0.f;
     viewportSize = glm::vec2(800.f,600.f);
     mode = DrawingMode::FULL;
     materialShaders = std::vector<GLSLShader*>(0);
@@ -229,6 +231,10 @@ OpenGLContent::OpenGLContent()
     
     flatShader = new GLSLShader("flat.frag", "flat.vert");
     flatShader->AddUniform("MVP", ParameterType::MAT4);
+    flatShader->AddUniform("FC", ParameterType::FLOAT);
+
+    shadowShader = new GLSLShader("shadow.frag", "shadow.vert");
+    shadowShader->AddUniform("MVP", ParameterType::MAT4);
     
     //Materials
     GLint compiled;
@@ -255,6 +261,7 @@ OpenGLContent::OpenGLContent()
     blinnPhong->AddUniform("M", ParameterType::MAT4);
     blinnPhong->AddUniform("N", ParameterType::MAT3);
     blinnPhong->AddUniform("MV", ParameterType::MAT3);
+    blinnPhong->AddUniform("FC", ParameterType::FLOAT);
     blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
     blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
     blinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -280,6 +287,7 @@ OpenGLContent::OpenGLContent()
     cookTorrance->AddUniform("M", ParameterType::MAT4);
     cookTorrance->AddUniform("N", ParameterType::MAT3);
     cookTorrance->AddUniform("MV", ParameterType::MAT3);
+    cookTorrance->AddUniform("FC", ParameterType::FLOAT);
     cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
     cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
     cookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -313,6 +321,7 @@ OpenGLContent::OpenGLContent()
     uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
     uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
     uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
+    uwBlinnPhong->AddUniform("FC", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
     uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
     uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
@@ -340,6 +349,7 @@ OpenGLContent::OpenGLContent()
     uwCookTorrance->AddUniform("M", ParameterType::MAT4);
     uwCookTorrance->AddUniform("N", ParameterType::MAT3);
     uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
+    uwCookTorrance->AddUniform("FC", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
     uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
     uwCookTorrance->AddUniform("color", ParameterType::VEC4);
@@ -398,6 +408,7 @@ OpenGLContent::~OpenGLContent()
     if(texLevelQuadShader != NULL) delete texLevelQuadShader;
     if(texCubeShader != NULL) delete texCubeShader;
     if(flatShader != NULL) delete flatShader;
+    if(shadowShader != NULL) delete shadowShader;
     
     //Material shaders
     for(size_t i=0; i<materialShaders.size(); ++i)
@@ -473,6 +484,7 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
     view = v->GetViewMatrix();
     projection = v->GetProjectionMatrix();
     viewProjection = projection * view;
+    FC = v->GetLogDepthConstant();
 }
 
 void OpenGLContent::SetDrawingMode(DrawingMode m)
@@ -729,32 +741,49 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
     if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
     {
-        if(mode == DrawingMode::RAW)
+        switch(mode)
         {
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
-        }
-        else if(mode == DrawingMode::FLAT)
-        {
-            flatShader->Use();
-            flatShader->SetUniform("MVP", viewProjection*M);
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
-            OpenGLState::UseProgram(0);
-        }
-        else
-        {
-            if(lookId >= 0 && lookId < (int)looks.size())
-                UseLook(lookId, M);
-            else
-                UseStandardLook(M);
-    
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
-            OpenGLState::UseProgram(0);
+            case DrawingMode::RAW:
+            {
+                OpenGLState::BindVertexArray(objects[objectId].vao);
+                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                OpenGLState::BindVertexArray(0);
+            }
+            break;
+
+            case DrawingMode::SHADOW:
+            {
+                shadowShader->Use();
+                shadowShader->SetUniform("MVP", viewProjection*M);
+                OpenGLState::BindVertexArray(objects[objectId].vao);
+                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                OpenGLState::BindVertexArray(0);
+            }
+            break;
+            
+            case DrawingMode::FLAT:
+            {
+                flatShader->Use();
+                flatShader->SetUniform("MVP", viewProjection*M);
+                flatShader->SetUniform("FC", FC);
+                OpenGLState::BindVertexArray(objects[objectId].vao);
+                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                OpenGLState::BindVertexArray(0);
+            }
+            break;
+
+            default:
+            {
+                if(lookId >= 0 && lookId < (int)looks.size())
+                    UseLook(lookId, M);
+                else
+                    UseStandardLook(M);
+        
+                OpenGLState::BindVertexArray(objects[objectId].vao);
+                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                OpenGLState::BindVertexArray(0);
+            }
+            break;
         }
     }
 }
@@ -804,6 +833,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             shader->SetUniform("M", M);
             shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
             shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+            shader->SetUniform("FC", FC);
             shader->SetUniform("eyePos", eyePos);
             shader->SetUniform("viewDir", viewDir);
 
@@ -835,6 +865,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             shader->SetUniform("M", M);
             shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
             shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+            shader->SetUniform("FC", FC);
             shader->SetUniform("eyePos", eyePos);
             shader->SetUniform("viewDir", viewDir);
 
@@ -878,6 +909,7 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
     shader->SetUniform("M", M);
     shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
     shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+    shader->SetUniform("FC", FC);
     shader->SetUniform("eyePos", eyePos);
     shader->SetUniform("viewDir", viewDir);
 

@@ -432,6 +432,7 @@ namespace sf
         glm::mat4 projection; //Current projection matrix
         glm::mat4 viewProjection; //Current view-projection matrix
         glm::vec2 viewportSize; //Current view-port size
+        GLfloat FC; //Current logarithmic depth buffer constant
         
         //Standard objects
         GLuint baseVertexArray; //base VAO
@@ -452,6 +453,7 @@ namespace sf
         GLSLShader* texLevelQuadShader;
         GLSLShader* texCubeShader;
         GLSLShader* flatShader;
+        GLSLShader* shadowShader;
         std::vector<GLSLShader*> materialShaders;
         
         //Methods

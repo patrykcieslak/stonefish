@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -19,9 +19,14 @@
 
 #version 330
 
+in float logz;
 out vec4 fragColor;
+
+uniform float FC;
 
 void main()
 {
+    //Logarithmic z-buffer correction
+	gl_FragDepth = log2(logz) * FC;
 	fragColor = vec4(1.0);
 }

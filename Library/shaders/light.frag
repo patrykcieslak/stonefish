@@ -19,10 +19,15 @@
 
 #version 330
 
-uniform vec3 color;
+in float logz;
 out vec4 fragColor;
+
+uniform vec3 color;
+uniform float FC;
 
 void main()
 {
+    //Logarithmic z-buffer correction
+	gl_FragDepth = log2(logz) * FC;
 	fragColor = vec4(color, 1.0);
 }

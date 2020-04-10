@@ -168,6 +168,11 @@ glm::mat4 OpenGLDepthCamera::GetViewMatrix() const
     return cameraTransform;
 }
 
+GLfloat OpenGLDepthCamera::GetFarClip() const
+{
+    return range.y;
+}
+
 void OpenGLDepthCamera::Update()
 {
     _needsUpdate = true;
@@ -197,8 +202,8 @@ void OpenGLDepthCamera::LinearizeDepth()
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthTex);
     depthLinearizeShader->Use();
-    depthLinearizeShader->SetUniform("clipInfo", glm::vec4(range.x*range.y, range.x-range.y, range.y, 1.f));
-    depthLinearizeShader->SetUniform("texDepth", TEX_POSTPROCESS1);
+    depthLinearizeShader->SetUniform("texLogDepth", TEX_POSTPROCESS1);
+    depthLinearizeShader->SetUniform("FC", GetLogDepthConstant());
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -219,10 +224,10 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthTex);
     depth2RangesShader->Use();
-    depth2RangesShader->SetUniform("clipInfo", glm::vec4(range.x*range.y, range.x-range.y, range.y, 1.f));
     depth2RangesShader->SetUniform("projInfo", projInfo);
     depth2RangesShader->SetUniform("rangeInfo", range);
-    depth2RangesShader->SetUniform("texDepth", TEX_POSTPROCESS1);
+    depth2RangesShader->SetUniform("texLogDepth", TEX_POSTPROCESS1);
+    depth2RangesShader->SetUniform("FC", GetLogDepthConstant());
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -281,15 +286,15 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
 void OpenGLDepthCamera::Init()
 {
     depthLinearizeShader = new GLSLShader("depthLinearize.frag");
-    depthLinearizeShader->AddUniform("clipInfo", ParameterType::VEC4);
-    depthLinearizeShader->AddUniform("texDepth", ParameterType::INT);
+    depthLinearizeShader->AddUniform("texLogDepth", ParameterType::INT);
+    depthLinearizeShader->AddUniform("FC", ParameterType::FLOAT);
     
     depth2RangesShader = new GLSLShader("depth2Ranges.frag");
-    depth2RangesShader->AddUniform("clipInfo", ParameterType::VEC4);
     depth2RangesShader->AddUniform("projInfo", ParameterType::VEC4);
     depth2RangesShader->AddUniform("rangeInfo", ParameterType::VEC2);
-    depth2RangesShader->AddUniform("texDepth", ParameterType::INT);
-    
+    depth2RangesShader->AddUniform("texLogDepth", ParameterType::INT);
+    depth2RangesShader->AddUniform("FC", ParameterType::FLOAT);
+
     depthVisualizeShader = new GLSLShader("depthVisualize.frag");
     depthVisualizeShader->AddUniform("range", ParameterType::VEC2);
     depthVisualizeShader->AddUniform("texLinearDepth", ParameterType::INT);

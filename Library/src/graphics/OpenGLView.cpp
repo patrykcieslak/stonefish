@@ -43,6 +43,11 @@ OpenGLView::~OpenGLView()
 {
 }
 
+GLuint OpenGLView::getRenderFBO()
+{
+    return renderFBO;
+}
+
 void OpenGLView::setEnabled(bool en)
 {
     enabled = en;
@@ -68,9 +73,9 @@ GLint* OpenGLView::GetViewport() const
     return view;
 }
 
-GLuint OpenGLView::getRenderFBO()
+GLfloat OpenGLView::GetLogDepthConstant() const
 {
-    return renderFBO;
+    return 1.f/glm::log2(GetFarClip() + 1.f);
 }
 
 }

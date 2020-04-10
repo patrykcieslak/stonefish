@@ -114,7 +114,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
         
         glGenTextures(1, &renderDepthStencilTex);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, renderDepthStencilTex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_STENCIL, viewportWidth, viewportHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -336,16 +336,6 @@ glm::mat4 OpenGLCamera::GetProjectionMatrix() const
     return projection;
 }
 
-glm::mat4 OpenGLCamera::GetInfiniteProjectionMatrix() const
-{
-	GLfloat epsilon = 10e-7;
-    glm::mat4 infProj = projection;
-    infProj[2][2] = epsilon-1.f;
-    infProj[2][3] = -1.f;
-    infProj[3][2] = (epsilon-2.f)*near;
-    return infProj;
-}
-
 GLfloat OpenGLCamera::GetFOVX() const
 {
     return fovx;
@@ -357,12 +347,12 @@ GLfloat OpenGLCamera::GetFOVY() const
     return fovx/aspect;
 }
 
-GLfloat OpenGLCamera::GetNearClip()
+GLfloat OpenGLCamera::GetNearClip() const
 {
     return near;
 }
 
-GLfloat OpenGLCamera::GetFarClip()
+GLfloat OpenGLCamera::GetFarClip() const
 {
     return far;
 }
@@ -498,9 +488,9 @@ void OpenGLCamera::GenerateLinearDepth(int sampleId, bool frontFace)
     if(samples>1)
     {
         depthLinearizeShader[1]->Use();
-        depthLinearizeShader[1]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
         depthLinearizeShader[1]->SetUniform("sampleIndex", sampleId);
-        depthLinearizeShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
+        depthLinearizeShader[1]->SetUniform("texLogDepth", TEX_POSTPROCESS1);
+        depthLinearizeShader[1]->SetUniform("FC", GetLogDepthConstant());
         
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_MULTISAMPLE, renderDepthStencilTex);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
@@ -509,8 +499,8 @@ void OpenGLCamera::GenerateLinearDepth(int sampleId, bool frontFace)
     else
     {
         depthLinearizeShader[0]->Use();
-        depthLinearizeShader[0]->SetUniform("clipInfo", glm::vec4(near*far, near-far, far, 1.f));
-        depthLinearizeShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
+        depthLinearizeShader[0]->SetUniform("texLogDepth", TEX_POSTPROCESS1);
+        depthLinearizeShader[0]->SetUniform("FC", GetLogDepthConstant());
         
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthStencilTex);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
@@ -834,12 +824,12 @@ void OpenGLCamera::Init()
     /////Linear depth////
     depthLinearizeShader = new GLSLShader*[2];
     depthLinearizeShader[0] = new GLSLShader("depthLinearize.frag");
-    depthLinearizeShader[0]->AddUniform("clipInfo", ParameterType::VEC4);
-    depthLinearizeShader[0]->AddUniform("texDepth", ParameterType::INT);
+    depthLinearizeShader[0]->AddUniform("texLogDepth", ParameterType::INT);
+    depthLinearizeShader[0]->AddUniform("FC", ParameterType::FLOAT);
     depthLinearizeShader[1] = new GLSLShader("depthLinearizeMSAA.frag");
-    depthLinearizeShader[1]->AddUniform("clipInfo", ParameterType::VEC4);
     depthLinearizeShader[1]->AddUniform("sampleIndex", ParameterType::INT);
-    depthLinearizeShader[1]->AddUniform("texDepth", ParameterType::INT);
+    depthLinearizeShader[1]->AddUniform("texLogDepth", ParameterType::INT);
+    depthLinearizeShader[1]->AddUniform("FC", ParameterType::FLOAT);
     
     /////AO//////////////
     if(GLAD_GL_VERSION_4_3)

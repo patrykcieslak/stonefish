@@ -229,6 +229,11 @@ glm::mat4 OpenGLFLS::GetViewMatrix() const
     return sonarTransform;
 }
 
+GLfloat OpenGLFLS::GetFarClip() const
+{
+    return range.y;
+}
+
 void OpenGLFLS::Update()
 {
     _needsUpdate = true;

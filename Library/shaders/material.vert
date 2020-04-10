@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -27,11 +27,13 @@ out vec3 normal;
 out vec2 texCoord;
 out vec4 fragPos;
 out vec3 eyeSpaceNormal;
+out float logz;
 
 uniform mat4 MVP;
 uniform mat4 M;
 uniform mat3 N;
 uniform mat3 MV;
+uniform float FC;
 
 void main()
 {
@@ -40,4 +42,6 @@ void main()
 	texCoord = uv;
 	fragPos = M * vec4(vt, 1.0);
 	gl_Position = MVP * vec4(vt, 1.0); 
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
+    logz = 1.0 + gl_Position.w;
 }

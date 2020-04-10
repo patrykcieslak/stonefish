@@ -41,6 +41,8 @@
 
 #define MEAN_SUN_ILLUMINANCE  107527.f //Sun average illuminance Lux
 #define MIN_ILLUMINANCE_THRESHOLD 0.1f //Minimum light illuminance to be considered
+#define STD_NEAR_PLANE_DISTANCE 0.01f //Standard near plane distance of the cameras
+#define STD_FAR_PLANE_DISTANCE 100000.f //Standard far plane distance of the cameras
 
 //Standard texture unit bindings (OpenGL 3.x >=48; OpenGL 4.x >=80)
 #define TEX_BASE                ((GLint)0)
@@ -214,7 +216,7 @@ namespace sf
     typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
     
     //! An enum representing the rendering mode.
-    typedef enum {RAW, FLAT, FULL, UNDERWATER} DrawingMode;
+    typedef enum {RAW, SHADOW, FLAT, FULL, UNDERWATER} DrawingMode;
     
     //! A structure containing data of a graphical material.
     struct Look

@@ -19,15 +19,9 @@
 
 #version 330
 
-layout(location = 0) in vec3 vertex;
-out float logz;
-
-uniform mat4 MVP;
-uniform float FC;
+out vec4 fragColor;
 
 void main()
 {
-	gl_Position = MVP * vec4(vertex, 1.0);
-    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
-    logz = 1.0 + gl_Position.w;
+	fragColor = vec4(1.0);
 }

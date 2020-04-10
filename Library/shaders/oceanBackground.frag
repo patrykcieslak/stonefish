@@ -18,10 +18,13 @@
 */
 
 in vec4 fragPos;
+in float logz;
+
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec4 fragNormal;
 
 uniform vec3 eyePos;
+uniform float FC;
 
 layout (std140) uniform SunSky
 {
@@ -36,21 +39,29 @@ layout (std140) uniform SunSky
 
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
 vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d);
+vec3 RefractToWater(vec3 I, vec3 N);
 
 const float d = 1000000.0;
 const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
 
 void main() 
 {
-    vec3 P = fragPos.xyz * d;
+    //Logarithmic z-buffer correction
+	gl_FragDepth = log2(logz) * FC;
+
+    vec3 P = fragPos.xyz/fragPos.w * d;
 	vec3 V = normalize(eyePos - P);
-    vec3 center = vec3(0,0,planetRadiusInUnits);
+    vec3 center = vec3(0,0, planetRadiusInUnits);
+    fragColor = vec3(0.0);
+
+    vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
+    if(R.z > 0.0)
+    {
+	    vec3 skyIlluminance;
+	    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, waterSurfaceN, sunDirection, skyIlluminance);
+	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	    fragColor = InScattering(L, R, V, max(eyePos.z, 0.0), d);
+    }
 	
-    //Inscattering
-    vec3 skyIlluminance;
-	vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, waterSurfaceN, sunDirection, skyIlluminance);
-	vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
-	fragColor = InScattering(L, -waterSurfaceN, V, max(eyePos.z, 0.0), d);
-    
     fragNormal = vec4(vec3(0.0,0.0,-1.0) * 0.5 + 0.5, 0.0);
 }

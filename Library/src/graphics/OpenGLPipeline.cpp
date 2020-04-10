@@ -331,7 +331,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
     {
         glCullFace(GL_FRONT);
-        content->SetDrawingMode(DrawingMode::FLAT);
+        content->SetDrawingMode(DrawingMode::SHADOW);
         for(unsigned int i=0; i<content->getLightsCount(); ++i)
             content->getLight(i)->BakeShadowmap(this);
         glCullFace(GL_BACK);
@@ -390,7 +390,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Bake parallel-split shadowmaps for sun
                 if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
                 {
-                    content->SetDrawingMode(DrawingMode::FLAT);
+                    content->SetDrawingMode(DrawingMode::SHADOW);
                     atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
                 }
 
@@ -414,13 +414,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
                         camera->DrawAO(1.0f);
-            
+                    
 					//Draw lights
 					DrawLights();
 					
                     //Render sky (at the end to take profit of early bailing)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
-                    
+
                     //Go to postprocessing stage
                     camera->EnterPostprocessing();
                 }
@@ -448,9 +448,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     {
                         OpenGLState::EnableBlend();
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                        //glDepthFunc(GL_ALWAYS);
                         glOcean->DrawSurface(camera);
                         OpenGLState::DisableBlend();
+                        //glDepthFunc(GL_LESS);
                         glOcean->DrawBacksurface(camera);
+                        //glDepthFunc(GL_LEQUAL);
+                        
                     }
                     else //b) Surface without waves (disable depth testing but write to depth buffer)
                     {
@@ -499,7 +503,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     camera->EnterPostprocessing();
                     
                     //Draw reflections
-                    OpenGLState::DisableDepthTest();
+                    /*OpenGLState::DisableDepthTest();
                     camera->DrawSSR();
                     
                     //Draw blur only below surface
@@ -507,7 +511,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
                     //glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
                     glOcean->DrawParticles(camera);
-                    OpenGLState::DisableStencilTest();
+                    OpenGLState::DisableStencilTest();*/
                 }
             
                 //Tone mapping
@@ -544,7 +548,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     
                     //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
                     //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
-                    //camera->ShowLinearDepthTexture(glm::vec4(0,0,300,200), true);
+                    //camera->ShowLinearDepthTexture(glm::vec4(0,0,600,500), true);
                     //camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200), false);
                     
                     //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,400,300,200), 0);

@@ -165,9 +165,6 @@ namespace sf
         //! A method that returns the projection matrix.
         glm::mat4 GetProjectionMatrix() const;
         
-        //! A method that returns the infinite projection matrix.
-        glm::mat4 GetInfiniteProjectionMatrix() const;
-        
         //! A method that returns the horizontal field of view.
         GLfloat GetFOVX() const;
         
@@ -175,10 +172,10 @@ namespace sf
         GLfloat GetFOVY() const;
         
         //! A method that returns the near clip plane distance.
-        GLfloat GetNearClip();
+        GLfloat GetNearClip() const;
         
         //! A method that returns the far clip plane distance.
-        GLfloat GetFarClip();
+        GLfloat GetFarClip() const;
         
         //! A method to set the exposure compensation factor.
         /*!

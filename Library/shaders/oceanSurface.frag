@@ -24,6 +24,8 @@
 */
 
 in vec4 fragPos;
+in float logz;
+
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 fragNormal;
 
@@ -33,6 +35,7 @@ uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
 uniform mat3 MV;
+uniform float FC;
 
 layout (std140) uniform SunSky
 {
@@ -112,6 +115,9 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 
 void main()
 {
+    //Logarithmic z-buffer correction
+	gl_FragDepth = log2(logz) * FC;
+
     vec3 P = fragPos.xyz/fragPos.w;
 	vec3 toEye = normalize(eyePos - P);
 	vec3 center = vec3(0, 0, planetRadiusInUnits);

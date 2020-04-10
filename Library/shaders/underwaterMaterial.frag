@@ -21,12 +21,14 @@ in vec3 normal;
 in vec2 texCoord;
 in vec4 fragPos;
 in vec3 eyeSpaceNormal;
+in float logz;
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec4 fragNormal;
 
 uniform vec3 eyePos;
 uniform vec3 viewDir;
+uniform float FC;
 uniform vec4 color;
 uniform float reflectivity;
 uniform sampler2D tex;
@@ -88,6 +90,9 @@ vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d);
 
 void main()
 {	
+	//Logarithmic z-buffer correction
+	gl_FragDepth = log2(logz) * FC;
+
 	//Vectors
 	vec3 P = fragPos.xyz/fragPos.w;
 	vec3 N = normalize(normal);

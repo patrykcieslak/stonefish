@@ -121,6 +121,7 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 	//Load light source shader
 	lightSourceShader = new GLSLShader("light.frag", "flat.vert");
 	lightSourceShader->AddUniform("MVP", ParameterType::MAT4);
+    lightSourceShader->AddUniform("FC", ParameterType::FLOAT);
 	lightSourceShader->AddUniform("color", ParameterType::VEC3);
 	
     //Count spotlights
