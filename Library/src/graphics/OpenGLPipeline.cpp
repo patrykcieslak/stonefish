@@ -52,9 +52,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     
     //Set default OpenGL options
     cInfo("Initialising OpenGL rendering pipeline...");
-    
-    if(s.msaa) glEnable(GL_MULTISAMPLE); else glDisable(GL_MULTISAMPLE);
-    
+     
     //Load shaders and create rendering buffers
     cInfo("Loading shaders...");
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
@@ -400,7 +398,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 OpenGLState::BindFramebuffer(camera->getRenderFBO());
                 GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
                 glDrawBuffers(2, renderBuffs);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
                 camera->SetViewport();
                 content->SetCurrentView(camera);
                 
@@ -419,10 +417,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 					DrawLights();
 					
                     //Render sky (at the end to take profit of early bailing)
-                    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);			
-
-                    //Go to postprocessing stage
-                    camera->EnterPostprocessing();
+                    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
                 }
                 else if(renderMode == 1) //OCEAN
                 {
@@ -448,13 +443,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     {
                         OpenGLState::EnableBlend();
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        //glDepthFunc(GL_ALWAYS);
                         glOcean->DrawSurface(camera);
                         OpenGLState::DisableBlend();
-                        //glDepthFunc(GL_LESS);
                         glOcean->DrawBacksurface(camera);
-                        //glDepthFunc(GL_LEQUAL);
-                        
                     }
                     else //b) Surface without waves (disable depth testing but write to depth buffer)
                     {
@@ -486,10 +477,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     OpenGLState::DisableStencilTest();
                     
                     //Linear depth front faces
-                    camera->GenerateLinearDepth(0, true);
+                    camera->GenerateLinearDepth(true);
                     
                     //Linear depth back faces
-                    OpenGLState::BindFramebuffer(camera->getRenderFBO());
+                    OpenGLState::BindFramebuffer(camera->getPostprocessFBO());
                     glClear(GL_DEPTH_BUFFER_BIT);
                     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                     glCullFace(GL_FRONT);
@@ -497,13 +488,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     DrawObjects();
                     glCullFace(GL_BACK);
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                    camera->GenerateLinearDepth(0, false);
-                    
-                    //Go to postprocessing stage
-                    camera->EnterPostprocessing();
+                    camera->GenerateLinearDepth(false);
                     
                     //Draw reflections
-                    /*OpenGLState::DisableDepthTest();
+                    OpenGLState::BindFramebuffer(camera->getRenderFBO());
+                    OpenGLState::DisableDepthTest();
                     camera->DrawSSR();
                     
                     //Draw blur only below surface
@@ -511,7 +500,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
                     //glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
                     glOcean->DrawParticles(camera);
-                    OpenGLState::DisableStencilTest();*/
+                    OpenGLState::DisableStencilTest();
                 }
             
                 //Tone mapping

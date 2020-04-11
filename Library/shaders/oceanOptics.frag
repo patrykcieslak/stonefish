@@ -82,7 +82,6 @@ vec3 BeerLambert(float d)
 vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d)
 {   
     float phase = HenyeyGreenstein(dot(D,V), 0.924);
-	//float phase = MieLorenzg(dot(D,V), g*30.0+1.0); 
     //float phase = FournierForand(dot(D,V), 1.08, 3.483);
 	return 10.0*L*phase*bWater/(cWater*(-V.z/D.z+1.0)) * exp(-cWater*z/D.z) * (1.0 - exp(-cWater*d*(-V.z/D.z+1.0)));
 }

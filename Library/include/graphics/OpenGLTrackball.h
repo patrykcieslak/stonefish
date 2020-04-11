@@ -45,11 +45,10 @@ namespace sf
          \param height the height of the view [px]
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
          \param range the minimum and maximum rendering distance of the camera [m]
-         \param spp number of samples used (>1 means multisampling)
          */
         OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
                         GLint originX, GLint originY, GLint width, GLint height,
-                        GLfloat horizontalFovDeg, glm::vec2 range, GLuint spp = 1);
+                        GLfloat horizontalFovDeg, glm::vec2 range);
         
         //! A method to apply a rotation to the trackball.
         /*!

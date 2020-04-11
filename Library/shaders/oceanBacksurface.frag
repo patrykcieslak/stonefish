@@ -130,7 +130,7 @@ void main()
     float d = length(eyePos - P);
 	
 	if(eyePos.z < 0.0)
-		d = P.z/dot(V, waterSurfaceN);
+		d = max(P.z, 0.0)/dot(V, waterSurfaceN);
 	
 	//Wave slope (layers 1,2)
     vec2 waveCoord = P.xy;

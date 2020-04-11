@@ -166,6 +166,7 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     particleShader->SetUniform("MVP", projection * view);
     particleShader->SetUniform("camRight", glm::vec3(view[0][0], view[1][0], view[2][0]));
     particleShader->SetUniform("camUp", glm::vec3(view[0][1], view[1][1], view[2][1]));
+    particleShader->SetUniform("FC", cam->GetLogDepthConstant());
     particleShader->SetUniform("eyePos", cam->GetEyePosition());
     particleShader->SetUniform("viewDir", cam->GetLookingDirection());
     particleShader->SetUniform("cWater", glOcn->getLightAttenuation());
@@ -206,6 +207,7 @@ void OpenGLOceanParticles::Init()
     particleShader->AddUniform("MVP", ParameterType::MAT4);
     particleShader->AddUniform("camRight", ParameterType::VEC3);
     particleShader->AddUniform("camUp", ParameterType::VEC3);
+    particleShader->AddUniform("FC", ParameterType::FLOAT);
     particleShader->AddUniform("eyePos", ParameterType::VEC3);
     particleShader->AddUniform("viewDir", ParameterType::VEC3);
     particleShader->AddUniform("color", ParameterType::VEC4);

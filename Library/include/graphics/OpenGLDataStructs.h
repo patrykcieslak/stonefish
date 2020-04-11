@@ -376,7 +376,7 @@ namespace sf
         RenderQuality ao;
         RenderQuality atmosphere;
         RenderQuality ocean;
-        bool msaa;
+        bool aa;
         
         //! A constructor.
         RenderSettings()
@@ -387,7 +387,7 @@ namespace sf
             ao = RenderQuality::QUALITY_MEDIUM;
             atmosphere = RenderQuality::QUALITY_MEDIUM;
             ocean = RenderQuality::QUALITY_MEDIUM;
-            msaa = false;
+            aa = false;
         }
     };
     

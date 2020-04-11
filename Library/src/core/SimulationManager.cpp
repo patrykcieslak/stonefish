@@ -718,7 +718,7 @@ void SimulationManager::InitializeScenario()
         if(view == NULL)
         {
             GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-            trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE), 4);
+            trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE));
             trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
         }

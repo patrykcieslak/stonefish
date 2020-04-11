@@ -33,7 +33,7 @@ namespace sf
 
 OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
                                  GLint x, GLint y, GLint width, GLint height, GLfloat horizontalFovDeg,
-                                 glm::vec2 range, GLuint spp) : OpenGLCamera(x, y, width, height, range, spp)
+                                 glm::vec2 range) : OpenGLCamera(x, y, width, height, range)
 {
     this->up = glm::normalize(up);
     rotation = glm::rotation(this->up, glm::vec3(0,0,1.f));

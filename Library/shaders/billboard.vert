@@ -26,10 +26,12 @@ out vec3 normal;
 out vec2 texCoord;
 out vec4 fragPos;
 out vec3 eyeSpaceNormal;
+out float logz;
 
 uniform mat4 MVP;
 uniform vec3 camRight;
 uniform vec3 camUp;
+uniform float FC;
 
 void main()
 {
@@ -42,4 +44,6 @@ void main()
     texCoord = billboardCorner.xy + vec2(0.5, 0.5);
     fragPos = vec4(vertex, 1.0);
     gl_Position = MVP * vec4(vertex, 1.0);
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
+    logz = 1.0 + gl_Position.w;
 }

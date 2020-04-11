@@ -45,12 +45,11 @@ namespace sf
          \param resolutionY the vertical resolution[pix]
          \param horizFOVDeg the horizontal field of view [deg]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
-         \param spp number of samples per pixel used (>1 needs multisampling support)
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
         ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency = Scalar(-1),
-            unsigned int spp = 1, Scalar minDistance = Scalar(0.1), Scalar maxDistance = Scalar(1000)); //Rendering options
+           Scalar minDistance = Scalar(0.1), Scalar maxDistance = Scalar(1000)); //Rendering options
         
         //! A destructor.
         ~ColorCamera();

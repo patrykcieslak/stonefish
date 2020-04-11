@@ -20,7 +20,8 @@
 #version 330
 
 in vec2 texcoord;
-out vec4 fragcolor;
+layout(location = 0) out vec4 fragcolor;
+
 uniform sampler2D texHDR;
 uniform sampler2D texAverage;
 uniform float exposureComp;
@@ -70,5 +71,6 @@ void main(void)
     //Correct exposure and tonemap
     float exposure = exposureComp * 7.0/lumAvg;
     rgbColor = Uncharted2Tonemap(exposure, rgbColor);
-    fragcolor = vec4(rgbColor, 1.0);
+    float lum = sqrt(dot(rgbColor, vec3(0.299, 0.587, 0.114))); //For linear, without sqrt for gamma 2.0
+    fragcolor = vec4(rgbColor, lum);
 }

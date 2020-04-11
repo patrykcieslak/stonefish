@@ -178,6 +178,7 @@ namespace sf
         bool waves;
         SDL_mutex* hydroMutex;
         GLfloat* fftData;
+        GLfloat oceanSize;
         OceanParams params;
         QuadTree* qt;
         int tesselation;

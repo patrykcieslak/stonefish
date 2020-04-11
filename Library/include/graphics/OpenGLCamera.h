@@ -77,9 +77,8 @@ namespace sf
          \param width the width of the view [px]
          \param height the height of the view [px]
          \param range the minimum and maximum rendering distance of the camera [m]
-         \param spp number of samples used when rendering (>1 means multisampling)
          */
-        OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, glm::vec2 range, GLuint spp);
+        OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, glm::vec2 range);
         
         //! A destructor.
         virtual ~OpenGLCamera();
@@ -113,15 +112,11 @@ namespace sf
          */
         glm::vec3 Ray(GLint x, GLint y);
         
-        //! A method to generate the linearised depth textures.
+        //! A method to generate a linear depth texture from the normal depth buffer.
         /*!
-         \param sampleId the index of the sample to read (important for multisampled rendering buffers)
-         \param frontFace a flag defining if the depth should be generated for front or back faces
-         */
-        void GenerateLinearDepth(int sampleId, bool frontFace);
-         
-        //! A method which blits the rendering buffer to screen for postprocessing.
-        void EnterPostprocessing();
+         \param front a flag indicating if the depth should be generated for front or back faces
+        */
+        void GenerateLinearDepth(bool front);
         
         //! A method to show the color texture.
         /*!
@@ -185,6 +180,9 @@ namespace sf
         
         //! A method returning the exposure compensation factor.
         GLfloat getExposureCompensation();
+
+        //! A method returning the postprocessing framebuffer of the camera.
+        GLuint getPostprocessFBO();
         
         //! A method returning the id of the color texture.
         GLuint getColorTexture();
@@ -236,6 +234,7 @@ namespace sf
         GLfloat exposureComp;
 		bool autoExposure;
 		bool toneMapping;
+        bool antiAliasing;
         
         //Postprocessing
         GLuint postprocessFBO;
@@ -259,7 +258,6 @@ namespace sf
         
         //Data
         GLuint aoFactor;
-        GLuint samples;
         GLfloat fovx;
         GLfloat near;
         GLfloat far;
@@ -268,12 +266,13 @@ namespace sf
         //Shaders
         static GLSLShader* lightMeterShader;
         static GLSLShader* tonemapShader;
-        static GLSLShader** depthLinearizeShader; //Two shaders -> no msaa/msaa
+        static GLSLShader* depthLinearizeShader;
         static GLSLShader* aoDeinterleaveShader;
-        static GLSLShader** aoCalcShader;         //Two shaders -> no msaa/msaa
+        static GLSLShader* aoCalcShader;
         static GLSLShader* aoReinterleaveShader;
         static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
-        static GLSLShader** ssrShader;            //Two shaders -> no msaa/msaa
+        static GLSLShader* ssrShader;
+        static GLSLShader* fxaaShader;
     };
 }
 

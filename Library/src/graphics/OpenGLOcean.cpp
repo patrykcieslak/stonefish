@@ -73,13 +73,14 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     params.gridSizes = glm::vec4(893.f, 101.f, 21.f, 11.f);
     params.spectrum12 = NULL;
     params.spectrum34 = NULL;
-    
+
     if(geometricWaves > 0.f)
     {
         params.wind = geometricWaves*5.f + 2.f;
         params.A = 1.f;
         params.omega = 5.f*expf(-geometricWaves) + 0.2f;
         waves = true;
+        oceanSize = 10000.f;
     }
     else
     {
@@ -87,6 +88,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
         params.A = 1.0f;
         params.omega = 2.f;
         waves = false;
+        oceanSize = 200000.f;
     }
     
     GenerateWavesSpectrum();
@@ -191,7 +193,10 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
         shader->AddUniform("tessDiv", ParameterType::FLOAT);
     }
     else
+    {
         shader = new GLSLShader(precompiled, header, "oceanSurface.frag", "oceanSurface.vert");
+        shader->AddUniform("size", ParameterType::FLOAT);
+    }
     
     shader->AddUniform("texWaveFFT", ParameterType::INT);
     shader->AddUniform("texSlopeVariance", ParameterType::INT);
@@ -225,6 +230,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     else
     {
         shader = new GLSLShader(precompiled, header, "oceanBacksurface.frag", "oceanSurface.vert");
+        shader->AddUniform("size", ParameterType::FLOAT);
     }
     
     shader->AddUniform("texWaveFFT", ParameterType::INT);
@@ -300,6 +306,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     else
     {
         shader = new GLSLShader("flat.frag", "oceanSurface.vert");
+        shader->AddUniform("size", ParameterType::FLOAT);
     }
     shader->AddUniform("MVP", ParameterType::MAT4);
     shader->AddUniform("FC", ParameterType::FLOAT);    
@@ -309,6 +316,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader = new GLSLShader("flat.frag", "oceanSurface.vert");
     shader->AddUniform("MVP", ParameterType::MAT4);
     shader->AddUniform("FC", ParameterType::FLOAT);
+    shader->AddUniform("size", ParameterType::FLOAT);
     oceanShaders.push_back(shader); //8
     
     //Blur
@@ -332,6 +340,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader = new GLSLShader(precompiled, header, "oceanBackground.frag", "oceanSurface.vert");
     shader->AddUniform("MVP", ParameterType::MAT4);
     shader->AddUniform("FC", ParameterType::FLOAT);
+    shader->AddUniform("size", ParameterType::FLOAT);
     shader->AddUniform("eyePos", ParameterType::VEC3);
     shader->AddUniform("cWater", ParameterType::VEC3);
     shader->AddUniform("bWater", ParameterType::VEC3);
@@ -380,17 +389,17 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     GLfloat surfData[12][3] = 
     {
         {0.f, 0.f, 0.f},
-        {0.f, 1.f, 0.f},
-        {1.f, 0.f, 0.f},
+        {0.f, 0.5f, 0.f},
+        {0.5f, 0.f, 0.f},
         {0.f, 0.f, 0.f},
-        {-1.f, 0.f, 0.f},
-        {0.f, 1.f, 0.f},
+        {-0.5f, 0.f, 0.f},
+        {0.f, 0.5f, 0.f},
         {0.f, 0.f, 0.f},
-        {0.f, -1.f, 0.f},
-        {-1.f, 0.f, 0.f},
+        {0.f, -0.5f, 0.f},
+        {-0.5f, 0.f, 0.f},
         {0.f, 0.f, 0.f},
-        {1.f, 0.f, 0.f},
-        {0.f, -1.f, 0.f}
+        {0.5f, 0.f, 0.f},
+        {0.f, -0.5f, 0.f}
     };
     
     glGenVertexArrays(1, &vao);
@@ -404,14 +413,14 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     OpenGLState::BindVertexArray(0);
     
     //Box around ocean (background)
-    glm::vec3 v1(-1.f, -1.f, 1.f);
-    glm::vec3 v2(-1.f,  1.f, 1.f);
-    glm::vec3 v3(1.f,   1.f, 1.f);
-    glm::vec3 v4(1.f,  -1.f, 1.f);
-    glm::vec3 v5(1.f,   1.f,  0.f);
-    glm::vec3 v6(1.f,  -1.f,  0.f);
-    glm::vec3 v7(-1.f, -1.f,  0.f);
-    glm::vec3 v8(-1.f,  1.f,  0.f);
+    glm::vec3 v1(-0.5f, -0.5f, 0.5f);
+    glm::vec3 v2(-0.5f,  0.5f, 0.5f);
+    glm::vec3 v3(0.5f,   0.5f, 0.5f);
+    glm::vec3 v4(0.5f,  -0.5f, 0.5f);
+    glm::vec3 v5(0.5f,   0.5f,  0.f);
+    glm::vec3 v6(0.5f,  -0.5f,  0.f);
+    glm::vec3 v7(-0.5f, -0.5f,  0.f);
+    glm::vec3 v8(-0.5f,  0.5f,  0.f);
     std::vector<glm::vec3> boxData;
     
     boxData.push_back(v1);
@@ -462,7 +471,6 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     //Surface waves
     if(waves)
     {
-        GLfloat oceanSize = 10000.f;
         qt = new QuadTree(glm::vec3(0), oceanSize, 15);
         fftData = new GLfloat[params.fftSize * params.fftSize * 4 * layers];
     }
@@ -730,6 +738,7 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
         oceanShaders[8]->Use();
         oceanShaders[8]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[8]->SetUniform("FC", cam->GetLogDepthConstant());
+        oceanShaders[8]->SetUniform("size", oceanSize);
         
         OpenGLState::BindVertexArray(vaoMask);
         glDrawArrays(GL_TRIANGLES, 0, 30);
@@ -745,6 +754,7 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
         oceanShaders[7]->Use();
         oceanShaders[7]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[7]->SetUniform("FC", cam->GetLogDepthConstant());
+        oceanShaders[7]->SetUniform("size", oceanSize);
         
         //1. Draw surface to depth buffer
         OpenGLState::BindVertexArray(vao);
@@ -767,6 +777,7 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
         oceanShaders[8]->Use();
         oceanShaders[8]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[8]->SetUniform("FC", cam->GetLogDepthConstant());
+        oceanShaders[8]->SetUniform("size", oceanSize);
         
         OpenGLState::BindVertexArray(vaoMask);
         glDrawArrays(GL_TRIANGLES, 0, 30);
@@ -787,6 +798,7 @@ void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
     oceanShaders[11]->Use();
     oceanShaders[11]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders[11]->SetUniform("FC", cam->GetLogDepthConstant());
+    oceanShaders[11]->SetUniform("size", oceanSize);
     oceanShaders[11]->SetUniform("eyePos", cam->GetEyePosition());
     oceanShaders[11]->SetUniform("cWater", getLightAttenuation());
     oceanShaders[11]->SetUniform("bWater", getLightScattering());
@@ -871,6 +883,7 @@ void OpenGLOcean::DrawSurface(OpenGLCamera* cam)
         oceanShaders[0]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[0]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[0]->SetUniform("FC", cam->GetLogDepthConstant());
+        oceanShaders[0]->SetUniform("size", oceanSize);
         oceanShaders[0]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
         oceanShaders[0]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[0]->SetUniform("gridSizes", params.gridSizes);
@@ -925,6 +938,7 @@ void OpenGLOcean::DrawBacksurface(OpenGLCamera* cam)
         oceanShaders[1]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
         oceanShaders[1]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
         oceanShaders[1]->SetUniform("FC", cam->GetLogDepthConstant());
+        oceanShaders[1]->SetUniform("size", oceanSize);
         oceanShaders[1]->SetUniform("eyePos", cam->GetEyePosition());
         oceanShaders[1]->SetUniform("gridSizes", params.gridSizes);
         oceanShaders[1]->SetUniform("cWater", getLightAttenuation());

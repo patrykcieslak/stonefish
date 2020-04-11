@@ -26,10 +26,11 @@ out float logz;
 
 uniform mat4 MVP;
 uniform float FC;
+uniform float size;
 
 void main()
 {
-	fragPos = vec4(vt * 10000.0, 1.0);
+	fragPos = vec4(vt * size, 1.0);
 	gl_Position = MVP * fragPos;
     gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
     logz = 1.0 + gl_Position.w;

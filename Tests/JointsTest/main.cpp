@@ -35,7 +35,7 @@ int main(int argc, const char * argv[])
     s.ao = sf::RenderQuality::QUALITY_HIGH;
     s.atmosphere = sf::RenderQuality::QUALITY_HIGH;
     s.ocean = sf::RenderQuality::QUALITY_DISABLED;
-    s.msaa = false;
+    s.aa = false;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

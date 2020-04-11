@@ -47,11 +47,10 @@ namespace sf
          \param height the height of the view [px]
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
          \param range the minimum and maximum rendering distance of the camera [m]
-         \param spp number of samples used (>1 means multisampling)
          */
         OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                          GLint originX, GLint originY, GLint width, GLint height,
-                         GLfloat horizontalFovDeg, glm::vec2 range, GLuint spp = 1);
+                         GLfloat horizontalFovDeg, glm::vec2 range);
         
         //! A destructor.
         ~OpenGLRealCamera();

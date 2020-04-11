@@ -34,9 +34,8 @@ namespace sf
 {
 
 ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency, 
-    unsigned int spp, Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
+    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
 {
-    samples = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
     newDataCallback = NULL;
     imageData = new uint8_t[resX*resY*3]; //RGB color
@@ -76,7 +75,7 @@ VisionSensorType ColorCamera::getVisionSensorType()
     
 void ColorCamera::InitGraphics()
 {
-    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, samples);
+    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange);
     glCamera->setCamera(this);
     UpdateTransform();
     glCamera->UpdateTransform();

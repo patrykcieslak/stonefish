@@ -1526,13 +1526,11 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         if((item = element->FirstChildElement("rendering")) != nullptr) //Optional parameters
         {
-            int spp = 1;
-            Scalar minDist(0.1);
-            Scalar maxDist(1000.0);
-            item->QueryAttribute("spp", &spp);
+            Scalar minDist(0.01);
+            Scalar maxDist(100000.0);
             item->QueryAttribute("minimum_distance", &minDist);
             item->QueryAttribute("maximum_distance", &maxDist);
-            cam = new ColorCamera(sensorName, resX, resY, hFov, rate, spp, minDist, maxDist);
+            cam = new ColorCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
         }
         else
         {

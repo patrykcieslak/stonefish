@@ -102,7 +102,7 @@ void main()
 	vec3 S = RefractToWater(-sunDirection, waterSurfaceN);
 	
 	if(eyePos.z < 0.0)
-		d = P.z/dot(V, waterSurfaceN);
+		d = max(P.z, 0.0)/dot(V, waterSurfaceN);
 	
 	//Diffuse color
 	vec4 albedo = vec4(color.rgb, 1.0);
