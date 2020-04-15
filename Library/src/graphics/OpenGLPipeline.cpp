@@ -182,9 +182,14 @@ void OpenGLPipeline::DrawObjects()
 
 void OpenGLPipeline::DrawLights()
 {
+    /*
+    OpenGLState::EnableBlend();
+    glBlendFunc(GL_ONE, GL_ONE);
 	content->SetDrawingMode(DrawingMode::RAW);
 	for(unsigned int i=0; i<content->getLightsCount(); ++i)
 		content->getLight(i)->DrawLight();
+    OpenGLState::DisableBlend();
+    */
 }
     
 void OpenGLPipeline::DrawHelpers()

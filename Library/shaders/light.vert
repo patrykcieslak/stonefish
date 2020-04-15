@@ -19,34 +19,18 @@
 
 #version 330
 
-in float logz;
-in vec4 fragPos;
-out vec4 fragColor;
+layout(location = 0) in vec3 vertex;
+out float logz;
+out vec4 fragPos;
 
-uniform vec3 eyePos;
-uniform vec3 color;
+uniform mat4 M;
+uniform mat4 MVP;
 uniform float FC;
-
-const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
-
-vec3 BeerLambert(float d);
 
 void main()
 {
-    //Logarithmic z-buffer correction
-	gl_FragDepth = log2(logz) * FC;
-
-    vec3 P = fragPos.xyz/fragPos.w;
-	vec3 toEye = eyePos - P;
-	float d = length(toEye);
-	vec3 V = toEye/d;
-	float dw = d;
-
-	if(eyePos.z < 0.0)
-		dw = max(P.z, 0.0)/dot(V, waterSurfaceN);
-    
-    if(P.z > 0.0)
-        fragColor = vec4(BeerLambert(dw), 1.0);
-    else
-        fragColor = vec4(color, 1.0);
+    fragPos = M * vec4(vertex, 1.0);
+	gl_Position = MVP * vec4(vertex, 1.0);
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
+    logz = 1.0 + gl_Position.w;
 }

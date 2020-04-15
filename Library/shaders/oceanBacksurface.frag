@@ -48,6 +48,32 @@ layout (std140) uniform SunSky
     float atmLengthUnitInMeters;
 };
 
+struct PointLight 
+{
+	vec3 position;
+	vec3 color;
+};
+
+struct SpotLight 
+{
+	mat4 clipSpace;
+    vec3 position;
+	float frustumNear;
+    vec3 direction;
+	float frustumFar;
+    vec3 color;
+	float cone;
+	vec2 radius;
+};
+
+layout (std140) uniform Lights
+{
+    PointLight pointLights[MAX_POINT_LIGHTS];
+    SpotLight spotLights[MAX_SPOT_LIGHTS];
+    int numPointLights;
+    int numSpotLights;
+};
+
 //Atmosphere
 vec3 GetSolarLuminance();
 vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
@@ -56,7 +82,9 @@ vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 s
 vec3 RefractToWater(vec3 I, vec3 N);
 vec3 RefractToAir(vec3 I, vec3 N);
 vec3 BeerLambert(float d);
-vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d);
+vec3 InScatteringSun(vec3 L, vec3 D, vec3 V, float z, float d);
+vec3 InScatteringPointLight(vec3 O, vec3 L, vec3 X, vec3 V, vec3 P, float d, float dw);
+vec3 InScatteringSpotLight(vec3 O, vec3 D, float w, float fn, vec3 L, vec3 X, vec3 V, vec3 P, float d, float dw);
 
 const float M_PI = 3.14159265358979323846;
 const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
@@ -124,13 +152,15 @@ void main()
 	gl_FragDepth = log2(logz) * FC;
 
 	vec3 P = fragPos.xyz/fragPos.w;
-	vec3 V = normalize(eyePos - P);
+	vec3 toEye = eyePos - P;
+	float d = length(toEye);
+	vec3 V = toEye/d;
 	vec3 center = vec3(0, 0, planetRadiusInUnits);
 	vec3 Psky = vec3(P.xy/atmLengthUnitInMeters, clamp(P.z/atmLengthUnitInMeters, -100000.0/atmLengthUnitInMeters, -0.5/atmLengthUnitInMeters));
-    float d = length(eyePos - P);
-	
+    float dw = d;
+
 	if(eyePos.z < 0.0)
-		d = max(P.z, 0.0)/dot(V, waterSurfaceN);
+		dw = max(P.z, 0.0)/dot(V, waterSurfaceN);
 	
 	//Wave slope (layers 1,2)
     vec2 waveCoord = P.xy;
@@ -178,17 +208,36 @@ void main()
     fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;
 	
     //Attenuation
-	fragColor *= BeerLambert(d);
+	fragColor *= BeerLambert(dw);
 	
-    //Inscattering
+    //In-scattering
     vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
     if(R.z > 0.0)
     {
 	    vec3 skyIlluminance;
 	    vec3 sunIlluminance = GetSunAndSkyIlluminance(Psky - center, waterSurfaceN, sunDirection, skyIlluminance);
 	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
-	    fragColor += InScattering(L, R, V, max(eyePos.z, 0.0), d);
+	    fragColor += InScatteringSun(L, R, -V, max(eyePos.z, 0.0), dw);
     }
+    
+    //In-scattering from point lights
+	for(int i=0; i<numPointLights; ++i)
+	{
+		fragColor += InScatteringPointLight(pointLights[i].position, 
+											pointLights[i].color,
+											eyePos, -V, P, d, dw);
+	}
+
+	//In-scattering from spot lights
+	for(int i=0; i<numSpotLights; ++i)
+	{
+		fragColor += InScatteringSpotLight(spotLights[i].position,
+										   spotLights[i].direction,
+										   spotLights[i].cone,
+										   spotLights[i].frustumNear,
+										   spotLights[i].color,
+										   eyePos, -V, P, d, dw);
+	}
 	
 	fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);
 }

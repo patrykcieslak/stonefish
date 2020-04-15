@@ -27,8 +27,12 @@
 
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
+#include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLRealCamera.h"
+#include "graphics/OpenGLOcean.h"
+#include "entities/forcefields/Ocean.h"
 
 namespace sf
 {
@@ -110,6 +114,10 @@ void OpenGLLight::DrawLight()
 {
 	lightSourceShader->Use();
 	lightSourceShader->SetUniform("color", color);
+    lightSourceShader->SetUniform("eyePos", activeView->GetEyePosition());
+    lightSourceShader->SetUniform("FC", activeView->GetLogDepthConstant());
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    lightSourceShader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());    
 }
 
 //////////////////static//////////////////////////////
@@ -119,10 +127,18 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
         return;
     
 	//Load light source shader
-	lightSourceShader = new GLSLShader("light.frag", "flat.vert");
+    GLint compiled; 
+	std::vector<GLuint> compiledShaders;
+    GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
+    compiledShaders.push_back(oceanOpticsFragment);
+	lightSourceShader = new GLSLShader(compiledShaders, "light.frag", "light.vert");
+    lightSourceShader->AddUniform("M", ParameterType::MAT4);
 	lightSourceShader->AddUniform("MVP", ParameterType::MAT4);
+    lightSourceShader->AddUniform("eyePos", ParameterType::VEC3);
+    lightSourceShader->AddUniform("cWater", ParameterType::VEC3);
     lightSourceShader->AddUniform("FC", ParameterType::FLOAT);
 	lightSourceShader->AddUniform("color", ParameterType::VEC3);
+    glDeleteShader(oceanOpticsFragment);
 	
     //Count spotlights
     unsigned int numOfSpotLights = 0;

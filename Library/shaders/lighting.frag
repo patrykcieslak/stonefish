@@ -677,7 +677,7 @@ vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	float distance = length(toLight);
 	toLight /= distance;
 	
-	float attenuation = 1.0/(distance*distance);
+	float attenuation = 1.0/(1.0+distance*distance);
 	return vec4(ShadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation, distance);
 }
 
@@ -692,7 +692,7 @@ vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
         
 	if(spotEffect > spotLights[id].cone && NdotL > 0.0)
 	{
-		float attenuation = 1.0/(distance*distance);
+		float attenuation = 1.0/(1.0 + distance*distance);
         float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].cone);
 		return vec4(ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * SpotShadow(id, P) * edge * attenuation, distance);
 	}

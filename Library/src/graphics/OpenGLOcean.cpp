@@ -185,6 +185,8 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
 	GLSLHeader header;
 	header.code = "#version 330\n";
 	header.code += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
+    header.code += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
+	header.code += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
 	header.useInFragment = true;
 	
     if(waves)
@@ -247,6 +249,7 @@ OpenGLOcean::OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics)
     shader->AddUniform("scattering_texture", ParameterType::INT);
     shader->AddUniform("irradiance_texture", ParameterType::INT);
     shader->BindUniformBlock("SunSky", UBO_SUNSKY);
+    shader->BindUniformBlock("Lights", UBO_LIGHTS);
     oceanShaders.push_back(shader); //1
 
     oceanShaders[1]->Use();

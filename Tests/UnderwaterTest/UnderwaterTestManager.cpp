@@ -113,10 +113,14 @@ void UnderwaterTestManager::BuildScenario()
     sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 2.0, "Rock", "seabed");
     AddStaticEntity(cyl, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-3.0,0,2.0)));
 	
-	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 1000000.0);
-	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,1.0)));
+	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 100000.0);
+	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,0.0,1.0)));
 	AddActuator(spot);
     
+    sf::Light* omni = new sf::Light("Omni", 0.2, sf::Color::BlackBody(5000.0), 10000.0);
+	omni->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(2.0,2.0,0.0)));
+	AddActuator(omni);
+
     //Create underwater vehicle body
     //Externals
     sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SUBMERGED_BODY, "yellow", sf::Scalar(0.003), false);

@@ -38,7 +38,7 @@ layout (std140) uniform SunSky
 };
 
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
-vec3 InScattering(vec3 L, vec3 D, vec3 V, float z, float d);
+vec3 InScatteringSun(vec3 L, vec3 D, vec3 V, float z, float d);
 vec3 RefractToWater(vec3 I, vec3 N);
 
 const float d = 1000000.0;
@@ -60,7 +60,7 @@ void main()
 	    vec3 skyIlluminance;
 	    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, waterSurfaceN, sunDirection, skyIlluminance);
 	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
-	    fragColor = InScattering(L, R, V, max(eyePos.z, 0.0), d);
+	    fragColor = InScatteringSun(L, R, -V, max(eyePos.z, 0.0), d);
     }
 	
     fragNormal = vec4(vec3(0.0,0.0,-1.0) * 0.5 + 0.5, 0.0);
