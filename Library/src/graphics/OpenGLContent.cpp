@@ -58,8 +58,8 @@ OpenGLContent::OpenGLContent()
     lightsUBO = 0;
     csBuf[0] = 0;
     csBuf[1] = 0;
-    ellipsoid.mesh = NULL;
-    cylinder.mesh = NULL;
+    cylinder.vao = 0;
+    ellipsoid.vao = 0;
     helperShader = NULL;
     texQuadShader = NULL;
     texQuadMSShader = NULL;
@@ -68,6 +68,7 @@ OpenGLContent::OpenGLContent()
     texCubeShader = NULL;
     flatShader = NULL;
     shadowShader = NULL;
+    lightSourceShader[0] = lightSourceShader[1] = NULL;
     eyePos = glm::vec3();
     viewDir = glm::vec3(1.f,0,0);
     viewProjection = glm::mat4();
@@ -151,42 +152,48 @@ OpenGLContent::OpenGLContent()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     //Cylinder helper
-    cylinder.mesh = BuildCylinder(1.f, 1.f, 12);
-    
+    Mesh* m = BuildCylinder(1.f, 1.f, 12);
+
     glGenVertexArrays(1, &cylinder.vao);
     glGenBuffers(1, &cylinder.vboVertex);
     glGenBuffers(1, &cylinder.vboIndex);
-    
+    cylinder.faceCount = (GLsizei)m->faces.size();
+
     OpenGLState::BindVertexArray(cylinder.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*cylinder.mesh->vertices.size(), &cylinder.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*m->vertices.size(), &m->vertices[0].pos.x, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*cylinder.mesh->faces.size(), &cylinder.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*m->faces.size(), &m->faces[0].vertexID[0], GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
+    delete m;
+
     //Ellipsoid helper
-    ellipsoid.mesh = BuildSphere(1.f, 3);
+    m = BuildSphere(1.f, 3);
     
     glGenVertexArrays(1, &ellipsoid.vao);
     glGenBuffers(1, &ellipsoid.vboVertex);
     glGenBuffers(1, &ellipsoid.vboIndex);
-    
+    ellipsoid.faceCount = (GLsizei)m->faces.size();
+
     OpenGLState::BindVertexArray(ellipsoid.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*ellipsoid.mesh->vertices.size(), &ellipsoid.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)* m->vertices.size(), &m->vertices[0].pos.x, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*ellipsoid.mesh->faces.size(), &ellipsoid.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), &m->faces[0].vertexID[0], GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
+
+    delete m;
 
     //Generate UBOs
     glGenBuffers(1, &lightsUBO);
@@ -242,7 +249,6 @@ OpenGLContent::OpenGLContent()
 	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
 	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
     std::string header2 = "#version 330\n";
-	header2 += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
 	header2 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
 	header2 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
     
@@ -257,54 +263,16 @@ OpenGLContent::OpenGLContent()
 	
     //Blinn-Phong shader
     GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
-    blinnPhong->AddUniform("MVP", ParameterType::MAT4);
-    blinnPhong->AddUniform("M", ParameterType::MAT4);
-    blinnPhong->AddUniform("N", ParameterType::MAT3);
-    blinnPhong->AddUniform("MV", ParameterType::MAT3);
-    blinnPhong->AddUniform("FC", ParameterType::FLOAT);
-    blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
-    blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
-    blinnPhong->AddUniform("color", ParameterType::VEC4);
-    blinnPhong->AddUniform("tex", ParameterType::INT);
     blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     blinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    blinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    blinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-    blinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
-    blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-    blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-    blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
-    blinnPhong->BindUniformBlock("SunSky", UBO_SUNSKY);
-    blinnPhong->BindUniformBlock("Lights", UBO_LIGHTS);
-
     materialShaders.push_back(blinnPhong);
     
     //Cook-Torrance shader
     GLSLShader* cookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
-    cookTorrance->AddUniform("MVP", ParameterType::MAT4);
-    cookTorrance->AddUniform("M", ParameterType::MAT4);
-    cookTorrance->AddUniform("N", ParameterType::MAT3);
-    cookTorrance->AddUniform("MV", ParameterType::MAT3);
-    cookTorrance->AddUniform("FC", ParameterType::FLOAT);
-    cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
-    cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
-    cookTorrance->AddUniform("color", ParameterType::VEC4);
-    cookTorrance->AddUniform("tex", ParameterType::INT);
     cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     cookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    cookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    cookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-    cookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
-    cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-    cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-    cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
-    cookTorrance->BindUniformBlock("SunSky", UBO_SUNSKY);
-    cookTorrance->BindUniformBlock("Lights", UBO_LIGHTS);
-    
     materialShaders.push_back(cookTorrance);
     glDeleteShader(materialFragment);
 	
@@ -312,68 +280,51 @@ OpenGLContent::OpenGLContent()
     commonMaterialShaders.pop_back();
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
 	commonMaterialShaders.push_back(oceanOpticsFragment);
-    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
+    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", header2, &compiled);
     commonMaterialShaders.push_back(materialFragment);
     
     //Underwater Blinn-Phong shader
     GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
-    uwBlinnPhong->AddUniform("MVP", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
-    uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
-    uwBlinnPhong->AddUniform("FC", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
-    uwBlinnPhong->AddUniform("tex", ParameterType::INT);
     uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("cWater", ParameterType::VEC3);
     uwBlinnPhong->AddUniform("bWater", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-    uwBlinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-    uwBlinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
-    uwBlinnPhong->BindUniformBlock("SunSky", UBO_SUNSKY);
-    uwBlinnPhong->BindUniformBlock("Lights", UBO_LIGHTS);
-    
     materialShaders.push_back(uwBlinnPhong);
     
     //Underwater Cook-Torrance shader
     GLSLShader* uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
-    uwCookTorrance->AddUniform("MVP", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("M", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("N", ParameterType::MAT3);
-    uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
-    uwCookTorrance->AddUniform("FC", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("color", ParameterType::VEC4);
-    uwCookTorrance->AddUniform("tex", ParameterType::INT);
     uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("cWater", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-    uwCookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-    uwCookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
-    uwCookTorrance->BindUniformBlock("SunSky", UBO_SUNSKY);
-    uwCookTorrance->BindUniformBlock("Lights", UBO_LIGHTS);
-    
+    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);   
     materialShaders.push_back(uwCookTorrance);
     
     glDeleteShader(materialFragment);
-	glDeleteShader(oceanOpticsFragment);
-	glDeleteShader(pcssFragment);
+	
+    //Add common uniforms
+    for(size_t i=0; i<materialShaders.size(); ++i)
+    {
+        materialShaders[i]->AddUniform("MVP", ParameterType::MAT4);
+        materialShaders[i]->AddUniform("M", ParameterType::MAT4);
+        materialShaders[i]->AddUniform("N", ParameterType::MAT3);
+        materialShaders[i]->AddUniform("MV", ParameterType::MAT3);
+        materialShaders[i]->AddUniform("FC", ParameterType::FLOAT);
+        materialShaders[i]->AddUniform("eyePos", ParameterType::VEC3);
+        materialShaders[i]->AddUniform("viewDir", ParameterType::VEC3);
+        materialShaders[i]->AddUniform("color", ParameterType::VEC4);
+        materialShaders[i]->AddUniform("tex", ParameterType::INT);
+        materialShaders[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+        materialShaders[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+        materialShaders[i]->AddUniform("sunShadowMap", ParameterType::INT);
+        materialShaders[i]->AddUniform("sunDepthMap", ParameterType::INT);
+        materialShaders[i]->AddUniform("transmittance_texture", ParameterType::INT);
+        materialShaders[i]->AddUniform("scattering_texture", ParameterType::INT);
+        materialShaders[i]->AddUniform("irradiance_texture", ParameterType::INT);
+        materialShaders[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
+        materialShaders[i]->BindUniformBlock("Lights", UBO_LIGHTS);
+    }
 
     //Set permanent texture units
     for(size_t i=0; i<materialShaders.size(); ++i)
@@ -389,7 +340,70 @@ OpenGLContent::OpenGLContent()
         materialShaders[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
     }
 
+    //Light source rendering shaders
+    std::vector<GLuint> commonLightShaders;
+    commonLightShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    commonLightShaders.push_back(pcssFragment);
+    
+    //Above surface
+    GLuint lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSource.frag", header2, &compiled);
+	commonLightShaders.push_back(lightSourceFragment);
+	
+    lightSourceShader[0] = new GLSLShader(commonLightShaders, "light.frag", "material.vert");
+
+    //Under surface
+    commonLightShaders.pop_back();
+    glDeleteShader(lightSourceFragment);
+
+    commonLightShaders.push_back(oceanOpticsFragment);
+    lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwLightSource.frag", header2, &compiled);
+	commonLightShaders.push_back(lightSourceFragment);
+	
+    lightSourceShader[1] = new GLSLShader(commonLightShaders, "light.frag", "material.vert");
+    lightSourceShader[1]->AddUniform("cWater", ParameterType::VEC3);
+    lightSourceShader[1]->AddUniform("bWater", ParameterType::VEC3);
+    
+    //Add common uniforms
+    for(size_t i=0; i<2; ++i)
+    {
+        lightSourceShader[i]->AddUniform("MVP", ParameterType::MAT4);
+        lightSourceShader[i]->AddUniform("M", ParameterType::MAT4);
+        lightSourceShader[i]->AddUniform("N", ParameterType::MAT3);
+        lightSourceShader[i]->AddUniform("MV", ParameterType::MAT3);
+        lightSourceShader[i]->AddUniform("FC", ParameterType::FLOAT);
+        lightSourceShader[i]->AddUniform("eyePos", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("viewDir", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("color", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("lightId", ParameterType::IVEC2);
+        lightSourceShader[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("sunShadowMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("sunDepthMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("transmittance_texture", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("scattering_texture", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("irradiance_texture", ParameterType::INT);
+        lightSourceShader[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
+        lightSourceShader[i]->BindUniformBlock("Lights", UBO_LIGHTS);
+    }
+
+    //Set permanent texture units
+    for(size_t i=0; i<2; ++i)
+    {
+        lightSourceShader[i]->Use();
+        lightSourceShader[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+        lightSourceShader[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+        lightSourceShader[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+        lightSourceShader[i]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+        lightSourceShader[i]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+        lightSourceShader[i]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+        lightSourceShader[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+    }
+
     OpenGLState::UseProgram(0);
+
+    glDeleteShader(pcssFragment);
+    glDeleteShader(oceanOpticsFragment);
+    glDeleteShader(lightSourceFragment);
 }
 
 OpenGLContent::~OpenGLContent()
@@ -409,6 +423,8 @@ OpenGLContent::~OpenGLContent()
     if(texCubeShader != NULL) delete texCubeShader;
     if(flatShader != NULL) delete flatShader;
     if(shadowShader != NULL) delete shadowShader;
+    if(lightSourceShader[0] != NULL) delete lightSourceShader[0];
+    if(lightSourceShader[1] != NULL) delete lightSourceShader[1];
     
     //Material shaders
     for(size_t i=0; i<materialShaders.size(); ++i)
@@ -662,7 +678,7 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 
 void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 {
-    if(helperShader != NULL && cylinder.mesh != NULL)
+    if(helperShader != NULL && cylinder.vao != 0)
     {
         helperShader->Use();
         helperShader->SetUniform("MVP", viewProjection*M);
@@ -670,7 +686,7 @@ void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
         
         OpenGLState::BindVertexArray(cylinder.vao);
         glVertexAttrib4fv(1, &color.r);
-        glDrawElements(GL_TRIANGLES, 3 * (GLsizei)cylinder.mesh->faces.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 3 * cylinder.faceCount, GL_UNSIGNED_INT, 0);
         OpenGLState::BindVertexArray(0);
         OpenGLState::UseProgram(0);
     }
@@ -678,7 +694,7 @@ void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 
 void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 {
-    if(helperShader != NULL && ellipsoid.mesh != NULL)
+    if(helperShader != NULL && ellipsoid.vao != 0)
     {
         helperShader->Use();
         helperShader->SetUniform("MVP", viewProjection*M);
@@ -686,7 +702,7 @@ void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
         
         OpenGLState::BindVertexArray(ellipsoid.vao);
         glVertexAttrib4fv(1, &color.r);
-        glDrawElements(GL_TRIANGLES, 3 * (GLsizei)ellipsoid.mesh->faces.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 3 * ellipsoid.faceCount, GL_UNSIGNED_INT, 0);
         OpenGLState::BindVertexArray(0);
         OpenGLState::UseProgram(0);
     }
@@ -746,7 +762,7 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
             case DrawingMode::RAW:
             {
                 OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
                 OpenGLState::BindVertexArray(0);
             }
             break;
@@ -756,7 +772,7 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
                 shadowShader->Use();
                 shadowShader->SetUniform("MVP", viewProjection*M);
                 OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
                 OpenGLState::BindVertexArray(0);
             }
             break;
@@ -767,7 +783,7 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
                 flatShader->SetUniform("MVP", viewProjection*M);
                 flatShader->SetUniform("FC", FC);
                 OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
                 OpenGLState::BindVertexArray(0);
             }
             break;
@@ -780,10 +796,50 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
                     UseStandardLook(M);
         
                 OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
                 OpenGLState::BindVertexArray(0);
             }
             break;
+        }
+    }
+}
+
+void OpenGLContent::DrawLightSource(unsigned int lightId)
+{
+    if(lightId >= 0 && lightId < lights.size())
+    {
+        int objectId = lights[lightId]->getSourceObject();
+        
+        if(objectId >= 0 && objectId < (int)objects.size())
+        {
+            //Render light source
+            glm::vec4 colorLi = lights[lightId]->getColorLi();
+            glm::mat4 M = lights[lightId]->getTransform();
+            GLint type = lights[lightId]->getType() == LightType::POINT_LIGHT ? 0 : 1; 
+            GLint id = lights[lightId]->getType() == LightType::POINT_LIGHT ? lightId : lightId - lightsUBOData.numPointLights;
+
+            GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
+            shader->Use();
+            shader->SetUniform("MVP", viewProjection * M);
+            shader->SetUniform("M", M);
+            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+            shader->SetUniform("FC", FC);
+            shader->SetUniform("eyePos", eyePos);
+            shader->SetUniform("viewDir", viewDir);
+            shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
+            shader->SetUniform("lightId", glm::ivec2(type, id));
+            
+            if(mode == DrawingMode::UNDERWATER)
+            {
+                Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+                shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+                shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+            }
+
+            OpenGLState::BindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+            OpenGLState::BindVertexArray(0);
         }
     }
 }
@@ -807,9 +863,6 @@ void OpenGLContent::SetupLights()
         }
     }
     
-    lightsUBOData.numPointLights = pointId;
-    lightsUBOData.numSpotLights = spotId;
-
     glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightsUBO), &lightsUBOData);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -926,11 +979,11 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 {
     Object obj;
-    obj.mesh = mesh;
     
     glGenVertexArrays(1, &obj.vao);
     glGenBuffers(1, &obj.vboVertex);
     glGenBuffers(1, &obj.vboIndex);
+    obj.faceCount = (GLsizei)mesh->faces.size();
     
     OpenGLState::BindVertexArray(obj.vao);	
     glEnableVertexAttribArray(0);
@@ -945,7 +998,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
     objects.push_back(obj);
@@ -1009,6 +1062,24 @@ unsigned int OpenGLContent::getViewsCount()
 void OpenGLContent::AddLight(OpenGLLight* light)
 {
     lights.push_back(light);
+
+    std::sort(lights.begin(), lights.end());
+    lightsUBOData.numPointLights = 0;
+    lightsUBOData.numSpotLights = 0;
+
+    for(size_t i=0; i<lights.size(); ++i)
+    {
+        switch(lights[i]->getType())
+        {
+            case LightType::POINT_LIGHT:
+                ++lightsUBOData.numPointLights;
+                break;
+
+            case LightType::SPOT_LIGHT:
+                ++lightsUBOData.numSpotLights;
+                break;
+        }
+    }
 }
 
 OpenGLLight* OpenGLContent::getLight(unsigned int id)

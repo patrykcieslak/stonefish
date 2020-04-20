@@ -34,10 +34,10 @@ namespace sf
     #pragma pack(1)
     struct PointLightUBO : public LightUBO
     {
-        glm::vec3 position;        
-        uint8_t pad1[4];
+        glm::vec3 position;
+        GLfloat radius;
         glm::vec3 color;
-        uint8_t pad2[4];
+        uint8_t pad[4];
     };
     #pragma pack(0)
 
@@ -50,13 +50,10 @@ namespace sf
          \param position the position of the light in the world frame [m]
 		 \param radius the radius of the light source [m]
          \param color the color of the light
-         \param illuminance the brightness of the light [lx]
+         \param lum the luminous power of the light [lm]
          */
-        OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat illuminance);
-        
-		//! A method implementing rendering of light surface.
-		void DrawLight();
-		
+        OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum);
+        		
         //! A method to set up light data in Lights UBO.
         /*!
          \param ubo a pointer to the light UBO structure
@@ -64,7 +61,7 @@ namespace sf
         void SetupShader(LightUBO* ubo);
         
         //! A method returning the type of the light.
-        LightType getType();
+        LightType getType() const;
     };
 }
 

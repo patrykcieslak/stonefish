@@ -163,13 +163,13 @@ void main()
 	vec3 outColor = vec3(0.0);
 	
 	//Sun contribution
-    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/MEAN_SUN_ILLUMINANCE;
+    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint;
 	
 	//Sky and scene reflection
 	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, -3.0)));
 	vec3 trans;
 	vec3 Lsky = GetSkyLuminance(Psky - center, ray, 0.0, sunDirection, trans);
-    outColor += Lsky/whitePoint/MEAN_SUN_ILLUMINANCE; //fresnel *
+    outColor += Lsky/whitePoint; //fresnel *
     
 	//Aerial perspective
     //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, Psky - center, 0.0, sunDirection, trans);///whitePoint/30000.0;

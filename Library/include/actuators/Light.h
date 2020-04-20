@@ -43,9 +43,9 @@ namespace sf
          \param uniqueName a name of the light
 		 \param radius a radius of the light source [m]
          \param color a color of the light
-         \param illuminance a value of luminous flux per unit area of light [lux]
+         \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Color color, Scalar illuminance);
+        Light(std::string uniqueName, Scalar radius, Color color, Scalar lum);
         
         //! A constructor of a spot light.
         /*!
@@ -53,9 +53,9 @@ namespace sf
 		 \param radius a radius of the light source [m]
          \param coneAngleDeg a cone angle of the spot light in degrees [deg]
          \param color a color of the light
-         \param illuminance a value of luminous flux per unit area of light [lux]
+         \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar illuminance);
+        Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
         
 		//! A method used to attach the comm device to the world origin.
         /*!
@@ -101,7 +101,7 @@ namespace sf
 		StaticEntity* attach2;
         Color c;
 		Scalar R;
-        Scalar illum;
+        Scalar Fi;
         Scalar coneAngle;
         OpenGLLight* glLight;
     };

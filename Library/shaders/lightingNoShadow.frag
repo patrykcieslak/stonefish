@@ -38,6 +38,7 @@ layout (std140) uniform SunSky
 struct PointLight 
 {
 	vec3 position;
+    float radius;
 	vec3 color;
 };
 
@@ -50,7 +51,7 @@ struct SpotLight
 	float frustumFar;
     vec3 color;
 	float cone;
-	vec2 radius;
+    vec3 radius;
 };
 
 layout (std140) uniform Lights
@@ -61,7 +62,7 @@ layout (std140) uniform Lights
     int numSpotLights;
 };
 
-vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo);
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo);
 
 //Calculate contribution of different light types
 vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
@@ -70,8 +71,8 @@ vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	float distance = length(toLight);
 	toLight /= distance;
 	
-	float attenuation = 1.0/(distance*distance);
-	return vec4(ShadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation, distance);
+	float attenuation = 1.0/(max(0.01*0.01, distance*distance));
+	return vec4(ShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), distance);
 }
 
 vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
@@ -85,9 +86,9 @@ vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
         
 	if(spotEffect > spotLights[id].cone && NdotL > 0.0)
 	{
-		float attenuation = 1.0/(distance*distance);
+		float attenuation = 1.0/(max(0.01*0.01, distance*distance));
         float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].cone);
-		return vec4(ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * edge * attenuation, distance);
+		return vec4(ShadingModel(N, toEye, toLight, spotLights[id].color * edge * attenuation, albedo), distance);
 	}
 	else
 		return vec4(0.0);
@@ -99,7 +100,7 @@ vec3 SunContribution(vec3 P, vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance;
+		return ShadingModel(N, toEye, sunDirection, illuminance, albedo);
 	}
 	else
 		return vec3(0.0);

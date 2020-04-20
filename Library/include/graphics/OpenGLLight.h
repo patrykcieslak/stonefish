@@ -52,9 +52,9 @@ namespace sf
          \param position the position of the light in world frame [m]
 		 \param radius the radius of the light source [m]
          \param color the color of the light
-         \param illuminance the brightness of the light [lx]
+         \param lum the luminous power of the light [lm]
          */
-        OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat illuminance);
+        OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum);
         
         //! A destructor.
         virtual ~OpenGLLight();
@@ -77,9 +77,6 @@ namespace sf
          */
         virtual void ShowShadowMap(glm::vec4 rect);
         
-		//! A method implementing rendering of light surface.
-		virtual void DrawLight();
-		
         //! A method to set up light data in Lights UBO.
         /*!
          \param ubo a pointer to the light UBO structure
@@ -87,7 +84,7 @@ namespace sf
         virtual void SetupShader(LightUBO* ubo) = 0;
         
         //! A method returning the type of the light.
-        virtual LightType getType() = 0;
+        virtual LightType getType() const = 0;
         
         //! A method used to update position of light.
         /*!
@@ -99,13 +96,13 @@ namespace sf
         virtual void UpdateTransform();
         
         //! A method to switch on the light.
-        void Activate();
+        void SwitchOn();
         
         //! A method to switch off the light
-        void Deactivate();
+        void SwitchOff();
         
-        //! A method returning the color of the light.
-        glm::vec3 getColor();
+        //! A method returning the color and intensity of the light.
+        glm::vec4 getColorLi();
         
         //! A method returning the position of the light.
         glm::vec3 getPosition();
@@ -115,10 +112,19 @@ namespace sf
         
         //! A method returning the orientation of the light.
         glm::quat getOrientation();
+
+        //! A method returning the model matrix of the light.
+        virtual glm::mat4 getTransform();
+
+        //! A method returning the light source object id.
+        int getSourceObject();
         
         //! A method informing if the light is active.
         bool isActive();
         
+        //! An operator used to sort lights by type.
+        bool operator<(const OpenGLLight& l);
+
         //! A static method to initialize data buffers for all lights in the scene.
         /*!
          \param lights a list of OpenGL lights in the scene
@@ -133,21 +139,20 @@ namespace sf
          \param view a pointer to the current view
          */
         static void SetCamera(OpenGLCamera* view);
-        
+
     protected:
-		Mesh* lightMesh;
-		unsigned int lightObject;
+		glm::vec4 colorLi;
+		bool active;
+        int sourceObject;
+        
         static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
         static GLuint spotShadowSampler;
         static GLuint spotDepthSampler;
         static OpenGLCamera* activeView;
-		static GLSLShader* lightSourceShader;
         
     private:
-        bool active;
         glm::vec3 pos;
         glm::vec3 tempPos;
-        glm::vec3 color;
 		GLfloat R;
     };
 }

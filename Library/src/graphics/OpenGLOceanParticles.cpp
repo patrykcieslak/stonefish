@@ -187,7 +187,6 @@ void OpenGLOceanParticles::Init()
 	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
 	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
     std::string header2 = "#version 330\n";
-	header2 += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
 	header2 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
 	header2 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
     
@@ -200,7 +199,7 @@ void OpenGLOceanParticles::Init()
     GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
 	commonMaterialShaders.push_back(oceanOpticsFragment);
     
-    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
+    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", header2, &compiled);
     commonMaterialShaders.push_back(materialFragment);
 
     particleShader = new GLSLShader(commonMaterialShaders, "oceanParticle.frag", "billboard.vert");

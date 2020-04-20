@@ -37,18 +37,18 @@
 namespace sf
 {
 
-Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar illuminance) 
+Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
 	: LinkActuator(uniqueName), c(color), coneAngle(0), attach2(nullptr)
 {
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
-	R = radius < Scalar(0) ? Scalar(0.02) : radius;
-    illum = illuminance < Scalar(0) ? Scalar(0) : illuminance;
+	R = radius < Scalar(0) ? Scalar(0) : radius;
+    Fi = lum < Scalar(0) ? Scalar(0) : lum;
 }
 
-Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar illuminance) 
-	: Light(uniqueName, radius, color, illuminance)
+Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
+	: Light(uniqueName, radius, color, lum)
 {
     coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
@@ -95,9 +95,9 @@ void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
 void Light::InitGraphics()
 {
     if(coneAngle > Scalar(0)) //Spot light
-        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, c.rgb, (GLfloat)illum);
+        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, c.rgb, (GLfloat)Fi);
     else //Omnidirectional light
-        glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, c.rgb, (GLfloat)illum);
+        glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, c.rgb, (GLfloat)Fi);
     
     UpdateTransform();
     glLight->UpdateTransform();

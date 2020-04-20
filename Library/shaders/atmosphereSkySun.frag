@@ -48,8 +48,6 @@
  
 #version 330
 
-#define MEAN_SUN_ILLUMINANCE 107527.0
-
 uniform vec3 eyePos;
 uniform vec3 sunDir;
 uniform vec3 whitePoint;
@@ -110,5 +108,5 @@ void main()
 	luminance = mix(luminance, groundLuminance, groundAlpha);
 	
 	//Color correction
-    fragColor = luminance/MEAN_SUN_ILLUMINANCE/whitePoint;
+    fragColor = luminance/whitePoint;
 }

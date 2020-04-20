@@ -59,7 +59,7 @@ void FallingTestManager::BuildScenario()
     
     ///////LOOKS///////////
     CreateLook("Grid", sf::Color::Gray(1.f), 0.8f, 0.f, 0.0f, sf::GetShaderPath() + "grid.png");
-    CreateLook("Green", sf::Color::RGB(0.3f, 1.0f, 0.2f), 0.2f, 0.f);
+    CreateLook("Green", sf::Color::RGB(0.1f, 0.8f, 0.1f), 0.5f, 0.0f);
     
     ////////OBJECTS
     sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
@@ -78,7 +78,7 @@ void FallingTestManager::BuildScenario()
 			AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.5*i+5.0,0.5*k,-sin(i/2.0)/2.0-0.2*i/2.0)));
 		}
 	
-	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 1000000.0);
+	sf::Light* spot = new sf::Light("Spot", 0.2, 50.0, sf::Color::BlackBody(5000.0), 1000.0);
 	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,-1.0)));
 	AddActuator(spot);
     

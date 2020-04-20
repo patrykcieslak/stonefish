@@ -41,8 +41,8 @@ namespace sf
         GLfloat frustumFar;
         glm::vec3 color;
         GLfloat cone;
-        glm::vec2 radius;
-        uint8_t pad[8];
+        glm::vec3 radius; //UV + physical radius
+        uint8_t pad[4];
     };
     #pragma pack(0)
 
@@ -57,9 +57,9 @@ namespace sf
 		 \param radius a radius of the light source [m]
          \param coneAngleDeg the angle of the light cone [deg]
          \param color the color of the light
-         \param illuminance the brightness of the light [lx]
+         \param lum the luminous power of the light [lm]
          */
-        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
+        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat lum);
         
         //! A destructor.
         ~OpenGLSpotLight();
@@ -81,9 +81,6 @@ namespace sf
          \param rect a rectangle in which to display the texture
          */
         void ShowShadowMap(glm::vec4 rect);
-		
-		//! A method implementing rendering of light surface.
-		void DrawLight();
     
         //! A method to set up light data in Lights UBO.
         /*!
@@ -101,13 +98,16 @@ namespace sf
         void UpdateTransform();
         
         //! A method returning the type of the light.
-        LightType getType();
+        LightType getType() const;
         
         //! A method returning the direction vector of the light.
         glm::vec3 getDirection();
         
         //! A method returning light clip space information.
         glm::mat4 getClipSpace();
+
+        //! A method returning the model matrix of the light.
+        glm::mat4 getTransform();
         
         //! A method returning the spot light cone angle.
         GLfloat getAngle();

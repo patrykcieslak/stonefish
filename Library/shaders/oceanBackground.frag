@@ -55,11 +55,11 @@ void main()
     fragColor = vec3(0.0);
 
     vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
-    if(R.z > 0.0)
+    if(R.z > 0.0 && sunDirection.z < 0.0)
     {
 	    vec3 skyIlluminance;
 	    vec3 sunIlluminance = GetSunAndSkyIlluminance(-center, waterSurfaceN, sunDirection, skyIlluminance);
-	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	    vec3 L = sunIlluminance/whitePoint;
 	    fragColor = InScatteringSun(L, R, -V, max(eyePos.z, 0.0), d);
     }
 	

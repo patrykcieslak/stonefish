@@ -41,21 +41,17 @@ GLuint OpenGLLight::spotShadowArrayTex = 0;
 GLuint OpenGLLight::spotDepthSampler = 0;
 GLuint OpenGLLight::spotShadowSampler = 0;
 OpenGLCamera* OpenGLLight::activeView = nullptr;
-GLSLShader* OpenGLLight::lightSourceShader = nullptr;
 
-OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloat illuminance)
+OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloat lum)
 {
     pos = tempPos = position;
-	R = radius < 0.f ? 0.02f : radius;
-    color = c * illuminance / MEAN_SUN_ILLUMINANCE;
+	R = glm::max(0.01f, radius);
     active = true;
-	lightMesh = nullptr;
+    sourceObject = -1;
 }
 
 OpenGLLight::~OpenGLLight()
 {
-	if(lightMesh != nullptr) 
-		delete lightMesh;
 }
 
 bool OpenGLLight::isActive()
@@ -63,9 +59,9 @@ bool OpenGLLight::isActive()
     return active;
 }
 
-glm::vec3 OpenGLLight::getColor()
+glm::vec4 OpenGLLight::getColorLi()
 {
-    return color;
+    return colorLi;
 }
 
 glm::vec3 OpenGLLight::getPosition()
@@ -78,6 +74,21 @@ GLfloat OpenGLLight::getSourceRadius()
 	return R;
 }
 
+int OpenGLLight::getSourceObject()
+{
+    return sourceObject;
+}
+
+glm::mat4 OpenGLLight::getTransform()
+{
+    return glm::translate(pos);
+}
+
+bool OpenGLLight::operator<(const OpenGLLight& l)
+{
+    return (int)getType() < (int)l.getType();
+}
+
 void OpenGLLight::UpdatePosition(glm::vec3 p)
 {
     tempPos = p;
@@ -88,12 +99,12 @@ void OpenGLLight::UpdateTransform()
     pos = tempPos;
 }
 
-void OpenGLLight::Activate()
+void OpenGLLight::SwitchOn()
 {
     active = true;
 }
 
-void OpenGLLight::Deactivate()
+void OpenGLLight::SwitchOff()
 {
     active = false;
 }
@@ -110,36 +121,12 @@ void OpenGLLight::ShowShadowMap(glm::vec4 rect)
 {
 }
 
-void OpenGLLight::DrawLight()
-{
-	lightSourceShader->Use();
-	lightSourceShader->SetUniform("color", color);
-    lightSourceShader->SetUniform("eyePos", activeView->GetEyePosition());
-    lightSourceShader->SetUniform("FC", activeView->GetLogDepthConstant());
-    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    lightSourceShader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());    
-}
-
 //////////////////static//////////////////////////////
 void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
 {
     if(lights.size() == 0)
         return;
     
-	//Load light source shader
-    GLint compiled; 
-	std::vector<GLuint> compiledShaders;
-    GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
-    compiledShaders.push_back(oceanOpticsFragment);
-	lightSourceShader = new GLSLShader(compiledShaders, "light.frag", "light.vert");
-    lightSourceShader->AddUniform("M", ParameterType::MAT4);
-	lightSourceShader->AddUniform("MVP", ParameterType::MAT4);
-    lightSourceShader->AddUniform("eyePos", ParameterType::VEC3);
-    lightSourceShader->AddUniform("cWater", ParameterType::VEC3);
-    lightSourceShader->AddUniform("FC", ParameterType::FLOAT);
-	lightSourceShader->AddUniform("color", ParameterType::VEC3);
-    glDeleteShader(oceanOpticsFragment);
-	
     //Count spotlights
     unsigned int numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
@@ -184,7 +171,6 @@ void OpenGLLight::Destroy()
     if(spotShadowArrayTex != 0) glDeleteTextures(1, &spotShadowArrayTex);
     if(spotDepthSampler != 0) glDeleteSamplers(1, &spotDepthSampler);
     if(spotShadowSampler != 0) glDeleteSamplers(1, &spotShadowSampler);
-	if(lightSourceShader != nullptr) delete lightSourceShader;
 }
 
 void OpenGLLight::SetCamera(OpenGLCamera* view)

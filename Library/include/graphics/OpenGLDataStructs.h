@@ -39,8 +39,7 @@
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
 
-#define MEAN_SUN_ILLUMINANCE  107527.f //Sun average illuminance Lux
-#define MIN_ILLUMINANCE_THRESHOLD 0.1f //Minimum light illuminance to be considered
+#define MIN_INTENSITY_THRESHOLD 1.0f //Minimum light intensity to be considered [cd]
 #define STD_NEAR_PLANE_DISTANCE 0.01f //Standard near plane distance of the cameras
 #define STD_FAR_PLANE_DISTANCE 100000.f //Standard far plane distance of the cameras
 
@@ -157,10 +156,10 @@ namespace sf
     //! A structure containing object data.
     struct Object
     {
-        Mesh* mesh;
         GLuint vao;
         GLuint vboVertex;
         GLuint vboIndex;
+        GLsizei faceCount;
     };
     
     //! An enum used in quad tree traversal.
@@ -211,7 +210,32 @@ namespace sf
         void Cut();
         void Draw();
     };
-    
+
+    //! A structure representing the tesselation UBO (std140 aligned).
+    #pragma pack(1)
+    struct AdaptiveTessUBO
+    {
+        glm::mat4 MV;
+        glm::mat4 MVP;
+        glm::mat4 P;
+        glm::mat4 InvP;
+        glm::mat4 InvV;
+        glm::vec4 frustumPlanes[6];
+        glm::vec4 viewport;
+        glm::vec3 eyePos;
+        GLfloat triSize;
+        glm::vec3 tileSize;
+        GLfloat innerTessFactor;
+        glm::vec3 gridOrigin;
+        GLfloat outerTessFactor;
+        GLfloat tileBoundingSphereR;
+        GLfloat invFocalLen;
+        GLfloat FC;
+        GLint gridW;
+        GLint gridH;
+    };
+    #pragma pack(0)
+
     //! An enum representing the type of look of an object.
     typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
     

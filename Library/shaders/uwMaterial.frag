@@ -47,6 +47,7 @@ layout (std140) uniform SunSky
 struct PointLight 
 {
 	vec3 position;
+    float radius;
 	vec3 color;
 };
 
@@ -59,7 +60,7 @@ struct SpotLight
 	float frustumFar;
     vec3 color;
 	float cone;
-	vec2 radius;
+    vec3 radius;
 };
 
 layout (std140) uniform Lights
@@ -77,7 +78,6 @@ vec3 GetSolarLuminance();
 vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
-vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo);
 float SpotShadow(int id);
 float SunShadow();
 vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo);
@@ -127,7 +127,7 @@ void main()
 	if(S.z > 0.0)
 		fragColor += SunContribution(P, N, V, albedo.rgb, sunIlluminance) * BeerLambert(dw+P.z/S.z);
 	
-	fragColor = fragColor/whitePoint/MEAN_SUN_ILLUMINANCE; //Color correction and normalization
+	fragColor = fragColor/whitePoint; //Color correction and normalization
 	
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
@@ -144,31 +144,33 @@ void main()
 	
 	//2. In-scattering from Sun/Sky
     vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
-    if(R.z > 0.0)
+    if(R.z > 0.0 && sunDirection.z < 0.0)
     {
 	    vec3 skyIlluminance;
 	    vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, waterSurfaceN, sunDirection, skyIlluminance);
-	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	    vec3 L = sunIlluminance/whitePoint;
 	    fragColor += InScatteringSun(L, R, -V, max(eyePos.z, 0.0), dw);
     }
 
 	//3. In-scattering from point lights
 	for(int i=0; i<numPointLights; ++i)
 	{
-		fragColor += InScatteringPointLight(pointLights[i].position, 
-											pointLights[i].color,
-											eyePos, -V, P, d, dw);
+		if(pointLights[i].position.z > 0.0)
+			fragColor += InScatteringPointLight(pointLights[i].position, 
+												pointLights[i].color,
+												eyePos, -V, P, d, dw);
 	}
 
 	//4. In-scattering from spot lights
 	for(int i=0; i<numSpotLights; ++i)
 	{
-		fragColor += InScatteringSpotLight(spotLights[i].position,
-										   spotLights[i].direction,
-										   spotLights[i].cone,
-										   spotLights[i].frustumNear,
-										   spotLights[i].color,
-										   eyePos, -V, P, d, dw);
+		if(spotLights[i].position.z > 0.0)
+			fragColor += InScatteringSpotLight(spotLights[i].position,
+											   spotLights[i].direction,
+											   spotLights[i].cone,
+											   spotLights[i].frustumNear,
+											   spotLights[i].color,
+											   eyePos, -V, P, d, dw);
 	}
 
 	//5. Transparency

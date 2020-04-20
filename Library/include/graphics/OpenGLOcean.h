@@ -49,7 +49,7 @@ namespace sf
         float cm;
         float t;
     };
-    
+
     class GLSLShader;
 	class OpenGLCamera;
 	class OpenGLOceanParticles;

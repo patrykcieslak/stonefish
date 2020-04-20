@@ -437,6 +437,7 @@ layout (std140) uniform SunSky
 struct PointLight 
 {
 	vec3 position;
+    float radius;
 	vec3 color;
 };
 
@@ -449,7 +450,7 @@ struct SpotLight
 	float frustumFar;
     vec3 color;
 	float cone;
-	vec2 radius;
+    vec3 radius;
 };
 
 layout (std140) uniform Lights
@@ -465,7 +466,7 @@ uniform sampler2DArrayShadow spotLightsShadowMap;
 uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
 
-vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo);
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo);
 
 // Derivatives of light-space depth with respect to texture2D coordinates
 vec2 depthGradient(vec2 uv, float z)
@@ -597,7 +598,7 @@ float SpotShadow(int id, vec3 P)
     float accumBlockerDepth;
 	float numBlockers;
 	float maxBlockers;
-    vec2 _searchRegionRadiusUV = searchRegionRadiusUV(spotLights[id].radius, spotLights[id].frustumNear, zEye); 
+    vec2 _searchRegionRadiusUV = searchRegionRadiusUV(spotLights[id].radius.xy, spotLights[id].frustumNear, zEye); 
     findBlocker(id, spotLightsDepthMap, accumBlockerDepth, numBlockers, maxBlockers, 
 		uv, z, dz_duv, _searchRegionRadiusUV);
 
@@ -607,7 +608,7 @@ float SpotShadow(int id, vec3 P)
     //3. Penumbra size calculation
     float avgBlockerDepth = accumBlockerDepth / numBlockers;
     float avgBlockerDepthWorld = linearDepthPersp(avgBlockerDepth, spotLights[id].frustumNear, spotLights[id].frustumFar);
-    vec2 _penumbraRadiusUV = penumbraRadiusUV(spotLights[id].radius, zEye, avgBlockerDepthWorld);
+    vec2 _penumbraRadiusUV = penumbraRadiusUV(spotLights[id].radius.xy, zEye, avgBlockerDepthWorld);
     vec2 filterRadius = projectToLightUV(_penumbraRadiusUV, spotLights[id].frustumNear, zEye);
 
     // STEP 3: filtering
@@ -677,8 +678,8 @@ vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	float distance = length(toLight);
 	toLight /= distance;
 	
-	float attenuation = 1.0/(1.0+distance*distance);
-	return vec4(ShadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation, distance);
+	float attenuation = 1.0/(max(0.01*0.01, distance*distance));
+	return vec4(ShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), distance);
 }
 
 vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
@@ -692,9 +693,9 @@ vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
         
 	if(spotEffect > spotLights[id].cone && NdotL > 0.0)
 	{
-		float attenuation = 1.0/(1.0 + distance*distance);
+		float attenuation = 1.0/(max(0.01*0.01, distance*distance));
         float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].cone);
-		return vec4(ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * SpotShadow(id, P) * edge * attenuation, distance);
+		return vec4(ShadingModel(N, toEye, toLight, spotLights[id].color * SpotShadow(id, P) * edge * attenuation, albedo), distance);
 	}
 	else
 		return vec4(0.0);
@@ -706,7 +707,7 @@ vec3 SunContribution(vec3 P, vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * SunShadow(P);
+		return ShadingModel(N, toEye, sunDirection, illuminance * SunShadow(P), albedo);
 	}
 	else
 		return vec3(0.0);

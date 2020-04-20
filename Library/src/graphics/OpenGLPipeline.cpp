@@ -182,14 +182,8 @@ void OpenGLPipeline::DrawObjects()
 
 void OpenGLPipeline::DrawLights()
 {
-    /*
-    OpenGLState::EnableBlend();
-    glBlendFunc(GL_ONE, GL_ONE);
-	content->SetDrawingMode(DrawingMode::RAW);
-	for(unsigned int i=0; i<content->getLightsCount(); ++i)
-		content->getLight(i)->DrawLight();
-    OpenGLState::DisableBlend();
-    */
+    for(unsigned int i=0; i<content->getLightsCount(); ++i)
+        content->DrawLightSource(i);
 }
     
 void OpenGLPipeline::DrawHelpers()
@@ -413,14 +407,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Render all objects
                     content->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
-                    
+                    DrawLights();
+
                     //Ambient occlusion
                     if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
                         camera->DrawAO(1.0f);
                     
-					//Draw lights
-					DrawLights();
-					
                     //Render sky (at the end to take profit of early bailing)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
                 }
@@ -438,10 +430,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Drawing underwater without stencil test
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
+                    DrawLights();
                     glOcean->DrawBackground(camera);
 					
 					//Draw lights
-					DrawLights();
+					//DrawLights();
 					
                     //a) Surface with waves
                     if(ocean->hasWaves())
@@ -498,7 +491,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw reflections
                     OpenGLState::BindFramebuffer(camera->getRenderFBO());
                     OpenGLState::DisableDepthTest();
-                    camera->DrawSSR();
+                    //camera->DrawSSR();
                     
                     //Draw blur only below surface
                     OpenGLState::EnableStencilTest();

@@ -19,8 +19,8 @@
 
 #version 330
 
-vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 {
-	return (0.5 + 0.5*abs(dot(toEye, toLight))) * albedo;
+	return (0.5 + 0.5*abs(dot(V, L))) * albedo * Lcolor;
 }
 

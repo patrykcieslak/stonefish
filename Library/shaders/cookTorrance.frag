@@ -64,25 +64,25 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo)
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 {
-	vec3 halfway = normalize(toEye + toLight);
+	vec3 halfway = normalize(V + L);
 	
 	vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
 	
 	float NDF = DistributionGGX(N, halfway, roughness);        
-	float G = GeometrySmith(N, toEye, toLight, roughness);      
-	vec3 F = fresnelSchlick(max(dot(halfway, toEye), 0.0), F0);       
+	float G = GeometrySmith(N, V, L, roughness);      
+	vec3 F = fresnelSchlick(max(dot(halfway, V), 0.0), F0);       
 	
 	vec3 nominator = NDF * G * F;
-	float NdotL = max(dot(N, toLight), 0.0);                
-	float denominator = 4.0 * max(dot(N, toEye), 0.0) * NdotL + 0.001; 
+	float NdotL = max(dot(N, L), 0.0);                
+	float denominator = 4.0 * max(dot(N, V), 0.0) * NdotL + 0.001; 
 	vec3 specular = nominator/denominator;
     
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS;
 	kD *= 1.0 - metallic;	  
         
-    return (kD * albedo / PI + specular) * NdotL;
+    return Lcolor * (kD * albedo / PI + specular) * NdotL;
 }

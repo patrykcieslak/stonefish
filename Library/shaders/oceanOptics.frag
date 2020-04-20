@@ -29,6 +29,7 @@ const vec3 waterRayleigh = vec3(0.15023, 0.405565, 1.0);
 const float r2 = 9.0;
 const float deltaMin = 0.025;
 const int nMax = 64;
+const float Sfactor = 10.0;
 
 //Phase functions
 float Rayleigh(float cosTheta) //For small particles
@@ -102,7 +103,7 @@ vec3 VSF(vec3 D, vec3 V)
 */
 vec3 InScatteringSun(vec3 L, vec3 D, vec3 V, float z, float d)
 {   
-    return 10.0 * L * VSF(D,V)/(cWater*(V.z/D.z+1.0)) * exp(-cWater*z/D.z) * (1.0 - exp(-cWater*d*(V.z/D.z+1.0)));
+    return Sfactor * L * VSF(D,V)/(cWater*(V.z/D.z+1.0)) * exp(-cWater*z/D.z) * (1.0 - exp(-cWater*d*(V.z/D.z+1.0)));
 }
 
 /*
@@ -167,7 +168,7 @@ vec3 InScatteringPointLight(vec3 O, vec3 L, vec3 X, vec3 V, vec3 P, float d, flo
 				vec3 OT = T - O;
 				float dist = length(OT);
 				OT /= dist;
-				float attenuation = 1.0/(1.0+dist*dist);
+				float attenuation = 1.0/(max(0.01*0.01, dist*dist));
 				Sin += delta * L * attenuation * VSF(OT,V) * BeerLambert(t0 + t + dist);
 				T += rayDelta;
 				t += delta;
@@ -175,7 +176,7 @@ vec3 InScatteringPointLight(vec3 O, vec3 L, vec3 X, vec3 V, vec3 P, float d, flo
 		}
     }
 
-	return Sin * 10.0;
+	return Sfactor * Sin;
 }
 
 /*
@@ -324,12 +325,12 @@ vec3 InScatteringSpotLight(vec3 O, vec3 D, float w, float fn, vec3 L, vec3 X, ve
 			OT /= dist;
 			float spotEffect = dot(D, OT);
 			float edge = smoothstep(1, 1.05, spotEffect/w);
-			float attenuation = 1.0/(1.0+dist*dist);
+			float attenuation = 1.0/(max(0.01*0.01, dist*dist));
 			Sin += delta * L * attenuation * edge * VSF(OT,V) * BeerLambert(t0 + t + dist);
 			T += rayDelta;
 			t += delta;
 		}
 	}
 
-	return Sin * 10.0;
+	return Sfactor * Sin;
 }

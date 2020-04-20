@@ -184,12 +184,18 @@ namespace sf
         
         //! A method to draw an object.
         /*!
-         \param modelId the id of the graphical object
+         \param objectId the id of the graphical object
          \param lookId the id of the graphical material
          \param M the model matrix
          */
-        void DrawObject(int modelId, int lookId, const glm::mat4& M);
-        
+        void DrawObject(int objectId, int lookId, const glm::mat4& M);
+
+        //! A method to draw the light source.
+        /*!
+         \param lightId the id of the light
+         */
+        void DrawLightSource(unsigned int lightId);
+
         //! A method to add a view to the list of views.
         /*!
          \param view a pointer to a view object
@@ -455,6 +461,7 @@ namespace sf
         GLSLShader* flatShader;
         GLSLShader* shadowShader;
         std::vector<GLSLShader*> materialShaders;
+        GLSLShader* lightSourceShader[2];
         
         //Methods
         void UseStandardLook(const glm::mat4& M);

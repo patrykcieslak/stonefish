@@ -19,34 +19,9 @@
 
 #version 330
 
-in float logz;
-in vec4 fragPos;
-out vec4 fragColor;
-
-uniform vec3 eyePos;
-uniform vec3 color;
-uniform float FC;
-
-const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
-
-vec3 BeerLambert(float d);
-
-void main()
+//Light shading model
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 {
-    //Logarithmic z-buffer correction
-	gl_FragDepth = log2(logz) * FC;
-
-    vec3 P = fragPos.xyz/fragPos.w;
-	vec3 toEye = eyePos - P;
-	float d = length(toEye);
-	vec3 V = toEye/d;
-	float dw = d;
-
-	if(eyePos.z < 0.0)
-		dw = max(P.z, 0.0)/dot(V, waterSurfaceN);
-    
-    if(P.z > 0.0)
-        fragColor = vec4(BeerLambert(dw), 1.0);
-    else
-        fragColor = vec4(color, 1.0);
+	float diffuse = max(dot(N, L), 0.0);
+	return Lcolor * diffuse * albedo;
 }

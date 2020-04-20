@@ -51,6 +51,7 @@ layout (std140) uniform SunSky
 struct PointLight 
 {
 	vec3 position;
+    float radius;
 	vec3 color;
 };
 
@@ -63,7 +64,7 @@ struct SpotLight
 	float frustumFar;
     vec3 color;
 	float cone;
-	vec2 radius;
+    vec3 radius;
 };
 
 layout (std140) uniform Lights
@@ -205,38 +206,40 @@ void main()
 	}
 	
 	//Final color
-    fragColor = (1.0-fresnel) * Lsky/whitePoint/MEAN_SUN_ILLUMINANCE;
+    fragColor = (1.0-fresnel) * Lsky/whitePoint;
 	
     //Attenuation
 	fragColor *= BeerLambert(dw);
 	
     //In-scattering
     vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
-    if(R.z > 0.0)
+    if(R.z > 0.0 && sunDirection.z < 0.0)
     {
 	    vec3 skyIlluminance;
 	    vec3 sunIlluminance = GetSunAndSkyIlluminance(Psky - center, waterSurfaceN, sunDirection, skyIlluminance);
-	    vec3 L = (sunIlluminance + skyIlluminance)/whitePoint/MEAN_SUN_ILLUMINANCE;
+	    vec3 L = sunIlluminance/whitePoint;
 	    fragColor += InScatteringSun(L, R, -V, max(eyePos.z, 0.0), dw);
     }
     
     //In-scattering from point lights
 	for(int i=0; i<numPointLights; ++i)
 	{
-		fragColor += InScatteringPointLight(pointLights[i].position, 
-											pointLights[i].color,
-											eyePos, -V, P, d, dw);
+		if(pointLights[i].position.z > 0.0)
+			fragColor += InScatteringPointLight(pointLights[i].position, 
+												pointLights[i].color,
+												eyePos, -V, P, d, dw);
 	}
 
 	//In-scattering from spot lights
 	for(int i=0; i<numSpotLights; ++i)
 	{
-		fragColor += InScatteringSpotLight(spotLights[i].position,
-										   spotLights[i].direction,
-										   spotLights[i].cone,
-										   spotLights[i].frustumNear,
-										   spotLights[i].color,
-										   eyePos, -V, P, d, dw);
+		if(spotLights[i].position.z > 0.0)
+			fragColor += InScatteringSpotLight(spotLights[i].position,
+											   spotLights[i].direction,
+											   spotLights[i].cone,
+											   spotLights[i].frustumNear,
+											   spotLights[i].color,
+											   eyePos, -V, P, d, dw);
 	}
 	
 	fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);
