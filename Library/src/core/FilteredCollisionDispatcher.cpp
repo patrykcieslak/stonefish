@@ -104,12 +104,6 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
                 {
                     if(contact != NULL)
                         contact->AddContactPoint(marray[i], contact->getEntityA() != entA);
-                        
-                    for(int h=0; h<marray[i]->getNumContacts(); ++h)
-                    {
-                        delete (Vector3*)marray[i]->getContactPoint(h).m_userPersistentData;
-                        marray[i]->getContactPoint(h).m_userPersistentData = NULL;
-                    }
                 }
             }
         }

@@ -54,12 +54,12 @@ std::map<uint64_t, std::pair<Scalar, Vector3>>& USBL::getTransponderPositions()
 
 void USBL::EnableAutoPing(Scalar rate)
 {
-     pingTime = Scalar(0);
-     pingRate = rate;
-     ping = true;
-     
-     if(pingRate <= Scalar(0)) //Auto pinging in continuous mode
-         SendMessage("PING");
+    if(rate > Scalar(0))
+    {
+        pingTime = Scalar(0);
+        pingRate = rate;
+        ping = true;
+    }
 }
  
 void USBL::DisableAutoPing()
@@ -97,7 +97,7 @@ void USBL::ProcessMessages()
             Vector3 cO = msg->txPosition;
             Transform dT = getDeviceFrame();
             Vector3 dO = dT.getOrigin();
-            Vector3 dir = (getDeviceFrame().inverse() * (cO - dO)).normalized(); //Direction in device frame
+            Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
             Scalar distance = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
             Scalar t = msg->timeStamp + distance/soundVelocity;
             
@@ -128,15 +128,13 @@ void USBL::ProcessMessages()
             }
             else 
                 pos = dir * distance;
-        
+
             //Update position in the transponder and in the USBL
-            cNode->UpdatePosition(dT * pos, true);
+            Vector3 worldPos = dT * pos;
+            cNode->UpdatePosition(worldPos, true);
+            
             transponderPos[msg->source] = std::make_pair(t, pos);
             newDataAvailable = true;
-            
-            //Auto pinging in continuous mode
-            if(ping && pingRate <= Scalar(0)) 
-                SendMessage("PING");
         }
         
         delete msg;

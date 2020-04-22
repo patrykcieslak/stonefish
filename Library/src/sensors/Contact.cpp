@@ -85,40 +85,16 @@ bool Contact::isNewDataAvailable()
 
 void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped)
 {
-    ContactPoint p;
-    const btManifoldPoint* mp = NULL;
-    
-    if(points.size() == 0)
+    for(int i=0; i<manifold->getNumContacts(); ++i)
     {
-        mp = &manifold->getContactPoint(0);
-    }
-    else
-    {
-        ContactPoint lastContact = points.back();
-        Scalar closestDistance = BT_LARGE_FLOAT;
-    
-        for(int i = 0; i < manifold->getNumContacts(); i++)
-        {
-
-            Vector3 candidate = swapped ? manifold->getContactPoint(i).getPositionWorldOnB() : manifold->getContactPoint(i).getPositionWorldOnA();
-            Scalar distance = ((swapped ? lastContact.locationB : lastContact.locationA) - candidate).length2();
-            if(distance < closestDistance)
-            {
-                mp = &manifold->getContactPoint(i);
-                closestDistance = distance;
-            }
-        }
-        
-        if(closestDistance < Scalar(0.001)*Scalar(0.001)) //Distance less than 1 mm --> skip to save memory and drawing time
-            return;
-    }
-    
-    if(mp != NULL && mp->m_userPersistentData != NULL)
-    {
+        ContactPoint p;
+        const btManifoldPoint* mp;
+        mp = &manifold->getContactPoint(i);
         p.locationA = swapped ? mp->getPositionWorldOnB() : mp->getPositionWorldOnA();
         p.locationB = swapped ? mp->getPositionWorldOnA() : mp->getPositionWorldOnB();
-        p.slippingVelocityA = (swapped ? Scalar(-1.) : Scalar(1.)) * Vector3(*((Vector3*)mp->m_userPersistentData));
-        p.normalForceA = (swapped ? Scalar(1.) : Scalar(-1.)) * mp->m_normalWorldOnB * mp->m_appliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
+        ContactInfo* cInfo = (ContactInfo*)mp->m_userPersistentData;
+        p.slippingVelocityA = (swapped ? Scalar(-1.) : Scalar(1.)) * cInfo->slip;
+        p.normalForceA = (swapped ? Scalar(1.) : Scalar(-1.)) * mp->m_normalWorldOnB * cInfo->totalAppliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
         AddContactPoint(p);
     }
 }
@@ -251,7 +227,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         
-        for(unsigned int i = 0; i < points.size(); ++i)
+        for(size_t i = 0; i < points.size(); ++i)
         {	
             Vector3 p = points[i].locationA;
             item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
@@ -266,7 +242,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         
-        for(unsigned int i = 0; i < points.size(); ++i)
+        for(size_t i = 0; i < points.size(); ++i)
         {	
             Vector3 p = points[i].locationB;
             item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));

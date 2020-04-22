@@ -289,6 +289,9 @@ namespace sf
         
         //! A method returning the angular acceleration of the body.
         Vector3 getAngularAcceleration() const;
+
+        //! A method returning the force applied to the body.
+        Vector3 getAppliedForce();
         
         //! A method returning the mass of the body.
         Scalar getMass() const;

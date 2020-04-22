@@ -499,6 +499,24 @@ Vector3 SolidEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) const
         return Vector3(0,0,0);
 }
 
+Vector3 SolidEntity::getAppliedForce()
+{
+    if(rigidBody != NULL)
+    {
+        return rigidBody->getTotalForce();
+    }
+    else if(multibodyCollider != NULL)
+    {
+        btMultiBody* multiBody = multibodyCollider->m_multiBody;
+        int index = multibodyCollider->m_link;
+
+        if(index >= 0)
+            return multiBody->getLinkForce(index);
+        else
+            return multiBody->getBaseForce();
+    }
+}
+
 Vector3 SolidEntity::getLinearAcceleration() const
 {
     return linearAcc;

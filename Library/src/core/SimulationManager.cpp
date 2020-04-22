@@ -64,8 +64,11 @@
 #include "comms/Comm.h"
 #include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
+#include <typeinfo>
 
 extern ContactAddedCallback gContactAddedCallback;
+extern ContactProcessedCallback gContactProcessedCallback;
+extern ContactDestroyedCallback gContactDestroyedCallback;
 
 namespace sf
 {
@@ -666,21 +669,21 @@ void SimulationManager::InitializeSolver()
 	
     //Quality/stability
     dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.2);  //non-contact constraint error reduction //0.25
-    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(0.2); //contact constraint error reduction //0.75
-    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.2); //friction constraint error reduction //0.5
-    dynamicsWorld->getSolverInfo().m_numIterations = 10; //number of constraint iterations
+    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.25);  //non-contact constraint error reduction //0.25
+    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(0.75); //contact constraint error reduction //0.75
+    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.5); //friction constraint error reduction //0.5
+    dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
     dynamicsWorld->getSolverInfo().m_sor = Scalar(1.); //not used
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = Scalar(20.); //not used
+    dynamicsWorld->getSolverInfo().m_maxErrorReduction = Scalar(0.); //not used
     
     //Collision
     dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = Scalar(0.01); //value close to zero needed for accurate friction // -0.001
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = Scalar(0.2); //error reduction for rigid body angular velocity //1.0
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = Scalar(0.0); //value close to zero needed for accurate friction // -0.001
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = Scalar(1.0); //error reduction for rigid body angular velocity //1.0
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
     dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = Scalar(0.0);
     dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
-    dynamicsWorld->getSolverInfo().m_restitutionVelocityThreshold = Scalar(0.01); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
+    dynamicsWorld->getSolverInfo().m_restitutionVelocityThreshold = Scalar(0.05); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
     
     //Special forces
     dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = Scalar(1e30); //gyroscopic effect
@@ -698,6 +701,8 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback;
+    gContactProcessedCallback = SimulationManager::ContactInfoUpdateCallback;
+    gContactDestroyedCallback = SimulationManager::ContactInfoDestroyCallback;
     dynamicsWorld->setSynchronizeAllMotionStates(false);
     
     //Set default params
@@ -1161,8 +1166,11 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     cp.m_combinedRollingFriction = Scalar(0.0);
     cp.m_combinedSpinningFriction = Scalar(0.0);
     
-    //Slipping
-    cp.m_userPersistentData = (void *)(new Vector3(slipVel));
+    //Save user data
+    ContactInfo* cInfo = new ContactInfo();
+    cInfo->totalAppliedImpulse = Scalar(0);
+    cInfo->slip = slipVel;
+    cp.m_userPersistentData = cInfo;
     
     //Damping angular velocity around contact normal (reduce spinning)
     //calculate relative angular velocity
@@ -1184,7 +1192,6 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     cp.m_combinedRestitution = mat0.restitution * mat1.restitution;
     
     //printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
-    //printf("%1.3lf\n", cp.m_distance1);
     
     return true;
 }
@@ -1453,5 +1460,18 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     simManager->SimulationStepCompleted(timeStep);
 }
 
+//Used to save contact information, including contact forces
+bool SimulationManager::ContactInfoUpdateCallback(btManifoldPoint& cp, void* body0, void* body1)
+{
+    ContactInfo* cInfo = (ContactInfo*)cp.m_userPersistentData;
+    cInfo->totalAppliedImpulse += cp.m_appliedImpulse;  
+    return true;
 }
 
+bool SimulationManager::ContactInfoDestroyCallback(void* userPersistentData)
+{
+    delete ((ContactInfo*)userPersistentData);
+    return true;
+}
+
+}

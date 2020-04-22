@@ -36,7 +36,11 @@ namespace sf
  
 //Static
 std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
+#ifdef DEBUG
+const Scalar AcousticModem::soundVelocity = Scalar(10);
+#else
 const Scalar AcousticModem::soundVelocity = Scalar(1500);
+#endif
 
 void AcousticModem::addNode(AcousticModem* node)
 {
@@ -141,7 +145,7 @@ CommType AcousticModem::getType()
 void AcousticModem::SendMessage(std::string data)
 {    
     if(!mutualContact(getDeviceId(), getConnectedId()))
-        return;
+       return;
     
     AcousticDataFrame* msg = new AcousticDataFrame();
     msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
@@ -180,7 +184,7 @@ void AcousticModem::InternalUpdate(Scalar dt)
 {
     //Propagate messages already sent
     std::map<AcousticDataFrame*, Vector3>::iterator mIt;
-    for(mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
+    for(mIt = propagating.begin(); mIt != propagating.end(); )
     {
         AcousticModem* dest = getNode(mIt->first->destination);
         Vector3 dO = dest->getDeviceFrame().getOrigin();
@@ -192,13 +196,15 @@ void AcousticModem::InternalUpdate(Scalar dt)
         {
             mIt->first->travelled += d;
             dest->MessageReceived(mIt->first);
-            propagating.erase(mIt);
+            mIt = propagating.erase(mIt);
         }
         else //Advance pulse
         {
             dir /= d; //Normalize direction
-            mIt->second += dir * soundVelocity * dt;
+            d = soundVelocity * dt;
+            mIt->second += dir * d;
             mIt->first->travelled += d;
+            ++mIt;
         }
     }
     
@@ -233,7 +239,19 @@ std::vector<Renderable> AcousticModem::Render()
     item.type = RenderableType::SENSOR_CS;
     item.model = glMatrixFromTransform(getDeviceFrame());
     items.push_back(item);
-    
+
+#ifdef DEBUG
+    item.type = RenderableType::SENSOR_POINTS;
+    item.model = glm::mat4(1.f);
+    std::map<AcousticDataFrame*, Vector3>::iterator mIt;
+    for(mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
+    {
+        Vector3 mPos = mIt->second;
+        item.points.push_back(glm::vec3((GLfloat)mPos.getX(), (GLfloat)mPos.getY(), (GLfloat)mPos.getZ()));
+    }
+    items.push_back(item);
+#endif
+
     return items;
 }
 

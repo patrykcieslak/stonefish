@@ -55,6 +55,13 @@ namespace sf
         Vector3 slippingVelocityA;
         Vector3 normalForceA;
     };
+
+    //! A structure containing the internal data attached to a contact point.
+    struct ContactInfo
+    {
+        Scalar totalAppliedImpulse;
+        Vector3 slip;
+    };
     
     struct Renderable;
     class Entity;
@@ -74,7 +81,7 @@ namespace sf
         
         //! A destructor.
         ~Contact();
-        
+
         //! A method to add a contact point to the history.
         /*!
          \param manifold a pointer to the contact manifold
