@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/FilteredCollisionDispatcher.h"
@@ -37,7 +37,7 @@ namespace sf
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
     inclusive = inclusiveMode;
-    setNearCallback(myNearCallback);
+    //setNearCallback(myNearCallback);
 }
 
 bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
@@ -89,22 +89,6 @@ void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair
                 Scalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0, colObj1, dispatchInfo, &contactPointResult);
                 if (dispatchInfo.m_timeOfImpact > toi)
                     dispatchInfo.m_timeOfImpact = toi;
-            }
-            
-            btManifoldArray marray;
-            collisionPair.m_algorithm->getAllContactManifolds(marray);
-            
-            Entity* entA = (Entity*)obj0Wrap.m_collisionObject->getUserPointer();
-            Entity* entB = (Entity*)obj1Wrap.m_collisionObject->getUserPointer();
-            Contact* contact = SimulationApp::getApp()->getSimulationManager()->getContact(entA, entB);
-            
-            for(int i=0; i<marray.size(); ++i)
-            {
-                if(marray[i]->getNumContacts() > 0)
-                {
-                    if(contact != NULL)
-                        contact->AddContactPoint(marray[i], contact->getEntityA() != entA);
-                }
             }
         }
     }

@@ -608,7 +608,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     return true;
 }
 
-bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns)
+bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns, bool compoundPart)
 {
     //---- Basic ----
     const char* name = nullptr;
@@ -644,11 +644,10 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     
     std::string typeStr(type);
     std::string solidName = ns != "" ? ns + "/" + std::string(name) : std::string(name);
-    
+    XMLElement* item;
+
     if(typeStr == "compound")
     {
-        XMLElement* item;
-        
         //First external part
         SolidEntity* part = nullptr;
         Compound* comp = nullptr;
@@ -656,7 +655,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
       
         if((item = element->FirstChildElement("external_part")) == nullptr)
             return false;
-        if(!ParseSolid(item, part, solidName))
+        if(!ParseSolid(item, part, solidName, true))
             return false;
         XMLElement* item2;
         if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
@@ -667,7 +666,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         item = item->NextSiblingElement("external_part");
         while(item != nullptr)
         {
-            if(!ParseSolid(item, part, solidName))
+            if(!ParseSolid(item, part, solidName, true))
             {
                 delete comp;
                 return false;
@@ -687,7 +686,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         item = element->FirstChildElement("internal_part");
         while(item != nullptr)
         {
-            if(!ParseSolid(item, part, solidName))
+            if(!ParseSolid(item, part, solidName, true))
             {
                 delete comp;
                 return false;
@@ -708,7 +707,6 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     else
     {
         //---- Common ----
-        XMLElement* item;
         const char* mat = nullptr;
         const char* look = nullptr;
         const char* inertia = nullptr;
@@ -869,7 +867,22 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             solid->SetArbitraryPhysicalProperties(newMass, newI, newCg);
         }
     }
- 
+
+    //Contact properties (soft contact)
+    if(!compoundPart)
+    {
+        Scalar contactK;
+        Scalar contactD;
+        
+        if((item = element->FirstChildElement("contact")) == nullptr 
+            || item->QueryAttribute("stiffness", &contactK) != XML_SUCCESS
+            || item->QueryAttribute("damping", &contactD) != XML_SUCCESS)
+            contactK = contactD = Scalar(-1);
+
+        if(contactK > Scalar(0) && contactD >= Scalar(0))
+            solid->SetContactProperties(true, contactK, contactD);
+    }
+       
     return true;
 }
 

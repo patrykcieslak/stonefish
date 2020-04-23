@@ -700,9 +700,9 @@ void SimulationManager::InitializeSolver()
     //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
-    gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback;
-    gContactProcessedCallback = SimulationManager::ContactInfoUpdateCallback;
-    gContactDestroyedCallback = SimulationManager::ContactInfoDestroyCallback;
+    gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback; //Compute combined friction and restitution
+    //gContactProcessedCallback = SimulationManager::ContactInfoUpdateCallback; //Update user data
+    gContactDestroyedCallback = SimulationManager::ContactInfoDestroyCallback; //Clear user data allocated in contact points
     dynamicsWorld->setSynchronizeAllMotionStates(false);
     
     //Set default params
@@ -1187,11 +1187,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     
     if(ent1->getType() == ENTITY_SOLID && !btFuzzyZero(relAngularVelocity10))
         ((SolidEntity*)ent1)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity10/btFabs(relAngularVelocity10) * T);
-    
+
     //Restitution
     cp.m_combinedRestitution = mat0.restitution * mat1.restitution;
-    
-    //printf("%s <-> %s  R:%1.3lf F:%1.3lf\n", ent0->getName().c_str(), ent1->getName().c_str(), cp.m_combinedRestitution, cp.m_combinedFriction);
     
     return true;
 }
@@ -1445,14 +1443,28 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
         }
     }
     
-    //loop through all sensors -> update measurements
+    //Loop through all sensors -> update measurements
     for(size_t i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
         
-    //loop through all comms -> update state and measurements
+    //Loop through all comms -> update state and measurements
     for(size_t i = 0; i < simManager->comms.size(); ++i)
         simManager->comms[i]->Update(timeStep);
     
+    //Loop through contact manifolds -> update contacts
+    int numManifolds = world->getDispatcher()->getNumManifolds();
+    for(int i=0; i<numManifolds; ++i)
+    {
+        btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
+        btCollisionObject* coA = (btCollisionObject*)contactManifold->getBody0();
+        btCollisionObject* coB = (btCollisionObject*)contactManifold->getBody1();
+        Entity* entA = (Entity*)coA->getUserPointer();
+        Entity* entB = (Entity*)coB->getUserPointer();
+        Contact* contact = simManager->getContact(entA, entB);
+        if(contact != NULL && contactManifold->getNumContacts() > 0)
+            contact->AddContactPoint(contactManifold, contact->getEntityA() != entA, timeStep);        
+    }
+
     //Update simulation time
     simManager->simulationTime += timeStep;
     
@@ -1468,6 +1480,7 @@ bool SimulationManager::ContactInfoUpdateCallback(btManifoldPoint& cp, void* bod
     return true;
 }
 
+//Used to deallocate memory reserved for contact information structure
 bool SimulationManager::ContactInfoDestroyCallback(void* userPersistentData)
 {
     delete ((ContactInfo*)userPersistentData);

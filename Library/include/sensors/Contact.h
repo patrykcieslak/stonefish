@@ -85,9 +85,10 @@ namespace sf
         //! A method to add a contact point to the history.
         /*!
          \param manifold a pointer to the contact manifold
-         \param swapped
+         \param swapped a flag indicating if the contact bodies are swapped
+         \param dt time step of the simulation tick callback
          */
-        void AddContactPoint(const btPersistentManifold* manifold, bool swapped);
+        void AddContactPoint(const btPersistentManifold* manifold, bool swapped, Scalar dt);
         
         //! A method to add a contact point to the history.
         /*!

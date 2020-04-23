@@ -96,8 +96,10 @@ namespace sf
          \param element a pointer to the XML node
          \param solid a reference to the loaded solid entity
          \param ns an optional namespace
+         \param compoundPart is this solid a part of a compound body?
          */
-        virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns = "");
+        virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, 
+                                        std::string ns = "", bool compoundPart = false);
         
         //! A method used to parse a robot description.
         /*!

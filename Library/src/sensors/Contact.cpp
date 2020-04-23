@@ -83,18 +83,26 @@ bool Contact::isNewDataAvailable()
     return newDataAvailable;
 }
 
-void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped)
+void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped, Scalar dt)
 {
     for(int i=0; i<manifold->getNumContacts(); ++i)
     {
+        const btManifoldPoint& mp = manifold->getContactPoint(i);
+        Vector3 locationA = swapped ? mp.getPositionWorldOnB() : mp.getPositionWorldOnA();
+        Vector3 normalForceA = (swapped ? Scalar(1.) : Scalar(-1.)) * mp.m_normalWorldOnB * mp.getAppliedImpulse() / dt;
+
+        //Filtering
+        if(points.size() > 0
+           && (locationA - points.back().locationA).length2() < (Scalar(0.001)*Scalar(0.001)) //Closer than 1 mm from the last point
+           && (normalForceA - points.back().normalForceA).fuzzyZero())  //No change in normal force
+            continue;
+
         ContactPoint p;
-        const btManifoldPoint* mp;
-        mp = &manifold->getContactPoint(i);
-        p.locationA = swapped ? mp->getPositionWorldOnB() : mp->getPositionWorldOnA();
-        p.locationB = swapped ? mp->getPositionWorldOnA() : mp->getPositionWorldOnB();
-        ContactInfo* cInfo = (ContactInfo*)mp->m_userPersistentData;
+        p.locationA = locationA;
+        p.locationB = swapped ? mp.getPositionWorldOnA() : mp.getPositionWorldOnB();
+        ContactInfo* cInfo = (ContactInfo*)mp.m_userPersistentData;
         p.slippingVelocityA = (swapped ? Scalar(-1.) : Scalar(1.)) * cInfo->slip;
-        p.normalForceA = (swapped ? Scalar(1.) : Scalar(-1.)) * mp->m_normalWorldOnB * cInfo->totalAppliedImpulse * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
+        p.normalForceA = normalForceA;
         AddContactPoint(p);
     }
 }
@@ -104,7 +112,7 @@ void Contact::AddContactPoint(ContactPoint p)
     //historyLen = 0 means "full history"
     if(historyLen > 0 && points.size() == historyLen)
         points.pop_front();
-    
+
     p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
     points.push_back(p);
     
