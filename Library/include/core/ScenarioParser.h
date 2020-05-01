@@ -28,6 +28,7 @@
 
 #include "StonefishCommon.h"
 #include "utils/tinyxml2.h"
+#include <map>
 
 using namespace tinyxml2;
 
@@ -66,6 +67,7 @@ namespace sf
          \param root a pointer to a root node
          */
         virtual bool PreProcess(XMLNode* root);
+        virtual bool PreProcess(XMLNode* root, std::map<std::string, std::string> &scenario_args);
     
         //! A method used to parse environment configuration.
         /*!
