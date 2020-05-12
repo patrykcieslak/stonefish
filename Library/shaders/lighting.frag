@@ -52,6 +52,8 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#version 330
+
 //Constants
 const float sunLightRadius = 0.03;
 
@@ -434,32 +436,7 @@ layout (std140) uniform SunSky
     float atmLengthUnitInMeters;
 };
 
-struct PointLight 
-{
-	vec3 position;
-    float radius;
-	vec3 color;
-};
-
-struct SpotLight 
-{
-	mat4 clipSpace;
-    vec3 position;
-	float frustumNear;
-    vec3 direction;
-	float frustumFar;
-    vec3 color;
-	float cone;
-    vec3 radius;
-};
-
-layout (std140) uniform Lights
-{
-    PointLight pointLights[MAX_POINT_LIGHTS];
-    SpotLight spotLights[MAX_SPOT_LIGHTS];
-    int numPointLights;
-    int numSpotLights;
-};
+#inject "lightingDef.glsl"
 
 uniform sampler2DArray spotLightsDepthMap;
 uniform sampler2DArrayShadow spotLightsShadowMap;

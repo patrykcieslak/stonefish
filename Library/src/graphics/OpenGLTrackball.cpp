@@ -45,6 +45,7 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
     dragging = false;
     transMode = false;
     holdingEntity = NULL;
+
     UpdateTransform();
 }
 
@@ -81,8 +82,11 @@ void OpenGLTrackball::UpdateTransform()
         glm::mat4 solidTrans = glMatrixFromTransform(holdingEntity->getCGTransform());
         center = glm::vec3(solidTrans[3]);
     }
-    
     trackballTransform = glm::lookAt(GetEyePosition(), center, GetUpDirection());
+    
+    viewUBOData.VP = GetProjectionMatrix() * GetViewMatrix();
+    viewUBOData.eye = GetEyePosition();
+    ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
 }
 
 GLfloat OpenGLTrackball::calculateZ(GLfloat x, GLfloat y)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GLSLShader__
@@ -129,7 +129,13 @@ namespace sf
                    std::string vertex = "",
                    std::string geometry = "",
                    std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-				   
+
+        //! A constructor.
+        /*!
+         \param sources a vector of pairs defining the shader type and the source code
+         */
+        GLSLShader(const std::vector<std::pair<GLenum, std::string>>& sources, std::vector<GLuint> precompiled = std::vector<GLuint>(0));
+		   
         //! A destructor.
         ~GLSLShader();
         
@@ -251,9 +257,16 @@ namespace sf
         //! A method used to bind a GLSL uniform block.
         /*!
          \param name the name of the uniform block
-         \param bindingPoint the index of the binfing point
+         \param bindingPoint the index of the binding point
          */
         bool BindUniformBlock(std::string name, GLuint bindingPoint);
+
+        //! A method used to bind a GLSL shader storage block.
+        /*!
+         \param name the name of the shader storage block
+         \param bindingPoint the index of the binding point
+         */
+        bool BindShaderStorageBlock(std::string name, GLuint bindingPoint);
 
         //! A method to check if the shader is valid.
         bool isValid();
@@ -281,7 +294,7 @@ namespace sf
          \param shaderCompiled a pointer to a variable that will hold the shader compilation output code
          \return an id of the new compiled shader
          */
-        static GLuint LoadShader(GLenum shaderType, std::string filename, const std::string& header, GLint* shaderCompiled);
+        static GLuint LoadShader(GLenum shaderType, const std::string& filename, const std::string& header, GLint* shaderCompiled);
         
     private:
         bool GetAttribute(std::string name, ParameterType type, GLint& index);

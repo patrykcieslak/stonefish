@@ -1,8 +1,5 @@
-#version 420
 #define FXAA_PC 1
 #define FXAA_GLSL_130 1
-#define FXAA_QUALITY__PRESET 15
-
 #define FXAA_GREEN_AS_LUMA 0
 
 /*--------------------------------------------------------------------------*/

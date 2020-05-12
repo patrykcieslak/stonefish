@@ -247,13 +247,17 @@ void GraphicalSimulationApp::InitializeSDL()
     
     //Initialize OpenGL function handlers 
     int version = gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
-    cInfo("Window created. OpenGL %d.%d contexts created.", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
-    
+    int vmajor = GLAD_VERSION_MAJOR(version);
+    int vminor = GLAD_VERSION_MINOR(version);
+    if(vmajor < 4 || (vmajor == 4 && vminor < 3))
+        cCritical("This program requires support for OpenGL 4.3, however OpenGL %d.%d was detected! Exiting...", vmajor, vminor);
+
     //Initialize OpenGL pipeline
+    cInfo("Window created. OpenGL %d.%d contexts created.", vmajor, vminor);
     OpenGLState::Init();
-    if(!GLSLShader::Init())
-        cCritical("No shader support!");
+    GLSLShader::Init();
     
+    //Initialize console output
     std::vector<ConsoleMessage> textLines = console->getLines();
     delete console;
     console = new OpenGLConsole();

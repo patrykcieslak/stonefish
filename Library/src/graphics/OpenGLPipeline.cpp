@@ -56,7 +56,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     //Load shaders and create rendering buffers
     cInfo("Loading shaders...");
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
-    OpenGLCamera::Init();
+    OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
     OpenGLFLS::Init();
     OpenGLOceanParticles::Init();
@@ -395,9 +395,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                 //Clear main framebuffer and setup camera
                 OpenGLState::BindFramebuffer(camera->getRenderFBO());
-                GLenum renderBuffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-                glDrawBuffers(2, renderBuffs);
+                GLenum renderBuffs[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+                glDrawBuffers(3, renderBuffs);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                glDrawBuffers(2, renderBuffs);
+
                 camera->SetViewport();
                 content->SetCurrentView(camera);
                 
@@ -423,7 +425,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Update ocean for this camera
                     if(ocean->hasWaves())
                         glOcean->UpdateSurface(camera);
-                    
+
                     //Generating stencil mask
                     glOcean->DrawUnderwaterMask(camera);
                     
@@ -433,16 +435,19 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     DrawLights();
                     glOcean->DrawBackground(camera);
 					
-					//Draw lights
-					//DrawLights();
-					
                     //a) Surface with waves
                     if(ocean->hasWaves())
                     {
+                        GLenum renderBuffs2[2] = {GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT1};
+                        glDrawBuffers(2, renderBuffs2);
+                        glOcean->DrawSurface(camera);
+                        glDrawBuffers(2, renderBuffs);
+                        OpenGLState::DisableDepthTest();
                         OpenGLState::EnableBlend();
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        glOcean->DrawSurface(camera);
+                        content->DrawTexturedSAQ(camera->getColorTexture(1));
                         OpenGLState::DisableBlend();
+                        OpenGLState::EnableDepthTest();
                         glOcean->DrawBacksurface(camera);
                     }
                     else //b) Surface without waves (disable depth testing but write to depth buffer)
@@ -465,8 +470,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw all objects as above surface (depth testing will secure drawing only what is above water)
                     content->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
-                    
-					//Draw lights
 					DrawLights();
 					
                     //Render sky (left for the end to only fill empty spaces)
@@ -491,7 +494,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //Draw reflections
                     OpenGLState::BindFramebuffer(camera->getRenderFBO());
                     OpenGLState::DisableDepthTest();
-                    //camera->DrawSSR();
+                    camera->DrawSSR();
                     
                     //Draw blur only below surface
                     OpenGLState::EnableStencilTest();
@@ -522,11 +525,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     
                     //Graphics debugging
-                    /*if(ocean != NULL)
+                    if(ocean != NULL)
                     {
-                        //ocean->getOpenGLOcean().ShowOceanSpectrum(glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]), glm::vec4(0,200,300,300));
-                        //ocean->getOpenGLOcean()->ShowTexture(4, glm::vec4(0,0,256,256));
-                    }*/
+                        //ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(512.f,512.f), glm::vec4(0.f,0.f,512.f,512.f));
+                        //ocean->getOpenGLOcean()->ShowTexture(3, glm::vec4(0,0,512,512));
+                    }
             
                     /*atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,0,200,200));
                     atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(200,0,200,200));

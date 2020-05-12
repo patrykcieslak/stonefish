@@ -17,6 +17,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#version 330
+
 in vec4 fragPos;
 in float logz;
 

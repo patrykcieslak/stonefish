@@ -29,7 +29,8 @@
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"
-#include "graphics/OpenGLOcean.h"
+#include "graphics/OpenGLFlatOcean.h"
+#include "graphics/OpenGLRealOcean.h"
 
 namespace sf
 {
@@ -201,7 +202,10 @@ void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world
 
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
-    glOcean = new OpenGLOcean((float)oceanState, hydrodynamics);
+    if(oceanState > 0.0)
+        glOcean = new OpenGLRealOcean(depth, oceanState, hydrodynamics);
+    else
+        glOcean = new OpenGLFlatOcean(depth);
     SetupWaterProperties(0.0);
 }
 

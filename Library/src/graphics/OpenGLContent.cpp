@@ -60,14 +60,6 @@ OpenGLContent::OpenGLContent()
     csBuf[1] = 0;
     cylinder.vao = 0;
     ellipsoid.vao = 0;
-    helperShader = NULL;
-    texQuadShader = NULL;
-    texQuadMSShader = NULL;
-    texLayerQuadShader = NULL;
-    texLevelQuadShader = NULL;
-    texCubeShader = NULL;
-    flatShader = NULL;
-    shadowShader = NULL;
     lightSourceShader[0] = lightSourceShader[1] = NULL;
     eyePos = glm::vec3();
     viewDir = glm::vec3(1.f,0,0);
@@ -203,62 +195,61 @@ OpenGLContent::OpenGLContent()
     glBindBufferRange(GL_UNIFORM_BUFFER, UBO_LIGHTS, lightsUBO, 0, sizeof(LightsUBO));
     memset(&lightsUBOData, 0, sizeof(LightsUBO));
 
+    ViewUBO viewZero;
+    viewZero.eye = glm::vec4(0.f);
+	viewZero.VP = glm::perspectiveFov(1.57f, 800.f, 600.f, 0.1f, 10000.f);
+    OpenGLView::ExtractFrustumFromVP(viewZero.frustum, viewZero.VP);
+    glGenBuffers(1, &viewUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(ViewUBO), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_VIEW, viewUBO, 0, sizeof(ViewUBO));
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), &viewZero);
+    
     //Load shaders
-    //Basic
-    helperShader = new GLSLShader("helpers.frag","helpers.vert");
-    helperShader->AddUniform("MVP", ParameterType::MAT4);
-    helperShader->AddUniform("scale", ParameterType::VEC3);
+    //-----BASIC-----
+    basicShaders["helper"] = new GLSLShader("helpers.frag","helpers.vert");
+    basicShaders["helper"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders["helper"]->AddUniform("scale", ParameterType::VEC3);
     
-    texSaqShader = new GLSLShader("texQuad.frag");
-    texSaqShader->AddUniform("tex", ParameterType::INT);
-    texSaqShader->AddUniform("color", ParameterType::VEC4);
+    basicShaders["tex_saq"] = new GLSLShader("texQuad.frag");
+    basicShaders["tex_saq"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_saq"]->AddUniform("color", ParameterType::VEC4);
     
-    texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
-    texQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texQuadShader->AddUniform("tex", ParameterType::INT);
-    texQuadShader->AddUniform("color", ParameterType::VEC4);
+    basicShaders["tex_quad"] = new GLSLShader("texQuad.frag","texQuad.vert");
+    basicShaders["tex_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders["tex_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_quad"]->AddUniform("color", ParameterType::VEC4);
     
-    texQuadMSShader = new GLSLShader("texQuadMS.frag","texQuad.vert");
-    texQuadMSShader->AddUniform("rect", ParameterType::VEC4);
-    texQuadMSShader->AddUniform("tex", ParameterType::INT);
-    texQuadMSShader->AddUniform("texSize", ParameterType::IVEC2);
+    basicShaders["tex_layer_quad"] = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
+    basicShaders["tex_layer_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders["tex_layer_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_layer_quad"]->AddUniform("layer", ParameterType::INT);
     
-    texLayerQuadShader = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
-    texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texLayerQuadShader->AddUniform("tex", ParameterType::INT);
-    texLayerQuadShader->AddUniform("layer", ParameterType::INT);
+    basicShaders["tex_level_quad"] = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
+    basicShaders["tex_level_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders["tex_level_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_level_quad"]->AddUniform("level", ParameterType::INT);
     
-    texLevelQuadShader = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
-    texLevelQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texLevelQuadShader->AddUniform("tex", ParameterType::INT);
-    texLevelQuadShader->AddUniform("level", ParameterType::INT);
+    basicShaders["tex_cube"] = new GLSLShader("texCube.frag", "texCube.vert");
+    basicShaders["tex_cube"]->AddUniform("tex", ParameterType::INT);
     
-    texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
-    texCubeShader->AddUniform("tex", ParameterType::INT);
-    
-    flatShader = new GLSLShader("flat.frag", "flat.vert");
-    flatShader->AddUniform("MVP", ParameterType::MAT4);
-    flatShader->AddUniform("FC", ParameterType::FLOAT);
+    basicShaders["flat"] = new GLSLShader("flat.frag", "flat.vert");
+    basicShaders["flat"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders["flat"]->AddUniform("FC", ParameterType::FLOAT);
 
-    shadowShader = new GLSLShader("shadow.frag", "shadow.vert");
-    shadowShader->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders["shadow"] = new GLSLShader("shadow.frag", "shadow.vert");
+    basicShaders["shadow"]->AddUniform("MVP", ParameterType::MAT4);
     
-    //Materials
-    GLint compiled;
-    std::string header1 = "#version 330\n";
-	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
-	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
-    std::string header2 = "#version 330\n";
-	header2 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
-	header2 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
-    
+    //-----MATERIALS-----
+    GLint compiled; 
 	std::vector<GLuint> commonMaterialShaders;
     commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
-	GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", header1, &compiled);
+	GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
 	commonMaterialShaders.push_back(pcssFragment);
 	
-	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header2, &compiled);
+	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", "", &compiled);
 	commonMaterialShaders.push_back(materialFragment);
 	
     //Blinn-Phong shader
@@ -277,11 +268,13 @@ OpenGLContent::OpenGLContent()
     glDeleteShader(materialFragment);
 	
     //-------------Underwater shaders---------------------------
-    commonMaterialShaders.pop_back();
+    commonMaterialShaders.pop_back(); //"material.frag"
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
-	commonMaterialShaders.push_back(oceanOpticsFragment);
-    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", header2, &compiled);
+    commonMaterialShaders.push_back(oceanOpticsFragment);
+    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", "", &compiled);
     commonMaterialShaders.push_back(materialFragment);
+    GLuint oceanSurfaceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
+    commonMaterialShaders.push_back(oceanSurfaceFragment);
     
     //Underwater Blinn-Phong shader
     GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
@@ -298,10 +291,38 @@ OpenGLContent::OpenGLContent()
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("cWater", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);   
+    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);
     materialShaders.push_back(uwCookTorrance);
     
+    commonMaterialShaders.pop_back(); //"oceanSurfaceFlat.glsl"
+    glDeleteShader(oceanSurfaceFragment);
+    oceanSurfaceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurface.glsl", "", &compiled);
+    commonMaterialShaders.push_back(oceanSurfaceFragment);
+
+    //Underwater Blinn-Phong shader (waves)
+    uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
+    uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
+    uwBlinnPhong->AddUniform("cWater", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("bWater", ParameterType::VEC3);
+    uwBlinnPhong->AddUniform("texWaveFFT", ParameterType::INT);
+    uwBlinnPhong->AddUniform("gridSizes", ParameterType::VEC4);
+    materialShaders.push_back(uwBlinnPhong);
+    
+    //Underwater Cook-Torrance shader (waves)
+    uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
+    uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
+    uwCookTorrance->AddUniform("cWater", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);
+    uwCookTorrance->AddUniform("texWaveFFT", ParameterType::INT);
+    uwCookTorrance->AddUniform("gridSizes", ParameterType::VEC4);
+    materialShaders.push_back(uwCookTorrance);
+
     glDeleteShader(materialFragment);
+    glDeleteShader(oceanSurfaceFragment);
 	
     //Add common uniforms
     for(size_t i=0; i<materialShaders.size(); ++i)
@@ -346,7 +367,7 @@ OpenGLContent::OpenGLContent()
     commonLightShaders.push_back(pcssFragment);
     
     //Above surface
-    GLuint lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSource.frag", header2, &compiled);
+    GLuint lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSource.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
     lightSourceShader[0] = new GLSLShader(commonLightShaders, "light.frag", "material.vert");
@@ -356,7 +377,7 @@ OpenGLContent::OpenGLContent()
     glDeleteShader(lightSourceFragment);
 
     commonLightShaders.push_back(oceanOpticsFragment);
-    lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwLightSource.frag", header2, &compiled);
+    lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwLightSource.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
     lightSourceShader[1] = new GLSLShader(commonLightShaders, "light.frag", "material.vert");
@@ -414,15 +435,15 @@ OpenGLContent::~OpenGLContent()
     if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
     if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
     if(lightsUBO != 0) glDeleteBuffers(1, &lightsUBO);
-    if(helperShader != NULL) delete helperShader;
-    if(texSaqShader != NULL) delete texSaqShader;
-    if(texQuadShader != NULL) delete texQuadShader;
-    if(texQuadMSShader != NULL) delete texQuadMSShader;
-    if(texLayerQuadShader != NULL) delete texLayerQuadShader;
-    if(texLevelQuadShader != NULL) delete texLevelQuadShader;
-    if(texCubeShader != NULL) delete texCubeShader;
-    if(flatShader != NULL) delete flatShader;
-    if(shadowShader != NULL) delete shadowShader;
+    if(viewUBO != 0) glDeleteBuffers(1, &viewUBO);
+    delete basicShaders["helper"];
+    delete basicShaders["tex_saq"];
+    delete basicShaders["tex_quad"];
+    delete basicShaders["tex_layer_quad"];
+    delete basicShaders["tex_level_quad"];
+    delete basicShaders["tex_cube"];
+    delete basicShaders["flat"];
+    delete basicShaders["shadow"];
     if(lightSourceShader[0] != NULL) delete lightSourceShader[0];
     if(lightSourceShader[1] != NULL) delete lightSourceShader[1];
     
@@ -501,6 +522,10 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
     projection = v->GetProjectionMatrix();
     viewProjection = projection * view;
     FC = v->GetLogDepthConstant();
+
+    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), v->getViewUBOData());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void OpenGLContent::SetDrawingMode(DrawingMode m)
@@ -523,9 +548,9 @@ void OpenGLContent::DrawSAQ()
 void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 {
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    texSaqShader->Use();
-    texSaqShader->SetUniform("tex", TEX_BASE);
-    texSaqShader->SetUniform("color", color);
+    basicShaders["tex_saq"]->Use();
+    basicShaders["tex_saq"]->SetUniform("tex", TEX_BASE);
+    basicShaders["tex_saq"]->SetUniform("color", color);
     
     OpenGLState::BindVertexArray(baseVertexArray);
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -537,14 +562,14 @@ void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
 {
-    if(texQuadShader != NULL)
+    if(basicShaders["tex_quad"] != NULL)
     {
         y = viewportSize.y-y-height;
         
-        texQuadShader->Use();
-        texQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        texQuadShader->SetUniform("tex", TEX_BASE);
-        texQuadShader->SetUniform("color", color);
+        basicShaders["tex_quad"]->Use();
+        basicShaders["tex_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        basicShaders["tex_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders["tex_quad"]->SetUniform("color", color);
         
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
         OpenGLState::BindVertexArray(baseVertexArray);
@@ -562,23 +587,23 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
 {
-    if((array && texLayerQuadShader != NULL)||(!array && texLevelQuadShader != NULL))
+    if((array && basicShaders["tex_layer_quad"] != NULL)||(!array && basicShaders["tex_level_quad"] != NULL))
     {
         y = viewportSize.y-y-height;
         
         if(array)
         {
-            texLayerQuadShader->Use();
-            texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-            texLayerQuadShader->SetUniform("tex", TEX_BASE);
-            texLayerQuadShader->SetUniform("layer", z);
+            basicShaders["tex_layer_quad"]->Use();
+            basicShaders["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+            basicShaders["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
+            basicShaders["tex_layer_quad"]->SetUniform("layer", z);
         }
         else
         {
-            texLevelQuadShader->Use();
-            texLevelQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-            texLevelQuadShader->SetUniform("tex", TEX_BASE);
-            texLevelQuadShader->SetUniform("level", z);
+            basicShaders["tex_level_quad"]->Use();
+            basicShaders["tex_level_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+            basicShaders["tex_level_quad"]->SetUniform("tex", TEX_BASE);
+            basicShaders["tex_level_quad"]->SetUniform("level", z);
         }
         
         OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
@@ -595,37 +620,12 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
     }
 }
 
-void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize)
-{
-    if(texQuadMSShader != NULL)
-    {
-        y = viewportSize.y-y-height;
-        
-        texQuadMSShader->Use();
-        texQuadMSShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        texQuadMSShader->SetUniform("tex", TEX_BASE);
-        texQuadMSShader->SetUniform("texSize", texSize);
-        
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_MULTISAMPLE, textureMS);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
-    }
-}	
-
 void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
-    if(cubeBuf != 0 && texCubeShader != NULL)
+    if(cubeBuf != 0 && basicShaders["tex_cube"] != NULL)
     {
-        texCubeShader->Use();
-        texCubeShader->SetUniform("tex", TEX_BASE);
+        basicShaders["tex_cube"]->Use();
+        basicShaders["tex_cube"]->SetUniform("tex", TEX_BASE);
         
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
         OpenGLState::BindVertexArray(baseVertexArray);
@@ -651,11 +651,11 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 
 void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 {
-    if(csBuf[0] != 0 && helperShader != NULL)
+    if(csBuf[0] != 0 && basicShaders["helper"] != NULL)
     {
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", glm::vec3(size));
+        basicShaders["helper"]->Use();
+        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+        basicShaders["helper"]->SetUniform("scale", glm::vec3(size));
         
         OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
@@ -678,11 +678,11 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 
 void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 {
-    if(helperShader != NULL && cylinder.vao != 0)
+    if(basicShaders["helper"] != NULL && cylinder.vao != 0)
     {
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", dims);
+        basicShaders["helper"]->Use();
+        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+        basicShaders["helper"]->SetUniform("scale", dims);
         
         OpenGLState::BindVertexArray(cylinder.vao);
         glVertexAttrib4fv(1, &color.r);
@@ -694,11 +694,11 @@ void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 
 void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 {
-    if(helperShader != NULL && ellipsoid.vao != 0)
+    if(basicShaders["helper"] != NULL && ellipsoid.vao != 0)
     {
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", radii);
+        basicShaders["helper"]->Use();
+        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+        basicShaders["helper"]->SetUniform("scale", radii);
         
         OpenGLState::BindVertexArray(ellipsoid.vao);
         glVertexAttrib4fv(1, &color.r);
@@ -710,14 +710,14 @@ void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 
 void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
 {
-    if(helperShader != NULL && vertices.size() > 0)
+    if(basicShaders["helper"] != NULL && vertices.size() > 0)
     {
         GLuint vbo;
         glGenBuffers(1, &vbo);
         
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", glm::vec3(1.f));
+        basicShaders["helper"]->Use();
+        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+        basicShaders["helper"]->SetUniform("scale", glm::vec3(1.f));
         
         OpenGLState::BindVertexArray(baseVertexArray);
         glEnableVertexAttribArray(0);
@@ -769,8 +769,8 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 
             case DrawingMode::SHADOW:
             {
-                shadowShader->Use();
-                shadowShader->SetUniform("MVP", viewProjection*M);
+                basicShaders["shadow"]->Use();
+                basicShaders["shadow"]->SetUniform("MVP", viewProjection*M);
                 OpenGLState::BindVertexArray(objects[objectId].vao);
                 glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
                 OpenGLState::BindVertexArray(0);
@@ -779,9 +779,9 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
             
             case DrawingMode::FLAT:
             {
-                flatShader->Use();
-                flatShader->SetUniform("MVP", viewProjection*M);
-                flatShader->SetUniform("FC", FC);
+                basicShaders["flat"]->Use();
+                basicShaders["flat"]->SetUniform("MVP", viewProjection*M);
+                basicShaders["flat"]->SetUniform("FC", FC);
                 OpenGLState::BindVertexArray(objects[objectId].vao);
                 glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
                 OpenGLState::BindVertexArray(0);
@@ -875,12 +875,16 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
     bool updateMaterial = (int)lookId != currentLookId;
     currentLookId = (int)lookId;
 
+    bool waves = false;
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    if(ocean != NULL && ocean->hasWaves()) waves = true;
+
     switch(l.type)
     {		
         default:
         case SIMPLE: //Blinn-Phong
         {
-            shader = mode == DrawingMode::FULL ? materialShaders[0] : materialShaders[2];
+            shader = mode == DrawingMode::FULL ? materialShaders[0] : (waves ? materialShaders[4] : materialShaders[2]);
             shader->Use();
             shader->SetUniform("MVP", viewProjection*M);
             shader->SetUniform("M", M);
@@ -912,7 +916,7 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
             
         case PHYSICAL: //Cook-Torrance
         {
-            shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
+            shader = mode == DrawingMode::FULL ? materialShaders[1] : (waves ? materialShaders[5] : materialShaders[3]);
             shader->Use();
             shader->SetUniform("MVP", viewProjection*M);
             shader->SetUniform("M", M);
@@ -945,9 +949,14 @@ void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
     
     if(mode == DrawingMode::UNDERWATER)
     {
-        Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
         shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
         shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        if(waves)
+        {
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+        }
     }
 }
 
@@ -1147,6 +1156,94 @@ GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GL
 GLuint OpenGLContent::LoadInternalTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
     return LoadTexture(GetShaderPath() + filename, hasAlphaChannel, anisotropy);
+}
+
+GLuint OpenGLContent::GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, GLenum type, const void* data, 
+                                      FilteringMode fm, bool repeat, bool anisotropy)
+{
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    OpenGLState::BindTexture(TEX_BASE, target, texture);
+    
+    switch(target)
+    {
+        case GL_TEXTURE_1D:
+            if(dimensions.x == 0)
+            {
+                OpenGLState::UnbindTexture(TEX_BASE);
+                glDeleteTextures(1, &texture);
+                cError("Texture dimensions cannot be equal to 0!");
+                return 0;
+            }
+            glTexImage1D(target, 0, internalFormat, dimensions.x, 0, format, type, data);
+            break;
+
+        case GL_TEXTURE_2D:
+            if(dimensions.x == 0 || dimensions.y == 0)
+            {
+                OpenGLState::UnbindTexture(TEX_BASE);
+                glDeleteTextures(1, &texture);
+                cError("Texture dimensions cannot be equal to 0!");
+                return 0;
+            }
+            glTexImage2D(target, 0, internalFormat, dimensions.x, dimensions.y, 0, format, type, data);
+            break;
+
+        case GL_TEXTURE_2D_ARRAY:
+        case GL_TEXTURE_3D:
+            if(dimensions.x == 0 || dimensions.y == 0 || dimensions.z == 0)
+            {
+                OpenGLState::UnbindTexture(TEX_BASE);
+                glDeleteTextures(1, &texture);
+                cError("Texture dimensions cannot be equal to 0!");
+                return 0;
+            }
+            glTexImage3D(target, 0, internalFormat, dimensions.x, dimensions.y, dimensions.z, 0, format, type, data);
+            break;
+
+        default:
+            OpenGLState::UnbindTexture(TEX_BASE);
+            glDeleteTextures(1, &texture);
+            cError("Unsupported texture format requested!");
+            return 0;
+    }
+
+    GLenum repeatMode = repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, repeatMode);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, repeatMode);
+    if(target == GL_TEXTURE_3D)
+        glTexParameteri(target, GL_TEXTURE_WRAP_R, repeatMode);
+
+    if(anisotropy)
+        glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, OpenGLState::GetMaxAnisotropy());
+
+    switch(fm)
+    {
+        case FilteringMode::NEAREST:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            break;
+
+        case FilteringMode::BILINEAR:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            break;
+
+        case FilteringMode::BILINEAR_MIPMAP:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glGenerateMipmap(target);
+            break;
+
+        case FilteringMode::TRILINEAR:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glGenerateMipmap(target);
+            break;
+    }
+
+    OpenGLState::UnbindTexture(TEX_BASE);
+    return texture;
 }
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)

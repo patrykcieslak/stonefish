@@ -183,25 +183,21 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
 void OpenGLOceanParticles::Init()
 {
     GLint compiled;
-    std::string header1 = "#version 330\n";
-	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
-	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
-    std::string header2 = "#version 330\n";
-	header2 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
-	header2 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
-    
 	std::vector<GLuint> commonMaterialShaders;
     commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
-	GLuint lightingFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightingNoShadow.frag", header1, &compiled);
+	GLuint lightingFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightingNoShadow.frag", "", &compiled);
 	commonMaterialShaders.push_back(lightingFragment);
 
     GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
 	commonMaterialShaders.push_back(oceanOpticsFragment);
     
-    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", header2, &compiled);
+    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", "", &compiled);
     commonMaterialShaders.push_back(materialFragment);
 
+    GLuint oceanSurfaceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
+    commonMaterialShaders.push_back(oceanSurfaceFragment);
+    
     particleShader = new GLSLShader(commonMaterialShaders, "oceanParticle.frag", "billboard.vert");
     particleShader->AddUniform("MVP", ParameterType::MAT4);
     particleShader->AddUniform("camRight", ParameterType::VEC3);
@@ -223,6 +219,7 @@ void OpenGLOceanParticles::Init()
     glDeleteShader(lightingFragment);
     glDeleteShader(oceanOpticsFragment);
     glDeleteShader(materialFragment);
+    glDeleteShader(oceanSurfaceFragment);
 
     particleShader->Use();
     particleShader->SetUniform("tex", TEX_MAT_DIFFUSE);

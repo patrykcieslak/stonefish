@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -17,14 +17,22 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#version 330
+/*
+    Based on "Quadtrees on the GPU" by Jonathan Dupuy.
+*/
 
-layout(location = 0) in vec3 vertex;
-layout(location = 1) in float edge;
-out float edgeDiv;
+#version 430
 
-void main()
+layout(std140) buffer QTreeCull
 {
-	edgeDiv = edge;
-    gl_Position = vec4(vertex, 1.0);
+    vec4 culled[];
+};
+
+layout(location = 0) in vec2 i_grid; // grid data
+
+void main() 
+{
+	vec4 i_transformation = culled[gl_InstanceID];
+	vec2 p = i_grid * i_transformation.w + i_transformation.xy + i_transformation.w * 0.5;
+	gl_Position = vec4(p, 0, i_transformation.w);
 }

@@ -199,6 +199,38 @@ GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, GLSLHeader& header, 
         
     valid = true;
 }
+
+GLSLShader::GLSLShader(const std::vector<std::pair<GLenum, std::string>>& sources, std::vector<GLuint> precompiled)
+{
+    valid = false;
+    program = 0;
+
+    if(sources.size() > 0)
+    {
+        valid = true;
+        
+        std::vector<GLuint> shaders = precompiled;
+        GLint compiled = 0;
+
+        for(size_t i=0; i<sources.size(); ++i)
+        {
+            GLuint shader = LoadShader(sources[i].first, sources[i].second, "", &compiled);
+            if(compiled == 0)
+            {
+                valid = false;
+                break;
+            }
+            shaders.push_back(shader);
+        }
+
+        if(valid)
+        {
+            program = CreateProgram(shaders, precompiled.size());
+            if(program == 0)
+                valid = false;
+        }
+    }
+}
     
 GLSLShader::~GLSLShader()
 {
@@ -450,6 +482,23 @@ bool GLSLShader::BindUniformBlock(std::string name, GLuint bindingPoint)
     }
 }
 
+bool GLSLShader::BindShaderStorageBlock(std::string name, GLuint bindingPoint)
+{
+    GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, name.c_str());
+    if(blockIndex != GL_INVALID_INDEX)
+    {
+        glShaderStorageBlockBinding(program, blockIndex, bindingPoint);
+        return true;
+    }
+    else
+    {
+#ifdef DEBUG
+        cError("Shader storage block %s not found in program!", name.c_str());
+#endif
+        return false;
+    }
+}
+
 //// Statics
 bool GLSLShader::Init()
 {
@@ -475,7 +524,7 @@ void GLSLShader::Verbose()
     verbose = true;
 }
 
-GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, const std::string& header, GLint *shaderCompiled)
+GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, const std::string& header, GLint *shaderCompiled)
 {
     GLuint shader = 0;
     
@@ -483,7 +532,7 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, const std
     std::string sourcePath = basePath + filename;
     
     std::ifstream sourceFile(sourcePath);
-    if(!sourceFile) 
+    if(!sourceFile.is_open()) 
         cCritical("Shader file not found: %s", sourcePath.c_str());
     
     std::string source = header + "\n";
@@ -508,6 +557,11 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, std::string filename, const std
             {
                 std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
                 std::ifstream injectedFile(injectedPath);
+                if(!injectedFile.is_open())
+                {
+                    sourceFile.close();
+                    cCritical("Shader include file not found: %s", injectedPath.c_str());
+                }
 #ifdef DEBUG
                 if(verbose)
                     cInfo("--> Injecting source from: %s", injectedPath.c_str());
@@ -584,7 +638,7 @@ GLuint GLSLShader::CreateProgram(const std::vector<GLuint>& compiledShaders, uns
     
     if(programLinked == 0)
     {
-        cError("Failed to link program: %s", (GLuint*)&program);
+        cError("Failed to link program!");
         glDeleteProgram(program);
         program = 0;
     }

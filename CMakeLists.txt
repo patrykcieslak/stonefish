@@ -33,22 +33,25 @@ include_directories(
 # Build list of library source files
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
 
-# Create library target
-add_library(Stonefish SHARED ${SOURCES})
-target_link_libraries(Stonefish ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} GLEW)
-
-# Create tests and use library locally (has to be disabled when installing system-wide!)
+# Define targets
 if(BUILD_TESTS)
+    # Create tests and use library locally (has to be disabled when installing system-wide!)
+    add_library(Stonefish_test SHARED ${SOURCES})
+    target_link_libraries(Stonefish_test ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
     add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Library/shaders/\") #Modifies shader path of the library
     add_subdirectory(Tests)
+else()
+    # Create shared library to be installed system-wide
+    add_library(Stonefish SHARED ${SOURCES})
+    target_link_libraries(Stonefish ${BULLET_LIBRARIES} ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
+
+    # Install library in the system
+    install(
+        TARGETS Stonefish 
+        LIBRARY DESTINATION /usr/local/lib
+    )
+
+    install(DIRECTORY Library/include/ DESTINATION /usr/local/include/Stonefish)
+    install(DIRECTORY Library/shaders/ DESTINATION /usr/local/share/Stonefish/shaders)
+    install(FILES Library/stonefish.pc DESTINATION /usr/local/lib/pkgconfig)
 endif()
-
-# Install library in the system
-install(
-    TARGETS Stonefish 
-    LIBRARY DESTINATION /usr/local/lib
-)
-
-install(DIRECTORY Library/include/ DESTINATION /usr/local/include/Stonefish)
-install(DIRECTORY Library/shaders/ DESTINATION /usr/local/share/Stonefish/shaders)
-install(FILES Library/stonefish.pc DESTINATION /usr/local/lib/pkgconfig)

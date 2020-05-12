@@ -67,6 +67,15 @@
 //Standard UBO bindings
 #define UBO_SUNSKY              ((GLuint)1)
 #define UBO_LIGHTS              ((GLuint)2)
+#define UBO_VIEW                ((GLuint)3)
+
+//Standard SSBO bindings
+#define SSBO_HISTOGRAM          ((GLuint)1)
+#define SSBO_QTREE_IN           ((GLuint)2)
+#define SSBO_QTREE_OUT          ((GLuint)3)
+#define SSBO_QTREE_CULL         ((GLuint)4)
+#define AC_QTREE_LOD            ((GLuint)5)
+#define AC_QTREE_CULL           ((GLuint)6)
 
 //Light params
 #define MAX_POINT_LIGHTS        ((GLint)32)
@@ -162,80 +171,6 @@ namespace sf
         GLsizei faceCount;
     };
     
-    //! An enum used in quad tree traversal.
-    typedef enum {NW, NE, SW, SE} Quadrant;
-    
-    //! An enum used in quad tree traversal.
-    typedef enum {E, N, W, S} Direction;
-    
-    struct QuadTree;
-    
-    //! A structure representing a single node of a quad tree.
-    struct QuadTreeNode
-    {
-        QuadTree* tree;
-        QuadTreeNode* parent;
-        Quadrant q;
-        QuadTreeNode* child[4];
-        unsigned short level;
-        unsigned short delta[4];
-        unsigned long code;
-        bool leaf;
-        bool renderable;
-        glm::vec3 origin;
-        GLfloat size;
-        glm::vec4 edgeFactors;
-        
-        QuadTreeNode(QuadTree* tree_, QuadTreeNode* parent_, Quadrant q_, glm::vec3 origin_, GLfloat size_);
-        ~QuadTreeNode();
-        bool NeedsSubdivision(glm::vec3 eye, glm::vec3 origin_);
-        void Grow(glm::vec3 eye, glm::mat4 VP);
-    };
-    
-    //! A structure representing a quad tree.
-    struct QuadTree
-    {
-        QuadTreeNode* root;
-        std::vector<QuadTreeNode*> leafs;
-        GLuint vao;
-        GLuint vboVertex;
-        GLuint vboEdgeDiv;
-        glm::vec3 origin;
-        GLfloat size;
-        unsigned int maxLvl;
-        
-        QuadTree(glm::vec3 origin_, GLfloat size_, unsigned int maxLevel);
-        ~QuadTree();
-        void Update(glm::vec3 eye, glm::mat4 VP);
-        void Cut();
-        void Draw();
-    };
-
-    //! A structure representing the tesselation UBO (std140 aligned).
-    #pragma pack(1)
-    struct AdaptiveTessUBO
-    {
-        glm::mat4 MV;
-        glm::mat4 MVP;
-        glm::mat4 P;
-        glm::mat4 InvP;
-        glm::mat4 InvV;
-        glm::vec4 frustumPlanes[6];
-        glm::vec4 viewport;
-        glm::vec3 eyePos;
-        GLfloat triSize;
-        glm::vec3 tileSize;
-        GLfloat innerTessFactor;
-        glm::vec3 gridOrigin;
-        GLfloat outerTessFactor;
-        GLfloat tileBoundingSphereR;
-        GLfloat invFocalLen;
-        GLfloat FC;
-        GLint gridW;
-        GLint gridH;
-    };
-    #pragma pack(0)
-
     //! An enum representing the type of look of an object.
     typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
     
@@ -400,7 +335,7 @@ namespace sf
         RenderQuality ao;
         RenderQuality atmosphere;
         RenderQuality ocean;
-        bool aa;
+        RenderQuality aa;
         
         //! A constructor.
         RenderSettings()
@@ -411,7 +346,7 @@ namespace sf
             ao = RenderQuality::QUALITY_MEDIUM;
             atmosphere = RenderQuality::QUALITY_MEDIUM;
             ocean = RenderQuality::QUALITY_MEDIUM;
-            aa = false;
+            aa = RenderQuality::QUALITY_MEDIUM;
         }
     };
     

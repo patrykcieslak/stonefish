@@ -23,6 +23,8 @@
     https://github.com/jdupuy/whitecaps
 */
 
+#version 330
+
 in vec4 fragPos;
 in float logz;
 
@@ -125,7 +127,8 @@ void main()
 	
 	//Wave slope (layers 1,2)
     vec2 waveCoord = P.xy;
-	vec2 slopes = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
+	vec2 slopes = vec2(0.0);
+    slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 1.0)).zw;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 2.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 2.0)).zw;

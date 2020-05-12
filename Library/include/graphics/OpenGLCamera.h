@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLCamera__
@@ -62,7 +62,7 @@ namespace sf
         glm::vec4 float2Offsets[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
         glm::vec4 jitters[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
     };
-    
+ 
     class GLSLShader;
     class SolidEntity;
     
@@ -185,7 +185,11 @@ namespace sf
         GLuint getPostprocessFBO();
         
         //! A method returning the id of the color texture.
-        GLuint getColorTexture();
+        /*!
+         \param index the id of the texture in the list
+         \return OpenGL id of the texture
+         */
+        GLuint getColorTexture(unsigned int index);
         
         //! A method returning the id of the final texture.
         GLuint getFinalTexture();
@@ -217,22 +221,23 @@ namespace sf
         bool usingAutoExposure();
 		
         //! A static method to load shaders.
-        static void Init();
+        static void Init(const RenderSettings& rSettings);
         
         //! A static method to destroy shaders.
         static void Destroy();
         
     protected:
-        //Multisampled float textures
+        //Buffers
         GLuint renderColorTex;
+        GLuint renderColor2Tex;
         GLuint renderViewNormalTex;
         GLuint renderDepthStencilTex;
-        
-        //Float texture
-        GLuint lightMeterFBO;
-        GLuint lightMeterTex;
+        GLuint histogramSSBO;
+        GLuint histogramBins;
+        glm::vec2 histogramRange;
+        GLuint exposureTex;
         GLfloat exposureComp;
-		bool autoExposure;
+        bool autoExposure;
 		bool toneMapping;
         bool antiAliasing;
         
@@ -264,8 +269,7 @@ namespace sf
         glm::mat4 projection;
         
         //Shaders
-        static GLSLShader* lightMeterShader;
-        static GLSLShader* tonemapShader;
+        static GLSLShader** tonemappingShaders;
         static GLSLShader* depthLinearizeShader;
         static GLSLShader* aoDeinterleaveShader;
         static GLSLShader* aoCalcShader;

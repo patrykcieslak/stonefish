@@ -17,13 +17,15 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#version 330
+
 in vec3 normal;
 in vec2 texCoord;
 in vec4 fragPos;
 in vec3 eyeSpaceNormal;
 in float logz;
 
-layout(location = 0) out vec3 fragColor;
+layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 fragNormal;
 
 uniform vec3 eyePos;
@@ -44,32 +46,7 @@ layout (std140) uniform SunSky
     float atmLengthUnitInMeters;
 };
 
-struct PointLight 
-{
-	vec3 position;
-    float radius;
-	vec3 color;
-};
-
-struct SpotLight 
-{
-	mat4 clipSpace;
-    vec3 position;
-	float frustumNear;
-    vec3 direction;
-	float frustumFar;
-    vec3 color;
-	float cone;
-    vec3 radius;
-};
-
-layout (std140) uniform Lights
-{
-    PointLight pointLights[MAX_POINT_LIGHTS];
-    SpotLight spotLights[MAX_SPOT_LIGHTS];
-    int numPointLights;
-    int numSpotLights;
-};
+#inject "lightingDef.glsl"
 
 const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);
 
@@ -89,6 +66,7 @@ vec3 BeerLambert(float d);
 vec3 InScatteringSun(vec3 L, vec3 D, vec3 V, float z, float d);
 vec3 InScatteringPointLight(vec3 O, vec3 L, vec3 X, vec3 V, vec3 P, float d, float dw);
 vec3 InScatteringSpotLight(vec3 O, vec3 D, float w, float fn, vec3 L, vec3 X, vec3 V, vec3 P, float d, float dw);
+float displace(vec2 p);
 
 void main()
 {	
@@ -103,9 +81,11 @@ void main()
 	vec3 V = toEye/d;
 	vec3 S = RefractToWater(-sunDirection, waterSurfaceN);
 	float dw = d;
+	float waterLevel = displace(P.xy);
+	float depth = P.z - waterLevel;
 
-	if(eyePos.z < 0.0)
-		dw = max(P.z, 0.0)/dot(V, waterSurfaceN);
+	if(eyePos.z < waterLevel)
+		dw = max(P.z - waterLevel, 0.0)/dot(V, waterSurfaceN);
 	
 	//Diffuse color
 	vec4 albedo = vec4(color.rgb, 1.0);
@@ -121,25 +101,25 @@ void main()
 	vec3 posSky = vec3(P.xy/atmLengthUnitInMeters,-0.5/atmLengthUnitInMeters);
 	vec3 skyIlluminance;
 	vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, N, sunDirection, skyIlluminance);
-	fragColor = albedo.rgb * skyIlluminance * BeerLambert(dw+P.z);
+	fragColor.rgb = albedo.rgb * skyIlluminance * BeerLambert(dw + depth);
 	
 	//Sun
 	if(S.z > 0.0)
-		fragColor += SunContribution(P, N, V, albedo.rgb, sunIlluminance) * BeerLambert(dw+P.z/S.z);
+		fragColor.rgb += SunContribution(P, N, V, albedo.rgb, sunIlluminance) * BeerLambert(dw + depth/S.z);
 	
-	fragColor = fragColor/whitePoint; //Color correction and normalization
+	fragColor.rgb = fragColor.rgb/whitePoint; //Color correction and normalization
 	
 	//Point lights
 	for(int i=0; i<numPointLights; ++i)
 	{
 		vec4 Ld = PointLightContribution(i, P, N, V, albedo.rgb);
-		fragColor += Ld.rgb * BeerLambert(dw + Ld.a);
+		fragColor.rgb += Ld.rgb * BeerLambert(dw + Ld.a);
 	}
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
 	{
 		vec4 Ld = SpotLightContribution(i, P, N, V, albedo.rgb);
-		fragColor += Ld.rgb * BeerLambert(dw + Ld.a);
+		fragColor.rgb += Ld.rgb * BeerLambert(dw + Ld.a);
 	}
 	
 	//2. In-scattering from Sun/Sky
@@ -149,14 +129,14 @@ void main()
 	    vec3 skyIlluminance;
 	    vec3 sunIlluminance = GetSunAndSkyIlluminance(posSky - center, waterSurfaceN, sunDirection, skyIlluminance);
 	    vec3 L = sunIlluminance/whitePoint;
-	    fragColor += InScatteringSun(L, R, -V, max(eyePos.z, 0.0), dw);
+	    fragColor.rgb += InScatteringSun(L, R, -V, max(eyePos.z, 0.0), dw);
     }
 
 	//3. In-scattering from point lights
 	for(int i=0; i<numPointLights; ++i)
 	{
 		if(pointLights[i].position.z > 0.0)
-			fragColor += InScatteringPointLight(pointLights[i].position, 
+			fragColor.rgb += InScatteringPointLight(pointLights[i].position, 
 												pointLights[i].color,
 												eyePos, -V, P, d, dw);
 	}
@@ -165,7 +145,7 @@ void main()
 	for(int i=0; i<numSpotLights; ++i)
 	{
 		if(spotLights[i].position.z > 0.0)
-			fragColor += InScatteringSpotLight(spotLights[i].position,
+			fragColor.rgb += InScatteringSpotLight(spotLights[i].position,
 											   spotLights[i].direction,
 											   spotLights[i].cone,
 											   spotLights[i].frustumNear,
@@ -174,7 +154,8 @@ void main()
 	}
 
 	//5. Transparency
-	fragColor *= albedo.a;
+	fragColor.rgb *= albedo.a;
+	fragColor.a = 1.0;
 
     //Normal
 	fragNormal = vec4(normalize(eyeSpaceNormal) * 0.5 + 0.5, reflectivity);

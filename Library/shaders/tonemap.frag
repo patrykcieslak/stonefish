@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -20,47 +20,47 @@
 #version 330
 
 in vec2 texcoord;
-layout(location = 0) out vec4 fragcolor;
-
-uniform sampler2D texHDR;
-uniform sampler2D texAverage;
+layout(location = 0) out vec4 fragColor;
+uniform sampler2D texSource;
+uniform sampler2D texExposure;
 uniform float exposureComp;
 
-const vec3 rgbToLum = vec3(0.212671, 0.715160, 0.072169); // vec3(0.299, 0.587, 0.114)
+#define RGB_TO_LUM vec3(0.2125, 0.7154, 0.0721)
 
-float computeEV100(float aperture, float shutterTime , float ISO)
+// sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT
+vec3 ACESInput(vec3 c)
 {
-    //EV number is defined as:
-    // 2^ EV_s = N ^2 / t    and     EV_s = EV_100 + log2 ( S /100)
-    // This gives
-    // EV_s = log2 ( N ^2 / t )
-    // EV_100 + log2 ( S /100) = log2 ( N ^2 / t )
-    // EV_100 = log2 ( N ^2 / t ) - log2 ( S /100)
-    // EV_100 = log2 ( N ^2 / t . 100 / S )
-    return log2(aperture*aperture/shutterTime*100.0/ISO);
+    vec3 cout;
+    cout.r = dot(c, vec3(0.59719, 0.35458, 0.04823));
+    cout.g = dot(c, vec3(0.07600, 0.90834, 0.01566));
+    cout.b = dot(c, vec3(0.02840, 0.13383, 0.83777));
+    return cout;
 }
 
-float computeEV100FromAvgLuminance(float avgLuminance)
+// ODT_SAT => XYZ => D60_2_D65 => sRGB
+vec3 ACESOutput(vec3 c)
 {
-    // We later use the middle gray at 12.7% in order to have
-    // a middle gray at 18% with a sqrt (2) room for specular highlights
-    // But here we deal with the spot meter measuring the middle gray
-    // which is fixed at 12.5 for matching standard camera
-    // constructor settings ( i . e . calibration constant K = 12.5)
-    // Reference: http://en.wikipedia.org/wiki/Film_speed
-    return log2(avgLuminance*100.0/12.5);
+    vec3 cout;
+    cout.r = dot(c, vec3(1.60475, -0.53108, -0.07367));
+    cout.g = dot(c, vec3(-0.10208, 1.10813, -0.00605));
+    cout.b = dot(c, vec3(-0.00327, -0.07276,  1.07602));
+    return cout;
 }
 
-float convertEV100ToExposure(float EV100)
+vec3 RRTAndODTFit(vec3 v)
 {
-    // Compute the maximum luminance possible with H_sbs sensitivity
-    // maxLum = 78 / ( S * q ) * N ^2 / t
-    //        = 78 / ( S * q ) * 2^ EV_100
-    //        = 78 / (100 * 0.65) * 2^ EV_100
-    //        = 1.2 * 2^ EV
-    // Reference: http://en.wikipedia.org/wiki/Film_speed
-    float maxLuminance = 1.2*pow(2.0, EV100);
-    return 1.0/maxLuminance;
+    vec3 a = v * (v + 0.0245786) - 0.000090537;
+    vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
+    return a / b;
+}
+
+vec3 ACESFitted(vec3 color)
+{
+    color = ACESInput(color);
+    color = RRTAndODTFit(color);  // Apply RRT and ODT
+    color = ACESOutput(color);
+    color = clamp(color, 0.0, 1.0);
+    return color;
 }
 
 vec3 approximationSRGBToLinear(vec3 sRGBCol)
@@ -180,30 +180,12 @@ vec3 Reinhard(vec3 color, float burn, float scale, float Lwhite)
     return xyzToRgb(vec3(X,Y,Z));
 }
 
-void main(void)
+void main(void) 
 {
-    //Read textures
-    float Lavg = texture(texAverage, vec2(0.5, 0.5)).r;
-    float Lmax = max( max(texelFetch(texAverage, ivec2(0,0), 0).g, texelFetch(texAverage, ivec2(1,0), 0).g),
-                      max(texelFetch(texAverage, ivec2(0,1), 0).g, texelFetch(texAverage, ivec2(1,1), 0).g) );
-    vec3 rgbColor = texture(texHDR, texcoord).rgb;
-    
-    //Expose
-    float autoEV100 = computeEV100(8.0, 1.0/1000.0, 100.0); //computeEV100FromAvgLuminance(Lavg); 
-    float exposure = convertEV100ToExposure(autoEV100) * exposureComp * 16.0;
-
-    //Tonemap
-    rgbColor = Uncharted2Tonemap(exposure, rgbColor); 
-    /*float burn = 0.1;
-    float scale = exposure / Lavg;
-    float Lwhite = Lmax * scale;
-    rgbColor = Reinhard(rgbColor, burn, scale, Lwhite);*/
-
-    //Gamma correct
-    rgbColor = accurateLinearToSRGB(rgbColor); //Constrains output to <0.0, 1.0>
-
-    //FXAA luminance
-    float lum = dot(rgbColor, rgbToLum); //sqrt for linear, without sqrt for gamma 2.0
-    
-    fragcolor = vec4(rgbColor, lum);
+    float exposure = texelFetch(texExposure, ivec2(0,0), 0).r;
+    vec3 color = texture(texSource, texcoord).rgb; 
+    color = accurateLinearToSRGB(exposure * exposureComp * color); //Gamma correction
+    float lum = dot(color, RGB_TO_LUM); //FXAA
+    color = ACESFitted(color); //Filmic tonemapping
+    fragColor = vec4(color, lum);
 }

@@ -245,8 +245,8 @@ void main(void)
     vec3 vsNormal = normalize(normalReflection.xyz * 2.0 - 1.0); //View space normal
     float reflectionStrength = normalReflection.w; //Reflectivity
     
-    //If pixel belongs to sky there is no reflection!
-    //if(dot(vsNormal, vsNormal) < 0.01 || reflectionStrength < 0.01) discard;
+    //If pixel belongs to sky there is no reflection! --> ADD REFLECTION OF THE SKY!!!!
+    if(dot(vsNormal, vsNormal) < 0.01 || reflectionStrength < 0.01) discard;
     
     //Get eye space position
     float depth = texture(texLinearDepth, texcoord).r;

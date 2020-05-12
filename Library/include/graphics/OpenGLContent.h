@@ -30,9 +30,13 @@
 #include "core/NameManager.h"
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
+#include <map>
 
 namespace sf
 {
+    //! An enum specifiying supported texture filtration modes.
+    enum class FilteringMode {NEAREST, BILINEAR, BILINEAR_MIPMAP, TRILINEAR};
+
     //! A structure representing data of the Lights UBO (std140 aligned)
     #pragma pack(1)
     struct LightsUBO
@@ -132,18 +136,7 @@ namespace sf
          \param array has to be set to true if texture is an array texture
          */
         void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array = true);
-        
-        //! A method to draw a textured quad (multisampled 2D texture).
-        /*!
-         \param x the x coordinate of the quad origin
-         \param y the y coordinate of the quad origin
-         \param width the width of the quad
-         \param height the height of the quad
-         \param textureMS the id of the texture
-         \param texSize dimensions of the texture
-         */
-        void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize);
-        
+         
         //! A method to display a cubemap texture.
         /*!
          \param texture the id of the texture
@@ -294,6 +287,21 @@ namespace sf
          */
         static GLuint LoadInternalTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f);
         
+        //! A static method to generate a new texture.
+        /*!
+         \param target the OpenGL texture target enum
+         \param dimensions the dimensions of the texture [px]
+         \param internalFormat the OpenGL internal texture format enum
+         \param format the OpenGL texture format enum
+         \param type the OpenGL data type enum
+         \param data a pointer to the data of the texture or NULL
+         \param fm the filtering mode
+         \param repeat a flag indicating if texture repeat mode should be used
+         \param anisotropy a flag indicating if anisotropic filtering should be enabled
+        */
+        static GLuint GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, 
+                                      GLenum type, const void* data, FilteringMode fm, bool repeat, bool anisotropy = false);
+
         //! A static method to load a mesh from a file.
         /*!
          \param filename a path to the model file
@@ -449,17 +457,10 @@ namespace sf
         Object cylinder; //used for approximating fluid dynamics coeffs
         GLuint lightsUBO;
         LightsUBO lightsUBOData;
+        GLuint viewUBO;
         
         //Shaders
-        GLSLShader* helperShader;
-        GLSLShader* texSaqShader;
-        GLSLShader* texQuadShader;
-        GLSLShader* texQuadMSShader;
-        GLSLShader* texLayerQuadShader;
-        GLSLShader* texLevelQuadShader;
-        GLSLShader* texCubeShader;
-        GLSLShader* flatShader;
-        GLSLShader* shadowShader;
+        std::map<std::string, GLSLShader*> basicShaders;
         std::vector<GLSLShader*> materialShaders;
         GLSLShader* lightSourceShader[2];
         

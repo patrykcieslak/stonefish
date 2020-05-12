@@ -17,6 +17,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#version 330
+
 in vec3 normal;
 in vec2 texCoord;
 in vec4 fragPos;
@@ -44,32 +46,7 @@ layout (std140) uniform SunSky
     float atmLengthUnitInMeters;
 };
 
-struct PointLight 
-{
-	vec3 position;
-    float radius;
-	vec3 color;
-};
-
-struct SpotLight 
-{
-	mat4 clipSpace;
-    vec3 position;
-	float frustumNear;
-    vec3 direction;
-	float frustumFar;
-    vec3 color;
-	float cone;
-    vec3 radius;
-};
-
-layout (std140) uniform Lights
-{
-    PointLight pointLights[MAX_POINT_LIGHTS];
-    SpotLight spotLights[MAX_SPOT_LIGHTS];
-    int numPointLights;
-    int numSpotLights;
-};
+#inject "lightingDef.glsl"
 
 //---------------Functions-------------------
 vec3 GetSolarLuminance();

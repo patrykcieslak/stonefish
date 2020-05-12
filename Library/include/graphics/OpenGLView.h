@@ -32,6 +32,16 @@ namespace sf
 {
     //! An enum defining types of views.
     typedef enum {CAMERA, TRACKBALL, DEPTH_CAMERA, SONAR} ViewType;
+
+    #pragma pack(1)
+    struct ViewUBO
+    {
+        glm::mat4 VP;
+        glm::vec4 frustum[6];
+        glm::vec3 eye;
+        GLfloat pad;
+    };
+    #pragma pack(0)
     
     //! An abstract class representing an OpenGL view.
     class OpenGLView
@@ -54,7 +64,7 @@ namespace sf
          \param destinationFBO the id of the framebuffer used as the destination for rendering
          */
         virtual void DrawLDR(GLuint destinationFBO) = 0;
-        
+
         //! A method that returns eye position.
         virtual glm::vec3 GetEyePosition() const = 0;
         
@@ -89,7 +99,10 @@ namespace sf
         GLint* GetViewport() const;
         
         //! A method returning the rendering framebuffer of the view.
-        GLuint getRenderFBO();
+        GLuint getRenderFBO() const;
+        
+        //! A method returning a pointer to the view UBO data.
+        const ViewUBO* getViewUBOData() const;
         
         //! A method to set if the view is enabled.
         /*!
@@ -99,6 +112,13 @@ namespace sf
         
         //! A method returning a flag saying if the view is enabled.
         bool isEnabled();
+
+        //! A method extracting frustium planes from the view-projection matrix.
+        /*!
+         \param frustum a pointer to the 6 frustum planes
+         \param VP the view-projection matrix
+         */
+        static void ExtractFrustumFromVP(glm::vec4 frustum[6], const glm::mat4& VP);
         
     protected:
         GLint originX;
@@ -107,6 +127,7 @@ namespace sf
         GLint viewportHeight;
         GLuint renderFBO;
         bool enabled;
+        ViewUBO viewUBOData;
     };
 }
     

@@ -20,7 +20,7 @@
 //  FallingTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestApp.h"
@@ -29,9 +29,9 @@
 int main(int argc, const char * argv[])
 {
     sf::RenderSettings s;
-    s.windowW = 1200;
-    s.windowH = 900;
-    s.aa = true;
+    s.windowW = 800;
+    s.windowH = 600;
+    s.aa = sf::RenderQuality::QUALITY_HIGH;
     s.shadows = sf::RenderQuality::QUALITY_HIGH;
     s.ao = sf::RenderQuality::QUALITY_HIGH;
     s.atmosphere = sf::RenderQuality::QUALITY_HIGH;

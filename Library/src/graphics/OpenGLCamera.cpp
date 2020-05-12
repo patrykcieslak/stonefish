@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLCamera.h"
@@ -38,8 +38,7 @@
 namespace sf
 {
 
-GLSLShader* OpenGLCamera::lightMeterShader = NULL;
-GLSLShader* OpenGLCamera::tonemapShader = NULL;
+GLSLShader** OpenGLCamera::tonemappingShaders =  NULL;
 GLSLShader* OpenGLCamera::depthLinearizeShader = NULL;
 GLSLShader* OpenGLCamera::aoDeinterleaveShader = NULL;
 GLSLShader* OpenGLCamera::aoCalcShader = NULL;
@@ -60,94 +59,63 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     antiAliasing = false;
     aoFactor = 0;
     
-    if(GLAD_GL_VERSION_4_3 
-       && ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::QUALITY_DISABLED)
+    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::QUALITY_DISABLED)
         aoFactor = 1;
-    
-    if(GLAD_GL_VERSION_4_2
-       && ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa)
+    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa)
         antiAliasing = true;
     
     //----Geometry rendering----
-    glGenTextures(1, &renderColorTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, renderColorTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, viewportWidth, viewportHeight, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    glGenTextures(1, &renderViewNormalTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, renderViewNormalTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    glGenTextures(1, &renderDepthStencilTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, renderDepthStencilTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
+    renderColorTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                    GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    renderColor2Tex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                     GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    renderViewNormalTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                         GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);                                                    
+    renderDepthStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                           GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
+
     glGenFramebuffers(1, &renderFBO);
     OpenGLState::BindFramebuffer(renderFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderColorTex, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, renderViewNormalTex, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, renderColor2Tex, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, renderDepthStencilTex, 0);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Render FBO initialization failed!");
         
-    //----Light metering (automatic exposure)----
-    glGenFramebuffers(1, &lightMeterFBO);
-    OpenGLState::BindFramebuffer(lightMeterFBO);
+    //---- Tonemapping ----
+    histogramBins = 256;
+    histogramRange = glm::vec2(-1.f,11.f);
+    GLuint histogram[histogramBins];
+    memset(histogram, 0, histogramBins * sizeof(GLuint));
+    glGenBuffers(1, &histogramSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins * sizeof(GLuint), histogram, GL_STATIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
-    glGenTextures(1, &lightMeterTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, lightMeterTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, 2, 2, 0, GL_RG, GL_FLOAT, NULL); //Distribute work to 4 parallel threads
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Use hardware bilinear interpolation
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightMeterTex, 0);
+    GLfloat zero = 0.f;
+    exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
+                                                 GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);
     
-    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if(status != GL_FRAMEBUFFER_COMPLETE)
-        cError("Light meter FBO initialization failed!");
-    
-    //----Non-multisampled postprocessing----
+    //Bind buffers for compute shaders
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_HISTOGRAM, histogramSSBO);
+    glBindImageTexture(TEX_POSTPROCESS1, renderColorTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+    glBindImageTexture(TEX_POSTPROCESS2, exposureTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+    //----Postprocessing----
+    postprocessTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                    GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    postprocessTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                       GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
+    postprocessStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                           GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
+
     glGenFramebuffers(1, &postprocessFBO);
     OpenGLState::BindFramebuffer(postprocessFBO);
-    
-    glGenTextures(2, postprocessTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, postprocessTex[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, viewportWidth, viewportHeight, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessTex[0], 0);
-    
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, postprocessTex[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, viewportWidth, viewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex[1], 0);
-    
-    glGenTextures(1, &postprocessStencilTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, postprocessStencilTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, viewportWidth, viewportHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, postprocessStencilTex, 0);
     
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -155,24 +123,10 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
         cError("Postprocess FBO initialization failed!");
     
     //Linear depth
-    glGenTextures(2, linearDepthTex);
-    //Front face
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, linearDepthTex[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, viewportWidth, viewportHeight, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    //Back face
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, linearDepthTex[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, viewportWidth, viewportHeight, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    OpenGLState::UnbindTexture(TEX_BASE);
+    linearDepthTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                       GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    linearDepthTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                       GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     
     glGenFramebuffers(1, &linearDepthFBO);
     OpenGLState::BindFramebuffer(linearDepthFBO);
@@ -277,18 +231,20 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
 OpenGLCamera::~OpenGLCamera()
 {
     glDeleteTextures(1, &renderColorTex);
+    glDeleteTextures(1, &renderColor2Tex);
     glDeleteTextures(1, &renderViewNormalTex);
     glDeleteTextures(1, &renderDepthStencilTex);
-    glDeleteTextures(1, &lightMeterTex);
+    glDeleteTextures(1, &exposureTex);
     glDeleteTextures(2, linearDepthTex);
     glDeleteTextures(2, postprocessTex);
     glDeleteTextures(1, &postprocessStencilTex);
     
     glDeleteFramebuffers(1, &renderFBO);
     glDeleteFramebuffers(1, &postprocessFBO);
-    glDeleteFramebuffers(1, &lightMeterFBO);
     glDeleteFramebuffers(1, &linearDepthFBO);
     
+    glDeleteBuffers(1, &histogramSSBO);
+
     if(aoFactor > 0)
     {
         glDeleteTextures(1, &aoResultTex);
@@ -389,9 +345,12 @@ GLfloat OpenGLCamera::getExposureCompensation()
     return exposureComp;
 }
 
-GLuint OpenGLCamera::getColorTexture()
+GLuint OpenGLCamera::getColorTexture(unsigned int index)
 {
-    return renderColorTex;
+    if(index == 0)
+        return renderColorTex;
+    else
+        return renderColor2Tex;
 }
     
 GLuint OpenGLCamera::getFinalTexture()
@@ -669,24 +628,32 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
 {
 	if(usingToneMapping())
 	{
-		//Bind HDR texture
-		OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex);
-		
 		if(usingAutoExposure())
 		{
-			//Matrix light metering
-			OpenGLState::BindFramebuffer(lightMeterFBO);
-			OpenGLState::Viewport(0,0,2,2);
-			lightMeterShader->Use();
-			lightMeterShader->SetUniform("texHDR", TEX_POSTPROCESS1);
-			lightMeterShader->SetUniform("samples", glm::ivec2(64,64));
-			((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-			OpenGLState::BindFramebuffer(0);
-		
+            OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+            OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            
+            //Compute histogram of luminance
+            tonemappingShaders[0]->Use();
+            tonemappingShaders[0]->SetUniform("params", glm::vec2(histogramRange.x, 1.f/(histogramRange.y-histogramRange.x)));
+            tonemappingShaders[0]->SetUniform("texSource", TEX_POSTPROCESS1);
+            glDispatchCompute((GLuint)ceil(viewportWidth/16.f), (GLuint)ceil(viewportHeight/16.f), 1);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            
+            //Compute exposure
+            tonemappingShaders[1]->Use();
+            tonemappingShaders[1]->SetUniform("texExposure", TEX_POSTPROCESS2);
+            tonemappingShaders[1]->SetUniform("params", glm::vec4(histogramRange.x, histogramRange.y-histogramRange.x, 
+                                                                        0.1f, (GLfloat)(viewportWidth * viewportHeight)));    
+            glDispatchCompute(256, 1, 1);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            
 			//Bind exposure texture
-			OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, lightMeterTex);
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex);
+			OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
 		}
-        
+
         if(antiAliasing)
         {
             OpenGLState::BindFramebuffer(postprocessFBO);
@@ -694,10 +661,10 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
             glDrawBuffers(1, renderBuffs);    
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
-            tonemapShader->Use();
-            tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
-            tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
-            tonemapShader->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
+            tonemappingShaders[2]->Use();
+            tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
+            tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
+            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
 
@@ -718,10 +685,10 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
         {
             OpenGLState::BindFramebuffer(destinationFBO);
             OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
-            tonemapShader->Use();
-            tonemapShader->SetUniform("texHDR", TEX_POSTPROCESS1);
-            tonemapShader->SetUniform("texAverage", TEX_POSTPROCESS2);
-            tonemapShader->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
+            tonemappingShaders[2]->Use();
+            tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
+            tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
+            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);   
@@ -740,17 +707,31 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
 }
 
 ///////////////////////// Static /////////////////////////////
-void OpenGLCamera::Init()
+void OpenGLCamera::Init(const RenderSettings& rSettings)
 {
     /////Tonemapping//////
-    lightMeterShader = new GLSLShader("lightMeter.frag");
-    lightMeterShader->AddUniform("texHDR", ParameterType::INT);
-    lightMeterShader->AddUniform("samples", ParameterType::IVEC2);
-    
-    tonemapShader = new GLSLShader("tonemapping.frag");
-    tonemapShader->AddUniform("texHDR", ParameterType::INT);
-    tonemapShader->AddUniform("texAverage", ParameterType::INT);
-    tonemapShader->AddUniform("exposureComp", ParameterType::FLOAT);
+    tonemappingShaders = new GLSLShader*[3];
+    std::vector<std::pair<GLenum, std::string>> sources;
+    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "lumHistogram.comp"));
+    tonemappingShaders[0] = new GLSLShader(sources);
+    tonemappingShaders[0]->AddUniform("params", ParameterType::VEC2);
+    tonemappingShaders[0]->AddUniform("texSource", ParameterType::INT);
+    tonemappingShaders[0]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
+
+    sources.clear();
+    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "autoExposure.comp"));
+    tonemappingShaders[1] = new GLSLShader(sources);
+    tonemappingShaders[1]->AddUniform("params", ParameterType::VEC4);
+    tonemappingShaders[1]->AddUniform("texExposure", ParameterType::INT);
+    tonemappingShaders[1]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
+
+    sources.clear();
+    sources.push_back(std::make_pair(GL_VERTEX_SHADER, "saq.vert"));
+    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "tonemap.frag"));
+    tonemappingShaders[2] = new GLSLShader(sources);
+    tonemappingShaders[2]->AddUniform("texSource", ParameterType::INT);
+    tonemappingShaders[2]->AddUniform("texExposure", ParameterType::INT);
+    tonemappingShaders[2]->AddUniform("exposureComp", ParameterType::FLOAT);
     
     /////Linear depth////
     depthLinearizeShader = new GLSLShader("depthLinearize.frag");
@@ -758,7 +739,7 @@ void OpenGLCamera::Init()
     depthLinearizeShader->AddUniform("FC", ParameterType::FLOAT);
     
     /////AO//////////////
-    if(GLAD_GL_VERSION_4_3)
+    if(rSettings.ao != RenderQuality::QUALITY_DISABLED)
     {
         aoDeinterleaveShader = new GLSLShader("hbaoDeinterleave.frag");
         aoDeinterleaveShader->AddUniform("info", ParameterType::VEC4);
@@ -781,7 +762,7 @@ void OpenGLCamera::Init()
         aoBlurShader[1]->AddUniform("invResolutionDirection", ParameterType::VEC2);
         aoBlurShader[1]->AddUniform("texSource", ParameterType::INT);
     }
-    
+
     //SSR - Screen Space Reflections
     ssrShader = new GLSLShader("ssr.frag");
     ssrShader->AddUniform("texColor", ParameterType::INT);
@@ -806,15 +787,40 @@ void OpenGLCamera::Init()
     ssrShader->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
 
     //FXAA
-    fxaaShader = new GLSLShader("fxaa.frag");
-    fxaaShader->AddUniform("texSource", ParameterType::INT);
-    fxaaShader->AddUniform("RCPFrame", ParameterType::VEC2);
+    if(rSettings.aa != RenderQuality::QUALITY_DISABLED)
+    {
+        GLSLHeader header;
+        header.useInFragment = true;
+        switch(rSettings.aa)
+        {
+            default:
+            case RenderQuality::QUALITY_LOW:
+                header.code = "#version 430\n#define FXAA_QUALITY__PRESET 12\n";
+                break;
+
+            case RenderQuality::QUALITY_MEDIUM:
+                header.code = "#version 430\n#define FXAA_QUALITY__PRESET 13\n";
+                break;
+
+            case RenderQuality::QUALITY_HIGH:
+                header.code = "#version 430\n#define FXAA_QUALITY__PRESET 23\n";
+                break;
+        }
+        fxaaShader = new GLSLShader(header, "fxaa.frag");
+        fxaaShader->AddUniform("texSource", ParameterType::INT);
+        fxaaShader->AddUniform("RCPFrame", ParameterType::VEC2);
+    }
 }
 
 void OpenGLCamera::Destroy()
 {
-    if(lightMeterShader != NULL) delete lightMeterShader;
-    if(tonemapShader != NULL) delete tonemapShader;
+    if(tonemappingShaders != NULL)
+    {
+        if(tonemappingShaders[0] != NULL) delete tonemappingShaders[0];
+        if(tonemappingShaders[1] != NULL) delete tonemappingShaders[1];
+        if(tonemappingShaders[2] != NULL) delete tonemappingShaders[2];
+        delete [] tonemappingShaders;
+    }
     if(depthLinearizeShader != NULL) delete depthLinearizeShader;
     if(aoDeinterleaveShader != NULL) delete aoDeinterleaveShader;
     if(aoCalcShader != NULL) delete aoCalcShader;
@@ -823,6 +829,7 @@ void OpenGLCamera::Destroy()
     {
         if(aoBlurShader[0] != NULL) delete aoBlurShader[0];
         if(aoBlurShader[1] != NULL) delete aoBlurShader[1];
+        delete [] aoBlurShader;
     }
     if(ssrShader != NULL) delete ssrShader;    
     if(fxaaShader != NULL) delete fxaaShader;
