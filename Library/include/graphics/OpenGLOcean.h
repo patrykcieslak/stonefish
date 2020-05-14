@@ -98,7 +98,10 @@ namespace sf
         virtual void DrawUnderwaterMask(OpenGLCamera* cam);
 
         //! A method that draws the waterline when the camera is crossing the water surface.
-        virtual void DrawWaterline() = 0;
+        /*!
+         \param cam a pointer to the active camera
+         */
+        void DrawWaterline(OpenGLCamera* cam);
         
         //! A method that draws the distant background of the ocean.
         /*!
@@ -146,7 +149,7 @@ namespace sf
          \param y the y coordinate in world frame [m]
          \return wave height [m]
          */
-        virtual GLfloat getWaveHeight(GLfloat x, GLfloat y);
+        virtual GLfloat ComputeWaveHeight(GLfloat x, GLfloat y);
 
         //! A method returning the id of the wave texture.
         GLuint getWaveTexture();

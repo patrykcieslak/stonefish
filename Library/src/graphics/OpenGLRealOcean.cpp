@@ -49,6 +49,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     qtPingpong = 1;
     treeSize = 0;
     cullSize = 0;
+    wireframe = false;
     
     //Loading shaders
     std::vector<std::pair<GLenum, std::string>> sources;
@@ -240,6 +241,11 @@ OpenGLRealOcean::~OpenGLRealOcean()
     delete fftData;
 }
 
+void OpenGLRealOcean::setWireframe(bool enabled)
+{
+    wireframe = enabled;
+}
+
 void OpenGLRealOcean::InitializeSimulation()
 {
     OpenGLOcean::InitializeSimulation();
@@ -313,7 +319,7 @@ GLfloat OpenGLRealOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuin
     return h;
 }
     
-GLfloat OpenGLRealOcean::getWaveHeight(GLfloat x, GLfloat y)
+GLfloat OpenGLRealOcean::ComputeWaveHeight(GLfloat x, GLfloat y)
 {
     //Z,X are reversed because the coordinate system used to draw ocean has Z axis pointing up!
     GLfloat z = 0.f;
@@ -386,7 +392,6 @@ void OpenGLRealOcean::DrawSurface(OpenGLCamera* cam)
     GLint* viewport = cam->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
-    
     oceanShaders["surface"]->Use();
     oceanShaders["surface"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders["surface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
@@ -399,9 +404,16 @@ void OpenGLRealOcean::DrawSurface(OpenGLCamera* cam)
     oceanShaders["surface"]->SetUniform("u_scene_size", oceanSize);
     oceanShaders["surface"]->SetUniform("u_gpu_tess_factor", (GLfloat)qtGPUTessFactor);
     OpenGLState::BindVertexArray(vao);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if(wireframe)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);    
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    else
+    {
+        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+    }
 	OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -414,7 +426,6 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLCamera* cam)
     GLint* viewport = cam->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
-    
     oceanShaders["backsurface"]->Use();
     oceanShaders["backsurface"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders["backsurface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
@@ -429,11 +440,18 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLCamera* cam)
     oceanShaders["backsurface"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["backsurface"]->SetUniform("bWater", getLightScattering());
     OpenGLState::BindVertexArray(vao);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glCullFace(GL_FRONT);
-    glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+    if(wireframe)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);    
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    else
+    {
+        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+    }
     glCullFace(GL_BACK);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -444,7 +462,7 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLCamera* cam)
 void OpenGLRealOcean::DrawUnderwaterMask(OpenGLCamera* cam)
 {
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-  
+    
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindVertexArray(vao);
 
@@ -483,44 +501,4 @@ void OpenGLRealOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     glClear(GL_DEPTH_BUFFER_BIT);
 }        
     
-void OpenGLRealOcean::DrawWaterline()
-{
-    /* Works only for camera looking horizontally - needs a lot more work!
-    //Draw water edge
-    oceanShaders[10]->Use();
-    oceanShaders[10]->SetUniform("MVP", projection * view);
-    oceanShaders[10]->SetUniform("gridSizes", params.gridSizes);
-    oceanShaders[10]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
-    
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //OpenGLState::EnableBlend();
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    GLsizei nEdgePoints = viewport[2]/5;
-    glm::vec3 edgeData[nEdgePoints];
-    for(GLsizei i=0; i<nEdgePoints; ++i)
-        edgeData[i] = glm::vec3(-1.f + 2.f * (GLfloat)i/(GLfloat)(nEdgePoints-1), 0.f, 0.f);
-    
-    glGenBuffers(1, &vboEdge);
-    glBindBuffer(GL_ARRAY_BUFFER, vboEdge);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(edgeData), &edgeData[0].x, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    OpenGLState::BindVertexArray(vaoMask);
-    glBindBuffer(GL_ARRAY_BUFFER, vboEdge);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    glDrawArrays(GL_LINE_STRIP, 0, nEdgePoints);
-    OpenGLState::BindVertexArray(0);
-    
-    OpenGLState::UseProgram(0);
-    
-    glDeleteBuffers(1, &vboEdge);
-    
-    //OpenGLState::DisableBlend();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    */
-}
-
 }

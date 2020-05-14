@@ -435,32 +435,22 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     DrawLights();
                     glOcean->DrawBackground(camera);
 					
-                    //a) Surface with waves
-                    if(ocean->hasWaves())
-                    {
-                        GLenum renderBuffs2[2] = {GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT1};
-                        glDrawBuffers(2, renderBuffs2);
-                        glOcean->DrawSurface(camera);
-                        glDrawBuffers(2, renderBuffs);
-                        OpenGLState::DisableDepthTest();
-                        OpenGLState::EnableBlend();
-                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        content->DrawTexturedSAQ(camera->getColorTexture(1));
-                        OpenGLState::DisableBlend();
-                        OpenGLState::EnableDepthTest();
-                        glOcean->DrawBacksurface(camera);
-                    }
-                    else //b) Surface without waves (disable depth testing but write to depth buffer)
-                    {
-                        OpenGLState::EnableBlend();
-                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        glDepthFunc(GL_ALWAYS);
-                        glOcean->DrawSurface(camera);
-                        OpenGLState::DisableBlend();
-                        glDepthFunc(GL_LESS);
-                        glOcean->DrawBacksurface(camera);
-                        glDepthFunc(GL_LEQUAL);
-                    }
+                    //Draw surface to back buffer
+                    GLenum renderBuffs2[2] = {GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT1};
+                    glDrawBuffers(2, renderBuffs2);
+                    glOcean->DrawSurface(camera);
+                    glDrawBuffers(2, renderBuffs);
+                    
+                    //Blend surface on top of scene
+                    OpenGLState::DisableDepthTest();
+                    OpenGLState::EnableBlend();
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    content->DrawTexturedSAQ(camera->getColorTexture(1));
+                    OpenGLState::DisableBlend();
+                    OpenGLState::EnableDepthTest();
+
+                    //Draw backsurface
+                    glOcean->DrawBacksurface(camera);                    
                     
                     //Stencil masking
                     OpenGLState::EnableStencilTest();
@@ -546,6 +536,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
                     //camera->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
                     //camera->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
+                    //camera->ShowDepthStencilTexture(glm::vec4(0,400,300,200));
                     
                     OpenGLState::BindFramebuffer(0);
                 }

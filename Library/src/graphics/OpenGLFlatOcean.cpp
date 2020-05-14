@@ -194,12 +194,11 @@ void OpenGLFlatOcean::DrawBacksurface(OpenGLCamera* cam)
     oceanShaders["backsurface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["backsurface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["backsurface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
-    OpenGLState::DisableCullFace();
     OpenGLState::BindVertexArray(vao);
+    glCullFace(GL_FRONT);
     glDrawArrays(GL_TRIANGLES, 0, 12);
+    glCullFace(GL_BACK);
     OpenGLState::BindVertexArray(0);
-    OpenGLState::EnableCullFace();
-
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::UseProgram(0);
@@ -238,10 +237,6 @@ void OpenGLFlatOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     OpenGLState::DisableStencilTest();
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_DEPTH_BUFFER_BIT);
-}        
-    
-void OpenGLFlatOcean::DrawWaterline()
-{
 }
 
 }

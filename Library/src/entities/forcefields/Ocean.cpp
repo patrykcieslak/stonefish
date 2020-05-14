@@ -117,7 +117,7 @@ Scalar Ocean::GetDepth(const Vector3& point)
 {
     if(hasWaves()) //Geometric waves
     {
-        GLfloat waveHeight = glOcean->getWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
+        GLfloat waveHeight = glOcean->ComputeWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
         glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), waveHeight);
         wavesDebug.points.push_back(wavePoint);
         return point.z() - Scalar(waveHeight);

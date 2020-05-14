@@ -67,9 +67,6 @@ namespace sf
          */
         void DrawUnderwaterMask(OpenGLCamera* cam);
         
-        //! A method that draws the waterline when the camera is crossing the water surface.
-        void DrawWaterline();
-        
     private:
         GLuint vao;
         GLuint vbo;

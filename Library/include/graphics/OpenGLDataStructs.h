@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLDataStructs__
@@ -40,7 +40,7 @@
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
 
 #define MIN_INTENSITY_THRESHOLD 1.0f //Minimum light intensity to be considered [cd]
-#define STD_NEAR_PLANE_DISTANCE 0.01f //Standard near plane distance of the cameras
+#define STD_NEAR_PLANE_DISTANCE 0.02f //Standard near plane distance of the cameras
 #define STD_FAR_PLANE_DISTANCE 100000.f //Standard far plane distance of the cameras
 
 //Standard texture unit bindings (OpenGL 3.x >=48; OpenGL 4.x >=80)

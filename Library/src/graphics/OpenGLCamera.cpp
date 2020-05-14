@@ -52,7 +52,6 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     fovx = 0.785f;
     near = range.x;
     far = range.y;
-    activePostprocessTexture = 0;
     exposureComp = 0.f;
 	autoExposure = true;
 	toneMapping = true;
@@ -352,11 +351,6 @@ GLuint OpenGLCamera::getColorTexture(unsigned int index)
     else
         return renderColor2Tex;
 }
-    
-GLuint OpenGLCamera::getFinalTexture()
-{
-    return postprocessTex[activePostprocessTexture];
-}
 
 bool OpenGLCamera::hasAO()
 {
@@ -396,6 +390,11 @@ void OpenGLCamera::ShowLinearDepthTexture(glm::vec4 rect, bool frontFace)
 void OpenGLCamera::ShowViewNormalTexture(glm::vec4 rect)
 {
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderViewNormalTex);
+}
+
+void OpenGLCamera::ShowDepthStencilTexture(glm::vec4 rect)
+{
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderDepthStencilTex);
 }
 
 void OpenGLCamera::ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index)

@@ -68,10 +68,12 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     glPipeline = NULL;
     gui = NULL;
     drawingTime = 0.0;
-    windowW = r.windowW;
-    windowH = r.windowH;
     rSettings = r;
     hSettings = h;
+    rSettings.windowW += rSettings.windowW % 2;
+    rSettings.windowH += rSettings.windowH % 2;
+    windowW = rSettings.windowW;
+    windowH = rSettings.windowH;
 }
 
 GraphicalSimulationApp::~GraphicalSimulationApp()

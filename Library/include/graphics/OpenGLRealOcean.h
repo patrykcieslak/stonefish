@@ -75,17 +75,20 @@ namespace sf
          \param cam a pointer to the active camera
          */
         void DrawUnderwaterMask(OpenGLCamera* cam);
-        
-        //! A method that draws the waterline when the camera is crossing the water surface.
-        void DrawWaterline();
-             
+                
         //! A method to get wave height at a specified coordinate.
         /*!
          \param x the x coordinate in world frame [m]
          \param y the y coordinate in world frame [m]
          \return wave height [m]
          */
-        GLfloat getWaveHeight(GLfloat x, GLfloat y);
+        GLfloat ComputeWaveHeight(GLfloat x, GLfloat y);
+
+        //! A method do enable wireframe rendering.
+        /*!
+         \param enabled a flag to indicating if wireframe should be enabled
+         */
+        void setWireframe(bool enabled);
         
     private:
         void InitializeSimulation();
@@ -102,6 +105,7 @@ namespace sf
         GLint qtPatchIndexCount;
         GLuint treeSize;
         GLuint cullSize;
+        bool wireframe;
     };
 }
 

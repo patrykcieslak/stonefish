@@ -123,16 +123,24 @@ void main()
     float nodeSize;
     lt_cell_2_30(nodesIn[nid].xy, node.xy, nodeSize, parent.xy);
 
-    float altitude = displace(eye.xy);
 	node.xy-= 0.5;
 	parent.xy-= 0.5;
 	nodeSize*= sceneSize;
-	node = vec3(sceneSize * node.xy + 0.5 * nodeSize, altitude).xyz;
-	parent = vec3(sceneSize * parent.xy + nodeSize, altitude).xyz;
-
+    
+    node = vec3(sceneSize * node.xy + 0.5 * nodeSize, 0.0);
+	parent = vec3(sceneSize * parent.xy + nodeSize, 0.0);
+    node.z = displace(node.xy);
+    parent.z = displace(parent.xy);
+    /* 
+    //Original
+    float altitude = displace(eye.xy);
+    node = vec3(sceneSize * node.xy + 0.5 * nodeSize, altitude);
+	parent = vec3(sceneSize * parent.xy + nodeSize, altitude);
+    */
+    
     //Distance from node centers
-	float dn = distance(eye, node);
-	float dp = distance(eye, parent);
+	float dn = distance(eye, node) + 0.5;
+	float dp = distance(eye, parent) + 0.5;
 
 	if(!lt_is_root_2_30(nodesIn[nid].xy) && 8.0 * nodeSize < dp) //Merge
     {

@@ -98,63 +98,55 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     OpenGLState::BindFramebuffer(0);
     
     //Computation
-    GLSLShader* shader;
-    shader = new GLSLShader("oceanInit.frag"); //Using saq vertex shader
-    shader->AddUniform("texSpectrum12", ParameterType::INT);
-    shader->AddUniform("texSpectrum34", ParameterType::INT);
-    shader->AddUniform("inverseGridSizes", ParameterType::VEC4);
-    shader->AddUniform("fftSize", ParameterType::FLOAT);
-    shader->AddUniform("t", ParameterType::FLOAT);
-    oceanShaders["init"] = shader;
+    oceanShaders["init"] = new GLSLShader("oceanInit.frag");
+    oceanShaders["init"]->AddUniform("texSpectrum12", ParameterType::INT);
+    oceanShaders["init"]->AddUniform("texSpectrum34", ParameterType::INT);
+    oceanShaders["init"]->AddUniform("inverseGridSizes", ParameterType::VEC4);
+    oceanShaders["init"]->AddUniform("fftSize", ParameterType::FLOAT);
+    oceanShaders["init"]->AddUniform("t", ParameterType::FLOAT);
     
-    shader = new GLSLShader("oceanFFTX.frag", "", "saq.geom"); //Using saq vertex shader
-    shader->AddUniform("texButterfly", ParameterType::INT);
-    shader->AddUniform("texSource", ParameterType::INT);
-    shader->AddUniform("pass", ParameterType::FLOAT);
-    oceanShaders["fftx"] = shader;
+    oceanShaders["fftx"] = new GLSLShader("oceanFFTX.frag", "", "saq.geom");
+    oceanShaders["fftx"]->AddUniform("texButterfly", ParameterType::INT);
+    oceanShaders["fftx"]->AddUniform("texSource", ParameterType::INT);
+    oceanShaders["fftx"]->AddUniform("pass", ParameterType::FLOAT);
     
-    shader = new GLSLShader("oceanFFTY.frag", "", "saq.geom"); //Using saq vertex shader
-    shader->AddUniform("texButterfly", ParameterType::INT);
-    shader->AddUniform("texSource", ParameterType::INT);
-    shader->AddUniform("pass", ParameterType::FLOAT);
-    oceanShaders["ffty"] = shader;
+    oceanShaders["ffty"] = new GLSLShader("oceanFFTY.frag", "", "saq.geom");
+    oceanShaders["ffty"]->AddUniform("texButterfly", ParameterType::INT);
+    oceanShaders["ffty"]->AddUniform("texSource", ParameterType::INT);
+    oceanShaders["ffty"]->AddUniform("pass", ParameterType::FLOAT);
     
-    shader = new GLSLShader("oceanVariance.frag"); //Using saq vertex shader
-    shader->AddUniform("texSpectrum12", ParameterType::INT);
-    shader->AddUniform("texSpectrum34", ParameterType::INT);
-    shader->AddUniform("varianceSize", ParameterType::FLOAT);
-    shader->AddUniform("fftSize", ParameterType::INT);
-    shader->AddUniform("gridSizes", ParameterType::VEC4);
-    shader->AddUniform("slopeVarianceDelta", ParameterType::FLOAT);
-    shader->AddUniform("c", ParameterType::FLOAT);
-    oceanShaders["variance"] = shader;
+    oceanShaders["variance"] = new GLSLShader("oceanVariance.frag");
+    oceanShaders["variance"]->AddUniform("texSpectrum12", ParameterType::INT);
+    oceanShaders["variance"]->AddUniform("texSpectrum34", ParameterType::INT);
+    oceanShaders["variance"]->AddUniform("varianceSize", ParameterType::FLOAT);
+    oceanShaders["variance"]->AddUniform("fftSize", ParameterType::INT);
+    oceanShaders["variance"]->AddUniform("gridSizes", ParameterType::VEC4);
+    oceanShaders["variance"]->AddUniform("slopeVarianceDelta", ParameterType::FLOAT);
+    oceanShaders["variance"]->AddUniform("c", ParameterType::FLOAT);
     
-    shader = new GLSLShader("oceanSpectrum.frag", "texQuad.vert");
-    shader->AddUniform("texSpectrum12", ParameterType::INT);
-    shader->AddUniform("texSpectrum34", ParameterType::INT);
-    shader->AddUniform("invGridSizes", ParameterType::VEC4);
-    shader->AddUniform("fftSize", ParameterType::FLOAT);
-    shader->AddUniform("zoom", ParameterType::FLOAT);
-    shader->AddUniform("linear", ParameterType::FLOAT);
-    shader->AddUniform("rect", ParameterType::VEC4);
-    oceanShaders["spectrum"] = shader;
+    oceanShaders["spectrum"] = new GLSLShader("oceanSpectrum.frag", "texQuad.vert");
+    oceanShaders["spectrum"]->AddUniform("texSpectrum12", ParameterType::INT);
+    oceanShaders["spectrum"]->AddUniform("texSpectrum34", ParameterType::INT);
+    oceanShaders["spectrum"]->AddUniform("invGridSizes", ParameterType::VEC4);
+    oceanShaders["spectrum"]->AddUniform("fftSize", ParameterType::FLOAT);
+    oceanShaders["spectrum"]->AddUniform("zoom", ParameterType::FLOAT);
+    oceanShaders["spectrum"]->AddUniform("linear", ParameterType::FLOAT);
+    oceanShaders["spectrum"]->AddUniform("rect", ParameterType::VEC4);
        
     //Mask background
-    shader = new GLSLShader("flat.frag", "oceanSurface.vert");
-    shader->AddUniform("MVP", ParameterType::MAT4);
-    shader->AddUniform("FC", ParameterType::FLOAT);
-    shader->AddUniform("size", ParameterType::FLOAT);
-    oceanShaders["mask_back"] = shader;
+    oceanShaders["mask_back"] = new GLSLShader("flat.frag", "oceanSurface.vert");
+    oceanShaders["mask_back"]->AddUniform("MVP", ParameterType::MAT4);
+    oceanShaders["mask_back"]->AddUniform("FC", ParameterType::FLOAT);
+    oceanShaders["mask_back"]->AddUniform("size", ParameterType::FLOAT);
     
     //Blur
-    shader = new GLSLShader("oceanBlur.frag");
-    shader->AddUniform("cWater", ParameterType::VEC3);
-    shader->AddUniform("bWater", ParameterType::VEC3);
-    shader->AddUniform("blurScale", ParameterType::FLOAT);
-    shader->AddUniform("blurShape", ParameterType::VEC2);
-    shader->AddUniform("texScene", ParameterType::INT);
-    shader->AddUniform("texLinearDepth", ParameterType::INT);
-    oceanShaders["blur"] = shader;
+    oceanShaders["blur"] = new GLSLShader("oceanBlur.frag");
+    oceanShaders["blur"]->AddUniform("cWater", ParameterType::VEC3);
+    oceanShaders["blur"]->AddUniform("bWater", ParameterType::VEC3);
+    oceanShaders["blur"]->AddUniform("blurScale", ParameterType::FLOAT);
+    oceanShaders["blur"]->AddUniform("blurShape", ParameterType::VEC2);
+    oceanShaders["blur"]->AddUniform("texScene", ParameterType::INT);
+    oceanShaders["blur"]->AddUniform("texLinearDepth", ParameterType::INT);
     
     //Background
     std::vector<GLuint> precompiled;
@@ -163,18 +155,17 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
     precompiled.push_back(oceanOpticsFragment);
     
-    shader = new GLSLShader(precompiled, "oceanBackground.frag", "oceanSurface.vert");
-    shader->AddUniform("MVP", ParameterType::MAT4);
-    shader->AddUniform("FC", ParameterType::FLOAT);
-    shader->AddUniform("size", ParameterType::FLOAT);
-    shader->AddUniform("eyePos", ParameterType::VEC3);
-    shader->AddUniform("cWater", ParameterType::VEC3);
-    shader->AddUniform("bWater", ParameterType::VEC3);
-    shader->AddUniform("transmittance_texture", ParameterType::INT);
-    shader->AddUniform("scattering_texture", ParameterType::INT);
-    shader->AddUniform("irradiance_texture", ParameterType::INT);
-    shader->BindUniformBlock("SunSky", UBO_SUNSKY);
-    oceanShaders["background"] = shader;
+    oceanShaders["background"] = new GLSLShader(precompiled, "oceanBackground.frag", "oceanSurface.vert");
+    oceanShaders["background"]->AddUniform("MVP", ParameterType::MAT4);
+    oceanShaders["background"]->AddUniform("FC", ParameterType::FLOAT);
+    oceanShaders["background"]->AddUniform("size", ParameterType::FLOAT);
+    oceanShaders["background"]->AddUniform("eyePos", ParameterType::VEC3);
+    oceanShaders["background"]->AddUniform("cWater", ParameterType::VEC3);
+    oceanShaders["background"]->AddUniform("bWater", ParameterType::VEC3);
+    oceanShaders["background"]->AddUniform("transmittance_texture", ParameterType::INT);
+    oceanShaders["background"]->AddUniform("scattering_texture", ParameterType::INT);
+    oceanShaders["background"]->AddUniform("irradiance_texture", ParameterType::INT);
+    oceanShaders["background"]->BindUniformBlock("SunSky", UBO_SUNSKY);
 
     oceanShaders["background"]->Use();
     oceanShaders["background"]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
@@ -300,7 +291,7 @@ glm::vec3 OpenGLOcean::getLightScattering()
     return lightScattering;
 }
     
-GLfloat OpenGLOcean::getWaveHeight(GLfloat x, GLfloat y)
+GLfloat OpenGLOcean::ComputeWaveHeight(GLfloat x, GLfloat y)
 {
     return 0.f;
 }
@@ -509,6 +500,62 @@ void OpenGLOcean::DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint line
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     delete [] viewport;
+}
+
+void OpenGLOcean::DrawWaterline(OpenGLCamera* cam)
+{
+    /*
+    // This is a concept but it became obsolete when the near plane of th camera is so close!
+    GLint* viewport = cam->GetViewport();
+    OpenGLState::DisableDepthTest();
+    
+    //1. Draw white SAQ to convert stencil to color texture in renderbuffer
+    OpenGLState::BindFramebuffer(cam->getRenderFBO());
+    GLenum renderBuffs[1] = {GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(1, renderBuffs);
+    glClear(GL_COLOR_BUFFER_BIT);
+    OpenGLState::EnableStencilTest();
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    oceanShaders["waterline_flat"]->Use();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    OpenGLState::UseProgram(0);
+    OpenGLState::DisableStencilTest();
+
+    //2. Use renderbuffer texture to draw downsampled, blurred image to postprocess buffer
+    OpenGLState::BindFramebuffer(cam->getPostprocessHalfFBO());
+    OpenGLState::Viewport(viewport[0], viewport[1], viewport[2]/2, viewport[3]/2);
+    renderBuffs[0] = GL_COLOR_ATTACHMENT0;
+    glDrawBuffers(1, renderBuffs);
+    ///OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getColorTexture(1));
+    //Draw blur H
+    //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(cam->getColorTexture(1));
+
+    //3. Do second pass of separable blur
+    renderBuffs[0] = GL_COLOR_ATTACHMENT1;
+    glDrawBuffers(1, renderBuffs);
+    //OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getPostprocessTexture(2));
+    //Draw blur V
+    //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(cam->getPostprocessTexture(2));
+   
+    //4. Use the blurred result to draw waterline to the framebuffer with blending
+    OpenGLState::BindFramebuffer(cam->getRenderFBO());
+    OpenGLState::Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    renderBuffs[0] = GL_COLOR_ATTACHMENT0;
+    glDrawBuffers(1, renderBuffs);
+    // OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getPostprocessTexture(3));
+    // OpenGLState::EnableBlend();
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // //Draw waterline
+    // ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    // OpenGLState::DisableBlend();
+    // OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(cam->getPostprocessTexture(3));
+    OpenGLState::BindFramebuffer(0);
+
+    delete [] viewport;
+    */
 }
 
 void OpenGLOcean::ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect)

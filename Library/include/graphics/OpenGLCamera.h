@@ -131,11 +131,17 @@ namespace sf
          */
         void ShowLinearDepthTexture(glm::vec4 rect, bool frontFace);
         
-        //! A method to show the view/normal texture.
+        //! A method to show the view-normal texture.
         /*!
          \param rect the rectangle in which to render the texture on screen
          */
         void ShowViewNormalTexture(glm::vec4 rect);
+
+        //! A method to show the depth-stencil texture.
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         */
+        void ShowDepthStencilTexture(glm::vec4 rect);
         
         //! A method to show the deinterleaved depth texture (HBAO).
         /*!
@@ -183,6 +189,9 @@ namespace sf
 
         //! A method returning the postprocessing framebuffer of the camera.
         GLuint getPostprocessFBO();
+
+        //! A method returning the postprocessing half framebuffer of the camera.
+        GLuint getPostprocessHalfFBO();
         
         //! A method returning the id of the color texture.
         /*!
@@ -245,8 +254,6 @@ namespace sf
         GLuint postprocessFBO;
         GLuint postprocessTex[2];
         GLuint postprocessStencilTex;
-        int activePostprocessTexture;
-        
         GLuint linearDepthFBO;
         GLuint linearDepthTex[2];
         
