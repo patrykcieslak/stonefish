@@ -49,7 +49,7 @@ namespace sf
         virtual Vector3 GetVelocityAtPoint(const Vector3& p) = 0;
         
         //! A method implementing the rendering of the velocity field.
-        virtual std::vector<Renderable> Render() = 0;
+        virtual std::vector<Renderable> Render(VelocityFieldUBO& ubo) = 0;
     };
 }
 

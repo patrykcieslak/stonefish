@@ -250,7 +250,7 @@ void main(void)
     
     //Get eye space position
     float depth = texture(texLinearDepth, texcoord).r;
-    float backDepth = texture(texLinearBackfaceDepth, texcoord).r;
+    //float backDepth = texture(texLinearBackfaceDepth, texcoord).r;
     vec3 vsRayOrigin = positionFromDepth(texcoord, depth); //Origin of reflected ray
     
     //Calculate reflected direction

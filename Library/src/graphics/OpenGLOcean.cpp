@@ -40,6 +40,9 @@
 #include "utils/SystemUtil.hpp"
 #include "utils/stb_image_write.h"
 #include "entities/forcefields/Atmosphere.h"
+#include "entities/forcefields/Uniform.h"
+#include "entities/forcefields/Jet.h"
+#include "entities/forcefields/Pipe.h"
 
 namespace sf
 {
@@ -229,6 +232,17 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     OpenGLState::BindVertexArray(0);
+
+    //Ocean currents
+    oceanCurrentsUBOData.numCurrents = 0;
+    oceanCurrentsUBOData.gravity = glm::vec3(0.f);
+    glGenBuffers(1, &oceanCurrentsUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, oceanCurrentsUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(OceanCurrentsUBO), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_OCEAN_CURRENTS, oceanCurrentsUBO, 0, sizeof(OceanCurrentsUBO));
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(OceanCurrentsUBO), &oceanCurrentsUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
     
     //Load absorption coefficient table
     std::ifstream dataFile(GetShaderPath() + "jerlov.dat", std::ios::in | std::ios::binary);
@@ -257,6 +271,7 @@ OpenGLOcean::~OpenGLOcean()
     glDeleteTextures(6, oceanTextures);
     glDeleteVertexArrays(1, &vaoMask);
     glDeleteBuffers(1, &vboMask);
+    glDeleteBuffers(1, &oceanCurrentsUBO);
     
     if(params.spectrum12 != NULL) delete [] params.spectrum12;
     if(params.spectrum34 != NULL) delete [] params.spectrum34;
@@ -304,6 +319,11 @@ GLuint OpenGLOcean::getWaveTexture()
 glm::vec4 OpenGLOcean::getWaveGridSizes()
 {
     return params.gridSizes;
+}
+
+void OpenGLOcean::UpdateOceanCurrentsData(const OceanCurrentsUBO& data)
+{
+    memcpy(&oceanCurrentsUBOData, &data, sizeof(OceanCurrentsUBO));
 }
 
 void OpenGLOcean::InitializeSimulation()
@@ -366,6 +386,7 @@ void OpenGLOcean::Simulate(GLfloat dt)
                                                               2.f*M_PI*(GLfloat)params.fftSize/params.gridSizes[2],
                                                               2.f*M_PI*(GLfloat)params.fftSize/params.gridSizes[3]));
     oceanShaders["init"]->SetUniform("t", params.t);
+    params.t += dt;
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[0]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, oceanTextures[1]);
     glDrawArrays(GL_TRIANGLES, 0, 3); //1 Layer
@@ -431,10 +452,12 @@ void OpenGLOcean::Simulate(GLfloat dt)
     
     OpenGLState::BindVertexArray(0);
     
-    params.t += dt;
-    
+    //Simulate particles
+    glBindBuffer(GL_UNIFORM_BUFFER, oceanCurrentsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(OceanCurrentsUBO), &oceanCurrentsUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
     for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
-        it->second->Update(it->first, SimulationApp::getApp()->getSimulationManager()->getOcean(), dt);
+        it->second->Update(it->first, dt);
 }
 
 void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
@@ -476,7 +499,7 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
     }
     catch(const std::out_of_range& e)
     {
-        particles = new OpenGLOceanParticles(10000, 3.0);
+        particles = new OpenGLOceanParticles(10000, 4.0);
         oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLOceanParticles*>(cam, particles));
     }
     

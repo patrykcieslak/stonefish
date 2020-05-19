@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum defining possible GLSL variable types.
-    typedef enum {BOOLEAN, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, MAT3, MAT4} ParameterType;
+    typedef enum {BOOLEAN, UINT, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, MAT3, MAT4} ParameterType;
     
     //! A structure containing information about a GLSL uniform.
     struct GLSLUniform
@@ -206,6 +206,14 @@ namespace sf
          */
         bool SetUniform(std::string name, glm::vec4 x);
         
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, GLuint x);
+
         //! A method used to set a GLSL uniform.
         /*!
          \param name the name of the uniform

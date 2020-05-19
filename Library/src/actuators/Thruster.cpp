@@ -94,6 +94,11 @@ Scalar Thruster::getThrust()
     return thrust;
 }
 
+Scalar Thruster::getDiameter()
+{
+    return D;
+}
+
 void Thruster::Update(Scalar dt)
 {
     if(attach != NULL)

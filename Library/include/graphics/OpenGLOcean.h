@@ -26,7 +26,7 @@
 #ifndef __Stonefish_OpenGLOcean__
 #define __Stonefish_OpenGLOcean__
 
-#include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLContent.h"
 #include <SDL2/SDL_mutex.h>
 #include <map>
 
@@ -50,9 +50,20 @@ namespace sf
         float t;
     };
 
+    #pragma pack(1)
+    //! A structure representing the ocean currents UBO.
+    struct OceanCurrentsUBO
+    {
+        VelocityFieldUBO currents[MAX_OCEAN_CURRENTS]; //REMARK: type -> 0=uniform,1=jet,2=pipe,10=thruster
+        glm::vec3 gravity;
+        GLuint numCurrents;
+    };
+    #pragma pack(0)
+
     class GLSLShader;
 	class OpenGLCamera;
 	class OpenGLOceanParticles;
+    class VelocityField;
 	
     //! A class implementing ocean simulation in OpenGL.
     class OpenGLOcean
@@ -137,6 +148,9 @@ namespace sf
          */
         void ShowTexture(int id, glm::vec4 rect);
        
+        //! A method that updates ocean currents information.
+        void UpdateOceanCurrentsData(const OceanCurrentsUBO& data);
+
         //! A method to set the type of ocean water.
         /*!
          \param t type of water
@@ -168,20 +182,21 @@ namespace sf
         float sqr(float x);
         
         std::map<OpenGLCamera*, OpenGLOceanParticles*> oceanParticles;
+        glm::vec3 absorption[64];
+        glm::vec3 scattering[64];
+        OceanCurrentsUBO oceanCurrentsUBOData;
+        GLfloat oceanSize;
+        OceanParams params;
+        glm::vec3 lightAbsorption;
+        glm::vec3 lightScattering;
+        int64_t lastTime;
+
         std::map<std::string, GLSLShader*> oceanShaders;
         GLuint oceanFBOs[3];
         GLuint oceanTextures[6];
-        glm::vec3 absorption[64];
-        glm::vec3 scattering[64];
-        
-        GLfloat oceanSize;
-        OceanParams params;
-        int64_t lastTime;
+        GLuint oceanCurrentsUBO;
         GLuint vaoMask;
         GLuint vboMask;
-        
-        glm::vec3 lightAbsorption;
-        glm::vec3 lightScattering;
 
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);

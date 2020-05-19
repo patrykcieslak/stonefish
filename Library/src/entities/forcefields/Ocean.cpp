@@ -31,6 +31,7 @@
 #include "entities/SolidEntity.h"
 #include "graphics/OpenGLFlatOcean.h"
 #include "graphics/OpenGLRealOcean.h"
+#include "actuators/Thruster.h"
 
 namespace sf
 {
@@ -211,20 +212,56 @@ void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 
 std::vector<Renderable> Ocean::Render()
 {
+    std::vector<Actuator*> act;
+    Render(act);
+}
+
+std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
+{
     std::vector<Renderable> items(0);
     
-    for(unsigned int i=0; i<currents.size(); ++i)
+    OceanCurrentsUBO currentsData;
+    currentsData.gravity = glm::vec3(0.f,0.f,9.81f);
+    currentsData.numCurrents = 0;
+
+    for(size_t i=0; i<currents.size(); ++i)
     {
-        std::vector<Renderable> citems = currents[i]->Render();
+        std::vector<Renderable> citems = currents[i]->Render(currentsData.currents[currentsData.numCurrents]);
         items.insert(items.end(), citems.begin(), citems.end());
+        ++currentsData.numCurrents;
     }
     
+    for(size_t i=0; i<act.size(); ++i)
+    {
+        if(act[i]->getType() == ActuatorType::ACTUATOR_THRUSTER)
+        {
+            Thruster* th = (Thruster*)act[i];
+            Transform thFrame = th->getActuatorFrame();
+            Vector3 thPos = thFrame.getOrigin();
+            Vector3 thDir = -thFrame.getBasis().getColumn(0);
+            Scalar R = th->getDiameter()/Scalar(2);
+            Scalar vel = th->getOmega()/Scalar(10);
+            currentsData.currents[currentsData.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
+                                                                             (GLfloat)thPos.getY(), 
+                                                                             (GLfloat)thPos.getZ(), (GLfloat)R);
+            currentsData.currents[currentsData.numCurrents].dirV = glm::vec4((GLfloat)thDir.getX(),
+                                                                             (GLfloat)thDir.getY(),
+                                                                             (GLfloat)thDir.getZ(),
+                                                                             (GLfloat)vel);
+            currentsData.currents[currentsData.numCurrents].params = glm::vec3(0.f);
+            currentsData.currents[currentsData.numCurrents].type = 10;
+            ++currentsData.numCurrents;
+        }
+    }
+
+    glOcean->UpdateOceanCurrentsData(currentsData);
+
     if(wavesDebug.points.size() > 0)
     {
         items.push_back(wavesDebug);
         wavesDebug.points.clear();
     }
-    
+
     return items;
 }
 

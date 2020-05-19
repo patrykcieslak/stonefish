@@ -43,6 +43,7 @@ namespace sf
     
     class VelocityField;
     class OpenGLOcean;
+    class Actuator;
     
     //! A class implementing an ocean.
     class Ocean : public ForcefieldEntity
@@ -135,8 +136,11 @@ namespace sf
          */
         void InitGraphics(SDL_mutex* hydrodynamics);
         
-        //! A method implementing the rendering of the ocean force field.
+        //! A method implementing the rendering of the force field.
         std::vector<Renderable> Render();
+
+        //! A method implementing the rendering of the ocean force field.
+        std::vector<Renderable> Render(const std::vector<Actuator*>& act);
         
     private:
         Fluid liquid;

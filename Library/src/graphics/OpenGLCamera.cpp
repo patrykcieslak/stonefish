@@ -586,11 +586,11 @@ void OpenGLCamera::DrawSSR()
     ssrShader->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
     ssrShader->SetUniform("near", near);
     ssrShader->SetUniform("far", far);
-    ssrShader->SetUniform("maxIterations", 100);
+    ssrShader->SetUniform("maxIterations", 200);
     ssrShader->SetUniform("maxBinarySearchIterations", 10);
-    ssrShader->SetUniform("pixelZSize", 1.0f);
-    ssrShader->SetUniform("pixelStride", 1.f);
-    ssrShader->SetUniform("pixelStrideZCutoff", 50.f);
+    ssrShader->SetUniform("pixelZSize", 0.1f);
+    ssrShader->SetUniform("pixelStride", 2.f);
+    ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
     ssrShader->SetUniform("maxRayDistance", 500.f);
     ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
     ssrShader->SetUniform("eyeFadeStart", 0.2f);

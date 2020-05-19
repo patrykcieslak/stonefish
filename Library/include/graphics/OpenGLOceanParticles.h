@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOceanParticles__
@@ -52,10 +52,9 @@ namespace sf
 		//! A method updating the positions/velocities of the particles.
 		/*!
          \param cam a pointer to the active camera
-		 \param ocn a pointer to the ocean entity
 		 \param dt time passed since last update
          */
-		void Update(OpenGLCamera* cam, Ocean* ocn, GLfloat dt);
+		void Update(OpenGLCamera* cam, GLfloat dt);
 		
 		//! A method drawing the particles.
 		/*!
@@ -79,12 +78,11 @@ namespace sf
 		bool initialised;
 		GLfloat range;
 		glm::vec3 lastEyePos;
-		GLuint vao;
-		GLuint vboParticle;
-		GLuint vboPositionSize;
-        GLuint flakeTexture;
-        
-		static GLSLShader* particleShader;
+
+		static GLuint flakeTexture;
+		static GLuint noiseTexture; 
+		static GLSLShader* updateShader;
+		static GLSLShader* renderShader;
 	};
 }
 

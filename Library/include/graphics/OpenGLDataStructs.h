@@ -68,6 +68,7 @@
 #define UBO_SUNSKY              ((GLuint)1)
 #define UBO_LIGHTS              ((GLuint)2)
 #define UBO_VIEW                ((GLuint)3)
+#define UBO_OCEAN_CURRENTS      ((GLuint)4)
 
 //Standard SSBO bindings
 #define SSBO_HISTOGRAM          ((GLuint)1)
@@ -76,10 +77,13 @@
 #define SSBO_QTREE_CULL         ((GLuint)4)
 #define AC_QTREE_LOD            ((GLuint)5)
 #define AC_QTREE_CULL           ((GLuint)6)
+#define SSBO_PARTICLE_POS       ((GLuint)7)
+#define SSBO_PARTICLE_VEL       ((GLuint)8)
 
 //Light params
 #define MAX_POINT_LIGHTS        ((GLint)32)
 #define MAX_SPOT_LIGHTS         ((GLint)32)
+#define MAX_OCEAN_CURRENTS      ((GLint)64)
 #define SPOT_LIGHT_SHADOWMAP_SIZE   ((GLint)2048)
 
 class btTransform;

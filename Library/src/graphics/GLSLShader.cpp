@@ -359,6 +359,17 @@ bool GLSLShader::SetUniform(std::string name, glm::vec4 x)
     return success;
 }
 
+bool GLSLShader::SetUniform(std::string name, GLuint x)
+{
+    GLint location = 0;
+    bool success = GetUniform(name, UINT, location);
+    
+    if(success)
+        glUniform1ui(location, x);
+    
+    return success;
+}
+
 bool GLSLShader::SetUniform(std::string name, GLint x)
 {
     GLint location = 0;

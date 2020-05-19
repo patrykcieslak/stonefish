@@ -56,7 +56,7 @@ namespace sf
         Vector3 GetVelocityAtPoint(const Vector3& p);
         
         //! A method implementing the rendering of the jet.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render(VelocityFieldUBO& ubo);
         
     private:
         Vector3 c, n;

@@ -1030,7 +1030,7 @@ void SimulationManager::UpdateDrawingQueue()
     
     //Ocean currents
     if(ocean != NULL)
-        glPipeline->AddToDrawingQueue(ocean->Render());
+        glPipeline->AddToDrawingQueue(ocean->Render(actuators));
 }
 
 Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOceanParticles.h"
@@ -35,204 +35,188 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLOcean.h"
 #include "entities/forcefields/Ocean.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
     
-GLSLShader* OpenGLOceanParticles::particleShader = NULL;
+GLuint OpenGLOceanParticles::flakeTexture = 0;
+GLuint OpenGLOceanParticles::noiseTexture = 0;
+GLSLShader* OpenGLOceanParticles::renderShader = NULL;
+GLSLShader* OpenGLOceanParticles::updateShader = NULL;
 
 OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibleRange) : OpenGLParticles(numOfParticles), uniformd(0, 1.f), normald(0, 1.f)
 {
     initialised = false;
     range = fabsf(visibleRange);
     lastEyePos = glm::vec3(0);
-    
-    glGenVertexArrays(1, &vao);
-    OpenGLState::BindVertexArray(vao);
-    
-    static const GLfloat billboard[] = { 
-         -0.5f, -0.5f, 0.0f,
-          0.5f, -0.5f, 0.0f,
-         -0.5f,  0.5f, 0.0f,
-          0.5f,  0.5f, 0.0f,
-    };
-    
-    glGenBuffers(1, &vboParticle);
-    glBindBuffer(GL_ARRAY_BUFFER, vboParticle);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(billboard), billboard, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &vboPositionSize);
-    glBindBuffer(GL_ARRAY_BUFFER, vboPositionSize);
-    glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(glm::vec4), NULL, GL_STREAM_DRAW);
-
-    OpenGLState::BindVertexArray(0);
-    
-    flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, 0.f);
 }
     
 OpenGLOceanParticles::~OpenGLOceanParticles()
 {
-    if(vboParticle > 0) glDeleteBuffers(1, &vboParticle);
-    if(vboPositionSize > 0) glDeleteBuffers(1, &vboPositionSize);
-    if(vao > 0) glDeleteVertexArrays(1, &vao);
 }
 
 void OpenGLOceanParticles::Create(glm::vec3 eyePos)
 {
     lastEyePos = eyePos;
-    initialised = true;
-    
     //Create particles randomly (uniformly) distributed inside a sphere
-    for(size_t i=0; i<nParticles; ++i)
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO);
+    glm::vec4* positions = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for(GLuint i=0; i<nParticles; ++i) 
     {
         GLfloat r = cbrtf(uniformd(generator)) * range; //cbrtf for uniform distribution in sphere volume
-        positionsSizes[i] = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + eyePos, uniformd(generator)*0.01f + 0.002f);
-        velocities[i] = 0.01f * glm::vec3(normald(generator), normald(generator), normald(generator));
+        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + eyePos, uniformd(generator)*0.005f + 0.002f);
     }
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleVelSSBO);
+    glm::vec4* velocities = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    memset(velocities, 0, sizeof(glm::vec4) * nParticles);
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    initialised = true;
 }
     
-void OpenGLOceanParticles::Update(OpenGLCamera* cam, Ocean* ocn, GLfloat dt)
+void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
 {
     glm::vec3 eyePos = cam->GetEyePosition();
-    
+    lastEyePos = eyePos;
+
     //Check if ever updated
     if(!initialised)
     {
         Create(eyePos);
         return;
     }
-    
-    //Simulate motion
-    for(size_t i=0; i<nParticles; ++i)
-    {
-        positionsSizes[i].x += velocities[i].x * dt;
-        positionsSizes[i].y += velocities[i].y * dt;
-        positionsSizes[i].z += velocities[i].z * dt;
-        
-        Vector3 v = ocn->GetFluidVelocity(Vector3(positionsSizes[i].x, positionsSizes[i].y, positionsSizes[i].z));
-        velocities[i] += glm::vec3((GLfloat)v.x(), (GLfloat)v.y(), (GLfloat)v.z()) * dt - 0.1f * velocities[i] * dt;
-    }
-    
-    //Determine camera moving direction - can be used to generate particles in the direction of movement?
-    /*
-    glm::vec3 dP = eyePos - lastEyePos;
-    lastEyePos = eyePos;
-    bool cameraMoved = glm::length2(dP) > 0.01f*0.01f; //Camera moved more than 1 cm?
-    if(cameraMoved) 
-        dP = glm::normalize(dP);*/
-        
-    //Kill and create (relocate) particles 
-    GLfloat range2 = range*range;
-    
-    //Relocate particles out of range to a random position on a sphere around camera
-    for(size_t i=0; i<nParticles; ++i)
-    {
-        if(glm::length2(glm::vec3(positionsSizes[i]) - eyePos) > range2) //If particle is out of range
-        {
-            GLfloat r = cbrtf(uniformd(generator)) * range;
-            positionsSizes[i] = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + eyePos, uniformd(generator)*0.01f + 0.002f);
-            velocities[i] = 0.01f * glm::vec3(normald(generator), normald(generator), normald(generator));
-        }
-    }
+
+    //Move particles
+    updateShader->Use();
+    updateShader->SetUniform("dt", dt);
+    updateShader->SetUniform("numParticles", nParticles);
+    updateShader->SetUniform("eyePos", eyePos);
+    updateShader->SetUniform("R", range);
+    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_3D, noiseTexture);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, particleVelSSBO);
+    glDispatchCompute((GLuint)ceil(nParticles/256.0), 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
 }
     
 void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
 {
-    glm::mat4 projection = cam->GetProjectionMatrix();
-    glm::mat4 view = cam->GetViewMatrix();
-    
-    OpenGLState::BindVertexArray(vao);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, vboPositionSize);
-    glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(glm::vec4), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
-    glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(glm::vec4), &positionsSizes[0].x);
-    
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vboParticle);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vboPositionSize);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    
-    glVertexAttribDivisor(0, 0);
-    glVertexAttribDivisor(1, 1);
-    
+    glm::mat4 MV = cam->GetViewMatrix();
+    renderShader->Use();
+    renderShader->SetUniform("MV", MV);
+    renderShader->SetUniform("iMV", glm::inverse(MV));
+    renderShader->SetUniform("P", cam->GetProjectionMatrix());
+    renderShader->SetUniform("FC", cam->GetLogDepthConstant());
+    renderShader->SetUniform("eyePos", cam->GetEyePosition());
+    renderShader->SetUniform("viewDir", cam->GetLookingDirection());
+    renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
+    renderShader->SetUniform("bWater", glOcn->getLightScattering());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
     OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
-    
-    particleShader->Use();
-    particleShader->SetUniform("MVP", projection * view);
-    particleShader->SetUniform("camRight", glm::vec3(view[0][0], view[1][0], view[2][0]));
-    particleShader->SetUniform("camUp", glm::vec3(view[0][1], view[1][1], view[2][1]));
-    particleShader->SetUniform("FC", cam->GetLogDepthConstant());
-    particleShader->SetUniform("eyePos", cam->GetEyePosition());
-    particleShader->SetUniform("viewDir", cam->GetLookingDirection());
-    particleShader->SetUniform("cWater", glOcn->getLightAttenuation());
-    particleShader->SetUniform("bWater", glOcn->getLightScattering());
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, (GLsizei)nParticles);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    OpenGLState::DisableBlend();
-    OpenGLState::UseProgram(0);
+    OpenGLState::BindVertexArray(particleVAO);
+    glDrawElements(GL_TRIANGLES, nParticles * 6, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
+    OpenGLState::DisableBlend();
+    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+    OpenGLState::UseProgram(0);
 }
     
 void OpenGLOceanParticles::Init()
 {
-    GLint compiled;
-	std::vector<GLuint> commonMaterialShaders;
-    commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    //Load shaders
+	std::vector<GLuint> precompiled;
+    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
-	GLuint lightingFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightingNoShadow.frag", "", &compiled);
-	commonMaterialShaders.push_back(lightingFragment);
+	std::vector<std::pair<GLenum, std::string>> sources;
+    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "oceanParticle.comp"));
+    updateShader = new GLSLShader(sources);
+    updateShader->AddUniform("dt", ParameterType::FLOAT);
+    updateShader->AddUniform("numParticles", ParameterType::UINT);
+    updateShader->AddUniform("eyePos", ParameterType::VEC3);
+    updateShader->AddUniform("R", ParameterType::FLOAT);
+    updateShader->AddUniform("texNoise", ParameterType::INT);
+    updateShader->AddUniform("invNoiseSize", ParameterType::FLOAT);
+    updateShader->BindUniformBlock("OceanCurrents", UBO_OCEAN_CURRENTS);
+    updateShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
+    updateShader->BindShaderStorageBlock("Velocities", SSBO_PARTICLE_VEL);
 
-    GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
-	commonMaterialShaders.push_back(oceanOpticsFragment);
+    GLuint noiseSize = 16;
+    updateShader->Use();
+    updateShader->SetUniform("texNoise", TEX_MAT_DIFFUSE);
+    updateShader->SetUniform("invNoiseSize", 1.f/(GLfloat)noiseSize);
+    OpenGLState::UseProgram(0);
+
+    sources.clear();
+    sources.push_back(std::make_pair(GL_VERTEX_SHADER, "particle.vert"));
+    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "lightingNoShadow.frag"));
+    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
+    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl"));
+    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanParticle.frag"));
+    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "uwMaterial.frag"));
     
-    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", "", &compiled);
-    commonMaterialShaders.push_back(materialFragment);
+    renderShader = new GLSLShader(sources, precompiled);
+    renderShader->AddUniform("MV", ParameterType::MAT4);
+    renderShader->AddUniform("iMV", ParameterType::MAT4);
+    renderShader->AddUniform("P", ParameterType::MAT4);
+    renderShader->AddUniform("FC", ParameterType::FLOAT);
+    renderShader->AddUniform("eyePos", ParameterType::VEC3);
+    renderShader->AddUniform("viewDir", ParameterType::VEC3);
+    renderShader->AddUniform("color", ParameterType::VEC4);
+    renderShader->AddUniform("tex", ParameterType::INT);
+    renderShader->AddUniform("reflectivity", ParameterType::FLOAT);
+    renderShader->AddUniform("cWater", ParameterType::VEC3);
+    renderShader->AddUniform("bWater", ParameterType::VEC3);
+    renderShader->AddUniform("transmittance_texture", ParameterType::INT);
+    renderShader->AddUniform("scattering_texture", ParameterType::INT);
+    renderShader->AddUniform("irradiance_texture", ParameterType::INT);
+    renderShader->BindUniformBlock("SunSky", UBO_SUNSKY);
+    renderShader->BindUniformBlock("Lights", UBO_LIGHTS);
+    renderShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
 
-    GLuint oceanSurfaceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
-    commonMaterialShaders.push_back(oceanSurfaceFragment);
-    
-    particleShader = new GLSLShader(commonMaterialShaders, "oceanParticle.frag", "billboard.vert");
-    particleShader->AddUniform("MVP", ParameterType::MAT4);
-    particleShader->AddUniform("camRight", ParameterType::VEC3);
-    particleShader->AddUniform("camUp", ParameterType::VEC3);
-    particleShader->AddUniform("FC", ParameterType::FLOAT);
-    particleShader->AddUniform("eyePos", ParameterType::VEC3);
-    particleShader->AddUniform("viewDir", ParameterType::VEC3);
-    particleShader->AddUniform("color", ParameterType::VEC4);
-    particleShader->AddUniform("tex", ParameterType::INT);
-    particleShader->AddUniform("reflectivity", ParameterType::FLOAT);
-    particleShader->AddUniform("cWater", ParameterType::VEC3);
-    particleShader->AddUniform("bWater", ParameterType::VEC3);
-    particleShader->AddUniform("transmittance_texture", ParameterType::INT);
-    particleShader->AddUniform("scattering_texture", ParameterType::INT);
-    particleShader->AddUniform("irradiance_texture", ParameterType::INT);
-    particleShader->BindUniformBlock("SunSky", UBO_SUNSKY);
-    particleShader->BindUniformBlock("Lights", UBO_LIGHTS);
+    renderShader->Use();
+    renderShader->SetUniform("tex", TEX_MAT_DIFFUSE);
+    renderShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    renderShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    renderShader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+    renderShader->SetUniform("reflectivity", 0.f);
+    renderShader->SetUniform("color", glm::vec4(0.f,0.f,0.f,1.f));
+    OpenGLState::UseProgram(0);
 
-    glDeleteShader(lightingFragment);
-    glDeleteShader(oceanOpticsFragment);
-    glDeleteShader(materialFragment);
-    glDeleteShader(oceanSurfaceFragment);
+    //Load textures
+    flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, 0.f);
 
-    particleShader->Use();
-    particleShader->SetUniform("tex", TEX_MAT_DIFFUSE);
-    particleShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    particleShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    particleShader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-    particleShader->SetUniform("reflectivity", 0.f);
-    particleShader->SetUniform("color", glm::vec4(0.f,0.f,0.f,1.f));
+    unsigned int seed = (unsigned int)GetTimeInMicroseconds();
+    std::mt19937 generator(seed);
+    std::uniform_int_distribution<int8_t> dist(-127,127);
+    glm::uvec3 noiseSize3(noiseSize, noiseSize, noiseSize);
+    int8_t* noiseData = new int8_t[noiseSize3.x * noiseSize3.y * noiseSize3.z * 4];
+    int8_t *ptr = noiseData;
+    for(unsigned int z=0; z<noiseSize3.z; ++z)
+        for(unsigned int y=0; y<noiseSize3.y; ++y) 
+            for(unsigned int x=0; x<noiseSize3.x; ++x) 
+            {
+              *ptr++ = dist(generator);
+              *ptr++ = dist(generator);
+              *ptr++ = dist(generator);
+              *ptr++ = dist(generator);
+            }
+    noiseTexture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, noiseSize3,
+                                                  GL_RGBA8_SNORM, GL_RGBA, GL_BYTE, noiseData, FilteringMode::BILINEAR, true);
+    delete [] noiseData;                                
 }
 
 void OpenGLOceanParticles::Destroy()
 {
-    if(particleShader != NULL) delete particleShader;
+    if(updateShader != NULL) delete updateShader;
+    if(renderShader != NULL) delete renderShader;
+    if(flakeTexture != 0) glDeleteTextures(1, &flakeTexture);
+    if(noiseTexture != 0) glDeleteTextures(1, &noiseTexture);
 }
     
 }

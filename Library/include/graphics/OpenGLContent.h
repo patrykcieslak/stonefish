@@ -37,14 +37,23 @@ namespace sf
     //! An enum specifiying supported texture filtration modes.
     enum class FilteringMode {NEAREST, BILINEAR, BILINEAR_MIPMAP, TRILINEAR};
 
-    //! A structure representing data of the Lights UBO (std140 aligned)
+    
     #pragma pack(1)
+    //! A structure representing data of the Lights UBO (std140 aligned)
     struct LightsUBO
     {
         PointLightUBO pointLights[MAX_POINT_LIGHTS];
         SpotLightUBO spotLights[MAX_SPOT_LIGHTS];
         GLint numPointLights;
         GLint numSpotLights;
+    };
+    //! A structure representing a velocity field UBO (std140 aligned).
+    struct VelocityFieldUBO
+    {
+        glm::vec4 posR;   //Position and orifice radius
+        glm::vec4 dirV;   //Direction and velocity value
+        glm::vec3 params; //Additional params
+        GLuint type;      //Type of velocity field
     };
     #pragma pack(0)
 

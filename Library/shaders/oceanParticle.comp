@@ -1,0 +1,227 @@
+#version 430
+
+#define MAX_OCEAN_CURRENTS  64
+#define M_PI    3.141592654
+#define SQRT_2  1.414213562
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+uniform float dt;
+uniform uint numParticles;
+uniform vec3 eyePos;
+uniform float R;
+uniform sampler3D texNoise;
+uniform float invNoiseSize;
+
+struct VelocityField
+{
+    vec4 posR;
+    vec4 dirV;
+    vec3 params;
+    uint type;
+};
+
+layout(std140) uniform OceanCurrents
+{
+    VelocityField currents[MAX_OCEAN_CURRENTS];
+    vec3 gravity;
+    uint numCurrents;
+};
+
+layout(std140) buffer Positions
+{
+    vec4 posSize[];
+};
+
+layout(std140) buffer Velocities
+{
+    vec4 velOpacity[];
+};
+
+const float noiseFrequency = 100.0;
+const float noiseStrength = 0.02;
+const float sizeFactor = 100.0;
+
+//Velocity of water for jet current
+vec3 jet(vec3 p, vec3 c, float r, vec3 n, float vout)
+{
+    vec3 cp = p-c;
+    
+    //Calculate distance from outlet
+    float t = dot(cp, n);
+    if(t < 0.0) 
+        return vec3(0.0);
+    
+    //Calculate distance to axis
+    float d = length(cross(cp, n));
+
+    //Calculate radius at point
+    float r_ = 1.0/5.0 * (t + 5.0*r); //Jet angle is around 24 deg independent of conditions!
+    if(d >= r_) 
+        return vec3(0.0);
+    
+    //Calculate central velocity
+    vec3 vmax = 10.0*r/(t + 5.0*r) * vout * n;  
+    
+    //Calculate fraction of central velocity
+    float f = exp(-50.0*d*d/(t*t));
+    
+    return f*vmax;
+}
+
+//Velocity of water for pipe current
+vec3 pipe(vec3 p, vec3 p1, float r1, float r2, float l, vec3 n, float vin, float gamma)
+{
+    vec3 p1p = p-p1;
+    
+    //Calculate closest point on line section between P1 and P2
+    float t = dot(p1p,n);
+    if(t < 0.0 || t > l) 
+        return vec3(0.0);
+    
+    //Calculate distance to line
+    float d = length(cross(p1p,n));
+
+    //Calculate radius at point
+    float r = r1 + (r2-r1) * t/l;
+    if(d >= r) 
+        return vec3(0.0);
+    
+    //Calculate central velocity
+    vec3 v = r1/r * vin * n;
+    
+    //Calculate fraction of central velocity
+    float f = pow(1.0-d/r, gamma);
+    
+    return f*v;
+}
+
+//Velocity of water for thruster
+vec3 thruster(vec3 p, vec3 c, float r, vec3 n, float vout)
+{
+    vec3 cp = p-c;
+    
+    //Calculate distance from duct back
+    float t = dot(cp, n);
+    if(t < 0.0) //Front of thruster?
+    { 
+        n = -n;
+        t = -t;
+        vout = -vout;
+    }
+    
+    //Calculate distance to axis
+    float d = length(cross(cp, n));
+
+    //Calculate radius at point
+    float r_ = 1.0/5.0 * (t + 5.0*r); //Jet angle is around 24 deg independent of conditions!
+    if(d >= r_) 
+        return vec3(0.0);
+    
+    //Calculate central velocity
+    vec3 vmax = 10.0*r/(t + 5.0*r) * vout * n;  
+    
+    //Calculate fraction of central velocity
+    float f = exp(-50.0*d*d/(t*t));
+    
+    return f*vmax;
+}
+
+//Uniform random value in [-1, 1]
+vec3 noise3f(vec3 s)
+{
+    return texture(texNoise, s * invNoiseSize).xyz;
+}
+
+//Fractal sum
+vec3 fBm3f(vec3 p, int octaves, float lacunarity, float gain) 
+{
+    float freq = 1.0, amp = 0.5;
+    vec3 sum = vec3(0.0);
+    for(int i=0; i<octaves; ++i) 
+    {
+        sum += noise3f(p * freq) * amp;
+        freq *= lacunarity;
+        amp *= gain;
+    }
+    return sum;
+}
+
+void main()
+{
+    uint pid = gl_GlobalInvocationID.x;
+    if(pid < numParticles)
+    {
+        //Drag factor
+        float drag = posSize[pid].w * sizeFactor * dt;
+
+        //Damp velocity
+        velOpacity[pid].xyz -= velOpacity[pid].xyz * drag;
+
+        //Add currents influence
+        for(uint i=0; i<numCurrents; ++i)
+        {
+            vec3 dir = vec3(1.0,0.0,0.0);
+            float vel = 0.0;
+
+            switch(currents[i].type)
+            {
+                case 0: //Uniform
+                {
+                    vel = currents[i].dirV.w;    
+                    dir = currents[i].dirV.xyz;
+                }
+                    break;
+
+                case 1: //Jet
+                {
+                    vec3 v = jet(posSize[pid].xyz, currents[i].posR.xyz, currents[i].posR.w, 
+                                                   currents[i].dirV.xyz, currents[i].dirV.w);
+                    vel = length(v);
+                    if(vel != 0.0)
+                        dir = v/vel;
+                }
+                    break;
+
+                case 2: //Pipe
+                {
+                    vec3 v = pipe(posSize[pid].xyz, currents[i].posR.xyz, currents[i].posR.w,
+                                                    currents[i].params.y, currents[i].params.x,
+                                                    currents[i].dirV.xyz, currents[i].dirV.w,
+                                                    currents[i].params.z);
+                    vel = length(v);
+                    if(vel != 0.0)
+                        dir = v/vel;
+                }
+                    break;
+
+                case 10: //Thruster
+                {
+                    vec3 v = thruster(posSize[pid].xyz, currents[i].posR.xyz, currents[i].posR.w, 
+                                                        currents[i].dirV.xyz, currents[i].dirV.w);
+                    vel = length(v);
+                    if(vel != 0.0)
+                        dir = v/vel;
+                }
+                    break;
+                
+                default:
+                    break;
+            }
+
+            if(dot(velOpacity[pid].xyz, dir) < vel)
+                velOpacity[pid].xyz += dir * vel * drag;
+        }
+
+        //Add fractal brownian motion
+        velOpacity[pid].xyz += fBm3f(posSize[pid].xyz * noiseFrequency,4,2.0,0.5) * noiseStrength * dt;
+
+        //Update position
+        posSize[pid].xyz += velOpacity[pid].xyz * dt;
+
+        //Move particles that are out of range
+        float d = distance(eyePos, posSize[pid].xyz);
+        if(d > R)
+            posSize[pid].xyz = noise3f(posSize[pid].xyz*1000.0) * R * SQRT_2 + eyePos;
+    }
+}

@@ -41,8 +41,12 @@ Vector3 Stream::GetVelocityAtPoint(const Vector3& p)
     return Vector3(0,0,0);
 }
 
-std::vector<Renderable> Stream::Render()
+std::vector<Renderable> Stream::Render(VelocityFieldUBO& ubo)
 {
+    ubo.posR = glm::vec4(0.f);
+    ubo.dirV = glm::vec4(0.f);
+    ubo.params = glm::vec3(0.f);
+    ubo.type = 0;
     return std::vector<Renderable>(0);
 }
     
