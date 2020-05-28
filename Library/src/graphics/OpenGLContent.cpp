@@ -1246,6 +1246,64 @@ GLuint OpenGLContent::GenerateTexture(GLenum target, glm::uvec3 dimensions, GLen
     return texture;
 }
 
+GLuint OpenGLContent::GenerateFramebuffer(const std::vector<FBOTexture>& textures)
+{
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    OpenGLState::BindFramebuffer(fbo);
+
+    for(size_t i = 0; i < textures.size(); ++i)
+    {
+        if(textures[i].attach == GL_DEPTH_ATTACHMENT 
+           || textures[i].attach == GL_STENCIL_ATTACHMENT
+           || textures[i].attach == GL_DEPTH_STENCIL_ATTACHMENT)
+        {
+            glFramebufferTexture(GL_FRAMEBUFFER, textures[i].attach, textures[i].tex, textures[i].lvl);
+            continue;
+        }
+
+        switch(textures[i].target)
+        {
+        case GL_TEXTURE_1D:
+            glFramebufferTexture1D(GL_FRAMEBUFFER, textures[i].attach, GL_TEXTURE_1D, textures[i].tex, textures[i].lvl);
+            break;
+
+        case GL_TEXTURE_2D:
+        case GL_TEXTURE_RECTANGLE:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Z: 
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_X: 
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y: 
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        case GL_TEXTURE_2D_MULTISAMPLE:
+            glFramebufferTexture2D(GL_FRAMEBUFFER, textures[i].attach, textures[i].target, textures[i].tex, textures[i].lvl);
+            break;
+
+        case GL_TEXTURE_3D:
+            glFramebufferTexture3D(GL_FRAMEBUFFER, textures[i].attach, GL_TEXTURE_3D, textures[i].tex, textures[i].lvl, textures[i].z);
+            break;
+        
+        default:
+            break;
+        }
+    }
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        cError("Framebuffer initialization failed!");
+        OpenGLState::BindFramebuffer(0);
+        glDeleteFramebuffers(1, &fbo);
+        return 0;
+    }
+    else
+    {
+        OpenGLState::BindFramebuffer(0);
+        return fbo;
+    }
+}
+
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 {
     Mesh* mesh = new Mesh;

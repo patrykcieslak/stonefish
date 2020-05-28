@@ -207,7 +207,7 @@ void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
         glOcean = new OpenGLRealOcean(depth, oceanState, hydrodynamics);
     else
         glOcean = new OpenGLFlatOcean(depth);
-    SetupWaterProperties(0.0);
+    SetupWaterProperties(0.2);
 }
 
 std::vector<Renderable> Ocean::Render()

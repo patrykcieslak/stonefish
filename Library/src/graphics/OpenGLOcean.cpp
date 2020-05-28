@@ -150,7 +150,7 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     oceanShaders["blur"]->AddUniform("blurShape", ParameterType::VEC2);
     oceanShaders["blur"]->AddUniform("texScene", ParameterType::INT);
     oceanShaders["blur"]->AddUniform("texLinearDepth", ParameterType::INT);
-    
+
     //Background
     std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
@@ -264,6 +264,8 @@ OpenGLOcean::~OpenGLOcean()
     delete oceanShaders["variance"];
     delete oceanShaders["spectrum"];
     delete oceanShaders["mask_back"];
+    //delete oceanShaders["blur_downsample"];
+    //delete oceanShaders["blur_gaussian"];
     delete oceanShaders["blur"];
     delete oceanShaders["background"];
 
@@ -506,16 +508,16 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
     particles->Draw(cam, this);
 }
 
-void OpenGLOcean::DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint linearDepthTex)
+void OpenGLOcean::DrawBlur(OpenGLCamera* cam)
 {
     GLint* viewport = cam->GetViewport();
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, sceneTexture);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, linearDepthTex);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getColorTexture(1));
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, cam->getLinearDepthTexture(true));
     oceanShaders["blur"]->Use();
     oceanShaders["blur"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["blur"]->SetUniform("bWater", getLightScattering());
     oceanShaders["blur"]->SetUniform("blurScale", 0.002f);
-    oceanShaders["blur"]->SetUniform("blurShape", glm::vec2(1.f, (GLfloat)viewport[2]/(GLfloat)viewport[3]));
+    oceanShaders["blur"]->SetUniform("blurShape", glm::vec2(1.f/(GLfloat)viewport[2], 1.f/(GLfloat)viewport[3]));
     oceanShaders["blur"]->SetUniform("texScene", TEX_POSTPROCESS1);
     oceanShaders["blur"]->SetUniform("texLinearDepth", TEX_POSTPROCESS2);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();

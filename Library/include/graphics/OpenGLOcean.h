@@ -129,10 +129,8 @@ namespace sf
         //! A method that draws the underwater blur (scattering).
         /*!
          \param cam a pointer to the active camera
-         \param sceneTexture an id of the color texture
-         \param linearDepthTex an id of the depth map texture
          */
-        void DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint linearDepthTex);
+        void DrawBlur(OpenGLCamera* cam);
         
         //! A method that drawsd the spectrum of waves.
         /*!

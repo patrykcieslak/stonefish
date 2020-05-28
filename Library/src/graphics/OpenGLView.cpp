@@ -34,8 +34,8 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
 {
     originX = x;
     originY = y;
-    viewportWidth = width;
-    viewportHeight = height;
+    viewportWidth = width + width % 2;
+    viewportHeight = height + height % 2;
     enabled = true;
     viewUBOData.VP = glm::mat4(1.f);
     viewUBOData.eye = glm::vec3(0.f);

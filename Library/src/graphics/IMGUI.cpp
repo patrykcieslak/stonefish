@@ -297,7 +297,7 @@ void IMGUI::GenerateBackground()
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     
-    for(int i=0; i<3; i++)
+    for(int i=0; i<3; ++i)
     {
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);

@@ -103,6 +103,14 @@ namespace sf
         
         //! A method to set current view matrix.
         void SetViewTransform();
+
+        //! A method used to determine which buffers are drawn during rendering.
+        /*!
+         \param colorBufferIndex the id of the color buffer to be used for rendering
+         \param normalBuffer a flag indicating if normal buffer should be written
+         \param clearBuffers a flag indicating if buffers should be cleared
+         */
+        void SetRenderBuffers(GLuint colorBufferIndex, bool normalBuffer, bool clearBuffers);
         
         //! A method to generate a ray in world space (picking).
         /*!
@@ -183,16 +191,13 @@ namespace sf
          \param ec exposure compensation factor
          */
         void setExposureCompensation(GLfloat ec);
-        
+
         //! A method returning the exposure compensation factor.
         GLfloat getExposureCompensation();
 
         //! A method returning the postprocessing framebuffer of the camera.
         GLuint getPostprocessFBO();
 
-        //! A method returning the postprocessing half framebuffer of the camera.
-        GLuint getPostprocessHalfFBO();
-        
         //! A method returning the id of the color texture.
         /*!
          \param index the id of the texture in the list
@@ -237,8 +242,7 @@ namespace sf
         
     protected:
         //Buffers
-        GLuint renderColorTex;
-        GLuint renderColor2Tex;
+        GLuint renderColorTex[2];
         GLuint renderViewNormalTex;
         GLuint renderDepthStencilTex;
         GLuint histogramSSBO;
@@ -249,6 +253,7 @@ namespace sf
         bool autoExposure;
 		bool toneMapping;
         bool antiAliasing;
+        GLuint lastActiveRenderColorBuffer;
         
         //Postprocessing
         GLuint postprocessFBO;

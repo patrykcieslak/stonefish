@@ -395,11 +395,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
                 //Clear main framebuffer and setup camera
                 OpenGLState::BindFramebuffer(camera->getRenderFBO());
-                GLenum renderBuffs[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-                glDrawBuffers(3, renderBuffs);
+                camera->SetRenderBuffers(0, true, false);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                glDrawBuffers(2, renderBuffs);
-
+                
                 camera->SetViewport();
                 content->SetCurrentView(camera);
                 
@@ -436,10 +434,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glOcean->DrawBackground(camera);
 					
                     //Draw surface to back buffer
-                    GLenum renderBuffs2[2] = {GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT1};
-                    glDrawBuffers(2, renderBuffs2);
+                    camera->SetRenderBuffers(1, false, true);
+                    camera->SetRenderBuffers(1, true, false);
+                    //camera->SetRenderBuffers(1, true, true);
                     glOcean->DrawSurface(camera);
-                    glDrawBuffers(2, renderBuffs);
+                    camera->SetRenderBuffers(0, true, false);
                     
                     //Blend surface on top of scene
                     OpenGLState::DisableDepthTest();
@@ -481,16 +480,22 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
                     camera->GenerateLinearDepth(false);
                     
+                    //Postprocessing
+                    OpenGLState::DisableDepthTest();
+
                     //Draw reflections
                     OpenGLState::BindFramebuffer(camera->getRenderFBO());
-                    OpenGLState::DisableDepthTest();
+                    camera->SetRenderBuffers(1, false, true);
                     camera->DrawSSR();
                     
-                    //Draw blur only below surface
+                    //Draw blur and particles only below surface
                     OpenGLState::EnableStencilTest();
                     glStencilFunc(GL_EQUAL, 1, 0xFF);
-                    //glOcean->DrawVolume(camera, camera->getPostprocessTexture(0), camera->getLinearDepthTexture(true));
+                    //camera->SetRenderBuffers(0, false, false);
+                    //glOcean->DrawBlur(camera);
                     glOcean->DrawParticles(camera);
+                    //glStencilFunc(GL_EQUAL, 0, 0xFF);
+                    //content->DrawTexturedSAQ(camera->getColorTexture(1));
                     OpenGLState::DisableStencilTest();
                 }
             
@@ -526,8 +531,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
                     atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);*/
                     
+                    //content->DrawTexturedQuad(0,0,800,600,camera->getPostprocessTexture(2));
                     //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
                     //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
+                    //camera->ShowSceneTexture(glm::vec4(0,200,300,200));
                     //camera->ShowLinearDepthTexture(glm::vec4(0,0,600,500), true);
                     //camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200), false);
                     

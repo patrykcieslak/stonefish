@@ -246,40 +246,43 @@ void main(void)
     float reflectionStrength = normalReflection.w; //Reflectivity
     
     //If pixel belongs to sky there is no reflection! --> ADD REFLECTION OF THE SKY!!!!
-    if(dot(vsNormal, vsNormal) < 0.01 || reflectionStrength < 0.01) discard;
-    
-    //Get eye space position
-    float depth = texture(texLinearDepth, texcoord).r;
-    //float backDepth = texture(texLinearBackfaceDepth, texcoord).r;
-    vec3 vsRayOrigin = positionFromDepth(texcoord, depth); //Origin of reflected ray
-    
-    //Calculate reflected direction
-    vec3 vsRayDirection = normalize(reflect(normalize(vsRayOrigin), vsNormal)); //Direction of reflected ray
-    
-    //Calculate jitter
-    float c = (gl_FragCoord.x + gl_FragCoord.y) * 0.25;
-    float jitter = fract(c);
-    
-    //Trace ray
-    vec2 hitPixel;
-    vec3 hitPoint;
-    int iterationCount;
-    bool intersect = traceScreenSpaceRay(vsRayOrigin, vsRayDirection, jitter, hitPixel, hitPoint, iterationCount, texcoord.x > 0.5);
-    float alpha = calculateAlphaForIntersection(intersect, iterationCount, reflectionStrength, hitPixel, hitPoint, vsRayOrigin, vsRayDirection);
+    if(dot(vsNormal, vsNormal) < 0.01 || reflectionStrength < 0.01) 
+        fragColor = vec4(texture(texColor, texcoord).rgb, 1.0);
+    else
+    {    
+        //Get eye space position
+        float depth = texture(texLinearDepth, texcoord).r;
+        //float backDepth = texture(texLinearBackfaceDepth, texcoord).r;
+        vec3 vsRayOrigin = positionFromDepth(texcoord, depth); //Origin of reflected ray
+        
+        //Calculate reflected direction
+        vec3 vsRayDirection = normalize(reflect(normalize(vsRayOrigin), vsNormal)); //Direction of reflected ray
+        
+        //Calculate jitter
+        float c = (gl_FragCoord.x + gl_FragCoord.y) * 0.25;
+        float jitter = fract(c);
+        
+        //Trace ray
+        vec2 hitPixel;
+        vec3 hitPoint;
+        int iterationCount;
+        bool intersect = traceScreenSpaceRay(vsRayOrigin, vsRayDirection, jitter, hitPixel, hitPoint, iterationCount, texcoord.x > 0.5);
+        float alpha = calculateAlphaForIntersection(intersect, iterationCount, reflectionStrength, hitPixel, hitPoint, vsRayOrigin, vsRayDirection);
 
-    //Add sky fallback or underwater background fallback
-    hitPixel = mix(texcoord, hitPixel, float(intersect));
-    
-    fragColor = vec4(mix(texture(texColor, texcoord).rgb, texture(texColor, hitPixel).rgb, alpha * reflectionStrength), 1.0);
-    //fragColor = vec4(vec3(alpha * reflectionStrength), 1.0);
-    //fragColor = vec4(vsNormal, 1.0);
-    //fragColor = vec4(vec3(-vsRayOrigin.z), 1.0);
-    //fragColor = vec4(normalReflection.xyz, 1.0);
-    //fragColor = vec4(texture(texLinearDepth, texcoord).rrr, 1.0);
-    //fragColor = vec4(texture(texColor, hitPixel).rgb, 1.0);
-    //fragColor = vec4(vec3(reflectionStrength), 1.0);
-    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
-    //fragColor = vec4(vec3(float(iterationCount)/maxIterations), 1.0);
-    //fragColor = vec4(vec3(depth), 1.0);
-	//fragColor = vec4(texture(texColor, texcoord).rgb, 1.0);
+        //Add sky fallback or underwater background fallback
+        hitPixel = mix(texcoord, hitPixel, float(intersect));
+        
+        fragColor = vec4(mix(texture(texColor, texcoord).rgb, texture(texColor, hitPixel).rgb, alpha * reflectionStrength), 1.0);
+        //fragColor = vec4(vec3(alpha * reflectionStrength), 1.0);
+        //fragColor = vec4(vsNormal, 1.0);
+        //fragColor = vec4(vec3(-vsRayOrigin.z), 1.0);
+        //fragColor = vec4(normalReflection.xyz, 1.0);
+        //fragColor = vec4(texture(texLinearDepth, texcoord).rrr, 1.0);
+        //fragColor = vec4(texture(texColor, hitPixel).rgb, 1.0);
+        //fragColor = vec4(vec3(reflectionStrength), 1.0);
+        //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+        //fragColor = vec4(vec3(float(iterationCount)/maxIterations), 1.0);
+        //fragColor = vec4(vec3(depth), 1.0);
+        //fragColor = vec4(texture(texColor, texcoord).rgb, 1.0);
+    }
 }

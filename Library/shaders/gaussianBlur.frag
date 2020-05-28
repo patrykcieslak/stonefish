@@ -1,6 +1,3 @@
-//Gaussian blur equivalent to 9 samples achieved by making use of the built-in bilinear filtering
-//http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
-//+ texture coordinates precomputed in vertex shader.
 /*    
     Copyright (c) 2019 Patryk Cieslak. All rights reserved.
 
@@ -19,6 +16,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+//Gaussian blur equivalent to 9 samples achieved by making use of the built-in bilinear filtering
+//http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+//+ texture coordinates precomputed in vertex shader.
 
 #version 330
 

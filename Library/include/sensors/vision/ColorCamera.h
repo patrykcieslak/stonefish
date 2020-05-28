@@ -103,7 +103,6 @@ namespace sf
         void InitGraphics();
         
         OpenGLRealCamera* glCamera;
-        unsigned int samples;
         glm::vec2 depthRange;
         uint8_t* imageData;
         std::function<void(ColorCamera*)> newDataCallback;

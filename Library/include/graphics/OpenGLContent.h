@@ -37,6 +37,18 @@ namespace sf
     //! An enum specifiying supported texture filtration modes.
     enum class FilteringMode {NEAREST, BILINEAR, BILINEAR_MIPMAP, TRILINEAR};
 
+    //! Framebuffer texture
+    struct FBOTexture
+    {
+        GLenum attach;
+        GLenum target;
+        GLuint tex;
+        GLint lvl;
+        GLint z;
+
+        FBOTexture(GLenum attachment, GLenum target, GLuint texture, GLint level = 0, GLint zoffset = 0)
+        : attach(attachment), target(target), tex(texture), lvl(level), z(zoffset) {}
+    };
     
     #pragma pack(1)
     //! A structure representing data of the Lights UBO (std140 aligned)
@@ -307,9 +319,17 @@ namespace sf
          \param fm the filtering mode
          \param repeat a flag indicating if texture repeat mode should be used
          \param anisotropy a flag indicating if anisotropic filtering should be enabled
+         \return a texture handle
         */
         static GLuint GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, 
                                       GLenum type, const void* data, FilteringMode fm, bool repeat, bool anisotropy = false);
+
+        //! A static method to create a framebuffer object.
+        /*!
+         \param textures a vector of framebuffer textures 
+         \return a framebuffer object handle
+         */
+        static GLuint GenerateFramebuffer(const std::vector<FBOTexture>& textures);
 
         //! A static method to load a mesh from a file.
         /*!

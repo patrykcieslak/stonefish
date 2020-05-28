@@ -1526,7 +1526,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         if((item = element->FirstChildElement("rendering")) != nullptr) //Optional parameters
         {
-            Scalar minDist(0.01);
+            Scalar minDist(0.02);
             Scalar maxDist(100000.0);
             item->QueryAttribute("minimum_distance", &minDist);
             item->QueryAttribute("maximum_distance", &maxDist);
