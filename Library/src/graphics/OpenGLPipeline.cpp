@@ -34,7 +34,7 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
-#include "graphics/OpenGLFLS.h"
+#include "graphics/OpenGLFLS2.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOceanParticles.h"
@@ -58,7 +58,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
-    OpenGLFLS::Init();
+    OpenGLFLS2::Init();
     OpenGLOceanParticles::Init();
     content = new OpenGLContent();
     
@@ -152,7 +152,7 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
             else if(content->getView(i)->getType() == ViewType::DEPTH_CAMERA)
                 ((OpenGLDepthCamera*)content->getView(i))->UpdateTransform();
             else if(content->getView(i)->getType() == ViewType::SONAR)
-                ((OpenGLFLS*)content->getView(i))->UpdateTransform();
+                ((OpenGLFLS2*)content->getView(i))->UpdateTransform();
         //Update light transforms to ensure consistency
         for(unsigned int i=0; i < content->getLightsCount(); ++i)
             content->getLight(i)->UpdateTransform();
@@ -365,7 +365,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
             else if(view->getType() == SONAR)
             {
-                OpenGLFLS* fls = (OpenGLFLS*)view;
+                OpenGLFLS2* fls = (OpenGLFLS2*)view;
                 
                 //Draw object and compute sonar data
                 fls->ComputeOutput(drawingQueueCopy);
@@ -531,7 +531,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
                     atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);*/
                     
-                    //content->DrawTexturedQuad(0,0,800,600,camera->getPostprocessTexture(2));
+                    //content->DrawTexturedQuad(0,0,800,600,camera->getPostprocessTexture(0));
                     //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
                     //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
                     //camera->ShowSceneTexture(glm::vec4(0,200,300,200));
@@ -559,6 +559,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         {
             GLint* viewport = view->GetViewport();
             OpenGLState::Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            content->SetViewportSize(viewport[2], viewport[3]);
             view->DrawLDR(screenFBO);
             delete [] viewport;
         }

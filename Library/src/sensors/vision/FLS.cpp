@@ -28,7 +28,7 @@
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "graphics/OpenGLFLS.h"
+#include "graphics/OpenGLFLS2.h"
 
 namespace sf
 {
@@ -88,7 +88,7 @@ VisionSensorType FLS::getVisionSensorType()
 
 void FLS::InitGraphics()
 {
-    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, (GLfloat)fovH, (GLfloat)fovV, 
+    glFLS = new OpenGLFLS2(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, (GLfloat)fovH, (GLfloat)fovV, 
                           (GLint)resX, beamRes.x, beamRes.y, range.x, range.y, (GLint)resY);
     glFLS->setSonar(this);
     glFLS->setColorMap(cMap);

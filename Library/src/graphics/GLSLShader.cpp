@@ -231,6 +231,38 @@ GLSLShader::GLSLShader(const std::vector<std::pair<GLenum, std::string>>& source
         }
     }
 }
+
+GLSLShader::GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuint> precompiled)
+{
+    valid = false;
+    program = 0;
+
+    if(sources.size() > 0)
+    {
+        valid = true;
+        
+        std::vector<GLuint> shaders = precompiled;
+        GLint compiled = 0;
+
+        for(size_t i=0; i<sources.size(); ++i)
+        {
+            GLuint shader = LoadShader(sources[i].type, sources[i].filename, sources[i].header, &compiled);
+            if(compiled == 0)
+            {
+                valid = false;
+                break;
+            }
+            shaders.push_back(shader);
+        }
+
+        if(valid)
+        {
+            program = CreateProgram(shaders, precompiled.size());
+            if(program == 0)
+                valid = false;
+        }
+    }
+}
     
 GLSLShader::~GLSLShader()
 {

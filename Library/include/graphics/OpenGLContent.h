@@ -479,7 +479,6 @@ namespace sf
         
         //Standard objects
         GLuint baseVertexArray; //base VAO
-        GLuint quadBuf; //quad for debugging textures
         GLuint cubeBuf; //cubemap cross VBO
         GLuint csBuf[2]; //vertex data for drawing coord systems
         Object ellipsoid; //used for approximating fluid dynamics coeffs

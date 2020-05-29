@@ -119,10 +119,6 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
                                                  GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);
     
-    //Bind buffers for compute shaders
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_HISTOGRAM, histogramSSBO);
-    glBindImageTexture(TEX_POSTPROCESS2, exposureTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-
     //----HBAO----
     if(aoFactor > 0)
     {
@@ -619,13 +615,16 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-            glBindImageTexture(TEX_POSTPROCESS1, renderColorTex[lastActiveRenderColorBuffer], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
             
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_HISTOGRAM, histogramSSBO);
+            glBindImageTexture(TEX_POSTPROCESS1, renderColorTex[lastActiveRenderColorBuffer], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+            glBindImageTexture(TEX_POSTPROCESS2, exposureTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
             //Compute histogram of luminance
             tonemappingShaders[0]->Use();
             tonemappingShaders[0]->SetUniform("params", glm::vec2(histogramRange.x, 1.f/(histogramRange.y-histogramRange.x)));
             tonemappingShaders[0]->SetUniform("texSource", TEX_POSTPROCESS1);
-            glDispatchCompute((GLuint)ceil(viewportWidth/16.f), (GLuint)ceil(viewportHeight/16.f), 1);
+            glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             
             //Compute exposure

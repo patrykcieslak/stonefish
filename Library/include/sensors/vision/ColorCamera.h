@@ -49,7 +49,7 @@ namespace sf
          \param maxDistance the maximum drawing distance [m]
          */
         ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency = Scalar(-1),
-           Scalar minDistance = Scalar(0.1), Scalar maxDistance = Scalar(1000)); //Rendering options
+           Scalar minDistance = Scalar(0.02), Scalar maxDistance = Scalar(100000.0)); //Rendering options
         
         //! A destructor.
         ~ColorCamera();

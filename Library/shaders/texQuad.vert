@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -19,12 +19,13 @@
 
 #version 330
 
-layout(location = 0) in vec4 vertex;
 out vec2 texcoord;
 uniform vec4 rect;
 
 void main(void)
 {
-	texcoord = vertex.zw;
-	gl_Position = vec4( (vertex.xy + vec2(1.0))*rect.zw - vec2(1.0) + 2.0*rect.xy,    0, 1.0);
+    int idx = gl_VertexID % 3;
+	vec4 pos = vec4((float(idx&1))*2.0, (float((idx>>1)&1))*2.0, 1.0, 1.0);
+	texcoord = pos.xy;
+    gl_Position = vec4((rect.xy + pos.xy * rect.zw) * 2.0 - 1.0, 0.0, 1.0);
 }

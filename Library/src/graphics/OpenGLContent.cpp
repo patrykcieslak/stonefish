@@ -53,7 +53,6 @@ OpenGLContent::OpenGLContent()
 {
     //Initialize members
     baseVertexArray = 0;
-    quadBuf = 0;
     cubeBuf = 0;
     lightsUBO = 0;
     csBuf[0] = 0;
@@ -78,18 +77,7 @@ OpenGLContent::OpenGLContent()
 
     //Initialize shaders and buffers
     glGenVertexArrays(1, &baseVertexArray);
-    
-    //Build quad texture VBO
-    GLfloat quadData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
-        {-1.f,  1.f, 0.f, 1.f},
-        { 1.f, -1.f, 1.f, 0.f},
-        { 1.f,  1.f, 1.f, 1.f}};
-    
-    glGenBuffers(1, &quadBuf);
-    glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
+     
     //Build cube croos VBO
     GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
         {-1.f, -0.333f, -1.f,-1.f, 1.f},
@@ -431,7 +419,6 @@ OpenGLContent::~OpenGLContent()
 {
     //Base shaders
     if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
-    if(quadBuf != 0) glDeleteBuffers(1, &quadBuf);
     if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
     if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
     if(lightsUBO != 0) glDeleteBuffers(1, &lightsUBO);
@@ -562,286 +549,257 @@ void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
 {
-    if(basicShaders["tex_quad"] != NULL)
-    {
-        y = viewportSize.y-y-height;
-        
-        basicShaders["tex_quad"]->Use();
-        basicShaders["tex_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        basicShaders["tex_quad"]->SetUniform("tex", TEX_BASE);
-        basicShaders["tex_quad"]->SetUniform("color", color);
-        
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
-    }
+    y = viewportSize.y-y-height;
+    
+    basicShaders["tex_quad"]->Use();
+    basicShaders["tex_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+    basicShaders["tex_quad"]->SetUniform("tex", TEX_BASE);
+    basicShaders["tex_quad"]->SetUniform("color", color);
+    
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
 {
-    if((array && basicShaders["tex_layer_quad"] != NULL)||(!array && basicShaders["tex_level_quad"] != NULL))
+    y = viewportSize.y-y-height;
+    
+    if(array)
     {
-        y = viewportSize.y-y-height;
-        
-        if(array)
-        {
-            basicShaders["tex_layer_quad"]->Use();
-            basicShaders["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-            basicShaders["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
-            basicShaders["tex_layer_quad"]->SetUniform("layer", z);
-        }
-        else
-        {
-            basicShaders["tex_level_quad"]->Use();
-            basicShaders["tex_level_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-            basicShaders["tex_level_quad"]->SetUniform("tex", TEX_BASE);
-            basicShaders["tex_level_quad"]->SetUniform("level", z);
-        }
-        
-        OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
+        basicShaders["tex_layer_quad"]->Use();
+        basicShaders["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        basicShaders["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders["tex_layer_quad"]->SetUniform("layer", z);
     }
+    else
+    {
+        basicShaders["tex_level_quad"]->Use();
+        basicShaders["tex_level_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        basicShaders["tex_level_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders["tex_level_quad"]->SetUniform("level", z);
+    }
+    
+    OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
-    if(cubeBuf != 0 && basicShaders["tex_cube"] != NULL)
-    {
-        basicShaders["tex_cube"]->Use();
-        basicShaders["tex_cube"]->SetUniform("tex", TEX_BASE);
-        
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
-        glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
-        glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
-        
-        OpenGLState::BindVertexArray(0);
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["tex_cube"]->Use();
+    basicShaders["tex_cube"]->SetUniform("tex", TEX_BASE);
+    
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
+    glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
+    
+    OpenGLState::BindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 {
-    if(csBuf[0] != 0 && basicShaders["helper"] != NULL)
-    {
-        basicShaders["helper"]->Use();
-        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-        basicShaders["helper"]->SetUniform("scale", glm::vec3(size));
-        
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glDrawArrays(GL_LINES, 0, 6);
-        OpenGLState::BindVertexArray(0);
-        
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", glm::vec3(size));
+    
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glDrawArrays(GL_LINES, 0, 6);
+    OpenGLState::BindVertexArray(0);
+    
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 {
-    if(basicShaders["helper"] != NULL && cylinder.vao != 0)
-    {
-        basicShaders["helper"]->Use();
-        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-        basicShaders["helper"]->SetUniform("scale", dims);
-        
-        OpenGLState::BindVertexArray(cylinder.vao);
-        glVertexAttrib4fv(1, &color.r);
-        glDrawElements(GL_TRIANGLES, 3 * cylinder.faceCount, GL_UNSIGNED_INT, 0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", dims);
+    
+    OpenGLState::BindVertexArray(cylinder.vao);
+    glVertexAttrib4fv(1, &color.r);
+    glDrawElements(GL_TRIANGLES, 3 * cylinder.faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 {
-    if(basicShaders["helper"] != NULL && ellipsoid.vao != 0)
-    {
-        basicShaders["helper"]->Use();
-        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-        basicShaders["helper"]->SetUniform("scale", radii);
-        
-        OpenGLState::BindVertexArray(ellipsoid.vao);
-        glVertexAttrib4fv(1, &color.r);
-        glDrawElements(GL_TRIANGLES, 3 * ellipsoid.faceCount, GL_UNSIGNED_INT, 0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", radii);
+    
+    OpenGLState::BindVertexArray(ellipsoid.vao);
+    glVertexAttrib4fv(1, &color.r);
+    glDrawElements(GL_TRIANGLES, 3 * ellipsoid.faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
 {
-    if(basicShaders["helper"] != NULL && vertices.size() > 0)
+    if(vertices.size() == 0)
+        return;
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", glm::vec3(1.f));
+    
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glEnableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glVertexAttrib4fv(1, &color.r);
+    
+    switch(type)
     {
-        GLuint vbo;
-        glGenBuffers(1, &vbo);
+        case LINES:
+            glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
+            break;
         
-        basicShaders["helper"]->Use();
-        basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-        basicShaders["helper"]->SetUniform("scale", glm::vec3(1.f));
-        
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glVertexAttrib4fv(1, &color.r);
-        
-        switch(type)
-        {
-            case LINES:
-                glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
-                break;
+        case LINE_STRIP:
+            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
+            break;
             
-            case LINE_STRIP:
-                glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
-                break;
-                
-            case POINTS:
-            default:
-                glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
-                break;
-        }
-        OpenGLState::BindVertexArray(0);
-        glDisableVertexAttribArray(0);
-        OpenGLState::UseProgram(0);
-        
-        glDeleteBuffers(1, &vbo);
+        case POINTS:
+        default:
+            glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
+            break;
     }
+    OpenGLState::BindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    OpenGLState::UseProgram(0);
+    
+    glDeleteBuffers(1, &vbo);
 }
 
 void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
-    if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
+    if(objectId < 0 || objectId >= (int)objects.size())
+        return;
+    
+    switch(mode)
     {
-        switch(mode)
+        case DrawingMode::RAW:
         {
-            case DrawingMode::RAW:
-            {
-                OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-                OpenGLState::BindVertexArray(0);
-            }
-            break;
-
-            case DrawingMode::SHADOW:
-            {
-                basicShaders["shadow"]->Use();
-                basicShaders["shadow"]->SetUniform("MVP", viewProjection*M);
-                OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-                OpenGLState::BindVertexArray(0);
-            }
-            break;
-            
-            case DrawingMode::FLAT:
-            {
-                basicShaders["flat"]->Use();
-                basicShaders["flat"]->SetUniform("MVP", viewProjection*M);
-                basicShaders["flat"]->SetUniform("FC", FC);
-                OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-                OpenGLState::BindVertexArray(0);
-            }
-            break;
-
-            default:
-            {
-                if(lookId >= 0 && lookId < (int)looks.size())
-                    UseLook(lookId, M);
-                else
-                    UseStandardLook(M);
-        
-                OpenGLState::BindVertexArray(objects[objectId].vao);
-                glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-                OpenGLState::BindVertexArray(0);
-            }
-            break;
+            OpenGLState::BindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+            OpenGLState::BindVertexArray(0);
         }
+        break;
+
+        case DrawingMode::SHADOW:
+        {
+            basicShaders["shadow"]->Use();
+            basicShaders["shadow"]->SetUniform("MVP", viewProjection*M);
+            OpenGLState::BindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+            OpenGLState::BindVertexArray(0);
+        }
+        break;
+        
+        case DrawingMode::FLAT:
+        {
+            basicShaders["flat"]->Use();
+            basicShaders["flat"]->SetUniform("MVP", viewProjection*M);
+            basicShaders["flat"]->SetUniform("FC", FC);
+            OpenGLState::BindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+            OpenGLState::BindVertexArray(0);
+        }
+        break;
+
+        default:
+        {
+            if(lookId >= 0 && lookId < (int)looks.size())
+                UseLook(lookId, M);
+            else
+                UseStandardLook(M);
+    
+            OpenGLState::BindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+            OpenGLState::BindVertexArray(0);
+        }
+        break;
     }
 }
 
 void OpenGLContent::DrawLightSource(unsigned int lightId)
 {
-    if(lightId >= 0 && lightId < lights.size())
+    if(lightId >= lights.size())
+        return;
+
+    int objectId = lights[lightId]->getSourceObject();
+    if(objectId < 0 || objectId >= (int)objects.size())
+        return;
+
+    //Render light source
+    glm::vec4 colorLi = lights[lightId]->getColorLi();
+    glm::mat4 M = lights[lightId]->getTransform();
+    GLint type = lights[lightId]->getType() == LightType::POINT_LIGHT ? 0 : 1; 
+    GLint id = lights[lightId]->getType() == LightType::POINT_LIGHT ? lightId : lightId - lightsUBOData.numPointLights;
+
+    GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
+    shader->Use();
+    shader->SetUniform("MVP", viewProjection * M);
+    shader->SetUniform("M", M);
+    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+    shader->SetUniform("FC", FC);
+    shader->SetUniform("eyePos", eyePos);
+    shader->SetUniform("viewDir", viewDir);
+    shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
+    shader->SetUniform("lightId", glm::ivec2(type, id));
+    
+    if(mode == DrawingMode::UNDERWATER)
     {
-        int objectId = lights[lightId]->getSourceObject();
-        
-        if(objectId >= 0 && objectId < (int)objects.size())
-        {
-            //Render light source
-            glm::vec4 colorLi = lights[lightId]->getColorLi();
-            glm::mat4 M = lights[lightId]->getTransform();
-            GLint type = lights[lightId]->getType() == LightType::POINT_LIGHT ? 0 : 1; 
-            GLint id = lights[lightId]->getType() == LightType::POINT_LIGHT ? lightId : lightId - lightsUBOData.numPointLights;
-
-            GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
-            shader->Use();
-            shader->SetUniform("MVP", viewProjection * M);
-            shader->SetUniform("M", M);
-            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("FC", FC);
-            shader->SetUniform("eyePos", eyePos);
-            shader->SetUniform("viewDir", viewDir);
-            shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
-            shader->SetUniform("lightId", glm::ivec2(type, id));
-            
-            if(mode == DrawingMode::UNDERWATER)
-            {
-                Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-                shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
-                shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
-            }
-
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
-        }
+        Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
     }
+
+    OpenGLState::BindVertexArray(objects[objectId].vao);
+    glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
 }
 
 void OpenGLContent::SetupLights()

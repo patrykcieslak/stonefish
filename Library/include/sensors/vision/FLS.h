@@ -32,7 +32,7 @@
 
 namespace sf
 {
-    class OpenGLFLS;
+    class OpenGLFLS2;
     
     //! A class representing a forward looking sonar.
     class FLS : public Camera
@@ -113,7 +113,7 @@ namespace sf
     private:
         void InitGraphics();
         
-        OpenGLFLS* glFLS;
+        OpenGLFLS2* glFLS;
         GLfloat* sonarData;
         GLuint* displayData;
         glm::vec2 range;

@@ -69,7 +69,19 @@ namespace sf
 			useInFragment(false)
 		{};
     };
-    
+
+    //! A structure representing the source of one shader.
+    struct GLSLSource
+    {
+        GLenum type;
+        std::string header;
+        std::string filename;
+
+        GLSLSource(GLenum type, const std::string& filename, const std::string& header = "")
+        : type(type), header(header), filename(filename) 
+        {};
+    };
+
     //! A class representing a single GLSL shader.
     class GLSLShader
     {
@@ -135,7 +147,14 @@ namespace sf
          \param sources a vector of pairs defining the shader type and the source code
          */
         GLSLShader(const std::vector<std::pair<GLenum, std::string>>& sources, std::vector<GLuint> precompiled = std::vector<GLuint>(0));
-		   
+
+        //! A constructor.
+        /*!
+         \param sources a vector of shader source structures
+         \param precompiled a vector of precompiled shader handles
+         */
+        GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuint> precompiled = std::vector<GLuint>(0));
+		
         //! A destructor.
         ~GLSLShader();
         

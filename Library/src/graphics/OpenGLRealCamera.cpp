@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLRealCamera.h"
@@ -168,24 +168,39 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
     {
         if(display) //No need to calculate exposure again
         {
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[0]);
-            OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
-            OpenGLState::BindFramebuffer(cameraFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-            tonemappingShaders[2]->Use();
-            tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
-            tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[2]->SetUniform("exposureComp", 1.f);
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-            OpenGLState::UseProgram(0);
-        
-            //Copy to camera data
-            glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
-        
-            //Unbind
-            OpenGLState::BindFramebuffer(0);
-            OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
-            OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+            if(antiAliasing)
+            {
+                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[1]);
+                OpenGLState::BindFramebuffer(cameraFBO);
+                OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+                fxaaShader->Use();
+                fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
+                fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
+                ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+                OpenGLState::UseProgram(0);
+                //Copy to camera data
+                glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
+                OpenGLState::BindFramebuffer(0);
+                OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+            }
+            else
+            {
+                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
+			    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
+                OpenGLState::BindFramebuffer(cameraFBO);
+                OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+                tonemappingShaders[2]->Use();
+                tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
+                tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
+                tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
+                ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+                OpenGLState::UseProgram(0);
+                //Copy to camera data
+                glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
+                OpenGLState::BindFramebuffer(0);
+                OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+                OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+            }
         }
         else
         {
