@@ -79,6 +79,8 @@
 #define AC_QTREE_CULL           ((GLuint)6)
 #define SSBO_PARTICLE_POS       ((GLuint)7)
 #define SSBO_PARTICLE_VEL       ((GLuint)8)
+#define SSBO_QTREE_INDIRECT     ((GLuint)9)
+#define SSBO_QTREE_SIZE         ((GLuint)10)
 
 //Light params
 #define MAX_POINT_LIGHTS        ((GLint)32)
@@ -93,6 +95,22 @@ namespace sf
     //! An enum defining a type of a rendered primitive.
     typedef enum {POINTS, LINES, LINE_STRIP} PrimitiveType;
     
+    struct DrawElementsIndirectCommand 
+    {
+        GLuint  count;
+        GLuint  instanceCount;
+        GLuint  firstIndex;
+        GLuint  baseVertex;
+        GLuint  baseInstance;
+    };
+
+    struct DispatchIndirectCommand
+    {
+        GLuint  numGroupsX;
+        GLuint  numGroupsY;
+        GLuint  numGroupsZ;
+    };
+
     //! A structure containing single vertex data.
     struct Vertex
     {

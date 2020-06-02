@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLDepthCamera.h"
@@ -49,11 +49,13 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
 {
     _needsUpdate = false;
     update = false;
+    newData = false;
     camera = NULL;
     idx = 0;
     range.x = minDepth;
     range.y = maxDepth;
     usesRanges = useRanges;
+    linearDepthPBO = 0;
     
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
@@ -121,6 +123,11 @@ OpenGLDepthCamera::~OpenGLDepthCamera()
     glDeleteFramebuffers(1, &renderFBO);
     glDeleteTextures(1, &linearDepthTex);
     glDeleteFramebuffers(1, &linearDepthFBO);
+
+    if(camera != NULL)
+    {
+        glDeleteBuffers(1, &linearDepthPBO);
+    }
 }
 
 void OpenGLDepthCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
@@ -136,6 +143,20 @@ void OpenGLDepthCamera::UpdateTransform()
     dir = tempDir;
     up = tempUp;
     SetupCamera();
+
+    //Inform camera to run callback
+    if(newData)
+    {
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, linearDepthPBO);
+        GLfloat* src = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        if(src)
+        {
+            camera->NewDataReady(src, idx);
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
+        }
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        newData = false;
+    }
 }
 
 void OpenGLDepthCamera::SetupCamera()
@@ -189,6 +210,11 @@ void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
 {
     camera = cam;
     idx = index;
+
+    glGenBuffers(1, &linearDepthPBO);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, linearDepthPBO);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * sizeof(GLfloat), 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 ViewType OpenGLDepthCamera::getType()
@@ -270,13 +296,13 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
             if(usesRanges) Depth2LinearRanges();
             else LinearizeDepth();
         }
-        
+                
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, camera->getImageDataPointer(idx));
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, linearDepthPBO);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, NULL);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-         
-        //Inform camera to run callback
-        camera->NewDataReady(idx);
+        newData = true;
     }
     
     update = false;

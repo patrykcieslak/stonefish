@@ -70,8 +70,6 @@ namespace sf
     private:
         GLuint vao;
         GLuint vbo;
-        GLuint vaoEdge;
-        GLuint vboEdge;
     };
 }
 

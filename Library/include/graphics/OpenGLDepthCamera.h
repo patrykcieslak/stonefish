@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLDepthCamera__
@@ -137,11 +137,13 @@ namespace sf
         glm::mat4 projection;
         bool _needsUpdate;
         bool update;
+        bool newData;
         glm::vec2 range;
         bool usesRanges;
         GLuint renderDepthTex;
         GLuint linearDepthTex;
         GLuint linearDepthFBO;
+        GLuint linearDepthPBO;
         static GLSLShader* depth2RangesShader;
         static GLSLShader* depthLinearizeShader;
         static GLSLShader* depthVisualizeShader;

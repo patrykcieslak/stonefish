@@ -106,6 +106,7 @@ namespace sf
         ColorCamera* camera;
         GLuint cameraFBO;
         GLuint cameraColorTex;
+        GLuint cameraPBO;
         
         glm::mat4 cameraTransform;
         glm::vec3 eye;
@@ -116,6 +117,7 @@ namespace sf
         glm::vec3 tempUp;
         bool _needsUpdate;
         bool update;
+        bool newData;
     };
 }
 

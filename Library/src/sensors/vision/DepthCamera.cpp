@@ -39,14 +39,11 @@ DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsig
     depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
     depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
     newDataCallback = NULL;
-    imageData = new GLfloat[resX*resY]; // Buffer for storing depth data
-    memset(imageData, 0, resX*resY*sizeof(GLfloat));
+    imageData = NULL;
 }
 
 DepthCamera::~DepthCamera()
 {
-    if(imageData != NULL)
-        delete [] imageData;
     glCamera = NULL;
 }
 
@@ -88,10 +85,14 @@ void DepthCamera::InstallNewDataHandler(std::function<void(DepthCamera*)> callba
     newDataCallback = callback;
 }
 
-void DepthCamera::NewDataReady(unsigned int index)
+void DepthCamera::NewDataReady(void* data, unsigned int index)
 {
     if(newDataCallback != NULL)
+    {
+        imageData = (GLfloat*)data;
         newDataCallback(this);
+        imageData = NULL;
+    }
 }
 
 void DepthCamera::InternalUpdate(Scalar dt)

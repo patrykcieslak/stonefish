@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/GLSLShader.h"
@@ -35,202 +35,6 @@ namespace sf
 
 GLuint GLSLShader::saqVertexShader = 0;
 bool GLSLShader::verbose = true;
-
-GLSLShader::GLSLShader(std::string fragment, std::string vertex, std::string geometry, std::pair<std::string, std::string> tesselation)
-{
-    valid = false;
-    GLint compiled = 0;
-    GLuint vs;
-    GLuint tcs;
-    GLuint tes;
-    GLuint gs;
-    GLuint fs;
-    std::string emptyHeader = "";
-    
-    if(vertex == "")
-        vs = saqVertexShader;
-    else
-        vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
-    
-    if(tesselation.first == "" || tesselation.second == "")
-    {
-        tcs = 0;
-        tes = 0;
-    }
-    else
-    {
-        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
-        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
-    }
-
-    if(geometry == "")
-        gs = 0;
-    else
-        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
-
-    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
-    program = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
-    valid = true;
-}
-
-GLSLShader::GLSLShader(GLSLHeader& header, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
-{
-    valid = false;
-    GLint compiled = 0;
-    GLuint vs;
-    GLuint tcs;
-    GLuint tes;
-    GLuint gs;
-    GLuint fs;
-    std::string emptyHeader = "";
-    
-    if(vertex == "")
-        vs = saqVertexShader;
-    else
-        vs = LoadShader(GL_VERTEX_SHADER, vertex, header.useInVertex ? header.code : emptyHeader, &compiled);
-    
-    if(tesselation.first == "" || tesselation.second == "")
-    {
-        tcs = 0;
-        tes = 0;
-    }
-    else
-    {
-        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, header.useInTessCtrl ? header.code : emptyHeader, &compiled);
-        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, header.useInTessEval ? header.code : emptyHeader, &compiled);
-    }
-
-    if(geometry == "")
-        gs = 0;
-    else
-        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
-
-    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
-    program = CreateProgram({vs, gs, fs, tcs, tes}, vs == saqVertexShader ? 1 : 0);
-    valid = true;
-}
-
-GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
-{
-    valid = false;
-    GLint compiled = 0;
-    GLuint vs;
-    GLuint tcs;
-    GLuint tes;
-    GLuint gs;
-    GLuint fs;
-    std::string emptyHeader = "";
-    
-    if(vertex == "")
-        vs = 0;
-    else
-        vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
-    
-    if(tesselation.first == "" || tesselation.second == "")
-    {
-        tcs = 0;
-        tes = 0;
-    }
-    else
-    {
-        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, emptyHeader, &compiled);
-        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, emptyHeader, &compiled);
-    }
-    
-    if(geometry == "")
-        gs = 0;
-    else
-        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, emptyHeader, &compiled);
-    
-    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
-    
-    std::vector<GLuint> cShaders = compiledShaders;
-    cShaders.push_back(vs);
-    cShaders.push_back(gs);
-    cShaders.push_back(fs);
-    cShaders.push_back(tcs);
-    cShaders.push_back(tes);	
-    program = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
-        
-    valid = true;
-}
-
-GLSLShader::GLSLShader(std::vector<GLuint> compiledShaders, GLSLHeader& header, std::string fragment, std::string vertex, std::string geometry,  std::pair<std::string, std::string> tesselation)
-{
-    valid = false;
-    GLint compiled = 0;
-    GLuint vs;
-    GLuint tcs;
-    GLuint tes;
-    GLuint gs;
-    GLuint fs;
-    std::string emptyHeader = "";
-    
-    if(vertex == "")
-        vs = 0;
-    else
-        vs = LoadShader(GL_VERTEX_SHADER, vertex, header.useInVertex ? header.code : emptyHeader, &compiled);
-    
-    if(tesselation.first == "" || tesselation.second == "")
-    {
-        tcs = 0;
-        tes = 0;
-    }
-    else
-    {
-        tcs = LoadShader(GL_TESS_CONTROL_SHADER, tesselation.first, header.useInTessCtrl ? header.code : emptyHeader, &compiled);
-        tes = LoadShader(GL_TESS_EVALUATION_SHADER, tesselation.second, header.useInTessEval ? header.code : emptyHeader, &compiled);
-    }
-    
-    if(geometry == "")
-        gs = 0;
-    else
-        gs = LoadShader(GL_GEOMETRY_SHADER, geometry, header.useInGeometry ? header.code : emptyHeader, &compiled);
-    
-    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, header.useInFragment ? header.code : emptyHeader, &compiled);
-    
-    std::vector<GLuint> cShaders = compiledShaders;
-    cShaders.push_back(vs);
-    cShaders.push_back(gs);
-    cShaders.push_back(fs);
-    cShaders.push_back(tcs);
-    cShaders.push_back(tes);	
-    program = CreateProgram(cShaders, vs == saqVertexShader ? (unsigned short)compiledShaders.size() + 1 : (unsigned short)compiledShaders.size());
-        
-    valid = true;
-}
-
-GLSLShader::GLSLShader(const std::vector<std::pair<GLenum, std::string>>& sources, std::vector<GLuint> precompiled)
-{
-    valid = false;
-    program = 0;
-
-    if(sources.size() > 0)
-    {
-        valid = true;
-        
-        std::vector<GLuint> shaders = precompiled;
-        GLint compiled = 0;
-
-        for(size_t i=0; i<sources.size(); ++i)
-        {
-            GLuint shader = LoadShader(sources[i].first, sources[i].second, "", &compiled);
-            if(compiled == 0)
-            {
-                valid = false;
-                break;
-            }
-            shaders.push_back(shader);
-        }
-
-        if(valid)
-        {
-            program = CreateProgram(shaders, precompiled.size());
-            if(program == 0)
-                valid = false;
-        }
-    }
-}
 
 GLSLShader::GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuint> precompiled)
 {
@@ -262,6 +66,24 @@ GLSLShader::GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuin
                 valid = false;
         }
     }
+}
+
+GLSLShader::GLSLShader(std::string fragment, std::string vertex)
+{
+    valid = false;
+    GLint compiled = 0;
+    GLuint vs;
+    GLuint fs;
+    std::string emptyHeader = "";
+    
+    if(vertex == "")
+        vs = saqVertexShader;
+    else
+        vs = LoadShader(GL_VERTEX_SHADER, vertex, emptyHeader, &compiled);
+    
+    fs = LoadShader(GL_FRAGMENT_SHADER, fragment, emptyHeader, &compiled);
+    program = CreateProgram({vs, fs}, vs == saqVertexShader ? 1 : 0);
+    valid = true;
 }
     
 GLSLShader::~GLSLShader()
@@ -442,6 +264,39 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec4 x)
     
     if(success)
         glUniform4iv(location, 1, glm::value_ptr(x));
+    
+    return success;
+}
+
+bool GLSLShader::SetUniform(std::string name, glm::uvec2 x)
+{
+    GLint location = 0;
+    bool success = GetUniform(name, UVEC2, location);
+    
+    if(success)
+        glUniform2uiv(location, 1, glm::value_ptr(x));
+    
+    return success;
+}
+
+bool GLSLShader::SetUniform(std::string name, glm::uvec3 x)
+{
+    GLint location = 0;
+    bool success = GetUniform(name, UVEC3, location);
+    
+    if(success)
+        glUniform3uiv(location, 1, glm::value_ptr(x));
+    
+    return success;
+}
+
+bool GLSLShader::SetUniform(std::string name, glm::uvec4 x)
+{
+    GLint location = 0;
+    bool success = GetUniform(name, UVEC4, location);
+    
+    if(success)
+        glUniform4uiv(location, 1, glm::value_ptr(x));
     
     return success;
 }

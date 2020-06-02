@@ -38,14 +38,11 @@ ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsig
 {
     depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
     newDataCallback = NULL;
-    imageData = new uint8_t[resX*resY*3]; //RGB color
-    memset(imageData, 0, resX*resY*3);
+    imageData = NULL;
 }
 
 ColorCamera::~ColorCamera()
 {
-    if(imageData != NULL)
-        delete [] imageData;
     glCamera = NULL;
 }
     
@@ -96,10 +93,14 @@ void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callba
     newDataCallback = callback;
 }
 
-void ColorCamera::NewDataReady(unsigned int index)
+void ColorCamera::NewDataReady(void* data, unsigned int index)
 {
     if(newDataCallback != NULL)
+    {
+        imageData = (GLubyte*)data;
         newDataCallback(this);
+        imageData = NULL;
+    }
 }
 
 void ColorCamera::InternalUpdate(Scalar dt)

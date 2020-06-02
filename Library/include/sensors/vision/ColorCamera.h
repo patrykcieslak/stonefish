@@ -49,7 +49,7 @@ namespace sf
          \param maxDistance the maximum drawing distance [m]
          */
         ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency = Scalar(-1),
-           Scalar minDistance = Scalar(0.02), Scalar maxDistance = Scalar(100000.0)); //Rendering options
+           Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
         
         //! A destructor.
         ~ColorCamera();
@@ -72,7 +72,7 @@ namespace sf
         /*!
          \param index the id of the OpenGL camera uploading the data
          */
-        void NewDataReady(unsigned int index = 0);
+        void NewDataReady(void* data, unsigned int index = 0);
         
         //! A method used to set a callback function called when new data is available.
         /*!
@@ -104,7 +104,7 @@ namespace sf
         
         OpenGLRealCamera* glCamera;
         glm::vec2 depthRange;
-        uint8_t* imageData;
+        GLubyte* imageData;
         std::function<void(ColorCamera*)> newDataCallback;
     };
 }

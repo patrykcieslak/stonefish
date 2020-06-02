@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLContent.h"
@@ -241,14 +241,19 @@ OpenGLContent::OpenGLContent()
 	commonMaterialShaders.push_back(materialFragment);
 	
     //Blinn-Phong shader
-    GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "blinnPhong.frag"));
+    GLSLShader* blinnPhong = new GLSLShader(sources, commonMaterialShaders);
     blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     blinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
     materialShaders.push_back(blinnPhong);
     
     //Cook-Torrance shader
-    GLSLShader* cookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "cookTorrance.frag"));
+    GLSLShader* cookTorrance = new GLSLShader(sources, commonMaterialShaders);
     cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     cookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
@@ -265,7 +270,9 @@ OpenGLContent::OpenGLContent()
     commonMaterialShaders.push_back(oceanSurfaceFragment);
     
     //Underwater Blinn-Phong shader
-    GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "blinnPhong.frag"));
+    GLSLShader* uwBlinnPhong = new GLSLShader(sources, commonMaterialShaders);
     uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
@@ -274,7 +281,9 @@ OpenGLContent::OpenGLContent()
     materialShaders.push_back(uwBlinnPhong);
     
     //Underwater Cook-Torrance shader
-    GLSLShader* uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "cookTorrance.frag"));
+    GLSLShader* uwCookTorrance = new GLSLShader(sources, commonMaterialShaders);
     uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
@@ -288,7 +297,9 @@ OpenGLContent::OpenGLContent()
     commonMaterialShaders.push_back(oceanSurfaceFragment);
 
     //Underwater Blinn-Phong shader (waves)
-    uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "blinnPhong.frag"));
+    uwBlinnPhong = new GLSLShader(sources, commonMaterialShaders);
     uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
     uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
@@ -299,7 +310,9 @@ OpenGLContent::OpenGLContent()
     materialShaders.push_back(uwBlinnPhong);
     
     //Underwater Cook-Torrance shader (waves)
-    uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "cookTorrance.frag"));
+    uwCookTorrance = new GLSLShader(sources, commonMaterialShaders);
     uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
     uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
@@ -358,7 +371,9 @@ OpenGLContent::OpenGLContent()
     GLuint lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSource.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
-    lightSourceShader[0] = new GLSLShader(commonLightShaders, "light.frag", "material.vert");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "light.frag"));
+    lightSourceShader[0] = new GLSLShader(sources, commonLightShaders);
 
     //Under surface
     commonLightShaders.pop_back();
@@ -368,7 +383,7 @@ OpenGLContent::OpenGLContent()
     lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwLightSource.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
-    lightSourceShader[1] = new GLSLShader(commonLightShaders, "light.frag", "material.vert");
+    lightSourceShader[1] = new GLSLShader(sources, commonLightShaders);
     lightSourceShader[1]->AddUniform("cWater", ParameterType::VEC3);
     lightSourceShader[1]->AddUniform("bWater", ParameterType::VEC3);
     
@@ -513,6 +528,7 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
     glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), v->getViewUBOData());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
 }
 
 void OpenGLContent::SetDrawingMode(DrawingMode m)
@@ -558,7 +574,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
     
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
     OpenGLState::BindVertexArray(baseVertexArray);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UnbindTexture(TEX_BASE);
     OpenGLState::UseProgram(0);
@@ -585,7 +601,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
     
     OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
     OpenGLState::BindVertexArray(baseVertexArray);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UnbindTexture(TEX_BASE);
     OpenGLState::UseProgram(0);
@@ -923,7 +939,11 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
     bool updateMaterial = currentLookId >= 0;
     currentLookId = -1;
 
-    GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
+    bool waves = false;
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    if(ocean != NULL && ocean->hasWaves()) waves = true;
+
+    GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : (waves ? materialShaders[5] : materialShaders[3]);
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);
@@ -940,6 +960,18 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
         shader->SetUniform("reflectivity", 0.f);
         shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
         OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+    }
+
+    if(mode == DrawingMode::UNDERWATER)
+    {
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        if(waves)
+        {
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+        }
     }
 }
 

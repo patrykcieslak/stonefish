@@ -23,19 +23,21 @@
 layout(local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
 
 // Two inputs, linear range and recorded intensity.
-layout(rg32f) uniform image2D sonarInput;
+layout(rg32f) uniform image2DArray sonarInput;
 
 // One output - intensity for each bin/beam combination
 layout(r32f) uniform image2D sonarOutput;
 
-uniform uint beamOffset;
+uniform uvec2 beams; //beams1, beams2
 uniform vec3 range; //min, max, step
 uniform vec3 noiseSeed;
 uniform vec2 noiseStddev;
 
 #define M_PI 3.1415926535897932384626433832795
+#define GAUSSIAN_WIDTH 5
 
-const float sampleWeight[5]=float[](
+const float sampleWeight[GAUSSIAN_WIDTH]=float[]
+(
     0.023792,
     0.094907,
     0.150342,
@@ -86,22 +88,47 @@ float gaussian(vec2 coord, float stddev, float mean)
 
 void main()
 {
-    uvec2 inDim = imageSize(sonarInput).xy; //nViewBeams x nBeamSamples
+    uvec3 inDim = imageSize(sonarInput).xyz; //nViewBeams x nBeamSamples x nViews
     uvec2 outDim = imageSize(sonarOutput).xy; //nBeams x nBins
-    
-    if(gl_GlobalInvocationID.x < inDim.x)
+    uint viewBeams = gl_GlobalInvocationID.y < inDim.z-1 ? beams.x : beams.y;
+
+    if(gl_GlobalInvocationID.x < viewBeams)
     {
-        for(uint i=0; i<N_BINS; ++i) //Initialize histogram counter
+        for(uint i=0; i<N_BINS; ++i) //Initialize histogram buffer
             binHistogram[i] = vec2(0.0); 
 
-        for(uint i=0; i<N_BEAM_SAMPLES; ++i) //For each vertical beam sample
+        ivec3 sampleCoord;
+        for(int i=0; i<N_BEAM_SAMPLES; ++i) //For each vertical beam sample
         {
-            for(uint k=0; k<5; ++k) //For each horizontal beam sample
+            sampleCoord.y = i;
+
+            for(int k=0; k<GAUSSIAN_WIDTH; ++k) //For each horizontal beam sample
             {
                 //Compute sample coordinate
-                ivec2 sampleCoord = ivec2(gl_GlobalInvocationID.x + k - 2, i);
-                if(sampleCoord.x < 0 || sampleCoord.x >= inDim.x)
-                    continue;
+                sampleCoord.x = int(gl_GlobalInvocationID.x) + k - GAUSSIAN_WIDTH/2;
+                sampleCoord.z = int(gl_GlobalInvocationID.y);
+
+                //Check if sample on border
+                if(sampleCoord.x < 0)
+                {
+                    if(gl_GlobalInvocationID.y == 0) //First view
+                        continue;
+                    else //Middle view
+                    {
+                        sampleCoord.x += int(beams.x); 
+                        --sampleCoord.z;
+                    }
+                }
+                else if(sampleCoord.x >= int(viewBeams))
+                {
+                    if(int(gl_GlobalInvocationID.y) == int(inDim.z)-1) //Last view
+                        continue;
+                    else //Middle view
+                    {
+                        sampleCoord.x -= int(beams.x);
+                        ++sampleCoord.z;
+                    }
+                }
                 
                 //Get sample value
                 vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
@@ -115,7 +142,7 @@ void main()
             }
         }
 
-        uint globalBeam = gl_GlobalInvocationID.x + beamOffset;
+        uint globalBeam = gl_GlobalInvocationID.x + beams.x * gl_GlobalInvocationID.y;
         vec2 noiseCoord = vec2(float(globalBeam)/float(outDim.x), 0.0);
         
         for(uint i=0; i<N_BINS; ++i)

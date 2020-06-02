@@ -697,23 +697,23 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
 {
     /////Tonemapping//////
     tonemappingShaders = new GLSLShader*[3];
-    std::vector<std::pair<GLenum, std::string>> sources;
-    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "lumHistogram.comp"));
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "lumHistogram.comp"));
     tonemappingShaders[0] = new GLSLShader(sources);
     tonemappingShaders[0]->AddUniform("params", ParameterType::VEC2);
     tonemappingShaders[0]->AddUniform("texSource", ParameterType::INT);
     tonemappingShaders[0]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
 
     sources.clear();
-    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "autoExposure.comp"));
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "autoExposure.comp"));
     tonemappingShaders[1] = new GLSLShader(sources);
     tonemappingShaders[1]->AddUniform("params", ParameterType::VEC4);
     tonemappingShaders[1]->AddUniform("texExposure", ParameterType::INT);
     tonemappingShaders[1]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
 
     sources.clear();
-    sources.push_back(std::make_pair(GL_VERTEX_SHADER, "saq.vert"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "tonemap.frag"));
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "tonemap.frag"));
     tonemappingShaders[2] = new GLSLShader(sources);
     tonemappingShaders[2]->AddUniform("texSource", ParameterType::INT);
     tonemappingShaders[2]->AddUniform("texExposure", ParameterType::INT);
@@ -731,7 +731,11 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
         aoDeinterleaveShader->AddUniform("info", ParameterType::VEC4);
         aoDeinterleaveShader->AddUniform("texLinearDepth", ParameterType::INT);
         
-        aoCalcShader = new GLSLShader("hbaoCalc.frag", "", "saq.geom");
+        std::vector<GLSLSource> sources;
+        sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+        sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "saq.geom"));
+        sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "hbaoCalc.frag"));
+        aoCalcShader = new GLSLShader(sources);
         aoCalcShader->AddUniform("texLinearDepth", ParameterType::INT);
         aoCalcShader->AddUniform("texViewNormal", ParameterType::INT);
         
@@ -775,24 +779,26 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     //FXAA
     if(rSettings.aa != RenderQuality::QUALITY_DISABLED)
     {
-        GLSLHeader header;
-        header.useInFragment = true;
+        std::string header;
         switch(rSettings.aa)
         {
             default:
             case RenderQuality::QUALITY_LOW:
-                header.code = "#version 430\n#define FXAA_QUALITY__PRESET 12\n";
+                header = "#version 430\n#define FXAA_QUALITY__PRESET 12\n";
                 break;
 
             case RenderQuality::QUALITY_MEDIUM:
-                header.code = "#version 430\n#define FXAA_QUALITY__PRESET 13\n";
+                header = "#version 430\n#define FXAA_QUALITY__PRESET 13\n";
                 break;
 
             case RenderQuality::QUALITY_HIGH:
-                header.code = "#version 430\n#define FXAA_QUALITY__PRESET 23\n";
+                header = "#version 430\n#define FXAA_QUALITY__PRESET 23\n";
                 break;
         }
-        fxaaShader = new GLSLShader(header, "fxaa.frag");
+        sources.clear();
+        sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+        sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "fxaa.frag", header));
+        fxaaShader = new GLSLShader(sources);
         fxaaShader->AddUniform("texSource", ParameterType::INT);
         fxaaShader->AddUniform("RCPFrame", ParameterType::VEC2);
     }

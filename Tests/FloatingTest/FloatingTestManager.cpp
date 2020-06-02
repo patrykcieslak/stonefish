@@ -51,7 +51,7 @@ void FloatingTestManager::BuildScenario()
 
     ////////OBJECTS    
     //Create environment
-    EnableOcean(0.0);
+    EnableOcean(0.5);
     getOcean()->SetupWaterProperties(0.2);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     

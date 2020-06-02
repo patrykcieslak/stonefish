@@ -28,33 +28,27 @@
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "graphics/OpenGLFLS2.h"
+#include "graphics/OpenGLFLS.h"
 
 namespace sf
 {
 
 FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
-    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency, unsigned int beamHPix, unsigned int beamVPix)
+    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
     range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
     range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
-    fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(180) ? Scalar(180) : verticalFOVDeg);
+    fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
     cMap = cm;
-    beamRes.x = beamHPix == 0 ? 5 : (GLint)beamHPix;
-    beamRes.y = beamVPix == 0 ? (GLint)ceil(fovV*beamRes.x*range.y) : (GLint)beamVPix;
-    newDataCallback = NULL;
-    sonarData = new GLfloat[resX*resY]; // Buffer for storing range data
+    sonarData = NULL;
     displayData = NULL;
-    memset(sonarData, 0, resX*resY*sizeof(GLfloat));
+    newDataCallback = NULL;
 }
 
 FLS::~FLS()
 {
-    if(sonarData != NULL)
-        delete [] sonarData;
-    if(displayData != NULL)
-        delete [] displayData;
+    if(displayData != NULL) delete [] displayData;
     glFLS = NULL;
 }
 
@@ -71,7 +65,7 @@ void FLS::getDisplayResolution(unsigned int& x, unsigned int& y)
     delete [] viewport;
 }
 
-GLuint* FLS::getDisplayDataPointer()
+GLubyte* FLS::getDisplayDataPointer()
 {
     return displayData;
 }
@@ -88,18 +82,18 @@ VisionSensorType FLS::getVisionSensorType()
 
 void FLS::InitGraphics()
 {
-    glFLS = new OpenGLFLS2(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, (GLfloat)fovH, (GLfloat)fovV, 
-                          (GLint)resX, beamRes.x, beamRes.y, range.x, range.y, (GLint)resY);
+    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
+                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range);
     glFLS->setSonar(this);
     glFLS->setColorMap(cMap);
     UpdateTransform();
     glFLS->UpdateTransform();
     InternalUpdate(0);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glFLS);
-    
-    GLint* viewport = glFLS->GetViewport();
-    displayData = new GLuint[viewport[2] * viewport[3] * 3];
-    delete [] viewport;
+
+    unsigned int w, h;
+    getDisplayResolution(w, h);
+    displayData = new GLubyte[w*h*3];
 }
 
 void FLS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -115,10 +109,23 @@ void FLS::InstallNewDataHandler(std::function<void(FLS*)> callback)
     newDataCallback = callback;
 }
 
-void FLS::NewDataReady(unsigned int index)
+void FLS::NewDataReady(void* data, unsigned int index)
 {
     if(newDataCallback != NULL)
-        newDataCallback(this);
+    {
+        if(index == 0)
+        {
+            unsigned int w, h;
+            getDisplayResolution(w, h);
+            memcpy(displayData, data, w*h*3);
+        }
+        else
+        {
+            sonarData = (GLfloat*)data;
+            newDataCallback(this);
+            sonarData = NULL;
+        }
+    }
 }
 
 void FLS::InternalUpdate(Scalar dt)

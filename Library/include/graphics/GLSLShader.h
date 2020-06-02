@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum defining possible GLSL variable types.
-    typedef enum {BOOLEAN, UINT, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, MAT3, MAT4} ParameterType;
+    typedef enum {BOOLEAN, UINT, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, UVEC2, UVEC3, UVEC4, MAT3, MAT4} ParameterType;
     
     //! A structure containing information about a GLSL uniform.
     struct GLSLUniform
@@ -50,26 +50,6 @@ namespace sf
         GLint index;
     };
     
-    //! A structure containing a header added to shaders during compilation.
-    struct GLSLHeader
-    {
-        std::string code;
-        bool useInVertex;
-        bool useInTessCtrl;
-        bool useInTessEval;
-        bool useInGeometry;
-        bool useInFragment;
-		
-		GLSLHeader(): 
-			code(""), 
-			useInVertex(false), 
-			useInTessCtrl(false), 
-			useInTessEval(false), 
-			useInGeometry(false), 
-			useInFragment(false)
-		{};
-    };
-
     //! A structure representing the source of one shader.
     struct GLSLSource
     {
@@ -88,73 +68,18 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param fragment path to the fragment shader
-         \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
-         */
-        GLSLShader(std::string fragment,
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-        
-        //! A constructor.
-        /*!
-         \param header a reference to a header structure
-         \param fragment path to the fragment shader
-         \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
-         */
-        GLSLShader(GLSLHeader& header,
-                   std::string fragment,
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-        
-        //! A constructor.
-        /*!
-         \param compiledShaders a list of compiled shaders that should be linked
-         \param fragment path to the fragment shader
-         \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
-         */
-        GLSLShader(std::vector<GLuint> compiledShaders,
-                   std::string fragment = "",
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-        
-		//! A constructor.
-        /*!
-         \param compiledShaders a list of compiled shaders that should be linked
-		 \param header a reference to a header structure
-         \param fragment path to the fragment shader
-         \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
-         */
-        GLSLShader(std::vector<GLuint> compiledShaders,
-				   GLSLHeader& header,
-                   std::string fragment = "",
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-
-        //! A constructor.
-        /*!
-         \param sources a vector of pairs defining the shader type and the source code
-         */
-        GLSLShader(const std::vector<std::pair<GLenum, std::string>>& sources, std::vector<GLuint> precompiled = std::vector<GLuint>(0));
-
-        //! A constructor.
-        /*!
          \param sources a vector of shader source structures
          \param precompiled a vector of precompiled shader handles
          */
         GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuint> precompiled = std::vector<GLuint>(0));
-		
+
+        //! A quick constructor.
+        /*!
+         \param fragment path to the fragment shader
+         \param vertex path to the vertex shader
+         */
+        GLSLShader(std::string fragment, std::string vertex = "");
+        
         //! A destructor.
         ~GLSLShader();
         
@@ -264,6 +189,30 @@ namespace sf
          \return success
          */
         bool SetUniform(std::string name, glm::ivec4 x);
+
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, glm::uvec2 x);
+        
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, glm::uvec3 x);
+        
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, glm::uvec4 x);
         
         //! A method used to set a GLSL uniform.
         /*!

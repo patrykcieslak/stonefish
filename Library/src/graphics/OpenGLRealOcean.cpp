@@ -32,6 +32,7 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLConsole.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
@@ -46,35 +47,38 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     qtGridTessFactor = 8; // Patch tessellation [2, 256]
     qtGPUTessFactor = 0;  // GPU tessellation factor [0,5]
     qtPatchIndexCount = 0;
-    qtPingpong = 1;
-    treeSize = 0;
-    cullSize = 0;
     wireframe = false;
     
     //Loading shaders
-    std::vector<std::pair<GLenum, std::string>> sources;
-    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "qt.comp"));
-    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "oceanSurface.glsl"));
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "qt.comp"));
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "oceanSurface.glsl"));
     oceanShaders["lod"] = new GLSLShader(sources);
     oceanShaders["lod"]->AddUniform("sceneSize", ParameterType::FLOAT);
-	oceanShaders["lod"]->AddUniform("treeSize", ParameterType::INT);
 	oceanShaders["lod"]->BindUniformBlock("View", UBO_VIEW);
 	oceanShaders["lod"]->BindShaderStorageBlock("QTreeIn", SSBO_QTREE_IN);
 	oceanShaders["lod"]->BindShaderStorageBlock("QTreeOut", SSBO_QTREE_OUT);
 	oceanShaders["lod"]->BindShaderStorageBlock("QTreeCull", SSBO_QTREE_CULL);
+    oceanShaders["lod"]->BindShaderStorageBlock("TreeSize", SSBO_QTREE_SIZE);
 	oceanShaders["lod"]->AddUniform("gridSizes", ParameterType::VEC4);
     oceanShaders["lod"]->AddUniform("texWaveFFT", ParameterType::INT);
+
+    sources.clear();
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "qtIndirect.comp"));
+    oceanShaders["indirect"] = new GLSLShader(sources);
+    oceanShaders["indirect"]->BindShaderStorageBlock("DispatchIndirect", SSBO_QTREE_INDIRECT);
+    oceanShaders["indirect"]->BindShaderStorageBlock("TreeSize", SSBO_QTREE_SIZE);
 
     sources.clear();
     std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
 
-    sources.push_back(std::make_pair(GL_VERTEX_SHADER, "qt.vert"));
-    sources.push_back(std::make_pair(GL_TESS_CONTROL_SHADER, "qt.tesc"));
-    sources.push_back(std::make_pair(GL_TESS_CONTROL_SHADER, "oceanSurface.glsl"));
-    sources.push_back(std::make_pair(GL_TESS_EVALUATION_SHADER, "qt.tese"));
-    sources.push_back(std::make_pair(GL_TESS_EVALUATION_SHADER, "oceanSurface.glsl"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "qt.vert"));
+    sources.push_back(GLSLSource(GL_TESS_CONTROL_SHADER, "qt.tesc"));
+    sources.push_back(GLSLSource(GL_TESS_CONTROL_SHADER, "oceanSurface.glsl"));
+    sources.push_back(GLSLSource(GL_TESS_EVALUATION_SHADER, "qt.tese"));
+    sources.push_back(GLSLSource(GL_TESS_EVALUATION_SHADER, "oceanSurface.glsl"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
     oceanShaders["surface"] = new GLSLShader(sources, precompiled);
     oceanShaders["surface"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders["surface"]->AddUniform("eyePos", ParameterType::VEC3);
@@ -99,8 +103,8 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     OpenGLState::UseProgram(0);
 
     sources.pop_back();
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
     oceanShaders["backsurface"] = new GLSLShader(sources, precompiled);
     oceanShaders["backsurface"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders["backsurface"]->AddUniform("eyePos", ParameterType::VEC3);
@@ -129,7 +133,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     //Mask rendering
     sources.pop_back();
     sources.pop_back();
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "flat.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "flat.frag"));
     oceanShaders["mask"] = new GLSLShader(sources);
     oceanShaders["mask"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders["mask"]->AddUniform("eyePos", ParameterType::VEC3);
@@ -140,33 +144,18 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["mask"]->AddUniform("u_gpu_tess_factor", ParameterType::FLOAT);
     oceanShaders["mask"]->BindShaderStorageBlock("QTreeCull", SSBO_QTREE_CULL);
 
-    // Buffers:
-	// - Patch data 1 (SSBO)
-	// - Patch data 2 (SSBO)
-	// - Culled patch data (SSBO)
-	// - Grid vertex (ARRAY)
-	// - Grid indexes (ARRAY)
-	// - Counters (ATOMIC COUNTER)
-	glGenBuffers(6, oceanBuffers);
+    //FFT data transfer
+    size_t fftDataSize = params.fftSize * params.fftSize * 4 * layers;
+    fftData = new GLfloat[fftDataSize];
+    memset(fftData, 0, sizeof(GLfloat) * fftDataSize);
+    
+    glGenBuffers(1, &fftPBO);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO);
+    glBufferData(GL_PIXEL_PACK_BUFFER, params.fftSize * params.fftSize * 4 * layers * sizeof(GLfloat), fftData, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-	//Quad tree (SSBO) x3
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, oceanBuffers[0]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) << 16, NULL, GL_STATIC_DRAW);
-	const GLuint dummy[] = {0,0,0,0};
-	GLuint* first = (GLuint*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint) * 4, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-	memcpy(first, dummy, sizeof(GLuint) * 4);
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, oceanBuffers[1]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) << 16, NULL, GL_STATIC_DRAW);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, oceanBuffers[2]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLfloat) << 16, NULL, GL_STATIC_DRAW);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, oceanBuffers[2]);
-
+    //Quad tree buffers
+    glGenBuffers(2, oceanBuffers);
 	//Grid vertex data (ARRAY) x2
 	size_t vertices_byte_size = sizeof(glm::vec2) * sqr(qtGridTessFactor);
 	size_t indexes_byte_size = sizeof(uint16_t) * sqr(qtGridTessFactor - 1) * 4;
@@ -194,11 +183,11 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
 			index[3] = i     + qtGridTessFactor * (j + 1);
 		}
 
-	glBindBuffer(GL_ARRAY_BUFFER, oceanBuffers[3]); //GRID_VERTICES
+	glBindBuffer(GL_ARRAY_BUFFER, oceanBuffers[0]); //GRID_VERTICES
 	glBufferData(GL_ARRAY_BUFFER, vertices_byte_size, vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oceanBuffers[4]); //GRID_INDEXES
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oceanBuffers[1]); //GRID_INDEXES
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexes_byte_size, indexes, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -206,35 +195,34 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
 	free(vertices);
 	free(indexes);
 
-	GLint atomicData[] = {0, 0};
-	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, oceanBuffers[5]); 
-	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLint) * 2, atomicData, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, AC_QTREE_LOD, oceanBuffers[5]);
-    glBindBufferRange(GL_ATOMIC_COUNTER_BUFFER, AC_QTREE_CULL, oceanBuffers[5], sizeof(int), sizeof(int));
-
 	//Vertex arrays:
 	// - Terrain
 	glGenVertexArrays(1, &vao);
 	OpenGLState::BindVertexArray(vao);
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, oceanBuffers[3]);
+	glBindBuffer(GL_ARRAY_BUFFER, oceanBuffers[0]);
 	glVertexAttribPointer(0, 2, GL_FLOAT, 0, 0, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oceanBuffers[4]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oceanBuffers[1]);
 	OpenGLState::BindVertexArray(0);
-
-    size_t fftDataSize = params.fftSize * params.fftSize * 4 * layers;
-    fftData = new GLfloat[fftDataSize];
-    memset(fftData, 0, sizeof(GLfloat) * fftDataSize);
 
     InitializeSimulation();
 }
 
 OpenGLRealOcean::~OpenGLRealOcean()
 {
-    glDeleteBuffers(6, oceanBuffers);
+    glDeleteBuffers(2, oceanBuffers);
+    glDeleteBuffers(1, &fftPBO);
 	glDeleteVertexArrays(1, &vao);
+    for(std::map<OpenGLCamera*, OceanQT>::iterator it=oceanTrees.begin(); it!=oceanTrees.end(); ++it)
+    {
+        glDeleteBuffers(4, it->second.patchSSBO);
+        glDeleteBuffers(1, &it->second.patchDEI);
+        glDeleteBuffers(1, &it->second.patchDI);
+        glDeleteBuffers(1, &it->second.patchAC);
+    }
+    oceanTrees.clear();
 	delete oceanShaders["lod"];
+    delete oceanShaders["indirect"];
     delete oceanShaders["surface"];
     delete oceanShaders["backsurface"];
     delete oceanShaders["mask"];
@@ -249,33 +237,6 @@ void OpenGLRealOcean::setWireframe(bool enabled)
 void OpenGLRealOcean::InitializeSimulation()
 {
     OpenGLOcean::InitializeSimulation();
-
-    //First pass of quad tree
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_IN, oceanBuffers[1 - qtPingpong]);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_OUT, oceanBuffers[qtPingpong]);
-    qtPingpong = 1 - qtPingpong;
-
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-	oceanShaders["lod"]->Use();
-	oceanShaders["lod"]->SetUniform("sceneSize", oceanSize);
-	oceanShaders["lod"]->SetUniform("gridSizes", params.gridSizes);
-	oceanShaders["lod"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
-    oceanShaders["lod"]->SetUniform("treeSize", (GLint)1);
-	glDispatchCompute(1, 1, 1);
-	OpenGLState::UseProgram(0);
-    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-    
-	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, oceanBuffers[5]);
-	GLuint* counters = (GLuint*)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, GL_MAP_READ_BIT);
-    treeSize = counters[0];
-	cullSize = counters[1];
-	glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
-
-    //Clear atomic counters
-	GLuint zero[] = {0, 0};
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, zero);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 }
 
 GLfloat OpenGLRealOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel)
@@ -333,63 +294,136 @@ GLfloat OpenGLRealOcean::ComputeWaveHeight(GLfloat x, GLfloat y)
 
 void OpenGLRealOcean::Simulate(GLfloat dt)
 {
-    OpenGLOcean::Simulate(dt);
-    glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-    //Copy wave data to RAM for hydrodynamic computations
     if(SDL_TryLockMutex(hydroMutex) == 0)
     {
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-        glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, GL_FLOAT, (GLvoid*)fftData);
-        OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO);
+        GLfloat* src = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        if(src)
+        {
+            memcpy(fftData, src, params.fftSize * params.fftSize * 4 * 4 * sizeof(GLfloat));
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
+        }
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         SDL_UnlockMutex(hydroMutex);
     }
+
+    OpenGLOcean::Simulate(dt);
+
+    //Copy wave data to RAM for hydrodynamic computations
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO);
+    glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, GL_FLOAT, NULL);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
 }
 
 void OpenGLRealOcean::UpdateSurface(OpenGLCamera* cam)
 {
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_IN, oceanBuffers[1 - qtPingpong]);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_OUT, oceanBuffers[qtPingpong]);
-    qtPingpong = 1 - qtPingpong;
-
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-	oceanShaders["lod"]->Use();
-	oceanShaders["lod"]->SetUniform("treeSize", (GLint)treeSize);
-	glDispatchCompute((GLuint)ceil(treeSize/256.0), 1, 1);
-	OpenGLState::UseProgram(0);
-    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-    
-	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, oceanBuffers[5]);
-	GLuint* counters = (GLuint*)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, GL_MAP_READ_BIT);
-    treeSize = counters[0];
-	cullSize = counters[1];
-	glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
-
-    //Clear atomic counters
-	GLuint zero[] = {0, 0};
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, zero);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-
-    GLuint limit = 1 << 15;
-    if(treeSize >= limit)
+    //Check if quad tree was created for this camera
+    OceanQT* tree;
+    try
     {
-        cWarning("Quad tree size exceeded limits! Resetting...");
+        tree = &oceanTrees.at(cam);
+    }
+    catch(const std::out_of_range& e)
+    {
+        OceanQT newTree;
+        //Generate buffers
+        glGenBuffers(4, newTree.patchSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, newTree.patchSSBO[0]);
+	    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) << 16, NULL, GL_STATIC_DRAW);
+	    //Init tree structure
         const GLuint dummy[] = {0,0,0,0};
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, oceanBuffers[1 - qtPingpong]);
 	    GLuint* first = (GLuint*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint) * 4, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 	    memcpy(first, dummy, sizeof(GLuint) * 4);
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        treeSize = 1;
-    }
+        
+	    glBindBuffer(GL_SHADER_STORAGE_BUFFER, newTree.patchSSBO[1]);
+	    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) << 16, NULL, GL_STATIC_DRAW);
+	    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-    //printf("Patches: %u/%u\n", cullSize, treeSize);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, newTree.patchSSBO[2]);
+	    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLfloat) << 16, NULL, GL_STATIC_DRAW);
+	    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        GLuint one = 1;
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, newTree.patchSSBO[3]);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), &one, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        GLuint zero = 0;
+        glGenBuffers(1, &newTree.patchAC);
+	    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, newTree.patchAC); 
+	    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), &zero, GL_DYNAMIC_DRAW);
+	    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
+        DrawElementsIndirectCommand cmd;
+        cmd.count = qtPatchIndexCount;
+        cmd.instanceCount = 0;
+        cmd.firstIndex = 0;
+        cmd.baseVertex = 0;
+        cmd.baseInstance = 0;
+        glGenBuffers(1, &newTree.patchDEI);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, newTree.patchDEI);
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(DrawElementsIndirectCommand), &cmd, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
+        DispatchIndirectCommand cmd2;
+        cmd2.numGroupsX = 1;
+        cmd2.numGroupsY = 1;
+        cmd2.numGroupsZ = 1;
+        glGenBuffers(1, &newTree.patchDI);
+        glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, newTree.patchDI);
+        glBufferData(GL_DISPATCH_INDIRECT_BUFFER, sizeof(DispatchIndirectCommand), &cmd2, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, 0);
+        
+        //Initialize
+        newTree.pingpong = 1;
+        oceanTrees[cam] = newTree;
+        tree = &oceanTrees[cam];
+    }
+    
+    GLuint zero = 0;
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_IN, tree->patchSSBO[1 - tree->pingpong]);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_OUT, tree->patchSSBO[tree->pingpong]);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree->patchSSBO[2]);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_SIZE, tree->patchSSBO[3]);
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, AC_QTREE_LOD, tree->patchAC);
+    glBindBufferRange(GL_ATOMIC_COUNTER_BUFFER, AC_QTREE_CULL, tree->patchDEI, sizeof(GLuint), sizeof(GLuint));
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, tree->patchDEI);
+    glBufferSubData(GL_DRAW_INDIRECT_BUFFER, sizeof(GLuint), sizeof(GLuint), &zero);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+    tree->pingpong = 1 - tree->pingpong;
+
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
+	oceanShaders["lod"]->Use();
+    oceanShaders["lod"]->SetUniform("sceneSize", oceanSize);
+	oceanShaders["lod"]->SetUniform("gridSizes", params.gridSizes);
+	oceanShaders["lod"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+    glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, tree->patchDI);
+    glDispatchComputeIndirect(NULL);
+    glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, 0);
+	OpenGLState::UseProgram(0);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT);
+    
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_INDIRECT, tree->patchDI, 0, sizeof(GLuint));
+    oceanShaders["indirect"]->Use();
+    glDispatchCompute(1, 1, 1);
+    OpenGLState::UseProgram(0);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, tree->patchAC);
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 }
         
 void OpenGLRealOcean::DrawSurface(OpenGLCamera* cam)
 {
+    OceanQT& tree = oceanTrees[cam];
     GLint* viewport = cam->GetViewport();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
     oceanShaders["surface"]->Use();
@@ -404,16 +438,18 @@ void OpenGLRealOcean::DrawSurface(OpenGLCamera* cam)
     oceanShaders["surface"]->SetUniform("u_scene_size", oceanSize);
     oceanShaders["surface"]->SetUniform("u_gpu_tess_factor", (GLfloat)qtGPUTessFactor);
     OpenGLState::BindVertexArray(vao);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, tree.patchDEI);
 	if(wireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);    
+        glDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_SHORT, NULL);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     else
     {
-        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+        glDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_SHORT, NULL);
     }
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -423,7 +459,9 @@ void OpenGLRealOcean::DrawSurface(OpenGLCamera* cam)
         
 void OpenGLRealOcean::DrawBacksurface(OpenGLCamera* cam)
 {
+    OceanQT& tree = oceanTrees[cam];
     GLint* viewport = cam->GetViewport();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
     oceanShaders["backsurface"]->Use();
@@ -440,18 +478,20 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLCamera* cam)
     oceanShaders["backsurface"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["backsurface"]->SetUniform("bWater", getLightScattering());
     OpenGLState::BindVertexArray(vao);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, tree.patchDEI);
     glCullFace(GL_FRONT);
     if(wireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);    
+        glDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_SHORT, NULL);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     else
     {
-        glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+        glDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_SHORT, NULL);   
     }
     glCullFace(GL_BACK);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -461,8 +501,9 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLCamera* cam)
         
 void OpenGLRealOcean::DrawUnderwaterMask(OpenGLCamera* cam)
 {
+    OceanQT& tree = oceanTrees[cam];
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindVertexArray(vao);
 
@@ -476,7 +517,8 @@ void OpenGLRealOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     oceanShaders["mask"]->SetUniform("u_gpu_tess_factor", (GLfloat)qtGPUTessFactor);
     
     //1. Draw surface to depth buffer
-    glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, tree.patchDEI);
+    glDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_SHORT, NULL);
 
     //2. Draw backsurface to depth and stencil buffer
     OpenGLState::EnableStencilTest();
@@ -486,7 +528,8 @@ void OpenGLRealOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     glClear(GL_STENCIL_BUFFER_BIT);
     glCullFace(GL_FRONT);
 
-    glDrawElementsInstanced(GL_PATCHES, qtPatchIndexCount, GL_UNSIGNED_SHORT, NULL, cullSize);
+    glDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_SHORT, NULL);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
     OpenGLState::BindVertexArray(0);
 	OpenGLState::UseProgram(0);

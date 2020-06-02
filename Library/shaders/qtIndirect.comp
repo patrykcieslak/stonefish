@@ -17,15 +17,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#version 330
+#version 430
 
-out vec2 texcoord;
-uniform vec4 rect;
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-void main(void)
+layout(std430) buffer DispatchIndirect
 {
-    vec2 pos = vec2(float(((uint(gl_VertexID) + 2u) / 3u)%2u),
-                    float(((uint(gl_VertexID) + 1u) / 3u)%2u)); 
-    texcoord = pos.xy;
-    gl_Position = vec4((rect.xy + pos.xy * rect.zw) * 2.0 - 1.0, 0.0, 1.0);
+    uint numGroupsX;
+};
+
+layout(std430) buffer TreeSize
+{
+    uint treeSize;
+};
+
+layout(binding = 5) uniform atomic_uint qTreeLodCounter;
+
+void main()
+{
+    treeSize = atomicCounter(qTreeLodCounter);
+    numGroupsX = uint(ceil(float(treeSize)/256.0)); 
 }

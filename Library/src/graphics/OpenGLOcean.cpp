@@ -108,12 +108,18 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     oceanShaders["init"]->AddUniform("fftSize", ParameterType::FLOAT);
     oceanShaders["init"]->AddUniform("t", ParameterType::FLOAT);
     
-    oceanShaders["fftx"] = new GLSLShader("oceanFFTX.frag", "", "saq.geom");
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+    sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "saq.geom"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanFFTX.frag"));
+    oceanShaders["fftx"] = new GLSLShader(sources);
     oceanShaders["fftx"]->AddUniform("texButterfly", ParameterType::INT);
     oceanShaders["fftx"]->AddUniform("texSource", ParameterType::INT);
     oceanShaders["fftx"]->AddUniform("pass", ParameterType::FLOAT);
     
-    oceanShaders["ffty"] = new GLSLShader("oceanFFTY.frag", "", "saq.geom");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanFFTY.frag"));
+    oceanShaders["ffty"] = new GLSLShader(sources);
     oceanShaders["ffty"]->AddUniform("texButterfly", ParameterType::INT);
     oceanShaders["ffty"]->AddUniform("texSource", ParameterType::INT);
     oceanShaders["ffty"]->AddUniform("pass", ParameterType::FLOAT);
@@ -157,8 +163,10 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     GLint compiled;
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
     precompiled.push_back(oceanOpticsFragment);
-    
-    oceanShaders["background"] = new GLSLShader(precompiled, "oceanBackground.frag", "oceanSurface.vert");
+    sources.clear();
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "oceanSurface.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanBackground.frag"));
+    oceanShaders["background"] = new GLSLShader(sources, precompiled);
     oceanShaders["background"]->AddUniform("MVP", ParameterType::MAT4);
     oceanShaders["background"]->AddUniform("FC", ParameterType::FLOAT);
     oceanShaders["background"]->AddUniform("size", ParameterType::FLOAT);
@@ -264,8 +272,6 @@ OpenGLOcean::~OpenGLOcean()
     delete oceanShaders["variance"];
     delete oceanShaders["spectrum"];
     delete oceanShaders["mask_back"];
-    //delete oceanShaders["blur_downsample"];
-    //delete oceanShaders["blur_gaussian"];
     delete oceanShaders["blur"];
     delete oceanShaders["background"];
 
@@ -454,7 +460,7 @@ void OpenGLOcean::Simulate(GLfloat dt)
     
     OpenGLState::BindVertexArray(0);
     
-    //Simulate particles
+    //Simulate particles (this is done every frame becasue even if the camera is not updated the particels need to move)
     glBindBuffer(GL_UNIFORM_BUFFER, oceanCurrentsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(OceanCurrentsUBO), &oceanCurrentsUBOData);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

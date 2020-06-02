@@ -289,7 +289,10 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Build rendering shaders
     std::vector<GLuint> compiledShaders;
     compiledShaders.push_back(atmosphereAPI);
-    skySunShader = new GLSLShader(compiledShaders, "atmosphereSkySun.frag", "atmosphereSkySun.vert");
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "atmosphereSkySun.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereSkySun.frag"));
+    skySunShader = new GLSLShader(sources, compiledShaders);
     skySunShader->AddUniform("transmittance_texture", ParameterType::INT);
     skySunShader->AddUniform("scattering_texture", ParameterType::INT);
     skySunShader->AddUniform("single_mie_scattering_texture", ParameterType::INT);
@@ -802,11 +805,11 @@ void OpenGLAtmosphere::Precompute()
         //transmittance for the 3 wavelengths used at the last iteration. But we
         //want the transmittance at kLambdaR, kLambdaG, kLambdaB instead, so we
         //must recompute it here for these 3 wavelengths:
-        GLSLHeader header;
-        header.useInFragment = true;
-        header.useInVertex = header.useInTessCtrl = header.useInTessEval = header.useInGeometry = false;
-        header.code = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB));
-        GLSLShader transmittanceShader(header, "atmosphereTransmittance.frag"); //No uniforms
+        std::string header = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB));
+        std::vector<GLSLSource> sources;
+        sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+        sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereTransmittance.frag", header));
+        GLSLShader transmittanceShader(sources); //No uniforms
 
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[AtmosphereTextures::TRANSMITTANCE], 0);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -840,19 +843,25 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
                                       bool blend)
 {
     //Load precompute shaders
-    GLSLHeader header;
-    header.useInFragment = true;
-    header.useInVertex = header.useInTessCtrl = header.useInTessEval = header.useInGeometry = false;
-    header.code = EarthsAtmosphere(lambdas);
-
-    GLSLShader transmittanceShader(header, "atmosphereTransmittance.frag"); //No uniforms
-    GLSLShader directIrradianceShader(header, "atmosphereDirectIrradiance.frag");
+    std::string header = EarthsAtmosphere(lambdas);
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereTransmittance.frag", header));
+    GLSLShader transmittanceShader(sources); //No uniforms
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereDirectIrradiance.frag", header));
+    GLSLShader directIrradianceShader(sources);
     directIrradianceShader.AddUniform("texTransmittance", ParameterType::INT);
-    GLSLShader singleScatteringShader(header, "atmosphereSingleScattering.frag", "", "atmosphere.geom");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "atmosphere.geom"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereSingleScattering.frag", header));
+    GLSLShader singleScatteringShader(sources);
     singleScatteringShader.AddUniform("texTransmittance", ParameterType::INT);
     singleScatteringShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
     singleScatteringShader.AddUniform("layer", ParameterType::INT);
-    GLSLShader scatteringDensityShader(header, "atmosphereScatteringDensity.frag", "", "atmosphere.geom");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereScatteringDensity.frag", header));
+    GLSLShader scatteringDensityShader(sources);
     scatteringDensityShader.AddUniform("texTransmittance", ParameterType::INT);
     scatteringDensityShader.AddUniform("texSingleRayleighScattering", ParameterType::INT);
     scatteringDensityShader.AddUniform("texSingleMieScattering", ParameterType::INT);
@@ -860,17 +869,22 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     scatteringDensityShader.AddUniform("texIrradiance", ParameterType::INT);
     scatteringDensityShader.AddUniform("scatteringOrder", ParameterType::INT);
     scatteringDensityShader.AddUniform("layer", ParameterType::INT);
-    GLSLShader indirectIrradianceShader(header, "atmosphereIndirectIrradiance.frag");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereMultipleScattering.frag", header));
+    GLSLShader multipleScatteringShader(sources);
+    multipleScatteringShader.AddUniform("texTransmittance", ParameterType::INT);
+    multipleScatteringShader.AddUniform("texScatteringDensity", ParameterType::INT);
+    multipleScatteringShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
+    multipleScatteringShader.AddUniform("layer", ParameterType::INT);
+    sources.pop_back();
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereIndirectIrradiance.frag", header));
+    GLSLShader indirectIrradianceShader(sources);
     indirectIrradianceShader.AddUniform("texSingleRayleighScattering", ParameterType::INT);
     indirectIrradianceShader.AddUniform("texSingleMieScattering", ParameterType::INT);
     indirectIrradianceShader.AddUniform("texMultipleScattering", ParameterType::INT);
     indirectIrradianceShader.AddUniform("scatteringOrder", ParameterType::INT);
     indirectIrradianceShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
-    GLSLShader multipleScatteringShader(header, "atmosphereMultipleScattering.frag", "", "atmosphere.geom");
-    multipleScatteringShader.AddUniform("texTransmittance", ParameterType::INT);
-    multipleScatteringShader.AddUniform("texScatteringDensity", ParameterType::INT);
-    multipleScatteringShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
-    multipleScatteringShader.AddUniform("layer", ParameterType::INT);
 
     const GLuint kDrawBuffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
 

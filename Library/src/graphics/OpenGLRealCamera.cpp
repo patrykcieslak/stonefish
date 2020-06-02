@@ -42,6 +42,7 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
 {
     _needsUpdate = false;
     update = false;
+    newData = false;
     camera = NULL;
     cameraFBO = 0;
     cameraColorTex = 0;
@@ -61,6 +62,7 @@ OpenGLRealCamera::~OpenGLRealCamera()
     if(camera != NULL)
     {
         glDeleteFramebuffers(1, &cameraFBO);
+        glDeleteBuffers(1, &cameraPBO);
         glDeleteTextures(1, &cameraColorTex);
     }
 }
@@ -106,6 +108,11 @@ void OpenGLRealCamera::setCamera(ColorCamera* cam)
         cError("Camera FBO initialization failed!");
     
     OpenGLState::BindFramebuffer(0);
+
+    glGenBuffers(1, &cameraPBO);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 3, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 glm::vec3 OpenGLRealCamera::GetEyePosition() const
@@ -140,6 +147,20 @@ void OpenGLRealCamera::UpdateTransform()
     viewUBOData.VP = GetProjectionMatrix() * GetViewMatrix();
     viewUBOData.eye = GetEyePosition();
     ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
+
+    //Inform camera to run callback
+    if(newData)
+    {
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+        GLubyte* src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        if(src)
+        {
+            camera->NewDataReady(src);
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
+        }
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        newData = false;
+    }
 }
 
 void OpenGLRealCamera::SetupCamera()
@@ -178,9 +199,12 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
                 fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
                 ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
                 OpenGLState::UseProgram(0);
-                //Copy to camera data
-                glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
                 OpenGLState::BindFramebuffer(0);
+
+                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex);
+                glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+                glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
                 OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
             }
             else
@@ -195,23 +219,27 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
                 tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
                 ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
                 OpenGLState::UseProgram(0);
-                //Copy to camera data
-                glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
                 OpenGLState::BindFramebuffer(0);
                 OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+
+                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex);
+                glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+                glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
                 OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
             }
         }
         else
         {
             OpenGLCamera::DrawLDR(cameraFBO);
-            OpenGLState::BindFramebuffer(cameraFBO);
-            glReadPixels(0, 0, viewportWidth, viewportHeight, GL_RGB, GL_UNSIGNED_BYTE, camera->getImageDataPointer());
-            OpenGLState::BindFramebuffer(0);
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+            OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         }
         
-        //Inform camera to run callback
-        camera->NewDataReady();
+        newData = true;
     }
     
     update = false;

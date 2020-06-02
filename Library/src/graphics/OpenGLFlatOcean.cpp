@@ -45,9 +45,9 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
 	std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
 
-    std::vector<std::pair<GLenum, std::string>> sources;
-    sources.push_back(std::make_pair(GL_VERTEX_SHADER, "oceanSurface.vert"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "oceanSurface.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
     oceanShaders["surface"] = new GLSLShader(sources, precompiled);
     oceanShaders["surface"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders["surface"]->AddUniform("texWaveFFT", ParameterType::INT);
@@ -74,7 +74,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     precompiled.push_back(oceanOpticsFragment);
 
     sources.pop_back();
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
     oceanShaders["backsurface"] = new GLSLShader(sources, precompiled);
     oceanShaders["backsurface"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders["backsurface"]->AddUniform("texWaveFFT", ParameterType::INT);
@@ -101,7 +101,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
 
     //Mask rendering
     sources.pop_back();
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "flat.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "flat.frag"));
     oceanShaders["mask"] = new GLSLShader(sources);
     oceanShaders["mask"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders["mask"]->AddUniform("MVP", ParameterType::MAT4);

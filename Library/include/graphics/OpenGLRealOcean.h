@@ -31,6 +31,16 @@
 
 namespace sf
 {
+    //! A structure hold the quad-tree information for each camera.
+    struct OceanQT
+    {
+        GLuint patchSSBO[4];
+        GLuint patchAC;
+        GLuint patchDEI;
+        GLuint patchDI;
+        GLint pingpong;
+    };
+
     //! A class implementing reallistic deformed ocean in OpenGL.
     class OpenGLRealOcean : public OpenGLOcean
     {
@@ -95,16 +105,14 @@ namespace sf
         GLfloat ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel);
 
         GLuint vao;
-        GLuint oceanBuffers[6];
+        GLuint oceanBuffers[2];
+        GLuint fftPBO;
+        std::map<OpenGLCamera*, OceanQT> oceanTrees; 
         SDL_mutex* hydroMutex;
         GLfloat* fftData;
-
-        GLint qtPingpong;
         GLint qtGridTessFactor;
         GLint qtGPUTessFactor;
         GLint qtPatchIndexCount;
-        GLuint treeSize;
-        GLuint cullSize;
         bool wireframe;
     };
 }

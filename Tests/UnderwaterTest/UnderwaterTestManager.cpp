@@ -63,6 +63,7 @@
 #include <entities/forcefields/Trigger.h>
 #include <entities/forcefields/Pipe.h>
 #include <entities/forcefields/Jet.h>
+#include <entities/forcefields/Uniform.h>
 #include <sensors/scalar/Profiler.h>
 #include <sensors/scalar/Multibeam.h>
 #include <utils/UnitSystem.h>
@@ -102,9 +103,10 @@ void UnderwaterTestManager::BuildScenario()
     
     ////////OBJECTS    
     //Create environment
-    EnableOcean(0.0);
+    EnableOcean(1.0);
     getOcean()->SetupWaterProperties(0.2);
     getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 1.0));
+    //getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.1,0.0,0.0)));
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
@@ -225,9 +227,11 @@ void UnderwaterTestManager::BuildScenario()
     //mb->setDisplayOnScreen(true);
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
-    sf::FLS* fls = new sf::FLS("FLS", 128, 500, 120.0, 20.0, 1.0, 10.0, sf::ColorMap::COLORMAP_JET);
+    //sf::FLS* fls = new sf::FLS("FLS", 500, 512, 100.0, 20.0, 1.0, 10.0, sf::ColorMap::COLORMAP_HOT);
     //fls->setDisplayOnScreen(true);
-    
+    sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0);
+    cam->setDisplayOnScreen(true);
+    sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
     //Create AUV
     sf::Robot* auv = new sf::Robot("GIRONA500");
     
@@ -267,7 +271,9 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(imu, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.7)));
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
-    auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
+    //auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
+    auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
+    //auv->AddVisionSensor(cam2, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,2.0)));
     AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(2.0,0,1.0)));
     
     thSurgeP->setSetpoint(-0.2);

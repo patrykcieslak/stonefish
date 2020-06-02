@@ -213,7 +213,7 @@ void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 std::vector<Renderable> Ocean::Render()
 {
     std::vector<Actuator*> act;
-    Render(act);
+    return Render(act);
 }
 
 std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
@@ -224,11 +224,14 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
     currentsData.gravity = glm::vec3(0.f,0.f,9.81f);
     currentsData.numCurrents = 0;
 
-    for(size_t i=0; i<currents.size(); ++i)
+    if(currentsEnabled)
     {
-        std::vector<Renderable> citems = currents[i]->Render(currentsData.currents[currentsData.numCurrents]);
-        items.insert(items.end(), citems.begin(), citems.end());
-        ++currentsData.numCurrents;
+        for(size_t i=0; i<currents.size(); ++i)
+        {
+            std::vector<Renderable> citems = currents[i]->Render(currentsData.currents[currentsData.numCurrents]);
+            items.insert(items.end(), citems.begin(), citems.end());
+            ++currentsData.numCurrents;
+        }
     }
     
     for(size_t i=0; i<act.size(); ++i)

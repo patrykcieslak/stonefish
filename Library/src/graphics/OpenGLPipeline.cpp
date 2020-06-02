@@ -34,7 +34,7 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
-#include "graphics/OpenGLFLS2.h"
+#include "graphics/OpenGLFLS.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOceanParticles.h"
@@ -58,14 +58,13 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
-    OpenGLFLS2::Init();
+    OpenGLFLS::Init();
     OpenGLOceanParticles::Init();
     content = new OpenGLContent();
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO);
     OpenGLState::BindFramebuffer(screenFBO);
-    
     glGenTextures(1, &screenTex);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, screenTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, rSettings.windowW, rSettings.windowH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -75,13 +74,10 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex, 0);
     OpenGLState::UnbindTexture(TEX_BASE);
-    
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Display FBO initialization failed!");
-    
     OpenGLState::BindFramebuffer(0);
-    
     lastSimTime = Scalar(0);
 }
 
@@ -145,14 +141,15 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
         drawingQueueCopy.clear();
         SDL_LockMutex(drawingQueueMutex);
         drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
-        //Update camera transforms to ensure consistency
+        //Update vision sensor transforms and copy generated data to ensure consistency
+        glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
         for(unsigned int i=0; i < content->getViewsCount(); ++i)
             if(content->getView(i)->getType() == ViewType::CAMERA)
                 ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
             else if(content->getView(i)->getType() == ViewType::DEPTH_CAMERA)
                 ((OpenGLDepthCamera*)content->getView(i))->UpdateTransform();
             else if(content->getView(i)->getType() == ViewType::SONAR)
-                ((OpenGLFLS2*)content->getView(i))->UpdateTransform();
+                ((OpenGLFLS*)content->getView(i))->UpdateTransform();
         //Update light transforms to ensure consistency
         for(unsigned int i=0; i < content->getLightsCount(); ++i)
             content->getLight(i)->UpdateTransform();
@@ -365,7 +362,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
             else if(view->getType() == SONAR)
             {
-                OpenGLFLS2* fls = (OpenGLFLS2*)view;
+                OpenGLFLS* fls = (OpenGLFLS*)view;
                 
                 //Draw object and compute sonar data
                 fls->ComputeOutput(drawingQueueCopy);

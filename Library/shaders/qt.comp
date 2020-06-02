@@ -26,7 +26,6 @@
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 uniform float sceneSize;
-uniform int treeSize;
 
 layout(std140) uniform View
 {
@@ -48,6 +47,11 @@ layout(std140) buffer QTreeOut
 layout(std140) buffer QTreeCull
 {
     vec4 culled[];
+};
+
+layout(std430) buffer TreeSize
+{
+    uint treeSize;
 };
 
 layout(binding = 5) uniform atomic_uint qTreeLodCounter;

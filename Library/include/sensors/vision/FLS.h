@@ -32,7 +32,7 @@
 
 namespace sf
 {
-    class OpenGLFLS2;
+    class OpenGLFLS;
     
     //! A class representing a forward looking sonar.
     class FLS : public Camera
@@ -49,11 +49,9 @@ namespace sf
          \param maxRange the maximum measured range [m]
          \param cm the color map used to display sonar data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
-         \param beamHPix the number of samples taken for each beam in the horizontal plane [pix]
-         \param beamVPix the number of samples taken for each beam in the vertical plane [pix]
          */
         FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
-                    Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1), unsigned int beamHPix = 0, unsigned int beamVPix = 0);
+                    Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1));
        
         //! A destructor.
         ~FLS();
@@ -76,7 +74,7 @@ namespace sf
         /*!
          \param index the id of the OpenGL camera (here sonar) uploading the data
          */
-        void NewDataReady(unsigned int index = 0);
+        void NewDataReady(void* data, unsigned int index = 0);
         
         //! A method used to set a callback function called when new data is available.
         /*!
@@ -105,7 +103,7 @@ namespace sf
         void getDisplayResolution(unsigned int& x, unsigned int& y);
         
         //! A method returning a pointer to the visualisation image data.
-        GLuint* getDisplayDataPointer();
+        GLubyte* getDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
         VisionSensorType getVisionSensorType();
@@ -113,9 +111,9 @@ namespace sf
     private:
         void InitGraphics();
         
-        OpenGLFLS2* glFLS;
+        OpenGLFLS* glFLS;
         GLfloat* sonarData;
-        GLuint* displayData;
+        GLubyte* displayData;
         glm::vec2 range;
         glm::ivec2 beamRes;
         Scalar fovV;

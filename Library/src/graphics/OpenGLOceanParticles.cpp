@@ -133,8 +133,8 @@ void OpenGLOceanParticles::Init()
 	std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
-	std::vector<std::pair<GLenum, std::string>> sources;
-    sources.push_back(std::make_pair(GL_COMPUTE_SHADER, "oceanParticle.comp"));
+	std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "oceanParticle.comp"));
     updateShader = new GLSLShader(sources);
     updateShader->AddUniform("dt", ParameterType::FLOAT);
     updateShader->AddUniform("numParticles", ParameterType::UINT);
@@ -153,12 +153,12 @@ void OpenGLOceanParticles::Init()
     OpenGLState::UseProgram(0);
 
     sources.clear();
-    sources.push_back(std::make_pair(GL_VERTEX_SHADER, "particle.vert"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "lightingNoShadow.frag"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "oceanParticle.frag"));
-    sources.push_back(std::make_pair(GL_FRAGMENT_SHADER, "uwMaterial.frag"));
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "particle.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "lightingNoShadow.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanParticle.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "uwMaterial.frag"));
     
     renderShader = new GLSLShader(sources, precompiled);
     renderShader->AddUniform("MV", ParameterType::MAT4);

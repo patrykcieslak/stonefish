@@ -55,9 +55,10 @@ namespace sf
         
         //! A method used to inform about new data.
         /*!
+         \param data a pointer to the OpenGL texture data
          \param index the id of the OpenGL camera uploading the data
          */
-        virtual void NewDataReady(unsigned int index = 0) = 0;
+        virtual void NewDataReady(void* data, unsigned int index = 0) = 0;
         
         //! A method used to setup the OpenGL camera transformation.
         /*!

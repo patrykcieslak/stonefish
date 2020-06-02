@@ -74,6 +74,9 @@ namespace sf
          \param f the sampling frequency of the sensor [Hz]
          */
         void setUpdateFrequency(Scalar f);
+
+        //! A method returning the sampling rate of the sensor.
+        Scalar getUpdateFrequency();
         
         //! A method informing if the sensor is renderable.
         bool isRenderable();

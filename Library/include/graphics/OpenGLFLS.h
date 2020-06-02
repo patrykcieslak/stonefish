@@ -29,11 +29,21 @@
 #include "graphics/OpenGLView.h"
 #include <random>
 
+#define FLS_MAX_SINGLE_FOV 30.f
+#define FLS_VRES_FACTOR 2.f
+
 namespace sf
 {
     class GLSLShader;
     class FLS;
     class SolidEntity;
+
+    struct SonarView
+    {
+        GLuint nBeams;
+        glm::mat4 projection;
+        glm::mat4 view;
+    };
 
     //! A class representing a forward looking sonar (FLS).
     class OpenGLFLS : public OpenGLView
@@ -49,15 +59,12 @@ namespace sf
          \param horizontalFovDeg the horizontal field of view of the sonar [deg]
          \param verticalFovDeg the vertical field of view of the sonar [deg]
          \param numOfBeams the number of sonar beams
-         \param beamHPix the number of pixels used to represent horizontal beam width [px]
-         \param beamVPix the number of pixels used to represent vertical beam width [px]
-         \param minRange the distance to the closest recorded object [m]
-         \param maxRange the distance to the farthest recorded object [m]
          \param numOfBins the number of sonar range bins
+         \param range_ the distance to the closest and farthest recorded object [m]
          */
         OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp,
-                  GLint originX, GLint originY, GLfloat horizontalFOVDeg, GLfloat verticalFOVDeg, GLuint numOfBeams, 
-                  GLint beamHPix, GLint beamVPix, GLfloat minRange, GLfloat maxRange, GLuint numOfBins);
+                   GLint originX, GLint originY, GLfloat horizontalFOVDeg, GLfloat verticalFOVDeg, 
+                   GLuint numOfBeams, GLuint numOfBins, glm::vec2 range_);
         
         //! A destructor.
         ~OpenGLFLS();
@@ -142,26 +149,33 @@ namespace sf
         glm::mat4 projection;
         bool _needsUpdate;
         bool update;
-        GLuint inputWidth;
-        GLuint inputHeight;
+        bool newData;
+        
+        std::vector<SonarView> views;
         GLuint nBeams;
+        GLuint nViewBeams;
         GLuint nBins;
+        GLuint nBeamSamples;
         glm::vec2 fov;
         glm::vec2 range;
         std::default_random_engine randGen;
         std::uniform_real_distribution<float> randDist;
         ColorMap cMap;
+        
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;
         GLuint outputTex;
         GLuint outputFBO;
+        GLuint outputPBO;
         GLuint displayTex;
         GLuint displayFBO;
+        GLuint displayPBO;
         GLuint fanVAO;
         GLuint fanBuf;
         GLuint fanDiv;
+        GLSLShader* sonarOutputShader;
+
         static GLSLShader* sonarInputShader;
-        static GLSLShader* sonarOutputShader;
         static GLSLShader* sonarVisualizeShader;
     };
 }

@@ -96,7 +96,7 @@ namespace sf
         /*!
          \param index the id of the OpenGL depth camera uploading the data
          */
-        void NewDataReady(unsigned int index = 0);
+        void NewDataReady(void* data, unsigned int index = 0);
         
         //! A method used to set a callback function called when new data is available.
         /*!
