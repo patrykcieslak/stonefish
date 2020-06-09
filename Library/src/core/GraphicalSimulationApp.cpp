@@ -68,6 +68,8 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     glPipeline = NULL;
     gui = NULL;
     drawingTime = 0.0;
+    maxDrawingTime = 0.0;
+    maxCounter = 0;
     rSettings = r;
     hSettings = h;
     rSettings.windowW += rSettings.windowW % 2;
@@ -130,9 +132,12 @@ SDL_Joystick* GraphicalSimulationApp::getJoystick()
     return joystick;
 }
 
-double GraphicalSimulationApp::getDrawingTime()
+double GraphicalSimulationApp::getDrawingTime(bool max)
 {
-    return drawingTime;
+    if(max)
+        return maxDrawingTime;
+    else
+        return drawingTime;
 }
 
 int GraphicalSimulationApp::getWindowWidth()
@@ -627,9 +632,22 @@ void GraphicalSimulationApp::RenderLoop()
     
     SDL_GL_SwapWindow(window);
     
+    //Update drawing time
 	double dt = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
-	double f = 0.01;
+	double f = 1.0/60.0;
 	drawingTime = f*dt + (1.0-f)*drawingTime;
+
+    //Update maximum drawing time
+    if(maxCounter >= 60)
+    {
+        maxDrawingTime = drawingTime;
+        maxCounter = 0;
+    }
+    else
+    {
+        maxDrawingTime = std::max(maxDrawingTime, dt);
+        ++maxCounter;
+    }
 }
 
 void GraphicalSimulationApp::DoHUD()
@@ -840,14 +858,14 @@ void GraphicalSimulationApp::DoHUD()
     //Bottom panel
     gui->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
     
-    std::sprintf(buf, "Drawing time: %1.2lf ms", getDrawingTime());
+    std::sprintf(buf, "Drawing time: %1.2lf (%1.2lf) ms", getDrawingTime(), getDrawingTime(true));
     gui->DoLabel(10, getWindowHeight() - 20.f, buf);
     
     std::sprintf(buf, "CPU usage: %1.0lf%%", getSimulationManager()->getCpuUsage());
-    gui->DoLabel(170, getWindowHeight() - 20.f, buf);
+    gui->DoLabel(190, getWindowHeight() - 20.f, buf);
     
     std::sprintf(buf, "Simulation time: %1.2lf s", getSimulationManager()->getSimulationTime());
-    gui->DoLabel(290, getWindowHeight() - 20.f, buf);
+    gui->DoLabel(320, getWindowHeight() - 20.f, buf);
 }
 
 void GraphicalSimulationApp::StartSimulation()

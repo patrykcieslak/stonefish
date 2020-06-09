@@ -105,7 +105,7 @@ namespace sf
     private:
         ColorCamera* camera;
         GLuint cameraFBO;
-        GLuint cameraColorTex;
+        GLuint cameraColorTex[2];
         GLuint cameraPBO;
         
         glm::mat4 cameraTransform;

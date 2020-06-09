@@ -289,6 +289,7 @@ namespace sf
         static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
         static GLSLShader* ssrShader;
         static GLSLShader* fxaaShader;
+        static GLSLShader* flipShader;
     };
 }
 

@@ -46,6 +46,7 @@ GLSLShader* OpenGLCamera::aoReinterleaveShader = NULL;
 GLSLShader** OpenGLCamera::aoBlurShader = NULL;
 GLSLShader* OpenGLCamera::ssrShader = NULL;
 GLSLShader* OpenGLCamera::fxaaShader = NULL;
+GLSLShader* OpenGLCamera::flipShader = NULL;
 
 OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec2 range) : OpenGLView(x, y, width, height)
 {
@@ -582,15 +583,6 @@ void OpenGLCamera::DrawSSR()
     ssrShader->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
     ssrShader->SetUniform("near", near);
     ssrShader->SetUniform("far", far);
-    ssrShader->SetUniform("maxIterations", 100);
-    ssrShader->SetUniform("maxBinarySearchIterations", 10);
-    ssrShader->SetUniform("pixelZSize", 0.1f);
-    ssrShader->SetUniform("pixelStride", 2.f);
-    ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
-    ssrShader->SetUniform("maxRayDistance", 500.f);
-    ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
-    ssrShader->SetUniform("eyeFadeStart", 0.2f);
-    ssrShader->SetUniform("eyeFadeEnd", 0.8f);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
     OpenGLState::UseProgram(0);
@@ -632,8 +624,8 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
             tonemappingShaders[1]->SetUniform("texExposure", TEX_POSTPROCESS2);
             tonemappingShaders[1]->SetUniform("params", glm::vec4(histogramRange.x, histogramRange.y-histogramRange.x, 
                                                                         0.1f, (GLfloat)(viewportWidth * viewportHeight)));    
-            glDispatchCompute(256, 1, 1);
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            glDispatchCompute(1, 1, 1);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
             
 			//Bind exposure texture
             OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
@@ -660,6 +652,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
             //Drawing to screen with anti-aliasing
             OpenGLState::BindFramebuffer(destinationFBO);
             OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+            glDrawBuffer(GL_COLOR_ATTACHMENT0);
             fxaaShader->Use();
             fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
             fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
@@ -671,6 +664,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
         {
             OpenGLState::BindFramebuffer(destinationFBO);
             OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
+            glDrawBuffer(GL_COLOR_ATTACHMENT0);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
             tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
@@ -687,6 +681,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO)
 	{
 		OpenGLState::BindFramebuffer(destinationFBO);
 		OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex[lastActiveRenderColorBuffer]);
 		OpenGLState::BindFramebuffer(0);
 	}
@@ -776,6 +771,18 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     ssrShader->AddUniform("eyeFadeStart", ParameterType::FLOAT);
     ssrShader->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
 
+    ssrShader->Use();
+    ssrShader->SetUniform("maxIterations", 100);
+    ssrShader->SetUniform("maxBinarySearchIterations", 5);
+    ssrShader->SetUniform("pixelZSize", 0.1f);
+    ssrShader->SetUniform("pixelStride", 2.f);
+    ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
+    ssrShader->SetUniform("maxRayDistance", 200.f);
+    ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
+    ssrShader->SetUniform("eyeFadeStart", 0.2f);
+    ssrShader->SetUniform("eyeFadeEnd", 0.8f);
+    OpenGLState::UseProgram(0);
+
     //FXAA
     if(rSettings.aa != RenderQuality::QUALITY_DISABLED)
     {
@@ -802,6 +809,10 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
         fxaaShader->AddUniform("texSource", ParameterType::INT);
         fxaaShader->AddUniform("RCPFrame", ParameterType::VEC2);
     }
+
+    //Real camera
+    flipShader = new GLSLShader("verticalFlip.frag");
+    flipShader->AddUniform("texSource", ParameterType::INT);
 }
 
 void OpenGLCamera::Destroy()
@@ -825,6 +836,7 @@ void OpenGLCamera::Destroy()
     }
     if(ssrShader != NULL) delete ssrShader;    
     if(fxaaShader != NULL) delete fxaaShader;
+    if(flipShader != NULL) delete flipShader;
 }
 
 }

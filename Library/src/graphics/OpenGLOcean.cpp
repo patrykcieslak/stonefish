@@ -507,10 +507,10 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
     }
     catch(const std::out_of_range& e)
     {
-        particles = new OpenGLOceanParticles(10000, 4.0);
+        particles = new OpenGLOceanParticles(5000, 3.0);
         oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLOceanParticles*>(cam, particles));
     }
-    
+
     particles->Draw(cam, this);
 }
 

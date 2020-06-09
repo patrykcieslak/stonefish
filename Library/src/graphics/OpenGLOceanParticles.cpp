@@ -99,8 +99,9 @@ void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, particleVelSSBO);
     glDispatchCompute((GLuint)ceil(nParticles/256.0), 1, 1);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+    OpenGLState::UseProgram(0);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
     
 void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
@@ -185,7 +186,7 @@ void OpenGLOceanParticles::Init()
     renderShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     renderShader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
     renderShader->SetUniform("reflectivity", 0.f);
-    renderShader->SetUniform("color", glm::vec4(0.f,0.f,0.f,1.f));
+    renderShader->SetUniform("color", glm::vec4(0.f,0.f,0.f,0.3f));
     OpenGLState::UseProgram(0);
 
     //Load textures

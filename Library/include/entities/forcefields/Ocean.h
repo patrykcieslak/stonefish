@@ -29,7 +29,7 @@
 #include <SDL2/SDL_mutex.h>
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
-#include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLOcean.h"
 
 namespace sf
 {
@@ -42,7 +42,6 @@ namespace sf
     };
     
     class VelocityField;
-    class OpenGLOcean;
     class Actuator;
     
     //! A class implementing an ocean.
@@ -114,6 +113,9 @@ namespace sf
         
         //! A method to disable all defined currents.
         void DisableCurrents();
+
+        //! A method updating the currents data in the OpenGL ocean.
+        void UpdateCurrentsData();
         
         //! A method returning the type of the water.
         Scalar getWaterType();
@@ -126,7 +128,7 @@ namespace sf
         
         //! A method returning a pointer to the OpenGL object implementing the ocean.
         OpenGLOcean* getOpenGLOcean();
-        
+
         //! A method returning the type of the force field.
         ForcefieldType getForcefieldType();
         
@@ -146,6 +148,7 @@ namespace sf
         Fluid liquid;
         std::vector<VelocityField*> currents;
         OpenGLOcean* glOcean;
+        OceanCurrentsUBO glOceanCurrentsUBOData;
         Scalar depth;
         Scalar waterType;
         Scalar oceanState;

@@ -162,6 +162,12 @@ void Ocean::DisableCurrents()
     currentsEnabled = false;
 }
 
+void Ocean::UpdateCurrentsData()
+{
+    if(glOcean != NULL)
+        glOcean->UpdateOceanCurrentsData(glOceanCurrentsUBOData);
+}
+
 void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
@@ -220,17 +226,17 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
 {
     std::vector<Renderable> items(0);
     
-    OceanCurrentsUBO currentsData;
-    currentsData.gravity = glm::vec3(0.f,0.f,9.81f);
-    currentsData.numCurrents = 0;
+    //Update currents data
+    glOceanCurrentsUBOData.gravity = glm::vec3(0.f,0.f,9.81f);
+    glOceanCurrentsUBOData.numCurrents = 0;
 
     if(currentsEnabled)
     {
         for(size_t i=0; i<currents.size(); ++i)
         {
-            std::vector<Renderable> citems = currents[i]->Render(currentsData.currents[currentsData.numCurrents]);
+            std::vector<Renderable> citems = currents[i]->Render(glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents]);
             items.insert(items.end(), citems.begin(), citems.end());
-            ++currentsData.numCurrents;
+            ++glOceanCurrentsUBOData.numCurrents;
         }
     }
     
@@ -244,20 +250,18 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
             Vector3 thDir = -thFrame.getBasis().getColumn(0);
             Scalar R = th->getDiameter()/Scalar(2);
             Scalar vel = th->getOmega()/Scalar(10);
-            currentsData.currents[currentsData.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
                                                                              (GLfloat)thPos.getY(), 
                                                                              (GLfloat)thPos.getZ(), (GLfloat)R);
-            currentsData.currents[currentsData.numCurrents].dirV = glm::vec4((GLfloat)thDir.getX(),
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].dirV = glm::vec4((GLfloat)thDir.getX(),
                                                                              (GLfloat)thDir.getY(),
                                                                              (GLfloat)thDir.getZ(),
                                                                              (GLfloat)vel);
-            currentsData.currents[currentsData.numCurrents].params = glm::vec3(0.f);
-            currentsData.currents[currentsData.numCurrents].type = 10;
-            ++currentsData.numCurrents;
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].params = glm::vec3(0.f);
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].type = 10;
+            ++glOceanCurrentsUBOData.numCurrents;
         }
     }
-
-    glOcean->UpdateOceanCurrentsData(currentsData);
 
     if(wavesDebug.points.size() > 0)
     {

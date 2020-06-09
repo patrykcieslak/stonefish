@@ -96,7 +96,7 @@ namespace sf
         OpenGLContent* getContent();
         
     private:
-        void PerformDrawingQueueCopy();
+        void PerformDrawingQueueCopy(SimulationManager* sim);
         void DrawHelpers();
         
         RenderSettings rSettings;

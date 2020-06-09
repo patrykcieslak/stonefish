@@ -140,7 +140,11 @@ namespace sf
         SDL_Joystick* getJoystick();
         
         //! A method returning the graphics rendering time in seconds.
-        double getDrawingTime();
+        /*!
+          \param max return maximum drawing time?
+          \return moving average drawing time or maximum drawing time [ms]
+        */
+        double getDrawingTime(bool max = false);
         
         //! A method returning the width of the window.
         int getWindowWidth();
@@ -195,6 +199,8 @@ namespace sf
         std::string shaderPath;
         bool loading;
         double drawingTime;
+        double maxDrawingTime;
+        int maxCounter;
         int windowW;
         int windowH;
         RenderSettings rSettings;

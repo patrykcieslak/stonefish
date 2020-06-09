@@ -134,7 +134,7 @@ bool OpenGLPipeline::isDrawingQueueEmpty()
     return drawingQueue.empty();
 }
     
-void OpenGLPipeline::PerformDrawingQueueCopy()
+void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
 {
     if(!drawingQueue.empty())
     {
@@ -142,7 +142,7 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
         SDL_LockMutex(drawingQueueMutex);
         drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
         //Update vision sensor transforms and copy generated data to ensure consistency
-        glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
+        //glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
         for(unsigned int i=0; i < content->getViewsCount(); ++i)
             if(content->getView(i)->getType() == ViewType::CAMERA)
                 ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
@@ -153,6 +153,9 @@ void OpenGLPipeline::PerformDrawingQueueCopy()
         //Update light transforms to ensure consistency
         for(unsigned int i=0; i < content->getLightsCount(); ++i)
             content->getLight(i)->UpdateTransform();
+        //Update ocean currents for particle systems
+        Ocean* ocean = sim->getOcean();
+        if(ocean != NULL) ocean->UpdateCurrentsData();
         drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
         SDL_UnlockMutex(drawingQueueMutex);
 			
@@ -306,7 +309,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     lastSimTime = now;
 
     //Double-buffering of drawing queue
-    PerformDrawingQueueCopy();
+    PerformDrawingQueueCopy(sim);
 	
     //Choose rendering mode
     unsigned int renderMode = 0; //Defaults to rendering without ocean
@@ -444,7 +447,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     content->DrawTexturedSAQ(camera->getColorTexture(1));
                     OpenGLState::DisableBlend();
                     OpenGLState::EnableDepthTest();
-
+                    
                     //Draw backsurface
                     glOcean->DrawBacksurface(camera);                    
                     
