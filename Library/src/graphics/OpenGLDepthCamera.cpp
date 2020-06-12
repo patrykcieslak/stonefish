@@ -44,11 +44,12 @@ GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
 OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                      GLint originX, GLint originY, GLint width, GLint height,
                                      GLfloat horizontalFOVDeg, GLfloat minDepth, GLfloat maxDepth,
-                                     bool useRanges, GLfloat verticalFOVDeg)
+                                     bool continuousUpdate, bool useRanges, GLfloat verticalFOVDeg)
  : OpenGLView(originX, originY, width, height)
 {
     _needsUpdate = false;
     update = false;
+    continuous = continuousUpdate;
     newData = false;
     camera = NULL;
     idx = 0;

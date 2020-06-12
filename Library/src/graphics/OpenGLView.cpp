@@ -37,6 +37,7 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
     viewportWidth = width + width % 2;
     viewportHeight = height + height % 2;
     enabled = true;
+	continuous = false;
     viewUBOData.VP = glm::mat4(1.f);
     viewUBOData.eye = glm::vec3(0.f);
     ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
@@ -64,6 +65,11 @@ void OpenGLView::setEnabled(bool en)
 bool OpenGLView::isEnabled()
 {
     return enabled;
+}
+
+bool OpenGLView::isContinuous()
+{
+	return continuous;
 }
 
 void OpenGLView::SetViewport()

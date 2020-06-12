@@ -113,6 +113,9 @@ namespace sf
         //! A method returning a flag saying if the view is enabled.
         bool isEnabled();
 
+        //! A method saying if the view works in continuous update mode.
+        bool isContinuous();
+
         //! A method extracting frustium planes from the view-projection matrix.
         /*!
          \param frustum a pointer to the 6 frustum planes
@@ -127,6 +130,7 @@ namespace sf
         GLint viewportHeight;
         GLuint renderFBO;
         bool enabled;
+        bool continuous;
         ViewUBO viewUBOData;
     };
 }

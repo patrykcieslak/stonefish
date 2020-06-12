@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLPipeline__
 
 #include <SDL2/SDL_thread.h>
+#include <deque>
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
 
@@ -104,6 +105,7 @@ namespace sf
         std::vector<Renderable> drawingQueue;
         std::vector<Renderable> drawingQueueCopy;
         SDL_mutex* drawingQueueMutex;
+        std::deque<unsigned int> viewsQueue;
         GLuint screenFBO;
         GLuint screenTex;
         OpenGLContent* content;

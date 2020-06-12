@@ -45,11 +45,12 @@ GLSLShader* OpenGLFLS::sonarVisualizeShader = NULL;
 
 OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp,
                        GLint originX, GLint originY, GLfloat horizontalFOVDeg, GLfloat verticalFOVDeg, 
-                       GLuint numOfBeams, GLuint numOfBins, glm::vec2 range_)
+                       GLuint numOfBeams, GLuint numOfBins, glm::vec2 range_, bool continuousUpdate)
 : OpenGLView(originX, originY, 2*numOfBins, numOfBins), randDist(0.f, 1.f)
 {
     _needsUpdate = false;
     update = false;
+    continuous = continuousUpdate;
     newData = false;
     sonar = NULL;
     range = range_;

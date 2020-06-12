@@ -103,7 +103,7 @@ void UnderwaterTestManager::BuildScenario()
     
     ////////OBJECTS    
     //Create environment
-    EnableOcean(1.0);
+    EnableOcean(0.0);
     getOcean()->SetupWaterProperties(0.2);
     getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 1.0));
     //getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.1,0.0,0.0)));
@@ -229,7 +229,7 @@ void UnderwaterTestManager::BuildScenario()
     //dc->setDisplayOnScreen(true);
     //sf::FLS* fls = new sf::FLS("FLS", 500, 512, 100.0, 20.0, 1.0, 10.0, sf::ColorMap::COLORMAP_HOT);
     //fls->setDisplayOnScreen(true);
-    sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0);
+    sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0, 10.0);
     cam->setDisplayOnScreen(true);
     sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
     //Create AUV

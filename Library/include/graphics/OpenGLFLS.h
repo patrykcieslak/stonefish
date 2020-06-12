@@ -61,10 +61,11 @@ namespace sf
          \param numOfBeams the number of sonar beams
          \param numOfBins the number of sonar range bins
          \param range_ the distance to the closest and farthest recorded object [m]
+         \param continuousUpdate a flag indicating if the FLS should be always updated
          */
         OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp,
                    GLint originX, GLint originY, GLfloat horizontalFOVDeg, GLfloat verticalFOVDeg, 
-                   GLuint numOfBeams, GLuint numOfBins, glm::vec2 range_);
+                   GLuint numOfBeams, GLuint numOfBins, glm::vec2 range_, bool continuousUpdate);
         
         //! A destructor.
         ~OpenGLFLS();

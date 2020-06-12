@@ -38,11 +38,13 @@ namespace sf
 
 OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                    GLint x, GLint y, GLint width, GLint height,
-                                   GLfloat horizontalFovDeg, glm::vec2 range) : OpenGLCamera(x, y, width, height, range)
+                                   GLfloat horizontalFovDeg, glm::vec2 range, bool continuousUpdate) 
+                                   : OpenGLCamera(x, y, width, height, range)
 {
     _needsUpdate = false;
     update = false;
     newData = false;
+    continuous = continuousUpdate;
     camera = NULL;
     cameraFBO = 0;
     

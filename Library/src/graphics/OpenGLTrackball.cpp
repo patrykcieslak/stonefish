@@ -44,6 +44,7 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
     projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
     dragging = false;
     transMode = false;
+    continuous = true;
     holdingEntity = NULL;
 
     UpdateTransform();
