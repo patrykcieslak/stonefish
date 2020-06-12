@@ -357,14 +357,18 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         else
             viewsNoUpdateQueue.push_back(i);
     }
+    
     if(updateCount < (unsigned int)viewsQueue.size())
         ++updateCount;
+    printf("\nUpdate: %u Queue: ", updateCount);
+    for(size_t i=0; i<viewsQueue.size(); ++i)
+        printf("\t%u", viewsQueue[i]);
 
     //Loop through all views -> trackballs, cameras, depth cameras...
     for(unsigned int i=0; i<updateCount; ++i)
     {
         OpenGLView* view = content->getView(viewsQueue[i]);
-        
+
         if(view->getType() == DEPTH_CAMERA)
         {
             OpenGLDepthCamera* camera = (OpenGLDepthCamera*)view;
@@ -540,11 +544,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 
                 //Graphics debugging
-                if(ocean != NULL)
-                {
+                //if(ocean != NULL)
+                //{
                     //ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(512.f,512.f), glm::vec4(0.f,0.f,512.f,512.f));
                     //ocean->getOpenGLOcean()->ShowTexture(3, glm::vec4(0,0,512,512));
-                }
+                //}
         
                 /*atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,0,200,200));
                 atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(200,0,200,200));

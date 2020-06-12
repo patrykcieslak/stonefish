@@ -76,13 +76,18 @@ ViewType OpenGLRealCamera::getType()
 void OpenGLRealCamera::Update()
 {
     _needsUpdate = true;
+    update = true;
 }
 
 bool OpenGLRealCamera::needsUpdate()
 {
-    update = _needsUpdate;
-    _needsUpdate = false;
-    return update && enabled;
+    if(_needsUpdate)
+    {
+        _needsUpdate = false;
+        return enabled;
+    }
+    else
+        return false;
 }
 
 void OpenGLRealCamera::setCamera(ColorCamera* cam)

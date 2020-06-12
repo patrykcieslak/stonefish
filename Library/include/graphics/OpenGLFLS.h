@@ -30,7 +30,7 @@
 #include <random>
 
 #define FLS_MAX_SINGLE_FOV 30.f
-#define FLS_VRES_FACTOR 2.f
+#define FLS_VRES_FACTOR 4.f
 
 namespace sf
 {

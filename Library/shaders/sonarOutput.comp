@@ -38,11 +38,8 @@ uniform vec2 noiseStddev;
 
 const float sampleWeight[GAUSSIAN_WIDTH]=float[]
 (
-    0.023792,
-    0.094907,
-    0.150342,
-    0.094907,
-    0.023792
+    0.06136, 0.24477, 0.38774, 0.24477, 0.06136     //sigma=1.0
+    //0.00135, 0.157305, 0.68269, 0.157305, 0.00135   //sigma=0.5
 );
 
 vec2 binHistogram[N_BINS];
@@ -137,7 +134,7 @@ void main()
 
                 //Compute bin and add accumulate intensity data
                 uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
-                binHistogram[bin].x += sampleWeight[k] * sigmoid(rangeIntensity.y);
+                binHistogram[bin].x += sampleWeight[k] * rangeIntensity.y; //sigmoid(rangeIntensity.y);
                 binHistogram[bin].y += sampleWeight[k];
             }
         }

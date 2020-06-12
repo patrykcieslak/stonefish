@@ -1,4 +1,4 @@
-/*    
+/*   
     Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
@@ -20,12 +20,20 @@
 #version 330
 
 in vec2 texcoord;
-out vec4 fragcolor;
-uniform sampler2D texLinearDepth;
-uniform vec2 range;
+layout(location = 0) out float fragColor;
 
-void main()
+uniform sampler2D texLogDepth;
+uniform float FC;
+
+float linearDepth(float logd)
 {
-    vec2 uv = vec2(texcoord.x, 1.0-texcoord.y);
-    fragcolor = (texture(texLinearDepth, uv).rrrr-range.xxxx)/(range.y-range.x);
+    return pow(2, logd/FC) - 1.0;
 }
+
+void main() 
+{
+    float depth = texture(texLogDepth, vec2(texcoord.x, 1.0-texcoord.y)).r;
+	fragColor = linearDepth(depth);
+}
+
+

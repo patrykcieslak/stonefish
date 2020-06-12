@@ -402,7 +402,7 @@ void OpenGLRealOcean::UpdateSurface(OpenGLCamera* cam)
 	oceanShaders["lod"]->SetUniform("gridSizes", params.gridSizes);
 	oceanShaders["lod"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, tree->patchDI);
-    glDispatchComputeIndirect(NULL);
+    glDispatchComputeIndirect(0);
     glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, 0);
 	OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);

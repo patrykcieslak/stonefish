@@ -40,6 +40,8 @@ vec3 viewPositionFromDepth(vec2 uv, float d)
 
 void main()
 {
-    vec3 position = viewPositionFromDepth(texcoord, linearDepth(texture(texLogDepth, texcoord).r));
+    vec2 uv = vec2(texcoord.x, 1.0-texcoord.y);
+    float depth = linearDepth(texture(texLogDepth, uv).r);
+    vec3 position = viewPositionFromDepth(uv, depth);
     range = clamp(length(position), rangeInfo.x, rangeInfo.y);
 }

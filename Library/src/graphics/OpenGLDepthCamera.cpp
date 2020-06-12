@@ -198,13 +198,18 @@ GLfloat OpenGLDepthCamera::GetFarClip() const
 void OpenGLDepthCamera::Update()
 {
     _needsUpdate = true;
+    update = true;
 }
 
 bool OpenGLDepthCamera::needsUpdate()
 {
-    update = _needsUpdate;
-    _needsUpdate = false;
-    return update && enabled;
+    if(_needsUpdate)
+    {
+        _needsUpdate = false;
+        return enabled;
+    }
+    else
+        return false;
 }
 
 void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
@@ -312,7 +317,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
 ///////////////////////// Static /////////////////////////////
 void OpenGLDepthCamera::Init()
 {
-    depthLinearizeShader = new GLSLShader("depthLinearize.frag");
+    depthLinearizeShader = new GLSLShader("depthLinearizeVFlip.frag");
     depthLinearizeShader->AddUniform("texLogDepth", ParameterType::INT);
     depthLinearizeShader->AddUniform("FC", ParameterType::FLOAT);
     

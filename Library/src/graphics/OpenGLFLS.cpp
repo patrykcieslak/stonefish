@@ -157,16 +157,19 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     GLfloat fanData[(fanDiv+1)*2][4];
     GLfloat Rmin = range.x/range.y;
     
+    //Flipped vertically to account for OpenGL window coordinates
     for(GLuint i=0; i<fanDiv+1; ++i)
     {
         GLfloat alpha = fov.x/2.f - i/(GLfloat)fanDiv * fov.x;
-        fanData[i*2][0] = Rmin*sinf(alpha)*1.f/hFactor;
-        fanData[i*2][1] = Rmin*cosf(alpha)*2.f-1.f;
-        fanData[i*2][2] = 1.f-i/(GLfloat)fanDiv;
+        //Min range edge
+        fanData[i*2][0] = -Rmin*sinf(alpha)*1.f/hFactor;
+        fanData[i*2][1] = (1.f-Rmin*cosf(alpha))*2.f-1.f;
+        fanData[i*2][2] = i/(GLfloat)fanDiv;
         fanData[i*2][3] = 0.f;
-        fanData[i*2+1][0] = sinf(alpha)*1.f/hFactor;
-        fanData[i*2+1][1] = cosf(alpha)*2.f-1.f;
-        fanData[i*2+1][2] = 1.f-i/(GLfloat)fanDiv;
+        //Max range edge
+        fanData[i*2+1][0] = -sinf(alpha)*1.f/hFactor;
+        fanData[i*2+1][1] = (1.f-cosf(alpha))*2.f-1.f;
+        fanData[i*2+1][2] = i/(GLfloat)fanDiv;
         fanData[i*2+1][3] = 1.f;
     }
     
@@ -293,13 +296,18 @@ GLfloat OpenGLFLS::GetFarClip() const
 void OpenGLFLS::Update()
 {
     _needsUpdate = true;
+    update = true;
 }
 
 bool OpenGLFLS::needsUpdate()
 {
-    update = _needsUpdate;
-    _needsUpdate = false;
-    return update && enabled;
+    if(_needsUpdate)
+    {
+        _needsUpdate = false;
+        return enabled;
+    }
+    else
+        return false;
 }
 
 void OpenGLFLS::setColorMap(ColorMap cm)
@@ -365,7 +373,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS2, outputTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     sonarOutputShader->Use();
     sonarOutputShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.1f, 0.05f));
+    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.05f, 0.02f));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nViewBeams/16.f), (GLuint)views.size(), 1);
     OpenGLState::UseProgram(0);            
@@ -396,9 +404,9 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO)
     //Draw on screen
     if(display)
     {
+        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
         if(0)
-        {
-            OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+        {    
             OpenGLState::BindFramebuffer(destinationFBO);
             OpenGLState::Viewport(0,0,nBeams,nBeamSamples);
             GLuint offset = 0;
@@ -413,7 +421,8 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO)
         else
         {
             OpenGLState::BindFramebuffer(destinationFBO);
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(displayTex);
+            OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+            content->DrawTexturedSAQ(displayTex);
             OpenGLState::BindFramebuffer(0);   
         }
     }
