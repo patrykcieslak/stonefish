@@ -360,9 +360,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     
     if(updateCount < (unsigned int)viewsQueue.size())
         ++updateCount;
-    printf("\nUpdate: %u Queue: ", updateCount);
-    for(size_t i=0; i<viewsQueue.size(); ++i)
-        printf("\t%u", viewsQueue[i]);
+
+    //printf("\nUpdate: %u Queue: ", updateCount);
+    //for(size_t i=0; i<viewsQueue.size(); ++i)
+    //   printf("\t%u", viewsQueue[i]);
 
     //Loop through all views -> trackballs, cameras, depth cameras...
     for(unsigned int i=0; i<updateCount; ++i)

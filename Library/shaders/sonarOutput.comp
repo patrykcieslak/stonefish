@@ -20,7 +20,7 @@
 //N_BINS - number of histogram bins
 //N_BEAM_SAMPLES - number of beam samples
 
-layout(local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 // Two inputs, linear range and recorded intensity.
 layout(rg32f) uniform image2DArray sonarInput;
@@ -30,63 +30,12 @@ layout(r32f) uniform image2D sonarOutput;
 
 uniform uvec2 beams; //beams1, beams2
 uniform vec3 range; //min, max, step
-uniform vec3 noiseSeed;
-uniform vec2 noiseStddev;
-
-#define M_PI 3.1415926535897932384626433832795
-#define GAUSSIAN_WIDTH 5
-
-const float sampleWeight[GAUSSIAN_WIDTH]=float[]
-(
-    0.06136, 0.24477, 0.38774, 0.24477, 0.06136     //sigma=1.0
-    //0.00135, 0.157305, 0.68269, 0.157305, 0.00135   //sigma=0.5
-);
 
 vec2 binHistogram[N_BINS];
-
-float sigmoid(float x)
-{
-    float t = (x - 0.6666667) * 18.0;
-    return (0.5 * tanh(0.5 * t) + 0.5);
-}
-
-float rand(vec2 coord)
-{
-    // This one-liner can be found in many places, including:
-    // http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-    // I can't find any explanation for it, but experimentally it does seem to
-    // produce approximately uniformly distributed values in the interval [0,1].
-    return fract(sin(dot(coord.xy, vec2(12.9898,78.233))) * 43758.5453);
-}
-
-float gaussian(vec2 coord, float stddev, float mean)
-{
-    // Box-Muller method for sampling from the normal distribution
-    // http://en.wikipedia.org/wiki/Normal_distribution#Generating_values_from_normal_distribution
-    // This method requires 2 uniform random inputs and produces 2 
-    // Gaussian random outputs. 3rd random variable is used to switch between the two outputs.
-    float U, V, R, Z;
-    // Add in the CPU-supplied random noiseSeed to generate the 3 random values.
-    U = rand(coord + vec2(noiseSeed.x, noiseSeed.x))+0.0000001;
-    V = rand(coord + vec2(noiseSeed.y, noiseSeed.y))+0.0000001;
-    R = rand(coord + vec2(noiseSeed.z, noiseSeed.z))+0.0000001;
-    // Switch between the two random outputs.
-    if(R < 0.5)
-        Z = sqrt(-2.0 * log(U)) * sin(2.0 * M_PI * V);
-    else
-        Z = sqrt(-2.0 * log(U)) * cos(2.0 * M_PI * V);
-
-    // Apply the stddev and mean.
-    Z = Z * stddev + mean;
-
-    // Return it as a vec4, to be added to the input ("true") color.
-    return Z;
-}
 
 void main()
 {
     uvec3 inDim = imageSize(sonarInput).xyz; //nViewBeams x nBeamSamples x nViews
-    uvec2 outDim = imageSize(sonarOutput).xy; //nBeams x nBins
     uint viewBeams = gl_GlobalInvocationID.y < inDim.z-1 ? beams.x : beams.y;
 
     if(gl_GlobalInvocationID.x < viewBeams)
@@ -95,60 +44,31 @@ void main()
             binHistogram[i] = vec2(0.0); 
 
         ivec3 sampleCoord;
+        sampleCoord.x = int(gl_GlobalInvocationID.x);
+        sampleCoord.z = int(gl_GlobalInvocationID.y);
+
         for(int i=0; i<N_BEAM_SAMPLES; ++i) //For each vertical beam sample
-        {
+        {            
             sampleCoord.y = i;
 
-            for(int k=0; k<GAUSSIAN_WIDTH; ++k) //For each horizontal beam sample
-            {
-                //Compute sample coordinate
-                sampleCoord.x = int(gl_GlobalInvocationID.x) + k - GAUSSIAN_WIDTH/2;
-                sampleCoord.z = int(gl_GlobalInvocationID.y);
+            //Get sample value
+            vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
+            if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
+                continue;
 
-                //Check if sample on border
-                if(sampleCoord.x < 0)
-                {
-                    if(gl_GlobalInvocationID.y == 0) //First view
-                        continue;
-                    else //Middle view
-                    {
-                        sampleCoord.x += int(beams.x); 
-                        --sampleCoord.z;
-                    }
-                }
-                else if(sampleCoord.x >= int(viewBeams))
-                {
-                    if(int(gl_GlobalInvocationID.y) == int(inDim.z)-1) //Last view
-                        continue;
-                    else //Middle view
-                    {
-                        sampleCoord.x -= int(beams.x);
-                        ++sampleCoord.z;
-                    }
-                }
-                
-                //Get sample value
-                vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
-                if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
-                    continue;
-
-                //Compute bin and add accumulate intensity data
-                uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
-                binHistogram[bin].x += sampleWeight[k] * rangeIntensity.y; //sigmoid(rangeIntensity.y);
-                binHistogram[bin].y += sampleWeight[k];
-            }
+            //Compute bin and add accumulate intensity data
+            uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
+            binHistogram[bin].x += rangeIntensity.y;
+            binHistogram[bin].y += 1.0;
         }
 
+        //Compute and store bin values
         uint globalBeam = gl_GlobalInvocationID.x + beams.x * gl_GlobalInvocationID.y;
-        vec2 noiseCoord = vec2(float(globalBeam)/float(outDim.x), 0.0);
-        
         for(uint i=0; i<N_BINS; ++i)
         {
-            noiseCoord.y = float(i)/float(N_BINS - 1);
-            float data = gaussian(-noiseCoord, noiseStddev.y, 0.0); //Additive noise
+            float data = 0.0;
             if(binHistogram[i].y > 0.0)
-                data += binHistogram[i].x/binHistogram[i].y * gaussian(noiseCoord.xx, noiseStddev.x, 1.0); //Multiplicative noise
-            data = clamp(data, 0.0, 1.0);
+                data = binHistogram[i].x/binHistogram[i].y;
             imageStore(sonarOutput, ivec2(globalBeam, i), vec4(data));
         }
     }

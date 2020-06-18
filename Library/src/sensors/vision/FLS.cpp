@@ -30,6 +30,8 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLFLS.h"
 
+#define SOUND_VELOCITY_WATER Scalar(1531) //Sea water
+
 namespace sf
 {
 
@@ -39,6 +41,11 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
 {
     range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
     range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
+    if(frequency < Scalar(0))
+    {
+        Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+        setUpdateFrequency(Scalar(1)/pulseTime);
+    }
     fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
     cMap = cm;
     sonarData = NULL;
@@ -139,36 +146,56 @@ std::vector<Renderable> FLS::Render()
     
     Renderable item;
     item.model = glMatrixFromTransform(getSensorFrame());
-    item.type = RenderableType::SENSOR_LINES;
+    item.type = RenderableType::SENSOR_LINES;    
     
-    //Create camera dummy
+    //Create sonar dummy
     GLfloat iconSize = 0.5f;
-    GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
-    GLfloat y = iconSize*tanf(fovV/360.f*M_PI);
-    
+    int div = 12;
+    GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
+    GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * iconSize;
+    GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * iconSize;
+    //Arcs
+    GLfloat hAngle = -fovStep*(div/2);
+    for(int i=0; i<=div; ++i)
+    {
+        GLfloat z = cosf(hAngle) * cosVAngle;
+        GLfloat x = sinf(hAngle) * cosVAngle;
+        item.points.push_back(glm::vec3(x, sinVAngle, z));
+        if(i > 0 && i < div)
+            item.points.push_back(glm::vec3(x, sinVAngle, z));
+        hAngle += fovStep;
+    }
+    hAngle = -fovStep*(div/2);
+    for(int i=0; i<=div; ++i)
+    {
+        GLfloat z = cosf(hAngle) * cosVAngle;
+        GLfloat x = sinf(hAngle) * cosVAngle;
+        item.points.push_back(glm::vec3(x, -sinVAngle, z));
+        if(i > 0 && i < div)
+            item.points.push_back(glm::vec3(x, -sinVAngle, z));
+        hAngle += fovStep;
+    }
+    //Ends
+    hAngle = -fovStep*(div/2);
+    GLfloat zs = cosf(hAngle) * cosVAngle;
+    GLfloat xs = sinf(hAngle) * cosVAngle;
+    item.points.push_back(glm::vec3(xs, sinVAngle, zs));
+    item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
+    hAngle = fovStep*(div/2);
+    GLfloat ze = cosf(hAngle) * cosVAngle;
+    GLfloat xe = sinf(hAngle) * cosVAngle;
+    item.points.push_back(glm::vec3(xe, sinVAngle, ze));
+    item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+    //Pyramid
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(x, -y, iconSize));
+    item.points.push_back(glm::vec3(xs, sinVAngle, zs));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(x,  y, iconSize));
+    item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
+    item.points.push_back(glm::vec3(xe, sinVAngle, ze));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-x,  y, iconSize));
-    
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    item.points.push_back(glm::vec3(x, y, iconSize));
-    item.points.push_back(glm::vec3(x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    
-    item.points.push_back(glm::vec3(-0.5f*x, -y, iconSize));
-    item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
-    item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
-    item.points.push_back(glm::vec3(0.5f*x, -y, iconSize));
-    
+    item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+
     items.push_back(item);
     return items;
 }

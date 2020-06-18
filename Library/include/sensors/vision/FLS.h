@@ -115,7 +115,6 @@ namespace sf
         GLfloat* sonarData;
         GLubyte* displayData;
         glm::vec2 range;
-        glm::ivec2 beamRes;
         Scalar fovV;
         ColorMap cMap;
         std::function<void(FLS*)> newDataCallback;

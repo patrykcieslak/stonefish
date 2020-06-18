@@ -29,9 +29,6 @@
 #include "graphics/OpenGLView.h"
 #include <random>
 
-#define FLS_MAX_SINGLE_FOV 30.f
-#define FLS_VRES_FACTOR 4.f
-
 namespace sf
 {
     class GLSLShader;
@@ -165,8 +162,7 @@ namespace sf
         
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;
-        GLuint outputTex;
-        GLuint outputFBO;
+        GLuint outputTex[2];
         GLuint outputPBO;
         GLuint displayTex;
         GLuint displayFBO;
@@ -177,6 +173,7 @@ namespace sf
         GLSLShader* sonarOutputShader;
 
         static GLSLShader* sonarInputShader;
+        static GLSLShader* sonarPostprocessShader;
         static GLSLShader* sonarVisualizeShader;
     };
 }
