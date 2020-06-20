@@ -516,9 +516,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Draw blur and particles only below surface
                 OpenGLState::EnableStencilTest();
                 glStencilFunc(GL_EQUAL, 1, 0xFF);
+                glOcean->DrawParticles(camera);
                 //camera->SetRenderBuffers(0, false, false);
                 //glOcean->DrawBlur(camera);
-                glOcean->DrawParticles(camera);
+                
                 //glStencilFunc(GL_EQUAL, 0, 0xFF);
                 //content->DrawTexturedSAQ(camera->getColorTexture(1));
                 OpenGLState::DisableStencilTest();

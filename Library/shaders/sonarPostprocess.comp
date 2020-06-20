@@ -33,11 +33,19 @@ uniform vec2 noiseStddev;
 #define M_PI 3.1415926535897932384626433832795
 #define GAUSSIAN_WIDTH 5
 
-const float sampleWeight[GAUSSIAN_WIDTH]=float[]
-(
-    0.06136, 0.24477, 0.38774, 0.24477, 0.06136     //sigma=1.0
-    //0.00135, 0.157305, 0.68269, 0.157305, 0.00135   //sigma=0.5
-);
+const float sampleWeight2D[GAUSSIAN_WIDTH][GAUSSIAN_WIDTH] = 
+{
+    //{0.003765, 0.015019, 0.023792, 0.015019, 0.003765}, //sigma = 1.0
+    ///{0.015019, 0.059912, 0.094907, 0.059912, 0.015019},
+    //{0.023792, 0.094907, 0.150342, 0.094907, 0.023792},
+    //{0.015019, 0.059912, 0.094907, 0.059912, 0.015019},
+    //{0.003765, 0.015019, 0.023792, 0.015019, 0.003765}
+    {0.000002, 0.000212, 0.000922, 0.000212, 0.000002}, //sigma = 0.5
+    {0.000212, 0.024745, 0.107391, 0.024745, 0.000212},
+    {0.000922, 0.107391, 0.466066, 0.107391, 0.000922},
+    {0.000212, 0.024745, 0.107391, 0.024745, 0.000212},
+    {0.000002, 0.000212, 0.000922, 0.000212, 0.000002}
+};
 
 float sigmoid(float x)
 {
@@ -88,7 +96,7 @@ void main()
         float value = 0.0;
         for(int i=-GAUSSIAN_WIDTH/2; i<=GAUSSIAN_WIDTH/2; ++i) //Horizontal blur (beam interference)
             for(int h=-GAUSSIAN_WIDTH/2; h<=GAUSSIAN_WIDTH/2; ++h) //Vertical blur (remove artifacts due to insufficient beam sampling)
-                value += sampleWeight[i+GAUSSIAN_WIDTH/2] * sampleWeight[h+GAUSSIAN_WIDTH/2] * imageLoad(sonarOutput, ivec2(coords.x+i, coords.y+h)).r;
+                value += sampleWeight2D[i+GAUSSIAN_WIDTH/2][h+GAUSSIAN_WIDTH/2] * imageLoad(sonarOutput, ivec2(coords.x+i, coords.y+h)).r;
         
         //Apply sigmoidal transform
         //value = sigmoid(value);

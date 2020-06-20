@@ -437,7 +437,7 @@ void GraphicalSimulationApp::Loop()
     SDL_Event event;
     bool mouseWasDown = false;
     
-    uint64_t startTime = GetTimeInMicroseconds();
+    //uint64_t startTime = GetTimeInMicroseconds();
     
     while(!hasFinished())
     {
@@ -588,10 +588,11 @@ void GraphicalSimulationApp::Loop()
         mouseWasDown = false;
 
         //Framerate limitting
+        /*
         uint64_t elapsedTime = GetTimeInMicroseconds() - startTime;
         if(elapsedTime < 16000)
             std::this_thread::sleep_for(std::chrono::microseconds(16000 - elapsedTime));
-        startTime = GetTimeInMicroseconds();
+        startTime = GetTimeInMicroseconds();*/
     }
 }
 
@@ -630,6 +631,7 @@ void GraphicalSimulationApp::RenderLoop()
         }
     }
     
+    glFinish(); //Ensure that the frame was fully rendered
     SDL_GL_SwapWindow(window);
     
     //Update drawing time
