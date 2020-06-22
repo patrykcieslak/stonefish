@@ -31,7 +31,7 @@
 namespace sf
 {
     //! An enum defining types of vision sensors.
-    typedef enum {SENSOR_COLOR_CAMERA = 0, SENSOR_DEPTH_CAMERA, SENSOR_MULTIBEAM2, SENSOR_FLS} VisionSensorType;
+    typedef enum {SENSOR_COLOR_CAMERA = 0, SENSOR_DEPTH_CAMERA, SENSOR_MULTIBEAM2, SENSOR_FLS, SENSOR_SSS} VisionSensorType;
     
     class SolidEntity;
     class FeatherstoneEntity;

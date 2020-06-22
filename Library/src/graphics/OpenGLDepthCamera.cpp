@@ -225,7 +225,7 @@ void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
 
 ViewType OpenGLDepthCamera::getType()
 {
-    return DEPTH_CAMERA;
+    return ViewType::DEPTH_CAMERA;
 }
 
 void OpenGLDepthCamera::LinearizeDepth()

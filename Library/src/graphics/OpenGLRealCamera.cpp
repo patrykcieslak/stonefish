@@ -70,7 +70,7 @@ OpenGLRealCamera::~OpenGLRealCamera()
 
 ViewType OpenGLRealCamera::getType()
 {
-    return CAMERA;
+    return ViewType::CAMERA;
 }
 
 void OpenGLRealCamera::Update()

@@ -52,7 +52,7 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
 
 ViewType OpenGLTrackball::getType()
 {
-    return TRACKBALL;
+    return ViewType::TRACKBALL;
 }
 
 bool OpenGLTrackball::needsUpdate()

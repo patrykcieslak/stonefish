@@ -35,6 +35,7 @@
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
 #include "graphics/OpenGLFLS.h"
+#include "graphics/OpenGLSSS.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOceanParticles.h"
@@ -59,6 +60,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
     OpenGLFLS::Init();
+    OpenGLSSS::Init();
     OpenGLOceanParticles::Init();
     content = new OpenGLContent();
     
@@ -148,8 +150,10 @@ void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
                 ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
             else if(content->getView(i)->getType() == ViewType::DEPTH_CAMERA)
                 ((OpenGLDepthCamera*)content->getView(i))->UpdateTransform();
-            else if(content->getView(i)->getType() == ViewType::SONAR)
+            else if(content->getView(i)->getType() == ViewType::FLS)
                 ((OpenGLFLS*)content->getView(i))->UpdateTransform();
+            else if(content->getView(i)->getType() == ViewType::SSS)
+                ((OpenGLSSS*)content->getView(i))->UpdateTransform();
         //Update light transforms to ensure consistency
         for(unsigned int i=0; i < content->getLightsCount(); ++i)
             content->getLight(i)->UpdateTransform();
@@ -370,7 +374,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     {
         OpenGLView* view = content->getView(viewsQueue[i]);
 
-        if(view->getType() == DEPTH_CAMERA)
+        if(view->getType() == ViewType::DEPTH_CAMERA)
         {
             OpenGLDepthCamera* camera = (OpenGLDepthCamera*)view;
             GLint* viewport = camera->GetViewport();
@@ -388,11 +392,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
             delete [] viewport;
         }
-        else if(view->getType() == SONAR)
+        else if(view->getType() == ViewType::FLS)
         {
-            OpenGLFLS* fls = (OpenGLFLS*)view;
+            OpenGLFLS* fls = static_cast<OpenGLFLS*>(view);
             
-            //Draw object and compute sonar data
+            //Draw objects and compute sonar data
             fls->ComputeOutput(drawingQueueCopy);
             
             //Draw sonar output
@@ -401,10 +405,23 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             fls->DrawLDR(screenFBO);
             delete [] viewport;
         }
-        else if(view->getType() == CAMERA || view->getType() == TRACKBALL)
+        else if(view->getType() == ViewType::SSS)
+        {
+            OpenGLSSS* sss = static_cast<OpenGLSSS*>(view);
+
+            //Draw objects and compute sonar data
+            sss->ComputeOutput(drawingQueueCopy);
+            
+            //Draw sonar output
+            GLint* viewport = sss->GetViewport();
+            content->SetViewportSize(viewport[2], viewport[3]);
+            sss->DrawLDR(screenFBO);
+            delete [] viewport;
+        }
+        else if(view->getType() == ViewType::CAMERA || view->getType() == ViewType::TRACKBALL)
         {
             //Apply view properties
-            OpenGLCamera* camera = (OpenGLCamera*)view;
+            OpenGLCamera* camera = static_cast<OpenGLCamera*>(view);
             OpenGLLight::SetCamera(camera);
             GLint* viewport = camera->GetViewport();
             content->SetViewportSize(viewport[2],viewport[3]);
