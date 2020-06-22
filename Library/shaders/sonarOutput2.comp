@@ -17,37 +17,35 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//N_BINS - number of histogram bins
-//N_BEAM_SAMPLES - number of beam samples
+//N_HALF_BINS - number of histogram bins
+//N_HORI_BEAM_SAMPLES - number of horizontal beam samples
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 // Two inputs, linear range and recorded intensity.
 layout(rg32f) uniform image2DArray sonarInput;
 
-// One output - intensity for each bin/beam combination
-layout(r32f) uniform image2D sonarOutput;
+// Two outputs - intensity for each bin/vertiacal beam sample and number of hits
+layout(rg32f) uniform image2DArray sonarHist;
 
-uniform uvec2 beams; //beams1, beams2
 uniform vec3 range; //min, max, step
 
-vec2 binHistogram[N_BINS];
+vec2 binHistogram[N_HALF_BINS];
 
 void main()
 {
-    uvec3 inDim = imageSize(sonarInput).xyz; //nViewBeams x nBeamSamples x nViews
-    uint viewBeams = gl_GlobalInvocationID.y < inDim.z-1 ? beams.x : beams.y;
-
-    if(gl_GlobalInvocationID.x < viewBeams)
+    uvec3 inDim = imageSize(sonarInput).xyz; //nBeamSamples.x * nBeamSamples.y * 2 
+    
+    if(gl_GlobalInvocationID.x < inDim.x)
     {
-        for(uint i=0; i<N_BINS; ++i) //Initialize histogram buffer
+        for(uint i=0; i<N_HALF_BINS; ++i) //Initialize histogram buffer
             binHistogram[i] = vec2(0.0); 
 
         ivec3 sampleCoord;
         sampleCoord.x = int(gl_GlobalInvocationID.x);
         sampleCoord.z = int(gl_GlobalInvocationID.y);
 
-        for(int i=0; i<N_BEAM_SAMPLES; ++i) //For each vertical beam sample
+        for(int i=0; i<N_HORI_BEAM_SAMPLES; ++i) //For each horizontal beam sample
         {            
             sampleCoord.y = i;
 
@@ -62,14 +60,8 @@ void main()
             binHistogram[bin].y += 1.0;
         }
 
-        //Compute and store bin values
-        uint globalBeam = gl_GlobalInvocationID.x + beams.x * gl_GlobalInvocationID.y;
-        for(uint i=0; i<N_BINS; ++i)
-        {
-            float data = 0.0;
-            if(binHistogram[i].y > 0.0)
-                data = binHistogram[i].x/binHistogram[i].y;
-            imageStore(sonarOutput, ivec2(globalBeam, i), vec4(data));
-        }
+        //Store bin values
+        for(uint i=0; i<N_HALF_BINS; ++i)
+            imageStore(sonarHist, ivec3(gl_GlobalInvocationID.x, i, gl_GlobalInvocationID.y), vec4(binHistogram[i].xy, 0.0, 0.0));
     }
 }

@@ -44,13 +44,12 @@ namespace sf
 {
 
 GLSLShader* OpenGLSSS::sonarInputShader = NULL;
-GLSLShader* OpenGLSSS::sonarPostprocessShader = NULL;
+GLSLShader* OpenGLSSS::sonarShiftShader = NULL;
 GLSLShader* OpenGLSSS::sonarVisualizeShader = NULL;
 
 OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 forward,
-                     GLint originX, GLint originY, GLfloat transducerOffset, GLfloat verticalTiltDeg, 
-                     GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, GLuint numOfBins, 
-                     GLuint numOfLines, glm::vec2 range_, bool continuousUpdate)
+                     GLint originX, GLint originY, GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
+                     GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range_, bool continuousUpdate)
 : OpenGLView(originX, originY, numOfBins, numOfLines), randDist(0.f, 1.f)
 {
     _needsUpdate = false;
@@ -59,13 +58,12 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     newData = false;
     sonar = NULL;
     range = range_;
-    offset = transducerOffset;
     tilt = glm::radians(verticalTiltDeg);
     fov.x = glm::radians(verticalBeamWidthDeg);
     fov.y = glm::radians(horizontalBeamWidthDeg);
     GLfloat binRange = 2.f*(range.y-range.x)/(GLfloat)viewportWidth;
-    nBeamSamples.x = 200; //glm::max((GLuint)ceilf(verticalBeamWidthDeg * 1.f/binRange * SSS_VRES_FACTOR), (GLuint)2048);
-    nBeamSamples.y = 100; //glm::max((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
+    nBeamSamples.x = glm::max((GLuint)ceilf(verticalBeamWidthDeg * 1.f/binRange * SSS_VRES_FACTOR), (GLuint)2048);
+    nBeamSamples.y = glm::max((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
     cMap = ColorMap::COLORMAP_HOT;
     
     SetupSonar(centerPosition, direction, forward);
@@ -77,8 +75,8 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     projection[2] = glm::vec4(0.f, 0.f, -(range.y + range.x)/(range.y-range.x), -1.f);
     projection[3] = glm::vec4(0.f, 0.f, -2.f*range.y*range.x/(range.y-range.x), 0.f);
     GLfloat offsetAngle = M_PI_2 - tilt;
-    views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f)) * glm::translate(glm::vec3(0.f,0.f,offset));
-    views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f)) * glm::translate(glm::vec3(0.f,0.f,offset));
+    views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
+    views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
 
     //Allocate resources
     inputRangeIntensityTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(nBeamSamples.x, nBeamSamples.y, 2),
@@ -98,18 +96,22 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
         cError("Sonar input FBO initialization failed!");
 
     //Output shader: sonar range data
-    outputTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 1), 
-                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    //a. Histograms for vertical beam FOV
+    outputTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(nBeamSamples.x, viewportWidth/2, 2), 
+                                                  GL_RG32F, GL_RG, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    //b. Waterfall output (ping-pong)
     outputTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 1), 
-                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
-        
+                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    outputTex[2] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 1), 
+                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    pingpong = 0;
     //Visualisation shader: sonar data color mapped
     glGenTextures(1, &displayTex);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, displayTex);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     OpenGLState::UnbindTexture(TEX_BASE);
@@ -118,31 +120,43 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     displayFBO = OpenGLContent::GenerateFramebuffer(textures);
     
     //Load output shader
-    /*std::string header = "#version 430\n#define N_BINS " + std::to_string(nBins)
-                         + "\n#define N_BEAM_SAMPLES " + std::to_string(nBeamSamples) + "\n"; 
+    std::string header = "#version 430\n#define N_HALF_BINS " + std::to_string(viewportWidth/2)
+                         + "\n#define N_HORI_BEAM_SAMPLES " + std::to_string(nBeamSamples.y)
+                         + "\n#define N_VERT_BEAM_SAMPLES " + std::to_string(nBeamSamples.x) + "\n"; ; 
     std::vector<GLSLSource> sources;
-    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarOutput.comp", header));
-    sonarOutputShader = new GLSLShader(sources);
-    sonarOutputShader->AddUniform("sonarInput", ParameterType::INT);
-    sonarOutputShader->AddUniform("sonarOutput", ParameterType::INT);
-    sonarOutputShader->AddUniform("beams", ParameterType::UVEC2);
-    sonarOutputShader->AddUniform("range", ParameterType::VEC3);
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarOutput2.comp", header));
+    sonarOutputShader[0] = new GLSLShader(sources);
+    sonarOutputShader[0]->AddUniform("sonarInput", ParameterType::INT);
+    sonarOutputShader[0]->AddUniform("sonarHist", ParameterType::INT);
+    sonarOutputShader[0]->AddUniform("range", ParameterType::VEC3);
 
-    sonarOutputShader->Use();
-    sonarOutputShader->SetUniform("sonarInput", TEX_POSTPROCESS1);
-    sonarOutputShader->SetUniform("sonarOutput", TEX_POSTPROCESS2);
-    sonarOutputShader->SetUniform("beams", glm::uvec2(views.front().nBeams, views.back().nBeams));
-    sonarOutputShader->SetUniform("range", glm::vec3(range.x, range.y, (range.y-range.x)/(GLfloat)nBins));
-    OpenGLState::UseProgram(0);*/
+    sonarOutputShader[0]->Use();
+    sonarOutputShader[0]->SetUniform("sonarInput", TEX_POSTPROCESS1);
+    sonarOutputShader[0]->SetUniform("sonarHist", TEX_POSTPROCESS2);
+    sonarOutputShader[0]->SetUniform("range", glm::vec3(range.x, range.y, 2*(range.y-range.x)/(GLfloat)viewportWidth));
+    OpenGLState::UseProgram(0);
+
+    sources.clear();
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarLine.comp", header));
+    sonarOutputShader[1] = new GLSLShader(sources);
+    sonarOutputShader[1]->AddUniform("sonarHist", ParameterType::INT);
+    sonarOutputShader[1]->AddUniform("sonarOutput", ParameterType::INT);
+    sonarOutputShader[1]->AddUniform("noiseSeed", ParameterType::VEC3);
+    sonarOutputShader[1]->AddUniform("noiseStddev", ParameterType::VEC2);
+    sonarOutputShader[1]->Use();
+    sonarOutputShader[1]->SetUniform("sonarHist", TEX_POSTPROCESS1);
+    sonarOutputShader[1]->SetUniform("sonarOutput", TEX_POSTPROCESS2);
+    OpenGLState::UseProgram(0);  
 }
 
 OpenGLSSS::~OpenGLSSS()
 {
-    delete sonarOutputShader;
+    delete sonarOutputShader[0];
+    delete sonarOutputShader[1];
     glDeleteTextures(1, &inputRangeIntensityTex);
     glDeleteRenderbuffers(1, &inputDepthRBO);
     glDeleteFramebuffers(1, &renderFBO);
-    glDeleteTextures(2, outputTex);
+    glDeleteTextures(3, outputTex);
     glDeleteTextures(1, &displayTex);
     glDeleteFramebuffers(1, &displayFBO);
 
@@ -275,17 +289,16 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindFramebuffer(renderFBO);
     OpenGLState::Viewport(0, 0, nBeamSamples.x, nBeamSamples.y);
     sonarInputShader->Use();
+    sonarInputShader->SetUniform("eyePos", center);
     for(size_t i=0; i<2; ++i) //For each of the sonar views
     {
         //Compute matrices
-        glm::mat4 V0 = GetViewMatrix() * views[i];
         glm::mat4 V = views[i] * GetViewMatrix();
         glm::mat4 VP = projection * V;
         //Clear color and depth for particular framebuffer layer
         glDrawBuffer(GL_COLOR_ATTACHMENT0 + (GLuint)i);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //Draw objects
-        sonarInputShader->SetUniform("eyePos", glm::vec3(V0[3][0],V0[3][1],V0[3][2]));
         for(size_t h=0; h<objects.size(); ++h)
         {
             if(objects[h].type != RenderableType::SOLID)
@@ -299,38 +312,44 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
             content->DrawObject(objects[h].objectId, objects[h].lookId, objects[h].model);
         }
     }
-    OpenGLState::UseProgram(0);
     
-    //Compute sonar output
-/*  glBindImageTexture(TEX_POSTPROCESS1, inputRangeIntensityTex, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
-    glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-    sonarOutputShader->Use();
+    //Compute sonar output histogram
+    glBindImageTexture(TEX_POSTPROCESS1, inputRangeIntensityTex, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
+    glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG32F);
+    sonarOutputShader[0]->Use();
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    glDispatchCompute((GLuint)ceilf(nViewBeams/64.f), (GLuint)views.size(), 1);
-    OpenGLState::UseProgram(0);  
-
+    glDispatchCompute((GLuint)ceilf(nBeamSamples.x/64.f), 2, 1);
+    
+    //Shift old sonar output
+    glBindImageTexture(TEX_POSTPROCESS1, outputTex[pingpong + 1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+    glBindImageTexture(TEX_POSTPROCESS2, outputTex[1-pingpong + 1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    sonarShiftShader->Use();
+    glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1);
+    
     //Postprocess sonar output
-    glBindImageTexture(TEX_POSTPROCESS1, outputTex[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-    glBindImageTexture(TEX_POSTPROCESS2, outputTex[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-    sonarPostprocessShader->Use();
-    sonarPostprocessShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarPostprocessShader->SetUniform("noiseStddev", glm::vec2(0.075f, 0.05f));
+    glBindImageTexture(TEX_POSTPROCESS1, outputTex[0], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
+    sonarOutputShader[1]->Use();
+    sonarOutputShader[1]->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
+    sonarOutputShader[1]->SetUniform("noiseStddev", glm::vec2(0.02f, 0.02f));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    glDispatchCompute((GLuint)ceilf(nBeams/16.f), (GLuint)ceilf(nBins/16.f), 1);
-    OpenGLState::UseProgram(0);
+    glDispatchCompute((GLuint)ceilf(viewportWidth/2.f/64.f), 2, 1);
     
     OpenGLState::BindFramebuffer(displayFBO);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glClear(GL_COLOR_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[1]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, outputTex[1-pingpong + 1]);
     sonarVisualizeShader->Use();
-    sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS1);
+    sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS2);
     sonarVisualizeShader->SetUniform("colormap", (GLint)cMap);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     content->DrawSAQ();
     OpenGLState::BindFramebuffer(0);
     OpenGLState::UseProgram(0);
-    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);*/
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+
+    ++pingpong;
+    if(pingpong > 1)
+        pingpong = 0;
 }
 
 void OpenGLSSS::DrawLDR(GLuint destinationFBO)
@@ -344,13 +363,13 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO)
     if(display)
     {
         OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        if(1)
+        if(0)
         {    
-            content->SetViewportSize(nBeamSamples.x*2, nBeamSamples.y);
+            content->SetViewportSize(nBeamSamples.x/2, nBeamSamples.y/4);
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, nBeamSamples.x*2, nBeamSamples.y);
-            content->DrawTexturedQuad(0.f, 0.f, (GLfloat)nBeamSamples.x, (GLfloat)nBeamSamples.y, inputRangeIntensityTex, 0, true);
-            content->DrawTexturedQuad((GLfloat)nBeamSamples.x, 0.f, (GLfloat)nBeamSamples.x, (GLfloat)nBeamSamples.y, inputRangeIntensityTex, 1, true);
+            OpenGLState::Viewport(0, 0, nBeamSamples.x/2, nBeamSamples.y/4);
+            content->DrawTexturedQuad(0.f, 0.f, (GLfloat)nBeamSamples.x/4, (GLfloat)nBeamSamples.y/4, inputRangeIntensityTex, 0, true);
+            content->DrawTexturedQuad((GLfloat)nBeamSamples.x/4, 0.f, (GLfloat)nBeamSamples.x/4, (GLfloat)nBeamSamples.y/4, inputRangeIntensityTex, 1, true);
             OpenGLState::BindFramebuffer(0);
         }
         else
@@ -365,7 +384,7 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO)
     //Copy texture to sonar buffer
     if(sonar != NULL && update)
     {
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[1]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[pingpong+1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -391,18 +410,16 @@ void OpenGLSSS::Init()
     sonarInputShader->AddUniform("restitution", ParameterType::FLOAT);
     
     std::vector<GLSLSource> sources;
-    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarPostprocess.comp"));
-    sonarPostprocessShader = new GLSLShader(sources);
-    sonarPostprocessShader->AddUniform("sonarOutput", ParameterType::INT);
-    sonarPostprocessShader->AddUniform("sonarPost", ParameterType::INT);
-    sonarPostprocessShader->AddUniform("noiseSeed", ParameterType::VEC3);
-    sonarPostprocessShader->AddUniform("noiseStddev", ParameterType::VEC2);
-    sonarPostprocessShader->Use();
-    sonarPostprocessShader->SetUniform("sonarOutput", TEX_POSTPROCESS1);
-    sonarPostprocessShader->SetUniform("sonarPost", TEX_POSTPROCESS2);
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarShift.comp"));
+    sonarShiftShader = new GLSLShader(sources);
+    sonarShiftShader->AddUniform("sonarOutputIn", ParameterType::INT);
+    sonarShiftShader->AddUniform("sonarOutputOut", ParameterType::INT);
+    sonarShiftShader->Use();
+    sonarShiftShader->SetUniform("sonarOutputIn", TEX_POSTPROCESS1);
+    sonarShiftShader->SetUniform("sonarOutputOut", TEX_POSTPROCESS2);
     OpenGLState::UseProgram(0);
 
-    sonarVisualizeShader = new GLSLShader("sonarVisualize.frag", "printer.vert");
+    sonarVisualizeShader = new GLSLShader("sonarVisualize.frag");
     sonarVisualizeShader->AddUniform("texSonarData", ParameterType::INT);
     sonarVisualizeShader->AddUniform("colormap", ParameterType::INT);
 }
@@ -410,7 +427,7 @@ void OpenGLSSS::Init()
 void OpenGLSSS::Destroy()
 {
     if(sonarInputShader != NULL) delete sonarInputShader;
-    if(sonarPostprocessShader != NULL) delete sonarPostprocessShader;
+    if(sonarShiftShader != NULL) delete sonarShiftShader;
     if(sonarVisualizeShader != NULL) delete sonarVisualizeShader;
 }
 

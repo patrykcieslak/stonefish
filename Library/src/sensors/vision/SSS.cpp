@@ -36,9 +36,8 @@ namespace sf
 {
 
 SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
-         Scalar horizontalBeamWidthDeg, Scalar transducerOffset, Scalar verticalTiltDeg, 
-         Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency)
-    : Camera(uniqueName, numOfBins, numOfLines, verticalBeamWidthDeg, frequency)
+         Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency)
+    : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
 {
     range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
     range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
@@ -48,7 +47,6 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
         setUpdateFrequency(Scalar(1)/pulseTime);
     }
     fovV = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
-    offset = transducerOffset < Scalar(0) ? Scalar(0) : transducerOffset;
     tilt = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
     cMap = cm;
     sonarData = NULL;
@@ -93,7 +91,7 @@ VisionSensorType SSS::getVisionSensorType()
 void SSS::InitGraphics()
 {
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
-                          (GLfloat)offset, (GLfloat)tilt, (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, freq < Scalar(0));
+                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, freq < Scalar(0));
     glSSS->setSonar(this);
     glSSS->setColorMap(cMap);
     UpdateTransform();
@@ -202,8 +200,8 @@ std::vector<Renderable> SSS::Render()
     //Add two transducer dummies
     GLfloat offsetAngle = M_PI_2 - glm::radians(tilt);
     glm::mat4 views[2];
-    views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f)) * glm::translate(glm::vec3(0.f,0.f,offset));
-    views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f)) * glm::translate(glm::vec3(0.f,0.f,offset));
+    views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
+    views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
     item.model = glMatrixFromTransform(getSensorFrame()) * views[0];
     items.push_back(item);
     item.model = glMatrixFromTransform(getSensorFrame()) * views[1];

@@ -46,19 +46,17 @@ namespace sf
          \param forward a vector aligned with the sonar track
          \param originX the x coordinate of the view origin in the program window [px]
          \param originY the y coordinate of the view origin in the program window [px]
-         \param transducerOffset the offset from the center point to the location of the transducer [m]
-         \param verticalTiltDeg the angle between the horizon and the transducer axis [deg]
          \param verticalBeamWidthDeg the field of view of the single sonar transducer [deg]
          \param horizontalBeamWidthDeg the width of the sonar beam along the track [deg]
          \param numOfBins the number of sonar range bins
          \param numOfLines the length of the waterfall display memory
+         \param verticalTiltDeg the angle between the horizon and the transducer axis [deg]
          \param range_ the distance to the closest and farthest recorded object [m]
          \param continuousUpdate a flag indicating if the sonar should be always updated
          */
         OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 forward,
-                  GLint originX, GLint originY, GLfloat transducerOffset, GLfloat verticalTiltDeg, 
-                  GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, GLuint numOfBins, 
-                  GLuint numOfLines, glm::vec2 range_, bool continuousUpdate);
+                  GLint originX, GLint originY, GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
+                  GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range_, bool continuousUpdate);
         
         //! A destructor.
         ~OpenGLSSS();
@@ -145,7 +143,6 @@ namespace sf
         bool update;
         bool newData;
 
-        GLfloat offset;
         GLfloat tilt;
         glm::uvec2 nBeamSamples;
         glm::vec2 fov;
@@ -157,15 +154,16 @@ namespace sf
         
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;
-        GLuint outputTex[2];
+        GLuint outputTex[3];
+        GLuint pingpong;
         GLuint outputPBO;
         GLuint displayTex;
         GLuint displayFBO;
         GLuint displayPBO;
-        GLSLShader* sonarOutputShader;
+        GLSLShader* sonarOutputShader[2];
 
         static GLSLShader* sonarInputShader;
-        static GLSLShader* sonarPostprocessShader;
+        static GLSLShader* sonarShiftShader;
         static GLSLShader* sonarVisualizeShader;
     };
 }

@@ -45,7 +45,6 @@ namespace sf
          \param numOfLines the length of the waterfall display memory
          \param verticalBeamWidthDeg the vertical width of the beam [deg]
          \param horizontalBeamWidthDeg the horizontal width of the beam [deg]
-         \param transducerOffset the distance from the center to the transducer [m]
          \param verticalTiltDeg the angle between the horizon and the transducer axis [deg]
          \param minRange the minimum measured range [m]
          \param maxRange the maximum measured range [m]
@@ -53,8 +52,8 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
         SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
-            Scalar horizontalBeamWidthDeg, Scalar transducerOffset, Scalar verticalTiltDeg, 
-            Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1));
+            Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
+            Scalar frequency = Scalar(-1));
        
         //! A destructor.
         ~SSS();
@@ -119,7 +118,6 @@ namespace sf
         GLubyte* displayData;
         glm::vec2 range;
         Scalar fovV;
-        Scalar offset;
         Scalar tilt;
         ColorMap cMap;
         std::function<void(SSS*)> newDataCallback;
