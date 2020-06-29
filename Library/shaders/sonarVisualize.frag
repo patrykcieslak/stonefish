@@ -35,7 +35,6 @@ void main()
     
     switch(colormap)
     {
-        default:
         case 0: //Hot
             fragcolor.r = clamp(1.0/0.4*data, 0.0, 1.0);
             fragcolor.g = clamp(1.0/0.4*(data-0.4), 0.0, 1.0);
@@ -59,6 +58,19 @@ void main()
             fragcolor.r = clamp(cos((data-1.0)*2.0),0.0,1.0)*0.9;
             fragcolor.g = clamp(cos((data-1.0)*1.57),0.0,1.0);
             fragcolor.b = clamp(cos((data-0.3)*8.0)*0.5+0.5,0.0,1.0)*0.5;
+            break;
+
+        default:   
+        case 4: //Orange-copper
+            fragcolor.r = clamp(data*1.3+0.3, 0.0, 1.0);
+            fragcolor.g = clamp(data*1.5-0.2, 0.0, 1.0);
+            fragcolor.b = clamp(data*2.0-1.0, 0.0, 1.0);
+            break;
+
+        case 5: //Blue
+            fragcolor.r = clamp(data*2.0-1.0, 0.0, 1.0);
+            fragcolor.g = clamp(data*1.5-0.2, 0.0, 1.0);
+            fragcolor.b = clamp(data*1.3+0.3, 0.0, 1.0);
             break;
     }
 }

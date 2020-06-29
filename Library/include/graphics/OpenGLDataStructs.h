@@ -221,7 +221,7 @@ namespace sf
     };
     
     //! An enum defining supported color maps.
-    typedef enum {COLORMAP_HOT = 0, COLORMAP_JET, COLORMAP_PERULA, COLORMAP_GREENBLUE} ColorMap;
+    enum class ColorMap : int32_t {HOT, JET, PERULA, GREEN_BLUE, ORANGE_COPPER, COLD_BLUE};
 
     //! A structure representing a color system.
     struct ColorSystem

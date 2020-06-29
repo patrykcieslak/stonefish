@@ -64,16 +64,18 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     GLfloat binRange = 2.f*(range.y-range.x)/(GLfloat)viewportWidth;
     nBeamSamples.x = glm::max((GLuint)ceilf(verticalBeamWidthDeg * 1.f/binRange * SSS_VRES_FACTOR), (GLuint)2048);
     nBeamSamples.y = glm::max((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
-    cMap = ColorMap::COLORMAP_HOT;
+    cMap = ColorMap::ORANGE_COPPER;
     
     SetupSonar(centerPosition, direction, forward);
     UpdateTransform();
     
     //Setup matrices
-    projection[0] = glm::vec4(range.x/(range.x*tanf(fov.x/2.f)), 0.f, 0.f, 0.f);
-    projection[1] = glm::vec4(0.f, range.x/(range.x*tanf(fov.y/2.f)), 0.f, 0.f);
-    projection[2] = glm::vec4(0.f, 0.f, -(range.y + range.x)/(range.y-range.x), -1.f);
-    projection[3] = glm::vec4(0.f, 0.f, -2.f*range.y*range.x/(range.y-range.x), 0.f);
+    GLfloat near = range.x/2.f;
+    GLfloat far = range.y;
+    projection[0] = glm::vec4(near/(near*tanf(fov.x/2.f)), 0.f, 0.f, 0.f);
+    projection[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
+    projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
+    projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
     GLfloat offsetAngle = M_PI_2 - tilt;
     views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
     views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
@@ -312,12 +314,13 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
             content->DrawObject(objects[h].objectId, objects[h].lookId, objects[h].model);
         }
     }
+    OpenGLState::BindFramebuffer(0);
     
     //Compute sonar output histogram
     glBindImageTexture(TEX_POSTPROCESS1, inputRangeIntensityTex, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG32F);
     sonarOutputShader[0]->Use();
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nBeamSamples.x/64.f), 2, 1);
     
     //Shift old sonar output
@@ -340,7 +343,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, outputTex[1-pingpong + 1]);
     sonarVisualizeShader->Use();
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS2);
-    sonarVisualizeShader->SetUniform("colormap", (GLint)cMap);
+    sonarVisualizeShader->SetUniform("colormap", static_cast<GLint>(cMap));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     content->DrawSAQ();
     OpenGLState::BindFramebuffer(0);

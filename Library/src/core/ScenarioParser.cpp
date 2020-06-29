@@ -55,6 +55,7 @@
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
 #include "sensors/vision/FLS.h"
+#include "sensors/vision/SSS.h"
 #include "sensors/Contact.h"
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
@@ -1597,7 +1598,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         int nBeams, nBins;
         Scalar rangeMin, rangeMax;
         const char* colorMap = nullptr;
-        ColorMap cMap = ColorMap::COLORMAP_HOT;
+        ColorMap cMap = ColorMap::ORANGE_COPPER;
         
         if((item = element->FirstChildElement("link")) == nullptr)
             return false;
@@ -1617,16 +1618,64 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
            && item->QueryStringAttribute("colormap", &colorMap) == XML_SUCCESS)
         {
             std::string colorMapStr(colorMap);
-            if(colorMapStr == "jet")
-                cMap = ColorMap::COLORMAP_JET;
+            if(colorMapStr == "hot")
+                cMap = ColorMap::HOT;
+            else if(colorMapStr == "jet")
+                cMap = ColorMap::JET;
             else if(colorMapStr == "perula")
-                cMap = ColorMap::COLORMAP_PERULA;
+                cMap = ColorMap::PERULA;
             else if(colorMapStr == "greenblue")
-                cMap = ColorMap::COLORMAP_GREENBLUE;
+                cMap = ColorMap::GREEN_BLUE;
+            else if(colorMapStr == "coldblue")
+                cMap = ColorMap::COLD_BLUE;
         }
         
         FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, rate);
         robot->AddVisionSensor(fls, robot->getName() + "/" + std::string(linkName), origin);
+    }
+    else if(typeStr == "sss")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        Scalar hFov, vFov;
+        int nLines, nBins;
+        Scalar rangeMin, rangeMax, tilt;
+        const char* colorMap = nullptr;
+        ColorMap cMap = ColorMap::ORANGE_COPPER;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
+            || item->QueryAttribute("lines", &nLines) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_beam_width", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("vertical_beam_width", &vFov) != XML_SUCCESS
+            || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
+            || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS
+            || item->QueryAttribute("vertical_tilt", &tilt) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("display")) != nullptr
+           && item->QueryStringAttribute("colormap", &colorMap) == XML_SUCCESS)
+        {
+            std::string colorMapStr(colorMap);
+            if(colorMapStr == "hot")
+                cMap = ColorMap::HOT;
+            else if(colorMapStr == "jet")
+                cMap = ColorMap::JET;
+            else if(colorMapStr == "perula")
+                cMap = ColorMap::PERULA;
+            else if(colorMapStr == "greenblue")
+                cMap = ColorMap::GREEN_BLUE;
+            else if(colorMapStr == "coldblue")
+                cMap = ColorMap::COLD_BLUE;
+        }
+        
+        SSS* sss = new SSS(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, rate);
+        robot->AddVisionSensor(sss, robot->getName() + "/" + std::string(linkName), origin);
     }
     else
         return false;
