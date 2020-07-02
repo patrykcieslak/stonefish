@@ -288,20 +288,20 @@ namespace sf
          \param id the index of the view
          \return a pointer to the view object
          */
-        OpenGLView* getView(unsigned int id);
+        OpenGLView* getView(size_t id);
         
         //! A method returning the number of views.
-        unsigned int getViewsCount();
+        size_t getViewsCount();
         
         //! A method returning a pointer to a light.
         /*!
          \param id the index of the light
          \return a pointer to the light object
          */
-        OpenGLLight* getLight(unsigned int id);
+        OpenGLLight* getLight(size_t id);
         
         //! A method returning the number of lights.
-        unsigned int getLightsCount();
+        size_t getLightsCount();
         
         //! A method that updates lights UBO.
         void SetupLights();
@@ -317,13 +317,13 @@ namespace sf
         /*!
          \param id the id of the object
          */
-        const Object& getObject(unsigned int id);
+        const Object& getObject(size_t id);
 
         //! A method returning a reference to the look structure.
         /*!
          \param id the id of the look
          */
-        const Look& getLook(unsigned int id);
+        const Look& getLook(size_t id);
         
         //! A static method to load a texture.
         /*!

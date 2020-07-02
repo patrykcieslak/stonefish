@@ -182,8 +182,8 @@ namespace sf
         virtual size_t getNumOfVertices() const = 0;
         virtual void* getVertexDataPointer() const = 0;
         virtual size_t getVertexSize() const = 0;
-        virtual inline glm::vec3 getVertexPos(size_t vertexID) const = 0;
-        virtual inline glm::vec3 getVertexPos(size_t faceID, unsigned short index) const = 0;
+        virtual glm::vec3 getVertexPos(size_t vertexID) const = 0;
+        virtual glm::vec3 getVertexPos(size_t faceID, unsigned short index) const = 0;
         virtual glm::vec3 ComputeFaceNormal(size_t faceID) const = 0;
         virtual GLfloat ComputeFaceArea(size_t faceID) const = 0;
     };
@@ -200,12 +200,12 @@ namespace sf
 
         size_t getVertexSize() const { return sizeof(Vertex); }
 
-        inline glm::vec3 getVertexPos(size_t vertexID) const
+        glm::vec3 getVertexPos(size_t vertexID) const
         {
             return vertices[vertexID].pos;
         }
 
-        inline glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
+        glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
         {
             return vertices[faces[faceID].vertexID[index]].pos;
         }
@@ -252,12 +252,12 @@ namespace sf
 
         size_t getVertexSize() const { return sizeof(TexturableVertex); }
 
-        inline glm::vec3 getVertexPos(size_t vertexID) const
+        glm::vec3 getVertexPos(size_t vertexID) const
         {
             return vertices[vertexID].pos;
         }
 
-        inline glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
+        glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
         {
             return vertices[faces[faceID].vertexID[index]].pos;
         }

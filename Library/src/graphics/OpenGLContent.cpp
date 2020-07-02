@@ -1072,17 +1072,17 @@ void OpenGLContent::AddView(OpenGLView *view)
     views.push_back(view);
 }
 
-OpenGLView* OpenGLContent::getView(unsigned int id)
+OpenGLView* OpenGLContent::getView(size_t id)
 {
     if(id < views.size())
         return views[id];
     else
-        return NULL;
+        return nullptr;
 }
 
-unsigned int OpenGLContent::getViewsCount()
+size_t OpenGLContent::getViewsCount()
 {
-    return (unsigned int)views.size();
+    return views.size();
 }
 
 void OpenGLContent::AddLight(OpenGLLight* light)
@@ -1108,17 +1108,17 @@ void OpenGLContent::AddLight(OpenGLLight* light)
     }
 }
 
-OpenGLLight* OpenGLContent::getLight(unsigned int id)
+OpenGLLight* OpenGLContent::getLight(size_t id)
 {
     if(id < lights.size())
         return lights[id];
     else
-        return NULL;
+        return nullptr;
 }
 
-unsigned int OpenGLContent::getLightsCount()
+size_t OpenGLContent::getLightsCount()
 {
-    return (unsigned int)lights.size();
+    return lights.size();
 }
 
 int OpenGLContent::getLookId(std::string name)
@@ -1130,16 +1130,14 @@ int OpenGLContent::getLookId(std::string name)
     return -1;
 }
 
-const Object& OpenGLContent::getObject(unsigned int id)
+const Object& OpenGLContent::getObject(size_t id)
 {
-    if(id < objects.size())
-        return objects[id];
+    return objects[id];
 }
 
-const Look& OpenGLContent::getLook(unsigned int id)
+const Look& OpenGLContent::getLook(size_t id)
 {
-    if(id < looks.size())
-        return looks[id];
+    return looks[id];
 }
     
 //Static methods
