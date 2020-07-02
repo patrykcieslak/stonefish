@@ -129,9 +129,10 @@ SolidType Wing::getSolidType()
 btCollisionShape* Wing::BuildCollisionShape()
 {
     btConvexHullShape* convex = new btConvexHullShape();
-    for(size_t i=0; i<phyMesh->vertices.size(); ++i)
+    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
     {
-        Vector3 v(phyMesh->vertices[i].pos.x, phyMesh->vertices[i].pos.y, phyMesh->vertices[i].pos.z);
+        glm::vec3 pos = phyMesh->getVertexPos(i);
+        Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }
     convex->optimizeConvexHull();

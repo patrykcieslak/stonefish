@@ -49,18 +49,19 @@ Obstacle::Obstacle(std::string uniqueName,
         phyMesh = graMesh;
         
     graObjectId = -1;
-    
-    Scalar* vertices = new Scalar[phyMesh->vertices.size()*3];
+
+    Scalar* vertices = new Scalar[phyMesh->getNumOfVertices() * 3];
     int* indices = new int[phyMesh->faces.size()*3];
     
-    for(unsigned int i=0; i<phyMesh->vertices.size(); ++i)
+    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
     {
-        vertices[i*3+0] = phyMesh->vertices[i].pos.x;
-        vertices[i*3+1] = phyMesh->vertices[i].pos.y;
-        vertices[i*3+2] = phyMesh->vertices[i].pos.z;
+        glm::vec3 pos = phyMesh->getVertexPos(i);
+        vertices[i*3+0] = pos.x;
+        vertices[i*3+1] = pos.y;
+        vertices[i*3+2] = pos.z;
     }
     
-    for(unsigned int i=0; i<phyMesh->faces.size(); ++i)
+    for(size_t i=0; i<phyMesh->faces.size(); ++i)
     {
         indices[i*3+0] = phyMesh->faces[i].vertexID[0];
         indices[i*3+1] = phyMesh->faces[i].vertexID[1];
@@ -68,7 +69,7 @@ Obstacle::Obstacle(std::string uniqueName,
     }
     
     btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray((int)phyMesh->faces.size(), indices, 3*sizeof(int),
-                                                                               (int)phyMesh->vertices.size(), vertices, 3*sizeof(Scalar));
+                                                                               (int)phyMesh->getNumOfVertices(), vertices, 3*sizeof(Scalar));
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
     BuildRigidBody(shape);
     

@@ -47,10 +47,9 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
     zNear = glm::max(0.05f, near);
     zFar = sqrtf(colorLi.a/MIN_INTENSITY_THRESHOLD);
 
-    Mesh* m = new Mesh;
+    PlainMesh* m = new PlainMesh;
     Vertex vt;
     Face f;
-    m->hasUVs = false;
     unsigned int slices = 24;    
     vt.normal = glm::vec3(0,0,-1.f);
     vt.pos = glm::vec3(0,0,0);

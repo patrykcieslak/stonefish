@@ -39,8 +39,12 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
     Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
-    range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
-    range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
+    range.x = 0.f;
+    range.y = 0.f;
+    setRangeMax(maxRange);
+    setRangeMin(minRange);
+    gain = Scalar(1);
+    
     if(frequency < Scalar(0))
     {
         Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
@@ -57,6 +61,21 @@ FLS::~FLS()
 {
     if(displayData != NULL) delete [] displayData;
     glFLS = NULL;
+}
+
+void FLS::setRangeMin(Scalar r)
+{
+    range.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range.y) ? (GLfloat)r : range.x);
+}
+
+void FLS::setRangeMax(Scalar r)
+{
+    range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
+}
+
+void FLS::setGain(Scalar g)
+{
+    gain = g > Scalar(0) ? g : Scalar(1);
 }
 
 void* FLS::getImageDataPointer(unsigned int index)
@@ -77,9 +96,19 @@ GLubyte* FLS::getDisplayDataPointer()
     return displayData;
 }
 
-glm::vec2 FLS::getRangeLimits()
+Scalar FLS::getRangeMin()
 {
-    return range;
+    return Scalar(range.x);
+}
+
+Scalar FLS::getRangeMax()
+{
+    return Scalar(range.y);
+}
+
+Scalar FLS::getGain()
+{
+    return gain;
 }
     
 VisionSensorType FLS::getVisionSensorType()

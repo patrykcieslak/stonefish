@@ -95,11 +95,11 @@ void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
     updateShader->SetUniform("numParticles", nParticles);
     updateShader->SetUniform("eyePos", eyePos);
     updateShader->SetUniform("R", range);
-    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_3D, noiseTexture);
+    OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_3D, noiseTexture);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, particleVelSSBO);
     glDispatchCompute((GLuint)ceil(nParticles/256.0), 1, 1);
-    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+    OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
@@ -117,14 +117,14 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
     renderShader->SetUniform("bWater", glOcn->getLightScattering());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
-    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, flakeTexture);
+    OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
     OpenGLState::BindVertexArray(particleVAO);
     glDrawElements(GL_TRIANGLES, nParticles * 6, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
     OpenGLState::DisableBlend();
-    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+    OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
 }
     
@@ -149,7 +149,7 @@ void OpenGLOceanParticles::Init()
 
     GLuint noiseSize = 16;
     updateShader->Use();
-    updateShader->SetUniform("texNoise", TEX_MAT_DIFFUSE);
+    updateShader->SetUniform("texNoise", TEX_MAT_ALBEDO);
     updateShader->SetUniform("invNoiseSize", 1.f/(GLfloat)noiseSize);
     OpenGLState::UseProgram(0);
 
@@ -159,7 +159,7 @@ void OpenGLOceanParticles::Init()
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanParticle.frag"));
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "uwMaterial.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "materialUUv.frag"));
     
     renderShader = new GLSLShader(sources, precompiled);
     renderShader->AddUniform("MV", ParameterType::MAT4);
@@ -169,7 +169,9 @@ void OpenGLOceanParticles::Init()
     renderShader->AddUniform("eyePos", ParameterType::VEC3);
     renderShader->AddUniform("viewDir", ParameterType::VEC3);
     renderShader->AddUniform("color", ParameterType::VEC4);
-    renderShader->AddUniform("tex", ParameterType::INT);
+    renderShader->AddUniform("texAlbedo", ParameterType::INT);
+    renderShader->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+    renderShader->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
     renderShader->AddUniform("reflectivity", ParameterType::FLOAT);
     renderShader->AddUniform("cWater", ParameterType::VEC3);
     renderShader->AddUniform("bWater", ParameterType::VEC3);
@@ -181,7 +183,9 @@ void OpenGLOceanParticles::Init()
     renderShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
 
     renderShader->Use();
-    renderShader->SetUniform("tex", TEX_MAT_DIFFUSE);
+    renderShader->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
+    renderShader->SetUniform("enableAlbedoTex", true);
+    renderShader->SetUniform("enableNormalTex", false);
     renderShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     renderShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     renderShader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);

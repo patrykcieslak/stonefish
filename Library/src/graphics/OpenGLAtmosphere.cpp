@@ -233,24 +233,24 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Set standard sun position
     SetSunPosition(90.0, 70.0);
 
-    if(quality == RenderQuality::QUALITY_DISABLED)
+    if(quality == RenderQuality::DISABLED)
         return;
     
     //Compute lookup textures
     switch(quality)
     {
-        case RenderQuality::QUALITY_LOW:
+        case RenderQuality::LOW:
             nPrecomputedWavelengths = 5;
             nScatteringOrders = 2;
             break;
         
         default:
-        case RenderQuality::QUALITY_MEDIUM:
+        case RenderQuality::MEDIUM:
             nPrecomputedWavelengths = 15;
             nScatteringOrders = 4;
             break;
         
-        case RenderQuality::QUALITY_HIGH:
+        case RenderQuality::HIGH:
             nPrecomputedWavelengths = 30;
             nScatteringOrders = 6;
     }
@@ -260,22 +260,22 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Set shadow quality
     switch(shadow)
     {
-        case RenderQuality::QUALITY_DISABLED:
+        case RenderQuality::DISABLED:
             sunShadowmapSize = 0;
             sunShadowmapSplits = 0;
             break;
         
-        case RenderQuality::QUALITY_LOW:
+        case RenderQuality::LOW:
             sunShadowmapSize = 1024;
             sunShadowmapSplits = 4;
             break;
         
-        case RenderQuality::QUALITY_MEDIUM:
+        case RenderQuality::MEDIUM:
             sunShadowmapSize = 2048;
             sunShadowmapSplits = 4;
             break;
         
-        case RenderQuality::QUALITY_HIGH:
+        case RenderQuality::HIGH:
             sunShadowmapSize = 4096;
             sunShadowmapSplits = 4;
             break;
@@ -309,7 +309,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     sunShadowFrustum = new ViewFrustum[sunShadowmapSplits];
     sunShadowCPM = new glm::mat4x4[sunShadowmapSplits];
     
-    if(shadow > RenderQuality::QUALITY_DISABLED)
+    if(shadow > RenderQuality::DISABLED)
     {
         sunShadowmapShader = new GLSLShader("sunCSM.frag");
         sunShadowmapShader->AddUniform("shadowmapArray", ParameterType::INT);
@@ -1292,18 +1292,18 @@ void OpenGLAtmosphere::BuildAtmosphereAPI(RenderQuality quality)
     
     switch(quality)
     {
-        case RenderQuality::QUALITY_LOW:
+        case RenderQuality::LOW:
             nPrecomputedWavelengths = 5;
             nScatteringOrders = 2;
             break;
             
         default:
-        case RenderQuality::QUALITY_MEDIUM:
+        case RenderQuality::MEDIUM:
             nPrecomputedWavelengths = 15;
             nScatteringOrders = 4;
             break;
             
-        case RenderQuality::QUALITY_HIGH:
+        case RenderQuality::HIGH:
             nPrecomputedWavelengths = 30;
             nScatteringOrders = 6;
     }

@@ -103,7 +103,7 @@ namespace sf
         SolidType getSolidType();
         
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
-        std::vector<Vertex>* getMeshVertices();
+        std::vector<Vector3>* getMeshVertices() const;
         
         //! A method that informs if the internal parts of the body are displayed.
         bool isDisplayingInternalParts();

@@ -205,7 +205,9 @@ namespace sf
         int windowH;
         RenderSettings rSettings;
         HelperSettings hSettings;
-        
+        GLuint timeQuery[2];
+        GLint timeQueryPingpong;
+
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);
     };

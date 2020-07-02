@@ -299,7 +299,7 @@ namespace sf
          \param name a name of the robot
          \return a pointer to a robot object
          */
-        Robot* getRobot(std::string name);
+        Robot* getRobot(const std::string& name);
         
         //! A method returning an entity by index.
         /*!
@@ -313,7 +313,7 @@ namespace sf
          \param name a name of the entity
          \return a pointer to an entity object
          */
-        Entity* getEntity(std::string name);
+        Entity* getEntity(const std::string& name);
         
         //! A method returning a joint by index.
         /*!
@@ -327,7 +327,7 @@ namespace sf
          \param name a name of the joint
          \return a pointer to a joint object
          */
-        Joint* getJoint(std::string name);
+        Joint* getJoint(const std::string& name);
         
         //! A method returning a contact by index.
         /*!
@@ -341,7 +341,7 @@ namespace sf
          \param name a name of the contact
          \return a pointer to a contact object
          */
-        Contact* getContact(std::string name);
+        Contact* getContact(const std::string& name);
         
         //! A method returning a contavt by entity pair.
         /*!
@@ -363,7 +363,7 @@ namespace sf
          \param name a name of the actuator
          \return a pointer to an actuator object
          */
-        Actuator* getActuator(std::string name);
+        Actuator* getActuator(const std::string& name);
         
         //! A method returning a sensor by index.
         /*!
@@ -377,7 +377,7 @@ namespace sf
          \param name a name of the sensor
          \return a pointer to a sensor object
          */
-        Sensor* getSensor(std::string name);
+        Sensor* getSensor(const std::string& name);
         
         //! A method returning a communication device by index.
         /*!
@@ -391,7 +391,7 @@ namespace sf
          \param name a name of the communication device
          \return a pointer to a comm object
          */
-        Comm* getComm(std::string name);
+        Comm* getComm(const std::string& name);
         
         //! A method returning a pointer to the NED object.
         NED* getNED();
@@ -441,7 +441,7 @@ namespace sf
          \param restitution a restitution factor <0,1>
          \return a name of the created material
          */
-        std::string CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution);
+        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution);
         
         //! A method that sets interaction between a pair of materials.
         /*!
@@ -451,7 +451,7 @@ namespace sf
          \param dynamicFricCoeff a coefficient of dynamic friction between materials
          \return was the interaction was set properly?
          */
-        bool SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        bool SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
         
         //! A method used to create a rendering look.
         /*!
@@ -460,10 +460,12 @@ namespace sf
          \param roughness how smooth the material looks
          \param metalness how metallic the material looks
          \param reflectivity how reflective the material is
-         \param texturePath a path to a texture
+         \param albedoTexturePath a path to a texture specifying albedo color
+         \param normalTexturePath a path to a texture specifying surface normal (bump mapping)
          \return the actual name of the created look
          */
-        std::string CreateLook(std::string name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, std::string texturePath = "");
+        std::string CreateLook(const std::string& name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
+                               const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "");
         
     protected:
         static void SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep);

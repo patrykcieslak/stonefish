@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationManager.h"
@@ -320,7 +320,7 @@ Contact* SimulationManager::getContact(unsigned int index)
         return NULL;
 }
 
-Contact* SimulationManager::getContact(std::string name)
+Contact* SimulationManager::getContact(const std::string& name)
 {
     for(size_t i = 0; i < contacts.size(); ++i)
         if(contacts[i]->getName() == name)
@@ -352,7 +352,7 @@ Robot* SimulationManager::getRobot(unsigned int index)
         return NULL;
 }
 
-Robot* SimulationManager::getRobot(std::string name)
+Robot* SimulationManager::getRobot(const std::string& name)
 {
     for(size_t i = 0; i < robots.size(); ++i)
         if(robots[i]->getName() == name)
@@ -369,7 +369,7 @@ Entity* SimulationManager::getEntity(unsigned int index)
         return NULL;
 }
 
-Entity* SimulationManager::getEntity(std::string name)
+Entity* SimulationManager::getEntity(const std::string& name)
 {
     for(size_t i = 0; i < entities.size(); ++i)
         if(entities[i]->getName() == name)
@@ -386,7 +386,7 @@ Joint* SimulationManager::getJoint(unsigned int index)
         return NULL;
 }
 
-Joint* SimulationManager::getJoint(std::string name)
+Joint* SimulationManager::getJoint(const std::string& name)
 {
     for(size_t i = 0; i < joints.size(); ++i)
         if(joints[i]->getName() == name)
@@ -403,7 +403,7 @@ Actuator* SimulationManager::getActuator(unsigned int index)
         return NULL;
 }
 
-Actuator* SimulationManager::getActuator(std::string name)
+Actuator* SimulationManager::getActuator(const std::string& name)
 {
     for(size_t i = 0; i < actuators.size(); ++i)
         if(actuators[i]->getName() == name)
@@ -420,7 +420,7 @@ Sensor* SimulationManager::getSensor(unsigned int index)
         return NULL;
 }
 
-Sensor* SimulationManager::getSensor(std::string name)
+Sensor* SimulationManager::getSensor(const std::string& name)
 {
     for(size_t i = 0; i < sensors.size(); ++i)
         if(sensors[i]->getName() == name)
@@ -437,7 +437,7 @@ Comm* SimulationManager::getComm(unsigned int index)
         return NULL;
 }
 
-Comm* SimulationManager::getComm(std::string name)
+Comm* SimulationManager::getComm(const std::string& name)
 {
     for(size_t i = 0; i < comms.size(); ++i)
         if(comms[i]->getName() == name)
@@ -1054,20 +1054,20 @@ void SimulationManager::RenderBulletDebug()
     debugDrawer->Render();
 }
  
-std::string SimulationManager::CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution)
+std::string SimulationManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution)
 {
     return getMaterialManager()->CreateMaterial(uniqueName, density, restitution);
 }
 
-bool SimulationManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
+bool SimulationManager::SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
 {
     return getMaterialManager()->SetMaterialsInteraction(firstMaterialName, secondMaterialName, staticFricCoeff, dynamicFricCoeff);
 }
 
-std::string SimulationManager::CreateLook(std::string name, Color color, float roughness, float metalness, float reflectivity, std::string texturePath)
+std::string SimulationManager::CreateLook(const std::string& name, Color color, float roughness, float metalness, float reflectivity, const std::string& albedoTexturePath, const std::string& normalTexturePath)
 {
     if(SimulationApp::getApp()->hasGraphics())
-        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, texturePath);
+        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, albedoTexturePath, normalTexturePath);
     else
         return "";
 }

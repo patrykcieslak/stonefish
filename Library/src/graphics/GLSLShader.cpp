@@ -36,7 +36,7 @@ namespace sf
 GLuint GLSLShader::saqVertexShader = 0;
 bool GLSLShader::verbose = true;
 
-GLSLShader::GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuint> precompiled)
+GLSLShader::GLSLShader(const std::vector<GLSLSource>& sources, const std::vector<GLuint>& precompiled)
 {
     valid = false;
     program = 0;
@@ -66,6 +66,15 @@ GLSLShader::GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuin
                 valid = false;
         }
     }
+}
+
+GLSLShader::GLSLShader(const std::vector<GLuint>& precompiled)
+{
+    program = CreateProgram(precompiled, precompiled.size());
+    if(program == 0)
+        valid = false;
+    else 
+        valid = true;
 }
 
 GLSLShader::GLSLShader(std::string fragment, std::string vertex)

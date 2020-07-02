@@ -20,13 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLContent__
 #define __Stonefish_OpenGLContent__
 
 #include "graphics/OpenGLDataStructs.h"
+#include "graphics/GLSLShader.h"
 #include "core/NameManager.h"
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
@@ -34,6 +35,8 @@
 
 namespace sf
 {
+    class OpenGLView;
+
     //! An enum specifiying supported texture filtration modes.
     enum class FilteringMode {NEAREST, BILINEAR, BILINEAR_MIPMAP, TRILINEAR};
 
@@ -69,9 +72,25 @@ namespace sf
     };
     #pragma pack(0)
 
-    class GLSLShader;
-    class OpenGLView;
-    
+    //! A structure representing a material shader collection.
+    struct MaterialShader
+    {
+        std::string shadingAlgorithm;
+        GLSLShader* shaders[6];
+
+        MaterialShader()
+        {
+            shadingAlgorithm = "";
+        }
+
+        MaterialShader(const MaterialShader &obj)
+        {
+            shadingAlgorithm = obj.shadingAlgorithm;
+            for(size_t i=0; i<6; ++i)
+                shaders[i] = obj.shaders[i];
+        }
+    };
+
     //! A class implementing OpenGL content management and core rendering funtions.
     class OpenGLContent
     {
@@ -236,10 +255,11 @@ namespace sf
          \param specular the specular strength
          \param shininess the shininess factor
          \param reflectivity the amount of reflection
-         \param texturePath a path to the texture file
+         \param albedoTexturePath a path to the texture file specifying albedo color
          \return the actual name of the created look
          */
-        std::string CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity = 0.f, std::string texturePath = "");
+        std::string CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+                                     GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "");
         
         //! A method to create a new physical look.
         /*!
@@ -248,17 +268,20 @@ namespace sf
          \param roughness the roughness of the surface
          \param metalness the amount of metal look
          \param relfectivity the amount of reflection
-         \param texturePath a path to the texture file
+         \param albedoTexturePath a path to the texture file specifying albedo color
+         \param normalTexturePath a path to the texture file specifying surface normal (bump mapping)
          \return the actual name of the created look
          */
-        std::string CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, GLfloat reflectivity = 0.f, std::string texturePath = "");
+        std::string CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
+                                       GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "");
         
         //! A method to use a look.
         /*!
          \param lookId an id of the look to use
+         \param texturable a flag determining if the object rendered is texturable
          \param M the model matrix
          */
-        void UseLook(unsigned int lookId, const glm::mat4& M);
+        void UseLook(unsigned int lookId, bool texturable, const glm::mat4& M);
         
         //! A method returning a pointer to a view.
         /*!
@@ -289,6 +312,18 @@ namespace sf
          \return the id of the corresponding look structure
          */
         int getLookId(std::string name);
+
+        //! A method returning a reference to the object structure.
+        /*!
+         \param id the id of the object
+         */
+        const Object& getObject(unsigned int id);
+
+        //! A method returning a reference to the look structure.
+        /*!
+         \param id the id of the look
+         */
+        const Look& getLook(unsigned int id);
         
         //! A static method to load a texture.
         /*!
@@ -419,6 +454,12 @@ namespace sf
          \param mesh a pointer to a mesh structure
          */
         static void SmoothNormals(Mesh* mesh);
+
+        //! A static method to compute tangent and bitangent vectors.
+        /*!
+         \param mesh a pointer to a mesh structure
+         */
+        static void ComputeTangents(TexturableMesh* mesh);
         
         //! A method to compute average face size.
         /*!
@@ -468,6 +509,7 @@ namespace sf
         std::vector<Look> looks; //OpenGL materials
         NameManager lookNameManager;
         int currentLookId;
+        bool currentTexturable;
         
         glm::vec3 eyePos;
         glm::vec3 viewDir;
@@ -489,7 +531,7 @@ namespace sf
         
         //Shaders
         std::map<std::string, GLSLShader*> basicShaders;
-        std::vector<GLSLShader*> materialShaders;
+        std::vector<MaterialShader> materialShaders;
         GLSLShader* lightSourceShader[2];
         
         //Methods

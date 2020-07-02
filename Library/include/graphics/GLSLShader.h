@@ -71,7 +71,13 @@ namespace sf
          \param sources a vector of shader source structures
          \param precompiled a vector of precompiled shader handles
          */
-        GLSLShader(const std::vector<GLSLSource>& sources, std::vector<GLuint> precompiled = std::vector<GLuint>(0));
+        GLSLShader(const std::vector<GLSLSource>& sources, const std::vector<GLuint>& precompiled = std::vector<GLuint>(0));
+
+        //! A constructor.
+        /*!
+         \param precompiled a vector of precompiled shader handles
+         */
+        GLSLShader(const std::vector<GLuint>& precompiled);
 
         //! A quick constructor.
         /*!

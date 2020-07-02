@@ -59,9 +59,9 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     antiAliasing = false;
     aoFactor = 0;
     
-    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::QUALITY_DISABLED)
+    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::DISABLED)
         aoFactor = 1;
-    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa)
+    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa != RenderQuality::DISABLED)
         antiAliasing = true;
     
     //----Geometry rendering----
@@ -720,7 +720,7 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     depthLinearizeShader->AddUniform("FC", ParameterType::FLOAT);
     
     /////AO//////////////
-    if(rSettings.ao != RenderQuality::QUALITY_DISABLED)
+    if(rSettings.ao != RenderQuality::DISABLED)
     {
         aoDeinterleaveShader = new GLSLShader("hbaoDeinterleave.frag");
         aoDeinterleaveShader->AddUniform("info", ParameterType::VEC4);
@@ -784,21 +784,21 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     OpenGLState::UseProgram(0);
 
     //FXAA
-    if(rSettings.aa != RenderQuality::QUALITY_DISABLED)
+    if(rSettings.aa != RenderQuality::DISABLED)
     {
         std::string header;
         switch(rSettings.aa)
         {
             default:
-            case RenderQuality::QUALITY_LOW:
+            case RenderQuality::LOW:
                 header = "#version 430\n#define FXAA_QUALITY__PRESET 12\n";
                 break;
 
-            case RenderQuality::QUALITY_MEDIUM:
+            case RenderQuality::MEDIUM:
                 header = "#version 430\n#define FXAA_QUALITY__PRESET 13\n";
                 break;
 
-            case RenderQuality::QUALITY_HIGH:
+            case RenderQuality::HIGH:
                 header = "#version 430\n#define FXAA_QUALITY__PRESET 23\n";
                 break;
         }

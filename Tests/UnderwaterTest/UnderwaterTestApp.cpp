@@ -28,6 +28,7 @@
 #include <actuators/Thruster.h>
 #include <actuators/VariableBuoyancy.h>
 #include <core/Robot.h>
+#include <sensors/vision/FLS.h>
 #include <graphics/IMGUI.h>
 #include <utils/SystemUtil.hpp>
 #include <comms/USBL.h>
@@ -46,6 +47,18 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
+    
+    sf::Uid id;
+    id.owner = 10;
+    id.item = 0;
+    
+    sf::FLS* fls = (sf::FLS*)getSimulationManager()->getRobot("GIRONA500")->getSensor("FLS");
+    sf::Scalar range = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), fls->getRangeMax(), "FLS Range[m]"));
+    fls->setRangeMax(range);
+    
+    id.item = 1;
+    sf::Scalar gain = (getGUI()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), fls->getGain(), "FLS Gain"));
+    fls->setGain(gain);
     
     /*
     sf::USBL* usbl = (sf::USBL*)getSimulationManager()->getComm("GIRONA500/USBL");

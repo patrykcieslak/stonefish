@@ -59,7 +59,7 @@
 #define TEX_SUN_DEPTH           ((GLint)12)
 #define TEX_SPOT_SHADOW         ((GLint)13)
 #define TEX_SPOT_DEPTH          ((GLint)14)
-#define TEX_MAT_DIFFUSE         ((GLint)15)
+#define TEX_MAT_ALBEDO          ((GLint)15)
 #define TEX_MAT_NORMAL          ((GLint)16)
 //#define TEX_POINT_SHADOW        ((GLint)X) 
 //#define TEX_POINT_DEPTH         ((GLint)X)
@@ -93,7 +93,7 @@ class btTransform;
 namespace sf
 {
     //! An enum defining a type of a rendered primitive.
-    typedef enum {POINTS, LINES, LINE_STRIP} PrimitiveType;
+    enum class PrimitiveType {POINTS, LINES, LINE_STRIP};
     
     struct DrawElementsIndirectCommand 
     {
@@ -114,21 +114,42 @@ namespace sf
     //! A structure containing single vertex data.
     struct Vertex
     {
-        glm::vec3 pos;
-        glm::vec3 normal;
-        glm::vec2 uv;
+        glm::vec3 pos;     //Vertex attrib 0
+        glm::vec3 normal;  //Vertex attrib 1
         
         Vertex()
         {
             pos = glm::vec3(0.f);
             normal = glm::vec3(0.f);
-            uv = glm::vec3(-1.f);
         }
-        
+
         friend bool operator==(const Vertex& lhs, const Vertex& rhs)
         {
-            if(lhs.pos == rhs.pos && lhs.normal == rhs.normal && lhs.uv == rhs.uv)
+            if(lhs.pos == rhs.pos 
+                && lhs.normal == rhs.normal)
                 return true;
+            return false;
+        };
+    };
+
+    //! A structure containing single vertex data.
+    struct TexturableVertex : public Vertex
+    {
+        glm::vec2 uv;        //Vertex attrib 2
+        glm::vec3 tangent;   //Vertex attrib 3
+        
+        TexturableVertex()
+        {
+            uv = glm::vec3(0.f);
+            tangent = glm::vec3(0.f);
+        }
+        
+        friend bool operator==(const TexturableVertex& lhs, const TexturableVertex& rhs)
+        {
+            if(lhs.pos == rhs.pos 
+               && lhs.normal == rhs.normal 
+               && lhs.uv == rhs.uv)
+               return true;
             return false;
         };
     };
@@ -149,29 +170,64 @@ namespace sf
     //! A structure containing mesh data.
     struct Mesh
     {
-        std::vector<Vertex> vertices;
         std::vector<Face> faces;
-        bool hasUVs = true;
-        
-        glm::vec3 ComputeFaceNormal(size_t faceID)
+
+        void* getFaceDataPointer() const 
         {
-            glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
-            glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
+            return (void*)&faces[0].vertexID[0];
+        }
+
+        virtual ~Mesh() {}    
+        virtual bool isTexturable() const = 0;
+        virtual size_t getNumOfVertices() const = 0;
+        virtual void* getVertexDataPointer() const = 0;
+        virtual size_t getVertexSize() const = 0;
+        virtual inline glm::vec3 getVertexPos(size_t vertexID) const = 0;
+        virtual inline glm::vec3 getVertexPos(size_t faceID, unsigned short index) const = 0;
+        virtual glm::vec3 ComputeFaceNormal(size_t faceID) const = 0;
+        virtual GLfloat ComputeFaceArea(size_t faceID) const = 0;
+    };
+
+    struct PlainMesh : public Mesh
+    {
+        std::vector<Vertex> vertices;
+        
+        bool isTexturable() const { return false; }
+
+        size_t getNumOfVertices() const { return vertices.size(); }
+
+        void* getVertexDataPointer() const { return (void*)&vertices[0].pos.x; };
+
+        size_t getVertexSize() const { return sizeof(Vertex); }
+
+        inline glm::vec3 getVertexPos(size_t vertexID) const
+        {
+            return vertices[vertexID].pos;
+        }
+
+        inline glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
+        {
+            return vertices[faces[faceID].vertexID[index]].pos;
+        }
+
+        glm::vec3 ComputeFaceNormal(size_t faceID) const
+        {
+            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
+            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
             return glm::normalize(glm::cross(v12,v13));
         }
         
-        GLfloat ComputeFaceArea(size_t faceID)
+        GLfloat ComputeFaceArea(size_t faceID) const
         {
-            glm::vec3 v12 = vertices[faces[faceID].vertexID[1]].pos - vertices[faces[faceID].vertexID[0]].pos;
-            glm::vec3 v13 = vertices[faces[faceID].vertexID[2]].pos - vertices[faces[faceID].vertexID[0]].pos;
+            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
+            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
             return glm::length(glm::cross(v12,v13))/2.f;
         }
-        
-        void JoinMesh(Mesh* mesh)
+
+        void JoinMesh(PlainMesh* mesh)
         {
             size_t voffset = vertices.size();
             size_t foffset = faces.size();
-            hasUVs = hasUVs && mesh->hasUVs;
             vertices.insert(vertices.end(), mesh->vertices.begin(), mesh->vertices.end());
             faces.insert(faces.end(), mesh->faces.begin(), mesh->faces.end());
             
@@ -183,6 +239,77 @@ namespace sf
             }
         }
     };
+
+    struct TexturableMesh : public Mesh
+    {
+        std::vector<TexturableVertex> vertices;
+        
+        bool isTexturable() const { return true; }
+
+        size_t getNumOfVertices() const { return vertices.size(); }
+
+        void* getVertexDataPointer() const { return (void*)&vertices[0].pos.x; };
+
+        size_t getVertexSize() const { return sizeof(TexturableVertex); }
+
+        inline glm::vec3 getVertexPos(size_t vertexID) const
+        {
+            return vertices[vertexID].pos;
+        }
+
+        inline glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
+        {
+            return vertices[faces[faceID].vertexID[index]].pos;
+        }
+
+        glm::vec3 ComputeFaceNormal(size_t faceID) const
+        {
+            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
+            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
+            return glm::normalize(glm::cross(v12,v13));
+        }
+        
+        GLfloat ComputeFaceArea(size_t faceID) const
+        {
+            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
+            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
+            return glm::length(glm::cross(v12,v13))/2.f;
+        }
+
+        void ComputeFaceTangent(size_t faceID, glm::vec3& tangent) const
+        {
+            //Shortcuts
+            const TexturableVertex& v0 = vertices[faces[faceID].vertexID[0]];
+            const TexturableVertex& v1 = vertices[faces[faceID].vertexID[1]];
+            const TexturableVertex& v2 = vertices[faces[faceID].vertexID[2]];
+            //Position delta
+            glm::vec3 deltaPos1 = v1.pos - v0.pos;
+            glm::vec3 deltaPos2 = v2.pos - v0.pos;
+            //UV delta
+            glm::vec2 deltaUV1 = v1.uv - v0.uv;
+            glm::vec2 deltaUV2 = v2.uv - v0.uv;
+            //Denominator
+            GLfloat r = 1.0f/(deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+            tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r;
+            //bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x)*r;
+        }
+
+        void JoinMesh(TexturableMesh* mesh)
+        {
+            size_t voffset = vertices.size();
+            size_t foffset = faces.size();
+            vertices.insert(vertices.end(), mesh->vertices.begin(), mesh->vertices.end());
+            faces.insert(faces.end(), mesh->faces.begin(), mesh->faces.end());
+            
+            for(size_t i=foffset; i<faces.size(); ++i)
+            {
+                faces[i].vertexID[0] += voffset;
+                faces[i].vertexID[1] += voffset;
+                faces[i].vertexID[2] += voffset;
+            }
+        }
+    };
+
     
     //! A structure containing object data.
     struct Object
@@ -191,13 +318,14 @@ namespace sf
         GLuint vboVertex;
         GLuint vboIndex;
         GLsizei faceCount;
+        bool texturable;
     };
     
     //! An enum representing the type of look of an object.
-    typedef enum {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT} LookType;
+    enum class LookType {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT};
     
     //! An enum representing the rendering mode.
-    typedef enum {RAW, SHADOW, FLAT, FULL, UNDERWATER} DrawingMode;
+    enum class DrawingMode {RAW, SHADOW, FLAT, FULL, UNDERWATER};
     
     //! A structure containing data of a graphical material.
     struct Look
@@ -206,8 +334,18 @@ namespace sf
         LookType type;
         glm::vec3 color;
         std::vector<GLfloat> params;
-        std::vector<GLuint> textures;
+        GLuint albedoTexture;
+        GLuint normalTexture;
         GLfloat reflectivity;
+
+        Look()
+        {
+            name = "";
+            type = LookType::SIMPLE;
+            color = glm::vec3(0.f);
+            albedoTexture = normalTexture = 0;
+            reflectivity = 0.f;
+        }
     };
     
     //! A structure containing data of a view frustum.
@@ -322,12 +460,12 @@ namespace sf
     };
     
     //! An enum used to designate type of helper object to be drawn.
-    typedef enum {
+    enum class RenderableType {
         SOLID = 0, SOLID_CS, MULTIBODY_AXIS,
         HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP,
         SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES,
         FORCE_GRAVITY, FORCE_BUOYANCY, FORCE_LINEAR_DRAG, FORCE_QUADRATIC_DRAG
-    } RenderableType;
+    };
     
     //! A structure that represents a renderable object.
     struct Renderable
@@ -346,7 +484,7 @@ namespace sf
     };
     
     //! An enum used to designate rendering quality.
-    typedef enum {QUALITY_DISABLED = 0, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH} RenderQuality;
+    enum class RenderQuality {DISABLED, LOW, MEDIUM, HIGH};
     
     //! A structure containing rendering settings.
     struct RenderSettings
@@ -364,11 +502,11 @@ namespace sf
         {
             windowW = 800;
             windowH = 600;
-            shadows = RenderQuality::QUALITY_MEDIUM;
-            ao = RenderQuality::QUALITY_MEDIUM;
-            atmosphere = RenderQuality::QUALITY_MEDIUM;
-            ocean = RenderQuality::QUALITY_MEDIUM;
-            aa = RenderQuality::QUALITY_MEDIUM;
+            shadows = RenderQuality::MEDIUM;
+            ao = RenderQuality::MEDIUM;
+            atmosphere = RenderQuality::MEDIUM;
+            ocean = RenderQuality::MEDIUM;
+            aa = RenderQuality::MEDIUM;
         }
     };
     

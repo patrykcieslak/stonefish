@@ -30,8 +30,15 @@ layout(r32f) uniform image2D sonarOutput;
 
 uniform uvec2 beams; //beams1, beams2
 uniform vec3 range; //min, max, step
+uniform float gain;
 
 vec2 binHistogram[N_BINS];
+
+float sigmoid(float x)
+{
+    float t = (x - 0.6666667) * 18.0;
+    return (0.5 * tanh(0.5 * t) + 0.5);
+}
 
 void main()
 {
@@ -68,7 +75,7 @@ void main()
         {
             float data = 0.0;
             if(binHistogram[i].y > 0.0)
-                data = binHistogram[i].x/binHistogram[i].y;
+                data = (binHistogram[i].x * gain)/binHistogram[i].y;
             imageStore(sonarOutput, ivec2(globalBeam, i), vec4(data));
         }
     }

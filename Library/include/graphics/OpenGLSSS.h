@@ -162,7 +162,7 @@ namespace sf
         GLuint displayPBO;
         GLSLShader* sonarOutputShader[2];
 
-        static GLSLShader* sonarInputShader;
+        static GLSLShader* sonarInputShader[2];
         static GLSLShader* sonarShiftShader;
         static GLSLShader* sonarVisualizeShader;
     };

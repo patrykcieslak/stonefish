@@ -21,10 +21,8 @@
 
 layout(location = 0) in vec3 vt;
 layout(location = 1) in vec3 n;
-layout(location = 2) in vec2 uv;
 
 out vec3 normal;
-out vec2 texCoord;
 out vec4 fragPos;
 out vec3 eyeSpaceNormal;
 out float logz;
@@ -39,7 +37,6 @@ void main()
 {
 	normal = normalize(N * n);
 	eyeSpaceNormal = normalize(MV * n);
-	texCoord = uv;
 	fragPos = M * vec4(vt, 1.0);
 	gl_Position = MVP * vec4(vt, 1.0); 
     gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;

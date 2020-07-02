@@ -68,8 +68,8 @@ OpenGLContent::OpenGLContent()
     FC = 0.f;
     viewportSize = glm::vec2(800.f,600.f);
     mode = DrawingMode::FULL;
-    materialShaders = std::vector<GLSLShader*>(0);
     currentLookId = -1;
+    currentTexturable = false;
 
     //Get OpenGL capabilities
     maxAnisotropy = 0.0f;
@@ -138,17 +138,18 @@ OpenGLContent::OpenGLContent()
     glGenBuffers(1, &cylinder.vboVertex);
     glGenBuffers(1, &cylinder.vboIndex);
     cylinder.faceCount = (GLsizei)m->faces.size();
+    cylinder.texturable = false;
 
     OpenGLState::BindVertexArray(cylinder.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*m->vertices.size(), &m->vertices[0].pos.x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*m->faces.size(), &m->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
     delete m;
@@ -160,17 +161,18 @@ OpenGLContent::OpenGLContent()
     glGenBuffers(1, &ellipsoid.vboVertex);
     glGenBuffers(1, &ellipsoid.vboIndex);
     ellipsoid.faceCount = (GLsizei)m->faces.size();
+    ellipsoid.texturable = false;
 
     OpenGLState::BindVertexArray(ellipsoid.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)* m->vertices.size(), &m->vertices[0].pos.x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), &m->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
 
     delete m;
@@ -230,137 +232,156 @@ OpenGLContent::OpenGLContent()
     basicShaders["shadow"]->AddUniform("MVP", ParameterType::MAT4);
     
     //-----MATERIALS-----
+    std::vector<std::string> shadingAlgorithms;
+    shadingAlgorithms.push_back("blinnPhong");
+    shadingAlgorithms.push_back("cookTorrance");
+
+    //Shaders common for all materials
     GLint compiled; 
-	std::vector<GLuint> commonMaterialShaders;
+    GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
+    std::vector<GLuint> commonMaterialShaders;
     commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
-    
-	GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
 	commonMaterialShaders.push_back(pcssFragment);
-	
-	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", "", &compiled);
-	commonMaterialShaders.push_back(materialFragment);
-	
-    //Blinn-Phong shader
-    std::vector<GLSLSource> sources;
-    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "blinnPhong.frag"));
-    GLSLShader* blinnPhong = new GLSLShader(sources, commonMaterialShaders);
-    blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-    blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-    blinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    materialShaders.push_back(blinnPhong);
-    
-    //Cook-Torrance shader
-    sources.pop_back();
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "cookTorrance.frag"));
-    GLSLShader* cookTorrance = new GLSLShader(sources, commonMaterialShaders);
-    cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-    cookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    materialShaders.push_back(cookTorrance);
-    glDeleteShader(materialFragment);
-	
-    //-------------Underwater shaders---------------------------
-    commonMaterialShaders.pop_back(); //"material.frag"
-	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
-    commonMaterialShaders.push_back(oceanOpticsFragment);
-    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwMaterial.frag", "", &compiled);
-    commonMaterialShaders.push_back(materialFragment);
-    GLuint oceanSurfaceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
-    commonMaterialShaders.push_back(oceanSurfaceFragment);
-    
-    //Underwater Blinn-Phong shader
-    sources.pop_back();
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "blinnPhong.frag"));
-    GLSLShader* uwBlinnPhong = new GLSLShader(sources, commonMaterialShaders);
-    uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("cWater", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("bWater", ParameterType::VEC3);
-    materialShaders.push_back(uwBlinnPhong);
-    
-    //Underwater Cook-Torrance shader
-    sources.pop_back();
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "cookTorrance.frag"));
-    GLSLShader* uwCookTorrance = new GLSLShader(sources, commonMaterialShaders);
-    uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("cWater", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);
-    materialShaders.push_back(uwCookTorrance);
-    
-    commonMaterialShaders.pop_back(); //"oceanSurfaceFlat.glsl"
-    glDeleteShader(oceanSurfaceFragment);
-    oceanSurfaceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurface.glsl", "", &compiled);
-    commonMaterialShaders.push_back(oceanSurfaceFragment);
 
-    //Underwater Blinn-Phong shader (waves)
-    sources.pop_back();
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "blinnPhong.frag"));
-    uwBlinnPhong = new GLSLShader(sources, commonMaterialShaders);
-    uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("cWater", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("bWater", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("texWaveFFT", ParameterType::INT);
-    uwBlinnPhong->AddUniform("gridSizes", ParameterType::VEC4);
-    materialShaders.push_back(uwBlinnPhong);
+    //Shaders common for all algorithms
+    GLuint materialVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "material.vert", "", &compiled);
+    GLuint materialUvVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "materialUv.vert", "", &compiled);
+    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", "", &compiled);
+    GLuint materialUvFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialUv.frag", "", &compiled);
+    GLuint materialUFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialU.frag", "", &compiled);
+	GLuint materialUUvFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialUUv.frag", "", &compiled);
+    GLuint oceanFlatFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
+    GLuint oceanWavesFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurface.glsl", "", &compiled);
+    GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
     
-    //Underwater Cook-Torrance shader (waves)
-    sources.pop_back();
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "cookTorrance.frag"));
-    uwCookTorrance = new GLSLShader(sources, commonMaterialShaders);
-    uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("cWater", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("bWater", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("texWaveFFT", ParameterType::INT);
-    uwCookTorrance->AddUniform("gridSizes", ParameterType::VEC4);
-    materialShaders.push_back(uwCookTorrance);
-
-    glDeleteShader(materialFragment);
-    glDeleteShader(oceanSurfaceFragment);
-	
-    //Add common uniforms
-    for(size_t i=0; i<materialShaders.size(); ++i)
+    for(size_t i=0; i<shadingAlgorithms.size(); ++i)
     {
-        materialShaders[i]->AddUniform("MVP", ParameterType::MAT4);
-        materialShaders[i]->AddUniform("M", ParameterType::MAT4);
-        materialShaders[i]->AddUniform("N", ParameterType::MAT3);
-        materialShaders[i]->AddUniform("MV", ParameterType::MAT3);
-        materialShaders[i]->AddUniform("FC", ParameterType::FLOAT);
-        materialShaders[i]->AddUniform("eyePos", ParameterType::VEC3);
-        materialShaders[i]->AddUniform("viewDir", ParameterType::VEC3);
-        materialShaders[i]->AddUniform("color", ParameterType::VEC4);
-        materialShaders[i]->AddUniform("tex", ParameterType::INT);
-        materialShaders[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
-        materialShaders[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
-        materialShaders[i]->AddUniform("sunShadowMap", ParameterType::INT);
-        materialShaders[i]->AddUniform("sunDepthMap", ParameterType::INT);
-        materialShaders[i]->AddUniform("transmittance_texture", ParameterType::INT);
-        materialShaders[i]->AddUniform("scattering_texture", ParameterType::INT);
-        materialShaders[i]->AddUniform("irradiance_texture", ParameterType::INT);
-        materialShaders[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
-        materialShaders[i]->BindUniformBlock("Lights", UBO_LIGHTS);
+        std::vector<GLuint> precompiled = commonMaterialShaders;
+        GLuint shadingFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, shadingAlgorithms[i] + ".frag", "", &compiled); 
+        precompiled.push_back(shadingFragment);
+
+        MaterialShader ms;
+        ms.shadingAlgorithm = shadingAlgorithms[i];
+        
+        //Plain
+        precompiled.push_back(materialVertex);
+        precompiled.push_back(materialFragment);
+        ms.shaders[0] = new GLSLShader(precompiled);
+        //Plain underwater
+        precompiled.pop_back();
+        precompiled.push_back(materialUFragment);
+        precompiled.push_back(oceanOpticsFragment);
+        precompiled.push_back(oceanFlatFragment);
+        ms.shaders[1] = new GLSLShader(precompiled);
+        ms.shaders[1]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[1]->AddUniform("bWater", ParameterType::VEC3);
+        //Plain underwater waves
+        precompiled.pop_back();
+        precompiled.push_back(oceanWavesFragment);
+        ms.shaders[2] = new GLSLShader(precompiled);
+        ms.shaders[2]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[2]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders[2]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders[2]->AddUniform("gridSizes", ParameterType::VEC4);
+
+        //Textured
+        precompiled.clear();
+        precompiled = commonMaterialShaders;
+        precompiled.push_back(shadingFragment);
+        precompiled.push_back(materialUvVertex);
+        precompiled.push_back(materialUvFragment);
+        ms.shaders[3] = new GLSLShader(precompiled);
+        ms.shaders[3]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[3]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[3]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[3]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        //Textured underwater
+        precompiled.pop_back();
+        precompiled.push_back(materialUUvFragment);
+        precompiled.push_back(oceanOpticsFragment);
+        precompiled.push_back(oceanFlatFragment);
+        ms.shaders[4] = new GLSLShader(precompiled);
+        ms.shaders[4]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[4]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[4]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[4]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders[4]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[4]->AddUniform("bWater", ParameterType::VEC3);
+        //Textured underwater waves
+        precompiled.pop_back();
+        precompiled.push_back(oceanWavesFragment);
+        ms.shaders[5] = new GLSLShader(precompiled);
+        ms.shaders[5]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[5]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[5]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[5]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders[5]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[5]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders[5]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders[5]->AddUniform("gridSizes", ParameterType::VEC4);
+
+        //Add common uniforms
+        for(size_t h = 0; h<6; ++h)
+        {
+            ms.shaders[h]->AddUniform("MVP", ParameterType::MAT4);
+            ms.shaders[h]->AddUniform("M", ParameterType::MAT4);
+            ms.shaders[h]->AddUniform("N", ParameterType::MAT3);
+            ms.shaders[h]->AddUniform("MV", ParameterType::MAT3);
+            ms.shaders[h]->AddUniform("FC", ParameterType::FLOAT);
+            ms.shaders[h]->AddUniform("eyePos", ParameterType::VEC3);
+            ms.shaders[h]->AddUniform("viewDir", ParameterType::VEC3);
+            ms.shaders[h]->AddUniform("color", ParameterType::VEC4);
+            ms.shaders[h]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("sunShadowMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("sunDepthMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("transmittance_texture", ParameterType::INT);
+            ms.shaders[h]->AddUniform("scattering_texture", ParameterType::INT);
+            ms.shaders[h]->AddUniform("irradiance_texture", ParameterType::INT);
+            ms.shaders[h]->BindUniformBlock("SunSky", UBO_SUNSKY);
+            ms.shaders[h]->BindUniformBlock("Lights", UBO_LIGHTS);
+
+            ms.shaders[h]->Use();
+            ms.shaders[h]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+            ms.shaders[h]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+            ms.shaders[h]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+            ms.shaders[h]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+            ms.shaders[h]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+            ms.shaders[h]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+            ms.shaders[h]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+            if(h > 2) //Textured?
+            {
+                ms.shaders[h]->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
+                ms.shaders[h]->SetUniform("texNormal", TEX_MAT_NORMAL);
+            }
+        }
+
+        materialShaders.push_back(ms);
+
+        glDeleteShader(shadingFragment);
     }
 
-    //Set permanent texture units
-    for(size_t i=0; i<materialShaders.size(); ++i)
+    for(size_t i=0; i<6; ++i)
     {
-        materialShaders[i]->Use();
-        materialShaders[i]->SetUniform("tex", TEX_MAT_DIFFUSE);
-        materialShaders[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
-        materialShaders[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
-        materialShaders[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
-        materialShaders[i]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
-        materialShaders[i]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-        materialShaders[i]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-        materialShaders[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+        GLSLShader* shader;
+        shader = materialShaders[0].shaders[i];
+        shader->AddUniform("shininess", ParameterType::FLOAT);
+        shader->AddUniform("specularStrength", ParameterType::FLOAT);
+        shader->AddUniform("reflectivity", ParameterType::FLOAT);
+        shader = materialShaders[1].shaders[i];
+        shader->AddUniform("roughness", ParameterType::FLOAT);
+        shader->AddUniform("metallic", ParameterType::FLOAT);
+        shader->AddUniform("reflectivity", ParameterType::FLOAT);
     }
+
+    glDeleteShader(materialVertex);
+    glDeleteShader(materialUvVertex);
+    glDeleteShader(materialFragment);
+    glDeleteShader(materialUvFragment);
+    glDeleteShader(materialUFragment);
+    glDeleteShader(materialUUvFragment);
+    glDeleteShader(oceanWavesFragment);
+    glDeleteShader(oceanFlatFragment);
 
     //Light source rendering shaders
     std::vector<GLuint> commonLightShaders;
@@ -371,7 +392,8 @@ OpenGLContent::OpenGLContent()
     GLuint lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSource.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
-    sources.pop_back();
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "light.frag"));
     lightSourceShader[0] = new GLSLShader(sources, commonLightShaders);
 
@@ -451,8 +473,10 @@ OpenGLContent::~OpenGLContent()
     
     //Material shaders
     for(size_t i=0; i<materialShaders.size(); ++i)
-        delete materialShaders[i];
-    materialShaders.clear();
+    {
+        for(size_t h=0; h<6; ++h)
+            delete materialShaders[i].shaders[h];
+    }
     
     //Views
     if(views.size() == 1) //Trackball left after destroying content
@@ -470,8 +494,10 @@ void OpenGLContent::DestroyContent()
 {
     for(size_t i=0; i<looks.size(); ++i)
     {
-        for(size_t h=0; h<looks[i].textures.size(); ++h)
-            glDeleteTextures(1, &looks[i].textures[h]);
+        if(looks[i].albedoTexture != 0)
+            glDeleteTextures(1, &looks[i].albedoTexture);
+        if(looks[i].normalTexture != 0)
+            glDeleteTextures(1, &looks[i].normalTexture);
     }
     looks.clear();
     lookNameManager.ClearNames();
@@ -483,7 +509,7 @@ void OpenGLContent::DestroyContent()
         glDeleteVertexArrays(1, &objects[i].vao);
     }	
     objects.clear();
-    
+
     for(size_t i=0; i<views.size(); ++i)
 		delete views[i];
 	views.clear();
@@ -708,15 +734,15 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
     
     switch(type)
     {
-        case LINES:
+        case PrimitiveType::LINES:
             glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
             break;
         
-        case LINE_STRIP:
+        case PrimitiveType::LINE_STRIP:
             glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
             break;
             
-        case POINTS:
+        case PrimitiveType::POINTS:
         default:
             glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
             break;
@@ -767,7 +793,7 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
         default:
         {
             if(lookId >= 0 && lookId < (int)looks.size())
-                UseLook(lookId, M);
+                UseLook(lookId, objects[objectId].texturable, M);
             else
                 UseStandardLook(M);
     
@@ -842,85 +868,80 @@ void OpenGLContent::SetupLights()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
+void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat4& M)
 {	
     Look& l = looks[lookId];
-    GLSLShader* shader;
-    bool updateMaterial = (int)lookId != currentLookId;
+    texturable = texturable && (l.albedoTexture > 0 || l.normalTexture > 0);
+    bool updateMaterial = ((int)lookId != currentLookId) || (currentTexturable != texturable);
     currentLookId = (int)lookId;
+    currentTexturable = texturable;
 
     bool waves = false;
     Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(ocean != NULL && ocean->hasWaves()) waves = true;
+    size_t shaderId = currentTexturable ? 3 : 0;
+    shaderId += (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;            
+    
+    GLSLShader* shader = materialShaders[l.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
+    shader->Use();
+    shader->SetUniform("MVP", viewProjection*M);
+    shader->SetUniform("M", M);
+    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+    shader->SetUniform("FC", FC);
+    shader->SetUniform("eyePos", eyePos);
+    shader->SetUniform("viewDir", viewDir);
 
-    switch(l.type)
-    {		
-        default:
-        case SIMPLE: //Blinn-Phong
-        {
-            shader = mode == DrawingMode::FULL ? materialShaders[0] : (waves ? materialShaders[4] : materialShaders[2]);
-            shader->Use();
-            shader->SetUniform("MVP", viewProjection*M);
-            shader->SetUniform("M", M);
-            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("FC", FC);
-            shader->SetUniform("eyePos", eyePos);
-            shader->SetUniform("viewDir", viewDir);
-
-            if(updateMaterial)
+    if(updateMaterial)
+    {
+        switch(l.type)
+        {		
+            default:
+            case LookType::SIMPLE: //Blinn-Phong
             {
                 shader->SetUniform("specularStrength", l.params[0]);
                 shader->SetUniform("shininess", l.params[1]);
                 shader->SetUniform("reflectivity", l.reflectivity);
-               
-                if(l.textures.size() > 0)
-                {
-                    shader->SetUniform("color", glm::vec4(l.color, 1.f));
-                    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, l.textures[0]);
-                }
-                else
-                {
-                    shader->SetUniform("color", glm::vec4(l.color, 0.f));			
-                    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
-                }
+                shader->SetUniform("color", glm::vec4(l.color, 1.f));
             }
-        }
             break;
             
-        case PHYSICAL: //Cook-Torrance
-        {
-            shader = mode == DrawingMode::FULL ? materialShaders[1] : (waves ? materialShaders[5] : materialShaders[3]);
-            shader->Use();
-            shader->SetUniform("MVP", viewProjection*M);
-            shader->SetUniform("M", M);
-            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("FC", FC);
-            shader->SetUniform("eyePos", eyePos);
-            shader->SetUniform("viewDir", viewDir);
-
-            if(updateMaterial)
+            case LookType::PHYSICAL: //Cook-Torrance
             {
                 shader->SetUniform("roughness", l.params[0]);
                 shader->SetUniform("metallic", l.params[1]);
                 shader->SetUniform("reflectivity", l.reflectivity);
-            
-                if(l.textures.size() > 0)
-                {
-                    shader->SetUniform("color", glm::vec4(l.color, 1.f));
-                    OpenGLState::BindTexture(TEX_MAT_DIFFUSE, GL_TEXTURE_2D, l.textures[0]);
-                }
-                else
-                {
-                    shader->SetUniform("color", glm::vec4(l.color, 0.f));			
-                    OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
-                }
+                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+            }
+            break;
+        }
+
+        if(currentTexturable)
+        {
+            if(l.albedoTexture > 0)
+            {
+                shader->SetUniform("enableAlbedoTex", true);
+                OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, l.albedoTexture);
+            }
+            else
+            {
+                shader->SetUniform("enableAlbedoTex", false);
+                OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
+            }
+
+            if(l.normalTexture > 0)
+            {
+                shader->SetUniform("enableNormalTex", true);
+                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalTexture);
+            }
+            else
+            {
+                shader->SetUniform("enableNormalTex", false);
+                OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
             }
         }
-            break;
     }
-    
+
     if(mode == DrawingMode::UNDERWATER)
     {
         shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
@@ -942,8 +963,8 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
     bool waves = false;
     Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(ocean != NULL && ocean->hasWaves()) waves = true;
-
-    GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : (waves ? materialShaders[5] : materialShaders[3]);
+    size_t shaderId = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
+    GLSLShader* shader = materialShaders[1].shaders[shaderId];
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);
@@ -959,7 +980,8 @@ void OpenGLContent::UseStandardLook(const glm::mat4& M)
         shader->SetUniform("metallic", 0.f);
         shader->SetUniform("reflectivity", 0.f);
         shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
-        OpenGLState::UnbindTexture(TEX_MAT_DIFFUSE);
+        OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
+        OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
     }
 
     if(mode == DrawingMode::UNDERWATER)
@@ -983,17 +1005,27 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     glGenBuffers(1, &obj.vboVertex);
     glGenBuffers(1, &obj.vboIndex);
     obj.faceCount = (GLsizei)mesh->faces.size();
+    obj.texturable = false;
     
     OpenGLState::BindVertexArray(obj.vao);	
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(0); //Position
+    glEnableVertexAttribArray(1); //Normal
+    if(mesh->isTexturable())
+    {
+        glEnableVertexAttribArray(2); //UV
+        glEnableVertexAttribArray(3); //Tangent
+        obj.texturable = true;
+    }
     
     glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
+    glBufferData(GL_ARRAY_BUFFER, mesh->getVertexSize() * mesh->getNumOfVertices(), mesh->getVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, mesh->getVertexSize(), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE,  mesh->getVertexSize(), (void*)sizeof(glm::vec3));
+    if(mesh->isTexturable())
+    {
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, mesh->getVertexSize(), (void*)(sizeof(glm::vec3)*2));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE,  mesh->getVertexSize(), (void*)(sizeof(glm::vec3)*2 + sizeof(glm::vec2)));
+    }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
@@ -1004,7 +1036,8 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     return (unsigned int)objects.size()-1;
 }
 
-std::string OpenGLContent::CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity, std::string textureName)
+std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+                                            GLfloat reflectivity, const std::string& albedoTextureName)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1013,16 +1046,13 @@ std::string OpenGLContent::CreateSimpleLook(std::string name, glm::vec3 rgbColor
     look.reflectivity = reflectivity;
     look.params.push_back(specular);
     look.params.push_back(shininess);
-    
-    if(textureName != "") 
-        look.textures.push_back(LoadTexture(textureName));
-    
+    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName);
     looks.push_back(look);
-    
     return look.name;
 }
 
-std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, GLfloat reflectivity, std::string textureName)
+std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
+                                              GLfloat reflectivity, const std::string& albedoTextureName, const std::string& normalTextureName)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1031,12 +1061,9 @@ std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbCol
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);
-    
-    if(textureName != "")
-        look.textures.push_back(LoadTexture(textureName, false, maxAnisotropy));
-        
+    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName, false, maxAnisotropy);
+    if(normalTextureName != "") look.normalTexture = LoadTexture(normalTextureName);
     looks.push_back(look);
-    
     return look.name;
 }
 
@@ -1101,6 +1128,18 @@ int OpenGLContent::getLookId(std::string name)
             return (int)i;
             
     return -1;
+}
+
+const Object& OpenGLContent::getObject(unsigned int id)
+{
+    if(id < objects.size())
+        return objects[id];
+}
+
+const Look& OpenGLContent::getLook(unsigned int id)
+{
+    if(id < looks.size())
+        return looks[id];
 }
     
 //Static methods
@@ -1296,10 +1335,9 @@ GLuint OpenGLContent::GenerateFramebuffer(const std::vector<FBOTexture>& texture
 
 Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
+    TexturableVertex vt;
     
     //Only one normal
     vt.pos.z = 0;
@@ -1329,16 +1367,21 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     f.vertexID[1] = 3;
     f.vertexID[2] = 2;
     mesh->faces.push_back(f);
+
+    glm::vec3 T;
+    mesh->ComputeFaceTangent(0, T);
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+        mesh->vertices[i].tangent = T;
+
     return mesh;
 }
 
 Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, unsigned int uvMode)
 {
     //Build mesh
-    Mesh* mesh = new Mesh();
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
-    mesh->hasUVs = true;
+    TexturableVertex vt;
     
     /////VERTICES
     glm::vec3 v1(-halfExtents.x, -halfExtents.y, -halfExtents.z);
@@ -1577,25 +1620,21 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
             break;
     }
     
-    //Subdivide
-    for(unsigned int i=0; i<subdivisions; ++i)
-        Subdivide(mesh);
-        
-    //SmoothNormals(mesh);
-    
+    //Postprocess
+    for(unsigned int i=0; i<subdivisions; ++i) Subdivide(mesh);
+    ComputeTangents(mesh);
+
     return mesh;
 }
 
 Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions) 
 {
-    Mesh* mesh = new Mesh;
+    PlainMesh* mesh = new PlainMesh;
     Face f;
     Vertex vt;
     vt.normal = glm::vec3(1,0,0);
-    mesh->hasUVs = false;
-    vt.uv = glm::vec2(0,0);
     
-    //Basuc icosahedron
+    //Basic icosahedron
     const GLfloat X = -.525731112119133606f;
     const GLfloat Z = -.850650808352039932f;
     const GLfloat N = 0.f;
@@ -1733,11 +1772,10 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
 
 Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices)
 {
-    Mesh* mesh = new Mesh;
+    TexturableMesh* mesh = new TexturableMesh;
     GLfloat halfHeight = height/2.f;
-    Vertex vt;
+    TexturableVertex vt;
     Face f;
-    mesh->hasUVs = true;
     
     //SIDE
     //Side vertices
@@ -1812,15 +1850,15 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     
     Subdivide(mesh);
     Subdivide(mesh);
+    ComputeTangents(mesh);
     return mesh;
 }
 
 Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices, unsigned int minorSlices)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
+    TexturableVertex vt;
 
     //Vertices
     for(unsigned int i=0; i<=majorSlices; ++i)
@@ -1855,15 +1893,15 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
             mesh->faces.push_back(f);
         }
     }
-        
+    
+    ComputeTangents(mesh);
     return mesh;
 }
     
 Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
-
+    TexturableMesh* mesh = new TexturableMesh;
+    
     GLfloat T = profileThickness/100.f;
     GLfloat m = maxCamber/100.f;
     GLfloat p = maxCamberPos/100.f;
@@ -1927,7 +1965,7 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
     }
     
     //Vertices
-    Vertex v;
+    TexturableVertex v;
     
     //----Top side
     //Front base
@@ -2131,17 +2169,15 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
         f.vertexID[2] = i*2+3;
         mesh->faces.push_back(f);
     }
-    
+    ComputeTangents(mesh);
     return mesh;
 }
     
 Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
-    
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
+    TexturableVertex vt;
     
     GLfloat fullSizeX = (sizeX-1) * scaleX;
     GLfloat fullSizeY = (sizeY-1) * scaleY;
@@ -2170,7 +2206,7 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
         }
     
     SmoothNormals(mesh);
-    
+    ComputeTangents(mesh);
     return mesh;
 }
 
@@ -2181,6 +2217,8 @@ Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
         abort();
     if(smooth)
         SmoothNormals(mesh);
+    if(mesh->isTexturable())
+        ComputeTangents((TexturableMesh*)mesh);
     return mesh;
 }
 
@@ -2189,50 +2227,86 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
     glm::mat4 gT = glMatrixFromTransform(T);
     glm::mat3 gR(gT);
     
-    for(size_t i=0; i<mesh->vertices.size(); ++i)
+    if(mesh->isTexturable())
     {
-        mesh->vertices[i].pos = glm::vec3(gT * glm::vec4(mesh->vertices[i].pos, 1.f));
-        mesh->vertices[i].normal = gR * mesh->vertices[i].normal;
+        TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        {
+            m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
+            m->vertices[i].normal = gR * m->vertices[i].normal;
+            m->vertices[i].tangent = gR * m->vertices[i].tangent;
+        }    
+    }
+    else
+    {   
+        PlainMesh* m = static_cast<PlainMesh*>(mesh);
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        {
+            m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
+            m->vertices[i].normal = gR * m->vertices[i].normal;
+        }    
     }
 }
 
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
-    //For all faces
-    for(unsigned int i=0; i<mesh->faces.size(); ++i)
+    if(mesh->isTexturable())
     {
-        Face thisFace = mesh->faces[i];
-        glm::vec3 thisN = mesh->ComputeFaceNormal(i);
-        
-        //For every vertex
-        for(unsigned short int h=0; h<3; ++h)
+        TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+        //Clear normals
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::vec3(0.f);
+        //Accumulate normals
+        for(size_t i=0; i<m->faces.size(); ++i)
         {
-            glm::vec3 n = thisN;
-            unsigned int contrib = 1;
-            
-            //Loop through all faces
-            for(unsigned int j=0; j<mesh->faces.size(); ++j)
-            {
-                if(j != i) //Reject same face
-                {
-                    Face thatFace = mesh->faces[j];
-                    glm::vec3 thatN = mesh->ComputeFaceNormal(j);
-                    
-                    for(unsigned short int k=0; k<3; k++)
-                    {
-                        if((mesh->vertices[thatFace.vertexID[k]].pos == mesh->vertices[thisFace.vertexID[h]].pos)&&(glm::dot(thatN,thisN) > 0.707f))
-                        {
-                            n += thatN;
-                            contrib++;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            n /= (GLfloat)contrib;
-            mesh->vertices[mesh->faces[i].vertexID[h]].normal = n;
+            glm::vec3 N = m->ComputeFaceNormal(i);
+            for(unsigned short h=0; h<3; ++h)
+                m->vertices[m->faces[i].vertexID[h]].normal += N;
         }
+        //Normalize
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::normalize(m->vertices[i].normal); 
+    }
+    else
+    {
+        PlainMesh* m = static_cast<PlainMesh*>(mesh);
+        //Clear normals
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::vec3(0.f);
+        //Accumulate normals
+        for(size_t i=0; i<m->faces.size(); ++i)
+        {
+            glm::vec3 N = m->ComputeFaceNormal(i);
+            for(unsigned short h=0; h<3; ++h)
+                m->vertices[m->faces[i].vertexID[h]].normal += N;
+        }
+        //Normalize
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::normalize(m->vertices[i].normal);
+    }
+}
+
+void OpenGLContent::ComputeTangents(TexturableMesh* mesh)
+{
+    //Clear tangents
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    {
+        mesh->vertices[i].tangent = glm::vec3(0.f);
+        //mesh->vertices[i].bitangent = glm::vec3(0.f);
+    }
+    //Accumulate tangents
+    for(size_t i=0; i<mesh->faces.size(); ++i)
+    {
+        glm::vec3 T;
+        mesh->ComputeFaceTangent(i, T);
+        for(unsigned short h=0; h<3; ++h)
+            mesh->vertices[mesh->faces[i].vertexID[h]].tangent += T;
+    }
+    //Normalize
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    {
+        mesh->vertices[i].tangent = glm::normalize(mesh->vertices[i].tangent);
+        mesh->vertices[i].tangent = glm::normalize(mesh->vertices[i].tangent - mesh->vertices[i].normal * glm::dot(mesh->vertices[i].normal, mesh->vertices[i].tangent));
     }
 }
 
@@ -2242,16 +2316,28 @@ GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh*
     if(key.first > key.second)
         std::swap(key.first, key.second);
         
-    auto inserted=lookup.insert({key, mesh->vertices.size()});
+    auto inserted = lookup.insert({key, mesh->getNumOfVertices()});
     if(inserted.second)
     {
-        glm::vec3 edge0 = mesh->vertices[firstID].pos;
-        glm::vec3 edge1 = mesh->vertices[secondID].pos;
-        Vertex vt;
-        vt.pos =  glm::normalize(edge0 + edge1);
-        vt.normal = vt.pos;
-        vt.uv = glm::vec2(0,0);
-        mesh->vertices.push_back(vt);
+        glm::vec3 edge0 = mesh->getVertexPos(firstID);  
+        glm::vec3 edge1 = mesh->getVertexPos(secondID);
+        if(mesh->isTexturable())
+        {
+            TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+            TexturableVertex vt;
+            vt.pos =  glm::normalize(edge0 + edge1);
+            vt.normal = vt.pos;
+            vt.uv = glm::vec2(0,0);
+            m->vertices.push_back(vt);
+        }
+        else
+        {
+            PlainMesh* m = static_cast<PlainMesh*>(mesh);
+            Vertex vt;
+            vt.pos =  glm::normalize(edge0 + edge1);
+            vt.normal = vt.pos;
+            m->vertices.push_back(vt);
+        }
     }
     
     return inserted.first->second;
@@ -2263,21 +2349,38 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
     if(key.first > key.second)
         std::swap(key.first, key.second);
         
-    auto inserted=lookup.insert({key, mesh->vertices.size()});
+    auto inserted=lookup.insert({key, mesh->getNumOfVertices()});
     if(inserted.second)
     {
-        glm::vec3 edge0 = mesh->vertices[firstID].pos;
-        glm::vec3 edge1 = mesh->vertices[secondID].pos;
-        glm::vec3 edge0n = mesh->vertices[firstID].normal;
-        glm::vec3 edge1n = mesh->vertices[secondID].normal;
-        glm::vec2 edge0uv = mesh->vertices[firstID].uv;
-        glm::vec2 edge1uv = mesh->vertices[secondID].uv;
-        
-        Vertex vt;
-        vt.pos = (edge0 + edge1)/(GLfloat)2;
-        vt.normal = glm::normalize(edge0n + edge1n);
-        vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
-        mesh->vertices.push_back(vt);
+        if(mesh->isTexturable())
+        {
+            TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+            glm::vec3 edge0 = m->vertices[firstID].pos;
+            glm::vec3 edge1 = m->vertices[secondID].pos;
+            glm::vec3 edge0n = m->vertices[firstID].normal;
+            glm::vec3 edge1n = m->vertices[secondID].normal;
+            glm::vec2 edge0uv = m->vertices[firstID].uv;
+            glm::vec2 edge1uv = m->vertices[secondID].uv;
+            
+            TexturableVertex vt;
+            vt.pos = (edge0 + edge1)/(GLfloat)2;
+            vt.normal = glm::normalize(edge0n + edge1n);
+            vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
+            m->vertices.push_back(vt);
+        }
+        else
+        {
+            PlainMesh* m = static_cast<PlainMesh*>(mesh);
+            glm::vec3 edge0 = m->vertices[firstID].pos;
+            glm::vec3 edge1 = m->vertices[secondID].pos;
+            glm::vec3 edge0n = m->vertices[firstID].normal;
+            glm::vec3 edge1n = m->vertices[secondID].normal;
+            
+            Vertex vt;
+            vt.pos = (edge0 + edge1)/(GLfloat)2;
+            vt.normal = glm::normalize(edge0n + edge1n);
+            m->vertices.push_back(vt);
+        }
     }
     
     return inserted.first->second;
@@ -2409,9 +2512,9 @@ void OpenGLContent::AABB(Mesh* mesh, glm::vec3& min, glm::vec3& max)
     GLfloat minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
     GLfloat minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
     
-    for(unsigned int i=0; i<mesh->vertices.size(); i++)
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
     {
-        glm::vec3 vertex = mesh->vertices[i].pos;
+        glm::vec3 vertex = mesh->getVertexPos(i);
         
         if(vertex.x > maxX)
             maxX = vertex.x;
@@ -2440,16 +2543,16 @@ void OpenGLContent::AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffse
 {
     glm::vec3 tempCenter(0,0,0);
     
-    for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-        tempCenter += mesh->vertices[i].pos;
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+        tempCenter += mesh->getVertexPos(i);
     
-    tempCenter /= (GLfloat)mesh->vertices.size();
+    tempCenter /= (GLfloat)mesh->getNumOfVertices();
     
     GLfloat radius = 0;
     
-    for(unsigned int i=0; i<mesh->vertices.size(); ++i)
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
     {
-        glm::vec3 v = mesh->vertices[i].pos;
+        glm::vec3 v = mesh->getVertexPos(i);
         GLfloat r = glm::length(v-tempCenter);
         if(r > radius)
             radius = r;

@@ -321,11 +321,11 @@ namespace sf
         */
         void getGeometryApprox(GeometryApproxType& type, std::vector<Scalar>& params) const;
         
-        //! A method returning a copy of the vertices of the physics mesh in physics frame (memory needs to be released manually!).
-        virtual std::vector<Vertex>* getMeshVertices();
-        
         //! A method returning a pointer to the physics mesh.
         const Mesh* getPhysicsMesh();
+
+        //! A method that returns a copy of all physics mesh vertices in body origin frame.
+        virtual std::vector<Vector3>* getMeshVertices() const;
         
         //! A method informing if the body is using buoyancy computation.
         bool isBuoyant() const;
@@ -387,7 +387,7 @@ namespace sf
         btRigidBody* rigidBody;
         btMultiBodyLinkCollider* multibodyCollider;
         
-        Mesh *phyMesh; //Mesh used for physics calculation
+        Mesh* phyMesh; //Mesh used for physics calculation
         Material mat;
         Scalar thick;
         Scalar volume;

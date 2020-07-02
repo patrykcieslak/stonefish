@@ -20,7 +20,6 @@
 #version 330
 
 in vec3 normal;
-in vec2 texCoord;
 in vec4 fragPos;
 in vec3 eyeSpaceNormal;
 in float logz;
@@ -33,7 +32,6 @@ uniform vec3 viewDir;
 uniform float FC;
 uniform vec4 color;
 uniform float reflectivity;
-uniform sampler2D tex;
 
 layout (std140) uniform SunSky
 {
@@ -68,13 +66,7 @@ void main()
 	vec3 P = fragPos.xyz/fragPos.w;
 	vec3 N = normalize(normal);
 	vec3 toEye = normalize(eyePos - P);
-	
 	vec4 albedo = vec4(color.rgb, 1.0);
-	if(color.a > 0.0)
-	{
-		vec4 texColor = texture(tex, texCoord);
-		albedo = vec4(mix(color.rgb, texColor.rgb, color.a), texColor.a);
-	}
 	
 	//1. Direct lighting
 	//Ambient

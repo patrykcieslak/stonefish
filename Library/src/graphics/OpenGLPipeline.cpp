@@ -144,7 +144,7 @@ void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
         SDL_LockMutex(drawingQueueMutex);
         drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
         //Update vision sensor transforms and copy generated data to ensure consistency
-        //glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
+        glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
         for(unsigned int i=0; i < content->getViewsCount(); ++i)
             if(content->getView(i)->getType() == ViewType::CAMERA)
                 ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
@@ -321,7 +321,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(ocean != NULL)
     {
         ocean->getOpenGLOcean()->Simulate(dt);
-        renderMode = rSettings.ocean > RenderQuality::QUALITY_DISABLED && ocean->isRenderable() ? 1 : 0;
+        renderMode = rSettings.ocean > RenderQuality::DISABLED && ocean->isRenderable() ? 1 : 0;
     }
     Atmosphere* atm = sim->getAtmosphere();
     OpenGLState::EnableDepthTest();
@@ -329,7 +329,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     
     //Bake shadow maps for lights (independent of view)
     content->SetupLights();
-    if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
+    if(rSettings.shadows > RenderQuality::DISABLED)
     {
         glCullFace(GL_FRONT);
         content->SetDrawingMode(DrawingMode::SHADOW);
@@ -427,7 +427,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             content->SetViewportSize(viewport[2],viewport[3]);
         
             //Bake parallel-split shadowmaps for sun
-            if(rSettings.shadows > RenderQuality::QUALITY_DISABLED)
+            if(rSettings.shadows > RenderQuality::DISABLED)
             {
                 content->SetDrawingMode(DrawingMode::SHADOW);
                 atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
@@ -452,7 +452,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 DrawLights();
 
                 //Ambient occlusion
-                if(rSettings.ao > RenderQuality::QUALITY_DISABLED)
+                if(rSettings.ao > RenderQuality::DISABLED)
                     camera->DrawAO(1.0f);
                 
                 //Render sky (at the end to take profit of early bailing)

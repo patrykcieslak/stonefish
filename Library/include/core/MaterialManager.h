@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_MaterialManager__
@@ -106,7 +106,7 @@ namespace sf
          \param restitution a restitution factor <0,1>
          \return a name of the created material
          */
-        std::string CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution);
+        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution);
         
         //! A method that sets interaction between a pair of materials.
         /*!
@@ -116,7 +116,7 @@ namespace sf
          \param dynamicFricCoeff a coefficient of dynamic friction between materials
          \return was the interaction was set properly?
          */
-        bool SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        bool SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
         
         //! A method that returns friction information for a specified pair of materials.
         /*!
@@ -132,7 +132,7 @@ namespace sf
          \param mat2Name a name of the second material
          \return a structure containing friction coefficients
          */
-        Friction GetMaterialsInteraction(std::string mat1Name, std::string mat2Name);
+        Friction GetMaterialsInteraction(const std::string& mat1Name, const std::string& mat2Name);
         
         //! A method returning a list of materials (names).
         std::vector<std::string> GetMaterialsList();
@@ -142,7 +142,7 @@ namespace sf
          \param name a name of the material
          \return a structure containing properties of the material
          */
-        Material getMaterial(std::string name);
+        Material getMaterial(const std::string& name);
         
         //! A method returning material information.
         /*!
@@ -159,14 +159,14 @@ namespace sf
          \param IOR index of refraction of the fluid
          \return a name of the created fluid
          */
-        std::string CreateFluid(std::string uniqueName, Scalar density, Scalar viscosity, Scalar IOR);
+        std::string CreateFluid(const std::string& uniqueName, Scalar density, Scalar viscosity, Scalar IOR);
         
         //! A method returning a fluid by name.
         /*!
          \param name a name of the fluid
          \return a the fluid structure
          */
-        Fluid getFluid(std::string name);
+        Fluid getFluid(const std::string& name);
         
         //! A method returning a fluid by id.
         /*!
@@ -179,7 +179,7 @@ namespace sf
         void ClearMaterialsAndFluids();
         
     private:
-        int getMaterialIndex(std::string name);
+        int getMaterialIndex(const std::string& name);
         
         std::vector<Material> materials;
         std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions;

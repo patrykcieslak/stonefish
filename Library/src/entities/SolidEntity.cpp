@@ -93,7 +93,7 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     //Set pointers
     rigidBody = NULL;
     multibodyCollider = NULL;
-    phyMesh = NULL;
+    phyMesh = nullptr;
     graObjectId = -1;
     phyObjectId = -1;
     dm = DisplayMode::DISPLAY_GRAPHICAL;
@@ -102,7 +102,7 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
 
 SolidEntity::~SolidEntity()
 {
-    if(phyMesh != NULL) delete phyMesh;
+    if(phyMesh != nullptr) delete phyMesh;
 }
 
 EntityType SolidEntity::getType()
@@ -561,19 +561,23 @@ Material SolidEntity::getMaterial() const
     return mat;
 }
 
-std::vector<Vertex>* SolidEntity::getMeshVertices()
-{
-    std::vector<Vertex>* pVert = new std::vector<Vertex>(0);
-    
-    if(phyMesh != NULL)
-        pVert->insert(pVert->end(), phyMesh->vertices.begin(), phyMesh->vertices.end());
-        
-    return pVert;
-}
-
 const Mesh* SolidEntity::getPhysicsMesh()
 {
     return phyMesh;
+}
+
+std::vector<Vector3>* SolidEntity::getMeshVertices() const
+{
+    std::vector<Vector3>* vertices = new std::vector<Vector3>(0);
+    if(phyMesh != nullptr)
+    {
+        for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+        {
+            glm::vec3 pos = phyMesh->getVertexPos(i);
+            vertices->push_back(Vector3(pos.x, pos.y, pos.z));
+        }
+    }
+    return vertices;
 }
 
 void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
@@ -600,26 +604,16 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
 
 void SolidEntity::ComputeSphericalApprox()
 {
-    //Get vertices of solid
-    std::vector<Vertex>* vertices = getMeshVertices();
-    if(vertices->size() < 2)
-    {
-        delete vertices;
+    std::vector<Vector3>* x = getMeshVertices();
+    if(x->size() < 2)
         return;
-    }
-    
-    std::vector<Vector3> x(vertices->size());
-    for(size_t i=0; i<vertices->size(); ++i)
-    {
-        Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
-        x[i] = T_CG2C * vp - P_CB;
-    }
-    delete vertices; //Clear allocated memory so it doesn't leak!
+    for(size_t i=0; i<x->size(); ++i)
+        x->at(i) = T_CG2C * x->at(i) - P_CB;
     
     Scalar r(0);
-    for(size_t i=0; i<x.size(); ++i)
+    for(size_t i=0; i<x->size(); ++i)
     {
-        Scalar rc = x[i].length2();
+        Scalar rc = x->at(i).length2();
         if(rc > r)
             r = rc;
     }
@@ -637,42 +631,34 @@ void SolidEntity::ComputeSphericalApprox()
     Transform sphereTransform = I4();
     sphereTransform.setOrigin(P_CB);
     T_CG2H = sphereTransform;
+
+    delete x;
 }
 
 void SolidEntity::ComputeCylindricalApprox()
 {
-    //Get vertices of solid
-    std::vector<Vertex>* vertices = getMeshVertices(); //Get a copy of vertices
-    if(vertices->size() < 2)
-    {
-        delete vertices;
+    std::vector<Vector3>* x = getMeshVertices();
+    if(x->size() < 2)
         return;
-    }
-    
-    std::vector<Vector3> x(vertices->size());
-    for(size_t i=0; i<vertices->size(); ++i)
-    {
-        Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
-        x[i] = T_CG2C * vp - P_CB;
-    }
-    delete vertices; //Clear allocated memory so it doesn't leak!
+    for(size_t i=0; i<x->size(); ++i)
+        x->at(i) = T_CG2C * x->at(i) - P_CB;
         
     //Radius
     Scalar r[3] = {0,0,0};
-    for(size_t i=0; i<x.size(); ++i)
+    for(size_t i=0; i<x->size(); ++i)
     {
         Scalar d;
         
         //X
-        d = btSqrt(x[i].y()*x[i].y() + x[i].z()*x[i].z());
+        d = btSqrt(x->at(i).y()*x->at(i).y() + x->at(i).z()*x->at(i).z());
         r[0] = d > r[0] ? d : r[0];
         
         //Y
-        d = btSqrt(x[i].x()*x[i].x() + x[i].z()*x[i].z());
+        d = btSqrt(x->at(i).x()*x->at(i).x() + x->at(i).z()*x->at(i).z());
         r[1] = d > r[1] ? d : r[1];
         
         //Z
-        d = btSqrt(x[i].x()*x[i].x() + x[i].y()*x[i].y());
+        d = btSqrt(x->at(i).x()*x->at(i).x() + x->at(i).y()*x->at(i).y());
         r[2] = d > r[2] ? d : r[2];
     }
     
@@ -686,9 +672,9 @@ void SolidEntity::ComputeCylindricalApprox()
         axis = 2;
     
     Scalar l_2 = 0;
-    for(size_t i=0; i<x.size(); ++i)
+    for(size_t i=0; i<x->size(); ++i)
     {
-        Scalar d = btFabs(x[i].m_floats[axis]);
+        Scalar d = btFabs(x->at(i).m_floats[axis]);
         l_2 = d > l_2 ? d : l_2;
     }
     
@@ -723,6 +709,8 @@ void SolidEntity::ComputeCylindricalApprox()
     
     aMass = T_CG2H.getBasis() * Vector3(m2, m2, m1);
     aI = T_CG2H.getBasis() * Vector3(I2, I2, I1);
+
+    delete x;
 }
 
 void SolidEntity::ComputeEllipsoidalApprox()
@@ -730,41 +718,31 @@ void SolidEntity::ComputeEllipsoidalApprox()
 #ifdef DEBUG
     cInfo("---- Computing ellipsoidal approximation of geometry for %s ----", getName().c_str());
 #endif
-    //Get vertices of solid
-    std::vector<Vertex>* vertices = getMeshVertices();
-    if(vertices->size() < 2)
-    {
-        delete vertices;
+    std::vector<Vector3>* x = getMeshVertices();
+    if(x->size() < 2)
         return;
-    }
-
-    std::vector<Vector3> x(vertices->size());
-    for(size_t i=0; i<vertices->size(); ++i)
-    {
-        Vector3 vp((*vertices)[i].pos.x, (*vertices)[i].pos.y, (*vertices)[i].pos.z);
-        x[i] = T_CG2C * vp - P_CB;
-    }
-    delete vertices; //Clear allocated memory so it doesn't leak!
-
+    for(size_t i=0; i<x->size(); ++i)
+        x->at(i) = T_CG2C * x->at(i) - P_CB;
+    
     //Initial volume approximation algorithm
     std::vector<Vector3> x0;
     for(size_t k=0; k<3; ++k) //3 dimensions
     {
-        std::vector<Scalar> x_k(x.size());
-        for(size_t i=0; i<x.size(); ++i)
-            x_k[i] = x[i].m_floats[k];
+        std::vector<Scalar> x_k(x->size());
+        for(size_t i=0; i<x->size(); ++i)
+            x_k[i] = x->at(i).m_floats[k];
 
         auto result = std::minmax_element(x_k.begin(), x_k.end());
-        x0.push_back(x[result.first - x_k.begin()]);
-        x0.push_back(x[result.second - x_k.begin()]);
+        x0.push_back(x->at(result.first - x_k.begin()));
+        x0.push_back(x->at(result.second - x_k.begin()));
     }
 
     //Minimum-volume enclosing axis-aligned ellipsoid algorithm
-    std::vector<Scalar> sigma(x.size());
-    for(size_t i=0; i<x.size(); ++i)
+    std::vector<Scalar> sigma(x->size());
+    for(size_t i=0; i<x->size(); ++i)
     {
         std::vector<Vector3>::iterator it;
-        it = std::find(x0.begin(), x0.end(), x[i]);
+        it = std::find(x0.begin(), x0.end(), x->at(i));
         if(it != x0.end())
             sigma[i] = Scalar(1)/Scalar(x0.size());
         else
@@ -776,16 +754,16 @@ void SolidEntity::ComputeEllipsoidalApprox()
     auto u = [](auto j, auto& x, auto& sigma)
     {
         auto sum = Scalar(0);
-        for(size_t i=0; i<x.size(); ++i)
-            sum += sigma[i] * x[i].m_floats[j] * x[i].m_floats[j]; 
+        for(size_t i=0; i<x->size(); ++i)
+            sum += sigma[i] * x->at(i).m_floats[j] * x->at(i).m_floats[j]; 
         return sum;
     };
     
     auto v = [](auto j, auto& x, auto& sigma)
     {
         auto sum = Scalar(0);
-        for(size_t i=0; i<x.size(); ++i)
-            sum += sigma[i] * x[i].m_floats[j]; 
+        for(size_t i=0; i<x->size(); ++i)
+            sum += sigma[i] * x->at(i).m_floats[j]; 
         return sum;	
     };
     
@@ -946,6 +924,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
 #ifdef DEBUG
     cInfo("--------------------------------------------------------------------");
 #endif
+    delete x;
 }
 
 Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)
@@ -1267,7 +1246,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
     }
     
     //Set zeros
-    if(mesh == NULL) return;
+    if(mesh == nullptr) return;
       
     //Calculate fluid dynamics forces and torques
     Vector3 p = T_CG.getOrigin();
@@ -1276,9 +1255,9 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
     for(size_t i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
-        glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
-        glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
-        glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+        glm::vec3 p1gl = mesh->getVertexPos(i, 0);
+        glm::vec3 p2gl = mesh->getVertexPos(i, 1);
+        glm::vec3 p3gl = mesh->getVertexPos(i, 2);
         Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
         Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
         Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
@@ -1555,7 +1534,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
 void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
                                               const Vector3& v, const Vector3& omega, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
 {
-    if(mesh == NULL) return;
+    if(mesh == nullptr) return;
     
     //Damping forces
     _Fdl.setZero();
@@ -1572,9 +1551,9 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
     for(unsigned int i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
-        glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
-        glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
-        glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+        glm::vec3 p1gl = mesh->getVertexPos(i, 0);
+        glm::vec3 p2gl = mesh->getVertexPos(i, 1);
+        glm::vec3 p3gl = mesh->getVertexPos(i, 2);
         Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
         Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
         Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
@@ -1676,7 +1655,7 @@ void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
 void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, const Transform& T_CG, const Transform& T_C,
                                            const Vector3& v, const Vector3& omega, Vector3& _Fda, Vector3& _Tda)
 {
-    if(mesh == NULL) return;
+    if(mesh == nullptr) return;
         
     _Fda.setZero();
     _Tda.setZero();
@@ -1689,9 +1668,9 @@ void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, co
     for(size_t i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
-        glm::vec3 p1gl = mesh->vertices[mesh->faces[i].vertexID[0]].pos;
-        glm::vec3 p2gl = mesh->vertices[mesh->faces[i].vertexID[1]].pos;
-        glm::vec3 p3gl = mesh->vertices[mesh->faces[i].vertexID[2]].pos;
+        glm::vec3 p1gl = mesh->getVertexPos(i, 0);
+        glm::vec3 p2gl = mesh->getVertexPos(i, 1);
+        glm::vec3 p3gl = mesh->getVertexPos(i, 2);
         Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
         Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
         Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);

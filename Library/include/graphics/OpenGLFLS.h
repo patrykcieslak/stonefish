@@ -156,9 +156,11 @@ namespace sf
         GLuint nBeamSamples;
         glm::vec2 fov;
         glm::vec2 range;
+        GLfloat gain;
         std::default_random_engine randGen;
         std::uniform_real_distribution<float> randDist;
         ColorMap cMap;
+        bool settingsUpdated;
         
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;
@@ -172,7 +174,7 @@ namespace sf
         GLuint fanDiv;
         GLSLShader* sonarOutputShader;
 
-        static GLSLShader* sonarInputShader;
+        static GLSLShader* sonarInputShader[2];
         static GLSLShader* sonarPostprocessShader;
         static GLSLShader* sonarVisualizeShader;
     };

@@ -67,6 +67,9 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     loadingThread = NULL;
     glPipeline = NULL;
     gui = NULL;
+    timeQuery[0] = 0;
+    timeQuery[1] = 0;
+    timeQueryPingpong = 0;
     drawingTime = 0.0;
     maxDrawingTime = 0.0;
     maxCounter = 0;
@@ -191,6 +194,10 @@ void GraphicalSimulationApp::Init()
     int status = 0;
     SDL_WaitThread(loadingThread, &status);
     SDL_GL_MakeCurrent(window, glMainContext);
+
+    //Create performance counters
+    glGenQueries(2, timeQuery);
+    //glQueryCounter(timeQuery[1-timeQueryPingpong], GL_TIMESTAMP);
 }
 
 void GraphicalSimulationApp::InitializeSDL()
@@ -437,7 +444,7 @@ void GraphicalSimulationApp::Loop()
     SDL_Event event;
     bool mouseWasDown = false;
     
-    //uint64_t startTime = GetTimeInMicroseconds();
+    uint64_t startTime = GetTimeInMicroseconds();
     
     while(!hasFinished())
     {
@@ -587,12 +594,11 @@ void GraphicalSimulationApp::Loop()
         }
         mouseWasDown = false;
 
-        //Framerate limitting
-        /*
+        //Framerate limitting (60Hz)
         uint64_t elapsedTime = GetTimeInMicroseconds() - startTime;
         if(elapsedTime < 16000)
             std::this_thread::sleep_for(std::chrono::microseconds(16000 - elapsedTime));
-        startTime = GetTimeInMicroseconds();*/
+        startTime = GetTimeInMicroseconds();
     }
 }
 
@@ -605,7 +611,7 @@ void GraphicalSimulationApp::RenderLoop()
     }
     
     //Rendering
-    uint64_t startTime = GetTimeInMicroseconds();
+    glBeginQuery(GL_TIME_ELAPSED, timeQuery[timeQueryPingpong]);
     glPipeline->Render(getSimulationManager());
     glPipeline->DrawDisplay();
     
@@ -630,12 +636,13 @@ void GraphicalSimulationApp::RenderLoop()
             gui->End();
         }
     }
-    
-    glFinish(); //Ensure that the frame was fully rendered
-    SDL_GL_SwapWindow(window);
+    glEndQuery(GL_TIME_ELAPSED);
     
     //Update drawing time
-	double dt = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
+    uint64_t drawTime;
+    glGetQueryObjectui64v(timeQuery[1-timeQueryPingpong], GL_QUERY_RESULT, &drawTime);
+    timeQueryPingpong = 1-timeQueryPingpong;
+	double dt = drawTime/1000000.0; //in ms
 	double f = 1.0/60.0;
 	drawingTime = f*dt + (1.0-f)*drawingTime;
 
@@ -650,6 +657,9 @@ void GraphicalSimulationApp::RenderLoop()
         maxDrawingTime = std::max(maxDrawingTime, dt);
         ++maxCounter;
     }
+
+    //glFinish(); //Ensure that the frame was fully rendered
+    SDL_GL_SwapWindow(window);
 }
 
 void GraphicalSimulationApp::DoHUD()
@@ -904,7 +914,8 @@ void GraphicalSimulationApp::StopSimulation()
 void GraphicalSimulationApp::CleanUp()
 {
     SimulationApp::CleanUp();
-    
+    glDeleteQueries(2, timeQuery);
+
     if(joystick != NULL)
         SDL_JoystickClose(0);
     

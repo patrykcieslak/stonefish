@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/MaterialManager.h"
@@ -48,7 +48,7 @@ void MaterialManager::ClearMaterialsAndFluids()
     fluidNameManager.ClearNames();
 }
 
-std::string MaterialManager::CreateMaterial(std::string uniqueName, Scalar density, Scalar restitution)
+std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution)
 {
     //Create and add new material
     Material mat;
@@ -80,7 +80,7 @@ std::string MaterialManager::CreateMaterial(std::string uniqueName, Scalar densi
     return mat.name;
 }
 
-std::string MaterialManager::CreateFluid(std::string uniqueName, Scalar density, Scalar viscosity, Scalar IOR)
+std::string MaterialManager::CreateFluid(const std::string& uniqueName, Scalar density, Scalar viscosity, Scalar IOR)
 {
     Fluid flu;
     flu.name = fluidNameManager.AddName(uniqueName);
@@ -92,7 +92,7 @@ std::string MaterialManager::CreateFluid(std::string uniqueName, Scalar density,
     return flu.name;
 }
 
-bool MaterialManager::SetMaterialsInteraction(std::string firstMaterialName, std::string secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
+bool MaterialManager::SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
 {
     MaterialPair p;
     p.mat1Id = getMaterialIndex(firstMaterialName);
@@ -137,12 +137,12 @@ Friction MaterialManager::GetMaterialsInteraction(int mat1Index, int mat2Index)
     }
 }
 
-Friction MaterialManager::GetMaterialsInteraction(std::string mat1Name, std::string mat2Name)
+Friction MaterialManager::GetMaterialsInteraction(const std::string& mat1Name, const std::string& mat2Name)
 {
     return GetMaterialsInteraction(getMaterialIndex(mat1Name), getMaterialIndex(mat2Name));
 }
 
-int MaterialManager::getMaterialIndex(std::string name)
+int MaterialManager::getMaterialIndex(const std::string& name)
 {
     for(unsigned int i=0; i<materials.size(); ++i)
         if(materials[i].name == name)
@@ -152,7 +152,7 @@ int MaterialManager::getMaterialIndex(std::string name)
     return -1;
 }
 
-Material MaterialManager::getMaterial(std::string name)
+Material MaterialManager::getMaterial(const std::string& name)
 {
     for(unsigned int i=0; i<materials.size(); ++i)
         if(materials[i].name == name)
@@ -169,7 +169,7 @@ Material MaterialManager::getMaterial(int index)
         return materials[0];
 }
 
-Fluid MaterialManager::getFluid(std::string name)
+Fluid MaterialManager::getFluid(const std::string& name)
 {
     for(unsigned int i=0; i<fluids.size(); ++i)
         if(fluids[i].name == name)
