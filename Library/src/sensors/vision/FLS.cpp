@@ -71,6 +71,8 @@ void FLS::setRangeMin(Scalar r)
 void FLS::setRangeMax(Scalar r)
 {
     range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
+    Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+    setUpdateFrequency(Scalar(1)/pulseTime);
 }
 
 void FLS::setGain(Scalar g)

@@ -58,6 +58,7 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     newData = false;
     sonar = nullptr;
     range = range_;
+    gain = 1.f;
     tilt = glm::radians(verticalTiltDeg);
     fov.x = glm::radians(verticalBeamWidthDeg);
     fov.y = glm::radians(horizontalBeamWidthDeg);
@@ -131,11 +132,13 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     sonarOutputShader[0]->AddUniform("sonarInput", ParameterType::INT);
     sonarOutputShader[0]->AddUniform("sonarHist", ParameterType::INT);
     sonarOutputShader[0]->AddUniform("range", ParameterType::VEC3);
+    sonarOutputShader[0]->AddUniform("gain", ParameterType::FLOAT);
 
     sonarOutputShader[0]->Use();
     sonarOutputShader[0]->SetUniform("sonarInput", TEX_POSTPROCESS1);
     sonarOutputShader[0]->SetUniform("sonarHist", TEX_POSTPROCESS2);
     sonarOutputShader[0]->SetUniform("range", glm::vec3(range.x, range.y, 2*(range.y-range.x)/(GLfloat)viewportWidth));
+    sonarOutputShader[0]->SetUniform("gain", gain);
     OpenGLState::UseProgram(0);
 
     sources.clear();
@@ -182,6 +185,39 @@ void OpenGLSSS::UpdateTransform()
     dir = tempDir;
     forward = tempForward;
     SetupSonar();
+
+    if(sonar == nullptr)
+        return;
+
+    //Update settings if necessary
+    bool updateProjection = false;
+    glm::vec3 rangeGain((GLfloat)sonar->getRangeMin(), (GLfloat)sonar->getRangeMax(), (GLfloat)sonar->getGain());
+    if(rangeGain.x != range.x)
+    {
+        range.x = rangeGain.x;
+        updateProjection = true;
+        settingsUpdated = true;
+    }
+    if(rangeGain.y != range.y)
+    {
+        range.y = rangeGain.y;
+        updateProjection = true;
+        settingsUpdated = true;
+    }
+    if(rangeGain.z != gain)
+    {
+        gain = rangeGain.z;
+        settingsUpdated = true;
+    }
+    if(updateProjection)
+    {
+        GLfloat near = range.x/2.f;
+        GLfloat far = range.y;
+        projection[0] = glm::vec4(near/(near*tanf(fov.x/2.f)), 0.f, 0.f, 0.f);
+        projection[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
+        projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
+        projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
+    }
 
     //Inform sonar to run callback
     if(newData)
@@ -299,7 +335,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     {
         //Compute matrices
         glm::mat4 V = views[i] * GetViewMatrix();
-        glm::mat4 VP = projection * V;
+        glm::mat4 VP = GetProjectionMatrix() * V;
         //Clear color and depth for particular framebuffer layer
         glDrawBuffer(GL_COLOR_ATTACHMENT0 + (GLuint)i);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -331,6 +367,12 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS1, inputRangeIntensityTex, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG32F);
     sonarOutputShader[0]->Use();
+    if(settingsUpdated)
+    {
+        sonarOutputShader[0]->SetUniform("range", glm::vec3(range.x, range.y, 2*(range.y-range.x)/(GLfloat)viewportWidth));
+        sonarOutputShader[0]->SetUniform("gain", gain);
+        settingsUpdated = false;
+    }
     glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nBeamSamples.x/64.f), 2, 1);
     

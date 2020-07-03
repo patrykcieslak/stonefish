@@ -110,20 +110,17 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
 
     //Setup matrices
     GLfloat viewFovCorr = (GLfloat)nViewBeams/(GLfloat)nBeams * fov.x;
-    glm::mat4 proj;
     GLfloat near = range.x / 2.f;
     GLfloat far = range.y;
-    proj[0] = glm::vec4(near/(near*tanf(viewFovCorr/2.f)), 0.f, 0.f, 0.f);
-    proj[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
-    proj[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
-    proj[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
+    projection[0] = glm::vec4(near/(near*tanf(viewFovCorr/2.f)), 0.f, 0.f, 0.f);
+    projection[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
+    projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
+    projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
     
     GLfloat viewFovAcc = 0.f;
     for(size_t i=0; i<views.size(); ++i)
     {
-        views[i].projection = proj;
-        views[i].view = glm::rotate(-fov.x/2.f + viewFovAcc + viewFovCorr/2.f, glm::vec3(0.f,1.f,0.f));
-        
+        views[i].view = glm::rotate(-fov.x/2.f + viewFovAcc + viewFovCorr/2.f, glm::vec3(0.f,1.f,0.f));   
         GLfloat viewFov = (GLfloat)views[i].nBeams/(GLfloat)nBeams * fov.x;
         viewFovAcc += viewFov;
     }
@@ -190,7 +187,9 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     sonarOutputShader->AddUniform("beams", ParameterType::UVEC2);
     sonarOutputShader->AddUniform("range", ParameterType::VEC3);
     sonarOutputShader->AddUniform("gain", ParameterType::FLOAT);
-
+    sonarOutputShader->AddUniform("noiseSeed", ParameterType::VEC3);
+    sonarOutputShader->AddUniform("noiseStddev", ParameterType::VEC2);
+    
     sonarOutputShader->Use();
     sonarOutputShader->SetUniform("sonarInput", TEX_POSTPROCESS1);
     sonarOutputShader->SetUniform("sonarOutput", TEX_POSTPROCESS2);
@@ -237,21 +236,58 @@ void OpenGLFLS::UpdateTransform()
         return;
 
     //Update settings if necessary
+    bool updateProjection = false;
     glm::vec3 rangeGain((GLfloat)sonar->getRangeMin(), (GLfloat)sonar->getRangeMax(), (GLfloat)sonar->getGain());
     if(rangeGain.x != range.x)
     {
         range.x = rangeGain.x;
+        updateProjection = true;
         settingsUpdated = true;
     }
     if(rangeGain.y != range.y)
     {
         range.y = rangeGain.y;
+        updateProjection = true;
         settingsUpdated = true;
     }
     if(rangeGain.z != gain)
     {
         gain = rangeGain.z;
         settingsUpdated = true;
+    }
+    if(updateProjection)
+    {
+        GLfloat viewFovCorr = (GLfloat)nViewBeams/(GLfloat)nBeams * fov.x;
+        GLfloat near = range.x / 2.f;
+        GLfloat far = range.y;
+        projection[0] = glm::vec4(near/(near*tanf(viewFovCorr/2.f)), 0.f, 0.f, 0.f);
+        projection[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
+        projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
+        projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
+
+        GLfloat fanData[(fanDiv+1)*2][4];
+        GLfloat Rmin = range.x/range.y;
+        GLfloat hFactor = sinf(fov.x/2.f);
+
+        //Flipped vertically to account for OpenGL window coordinates
+        for(GLuint i=0; i<fanDiv+1; ++i)
+        {
+            GLfloat alpha = fov.x/2.f - i/(GLfloat)fanDiv * fov.x;
+            //Min range edge
+            fanData[i*2][0] = -Rmin*sinf(alpha)*1.f/hFactor;
+            fanData[i*2][1] = (1.f-Rmin*cosf(alpha))*2.f-1.f;
+            fanData[i*2][2] = i/(GLfloat)fanDiv;
+            fanData[i*2][3] = 0.f;
+            //Max range edge
+            fanData[i*2+1][0] = -sinf(alpha)*1.f/hFactor;
+            fanData[i*2+1][1] = (1.f-cosf(alpha))*2.f-1.f;
+            fanData[i*2+1][2] = i/(GLfloat)fanDiv;
+            fanData[i*2+1][3] = 1.f;
+        }
+    
+        glBindBuffer(GL_ARRAY_BUFFER, fanBuf);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(fanData), fanData);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     //Inform sonar to run callback
@@ -373,7 +409,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, inputRangeIntensityTex, 0, i);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //Calculate view transform
-        glm::mat4 VP = views[i].projection * views[i].view * GetViewMatrix();
+        glm::mat4 VP = GetProjectionMatrix() * views[i].view * GetViewMatrix();
         //Draw objects
         for(size_t h=0; h<objects.size(); ++h)
         {
@@ -402,6 +438,8 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS1, inputRangeIntensityTex, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     sonarOutputShader->Use();
+    sonarOutputShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
+    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.01f, 0.00002f));
     if(settingsUpdated)
     {
         sonarOutputShader->SetUniform("range", glm::vec3(range.x, range.y, (range.y-range.x)/(GLfloat)nBins));
@@ -415,8 +453,6 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS1, outputTex[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     sonarPostprocessShader->Use();
-    sonarPostprocessShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarPostprocessShader->SetUniform("noiseStddev", glm::vec2(0.02f, 0.04f));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nBeams/16.f), (GLuint)ceilf(nBins/16.f), 1);
     
@@ -513,8 +549,6 @@ void OpenGLFLS::Init()
     sonarPostprocessShader = new GLSLShader(sources);
     sonarPostprocessShader->AddUniform("sonarOutput", ParameterType::INT);
     sonarPostprocessShader->AddUniform("sonarPost", ParameterType::INT);
-    sonarPostprocessShader->AddUniform("noiseSeed", ParameterType::VEC3);
-    sonarPostprocessShader->AddUniform("noiseStddev", ParameterType::VEC2);
     sonarPostprocessShader->Use();
     sonarPostprocessShader->SetUniform("sonarOutput", TEX_POSTPROCESS1);
     sonarPostprocessShader->SetUniform("sonarPost", TEX_POSTPROCESS2);

@@ -39,8 +39,12 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
          Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency)
     : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
 {
-    range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
-    range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
+    range.x = 0.f;
+    range.y = 0.f;
+    setRangeMax(maxRange);
+    setRangeMin(minRange);
+    gain = Scalar(1);
+
     if(frequency < Scalar(0))
     {
         Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
@@ -58,6 +62,23 @@ SSS::~SSS()
 {
     if(displayData != NULL) delete [] displayData;
     glSSS = NULL;
+}
+
+void SSS::setRangeMin(Scalar r)
+{
+    range.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range.y) ? (GLfloat)r : range.x);
+}
+
+void SSS::setRangeMax(Scalar r)
+{
+    range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
+    Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+    setUpdateFrequency(Scalar(1)/pulseTime);
+}
+
+void SSS::setGain(Scalar g)
+{
+    gain = g > Scalar(0) ? g : Scalar(1);
 }
 
 void* SSS::getImageDataPointer(unsigned int index)
@@ -78,11 +99,21 @@ GLubyte* SSS::getDisplayDataPointer()
     return displayData;
 }
 
-glm::vec2 SSS::getRangeLimits()
+Scalar SSS::getRangeMin()
 {
-    return range;
+    return Scalar(range.x);
 }
-    
+
+Scalar SSS::getRangeMax()
+{
+    return Scalar(range.y);
+}
+
+Scalar SSS::getGain()
+{
+    return gain;
+}
+   
 VisionSensorType SSS::getVisionSensorType()
 {
     return VisionSensorType::SENSOR_SSS;

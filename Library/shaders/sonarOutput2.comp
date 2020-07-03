@@ -29,8 +29,14 @@ layout(rg32f) uniform image2DArray sonarInput;
 layout(rg32f) uniform image2DArray sonarHist;
 
 uniform vec3 range; //min, max, step
+uniform float gain;
 
 vec2 binHistogram[N_HALF_BINS];
+
+float TVG(float r)
+{
+    return r*r*r*r;
+}
 
 void main()
 {
@@ -56,7 +62,7 @@ void main()
 
             //Compute bin and accumulate intensity data
             uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
-            binHistogram[bin].x += rangeIntensity.y;
+            binHistogram[bin].x += rangeIntensity.y * gain * TVG(rangeIntensity.x);
             binHistogram[bin].y += 1.0;
         }
 

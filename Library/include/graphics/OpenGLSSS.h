@@ -147,10 +147,12 @@ namespace sf
         glm::uvec2 nBeamSamples;
         glm::vec2 fov;
         glm::vec2 range;
+        GLfloat gain;
         glm::mat4 views[2];
         std::default_random_engine randGen;
         std::uniform_real_distribution<float> randDist;
         ColorMap cMap;
+        bool settingsUpdated;
         
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;

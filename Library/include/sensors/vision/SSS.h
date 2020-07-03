@@ -87,8 +87,32 @@ namespace sf
         //! A method implementing the rendering of the sonar dummy.
         std::vector<Renderable> Render();
         
-        //! A method returning the range limits of the sonar.
-        glm::vec2 getRangeLimits();
+        //! A method setting the minimum range of the sonar.
+        /*!
+         \param r range [m]
+         */
+        void setRangeMin(Scalar r);
+
+        //! A method setting the minimum range of the sonar.
+        /*!
+         \param r range [m]
+         */
+        void setRangeMax(Scalar r);
+
+        //! A method setting the gain of the sonar.
+        /*!
+         \param g gain factor [1]
+         */
+        void setGain(Scalar g);
+
+        //! A method returning the minimum range of the sonar.
+        Scalar getRangeMin();
+        
+        //! A method returning the maximum range of the sonar.
+        Scalar getRangeMax();
+
+        //! A method returning the gain of the sonar.
+        Scalar getGain();
         
         //! A method returning a pointer to the sonar data.
         /*!
@@ -117,6 +141,7 @@ namespace sf
         GLfloat* sonarData;
         GLubyte* displayData;
         glm::vec2 range;
+        Scalar gain;
         Scalar fovV;
         Scalar tilt;
         ColorMap cMap;

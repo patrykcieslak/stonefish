@@ -1394,7 +1394,8 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
-        {    
+        {   
+            //uint64_t s = GetTimeInMicroseconds();
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
@@ -1410,6 +1411,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 else if(co2 == simManager->ocean->getGhost())
                     simManager->ocean->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co1, recompute);
             }
+            //uint64_t e = GetTimeInMicroseconds();
+            //if(recompute)
+            //    printf("Hydro compute time: %ld us\n", e-s);
         }
         
         if(recompute) SDL_UnlockMutex(simManager->simHydroMutex);

@@ -31,6 +31,10 @@ layout(r32f) uniform image2D sonarOutput;
 uniform uvec2 beams; //beams1, beams2
 uniform vec3 range; //min, max, step
 uniform float gain;
+uniform vec3 noiseSeed;
+uniform vec2 noiseStddev;
+
+#define M_PI 3.1415926535897932384626433832795
 
 vec2 binHistogram[N_BINS];
 
@@ -38,6 +42,44 @@ float sigmoid(float x)
 {
     float t = (x - 0.6666667) * 18.0;
     return (0.5 * tanh(0.5 * t) + 0.5);
+}
+
+float TVG(float r)
+{
+    return r*r*r*r;
+}
+
+float rand(vec2 coord)
+{
+    // This one-liner can be found in many places, including:
+    // http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+    // I can't find any explanation for it, but experimentally it does seem to
+    // produce approximately uniformly distributed values in the interval [0,1].
+    return fract(sin(dot(coord.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float gaussian(vec2 coord, float stddev, float mean)
+{
+    // Box-Muller method for sampling from the normal distribution
+    // http://en.wikipedia.org/wiki/Normal_distribution#Generating_values_from_normal_distribution
+    // This method requires 2 uniform random inputs and produces 2 
+    // Gaussian random outputs. 3rd random variable is used to switch between the two outputs.
+    float U, V, R, Z;
+    // Add in the CPU-supplied random noiseSeed to generate the 3 random values.
+    U = rand(coord + vec2(noiseSeed.x, noiseSeed.x))+0.0000001;
+    V = rand(coord + vec2(noiseSeed.y, noiseSeed.y))+0.0000001;
+    R = rand(coord + vec2(noiseSeed.z, noiseSeed.z))+0.0000001;
+    // Switch between the two random outputs.
+    if(R < 0.5)
+        Z = sqrt(-2.0 * log(U)) * sin(2.0 * M_PI * V);
+    else
+        Z = sqrt(-2.0 * log(U)) * cos(2.0 * M_PI * V);
+
+    // Apply the stddev and mean.
+    Z = Z * stddev + mean;
+
+    // Return it as a vec4, to be added to the input ("true") color.
+    return Z;
 }
 
 void main()
@@ -53,19 +95,28 @@ void main()
         ivec3 sampleCoord;
         sampleCoord.x = int(gl_GlobalInvocationID.x);
         sampleCoord.z = int(gl_GlobalInvocationID.y);
-
+        
+        vec2 noiseCoord;
+        noiseCoord.x = float(sampleCoord.x*(sampleCoord.z+1))/float(viewBeams * (inDim.z+1));
+        float mulNoise = gaussian(noiseCoord.xx, noiseStddev.x, 1.0);
+        
         for(int i=0; i<N_BEAM_SAMPLES; ++i) //For each vertical beam sample
         {            
             sampleCoord.y = i;
+            noiseCoord.y = float(i)/float(N_BEAM_SAMPLES);
 
             //Get sample value
             vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
+            rangeIntensity.x += gaussian(noiseCoord.xy, 2.0*range.z, 0.0);
+
             if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
                 continue;
 
             //Compute bin and accumulate intensity data
             uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
-            binHistogram[bin].x += rangeIntensity.y;
+            float noisy = rangeIntensity.y * mulNoise; //Multiplicative noise
+            noisy += gaussian(-noiseCoord.xy, noiseStddev.y, 0.0)/(rangeIntensity.x*rangeIntensity.x); //Additive noise
+            binHistogram[bin].x += noisy * gain * TVG(rangeIntensity.x);
             binHistogram[bin].y += 1.0;
         }
 
@@ -75,7 +126,15 @@ void main()
         {
             float data = 0.0;
             if(binHistogram[i].y > 0.0)
-                data = (binHistogram[i].x * gain)/binHistogram[i].y;
+            {
+                data = binHistogram[i].x/binHistogram[i].y;
+            }
+            else
+            {
+                noiseCoord.y = float(i)/float(N_BINS);
+                float r = (float(i)+0.5)*range.z;
+                data = gain * TVG(r) * gaussian(-noiseCoord.xy, noiseStddev.y, 0.0)/(r*r); //Additive noise
+            }
             imageStore(sonarOutput, ivec2(globalBeam, i), vec4(data));
         }
     }
