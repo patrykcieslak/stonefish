@@ -569,10 +569,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //ocean->getOpenGLOcean()->ShowTexture(3, glm::vec4(0,0,512,512));
                 //}
         
-                /*atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,0,200,200));
-                atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(200,0,200,200));
-                atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
-                atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);*/
+                //atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,0,200,200));
+                //atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(200,0,200,200));
+                //atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
+                //atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);
                 
                 //content->DrawTexturedQuad(0,0,800,600,camera->getPostprocessTexture(0));
                 //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));

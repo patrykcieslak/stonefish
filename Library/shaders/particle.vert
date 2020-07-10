@@ -1,6 +1,7 @@
 #version 430
 
 out vec3 normal;
+out mat3 TBN; //Not used
 out vec2 texCoord;
 out vec4 fragPos;
 out vec3 eyeSpaceNormal;

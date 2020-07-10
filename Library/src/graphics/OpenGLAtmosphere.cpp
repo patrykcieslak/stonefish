@@ -678,80 +678,25 @@ void OpenGLAtmosphere::Precompute()
         if(textures[i] != 0) glDeleteTextures(1, &textures[i]);
 
     //Generate new empty textures to store the result of precomputation
-    glGenTextures(AtmosphereTextures::TEXTURE_COUNT, textures);
-
     //Transmittance
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL); //16F precision for the transmittance gives artifacts.
-
+    textures[AtmosphereTextures::TRANSMITTANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT, 1), 
+        GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     //Scattering
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGBA, GL_FLOAT, NULL);
-
+    textures[AtmosphereTextures::SCATTERING] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH), 
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     //Irradiance
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-
+    textures[AtmosphereTextures::IRRADIANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 1),
+        GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    
     //Create temporary textures
-    GLuint delta_irradiance_texture;
-    glGenTextures(1, &delta_irradiance_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, delta_irradiance_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-
-    GLuint delta_rayleigh_scattering_texture;
-    glGenTextures(1, &delta_rayleigh_scattering_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGB, GL_FLOAT, NULL);
-
-    GLuint delta_mie_scattering_texture;
-    glGenTextures(1, &delta_mie_scattering_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_mie_scattering_texture);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGB, GL_FLOAT, NULL);
-
-    GLuint delta_scattering_density_texture;
-    glGenTextures(1, &delta_scattering_density_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_scattering_density_texture);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGB, GL_FLOAT, NULL);
-
+    GLuint delta_irradiance_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 1), 
+        GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    GLuint delta_rayleigh_scattering_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH),
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    GLuint delta_mie_scattering_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH),
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    GLuint delta_scattering_density_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH),
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     GLuint delta_multiple_scattering_texture = delta_rayleigh_scattering_texture;
 
     //Create temporary framebuffer
@@ -795,7 +740,9 @@ void OpenGLAtmosphere::Precompute()
                                                 coeff(lambdas[0], 2), coeff(lambdas[1], 2), coeff(lambdas[2], 2)
                                                });
             luminance_from_radiance = glm::transpose(luminance_from_radiance);
-
+#ifdef DEBUG
+            cInfo("Compute iteration %d:\n", i);
+#endif
             PrecomputePass(fbo, delta_irradiance_texture, delta_rayleigh_scattering_texture, delta_mie_scattering_texture,
                            delta_scattering_density_texture, delta_multiple_scattering_texture,
                            lambdas, luminance_from_radiance, i > 0);
@@ -892,6 +839,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
     //Compute the transmittance, and store it in transmittance_texture_.
+    OpenGLState::BindFramebuffer(fbo);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[AtmosphereTextures::TRANSMITTANCE], 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     OpenGLState::Viewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
