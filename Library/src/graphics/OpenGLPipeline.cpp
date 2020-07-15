@@ -344,7 +344,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 
     //Update the queue of views needing update
     unsigned int updateCount = 0;
-    std::vector<unsigned int> viewsNoUpdateQueue;
+    std::vector<unsigned int> viewsNoUpdate;
     for(int i=content->getViewsCount()-1; i >= 0; --i)
     {
         OpenGLView* view = content->getView(i);
@@ -356,67 +356,75 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 ++updateCount;
             }
             else
+            {
                 viewsQueue.push_back(i);
+                viewsNoUpdate.push_back(i);
+            }
         }
         else
-            viewsNoUpdateQueue.push_back(i);
+        {
+            viewsNoUpdate.push_back(i);
+        }
     }
     
-    if(updateCount < (unsigned int)viewsQueue.size())
+    if(viewsQueue.size() > content->getViewsCount())
+    {
+        updateCount = viewsQueue.size();
+        viewsNoUpdate.clear();
+    }
+    else if(updateCount < (unsigned int)viewsQueue.size())
+    {
         ++updateCount;
-
-    //printf("\nUpdate: %u Queue: ", updateCount);
-    //for(size_t i=0; i<viewsQueue.size(); ++i)
-    //   printf("\t%u", viewsQueue[i]);
-
+        viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]));
+    }
+    /*
+    printf("\nUpdate: %u Queue: ", updateCount);
+    for(size_t i=0; i<viewsQueue.size(); ++i)
+       printf("\t%u", viewsQueue[i]);
+    printf("\nNo-update: %u Queue: ", viewsNoUpdate.size());
+    for(size_t i=0; i<viewsNoUpdate.size(); ++i)
+       printf("\t%u", viewsNoUpdate[i]);
+    */
+   
     //Loop through all views -> trackballs, cameras, depth cameras...
     for(unsigned int i=0; i<updateCount; ++i)
     {
+        OpenGLState::EnableDepthTest();
+        OpenGLState::EnableCullFace();
+        OpenGLState::DisableBlend();
         OpenGLView* view = content->getView(viewsQueue[i]);
-
+            
         if(view->getType() == ViewType::DEPTH_CAMERA)
         {
             OpenGLDepthCamera* camera = (OpenGLDepthCamera*)view;
             GLint* viewport = camera->GetViewport();
             content->SetViewportSize(viewport[2],viewport[3]);
-        
             OpenGLState::BindFramebuffer(camera->getRenderFBO());
             glClear(GL_DEPTH_BUFFER_BIT); //Only depth is rendered
             camera->SetViewport();
             content->SetCurrentView(camera);
             content->SetDrawingMode(DrawingMode::FLAT);
             DrawObjects();
-            
-            camera->DrawLDR(screenFBO);
+            //Draw camera output
+            camera->DrawLDR(screenFBO, true);
             OpenGLState::BindFramebuffer(0);
-            
             delete [] viewport;
         }
         else if(view->getType() == ViewType::FLS)
         {
             OpenGLFLS* fls = static_cast<OpenGLFLS*>(view);
-            
             //Draw objects and compute sonar data
             fls->ComputeOutput(drawingQueueCopy);
-            
             //Draw sonar output
-            GLint* viewport = fls->GetViewport();
-            content->SetViewportSize(viewport[2], viewport[3]);
-            fls->DrawLDR(screenFBO);
-            delete [] viewport;
+            fls->DrawLDR(screenFBO, true);
         }
         else if(view->getType() == ViewType::SSS)
         {
             OpenGLSSS* sss = static_cast<OpenGLSSS*>(view);
-
             //Draw objects and compute sonar data
             sss->ComputeOutput(drawingQueueCopy);
-            
             //Draw sonar output
-            GLint* viewport = sss->GetViewport();
-            content->SetViewportSize(viewport[2], viewport[3]);
-            sss->DrawLDR(screenFBO);
-            delete [] viewport;
+            sss->DrawLDR(screenFBO, true);
         }
         else if(view->getType() == ViewType::CAMERA || view->getType() == ViewType::TRACKBALL)
         {
@@ -543,8 +551,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             }
         
             //Tone mapping
-            OpenGLState::Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            camera->DrawLDR(screenFBO);
+            camera->DrawLDR(screenFBO, true);
         
             //Helper objects
             if(camera->getType() == ViewType::TRACKBALL)
@@ -593,16 +600,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         
             delete [] viewport;
         }
-        
-        OpenGLState::EnableDepthTest();
-        OpenGLState::EnableCullFace();
-        OpenGLState::DisableBlend();
     }
+    //Draw views that are displayed but not updated
+    for(size_t i=0; i<viewsNoUpdate.size(); ++i)
+        content->getView(viewsNoUpdate[i])->DrawLDR(screenFBO, false);
     //Remove views drawn in this frame
     viewsQueue.erase(viewsQueue.begin(), viewsQueue.begin() + updateCount);
-    //Draw views that were not updated
-    for(size_t i=0; i<viewsNoUpdateQueue.size(); ++i)
-        content->getView(viewsNoUpdateQueue[i])->DrawLDR(screenFBO);
 }
 
 }

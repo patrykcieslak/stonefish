@@ -67,8 +67,9 @@ namespace sf
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
+         \param updated a flag indicating if view content was updated
          */
-        void DrawLDR(GLuint destinationFBO);
+        void DrawLDR(GLuint destinationFBO, bool updated);
         
         //! A method returning the eye position.
         glm::vec3 GetEyePosition() const;
@@ -140,7 +141,6 @@ namespace sf
         glm::vec3 tempForward;
         glm::mat4 projection;
         bool _needsUpdate;
-        bool update;
         bool newData;
 
         GLfloat tilt;

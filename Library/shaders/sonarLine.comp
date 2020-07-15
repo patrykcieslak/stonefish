@@ -30,6 +30,9 @@ layout(r32f) uniform image2D sonarOutput;
 
 uniform vec3 noiseSeed;
 uniform vec2 noiseStddev;
+uniform float gain;
+uniform float vfov;
+uniform float tilt;
 
 #define M_PI 3.1415926535897932384626433832795
 
@@ -70,22 +73,37 @@ void main()
 {
     if(gl_GlobalInvocationID.x < N_HALF_BINS)
     {
-        //Compute data
+        //Compute bin
+        int bin;
+        float fov;
+        if(gl_GlobalInvocationID.y == 0)
+        {
+            bin = int(N_HALF_BINS) - 1 - int(gl_GlobalInvocationID.x);
+            fov = vfov;
+        }
+        else
+        {
+            bin = int(N_HALF_BINS) + int(gl_GlobalInvocationID.x);
+            fov = -vfov;
+        }
+
+        //Accumulate data samples
         vec2 data = vec2(0.0,0.0);
         for(uint i=0; i<N_VERT_BEAM_SAMPLES; ++i)
-            data += imageLoad(sonarHist, ivec3(i, gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).rg;
-        float value = 0.0;
+        {
+            float factor = float(i)/float(N_VERT_BEAM_SAMPLES-1);
+            float theta = tilt + (factor-0.5) * fov;
+            vec2 bs = imageLoad(sonarHist, ivec3(i, gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).rg;
+            bs.x *= smoothstep(0.0, 0.2, factor) * (1.0 - smoothstep(0.8, 1.0, factor));
+            bs.x /= sin(theta); //Intensity compensation based on flat bottom model
+            data += bs;
+        }
+
+        //Compute bin values
+        float value = gain * (float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1)*0.5+0.5) //Distance dependent amount of noise 
+                      * gaussian(-vec2(float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1), 0.0), noiseStddev.y, 0.0); //Additive noise
         if(data.y > 0.0)
-            value = data.x/data.y;
-        //Compute bin location
-        int bin = -1;
-        if(gl_GlobalInvocationID.y == 0)
-            bin = int(N_HALF_BINS) - 1 - int(gl_GlobalInvocationID.x);
-        else 
-            bin = int(N_HALF_BINS) + int(gl_GlobalInvocationID.x);
-        //Add noise
-        value *= gaussian(vec2(0.0), noiseStddev.x, 1.0); //Multiplicative noise
-        value += gaussian(-vec2(float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1), 0.0), noiseStddev.y, 0.0); //Additive noise
+            value += 0.5 * data.x/data.y * gain * gaussian(vec2(0.0), noiseStddev.x, 1.0); //Multiplicative noise
         value = clamp(value, 0.0, 1.0);
         //Store new line
         imageStore(sonarOutput, ivec2(bin, 0), vec4(value));

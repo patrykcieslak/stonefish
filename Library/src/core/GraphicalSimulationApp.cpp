@@ -443,7 +443,6 @@ void GraphicalSimulationApp::Loop()
 {
     SDL_Event event;
     bool mouseWasDown = false;
-    
     uint64_t startTime = GetTimeInMicroseconds();
     
     while(!hasFinished())
@@ -642,7 +641,7 @@ void GraphicalSimulationApp::RenderLoop()
     uint64_t drawTime;
     glGetQueryObjectui64v(timeQuery[1-timeQueryPingpong], GL_QUERY_RESULT, &drawTime);
     timeQueryPingpong = 1-timeQueryPingpong;
-	double dt = drawTime/1000000.0; //in ms
+	double dt = std::min(drawTime/1000000.0, 1000.0); //in ms
 	double f = 1.0/60.0;
 	drawingTime = f*dt + (1.0-f)*drawingTime;
 

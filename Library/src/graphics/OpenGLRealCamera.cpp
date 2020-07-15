@@ -42,7 +42,6 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
                                    : OpenGLCamera(x, y, width, height, range)
 {
     _needsUpdate = false;
-    update = false;
     newData = false;
     continuous = continuousUpdate;
     camera = NULL;
@@ -76,7 +75,6 @@ ViewType OpenGLRealCamera::getType()
 void OpenGLRealCamera::Update()
 {
     _needsUpdate = true;
-    update = true;
 }
 
 bool OpenGLRealCamera::needsUpdate()
@@ -169,19 +167,21 @@ glm::mat4 OpenGLRealCamera::GetViewMatrix() const
     return cameraTransform;
 }
 
-void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
+void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
 {
     //Check if there is a need to display image on screen
     bool display = true;
+    unsigned int dispX, dispY;
+    GLfloat dispScale;
     if(camera != NULL)
-        display = camera->getDisplayOnScreen();
+        display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
-        OpenGLCamera::DrawLDR(destinationFBO);
+        OpenGLCamera::DrawLDR(destinationFBO, updated);
     
     //Draw to camera buffer
-    if(camera != NULL && update)
+    if(camera != NULL && updated)
     {
         if(display) //No need to calculate exposure again
         {
@@ -241,7 +241,7 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
         }
         else
         {
-            OpenGLCamera::DrawLDR(cameraFBO);
+            OpenGLCamera::DrawLDR(cameraFBO, updated);
             OpenGLState::BindFramebuffer(cameraFBO);
             OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             glDrawBuffer(GL_COLOR_ATTACHMENT1);
@@ -261,8 +261,6 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO)
         
         newData = true;
     }
-    
-    update = false;
 }
 
 }

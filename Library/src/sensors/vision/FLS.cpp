@@ -121,7 +121,7 @@ VisionSensorType FLS::getVisionSensorType()
 void FLS::InitGraphics()
 {
     glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
-                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, freq < Scalar(0));
+                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, false);
     glFLS->setSonar(this);
     glFLS->setColorMap(cMap);
     UpdateTransform();

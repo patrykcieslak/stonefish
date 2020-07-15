@@ -35,7 +35,7 @@ Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int re
     fovH = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
     resX = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
     resY = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
-    display = false;
+    setDisplayOnScreen(false, 0, 0, 1.f);
 }
     
 Camera::~Camera()
@@ -53,14 +53,20 @@ void Camera::getResolution(unsigned int& x, unsigned int& y)
     y = resY;
 }
 
-void Camera::setDisplayOnScreen(bool onScreen)
+void Camera::setDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale)
 {
-    display = onScreen;
+    screen = display;
+    screenX = x;
+    screenY = y;
+    screenScale = scale;
 }
 
-bool Camera::getDisplayOnScreen()
+bool Camera::getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale)
 {
-    return display;
+    x = screenX;
+    y = screenY;
+    scale = screenScale;
+    return screen;
 }
 
 void Camera::UpdateTransform()

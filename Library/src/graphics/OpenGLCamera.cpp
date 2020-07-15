@@ -598,7 +598,7 @@ void OpenGLCamera::ShowAmbientOcclusion(glm::vec4 rect)
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, getAOTexture());
 }
 
-void OpenGLCamera::DrawLDR(GLuint destinationFBO)
+void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 {
 	if(usingToneMapping())
 	{

@@ -122,7 +122,7 @@ VisionSensorType SSS::getVisionSensorType()
 void SSS::InitGraphics()
 {
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
-                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, freq < Scalar(0));
+                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, false);
     glSSS->setSonar(this);
     glSSS->setColorMap(cMap);
     UpdateTransform();

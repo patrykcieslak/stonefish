@@ -86,8 +86,9 @@ namespace sf
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
+         \param updated a flag indicating if view content was updated
          */
-        virtual void DrawLDR(GLuint destinationFBO);
+        virtual void DrawLDR(GLuint destinationFBO, bool updated);
         
         //! A method drawing the ambient occlusion effect.
         /*!

@@ -28,12 +28,6 @@ uniform vec3 eyePos;
 uniform float restitution;
 uniform sampler2D texNormal;
 
-float lossFactor(float r)
-{
-    float spreading = 1.0/(max(0.01*0.01, r*r));
-    return spreading*spreading;
-}
-
 void main()
 {
     vec3 N = texture(texNormal, texCoord).rgb;
@@ -43,5 +37,5 @@ void main()
     float len = length(toEye);
     toEye /= len;
     rangeIntensity.x = len;
-    rangeIntensity.y = clamp(dot(N, toEye), 0.0, 1.0) * restitution * lossFactor(rangeIntensity.x);
+    rangeIntensity.y = clamp(dot(N, toEye), 0.0, 1.0) * restitution;
 }

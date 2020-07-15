@@ -48,7 +48,6 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
  : OpenGLView(originX, originY, width, height)
 {
     _needsUpdate = false;
-    update = false;
     continuous = continuousUpdate;
     newData = false;
     camera = NULL;
@@ -198,7 +197,6 @@ GLfloat OpenGLDepthCamera::GetFarClip() const
 void OpenGLDepthCamera::Update()
 {
     _needsUpdate = true;
-    update = true;
 }
 
 bool OpenGLDepthCamera::needsUpdate()
@@ -266,12 +264,14 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     OpenGLState::BindFramebuffer(0);
 }
 
-void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
+void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
 {
     //Check if there is a need to display image on screen
     bool display = true;
+    unsigned int dispX, dispY;
+    GLfloat dispScale;
     if(camera != NULL)
-        display = camera->getDisplayOnScreen();
+        display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -295,7 +295,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
     }
     
     //Copy texture to camera buffer
-    if(camera != NULL && update)
+    if(camera != NULL && updated)
     {
         if(!display)
         {
@@ -310,8 +310,6 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO)
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         newData = true;
     }
-    
-    update = false;
 }
 
 ///////////////////////// Static /////////////////////////////

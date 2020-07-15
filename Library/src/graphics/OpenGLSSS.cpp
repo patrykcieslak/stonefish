@@ -53,7 +53,6 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
 : OpenGLView(originX, originY, numOfBins, numOfLines), randDist(0.f, 1.f)
 {
     _needsUpdate = false;
-    update = false;
     continuous = continuousUpdate;
     newData = false;
     sonar = nullptr;
@@ -132,13 +131,11 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     sonarOutputShader[0]->AddUniform("sonarInput", ParameterType::INT);
     sonarOutputShader[0]->AddUniform("sonarHist", ParameterType::INT);
     sonarOutputShader[0]->AddUniform("range", ParameterType::VEC3);
-    sonarOutputShader[0]->AddUniform("gain", ParameterType::FLOAT);
 
     sonarOutputShader[0]->Use();
     sonarOutputShader[0]->SetUniform("sonarInput", TEX_POSTPROCESS1);
     sonarOutputShader[0]->SetUniform("sonarHist", TEX_POSTPROCESS2);
     sonarOutputShader[0]->SetUniform("range", glm::vec3(range.x, range.y, 2*(range.y-range.x)/(GLfloat)viewportWidth));
-    sonarOutputShader[0]->SetUniform("gain", gain);
     OpenGLState::UseProgram(0);
 
     sources.clear();
@@ -148,9 +145,15 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     sonarOutputShader[1]->AddUniform("sonarOutput", ParameterType::INT);
     sonarOutputShader[1]->AddUniform("noiseSeed", ParameterType::VEC3);
     sonarOutputShader[1]->AddUniform("noiseStddev", ParameterType::VEC2);
+    sonarOutputShader[1]->AddUniform("gain", ParameterType::FLOAT);
+    sonarOutputShader[1]->AddUniform("vfov", ParameterType::FLOAT);
+    sonarOutputShader[1]->AddUniform("tilt", ParameterType::FLOAT);
     sonarOutputShader[1]->Use();
     sonarOutputShader[1]->SetUniform("sonarHist", TEX_POSTPROCESS1);
     sonarOutputShader[1]->SetUniform("sonarOutput", TEX_POSTPROCESS2);
+    sonarOutputShader[1]->SetUniform("gain", gain);
+    sonarOutputShader[1]->SetUniform("vfov", fov.x);
+    sonarOutputShader[1]->SetUniform("tilt", tilt);
     OpenGLState::UseProgram(0);  
 }
 
@@ -207,7 +210,7 @@ void OpenGLSSS::UpdateTransform()
     if(rangeGain.z != gain)
     {
         gain = rangeGain.z;
-        settingsUpdated = true;
+        //settingsUpdated = true;
     }
     if(updateProjection)
     {
@@ -280,7 +283,6 @@ GLfloat OpenGLSSS::GetFarClip() const
 void OpenGLSSS::Update()
 {
     _needsUpdate = true;
-    update = true;
 }
 
 bool OpenGLSSS::needsUpdate()
@@ -370,7 +372,6 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     if(settingsUpdated)
     {
         sonarOutputShader[0]->SetUniform("range", glm::vec3(range.x, range.y, 2*(range.y-range.x)/(GLfloat)viewportWidth));
-        sonarOutputShader[0]->SetUniform("gain", gain);
         settingsUpdated = false;
     }
     glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
@@ -387,6 +388,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     sonarOutputShader[1]->Use();
     sonarOutputShader[1]->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
     sonarOutputShader[1]->SetUniform("noiseStddev", glm::vec2(0.01f, 0.02f));
+    sonarOutputShader[1]->SetUniform("gain", gain);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(viewportWidth/2.f/64.f), 2, 1);
     
@@ -408,12 +410,14 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
         pingpong = 0;
 }
 
-void OpenGLSSS::DrawLDR(GLuint destinationFBO)
+void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
 {
     //Check if there is a need to display image on screen
     bool display = true;
+    unsigned int dispX, dispY;
+    GLfloat dispScale;
     if(sonar != nullptr)
-        display = sonar->getDisplayOnScreen();
+        display = sonar->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -430,15 +434,16 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO)
         }
         else
         {
+            int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+            OpenGLState::Viewport(dispX, windowHeight-viewportHeight*dispScale-dispY, viewportWidth*dispScale, viewportHeight*dispScale);
             content->DrawTexturedSAQ(displayTex);
             OpenGLState::BindFramebuffer(0);   
         }
     }
     
     //Copy texture to sonar buffer
-    if(sonar != nullptr && update)
+    if(sonar != nullptr && updated)
     {
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[pingpong+1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
@@ -451,8 +456,6 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO)
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         newData = true;
     }
-    
-    update = false;
 }
 
 ///////////////////////// Static /////////////////////////////

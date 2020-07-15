@@ -230,10 +230,10 @@ void UnderwaterTestManager::BuildScenario()
     //mb->setDisplayOnScreen(true);
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
-    sf::FLS* fls = new sf::FLS("FLS", 512, 500, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::ORANGE_COPPER);
-    fls->setDisplayOnScreen(true);
-    sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 40.0, 1.0, 20.0, sf::ColorMap::ORANGE_COPPER);
-    sss->setDisplayOnScreen(true);
+    sf::FLS* fls = new sf::FLS("FLS", 256, 1000, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
+    fls->setDisplayOnScreen(true, 0, 500, 0.25f);
+    sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 40.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
+    sss->setDisplayOnScreen(true, 485, 500, 0.6f);
     //sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0, 10.0);
     //cam->setDisplayOnScreen(true);
     //sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
@@ -276,7 +276,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(imu, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.7)));
     auv->AddLinkSensor(fog, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0.3,0,-0.7)));
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
-    //auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(0.0,0.0,1.0)));
+    auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.8), sf::Vector3(0.0,0.0,1.0)));
     auv->AddVisionSensor(sss, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(0.0,0.0,0.0)));
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam2, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,2.0)));

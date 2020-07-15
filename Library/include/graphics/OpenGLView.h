@@ -62,8 +62,9 @@ namespace sf
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
+         \param updated a flag indicating if view content was updated
          */
-        virtual void DrawLDR(GLuint destinationFBO) = 0;
+        virtual void DrawLDR(GLuint destinationFBO, bool updated) = 0;
 
         //! A method that returns eye position.
         virtual glm::vec3 GetEyePosition() const = 0;

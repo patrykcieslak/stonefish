@@ -48,7 +48,7 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
-    /*
+
     sf::Uid id;
     id.owner = 10;
     id.item = 0;
@@ -60,18 +60,17 @@ void UnderwaterTestApp::DoHUD()
     id.item = 1;
     sf::Scalar gain = (getGUI()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), fls->getGain(), "FLS Gain"));
     fls->setGain(gain);
-    */
-    sf::Uid id;
+    
     id.owner = 10;
-    id.item = 0;
+    id.item = 2;
     
     sf::SSS* sss = (sf::SSS*)getSimulationManager()->getRobot("GIRONA500")->getSensor("SSS");
-    sf::Scalar range = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), sss->getRangeMax(), "SSS Range[m]"));
-    sss->setRangeMax(range);
+    sf::Scalar range2 = (getGUI()->DoSlider(id, 180.f, 110.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), sss->getRangeMax(), "SSS Range[m]"));
+    sss->setRangeMax(range2);
     
-    id.item = 1;
-    sf::Scalar gain = (getGUI()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), sss->getGain(), "SSS Gain"));
-    sss->setGain(gain);
+    id.item = 3;
+    sf::Scalar gain2 = (getGUI()->DoSlider(id, 180.f, 160.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), sss->getGain(), "SSS Gain"));
+    sss->setGain(gain2);
     
     /*
     sf::USBL* usbl = (sf::USBL*)getSimulationManager()->getComm("GIRONA500/USBL");

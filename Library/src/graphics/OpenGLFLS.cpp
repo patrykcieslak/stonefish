@@ -53,7 +53,6 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
 : OpenGLView(originX, originY, 2*numOfBins, numOfBins), randDist(0.f, 1.f)
 {
     _needsUpdate = false;
-    update = false;
     continuous = continuousUpdate;
     newData = false;
     sonar = nullptr;
@@ -351,7 +350,6 @@ GLfloat OpenGLFLS::GetFarClip() const
 void OpenGLFLS::Update()
 {
     _needsUpdate = true;
-    update = true;
 }
 
 bool OpenGLFLS::needsUpdate()
@@ -439,7 +437,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     sonarOutputShader->Use();
     sonarOutputShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.01f, 0.00005f));
+    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.02f, 0.03f));
     if(settingsUpdated)
     {
         sonarOutputShader->SetUniform("range", glm::vec3(range.x, range.y, (range.y-range.x)/(GLfloat)nBins));
@@ -472,12 +470,14 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
 }
 
-void OpenGLFLS::DrawLDR(GLuint destinationFBO)
+void OpenGLFLS::DrawLDR(GLuint destinationFBO, bool updated)
 {
     //Check if there is a need to display image on screen
     bool display = true;
+    unsigned int dispX, dispY;
+    GLfloat dispScale;
     if(sonar != nullptr)
-        display = sonar->getDisplayOnScreen();
+        display = sonar->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -498,15 +498,16 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO)
         }
         else
         {
-            OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+            int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+            OpenGLState::BindFramebuffer(destinationFBO);    
+            OpenGLState::Viewport(dispX, windowHeight-viewportHeight*dispScale-dispY, viewportWidth*dispScale, viewportHeight*dispScale);
             content->DrawTexturedSAQ(displayTex);
             OpenGLState::BindFramebuffer(0);   
         }
     }
     
     //Copy texture to sonar buffer
-    if(sonar != nullptr && update)
+    if(sonar != nullptr && updated)
     {
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
@@ -519,8 +520,6 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO)
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         newData = true;
     }
-    
-    update = false;
 }
 
 ///////////////////////// Static /////////////////////////////

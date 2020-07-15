@@ -44,11 +44,6 @@ float sigmoid(float x)
     return (0.5 * tanh(0.5 * t) + 0.5);
 }
 
-float TVG(float r)
-{
-    return r*r*r*r;
-}
-
 float rand(vec2 coord)
 {
     // This one-liner can be found in many places, including:
@@ -96,45 +91,34 @@ void main()
         sampleCoord.x = int(gl_GlobalInvocationID.x);
         sampleCoord.z = int(gl_GlobalInvocationID.y);
         
-        vec2 noiseCoord;
-        noiseCoord.x = float(sampleCoord.x*(sampleCoord.z+1))/float(viewBeams * (inDim.z+1));
-        float mulNoise = gaussian(noiseCoord.xx, noiseStddev.x, 1.0);
-        
         for(int i=0; i<N_BEAM_SAMPLES; ++i) //For each vertical beam sample
         {            
             sampleCoord.y = i;
-            noiseCoord.y = float(i)/float(N_BEAM_SAMPLES);
 
             //Get sample value
             vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
-            rangeIntensity.x += gaussian(noiseCoord.xy, 2.0*range.z, 0.0);
-
             if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
                 continue;
 
             //Compute bin and accumulate intensity data
+            float factor = float(i)/(float(N_BEAM_SAMPLES-1));
             uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
-            float noisy = rangeIntensity.y * mulNoise; //Multiplicative noise
-            noisy += gaussian(-noiseCoord.xy, noiseStddev.y, 0.0)/(rangeIntensity.x*rangeIntensity.x); //Additive noise
-            binHistogram[bin].x += noisy * gain * TVG(rangeIntensity.x);
+            binHistogram[bin].x += rangeIntensity.y * smoothstep(0.0, 0.2, factor) * (1.0 - smoothstep(0.8, 1.0, factor)); //Lobe intensity correction
             binHistogram[bin].y += 1.0;
         }
 
         //Compute and store bin values
+        vec2 noiseCoord;
+        noiseCoord.x = float(sampleCoord.x*(sampleCoord.z+1))/float(viewBeams * (inDim.z+1));
+        float mulNoise = gaussian(noiseCoord.xx, noiseStddev.x, 1.0);
         uint globalBeam = gl_GlobalInvocationID.x + beams.x * gl_GlobalInvocationID.y;
+        
         for(uint i=0; i<N_BINS; ++i)
         {
-            float data = 0.0;
+            noiseCoord.y = i/float(N_BINS-1);
+            float data = gain * gaussian(-noiseCoord.xy, noiseStddev.y, 0.0); //Additive noise
             if(binHistogram[i].y > 0.0)
-            {
-                data = binHistogram[i].x/binHistogram[i].y;
-            }
-            else
-            {
-                noiseCoord.y = float(i)/float(N_BINS);
-                float r = (float(i)+0.5)*range.z;
-                data = gain * TVG(r) * gaussian(-noiseCoord.xy, noiseStddev.y, 0.0)/(r*r); //Additive noise
-            }
+                data += gain * (binHistogram[i].x/binHistogram[i].y) * mulNoise; //Signal + multiplicative noise
             imageStore(sonarOutput, ivec2(globalBeam, i), vec4(data));
         }
     }
