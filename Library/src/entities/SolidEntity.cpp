@@ -39,13 +39,13 @@
 namespace sf
 {
 
-SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant) : Entity(uniqueName)
+SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant) : MovingEntity(uniqueName, material, look)
 {
     mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     thick = thickness;
     
-    if((bpt == BodyPhysicsType::SUBMERGED_BODY || bpt == BodyPhysicsType::FLOATING_BODY) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-        phyType = BodyPhysicsType::SURFACE_BODY;
+    if((bpt == BodyPhysicsType::SUBMERGED || bpt == BodyPhysicsType::FLOATING) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        phyType = BodyPhysicsType::SURFACE;
     else
         phyType = bpt;
     
@@ -72,7 +72,7 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     contactK = Scalar(-1);
     contactD = Scalar(0);
     volume = Scalar(0);
-    fdApproxType = FD_APPROX_AUTO;
+    fdApproxType =  GeometryApproxType::AUTO;
     fdApproxParams = std::vector<Scalar>(0);
     T_CG2H = Transform::getIdentity();
     
@@ -96,7 +96,7 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     phyMesh = nullptr;
     graObjectId = -1;
     phyObjectId = -1;
-    dm = DisplayMode::DISPLAY_GRAPHICAL;
+    dm = DisplayMode::GRAPHICAL;
     submerged.type = RenderableType::HYDRO_LINES;
 }
 
@@ -105,9 +105,9 @@ SolidEntity::~SolidEntity()
     if(phyMesh != nullptr) delete phyMesh;
 }
 
-EntityType SolidEntity::getType()
+EntityType SolidEntity::getType() const
 {
-    return ENTITY_SOLID;
+    return EntityType::SOLID;
 }
 
 void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
@@ -178,26 +178,6 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
     }
 }
 
-void SolidEntity::setDisplayMode(DisplayMode m)
-{
-    dm = m;
-}
-
-void SolidEntity::setLook(int newLookId)
-{
-    lookId = newLookId;
-}
-
-int SolidEntity::getLook() const
-{
-    return lookId;
-}
-
-int SolidEntity::getGraphicalObject() const
-{
-    return graObjectId;
-}
-
 int SolidEntity::getPhysicalObject() const
 {
     return phyObjectId;
@@ -236,14 +216,14 @@ std::vector<Renderable> SolidEntity::Render()
         item.type = RenderableType::SOLID;
         item.materialName = mat.name;
         
-        if(dm == DisplayMode::DISPLAY_GRAPHICAL && graObjectId >= 0)
+        if(dm == DisplayMode::GRAPHICAL && graObjectId >= 0)
         {
             item.objectId = graObjectId;
             item.lookId = lookId;
             item.model = glMatrixFromTransform(getGTransform());
             items.push_back(item);
         }
-        else if(dm == DisplayMode::DISPLAY_PHYSICAL && phyObjectId >= 0)
+        else if(dm == DisplayMode::PHYSICAL && phyObjectId >= 0)
         {
             item.objectId = phyObjectId;
             item.lookId = -1;
@@ -268,24 +248,24 @@ std::vector<Renderable> SolidEntity::Render()
         //Geometry approximation
         switch(fdApproxType)
         {
-            case FD_APPROX_AUTO:
+            case  GeometryApproxType::AUTO:
                 break;
                 
-            case FD_APPROX_SPHERE:
+            case  GeometryApproxType::SPHERE:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
                 item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0]));
                 items.push_back(item);
                 break;
                 
-            case FD_APPROX_CYLINDER:
+            case  GeometryApproxType::CYLINDER:
                 item.type = RenderableType::HYDRO_CYLINDER;
                 item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1]));
                 items.push_back(item);
                 break;
                 
-            case FD_APPROX_ELLIPSOID:
+            case  GeometryApproxType::ELLIPSOID:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
                 item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1], (GLfloat)fdApproxParams[2]));
@@ -536,7 +516,7 @@ Vector3 SolidEntity::getAddedInertia() const
 
 Scalar SolidEntity::getAugmentedMass() const
 {
-    if(phyType == BodyPhysicsType::SUBMERGED_BODY)
+    if(phyType == BodyPhysicsType::SUBMERGED)
         return mass + (aMass.x() + aMass.y() + aMass.z())/Scalar(3);
     else
         return mass;
@@ -544,7 +524,7 @@ Scalar SolidEntity::getAugmentedMass() const
 
 Vector3 SolidEntity::getAugmentedInertia() const
 {
-    if(phyType == BodyPhysicsType::SUBMERGED_BODY)
+    if(phyType == BodyPhysicsType::SUBMERGED)
         return Ipri + aI;
     else
         return Ipri;
@@ -554,11 +534,6 @@ void SolidEntity::getGeometryApprox(GeometryApproxType& type, std::vector<Scalar
 {
     type = fdApproxType;
     params = fdApproxParams;
-}
-
-Material SolidEntity::getMaterial() const
-{
-    return mat;
 }
 
 const Mesh* SolidEntity::getPhysicsMesh()
@@ -584,16 +559,16 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
 {
     switch(t)
     {
-        case FD_APPROX_SPHERE:
+        case  GeometryApproxType::SPHERE:
             ComputeSphericalApprox();
             break;
             
-        case FD_APPROX_CYLINDER:
+        case  GeometryApproxType::CYLINDER:
             ComputeCylindricalApprox();
             break;
             
-        case FD_APPROX_AUTO:
-        case FD_APPROX_ELLIPSOID:
+        case  GeometryApproxType::AUTO:
+        case  GeometryApproxType::ELLIPSOID:
             ComputeEllipsoidalApprox();
             break;
     }
@@ -618,7 +593,7 @@ void SolidEntity::ComputeSphericalApprox()
             r = rc;
     }
     
-    fdApproxType = FD_APPROX_SPHERE;
+    fdApproxType =  GeometryApproxType::SPHERE;
     fdApproxParams.resize(1);
     fdApproxParams[0] = btSqrt(r);
     
@@ -678,7 +653,7 @@ void SolidEntity::ComputeCylindricalApprox()
         l_2 = d > l_2 ? d : l_2;
     }
     
-    fdApproxType = FD_APPROX_CYLINDER;
+    fdApproxType =  GeometryApproxType::CYLINDER;
     fdApproxParams.resize(2);
     
     if(axis == 0) //X axis
@@ -900,7 +875,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
     cInfo("Ellipsoid core points: %d", x0.size());
 #endif
     
-    fdApproxType = FD_APPROX_ELLIPSOID;
+    fdApproxType =  GeometryApproxType::ELLIPSOID;
     fdApproxParams.resize(3);
     fdApproxParams[0] = d.getX();
     fdApproxParams[1] = d.getY();
@@ -1074,16 +1049,6 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
     }
 }
 
-void SolidEntity::RemoveFromSimulation(SimulationManager* sm)
-{
-    if(rigidBody != NULL)
-    {
-        sm->getDynamicsWorld()->removeRigidBody(rigidBody);
-        delete rigidBody;
-        rigidBody = NULL;
-    }
-}
-
 void SolidEntity::UpdateAcceleration(Scalar dt)
 {
     //Filter velocity
@@ -1157,11 +1122,11 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* ocn)
     if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), d.z())) > Scalar(0)) ++submerged;
     
     if(submerged == 0)
-        return BodyFluidPosition::OUTSIDE_FLUID;
+        return BodyFluidPosition::OUTSIDE;
     else if(submerged == 8)
-        return BodyFluidPosition::INSIDE_FLUID;
+        return BodyFluidPosition::INSIDE;
     else
-        return BodyFluidPosition::CROSSING_FLUID_SURFACE;
+        return BodyFluidPosition::CROSSING_SURFACE;
 }
     
 void SolidEntity::ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Vector3& linear, Vector3& quadratic, Vector3& skin)
@@ -1193,18 +1158,18 @@ void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdl, Vector3& 
     
     switch(fdApproxType)
     {
-        case FD_APPROX_AUTO:
-        case FD_APPROX_SPHERE:
+        case  GeometryApproxType::AUTO:
+        case  GeometryApproxType::SPHERE:
             break;
                 
-        case FD_APPROX_CYLINDER:
+        case  GeometryApproxType::CYLINDER:
         {
             Vector3 Cd(0.5, 0.5, 1.0);
             corFactor = Cd.dot(Fdqn);
         }
             break;
                 
-        case FD_APPROX_ELLIPSOID:
+        case  GeometryApproxType::ELLIPSOID:
         {
             Vector3 Cd(Scalar(1)/fdApproxParams[0] , Scalar(1)/fdApproxParams[1], Scalar(1)/fdApproxParams[2]);
             Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
@@ -1590,7 +1555,7 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
 
 void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phyType != BodyPhysicsType::FLOATING_BODY && phyType != BodyPhysicsType::SUBMERGED_BODY) return;
+    if(phyType != BodyPhysicsType::FLOATING && phyType != BodyPhysicsType::SUBMERGED) return;
     
 #ifdef DEBUG
     submerged.points.clear();
@@ -1599,7 +1564,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
     //If completely outside fluid just set all torques and forces to 0
-    if(bf == BodyFluidPosition::OUTSIDE_FLUID)
+    if(bf == BodyFluidPosition::OUTSIDE)
     {
         Fb.setZero();
         Tb.setZero();
@@ -1617,7 +1582,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     Vector3 omega = getAngularVelocity();
     
     //Check if fully submerged --> simplifies buoyancy calculation
-    if(bf == BodyFluidPosition::INSIDE_FLUID)
+    if(bf == BodyFluidPosition::INSIDE)
     {
         //Compute buoyancy based on CB position
         if(isBuoyant())
@@ -1641,7 +1606,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 
 void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phyType != BodyPhysicsType::AERODYNAMIC_BODY) return;
+    if(phyType != BodyPhysicsType::AERODYNAMIC) return;
     
     //Get velocities and transformations
     Vector3 v = getLinearVelocity();
@@ -1712,18 +1677,18 @@ void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vecto
     
     switch(fdApproxType)
     {
-        case FD_APPROX_AUTO:
-        case FD_APPROX_SPHERE:
+        case  GeometryApproxType::AUTO:
+        case  GeometryApproxType::SPHERE:
             break;
                 
-        case FD_APPROX_CYLINDER:
+        case  GeometryApproxType::CYLINDER:
         {
             Vector3 Cd(0.5, 0.5, 1.0);
             corFactor = Cd.dot(Fdan);
         }
             break;
                 
-        case FD_APPROX_ELLIPSOID:
+        case  GeometryApproxType::ELLIPSOID:
         {
             Vector3 Cd(Scalar(1)/fdApproxParams[0] , Scalar(1)/fdApproxParams[1], Scalar(1)/fdApproxParams[2]);
             Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());

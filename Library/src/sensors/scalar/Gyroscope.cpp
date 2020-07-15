@@ -78,7 +78,7 @@ void Gyroscope::InternalUpdate(Scalar dt)
 
 ScalarSensorType Gyroscope::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_GYRO;
+    return ScalarSensorType::GYRO;
 }
 
 }

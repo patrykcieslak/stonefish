@@ -53,7 +53,7 @@ void UnderwaterTestApp::DoHUD()
     id.owner = 10;
     id.item = 0;
     
-    sf::FLS* fls = (sf::FLS*)getSimulationManager()->getRobot("GIRONA500")->getSensor("FLS");
+    sf::FLS* fls = (sf::FLS*)getSimulationManager()->getSensor("FLS");  //->getRobot("GIRONA500")->getSensor("FLS");
     sf::Scalar range = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), fls->getRangeMax(), "FLS Range[m]"));
     fls->setRangeMax(range);
     

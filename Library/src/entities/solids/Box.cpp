@@ -70,13 +70,13 @@ Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& ori
 	phyMesh = OpenGLContent::BuildBox(glHalfExtents);
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(FD_APPROX_ELLIPSOID);
+    ComputeFluidDynamicsApprox( GeometryApproxType::ELLIPSOID);
     //dragCoeff = Vector3(halfExtents.y()*halfExtents.z()*Scalar(4*1.05), halfExtents.x()*halfExtents.z()*Scalar(4*1.05), halfExtents.y()*halfExtents.x()*Scalar(4*1.05));
 }
 
 SolidType Box::getSolidType()
 {
-    return SolidType::SOLID_BOX;
+    return SolidType::BOX;
 }
 
 btCollisionShape* Box::BuildCollisionShape()

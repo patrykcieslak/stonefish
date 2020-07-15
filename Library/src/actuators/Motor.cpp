@@ -38,7 +38,7 @@ Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
 
 ActuatorType Motor::getType()
 {
-    return ActuatorType::ACTUATOR_MOTOR;
+    return ActuatorType::MOTOR;
 }
 
 void Motor::setIntensity(Scalar tau)

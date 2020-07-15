@@ -445,6 +445,8 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         Scalar reflectivity;
         const char* texture = nullptr;
         std::string textureStr = "";
+        const char* normalMap = nullptr;
+        std::string normalMapStr = "";
         
         if(look->QueryStringAttribute("name", &name) != XML_SUCCESS)
             return false;
@@ -458,7 +460,10 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
             reflectivity = Scalar(0);
         if(look->QueryStringAttribute("texture", &texture) == XML_SUCCESS)
             textureStr = GetFullPath(std::string(texture));
-        sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr);
+        if(look->QueryStringAttribute("normal_map", &normalMap) == XML_SUCCESS)
+            normalMapStr = GetFullPath(std::string(normalMap));
+        
+        sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
         look = look->NextSiblingElement("look");
     }
     
@@ -481,6 +486,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     const char* mat = nullptr;
     const char* look = nullptr;
     unsigned int uvMode = 0;
+    float uvScale = 1.f;
     Transform trans;
     
     //Material
@@ -494,6 +500,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     if(item->QueryStringAttribute("name", &look) != XML_SUCCESS)
         return false;
     item->QueryAttribute("uv_mode", &uvMode); //Optional
+    item->QueryAttribute("uv_scale", &uvScale); //Optional
     //Transform
     if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
         return false;
@@ -580,7 +587,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     }
     else if(typestr == "plane")
     {
-        object = new Plane(std::string(name), Scalar(10000), std::string(mat), std::string(look));
+        object = new Plane(std::string(name), Scalar(10000), std::string(mat), std::string(look), uvScale);
     } 
     else if(typestr == "terrain")
     {
@@ -624,19 +631,19 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         return false;
     if(element->QueryStringAttribute("physics", &phyType) != XML_SUCCESS)
     {
-        ePhyType = BodyPhysicsType::SUBMERGED_BODY;
+        ePhyType = BodyPhysicsType::SUBMERGED;
     }
     else
     {
         std::string phyTypeStr(phyType);
         if(phyTypeStr == "surface")
-            ePhyType = BodyPhysicsType::SURFACE_BODY;
+            ePhyType = BodyPhysicsType::SURFACE;
         else if(phyTypeStr == "floating")
-            ePhyType = BodyPhysicsType::FLOATING_BODY;
+            ePhyType = BodyPhysicsType::FLOATING;
         else if(phyTypeStr == "submerged")
-            ePhyType = BodyPhysicsType::SUBMERGED_BODY;
+            ePhyType = BodyPhysicsType::SUBMERGED;
         else if(phyTypeStr == "aerodynamic")
-            ePhyType = BodyPhysicsType::AERODYNAMIC_BODY;
+            ePhyType = BodyPhysicsType::AERODYNAMIC;
         else 
             return false;
     }
@@ -1756,13 +1763,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED, std::string(look));
             Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC, std::string(look));
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
@@ -1944,12 +1951,12 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         if(item->QueryStringAttribute("name", &attachName) == XML_SUCCESS)
         {
             Entity* body = sm->getEntity(std::string(attachName));
-            if(body->getType() == ENTITY_STATIC)
+            if(body->getType() == EntityType::STATIC)
             {
                 comm->AttachToStatic((StaticEntity*)body, origin);
                 sm->AddComm(comm);
             }
-            else if(body->getType() == ENTITY_SOLID)
+            else if(body->getType() == EntityType::SOLID)
             {
                 comm->AttachToSolid((SolidEntity*)body, origin);
                 sm->AddComm(comm);
@@ -2017,8 +2024,8 @@ bool ScenarioParser::ParseContact(XMLElement* element)
         }
     }
     if(entA == nullptr || entB == nullptr
-       || (entA->getType() != ENTITY_SOLID && entA->getType() != ENTITY_STATIC)
-       || (entB->getType() != ENTITY_SOLID && entB->getType() != ENTITY_STATIC))
+       || (entA->getType() != EntityType::SOLID && entA->getType() != EntityType::STATIC)
+       || (entB->getType() != EntityType::SOLID && entB->getType() != EntityType::STATIC))
         return false;
     
     int16_t displayMask = 0;

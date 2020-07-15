@@ -81,7 +81,7 @@ void IMU::setNoise(Scalar angleStdDev, Scalar angularVelocityStdDev)
 
 ScalarSensorType IMU::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_IMU;
+    return ScalarSensorType::IMU;
 }
 
 

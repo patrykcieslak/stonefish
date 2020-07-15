@@ -42,7 +42,7 @@
 #include <actuators/Light.h>
 
 FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) 
-    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
+    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
 }
 
@@ -84,9 +84,9 @@ void FallingTestManager::BuildScenario()
     
     //---Robot---
     //Mechanical parts
-    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "Green");
-    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "");
-    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "Green");
+    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "");
+    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
     
     std::vector<sf::SolidEntity*> links;
     links.push_back(link1);
@@ -114,6 +114,6 @@ void FallingTestManager::BuildScenario()
     /*sf::Obstacle* funnel = new sf::Obstacle("Funnel", sf::GetDataPath() + "funnel.obj", 1.0, sf::I4(), "Steel", "Green");
     AddStaticEntity(funnel, sf::Transform(sf::IQ(), sf::Vector3(1.0, 1.0, -0.5)));
 
-    sf::Polyhedron* obj2 = new sf::Polyhedron("Cylinder", sf::GetDataPath() + "sphere_R=1.obj", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "Green");
+    sf::Polyhedron* obj2 = new sf::Polyhedron("Cylinder", sf::GetDataPath() + "sphere_R=1.obj", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
     AddSolidEntity(obj2, sf::Transform(sf::IQ(), sf::Vector3(1.0, 1.4, -2.0)));*/
 }

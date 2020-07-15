@@ -63,7 +63,7 @@ void Pressure::setNoise(Scalar pressureStdDev)
 
 ScalarSensorType Pressure::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_PRESSURE;
+    return ScalarSensorType::PRESSURE;
 }
 
 }

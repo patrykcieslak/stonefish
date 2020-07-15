@@ -42,6 +42,7 @@ namespace sf
     class ResearchConstraintSolver;
     class Entity;
     class StaticEntity;
+    class AnimatedEntity;
     class FeatherstoneEntity;
     class Joint;
     class Actuator;
@@ -77,7 +78,7 @@ namespace sf
          \param cft type of collision filtering used
          \param ht type of hydrodynamics computations
          */
-        SimulationManager(Scalar stepsPerSecond = Scalar(60), SolverType st = SOLVER_SI, CollisionFilteringType cft = COLLISION_EXCLUSIVE, FluidDynamicsType ht = GEOMETRY_BASED);
+        SimulationManager(Scalar stepsPerSecond = Scalar(60), SolverType st = SOLVER_SI, CollisionFilteringType cft = COLLISION_EXCLUSIVE);
         
         //! A destructor.
         virtual ~SimulationManager();
@@ -142,13 +143,20 @@ namespace sf
          */
         void AddStaticEntity(StaticEntity* ent, const Transform& origin);
         
+        //! A method that adds an animated rigid body to the simulation world.
+        /*!
+         \param ent a pointer to the animated object
+         \param origin a pose of the body in the world frame
+         */
+        void AddAnimatedEntity(AnimatedEntity* ent, const Transform& origin);
+        
         //! A method that adds a dynamic rigid body to the simulation world.
         /*!
          \param ent a pointer to the dynamic body object
          \param origin a pose of the body in the world frame
          */
         void AddSolidEntity(SolidEntity* ent, const Transform& origin);
-        
+
         //! A method that adds a rigid multibody to the simulation world.
         /*!
          \param ent a pointer to the multibody object
@@ -283,9 +291,6 @@ namespace sf
         
         //! A method returning the type of solver used.
         SolverType getSolverType();
-        
-        //! A method returning the type of fluid dynamics computations used.
-        FluidDynamicsType getFluidDynamicsType();
         
         //! A method returning a robot by index
         /*!
@@ -488,7 +493,6 @@ namespace sf
         
         SolverType solver;
         CollisionFilteringType collisionFilter;
-        FluidDynamicsType hydroType;
         Scalar sps;
         Scalar realtimeFactor;
         Scalar cpuUsage;

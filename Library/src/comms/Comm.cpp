@@ -58,11 +58,11 @@ Transform Comm::getDeviceFrame()
 {
     if(attach != nullptr)
     {
-        if(attach->getType() == EntityType::ENTITY_STATIC)
+        if(attach->getType() == EntityType::STATIC)
         {
             return ((StaticEntity*)attach)->getTransform() * o2c;
         }
-        else if(attach->getType() == EntityType::ENTITY_SOLID)
+        else if(attach->getType() == EntityType::SOLID)
         {
             return ((SolidEntity*)attach)->getOTransform() * o2c;
         }

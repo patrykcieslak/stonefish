@@ -1331,7 +1331,7 @@ GLuint OpenGLContent::GenerateFramebuffer(const std::vector<FBOTexture>& texture
     }
 }
 
-Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
+Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvScale)
 {
     TexturableMesh* mesh = new TexturableMesh;
     Face f;
@@ -1347,15 +1347,15 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     mesh->vertices.push_back(vt);
     
     vt.pos.x = halfExtents;
-    vt.uv = glm::vec2(0.f, halfExtents*2.f);
+    vt.uv = glm::vec2(0.f, halfExtents*2.f)/uvScale;
     mesh->vertices.push_back(vt);
         
     vt.pos.y = halfExtents;
-    vt.uv = glm::vec2(halfExtents*2.f, halfExtents*2.f);
+    vt.uv = glm::vec2(halfExtents*2.f, halfExtents*2.f)/uvScale;
     mesh->vertices.push_back(vt);
         
     vt.pos.x = -halfExtents;
-    vt.uv = glm::vec2(halfExtents*2.f, 0.f);
+    vt.uv = glm::vec2(halfExtents*2.f, 0.f)/uvScale;
     mesh->vertices.push_back(vt);
     
     f.vertexID[0] = 0;

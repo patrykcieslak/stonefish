@@ -679,9 +679,9 @@ void GraphicalSimulationApp::DoHUD()
     id.owner = 0;
     
     id.item = 0;
-    bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::DISPLAY_PHYSICAL; 
+    bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::PHYSICAL; 
     displayPhysical = gui->DoCheckBox(id, 15.f, offset, 110.f, displayPhysical, "Physical objects");
-    getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::DISPLAY_PHYSICAL : DisplayMode::DISPLAY_GRAPHICAL);
+    getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::PHYSICAL : DisplayMode::GRAPHICAL);
     offset += 22.f;
     
     id.item = 1;
@@ -807,7 +807,7 @@ void GraphicalSimulationApp::DoHUD()
     {
         switch(lastPicked->getType())
         {
-            case EntityType::ENTITY_STATIC:
+            case EntityType:: STATIC:
             {
                 StaticEntity* ent = (StaticEntity*)lastPicked;
                 
@@ -823,11 +823,11 @@ void GraphicalSimulationApp::DoHUD()
             }
                 break;
                 
-            case EntityType::ENTITY_SOLID:
+            case EntityType:: SOLID:
             {
                 SolidEntity* ent = (SolidEntity*)lastPicked;
                 
-                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::SOLID_COMPOUND ? 143.f : 122.f);
+                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::COMPOUND ? 143.f : 122.f);
                 offset += 5.f;
                 gui->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
@@ -835,7 +835,7 @@ void GraphicalSimulationApp::DoHUD()
                 offset += 14.f;
                 gui->DoLabel(18.f, offset, std::string("Type: Dynamic"));
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, ent->getSolidType() == SolidType::SOLID_COMPOUND ? std::string("Material: Compound") : std::string("Material: ") + ent->getMaterial().name);
+                gui->DoLabel(18.f, offset, ent->getSolidType() == SolidType::COMPOUND ? std::string("Material: Compound") : std::string("Material: ") + ent->getMaterial().name);
                 offset += 14.f;
                 std::sprintf(buf, "%1.3lf", ent->getMass());
                 gui->DoLabel(18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
@@ -850,7 +850,7 @@ void GraphicalSimulationApp::DoHUD()
                 gui->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
                 offset += 11.f;
                 
-                if(ent->getSolidType() == SolidType::SOLID_COMPOUND)
+                if(ent->getSolidType() == SolidType::COMPOUND)
                 {
                     Compound* cmp = (Compound*)ent;
                     id.owner = 4;

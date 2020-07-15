@@ -59,7 +59,7 @@ glm::vec2 DepthCamera::getDepthRange()
     
 VisionSensorType DepthCamera::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_DEPTH_CAMERA;
+    return VisionSensorType::DEPTH_CAMERA;
 }
 
 void DepthCamera::InitGraphics()

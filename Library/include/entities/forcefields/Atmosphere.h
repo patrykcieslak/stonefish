@@ -79,12 +79,11 @@ namespace sf
         
         //! A method running the aerodynamics computation.
         /*!
-         \param fdt type of fluid dynamics computations
          \param world a pointer to the dynamics world
          \param co a pointer to the collision object
          \param recompute a flag deciding if hydrodynamic forces need to be recomputed
          */
-        void ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
+        void ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute);
         
         //! A method returning the position of the sun in the sky.
         /*!

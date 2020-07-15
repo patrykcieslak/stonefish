@@ -81,7 +81,7 @@ Scalar Multibeam2::getVerticalFOV()
 
 VisionSensorType Multibeam2::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_MULTIBEAM2;
+    return VisionSensorType::MULTIBEAM2;
 }
     
 void Multibeam2::InitGraphics()

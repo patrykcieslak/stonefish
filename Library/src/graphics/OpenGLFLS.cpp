@@ -37,7 +37,7 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
-#define FLS_MAX_SINGLE_FOV 10.f
+#define FLS_MAX_SINGLE_FOV 30.f
 #define FLS_VRES_FACTOR 1.f
 
 namespace sf

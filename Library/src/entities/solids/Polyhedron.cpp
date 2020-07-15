@@ -92,7 +92,7 @@ Polyhedron::~Polyhedron()
     
 SolidType Polyhedron::getSolidType()
 {
-    return SolidType::SOLID_POLYHEDRON;
+    return SolidType::POLYHEDRON;
 }
 
 btCollisionShape* Polyhedron::BuildCollisionShape()

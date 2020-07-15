@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sensor__
@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum defining types of sensors.
-    typedef enum {SENSOR_JOINT = 0, SENSOR_LINK, SENSOR_VISION, SENSOR_OTHER} SensorType;
+    enum class SensorType {JOINT, LINK, VISION, OTHER};
     
     struct Renderable;
     

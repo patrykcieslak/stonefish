@@ -44,7 +44,7 @@ Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, S
 
 ActuatorType Servo::getType()
 {
-    return ActuatorType::ACTUATOR_SERVO;
+    return ActuatorType::SERVO;
 }    
 
 void Servo::setControlMode(ServoControlMode m)

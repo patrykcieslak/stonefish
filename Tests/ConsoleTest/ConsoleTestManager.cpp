@@ -31,7 +31,7 @@
 #include <utils/UnitSystem.h>
 
 ConsoleTestManager::ConsoleTestManager(sf::Scalar stepsPerSecond) 
-    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
+    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
 }
 
@@ -45,8 +45,8 @@ void ConsoleTestManager::BuildScenario()
     sf::Plane* plane = new sf::Plane("Bottom", 1000.0, "Rock");
     AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
     
-    sf::Sphere* sph1 = new sf::Sphere("Sphere1", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE_BODY);
-    sf::Sphere* sph2 = new sf::Sphere("Sphere2", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE_BODY);
+    sf::Sphere* sph1 = new sf::Sphere("Sphere1", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE);
+    sf::Sphere* sph2 = new sf::Sphere("Sphere2", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE);
     
     std::vector<sf::SolidEntity*> links(0);
     links.push_back(sph2);

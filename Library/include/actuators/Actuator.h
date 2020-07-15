@@ -33,7 +33,7 @@ namespace sf
     struct Renderable;
     
     //! An enum designating a type of the actuator.
-    typedef enum {ACTUATOR_MOTOR, ACTUATOR_SERVO, ACTUATOR_PROPELLER, ACTUATOR_THRUSTER, ACTUATOR_VBS, ACTUATOR_LIGHT} ActuatorType;
+    enum class ActuatorType {MOTOR, SERVO, PROPELLER, THRUSTER, VBS, LIGHT};
     
     //! An abstract class representing any actuator.
     class Actuator

@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum specifiying the type of the static entity.
-    typedef enum {STATIC_PLANE, STATIC_TERRAIN, STATIC_OBSTACLE} StaticEntityType;
+    enum class StaticEntityType {PLANE, TERRAIN, OBSTACLE};
     
     struct Mesh;
     
@@ -84,13 +84,13 @@ namespace sf
         Transform getTransform();
         
         //! A method returning the material of the entity.
-        Material getMaterial();
+        Material getMaterial() const;
         
         //! A method returning the rigid body associated with the entity.
         btRigidBody* getRigidBody();
         
         //! A method returning the type of the entity.
-        EntityType getType();
+        EntityType getType() const;
         
         //! A method returninf the type of the static entity.
         virtual StaticEntityType getStaticType() = 0;

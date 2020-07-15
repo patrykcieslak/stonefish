@@ -98,7 +98,7 @@ Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transf
 
 ForcefieldType Trigger::getForcefieldType()
 {
-    return FORCEFIELD_TRIGGER;
+    return ForcefieldType::TRIGGER;
 }
 
 void Trigger::AddActiveSolid(SolidEntity* solid)
@@ -132,7 +132,7 @@ void Trigger::Activate(btCollisionObject* co)
     else
         return;
     
-    if(ent->getType() == ENTITY_SOLID)
+    if(ent->getType() == EntityType::SOLID)
     {
         SolidEntity* solid = (SolidEntity*)ent;
         for(unsigned int i=0; i<solids.size(); ++i)

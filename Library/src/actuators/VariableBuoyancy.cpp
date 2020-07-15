@@ -66,7 +66,7 @@ VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std
 
 ActuatorType VariableBuoyancy::getType()
 {
-    return ActuatorType::ACTUATOR_VBS;
+    return ActuatorType::VBS;
 }
         
 void VariableBuoyancy::setFlowRate(Scalar rate)

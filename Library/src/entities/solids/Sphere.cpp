@@ -61,13 +61,13 @@ Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, s
     phyMesh = OpenGLContent::BuildSphere((GLfloat)r);
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(FD_APPROX_SPHERE);
+    ComputeFluidDynamicsApprox( GeometryApproxType::SPHERE);
     //dragCoeff = Vector3(Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius);
 }
 
 SolidType Sphere::getSolidType()
 {
-    return SolidType::SOLID_SPHERE;
+    return SolidType::SPHERE;
 }
 
 btCollisionShape* Sphere::BuildCollisionShape()

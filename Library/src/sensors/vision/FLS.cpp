@@ -115,7 +115,7 @@ Scalar FLS::getGain()
     
 VisionSensorType FLS::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_FLS;
+    return VisionSensorType::FLS;
 }
 
 void FLS::InitGraphics()

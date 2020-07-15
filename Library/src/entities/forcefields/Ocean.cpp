@@ -87,7 +87,7 @@ OpenGLOcean* Ocean::getOpenGLOcean()
 
 ForcefieldType Ocean::getForcefieldType()
 {
-    return FORCEFIELD_OCEAN;
+    return ForcefieldType::OCEAN;
 }
 
 Fluid Ocean::getLiquid() const
@@ -168,7 +168,7 @@ void Ocean::UpdateCurrentsData()
         glOcean->UpdateOceanCurrentsData(glOceanCurrentsUBOData);
 }
 
-void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
+void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
     btRigidBody* rb = btRigidBody::upcast(co);
@@ -192,9 +192,8 @@ void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world
         return;
     
     HydrodynamicsSettings settings;
-    settings.algorithm = fdt;
     
-    if(ent->getType() == ENTITY_SOLID)
+    if(ent->getType() == EntityType::SOLID)
     {
         if(recompute)
         {
@@ -242,7 +241,7 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
     
     for(size_t i=0; i<act.size(); ++i)
     {
-        if(act[i]->getType() == ActuatorType::ACTUATOR_THRUSTER)
+        if(act[i]->getType() == ActuatorType::THRUSTER)
         {
             Thruster* th = (Thruster*)act[i];
             Transform thFrame = th->getActuatorFrame();

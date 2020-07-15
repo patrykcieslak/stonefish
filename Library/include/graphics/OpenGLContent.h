@@ -378,9 +378,10 @@ namespace sf
         //! A static method to build a graphical plane object.
         /*!
          \param halfExtents the size of the plane [m]
+         \param uvScale scaling of the texture coordinates
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildPlane(GLfloat halfExtents);
+        static Mesh* BuildPlane(GLfloat halfExtents, GLfloat uvScale = 1.f);
         
         //! A static method to build a graphical box object.
         /*!

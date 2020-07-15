@@ -98,7 +98,7 @@ void RealRotaryEncoder::InternalUpdate(Scalar dt)
 
 ScalarSensorType RealRotaryEncoder::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_ENCODER;
+    return ScalarSensorType::ENCODER;
 }
 
 }

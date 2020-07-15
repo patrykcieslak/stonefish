@@ -74,7 +74,7 @@ void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar ori
 
 ScalarSensorType Odometry::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_ODOM;
+    return ScalarSensorType::ODOM;
 }
 
 

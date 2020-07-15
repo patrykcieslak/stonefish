@@ -68,13 +68,13 @@ Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const T
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2));
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(FD_APPROX_CYLINDER);
+    ComputeFluidDynamicsApprox( GeometryApproxType::CYLINDER);
     //dragCoeff = Vector3(radius*halfHeight*Scalar(4*0.5), M_PI*radius*radius*Scalar(0.9), radius*halfHeight*Scalar(4*0.5));
 }
 
 SolidType Cylinder::getSolidType()
 {
-    return SolidType::SOLID_CYLINDER;
+    return SolidType::CYLINDER;
 }
 
 btCollisionShape* Cylinder::BuildCollisionShape()

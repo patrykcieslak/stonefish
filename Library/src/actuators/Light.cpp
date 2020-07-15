@@ -55,7 +55,7 @@ Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color c
     
 ActuatorType Light::getType()
 {
-    return ActuatorType::ACTUATOR_LIGHT;
+    return ActuatorType::LIGHT;
 }
 
 Transform Light::getActuatorFrame()

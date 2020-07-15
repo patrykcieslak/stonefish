@@ -54,6 +54,7 @@
 #include "entities/FeatherstoneEntity.h"
 #include "entities/solids/Compound.h"
 #include "entities/StaticEntity.h"
+#include "entities/AnimatedEntity.h"
 #include "entities/ForcefieldEntity.h"
 #include "entities/forcefields/Trigger.h"
 #include "entities/statics/Plane.h"
@@ -70,14 +71,13 @@ extern ContactAddedCallback gContactAddedCallback;
 namespace sf
 {
 
-SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft, FluidDynamicsType ht)
+SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
 {
     //Initialize simulation world
     realtimeFactor = Scalar(1);
     cpuUsage = Scalar(0);
     solver = st;
     collisionFilter = cft;
-    hydroType = ht;
     fdCounter = 0;
     currentTime = 0;
     physicsTime = 0;
@@ -91,7 +91,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     ocean = NULL;
     atmosphere = NULL;
     trackball = NULL;
-    sdm = DisplayMode::DISPLAY_GRAPHICAL;
+    sdm = DisplayMode::GRAPHICAL;
     simHydroMutex = SDL_CreateMutex();
     simSettingsMutex = SDL_CreateMutex();
     simInfoMutex = SDL_CreateMutex();
@@ -146,6 +146,15 @@ void SimulationManager::AddEntity(Entity *ent)
 }
 
 void SimulationManager::AddStaticEntity(StaticEntity* ent, const Transform& origin)
+{
+    if(ent != NULL)
+    {
+        entities.push_back(ent);
+        ent->AddToSimulation(this, origin);
+    }
+}
+
+void SimulationManager::AddAnimatedEntity(AnimatedEntity* ent, const Transform& origin)
 {
     if(ent != NULL)
     {
@@ -337,11 +346,6 @@ CollisionFilteringType SimulationManager::getCollisionFilter()
 SolverType SimulationManager::getSolverType()
 {
     return solver;
-}
-
-FluidDynamicsType SimulationManager::getFluidDynamicsType()
-{
-    return hydroType;
 }
 
 Robot* SimulationManager::getRobot(unsigned int index)
@@ -588,11 +592,11 @@ void SimulationManager::setSolidDisplayMode(DisplayMode m)
         
     for(size_t i=0; i<entities.size(); ++i)
     {
-        if(entities[i]->getType() == EntityType::ENTITY_STATIC)
+        if(entities[i]->getType() == EntityType::STATIC)
             ((StaticEntity*)entities[i])->setDisplayMode(m);
-        else if(entities[i]->getType() == EntityType::ENTITY_SOLID)
+        else if(entities[i]->getType() == EntityType::SOLID)
             ((SolidEntity*)entities[i])->setDisplayMode(m);
-        else if(entities[i]->getType() == EntityType::ENTITY_FEATHERSTONE)
+        else if(entities[i]->getType() == EntityType::FEATHERSTONE)
             ((FeatherstoneEntity*)entities[i])->setDisplayMode(m);
     }
     
@@ -1004,7 +1008,7 @@ void SimulationManager::UpdateDrawingQueue()
     for(size_t i=0; i<actuators.size(); ++i)
     {
         glPipeline->AddToDrawingQueue(actuators[i]->Render());
-        if(actuators[i]->getType() == ActuatorType::ACTUATOR_LIGHT)
+        if(actuators[i]->getType() == ActuatorType::LIGHT)
             ((Light*)actuators[i])->UpdateTransform();
     }
     
@@ -1012,7 +1016,7 @@ void SimulationManager::UpdateDrawingQueue()
     for(size_t i=0; i<sensors.size(); ++i)
     {
         glPipeline->AddToDrawingQueue(sensors[i]->Render());
-        if(sensors[i]->getType() == SensorType::SENSOR_VISION)
+        if(sensors[i]->getType() == SensorType::VISION)
             ((VisionSensor*)sensors[i])->UpdateTransform();
     }
     
@@ -1091,17 +1095,17 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     Vector3 contactVelocity0;
     Scalar contactAngularVelocity0;
     
-    if(ent0->getType() == ENTITY_STATIC)
+    if(ent0->getType() == EntityType::STATIC)
     {
         StaticEntity* sent0 = (StaticEntity*)ent0;
         mat0 = sent0->getMaterial();
         contactVelocity0.setZero();
         contactAngularVelocity0 = Scalar(0);
     }
-    else if(ent0->getType() == ENTITY_SOLID)
+    else if(ent0->getType() == EntityType::SOLID)
     {
         SolidEntity* sent0 = (SolidEntity*)ent0;
-        if(sent0->getSolidType() == SolidType::SOLID_COMPOUND)
+        if(sent0->getSolidType() == SolidType::COMPOUND)
             mat0 = ((Compound*)sent0)->getMaterial(((Compound*)sent0)->getPartId(index0));
         else
             mat0 = sent0->getMaterial();
@@ -1122,17 +1126,17 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     Vector3 contactVelocity1;
     Scalar contactAngularVelocity1;
     
-    if(ent1->getType() == ENTITY_STATIC)
+    if(ent1->getType() == EntityType::STATIC)
     {
         StaticEntity* sent1 = (StaticEntity*)ent1;
         mat1 = sent1->getMaterial();
         contactVelocity1.setZero();
         contactAngularVelocity1 = Scalar(0);
     }
-    else if(ent1->getType() == ENTITY_SOLID)
+    else if(ent1->getType() == EntityType::SOLID)
     {
         SolidEntity* sent1 = (SolidEntity*)ent1;
-        if(sent1->getSolidType() == SolidType::SOLID_COMPOUND)
+        if(sent1->getSolidType() == SolidType::COMPOUND)
             mat1 = ((Compound*)sent1)->getMaterial(((Compound*)sent1)->getPartId(index1));
         else
             mat1 = sent1->getMaterial();
@@ -1174,10 +1178,10 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     Scalar T = cp.m_combinedFriction * normalForce * 0.002;
 
     //apply damping torque
-    if(ent0->getType() == ENTITY_SOLID && !btFuzzyZero(relAngularVelocity01))
+    if(ent0->getType() == EntityType::SOLID && !btFuzzyZero(relAngularVelocity01))
         ((SolidEntity*)ent0)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity01/btFabs(relAngularVelocity01) * T);
     
-    if(ent1->getType() == ENTITY_SOLID && !btFuzzyZero(relAngularVelocity10))
+    if(ent1->getType() == EntityType::SOLID && !btFuzzyZero(relAngularVelocity10))
         ((SolidEntity*)ent1)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity10/btFabs(relAngularVelocity10) * T);
     
     //Restitution
@@ -1205,12 +1209,12 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
         //Apply gravity to bodies
         for(size_t i = 0; i < simManager->entities.size(); ++i)
         {
-            if(simManager->entities[i]->getType() == ENTITY_SOLID)
+            if(simManager->entities[i]->getType() == EntityType::SOLID)
             {
                 SolidEntity* solid = (SolidEntity*)simManager->entities[i];
                 solid->ApplyGravity(world->getGravity());
             }
-            else if(simManager->entities[i]->getType() == ENTITY_FEATHERSTONE)
+            else if(simManager->entities[i]->getType() == EntityType::FEATHERSTONE)
             {
                 FeatherstoneEntity* feather = (FeatherstoneEntity*)simManager->entities[i];
                 feather->ApplyGravity(world->getGravity());
@@ -1224,7 +1228,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
             //Check if objects settled
             for(size_t i = 0; i < simManager->entities.size(); ++i)
             {
-                if(simManager->entities[i]->getType() == ENTITY_SOLID)
+                if(simManager->entities[i]->getType() == EntityType::SOLID)
                 {
                     SolidEntity* solid = (SolidEntity*)simManager->entities[i];
                     if(solid->getLinearVelocity().length() > simManager->icLinTolerance * Scalar(100.) || solid->getAngularVelocity().length() > simManager->icAngTolerance * Scalar(100.))
@@ -1233,7 +1237,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                         break;
                     }
                 }
-                else if(simManager->entities[i]->getType() == ENTITY_FEATHERSTONE)
+                else if(simManager->entities[i]->getType() == EntityType::FEATHERSTONE)
                 {
                     FeatherstoneEntity* multibody = (FeatherstoneEntity*)simManager->entities[i];
                     
@@ -1315,21 +1319,21 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     {
         Entity* ent = simManager->entities[i];
         
-        if(ent->getType() == ENTITY_SOLID)
+        if(ent->getType() == EntityType::SOLID)
         {
             SolidEntity* solid = (SolidEntity*)ent;
             solid->ApplyGravity(mbDynamicsWorld->getGravity());
         }
-        else if(ent->getType() == ENTITY_FEATHERSTONE)
+        else if(ent->getType() == EntityType::FEATHERSTONE)
         {
             FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
             multibody->ApplyGravity(mbDynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
-        else if(ent->getType() == ENTITY_FORCEFIELD)
+        else if(ent->getType() == EntityType::FORCEFIELD)
         {
             ForcefieldEntity* ff = (ForcefieldEntity*)ent;
-            if(ff->getForcefieldType() == FORCEFIELD_TRIGGER)
+            if(ff->getForcefieldType() == ForcefieldType::TRIGGER)
             {				
                 Trigger* trigger = (Trigger*)ff;
                 trigger->Clear();
@@ -1378,9 +1382,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
                 if(co1 == simManager->atmosphere->getGhost())
-                    simManager->atmosphere->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co2, recompute);
+                    simManager->atmosphere->ApplyFluidForces(world, co2, recompute);
                 else if(co2 == simManager->ocean->getGhost())
-                    simManager->atmosphere->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co1, recompute);
+                    simManager->atmosphere->ApplyFluidForces(world, co1, recompute);
             }
         }
     }
@@ -1407,9 +1411,9 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
                 
                 if(co1 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co2, recompute);
+                    simManager->ocean->ApplyFluidForces(world, co2, recompute);
                 else if(co2 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(simManager->getFluidDynamicsType(), world, co1, recompute);
+                    simManager->ocean->ApplyFluidForces(world, co1, recompute);
             }
             //uint64_t e = GetTimeInMicroseconds();
             //if(recompute)
@@ -1430,15 +1434,20 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     {
         Entity* ent = simManager->entities[i];
             
-        if(ent->getType() == ENTITY_SOLID)
+        if(ent->getType() == EntityType::SOLID)
         {
             SolidEntity* solid = (SolidEntity*)ent;
             solid->UpdateAcceleration(timeStep);
         }
-        else if(ent->getType() == ENTITY_FEATHERSTONE)
+        else if(ent->getType() == EntityType::FEATHERSTONE)
         {
             FeatherstoneEntity* fe = (FeatherstoneEntity*)ent;
             fe->UpdateAcceleration(timeStep);
+        }
+        else if(ent->getType() == EntityType::ANIMATED)
+        {
+            AnimatedEntity* anim = (AnimatedEntity*)ent;
+            anim->Update(timeStep);
         }
     }
     

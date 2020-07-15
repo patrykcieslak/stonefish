@@ -116,7 +116,7 @@ Scalar SSS::getGain()
    
 VisionSensorType SSS::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_SSS;
+    return VisionSensorType::SSS;
 }
 
 void SSS::InitGraphics()

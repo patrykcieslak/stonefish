@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum defining types of comms.
-    typedef enum {COMM_RADIO = 0, COMM_ACOUSTIC, COMM_VLC} CommType;
+    enum class CommType {RADIO, ACOUSTIC, VLC};
     
     struct Renderable;
     class Entity;

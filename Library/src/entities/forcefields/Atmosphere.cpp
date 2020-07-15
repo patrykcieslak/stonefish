@@ -65,7 +65,7 @@ OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
     
 ForcefieldType Atmosphere::getForcefieldType()
 {
-    return ForcefieldType::FORCEFIELD_ATMOSPHERE;
+    return ForcefieldType::ATMOSPHERE;
 }
 
 Fluid Atmosphere::getGas() const
@@ -136,7 +136,7 @@ bool Atmosphere::IsInsideFluid(const Vector3& point) const
     return true;
 }
 
-void Atmosphere::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
+void Atmosphere::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
     btRigidBody* rb = btRigidBody::upcast(co);
@@ -159,7 +159,7 @@ void Atmosphere::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* 
     else
         return;
     
-    if(ent->getType() == ENTITY_SOLID)
+    if(ent->getType() == EntityType::SOLID)
     {
         if(recompute)
         {

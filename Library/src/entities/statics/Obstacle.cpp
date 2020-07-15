@@ -127,7 +127,7 @@ Obstacle::~Obstacle()
 
 StaticEntityType Obstacle::getStaticType()
 {
-    return STATIC_OBSTACLE;
+    return StaticEntityType::OBSTACLE;
 }
     
 void Obstacle::BuildGraphicalObject()
@@ -149,14 +149,14 @@ std::vector<Renderable> Obstacle::Render()
         item.type = RenderableType::SOLID;
         item.materialName = mat.name;
         
-        if(dm == DisplayMode::DISPLAY_GRAPHICAL && graObjectId >= 0)
+        if(dm == DisplayMode::GRAPHICAL && graObjectId >= 0)
         { 
             item.objectId = graObjectId;
             item.lookId = lookId;
             item.model = glMatrixFromTransform(getTransform());
             items.push_back(item);
         }
-        else if(dm == DisplayMode::DISPLAY_PHYSICAL && phyObjectId >= 0)
+        else if(dm == DisplayMode::PHYSICAL && phyObjectId >= 0)
         {
             item.objectId = phyObjectId;
             item.lookId = -1;

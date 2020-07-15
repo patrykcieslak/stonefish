@@ -74,7 +74,7 @@ Terrain::~Terrain()
 
 StaticEntityType Terrain::getStaticType()
 {
-    return STATIC_TERRAIN;
+    return StaticEntityType::TERRAIN;
 }
     
 void Terrain::getAABB(Vector3 &min, Vector3 &max)

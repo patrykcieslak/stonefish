@@ -54,7 +54,7 @@ namespace sf
                    std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                    std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
                    std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), 
-                   bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
+                   bool isBuoyant = true, GeometryApproxType approx =  GeometryApproxType::AUTO);
         
         //! A constructor.
         /*!
@@ -71,7 +71,7 @@ namespace sf
          */
         Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
                    std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), 
-                   bool isBuoyant = true, GeometryApproxType approx = FD_APPROX_AUTO);
+                   bool isBuoyant = true, GeometryApproxType approx =  GeometryApproxType::AUTO);
         
         //! A destructor.
         ~Polyhedron();

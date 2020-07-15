@@ -65,7 +65,7 @@ Propeller::~Propeller()
 
 ActuatorType Propeller::getType()
 {
-    return ActuatorType::ACTUATOR_PROPELLER;
+    return ActuatorType::PROPELLER;
 }
 
 void Propeller::setSetpoint(Scalar s)

@@ -94,7 +94,7 @@ Scalar GPS::getNoise()
 
 ScalarSensorType GPS::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_GPS;
+    return ScalarSensorType::GPS;
 }
 
 }

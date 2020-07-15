@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VisionSensor__
@@ -31,10 +31,9 @@
 namespace sf
 {
     //! An enum defining types of vision sensors.
-    typedef enum {SENSOR_COLOR_CAMERA = 0, SENSOR_DEPTH_CAMERA, SENSOR_MULTIBEAM2, SENSOR_FLS, SENSOR_SSS} VisionSensorType;
+    enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, MULTIBEAM2, FLS, SSS};
     
-    class SolidEntity;
-    class FeatherstoneEntity;
+    class MovingEntity;
     
     //! An abstract class representing a vision sensor.
     class VisionSensor : public Sensor
@@ -64,7 +63,7 @@ namespace sf
          \param solid a pointer to the rigid body
          \param origin the place where the sensor should be attached in the solid origin frame
          */
-        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        void AttachToSolid(MovingEntity* solid, const Transform& origin);
         
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame();
@@ -79,7 +78,7 @@ namespace sf
         virtual void InitGraphics() = 0;
         
     private:
-        SolidEntity* attach;
+        MovingEntity* attach;
         Transform o2s;
     };
 }

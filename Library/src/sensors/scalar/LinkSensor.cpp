@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/LinkSensor.h"
@@ -33,7 +33,7 @@ namespace sf
 
 LinkSensor::LinkSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
-    attach = NULL;
+    attach = nullptr;
     o2s = Transform::getIdentity();
 }
 
@@ -43,7 +43,7 @@ LinkSensor::~LinkSensor()
 
 Transform LinkSensor::getSensorFrame()
 {
-    if(attach != NULL)
+    if(attach != nullptr)
         return attach->getOTransform() * o2s;
     else
         return o2s;
@@ -51,20 +51,20 @@ Transform LinkSensor::getSensorFrame()
 
 SensorType LinkSensor::getType()
 {
-    return SensorType::SENSOR_LINK;
+    return SensorType::LINK;
 }
 
 std::string LinkSensor::getLinkName()
 {
-    if(attach != NULL)
+    if(attach != nullptr)
         return attach->getName();
     else
         return std::string("");
 }
 
-void LinkSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)
+void LinkSensor::AttachToSolid(MovingEntity* solid, const Transform& origin)
 {
-    if(solid != NULL)
+    if(solid != nullptr)
     {
         o2s = origin;
         attach = solid;

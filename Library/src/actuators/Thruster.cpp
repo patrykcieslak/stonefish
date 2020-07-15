@@ -65,7 +65,7 @@ Thruster::~Thruster()
 
 ActuatorType Thruster::getType()
 {
-    return ActuatorType::ACTUATOR_THRUSTER;
+    return ActuatorType::THRUSTER;
 }
 
 void Thruster::setSetpoint(Scalar s)

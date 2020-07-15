@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright(c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/statics/Plane.h"
@@ -31,9 +31,9 @@
 namespace sf
 {
 
-Plane::Plane(std::string uniqueName, Scalar planeSize, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
+Plane::Plane(std::string uniqueName, Scalar planeSize, std::string material, std::string look, float uvScale) : StaticEntity(uniqueName, material, look)
 {
-    phyMesh = OpenGLContent::BuildPlane(planeSize/2.f);
+    phyMesh = OpenGLContent::BuildPlane(planeSize/2.f, uvScale > 0.f ? uvScale : 1.f);
     btCollisionShape* shape = new btStaticPlaneShape(Vector3(0,0,-1), 0);
     BuildRigidBody(shape);
 }
@@ -47,7 +47,7 @@ void Plane::getAABB(Vector3 &min, Vector3 &max)
 
 StaticEntityType Plane::getStaticType()
 {
-    return STATIC_PLANE;
+    return StaticEntityType::PLANE;
 }
 
 }
