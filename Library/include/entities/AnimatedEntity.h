@@ -44,6 +44,7 @@
 #define __Stonefish_AnimatedEntity__
 
 #include "entities/MovingEntity.h"
+#include "core/TrajectoryGenerator.h"
 
 namespace sf
 {
@@ -64,6 +65,12 @@ namespace sf
         
         //! A destructor.
         virtual ~AnimatedEntity();
+        
+        //! A method conneting a trajectroy generator with the animated entity to animate automatically.
+        /*!
+         \param generator a pointer to the trajectory generator object
+         */
+        void ConnectTrajectoryGenerator(TrajectoryGenerator* generator);
         
         //! A method updating the transformation and velocities of the animated body.
         /*!
@@ -86,7 +93,7 @@ namespace sf
         
         //! A method returning the elements that should be rendered.
         std::vector<Renderable> Render();
-              
+                  
         //! A method used to set new origin of the entity in the world frame.
         /*!
          \param trans a transformation of the entity origin in the world frame
@@ -131,6 +138,9 @@ namespace sf
         //void ClearTrajectory();        
     private:
         Transform T_O;
+        Vector3 vel;
+        Vector3 aVel;
+        TrajectoryGenerator* tg;
     };
 }
 

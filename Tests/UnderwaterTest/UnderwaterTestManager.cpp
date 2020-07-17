@@ -71,6 +71,7 @@
 #include <utils/UnitSystem.h>
 #include <core/ScenarioParser.h>
 #include <core/NED.h>
+#include <core/TrajectoryGenerator.h>
 
 UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
 : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
@@ -286,7 +287,12 @@ void UnderwaterTestManager::BuildScenario()
     thSurgeP->setSetpoint(0.5);
     thSurgeS->setSetpoint(0.5);
 
+    sf::TrajectoryGenerator* tg = new sf::TrajectoryGenerator();
+    sf::PWLSegment* seg = new sf::PWLSegment(sf::TrajectoryPoint(sf::Vector3(0,0,0), 0),
+                                             sf::TrajectoryPoint(sf::Vector3(10,0,4), 10));
+    tg->AddSegment(seg);
     sf::AnimatedEntity* anim = new sf::AnimatedEntity("Anim1", sf::GetDataPath() + "dragon.obj", 0.5, sf::Transform(sf::Quaternion(0.0,M_PI_2,0.0), sf::V0()), "Rock", "seabed");
+    anim->ConnectTrajectoryGenerator(tg);
     AddAnimatedEntity(anim, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
 
 #endif

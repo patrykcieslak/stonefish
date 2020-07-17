@@ -44,10 +44,15 @@ AnimatedEntity::AnimatedEntity(std::string uniqueName, std::string graphicsFilen
         delete mesh;
     }
     T_O = I4();
+    vel = V0();
+    aVel = V0();
+    tg = nullptr;
 }
 
 AnimatedEntity::~AnimatedEntity()
 {
+    if(tg != nullptr)
+        delete tg;
 }
 
 EntityType AnimatedEntity::getType() const
@@ -101,9 +106,20 @@ void AnimatedEntity::setOTransform(const Transform& trans)
     T_O = trans;
 }
 
+void AnimatedEntity::ConnectTrajectoryGenerator(TrajectoryGenerator* generator)
+{
+    tg = generator;
+    T_O.setOrigin(tg->getCurrentPoint());
+}
+
 void AnimatedEntity::Update(Scalar dt)
 {
-
+    if(tg != nullptr)
+    {
+        tg->Advance(dt);
+        T_O.setOrigin(tg->getCurrentPoint());
+        vel = tg->getCurrentVelocity();
+    }
 }
 
 void AnimatedEntity::AddToSimulation(SimulationManager* sm)
@@ -119,7 +135,7 @@ void AnimatedEntity::AddToSimulation(SimulationManager* sm, const Transform& ori
 std::vector<Renderable> AnimatedEntity::Render()
 {
     std::vector<Renderable> items(0);
-    
+    //Render animated object
     if(graObjectId >= 0 && isRenderable())
     {
         Renderable item;
@@ -130,7 +146,12 @@ std::vector<Renderable> AnimatedEntity::Render()
         item.model = glMatrixFromTransform(getOTransform());
         items.push_back(item);
     }
-    
+    //Render object trajectory
+    if(tg != nullptr)
+    {
+        const std::vector<Renderable>& tgItems = tg->Render();
+        items.insert(items.begin(), tgItems.begin(), tgItems.end());
+    }
     return items;
 }
 
