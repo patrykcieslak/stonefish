@@ -78,6 +78,7 @@ This is free software, published under the General Public License v3.0.
 *Version 0.9*
 - Requires support for OpenGL 4.3+ (compute shaders)
 - Complete rewrite of the ocean/underwater rendering pipeline
+- New linear tree based automatic LOD algorithm 
 - New automatic exposure and anti-aliasing algorithms
 - Logarythmic depth buffer for planet scale rendering
 - Fully GPU-based simulation of forward-looking sonar (FLS)
@@ -85,4 +86,7 @@ This is free software, published under the General Public License v3.0.
 - Normal mapping to enable high resolution surface details
 - Faster download of data from the GPU memory
 - Scheduling of multiple view rendering
-- OpenGL function handlers provided through GLAD
+- Interactive selection outline in 3D view
+- OpenGL function handlers provided through GLAD (dropped outdated GLEW)
+- General cleaning of code and refactoring
+- Dozens of bug fixes
