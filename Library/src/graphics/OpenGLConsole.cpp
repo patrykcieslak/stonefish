@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLConsole.h"
@@ -30,7 +30,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/IMGUI.h"
 #include "graphics/OpenGLPrinter.h"
-#include "utils/stb_image.h"
+#include "graphics/OpenGLContent.h"
 
 namespace sf
 {
@@ -65,31 +65,8 @@ void OpenGLConsole::Init(int w, int h)
     
     if(logoTexture > 0) //Check if not already initialized
         return;
-    
-    //Load logo texture - can't use material class because it writes to the console
-    int width, height, channels;
-    std::string path = GetShaderPath() + "logo_color_64.png";
-    
-    // Allocate image; fail out on error
-    unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
-    if(dataBuffer != NULL)
-    {
-        // Allocate an OpenGL texture
-        glGenTextures(1, &logoTexture);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
-        // Upload texture to memory
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
-        // Set certain properties of texture
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Wrap texture around
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // Release internal buffer
-        stbi_image_free(dataBuffer);
-    }
-    else
-        logoTexture = 0;
+    //Load logo texture
+    logoTexture = OpenGLContent::LoadInternalTexture("logo_64.png", true);
     
     glGenVertexArrays(1, &consoleVAO);
     OpenGLState::BindVertexArray(consoleVAO);

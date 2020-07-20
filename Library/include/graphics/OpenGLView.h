@@ -66,6 +66,9 @@ namespace sf
          */
         virtual void DrawLDR(GLuint destinationFBO, bool updated) = 0;
 
+        //! A method that updates view world transform.
+        virtual void UpdateTransform() = 0;
+
         //! A method that returns eye position.
         virtual glm::vec3 GetEyePosition() const = 0;
         

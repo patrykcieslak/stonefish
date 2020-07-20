@@ -111,7 +111,7 @@ std::vector<Renderable> StaticEntity::Render()
         item.type = RenderableType::SOLID;
         item.materialName = mat.name;
         item.objectId = phyObjectId;
-        item.lookId = lookId;
+        item.lookId = dm == DisplayMode::GRAPHICAL ? lookId : -1;
         item.model = glMatrixFromTransform(trans);
         items.push_back(item);
     }

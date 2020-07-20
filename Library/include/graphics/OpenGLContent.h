@@ -511,6 +511,7 @@ namespace sf
         NameManager lookNameManager;
         int currentLookId;
         bool currentTexturable;
+        int currentShaderMode;
         
         glm::vec3 eyePos;
         glm::vec3 viewDir;

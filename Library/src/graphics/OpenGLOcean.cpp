@@ -177,11 +177,13 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     oceanShaders["background"]->AddUniform("scattering_texture", ParameterType::INT);
     oceanShaders["background"]->AddUniform("irradiance_texture", ParameterType::INT);
     oceanShaders["background"]->BindUniformBlock("SunSky", UBO_SUNSKY);
+    oceanShaders["background"]->BindUniformBlock("Lights", UBO_LIGHTS);
 
     oceanShaders["background"]->Use();
     oceanShaders["background"]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     oceanShaders["background"]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     oceanShaders["background"]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);    
+    OpenGLState::UseProgram(0);
     
 	glDeleteShader(oceanOpticsFragment);
  
@@ -196,50 +198,79 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     glm::vec3 v8(-0.5f,  0.5f,  0.f);
     std::vector<glm::vec3> boxData;
     
-    boxData.push_back(v1);
-    boxData.push_back(v3);
-    boxData.push_back(v2);
-    boxData.push_back(v1);
-    boxData.push_back(v4);
-    boxData.push_back(v3);
+    PlainMesh mesh;
+    Vertex v;
+    Face f;
+
+    v.normal = glm::vec3(0.f, 0.f, -1.f);
+    v.pos = v1; //0
+    mesh.vertices.push_back(v);
+    v.pos = v2; //1
+    mesh.vertices.push_back(v);
+    v.pos = v3; //2
+    mesh.vertices.push_back(v);
+    v.pos = v4; //3
+    mesh.vertices.push_back(v);
+    v.pos = v5; //4
+    mesh.vertices.push_back(v);
+    v.pos = v6; //5
+    mesh.vertices.push_back(v);
+    v.pos = v7; //6
+    mesh.vertices.push_back(v);
+    v.pos = v8; //7
+    mesh.vertices.push_back(v);
+
+    //Bottom        
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 1;
+    mesh.faces.push_back(f);
+    f.vertexID[0] = 0;
+    f.vertexID[1] = 3;
+    f.vertexID[2] = 2;
+    mesh.faces.push_back(f);
     
-    boxData.push_back(v5);
-    boxData.push_back(v3);
-    boxData.push_back(v4);
-    boxData.push_back(v5);
-    boxData.push_back(v4);
-    boxData.push_back(v6);
+    //Side1
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 2;
+    f.vertexID[2] = 3;
+    mesh.faces.push_back(f);
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 3;
+    f.vertexID[2] = 5;
+    mesh.faces.push_back(f);
     
-    boxData.push_back(v7);
-    boxData.push_back(v2);
-    boxData.push_back(v8);
-    boxData.push_back(v7);
-    boxData.push_back(v1);
-    boxData.push_back(v2);
+    //Side2
+    f.vertexID[0] = 6;
+    f.vertexID[1] = 1;
+    f.vertexID[2] = 7;
+    mesh.faces.push_back(f);
+    f.vertexID[0] = 6;
+    f.vertexID[1] = 0;
+    f.vertexID[2] = 1;
+    mesh.faces.push_back(f);
     
-    boxData.push_back(v5);
-    boxData.push_back(v2);
-    boxData.push_back(v3);
-    boxData.push_back(v5);
-    boxData.push_back(v8);
-    boxData.push_back(v2);
+    //Side3
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 1;
+    f.vertexID[2] = 2;
+    mesh.faces.push_back(f);
+    f.vertexID[0] = 4;
+    f.vertexID[1] = 7;
+    f.vertexID[2] = 1;
+    mesh.faces.push_back(f);
     
-    boxData.push_back(v4);
-    boxData.push_back(v7);
-    boxData.push_back(v6);
-    boxData.push_back(v4);
-    boxData.push_back(v1);
-    boxData.push_back(v7);
+    //Side4
+    f.vertexID[0] = 3;
+    f.vertexID[1] = 6;
+    f.vertexID[2] = 5;
+    mesh.faces.push_back(f);
+    f.vertexID[0] = 3;
+    f.vertexID[1] = 0;
+    f.vertexID[2] = 6;
+    mesh.faces.push_back(f);
     
-    glGenVertexArrays(1, &vaoMask);
-    glGenBuffers(1, &vboMask);
-    OpenGLState::BindVertexArray(vaoMask);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vboMask);
-    glBufferData(GL_ARRAY_BUFFER, boxData.size()*sizeof(glm::vec3), &boxData[0].x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    OpenGLState::BindVertexArray(0);
+    oceanBoxObj = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(&mesh);
 
     //Ocean currents
     oceanCurrentsUBOData.numCurrents = 0;
@@ -277,8 +308,6 @@ OpenGLOcean::~OpenGLOcean()
 
     glDeleteFramebuffers(3, oceanFBOs);
     glDeleteTextures(6, oceanTextures);
-    glDeleteVertexArrays(1, &vaoMask);
-    glDeleteBuffers(1, &vboMask);
     glDeleteBuffers(1, &oceanCurrentsUBO);
     
     if(params.spectrum12 != NULL) delete [] params.spectrum12;
@@ -474,9 +503,9 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     oceanShaders["mask_back"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders["mask_back"]->SetUniform("FC", cam->GetLogDepthConstant());
     oceanShaders["mask_back"]->SetUniform("size", oceanSize);
-    OpenGLState::BindVertexArray(vaoMask);
-    glDrawArrays(GL_TRIANGLES, 0, 30);
-    OpenGLState::BindVertexArray(0);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj, -1, glm::mat4(1.f));
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
     OpenGLState::UseProgram(0);
 }
     
@@ -490,9 +519,9 @@ void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
     oceanShaders["background"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["background"]->SetUniform("bWater", getLightScattering());
     glCullFace(GL_FRONT);
-    OpenGLState::BindVertexArray(vaoMask);
-    glDrawArrays(GL_TRIANGLES, 0, 30);
-    OpenGLState::BindVertexArray(0);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj, -1, glm::mat4(1.f));
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
     glCullFace(GL_BACK);
     OpenGLState::UseProgram(0);
 }

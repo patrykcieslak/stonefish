@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationApp.h"
@@ -40,7 +40,12 @@ SimulationApp::SimulationApp(std::string name, std::string dataDirPath, Simulati
     finished = false;
     running = false;
     physicsTime = 0.0;
-    console = NULL;
+    console = new Console();
+    //Version info
+    if(STONEFISH_VER_PATCH != 0)
+        cInfo("Welcome to Stonefish %d.%d.%d", STONEFISH_VER_MAJOR, STONEFISH_VER_MINOR, STONEFISH_VER_PATCH);
+    else
+        cInfo("Welcome to Stonefish %d.%d.", STONEFISH_VER_MAJOR, STONEFISH_VER_MINOR);
 }
 
 SimulationApp::~SimulationApp()

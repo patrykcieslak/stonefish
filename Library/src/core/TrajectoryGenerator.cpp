@@ -160,6 +160,7 @@ Vector3 PWLSegment::PointAtTime(Scalar t) const
                 return points[i-1].p + (points[i].p - points[i-1].p) * interp;
             }
         }
+        return V0(); //Never reached
     }
 }
 
@@ -177,6 +178,7 @@ Vector3 PWLSegment::VelocityAtTime(Scalar t) const
             if(t <= points[i].t)
                 return (points[i].p - points[i-1].p)/(points[i].t - points[i-1].t);
         }
+        return V0(); //Never reached
     }
 }
 

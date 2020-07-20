@@ -132,6 +132,9 @@ namespace sf
         
         //! A method returning a pointer to the GUI.
         IMGUI* getGUI();
+
+        //! A method returning a pointer to the selected entity.
+        Entity* getSelectedEntity();
         
         //! A method informing if the application is graphical.
         bool hasGraphics();
@@ -193,7 +196,7 @@ namespace sf
         OpenGLPipeline* glPipeline;
         
         SolidEntity* trackballCenter;
-        Entity* lastPicked;
+        Entity* selectedEntity;
         bool displayHUD;
         bool displayConsole;
         std::string shaderPath;

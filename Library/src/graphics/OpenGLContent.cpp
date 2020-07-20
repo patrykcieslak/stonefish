@@ -70,6 +70,7 @@ OpenGLContent::OpenGLContent()
     mode = DrawingMode::FULL;
     currentLookId = -1;
     currentTexturable = false;
+    currentShaderMode = -1;
 
     //Get OpenGL capabilities
     maxAnisotropy = 0.0f;
@@ -870,18 +871,22 @@ void OpenGLContent::SetupLights()
 
 void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat4& M)
 {	
-    Look& l = looks[lookId];
-    texturable = texturable && (l.albedoTexture > 0 || l.normalTexture > 0);
-    bool updateMaterial = ((int)lookId != currentLookId) || (currentTexturable != texturable);
-    currentLookId = (int)lookId;
-    currentTexturable = texturable;
-
     bool waves = false;
     Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(ocean != NULL && ocean->hasWaves()) waves = true;
-    size_t shaderId = currentTexturable ? 3 : 0;
-    shaderId += (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;            
     
+    Look& l = looks[lookId];
+    texturable = texturable && (l.albedoTexture > 0 || l.normalTexture > 0);
+    int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
+
+    bool updateMaterial = ((int)lookId != currentLookId) 
+                          || (currentTexturable != texturable)
+                          || (currentShaderMode != shaderMode);
+    currentLookId = (int)lookId;
+    currentTexturable = texturable;
+    currentShaderMode = shaderMode;
+
+    size_t shaderId = (currentTexturable ? 3 : 0) + (size_t)currentShaderMode;
     GLSLShader* shader = materialShaders[l.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
@@ -957,14 +962,18 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
 
 void OpenGLContent::UseStandardLook(const glm::mat4& M)
 {
-    bool updateMaterial = currentLookId >= 0;
-    currentLookId = -1;
-
     bool waves = false;
     Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(ocean != NULL && ocean->hasWaves()) waves = true;
-    size_t shaderId = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
-    GLSLShader* shader = materialShaders[1].shaders[shaderId];
+    
+    int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
+    bool updateMaterial = (currentLookId >= 0)
+                          || (currentShaderMode != shaderMode);
+    currentLookId = -1;
+    currentTexturable = false;
+    currentShaderMode = shaderMode;
+
+    GLSLShader* shader = materialShaders[1].shaders[(size_t)currentShaderMode];
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);

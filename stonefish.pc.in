@@ -1,6 +1,6 @@
-Name: Stonefish
-Description: Marine and terrestial robotics simulation library
+Name: @PROJECT_NAME@
+Description: Advanced marine and terrestial robotics simulation library
 Requires: bullet freetype2 sdl2
-Version: 1.0
+Version: @PROJECT_VERSION@
 Libs: -L/usr/local/lib -lStonefish -lBulletDynamics -lBulletCollision -lLinearMath -lfreetype -lSDL2 -lGL -lGLU
 Cflags: -DBT_EULER_DEFAULT_ZYX -I/usr/local/include -I/usr/local/include/Stonefish

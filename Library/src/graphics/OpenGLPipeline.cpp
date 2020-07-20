@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright(c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPipeline.h"
@@ -31,6 +31,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLOcean.h"
+#include "graphics/OpenGLTrackball.h"
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
@@ -43,6 +44,7 @@
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
+#include "core/GraphicalSimulationApp.h"
 
 namespace sf
 {
@@ -131,6 +133,11 @@ void OpenGLPipeline::AddToDrawingQueue(const std::vector<Renderable>& r)
     drawingQueue.insert(drawingQueue.end(), r.begin(), r.end());
 }
 
+void OpenGLPipeline::AddToSelectedDrawingQueue(const std::vector<Renderable>& r)
+{
+    selectedDrawingQueue.insert(selectedDrawingQueue.end(), r.begin(), r.end());
+}
+
 bool OpenGLPipeline::isDrawingQueueEmpty()
 {
     return drawingQueue.empty();
@@ -141,26 +148,27 @@ void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
     if(!drawingQueue.empty())
     {
         drawingQueueCopy.clear();
+        selectedDrawingQueueCopy.clear();
+
         SDL_LockMutex(drawingQueueMutex);
+        //Double buffering
         drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
+        selectedDrawingQueueCopy.insert(selectedDrawingQueueCopy.end(), selectedDrawingQueue.begin(), selectedDrawingQueue.end());
+
         //Update vision sensor transforms and copy generated data to ensure consistency
         glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
         for(unsigned int i=0; i < content->getViewsCount(); ++i)
-            if(content->getView(i)->getType() == ViewType::CAMERA)
-                ((OpenGLRealCamera*)content->getView(i))->UpdateTransform();
-            else if(content->getView(i)->getType() == ViewType::DEPTH_CAMERA)
-                ((OpenGLDepthCamera*)content->getView(i))->UpdateTransform();
-            else if(content->getView(i)->getType() == ViewType::FLS)
-                ((OpenGLFLS*)content->getView(i))->UpdateTransform();
-            else if(content->getView(i)->getType() == ViewType::SSS)
-                ((OpenGLSSS*)content->getView(i))->UpdateTransform();
+            content->getView(i)->UpdateTransform();
         //Update light transforms to ensure consistency
         for(unsigned int i=0; i < content->getLightsCount(); ++i)
             content->getLight(i)->UpdateTransform();
         //Update ocean currents for particle systems
         Ocean* ocean = sim->getOcean();
         if(ocean != NULL) ocean->UpdateCurrentsData();
-        drawingQueue.clear(); //Enable update of drawing queue by clearing old queue
+
+        //Enable update of drawing queue by clearing old queue
+        drawingQueue.clear(); 
+        selectedDrawingQueue.clear();
         SDL_UnlockMutex(drawingQueueMutex);
 			
 		//Sort objects by material to reduce uniform/texture switching
@@ -569,6 +577,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 if(hSettings.showBulletDebugInfo) sim->RenderBulletDebug();
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 
+                //Overlay selection outline
+                ((OpenGLTrackball*)camera)->DrawSelection(selectedDrawingQueueCopy, screenFBO);
+                
+                /* 
                 //Graphics debugging
                 //if(ocean != NULL)
                 //{
@@ -593,7 +605,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //camera->ShowDeinterleavedDepthTexture(glm::vec4(0,600,300,200), 9);
                 //camera->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
                 //camera->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
-                //camera->ShowDepthStencilTexture(glm::vec4(0,400,300,200));
+                //camera->ShowDepthStencilTexture(glm::vec4(0,400,300,200)); 
+                */
                 
                 OpenGLState::BindFramebuffer(0);
             }

@@ -587,20 +587,22 @@ void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsi
 
 void SimulationManager::setSolidDisplayMode(DisplayMode m)
 {
-    if(sdm == m)
+    if(sdm == m) 
         return;
-        
+    sdm = m;
+
     for(size_t i=0; i<entities.size(); ++i)
     {
         if(entities[i]->getType() == EntityType::STATIC)
-            ((StaticEntity*)entities[i])->setDisplayMode(m);
-        else if(entities[i]->getType() == EntityType::SOLID)
-            ((SolidEntity*)entities[i])->setDisplayMode(m);
+            ((StaticEntity*)entities[i])->setDisplayMode(sdm);
+        else if(entities[i]->getType() == EntityType::SOLID || entities[i]->getType() == EntityType::ANIMATED)
+            ((MovingEntity*)entities[i])->setDisplayMode(sdm);
         else if(entities[i]->getType() == EntityType::FEATHERSTONE)
-            ((FeatherstoneEntity*)entities[i])->setDisplayMode(m);
+            ((FeatherstoneEntity*)entities[i])->setDisplayMode(sdm);
     }
-    
-    sdm = m;
+
+    for(size_t i=0; i<actuators.size(); ++i)
+        actuators[i]->setDisplayMode(sdm);
 }
 
 DisplayMode SimulationManager::getSolidDisplayMode()
@@ -999,7 +1001,11 @@ void SimulationManager::UpdateDrawingQueue()
     //Solids, manipulators, systems....
     for(size_t i=0; i<entities.size(); ++i)
         glPipeline->AddToDrawingQueue(entities[i]->Render());
-    
+
+    Entity* selected = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSelectedEntity();
+    if(selected != NULL)
+        glPipeline->AddToSelectedDrawingQueue(selected->Render());
+
     //Joints
     for(size_t i=0; i<joints.size(); ++i)
         glPipeline->AddToDrawingQueue(joints[i]->Render());
@@ -1026,7 +1032,7 @@ void SimulationManager::UpdateDrawingQueue()
     
     //Trackball
     if(trackball != NULL)
-        trackball->UpdateTransform();
+        trackball->UpdateCenterPos();
     
     //Contacts
     for(size_t i=0; i<contacts.size(); ++i)
@@ -1049,7 +1055,7 @@ Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
         return ent;
     }
     else
-        return NULL;
+        return nullptr;
 }
 
 void SimulationManager::RenderBulletDebug()

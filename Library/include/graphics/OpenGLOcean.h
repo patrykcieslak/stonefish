@@ -193,9 +193,7 @@ namespace sf
         GLuint oceanFBOs[3];
         GLuint oceanTextures[6];
         GLuint oceanCurrentsUBO;
-        GLuint vaoMask;
-        GLuint vboMask;
-
+        
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
         int bitReverse(int i, int N);
@@ -206,6 +204,8 @@ namespace sf
         void GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result);
         float spectrum(float kx, float ky, bool omnispectrum = false);
         float omega(float k);
+
+        int oceanBoxObj;
     };
 }
 

@@ -1,4 +1,4 @@
-![Stonefish logo](https://github.com/patrykcieslak/stonefish/blob/master/Library/shaders/logo_color_64_normal.png)
+![Stonefish logo](https://github.com/patrykcieslak/stonefish/blob/master/Library/shaders/logo_64.png)
 # ***Stonefish***
 ### An advanced simulation tool developed for marine robotics.
 
@@ -13,16 +13,16 @@ There are two sources of documentation for the library: a [repository Wiki](http
 
 ### Requirements
 
-The simulation is CPU heavy and requires a recent GPU. The minimum requirement is the support for *OpenGL 3.3*. 
+The simulation is CPU heavy and requires a recent GPU. The minimum requirement is the support for *OpenGL 4.3*. 
 
 Install official manufacturer drivers for your graphics card before using _Stonefish_!
 
-The software is developed and tested on *Linux Ubuntu*. There is also an Xcode project file provided, to compile and run the software on *Mac OSX*. It should work on any Unix based platform. A version for Windows is not available at this time.
+The software is developed and tested on *Linux Ubuntu*. It should work on any Unix based platform. A version for Windows is not available at this time.
 
 ### Installation
 1. Dependencies
-    * **Bullet Physics library** (version 2.88, from source)
-        1. `git clone https://github.com/bulletphysics/bullet3.git -b 2.88`
+    * **Bullet Physics library** (version 2.89, from source)
+        1. `git clone https://github.com/bulletphysics/bullet3.git -b 2.89`
         2. `cd bullet3`
         3. `mkdir build`
         4. `cd build`
@@ -36,6 +36,7 @@ The software is developed and tested on *Linux Ubuntu*. There is also an Xcode p
         3. `sudo vim sdl2-config.cmake`
         4. Remove space after "-lSDL2".
         5. Save file.
+    * **Freetype library** (libfreetype6-dev)
 
 2. Building
     1. Clone _stonefish_ repository.
@@ -43,7 +44,7 @@ The software is developed and tested on *Linux Ubuntu*. There is also an Xcode p
     3. `mkdir build`
     4. `cd build`
     5. `cmake ..`
-    6. `make -j4`
+    6. `make -jX` (where X is the number of threads)
     7. `sudo make install`
 
 3. Documentation
@@ -67,7 +68,21 @@ If you find this software useful in your research, please cite:
    doi={10.1109/OCEANSE.2019.8867434}}
 ```
 ### Funding
-This work was part of a project titled ”Force/position control system to enable compliant manipulation from a floating I-AUV”, which received funding from the European Community H2020 Programme, under the Marie Sklodowska-Curie grant agreement no. 750063. The work is continued under a project titled ”EU Marine Robots”, which received funding from the European Community H2020 Programme, grant agreement no. 731103.
+This work was part of a project titled ”Force/position control system to enable compliant manipulation from a floating I-AUV”, which received funding from the European Community H2020 Programme, under the Marie Sklodowska-Curie grant agreement no. 750063. The work was continued under a project titled ”EU Marine Robots”, which received funding from the European Community H2020 Programme, grant agreement no. 731103.
 
 ### License
 This is free software, published under the General Public License v3.0.
+
+### Change log
+
+*Version 0.9*
+- Requires support for OpenGL 4.3+ (compute shaders)
+- Complete rewrite of the ocean/underwater rendering pipeline
+- New automatic exposure and anti-aliasing algorithms
+- Logarythmic depth buffer for planet scale rendering
+- Fully GPU-based simulation of forward-looking sonar (FLS)
+- Fully GPU-based simulation of side-scan sonnar (SSS)
+- Normal mapping to enable high resolution surface details
+- Faster download of data from the GPU memory
+- Scheduling of multiple view rendering
+- OpenGL function handlers provided through GLAD

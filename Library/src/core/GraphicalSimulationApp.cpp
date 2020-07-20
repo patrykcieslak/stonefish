@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -56,7 +56,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     glLoadingContext = NULL;
     glMainContext = NULL;
     trackballCenter = NULL;
-    lastPicked = NULL;
+    selectedEntity = nullptr;
     displayHUD = true;
     displayConsole = false;
     joystick = NULL;
@@ -125,6 +125,11 @@ IMGUI* GraphicalSimulationApp::getGUI()
     return gui;
 }
 
+Entity* GraphicalSimulationApp::getSelectedEntity()
+{
+    return selectedEntity;
+}
+
 bool GraphicalSimulationApp::hasGraphics()
 {
     return true;
@@ -170,11 +175,10 @@ HelperSettings& GraphicalSimulationApp::getHelperSettings()
 
 void GraphicalSimulationApp::Init()
 {
-    //Basics
+    //Window initialization + loading thread
     loading = true;
-    console = new Console(); //Create temporary text console
-    InitializeSDL(); //Window initialization + loading thread
-    
+    InitializeSDL();
+
     //Continue initialization with console visible
     cInfo("Initializing rendering pipeline:");
     cInfo("Loading GUI...");
@@ -197,7 +201,6 @@ void GraphicalSimulationApp::Init()
 
     //Create performance counters
     glGenQueries(2, timeQuery);
-    //glQueryCounter(timeQuery[1-timeQueryPingpong], GL_TIMESTAMP);
 }
 
 void GraphicalSimulationApp::InitializeSDL()
@@ -330,7 +333,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             break;
             
         case SDLK_SPACE:
-            lastPicked = NULL;
+            selectedEntity = nullptr;
             if(!getSimulationManager()->isSimulationFresh())
             {
                 StopSimulation();
@@ -578,7 +581,7 @@ void GraphicalSimulationApp::Loop()
                 {
                     glm::vec3 eye = trackball->GetEyePosition();
                     glm::vec3 ray = trackball->Ray(event.button.x, event.button.y);
-                    lastPicked = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
+                    selectedEntity = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
                 }
                 else //RIGHT OR MIDDLE
                 {
@@ -767,7 +770,7 @@ void GraphicalSimulationApp::DoHUD()
     //Main view exposure
     gui->DoPanel(10.f, offset, 160.f, 126.f);
     offset += 5.f;
-    gui->DoLabel(15.f, offset, "RENDERING");
+    gui->DoLabel(15.f, offset, "VIEW");
     offset += 15.f;
     
     id.owner = 3;
@@ -803,13 +806,13 @@ void GraphicalSimulationApp::DoHUD()
     offset += 61.f;
     
     //Picked entity information
-    if(lastPicked != NULL)
+    if(selectedEntity != nullptr)
     {
-        switch(lastPicked->getType())
+        switch(selectedEntity->getType())
         {
             case EntityType:: STATIC:
             {
-                StaticEntity* ent = (StaticEntity*)lastPicked;
+                StaticEntity* ent = (StaticEntity*)selectedEntity;
                 
                 gui->DoPanel(10.f, offset, 160.f, 66.f);
                 offset += 5.f;
@@ -825,7 +828,7 @@ void GraphicalSimulationApp::DoHUD()
                 
             case EntityType:: SOLID:
             {
-                SolidEntity* ent = (SolidEntity*)lastPicked;
+                SolidEntity* ent = (SolidEntity*)selectedEntity;
                 
                 gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::COMPOUND ? 143.f : 122.f);
                 offset += 5.f;
@@ -867,7 +870,7 @@ void GraphicalSimulationApp::DoHUD()
     }
     
     //Bottom panel
-    gui->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
+    gui->DoPanel(-10, getWindowHeight()-30.f, getWindowWidth()+20, 30.f);
     
     std::sprintf(buf, "Drawing time: %1.2lf (%1.2lf) ms", getDrawingTime(), getDrawingTime(true));
     gui->DoLabel(10, getWindowHeight() - 20.f, buf);
@@ -902,7 +905,7 @@ void GraphicalSimulationApp::ResumeSimulation()
 void GraphicalSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
-	lastPicked = NULL;
+	selectedEntity = nullptr;
 	trackballCenter = NULL;
     
     int status;
@@ -935,7 +938,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     SDL_GL_MakeCurrent(ltdata->app->window, ltdata->app->glLoadingContext);  
     
     //Render loading screen
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
     glScissor(0, 0, ltdata->app->windowW, ltdata->app->windowH);
     glViewport(0, 0, ltdata->app->windowW, ltdata->app->windowH);
     glDisable(GL_DEPTH_TEST);

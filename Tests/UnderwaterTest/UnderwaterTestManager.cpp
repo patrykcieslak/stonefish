@@ -233,9 +233,9 @@ void UnderwaterTestManager::BuildScenario()
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
     sf::FLS* fls = new sf::FLS("FLS", 256, 1000, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
-    fls->setDisplayOnScreen(true, 0, 500, 0.25f);
+    //fls->setDisplayOnScreen(true, 0, 500, 0.25f);
     sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 40.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
-    sss->setDisplayOnScreen(true, 485, 500, 0.6f);
+    //sss->setDisplayOnScreen(true, 485, 500, 0.6f);
     //sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0, 10.0);
     //cam->setDisplayOnScreen(true);
     //sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
@@ -291,7 +291,7 @@ void UnderwaterTestManager::BuildScenario()
     sf::PWLSegment* seg = new sf::PWLSegment(sf::TrajectoryPoint(sf::Vector3(0,0,0), 0),
                                              sf::TrajectoryPoint(sf::Vector3(10,0,4), 10));
     tg->AddSegment(seg);
-    sf::AnimatedEntity* anim = new sf::AnimatedEntity("Anim1", sf::GetDataPath() + "dragon.obj", 0.5, sf::Transform(sf::Quaternion(0.0,M_PI_2,0.0), sf::V0()), "Rock", "seabed");
+    sf::AnimatedEntity* anim = new sf::AnimatedEntity("Anim1", sf::GetDataPath() + "dragon.obj", 0.5, sf::Transform(sf::Quaternion(0.0,M_PI_2,0.0), sf::V0()), "Rock", "yellow");
     anim->ConnectTrajectoryGenerator(tg);
     AddAnimatedEntity(anim, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
 

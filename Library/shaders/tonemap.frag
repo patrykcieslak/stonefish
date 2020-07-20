@@ -182,7 +182,7 @@ vec3 Reinhard(vec3 color, float burn, float scale, float Lwhite)
 
 void main(void) 
 {
-    float exposure = texelFetch(texExposure, ivec2(0,0), 0).r;
+    float exposure = clamp(texelFetch(texExposure, ivec2(0,0), 0).r, 0.0, 0.0004);
     vec3 color = texture(texSource, texcoord).rgb; 
     color = accurateLinearToSRGB(exposure * exposureComp * color); //Gamma correction
     float lum = dot(color, RGB_TO_LUM); //FXAA

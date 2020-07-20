@@ -654,7 +654,9 @@ vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	vec3 toLight = pointLights[id].position - P;
 	float distance = length(toLight);
 	toLight /= distance;
-	
+	if(distance > 100.0) //Limit light range
+        return vec4(vec3(0.0), 100.0);
+    
 	float attenuation = 1.0/(max(0.01*0.01, distance*distance));
 	return vec4(ShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), distance);
 }
@@ -664,7 +666,9 @@ vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	vec3 toLight = spotLights[id].position - P;
 	float distance = length(toLight);
 	toLight /= distance;
-	
+	if(distance > 100.0) //Limit light range
+        return vec4(vec3(0.0), 100.0);
+
 	float spotEffect = dot(spotLights[id].direction, -toLight); //Angle between spot direction and point-light vector
     float NdotL = dot(N, toLight);
         
