@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sensor__
@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum defining types of sensors.
-    typedef enum {SENSOR_JOINT = 0, SENSOR_LINK, SENSOR_VISION, SENSOR_OTHER} SensorType;
+    enum class SensorType {JOINT, LINK, VISION, OTHER};
     
     struct Renderable;
     
@@ -74,6 +74,9 @@ namespace sf
          \param f the sampling frequency of the sensor [Hz]
          */
         void setUpdateFrequency(Scalar f);
+
+        //! A method returning the sampling rate of the sensor.
+        Scalar getUpdateFrequency();
         
         //! A method informing if the sensor is renderable.
         bool isRenderable();

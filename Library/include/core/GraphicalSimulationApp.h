@@ -26,9 +26,9 @@
 #ifndef __Stonefish_GraphicalSimulationApp__
 #define __Stonefish_GraphicalSimulationApp__
 
+#include "graphics/OpenGLDataStructs.h"
 #include <SDL2/SDL.h>
 #include "core/SimulationApp.h"
-#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
@@ -132,6 +132,9 @@ namespace sf
         
         //! A method returning a pointer to the GUI.
         IMGUI* getGUI();
+
+        //! A method returning a pointer to the selected entity.
+        Entity* getSelectedEntity();
         
         //! A method informing if the application is graphical.
         bool hasGraphics();
@@ -140,7 +143,11 @@ namespace sf
         SDL_Joystick* getJoystick();
         
         //! A method returning the graphics rendering time in seconds.
-        double getDrawingTime();
+        /*!
+          \param max return maximum drawing time?
+          \return moving average drawing time or maximum drawing time [ms]
+        */
+        double getDrawingTime(bool max = false);
         
         //! A method returning the width of the window.
         int getWindowWidth();
@@ -189,17 +196,21 @@ namespace sf
         OpenGLPipeline* glPipeline;
         
         SolidEntity* trackballCenter;
-        Entity* lastPicked;
+        Entity* selectedEntity;
         bool displayHUD;
         bool displayConsole;
         std::string shaderPath;
         bool loading;
         double drawingTime;
+        double maxDrawingTime;
+        int maxCounter;
         int windowW;
         int windowH;
         RenderSettings rSettings;
         HelperSettings hSettings;
-        
+        GLuint timeQuery[2];
+        GLint timeQueryPingpong;
+
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);
     };

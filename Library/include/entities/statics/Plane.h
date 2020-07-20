@@ -40,8 +40,9 @@ namespace sf
          \param size of the rendered plane [m]
          \param material the name of the material the plane is made of
          \param look the name of the graphical material used for rendering
+         \param uvScale scaling of the texture coordinates
          */
-        Plane(std::string uniqueName, Scalar size, std::string material, std::string look = "");
+        Plane(std::string uniqueName, Scalar size, std::string material, std::string look = "", float uvScale = 1.f);
         
         //! A method returning the extents of the plane axis alligned bounding box.
         /*!

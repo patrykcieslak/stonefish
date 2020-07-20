@@ -20,21 +20,77 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLContent__
 #define __Stonefish_OpenGLContent__
 
 #include "graphics/OpenGLDataStructs.h"
+#include "graphics/GLSLShader.h"
 #include "core/NameManager.h"
+#include "graphics/OpenGLPointLight.h"
+#include "graphics/OpenGLSpotLight.h"
+#include <map>
 
 namespace sf
 {
-    class GLSLShader;
     class OpenGLView;
-    class OpenGLLight;
+
+    //! An enum specifiying supported texture filtration modes.
+    enum class FilteringMode {NEAREST, BILINEAR, BILINEAR_MIPMAP, TRILINEAR};
+
+    //! Framebuffer texture
+    struct FBOTexture
+    {
+        GLenum attach;
+        GLenum target;
+        GLuint tex;
+        GLint lvl;
+        GLint z;
+
+        FBOTexture(GLenum attachment, GLenum target, GLuint texture, GLint level = 0, GLint zoffset = 0)
+        : attach(attachment), target(target), tex(texture), lvl(level), z(zoffset) {}
+    };
     
+    #pragma pack(1)
+    //! A structure representing data of the Lights UBO (std140 aligned)
+    struct LightsUBO
+    {
+        PointLightUBO pointLights[MAX_POINT_LIGHTS];
+        SpotLightUBO spotLights[MAX_SPOT_LIGHTS];
+        GLint numPointLights;
+        GLint numSpotLights;
+    };
+    //! A structure representing a velocity field UBO (std140 aligned).
+    struct VelocityFieldUBO
+    {
+        glm::vec4 posR;   //Position and orifice radius
+        glm::vec4 dirV;   //Direction and velocity value
+        glm::vec3 params; //Additional params
+        GLuint type;      //Type of velocity field
+    };
+    #pragma pack(0)
+
+    //! A structure representing a material shader collection.
+    struct MaterialShader
+    {
+        std::string shadingAlgorithm;
+        GLSLShader* shaders[6];
+
+        MaterialShader()
+        {
+            shadingAlgorithm = "";
+        }
+
+        MaterialShader(const MaterialShader &obj)
+        {
+            shadingAlgorithm = obj.shadingAlgorithm;
+            for(size_t i=0; i<6; ++i)
+                shaders[i] = obj.shaders[i];
+        }
+    };
+
     //! A class implementing OpenGL content management and core rendering funtions.
     class OpenGLContent
     {
@@ -88,15 +144,6 @@ namespace sf
         //! A method that binds the base vertex array.
         void BindBaseVertexArray();
         
-        //! A method to enable clipping plane.
-        /*!
-         \param clipPlaneCoeff coefficients of the plane equation
-         */
-        void EnableClipPlane(glm::vec4 clipPlaneCoeff);
-        
-        //! A method to disable clipping plane.
-        void DisableClipPlane();
-        
         //! A method to draw a screen-aligned quad.
         void DrawSAQ();
         
@@ -129,18 +176,7 @@ namespace sf
          \param array has to be set to true if texture is an array texture
          */
         void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array = true);
-        
-        //! A method to draw a textured quad (multisampled 2D texture).
-        /*!
-         \param x the x coordinate of the quad origin
-         \param y the y coordinate of the quad origin
-         \param width the width of the quad
-         \param height the height of the quad
-         \param textureMS the id of the texture
-         \param texSize dimensions of the texture
-         */
-        void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize);
-        
+         
         //! A method to display a cubemap texture.
         /*!
          \param texture the id of the texture
@@ -181,12 +217,18 @@ namespace sf
         
         //! A method to draw an object.
         /*!
-         \param modelId the id of the graphical object
+         \param objectId the id of the graphical object
          \param lookId the id of the graphical material
          \param M the model matrix
          */
-        void DrawObject(int modelId, int lookId, const glm::mat4& M);
-        
+        void DrawObject(int objectId, int lookId, const glm::mat4& M);
+
+        //! A method to draw the light source.
+        /*!
+         \param lightId the id of the light
+         */
+        void DrawLightSource(unsigned int lightId);
+
         //! A method to add a view to the list of views.
         /*!
          \param view a pointer to a view object
@@ -213,10 +255,11 @@ namespace sf
          \param specular the specular strength
          \param shininess the shininess factor
          \param reflectivity the amount of reflection
-         \param texturePath a path to the texture file
+         \param albedoTexturePath a path to the texture file specifying albedo color
          \return the actual name of the created look
          */
-        std::string CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity = 0.f, std::string texturePath = "");
+        std::string CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+                                     GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "");
         
         //! A method to create a new physical look.
         /*!
@@ -225,43 +268,43 @@ namespace sf
          \param roughness the roughness of the surface
          \param metalness the amount of metal look
          \param relfectivity the amount of reflection
-         \param texturePath a path to the texture file
+         \param albedoTexturePath a path to the texture file specifying albedo color
+         \param normalTexturePath a path to the texture file specifying surface normal (bump mapping)
          \return the actual name of the created look
          */
-        std::string CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, GLfloat reflectivity = 0.f, std::string texturePath = "");
+        std::string CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
+                                       GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "");
         
         //! A method to use a look.
         /*!
          \param lookId an id of the look to use
+         \param texturable a flag determining if the object rendered is texturable
          \param M the model matrix
          */
-        void UseLook(unsigned int lookId, const glm::mat4& M);
+        void UseLook(unsigned int lookId, bool texturable, const glm::mat4& M);
         
         //! A method returning a pointer to a view.
         /*!
          \param id the index of the view
          \return a pointer to the view object
          */
-        OpenGLView* getView(unsigned int id);
+        OpenGLView* getView(size_t id);
         
         //! A method returning the number of views.
-        unsigned int getViewsCount();
+        size_t getViewsCount();
         
         //! A method returning a pointer to a light.
         /*!
          \param id the index of the light
          \return a pointer to the light object
          */
-        OpenGLLight* getLight(unsigned int id);
+        OpenGLLight* getLight(size_t id);
         
         //! A method returning the number of lights.
-        unsigned int getLightsCount();
+        size_t getLightsCount();
         
-        //! A method that sets up shader uniforms with light information.
-        /*!
-         \param shader a pointer to a shader
-         */
-        void SetupLights(GLSLShader* shader);
+        //! A method that updates lights UBO.
+        void SetupLights();
         
         //! A method returing the id of a look.
         /*!
@@ -269,21 +312,60 @@ namespace sf
          \return the id of the corresponding look structure
          */
         int getLookId(std::string name);
+
+        //! A method returning a reference to the object structure.
+        /*!
+         \param id the id of the object
+         */
+        const Object& getObject(size_t id);
+
+        //! A method returning a reference to the look structure.
+        /*!
+         \param id the id of the look
+         */
+        const Look& getLook(size_t id);
         
         //! A static method to load a texture.
         /*!
          \param filename the path to the texture file
+         \param hasAlphaChannel a flag to indicate if the texture has transparency
+         \param anisotropy defines maximum anisotropic filtering
          \return the id of the loaded texture
          */
-        static GLuint LoadTexture(std::string filename);
+        static GLuint LoadTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f);
         
         //! A static method to load an internal texture.
         /*!
          \param filename the name of the texture file
+         \param hasAlphaChannel a flag to indicate if the texture has transparency
+         \param anisotropy defines maximum anisotropic filtering
          \return the id of the loaded texture
          */
-        static GLuint LoadInternalTexture(std::string filename);
+        static GLuint LoadInternalTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f);
         
+        //! A static method to generate a new texture.
+        /*!
+         \param target the OpenGL texture target enum
+         \param dimensions the dimensions of the texture [px]
+         \param internalFormat the OpenGL internal texture format enum
+         \param format the OpenGL texture format enum
+         \param type the OpenGL data type enum
+         \param data a pointer to the data of the texture or NULL
+         \param fm the filtering mode
+         \param repeat a flag indicating if texture repeat mode should be used
+         \param anisotropy a flag indicating if anisotropic filtering should be enabled
+         \return a texture handle
+        */
+        static GLuint GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, 
+                                      GLenum type, const void* data, FilteringMode fm, bool repeat, bool anisotropy = false);
+
+        //! A static method to create a framebuffer object.
+        /*!
+         \param textures a vector of framebuffer textures 
+         \return a framebuffer object handle
+         */
+        static GLuint GenerateFramebuffer(const std::vector<FBOTexture>& textures);
+
         //! A static method to load a mesh from a file.
         /*!
          \param filename a path to the model file
@@ -296,9 +378,10 @@ namespace sf
         //! A static method to build a graphical plane object.
         /*!
          \param halfExtents the size of the plane [m]
+         \param uvScale scaling of the texture coordinates
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildPlane(GLfloat halfExtents);
+        static Mesh* BuildPlane(GLfloat halfExtents, GLfloat uvScale = 1.f);
         
         //! A static method to build a graphical box object.
         /*!
@@ -372,6 +455,12 @@ namespace sf
          \param mesh a pointer to a mesh structure
          */
         static void SmoothNormals(Mesh* mesh);
+
+        //! A static method to compute tangent and bitangent vectors.
+        /*!
+         \param mesh a pointer to a mesh structure
+         */
+        static void ComputeTangents(TexturableMesh* mesh);
         
         //! A method to compute average face size.
         /*!
@@ -412,6 +501,7 @@ namespace sf
     private:
         //Modes
         DrawingMode mode;
+        GLfloat maxAnisotropy;
         
         //Data
         std::vector<OpenGLView*> views;
@@ -419,6 +509,9 @@ namespace sf
         std::vector<Object> objects; //VBAs
         std::vector<Look> looks; //OpenGL materials
         NameManager lookNameManager;
+        int currentLookId;
+        bool currentTexturable;
+        int currentShaderMode;
         
         glm::vec3 eyePos;
         glm::vec3 viewDir;
@@ -426,26 +519,22 @@ namespace sf
         glm::mat4 projection; //Current projection matrix
         glm::mat4 viewProjection; //Current view-projection matrix
         glm::vec2 viewportSize; //Current view-port size
-        glm::vec4 clipPlane;
+        GLfloat FC; //Current logarithmic depth buffer constant
         
         //Standard objects
         GLuint baseVertexArray; //base VAO
-        GLuint quadBuf; //quad for debugging textures
         GLuint cubeBuf; //cubemap cross VBO
         GLuint csBuf[2]; //vertex data for drawing coord systems
         Object ellipsoid; //used for approximating fluid dynamics coeffs
         Object cylinder; //used for approximating fluid dynamics coeffs
+        GLuint lightsUBO;
+        LightsUBO lightsUBOData;
+        GLuint viewUBO;
         
         //Shaders
-        GLSLShader* helperShader;
-        GLSLShader* texSaqShader;
-        GLSLShader* texQuadShader;
-        GLSLShader* texQuadMSShader;
-        GLSLShader* texLayerQuadShader;
-        GLSLShader* texLevelQuadShader;
-        GLSLShader* texCubeShader;
-        GLSLShader* flatShader;
-        std::vector<GLSLShader*> materialShaders;
+        std::map<std::string, GLSLShader*> basicShaders;
+        std::vector<MaterialShader> materialShaders;
+        GLSLShader* lightSourceShader[2];
         
         //Methods
         void UseStandardLook(const glm::mat4& M);

@@ -90,29 +90,24 @@ size_t Compound::getPartId(size_t collisionShapeId) const
     
 SolidType Compound::getSolidType()
 {
-    return SolidType::SOLID_COMPOUND;
+    return SolidType::COMPOUND;
 }
 
-std::vector<Vertex>* Compound::getMeshVertices()
+std::vector<Vector3>* Compound::getMeshVertices() const
 {
-    std::vector<Vertex>* pVert = new std::vector<Vertex>(0);
+    std::vector<Vector3>* pVert = new std::vector<Vector3>(0);
         
     for(size_t i=0; i<parts.size(); ++i)
     {
         if(parts[i].isExternal)
         {
-            std::vector<Vertex>* pPartVert = parts[i].solid->getMeshVertices();
+            std::vector<Vector3>* pPartVert = parts[i].solid->getMeshVertices();
             Transform phyMeshTrans = parts[i].origin * parts[i].solid->getO2GTransform();
-            glm::mat4 glTrans = glMatrixFromTransform(phyMeshTrans);
-            
             for(size_t h=0; h < pPartVert->size(); ++h)
             {
-                glm::vec4 vTrans = glTrans * glm::vec4((*pPartVert)[h].pos, 1.f);
-                Vertex v;
-                v.pos = glm::vec3(vTrans);
+                Vector3 v = phyMeshTrans * pPartVert->at(h);
                 pVert->push_back(v);
-            }
-                
+            }    
             delete pPartVert;
         }
     }
@@ -274,14 +269,14 @@ btCollisionShape* Compound::BuildCollisionShape()
 
 void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phyType != BodyPhysicsType::FLOATING_BODY && phyType != BodyPhysicsType::SUBMERGED_BODY) return;
+    if(phyType != BodyPhysicsType::FLOATING && phyType != BodyPhysicsType::SUBMERGED) return;
     
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
     submerged.points.clear();
     
     //If completely outside fluid just set all torques and forces to 0
-    if(bf == BodyFluidPosition::OUTSIDE_FLUID)
+    if(bf == BodyFluidPosition::OUTSIDE)
     {
         Fb.setZero();
         Tb.setZero();
@@ -294,7 +289,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         return;
     }
     
-    if(bf == BodyFluidPosition::INSIDE_FLUID)
+    if(bf == BodyFluidPosition::INSIDE)
     {
         //Compute buoyancy based on CB position
         if(isBuoyant())
@@ -409,7 +404,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
 void Compound::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phyType != BodyPhysicsType::AERODYNAMIC_BODY) return;
+    if(phyType != BodyPhysicsType::AERODYNAMIC) return;
     
     //Set zero
     Fda.setZero();
@@ -467,7 +462,7 @@ std::vector<Renderable> Compound::Render()
                 item.type = RenderableType::SOLID;
                 item.materialName = parts[i].solid->getMaterial().name;
                 
-                if(dm == DisplayMode::DISPLAY_GRAPHICAL)
+                if(dm == DisplayMode::GRAPHICAL)
                 {
                     Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
                     item.objectId = parts[i].solid->getGraphicalObject();
@@ -475,7 +470,7 @@ std::vector<Renderable> Compound::Render()
                     item.model = glMatrixFromTransform(oTrans);
                     items.push_back(item);
                 }
-                else if(dm == DisplayMode::DISPLAY_PHYSICAL)
+                else if(dm == DisplayMode::PHYSICAL)
                 {
                     Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2CTransform();
                     item.objectId = parts[i].solid->getPhysicalObject();
@@ -492,22 +487,22 @@ std::vector<Renderable> Compound::Render()
             
             switch(atype)
             {
-                case FD_APPROX_AUTO:
+                case  GeometryApproxType::AUTO:
                     break;
                 
-                case FD_APPROX_SPHERE:
+                case  GeometryApproxType::SPHERE:
                     item.type = RenderableType::HYDRO_ELLIPSOID;
                     item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
                     items.push_back(item);
                     break;
                 
-                case FD_APPROX_CYLINDER:
+                case  GeometryApproxType::CYLINDER:
                     item.type = RenderableType::HYDRO_CYLINDER;
                     item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
                     items.push_back(item);
                     break;
                 
-                case FD_APPROX_ELLIPSOID:
+                case  GeometryApproxType::ELLIPSOID:
                     item.type = RenderableType::HYDRO_ELLIPSOID;
                     item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
                     items.push_back(item);

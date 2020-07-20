@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -20,9 +20,14 @@
 #version 330
 
 layout(location = 0) in vec3 vertex;
+out float logz;
+
 uniform mat4 MVP;
+uniform float FC;
 
 void main()
 {
 	gl_Position = MVP * vec4(vertex, 1.0);
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
+    logz = 1.0 + gl_Position.w;
 }

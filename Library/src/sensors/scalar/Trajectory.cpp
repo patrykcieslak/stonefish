@@ -56,7 +56,7 @@ void Trajectory::InternalUpdate(Scalar dt)
 
 ScalarSensorType Trajectory::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_TRAJECTORY;
+    return ScalarSensorType::TRAJECTORY;
 }
 
 }

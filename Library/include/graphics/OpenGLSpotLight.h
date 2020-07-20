@@ -30,6 +30,22 @@
 
 namespace sf
 {
+    //! A structure representing a spot light in the Ligths UBO (std140 aligned).
+    #pragma pack(1)
+    struct SpotLightUBO : public LightUBO
+    {
+        glm::mat4 clipSpace;
+        glm::vec3 position;
+        GLfloat frustumNear;
+        glm::vec3 direction;
+        GLfloat frustumFar;
+        glm::vec3 color;
+        GLfloat cone;
+        glm::vec3 radius; //UV + physical radius
+        uint8_t pad[4];
+    };
+    #pragma pack(0)
+
     //! A class implementing an OpenGL spot light with shadow.
     class OpenGLSpotLight : public OpenGLLight
     {
@@ -41,9 +57,9 @@ namespace sf
 		 \param radius a radius of the light source [m]
          \param coneAngleDeg the angle of the light cone [deg]
          \param color the color of the light
-         \param illuminance the brightness of the light [lx]
+         \param lum the luminous power of the light [lm]
          */
-        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance);
+        OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat lum);
         
         //! A destructor.
         ~OpenGLSpotLight();
@@ -65,16 +81,12 @@ namespace sf
          \param rect a rectangle in which to display the texture
          */
         void ShowShadowMap(glm::vec4 rect);
-		
-		//! A method implementing rendering of light surface.
-		void DrawLight();
     
-        //! A method to set up light data in a shader.
+        //! A method to set up light data in Lights UBO.
         /*!
-         \param shader a pointer to a GLSL shader
-         \param lightId an id of the light
+         \param ubo a pointer to the light UBO structure
          */
-        void SetupShader(GLSLShader* shader, unsigned int lightId);
+        void SetupShader(LightUBO* ubo);
         
         //! A method used to update direction of the spot light.
         /*!
@@ -86,13 +98,16 @@ namespace sf
         void UpdateTransform();
         
         //! A method returning the type of the light.
-        LightType getType();
+        LightType getType() const;
         
         //! A method returning the direction vector of the light.
         glm::vec3 getDirection();
         
         //! A method returning light clip space information.
         glm::mat4 getClipSpace();
+
+        //! A method returning the model matrix of the light.
+        glm::mat4 getTransform();
         
         //! A method returning the spot light cone angle.
         GLfloat getAngle();

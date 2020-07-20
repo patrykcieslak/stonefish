@@ -35,6 +35,13 @@ namespace sf
     class FLS;
     class SolidEntity;
 
+    struct SonarView
+    {
+        GLuint nBeams;
+        glm::mat4 projection;
+        glm::mat4 view;
+    };
+
     //! A class representing a forward looking sonar (FLS).
     class OpenGLFLS : public OpenGLView
     {
@@ -49,15 +56,13 @@ namespace sf
          \param horizontalFovDeg the horizontal field of view of the sonar [deg]
          \param verticalFovDeg the vertical field of view of the sonar [deg]
          \param numOfBeams the number of sonar beams
-         \param beamHPix the number of pixels used to represent horizontal beam width [px]
-         \param beamVPix the number of pixels used to represent vertical beam width [px]
-         \param minRange the distance to the closest recorded object [m]
-         \param maxRange the distance to the farthest recorded object [m]
          \param numOfBins the number of sonar range bins
+         \param range_ the distance to the closest and farthest recorded object [m]
+         \param continuousUpdate a flag indicating if the FLS should be always updated
          */
         OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp,
-                  GLint originX, GLint originY, GLfloat horizontalFOVDeg, GLfloat verticalFOVDeg, GLuint numOfBeams, 
-                  GLint beamHPix, GLint beamVPix, GLfloat minRange, GLfloat maxRange, GLuint numOfBins);
+                   GLint originX, GLint originY, GLfloat horizontalFOVDeg, GLfloat verticalFOVDeg, 
+                   GLuint numOfBeams, GLuint numOfBins, glm::vec2 range_, bool continuousUpdate);
         
         //! A destructor.
         ~OpenGLFLS();
@@ -68,8 +73,9 @@ namespace sf
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
+         \param updated a flag indicating if view content was updated
          */
-        void DrawLDR(GLuint destinationFBO);
+        void DrawLDR(GLuint destinationFBO, bool updated);
         
         //! A method returning the eye position.
         glm::vec3 GetEyePosition() const;
@@ -85,6 +91,9 @@ namespace sf
         
         //! A method returning the view matrix.
         glm::mat4 GetViewMatrix() const;
+
+        //! A method that returns the far clip plane distance.
+        GLfloat GetFarClip() const;
         
         //! A method that sets up the sonar.
         void SetupSonar();
@@ -138,27 +147,35 @@ namespace sf
         glm::vec3 tempUp;
         glm::mat4 projection;
         bool _needsUpdate;
-        bool update;
-        GLuint inputWidth;
-        GLuint inputHeight;
+        bool newData;
+        
+        std::vector<SonarView> views;
         GLuint nBeams;
+        GLuint nViewBeams;
         GLuint nBins;
+        GLuint nBeamSamples;
         glm::vec2 fov;
         glm::vec2 range;
+        GLfloat gain;
         std::default_random_engine randGen;
         std::uniform_real_distribution<float> randDist;
         ColorMap cMap;
+        bool settingsUpdated;
+        
         GLuint inputRangeIntensityTex;
         GLuint inputDepthRBO;
-        GLuint outputTex;
-        GLuint outputFBO;
+        GLuint outputTex[2];
+        GLuint outputPBO;
         GLuint displayTex;
         GLuint displayFBO;
+        GLuint displayPBO;
         GLuint fanVAO;
         GLuint fanBuf;
         GLuint fanDiv;
-        static GLSLShader* sonarInputShader;
-        static GLSLShader* sonarOutputShader;
+        GLSLShader* sonarOutputShader;
+
+        static GLSLShader* sonarInputShader[2];
+        static GLSLShader* sonarPostprocessShader;
         static GLSLShader* sonarVisualizeShader;
     };
 }

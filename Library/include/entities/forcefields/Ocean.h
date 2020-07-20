@@ -29,20 +29,19 @@
 #include <SDL2/SDL_mutex.h>
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
-#include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLOcean.h"
 
 namespace sf
 {
     //! A structure holding the settings of the hydrodynamics computation.
     struct HydrodynamicsSettings
     {
-        FluidDynamicsType algorithm;
         bool dampingForces;
         bool reallisticBuoyancy;
     };
     
     class VelocityField;
-    class OpenGLOcean;
+    class Actuator;
     
     //! A class implementing an ocean.
     class Ocean : public ForcefieldEntity
@@ -61,10 +60,9 @@ namespace sf
         
         //! A method used to setup the properties of the water.
         /*!
-         \param type the type of the water <0,1>
-         \param turbidity the turbidity of the water
+         \param jerlov the type of water according to Jerlov (I-9C) <0,1>
          */
-        void SetupWaterProperties(Scalar type, Scalar turbidity);
+        void SetupWaterProperties(Scalar jerlov);
         
         //! A method used to add a velocity field to the ocean.
         /*!
@@ -74,12 +72,11 @@ namespace sf
         
         //! A method running the hydrodynamics computation.
         /*!
-         \param fdt type of fluid dynamics computations
          \param world a pointer to the dynamics world
          \param co a pointer to the collision object
          \param recompute a flag deciding if hydrodynamic forces need to be recomputed
          */
-        void ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute);
+        void ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute);
         
         //! A method returning the water velocity.
         /*!
@@ -114,13 +111,13 @@ namespace sf
         
         //! A method to disable all defined currents.
         void DisableCurrents();
+
+        //! A method updating the currents data in the OpenGL ocean.
+        void UpdateCurrentsData();
         
         //! A method returning the type of the water.
         Scalar getWaterType();
-        
-        //! A method returning the turbidity of the water.
-        Scalar getTurbidity();
-        
+          
         //! A method informing if the ocean waves are simulated.
         bool hasWaves() const;
         
@@ -129,7 +126,7 @@ namespace sf
         
         //! A method returning a pointer to the OpenGL object implementing the ocean.
         OpenGLOcean* getOpenGLOcean();
-        
+
         //! A method returning the type of the force field.
         ForcefieldType getForcefieldType();
         
@@ -139,16 +136,19 @@ namespace sf
          */
         void InitGraphics(SDL_mutex* hydrodynamics);
         
-        //! A method implementing the rendering of the ocean force field.
+        //! A method implementing the rendering of the force field.
         std::vector<Renderable> Render();
+
+        //! A method implementing the rendering of the ocean force field.
+        std::vector<Renderable> Render(const std::vector<Actuator*>& act);
         
     private:
         Fluid liquid;
         std::vector<VelocityField*> currents;
         OpenGLOcean* glOcean;
+        OceanCurrentsUBO glOceanCurrentsUBOData;
         Scalar depth;
         Scalar waterType;
-        Scalar turbidity;
         Scalar oceanState;
         bool currentsEnabled;
         Renderable wavesDebug;

@@ -65,7 +65,7 @@ Thruster::~Thruster()
 
 ActuatorType Thruster::getType()
 {
-    return ActuatorType::ACTUATOR_THRUSTER;
+    return ActuatorType::THRUSTER;
 }
 
 void Thruster::setSetpoint(Scalar s)
@@ -92,6 +92,11 @@ Scalar Thruster::getOmega()
 Scalar Thruster::getThrust()
 {
     return thrust;
+}
+
+Scalar Thruster::getDiameter()
+{
+    return D;
 }
 
 void Thruster::Update(Scalar dt)
@@ -172,7 +177,7 @@ std::vector<Renderable> Thruster::Render()
     item.type = RenderableType::SOLID;
     item.materialName = prop->getMaterial().name;
     item.objectId = prop->getGraphicalObject();
-    item.lookId = prop->getLook();
+    item.lookId = dm == DisplayMode::GRAPHICAL ? prop->getLook() : -1;
 	item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
     

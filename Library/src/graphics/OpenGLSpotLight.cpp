@@ -36,18 +36,41 @@
 namespace sf
 {
 
-OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat illuminance) 
-	: OpenGLLight(position, radius, color, illuminance)
+OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloat radius, GLfloat coneAngleDeg, glm::vec3 color, GLfloat lum) 
+	: OpenGLLight(position, radius, color, lum)
 {
-    coneAngle = coneAngleDeg/180.f*M_PI;
+    coneAngle = glm::max(0.1f, coneAngleDeg)/180.f*M_PI;
+    GLfloat S = 2.f*M_PI*(1.f-cosf(coneAngle/2.f));
+    colorLi = glm::vec4(color, lum/S);
     clipSpace = glm::mat4();
-	GLfloat near = getSourceRadius() / tanf(coneAngle/2.f);
-    zNear = near < 0.02f ? 0.02f : near;
-    zFar = sqrtf((illuminance / MEAN_SUN_ILLUMINANCE) / MIN_ILLUMINANCE_THRESHOLD);
+	GLfloat near = getSourceRadius()/tanf(coneAngle/2.f);
+    zNear = glm::max(0.05f, near);
+    zFar = sqrtf(colorLi.a/MIN_INTENSITY_THRESHOLD);
+
+    PlainMesh* m = new PlainMesh;
+    Vertex vt;
+    Face f;
+    unsigned int slices = 24;    
+    vt.normal = glm::vec3(0,0,-1.f);
+    vt.pos = glm::vec3(0,0,0);
+    m->vertices.push_back(vt);
+    //vertices
+    for(unsigned int i=0; i<=slices; ++i)
+    {
+        vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*getSourceRadius(), -cosf(i/(GLfloat)slices*M_PI*2.f)*getSourceRadius(), 0.0);
+        m->vertices.push_back(vt);
+    }
+    //faces
+    for(unsigned int i=0; i<slices; ++i)
+    {
+        f.vertexID[0] = 0;
+        f.vertexID[1] = i + 2;
+        f.vertexID[2] = i + 1;
+        m->faces.push_back(f);
+    }
+    sourceObject = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m);
+    delete m;
     
-	lightMesh = OpenGLContent::BuildCylinder(getSourceRadius(), getSourceRadius()/10.f);
-	lightObject = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(lightMesh);
-	
 	UpdatePosition(position);
     UpdateDirection(direction);
     UpdateTransform();
@@ -74,7 +97,7 @@ void OpenGLSpotLight::InitShadowmap(GLint shadowmapLayer)
     OpenGLState::BindFramebuffer(0);
 }
 
-LightType OpenGLSpotLight::getType()
+LightType OpenGLSpotLight::getType() const
 {
     return SPOT_LIGHT;
 }
@@ -93,6 +116,12 @@ glm::mat4 OpenGLSpotLight::getClipSpace()
 {
     return clipSpace;
 }
+
+glm::mat4 OpenGLSpotLight::getTransform()
+{
+    glm::vec3 pos = getPosition() + getDirection() * (zNear - 1e-3f);
+    return glm::inverse(glm::lookAt(pos, pos + getDirection(), glm::vec3(0,0,1.f)));
+}
     
 void OpenGLSpotLight::UpdateDirection(glm::vec3 d)
 {
@@ -105,17 +134,17 @@ void OpenGLSpotLight::UpdateTransform()
     dir = tempDir;
 }
 
-void OpenGLSpotLight::SetupShader(GLSLShader* shader, unsigned int lightId)
+void OpenGLSpotLight::SetupShader(LightUBO* ubo)
 {
-    std::string lightUni = "spotLights[" + std::to_string(lightId) + "].";
-    shader->SetUniform(lightUni + "position", getPosition());
-    shader->SetUniform(lightUni + "radius", glm::vec2(0.1f,0.1f));
-    shader->SetUniform(lightUni + "color", getColor());
-    shader->SetUniform(lightUni + "direction", getDirection());
-    shader->SetUniform(lightUni + "angle", (GLfloat)cosf(getAngle()/2.f));
-    shader->SetUniform(lightUni + "clipSpace", getClipSpace());
-    shader->SetUniform(lightUni + "zNear", zNear);
-    shader->SetUniform(lightUni + "zFar", zFar);
+    SpotLightUBO* spotUbo = (SpotLightUBO*)ubo;
+    spotUbo->position = getPosition();
+    spotUbo->color = glm::vec3(colorLi) * colorLi.a; 
+    spotUbo->direction = getDirection();
+    spotUbo->cone = (GLfloat)cosf(getAngle()/2.f);
+    spotUbo->clipSpace = getClipSpace();
+    spotUbo->frustumNear = zNear;
+    spotUbo->frustumFar = zFar;
+    spotUbo->radius = glm::vec3(0.1f,0.1f,getSourceRadius());
 }
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
@@ -150,18 +179,6 @@ void OpenGLSpotLight::ShowShadowMap(glm::vec4 rect)
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, shadowMap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     OpenGLContent::getInstance()->DrawTexturedQuad(x, y, w, h, shadowMap);*/
-}
-
-void OpenGLSpotLight::DrawLight()
-{
-	OpenGLLight::DrawLight();
-	glm::vec3 pos = getPosition() + getDirection() * zNear;
-	glm::mat4 model = glm::inverse(glm::lookAt(pos, pos + getDirection(), glm::vec3(0,0,1.f)));
-	glm::mat4 view = activeView->GetViewMatrix();
-	glm::mat4 proj = activeView->GetProjectionMatrix();
-	glm::mat4 MVP = proj * view * model;
-	lightSourceShader->SetUniform("MVP", MVP);
-	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(lightObject, 0, glm::mat4());
 }
 
 }

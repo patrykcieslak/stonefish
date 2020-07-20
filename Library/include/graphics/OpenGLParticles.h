@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLParticles__
@@ -31,7 +31,7 @@
 namespace sf
 {
 	class OpenGLCamera;
-	
+
 	//! An abstract class implementing a general particle system
 	class OpenGLParticles
 	{
@@ -40,24 +40,17 @@ namespace sf
         /*!
          \param numOfParticles the number of simulated particles
          */
-        OpenGLParticles(size_t numOfParticles);
+        OpenGLParticles(GLuint numOfParticles);
 		
         //! A destructor.
         virtual ~OpenGLParticles();	
 		
-		//! A method returning the number of particles.
-		size_t getNumOfParticles();
-		
-		//! A method returning the pointer to the position/size buffer.
-		glm::vec4* getPositionsSizes();
-		
-		//! A method returning the pointer to the velocity buffer.
-		glm::vec3* getVelocities();
-		
 	protected:
-		size_t nParticles;
-        glm::vec4* positionsSizes;
-		glm::vec3* velocities;
+		GLuint nParticles;
+        GLuint particlePosSSBO; //Includes position and size
+        GLuint particleVelSSBO; //Includes velocity and opacity
+        GLuint particleVAO; //Vertex array
+        GLuint particleEAB; //Indices of particle triangles
 	};
 }
 

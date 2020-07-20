@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -17,19 +17,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#version 330
+#version 430
 
 in vec2 texcoord;
 out vec4 fragColor;
 
-uniform vec3 lightAbsorption;
-uniform float turbidity;
+uniform vec3 cWater;
+uniform vec3 bWater;
 uniform vec2 blurShape;
 uniform float blurScale;
 uniform sampler2D texScene;
 uniform sampler2D texLinearDepth;
-
-const vec3 rayleigh = vec3(0.15023, 0.405565, 1.0);
 
 const vec2 Poisson32[32] = vec2[](
                                   vec2(-0.975402, -0.0711386),
@@ -136,27 +134,52 @@ const vec2 Poisson64[64] = vec2[](
 
 void main(void)
 {
-    fragColor = vec4(1.0);
-	float depth = texture(texLinearDepth, texcoord).r;
+    float depth = texture(texLinearDepth, texcoord).r;
     vec3 color = texture(texScene, texcoord).rgb;
-    
-    //Water properties
-    vec3 b = 0.2 * turbidity * rayleigh; //Scattering coefficient
-    //vec3 c = lightAbsorption + 0.1 * b; //Full attenuation coefficient
-    
+    int nr = int(clamp(depth, 0, 10));
+    float w = 1.0;
+    for(int i=0; i<nr; ++i)
+    {
+        float r = 1.0*i + 0.5;
+        float wr = exp(-r*r/float(nr*2));
+        int nc = i * 4;
+        for(int h=0; h<nc; ++h)
+        {
+            float theta = float(h)/float(nc) * 6.283185 + 0.785398;
+            vec2 uv = texcoord;
+            uv.x += blurShape.x * r * cos(theta);
+            uv.y += blurShape.y * r * sin(theta);
+
+            float sdepth = texture(texLinearDepth, uv).r;
+            if(sdepth > depth)
+            {
+                color += wr * texture(texScene, uv).rgb;
+                w += wr;
+            }
+        }
+    }
+
+    fragColor = vec4(color/w, 1.0);
     //Sample color based on b
-    vec2 r = dot(normalize(color), b) * blurScale * blurShape;
+    //vec2 r = dot(normalize(color), bWater) * blurScale * blurShape;
+    /*vec2 r = depth;
     vec3 blur = vec3(0.0);
     float w = 0.0;
     
-    for(int i=0; i<64; ++i)
+    for(int i=0; i<32; ++i)
     {
-        vec2 uv = texcoord + r * Poisson64[i];
-        float wi = 1.0-length(Poisson64[i]);
+        vec2 uv = texcoord + r * Poisson32[i];
+        if(texture(texLinearDepth, uv).r < depth)
+            continue;
+
+        float wi = 1.0; // 1.0-length(Poisson64[i]);
         blur += wi * texture(texScene, uv).rgb;
         w += wi;
     }
     
-    float maxBlurDist = 10.0/(turbidity+0.1);
-    fragColor.rgb = mix(color, blur/w, clamp(depth, 0.0, maxBlurDist)/maxBlurDist);
+    //float maxBlurDist = 10.0/(length(bWater)+0.1);
+    //fragColor.rgb = mix(color, blur/w, clamp(depth, 0.0, maxBlurDist)/maxBlurDist);
+    //fragColor = texture(texScene, texcoord);
+    fragColor = vec4(blur/w, 1.0);
+    */
 }

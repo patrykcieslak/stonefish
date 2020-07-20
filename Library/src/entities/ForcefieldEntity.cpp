@@ -20,7 +20,7 @@
 //
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/ForcefieldEntity.h"
@@ -41,9 +41,9 @@ ForcefieldEntity::~ForcefieldEntity()
 {
 }
 
-EntityType ForcefieldEntity::getType()
+EntityType ForcefieldEntity::getType() const
 {
-    return ENTITY_FORCEFIELD;
+    return EntityType::FORCEFIELD;
 }
 
 btPairCachingGhostObject* ForcefieldEntity::getGhost()

@@ -379,7 +379,7 @@ namespace sf
         void getAABB(Vector3& min, Vector3& max);
         
         //! A method returning the type of the entity.
-        EntityType getType();
+        EntityType getType() const;
         
     private:
         btMultiBody* multiBody;

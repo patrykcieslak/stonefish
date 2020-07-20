@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLConsole.h"
@@ -30,7 +30,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/IMGUI.h"
 #include "graphics/OpenGLPrinter.h"
-#include "utils/stb_image.h"
+#include "graphics/OpenGLContent.h"
 
 namespace sf
 {
@@ -45,7 +45,6 @@ OpenGLConsole::OpenGLConsole()
     printer = NULL;
     logoTexture = 0;
     consoleVAO = 0;
-    texQuadVBO = 0;
     texQuadShader = NULL;
     lastTime = GetTimeInMicroseconds();
 }
@@ -55,7 +54,6 @@ OpenGLConsole::~OpenGLConsole()
     if(printer != NULL) delete printer;
     if(logoTexture > 0) glDeleteTextures(1, &logoTexture);
     if(consoleVAO > 0) glDeleteVertexArrays(1, &consoleVAO);
-    if(texQuadVBO > 0) glDeleteBuffers(1, &texQuadVBO);
     if(texQuadShader != NULL) delete texQuadShader;
 }
     
@@ -67,46 +65,13 @@ void OpenGLConsole::Init(int w, int h)
     
     if(logoTexture > 0) //Check if not already initialized
         return;
-    
-    //Load logo texture - can't use material class because it writes to the console
-    int width, height, channels;
-    std::string path = GetShaderPath() + "logo_color_64.png";
-    
-    // Allocate image; fail out on error
-    unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
-    if(dataBuffer != NULL)
-    {
-        // Allocate an OpenGL texture
-        glGenTextures(1, &logoTexture);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
-        // Upload texture to memory
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
-        // Set certain properties of texture
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Wrap texture around
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // Release internal buffer
-        stbi_image_free(dataBuffer);
-    }
-    else
-        logoTexture = 0;
+    //Load logo texture
+    logoTexture = OpenGLContent::LoadInternalTexture("logo_64.png", true);
     
     glGenVertexArrays(1, &consoleVAO);
     OpenGLState::BindVertexArray(consoleVAO);
     glEnableVertexAttribArray(0);
     OpenGLState::BindVertexArray(0);
-    
-    GLfloat saqData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
-        { 1.f, -1.f, 1.f, 0.f},
-        {-1.f,  1.f, 0.f, 1.f},
-        { 1.f,  1.f, 1.f, 1.f}};
-    
-    glGenBuffers(1, &texQuadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(saqData), saqData, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
     texQuadShader->AddUniform("rect", ParameterType::VEC4);
@@ -208,16 +173,13 @@ void OpenGLConsole::Render(bool overlay)
         
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGUI()->getTranslucentTexture());
         OpenGLState::BindVertexArray(consoleVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         
         texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
         texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
         
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         OpenGLState::UseProgram(0);
         OpenGLState::UnbindTexture(TEX_BASE);
         
@@ -242,10 +204,7 @@ void OpenGLConsole::Render(bool overlay)
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, logoTexture);
-        glBindBuffer(GL_ARRAY_BUFFER, texQuadVBO);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindTexture(GL_TEXTURE_2D, 0);
         glUseProgram(0);
         

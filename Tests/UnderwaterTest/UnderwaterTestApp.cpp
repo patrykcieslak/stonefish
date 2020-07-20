@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestApp.h"
@@ -28,6 +28,8 @@
 #include <actuators/Thruster.h>
 #include <actuators/VariableBuoyancy.h>
 #include <core/Robot.h>
+#include <sensors/vision/FLS.h>
+#include <sensors/vision/SSS.h>
 #include <graphics/IMGUI.h>
 #include <utils/SystemUtil.hpp>
 #include <comms/USBL.h>
@@ -46,6 +48,29 @@ void UnderwaterTestApp::InitializeGUI()
 void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
+
+    sf::Uid id;
+    id.owner = 10;
+    id.item = 0;
+    
+    sf::FLS* fls = (sf::FLS*)getSimulationManager()->getSensor("FLS");  //->getRobot("GIRONA500")->getSensor("FLS");
+    sf::Scalar range = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), fls->getRangeMax(), "FLS Range[m]"));
+    fls->setRangeMax(range);
+    
+    id.item = 1;
+    sf::Scalar gain = (getGUI()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), fls->getGain(), "FLS Gain"));
+    fls->setGain(gain);
+    
+    id.owner = 10;
+    id.item = 2;
+    
+    sf::SSS* sss = (sf::SSS*)getSimulationManager()->getRobot("GIRONA500")->getSensor("SSS");
+    sf::Scalar range2 = (getGUI()->DoSlider(id, 180.f, 110.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), sss->getRangeMax(), "SSS Range[m]"));
+    sss->setRangeMax(range2);
+    
+    id.item = 3;
+    sf::Scalar gain2 = (getGUI()->DoSlider(id, 180.f, 160.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), sss->getGain(), "SSS Gain"));
+    sss->setGain(gain2);
     
     /*
     sf::USBL* usbl = (sf::USBL*)getSimulationManager()->getComm("GIRONA500/USBL");

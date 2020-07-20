@@ -43,7 +43,7 @@ namespace sf
     class LinkActuator;
     class JointActuator;
     
-    //! A class inplementing a robotic system composed of a dynamic rigid-body tree, actuators and sensors.
+    //! A class implementing a robotic system composed of a dynamic rigid-body tree, actuators and sensors.
     class Robot
     {
     public:

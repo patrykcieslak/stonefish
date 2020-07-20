@@ -41,7 +41,7 @@ StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::st
     else
         lookId = -1;
     phyObjectId = -1;
-    dm = DisplayMode::DISPLAY_GRAPHICAL;
+    dm = DisplayMode::GRAPHICAL;
     rigidBody = NULL;
     phyMesh = NULL;
 }
@@ -51,12 +51,12 @@ StaticEntity::~StaticEntity()
     if(phyMesh != NULL) delete phyMesh;
 }
 
-EntityType StaticEntity::getType()
+EntityType StaticEntity::getType() const
 {
-    return ENTITY_STATIC;
+    return EntityType::STATIC;
 }
 
-Material StaticEntity::getMaterial()
+Material StaticEntity::getMaterial() const
 {
     return mat;
 }
@@ -111,7 +111,7 @@ std::vector<Renderable> StaticEntity::Render()
         item.type = RenderableType::SOLID;
         item.materialName = mat.name;
         item.objectId = phyObjectId;
-        item.lookId = lookId;
+        item.lookId = dm == DisplayMode::GRAPHICAL ? lookId : -1;
         item.model = glMatrixFromTransform(trans);
         items.push_back(item);
     }

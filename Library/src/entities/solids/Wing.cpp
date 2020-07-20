@@ -57,7 +57,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //3. Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(FD_APPROX_ELLIPSOID);
+    ComputeFluidDynamicsApprox( GeometryApproxType::ELLIPSOID);
     
     //4. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
@@ -112,7 +112,7 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     
     //4. Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(FD_APPROX_ELLIPSOID);
+    ComputeFluidDynamicsApprox(GeometryApproxType::ELLIPSOID);
     
     //5. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
@@ -123,15 +123,16 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     
 SolidType Wing::getSolidType()
 {
-    return SolidType::SOLID_WING;
+    return SolidType::WING;
 }
     
 btCollisionShape* Wing::BuildCollisionShape()
 {
     btConvexHullShape* convex = new btConvexHullShape();
-    for(size_t i=0; i<phyMesh->vertices.size(); ++i)
+    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
     {
-        Vector3 v(phyMesh->vertices[i].pos.x, phyMesh->vertices[i].pos.y, phyMesh->vertices[i].pos.z);
+        glm::vec3 pos = phyMesh->getVertexPos(i);
+        Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }
     convex->optimizeConvexHull();

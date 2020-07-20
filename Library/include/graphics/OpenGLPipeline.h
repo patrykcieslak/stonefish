@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLPipeline__
 
 #include <SDL2/SDL_thread.h>
+#include <deque>
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
 
@@ -67,6 +68,12 @@ namespace sf
 		 \param r a vector of renderable objects
 		 */
         void AddToDrawingQueue(const std::vector<Renderable>& r);
+
+        //! A method to add multiple renderable objects to the selected objects rendering queue.
+		/*!
+		 \param r a vector of renderable objects
+		 */
+        void AddToSelectedDrawingQueue(const std::vector<Renderable>& r);
 		
         //! A method that draws all normal objects.
         void DrawObjects();
@@ -96,14 +103,17 @@ namespace sf
         OpenGLContent* getContent();
         
     private:
-        void PerformDrawingQueueCopy();
+        void PerformDrawingQueueCopy(SimulationManager* sim);
         void DrawHelpers();
         
         RenderSettings rSettings;
         HelperSettings hSettings;
         std::vector<Renderable> drawingQueue;
         std::vector<Renderable> drawingQueueCopy;
+        std::vector<Renderable> selectedDrawingQueue;
+        std::vector<Renderable> selectedDrawingQueueCopy;
         SDL_mutex* drawingQueueMutex;
+        std::deque<unsigned int> viewsQueue;
         GLuint screenFBO;
         GLuint screenTex;
         OpenGLContent* content;

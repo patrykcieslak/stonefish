@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum specifying the type of entity.
-    typedef enum { ENTITY_STATIC, ENTITY_SOLID, ENTITY_FEATHERSTONE, ENTITY_FORCEFIELD } EntityType;
+    enum class EntityType {STATIC, SOLID, ANIMATED, FEATHERSTONE, FORCEFIELD};
     
     //! An enum used for collision filtering.
     typedef enum
@@ -45,7 +45,7 @@ namespace sf
     CollisionMask;
     
     //! An enum defining how the body is displayed.
-    typedef enum {DISPLAY_GRAPHICAL = 0, DISPLAY_PHYSICAL} DisplayMode;
+    enum class DisplayMode {GRAPHICAL, PHYSICAL};
     
     struct Renderable;
     class SimulationManager;
@@ -76,7 +76,7 @@ namespace sf
         std::string getName() const;
         
         //! A method returning the type of the entity.
-        virtual EntityType getType() = 0;
+        virtual EntityType getType() const = 0;
         
         //! A method implementing rendering of the entity.
         virtual std::vector<Renderable> Render() = 0;

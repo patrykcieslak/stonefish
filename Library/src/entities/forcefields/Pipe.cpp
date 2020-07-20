@@ -62,10 +62,14 @@ Vector3 Pipe::GetVelocityAtPoint(const Vector3& p)
     return f*v;
 }
 
-std::vector<Renderable> Pipe::Render()
+std::vector<Renderable> Pipe::Render(VelocityFieldUBO& ubo)
 {
     std::vector<Renderable> items(0);
-    
+    ubo.posR = glm::vec4((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ(), (GLfloat)r1);
+    ubo.dirV = glm::vec4((GLfloat)n.getX(), (GLfloat)n.getY(), (GLfloat)n.getZ(), (GLfloat)vin);
+    ubo.params = glm::vec3((GLfloat)l, (GLfloat)r2, (GLfloat)gamma);
+    ubo.type = 2;
+
     //Model matrix
     glm::vec3 z_(n.x(), n.y(), n.z());
     glm::vec3 x_(n.y(), n.x(), n.z());

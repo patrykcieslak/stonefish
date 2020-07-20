@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLTrackball__
@@ -30,6 +30,8 @@
 
 namespace sf
 {
+    class Entity;
+
     //! A class implementing a camera that can be rotated as a trackball, with mouse.
     class OpenGLTrackball : public OpenGLCamera
     {
@@ -45,11 +47,13 @@ namespace sf
          \param height the height of the view [px]
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
          \param range the minimum and maximum rendering distance of the camera [m]
-         \param spp number of samples used (>1 means multisampling)
          */
         OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
                         GLint originX, GLint originY, GLint width, GLint height,
-                        GLfloat horizontalFovDeg, glm::vec2 range, GLuint spp = 1);
+                        GLfloat horizontalFovDeg, glm::vec2 range);
+
+        //! A destructor.
+        ~OpenGLTrackball();
         
         //! A method to apply a rotation to the trackball.
         /*!
@@ -69,6 +73,9 @@ namespace sf
          */
         void GlueToEntity(SolidEntity* solid);
         
+        //! A method saving the new centre for update.
+        void UpdateCenterPos();
+
         //! A method used to update the trasformation of the trackball.
         void UpdateTransform();
         
@@ -95,6 +102,12 @@ namespace sf
          \param s amount of scrolling
          */
         void MouseScroll(GLfloat s);
+
+        //! A method drawing a selection outline.
+        /*!
+         \param r a reference to a vector of renderable objects
+         */
+        void DrawSelection(const std::vector<Renderable>& r, GLuint destinationFBO);
         
         //! A method returning the view matrix.
         glm::mat4 GetViewMatrix() const;
@@ -119,6 +132,7 @@ namespace sf
         
         SolidEntity* holdingEntity;
         
+        glm::vec3 tempCenter;
         glm::mat4 trackballTransform;
         glm::quat rotation;
         glm::vec3 center;
@@ -131,6 +145,9 @@ namespace sf
         glm::vec3 translation_start;
         bool dragging;
         bool transMode;
+
+        //Shaders
+        GLSLShader* outlineShader[2];
     };
 }
 

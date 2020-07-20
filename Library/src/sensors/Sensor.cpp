@@ -68,6 +68,11 @@ void Sensor::setUpdateFrequency(Scalar f)
     freq = f;
 }
 
+Scalar Sensor::getUpdateFrequency()
+{
+    return freq;
+}
+
 bool Sensor::isNewDataAvailable()
 {
     return newDataAvailable;

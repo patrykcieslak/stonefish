@@ -67,13 +67,13 @@ Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, con
     phyMesh = OpenGLContent::BuildTorus(MR, mR);
     
     //Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(FD_APPROX_CYLINDER);
+    ComputeFluidDynamicsApprox( GeometryApproxType::CYLINDER);
     //dragCoeff = Vector3(0.5, 0.5, 0.5);//Vector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
 }
 
 SolidType Torus::getSolidType()
 {
-    return SolidType::SOLID_TORUS;
+    return SolidType::TORUS;
 }
 
 btCollisionShape* Torus::BuildCollisionShape()

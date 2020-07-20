@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ConsoleSimulationApp.h"
@@ -38,7 +38,6 @@ ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDir
 : SimulationApp(name, dataDirPath, sim)
 {
     simulationThread = NULL;
-    console = new Console();
 }
 
 ConsoleSimulationApp::~ConsoleSimulationApp()
@@ -53,6 +52,7 @@ bool ConsoleSimulationApp::hasGraphics()
 
 void ConsoleSimulationApp::Init()
 {
+    //Initialization
     cInfo("Initializing simulation:");
     InitializeSimulation();
     cInfo("Ready for running...");

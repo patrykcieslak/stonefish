@@ -199,7 +199,8 @@ constexpr double MAX_LUMINOUS_EFFICACY = 683.0; //The conversion factor between 
 constexpr double kLambdaR = 680.0;
 constexpr double kLambdaG = 550.0;
 constexpr double kLambdaB = 440.0;
-constexpr double kLengthUnitInMeters = 1.0; //Length unit used in OpenGL
+constexpr double kLengthUnitInMeters = 1000.0; //Length unit used in OpenGL
+constexpr double kBottomRadius = 6360000.0;
 
 GLuint OpenGLAtmosphere::atmosphereAPI = 0;
 std::string OpenGLAtmosphere::glslDefinitions = "";
@@ -213,7 +214,6 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Prepare for rendering
     for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures[i] = 0;
     skySunShader = NULL;
-    atmBottomRadius = 0.f;
     whitePoint = glm::vec3(1.f);
 
     //Init shadow baking
@@ -224,6 +224,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     sunShadowmapSplits = 4;
     sunShadowmapSize = 4096;
     sunShadowFBO = 0;
+    sunSkyUBO = 0;
     sunDirection = glm::vec3(0,0,1.f);
     sunModelView = glm::mat4x4(0);
     sunShadowFrustum = NULL;
@@ -232,50 +233,49 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Set standard sun position
     SetSunPosition(90.0, 70.0);
 
-    if(quality == RenderQuality::QUALITY_DISABLED)
+    if(quality == RenderQuality::DISABLED)
         return;
     
     //Compute lookup textures
     switch(quality)
     {
-        case RenderQuality::QUALITY_LOW:
+        case RenderQuality::LOW:
             nPrecomputedWavelengths = 5;
             nScatteringOrders = 2;
             break;
         
         default:
-        case RenderQuality::QUALITY_MEDIUM:
+        case RenderQuality::MEDIUM:
             nPrecomputedWavelengths = 15;
             nScatteringOrders = 4;
             break;
         
-        case RenderQuality::QUALITY_HIGH:
+        case RenderQuality::HIGH:
             nPrecomputedWavelengths = 30;
             nScatteringOrders = 6;
     }
     
     Precompute();
-    atmBottomRadius = -6360000.f;
-
+    
     //Set shadow quality
     switch(shadow)
     {
-        case RenderQuality::QUALITY_DISABLED:
+        case RenderQuality::DISABLED:
             sunShadowmapSize = 0;
             sunShadowmapSplits = 0;
             break;
         
-        case RenderQuality::QUALITY_LOW:
+        case RenderQuality::LOW:
             sunShadowmapSize = 1024;
             sunShadowmapSplits = 4;
             break;
         
-        case RenderQuality::QUALITY_MEDIUM:
+        case RenderQuality::MEDIUM:
             sunShadowmapSize = 2048;
             sunShadowmapSplits = 4;
             break;
         
-        case RenderQuality::QUALITY_HIGH:
+        case RenderQuality::HIGH:
             sunShadowmapSize = 4096;
             sunShadowmapSplits = 4;
             break;
@@ -289,23 +289,27 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     //Build rendering shaders
     std::vector<GLuint> compiledShaders;
     compiledShaders.push_back(atmosphereAPI);
-    skySunShader = new GLSLShader(compiledShaders, "atmosphereSkySun.frag", "atmosphereSkySun.vert");
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "atmosphereSkySun.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereSkySun.frag"));
+    skySunShader = new GLSLShader(sources, compiledShaders);
     skySunShader->AddUniform("transmittance_texture", ParameterType::INT);
     skySunShader->AddUniform("scattering_texture", ParameterType::INT);
     skySunShader->AddUniform("single_mie_scattering_texture", ParameterType::INT);
     skySunShader->AddUniform("eyePos", ParameterType::VEC3);
     skySunShader->AddUniform("sunDir", ParameterType::VEC3);
-    skySunShader->AddUniform("invView", ParameterType::MAT3);
+    skySunShader->AddUniform("invView", ParameterType::MAT4);
     skySunShader->AddUniform("invProj", ParameterType::MAT4);
-    skySunShader->AddUniform("viewport", ParameterType::VEC2);
     skySunShader->AddUniform("whitePoint", ParameterType::VEC3);
     skySunShader->AddUniform("cosSunSize", ParameterType::FLOAT);
+	skySunShader->AddUniform("bottomRadius", ParameterType::FLOAT);
+	skySunShader->AddUniform("groundAlbedo", ParameterType::FLOAT);
 
     //Initialize shadows
     sunShadowFrustum = new ViewFrustum[sunShadowmapSplits];
     sunShadowCPM = new glm::mat4x4[sunShadowmapSplits];
     
-    if(shadow > RenderQuality::QUALITY_DISABLED)
+    if(shadow > RenderQuality::DISABLED)
     {
         sunShadowmapShader = new GLSLShader("sunCSM.frag");
         sunShadowmapShader->AddUniform("shadowmapArray", ParameterType::INT);
@@ -344,18 +348,25 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
         cError("Sun shadow FBO initialization failed!");
         
         OpenGLState::BindFramebuffer(0);
-    }
-    else
-    {
-        //Generate shadowmap array
-        glGenTextures(1, &sunShadowmapArray);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, 1, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        OpenGLState::UnbindTexture(TEX_BASE);
+
+        //Permanently bind shadow textures and samplers
+        OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+        glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
+
+        OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+        glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
+
+        //Create sun & sky UBO
+        glGenBuffers(1, &sunSkyUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(SunSkyUBO), NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBufferRange(GL_UNIFORM_BUFFER, UBO_SUNSKY, sunSkyUBO, 0, sizeof(SunSkyUBO));
+
+        memset(&sunSkyUBOData, 0, sizeof(SunSkyUBO));
+        sunSkyUBOData.atmLengthUnitInMeters = (GLfloat)kLengthUnitInMeters;
+        sunSkyUBOData.planetRadiusInUnits = (GLfloat)(kBottomRadius/kLengthUnitInMeters);
+        sunSkyUBOData.whitePoint = whitePoint;
     }
 }
 
@@ -377,6 +388,7 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
         glDeleteSamplers(1, &sunDepthSampler);
         glDeleteSamplers(1, &sunShadowSampler);
         glDeleteFramebuffers(1, &sunShadowFBO);
+        glDeleteBuffers(1, &sunSkyUBO);
         delete sunShadowmapShader;
     }
 }
@@ -413,11 +425,6 @@ glm::vec3 OpenGLAtmosphere::GetSunDirection()
     return sunDirection;
 }
 
-GLfloat OpenGLAtmosphere::getAtmosphereBottomRadius()
-{
-    return atmBottomRadius;
-}
-
 GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
 {
     return textures[id];
@@ -425,25 +432,28 @@ GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
 
 void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLCamera* view)
 {
-    glm::mat4 viewMatrix = view->GetViewMatrix();
-    glm::mat4 projection = view->GetProjectionMatrix();
-    GLint* viewport = view->GetViewport();
+	glm::vec3 eyePos = view->GetEyePosition()/kLengthUnitInMeters;
+	eyePos.z = eyePos.z > -0.5/kLengthUnitInMeters ? -0.5/kLengthUnitInMeters : eyePos.z;
+    glm::mat4 invViewMatrix = glm::inverse(view->GetViewMatrix());
+	invViewMatrix[3].x = eyePos.x;
+	invViewMatrix[3].y = eyePos.y;
+	invViewMatrix[3].z = eyePos.z;
+    glm::mat4 invProjectionMatrix = glm::inverse(view->GetProjectionMatrix());
 
     skySunShader->Use();
+	skySunShader->SetUniform("bottomRadius", (GLfloat)(kBottomRadius/kLengthUnitInMeters));
+	skySunShader->SetUniform("groundAlbedo", 0.7f);
     skySunShader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     skySunShader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     skySunShader->SetUniform("single_mie_scattering_texture", TEX_ATM_SCATTERING);
-    skySunShader->SetUniform("eyePos", view->GetEyePosition());
+    skySunShader->SetUniform("eyePos", eyePos);
     skySunShader->SetUniform("sunDir", GetSunDirection());
-    skySunShader->SetUniform("invProj", glm::inverse(projection));
-    skySunShader->SetUniform("invView", glm::mat3(glm::inverse(viewMatrix)));
-    skySunShader->SetUniform("viewport", glm::vec2(viewport[2], viewport[3]));
+    skySunShader->SetUniform("invProj", invProjectionMatrix);
+    skySunShader->SetUniform("invView", invViewMatrix);
     skySunShader->SetUniform("whitePoint", whitePoint);
     skySunShader->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
-    
-    delete [] viewport;
 }
 
 void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
@@ -620,7 +630,7 @@ glm::mat4 OpenGLAtmosphere::BuildCropProjMatrix(ViewFrustum &f)
     return shad_crop_proj;
 }
 
-void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
+void OpenGLAtmosphere::SetupMaterialShaders()
 {
     //Calculate shadow splits
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
@@ -629,14 +639,13 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
                    0.5f, 0.5f, 0.5f, 1.f);
     GLfloat frustumFar[4];
     GLfloat frustumNear[4];
-    glm::mat4 lightClipSpace[4];
 
     //For every inactive split
     for(unsigned int i = sunShadowmapSplits; i<4; ++i)
     {
         frustumNear[i] = 0;
         frustumFar[i] = 0;
-        lightClipSpace[i] = glm::mat4();
+        sunSkyUBOData.sunClipSpace[i] = glm::mat4();
     }
 
     //For every active split
@@ -644,47 +653,16 @@ void OpenGLAtmosphere::SetupMaterialShader(GLSLShader* shader)
     {
         frustumNear[i] = sunShadowFrustum[i].near;
         frustumFar[i] = sunShadowFrustum[i].far;
-        lightClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
+        sunSkyUBOData.sunClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
     }
 
-    shader->SetUniform("planetRadius", atmBottomRadius-1.f);
-    shader->SetUniform("sunDirection", GetSunDirection());
-    shader->SetUniform("sunClipSpace[0]", lightClipSpace[0]);
-    shader->SetUniform("sunClipSpace[1]", lightClipSpace[1]);
-    shader->SetUniform("sunClipSpace[2]", lightClipSpace[2]);
-    shader->SetUniform("sunClipSpace[3]", lightClipSpace[3]);
-    shader->SetUniform("sunFrustumNear[0]", frustumNear[0]);
-    shader->SetUniform("sunFrustumNear[1]", frustumNear[1]);
-    shader->SetUniform("sunFrustumNear[2]", frustumNear[2]);
-    shader->SetUniform("sunFrustumNear[3]", frustumNear[3]);
-    shader->SetUniform("sunFrustumFar[0]", frustumFar[0]);
-    shader->SetUniform("sunFrustumFar[1]", frustumFar[1]);
-    shader->SetUniform("sunFrustumFar[2]", frustumFar[2]);
-    shader->SetUniform("sunFrustumFar[3]", frustumFar[3]);
-    shader->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
-    shader->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
-    shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-    shader->SetUniform("whitePoint", whitePoint);
+    sunSkyUBOData.sunFrustumNear = glm::vec4(frustumNear[0], frustumNear[1], frustumNear[2], frustumNear[3]);
+    sunSkyUBOData.sunFrustumFar = glm::vec4(frustumFar[0], frustumFar[1], frustumFar[2], frustumFar[3]);
+    sunSkyUBOData.sunDirection = GetSunDirection();
 
-    //Bind textures and samplers
-    OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-    glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
-
-    OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-    glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
-}
-
-void OpenGLAtmosphere::SetupOceanShader(GLSLShader* shader)
-{
-    shader->SetUniform("planetRadius", atmBottomRadius-1.f);
-    shader->SetUniform("sunDirection", GetSunDirection());
-    shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-    shader->SetUniform("whitePoint", whitePoint);
-    shader->SetUniform("cosSunSize", (GLfloat)cos(0.00935/2.0));
+    glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(SunSkyUBO), &sunSkyUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void OpenGLAtmosphere::Precompute()
@@ -700,80 +678,25 @@ void OpenGLAtmosphere::Precompute()
         if(textures[i] != 0) glDeleteTextures(1, &textures[i]);
 
     //Generate new empty textures to store the result of precomputation
-    glGenTextures(AtmosphereTextures::TEXTURE_COUNT, textures);
-
     //Transmittance
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL); //16F precision for the transmittance gives artifacts.
-
+    textures[AtmosphereTextures::TRANSMITTANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT, 1), 
+        GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     //Scattering
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGBA, GL_FLOAT, NULL);
-
+    textures[AtmosphereTextures::SCATTERING] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH), 
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     //Irradiance
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-
+    textures[AtmosphereTextures::IRRADIANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 1),
+        GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    
     //Create temporary textures
-    GLuint delta_irradiance_texture;
-    glGenTextures(1, &delta_irradiance_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, delta_irradiance_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-
-    GLuint delta_rayleigh_scattering_texture;
-    glGenTextures(1, &delta_rayleigh_scattering_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_rayleigh_scattering_texture);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGB, GL_FLOAT, NULL);
-
-    GLuint delta_mie_scattering_texture;
-    glGenTextures(1, &delta_mie_scattering_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_mie_scattering_texture);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGB, GL_FLOAT, NULL);
-
-    GLuint delta_scattering_density_texture;
-    glGenTextures(1, &delta_scattering_density_texture);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_3D, delta_scattering_density_texture);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH, 0, GL_RGB, GL_FLOAT, NULL);
-
+    GLuint delta_irradiance_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT, 1), 
+        GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    GLuint delta_rayleigh_scattering_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH),
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    GLuint delta_mie_scattering_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH),
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    GLuint delta_scattering_density_texture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT, SCATTERING_TEXTURE_DEPTH),
+        GL_RGBA16F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     GLuint delta_multiple_scattering_texture = delta_rayleigh_scattering_texture;
 
     //Create temporary framebuffer
@@ -817,7 +740,9 @@ void OpenGLAtmosphere::Precompute()
                                                 coeff(lambdas[0], 2), coeff(lambdas[1], 2), coeff(lambdas[2], 2)
                                                });
             luminance_from_radiance = glm::transpose(luminance_from_radiance);
-
+#ifdef DEBUG
+            cInfo("Compute iteration %d:\n", i);
+#endif
             PrecomputePass(fbo, delta_irradiance_texture, delta_rayleigh_scattering_texture, delta_mie_scattering_texture,
                            delta_scattering_density_texture, delta_multiple_scattering_texture,
                            lambdas, luminance_from_radiance, i > 0);
@@ -827,11 +752,11 @@ void OpenGLAtmosphere::Precompute()
         //transmittance for the 3 wavelengths used at the last iteration. But we
         //want the transmittance at kLambdaR, kLambdaG, kLambdaB instead, so we
         //must recompute it here for these 3 wavelengths:
-        GLSLHeader header;
-        header.useInFragment = true;
-        header.useInVertex = header.useInTessCtrl = header.useInTessEval = header.useInGeometry = false;
-        header.code = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB));
-        GLSLShader transmittanceShader(header, "atmosphereTransmittance.frag"); //No uniforms
+        std::string header = EarthsAtmosphere(glm::dvec3(kLambdaR, kLambdaG, kLambdaB));
+        std::vector<GLSLSource> sources;
+        sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+        sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereTransmittance.frag", header));
+        GLSLShader transmittanceShader(sources); //No uniforms
 
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[AtmosphereTextures::TRANSMITTANCE], 0);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -865,19 +790,25 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
                                       bool blend)
 {
     //Load precompute shaders
-    GLSLHeader header;
-    header.useInFragment = true;
-    header.useInVertex = header.useInTessCtrl = header.useInTessEval = header.useInGeometry = false;
-    header.code = EarthsAtmosphere(lambdas);
-
-    GLSLShader transmittanceShader(header, "atmosphereTransmittance.frag"); //No uniforms
-    GLSLShader directIrradianceShader(header, "atmosphereDirectIrradiance.frag");
+    std::string header = EarthsAtmosphere(lambdas);
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereTransmittance.frag", header));
+    GLSLShader transmittanceShader(sources); //No uniforms
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereDirectIrradiance.frag", header));
+    GLSLShader directIrradianceShader(sources);
     directIrradianceShader.AddUniform("texTransmittance", ParameterType::INT);
-    GLSLShader singleScatteringShader(header, "atmosphereSingleScattering.frag", "", "atmosphere.geom");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "atmosphere.geom"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereSingleScattering.frag", header));
+    GLSLShader singleScatteringShader(sources);
     singleScatteringShader.AddUniform("texTransmittance", ParameterType::INT);
     singleScatteringShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
     singleScatteringShader.AddUniform("layer", ParameterType::INT);
-    GLSLShader scatteringDensityShader(header, "atmosphereScatteringDensity.frag", "", "atmosphere.geom");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereScatteringDensity.frag", header));
+    GLSLShader scatteringDensityShader(sources);
     scatteringDensityShader.AddUniform("texTransmittance", ParameterType::INT);
     scatteringDensityShader.AddUniform("texSingleRayleighScattering", ParameterType::INT);
     scatteringDensityShader.AddUniform("texSingleMieScattering", ParameterType::INT);
@@ -885,17 +816,22 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     scatteringDensityShader.AddUniform("texIrradiance", ParameterType::INT);
     scatteringDensityShader.AddUniform("scatteringOrder", ParameterType::INT);
     scatteringDensityShader.AddUniform("layer", ParameterType::INT);
-    GLSLShader indirectIrradianceShader(header, "atmosphereIndirectIrradiance.frag");
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereMultipleScattering.frag", header));
+    GLSLShader multipleScatteringShader(sources);
+    multipleScatteringShader.AddUniform("texTransmittance", ParameterType::INT);
+    multipleScatteringShader.AddUniform("texScatteringDensity", ParameterType::INT);
+    multipleScatteringShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
+    multipleScatteringShader.AddUniform("layer", ParameterType::INT);
+    sources.pop_back();
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmosphereIndirectIrradiance.frag", header));
+    GLSLShader indirectIrradianceShader(sources);
     indirectIrradianceShader.AddUniform("texSingleRayleighScattering", ParameterType::INT);
     indirectIrradianceShader.AddUniform("texSingleMieScattering", ParameterType::INT);
     indirectIrradianceShader.AddUniform("texMultipleScattering", ParameterType::INT);
     indirectIrradianceShader.AddUniform("scatteringOrder", ParameterType::INT);
     indirectIrradianceShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
-    GLSLShader multipleScatteringShader(header, "atmosphereMultipleScattering.frag", "", "atmosphere.geom");
-    multipleScatteringShader.AddUniform("texTransmittance", ParameterType::INT);
-    multipleScatteringShader.AddUniform("texScatteringDensity", ParameterType::INT);
-    multipleScatteringShader.AddUniform("luminanceFromRadiance", ParameterType::MAT3);
-    multipleScatteringShader.AddUniform("layer", ParameterType::INT);
 
     const GLuint kDrawBuffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
 
@@ -903,6 +839,7 @@ void OpenGLAtmosphere::PrecomputePass(GLuint fbo, GLuint delta_irradiance_textur
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
     //Compute the transmittance, and store it in transmittance_texture_.
+    OpenGLState::BindFramebuffer(fbo);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[AtmosphereTextures::TRANSMITTANCE], 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     OpenGLState::Viewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
@@ -1055,7 +992,6 @@ std::string OpenGLAtmosphere::EarthsAtmosphere(const glm::dvec3& lambdas)
     constexpr double kMaxOzoneNumberDensity = 300.0 * kDobsonUnit / 15000.0;
     // Wavelength independent solar irradiance "spectrum" (not physically realistic, but was used in the original implementation).
     //constexpr double kConstantSolarIrradiance = 1.5;
-    constexpr double kBottomRadius = 6360000.0;
     constexpr double kTopRadius = 6420000.0;
     constexpr double kRayleigh = 1.24062e-6;
     constexpr double kRayleighScaleHeight = 8000.0;
@@ -1304,18 +1240,18 @@ void OpenGLAtmosphere::BuildAtmosphereAPI(RenderQuality quality)
     
     switch(quality)
     {
-        case RenderQuality::QUALITY_LOW:
+        case RenderQuality::LOW:
             nPrecomputedWavelengths = 5;
             nScatteringOrders = 2;
             break;
             
         default:
-        case RenderQuality::QUALITY_MEDIUM:
+        case RenderQuality::MEDIUM:
             nPrecomputedWavelengths = 15;
             nScatteringOrders = 4;
             break;
             
-        case RenderQuality::QUALITY_HIGH:
+        case RenderQuality::HIGH:
             nPrecomputedWavelengths = 30;
             nScatteringOrders = 6;
     }

@@ -35,7 +35,7 @@
 #include <sensors/Sample.h>
 
 FloatingTestManager::FloatingTestManager(sf::Scalar stepsPerSecond)
-   : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
+   : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
 }
 
@@ -51,15 +51,15 @@ void FloatingTestManager::BuildScenario()
 
     ////////OBJECTS    
     //Create environment
-    EnableOcean(0.0);
-    getOcean()->SetupWaterProperties(0.2, 1.0);
+    EnableOcean(0.5);
+    getOcean()->SetupWaterProperties(0.2);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
     sf::Polyhedron* hull = new sf::Polyhedron("Hull", sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
-                                              sf::BodyPhysicsType::FLOATING_BODY, "white", sf::Scalar(0.05), true);
+                                              sf::BodyPhysicsType::FLOATING, "white", sf::Scalar(0.05), true);
     
     sf::Polyhedron* prop = new sf::Polyhedron("Propeller", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
-                                              sf::BodyPhysicsType::SUBMERGED_BODY, "propeller");
+                                              sf::BodyPhysicsType::SUBMERGED, "propeller");
     
     sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.18, std::make_pair(0.48, 0.48), 0.05, 10000.0, false);
     

@@ -49,6 +49,7 @@ namespace sf
         static void DisableCullFace();
         static void BindTexture(GLuint unit, GLenum type, GLuint handle);
         static void UnbindTexture(GLuint unit);
+        static GLfloat GetMaxAnisotropy();
         
     private:
         OpenGLState() noexcept;
@@ -64,6 +65,7 @@ namespace sf
         static bool cullFace; //GL_CULL_FACE
         static GLuint activeTexture; //Active texture unit
         static std::vector<std::pair<GLenum, GLuint>> textures; //(type, handle)
+        static GLfloat maxAniso;
     };
 }
 

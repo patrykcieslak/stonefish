@@ -20,15 +20,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOcean__
 #define __Stonefish_OpenGLOcean__
 
-#include <map>
+#include "graphics/OpenGLContent.h"
 #include <SDL2/SDL_mutex.h>
-#include "graphics/OpenGLDataStructs.h"
+#include <map>
 
 namespace sf
 {
@@ -49,10 +49,21 @@ namespace sf
         float cm;
         float t;
     };
-    
+
+    #pragma pack(1)
+    //! A structure representing the ocean currents UBO.
+    struct OceanCurrentsUBO
+    {
+        VelocityFieldUBO currents[MAX_OCEAN_CURRENTS]; //REMARK: type -> 0=uniform,1=jet,2=pipe,10=thruster
+        glm::vec3 gravity;
+        GLuint numCurrents;
+    };
+    #pragma pack(0)
+
     class GLSLShader;
 	class OpenGLCamera;
 	class OpenGLOceanParticles;
+    class VelocityField;
 	
     //! A class implementing ocean simulation in OpenGL.
     class OpenGLOcean
@@ -60,49 +71,54 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param geometricWaves the state of the ocean, if >0 the ocean is rendered with geometric waves otherwise as a plane with wave texture
-         \param hydrodynamics a pointer to a mutex
+         \param size the size of the ocean surface mesh [m]
          */
-        OpenGLOcean(float geometricWaves, SDL_mutex* hydrodynamics);
+        OpenGLOcean(GLfloat size);
         
         //! A destructor.
-        ~OpenGLOcean();
-        
+        virtual ~OpenGLOcean();
+
         //! A method that simulates wave propagation.
 		/*!
 		 \param dt time since last update
 		 */
-        void Simulate(GLfloat dt);
+        virtual void Simulate(GLfloat dt);
         
         //! A method that updates the wave mesh.
         /*!
          \param cam a pointer to the active camera
          */
-        void UpdateSurface(OpenGLCamera* cam);
+        virtual void UpdateSurface(OpenGLCamera* cam) = 0;
         
         //! A method that draws the surface of the ocean.
         /*!
          \param cam a pointer to the active camera
          */
-        void DrawSurface(OpenGLCamera* cam);
+        virtual void DrawSurface(OpenGLCamera* cam) = 0;
         
         //! A method that draws the surface of the ocean, seen from underwater.
         /*!
          \param cam a pointer to the active camera
          */
-        void DrawBacksurface(OpenGLCamera* cam);
+        virtual void DrawBacksurface(OpenGLCamera* cam) = 0;
+        
+        //! A method that generates the stencil mask.
+        /*!
+         \param cam a pointer to the active camera
+         */
+        virtual void DrawUnderwaterMask(OpenGLCamera* cam);
+
+        //! A method that draws the waterline when the camera is crossing the water surface.
+        /*!
+         \param cam a pointer to the active camera
+         */
+        void DrawWaterline(OpenGLCamera* cam);
         
         //! A method that draws the distant background of the ocean.
         /*!
          \param cam a pointer to the active camera
          */
         void DrawBackground(OpenGLCamera* cam);
-        
-        //! A method that generates the stencil mask.
-        /*!
-         \param cam a pointer to the active camera
-         */
-        void DrawUnderwaterMask(OpenGLCamera* cam);
         
 		//! A method that draws underwater particles.
 		/*!
@@ -113,13 +129,8 @@ namespace sf
         //! A method that draws the underwater blur (scattering).
         /*!
          \param cam a pointer to the active camera
-         \param sceneTexture an id of the color texture
-         \param linearDepthTex an id of the depth map texture
          */
-        void DrawVolume(OpenGLCamera* cam, GLuint sceneTexture, GLuint linearDepthTex);
-        
-        //! A method that draws the waterline when the camera is crossing the water surface.
-        void DrawWaterline();
+        void DrawBlur(OpenGLCamera* cam);
         
         //! A method that drawsd the spectrum of waves.
         /*!
@@ -135,17 +146,14 @@ namespace sf
          */
         void ShowTexture(int id, glm::vec4 rect);
        
+        //! A method that updates ocean currents information.
+        void UpdateOceanCurrentsData(const OceanCurrentsUBO& data);
+
         //! A method to set the type of ocean water.
         /*!
          \param t type of water
          */
         void setWaterType(GLfloat t);
-        
-        //! A method to set the turbidity of ocean water.
-        /*!
-         \param t water turbidity
-         */
-        void setTurbidity(GLfloat t);
         
         //! A method to get wave height at a specified coordinate.
         /*!
@@ -153,17 +161,41 @@ namespace sf
          \param y the y coordinate in world frame [m]
          \return wave height [m]
          */
-        GLfloat getWaveHeight(GLfloat x, GLfloat y);
+        virtual GLfloat ComputeWaveHeight(GLfloat x, GLfloat y);
+
+        //! A method returning the id of the wave texture.
+        GLuint getWaveTexture();
+
+        //! A method returning the vector of wave grid sizes.
+        glm::vec4 getWaveGridSizes();
+
+        //! A method returning calculated light attenuation coefficient.
+        glm::vec3 getLightAttenuation();
+        	
+        //! A method calculating Henyey-Greenstein scattering factor.
+        glm::vec3 getLightScattering();
         
-        //! A method returning calculated light absorption coefficients.
-        glm::vec3 getLightAbsorption();
+    protected:
+        virtual void InitializeSimulation();
+        float sqr(float x);
         
-        //! A method returning the turbidity of the water.
-        GLfloat getTurbidity();
+        std::map<OpenGLCamera*, OpenGLOceanParticles*> oceanParticles;
+        glm::vec3 absorption[64];
+        glm::vec3 scattering[64];
+        OceanCurrentsUBO oceanCurrentsUBOData;
+        GLfloat oceanSize;
+        OceanParams params;
+        glm::vec3 lightAbsorption;
+        glm::vec3 lightScattering;
+        int64_t lastTime;
+
+        std::map<std::string, GLSLShader*> oceanShaders;
+        GLuint oceanFBOs[3];
+        GLuint oceanTextures[6];
+        GLuint oceanCurrentsUBO;
         
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
-        GLfloat ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel);
         int bitReverse(int i, int N);
         void computeWeight(int N, int k, float &Wr, float &Wi);
         float ComputeSlopeVariance();
@@ -172,29 +204,8 @@ namespace sf
         void GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result);
         float spectrum(float kx, float ky, bool omnispectrum = false);
         float omega(float k);
-        float sqr(float x);
-        
-		std::map<OpenGLCamera*, OpenGLOceanParticles*> oceanParticles;
-        std::vector<GLSLShader*> oceanShaders;
-        GLuint oceanFBOs[3];
-        GLuint oceanTextures[6];
-        glm::vec3 absorption[64];
-        
-        bool waves;
-        SDL_mutex* hydroMutex;
-        GLfloat* fftData;
-        OceanParams params;
-        QuadTree* qt;
-        int tesselation;
-        int64_t lastTime;
-        GLuint vao;
-        GLuint vbo;
-        GLuint vaoEdge;
-        GLuint vboEdge;
-        GLuint vaoMask;
-        GLuint vboMask;
-        glm::vec3 lightAbsorption;
-        GLfloat turbidity;
+
+        int oceanBoxObj;
     };
 }
 

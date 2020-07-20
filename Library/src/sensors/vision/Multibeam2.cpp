@@ -81,7 +81,7 @@ Scalar Multibeam2::getVerticalFOV()
 
 VisionSensorType Multibeam2::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_MULTIBEAM2;
+    return VisionSensorType::MULTIBEAM2;
 }
     
 void Multibeam2::InitGraphics()
@@ -203,8 +203,12 @@ void Multibeam2::InstallNewDataHandler(std::function<void(Multibeam2*)> callback
     newDataCallback = callback;
 }
     
-void Multibeam2::NewDataReady(unsigned int index)
+void Multibeam2::NewDataReady(void* data, unsigned int index)
 {
+    if(index >= cameras.size())
+        return;
+
+    memcpy(getImageDataPointer(index), data, cameras[index].width * resY * sizeof(GLfloat));
     dataCounter += index;
     int lastIndex = (int)cameras.size()-1;
     int nSum = lastIndex*(lastIndex+1)/2;

@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -26,5 +26,6 @@ uniform vec2 range;
 
 void main()
 {
-    fragcolor = (texture(texLinearDepth, texcoord).rrrr-range.xxxx)/(range.y-range.x);
+    vec2 uv = vec2(texcoord.x, 1.0-texcoord.y);
+    fragcolor = (texture(texLinearDepth, uv).rrrr-range.xxxx)/(range.y-range.x);
 }

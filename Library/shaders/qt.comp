@@ -1,0 +1,168 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+/*
+    Based on "Quadtrees on the GPU" by Jonathan Dupuy.
+*/
+
+#version 430
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+uniform float sceneSize;
+
+layout(std140) uniform View
+{
+    mat4 VP;
+	vec4 frustum[6];
+    vec3 eye;
+};
+
+layout(std140) buffer QTreeIn
+{
+    uvec4 nodesIn[];
+};
+
+layout(std140) buffer QTreeOut
+{
+    uvec4 nodesOut[];
+};
+
+layout(std140) buffer QTreeCull
+{
+    vec4 culled[];
+};
+
+layout(std430) buffer TreeSize
+{
+    uint treeSize;
+};
+
+layout(binding = 5) uniform atomic_uint qTreeLodCounter;
+layout(binding = 6) uniform atomic_uint qTreeCullCounter;
+
+//Linear quad tree API
+#inject "ltree.glsl"
+
+//Implementation dependent heightfield function
+float displace(vec2 p);
+
+vec3 nvertex(vec3 m, vec3 M, vec3 n) 
+{
+	bvec3 s = greaterThanEqual(n, vec3(0));
+	return mix(m, M, s);
+}
+
+void writeNode(uvec2 nn)
+{
+    //Update quad tree structure
+    uint nid = atomicCounterIncrement(qTreeLodCounter);
+    nodesOut[nid].xy = nn;
+
+    //Check visibility
+    vec2 node;
+    float nodeSize;
+    lt_cell_2_30(nn, node, nodeSize);
+
+    // Compute aabb
+	node = (node - 0.5) * sceneSize;
+	nodeSize *= sceneSize;
+
+    vec2 nextNode = vec2(node.x + nodeSize, node.y + nodeSize);
+    float displace1 = displace(node);
+    float displace2 =  displace(nextNode);
+    if(displace2 < displace1)
+    {
+        float tmp = displace1;
+        displace1 = displace2;
+        displace2 = tmp;
+    }
+	vec3 nodeMin = vec3(node.x, node.y, displace1);
+	vec3 nodeMax = vec3(nextNode.x, nextNode.y, displace2);
+
+	// Cull http://www.lighthouse3d.com/tutorials/view-frustum-culling/geometric-approach-testing-boxes-ii/
+	int i = 0;
+	float a = 1;
+	vec3 n;
+
+	for(; i < 6 && a >= 0.0; ++i) 
+	{
+		//Compute negative vertex
+		n = nvertex(nodeMin, nodeMax, frustum[i].xyz);
+		a = dot(frustum[i].xyz, n) + frustum[i].w;
+	}
+
+	//Save if intersection or inside
+	if(a > 0.0) 
+    {
+        uint nid2 = atomicCounterIncrement(qTreeCullCounter);
+        culled[nid2] = vec4(node, 0.0, nodeSize);
+	}
+}
+
+void main()
+{
+    uint nid = gl_GlobalInvocationID.x;
+    if(nid >= treeSize)
+        return;
+
+    //Position
+    vec3 node, parent;
+    float nodeSize;
+    lt_cell_2_30(nodesIn[nid].xy, node.xy, nodeSize, parent.xy);
+
+	node.xy-= 0.5;
+	parent.xy-= 0.5;
+	nodeSize*= sceneSize;
+    
+    node = vec3(sceneSize * node.xy + 0.5 * nodeSize, 0.0);
+	parent = vec3(sceneSize * parent.xy + nodeSize, 0.0);
+    node.z = displace(node.xy);
+    parent.z = displace(parent.xy);
+    /* 
+    //Original
+    float altitude = displace(eye.xy);
+    node = vec3(sceneSize * node.xy + 0.5 * nodeSize, altitude);
+	parent = vec3(sceneSize * parent.xy + nodeSize, altitude);
+    */
+    
+    //Distance from node centers
+	float dn = distance(eye, node) + 0.5;
+	float dp = distance(eye, parent) + 0.5;
+
+	if(!lt_is_root_2_30(nodesIn[nid].xy) && 8.0 * nodeSize < dp) //Merge
+    {
+		//Make sure we generate the root node only once
+		if(lt_is_upper_left_2_30(nodesIn[nid].xy)) 
+            writeNode(lt_parent_2_30(nodesIn[nid].xy));
+	} 
+    else if(!lt_is_leaf_2_30(nodesIn[nid].xy) && 4.0 * nodeSize > dn) //Split
+    { 
+		uvec2 children[4];
+		lt_children_2_30(nodesIn[nid].xy, children);
+		writeNode(children[0]);
+        writeNode(children[1]);
+        writeNode(children[2]);
+        writeNode(children[3]);
+	} 
+    else //Keep 
+    { 
+		writeNode(nodesIn[nid].xy);
+	}
+}

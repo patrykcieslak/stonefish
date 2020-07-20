@@ -55,6 +55,7 @@
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
 #include "sensors/vision/FLS.h"
+#include "sensors/vision/SSS.h"
 #include "sensors/Contact.h"
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
@@ -444,6 +445,8 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         Scalar reflectivity;
         const char* texture = nullptr;
         std::string textureStr = "";
+        const char* normalMap = nullptr;
+        std::string normalMapStr = "";
         
         if(look->QueryStringAttribute("name", &name) != XML_SUCCESS)
             return false;
@@ -457,7 +460,10 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
             reflectivity = Scalar(0);
         if(look->QueryStringAttribute("texture", &texture) == XML_SUCCESS)
             textureStr = GetFullPath(std::string(texture));
-        sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr);
+        if(look->QueryStringAttribute("normal_map", &normalMap) == XML_SUCCESS)
+            normalMapStr = GetFullPath(std::string(normalMap));
+        
+        sm->CreateLook(name, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
         look = look->NextSiblingElement("look");
     }
     
@@ -480,6 +486,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     const char* mat = nullptr;
     const char* look = nullptr;
     unsigned int uvMode = 0;
+    float uvScale = 1.f;
     Transform trans;
     
     //Material
@@ -493,6 +500,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     if(item->QueryStringAttribute("name", &look) != XML_SUCCESS)
         return false;
     item->QueryAttribute("uv_mode", &uvMode); //Optional
+    item->QueryAttribute("uv_scale", &uvScale); //Optional
     //Transform
     if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
         return false;
@@ -579,7 +587,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     }
     else if(typestr == "plane")
     {
-        object = new Plane(std::string(name), Scalar(10000), std::string(mat), std::string(look));
+        object = new Plane(std::string(name), Scalar(10000), std::string(mat), std::string(look), uvScale);
     } 
     else if(typestr == "terrain")
     {
@@ -623,19 +631,19 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         return false;
     if(element->QueryStringAttribute("physics", &phyType) != XML_SUCCESS)
     {
-        ePhyType = BodyPhysicsType::SUBMERGED_BODY;
+        ePhyType = BodyPhysicsType::SUBMERGED;
     }
     else
     {
         std::string phyTypeStr(phyType);
         if(phyTypeStr == "surface")
-            ePhyType = BodyPhysicsType::SURFACE_BODY;
+            ePhyType = BodyPhysicsType::SURFACE;
         else if(phyTypeStr == "floating")
-            ePhyType = BodyPhysicsType::FLOATING_BODY;
+            ePhyType = BodyPhysicsType::FLOATING;
         else if(phyTypeStr == "submerged")
-            ePhyType = BodyPhysicsType::SUBMERGED_BODY;
+            ePhyType = BodyPhysicsType::SUBMERGED;
         else if(phyTypeStr == "aerodynamic")
-            ePhyType = BodyPhysicsType::AERODYNAMIC_BODY;
+            ePhyType = BodyPhysicsType::AERODYNAMIC;
         else 
             return false;
     }
@@ -1539,13 +1547,11 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         if((item = element->FirstChildElement("rendering")) != nullptr) //Optional parameters
         {
-            int spp = 1;
-            Scalar minDist(0.1);
-            Scalar maxDist(1000.0);
-            item->QueryAttribute("spp", &spp);
+            Scalar minDist(0.02);
+            Scalar maxDist(100000.0);
             item->QueryAttribute("minimum_distance", &minDist);
             item->QueryAttribute("maximum_distance", &maxDist);
-            cam = new ColorCamera(sensorName, resX, resY, hFov, rate, spp, minDist, maxDist);
+            cam = new ColorCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
         }
         else
         {
@@ -1612,7 +1618,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         int nBeams, nBins;
         Scalar rangeMin, rangeMax;
         const char* colorMap = nullptr;
-        ColorMap cMap = ColorMap::COLORMAP_HOT;
+        ColorMap cMap = ColorMap::ORANGE_COPPER;
         
         if((item = element->FirstChildElement("link")) == nullptr)
             return false;
@@ -1632,16 +1638,64 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
            && item->QueryStringAttribute("colormap", &colorMap) == XML_SUCCESS)
         {
             std::string colorMapStr(colorMap);
-            if(colorMapStr == "jet")
-                cMap = ColorMap::COLORMAP_JET;
+            if(colorMapStr == "hot")
+                cMap = ColorMap::HOT;
+            else if(colorMapStr == "jet")
+                cMap = ColorMap::JET;
             else if(colorMapStr == "perula")
-                cMap = ColorMap::COLORMAP_PERULA;
+                cMap = ColorMap::PERULA;
             else if(colorMapStr == "greenblue")
-                cMap = ColorMap::COLORMAP_GREENBLUE;
+                cMap = ColorMap::GREEN_BLUE;
+            else if(colorMapStr == "coldblue")
+                cMap = ColorMap::COLD_BLUE;
         }
         
         FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, rate);
         robot->AddVisionSensor(fls, robot->getName() + "/" + std::string(linkName), origin);
+    }
+    else if(typeStr == "sss")
+    {
+        const char* linkName = nullptr;
+        Transform origin;
+        Scalar hFov, vFov;
+        int nLines, nBins;
+        Scalar rangeMin, rangeMax, tilt;
+        const char* colorMap = nullptr;
+        ColorMap cMap = ColorMap::ORANGE_COPPER;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
+            || item->QueryAttribute("lines", &nLines) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_beam_width", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("vertical_beam_width", &vFov) != XML_SUCCESS
+            || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
+            || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS
+            || item->QueryAttribute("vertical_tilt", &tilt) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("display")) != nullptr
+           && item->QueryStringAttribute("colormap", &colorMap) == XML_SUCCESS)
+        {
+            std::string colorMapStr(colorMap);
+            if(colorMapStr == "hot")
+                cMap = ColorMap::HOT;
+            else if(colorMapStr == "jet")
+                cMap = ColorMap::JET;
+            else if(colorMapStr == "perula")
+                cMap = ColorMap::PERULA;
+            else if(colorMapStr == "greenblue")
+                cMap = ColorMap::GREEN_BLUE;
+            else if(colorMapStr == "coldblue")
+                cMap = ColorMap::COLD_BLUE;
+        }
+        
+        SSS* sss = new SSS(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, rate);
+        robot->AddVisionSensor(sss, robot->getName() + "/" + std::string(linkName), origin);
     }
     else
         return false;
@@ -1722,13 +1776,13 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED, std::string(look));
             Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC_BODY, std::string(look));
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC, std::string(look));
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
         }
@@ -1910,12 +1964,12 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         if(item->QueryStringAttribute("name", &attachName) == XML_SUCCESS)
         {
             Entity* body = sm->getEntity(std::string(attachName));
-            if(body->getType() == ENTITY_STATIC)
+            if(body->getType() == EntityType::STATIC)
             {
                 comm->AttachToStatic((StaticEntity*)body, origin);
                 sm->AddComm(comm);
             }
-            else if(body->getType() == ENTITY_SOLID)
+            else if(body->getType() == EntityType::SOLID)
             {
                 comm->AttachToSolid((SolidEntity*)body, origin);
                 sm->AddComm(comm);
@@ -1983,8 +2037,8 @@ bool ScenarioParser::ParseContact(XMLElement* element)
         }
     }
     if(entA == nullptr || entB == nullptr
-       || (entA->getType() != ENTITY_SOLID && entA->getType() != ENTITY_STATIC)
-       || (entB->getType() != ENTITY_SOLID && entB->getType() != ENTITY_STATIC))
+       || (entA->getType() != EntityType::SOLID && entA->getType() != EntityType::STATIC)
+       || (entB->getType() != EntityType::SOLID && entB->getType() != EntityType::STATIC))
         return false;
     
     int16_t displayMask = 0;

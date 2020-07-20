@@ -1,0 +1,111 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//N_HALF_BINS - number of histogram bins
+//N_VERT_BEAM_SAMPLES - number of vertical beam samples
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Two inputs
+layout(rg32f) uniform image2DArray sonarHist;
+
+// One output
+layout(r32f) uniform image2D sonarOutput;
+
+uniform vec3 noiseSeed;
+uniform vec2 noiseStddev;
+uniform float gain;
+uniform float vfov;
+uniform float tilt;
+
+#define M_PI 3.1415926535897932384626433832795
+
+float rand(vec2 coord)
+{
+    // This one-liner can be found in many places, including:
+    // http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+    // I can't find any explanation for it, but experimentally it does seem to
+    // produce approximately uniformly distributed values in the interval [0,1].
+    return fract(sin(dot(coord.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float gaussian(vec2 coord, float stddev, float mean)
+{
+    // Box-Muller method for sampling from the normal distribution
+    // http://en.wikipedia.org/wiki/Normal_distribution#Generating_values_from_normal_distribution
+    // This method requires 2 uniform random inputs and produces 2 
+    // Gaussian random outputs. 3rd random variable is used to switch between the two outputs.
+    float U, V, R, Z;
+    // Add in the CPU-supplied random noiseSeed to generate the 3 random values.
+    U = rand(coord + vec2(noiseSeed.x, noiseSeed.x))+0.0000001;
+    V = rand(coord + vec2(noiseSeed.y, noiseSeed.y))+0.0000001;
+    R = rand(coord + vec2(noiseSeed.z, noiseSeed.z))+0.0000001;
+    // Switch between the two random outputs.
+    if(R < 0.5)
+        Z = sqrt(-2.0 * log(U)) * sin(2.0 * M_PI * V);
+    else
+        Z = sqrt(-2.0 * log(U)) * cos(2.0 * M_PI * V);
+
+    // Apply the stddev and mean.
+    Z = Z * stddev + mean;
+
+    // Return it as a vec4, to be added to the input ("true") color.
+    return Z;
+}
+
+void main()
+{
+    if(gl_GlobalInvocationID.x < N_HALF_BINS)
+    {
+        //Compute bin
+        int bin;
+        float fov;
+        if(gl_GlobalInvocationID.y == 0)
+        {
+            bin = int(N_HALF_BINS) - 1 - int(gl_GlobalInvocationID.x);
+            fov = vfov;
+        }
+        else
+        {
+            bin = int(N_HALF_BINS) + int(gl_GlobalInvocationID.x);
+            fov = -vfov;
+        }
+
+        //Accumulate data samples
+        vec2 data = vec2(0.0,0.0);
+        for(uint i=0; i<N_VERT_BEAM_SAMPLES; ++i)
+        {
+            float factor = float(i)/float(N_VERT_BEAM_SAMPLES-1);
+            float theta = tilt + (factor-0.5) * fov;
+            vec2 bs = imageLoad(sonarHist, ivec3(i, gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).rg;
+            bs.x *= smoothstep(0.0, 0.2, factor) * (1.0 - smoothstep(0.8, 1.0, factor));
+            bs.x /= sin(theta); //Intensity compensation based on flat bottom model
+            data += bs;
+        }
+
+        //Compute bin values
+        float value = gain * (float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1)*0.5+0.5) //Distance dependent amount of noise 
+                      * gaussian(-vec2(float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1), 0.0), noiseStddev.y, 0.0); //Additive noise
+        if(data.y > 0.0)
+            value += 0.5 * data.x/data.y * gain * gaussian(vec2(0.0), noiseStddev.x, 1.0); //Multiplicative noise
+        value = clamp(value, 0.0, 1.0);
+        //Store new line
+        imageStore(sonarOutput, ivec2(bin, 0), vec4(value));
+    }
+}

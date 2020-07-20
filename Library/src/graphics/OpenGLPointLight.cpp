@@ -35,33 +35,25 @@
 namespace sf
 {
 
-OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat illuminance) : OpenGLLight(position, radius, color, illuminance)
+OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum) : OpenGLLight(position, radius, color, lum)
 {
-	lightMesh = OpenGLContent::BuildSphere(getSourceRadius());
-	lightObject = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(lightMesh);
+    colorLi = glm::vec4(color, (GLfloat)(lum/(4.f*M_PI)));
+	Mesh* m = OpenGLContent::BuildSphere(getSourceRadius());
+	sourceObject = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m);
+    delete m;
 }
 
-LightType OpenGLPointLight::getType()
+LightType OpenGLPointLight::getType() const
 {
     return POINT_LIGHT;
 }
 
-void OpenGLPointLight::SetupShader(GLSLShader* shader, unsigned int lightId)
+void OpenGLPointLight::SetupShader(LightUBO* ubo)
 {
-    std::string lightUni = "pointLights[" + std::to_string(lightId) + "].";
-    shader->SetUniform(lightUni + "position", getPosition());
-    shader->SetUniform(lightUni + "color", getColor());
-}
- 
-void OpenGLPointLight::DrawLight()
-{
-	OpenGLLight::DrawLight();
-	glm::mat4 model = glm::translate(getPosition());
-	glm::mat4 view = activeView->GetViewMatrix();
-	glm::mat4 proj = activeView->GetProjectionMatrix();
-	glm::mat4 MVP = proj * view * model;
-	lightSourceShader->SetUniform("MVP", MVP);
-	((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(lightObject, 0, glm::mat4());
+    PointLightUBO* pointUbo = (PointLightUBO*)ubo;
+    pointUbo->position = getPosition();
+    pointUbo->radius = getSourceRadius();
+    pointUbo->color = glm::vec3(colorLi) * colorLi.a; 
 }
    
 }

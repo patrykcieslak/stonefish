@@ -127,7 +127,7 @@ void Profiler::setNoise(Scalar stdDev)
 
 ScalarSensorType Profiler::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_PROFILER;
+    return ScalarSensorType::PROFILER;
 }
 
 }

@@ -34,7 +34,7 @@
 #include <utils/SystemUtil.hpp>
 
 SlidingTestManager::SlidingTestManager(sf::Scalar stepsPerSecond) 
-  : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
+  : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
 }
 
@@ -60,7 +60,7 @@ void SlidingTestManager::BuildScenario()
     sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), "Ground", "grid", 2);
     AddStaticEntity(ramp, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
   
-    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(box, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -1.72)));
     
     sf::Odometry* traj = new sf::Odometry("Odometry", -1, 1000);
@@ -69,7 +69,7 @@ void SlidingTestManager::BuildScenario()
     AddSensor(traj);
     
     //////CAMERA & LIGHT//////
-    sf::Light* omni = new sf::Light("Omni", sf::Color::BlackBody(4000), 1000000);
+    sf::Light* omni = new sf::Light("Omni", sf::Scalar(0.1), sf::Color::BlackBody(4000), 1000000);
     omni->AttachToSolid(box, sf::Transform(sf::IQ(), sf::Vector3(0,0,-1)));
     AddActuator(omni);
 }

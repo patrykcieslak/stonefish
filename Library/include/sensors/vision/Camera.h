@@ -55,9 +55,10 @@ namespace sf
         
         //! A method used to inform about new data.
         /*!
+         \param data a pointer to the OpenGL texture data
          \param index the id of the OpenGL camera uploading the data
          */
-        virtual void NewDataReady(unsigned int index = 0) = 0;
+        virtual void NewDataReady(void* data, unsigned int index = 0) = 0;
         
         //! A method used to setup the OpenGL camera transformation.
         /*!
@@ -75,12 +76,21 @@ namespace sf
         
         //! A method to set if the camera image should be displayed in the main window.
         /*!
-         \param screen show image in the program window?
+         \param display show image in the program window?
+         \param x position of the image in the window [px]
+         \param y position of the image in the window [px]
+         \param scale scaling factor of the image
          */
-        void setDisplayOnScreen(bool screen);
+        void setDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale);
         
         //! A method informing if the camera image should be displayed in the main window.
-        bool getDisplayOnScreen();
+        /*!
+         \param x referece to the x position of the image in the window [px]
+         \param y reference to the y position of the image in the window [px]
+         \param scale reference to the scaling factor of the image
+         \return a flag indicating if the view should be displayed
+         */
+        bool getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale);
         
         //! A method returning the horizontal field of view of the camera [deg].
         Scalar getHorizontalFOV();
@@ -103,7 +113,10 @@ namespace sf
         Scalar fovH;
         unsigned int resX;
         unsigned int resY;
-        bool display;
+        unsigned int screenX;
+        unsigned int screenY;
+        float screenScale;
+        bool screen;
     };
 }
 

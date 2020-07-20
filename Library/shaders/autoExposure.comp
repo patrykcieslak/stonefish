@@ -1,0 +1,113 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+/*
+    Based on implementation by Bruno Opsenica https://bruop.github.io/tonemapping/
+*/
+
+#version 430
+
+#define GROUP_SIZE 256
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+uniform vec4 params;
+#define minLogLum params.x
+#define logLumRange params.y
+#define timeCoeff params.z
+#define numPixels params.w
+
+#define localIndex gl_LocalInvocationIndex
+
+//We'll be writing our exposure to target
+layout(r32f) uniform image2D texExposure;
+
+layout(std430) buffer Histogram
+{                                    
+	uint histogram[];
+};
+
+// Shared
+shared uint histogramShared[GROUP_SIZE];
+
+float computeEV100FromAvgLogLuminance(float avgLogLuminance)
+{
+    // We later use the middle gray at 12.7% in order to have
+    // a middle gray at 18% with a sqrt (2) room for specular highlights
+    // But here we deal with the spot meter measuring the middle gray
+    // which is fixed at 12.5 for matching standard camera
+    // constructor settings ( i . e . calibration constant K = 12.5)
+    // Reference: http://en.wikipedia.org/wiki/Film_speed
+    // avgLuminance = log2(avgLuminance*100.0/12.5);
+    return avgLogLuminance + log2(100.0/12.5); 
+}
+
+float convertEV100ToExposure(float EV100)
+{
+    // Compute the maximum luminance possible with H_sbs sensitivity
+    // maxLum = 78 / ( S * q ) * N ^2 / t
+    //        = 78 / ( S * q ) * 2^ EV_100
+    //        = 78 / (100 * 0.65) * 2^ EV_100
+    //        = 1.2 * 2^ EV
+    // Reference: http://en.wikipedia.org/wiki/Film_speed
+    float maxLuminance = 1.2*pow(2.0, EV100);
+    return 1.0/maxLuminance;
+}
+
+void main() 
+{
+    // Get the count from the histogram buffer
+    uint countForThisBin = histogram[localIndex];
+    histogramShared[localIndex] = countForThisBin * localIndex;
+    barrier();
+
+    // Reset the count stored in the buffer in anticipation of the next pass
+    histogram[localIndex] = 0;
+
+    // This loop will perform a weighted count of the luminance range
+    for(uint cutoff = (GROUP_SIZE >> 1); cutoff > 0; cutoff >>= 1) 
+    {
+        if(uint(localIndex) < cutoff) 
+        {
+            histogramShared[localIndex] += histogramShared[localIndex + cutoff];
+        }
+        barrier();
+    }
+
+    // We only need to calculate this once, so only a single thread is needed.
+    if (gl_GlobalInvocationID.x == 0) 
+    {
+        // Here we take our weighted sum and divide it by the number of pixels
+        // that had luminance greater than zero (since the index == 0, we can
+        // use countForThisBin to find the number of black pixels)
+        float weightedLogAverage = (histogramShared[0] / max(numPixels - float(countForThisBin), 1.0)) - 1.0;
+
+        // Map from our histogram space to actual luminance
+        // weightedAvgLum = exp2(((weightedLogAverage / 254.0) * logLumRange) + minLogLum);
+        float weightedAvgLogLum = ((weightedLogAverage / 254.0) * logLumRange) + minLogLum; 
+        float exposure = convertEV100ToExposure(computeEV100FromAvgLogLuminance(weightedAvgLogLum));
+
+        // The new stored value will be interpolated using the last frames value
+        // to prevent sudden shifts in the exposure.
+        float exposureLastFrame = imageLoad(texExposure, ivec2(0,0)).x;
+        float adaptedExposure = exposureLastFrame + (exposure - exposureLastFrame) * timeCoeff;
+        //float adaptedExposure = exposure * timeCoeff + exposureLastFrame * (1.0 - timeCoeff); 
+        imageStore(texExposure, ivec2(0,0), vec4(adaptedExposure, 0.0, 0.0, 0.0));
+    }
+}

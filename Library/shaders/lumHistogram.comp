@@ -1,0 +1,91 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+/*
+    Based on implementation by Bruno Opsenica https://bruop.github.io/tonemapping/
+*/
+
+#version 430
+
+#define GROUP_SIZE 256
+#define EPSILON 0.005
+#define RGB_TO_LUM vec3(0.2125, 0.7154, 0.0721)
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+uniform vec2 params;
+// params.x = minimum log_2 luminance
+// params.y = inverse of the log_2 luminance range
+
+// Our two inputs, the read-only HDR color image, and the histogram buffer
+layout(rgba32f) uniform image2D texSource;
+
+layout(std430) buffer Histogram
+{                                    
+	uint histogram[];
+};
+
+// Shared histogram buffer used for storing intermediate sums for each work group
+shared uint histogramShared[GROUP_SIZE];
+
+//For a given color and luminance range, return the histogram bin index
+uint colorToBin(vec3 hdrColor, float minLogLum, float inverseLogLumRange) 
+{
+    //Convert our RGB value to Luminance, see note for RGB_TO_LUM macro above
+    float lum = dot(hdrColor, RGB_TO_LUM);
+
+    //Avoid taking the log of zero
+    if(lum < EPSILON) 
+    {
+        return 0;
+    }
+
+    //Calculate the log_2 luminance and express it as a value in [0.0, 1.0]
+    //where 0.0 represents the minimum luminance, and 1.0 represents the max.
+    float logLum = clamp((log2(lum) - minLogLum) * inverseLogLumRange, 0.0, 1.0);
+
+    //Map [0, 1] to [1, 255]. The zeroth bin is handled by the epsilon check above.
+    return uint(logLum * 254.0 + 1.0);
+}
+
+void main() 
+{
+    //Initialize the bin for this thread to 0
+    histogramShared[gl_LocalInvocationIndex] = 0; //Local indices range from 0 to 255 (group size-1)
+    barrier();
+    
+    //Ignore threads that map to areas beyond the bounds of our HDR image
+    uvec2 dim = imageSize(texSource).xy;
+    if(gl_GlobalInvocationID.x < dim.x && gl_GlobalInvocationID.y < dim.y) 
+    {
+        vec3 hdrColor = imageLoad(texSource, ivec2(gl_GlobalInvocationID.xy)).xyz;
+        uint binIndex = colorToBin(hdrColor, params.x, params.y);
+        // We use an atomic add to ensure we don't write to the same bin in our
+        // histogram from two different threads at the same time.
+        atomicAdd(histogramShared[binIndex], 1);
+    }
+
+    //Wait for all threads in the work group to reach this point before adding our
+    //local histogram to the global one
+    barrier();
+
+    //Technically there's no chance that two threads write to the same bin here,
+    //but different work groups might! So we still need the atomic add.
+    atomicAdd(histogram[gl_LocalInvocationIndex], histogramShared[gl_LocalInvocationIndex]);
+}

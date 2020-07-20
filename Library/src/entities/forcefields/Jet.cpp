@@ -59,10 +59,14 @@ Vector3 Jet::GetVelocityAtPoint(const Vector3& p)
     return f*vmax;
 }
 
-std::vector<Renderable> Jet::Render()
+std::vector<Renderable> Jet::Render(VelocityFieldUBO& ubo)
 {
     std::vector<Renderable> items(0);
-    
+    ubo.posR = glm::vec4((GLfloat)c.getX(), (GLfloat)c.getY(), (GLfloat)c.getZ(), (GLfloat)r);
+    ubo.dirV = glm::vec4((GLfloat)n.getX(), (GLfloat)n.getY(), (GLfloat)n.getZ(), (GLfloat)vout);
+    ubo.params = glm::vec3(0.f);
+    ubo.type = 1;
+
     //Model matrix
     glm::vec3 z_(n.x(), n.y(), n.z());
     glm::vec3 x_(-n.y(), n.x(), n.z());

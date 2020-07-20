@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ForcefieldEntity__
@@ -32,10 +32,7 @@
 namespace sf
 {
     //! An enum specifying the type of forcefield.
-    typedef enum {FORCEFIELD_POOL = 0, FORCEFIELD_OCEAN, FORCEFIELD_TRIGGER, FORCEFIELD_ATMOSPHERE} ForcefieldType;
-    
-     //! An enum specifying the type of hydrodynamics computation that is used in the simulation
-    typedef enum {GEOMETRY_BASED = 0} FluidDynamicsType; //TRIFOLD_SYMMETRY, FULLY_COUPLED
+    enum class ForcefieldType {POOL, OCEAN, TRIGGER, ATMOSPHERE};
     
     //! An abstract class representing some kind of a force field.
     class ForcefieldEntity : public Entity
@@ -73,7 +70,7 @@ namespace sf
         virtual ForcefieldType getForcefieldType() = 0;
         
         //! A method returning the type of the entity.
-        EntityType getType();
+        EntityType getType() const;
         
     protected:
         btPairCachingGhostObject* ghost;

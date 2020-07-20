@@ -25,7 +25,11 @@
 
 #version 330
 
-#define MEAN_SUN_ILLUMINANCE 107527.0
+in vec4 fragPos;
+in float logz;
+
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 fragNormal;
 
 uniform sampler2DArray texWaveFFT;
 uniform sampler3D texSlopeVariance; 
@@ -33,13 +37,18 @@ uniform vec2 viewport;
 uniform vec4 gridSizes;
 uniform vec3 eyePos;
 uniform mat3 MV;
-uniform vec3 sunDirection;
-uniform float planetRadius;
-uniform vec3 whitePoint;
+uniform float FC;
 
-in vec4 fragPos;
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 fragNormal;
+layout (std140) uniform SunSky
+{
+    mat4 sunClipSpace[4];
+    vec4 sunFrustumNear;
+    vec4 sunFrustumFar;
+    vec3 sunDirection;
+	float planetRadiusInUnits;
+	vec3 whitePoint;
+    float atmLengthUnitInMeters;
+};
 
 //Atmosphere
 vec3 GetSolarLuminance();
@@ -108,14 +117,18 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 
 void main()
 {
-    vec3 pos = fragPos.xyz/fragPos.w;
-	vec3 toEye = normalize(eyePos - pos);
-	vec3 center = vec3(0, 0, -planetRadius);
-	vec3 P = pos - center;
+    //Logarithmic z-buffer correction
+	gl_FragDepth = log2(logz) * FC;
+
+    vec3 P = fragPos.xyz/fragPos.w;
+	vec3 toEye = normalize(eyePos - P);
+	vec3 center = vec3(0, 0, planetRadiusInUnits);
+	vec3 Psky = vec3(P.xy/atmLengthUnitInMeters, clamp(P.z/atmLengthUnitInMeters, -100000.0/atmLengthUnitInMeters, -0.5/atmLengthUnitInMeters));
 	
 	//Wave slope (layers 1,2)
-    vec2 waveCoord = pos.xy;
-	vec2 slopes = texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
+    vec2 waveCoord = P.xy;
+	vec2 slopes = vec2(0.0);
+    slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.x, 1.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.y, 1.0)).zw;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.z, 2.0)).xy;
 	slopes += texture(texWaveFFT, vec3(waveCoord/gridSizes.w, 2.0)).zw;
@@ -148,21 +161,21 @@ void main()
     //float fresnel = 0.02 + 0.98 * pow(1.0 - dot(toEye, normal), 5.0);
     
 	vec3 Isky;
-	vec3 Isun = GetSunAndSkyIlluminance(P, normal, sunDirection, Isky);
+	vec3 Isun = GetSunAndSkyIlluminance(Psky - center, normal, sunDirection, Isky);
 	
 	vec3 outColor = vec3(0.0);
 	
 	//Sun contribution
-    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint/MEAN_SUN_ILLUMINANCE;
+    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint;
 	
 	//Sky and scene reflection
 	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, -3.0)));
 	vec3 trans;
-	vec3 Lsky = GetSkyLuminance(P, ray, 0.0, sunDirection, trans);
-    outColor += Lsky/whitePoint/MEAN_SUN_ILLUMINANCE; //fresnel *
+	vec3 Lsky = GetSkyLuminance(Psky - center, ray, 0.0, sunDirection, trans);
+    outColor += Lsky/whitePoint; //fresnel *
     
 	//Aerial perspective
-    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, P, 0.0, sunDirection, trans);///whitePoint/30000.0;
+    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, Psky - center, 0.0, sunDirection, trans);///whitePoint/30000.0;
     //outColor = L2P;//trans * outColor + L2P;
 	
 	//Sea contribution

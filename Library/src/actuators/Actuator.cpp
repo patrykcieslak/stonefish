@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Actuator.h"
@@ -35,12 +35,18 @@ namespace sf
 Actuator::Actuator(std::string uniqueName)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    dm = DisplayMode::GRAPHICAL;
 }
 
 Actuator::~Actuator()
 {
     if(SimulationApp::getApp() != NULL)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+}
+
+void Actuator::setDisplayMode(DisplayMode m)
+{
+    dm = m;
 }
 
 std::string Actuator::getName()

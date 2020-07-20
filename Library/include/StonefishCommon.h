@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/01/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_StonefishCommon__
@@ -34,6 +34,9 @@
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+
+//Stonefish
+#include <version.h>
 
 namespace sf
 {

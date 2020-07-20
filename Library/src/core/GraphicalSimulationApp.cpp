@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -56,7 +56,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     glLoadingContext = NULL;
     glMainContext = NULL;
     trackballCenter = NULL;
-    lastPicked = NULL;
+    selectedEntity = nullptr;
     displayHUD = true;
     displayConsole = false;
     joystick = NULL;
@@ -67,11 +67,18 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     loadingThread = NULL;
     glPipeline = NULL;
     gui = NULL;
+    timeQuery[0] = 0;
+    timeQuery[1] = 0;
+    timeQueryPingpong = 0;
     drawingTime = 0.0;
-    windowW = r.windowW;
-    windowH = r.windowH;
+    maxDrawingTime = 0.0;
+    maxCounter = 0;
     rSettings = r;
     hSettings = h;
+    rSettings.windowW += rSettings.windowW % 2;
+    rSettings.windowH += rSettings.windowH % 2;
+    windowW = rSettings.windowW;
+    windowH = rSettings.windowH;
 }
 
 GraphicalSimulationApp::~GraphicalSimulationApp()
@@ -118,6 +125,11 @@ IMGUI* GraphicalSimulationApp::getGUI()
     return gui;
 }
 
+Entity* GraphicalSimulationApp::getSelectedEntity()
+{
+    return selectedEntity;
+}
+
 bool GraphicalSimulationApp::hasGraphics()
 {
     return true;
@@ -128,9 +140,12 @@ SDL_Joystick* GraphicalSimulationApp::getJoystick()
     return joystick;
 }
 
-double GraphicalSimulationApp::getDrawingTime()
+double GraphicalSimulationApp::getDrawingTime(bool max)
 {
-    return drawingTime;
+    if(max)
+        return maxDrawingTime;
+    else
+        return drawingTime;
 }
 
 int GraphicalSimulationApp::getWindowWidth()
@@ -160,11 +175,10 @@ HelperSettings& GraphicalSimulationApp::getHelperSettings()
 
 void GraphicalSimulationApp::Init()
 {
-    //Basics
+    //Window initialization + loading thread
     loading = true;
-    console = new Console(); //Create temporary text console
-    InitializeSDL(); //Window initialization + loading thread
-    
+    InitializeSDL();
+
     //Continue initialization with console visible
     cInfo("Initializing rendering pipeline:");
     cInfo("Loading GUI...");
@@ -184,6 +198,9 @@ void GraphicalSimulationApp::Init()
     int status = 0;
     SDL_WaitThread(loadingThread, &status);
     SDL_GL_MakeCurrent(window, glMainContext);
+
+    //Create performance counters
+    glGenQueries(2, timeQuery);
 }
 
 void GraphicalSimulationApp::InitializeSDL()
@@ -192,8 +209,8 @@ void GraphicalSimulationApp::InitializeSDL()
     
     //Create OpenGL contexts
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -245,22 +262,19 @@ void GraphicalSimulationApp::InitializeSDL()
     if(SDL_GL_SetSwapInterval(0) == -1)
         cError("SDL2: %s", SDL_GetError());
     
-    //Check OpenGL context version
-    int glVersionMajor, glVersionMinor;
-    glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
-    glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
-    cInfo("Window created. OpenGL %d.%d contexts created.", glVersionMajor, glVersionMinor);
-    
-    //Initialize basic drawing functions and console
-    glewExperimental = GL_TRUE;
-    if(glewInit() != GLEW_OK)
-        cCritical("Failed to initialize GLEW!");
-    
+    //Initialize OpenGL function handlers 
+    int version = gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
+    int vmajor = GLAD_VERSION_MAJOR(version);
+    int vminor = GLAD_VERSION_MINOR(version);
+    if(vmajor < 4 || (vmajor == 4 && vminor < 3))
+        cCritical("This program requires support for OpenGL 4.3, however OpenGL %d.%d was detected! Exiting...", vmajor, vminor);
+
+    //Initialize OpenGL pipeline
+    cInfo("Window created. OpenGL %d.%d contexts created.", vmajor, vminor);
     OpenGLState::Init();
+    GLSLShader::Init();
     
-    if(!GLSLShader::Init())
-        cCritical("No shader support!");
-    
+    //Initialize console output
     std::vector<ConsoleMessage> textLines = console->getLines();
     delete console;
     console = new OpenGLConsole();
@@ -319,7 +333,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             break;
             
         case SDLK_SPACE:
-            lastPicked = NULL;
+            selectedEntity = nullptr;
             if(!getSimulationManager()->isSimulationFresh())
             {
                 StopSimulation();
@@ -432,7 +446,6 @@ void GraphicalSimulationApp::Loop()
 {
     SDL_Event event;
     bool mouseWasDown = false;
-    
     uint64_t startTime = GetTimeInMicroseconds();
     
     while(!hasFinished())
@@ -568,7 +581,7 @@ void GraphicalSimulationApp::Loop()
                 {
                     glm::vec3 eye = trackball->GetEyePosition();
                     glm::vec3 ray = trackball->Ray(event.button.x, event.button.y);
-                    lastPicked = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
+                    selectedEntity = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
                 }
                 else //RIGHT OR MIDDLE
                 {
@@ -583,7 +596,7 @@ void GraphicalSimulationApp::Loop()
         }
         mouseWasDown = false;
 
-        //Framerate limitting
+        //Framerate limitting (60Hz)
         uint64_t elapsedTime = GetTimeInMicroseconds() - startTime;
         if(elapsedTime < 16000)
             std::this_thread::sleep_for(std::chrono::microseconds(16000 - elapsedTime));
@@ -600,7 +613,7 @@ void GraphicalSimulationApp::RenderLoop()
     }
     
     //Rendering
-    uint64_t startTime = GetTimeInMicroseconds();
+    glBeginQuery(GL_TIME_ELAPSED, timeQuery[timeQueryPingpong]);
     glPipeline->Render(getSimulationManager());
     glPipeline->DrawDisplay();
     
@@ -625,9 +638,30 @@ void GraphicalSimulationApp::RenderLoop()
             gui->End();
         }
     }
+    glEndQuery(GL_TIME_ELAPSED);
     
+    //Update drawing time
+    uint64_t drawTime;
+    glGetQueryObjectui64v(timeQuery[1-timeQueryPingpong], GL_QUERY_RESULT, &drawTime);
+    timeQueryPingpong = 1-timeQueryPingpong;
+	double dt = std::min(drawTime/1000000.0, 1000.0); //in ms
+	double f = 1.0/60.0;
+	drawingTime = f*dt + (1.0-f)*drawingTime;
+
+    //Update maximum drawing time
+    if(maxCounter >= 60)
+    {
+        maxDrawingTime = drawingTime;
+        maxCounter = 0;
+    }
+    else
+    {
+        maxDrawingTime = std::max(maxDrawingTime, dt);
+        ++maxCounter;
+    }
+
+    //glFinish(); //Ensure that the frame was fully rendered
     SDL_GL_SwapWindow(window);
-    drawingTime = (GetTimeInMicroseconds() - startTime)/1000.0; //in ms
 }
 
 void GraphicalSimulationApp::DoHUD()
@@ -648,9 +682,9 @@ void GraphicalSimulationApp::DoHUD()
     id.owner = 0;
     
     id.item = 0;
-    bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::DISPLAY_PHYSICAL; 
+    bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::PHYSICAL; 
     displayPhysical = gui->DoCheckBox(id, 15.f, offset, 110.f, displayPhysical, "Physical objects");
-    getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::DISPLAY_PHYSICAL : DisplayMode::DISPLAY_GRAPHICAL);
+    getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::PHYSICAL : DisplayMode::GRAPHICAL);
     offset += 22.f;
     
     id.item = 1;
@@ -710,11 +744,10 @@ void GraphicalSimulationApp::DoHUD()
     if(ocn != NULL)
     {
         Scalar waterType = ocn->getWaterType();
-        Scalar turbidity = ocn->getTurbidity();
         
         bool oceanOn = ocn->isRenderable();
         
-        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 132.f : 33.f);
+        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 82.f : 33.f);
         offset += 5.f;
        
         id.owner = 2;
@@ -725,14 +758,10 @@ void GraphicalSimulationApp::DoHUD()
         if(oceanOn)
         {
             id.item = 1;
-            waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Water Type");
+            waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
             offset += 50.f;
         
-            id.item = 2;
-            turbidity = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0.1), Scalar(100.0), turbidity, "Turbidity");
-            offset += 50.f;
-        
-            ocn->SetupWaterProperties(waterType, turbidity);
+            ocn->SetupWaterProperties(waterType);
         }
         
         offset += 7.f;
@@ -741,7 +770,7 @@ void GraphicalSimulationApp::DoHUD()
     //Main view exposure
     gui->DoPanel(10.f, offset, 160.f, 126.f);
     offset += 5.f;
-    gui->DoLabel(15.f, offset, "RENDERING");
+    gui->DoLabel(15.f, offset, "VIEW");
     offset += 15.f;
     
     id.owner = 3;
@@ -777,13 +806,13 @@ void GraphicalSimulationApp::DoHUD()
     offset += 61.f;
     
     //Picked entity information
-    if(lastPicked != NULL)
+    if(selectedEntity != nullptr)
     {
-        switch(lastPicked->getType())
+        switch(selectedEntity->getType())
         {
-            case EntityType::ENTITY_STATIC:
+            case EntityType:: STATIC:
             {
-                StaticEntity* ent = (StaticEntity*)lastPicked;
+                StaticEntity* ent = (StaticEntity*)selectedEntity;
                 
                 gui->DoPanel(10.f, offset, 160.f, 66.f);
                 offset += 5.f;
@@ -797,11 +826,11 @@ void GraphicalSimulationApp::DoHUD()
             }
                 break;
                 
-            case EntityType::ENTITY_SOLID:
+            case EntityType:: SOLID:
             {
-                SolidEntity* ent = (SolidEntity*)lastPicked;
+                SolidEntity* ent = (SolidEntity*)selectedEntity;
                 
-                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::SOLID_COMPOUND ? 143.f : 122.f);
+                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::COMPOUND ? 143.f : 122.f);
                 offset += 5.f;
                 gui->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
@@ -809,7 +838,7 @@ void GraphicalSimulationApp::DoHUD()
                 offset += 14.f;
                 gui->DoLabel(18.f, offset, std::string("Type: Dynamic"));
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, ent->getSolidType() == SolidType::SOLID_COMPOUND ? std::string("Material: Compound") : std::string("Material: ") + ent->getMaterial().name);
+                gui->DoLabel(18.f, offset, ent->getSolidType() == SolidType::COMPOUND ? std::string("Material: Compound") : std::string("Material: ") + ent->getMaterial().name);
                 offset += 14.f;
                 std::sprintf(buf, "%1.3lf", ent->getMass());
                 gui->DoLabel(18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
@@ -824,7 +853,7 @@ void GraphicalSimulationApp::DoHUD()
                 gui->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
                 offset += 11.f;
                 
-                if(ent->getSolidType() == SolidType::SOLID_COMPOUND)
+                if(ent->getSolidType() == SolidType::COMPOUND)
                 {
                     Compound* cmp = (Compound*)ent;
                     id.owner = 4;
@@ -841,16 +870,16 @@ void GraphicalSimulationApp::DoHUD()
     }
     
     //Bottom panel
-    gui->DoPanel(0, getWindowHeight()-30.f, getWindowWidth(), 30.f);
+    gui->DoPanel(-10, getWindowHeight()-30.f, getWindowWidth()+20, 30.f);
     
-    std::sprintf(buf, "Drawing time: %1.2lf ms", getDrawingTime());
+    std::sprintf(buf, "Drawing time: %1.2lf (%1.2lf) ms", getDrawingTime(), getDrawingTime(true));
     gui->DoLabel(10, getWindowHeight() - 20.f, buf);
     
     std::sprintf(buf, "CPU usage: %1.0lf%%", getSimulationManager()->getCpuUsage());
-    gui->DoLabel(170, getWindowHeight() - 20.f, buf);
+    gui->DoLabel(190, getWindowHeight() - 20.f, buf);
     
     std::sprintf(buf, "Simulation time: %1.2lf s", getSimulationManager()->getSimulationTime());
-    gui->DoLabel(290, getWindowHeight() - 20.f, buf);
+    gui->DoLabel(320, getWindowHeight() - 20.f, buf);
 }
 
 void GraphicalSimulationApp::StartSimulation()
@@ -876,7 +905,7 @@ void GraphicalSimulationApp::ResumeSimulation()
 void GraphicalSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
-	lastPicked = NULL;
+	selectedEntity = nullptr;
 	trackballCenter = NULL;
     
     int status;
@@ -887,7 +916,8 @@ void GraphicalSimulationApp::StopSimulation()
 void GraphicalSimulationApp::CleanUp()
 {
     SimulationApp::CleanUp();
-    
+    glDeleteQueries(2, timeQuery);
+
     if(joystick != NULL)
         SDL_JoystickClose(0);
     
@@ -908,7 +938,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     SDL_GL_MakeCurrent(ltdata->app->window, ltdata->app->glLoadingContext);  
     
     //Render loading screen
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
     glScissor(0, 0, ltdata->app->windowW, ltdata->app->windowH);
     glViewport(0, 0, ltdata->app->windowW, ltdata->app->windowH);
     glDisable(GL_DEPTH_TEST);

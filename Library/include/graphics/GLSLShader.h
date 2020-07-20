@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GLSLShader__
@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum defining possible GLSL variable types.
-    typedef enum {BOOLEAN, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, MAT3, MAT4} ParameterType;
+    typedef enum {BOOLEAN, UINT, INT, FLOAT, VEC2, VEC3, VEC4, IVEC2, IVEC3, IVEC4, UVEC2, UVEC3, UVEC4, MAT3, MAT4} ParameterType;
     
     //! A structure containing information about a GLSL uniform.
     struct GLSLUniform
@@ -50,60 +50,41 @@ namespace sf
         GLint index;
     };
     
-    //! A structure containing a header added to shaders during compilation.
-    struct GLSLHeader
+    //! A structure representing the source of one shader.
+    struct GLSLSource
     {
-        std::string code;
-        bool useInVertex;
-        bool useInTessCtrl;
-        bool useInTessEval;
-        bool useInGeometry;
-        bool useInFragment;
+        GLenum type;
+        std::string header;
+        std::string filename;
+
+        GLSLSource(GLenum type, const std::string& filename, const std::string& header = "")
+        : type(type), header(header), filename(filename) 
+        {};
     };
-    
+
     //! A class representing a single GLSL shader.
     class GLSLShader
     {
     public:
         //! A constructor.
         /*!
-         \param fragment path to the fragment shader
-         \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
+         \param sources a vector of shader source structures
+         \param precompiled a vector of precompiled shader handles
          */
-        GLSLShader(std::string fragment,
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-        
+        GLSLShader(const std::vector<GLSLSource>& sources, const std::vector<GLuint>& precompiled = std::vector<GLuint>(0));
+
         //! A constructor.
         /*!
-         \param header a reference to a header structure
-         \param fragment path to the fragment shader
-         \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
+         \param precompiled a vector of precompiled shader handles
          */
-        GLSLShader(GLSLHeader& header,
-                   std::string fragment,
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
-        
-        //! A constructor.
+        GLSLShader(const std::vector<GLuint>& precompiled);
+
+        //! A quick constructor.
         /*!
-         \param compiledShaders a list of compiled shaders that should be linked
          \param fragment path to the fragment shader
          \param vertex path to the vertex shader
-         \param geometry path to the geometry shader
-         \param tesselation a pair of two path to the tesselation shaders
          */
-        GLSLShader(std::vector<GLuint> compiledShaders,
-                   std::string fragment = "",
-                   std::string vertex = "",
-                   std::string geometry = "",
-                   std::pair<std::string, std::string> tesselation = std::make_pair("",""));
+        GLSLShader(std::string fragment, std::string vertex = "");
         
         //! A destructor.
         ~GLSLShader();
@@ -181,6 +162,14 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
+        bool SetUniform(std::string name, GLuint x);
+
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
         bool SetUniform(std::string name, GLint x);
         
         //! A method used to set a GLSL uniform.
@@ -206,6 +195,30 @@ namespace sf
          \return success
          */
         bool SetUniform(std::string name, glm::ivec4 x);
+
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, glm::uvec2 x);
+        
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, glm::uvec3 x);
+        
+        //! A method used to set a GLSL uniform.
+        /*!
+         \param name the name of the uniform
+         \param x the value of the uniform
+         \return success
+         */
+        bool SetUniform(std::string name, glm::uvec4 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -222,7 +235,21 @@ namespace sf
          \return success
          */
         bool SetUniform(std::string name, glm::mat4 x);
-        
+
+        //! A method used to bind a GLSL uniform block.
+        /*!
+         \param name the name of the uniform block
+         \param bindingPoint the index of the binding point
+         */
+        bool BindUniformBlock(std::string name, GLuint bindingPoint);
+
+        //! A method used to bind a GLSL shader storage block.
+        /*!
+         \param name the name of the shader storage block
+         \param bindingPoint the index of the binding point
+         */
+        bool BindShaderStorageBlock(std::string name, GLuint bindingPoint);
+
         //! A method to check if the shader is valid.
         bool isValid();
         
@@ -249,7 +276,7 @@ namespace sf
          \param shaderCompiled a pointer to a variable that will hold the shader compilation output code
          \return an id of the new compiled shader
          */
-        static GLuint LoadShader(GLenum shaderType, std::string filename, const std::string& header, GLint* shaderCompiled);
+        static GLuint LoadShader(GLenum shaderType, const std::string& filename, const std::string& header, GLint* shaderCompiled);
         
     private:
         bool GetAttribute(std::string name, ParameterType type, GLint& index);
@@ -257,7 +284,7 @@ namespace sf
         
         std::vector<GLSLAttribute> attributes;
         std::vector<GLSLUniform> uniforms;
-        GLuint shader;
+        GLuint program;
         bool valid;
         
         static GLuint saqVertexShader;

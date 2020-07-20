@@ -33,13 +33,13 @@ int main(int argc, const char * argv[])
     //feenableexcept(FE_INVALID | FE_OVERFLOW);
     
     sf::RenderSettings s;
-    s.windowW = 1200;
-    s.windowH = 1000;
-    s.msaa = false;
-    s.shadows = sf::RenderQuality::QUALITY_HIGH;
-    s.ao = sf::RenderQuality::QUALITY_HIGH;
-    s.atmosphere = sf::RenderQuality::QUALITY_MEDIUM;
-    s.ocean = sf::RenderQuality::QUALITY_HIGH;
+    s.windowW = 1000;
+    s.windowH = 800;
+    s.aa = sf::RenderQuality::HIGH;
+    s.shadows = sf::RenderQuality::HIGH;
+    s.ao = sf::RenderQuality::HIGH;
+    s.atmosphere = sf::RenderQuality::MEDIUM;
+    s.ocean = sf::RenderQuality::HIGH;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

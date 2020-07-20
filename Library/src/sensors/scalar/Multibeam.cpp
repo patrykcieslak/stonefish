@@ -117,7 +117,7 @@ void Multibeam::setNoise(Scalar stdDev)
 
 ScalarSensorType Multibeam::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_MULTIBEAM;
+    return ScalarSensorType::MULTIBEAM;
 }
 
 Scalar Multibeam::getAngleRange()

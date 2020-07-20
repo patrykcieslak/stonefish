@@ -34,19 +34,15 @@ namespace sf
 {
 
 ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency, 
-    unsigned int spp, Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
+    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
 {
-    samples = spp < 1 ? 1 : (spp > 16 ? 16 : spp);
     depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
     newDataCallback = NULL;
-    imageData = new uint8_t[resX*resY*3]; //RGB color
-    memset(imageData, 0, resX*resY*3);
+    imageData = NULL;
 }
 
 ColorCamera::~ColorCamera()
 {
-    if(imageData != NULL)
-        delete [] imageData;
     glCamera = NULL;
 }
     
@@ -71,12 +67,12 @@ void* ColorCamera::getImageDataPointer(unsigned int index)
 
 VisionSensorType ColorCamera::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_COLOR_CAMERA;
+    return VisionSensorType::COLOR_CAMERA;
 }
     
 void ColorCamera::InitGraphics()
 {
-    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, samples);
+    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
     glCamera->setCamera(this);
     UpdateTransform();
     glCamera->UpdateTransform();
@@ -97,10 +93,14 @@ void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callba
     newDataCallback = callback;
 }
 
-void ColorCamera::NewDataReady(unsigned int index)
+void ColorCamera::NewDataReady(void* data, unsigned int index)
 {
     if(newDataCallback != NULL)
+    {
+        imageData = (GLubyte*)data;
         newDataCallback(this);
+        imageData = NULL;
+    }
 }
 
 void ColorCamera::InternalUpdate(Scalar dt)

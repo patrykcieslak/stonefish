@@ -29,7 +29,9 @@
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"
-#include "graphics/OpenGLOcean.h"
+#include "graphics/OpenGLFlatOcean.h"
+#include "graphics/OpenGLRealOcean.h"
+#include "actuators/Thruster.h"
 
 namespace sf
 {
@@ -51,8 +53,7 @@ Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(u
     liquid = l;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
-    waterType = Scalar(0.5);
-    turbidity = 1.0;
+    waterType = Scalar(0.0);
     glOcean = NULL;
 }
 
@@ -78,12 +79,7 @@ Scalar Ocean::getWaterType()
 {
     return waterType;
 }
-    
-Scalar Ocean::getTurbidity()
-{
-    return turbidity;
-}
-    
+        
 OpenGLOcean* Ocean::getOpenGLOcean()
 {
     return glOcean;
@@ -91,7 +87,7 @@ OpenGLOcean* Ocean::getOpenGLOcean()
 
 ForcefieldType Ocean::getForcefieldType()
 {
-    return FORCEFIELD_OCEAN;
+    return ForcefieldType::OCEAN;
 }
 
 Fluid Ocean::getLiquid() const
@@ -99,15 +95,12 @@ Fluid Ocean::getLiquid() const
     return liquid;
 }
     
-void Ocean::SetupWaterProperties(Scalar type, Scalar turb)
-{
-    waterType = type > Scalar(1) ? Scalar(1) : (type < Scalar(0) ? Scalar(0) : type);
-    turbidity = turb < Scalar(0) ? Scalar(0) : turb;
-    
+void Ocean::SetupWaterProperties(Scalar jerlov)
+{ 
     if(glOcean != NULL)
     {
+        waterType = jerlov > Scalar(1) ? Scalar(1) : (jerlov < Scalar(0) ? Scalar(0) : jerlov);
         glOcean->setWaterType((float)waterType);
-        glOcean->setTurbidity((float)turbidity);
     }
 }
 
@@ -125,7 +118,7 @@ Scalar Ocean::GetDepth(const Vector3& point)
 {
     if(hasWaves()) //Geometric waves
     {
-        GLfloat waveHeight = glOcean->getWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
+        GLfloat waveHeight = glOcean->ComputeWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
         glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), waveHeight);
         wavesDebug.points.push_back(wavePoint);
         return point.z() - Scalar(waveHeight);
@@ -169,7 +162,13 @@ void Ocean::DisableCurrents()
     currentsEnabled = false;
 }
 
-void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world, btCollisionObject* co, bool recompute)
+void Ocean::UpdateCurrentsData()
+{
+    if(glOcean != NULL)
+        glOcean->UpdateOceanCurrentsData(glOceanCurrentsUBOData);
+}
+
+void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
     btRigidBody* rb = btRigidBody::upcast(co);
@@ -193,9 +192,8 @@ void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world
         return;
     
     HydrodynamicsSettings settings;
-    settings.algorithm = fdt;
     
-    if(ent->getType() == ENTITY_SOLID)
+    if(ent->getType() == EntityType::SOLID)
     {
         if(recompute)
         {
@@ -210,26 +208,66 @@ void Ocean::ApplyFluidForces(const FluidDynamicsType fdt, btDynamicsWorld* world
 
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
-    glOcean = new OpenGLOcean((float)oceanState, hydrodynamics);
-    SetupWaterProperties(0.0, 1.0);
+    if(oceanState > 0.0)
+        glOcean = new OpenGLRealOcean(depth, oceanState, hydrodynamics);
+    else
+        glOcean = new OpenGLFlatOcean(depth);
+    SetupWaterProperties(0.2);
 }
 
 std::vector<Renderable> Ocean::Render()
 {
+    std::vector<Actuator*> act;
+    return Render(act);
+}
+
+std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
+{
     std::vector<Renderable> items(0);
     
-    for(unsigned int i=0; i<currents.size(); ++i)
+    //Update currents data
+    glOceanCurrentsUBOData.gravity = glm::vec3(0.f,0.f,9.81f);
+    glOceanCurrentsUBOData.numCurrents = 0;
+
+    if(currentsEnabled)
     {
-        std::vector<Renderable> citems = currents[i]->Render();
-        items.insert(items.end(), citems.begin(), citems.end());
+        for(size_t i=0; i<currents.size(); ++i)
+        {
+            std::vector<Renderable> citems = currents[i]->Render(glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents]);
+            items.insert(items.end(), citems.begin(), citems.end());
+            ++glOceanCurrentsUBOData.numCurrents;
+        }
     }
     
+    for(size_t i=0; i<act.size(); ++i)
+    {
+        if(act[i]->getType() == ActuatorType::THRUSTER)
+        {
+            Thruster* th = (Thruster*)act[i];
+            Transform thFrame = th->getActuatorFrame();
+            Vector3 thPos = thFrame.getOrigin();
+            Vector3 thDir = -thFrame.getBasis().getColumn(0);
+            Scalar R = th->getDiameter()/Scalar(2);
+            Scalar vel = th->getOmega()/Scalar(10);
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
+                                                                             (GLfloat)thPos.getY(), 
+                                                                             (GLfloat)thPos.getZ(), (GLfloat)R);
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].dirV = glm::vec4((GLfloat)thDir.getX(),
+                                                                             (GLfloat)thDir.getY(),
+                                                                             (GLfloat)thDir.getZ(),
+                                                                             (GLfloat)vel);
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].params = glm::vec3(0.f);
+            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].type = 10;
+            ++glOceanCurrentsUBOData.numCurrents;
+        }
+    }
+
     if(wavesDebug.points.size() > 0)
     {
         items.push_back(wavesDebug);
         wavesDebug.points.clear();
     }
-    
+
     return items;
 }
 

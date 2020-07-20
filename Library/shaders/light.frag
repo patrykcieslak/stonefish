@@ -19,10 +19,9 @@
 
 #version 330
 
-uniform vec3 color;
-out vec4 fragColor;
-
-void main()
+//Light shading model
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 {
-	fragColor = vec4(color, 1.0);
+	float diffuse = max(dot(N, L), 0.0);
+	return Lcolor * diffuse * albedo;
 }

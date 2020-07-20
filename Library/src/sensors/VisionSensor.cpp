@@ -37,7 +37,7 @@ VisionSensor::VisionSensor(std::string uniqueName, Scalar frequency) : Sensor(un
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use vision sensors in console simulation! Use graphical simulation if possible.");
     
-    attach = NULL;
+    attach = nullptr;
     o2s = Transform::getIdentity();
 }
 
@@ -47,7 +47,7 @@ VisionSensor::~VisionSensor()
 
 Transform VisionSensor::getSensorFrame()
 {
-    if(attach != NULL)
+    if(attach != nullptr)
         return attach->getOTransform() * o2s;
     else
         return o2s;
@@ -55,12 +55,12 @@ Transform VisionSensor::getSensorFrame()
 
 SensorType VisionSensor::getType()
 {
-    return SensorType::SENSOR_VISION;
+    return SensorType::VISION;
 }
 
-void VisionSensor::AttachToSolid(SolidEntity* solid, const Transform& origin)
+void VisionSensor::AttachToSolid(MovingEntity* solid, const Transform& origin)
 {
-    if(solid != NULL)
+    if(solid != nullptr)
     {
         o2s = origin;
         attach = solid;

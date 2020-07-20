@@ -20,20 +20,21 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Actuator__
 #define __Stonefish_Actuator__
 
 #include "StonefishCommon.h"
+#include "entities/Entity.h"
 
 namespace sf
 {
     struct Renderable;
     
     //! An enum designating a type of the actuator.
-    typedef enum {ACTUATOR_MOTOR, ACTUATOR_SERVO, ACTUATOR_PROPELLER, ACTUATOR_THRUSTER, ACTUATOR_VBS, ACTUATOR_LIGHT} ActuatorType;
+    enum class ActuatorType {MOTOR, SERVO, PROPELLER, THRUSTER, VBS, LIGHT};
     
     //! An abstract class representing any actuator.
     class Actuator
@@ -57,12 +58,21 @@ namespace sf
         //! A method implementing the rendering of the actuator.
         virtual std::vector<Renderable> Render();
         
+        //! A method used to set display mode used for the actuator.
+        /*!
+         \param m flag defining the display mode
+         */
+        void setDisplayMode(DisplayMode m);
+
         //! A method returning the type of the actuator.
         virtual ActuatorType getType() = 0;
 
         //! A method returning the name of the actuator.
         std::string getName();
-        
+    
+    protected:
+        DisplayMode dm;
+
     private:
         std::string name;
     };

@@ -49,11 +49,9 @@ namespace sf
          \param maxRange the maximum measured range [m]
          \param cm the color map used to display sonar data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
-         \param beamHPix the number of samples taken for each beam in the horizontal plane [pix]
-         \param beamVPix the number of samples taken for each beam in the vertical plane [pix]
          */
         FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
-                    Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1), unsigned int beamHPix = 0, unsigned int beamVPix = 0);
+                    Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1));
        
         //! A destructor.
         ~FLS();
@@ -76,7 +74,7 @@ namespace sf
         /*!
          \param index the id of the OpenGL camera (here sonar) uploading the data
          */
-        void NewDataReady(unsigned int index = 0);
+        void NewDataReady(void* data, unsigned int index = 0);
         
         //! A method used to set a callback function called when new data is available.
         /*!
@@ -86,10 +84,34 @@ namespace sf
         
         //! A method implementing the rendering of the sonar dummy.
         std::vector<Renderable> Render();
+
+        //! A method setting the minimum range of the sonar.
+        /*!
+         \param r range [m]
+         */
+        void setRangeMin(Scalar r);
+
+        //! A method setting the minimum range of the sonar.
+        /*!
+         \param r range [m]
+         */
+        void setRangeMax(Scalar r);
+
+        //! A method setting the gain of the sonar.
+        /*!
+         \param g gain factor [1]
+         */
+        void setGain(Scalar g);
+
+        //! A method returning the minimum range of the sonar.
+        Scalar getRangeMin();
         
-        //! A method returning the range limits of the sonar.
-        glm::vec2 getRangeLimits();
-        
+        //! A method returning the maximum range of the sonar.
+        Scalar getRangeMax();
+
+        //! A method returning the gain of the sonar.
+        Scalar getGain();
+
         //! A method returning a pointer to the sonar data.
         /*!
          \param index the id of the OpenGL camera (here sonar) for which the data pointer is requested
@@ -105,7 +127,7 @@ namespace sf
         void getDisplayResolution(unsigned int& x, unsigned int& y);
         
         //! A method returning a pointer to the visualisation image data.
-        GLuint* getDisplayDataPointer();
+        GLubyte* getDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
         VisionSensorType getVisionSensorType();
@@ -115,9 +137,9 @@ namespace sf
         
         OpenGLFLS* glFLS;
         GLfloat* sonarData;
-        GLuint* displayData;
+        GLubyte* displayData;
         glm::vec2 range;
-        glm::ivec2 beamRes;
+        Scalar gain;
         Scalar fovV;
         ColorMap cMap;
         std::function<void(FLS*)> newDataCallback;

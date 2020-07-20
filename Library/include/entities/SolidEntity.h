@@ -28,32 +28,32 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include "core/MaterialManager.h"
-#include "entities/Entity.h"
+#include "entities/MovingEntity.h"
 #include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
     //! An enum designating the type of solid that the body represents.
-    typedef enum {SOLID_POLYHEDRON = 0, SOLID_SPHERE, SOLID_CYLINDER, SOLID_BOX, SOLID_TORUS, SOLID_COMPOUND, SOLID_WING} SolidType;
+    enum class SolidType {POLYHEDRON, SPHERE, CYLINDER, BOX, TORUS, COMPOUND, WING};
     //! An enum designating the type of geometry approximation used for fluid dynamics coefficients predicition.
-    typedef enum {FD_APPROX_AUTO = 0, FD_APPROX_SPHERE, FD_APPROX_CYLINDER, FD_APPROX_ELLIPSOID} GeometryApproxType;
+    enum class GeometryApproxType {AUTO, SPHERE, CYLINDER, ELLIPSOID};
     //! An enum used to define if the body is submerged.
-    typedef enum {INSIDE_FLUID = 0, OUTSIDE_FLUID, CROSSING_FLUID_SURFACE} BodyFluidPosition;
+    enum class BodyFluidPosition {INSIDE, OUTSIDE, CROSSING_SURFACE};
     //! An enum defining what is the medium in which the body moves (affects which forces are computed, needed because it is not possible to change mass during simulation).
     /*!
-     SURFACE_BODY -> no aerodynamics or hydrodynamics
-     FLOATING_BODY -> hydrodynamics with buoyancy
-     SUBMERGED_BODY -> hydrodynamics with buoyancy and added mass
-     AERODYNAMIC_BODY -> aerodynamics
+     SURFACE -> no aerodynamics or hydrodynamics
+     FLOATING -> hydrodynamics with buoyancy
+     SUBMERGED -> hydrodynamics with buoyancy and added mass
+     AERODYNAMIC -> aerodynamics
     */
-    typedef enum {SURFACE_BODY = 0, FLOATING_BODY, SUBMERGED_BODY, AERODYNAMIC_BODY} BodyPhysicsType;
+    enum class BodyPhysicsType {SURFACE, FLOATING, SUBMERGED, AERODYNAMIC};
     
     struct HydrodynamicsSettings;
     class Ocean;
     class Atmosphere;
     
     //! An abstract class representing a rigid body.
-    class SolidEntity : public Entity
+    class SolidEntity : public MovingEntity
     {
     public:
         //! A constructor.
@@ -82,12 +82,6 @@ namespace sf
          \param origin a pose of the body CG in the world frame
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
-        
-        //! A method removing the body from the simulation manager.
-        /*!
-         \param sm a pointer to the simulation manager
-         */
-        void RemoveFromSimulation(SimulationManager* sm);
         
         //! A pure virtual method building a collision shape for the body.
         virtual btCollisionShape* BuildCollisionShape() = 0;
@@ -237,7 +231,7 @@ namespace sf
         void setCGTransform(const Transform& trans);
         
         //! A method returning the type of the entity.
-        EntityType getType();
+        EntityType getType() const;
         
         //! A method returning the transformation from the CG frame to the graphics mesh origin.
         Transform getCG2GTransform() const;
@@ -310,9 +304,6 @@ namespace sf
 	  
 		//! A method returning the hydrodynamic added inertia (diagonal elements).
 		Vector3 getAddedInertia() const;
-	  
-        //! A method returning the material of the body.
-        Material getMaterial() const;
         
         //! A method returning the volume of the body.
         Scalar getVolume() const;
@@ -324,11 +315,11 @@ namespace sf
         */
         void getGeometryApprox(GeometryApproxType& type, std::vector<Scalar>& params) const;
         
-        //! A method returning a copy of the vertices of the physics mesh in physics frame (memory needs to be released manually!).
-        virtual std::vector<Vertex>* getMeshVertices();
-        
         //! A method returning a pointer to the physics mesh.
         const Mesh* getPhysicsMesh();
+
+        //! A method that returns a copy of all physics mesh vertices in body origin frame.
+        virtual std::vector<Vector3>* getMeshVertices() const;
         
         //! A method informing if the body is using buoyancy computation.
         bool isBuoyant() const;
@@ -350,26 +341,8 @@ namespace sf
          */
         void getAABB(Vector3& min, Vector3& max);
         
-        //! A method used to change the rendering style of the object.
-        /*!
-         \param newLookId an index of the graphical material that should be used to render the body
-         */
-        void setLook(int newLookId);
-        
         //! A method used to set if the body CG should be rendered.
         void setDisplayCoordSys(bool enabled);
-        
-        //! A method used to set display mode used for the body.
-        /*!
-         \param m flag defining the display mode
-         */
-        void setDisplayMode(DisplayMode m);
-        
-        //! A method returning the index of the graphical material used in rendering.
-        int getLook() const;
-        
-        //! A method returning the index of the graphical object used in rendering.
-        int getGraphicalObject() const;
         
         //! A method returning the index of the physical object used in rendering.
         int getPhysicalObject() const;
@@ -390,8 +363,7 @@ namespace sf
         btRigidBody* rigidBody;
         btMultiBodyLinkCollider* multibodyCollider;
         
-        Mesh *phyMesh; //Mesh used for physics calculation
-        Material mat;
+        Mesh* phyMesh; //Mesh used for physics calculation
         Scalar thick;
         Scalar volume;
         
@@ -437,10 +409,7 @@ namespace sf
         Vector3 angularAcc;
         
         //Display
-        int lookId;
-        int graObjectId;
         int phyObjectId;
-        DisplayMode dm;
         Renderable submerged;
         
     private:

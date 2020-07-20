@@ -1,0 +1,67 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//N_HALF_BINS - number of histogram bins
+//N_HORI_BEAM_SAMPLES - number of horizontal beam samples
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Two inputs, linear range and recorded intensity.
+layout(rg32f) uniform image2DArray sonarInput;
+
+// Two outputs - intensity for each bin/vertiacal beam sample and number of hits
+layout(rg32f) uniform image2DArray sonarHist;
+
+uniform vec3 range; //min, max, step
+
+vec2 binHistogram[N_HALF_BINS];
+
+void main()
+{
+    uvec3 inDim = imageSize(sonarInput).xyz; //nBeamSamples.x * nBeamSamples.y * 2 
+    
+    if(gl_GlobalInvocationID.x < inDim.x)
+    {
+        for(uint i=0; i<N_HALF_BINS; ++i) //Initialize histogram buffer
+            binHistogram[i] = vec2(0.0); 
+
+        ivec3 sampleCoord;
+        sampleCoord.x = int(gl_GlobalInvocationID.x);
+        sampleCoord.z = int(gl_GlobalInvocationID.y);
+
+        for(int i=0; i<N_HORI_BEAM_SAMPLES; ++i) //For each horizontal beam sample
+        {            
+            sampleCoord.y = i;
+
+            //Get sample value
+            vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
+            if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
+                continue;
+
+            //Compute bin and accumulate intensity data
+            uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
+            binHistogram[bin].x += rangeIntensity.y;
+            binHistogram[bin].y += 1.0;
+        }
+
+        //Store bin values
+        for(uint i=0; i<N_HALF_BINS; ++i)
+            imageStore(sonarHist, ivec3(gl_GlobalInvocationID.x, i, gl_GlobalInvocationID.y), vec4(binHistogram[i].xy, 0.0, 0.0));
+    }
+}

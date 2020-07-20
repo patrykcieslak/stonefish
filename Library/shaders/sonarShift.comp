@@ -1,0 +1,39 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#version 430
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// One input
+layout(r32f) uniform image2D sonarOutputIn;
+
+// One output
+layout(r32f) uniform image2D sonarOutputOut;
+
+void main()
+{
+    uvec2 dim = imageSize(sonarOutputOut).xy;
+
+    if(gl_GlobalInvocationID.x < dim.x && gl_GlobalInvocationID.y < dim.y)
+    {
+        float data = imageLoad(sonarOutputIn, ivec2(gl_GlobalInvocationID.x, int(gl_GlobalInvocationID.y)-1)).r;
+        imageStore(sonarOutputOut, ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y), vec4(data));
+    }
+}

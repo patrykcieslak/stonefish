@@ -47,11 +47,11 @@ namespace sf
          \param height the height of the view [px]
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
          \param range the minimum and maximum rendering distance of the camera [m]
-         \param spp number of samples used (>1 means multisampling)
+         \param continuousUpdate a flag indicating if this camera has to be always updated
          */
         OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                          GLint originX, GLint originY, GLint width, GLint height,
-                         GLfloat horizontalFovDeg, glm::vec2 range, GLuint spp = 1);
+                         GLfloat horizontalFovDeg, glm::vec2 range, bool continuousUpdate);
         
         //! A destructor.
         ~OpenGLRealCamera();
@@ -59,8 +59,9 @@ namespace sf
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
+         \param updated a flag indicating if view content was updated
          */
-        void DrawLDR(GLuint destinationFBO);
+        void DrawLDR(GLuint destinationFBO, bool updated);
         
         //! A method that sets up the camera.
         void SetupCamera();
@@ -106,7 +107,8 @@ namespace sf
     private:
         ColorCamera* camera;
         GLuint cameraFBO;
-        GLuint cameraColorTex;
+        GLuint cameraColorTex[2];
+        GLuint cameraPBO;
         
         glm::mat4 cameraTransform;
         glm::vec3 eye;
@@ -116,7 +118,7 @@ namespace sf
         glm::vec3 tempDir;
         glm::vec3 tempUp;
         bool _needsUpdate;
-        bool update;
+        bool newData;
     };
 }
 

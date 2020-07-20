@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLConsole__
@@ -74,7 +74,6 @@ namespace sf
         OpenGLPrinter* printer;
         GLuint logoTexture;
         GLuint consoleVAO;
-        GLuint texQuadVBO;
         GLSLShader* texQuadShader;
     };
 }

@@ -41,36 +41,30 @@ bool OpenGLState::blend = false;
 bool OpenGLState::cullFace = false;
 GLuint OpenGLState::activeTexture = 0;
 std::vector<std::pair<GLenum, GLuint>> OpenGLState::textures = std::vector<std::pair<GLuint, GLuint>>(0);
+GLfloat OpenGLState::maxAniso = -1.f;
 
 void OpenGLState::Init()
 {
-    cInfo("Checking GPU capabilities...");
     GLint texUnits;
-    GLint maxTexSize;
-    GLint maxTexLayers;
-    GLint maxUniforms;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &texUnits);
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
-    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTexLayers);
-    glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniforms);
-    cInfo("Number of texture units available: %d", texUnits);
-    cInfo("Maximum texture size: %d", maxTexSize);
-    cInfo("Maximum number of texture layers: %d", maxTexLayers);
-    cInfo("Maximum number of fragment shader uniforms: %d", maxUniforms);
-    
-    if(GLEW_VERSION_3_3)
+
+    if(maxAniso < 0.f)
     {
-        cInfo("OpenGL 3.3 supported.");
-        
-        if(GLEW_VERSION_4_3)
-            cInfo("OpenGL 4.3 supported.");
-        else
-            cWarning("OpenGL 4.3 not supported!");
+        cInfo("Checking GPU capabilities...");
+        GLint maxTexSize;
+        GLint maxTexLayers;
+        GLint maxUniforms;    
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+        glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTexLayers);
+        glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniforms);
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxAniso);
+        cInfo("Number of texture units available: %d", texUnits);
+        cInfo("Maximum texture size: %d", maxTexSize);
+        cInfo("Maximum number of texture layers: %d", maxTexLayers);
+        cInfo("Maximum number of fragment shader uniforms: %d", maxUniforms);
+        cInfo("Setting up OpenGL...");
     }
-    else
-        cCritical("OpenGL 3.3 not supported - minimum requirements not met!");
-    
-    cInfo("Setting up OpenGL...");
+
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
@@ -79,9 +73,9 @@ void OpenGLState::Init()
     glDepthFunc(GL_LEQUAL);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    glEnable(GL_DEPTH_CLAMP);
     glPointSize(1.f);
     glLineWidth(1.f);
-    glLineStipple(3, 0xE4E4);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindVertexArray(0);
     glUseProgram(0);
@@ -244,6 +238,11 @@ void OpenGLState::UnbindTexture(GLuint unit)
     
     glBindTexture(textures[unit].first, 0);
     textures[unit].second = 0;
+}
+
+GLfloat OpenGLState::GetMaxAnisotropy()
+{
+    return maxAniso;
 }
 
 OpenGLState::OpenGLState() noexcept

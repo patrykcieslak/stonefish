@@ -139,7 +139,7 @@ void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
 
 CommType AcousticModem::getType()
 {
-    return CommType::COMM_ACOUSTIC;
+    return CommType::ACOUSTIC;
 }
 
 void AcousticModem::SendMessage(std::string data)

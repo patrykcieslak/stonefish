@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/IMGUI.h"
@@ -34,7 +34,6 @@
 #include "sensors/ScalarSensor.h"
 #include "sensors/Sample.h"
 #include "utils/SystemUtil.hpp"
-#include "utils/stb_image.h"
 
 namespace sf
 {
@@ -79,56 +78,10 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     plainPrinter = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
     backgroundMargin = 5.f;
     
-    //Load logo texture - can't use material class because it writes to the console
-    int width, height, channels;
-    std::string path = GetShaderPath() + "logo_gray_64.png";
-    
-    // Allocate image; fail out on error
-    unsigned char* dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
-    if(dataBuffer != NULL)
-    {
-        // Allocate an OpenGL texture
-        glGenTextures(1, &logoTexture);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
-        // Upload texture to memory
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
-        // Set certain properties of texture
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Wrap texture around
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // Release internal buffer
-        stbi_image_free(dataBuffer);
-        OpenGLState::UnbindTexture(TEX_BASE);
-    }
-    else
-        logoTexture = 0;
-    
+    //Load logo texture
+    logoTexture = OpenGLContent::LoadInternalTexture("logo_gray_64.png", true);
     //Load corner texture
-    path = GetShaderPath() + "gui.png";
-    
-    // Allocate image; fail out on error
-    dataBuffer = stbi_load(path.c_str(), &width, &height, &channels, 4);
-    if(dataBuffer != NULL)
-    {
-        // Allocate an OpenGL texture
-        glGenTextures(1, &guiTexture);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, guiTexture);
-        // Upload texture to memory
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
-        // Set certain properties of texture
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Wrap texture around
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // Release internal buffer
-        stbi_image_free(dataBuffer);
-        OpenGLState::UnbindTexture(TEX_BASE);
-    }
-    else
-        guiTexture = 0;
+    guiTexture = OpenGLContent::LoadInternalTexture("gui.png", true);
     
     //Generate VAO
     glGenVertexArrays(1, &guiVAO);
@@ -297,7 +250,7 @@ void IMGUI::GenerateBackground()
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     
-    for(int i=0; i<3; i++)
+    for(int i=0; i<3; ++i)
     {
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);

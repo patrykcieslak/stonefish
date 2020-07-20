@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_LinkSensor__
@@ -30,7 +30,7 @@
 
 namespace sf
 {
-    class SolidEntity;
+    class MovingEntity;
     class FeatherstoneEntity;
     
     //! An abstract class representing a sensor attached to a rigid body.
@@ -62,7 +62,7 @@ namespace sf
          \param solid a pointer to a rigid body
          \param origin a transformation from the body frame to the sensor frame
          */
-        void AttachToSolid(SolidEntity* solid, const Transform& origin);
+        void AttachToSolid(MovingEntity* solid, const Transform& origin);
         
         //! A method returning the current sensor frame in world.
         Transform getSensorFrame();
@@ -74,7 +74,7 @@ namespace sf
         std::string getLinkName();
         
     protected:
-        SolidEntity* attach;
+        MovingEntity* attach;
         Transform o2s;
     };
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/FeatherstoneEntity.h"
@@ -64,9 +64,9 @@ FeatherstoneEntity::~FeatherstoneEntity()
     joints.clear();
 }
 
-EntityType FeatherstoneEntity::getType()
+EntityType FeatherstoneEntity::getType() const
 {
-    return ENTITY_FEATHERSTONE;
+    return EntityType::FEATHERSTONE;
 }
 
 void FeatherstoneEntity::getAABB(Vector3& min, Vector3& max)

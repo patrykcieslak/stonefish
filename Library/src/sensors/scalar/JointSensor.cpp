@@ -40,7 +40,7 @@ JointSensor::JointSensor(std::string uniqueName, Scalar frequency, int historyLe
 
 SensorType JointSensor::getType()
 {
-    return SensorType::SENSOR_JOINT;
+    return SensorType::JOINT;
 }
 
 Transform JointSensor::getSensorFrame()

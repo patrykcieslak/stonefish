@@ -38,9 +38,15 @@ Vector3 Uniform::GetVelocityAtPoint(const Vector3& p)
     return v;
 }
 
-std::vector<Renderable> Uniform::Render()
+std::vector<Renderable> Uniform::Render(VelocityFieldUBO& ubo)
 {
     std::vector<Renderable> items(0);
+    Scalar vel = v.length();
+    Vector3 dir = vel > Scalar(0) ? (v/vel) : Vector3(0,0,0);
+    ubo.posR = glm::vec4(0.f);
+    ubo.dirV = glm::vec4((GLfloat)dir.getX(), (GLfloat)dir.getY(), (GLfloat)dir.getZ(), (GLfloat)vel);
+    ubo.params= glm::vec3(0.f);
+    ubo.type = 0;
     return items;
 }
 

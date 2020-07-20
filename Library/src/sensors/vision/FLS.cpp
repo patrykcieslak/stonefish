@@ -30,32 +30,54 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLFLS.h"
 
+#define SOUND_VELOCITY_WATER Scalar(1531) //Sea water
+
 namespace sf
 {
 
 FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
-    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency, unsigned int beamHPix, unsigned int beamVPix)
+    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
-    range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
-    range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 0.1f;
-    fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(180) ? Scalar(180) : verticalFOVDeg);
+    range.x = 0.f;
+    range.y = 0.f;
+    setRangeMax(maxRange);
+    setRangeMin(minRange);
+    gain = Scalar(1);
+    
+    if(frequency < Scalar(0))
+    {
+        Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+        setUpdateFrequency(Scalar(1)/pulseTime);
+    }
+    fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
     cMap = cm;
-    beamRes.x = beamHPix == 0 ? 5 : (GLint)beamHPix;
-    beamRes.y = beamVPix == 0 ? (GLint)ceil(fovV*beamRes.x*range.y) : (GLint)beamVPix;
-    newDataCallback = NULL;
-    sonarData = new GLfloat[resX*resY]; // Buffer for storing range data
+    sonarData = NULL;
     displayData = NULL;
-    memset(sonarData, 0, resX*resY*sizeof(GLfloat));
+    newDataCallback = NULL;
 }
 
 FLS::~FLS()
 {
-    if(sonarData != NULL)
-        delete [] sonarData;
-    if(displayData != NULL)
-        delete [] displayData;
+    if(displayData != NULL) delete [] displayData;
     glFLS = NULL;
+}
+
+void FLS::setRangeMin(Scalar r)
+{
+    range.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range.y) ? (GLfloat)r : range.x);
+}
+
+void FLS::setRangeMax(Scalar r)
+{
+    range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
+    Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+    setUpdateFrequency(Scalar(1)/pulseTime);
+}
+
+void FLS::setGain(Scalar g)
+{
+    gain = g > Scalar(0) ? g : Scalar(1);
 }
 
 void* FLS::getImageDataPointer(unsigned int index)
@@ -71,35 +93,45 @@ void FLS::getDisplayResolution(unsigned int& x, unsigned int& y)
     delete [] viewport;
 }
 
-GLuint* FLS::getDisplayDataPointer()
+GLubyte* FLS::getDisplayDataPointer()
 {
     return displayData;
 }
 
-glm::vec2 FLS::getRangeLimits()
+Scalar FLS::getRangeMin()
 {
-    return range;
+    return Scalar(range.x);
+}
+
+Scalar FLS::getRangeMax()
+{
+    return Scalar(range.y);
+}
+
+Scalar FLS::getGain()
+{
+    return gain;
 }
     
 VisionSensorType FLS::getVisionSensorType()
 {
-    return VisionSensorType::SENSOR_FLS;
+    return VisionSensorType::FLS;
 }
 
 void FLS::InitGraphics()
 {
-    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, (GLfloat)fovH, (GLfloat)fovV, 
-                          (GLint)resX, beamRes.x, beamRes.y, range.x, range.y, (GLint)resY);
+    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
+                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, false);
     glFLS->setSonar(this);
     glFLS->setColorMap(cMap);
     UpdateTransform();
     glFLS->UpdateTransform();
     InternalUpdate(0);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glFLS);
-    
-    GLint* viewport = glFLS->GetViewport();
-    displayData = new GLuint[viewport[2] * viewport[3] * 3];
-    delete [] viewport;
+
+    unsigned int w, h;
+    getDisplayResolution(w, h);
+    displayData = new GLubyte[w*h*3];
 }
 
 void FLS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -115,10 +147,23 @@ void FLS::InstallNewDataHandler(std::function<void(FLS*)> callback)
     newDataCallback = callback;
 }
 
-void FLS::NewDataReady(unsigned int index)
+void FLS::NewDataReady(void* data, unsigned int index)
 {
     if(newDataCallback != NULL)
-        newDataCallback(this);
+    {
+        if(index == 0)
+        {
+            unsigned int w, h;
+            getDisplayResolution(w, h);
+            memcpy(displayData, data, w*h*3);
+        }
+        else
+        {
+            sonarData = (GLfloat*)data;
+            newDataCallback(this);
+            sonarData = NULL;
+        }
+    }
 }
 
 void FLS::InternalUpdate(Scalar dt)
@@ -132,36 +177,56 @@ std::vector<Renderable> FLS::Render()
     
     Renderable item;
     item.model = glMatrixFromTransform(getSensorFrame());
-    item.type = RenderableType::SENSOR_LINES;
+    item.type = RenderableType::SENSOR_LINES;    
     
-    //Create camera dummy
+    //Create sonar dummy
     GLfloat iconSize = 0.5f;
-    GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
-    GLfloat y = iconSize*tanf(fovV/360.f*M_PI);
-    
+    int div = 12;
+    GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
+    GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * iconSize;
+    GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * iconSize;
+    //Arcs
+    GLfloat hAngle = -fovStep*(div/2);
+    for(int i=0; i<=div; ++i)
+    {
+        GLfloat z = cosf(hAngle) * cosVAngle;
+        GLfloat x = sinf(hAngle) * cosVAngle;
+        item.points.push_back(glm::vec3(x, sinVAngle, z));
+        if(i > 0 && i < div)
+            item.points.push_back(glm::vec3(x, sinVAngle, z));
+        hAngle += fovStep;
+    }
+    hAngle = -fovStep*(div/2);
+    for(int i=0; i<=div; ++i)
+    {
+        GLfloat z = cosf(hAngle) * cosVAngle;
+        GLfloat x = sinf(hAngle) * cosVAngle;
+        item.points.push_back(glm::vec3(x, -sinVAngle, z));
+        if(i > 0 && i < div)
+            item.points.push_back(glm::vec3(x, -sinVAngle, z));
+        hAngle += fovStep;
+    }
+    //Ends
+    hAngle = -fovStep*(div/2);
+    GLfloat zs = cosf(hAngle) * cosVAngle;
+    GLfloat xs = sinf(hAngle) * cosVAngle;
+    item.points.push_back(glm::vec3(xs, sinVAngle, zs));
+    item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
+    hAngle = fovStep*(div/2);
+    GLfloat ze = cosf(hAngle) * cosVAngle;
+    GLfloat xe = sinf(hAngle) * cosVAngle;
+    item.points.push_back(glm::vec3(xe, sinVAngle, ze));
+    item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+    //Pyramid
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(x, -y, iconSize));
+    item.points.push_back(glm::vec3(xs, sinVAngle, zs));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(x,  y, iconSize));
+    item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
+    item.points.push_back(glm::vec3(xe, sinVAngle, ze));
     item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-x,  y, iconSize));
-    
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    item.points.push_back(glm::vec3(x, y, iconSize));
-    item.points.push_back(glm::vec3(x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    
-    item.points.push_back(glm::vec3(-0.5f*x, -y, iconSize));
-    item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
-    item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
-    item.points.push_back(glm::vec3(0.5f*x, -y, iconSize));
-    
+    item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+
     items.push_back(item);
     return items;
 }

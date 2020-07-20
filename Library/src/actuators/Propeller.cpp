@@ -65,7 +65,7 @@ Propeller::~Propeller()
 
 ActuatorType Propeller::getType()
 {
-    return ActuatorType::ACTUATOR_PROPELLER;
+    return ActuatorType::PROPELLER;
 }
 
 void Propeller::setSetpoint(Scalar s)
@@ -162,7 +162,7 @@ std::vector<Renderable> Propeller::Render()
     item.type = RenderableType::SOLID;
     item.materialName = prop->getMaterial().name;
     item.objectId = prop->getGraphicalObject();
-    item.lookId = prop->getLook();
+    item.lookId = dm == DisplayMode::GRAPHICAL ? prop->getLook() : -1;
 	item.model = glMatrixFromTransform(propTrans);
     items.push_back(item);
     

@@ -40,7 +40,7 @@
 #include <utils/SystemUtil.hpp>
 
 JointsTestManager::JointsTestManager(sf::Scalar stepsPerSecond) 
-  : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE, sf::FluidDynamicsType::GEOMETRY_BASED)
+  : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
 }
 
@@ -66,55 +66,55 @@ void JointsTestManager::BuildScenario()
     AddStaticEntity(floor, sf::I4());
     
     //----Fixed Joint----
-    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-3.0)));
     
-    sf::Sphere* sph = new sf::Sphere("Sph1", sf::Scalar(0.2), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE_BODY, "orange");
+    sf::Sphere* sph = new sf::Sphere("Sph1", sf::Scalar(0.2), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "orange");
     AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(-2.0,-0.5,-3.0)));
     
     sf::FixedJoint* fixed = new sf::FixedJoint("Fix", box, sph);
     AddJoint(fixed);
     
     //----Revolute Joint----
-    box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.5,0.0,-1.0)));
     
-    sf::Box* box2 = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "orange");
+    sf::Box* box2 = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "orange");
     AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(0.5,0.2,-1.0)));
     
     sf::RevoluteJoint* revo = new sf::RevoluteJoint("Revolute", box, box2, sf::Vector3(0.5,0.1,-0.9), sf::Vector3(0,1,0), false);
     AddJoint(revo);
     
-    sph = new sf::Sphere("Sph2", sf::Scalar(0.2), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    sph = new sf::Sphere("Sph2", sf::Scalar(0.2), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-3.0)));
     
     revo = new sf::RevoluteJoint("RevoluteFix", sph, sf::Vector3(0.0,1.0,-3.0), sf::Vector3(1.0,0.0,0.0));
     AddJoint(revo);
     
     //----Spherical Joint----
-    sph = new sf::Sphere("Sph3", sf::Scalar(0.2), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    sph = new sf::Sphere("Sph3", sf::Scalar(0.2), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0, -2.0, -1.0)));
-    sf::Sphere* sph2 = new sf::Sphere("Sph4", sf::Scalar(0.15), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "orange");
+    sf::Sphere* sph2 = new sf::Sphere("Sph4", sf::Scalar(0.15), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "orange");
     AddSolidEntity(sph2, sf::Transform(sf::IQ(), sf::Vector3(0.0, -2.2, -0.4)));
     
     sf::SphericalJoint* spher = new sf::SphericalJoint("Spherical", sph, sph2, sf::Vector3(0.0, -2.0, -0.6));
     AddJoint(spher);
     
     //----Prismatic Joint----
-    box = new sf::Box("Box4", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    box = new sf::Box("Box4", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(1.0,0.0,-0.051)));
     
-    box2 = new sf::Box("Box5", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "orange");
+    box2 = new sf::Box("Box5", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "orange");
     AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(1.0,0.0,-0.5)));
     
     sf::PrismaticJoint* trans = new sf::PrismaticJoint("Prismatic", box, box2, sf::Vector3(0.5,0,-1.0));
     AddJoint(trans);
     
     //----Cylindrical Joint----
-    box = new sf::Box("Box6", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "green");
+    box = new sf::Box("Box6", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "green");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.051)));
     
-    box2 = new sf::Box("Box7", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE_BODY, "orange");
+    box2 = new sf::Box("Box7", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", sf::BodyPhysicsType::SURFACE, "orange");
     AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.5)));
     
     sf::CylindricalJoint* cyli = new sf::CylindricalJoint("Cylindrical", box, box2, sf::Vector3(-1.0, 0.050, -0.25), sf::Vector3(0,0,1));

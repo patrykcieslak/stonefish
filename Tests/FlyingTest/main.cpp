@@ -31,11 +31,11 @@ int main(int argc, const char * argv[])
     sf::RenderSettings s;
     s.windowW = 1200;
     s.windowH = 900;
-    s.msaa = true;
-    s.shadows = sf::RenderQuality::QUALITY_HIGH;
-    s.ao = sf::RenderQuality::QUALITY_HIGH;
-    s.atmosphere = sf::RenderQuality::QUALITY_HIGH;
-    s.ocean = sf::RenderQuality::QUALITY_DISABLED;
+    s.aa = sf::RenderQuality::HIGH;
+    s.shadows = sf::RenderQuality::HIGH;
+    s.ao = sf::RenderQuality::HIGH;
+    s.atmosphere = sf::RenderQuality::HIGH;
+    s.ocean = sf::RenderQuality::DISABLED;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

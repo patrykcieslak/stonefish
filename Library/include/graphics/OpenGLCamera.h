@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLCamera__
@@ -62,7 +62,7 @@ namespace sf
         glm::vec4 float2Offsets[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
         glm::vec4 jitters[AO_RANDOMTEX_SIZE*AO_RANDOMTEX_SIZE];
     };
-    
+ 
     class GLSLShader;
     class SolidEntity;
     
@@ -77,9 +77,8 @@ namespace sf
          \param width the width of the view [px]
          \param height the height of the view [px]
          \param range the minimum and maximum rendering distance of the camera [m]
-         \param spp number of samples used when rendering (>1 means multisampling)
          */
-        OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, glm::vec2 range, GLuint spp);
+        OpenGLCamera(GLint originX, GLint originY, GLint width, GLint height, glm::vec2 range);
         
         //! A destructor.
         virtual ~OpenGLCamera();
@@ -87,8 +86,9 @@ namespace sf
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
+         \param updated a flag indicating if view content was updated
          */
-        virtual void DrawLDR(GLuint destinationFBO);
+        virtual void DrawLDR(GLuint destinationFBO, bool updated);
         
         //! A method drawing the ambient occlusion effect.
         /*!
@@ -104,6 +104,14 @@ namespace sf
         
         //! A method to set current view matrix.
         void SetViewTransform();
+
+        //! A method used to determine which buffers are drawn during rendering.
+        /*!
+         \param colorBufferIndex the id of the color buffer to be used for rendering
+         \param normalBuffer a flag indicating if normal buffer should be written
+         \param clearBuffers a flag indicating if buffers should be cleared
+         */
+        void SetRenderBuffers(GLuint colorBufferIndex, bool normalBuffer, bool clearBuffers);
         
         //! A method to generate a ray in world space (picking).
         /*!
@@ -113,15 +121,11 @@ namespace sf
          */
         glm::vec3 Ray(GLint x, GLint y);
         
-        //! A method to generate the linearised depth textures.
+        //! A method to generate a linear depth texture from the normal depth buffer.
         /*!
-         \param sampleId the index of the sample to read (important for multisampled rendering buffers)
-         \param frontFace a flag defining if the depth should be generated for front or back faces
-         */
-        void GenerateLinearDepth(int sampleId, bool frontFace);
-         
-        //! A method which blits the rendering buffer to screen for postprocessing.
-        void EnterPostprocessing();
+         \param front a flag indicating if the depth should be generated for front or back faces
+        */
+        void GenerateLinearDepth(bool front);
         
         //! A method to show the color texture.
         /*!
@@ -136,11 +140,17 @@ namespace sf
          */
         void ShowLinearDepthTexture(glm::vec4 rect, bool frontFace);
         
-        //! A method to show the view/normal texture.
+        //! A method to show the view-normal texture.
         /*!
          \param rect the rectangle in which to render the texture on screen
          */
         void ShowViewNormalTexture(glm::vec4 rect);
+
+        //! A method to show the depth-stencil texture.
+        /*!
+         \param rect the rectangle in which to render the texture on screen
+         */
+        void ShowDepthStencilTexture(glm::vec4 rect);
         
         //! A method to show the deinterleaved depth texture (HBAO).
         /*!
@@ -165,9 +175,6 @@ namespace sf
         //! A method that returns the projection matrix.
         glm::mat4 GetProjectionMatrix() const;
         
-        //! A method that returns the infinite projection matrix.
-        glm::mat4 GetInfiniteProjectionMatrix() const;
-        
         //! A method that returns the horizontal field of view.
         GLfloat GetFOVX() const;
         
@@ -175,22 +182,29 @@ namespace sf
         GLfloat GetFOVY() const;
         
         //! A method that returns the near clip plane distance.
-        GLfloat GetNearClip();
+        GLfloat GetNearClip() const;
         
         //! A method that returns the far clip plane distance.
-        GLfloat GetFarClip();
+        GLfloat GetFarClip() const;
         
         //! A method to set the exposure compensation factor.
         /*!
          \param ec exposure compensation factor
          */
         void setExposureCompensation(GLfloat ec);
-        
+
         //! A method returning the exposure compensation factor.
         GLfloat getExposureCompensation();
-        
+
+        //! A method returning the postprocessing framebuffer of the camera.
+        GLuint getPostprocessFBO();
+
         //! A method returning the id of the color texture.
-        GLuint getColorTexture();
+        /*!
+         \param index the id of the texture in the list
+         \return OpenGL id of the texture
+         */
+        GLuint getColorTexture(unsigned int index);
         
         //! A method returning the id of the final texture.
         GLuint getFinalTexture();
@@ -214,30 +228,38 @@ namespace sf
         
         //! A method informing if view is using ambient occlusion.
         bool hasAO();
-        
+		
+		//! A method informing if HDR tone mapping is enabled.
+		bool usingToneMapping();
+		
+		//! A method informing if auto exposure function is enabled.
+        bool usingAutoExposure();
+		
         //! A static method to load shaders.
-        static void Init();
+        static void Init(const RenderSettings& rSettings);
         
         //! A static method to destroy shaders.
         static void Destroy();
         
     protected:
-        //Multisampled float textures
-        GLuint renderColorTex;
+        //Buffers
+        GLuint renderColorTex[2];
         GLuint renderViewNormalTex;
         GLuint renderDepthStencilTex;
-        
-        //Float texture
-        GLuint lightMeterFBO;
-        GLuint lightMeterTex;
+        GLuint histogramSSBO;
+        GLuint histogramBins;
+        glm::vec2 histogramRange;
+        GLuint exposureTex;
         GLfloat exposureComp;
+        bool autoExposure;
+		bool toneMapping;
+        bool antiAliasing;
+        GLuint lastActiveRenderColorBuffer;
         
         //Postprocessing
         GLuint postprocessFBO;
         GLuint postprocessTex[2];
         GLuint postprocessStencilTex;
-        int activePostprocessTexture;
-        
         GLuint linearDepthFBO;
         GLuint linearDepthTex[2];
         
@@ -254,22 +276,21 @@ namespace sf
         
         //Data
         GLuint aoFactor;
-        GLuint samples;
         GLfloat fovx;
         GLfloat near;
         GLfloat far;
         glm::mat4 projection;
         
         //Shaders
-        static GLSLShader** depthAwareBlurShader;
-        static GLSLShader* lightMeterShader;
-        static GLSLShader* tonemapShader;
-        static GLSLShader** depthLinearizeShader; //Two shaders -> no msaa/msaa
+        static GLSLShader** tonemappingShaders;
+        static GLSLShader* depthLinearizeShader;
         static GLSLShader* aoDeinterleaveShader;
-        static GLSLShader** aoCalcShader;         //Two shaders -> no msaa/msaa
+        static GLSLShader* aoCalcShader;
         static GLSLShader* aoReinterleaveShader;
         static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
-        static GLSLShader** ssrShader;            //Two shaders -> no msaa/msaa
+        static GLSLShader* ssrShader;
+        static GLSLShader* fxaaShader;
+        static GLSLShader* flipShader;
     };
 }
 

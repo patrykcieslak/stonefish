@@ -53,7 +53,7 @@ void Compass::setNoise(Scalar headingStdDev)
 
 ScalarSensorType Compass::getScalarSensorType()
 {
-    return ScalarSensorType::SENSOR_COMPASS;
+    return ScalarSensorType::COMPASS;
 }
 
 }

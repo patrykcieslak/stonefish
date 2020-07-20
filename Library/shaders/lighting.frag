@@ -52,24 +52,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-//Definitions
-struct PointLight 
-{
-	vec3 position;
-	vec3 color;
-};
-
-struct SpotLight 
-{
-	vec3 position;
-	vec3 direction;
-	vec3 color;
-	float angle;
-	mat4 clipSpace;
-	float zNear;
-	float zFar;
-	vec2 radius;
-};
+#version 330
 
 //Constants
 const float sunLightRadius = 0.03;
@@ -439,26 +422,28 @@ const vec2 Poisson128[128] = vec2[](
 );
 
 //Inputs
-in vec3 fragPos;
 uniform vec3 eyePos;
 uniform vec3 viewDir;
 
-uniform PointLight pointLights[MAX_POINT_LIGHTS];
-uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
-uniform int numPointLights;
-uniform int numSpotLights;
+layout (std140) uniform SunSky
+{
+    mat4 sunClipSpace[4];
+    vec4 sunFrustumNear;
+    vec4 sunFrustumFar;
+    vec3 sunDirection;
+	float planetRadiusInUnits;
+	vec3 whitePoint;
+    float atmLengthUnitInMeters;
+};
+
+#inject "lightingDef.glsl"
+
 uniform sampler2DArray spotLightsDepthMap;
 uniform sampler2DArrayShadow spotLightsShadowMap;
-
-uniform vec3 sunDirection;
-uniform mat4 sunClipSpace[4];
-uniform float sunFrustumNear[4];
-uniform float sunFrustumFar[4];
 uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
-uniform float shadowMapSize;
 
-vec3 ShadingModel(vec3 N, vec3 toEye, vec3 toLight, vec3 albedo);
+vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo);
 
 // Derivatives of light-space depth with respect to texture2D coordinates
 vec2 depthGradient(vec2 uv, float z)
@@ -577,20 +562,20 @@ float pcfFilter(
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float SpotShadow(int id)
+float SpotShadow(int id, vec3 P)
 {
 	//1. Compute search parameters
-	vec4 fragPosLight = spotLights[id].clipSpace * vec4(fragPos, 1.0);
-	vec2 uv = fragPosLight.xy/fragPosLight.w;
-	float z = fragPosLight.z/fragPosLight.w;
+	vec4 posLight = spotLights[id].clipSpace * vec4(P, 1.0);
+	vec2 uv = posLight.xy/posLight.w;
+	float z = posLight.z/posLight.w;
 	vec2 dz_duv = depthGradient(uv, z);
-	float zEye = linearDepthPersp(z, spotLights[id].zNear, spotLights[id].zFar);
+	float zEye = linearDepthPersp(z, spotLights[id].frustumNear, spotLights[id].frustumFar);
 	
     //2. Blocker search
     float accumBlockerDepth;
 	float numBlockers;
 	float maxBlockers;
-    vec2 _searchRegionRadiusUV = searchRegionRadiusUV(spotLights[id].radius, spotLights[id].zNear, zEye); 
+    vec2 _searchRegionRadiusUV = searchRegionRadiusUV(spotLights[id].radius.xy, spotLights[id].frustumNear, zEye); 
     findBlocker(id, spotLightsDepthMap, accumBlockerDepth, numBlockers, maxBlockers, 
 		uv, z, dz_duv, _searchRegionRadiusUV);
 
@@ -599,40 +584,55 @@ float SpotShadow(int id)
 
     //3. Penumbra size calculation
     float avgBlockerDepth = accumBlockerDepth / numBlockers;
-    float avgBlockerDepthWorld = linearDepthPersp(avgBlockerDepth, spotLights[id].zNear, spotLights[id].zFar);
-    vec2 _penumbraRadiusUV = penumbraRadiusUV(spotLights[id].radius, zEye, avgBlockerDepthWorld);
-    vec2 filterRadius = projectToLightUV(_penumbraRadiusUV, spotLights[id].zNear, zEye);
+    float avgBlockerDepthWorld = linearDepthPersp(avgBlockerDepth, spotLights[id].frustumNear, spotLights[id].frustumFar);
+    vec2 _penumbraRadiusUV = penumbraRadiusUV(spotLights[id].radius.xy, zEye, avgBlockerDepthWorld);
+    vec2 filterRadius = projectToLightUV(_penumbraRadiusUV, spotLights[id].frustumNear, zEye);
 
     // STEP 3: filtering
     return pcfFilter(id, spotLightsShadowMap, uv, z, dz_duv, filterRadius);
 }
 
 //Calculate in-shadow coefficient by sampling shadow edges
-float SunShadow()
+float SunShadow(vec3 P)
 {
 	//1. Find the appropriate CSM split to look up in based on the depth of the fragment
-    float depth = dot(fragPos-eyePos, viewDir); 
+    float depth = dot(P - eyePos, viewDir); 
 	int index = 3;
-	if(depth < sunFrustumFar[0])
+	float splitNear = sunFrustumNear.w;
+    float splitFar = sunFrustumFar.w;
+
+    if(depth < sunFrustumFar.x)
+    {
 		index = 0;
-	else if(depth < sunFrustumFar[1])
+        splitNear = sunFrustumNear.x;
+        splitFar = sunFrustumFar.x; 
+    }
+	else if(depth < sunFrustumFar.y)
+    {
     	index = 1;
-	else if(depth < sunFrustumFar[2])
+        splitNear = sunFrustumNear.y;
+        splitFar = sunFrustumFar.y;
+    }
+	else if(depth < sunFrustumFar.z)
+    {
 		index = 2;
+        splitNear = sunFrustumNear.z;
+        splitFar = sunFrustumFar.z;
+    }
 	
 	//2. Compute search parameters
-	vec2 sunRadiusUV = vec2(sunLightRadius) * (sunFrustumFar[0]-sunFrustumNear[0])/(sunFrustumFar[index]-sunFrustumNear[index]);
-	vec4 fragPosLight = sunClipSpace[index] * vec4(fragPos, 1.0);
-	vec2 uv = fragPosLight.xy;
-	float z = fragPosLight.z;
+	vec2 sunRadiusUV = vec2(sunLightRadius) * (sunFrustumFar.x - sunFrustumNear.x)/(splitFar - splitNear);
+	vec4 posLight = sunClipSpace[index] * vec4(P, 1.0);
+	vec2 uv = posLight.xy;
+	float z = posLight.z;
 	vec2 dz_duv = depthGradient(uv, z);
-	float zEye = linearDepthOrtho(z, sunFrustumNear[index], sunFrustumFar[index]);
+	float zEye = linearDepthOrtho(z, splitNear, splitFar);
 	
 	//3. Blocker search
 	float accumBlockerDepth;
 	float numBlockers;
 	float maxBlockers;
-	vec2 _searchRegionRadiusUV = searchRegionRadiusUV(sunRadiusUV, sunFrustumNear[index], zEye);
+	vec2 _searchRegionRadiusUV = searchRegionRadiusUV(sunRadiusUV, splitNear, zEye);
 	findBlocker(index, sunDepthMap, accumBlockerDepth, numBlockers, maxBlockers, 
 		uv, z, dz_duv, _searchRegionRadiusUV);
 	
@@ -641,7 +641,7 @@ float SunShadow()
 	
 	//4. Penumbra size calculation
 	float avgBlockerDepth = accumBlockerDepth / numBlockers;
-	float avgBlockerDepthWorld = linearDepthOrtho(avgBlockerDepth, sunFrustumNear[index], sunFrustumFar[index]);
+	float avgBlockerDepthWorld = linearDepthOrtho(avgBlockerDepth, splitNear, splitFar);
 	vec2 penumbraRadiusUV = 0.1 * sunRadiusUV * (avgBlockerDepthWorld - zEye);
 	
 	//5. Filtering
@@ -649,42 +649,46 @@ float SunShadow()
 }
 
 //Calculate contribution of different light types
-vec3 PointLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
+vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 {
-	vec3 toLight = pointLights[id].position - fragPos;
+	vec3 toLight = pointLights[id].position - P;
 	float distance = length(toLight);
 	toLight /= distance;
-	
-	float attenuation = 1.0/(distance*distance);
-	return ShadingModel(N, toEye, toLight, albedo) * pointLights[id].color * attenuation;
+	if(distance > 100.0) //Limit light range
+        return vec4(vec3(0.0), 100.0);
+    
+	float attenuation = 1.0/(max(0.01*0.01, distance*distance));
+	return vec4(ShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), distance);
 }
 
-vec3 SpotLightContribution(int id, vec3 N, vec3 toEye, vec3 albedo)
+vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 {	
-	vec3 toLight = spotLights[id].position - fragPos;
+	vec3 toLight = spotLights[id].position - P;
 	float distance = length(toLight);
 	toLight /= distance;
-	
+	if(distance > 100.0) //Limit light range
+        return vec4(vec3(0.0), 100.0);
+
 	float spotEffect = dot(spotLights[id].direction, -toLight); //Angle between spot direction and point-light vector
     float NdotL = dot(N, toLight);
         
-	if(spotEffect > spotLights[id].angle && NdotL > 0.0)
+	if(spotEffect > spotLights[id].cone && NdotL > 0.0)
 	{
-		float attenuation = 1.0/(distance*distance);
-        float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].angle);
-		return ShadingModel(N, toEye, toLight, albedo) * spotLights[id].color * SpotShadow(id) * edge * attenuation;
+		float attenuation = 1.0/(max(0.01*0.01, distance*distance));
+        float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].cone);
+		return vec4(ShadingModel(N, toEye, toLight, spotLights[id].color * SpotShadow(id, P) * edge * attenuation, albedo), distance);
 	}
 	else
-		return vec3(0.0);
+		return vec4(0.0);
 }
 
-vec3 SunContribution(vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
+vec3 SunContribution(vec3 P, vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 {
 	float NdotL = dot(N, sunDirection);
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, albedo) * illuminance * SunShadow();
+		return ShadingModel(N, toEye, sunDirection, illuminance * SunShadow(P), albedo);
 	}
 	else
 		return vec3(0.0);

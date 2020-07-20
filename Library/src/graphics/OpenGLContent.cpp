@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLContent.h"
@@ -53,43 +53,32 @@ OpenGLContent::OpenGLContent()
 {
     //Initialize members
     baseVertexArray = 0;
-    quadBuf = 0;
     cubeBuf = 0;
+    lightsUBO = 0;
     csBuf[0] = 0;
     csBuf[1] = 0;
-    ellipsoid.mesh = NULL;
-    cylinder.mesh = NULL;
-    helperShader = NULL;
-    texQuadShader = NULL;
-    texQuadMSShader = NULL;
-    texLayerQuadShader = NULL;
-    texLevelQuadShader = NULL;
-    texCubeShader = NULL;
-    flatShader = NULL;
+    cylinder.vao = 0;
+    ellipsoid.vao = 0;
+    lightSourceShader[0] = lightSourceShader[1] = NULL;
     eyePos = glm::vec3();
     viewDir = glm::vec3(1.f,0,0);
     viewProjection = glm::mat4();
     view = glm::mat4();
     projection = glm::mat4();
+    FC = 0.f;
     viewportSize = glm::vec2(800.f,600.f);
     mode = DrawingMode::FULL;
-    clipPlane = glm::vec4();
-    materialShaders = std::vector<GLSLShader*>(0);
+    currentLookId = -1;
+    currentTexturable = false;
+    currentShaderMode = -1;
+
+    //Get OpenGL capabilities
+    maxAnisotropy = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
 
     //Initialize shaders and buffers
     glGenVertexArrays(1, &baseVertexArray);
-    
-    //Build quad texture VBO
-    GLfloat quadData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
-        {-1.f,  1.f, 0.f, 1.f},
-        { 1.f, -1.f, 1.f, 0.f},
-        { 1.f,  1.f, 1.f, 1.f}};
-    
-    glGenBuffers(1, &quadBuf);
-    glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
+     
     //Build cube croos VBO
     GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
         {-1.f, -0.333f, -1.f,-1.f, 1.f},
@@ -144,378 +133,351 @@ OpenGLContent::OpenGLContent()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     //Cylinder helper
-    cylinder.mesh = BuildCylinder(1.f, 1.f, 12);
-    
+    Mesh* m = BuildCylinder(1.f, 1.f, 12);
+
     glGenVertexArrays(1, &cylinder.vao);
     glGenBuffers(1, &cylinder.vboVertex);
     glGenBuffers(1, &cylinder.vboIndex);
-    
+    cylinder.faceCount = (GLsizei)m->faces.size();
+    cylinder.texturable = false;
+
     OpenGLState::BindVertexArray(cylinder.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*cylinder.mesh->vertices.size(), &cylinder.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*cylinder.mesh->faces.size(), &cylinder.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
+    delete m;
+
     //Ellipsoid helper
-    ellipsoid.mesh = BuildSphere(1.f, 3);
+    m = BuildSphere(1.f, 3);
     
     glGenVertexArrays(1, &ellipsoid.vao);
     glGenBuffers(1, &ellipsoid.vboVertex);
     glGenBuffers(1, &ellipsoid.vboIndex);
-    
+    ellipsoid.faceCount = (GLsizei)m->faces.size();
+    ellipsoid.texturable = false;
+
     OpenGLState::BindVertexArray(ellipsoid.vao);
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*ellipsoid.mesh->vertices.size(), &ellipsoid.mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*ellipsoid.mesh->faces.size(), &ellipsoid.mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
+
+    delete m;
+
+    //Generate UBOs
+    glGenBuffers(1, &lightsUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(LightsUBO), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_LIGHTS, lightsUBO, 0, sizeof(LightsUBO));
+    memset(&lightsUBOData, 0, sizeof(LightsUBO));
+
+    ViewUBO viewZero;
+    viewZero.eye = glm::vec4(0.f);
+	viewZero.VP = glm::perspectiveFov(1.57f, 800.f, 600.f, 0.1f, 10000.f);
+    OpenGLView::ExtractFrustumFromVP(viewZero.frustum, viewZero.VP);
+    glGenBuffers(1, &viewUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(ViewUBO), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_VIEW, viewUBO, 0, sizeof(ViewUBO));
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), &viewZero);
     
     //Load shaders
-    //Basic
-    helperShader = new GLSLShader("helpers.frag","helpers.vert");
-    helperShader->AddUniform("MVP", ParameterType::MAT4);
-    helperShader->AddUniform("scale", ParameterType::VEC3);
+    //-----BASIC-----
+    basicShaders["helper"] = new GLSLShader("helpers.frag","helpers.vert");
+    basicShaders["helper"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders["helper"]->AddUniform("scale", ParameterType::VEC3);
     
-    texSaqShader = new GLSLShader("texQuad.frag");
-    texSaqShader->AddUniform("tex", ParameterType::INT);
-    texSaqShader->AddUniform("color", ParameterType::VEC4);
+    basicShaders["tex_saq"] = new GLSLShader("texQuad.frag");
+    basicShaders["tex_saq"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_saq"]->AddUniform("color", ParameterType::VEC4);
     
-    texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
-    texQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texQuadShader->AddUniform("tex", ParameterType::INT);
-    texQuadShader->AddUniform("color", ParameterType::VEC4);
+    basicShaders["tex_quad"] = new GLSLShader("texQuad.frag","texQuad.vert");
+    basicShaders["tex_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders["tex_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_quad"]->AddUniform("color", ParameterType::VEC4);
     
-    texQuadMSShader = new GLSLShader("texQuadMS.frag","texQuad.vert");
-    texQuadMSShader->AddUniform("rect", ParameterType::VEC4);
-    texQuadMSShader->AddUniform("tex", ParameterType::INT);
-    texQuadMSShader->AddUniform("texSize", ParameterType::IVEC2);
+    basicShaders["tex_layer_quad"] = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
+    basicShaders["tex_layer_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders["tex_layer_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_layer_quad"]->AddUniform("layer", ParameterType::INT);
     
-    texLayerQuadShader = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
-    texLayerQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texLayerQuadShader->AddUniform("tex", ParameterType::INT);
-    texLayerQuadShader->AddUniform("layer", ParameterType::INT);
+    basicShaders["tex_level_quad"] = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
+    basicShaders["tex_level_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders["tex_level_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders["tex_level_quad"]->AddUniform("level", ParameterType::INT);
     
-    texLevelQuadShader = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
-    texLevelQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texLevelQuadShader->AddUniform("tex", ParameterType::INT);
-    texLevelQuadShader->AddUniform("level", ParameterType::INT);
+    basicShaders["tex_cube"] = new GLSLShader("texCube.frag", "texCube.vert");
+    basicShaders["tex_cube"]->AddUniform("tex", ParameterType::INT);
     
-    texCubeShader = new GLSLShader("texCube.frag", "texCube.vert");
-    texCubeShader->AddUniform("tex", ParameterType::INT);
+    basicShaders["flat"] = new GLSLShader("flat.frag", "flat.vert");
+    basicShaders["flat"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders["flat"]->AddUniform("FC", ParameterType::FLOAT);
+
+    basicShaders["shadow"] = new GLSLShader("shadow.frag", "shadow.vert");
+    basicShaders["shadow"]->AddUniform("MVP", ParameterType::MAT4);
     
-    flatShader = new GLSLShader("flat.frag", "flat.vert");
-    flatShader->AddUniform("MVP", ParameterType::MAT4);
-    
-    //Materials
-    GLint compiled;
-    std::string header1 = "#version 330\n";
-	header1 += "#define MAX_POINT_LIGHTS " + std::to_string(MAX_POINT_LIGHTS) + "\n";
-	header1 += "#define MAX_SPOT_LIGHTS " + std::to_string(MAX_SPOT_LIGHTS) + "\n";
-    std::string header2 = "#version 330\n";
-	header2 += "#define MEAN_SUN_ILLUMINANCE " + std::to_string(MEAN_SUN_ILLUMINANCE) + "\n";
-	
-	std::vector<GLuint> commonMaterialShaders;
+    //-----MATERIALS-----
+    std::vector<std::string> shadingAlgorithms;
+    shadingAlgorithms.push_back("blinnPhong");
+    shadingAlgorithms.push_back("cookTorrance");
+
+    //Shaders common for all materials
+    GLint compiled; 
+    GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
+    std::vector<GLuint> commonMaterialShaders;
     commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
-    
-	GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", header1, &compiled);
 	commonMaterialShaders.push_back(pcssFragment);
-	
-	GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", header2, &compiled);
-	commonMaterialShaders.push_back(materialFragment);
-	
-    //Blinn-Phong shader
-    GLSLShader* blinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
-    blinnPhong->AddUniform("MVP", ParameterType::MAT4);
-    blinnPhong->AddUniform("M", ParameterType::MAT4);
-    blinnPhong->AddUniform("N", ParameterType::MAT3);
-    blinnPhong->AddUniform("MV", ParameterType::MAT3);
-    blinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
-    blinnPhong->AddUniform("eyePos", ParameterType::VEC3);
-    blinnPhong->AddUniform("viewDir", ParameterType::VEC3);
-    blinnPhong->AddUniform("color", ParameterType::VEC4);
-    blinnPhong->AddUniform("tex", ParameterType::INT);
-    blinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-    blinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-    blinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    blinnPhong->AddUniform("numPointLights", ParameterType::INT);
-    blinnPhong->AddUniform("numSpotLights", ParameterType::INT);
-    blinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    blinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
+
+    //Shaders common for all algorithms
+    GLuint materialVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "material.vert", "", &compiled);
+    GLuint materialUvVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "materialUv.vert", "", &compiled);
+    GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", "", &compiled);
+    GLuint materialUvFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialUv.frag", "", &compiled);
+    GLuint materialUFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialU.frag", "", &compiled);
+	GLuint materialUUvFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialUUv.frag", "", &compiled);
+    GLuint oceanFlatFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
+    GLuint oceanWavesFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurface.glsl", "", &compiled);
+    GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
     
-    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+    for(size_t i=0; i<shadingAlgorithms.size(); ++i)
     {
-        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-        blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-        blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+        std::vector<GLuint> precompiled = commonMaterialShaders;
+        GLuint shadingFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, shadingAlgorithms[i] + ".frag", "", &compiled); 
+        precompiled.push_back(shadingFragment);
+
+        MaterialShader ms;
+        ms.shadingAlgorithm = shadingAlgorithms[i];
+        
+        //Plain
+        precompiled.push_back(materialVertex);
+        precompiled.push_back(materialFragment);
+        ms.shaders[0] = new GLSLShader(precompiled);
+        //Plain underwater
+        precompiled.pop_back();
+        precompiled.push_back(materialUFragment);
+        precompiled.push_back(oceanOpticsFragment);
+        precompiled.push_back(oceanFlatFragment);
+        ms.shaders[1] = new GLSLShader(precompiled);
+        ms.shaders[1]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[1]->AddUniform("bWater", ParameterType::VEC3);
+        //Plain underwater waves
+        precompiled.pop_back();
+        precompiled.push_back(oceanWavesFragment);
+        ms.shaders[2] = new GLSLShader(precompiled);
+        ms.shaders[2]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[2]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders[2]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders[2]->AddUniform("gridSizes", ParameterType::VEC4);
+
+        //Textured
+        precompiled.clear();
+        precompiled = commonMaterialShaders;
+        precompiled.push_back(shadingFragment);
+        precompiled.push_back(materialUvVertex);
+        precompiled.push_back(materialUvFragment);
+        ms.shaders[3] = new GLSLShader(precompiled);
+        ms.shaders[3]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[3]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[3]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[3]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        //Textured underwater
+        precompiled.pop_back();
+        precompiled.push_back(materialUUvFragment);
+        precompiled.push_back(oceanOpticsFragment);
+        precompiled.push_back(oceanFlatFragment);
+        ms.shaders[4] = new GLSLShader(precompiled);
+        ms.shaders[4]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[4]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[4]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[4]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders[4]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[4]->AddUniform("bWater", ParameterType::VEC3);
+        //Textured underwater waves
+        precompiled.pop_back();
+        precompiled.push_back(oceanWavesFragment);
+        ms.shaders[5] = new GLSLShader(precompiled);
+        ms.shaders[5]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[5]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[5]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[5]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders[5]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[5]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders[5]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders[5]->AddUniform("gridSizes", ParameterType::VEC4);
+
+        //Add common uniforms
+        for(size_t h = 0; h<6; ++h)
+        {
+            ms.shaders[h]->AddUniform("MVP", ParameterType::MAT4);
+            ms.shaders[h]->AddUniform("M", ParameterType::MAT4);
+            ms.shaders[h]->AddUniform("N", ParameterType::MAT3);
+            ms.shaders[h]->AddUniform("MV", ParameterType::MAT3);
+            ms.shaders[h]->AddUniform("FC", ParameterType::FLOAT);
+            ms.shaders[h]->AddUniform("eyePos", ParameterType::VEC3);
+            ms.shaders[h]->AddUniform("viewDir", ParameterType::VEC3);
+            ms.shaders[h]->AddUniform("color", ParameterType::VEC4);
+            ms.shaders[h]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("sunShadowMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("sunDepthMap", ParameterType::INT);
+            ms.shaders[h]->AddUniform("transmittance_texture", ParameterType::INT);
+            ms.shaders[h]->AddUniform("scattering_texture", ParameterType::INT);
+            ms.shaders[h]->AddUniform("irradiance_texture", ParameterType::INT);
+            ms.shaders[h]->BindUniformBlock("SunSky", UBO_SUNSKY);
+            ms.shaders[h]->BindUniformBlock("Lights", UBO_LIGHTS);
+
+            ms.shaders[h]->Use();
+            ms.shaders[h]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+            ms.shaders[h]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+            ms.shaders[h]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+            ms.shaders[h]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+            ms.shaders[h]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+            ms.shaders[h]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+            ms.shaders[h]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+            if(h > 2) //Textured?
+            {
+                ms.shaders[h]->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
+                ms.shaders[h]->SetUniform("texNormal", TEX_MAT_NORMAL);
+            }
+        }
+
+        materialShaders.push_back(ms);
+
+        glDeleteShader(shadingFragment);
     }
-    
-    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+
+    for(size_t i=0; i<6; ++i)
     {
-        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-        blinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-        blinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
-        blinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
-        blinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
-        blinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-        blinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-        blinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-        blinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
+        GLSLShader* shader;
+        shader = materialShaders[0].shaders[i];
+        shader->AddUniform("shininess", ParameterType::FLOAT);
+        shader->AddUniform("specularStrength", ParameterType::FLOAT);
+        shader->AddUniform("reflectivity", ParameterType::FLOAT);
+        shader = materialShaders[1].shaders[i];
+        shader->AddUniform("roughness", ParameterType::FLOAT);
+        shader->AddUniform("metallic", ParameterType::FLOAT);
+        shader->AddUniform("reflectivity", ParameterType::FLOAT);
     }
-    
-    blinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
-    blinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-    blinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-    blinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-    blinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-    blinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-    blinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-    blinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
-    blinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-    blinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-    blinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
-    blinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
-    blinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
-    
-    materialShaders.push_back(blinnPhong);
-    
-    //Cook-Torrance shader
-    GLSLShader* cookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
-    cookTorrance->AddUniform("MVP", ParameterType::MAT4);
-    cookTorrance->AddUniform("M", ParameterType::MAT4);
-    cookTorrance->AddUniform("N", ParameterType::MAT3);
-    cookTorrance->AddUniform("MV", ParameterType::MAT3);
-    cookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
-    cookTorrance->AddUniform("eyePos", ParameterType::VEC3);
-    cookTorrance->AddUniform("viewDir", ParameterType::VEC3);
-    cookTorrance->AddUniform("color", ParameterType::VEC4);
-    cookTorrance->AddUniform("tex", ParameterType::INT);
-    cookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    cookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-    cookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    cookTorrance->AddUniform("numPointLights", ParameterType::INT);
-    cookTorrance->AddUniform("numSpotLights", ParameterType::INT);
-    cookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    cookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    
-    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-    {
-        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-        cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-        cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-    }
-    
-    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-    {
-        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-        cookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-        cookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
-        cookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-        cookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
-        cookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-        cookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-        cookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-        cookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-    }
-    
-    cookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
-    cookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-    cookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-    cookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-    cookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-    cookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-    cookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-    cookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
-    cookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-    cookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-    cookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
-    cookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
-    cookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
-    
-    materialShaders.push_back(cookTorrance);
+
+    glDeleteShader(materialVertex);
+    glDeleteShader(materialUvVertex);
     glDeleteShader(materialFragment);
+    glDeleteShader(materialUvFragment);
+    glDeleteShader(materialUFragment);
+    glDeleteShader(materialUUvFragment);
+    glDeleteShader(oceanWavesFragment);
+    glDeleteShader(oceanFlatFragment);
+
+    //Light source rendering shaders
+    std::vector<GLuint> commonLightShaders;
+    commonLightShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    commonLightShaders.push_back(pcssFragment);
+    
+    //Above surface
+    GLuint lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSource.frag", "", &compiled);
+	commonLightShaders.push_back(lightSourceFragment);
 	
-    //-------------Underwater shaders---------------------------
-    commonMaterialShaders.pop_back();
-    materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "underwaterMaterial.frag", header2, &compiled);
-    commonMaterialShaders.push_back(materialFragment);
+    std::vector<GLSLSource> sources;
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "light.frag"));
+    lightSourceShader[0] = new GLSLShader(sources, commonLightShaders);
+
+    //Under surface
+    commonLightShaders.pop_back();
+    glDeleteShader(lightSourceFragment);
+
+    commonLightShaders.push_back(oceanOpticsFragment);
+    lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwLightSource.frag", "", &compiled);
+	commonLightShaders.push_back(lightSourceFragment);
+	
+    lightSourceShader[1] = new GLSLShader(sources, commonLightShaders);
+    lightSourceShader[1]->AddUniform("cWater", ParameterType::VEC3);
+    lightSourceShader[1]->AddUniform("bWater", ParameterType::VEC3);
     
-    //Blinn-Phong shader
-    GLSLShader* uwBlinnPhong = new GLSLShader(commonMaterialShaders, "blinnPhong.frag", "material.vert");
-    uwBlinnPhong->AddUniform("MVP", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("M", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("N", ParameterType::MAT3);
-    uwBlinnPhong->AddUniform("MV", ParameterType::MAT3);
-    uwBlinnPhong->AddUniform("clipPlane", ParameterType::VEC4);
-    uwBlinnPhong->AddUniform("eyePos", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("viewDir", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("color", ParameterType::VEC4);
-    uwBlinnPhong->AddUniform("tex", ParameterType::INT);
-    uwBlinnPhong->AddUniform("shininess", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("specularStrength", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("lightAbsorption", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("turbidity", ParameterType::FLOAT);
-    
-    uwBlinnPhong->AddUniform("numPointLights", ParameterType::INT);
-    uwBlinnPhong->AddUniform("numSpotLights", ParameterType::INT);
-    uwBlinnPhong->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    
-    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
+    //Add common uniforms
+    for(size_t i=0; i<2; ++i)
     {
-        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-        uwBlinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-        uwBlinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("MVP", ParameterType::MAT4);
+        lightSourceShader[i]->AddUniform("M", ParameterType::MAT4);
+        lightSourceShader[i]->AddUniform("N", ParameterType::MAT3);
+        lightSourceShader[i]->AddUniform("MV", ParameterType::MAT3);
+        lightSourceShader[i]->AddUniform("FC", ParameterType::FLOAT);
+        lightSourceShader[i]->AddUniform("eyePos", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("viewDir", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("color", ParameterType::VEC3);
+        lightSourceShader[i]->AddUniform("lightId", ParameterType::IVEC2);
+        lightSourceShader[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("sunShadowMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("sunDepthMap", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("transmittance_texture", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("scattering_texture", ParameterType::INT);
+        lightSourceShader[i]->AddUniform("irradiance_texture", ParameterType::INT);
+        lightSourceShader[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
+        lightSourceShader[i]->BindUniformBlock("Lights", UBO_LIGHTS);
     }
-    
-    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
+
+    //Set permanent texture units
+    for(size_t i=0; i<2; ++i)
     {
-        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-        uwBlinnPhong->AddUniform(lightUni + "position", ParameterType::VEC3);
-        uwBlinnPhong->AddUniform(lightUni + "radius", ParameterType::VEC2);
-        uwBlinnPhong->AddUniform(lightUni + "color", ParameterType::VEC3);
-        uwBlinnPhong->AddUniform(lightUni + "direction", ParameterType::VEC3);
-        uwBlinnPhong->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-        uwBlinnPhong->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-        uwBlinnPhong->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-        uwBlinnPhong->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
+        lightSourceShader[i]->Use();
+        lightSourceShader[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+        lightSourceShader[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+        lightSourceShader[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+        lightSourceShader[i]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+        lightSourceShader[i]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+        lightSourceShader[i]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+        lightSourceShader[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
     }
-    
-    uwBlinnPhong->AddUniform("sunDirection", ParameterType::VEC3);
-    uwBlinnPhong->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-    uwBlinnPhong->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("sunShadowMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("sunDepthMap", ParameterType::INT);
-    uwBlinnPhong->AddUniform("transmittance_texture", ParameterType::INT);
-    uwBlinnPhong->AddUniform("scattering_texture", ParameterType::INT);
-    uwBlinnPhong->AddUniform("irradiance_texture", ParameterType::INT);
-    uwBlinnPhong->AddUniform("planetRadius", ParameterType::FLOAT);
-    uwBlinnPhong->AddUniform("whitePoint", ParameterType::VEC3);
-    
-    materialShaders.push_back(uwBlinnPhong);
-    
-    //Underwater Cook-Torrance shader
-    GLSLShader* uwCookTorrance = new GLSLShader(commonMaterialShaders, "cookTorrance.frag", "material.vert");
-    uwCookTorrance->AddUniform("MVP", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("M", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("N", ParameterType::MAT3);
-    uwCookTorrance->AddUniform("MV", ParameterType::MAT3);
-    uwCookTorrance->AddUniform("clipPlane", ParameterType::VEC4);
-    uwCookTorrance->AddUniform("eyePos", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("viewDir", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("color", ParameterType::VEC4);
-    uwCookTorrance->AddUniform("tex", ParameterType::INT);
-    uwCookTorrance->AddUniform("roughness", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("metallic", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("reflectivity", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("lightAbsorption", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("turbidity", ParameterType::FLOAT);
-    
-    uwCookTorrance->AddUniform("numPointLights", ParameterType::INT);
-    uwCookTorrance->AddUniform("numSpotLights", ParameterType::INT);
-    uwCookTorrance->AddUniform("spotLightsDepthMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("spotLightsShadowMap", ParameterType::INT);
-    
-    for(unsigned int i=0; i<MAX_POINT_LIGHTS; ++i)
-    {
-        std::string lightUni = "pointLights[" + std::to_string(i) + "].";
-        uwCookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-        uwCookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-    }
-    
-    for(unsigned int i=0; i<MAX_SPOT_LIGHTS; ++i)
-    {
-        std::string lightUni = "spotLights[" + std::to_string(i) + "].";
-        uwCookTorrance->AddUniform(lightUni + "position", ParameterType::VEC3);
-        uwCookTorrance->AddUniform(lightUni + "radius", ParameterType::VEC2);
-        uwCookTorrance->AddUniform(lightUni + "color", ParameterType::VEC3);
-        uwCookTorrance->AddUniform(lightUni + "direction", ParameterType::VEC3);
-        uwCookTorrance->AddUniform(lightUni + "angle", ParameterType::FLOAT);
-        uwCookTorrance->AddUniform(lightUni + "clipSpace", ParameterType::MAT4);
-        uwCookTorrance->AddUniform(lightUni + "zNear", ParameterType::FLOAT);
-        uwCookTorrance->AddUniform(lightUni + "zFar", ParameterType::FLOAT);
-    }
-    
-    uwCookTorrance->AddUniform("sunDirection", ParameterType::VEC3);
-    uwCookTorrance->AddUniform("sunClipSpace[0]", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("sunClipSpace[1]", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("sunClipSpace[2]", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("sunClipSpace[3]", ParameterType::MAT4);
-    uwCookTorrance->AddUniform("sunFrustumNear[0]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumNear[1]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumNear[2]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumNear[3]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumFar[0]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumFar[1]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumFar[2]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunFrustumFar[3]", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("sunShadowMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("sunDepthMap", ParameterType::INT);
-    uwCookTorrance->AddUniform("transmittance_texture", ParameterType::INT);
-    uwCookTorrance->AddUniform("scattering_texture", ParameterType::INT);
-    uwCookTorrance->AddUniform("irradiance_texture", ParameterType::INT);
-    uwCookTorrance->AddUniform("planetRadius", ParameterType::FLOAT);
-    uwCookTorrance->AddUniform("whitePoint", ParameterType::VEC3);
-    
-    materialShaders.push_back(uwCookTorrance);
-    glDeleteShader(materialFragment);
+
+    OpenGLState::UseProgram(0);
+
+    glDeleteShader(pcssFragment);
+    glDeleteShader(oceanOpticsFragment);
+    glDeleteShader(lightSourceFragment);
 }
 
 OpenGLContent::~OpenGLContent()
 {
     //Base shaders
     if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
-    if(quadBuf != 0) glDeleteBuffers(1, &quadBuf);
     if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
     if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
-    if(helperShader != NULL) delete helperShader;
-    if(texSaqShader != NULL) delete texSaqShader;
-    if(texQuadShader != NULL) delete texQuadShader;
-    if(texQuadMSShader != NULL) delete texQuadMSShader;
-    if(texLayerQuadShader != NULL) delete texLayerQuadShader;
-    if(texLevelQuadShader != NULL) delete texLevelQuadShader;
-    if(texCubeShader != NULL) delete texCubeShader;
-    if(flatShader != NULL) delete flatShader;
+    if(lightsUBO != 0) glDeleteBuffers(1, &lightsUBO);
+    if(viewUBO != 0) glDeleteBuffers(1, &viewUBO);
+    delete basicShaders["helper"];
+    delete basicShaders["tex_saq"];
+    delete basicShaders["tex_quad"];
+    delete basicShaders["tex_layer_quad"];
+    delete basicShaders["tex_level_quad"];
+    delete basicShaders["tex_cube"];
+    delete basicShaders["flat"];
+    delete basicShaders["shadow"];
+    if(lightSourceShader[0] != NULL) delete lightSourceShader[0];
+    if(lightSourceShader[1] != NULL) delete lightSourceShader[1];
     
     //Material shaders
     for(size_t i=0; i<materialShaders.size(); ++i)
-        delete materialShaders[i];
-    materialShaders.clear();
+    {
+        for(size_t h=0; h<6; ++h)
+            delete materialShaders[i].shaders[h];
+    }
     
     //Views
     if(views.size() == 1) //Trackball left after destroying content
@@ -533,8 +495,10 @@ void OpenGLContent::DestroyContent()
 {
     for(size_t i=0; i<looks.size(); ++i)
     {
-        for(size_t h=0; h<looks[i].textures.size(); ++h)
-            glDeleteTextures(1, &looks[i].textures[h]);
+        if(looks[i].albedoTexture != 0)
+            glDeleteTextures(1, &looks[i].albedoTexture);
+        if(looks[i].normalTexture != 0)
+            glDeleteTextures(1, &looks[i].normalTexture);
     }
     looks.clear();
     lookNameManager.ClearNames();
@@ -546,7 +510,7 @@ void OpenGLContent::DestroyContent()
         glDeleteVertexArrays(1, &objects[i].vao);
     }	
     objects.clear();
-    
+
     for(size_t i=0; i<views.size(); ++i)
 		delete views[i];
 	views.clear();
@@ -586,23 +550,17 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
     view = v->GetViewMatrix();
     projection = v->GetProjectionMatrix();
     viewProjection = projection * view;
+    FC = v->GetLogDepthConstant();
+
+    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), v->getViewUBOData());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
 }
 
 void OpenGLContent::SetDrawingMode(DrawingMode m)
 {
     mode = m;
-}
-
-void OpenGLContent::EnableClipPlane(glm::vec4 clipPlaneCoeff)
-{
-    clipPlane = clipPlaneCoeff;
-    glEnable(GL_CLIP_DISTANCE0);
-}
-
-void OpenGLContent::DisableClipPlane()
-{
-    clipPlane = glm::vec4();
-    glDisable(GL_CLIP_DISTANCE0);
 }
 
 void OpenGLContent::BindBaseVertexArray()
@@ -620,9 +578,9 @@ void OpenGLContent::DrawSAQ()
 void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 {
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    texSaqShader->Use();
-    texSaqShader->SetUniform("tex", TEX_BASE);
-    texSaqShader->SetUniform("color", color);
+    basicShaders["tex_saq"]->Use();
+    basicShaders["tex_saq"]->SetUniform("tex", TEX_BASE);
+    basicShaders["tex_saq"]->SetUniform("color", color);
     
     OpenGLState::BindVertexArray(baseVertexArray);
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -634,409 +592,461 @@ void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
 {
-    if(texQuadShader != NULL)
-    {
-        y = viewportSize.y-y-height;
-        
-        texQuadShader->Use();
-        texQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        texQuadShader->SetUniform("tex", TEX_BASE);
-        texQuadShader->SetUniform("color", color);
-        
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
-    }
+    y = viewportSize.y-y-height;
+    
+    basicShaders["tex_quad"]->Use();
+    basicShaders["tex_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+    basicShaders["tex_quad"]->SetUniform("tex", TEX_BASE);
+    basicShaders["tex_quad"]->SetUniform("color", color);
+    
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
 {
-    if((array && texLayerQuadShader != NULL)||(!array && texLevelQuadShader != NULL))
+    y = viewportSize.y-y-height;
+    
+    if(array)
     {
-        y = viewportSize.y-y-height;
-        
-        if(array)
-        {
-            texLayerQuadShader->Use();
-            texLayerQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-            texLayerQuadShader->SetUniform("tex", TEX_BASE);
-            texLayerQuadShader->SetUniform("layer", z);
-        }
-        else
-        {
-            texLevelQuadShader->Use();
-            texLevelQuadShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-            texLevelQuadShader->SetUniform("tex", TEX_BASE);
-            texLevelQuadShader->SetUniform("level", z);
-        }
-        
-        OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
+        basicShaders["tex_layer_quad"]->Use();
+        basicShaders["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        basicShaders["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders["tex_layer_quad"]->SetUniform("layer", z);
     }
+    else
+    {
+        basicShaders["tex_level_quad"]->Use();
+        basicShaders["tex_level_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
+        basicShaders["tex_level_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders["tex_level_quad"]->SetUniform("level", z);
+    }
+    
+    OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::UseProgram(0);
 }
-
-void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint textureMS, glm::ivec2 texSize)
-{
-    if(texQuadMSShader != NULL)
-    {
-        y = viewportSize.y-y-height;
-        
-        texQuadMSShader->Use();
-        texQuadMSShader->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        texQuadMSShader->SetUniform("tex", TEX_BASE);
-        texQuadMSShader->SetUniform("texSize", texSize);
-        
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_MULTISAMPLE, textureMS);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quadBuf); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
-    }
-}	
 
 void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
-    if(cubeBuf != 0 && texCubeShader != NULL)
-    {
-        texCubeShader->Use();
-        texCubeShader->SetUniform("tex", TEX_BASE);
-        
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
-        glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
-        glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
-        
-        OpenGLState::BindVertexArray(0);
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        OpenGLState::UnbindTexture(TEX_BASE);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["tex_cube"]->Use();
+    basicShaders["tex_cube"]->SetUniform("tex", TEX_BASE);
+    
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
+    glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
+    
+    OpenGLState::BindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    OpenGLState::UnbindTexture(TEX_BASE);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 {
-    if(csBuf[0] != 0 && helperShader != NULL)
-    {
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", glm::vec3(size));
-        
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glDrawArrays(GL_LINES, 0, 6);
-        OpenGLState::BindVertexArray(0);
-        
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", glm::vec3(size));
+    
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glDrawArrays(GL_LINES, 0, 6);
+    OpenGLState::BindVertexArray(0);
+    
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 {
-    if(helperShader != NULL && cylinder.mesh != NULL)
-    {
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", dims);
-        
-        OpenGLState::BindVertexArray(cylinder.vao);
-        glVertexAttrib4fv(1, &color.r);
-        glDrawElements(GL_TRIANGLES, 3 * (GLsizei)cylinder.mesh->faces.size(), GL_UNSIGNED_INT, 0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", dims);
+    
+    OpenGLState::BindVertexArray(cylinder.vao);
+    glVertexAttrib4fv(1, &color.r);
+    glDrawElements(GL_TRIANGLES, 3 * cylinder.faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 {
-    if(helperShader != NULL && ellipsoid.mesh != NULL)
-    {
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", radii);
-        
-        OpenGLState::BindVertexArray(ellipsoid.vao);
-        glVertexAttrib4fv(1, &color.r);
-        glDrawElements(GL_TRIANGLES, 3 * (GLsizei)ellipsoid.mesh->faces.size(), GL_UNSIGNED_INT, 0);
-        OpenGLState::BindVertexArray(0);
-        OpenGLState::UseProgram(0);
-    }
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", radii);
+    
+    OpenGLState::BindVertexArray(ellipsoid.vao);
+    glVertexAttrib4fv(1, &color.r);
+    glDrawElements(GL_TRIANGLES, 3 * ellipsoid.faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
 {
-    if(helperShader != NULL && vertices.size() > 0)
+    if(vertices.size() == 0)
+        return;
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    
+    basicShaders["helper"]->Use();
+    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
+    basicShaders["helper"]->SetUniform("scale", glm::vec3(1.f));
+    
+    OpenGLState::BindVertexArray(baseVertexArray);
+    glEnableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glVertexAttrib4fv(1, &color.r);
+    
+    switch(type)
     {
-        GLuint vbo;
-        glGenBuffers(1, &vbo);
+        case PrimitiveType::LINES:
+            glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
+            break;
         
-        helperShader->Use();
-        helperShader->SetUniform("MVP", viewProjection*M);
-        helperShader->SetUniform("scale", glm::vec3(1.f));
-        
-        OpenGLState::BindVertexArray(baseVertexArray);
-        glEnableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glVertexAttrib4fv(1, &color.r);
-        
-        switch(type)
-        {
-            case LINES:
-                glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
-                break;
+        case PrimitiveType::LINE_STRIP:
+            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
+            break;
             
-            case LINE_STRIP:
-                glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
-                break;
-                
-            case POINTS:
-            default:
-                glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
-                break;
-        }
-        OpenGLState::BindVertexArray(0);
-        glDisableVertexAttribArray(0);
-        OpenGLState::UseProgram(0);
-        
-        glDeleteBuffers(1, &vbo);
+        case PrimitiveType::POINTS:
+        default:
+            glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
+            break;
     }
+    OpenGLState::BindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    OpenGLState::UseProgram(0);
+    
+    glDeleteBuffers(1, &vbo);
 }
 
 void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
-    if(objectId >= 0 && objectId < (int)objects.size()) //Check if object exists
+    if(objectId < 0 || objectId >= (int)objects.size())
+        return;
+    
+    switch(mode)
     {
-        if(mode == DrawingMode::RAW)
+        case DrawingMode::RAW:
         {
             OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
             OpenGLState::BindVertexArray(0);
         }
-        else if(mode == DrawingMode::FLAT)
+        break;
+
+        case DrawingMode::SHADOW:
         {
-            flatShader->Use();
-            flatShader->SetUniform("MVP", viewProjection*M);
+            basicShaders["shadow"]->Use();
+            basicShaders["shadow"]->SetUniform("MVP", viewProjection*M);
             OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
             OpenGLState::BindVertexArray(0);
-            OpenGLState::UseProgram(0);
         }
-        else
+        break;
+        
+        case DrawingMode::FLAT:
+        {
+            basicShaders["flat"]->Use();
+            basicShaders["flat"]->SetUniform("MVP", viewProjection*M);
+            basicShaders["flat"]->SetUniform("FC", FC);
+            OpenGLState::BindVertexArray(objects[objectId].vao);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+            OpenGLState::BindVertexArray(0);
+        }
+        break;
+
+        default:
         {
             if(lookId >= 0 && lookId < (int)looks.size())
-                UseLook(lookId, M);
+                UseLook(lookId, objects[objectId].texturable, M);
             else
                 UseStandardLook(M);
     
             OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, 3 * (GLsizei)objects[objectId].mesh->faces.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
             OpenGLState::BindVertexArray(0);
-            OpenGLState::UseProgram(0);
         }
+        break;
     }
 }
 
-void OpenGLContent::SetupLights(GLSLShader* shader)
+void OpenGLContent::DrawLightSource(unsigned int lightId)
 {
-    int pointId = 0;
-    int spotId = 0;
-    
-    for(unsigned int i=0; i<lights.size(); ++i)
-    {
-        if(lights[i]->getType() == POINT_LIGHT)
-        {
-            lights[i]->SetupShader(shader, pointId);
-            ++pointId;
-        }
-        else
-        {
-            lights[i]->SetupShader(shader, spotId);
-            ++spotId;
-        }
-    }
-    
-    shader->SetUniform("numPointLights", pointId);
-    shader->SetUniform("numSpotLights", spotId);
-    OpenGLLight::SetupShader(shader);
-    SimulationApp::getApp()->getSimulationManager()->getAtmosphere()->getOpenGLAtmosphere()->SetupMaterialShader(shader);
-}
+    if(lightId >= lights.size())
+        return;
 
-void OpenGLContent::UseLook(unsigned int lookId, const glm::mat4& M)
-{	
-    Look& l = looks[lookId];
-    GLSLShader* shader;
-    
-    switch(l.type)
-    {		
-        default:
-        case SIMPLE: //Blinn-Phong
-        {
-            shader = mode == DrawingMode::FULL ? materialShaders[0] : materialShaders[2];
-            shader->Use();
-            shader->SetUniform("MVP", viewProjection*M);
-            shader->SetUniform("M", M);
-            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("clipPlane", clipPlane);
-            shader->SetUniform("eyePos", eyePos);
-            shader->SetUniform("viewDir", viewDir);
-            shader->SetUniform("specularStrength", l.params[0]);
-            shader->SetUniform("shininess", l.params[1]);
-            shader->SetUniform("reflectivity", l.reflectivity);
-            shader->SetUniform("tex", TEX_BASE);
-            
-            if(l.textures.size() > 0)
-            {
-                OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, l.textures[0]);
-                shader->SetUniform("color", glm::vec4(l.color, 1.f));
-            }
-            else
-            {
-                OpenGLState::UnbindTexture(TEX_BASE);
-                shader->SetUniform("color", glm::vec4(l.color, 0.f));			
-            }
-        }
-            break;
-            
-        case PHYSICAL: //Cook-Torrance
-        {
-            shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
-            shader->Use();
-            shader->SetUniform("MVP", viewProjection*M);
-            shader->SetUniform("M", M);
-            shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-            shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-            shader->SetUniform("clipPlane", clipPlane);
-            shader->SetUniform("eyePos", eyePos);
-            shader->SetUniform("viewDir", viewDir);
-            shader->SetUniform("roughness", l.params[0]);
-            shader->SetUniform("metallic", l.params[1]);
-            shader->SetUniform("reflectivity", l.reflectivity);
-            shader->SetUniform("tex", TEX_BASE);
-            
-            if(l.textures.size() > 0)
-            {
-                OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, l.textures[0]);
-                shader->SetUniform("color", glm::vec4(l.color, 1.f));
-            }
-            else
-            {
-                OpenGLState::UnbindTexture(TEX_BASE);
-                shader->SetUniform("color", glm::vec4(l.color, 0.f));			
-            }
-        }
-            break;
-    }
+    int objectId = lights[lightId]->getSourceObject();
+    if(objectId < 0 || objectId >= (int)objects.size())
+        return;
+
+    //Render light source
+    glm::vec4 colorLi = lights[lightId]->getColorLi();
+    glm::mat4 M = lights[lightId]->getTransform();
+    GLint type = lights[lightId]->getType() == LightType::POINT_LIGHT ? 0 : 1; 
+    GLint id = lights[lightId]->getType() == LightType::POINT_LIGHT ? lightId : lightId - lightsUBOData.numPointLights;
+
+    GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
+    shader->Use();
+    shader->SetUniform("MVP", viewProjection * M);
+    shader->SetUniform("M", M);
+    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+    shader->SetUniform("FC", FC);
+    shader->SetUniform("eyePos", eyePos);
+    shader->SetUniform("viewDir", viewDir);
+    shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
+    shader->SetUniform("lightId", glm::ivec2(type, id));
     
     if(mode == DrawingMode::UNDERWATER)
     {
         Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        shader->SetUniform("turbidity", ocean->getOpenGLOcean()->getTurbidity());
-        shader->SetUniform("lightAbsorption", ocean->getOpenGLOcean()->getLightAbsorption());
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
     }
-    
-    SetupLights(shader);
+
+    OpenGLState::BindVertexArray(objects[objectId].vao);
+    glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
 }
 
-void OpenGLContent::UseStandardLook(const glm::mat4& M)
+void OpenGLContent::SetupLights()
 {
-    GLSLShader* shader = mode == DrawingMode::FULL ? materialShaders[1] : materialShaders[3];
+    int pointId = 0;
+    int spotId = 0;
     
+    for(size_t i=0; i<lights.size(); ++i)
+    {
+        if(lights[i]->getType() == POINT_LIGHT)
+        {
+            lights[i]->SetupShader(&lightsUBOData.pointLights[pointId]);
+            ++pointId;
+        }
+        else
+        {
+            lights[i]->SetupShader(&lightsUBOData.spotLights[spotId]);
+            ++spotId;
+        }
+    }
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightsUBO), &lightsUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat4& M)
+{	
+    bool waves = false;
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    if(ocean != NULL && ocean->hasWaves()) waves = true;
+    
+    Look& l = looks[lookId];
+    texturable = texturable && (l.albedoTexture > 0 || l.normalTexture > 0);
+    int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
+
+    bool updateMaterial = ((int)lookId != currentLookId) 
+                          || (currentTexturable != texturable)
+                          || (currentShaderMode != shaderMode);
+    currentLookId = (int)lookId;
+    currentTexturable = texturable;
+    currentShaderMode = shaderMode;
+
+    size_t shaderId = (currentTexturable ? 3 : 0) + (size_t)currentShaderMode;
+    GLSLShader* shader = materialShaders[l.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);
     shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
     shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-    shader->SetUniform("clipPlane", clipPlane);
+    shader->SetUniform("FC", FC);
     shader->SetUniform("eyePos", eyePos);
     shader->SetUniform("viewDir", viewDir);
-    shader->SetUniform("roughness", 0.5f);
-    shader->SetUniform("metallic", 0.f);
-    shader->SetUniform("reflectivity", 0.f);
-    shader->SetUniform("tex", TEX_BASE);
-    shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
-    OpenGLState::UnbindTexture(TEX_BASE);
-    SetupLights(shader);
+
+    if(updateMaterial)
+    {
+        switch(l.type)
+        {		
+            default:
+            case LookType::SIMPLE: //Blinn-Phong
+            {
+                shader->SetUniform("specularStrength", l.params[0]);
+                shader->SetUniform("shininess", l.params[1]);
+                shader->SetUniform("reflectivity", l.reflectivity);
+                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+            }
+            break;
+            
+            case LookType::PHYSICAL: //Cook-Torrance
+            {
+                shader->SetUniform("roughness", l.params[0]);
+                shader->SetUniform("metallic", l.params[1]);
+                shader->SetUniform("reflectivity", l.reflectivity);
+                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+            }
+            break;
+        }
+
+        if(currentTexturable)
+        {
+            if(l.albedoTexture > 0)
+            {
+                shader->SetUniform("enableAlbedoTex", true);
+                OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, l.albedoTexture);
+            }
+            else
+            {
+                shader->SetUniform("enableAlbedoTex", false);
+                OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
+            }
+
+            if(l.normalTexture > 0)
+            {
+                shader->SetUniform("enableNormalTex", true);
+                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalTexture);
+            }
+            else
+            {
+                shader->SetUniform("enableNormalTex", false);
+                OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
+            }
+        }
+    }
+
+    if(mode == DrawingMode::UNDERWATER)
+    {
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        if(waves)
+        {
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+        }
+    }
+}
+
+void OpenGLContent::UseStandardLook(const glm::mat4& M)
+{
+    bool waves = false;
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    if(ocean != NULL && ocean->hasWaves()) waves = true;
+    
+    int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
+    bool updateMaterial = (currentLookId >= 0)
+                          || (currentShaderMode != shaderMode);
+    currentLookId = -1;
+    currentTexturable = false;
+    currentShaderMode = shaderMode;
+
+    GLSLShader* shader = materialShaders[1].shaders[(size_t)currentShaderMode];
+    shader->Use();
+    shader->SetUniform("MVP", viewProjection*M);
+    shader->SetUniform("M", M);
+    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+    shader->SetUniform("FC", FC);
+    shader->SetUniform("eyePos", eyePos);
+    shader->SetUniform("viewDir", viewDir);
+
+    if(updateMaterial)
+    {
+        shader->SetUniform("roughness", 0.5f);
+        shader->SetUniform("metallic", 0.f);
+        shader->SetUniform("reflectivity", 0.f);
+        shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
+        OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
+        OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
+    }
+
+    if(mode == DrawingMode::UNDERWATER)
+    {
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        if(waves)
+        {
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+        }
+    }
 }
 
 unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 {
     Object obj;
-    obj.mesh = mesh;
     
     glGenVertexArrays(1, &obj.vao);
     glGenBuffers(1, &obj.vboVertex);
     glGenBuffers(1, &obj.vboIndex);
+    obj.faceCount = (GLsizei)mesh->faces.size();
+    obj.texturable = false;
     
     OpenGLState::BindVertexArray(obj.vao);	
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(0); //Position
+    glEnableVertexAttribArray(1); //Normal
+    if(mesh->isTexturable())
+    {
+        glEnableVertexAttribArray(2); //UV
+        glEnableVertexAttribArray(3); //Tangent
+        obj.texturable = true;
+    }
     
     glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*mesh->vertices.size(), &mesh->vertices[0].pos.x, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)sizeof(glm::vec3));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3)*2));
+    glBufferData(GL_ARRAY_BUFFER, mesh->getVertexSize() * mesh->getNumOfVertices(), mesh->getVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, mesh->getVertexSize(), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE,  mesh->getVertexSize(), (void*)sizeof(glm::vec3));
+    if(mesh->isTexturable())
+    {
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, mesh->getVertexSize(), (void*)(sizeof(glm::vec3)*2));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE,  mesh->getVertexSize(), (void*)(sizeof(glm::vec3)*2 + sizeof(glm::vec2)));
+    }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face)*mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
     objects.push_back(obj);
     return (unsigned int)objects.size()-1;
 }
 
-std::string OpenGLContent::CreateSimpleLook(std::string name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, GLfloat reflectivity, std::string textureName)
+std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+                                            GLfloat reflectivity, const std::string& albedoTextureName)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1045,16 +1055,13 @@ std::string OpenGLContent::CreateSimpleLook(std::string name, glm::vec3 rgbColor
     look.reflectivity = reflectivity;
     look.params.push_back(specular);
     look.params.push_back(shininess);
-    
-    if(textureName != "") 
-        look.textures.push_back(LoadTexture(textureName));
-    
+    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName);
     looks.push_back(look);
-    
     return look.name;
 }
 
-std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, GLfloat reflectivity, std::string textureName)
+std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
+                                              GLfloat reflectivity, const std::string& albedoTextureName, const std::string& normalTextureName)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1063,12 +1070,9 @@ std::string OpenGLContent::CreatePhysicalLook(std::string name, glm::vec3 rgbCol
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);
-    
-    if(textureName != "")
-        look.textures.push_back(LoadTexture(textureName));
-        
+    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName, false, maxAnisotropy);
+    if(normalTextureName != "") look.normalTexture = LoadTexture(normalTextureName);
     looks.push_back(look);
-    
     return look.name;
 }
 
@@ -1077,35 +1081,53 @@ void OpenGLContent::AddView(OpenGLView *view)
     views.push_back(view);
 }
 
-OpenGLView* OpenGLContent::getView(unsigned int id)
+OpenGLView* OpenGLContent::getView(size_t id)
 {
     if(id < views.size())
         return views[id];
     else
-        return NULL;
+        return nullptr;
 }
 
-unsigned int OpenGLContent::getViewsCount()
+size_t OpenGLContent::getViewsCount()
 {
-    return (unsigned int)views.size();
+    return views.size();
 }
 
 void OpenGLContent::AddLight(OpenGLLight* light)
 {
     lights.push_back(light);
+
+    std::sort(lights.begin(), lights.end());
+    lightsUBOData.numPointLights = 0;
+    lightsUBOData.numSpotLights = 0;
+
+    for(size_t i=0; i<lights.size(); ++i)
+    {
+        switch(lights[i]->getType())
+        {
+            case LightType::POINT_LIGHT:
+                ++lightsUBOData.numPointLights;
+                break;
+
+            case LightType::SPOT_LIGHT:
+                ++lightsUBOData.numSpotLights;
+                break;
+        }
+    }
 }
 
-OpenGLLight* OpenGLContent::getLight(unsigned int id)
+OpenGLLight* OpenGLContent::getLight(size_t id)
 {
     if(id < lights.size())
         return lights[id];
     else
-        return NULL;
+        return nullptr;
 }
 
-unsigned int OpenGLContent::getLightsCount()
+size_t OpenGLContent::getLightsCount()
 {
-    return (unsigned int)lights.size();
+    return lights.size();
 }
 
 int OpenGLContent::getLookId(std::string name)
@@ -1116,58 +1138,213 @@ int OpenGLContent::getLookId(std::string name)
             
     return -1;
 }
+
+const Object& OpenGLContent::getObject(size_t id)
+{
+    return objects[id];
+}
+
+const Look& OpenGLContent::getLook(size_t id)
+{
+    return looks[id];
+}
     
 //Static methods
-GLuint OpenGLContent::LoadTexture(std::string filename)
+GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
     int width, height, channels;
+    int reqChannels = hasAlphaChannel ? 4 : 3;
     GLuint texture;
     
     // Allocate image; fail out on error
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, 3);
+    unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, reqChannels);
     if(dataBuffer == NULL)
     {
         cError("Failed to load texture from: %s", filename.c_str());
-        return -1;
+        return 0;
     }
     
-    cInfo("Loading texture from: %s", filename.c_str());
+    if(channels != reqChannels)
+    {
+        cWarning("Texture has %d channels while expected %d channels!", channels, reqChannels);
+    }
+
+    cInfo("Loaded texture from: %s", filename.c_str());
     
-    GLfloat maxAniso = 0.0f;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-    
-    // Allocate an OpenGL texture
     glGenTextures(1, &texture);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    // Upload texture to memory
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
-    // Set certain properties of texture
-    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, reqChannels == 3 ? GL_RGB8 : GL_RGBA8, width, height, 0, reqChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-    // Wrap texture around
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    if(anisotropy > 0.f)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
     OpenGLState::UnbindTexture(TEX_BASE);
-    // Release internal buffer
+    
     stbi_image_free(dataBuffer);
     
     return texture;
 }
 
-GLuint OpenGLContent::LoadInternalTexture(std::string filename)
+GLuint OpenGLContent::LoadInternalTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
-    return LoadTexture(GetShaderPath() + filename);
+    return LoadTexture(GetShaderPath() + filename, hasAlphaChannel, anisotropy);
 }
 
-Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
+GLuint OpenGLContent::GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, GLenum type, const void* data, 
+                                      FilteringMode fm, bool repeat, bool anisotropy)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    OpenGLState::BindTexture(TEX_BASE, target, texture);
+    
+    switch(target)
+    {
+        case GL_TEXTURE_1D:
+            if(dimensions.x == 0)
+            {
+                OpenGLState::UnbindTexture(TEX_BASE);
+                glDeleteTextures(1, &texture);
+                cError("Texture dimensions cannot be equal to 0!");
+                return 0;
+            }
+            glTexImage1D(target, 0, internalFormat, dimensions.x, 0, format, type, data);
+            break;
+
+        case GL_TEXTURE_2D:
+            if(dimensions.x == 0 || dimensions.y == 0)
+            {
+                OpenGLState::UnbindTexture(TEX_BASE);
+                glDeleteTextures(1, &texture);
+                cError("Texture dimensions cannot be equal to 0!");
+                return 0;
+            }
+            glTexImage2D(target, 0, internalFormat, dimensions.x, dimensions.y, 0, format, type, data);
+            break;
+
+        case GL_TEXTURE_2D_ARRAY:
+        case GL_TEXTURE_3D:
+            if(dimensions.x == 0 || dimensions.y == 0 || dimensions.z == 0)
+            {
+                OpenGLState::UnbindTexture(TEX_BASE);
+                glDeleteTextures(1, &texture);
+                cError("Texture dimensions cannot be equal to 0!");
+                return 0;
+            }
+            glTexImage3D(target, 0, internalFormat, dimensions.x, dimensions.y, dimensions.z, 0, format, type, data);
+            break;
+
+        default:
+            OpenGLState::UnbindTexture(TEX_BASE);
+            glDeleteTextures(1, &texture);
+            cError("Unsupported texture format requested!");
+            return 0;
+    }
+
+    GLenum repeatMode = repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, repeatMode);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, repeatMode);
+    if(target == GL_TEXTURE_3D)
+        glTexParameteri(target, GL_TEXTURE_WRAP_R, repeatMode);
+
+    if(anisotropy)
+        glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, OpenGLState::GetMaxAnisotropy());
+
+    switch(fm)
+    {
+        case FilteringMode::NEAREST:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            break;
+
+        case FilteringMode::BILINEAR:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            break;
+
+        case FilteringMode::BILINEAR_MIPMAP:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glGenerateMipmap(target);
+            break;
+
+        case FilteringMode::TRILINEAR:
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glGenerateMipmap(target);
+            break;
+    }
+
+    OpenGLState::UnbindTexture(TEX_BASE);
+    return texture;
+}
+
+GLuint OpenGLContent::GenerateFramebuffer(const std::vector<FBOTexture>& textures)
+{
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    OpenGLState::BindFramebuffer(fbo);
+
+    for(size_t i = 0; i < textures.size(); ++i)
+    {
+        if(textures[i].attach == GL_DEPTH_ATTACHMENT 
+           || textures[i].attach == GL_STENCIL_ATTACHMENT
+           || textures[i].attach == GL_DEPTH_STENCIL_ATTACHMENT)
+        {
+            glFramebufferTexture(GL_FRAMEBUFFER, textures[i].attach, textures[i].tex, textures[i].lvl);
+            continue;
+        }
+
+        switch(textures[i].target)
+        {
+        case GL_TEXTURE_1D:
+            glFramebufferTexture1D(GL_FRAMEBUFFER, textures[i].attach, GL_TEXTURE_1D, textures[i].tex, textures[i].lvl);
+            break;
+
+        case GL_TEXTURE_2D:
+        case GL_TEXTURE_RECTANGLE:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Z: 
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_X: 
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y: 
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        case GL_TEXTURE_2D_MULTISAMPLE:
+            glFramebufferTexture2D(GL_FRAMEBUFFER, textures[i].attach, textures[i].target, textures[i].tex, textures[i].lvl);
+            break;
+
+        case GL_TEXTURE_3D:
+            glFramebufferTexture3D(GL_FRAMEBUFFER, textures[i].attach, GL_TEXTURE_3D, textures[i].tex, textures[i].lvl, textures[i].z);
+            break;
+        
+        default:
+            break;
+        }
+    }
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        cError("Framebuffer initialization failed!");
+        OpenGLState::BindFramebuffer(0);
+        glDeleteFramebuffers(1, &fbo);
+        return 0;
+    }
+    else
+    {
+        OpenGLState::BindFramebuffer(0);
+        return fbo;
+    }
+}
+
+Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvScale)
+{
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
+    TexturableVertex vt;
     
     //Only one normal
     vt.pos.z = 0;
@@ -1179,15 +1356,15 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     mesh->vertices.push_back(vt);
     
     vt.pos.x = halfExtents;
-    vt.uv = glm::vec2(0.f, halfExtents*2.f);
+    vt.uv = glm::vec2(0.f, halfExtents*2.f)/uvScale;
     mesh->vertices.push_back(vt);
         
     vt.pos.y = halfExtents;
-    vt.uv = glm::vec2(halfExtents*2.f, halfExtents*2.f);
+    vt.uv = glm::vec2(halfExtents*2.f, halfExtents*2.f)/uvScale;
     mesh->vertices.push_back(vt);
         
     vt.pos.x = -halfExtents;
-    vt.uv = glm::vec2(halfExtents*2.f, 0.f);
+    vt.uv = glm::vec2(halfExtents*2.f, 0.f)/uvScale;
     mesh->vertices.push_back(vt);
     
     f.vertexID[0] = 0;
@@ -1197,16 +1374,21 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents)
     f.vertexID[1] = 3;
     f.vertexID[2] = 2;
     mesh->faces.push_back(f);
+
+    glm::vec3 T;
+    mesh->ComputeFaceTangent(0, T);
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+        mesh->vertices[i].tangent = T;
+
     return mesh;
 }
 
 Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, unsigned int uvMode)
 {
     //Build mesh
-    Mesh* mesh = new Mesh();
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
-    mesh->hasUVs = true;
+    TexturableVertex vt;
     
     /////VERTICES
     glm::vec3 v1(-halfExtents.x, -halfExtents.y, -halfExtents.z);
@@ -1445,25 +1627,21 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
             break;
     }
     
-    //Subdivide
-    for(unsigned int i=0; i<subdivisions; ++i)
-        Subdivide(mesh);
-        
-    //SmoothNormals(mesh);
-    
+    //Postprocess
+    for(unsigned int i=0; i<subdivisions; ++i) Subdivide(mesh);
+    ComputeTangents(mesh);
+
     return mesh;
 }
 
 Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions) 
 {
-    Mesh* mesh = new Mesh;
+    PlainMesh* mesh = new PlainMesh;
     Face f;
     Vertex vt;
     vt.normal = glm::vec3(1,0,0);
-    mesh->hasUVs = false;
-    vt.uv = glm::vec2(0,0);
     
-    //Basuc icosahedron
+    //Basic icosahedron
     const GLfloat X = -.525731112119133606f;
     const GLfloat Z = -.850650808352039932f;
     const GLfloat N = 0.f;
@@ -1601,11 +1779,10 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
 
 Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices)
 {
-    Mesh* mesh = new Mesh;
+    TexturableMesh* mesh = new TexturableMesh;
     GLfloat halfHeight = height/2.f;
-    Vertex vt;
+    TexturableVertex vt;
     Face f;
-    mesh->hasUVs = true;
     
     //SIDE
     //Side vertices
@@ -1680,15 +1857,15 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     
     Subdivide(mesh);
     Subdivide(mesh);
+    ComputeTangents(mesh);
     return mesh;
 }
 
 Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices, unsigned int minorSlices)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
+    TexturableVertex vt;
 
     //Vertices
     for(unsigned int i=0; i<=majorSlices; ++i)
@@ -1723,15 +1900,15 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
             mesh->faces.push_back(f);
         }
     }
-        
+    
+    ComputeTangents(mesh);
     return mesh;
 }
     
 Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
-
+    TexturableMesh* mesh = new TexturableMesh;
+    
     GLfloat T = profileThickness/100.f;
     GLfloat m = maxCamber/100.f;
     GLfloat p = maxCamberPos/100.f;
@@ -1795,7 +1972,7 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
     }
     
     //Vertices
-    Vertex v;
+    TexturableVertex v;
     
     //----Top side
     //Front base
@@ -1999,17 +2176,15 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
         f.vertexID[2] = i*2+3;
         mesh->faces.push_back(f);
     }
-    
+    ComputeTangents(mesh);
     return mesh;
 }
     
 Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight)
 {
-    Mesh* mesh = new Mesh;
-    mesh->hasUVs = true;
-    
+    TexturableMesh* mesh = new TexturableMesh;
     Face f;
-    Vertex vt;
+    TexturableVertex vt;
     
     GLfloat fullSizeX = (sizeX-1) * scaleX;
     GLfloat fullSizeY = (sizeY-1) * scaleY;
@@ -2038,7 +2213,7 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
         }
     
     SmoothNormals(mesh);
-    
+    ComputeTangents(mesh);
     return mesh;
 }
 
@@ -2049,6 +2224,8 @@ Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
         abort();
     if(smooth)
         SmoothNormals(mesh);
+    if(mesh->isTexturable())
+        ComputeTangents((TexturableMesh*)mesh);
     return mesh;
 }
 
@@ -2057,50 +2234,86 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
     glm::mat4 gT = glMatrixFromTransform(T);
     glm::mat3 gR(gT);
     
-    for(size_t i=0; i<mesh->vertices.size(); ++i)
+    if(mesh->isTexturable())
     {
-        mesh->vertices[i].pos = glm::vec3(gT * glm::vec4(mesh->vertices[i].pos, 1.f));
-        mesh->vertices[i].normal = gR * mesh->vertices[i].normal;
+        TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        {
+            m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
+            m->vertices[i].normal = gR * m->vertices[i].normal;
+            m->vertices[i].tangent = gR * m->vertices[i].tangent;
+        }    
+    }
+    else
+    {   
+        PlainMesh* m = static_cast<PlainMesh*>(mesh);
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        {
+            m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
+            m->vertices[i].normal = gR * m->vertices[i].normal;
+        }    
     }
 }
 
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
-    //For all faces
-    for(unsigned int i=0; i<mesh->faces.size(); ++i)
+    if(mesh->isTexturable())
     {
-        Face thisFace = mesh->faces[i];
-        glm::vec3 thisN = mesh->ComputeFaceNormal(i);
-        
-        //For every vertex
-        for(unsigned short int h=0; h<3; ++h)
+        TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+        //Clear normals
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::vec3(0.f);
+        //Accumulate normals
+        for(size_t i=0; i<m->faces.size(); ++i)
         {
-            glm::vec3 n = thisN;
-            unsigned int contrib = 1;
-            
-            //Loop through all faces
-            for(unsigned int j=0; j<mesh->faces.size(); ++j)
-            {
-                if(j != i) //Reject same face
-                {
-                    Face thatFace = mesh->faces[j];
-                    glm::vec3 thatN = mesh->ComputeFaceNormal(j);
-                    
-                    for(unsigned short int k=0; k<3; k++)
-                    {
-                        if((mesh->vertices[thatFace.vertexID[k]].pos == mesh->vertices[thisFace.vertexID[h]].pos)&&(glm::dot(thatN,thisN) > 0.707f))
-                        {
-                            n += thatN;
-                            contrib++;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            n /= (GLfloat)contrib;
-            mesh->vertices[mesh->faces[i].vertexID[h]].normal = n;
+            glm::vec3 N = m->ComputeFaceNormal(i);
+            for(unsigned short h=0; h<3; ++h)
+                m->vertices[m->faces[i].vertexID[h]].normal += N;
         }
+        //Normalize
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::normalize(m->vertices[i].normal); 
+    }
+    else
+    {
+        PlainMesh* m = static_cast<PlainMesh*>(mesh);
+        //Clear normals
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::vec3(0.f);
+        //Accumulate normals
+        for(size_t i=0; i<m->faces.size(); ++i)
+        {
+            glm::vec3 N = m->ComputeFaceNormal(i);
+            for(unsigned short h=0; h<3; ++h)
+                m->vertices[m->faces[i].vertexID[h]].normal += N;
+        }
+        //Normalize
+        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+            m->vertices[i].normal = glm::normalize(m->vertices[i].normal);
+    }
+}
+
+void OpenGLContent::ComputeTangents(TexturableMesh* mesh)
+{
+    //Clear tangents
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    {
+        mesh->vertices[i].tangent = glm::vec3(0.f);
+        //mesh->vertices[i].bitangent = glm::vec3(0.f);
+    }
+    //Accumulate tangents
+    for(size_t i=0; i<mesh->faces.size(); ++i)
+    {
+        glm::vec3 T;
+        mesh->ComputeFaceTangent(i, T);
+        for(unsigned short h=0; h<3; ++h)
+            mesh->vertices[mesh->faces[i].vertexID[h]].tangent += T;
+    }
+    //Normalize
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    {
+        mesh->vertices[i].tangent = glm::normalize(mesh->vertices[i].tangent);
+        mesh->vertices[i].tangent = glm::normalize(mesh->vertices[i].tangent - mesh->vertices[i].normal * glm::dot(mesh->vertices[i].normal, mesh->vertices[i].tangent));
     }
 }
 
@@ -2110,16 +2323,28 @@ GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh*
     if(key.first > key.second)
         std::swap(key.first, key.second);
         
-    auto inserted=lookup.insert({key, mesh->vertices.size()});
+    auto inserted = lookup.insert({key, mesh->getNumOfVertices()});
     if(inserted.second)
     {
-        glm::vec3 edge0 = mesh->vertices[firstID].pos;
-        glm::vec3 edge1 = mesh->vertices[secondID].pos;
-        Vertex vt;
-        vt.pos =  glm::normalize(edge0 + edge1);
-        vt.normal = vt.pos;
-        vt.uv = glm::vec2(0,0);
-        mesh->vertices.push_back(vt);
+        glm::vec3 edge0 = mesh->getVertexPos(firstID);  
+        glm::vec3 edge1 = mesh->getVertexPos(secondID);
+        if(mesh->isTexturable())
+        {
+            TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+            TexturableVertex vt;
+            vt.pos =  glm::normalize(edge0 + edge1);
+            vt.normal = vt.pos;
+            vt.uv = glm::vec2(0,0);
+            m->vertices.push_back(vt);
+        }
+        else
+        {
+            PlainMesh* m = static_cast<PlainMesh*>(mesh);
+            Vertex vt;
+            vt.pos =  glm::normalize(edge0 + edge1);
+            vt.normal = vt.pos;
+            m->vertices.push_back(vt);
+        }
     }
     
     return inserted.first->second;
@@ -2131,21 +2356,38 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
     if(key.first > key.second)
         std::swap(key.first, key.second);
         
-    auto inserted=lookup.insert({key, mesh->vertices.size()});
+    auto inserted=lookup.insert({key, mesh->getNumOfVertices()});
     if(inserted.second)
     {
-        glm::vec3 edge0 = mesh->vertices[firstID].pos;
-        glm::vec3 edge1 = mesh->vertices[secondID].pos;
-        glm::vec3 edge0n = mesh->vertices[firstID].normal;
-        glm::vec3 edge1n = mesh->vertices[secondID].normal;
-        glm::vec2 edge0uv = mesh->vertices[firstID].uv;
-        glm::vec2 edge1uv = mesh->vertices[secondID].uv;
-        
-        Vertex vt;
-        vt.pos = (edge0 + edge1)/(GLfloat)2;
-        vt.normal = glm::normalize(edge0n + edge1n);
-        vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
-        mesh->vertices.push_back(vt);
+        if(mesh->isTexturable())
+        {
+            TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+            glm::vec3 edge0 = m->vertices[firstID].pos;
+            glm::vec3 edge1 = m->vertices[secondID].pos;
+            glm::vec3 edge0n = m->vertices[firstID].normal;
+            glm::vec3 edge1n = m->vertices[secondID].normal;
+            glm::vec2 edge0uv = m->vertices[firstID].uv;
+            glm::vec2 edge1uv = m->vertices[secondID].uv;
+            
+            TexturableVertex vt;
+            vt.pos = (edge0 + edge1)/(GLfloat)2;
+            vt.normal = glm::normalize(edge0n + edge1n);
+            vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
+            m->vertices.push_back(vt);
+        }
+        else
+        {
+            PlainMesh* m = static_cast<PlainMesh*>(mesh);
+            glm::vec3 edge0 = m->vertices[firstID].pos;
+            glm::vec3 edge1 = m->vertices[secondID].pos;
+            glm::vec3 edge0n = m->vertices[firstID].normal;
+            glm::vec3 edge1n = m->vertices[secondID].normal;
+            
+            Vertex vt;
+            vt.pos = (edge0 + edge1)/(GLfloat)2;
+            vt.normal = glm::normalize(edge0n + edge1n);
+            m->vertices.push_back(vt);
+        }
     }
     
     return inserted.first->second;
@@ -2277,9 +2519,9 @@ void OpenGLContent::AABB(Mesh* mesh, glm::vec3& min, glm::vec3& max)
     GLfloat minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
     GLfloat minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
     
-    for(unsigned int i=0; i<mesh->vertices.size(); i++)
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
     {
-        glm::vec3 vertex = mesh->vertices[i].pos;
+        glm::vec3 vertex = mesh->getVertexPos(i);
         
         if(vertex.x > maxX)
             maxX = vertex.x;
@@ -2308,16 +2550,16 @@ void OpenGLContent::AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffse
 {
     glm::vec3 tempCenter(0,0,0);
     
-    for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-        tempCenter += mesh->vertices[i].pos;
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+        tempCenter += mesh->getVertexPos(i);
     
-    tempCenter /= (GLfloat)mesh->vertices.size();
+    tempCenter /= (GLfloat)mesh->getNumOfVertices();
     
     GLfloat radius = 0;
     
-    for(unsigned int i=0; i<mesh->vertices.size(); ++i)
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
     {
-        glm::vec3 v = mesh->vertices[i].pos;
+        glm::vec3 v = mesh->getVertexPos(i);
         GLfloat r = glm::length(v-tempCenter);
         if(r > radius)
             radius = r;

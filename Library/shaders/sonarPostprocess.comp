@@ -1,0 +1,61 @@
+/*    
+    Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#version 430
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// One input - intensity for each bin/beam combination
+layout(r32f) uniform image2D sonarOutput;
+
+// One output - intensity for each bin/beam combination
+layout(r32f) uniform image2D sonarPost;
+
+#define GAUSSIAN_WIDTH 5
+
+const float sampleWeight2D[GAUSSIAN_WIDTH][GAUSSIAN_WIDTH] = 
+{
+    {0.003765, 0.015019, 0.023792, 0.015019, 0.003765}, //sigma = 1.0
+    {0.015019, 0.059912, 0.094907, 0.059912, 0.015019},
+    {0.023792, 0.094907, 0.150342, 0.094907, 0.023792},
+    {0.015019, 0.059912, 0.094907, 0.059912, 0.015019},
+    {0.003765, 0.015019, 0.023792, 0.015019, 0.003765}
+    //{0.000002, 0.000212, 0.000922, 0.000212, 0.000002}, //sigma = 0.5
+    //{0.000212, 0.024745, 0.107391, 0.024745, 0.000212},
+    //{0.000922, 0.107391, 0.466066, 0.107391, 0.000922},
+    //{0.000212, 0.024745, 0.107391, 0.024745, 0.000212},
+    //{0.000002, 0.000212, 0.000922, 0.000212, 0.000002}
+};
+
+void main()
+{
+    ivec2 dim = ivec2(imageSize(sonarOutput).xy); //nBeams x nBins
+    ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+    if(coords.x < dim.x && coords.y < dim.y)
+    {
+        //Gaussian blur
+        float value = 0.0;
+        for(int i=-GAUSSIAN_WIDTH/2; i<=GAUSSIAN_WIDTH/2; ++i) //Horizontal blur (beam interference)
+            for(int h=-GAUSSIAN_WIDTH/2; h<=GAUSSIAN_WIDTH/2; ++h) //Vertical blur (remove artifacts due to insufficient beam sampling)
+                value += sampleWeight2D[i+GAUSSIAN_WIDTH/2][h+GAUSSIAN_WIDTH/2] * imageLoad(sonarOutput, ivec2(coords.x+i, coords.y+h)).r;
+        value = clamp(value, 0.0, 1.0);
+        //Store data 
+        imageStore(sonarPost, coords, vec4(value));
+    }
+}
