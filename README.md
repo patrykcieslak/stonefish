@@ -76,16 +76,19 @@ This is free software, published under the General Public License v3.0.
 ### Change log
 
 *Version 0.9*
-- Requires support for OpenGL 4.3+ (compute shaders)
+- Moved to the OpenGL 4.3 functionality (compute shaders)
 - Complete rewrite of the ocean/underwater rendering pipeline
-- New linear tree based automatic LOD algorithm 
-- New automatic exposure and anti-aliasing algorithms
-- Logarythmic depth buffer for planet scale rendering
+- Light absorption and scattering in water based on Jerlov measurements
+- Full support of photo-reallistic sky and sunlight as well as point and spot lights
+- New, linear tree based, automatic LOD algorithm 
+- New automatic exposure (histogram based) and anti-aliasing (FXAA) algorithms
+- Logarythmic depth buffer for planet scale rendering without precision issues
 - Fully GPU-based simulation of forward-looking sonar (FLS)
 - Fully GPU-based simulation of side-scan sonnar (SSS)
 - Normal mapping to enable high resolution surface details
 - Faster download of data from the GPU memory
-- Scheduling of multiple view rendering
+- Scheduling of the rendering of multiple views
+- Reallistic measurement of the drawing time
 - Interactive selection outline in 3D view
 - OpenGL function handlers provided through GLAD (dropped outdated GLEW)
 - General cleaning of code and refactoring
