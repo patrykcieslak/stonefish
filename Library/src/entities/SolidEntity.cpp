@@ -495,6 +495,8 @@ Vector3 SolidEntity::getAppliedForce()
         else
             return multiBody->getBaseForce();
     }
+    else
+        return V0();
 }
 
 Vector3 SolidEntity::getLinearAcceleration() const
