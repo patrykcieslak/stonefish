@@ -36,11 +36,6 @@ namespace sf
  
 //Static
 std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
-#ifdef DEBUG
-const Scalar AcousticModem::soundVelocity = Scalar(10);
-#else
-const Scalar AcousticModem::soundVelocity = Scalar(1500);
-#endif
 
 void AcousticModem::addNode(AcousticModem* node)
 {
@@ -192,7 +187,7 @@ void AcousticModem::InternalUpdate(Scalar dt)
         Vector3 dir = dO - sO;
         Scalar d = dir.length();
         
-        if(d <= soundVelocity*dt) //Message reached?
+        if(d <= SOUND_VELOCITY_WATER*dt) //Message reached?
         {
             mIt->first->travelled += d;
             dest->MessageReceived(mIt->first);
@@ -201,7 +196,7 @@ void AcousticModem::InternalUpdate(Scalar dt)
         else //Advance pulse
         {
             dir /= d; //Normalize direction
-            d = soundVelocity * dt;
+            d = SOUND_VELOCITY_WATER * dt;
             mIt->second += dir * d;
             mIt->first->travelled += d;
             ++mIt;

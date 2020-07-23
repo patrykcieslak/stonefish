@@ -40,12 +40,14 @@
 
 namespace sf
 {
+    //Basic type definitions
     typedef btScalar Scalar;
     typedef btQuaternion Quaternion;
     typedef btVector3 Vector3;
     typedef btMatrix3x3 Matrix3;
     typedef btTransform Transform;
     
+    //Utility functions
     inline Transform I4() { return Transform::getIdentity(); }
     inline Matrix3 I3() { return Matrix3::getIdentity(); }
     inline Quaternion IQ() { return Quaternion::getIdentity(); }
@@ -53,6 +55,12 @@ namespace sf
     inline Vector3 VX() { return Vector3(1,0,0); }
     inline Vector3 VY() { return Vector3(0,1,0); }
     inline Vector3 VZ() { return Vector3(0,0,1); }
+    inline Scalar clamp(Scalar v, Scalar bottom, Scalar top) { return (v < bottom) ? bottom : ((v > top) ? top : v); }
+    inline Scalar radians(Scalar deg) { return deg / Scalar(180) * Scalar(M_PI); }
+    inline Scalar degrees(Scalar rad) { return rad / Scalar(M_PI) * Scalar(180); }
+
+    //Various constants
+    const Scalar SOUND_VELOCITY_WATER = Scalar(1531);
 }
 
 #endif

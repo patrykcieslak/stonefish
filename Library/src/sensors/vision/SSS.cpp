@@ -30,8 +30,6 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLSSS.h"
 
-#define SOUND_VELOCITY_WATER Scalar(1531) //Sea water
-
 namespace sf
 {
 
@@ -44,12 +42,6 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
     setRangeMax(maxRange);
     setRangeMin(minRange);
     gain = Scalar(1);
-
-    if(frequency < Scalar(0))
-    {
-        Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
-        setUpdateFrequency(Scalar(1)/pulseTime);
-    }
     fovV = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
     tilt = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
     cMap = cm;
@@ -99,17 +91,17 @@ GLubyte* SSS::getDisplayDataPointer()
     return displayData;
 }
 
-Scalar SSS::getRangeMin()
+Scalar SSS::getRangeMin() const
 {
     return Scalar(range.x);
 }
 
-Scalar SSS::getRangeMax()
+Scalar SSS::getRangeMax() const
 {
     return Scalar(range.y);
 }
 
-Scalar SSS::getGain()
+Scalar SSS::getGain() const
 {
     return gain;
 }
@@ -121,8 +113,8 @@ VisionSensorType SSS::getVisionSensorType()
 
 void SSS::InitGraphics()
 {
-    glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
-                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, false);
+    glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range);
     glSSS->setSonar(this);
     glSSS->setColorMap(cMap);
     UpdateTransform();

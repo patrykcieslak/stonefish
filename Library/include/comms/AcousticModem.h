@@ -92,8 +92,6 @@ namespace sf
         
         static AcousticModem* getNode(uint64_t deviceId);
         
-        static const Scalar soundVelocity;
-        
     private:
         bool isReceptionPossible(Vector3 dir, Scalar distance);
         

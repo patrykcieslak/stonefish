@@ -115,6 +115,10 @@ void GLSLShader::Use()
 {
     if(valid)
         OpenGLState::UseProgram(program);
+#ifdef DEBUG
+    else
+        cError("Trying to use invalid shader!");
+#endif
 }
 
 bool GLSLShader::AddAttribute(std::string name, ParameterType type)

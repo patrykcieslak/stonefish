@@ -49,7 +49,7 @@ namespace sf
          \param minRange the minimum measured range [m]
          \param maxRange the maximum measured range [m]
          \param cm the color map used to display sonar data
-         \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
+         \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
         SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
             Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
@@ -106,13 +106,13 @@ namespace sf
         void setGain(Scalar g);
 
         //! A method returning the minimum range of the sonar.
-        Scalar getRangeMin();
+        Scalar getRangeMin() const;
         
         //! A method returning the maximum range of the sonar.
-        Scalar getRangeMax();
+        Scalar getRangeMax() const;
 
         //! A method returning the gain of the sonar.
-        Scalar getGain();
+        Scalar getGain() const;
         
         //! A method returning a pointer to the sonar data.
         /*!

@@ -37,36 +37,24 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
-#define SSS_VRES_FACTOR 1.f
+#define SSS_VRES_FACTOR 0.2f
 #define SSS_HRES_FACTOR 100.f
 
 namespace sf
 {
 
-GLSLShader* OpenGLSSS::sonarInputShader[2] = {nullptr, nullptr};
-GLSLShader* OpenGLSSS::sonarShiftShader = nullptr;
-GLSLShader* OpenGLSSS::sonarVisualizeShader = nullptr;
-
 OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 forward,
-                     GLint originX, GLint originY, GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
-                     GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range_, bool continuousUpdate)
-: OpenGLView(originX, originY, numOfBins, numOfLines), randDist(0.f, 1.f)
+                     GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
+                     GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range_)
+: OpenGLSonar(centerPosition, direction, forward, glm::uvec2(numOfBins, numOfLines), range_)
 {
-    _needsUpdate = false;
-    continuous = continuousUpdate;
-    newData = false;
+    //SSS specs
     sonar = nullptr;
-    range = range_;
-    gain = 1.f;
     tilt = glm::radians(verticalTiltDeg);
     fov.x = glm::radians(verticalBeamWidthDeg);
     fov.y = glm::radians(horizontalBeamWidthDeg);
-    GLfloat binRange = 2.f*(range.y-range.x)/(GLfloat)viewportWidth;
-    nBeamSamples.x = glm::max((GLuint)ceilf(verticalBeamWidthDeg * 1.f/binRange * SSS_VRES_FACTOR), (GLuint)2048);
-    nBeamSamples.y = glm::max((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
-    cMap = ColorMap::ORANGE_COPPER;
-    
-    SetupSonar(centerPosition, direction, forward);
+    nBeamSamples.x = glm::min((GLuint)ceilf(verticalBeamWidthDeg * (GLfloat)numOfBins/2.f * SSS_VRES_FACTOR), (GLuint)2048);
+    nBeamSamples.y = glm::min((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
     UpdateTransform();
     
     //Setup matrices
@@ -112,8 +100,8 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, displayTex);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     OpenGLState::UnbindTexture(TEX_BASE);
@@ -121,6 +109,35 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     textures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTex));
     displayFBO = OpenGLContent::GenerateFramebuffer(textures);
     
+    //Display quad
+    GLfloat quadData[4][4];
+    quadData[0][0] = -1.f;
+    quadData[0][1] = 1.f;
+    quadData[0][2] = 0.f;
+    quadData[0][3] = 1.f;
+    quadData[1][0] = -1.f;
+    quadData[1][1] = -1.f;
+    quadData[1][2] = 0.f;
+    quadData[1][3] = 0.f;
+    quadData[2][0] = 1.f;
+    quadData[2][1] = 1.f;
+    quadData[2][2] = 1.f;
+    quadData[2][3] = 1.f;
+    quadData[3][0] = 1.f;
+    quadData[3][1] = -1.f;
+    quadData[3][2] = 1.f;
+    quadData[3][3] = 0.f;
+    
+    glGenVertexArrays(1, &displayVAO);
+    OpenGLState::BindVertexArray(displayVAO);
+    glEnableVertexAttribArray(0);
+    glGenBuffers(1, &displayVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, displayVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    OpenGLState::BindVertexArray(0);
+
     //Load output shader
     std::string header = "#version 430\n#define N_HALF_BINS " + std::to_string(viewportWidth/2)
                          + "\n#define N_HORI_BEAM_SAMPLES " + std::to_string(nBeamSamples.y)
@@ -155,39 +172,29 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     sonarOutputShader[1]->SetUniform("vfov", fov.x);
     sonarOutputShader[1]->SetUniform("tilt", tilt);
     OpenGLState::UseProgram(0);  
+
+    sources.clear();
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarShift.comp"));
+    sonarShiftShader = new GLSLShader(sources);
+    sonarShiftShader->AddUniform("sonarOutputIn", ParameterType::INT);
+    sonarShiftShader->AddUniform("sonarOutputOut", ParameterType::INT);
+    sonarShiftShader->Use();
+    sonarShiftShader->SetUniform("sonarOutputIn", TEX_POSTPROCESS1);
+    sonarShiftShader->SetUniform("sonarOutputOut", TEX_POSTPROCESS2);
+    OpenGLState::UseProgram(0);
 }
 
 OpenGLSSS::~OpenGLSSS()
 {
     delete sonarOutputShader[0];
     delete sonarOutputShader[1];
-    glDeleteTextures(1, &inputRangeIntensityTex);
-    glDeleteRenderbuffers(1, &inputDepthRBO);
-    glDeleteFramebuffers(1, &renderFBO);
+    delete sonarShiftShader;
     glDeleteTextures(3, outputTex);
-    glDeleteTextures(1, &displayTex);
-    glDeleteFramebuffers(1, &displayFBO);
-
-    if(sonar != nullptr)
-    {
-        glDeleteBuffers(1, &outputPBO);
-        glDeleteBuffers(1, &displayPBO);
-    }
-}
-
-void OpenGLSSS::SetupSonar(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
-{
-    tempDir = _dir;
-    tempCenter = _eye;
-    tempForward = _up;
 }
 
 void OpenGLSSS::UpdateTransform()
 {
-    center = tempCenter;
-    dir = tempDir;
-    forward = tempForward;
-    SetupSonar();
+    OpenGLSonar::UpdateTransform();
 
     if(sonar == nullptr)
         return;
@@ -245,62 +252,6 @@ void OpenGLSSS::UpdateTransform()
     }
 }
 
-void OpenGLSSS::SetupSonar()
-{
-    sonarTransform = glm::lookAt(center, center+dir, forward);
-}
-
-glm::vec3 OpenGLSSS::GetEyePosition() const
-{
-    return center;
-}
-
-glm::vec3 OpenGLSSS::GetLookingDirection() const
-{
-    return dir;
-}
-
-glm::vec3 OpenGLSSS::GetUpDirection() const
-{
-    return forward;
-}
-
-glm::mat4 OpenGLSSS::GetProjectionMatrix() const
-{
-    return projection;
-}
-
-glm::mat4 OpenGLSSS::GetViewMatrix() const
-{
-    return sonarTransform;
-}
-
-GLfloat OpenGLSSS::GetFarClip() const
-{
-    return range.y;
-}
-
-void OpenGLSSS::Update()
-{
-    _needsUpdate = true;
-}
-
-bool OpenGLSSS::needsUpdate()
-{
-    if(_needsUpdate)
-    {
-        _needsUpdate = false;
-        return enabled;
-    }
-    else
-        return false;
-}
-
-void OpenGLSSS::setColorMap(ColorMap cm)
-{
-    cMap = cm;
-}
-
 void OpenGLSSS::setSonar(SSS* s)
 {
     sonar = s;
@@ -316,11 +267,6 @@ void OpenGLSSS::setSonar(SSS* s)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-ViewType OpenGLSSS::getType()
-{
-    return ViewType::SSS;
-}
-
 void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
 {
     OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
@@ -329,15 +275,14 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindFramebuffer(renderFBO);
     OpenGLState::Viewport(0, 0, nBeamSamples.x, nBeamSamples.y);
     sonarInputShader[1]->Use();
-    sonarInputShader[1]->SetUniform("eyePos", center);
+    sonarInputShader[1]->SetUniform("eyePos", GetEyePosition());
     sonarInputShader[0]->Use();
-    sonarInputShader[0]->SetUniform("eyePos", center);
+    sonarInputShader[0]->SetUniform("eyePos", GetEyePosition());
     GLSLShader* shader;
     for(size_t i=0; i<2; ++i) //For each of the sonar views
     {
         //Compute matrices
-        glm::mat4 V = views[i] * GetViewMatrix();
-        glm::mat4 VP = GetProjectionMatrix() * V;
+        glm::mat4 VP = GetProjectionMatrix() * views[i] * GetViewMatrix();
         //Clear color and depth for particular framebuffer layer
         glDrawBuffer(GL_COLOR_ATTACHMENT0 + (GLuint)i);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -400,7 +345,9 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS2);
     sonarVisualizeShader->SetUniform("colormap", static_cast<GLint>(cMap));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    content->DrawSAQ();
+    OpenGLState::BindVertexArray(displayVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    OpenGLState::BindVertexArray(0);
     OpenGLState::BindFramebuffer(0);
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -457,49 +404,5 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
         newData = true;
     }
 }
-
-///////////////////////// Static /////////////////////////////
-void OpenGLSSS::Init()
-{
-    sonarInputShader[0] = new GLSLShader("sonarInput.frag", "sonarInput.vert");
-    sonarInputShader[0]->AddUniform("MVP", ParameterType::MAT4);
-    sonarInputShader[0]->AddUniform("M", ParameterType::MAT4);
-    sonarInputShader[0]->AddUniform("N", ParameterType::MAT3);
-    sonarInputShader[0]->AddUniform("eyePos", ParameterType::VEC3);
-    sonarInputShader[0]->AddUniform("restitution", ParameterType::FLOAT);
-    
-    sonarInputShader[1] = new GLSLShader("sonarInputUv.frag", "sonarInputUv.vert");
-    sonarInputShader[1]->AddUniform("MVP", ParameterType::MAT4);
-    sonarInputShader[1]->AddUniform("M", ParameterType::MAT4);
-    sonarInputShader[1]->AddUniform("N", ParameterType::MAT3);
-    sonarInputShader[1]->AddUniform("eyePos", ParameterType::VEC3);
-    sonarInputShader[1]->AddUniform("restitution", ParameterType::FLOAT);
-    sonarInputShader[1]->AddUniform("texNormal", ParameterType::INT);
-    sonarInputShader[1]->Use();
-    sonarInputShader[1]->SetUniform("texNormal", TEX_MAT_NORMAL);
-    OpenGLState::UseProgram(0);
-    
-    std::vector<GLSLSource> sources;
-    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "sonarShift.comp"));
-    sonarShiftShader = new GLSLShader(sources);
-    sonarShiftShader->AddUniform("sonarOutputIn", ParameterType::INT);
-    sonarShiftShader->AddUniform("sonarOutputOut", ParameterType::INT);
-    sonarShiftShader->Use();
-    sonarShiftShader->SetUniform("sonarOutputIn", TEX_POSTPROCESS1);
-    sonarShiftShader->SetUniform("sonarOutputOut", TEX_POSTPROCESS2);
-    OpenGLState::UseProgram(0);
-
-    sonarVisualizeShader = new GLSLShader("sonarVisualize.frag");
-    sonarVisualizeShader->AddUniform("texSonarData", ParameterType::INT);
-    sonarVisualizeShader->AddUniform("colormap", ParameterType::INT);
-}
-
-void OpenGLSSS::Destroy()
-{
-    if(sonarInputShader[0] != nullptr) delete sonarInputShader[0];
-    if(sonarInputShader[1] != nullptr) delete sonarInputShader[1];
-    if(sonarShiftShader != nullptr) delete sonarShiftShader;
-    if(sonarVisualizeShader != nullptr) delete sonarVisualizeShader;
-}
-
+   
 }

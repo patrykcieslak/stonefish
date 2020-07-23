@@ -35,8 +35,7 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
-#include "graphics/OpenGLFLS.h"
-#include "graphics/OpenGLSSS.h"
+#include "graphics/OpenGLSonar.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOceanParticles.h"
@@ -61,8 +60,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
-    OpenGLFLS::Init();
-    OpenGLSSS::Init();
+    OpenGLSonar::Init();
     OpenGLOceanParticles::Init();
     content = new OpenGLContent();
     
@@ -89,6 +87,7 @@ OpenGLPipeline::~OpenGLPipeline()
 {
     OpenGLCamera::Destroy();
     OpenGLDepthCamera::Destroy();
+    OpenGLSonar::Destroy();
     OpenGLOceanParticles::Destroy();
     OpenGLLight::Destroy();
     delete content;
@@ -418,21 +417,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             OpenGLState::BindFramebuffer(0);
             delete [] viewport;
         }
-        else if(view->getType() == ViewType::FLS)
+        else if(view->getType() == ViewType::SONAR)
         {
-            OpenGLFLS* fls = static_cast<OpenGLFLS*>(view);
+            OpenGLSonar* sonar = static_cast<OpenGLSonar*>(view);
             //Draw objects and compute sonar data
-            fls->ComputeOutput(drawingQueueCopy);
+            sonar->ComputeOutput(drawingQueueCopy);
             //Draw sonar output
-            fls->DrawLDR(screenFBO, true);
-        }
-        else if(view->getType() == ViewType::SSS)
-        {
-            OpenGLSSS* sss = static_cast<OpenGLSSS*>(view);
-            //Draw objects and compute sonar data
-            sss->ComputeOutput(drawingQueueCopy);
-            //Draw sonar output
-            sss->DrawLDR(screenFBO, true);
+            sonar->DrawLDR(screenFBO, true);
         }
         else if(view->getType() == ViewType::CAMERA || view->getType() == ViewType::TRACKBALL)
         {

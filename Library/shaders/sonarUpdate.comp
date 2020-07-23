@@ -17,22 +17,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//N_HALF_BINS - number of histogram bins
-//N_VERT_BEAM_SAMPLES - number of vertical beam samples
+#version 430
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-// Two inputs
-layout(rg32f) uniform image2DArray sonarHist;
+// One input
+layout(rg32f) uniform image2D sonarHist;
 
 // One output
 layout(r32f) uniform image2D sonarOutput;
 
+uniform float gain;
+uniform uint rotationStep;
 uniform vec3 noiseSeed;
 uniform vec2 noiseStddev;
-uniform float gain;
-uniform float vfov;
-uniform float tilt;
 
 #define M_PI 3.1415926535897932384626433832795
 
@@ -71,41 +69,24 @@ float gaussian(vec2 coord, float stddev, float mean)
 
 void main()
 {
-    if(gl_GlobalInvocationID.x < N_HALF_BINS)
+    uvec2 dim = imageSize(sonarHist).xy; // vertical beam samples x bins
+    int nSteps = int(imageSize(sonarOutput).x);
+    
+    if(gl_GlobalInvocationID.x < dim.y)
     {
-        //Compute bin
-        int bin;
-        float fov;
-        if(gl_GlobalInvocationID.y == 0)
-        {
-            bin = int(N_HALF_BINS) - 1 - int(gl_GlobalInvocationID.x);
-            fov = vfov;
-        }
-        else
-        {
-            bin = int(N_HALF_BINS) + int(gl_GlobalInvocationID.x);
-            fov = -vfov;
-        }
+        vec2 data = vec2(0.0);
+        for(uint i=0; i<dim.x; ++i)
+            data += imageLoad(sonarHist, ivec2(i, int(gl_GlobalInvocationID.x))).rg;
 
-        //Accumulate data samples
-        vec2 data = vec2(0.0,0.0);
-        for(uint i=0; i<N_VERT_BEAM_SAMPLES; ++i)
-        {
-            float factor = float(i)/float(N_VERT_BEAM_SAMPLES-1);
-            float theta = tilt + (factor-0.5) * fov;
-            vec2 bs = imageLoad(sonarHist, ivec3(i, gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).rg;
-            bs.x *= smoothstep(0.0, 0.2, factor) * (1.0 - smoothstep(0.8, 1.0, factor));
-            bs.x /= sin(theta); //Intensity compensation based on flat bottom model
-            data += bs;
-        }
+        vec2 noiseCoord;
+        noiseCoord.x = float(rotationStep)/float(nSteps-1);
+        noiseCoord.y = float(gl_GlobalInvocationID.x)/float(int(dim.y)-1);
 
-        //Compute bin values
-        float value = gain * (float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1)*0.5+0.5) //Distance dependent amount of noise 
-                      * gaussian(-vec2(float(gl_GlobalInvocationID.x)/float(N_HALF_BINS-1), 0.0), noiseStddev.y, 0.0); //Additive noise
+        float value = gain * (noiseCoord.y*0.5+0.5) //Distance dependent amount of noise 
+                      * gaussian(-noiseCoord.xy, noiseStddev.y, 0.0); //Additive noise
         if(data.y > 0.0)
-            value += 0.7 * data.x/data.y * gain * gaussian(vec2(0.0), noiseStddev.x, 1.0); //Multiplicative noise
+            value += data.x/data.y * gain * gaussian(noiseCoord.xx, noiseStddev.x, 1.0); //Multiplicative noise
         value = clamp(value, 0.0, 1.0);
-        //Store new line
-        imageStore(sonarOutput, ivec2(bin, 0), vec4(value));
+        imageStore(sonarOutput, ivec2(rotationStep, gl_GlobalInvocationID.x), vec4(value));
     }
 }

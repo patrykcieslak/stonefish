@@ -16,15 +16,15 @@
 */
 
 //
-//  OpenGLSSS.h
+//  OpenGLMSIS.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 20/06/20.
+//  Created by Patryk Cieslak on 21/07/20.
 //  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSSS__
-#define __Stonefish_OpenGLSSS__
+#ifndef __Stonefish_OpenGLMSIS__
+#define __Stonefish_OpenGLMSIS__
 
 #include "graphics/OpenGLSonar.h"
 #include <random>
@@ -32,30 +32,29 @@
 namespace sf
 {
     class GLSLShader;
-    class SSS;
+    class MSIS;
 
-    //! A class representing a side-scan sonar (SSS).
-    class OpenGLSSS : public OpenGLSonar
+    //! A class representing a mechanical scanning imaging sonar (MSIS).
+    class OpenGLMSIS : public OpenGLSonar
     {
     public:
         //! A constructor.
         /*!
-         \param centerPosition the position of the sonar center in world space [m]
+         \param eyePosition the position of the sonar eye in world space [m]
          \param direction a unit vector parallel to the sonar central axis
-         \param forward a vector aligned with the sonar track
-         \param verticalBeamWidthDeg the field of view of the single sonar transducer [deg]
-         \param horizontalBeamWidthDeg the width of the sonar beam along the track [deg]
+         \param sonarUp a unit vector perpendicular to the sonar plane
+         \param horizontalBeamWidthDeg the horizontal width of the sonar beam [deg]
+         \param verticalBeamWidthDeg the vertical width of the sonar beam [deg]
+         \param numOfSteps the number of sonar motor steps
          \param numOfBins the number of sonar range bins
-         \param numOfLines the length of the waterfall display memory
-         \param verticalTiltDeg the angle between the horizon and the transducer axis [deg]
          \param range_ the distance to the closest and farthest recorded object [m]
          */
-        OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 forward,
-                  GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
-                  GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range_);
+        OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp,
+                   GLfloat horizontalBeamWidthDeg, GLfloat verticalBeamWidthDeg, 
+                   GLuint numOfSteps, GLuint numOfBins, glm::vec2 range_);
         
         //! A destructor.
-        ~OpenGLSSS();
+        ~OpenGLMSIS();
         
         //! A method that computes simulated sonar data.
         void ComputeOutput(std::vector<Renderable>& objects);
@@ -74,21 +73,22 @@ namespace sf
         /*!
          \param son a pointer to a sonar sensor
          */
-        void setSonar(SSS* s);
+        void setSonar(MSIS* s);
         
     protected:
-        //SSS specific
-        SSS* sonar;
-        GLfloat tilt;
+        //MSIS specific
+        MSIS* sonar;
+        GLuint nSteps;
+        GLuint nBins;
         glm::uvec2 nBeamSamples;
+        glm::mat4 beamRotation;
+        GLint currentStep;
         glm::vec2 fov;
-        glm::mat4 views[2];
-        
         //OpenGL
-        GLuint outputTex[3];
-        GLint pingpong;
-        GLSLShader* sonarOutputShader[2];
-        GLSLShader* sonarShiftShader;
+        GLuint outputTex[2];
+        GLuint fanDiv;
+        GLSLShader* sonarOutputShader;
+        GLSLShader* sonarUpdateShader;
     };
 }
 

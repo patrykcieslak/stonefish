@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScenarioParser__
@@ -40,6 +40,7 @@ namespace sf
     class Actuator;
     class Comm;
     struct Color;
+    enum class ColorMap;
   
     //! A class that implements parsing of XML files describing a simulation scenario.
     class ScenarioParser
@@ -159,6 +160,7 @@ namespace sf
         bool CopyNode(XMLNode* destParent, const XMLNode* src);
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
+        bool ParseColorMap(XMLElement* element, ColorMap& cm);
     
         XMLDocument doc;
         SimulationManager* sm;

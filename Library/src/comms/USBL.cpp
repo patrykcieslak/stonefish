@@ -99,7 +99,7 @@ void USBL::ProcessMessages()
             Vector3 dO = dT.getOrigin();
             Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
             Scalar distance = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
-            Scalar t = msg->timeStamp + distance/soundVelocity;
+            Scalar t = msg->timeStamp + distance/SOUND_VELOCITY_WATER;
             
             //Find ranging angles
             Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();

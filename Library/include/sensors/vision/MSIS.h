@@ -16,15 +16,15 @@
 */
 
 //
-//  FLS.h
+//  MSIS.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 17/02/20.
+//  Created by Patryk Cieslak on 21/07/20.
 //  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FLS__
-#define __Stonefish_FLS__
+#ifndef __Stonefish_MSIS__
+#define __Stonefish_MSIS__
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -32,29 +32,31 @@
 
 namespace sf
 {
-    class OpenGLFLS;
+    class OpenGLMSIS;
     
-    //! A class representing a forward looking sonar.
-    class FLS : public Camera
+    //! A class representing a mechanical scanning imaging sonar.
+    class MSIS : public Camera
     {
     public:
         //! A constructor.
         /*!
          \param uniqueName a name for the sensor
-         \param numOfBeams a number of acoustic beams
+         \param stepAngleDeg size of the rotation step [deg]
          \param numOfBins a range resolution of the sonar image
-         \param horizontalFOVDeg the horizontal field of view [deg]
-         \param verticalFOVDeg the vertical beam width [deg]
+         \param horizontalBeamWidthDeg the horizontal beam width [deg]
+         \param verticalBeamWidthDeg the vertical beam width [deg]
+         \param minRotationDeg the minimum rotation of the sonar head [deg]
+         \param maxRotationDeg the maximum rotation of the sonar head [deg]
          \param minRange the minimum measured range [m]
          \param maxRange the maximum measured range [m]
          \param cm the color map used to display sonar data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
-                    Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1));
+        MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
+             Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, ColorMap cm, Scalar frequency = Scalar(-1));
        
         //! A destructor.
-        ~FLS();
+        ~MSIS();
         
         //! A method performing internal sensor state update.
         /*!
@@ -80,11 +82,18 @@ namespace sf
         /*!
          \param callback a function to be called
          */
-        void InstallNewDataHandler(std::function<void(FLS*)> callback);
+        void InstallNewDataHandler(std::function<void(MSIS*)> callback);
         
         //! A method implementing the rendering of the sonar dummy.
         std::vector<Renderable> Render();
 
+        //! A method setting the limits of the sonar head rotation.
+        /*!
+         \param l1Deg first limit of rotation angle [deg]
+         \param l2Deg second limit of rotation angle [deg]
+         */
+        void setRotationLimits(Scalar l1Deg, Scalar l2Deg);
+        
         //! A method setting the minimum range of the sonar.
         /*!
          \param r range [m]
@@ -103,6 +112,13 @@ namespace sf
          */
         void setGain(Scalar g);
 
+        //! A method returning the rotation limits.
+        /*!
+         \param l1Deg first limit of rotation angle [deg]
+         \param l2Deg second limit of rotation angle [deg]
+         */
+        void getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const;
+
         //! A method returning the minimum range of the sonar.
         Scalar getRangeMin() const;
         
@@ -111,6 +127,12 @@ namespace sf
 
         //! A method returning the gain of the sonar.
         Scalar getGain() const;
+
+        //! A method returning the step size.
+        Scalar getRotationStepAngle() const;
+
+        //! A method returning the current rotation step.
+        int getCurrentRotationStep() const;
 
         //! A method returning a pointer to the sonar data.
         /*!
@@ -135,14 +157,19 @@ namespace sf
     private:
         void InitGraphics();
         
-        OpenGLFLS* glFLS;
+        OpenGLMSIS* glMSIS;
         GLfloat* sonarData;
         GLubyte* displayData;
+        int currentStep;
+        bool cw;
+        glm::ivec2 roi;
+        bool fullRotation;
         glm::vec2 range;
         Scalar gain;
         Scalar fovV;
+        Scalar stepSize;
         ColorMap cMap;
-        std::function<void(FLS*)> newDataCallback;
+        std::function<void(MSIS*)> newDataCallback;
     };
 }
 

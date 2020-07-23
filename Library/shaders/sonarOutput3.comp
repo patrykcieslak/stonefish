@@ -17,37 +17,38 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//N_HALF_BINS - number of histogram bins
+//N_BINS - number of histogram bins
 //N_HORI_BEAM_SAMPLES - number of horizontal beam samples
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 // Two inputs, linear range and recorded intensity.
-layout(rg32f) uniform image2DArray sonarInput;
+layout(rg32f) uniform image2D sonarInput;
 
 // Two outputs - intensity for each bin/vertical beam sample and number of hits
-layout(rg32f) uniform image2DArray sonarHist;
+layout(rg32f) uniform image2D sonarHist;
 
 uniform vec3 range; //min, max, step
 
-vec2 binHistogram[N_HALF_BINS];
+vec2 binHistogram[N_BINS];
 
 void main()
 {
-    uvec3 inDim = imageSize(sonarInput).xyz; //nBeamSamples.x * nBeamSamples.y * 2 
+    uvec2 inDim = imageSize(sonarInput).xy; //nBeamSamples.x * nBeamSamples.y 
     
-    if(gl_GlobalInvocationID.x < inDim.x)
+    if(gl_GlobalInvocationID.x < inDim.y) //For each vertical row
     {
-        for(uint i=0; i<N_HALF_BINS; ++i) //Initialize histogram buffer
+        for(int i=0; i<N_BINS; ++i) //Initialize histogram buffer
             binHistogram[i] = vec2(0.0); 
 
-        ivec3 sampleCoord;
-        sampleCoord.x = int(gl_GlobalInvocationID.x);
-        sampleCoord.z = int(gl_GlobalInvocationID.y);
+        ivec2 sampleCoord;
+        sampleCoord.y = int(gl_GlobalInvocationID.x);
+        float vFrac2 = (float(gl_GlobalInvocationID.x)/float(int(inDim.y)-1)-0.5)*2.0;
+        vFrac2 *= vFrac2;
 
         for(int i=0; i<N_HORI_BEAM_SAMPLES; ++i) //For each horizontal beam sample
         {            
-            sampleCoord.y = i;
+            sampleCoord.x = i;
 
             //Get sample value
             vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
@@ -55,16 +56,16 @@ void main()
                 continue;
 
             //Compute bin and accumulate intensity data
-            uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
             float hFrac2 = (float(i)/float(N_HORI_BEAM_SAMPLES-1)-0.5)*2.0;
             hFrac2 *= hFrac2;
-            float beamPattern = clamp(1.0 - hFrac2/2.0, 0.0, 1.0);
+            uint bin = uint(floor((rangeIntensity.x - range.x)/range.z));
+            float beamPattern = clamp(1.0 - (hFrac2 + vFrac2)/2.0, 0.0, 1.0);
             binHistogram[bin].x += rangeIntensity.y * beamPattern;
             binHistogram[bin].y += 1.0;
         }
 
         //Store bin values
-        for(uint i=0; i<N_HALF_BINS; ++i)
-            imageStore(sonarHist, ivec3(gl_GlobalInvocationID.x, i, gl_GlobalInvocationID.y), vec4(binHistogram[i].xy, 0.0, 0.0));
+        for(int i=0; i<N_BINS; ++i)
+            imageStore(sonarHist, ivec2(sampleCoord.y, i), vec4(binHistogram[i].xy, 0.0, 0.0));
     }
 }

@@ -57,6 +57,7 @@
 #include <sensors/vision/Multibeam2.h>
 #include <sensors/vision/FLS.h>
 #include <sensors/vision/SSS.h>
+#include <sensors/vision/MSIS.h>
 #include <actuators/Light.h>
 #include <sensors/scalar/RotaryEncoder.h>
 #include <sensors/scalar/Accelerometer.h>
@@ -85,9 +86,9 @@ void UnderwaterTestManager::BuildScenario()
     parser.Parse(sf::GetDataPath() + "underwater_pipe.scn");
 #else
     ///////MATERIALS////////
-    CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.5);
-    CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.3);
-    CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);
+    CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.3);
+    CreateMaterial("Fiberglass", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.5), 0.9);
+    CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.6);
     SetMaterialsInteraction("Dummy", "Dummy", 0.5, 0.2);
     SetMaterialsInteraction("Fiberglass", "Fiberglass", 0.5, 0.2);
     SetMaterialsInteraction("Rock", "Rock", 0.9, 0.7);
@@ -115,9 +116,9 @@ void UnderwaterTestManager::BuildScenario()
     
     //sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
     //AddStaticEntity(tank, sf::I4());
-    sf::Plane* seabed = new sf::Plane("Seabed", 1000.0, "Rock", "seabed", 2.f);
+    sf::Plane* seabed = new sf::Plane("Seabed", 1000.0, "Rock", "seabed", 5.f);
     AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,5.0)));
-    sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, "Rock", "seabed");
+    sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, "Fiberglass", "seabed");
     AddStaticEntity(cyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(6.0,2.0,5.0)));
 	
 	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 100.0);
@@ -232,10 +233,12 @@ void UnderwaterTestManager::BuildScenario()
     //mb->setDisplayOnScreen(true);
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
-    sf::FLS* fls = new sf::FLS("FLS", 256, 1000, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
-    //fls->setDisplayOnScreen(true, 0, 500, 0.25f);
-    sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 40.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
-    //sss->setDisplayOnScreen(true, 485, 500, 0.6f);
+    sf::FLS* fls = new sf::FLS("FLS", 256, 500, 150.0, 30.0, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
+    fls->setDisplayOnScreen(true, 0, 500, 0.5f);
+    sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
+    sss->setDisplayOnScreen(true, 485, 500, 0.6f);
+    sf::MSIS* msis = new sf::MSIS("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
+    msis->setDisplayOnScreen(true, 0, 0, 1.0f);
     //sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0, 10.0);
     //cam->setDisplayOnScreen(true);
     //sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
@@ -280,20 +283,21 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.8), sf::Vector3(0.0,0.0,1.0)));
     auv->AddVisionSensor(sss, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(0.0,0.0,0.0)));
+    auv->AddVisionSensor(msis, "Vehicle", sf::Transform(sf::Quaternion(0.0, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam2, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,2.0)));
-    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(2.0,0,1.0)));
+    AddRobot(auv, sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(2.0,0.0,1.0)));
     
-    thSurgeP->setSetpoint(0.5);
-    thSurgeS->setSetpoint(0.5);
-
+    thSurgeP->setSetpoint(0.55);
+    thSurgeS->setSetpoint(0.58);
+/*
     sf::TrajectoryGenerator* tg = new sf::TrajectoryGenerator();
     sf::PWLSegment* seg = new sf::PWLSegment(sf::TrajectoryPoint(sf::Vector3(0,0,0), 0),
                                              sf::TrajectoryPoint(sf::Vector3(10,0,4), 10));
     tg->AddSegment(seg);
     sf::AnimatedEntity* anim = new sf::AnimatedEntity("Anim1", sf::GetDataPath() + "dragon.obj", 0.5, sf::Transform(sf::Quaternion(0.0,M_PI_2,0.0), sf::V0()), "Rock", "yellow");
     anim->ConnectTrajectoryGenerator(tg);
-    AddAnimatedEntity(anim, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));
+    AddAnimatedEntity(anim, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));*/
 
 #endif
 }

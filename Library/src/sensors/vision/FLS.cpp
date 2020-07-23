@@ -30,8 +30,6 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLFLS.h"
 
-#define SOUND_VELOCITY_WATER Scalar(1531) //Sea water
-
 namespace sf
 {
 
@@ -44,12 +42,6 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
     setRangeMax(maxRange);
     setRangeMin(minRange);
     gain = Scalar(1);
-    
-    if(frequency < Scalar(0))
-    {
-        Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
-        setUpdateFrequency(Scalar(1)/pulseTime);
-    }
     fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
     cMap = cm;
     sonarData = NULL;
@@ -98,17 +90,17 @@ GLubyte* FLS::getDisplayDataPointer()
     return displayData;
 }
 
-Scalar FLS::getRangeMin()
+Scalar FLS::getRangeMin() const
 {
     return Scalar(range.x);
 }
 
-Scalar FLS::getRangeMax()
+Scalar FLS::getRangeMax() const
 {
     return Scalar(range.y);
 }
 
-Scalar FLS::getGain()
+Scalar FLS::getGain() const
 {
     return gain;
 }
@@ -120,8 +112,8 @@ VisionSensorType FLS::getVisionSensorType()
 
 void FLS::InitGraphics()
 {
-    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, 
-                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, false);
+    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
+                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range);
     glFLS->setSonar(this);
     glFLS->setColorMap(cMap);
     UpdateTransform();
