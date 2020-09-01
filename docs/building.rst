@@ -154,7 +154,7 @@ Example of creating a button widget (*note:* ``MySimulationApp`` is a subclass o
         GraphicalSimulationApp::DoHUD(); //Keep standard GUI
 
         sf::ui_id button;
-        button.owner = 0; //e.g. id of a panel
+        button.owner = 1; //e.g. id of a panel
         button.index = 0; //e.g. id of a widget on the panel
         button.item = 0; //e.q. id of an option on a list
 

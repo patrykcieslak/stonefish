@@ -2,14 +2,14 @@
 # ***Stonefish***
 ### An advanced simulation tool developed for marine robotics.
 
-Stonefish is a C++ library which wraps around Bullet Physics library to deliver intuitive simulation of marine robots in realistic scenarios. It is directed towards researchers in the field of marine robotics but can as well be used as a general robot simulator. 
+Stonefish is a C++ library which wraps around [Bullet Physics](https://pybullet.org) library to deliver intuitive simulation of marine robots in realistic scenarios. It is directed towards researchers in the field of marine robotics but can as well be used as a general robot simulator. 
 
-Stonefish includes advanced hydrodynamics computation based on actual geometry of bodies to better approximate hydrodynamic forces and allow for effects not possible when using symbolic models. The rendering pipeline, developed from the ground up, delivers realistic rendering of atmosphere, ocean and underwater environment. Special focus was put on the latter, where effects of wavelength-dependent light absorption and scattering were considered (other simulators often use only blue fog). 
+Stonefish includes advanced hydrodynamic computations based on actual geometry of bodies, to better approximate hydrodynamic forces and allow for effects not possible when using symbolic models. The rendering pipeline, developed from the ground up, delivers realistic rendering of atmosphere, ocean and underwater environment. Special focus was put on the latter, where effects of wavelength-dependent light absorption and scattering were considered (other simulators often use only blue fog). 
 
-Stonefish can be used to create standalone applications or combined with a ROS package [_stonefish_ros_](https://github.com/patrykcieslak/stonefish_ros), which implements 
-simulator templates and facilitates easy integration with ROS architecture.
+Stonefish can be used to create standalone applications or combined with a [Robot Operating System](https://www.ros.org) (ROS) package [_stonefish_ros_](https://github.com/patrykcieslak/stonefish_ros), which implements 
+standard simulator node and facilitates easy integration with ROS architecture.
 
-There are two sources of documentation for the library: a [repository Wiki](https://github.com/patrykcieslak/stonefish/wiki) and a doxygen generated website, based on comments in the code (instructions below).
+There are two sources of documentation for the library: [html documentation generated with Sphinx](https://stonefish.readthedocs.io) and code documentation generated with Doxygen, based on comments in the code (instructions below).
 
 ### Requirements
 
@@ -17,7 +17,7 @@ The simulation is CPU heavy and requires a recent GPU. The minimum requirement i
 
 Install official manufacturer drivers for your graphics card before using _Stonefish_!
 
-The software is developed and tested on *Linux Ubuntu*. It should work on any Unix based platform. A version for Windows is not available at this time.
+The software is developed and tested on *Linux Ubuntu*. It should work on any Unix based platform. A version for Windows is not available at this time. MacOS is not supported due to its lack of support for OpenGL 4.3.
 
 ### Installation
 1. Dependencies

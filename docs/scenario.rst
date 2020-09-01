@@ -37,7 +37,7 @@ A properly defined scenario file has to contain a set of obligatory tags, specif
         <looks>
             <!-- Definitions of looks -->
         </looks>
-        <!-- Definitions used to build the simulated world -->
+        <!-- Definitions of bodies and robots -->
     </scenario>
 
 Using the code

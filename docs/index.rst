@@ -52,10 +52,10 @@ This work was part of a project titled ”Force/position control system to enabl
    materials
    environment
    bodies
+   robots
    sensors
    actuators
    comms
-   robots
    special
    changelog
    license

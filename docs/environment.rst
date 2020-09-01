@@ -1,10 +1,12 @@
+.. _environment:
+
 ===========
 Environment
 ===========
 
-The description of a simulation scenario starts with the definition of the environment to be simulated. The *Stonefish* library is prepared to be used as a general robot simulator, which implements crucial elements for marine robotics. The standard simulation medium is air, which can be used for the ground and flying robots (preliminary support). If the user is interested in simulating marine robots, a virtual ocean has to be enabled. Next, the world can be filled with static rigid bodies, which may include terrain and structures fixed to the world frame. If some parts of the environment are considered dynamic, they have to be created as dynamic bodies or robots, described in the subsequent parts of the documentation.
+The description of a simulation world starts with the definition of the environment to be simulated. The *Stonefish* library is prepared to be used as a general robot simulator, which implements crucial elements for marine robotics. The standard simulation medium is air, which can be used for the ground and flying robots (preliminary support). If the user is interested in simulating marine robots, a virtual ocean has to be enabled. Next, the world can be filled with static rigid bodies, which may include terrain and structures fixed to the world frame. If some parts of the environment are considered dynamic, they have to be created as dynamic bodies or robots, described in the subsequent parts of the documentation.
 
-The parameters of the environment are specified between ``<environment> ... </environment>``, and they include position of the world frame origin, position of the sun in the sky and the ocean definitions explained in the next section:
+The parameters of the environment are specified between ``<environment> ... </environment>``, inside the root node of the XML file, and they include position of the world frame origin, position of the sun in the sky and the ocean definitions explained in the next section:
 
 .. code-block:: xml
 
@@ -37,13 +39,15 @@ Currents
 Water currents have a significant impact on the operation of underwater robots. Therefore, the *Stonefish* library implements some basic forms of water currents, treated as water velocity fields. Currently implemented types of water currents include:
 
 - ``Uniform`` the same velocity in the whole ocean
-- ``Jet`` a velocity distribution coming from an underwater pipe outlet
-- ``Pipe`` a velocity distrubution in a virtual pipe
+
+- ``Jet`` a velocity distribution coming from an circular underwater outlet
+
+- ``Pipe`` a velocity distrubution resambling a virtual pipe submerged in the ocean
 
 Ocean optics
 ------------
 
-As mentioned before, underwater rendering plays an important role in reallistic simulation of optical sensors. The *Stonefish* library implements optical effects encountered in ocean waters like light absorption, out-scattering, and in-scattering, also called the airlight.
+As mentioned before, underwater rendering plays an important role in realistic simulation of optical sensors. The *Stonefish* library implements optical effects encountered in ocean waters like light absorption, out-scattering, and in-scattering, also called the airlight.
 The absorption and scattering coefficeints are computed for three wavelengths, corresponding to the red, green and blue channels of the rendering pipeline, based on the Jerlov measurements covering wide spectrum of the coastal water types. The water quality is defined with a single parameter ranging from 0.0 to 1.0, where the lower limit corresponds to the Jerlov type I water and the upper limit represents the Jerlov type 9C water.
 
 Definitions
@@ -79,90 +83,151 @@ The following lines of code can be used to achieve the same:
 Static bodies
 =============
 
-The static bodies are all elements of the simulation scenario that remain fixed to the world origin, for the whole duration of the simulation. These kind of objects are used only for collision and sensor simulation. Due to their fixed position in the world, they do not require computation of dynamics and can deliver optimised collision detection algoritms. An important feature is that static bodies can have arbitrary collision geometry, not requiring convexity. Static bodies include a simple plane, basic solids, meshes and terrain.
+The static bodies are all elements of the simulation scenario that remain fixed to the world origin, for the whole duration of the simulation. These kind of objects are used only for collision and sensor simulation. Due to their fixed position in the world, they do not require computation of dynamics and can deliver optimised collision detection algoritms. An important feature is that static bodies can have arbitrary collision geometry, not requiring convexity. Static bodies include a simple plane, basic solids, meshes and terrain. They are defined in the XML syntax using the ``<static> ... </static>`` tags, in a following way:
+
+.. code-block:: xml
+
+    <static name="{1}" type="{2}">
+        <!-- specific definitions here -->
+        <material name="{3}"/>
+        <look name="{4}"/>
+        <world_transform xyz="{5a}" rpy="{5b}"/>
+    </static>
+
+where
+
+1) **Name**: unique string
+
+2) **Type**: type of the static body
+
+3) **Material name**: the name of the physical material
+
+4) **Look name**: the name of the graphical material
+
+5) **World transform**: position and orientation of the body with respect to the world frame.
+
+Depending on the type of the static body the specific definitions change.
+
+.. note:: 
+
+    In the following examples it is assumed that physical materials called "Steel" and "Rock", as well as looks called "Yellow" and "Gray", were defined.
 
 Plane
 -----
 
 A plane is the simplest static body, that is usually used as the ground plane or the sea bottom, if no complex terrain is needed.
 
-Obstacles
----------
+In the XML syntax the plane does not have any additional parameters. It is only needed to define the type of the static body as "plane". An exemplary plane can be defined as follows:
 
-The obstacles are all static solids, created using parameteric definitions or loaded from geometry files.
+.. code-block:: xml
 
-The following code is an example of defining an environment and adding it to the simulation scenario. The example assumes that a physical material called "Rock" and a graphical look called "seabed" were defined.
+    <static name="Floor" type="plane">
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0">
+    </static>
+
+The same can be achieved in code:
 
 .. code-block:: cpp
 
-    sf::Plane* plane = new sf::Plane("Bottom", sf::Scalar(10000.0), "Rock", "seabed");
-    AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,5.0)));
-    sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(1.0,1.0,1.0), "Rock", "seabed");
-    AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,4.5)));
-    sf::Cylinder* cylinder = new sf::Cylinder("Cylinder", sf::Scalar(0.5), sf::Scalar(2.0), sf::Transform::getIdentity(), "Rock", sf::BodyPhysicsType::SUBMERGED_BODY, "seabed");
-    AddSolidEntity(cylinder, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,2.0)));
+    sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "Yellow");
+    AddStaticEntity(floor, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 1.0));
 
-Elements of the environment, like terrain, structures, fixed obstacles, can be considered static bodies and should be defined as such, to improve performance of the simulation. Apart from the efficiency side, the geometry used for the static bodies can be arbitrary, i.e., does not have to be convex to achieve correct collisions.
+Obstacles
+---------
 
-A static body is defined using ``<static name="[1]" type="[2]">[3]</static>``. The name of the body [1] should be unique across the simulation scenario. The body type [2] has to be equal to one of the types specified below and it determines how the body will be created, i.e., which tags will have to be included in the description [3].
-Some of the tags are common for all types of bodies like the material the body is made of [4], its look determining the rendering style [5] and its orientation [6] and position [7] in the world (NED) frame, which is fixed for a static body by definition. Therefore, a general structure of the definition of a static body is the following:
+The obstacles are static solids, created using parameteric definitions: spheres, cylinders and boxes, or loaded from geometry files. 
+
+In case of the **parameteric solids** the specific definitions are reduced to their dimensions. Both the physical and the graphical mesh have the same complexity. Depending on the shape a different set of dimensions has to be specified:
+
+- **Sphere** ``type="sphere"`` - ball with a specified radius {1}:
+ 
+    .. code-block:: xml
+  
+        <dimensions radius="{1}"/>
+
+- **Cylinder** ``type="cylinder"`` - cylinder along Z axis, with a specified radius {1} and height {2}:
+
+    .. code-block:: xml
+
+        <dimensions radius="{1}" height="{2}"/>
+
+- **Box** ``type="box"`` - box with specified width {1}, length {2} and height {3}: 
+
+    .. code-block:: xml
+    
+        <dimensions xyz="{1} {2} {3}"/>
+   
+Definition of arbitrary **triangle meshes** ``type="model"``, loaded from geometry files, is more complex. Their geometry can be specified separately for the physics computations ``<physical> .. </physical>`` and the rendering ``<visual> ... </visual>``. The physics mesh should be optimised to improve collision performance.  If only physics geometry is specified, it is also used for rendering. Moreover, the physics mesh is used when simulating operation of :ref:`link sensors <link-sensors>` and the graphics mesh is used for the :ref:`vision sensors <vision-sensors>`. The geometry can be loaded from STL or OBJ files (ASCII format). 
+
+An example of creating obstacles, including triangle meshes, is presented below:
 
 .. code-block:: xml
 
-    <static name="[1]" type="[2]">
-        [definitions specific for a selected body type]
-        <material name="[4]"/>
-        <look name="[5]"/>
-        <world_transform rpy="[6]" xyz="[7]"/>
+    <static name="Ball" type="sphere">
+        <dimensions radius="0.5"/>
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="2.0 0.0 5.0" rpy="0.0 0.0 0.0"/>
+    </static>
+    
+    <static name="Wall" type="box">
+        <dimensions xyz="10.0 0.2 5.0"/>
+        <material name="Steel"/>
+        <look name="Gray"/>
+        <world_transform xyz="0.0 5.0 2.0" rpy="0.0 0.0 0.0"/>
     </static>
 
-Tags specific for each available body type are the following:
+    <static name="Canyon" type="model">
+        <physical>
+            <mesh filename="canyon_phy.obj" scale="1.0"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/> 
+        </physical>
+        <visual>
+            <mesh filename="canyon_vis.obj" scale="1.0"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        </visual>
+        <material name="Rock"/>
+        <look name="Gray"/>
+        <world_transform xyz="0.0 0.0 10.0" rpy="0.0 0.0 0.0"/>
+    </static>
 
-1. Plane ``type="plane"`` - an infinite plane: no additional tags.
+The ``<origin>`` tag is used to apply local transformation to the geometry, i.e., to change the position of the mesh origin and rotate the mesh, before placing it in the world. It is especially useful in case of geometry exported from 3D software in a wrong frame.
 
-2. Sphere ``type="sphere"`` - a sphere (ball) with a specified radius:  
-``<dimensions radius="1.0"/>``
+The same can be achieved using the following code:
 
-3. Cylinder ``type="cylinder"`` - a cylinder with a specified radius and height, with its axis aligned with the local Z axis:  
-``<dimensions radius="1.0" height="2.0"/>``
+.. code-block:: cpp
 
-4. Box ``type="box"`` - a box with specified width, height and length:  
-``<dimensions xyz="0.5 1.0 2.0"/>``
-   
-5. Mesh ``type="model"`` - an arbitrary mesh made of triangles. The geometry can be specified separately for the physics computation and the rendering. If only physical geometry is specified it is also used for rendering. The geometry can be loaded from STL or OBJ files (ASCII format). The origin tag is used to apply local transformation to the geometry, i.e., transformation in the frame defined by the 3D software used to save the geometry.
+    sf::Obstacle* ball = new sf::Obstacle("Ball", 0.5, "Steel", "Yellow");
+    AddStaticEntity(ball, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(2.0, 0.0, 5.0)));
+    sf::Obstacle* wall = new sf::Obstacle("Wall", sf::Vector3(10.0, 0.2, 5.0), "Steel", "Gray");
+    AddStaticEntity(wall, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 5.0, 2.0)));
+    sf::Obstacle* canyon = new sf::Obstacle("Canyon", sf::GetDataPath() + "canyon_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "canyon_phy.obj", 1.0, sf::I4(), "Rock", "Gray");
+    AddStaticEntity(canyon, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 10.0)));
 
-.. code-block:: xml
+.. note::
 
-    <physical>
-        <mesh filename="statue_phy.obj" scale="1.0"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/> 
-    </physical>
-    <visual> <!-- optional -->
-        <mesh filename="statue_gra.obj" scale="1.0"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-    </visual>
-
+    Function ``std::string sf::GetDataPath()`` returns a path to the directory storing simulation data, specified during the construction of the ``sf::SimulationApp`` object. Function ``sf::Transform sf::I4()`` creates an identity transformation matrix.
 
 Terrain
 -------
 
-6. Terrain `type="terrain"` - a heightfield terrain built based on a bitmap. Scale of the terrain is defined in meters per pixel.
+Currently the *Stonefish* library implements one type of easily defined terrain mesh which is a heightmap based terrain ``type="terrain"``. This kind of terrain mesh is generated from a planar grid displaced in the Z direction, based on the values of the heightmap pixels. Scale of the terrain is defined in meters per pixel and the height is defined by providing value correspondinng to a fully saturated pixel.
+
+The following example presents the definition of a heightmap based terrain:
 
 .. code-block:: xml
 
-    <height_map filename="terrain.png"/>
-    <dimensions scalex="0.1" scaley="0.1" height="10.0"/>
-
-_Following the above instructions, an exemplary static cylinder can be defined as:_
-
-.. code-block:: xml
-
-    <static name="Cylinder1" type="cylinder">   
-        <dimensions radius="1.0" height="2.0"/>
-        <material name="Aluminium"/>
-        <look name="yellow"/>
-        <world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 2.0"/>
+    <static name="Bottom" type="terrain">
+        <height_map filename="terrain.png"/>
+        <dimensions scalex="0.1" scaley="0.2" height="10.0"/>
+        <material name="Rock"/>
+        <look name="Gray"/>
+        <world_transform xyz="0.0 0.0 15.0" rpy="0.0 0.0 0.0"/>
     </static>
 
+.. code-block:: cpp
 
-
+    sf::Terrain* bottom = new sf::Terrain("Bottom", sf::GetDataPath() + "terrain.png", 0.1, 0.2, "Rock", "Gray");
+    AddStaticEntity(bottom, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 15.0)));

@@ -7,7 +7,7 @@ Changelog
 
 - Fully GPU-based simulation of mechanical scanning imaging sonar (MSIS)
 - Improvements in all sonar simulations
-- New, complete, beautiful, documentation generated with Sphinx
+- New, complete, beautiful documentation generated with Sphinx
 
 0.9
 ===

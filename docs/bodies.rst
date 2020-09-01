@@ -1,177 +1,266 @@
+.. _dynamic-bodies:
+
 ==============
 Dynamic bodies
 ==============
 
-Two types of rigid bodies can be defined in the simulation scenario: static and dynamic. Each body is characterised by its geometry, material and look. Only dynamic bodies can be used as links of a multi-body chain (robot).
+The dynamic bodies represent all of the rigid bodies that are not fixed to the world frame and thus require simulation of dynamics and hydrodynamics. It includes free bodies, constituting the dynamic parts of the :ref:`environment <environment>`, as well as :ref:`links of the robots <robot-links>`.
 
-Algorithms
-==========
+Common properties
+=================
 
-The simulation scenario is composed of environment definition and dynamical objects definitions. The environment can include ocean simulation, which is one of the main features of the software.  
+All of the dynamic bodies share the same mechanical properties which are used in the computation of forces governing their motion. 
+An important feature of the *Stonefish* library is that these properties are computed automatically, based on provided geometry and material definitions, and include: mass, moments of inertia, volume, location of the centre of gravity (**CG**) and location of the centre of buoyancy (**CB**). 
 
-The geometry-based fluid dynamics computations (hydrodynamics and aerodynamics), which are a unique feature of the software, are based on an idea of using geometry of the rigid bodies to: a) approximate added mass and fluid dynamics coefficients; b) sum forces along the surfaces of bodies to enable realistic buoyancy calculation at the ocean surface, as well as drag forces depending on local fluid velocity (water jets, currents etc.). A type of required calculations is decided based upon a flag assigned to every rigid body in the simulation: a) ``SURFACE_BODY`` - no aerodynamics or hydrodynamics; 
-b) ``FLOATING_BODY`` - hydrodynamics with buoyancy; c) ``SUBMERGED_BODY`` - hydrodynamics with buoyancy and added mass; d) ``AERODYNAMIC_BODY`` - aerodynamics.
+Coordinate frames
+^^^^^^^^^^^^^^^^^
 
-The type of physics simulation does not only depend on the environment itself but also on the choice made for every dynamic body. While creating these bodies, as standalone or as links of a robot, a flag of type `sf::BodyPhysicsType` has to be set. The following options are possible, with their corresponding meaning:
-
-- ``SURFACE_BODY`` - no aerodynamic or hydrodynamic forces computed
-- ``FLOATING_BODY`` - buoyancy and hydrodynamic drag is computed, no added mass effect
-- ``SUBMERGED_BODY`` - buoyancy and hydrodynamic forces including added mass effect are computed
-- ``AERODYNAMIC_BODY`` - aerodynamic drag is computed (lift not supported for general bodies)
-
-Common body properties
-----------------------
-
-Dynamic bodies are bodies which are not fixed to the global frame (subclasses of ``sf::SolidEntity``). These kind of bodies are affected by different forces, depending on the type of environment and the type of body physics simulation selected. Dynamic bodies can be created standalone or used as links of a robot. 
-
-An important feature of the body creation process is that its mechanical properties are computed based on provided geometry: mass, moments of inertia, volume, location of the centre of gravity (CG) and location of the centre of buoyancy (CB). It is possible to override some of the properties by using following methods of the ``class SolidEntity``:
-
-- ``void ScalePhysicalPropertiesToArbitraryMass(Scalar mass)`` - changes mass and scales moments of inertia accordingly
-- ``void SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& CG)`` - changes mass, moments of inertia and CG location to arbitrary values
-
-The following diagram presents the coordinate frames defined for each of the dynamic bodies. The location of the frames is not realistic but only for illustration purposes. The shape of each body is described by: a graphical mesh (black), a mesh used for physics computations (green) and an approximation of the body geometry (dashed blue). There are 3 frames associated with these meshes: *frame G*, *frame C* and *frame H* respectively. The origin of the body is defined by *frame O*, which is used as a handle, to position the body in the *world frame W*.
+The following diagram presents the coordinate frames defined for a dynamic body. The location of the frames is not realistic but only for illustration purposes. The shape of the body is described by: a graphical mesh (black), a mesh used for physics computations (green) and an approximation of the body geometry (dashed blue). There are 3 frames associated with these meshes: frame **G**, frame **C** and frame **H** respectively. The origin of the body is defined by frame **O**, which is used as a handle, to position the body in the world frame **W**.
 
 .. image:: images/frames.svg
     :width: 400
     :alt: Drawing presenting coordinate frames used in the simulator.
 
-Parametric solids
------------------
+Physics mode
+^^^^^^^^^^^^
 
-The simplest rigid bodies that can be created are parametric solids, which include: box, sphere, cylinder, torus and wing. The physical geometry of parametric solids is the same as the graphical mesh. Besides the wing body, the collisions of parametric solids are computed analytically, with simple formulas, which makes them very efficient to use. 
+Dynamic bodies are affected by different forces, depending on the type of environment, the position of the body with respect to the ocean surface (if it is enabled) and the selected body physics mode. The last one was introduced as an optimization to help determine which forces have to be computed for a specific body and thus how the body should be prepared for the simulation. The physics mode of each dynamic body ``sf::BodyPhysicsType`` has to be selected from one of the following options:
 
-- ``Sphere`` - a ball or sphere with a given radius
-- ``Box`` - a box described by 3 lengths along X,Y,Z axes
-- ``Cylinder`` - a cylinder parametrised with radius and height, aligned with the Z axis
-- ``Torus`` - a torus parametrised with its major and minor radius, aligned with the Y axis
-- ``Wing`` - a solid based on an extruded NACA profile (4-digit system), aligned with Y axis 
+- ``SURFACE`` - no aerodynamic or hydrodynamic forces computed
 
-Models loaded from geometry files
----------------------------------
+- ``FLOATING`` - buoyancy and hydrodynamic drag is computed, no added mass effect
 
-Another way of creating a rigid body is by loading its geometry from a Wavefront OBJ file or an STL file (only text files supported), which is possible by using ``class Polyhedron``. The user can provide different geometry for rendering and physics computation, to deliver plausible visualisation and efficient simulation at the same time. It should be noticed that the collision geometry is always a convex hull around the physical geometry. Assuming that a physical material called "Steel" and a graphical look called "grey" where defined before, a rigid body based on a geometry file can be created writing:
+- ``SUBMERGED`` - buoyancy and hydrodynamic forces including added mass effect are computed
 
-.. code-block:: cpp
+- ``AERODYNAMIC`` - aerodynamic drag is computed (lift not supported for general bodies)
 
-    sf::Polyhedron* poly = new sf::Polyhedron("Poly", "geometry_file_name.obj", sf::Scalar(1), sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED_BODY, "grey");
+Collisions
+^^^^^^^^^^
 
-Compound bodies
----------------
+The *Stonefish* library uses a collision detection algorithm that approximates geometry of dynamic bodies to convex hulls. This feature significantly improves the performance of the simulation. Moreover, the library implements analytic collision points computation for basic solids, which should be used whenever possible. This not only further improves the performance, but also enables smooth collision response with standard curved surfaces. In case a non-convex collision is required, it is necessary to compose the dynamic body from multiple convex bodies, using the :ref:`compound body <compound-bodies>` type.
 
-Sometimes it is useful to define a rigid body as a combination of multiple rigid bodies, e.g., when creating a base of a mobile robot. It is also a way of creating a concave mesh which will respond to collisions correctly. In the _Stonefish_ library such body can be defined using ``class Compound``. User can define a rigid body composed of external and internal parts, which influences the performed physics computations, e.g., drag forces are only computed for external parts. 
+Creating dynamic bodies
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Example:
+The way of defining a dynamic body highly depends on its type. However, all of the dynamic bodies, except for the compound type, share some common properties:
 
-.. code-block:: cpp
+1) **Name**: unique string
 
-    //Define components of the compound body
-    sf::Cylinder* cylinder1 = new sf::Cylinder("Cylinder1", 0.4, 0.5, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED_BODY, "grey");
-    sf::Cylinder* cylinder2 = new sf::Cylinder("Cylinder2", 0.3, 1.0, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED_BODY, "grey");
-    sf::Cylinder* cylinder3 = new sf::Cylinder("Cylinder3", 0.1, 0.3, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED_BODY, "grey");
+2) **Body type**: the type of the dynamic body
 
-    //Build compound body
-    sf::Compound* comp = new sf::Compound("Compound", cylinder1, sf::I4(), sf::BodyPhysicsType::SUBMERGED_BODY);
-    comp->AddExternalPart(cylinder2, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.6,0.0)));
-    comp->AddInternalPart(cylinder3, sf::I4());
+3) **Physics mode**: the physics computation mode
 
-Two different types of rigid bodies can be defined in the simulation scenario, that is *static* and *dynamic* bodies.
+4) **Buoyant**: a flag indicating if the body is buoyant (optional)
 
+5) **Material name**: the name of the material the body is made of
 
-Xml
-===
+6) **Look name**: the name of the look used for rendering the body
 
-All bodies that should move and do not constitute a multi-body system have to be defined as dynamic bodies. For these type of bodies a convex hull is built for collision computation. Therefore, to achieve correct collisions for a non-convex body, it is necessary to compose a it from multiple convex bodies, using the compound body type. Whenever possible, one of the basic solid shapes should be used to improve collision detection performance and enable analytical computation of collision points, i.e., achieve smooth collision with curved surfaces.
-
-A dynamic body is defined using ``<dynamic name="[1]" type="[2]" physics="[3]" buoyant="[4]">[5]</dynamic>``. The name of the body [1] should be unique across the simulation scenario. The body type [2] has to be equal to one of the types specified below and it determines how the body will be created, i.e., which tags will have to be included in the description [5]. Moreover, the type of physics computations [3] as well as a boolean flag determining if the body is buoyant [4] have to be defined, to ensure proper behaviour of the body. Some of the tags in the body description [5] are common for all types of bodies, like the material the body is made of [6], its look determining the rendering style [7] and its initial orientation [8] and position [9] in the world (NED) frame. Therefore, a general structure of the definition of a dynamic body is the following:
+7) **World transformation**: the transformation of the body origin in the world frame (position and orientation of the body)
 
 .. code-block:: xml
 
-    <dynamic name="[1]" type="[2]" physics="[3]" buoyant="[4]">
-        [definitions specific for a selected body type]
-        <material name="[6]"/>
-        <look name="[7]"/>
-        <world_transform rpy="[8]" xyz="[9]"/>
+    <dynamic name="{1}" type="{2}" physics="{3}" buoyant="{4}">
+        <!-- definitions specific for a selected body type -->
+        <material name="{5}"/>
+        <look name="{6}"/>
+        <world_transform xyz="{7a}" rpy="{7b}"/>
     </dynamic>
 
-Tags specific for each available body type are the following:
+When creating the dynamic bodies in the C++ code, it is necessary to use a constructor of a specific body type. All of the dynamic body types are implemented as subclasses of ``sf::SolidEntity``.
+
+.. note::
+
+    In the following sections, description of each specific body type implementation is accompanied with an example of body instantiation through the XML syntax and the C++ code. It is assumed that a physical material called "Steel" and a look called "Yellow" were defined.
+
+Overriding calculated properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to override some of the automatically calculated properties of a dynamic body. There are two methods to do it:
+
+1. Set an arbitrary mass and allow the library to automatically scale the moments of inertia
+
+    .. code-block:: xml
+
+        <dynamic>
+            <!-- all standard definitions -->
+            <mass value="30.0"/>
+        </dynamic>
+
+    .. code-block:: cpp
+
+        sf::SolidEntity* solid = ...;
+        solid->ScalePhysicalPropertiesToArbitraryMass(30.0);
+
+2. Set an arbitrary mass, moments of inertia and location of the CG
+
+    .. code-block:: xml
+
+        <dynamic>
+            <!-- all standard definitions -->
+            <mass value="30.0"/>
+            <inertia xyz="1.0 0.5 0.2"/>
+            <cg xyz="0.2 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        </dynamic>
+
+    .. code-block:: cpp
+
+        sf::SolidEntity* solid = ...;
+        solid->SetArbitraryPhysicalProperties(30.0, sf::Vector3(1.0, 0.5, 0.2), sf::Transform(sf::IQ(), sf::Vector3(0.2, 0.0, 0.0)));
+
+Parametric solids
+=================
+
+The most efficient dynamic bodies are parametric solids, which include: box, sphere, cylinder, torus and wing. The physical geometry of parametric solids is the same as the graphical mesh. Besides the wing body, the collisions of parametric solids are computed analytically.
 
 1. Sphere ``type="sphere"`` - a sphere (ball) with a specified radius:
 
 .. code-block:: xml
 
-    <dimensions radius="1.0"/>    
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <dynamic name="Sphere" type="sphere" physics="submerged" buoyant="true">
+        <dimensions radius="0.5"/>    
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>    
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </dynamic>
 
-2. Cylinder ``type="cylinder"`` - a cylinder with a specified radius and height, with its axis aligned with the local Z axis:  
+.. code-block:: cpp
+
+    #include <Stonefish/entities/solids/Sphere.h>
+    sf::Sphere* sph = new sf::Sphere("Sphere", 0.5, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
+    AddSolidEntity(sph, sf::I4());
+
+2. Cylinder ``type="cylinder"`` - a cylinder with a specified radius and height, with its axis coincident with the local Z axis:  
 
 .. code-block:: xml
 
-    <dimensions radius="1.0" height="2.0"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <dynamic name="Cyl" type="cylinder" physics="surface">
+        <dimensions radius="1.0" height="2.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>    
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </dynamic>
+
+.. code-block:: cpp
+
+    #include <Stonefish/entities/solids/Cylinder.h>
+    sf::Cylinder* cyl = new sf::Cylinder("Cyl", 1.0, 2.0, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Yellow");
+    AddSolidEntity(cyl, sf::I4());
 
 3. Box ``type="box"`` - a box with specified width, height and length:  
 
 .. code-block:: xml
 
-    <dimensions xyz="0.5 1.0 2.0"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-
-4. Torus ``type="torus"`` - a torus with a specified major and minor radius:
-
-.. code-block:: xml
-
-    <dimensions major_radius="1.0" minor_radius="0.1"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-
-5. Mesh ``type="model"`` - an arbitrary mesh made of triangles. The geometry can be specified separately for the physics computation and the rendering. If only physical geometry is specified it is also used for rendering. The geometry can be loaded from STL or OBJ files (ASCII format). The origin tag is used to apply local transformation to the geometry, i.e., transformation in the frame defined by the 3D software used to save the geometry.
-
-.. code-block:: xml
-
-    <physical>
-        <mesh filename="pipe_phy.obj" scale="1.0"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/> 
-    </physical>
-    <visual> <!-- optional -->
-        <mesh filename="pipe_gra.obj" scale="1.0"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-    </visual>
-
-*Following the above instructions, an exemplary dynamic torus can be defined as:*
-
-.. code-block:: xml
-
-    <dynamic name="Torus1" type="torus" physics="submerged" buoyant="true">   
-        <dimensions major_radius="1.0" minor_radius="0.2"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-        <material name="Aluminium"/>
-        <look name="yellow"/>
-        <world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 2.0"/>
+    <dynamic name="Box" type="box" physics="submerged" buoyant="true">
+        <dimensions xyz="0.5 1.0 2.0"/>
+        <origin xyz="0.5 0.0 0.0" rpy="0.0 0.0 0.0"/>    
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 2.0" rpy="0.0 0.0 0.0"/>
     </dynamic>
+
+.. code-block:: cpp
+
+    #include <Stonefish/entities/solids/Box.h>
+    sf::Box* box = new sf::Box("Box", sf::Vector3(0.5, 1.0, 2.0), sf::Transform(sf::IQ(), sf::Vector3(0.5, 0.0, 0.0)), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
+    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
+
+4. Torus ``type="torus"`` - a torus with a specified major and minor radius, with its axis coincident with the local Y axis:
+
+.. code-block:: xml
+
+    <dynamic name="Torus" type="torus" physics="submerged" buoyant="true">
+        <dimensions major_radius="1.0" minor_radius="0.1"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>    
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </dynamic>
+    
+.. code-block:: cpp
+
+    #include <Stonefish/entities/solids/Torus.h>
+    sf::Torus* tr = new sf::Torus("Torus", 1.0, 0.1, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
+    AddSolidEntity(tr, sf::I4());
+
+5. Wing profile ``type="wing"`` - a solid based on an extruded NACA profile (4-digit system), aligned with local Y axis:
+
+.. code-block:: cpp
+
+    #include <Stonefish/entities/solids/Wing.h>
+    sf::Wing* wing = new sf::Wing("Wing", 1.0, 0.5, "4000", 3.0, sf::I4(), "Steel", sf::BodyPhysicsType::AERODYNAMIC, "Yellow");
+    AddSolidEntity(wing, sf::I4());
+
+Arbitrary meshes
+================
+
+The dynamic bodies can be created based on arbitrary geometry, loaded from mesh files ``type="model"``. The geometry can be specified separately for the physics computation and the rendering. If only physical geometry is specified it is also used for rendering. The geometry can be loaded from STL or OBJ files (ASCII format). 
+
+.. code-block:: xml
+
+    <dynamic name="Mesh" type="model" physics="submerged" buoyant="true">
+        <physical>
+            <mesh filename="model_phy.obj" scale="1.0"/>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/> 
+        </physical>
+        <visual>
+            <mesh filename="model_vis.obj" scale="1.0"/>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+        </visual>
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </dynamic>
+
+The ``<origin>`` tag is used to apply local transformation to the geometry, i.e., transformation in the frame defined by the 3D software used to save the geometry.
+
+.. code-block:: cpp
+
+    #include <Stonefish/entities/solids/Polyhedron.h>
+    sf::Polyhedron* poly = new sf::Polyhedron("Poly", sf::GetDataPath() + "model_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "model_phy.obj", 1.0, "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
+    AddSolidEntity(poly, sf::I4());
+
+.. _compound-bodies:
 
 Compound bodies
-^^^^^^^^^^^^^^^
+===============
 
-A special type of body, called *compound*, can be created, to allow for intuitive construction of a group of rigidly connected elements and/or enable correct collision with non-convex geometry. A compound body is composed of external and internal parts, with at least one obligatory external part. The general structure of a compound body definition is following:
+A special type of dynamic body, called *compound*, can be used, for intuitive construction of a group of rigidly connected elements and/or enabling correct collision with non-convex geometry. A compound body is composed of external and internal parts, with at least one obligatory external part. Only the external parts are used when computing the drag forces, while all parts contribute to the buoyancy. 
+Each of the parts is defined as parametric or mesh body, using the previously presented syntax. The difference lies in how these bodies are added to the simulation world by first combining them into one compound body.
+
+An example of creating a compound body is presented below:
 
 .. code-block:: xml
 
-    <dynamic name="[1]" type="[2]" physics="[3]" buoyant="[4]">
-        <external_part name="[1.1]" type="[1.2]" physics="[1.3]" buoyant="[1.4]">
-            [definitions specific for the type of part selected]
-            <material name="[1.5]"/>
-            <look name="[1.6]"/>
-            <compound_transform rpy="[1.7]" xyz="[1.8]"/>
+    <dynamic name="Comp" physics="submerged" type="compound">
+        <external_part name="Part1" type="sphere" physics="submerged" buoyant="true">
+            <dimensions radius="0.5"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <material name="Steel"/>
+            <look name="Yellow"/>
+            <compound_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         </external_part>
-
-        <internal_part name="[2.1]" type="[2.2]" physics="[2.3]" buoyant="[2.4]">
-            [definitions specific for the type of part selected]
-            <material name="[2.5]"/>
-            <look name="[2.6]"/>
-            <compound_transform rpy="[2.7]" xyz="[2.8]"/>
+        <internal_part name="Part2" type="box" physics="submerged" buoyant="true">
+            <dimensions xyz="0.5 0.1 0.1"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <material name="Steel"/>
+            <look name="Yellow"/>
+            <compound_transform xyz="0.25 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <internal_part/>
-        <world_transform rpy="[5]" xyz="[6]"/>
+        <world_transform xyz="0.0 0.0 5.0" rpy="0.0 0.0 0.0"/>
     </dynamic>
 
-It can be noticed that the definition of each compound body part, internal or external, is the same as the definition of a single dynamic body, i.e., each part can be one of the five types of dynamic bodies defined above. There are two differences though: instead of the *world transform* we have a *compound transform* [1.7-1.8, 2.7-2.8], which positions the part in the origin frame of the compound body, and the physics computed for the parts change depending if they are defined as internal or external, e.g., fluid damping forces do not act on internal parts. The *world transform* of the whole body is defined outside the definition of the parts [5-6]. There is no definition of material or look for the whole body because these properties can change for each part.
+It should be noticed that when defining parts of a compound body the ``<dynamic>`` tag is replaced with ``<external_part>`` and ``<internal_part>`` tags. The ``<compound_transform>`` tag defined for each of the parts is used to determine the position and orientation of the part in the origin frame of the compound body and it replaces the ``<world_transform>``, which is now defined for the whole compound body, at the end.
 
+.. code-block:: cpp
 
+    #include <Stonefish/entities/solids/Sphere.h>
+    #include <Stonefish/entities/solids/Box.h>
+    #include <Stonefish/entities/solids/Compound.h>
+    sf::Sphere* part1 = new sf::Sphere("Part1", 0.5, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
+    sf::Box* part2 = new sf::Box("Part2", sf::Vector3(0.5, 0.1, 0.1), sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
+    sf::Compound* comp = new sf::Compound("Comp", part1, sf::I4(), sf::BodyPhysicsType::SUBMERGED);
+    comp->AddInternalPart(part2, sf::Transform(sf::IQ(), sf::Vector3(0.25, 0.0, 0.0)));
+    AddSolidEntity(comp, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 5.0)));
