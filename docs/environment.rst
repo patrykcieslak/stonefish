@@ -6,22 +6,23 @@ Environment
 
 The description of a simulation world starts with the definition of the environment to be simulated. The *Stonefish* library is prepared to be used as a general robot simulator, which implements crucial elements for marine robotics. The standard simulation medium is air, which can be used for the ground and flying robots (preliminary support). If the user is interested in simulating marine robots, a virtual ocean has to be enabled. Next, the world can be filled with static rigid bodies, which may include terrain and structures fixed to the world frame. If some parts of the environment are considered dynamic, they have to be created as dynamic bodies or robots, described in the subsequent parts of the documentation.
 
-The parameters of the environment are specified between ``<environment> ... </environment>``, inside the root node of the XML file, and they include position of the world frame origin, position of the sun in the sky and the ocean definitions explained in the next section:
+The parameters of the environment are specified between ``<environment> ... </environment>``, inside the root node of the XML file, and they include position of the world frame origin (NED origin), the ocean definitions and the atmosphere definitions, explained in the following sections. If no ocean definitions are present the ocean simulation is disabled.
+
+The basic structure of the XML tags used to define the environment is:
 
 .. code-block:: xml
 
     <environment>
         <ned latitude="40.0" longitude="3.0"/> <!-- geographic coordinates of the NED origin -->
-        <sun azimuth="20.0" elevation="50.0"/> <!-- sun position -->
         <!-- ocean definitions -->
+        <!-- atmosphere definitions -->
     </environment>
 
-The same can be achieved in code by the following lines:
+The same can be achieved in code by the following line:
 
 .. code-block:: cpp
 
     getNED()->Init(40.0, 20.0, 0.0);
-    getAtmosphere()->SetupSunPosition(20.0, 50.0);
 
 Ocean
 =====
@@ -57,7 +58,7 @@ The ocean definitions have to be placed inside the environment node of the scena
 
 .. code-block:: xml
 
-    <ocean enabled = "true">
+    <ocean>
         <water density="1031.0" jerlov="0.2"/>
         <waves height="0.0"/>
         <current type="uniform">
@@ -76,9 +77,57 @@ The following lines of code can be used to achieve the same:
 
     getMaterialManager()->CreateFluid("OceanWater", 1031.0, 0.002, 1.33);
     EnableOcean(0.0, getMaterialManager()->getFluid("OceanWater"));
-    getOcean()->SetupWaterProperties(0.2);
+    getOcean()->setWaterType(0.2);
     getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0, 0.0, 0.0)));
     getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
+
+Atmosphere
+==========
+
+The atmosphere simulation is another component of the virtual environment. It enables realistic motion of aerodynamic bodies, taking into account winds. In the current state only air drag is simulated. An important feature of the atmosphere simulation is the photo-realistic rendering of sky and Sun.  
+
+Winds
+-----
+
+Winds have a significant impact on the motion of flying robots. Therefore, the *Stonefish* library implements some basic forms of wind, treated as air velocity fields. Currently implemented types of wind include:
+
+- ``Uniform`` the same velocity in the whole atmosphere
+
+- ``Jet`` a velocity distribution coming from an circular outlet
+
+- ``Pipe`` a velocity distrubution resambling a virtual pipe submerged in the atmosphere
+
+Sky and Sun
+-----------
+
+The sky and Sun rendering is based on precomputed atmospheric scattering algorithm. It takes into account multiple layers of Earth's atmosphere, including the ozone layer, to generate photo-realistic image of the sky. Sun's position on the sky can be changed dynamically during the simulation.  
+
+Definitions
+-----------
+
+The atmosphere definitions have to be placed inside the environment node of the scenario file, between ``<atmosphere> ... </atmosphere>``. An example covering all of the implemented features is presented below:
+
+.. code-block:: xml
+
+    <atmosphere>
+        <sun azimuth="20.0" elevation="50.0"/>
+        <wind type="uniform">
+            <velocity xyz="1.0 0.0 0.0"/>
+        </wind>
+        <wind type="jet">
+            <center xyz="0.0 0.0 3.0"/>
+            <outlet radius="0.2"/>
+            <velocity xyz="0.0 2.0 0.0"/>
+        </wind>
+    </atmosphere>
+
+The following lines of code can be used to achieve the same:
+
+.. code-block:: cpp
+
+    getAtmosphere()->SetupSunPosition(20.0, 50.0);
+    getAtmosphere()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0, 0.0, 0.0)));
+    getAtmosphere()->AddVelocityField(new sf::Jet(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 
 Static bodies
 =============
@@ -134,6 +183,10 @@ The same can be achieved in code:
     sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "Yellow");
     AddStaticEntity(floor, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 1.0));
 
+.. note::
+
+    Plane definition has one special functionality. It is possible to scale the automatically generated texture coordinates, to tile the textures associated with the look. In the XML syntax the ``<look>`` tag has to be augmented to include attribute ``uv_scale="#.#"`` and in the C++ code the scale can be passed as the last argument in the object constructor.
+
 Obstacles
 ---------
 
@@ -143,21 +196,25 @@ In case of the **parameteric solids** the specific definitions are reduced to th
 
 - **Sphere** ``type="sphere"`` - ball with a specified radius {1}:
  
-    .. code-block:: xml
+.. code-block:: xml
   
-        <dimensions radius="{1}"/>
+    <dimensions radius="{1}"/>
 
 - **Cylinder** ``type="cylinder"`` - cylinder along Z axis, with a specified radius {1} and height {2}:
 
-    .. code-block:: xml
+.. code-block:: xml
 
-        <dimensions radius="{1}" height="{2}"/>
+    <dimensions radius="{1}" height="{2}"/>
 
 - **Box** ``type="box"`` - box with specified width {1}, length {2} and height {3}: 
 
-    .. code-block:: xml
+.. code-block:: xml
     
-        <dimensions xyz="{1} {2} {3}"/>
+    <dimensions xyz="{1} {2} {3}"/>
+
+.. note::
+
+    Box definition has one special functionality. It is possible to choose from 3 automatically generated texture coordinate schemes: scheme 0 (default) assumes that the texture is in a cubemap format and applies it to the box faces accordingly, scheme 1 applies the whole texture to each face of the box, and scheme 2 tiles the whole texture along each of the box faces, based on face dimensions. In the XML syntax the ``<look>`` tag has to be augmented to include attribute ``uv_mode="#"`` and in the C++ code the mode can be passed as the last argument in the object constructor.
    
 Definition of arbitrary **triangle meshes** ``type="model"``, loaded from geometry files, is more complex. Their geometry can be specified separately for the physics computations ``<physical> .. </physical>`` and the rendering ``<visual> ... </visual>``. The physics mesh should be optimised to improve collision performance.  If only physics geometry is specified, it is also used for rendering. Moreover, the physics mesh is used when simulating operation of :ref:`link sensors <link-sensors>` and the graphics mesh is used for the :ref:`vision sensors <vision-sensors>`. The geometry can be loaded from STL or OBJ files (ASCII format). 
 
@@ -214,6 +271,7 @@ Terrain
 -------
 
 Currently the *Stonefish* library implements one type of easily defined terrain mesh which is a heightmap based terrain ``type="terrain"``. This kind of terrain mesh is generated from a planar grid displaced in the Z direction, based on the values of the heightmap pixels. Scale of the terrain is defined in meters per pixel and the height is defined by providing value correspondinng to a fully saturated pixel.
+The heightmap has to be a single channel (grayscale) image, with an 8 bit or 16 bit precision. The latter allows for much higher height resolution.
 
 The following example presents the definition of a heightmap based terrain:
 
@@ -231,3 +289,7 @@ The following example presents the definition of a heightmap based terrain:
 
     sf::Terrain* bottom = new sf::Terrain("Bottom", sf::GetDataPath() + "terrain.png", 0.1, 0.2, "Rock", "Gray");
     AddStaticEntity(bottom, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 15.0)));
+
+.. note::
+
+    Terrain definition has one special functionality. It is possible to scale the automatically generated texture coordinates, to tile the textures associated with the look. In the XML syntax the ``<look>`` tag has to be augmented to include attribute ``uv_scale="#.#"`` and in the C++ code the scale can be passed as the last argument in the object constructor.

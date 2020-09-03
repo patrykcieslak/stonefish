@@ -32,6 +32,8 @@
 #include "graphics/OpenGLFlatOcean.h"
 #include "graphics/OpenGLRealOcean.h"
 #include "actuators/Thruster.h"
+#include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 
 namespace sf
 {
@@ -95,7 +97,7 @@ Fluid Ocean::getLiquid() const
     return liquid;
 }
     
-void Ocean::SetupWaterProperties(Scalar jerlov)
+void Ocean::setWaterType(Scalar jerlov)
 { 
     if(glOcean != NULL)
     {
@@ -133,7 +135,7 @@ Scalar Ocean::GetDepth(const Vector3& point)
 
 Scalar Ocean::GetPressure(const Vector3& point)
 {
-    Scalar g = 9.81;
+    Scalar g = SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
     Scalar d = GetDepth(point);
     Scalar pressure = d > Scalar(0) ? d*liquid.density*g : Scalar(0);
     return pressure;
@@ -212,7 +214,7 @@ void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
         glOcean = new OpenGLRealOcean(depth, oceanState, hydrodynamics);
     else
         glOcean = new OpenGLFlatOcean(depth);
-    SetupWaterProperties(0.2);
+    setWaterType(0.2);
 }
 
 std::vector<Renderable> Ocean::Render()

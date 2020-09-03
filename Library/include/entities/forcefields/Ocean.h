@@ -62,7 +62,7 @@ namespace sf
         /*!
          \param jerlov the type of water according to Jerlov (I-9C) <0,1>
          */
-        void SetupWaterProperties(Scalar jerlov);
+        void setWaterType(Scalar jerlov);
         
         //! A method used to add a velocity field to the ocean.
         /*!

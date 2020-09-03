@@ -44,8 +44,9 @@ namespace sf
          \param height the height at the maximum possible heightmap value [m]
          \param material the name of the material the terrain is made of
          \param look the name of the graphical material used for rendering
+         \param uvScale scaling of texture coordinates
          */
-        Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string material, std::string look = "");
+        Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string material, std::string look = "", float uvScale = 1.f);
         
         //! A destructor.
         ~Terrain();
@@ -68,7 +69,7 @@ namespace sf
         StaticEntityType getStaticType();
         
     private:
-        Scalar* terrainHeight;
+        Scalar* heightfield;
         Scalar maxHeight;
     };
 }

@@ -62,24 +62,33 @@ void DVL::InternalUpdate(Scalar dt)
     dir[2] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) + dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
     dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
     
+    unsigned int divs = ceil(channels[3].rangeMax - channels[3].rangeMin);
+    
     for(unsigned int i=0; i<4; ++i)
     {
         from[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMin;
         to[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMax;
-        
-        btCollisionWorld::ClosestRayResultCallback closest(from[i], to[i]);
-        SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from[i], to[i], closest);
-        
-        if(closest.hasHit())
+
+        Vector3 step = (to[i]-from[i])/Scalar(divs);
+        range[i] = Scalar(-1);
+
+        for(unsigned int h=0; h<divs; ++h)
         {
-            Vector3 p = from[i].lerp(to[i], closest.m_closestHitFraction);
-            range[i] = (p - dvlTrans.getOrigin()).length();
-        }
-        else
-            range[i] = Scalar(-1);
+            Vector3 from_ = from[i] + step*Scalar(h);
+            Vector3 to_ = from[i] + step*Scalar(h+1);
+            btCollisionWorld::ClosestRayResultCallback closest(from_, to_);
+            SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from_, to_, closest);
             
+            if(closest.hasHit())
+            {
+                Vector3 p = from_.lerp(to_, closest.m_closestHitFraction);
+                range[i] = (p - dvlTrans.getOrigin()).length();
+                break;
+            }
+        }
+
         if(range[i] > Scalar(0) && (range[i] < minRange || minRange < Scalar(0)))
-            minRange = range[i];
+                minRange = range[i];
     }
    
     //Get velocity

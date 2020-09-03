@@ -620,7 +620,7 @@ bool SimulationManager::isOceanEnabled()
 
 void SimulationManager::InitializeSolver()
 {
-    dwBroadphase = new btDbvtBroadphase();
+    dwBroadphase = new btDbvtBroadphase(); //btAxisSweep3(Vector3(-50000.0, -50000.0, -10000.0), Vector3(50000.0, 50000.0, 10000.0));
     dwCollisionConfig = new btDefaultCollisionConfiguration();
   
     //Choose collision dispatcher

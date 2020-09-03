@@ -202,12 +202,12 @@ void OpenGLPipeline::DrawHelpers()
     //Coordinate systems
     if(hSettings.showCoordSys)
     {
-        content->DrawCoordSystem(glm::mat4(), 1.f);
+        content->DrawCoordSystem(glm::mat4(1.f), 1.f);
         
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
-                content->DrawCoordSystem(drawingQueueCopy[h].model, 0.5f);
+                content->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
         }
     }
     

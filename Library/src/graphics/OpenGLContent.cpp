@@ -2180,7 +2180,7 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
     return mesh;
 }
     
-Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight)
+Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight, GLfloat uvScale)
 {
     TexturableMesh* mesh = new TexturableMesh;
     Face f;
@@ -2196,7 +2196,7 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
         {
             vt.pos = glm::vec3((GLfloat)j/(GLfloat)(sizeX-1)*fullSizeX-offsetX, (GLfloat)i/(GLfloat)(sizeY-1)*fullSizeY-offsetY, heightfield[i*sizeX + j]-maxHeight/2.f);
             vt.normal = glm::vec3(0.f,0.f,-1.f);
-            vt.uv = glm::vec2((GLfloat)j/(GLfloat)(sizeX-1), (GLfloat)i/(GLfloat)(sizeY-1));
+            vt.uv = glm::vec2((GLfloat)j/(GLfloat)(sizeX-1), (GLfloat)i/(GLfloat)(sizeY-1)) * uvScale;
             mesh->vertices.push_back(vt);
         }
     

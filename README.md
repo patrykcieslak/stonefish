@@ -75,6 +75,14 @@ This is free software, published under the General Public License v3.0.
 
 ### Change log
 
+*Version 1.0*
+- Fully GPU-based simulation of mechanical scanning imaging sonar (MSIS)
+- Improvements in all sonar simulations
+- Significant improvement to DVL performance when heightfield terrain is used
+- Hightfield terrain now supports 16 bit heightmaps
+- New syntax for loading ocean and atmosphere definitons using the XML parser
+- New, complete, beautiful documentation generated with Sphinx
+
 *Version 0.9*
 - Moved to the OpenGL 4.3 functionality (compute shaders)
 - Complete rewrite of the ocean/underwater rendering pipeline

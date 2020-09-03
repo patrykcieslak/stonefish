@@ -111,7 +111,7 @@ It is possible to override some of the automatically calculated properties of a 
 Parametric solids
 =================
 
-The most efficient dynamic bodies are parametric solids, which include: box, sphere, cylinder, torus and wing. The physical geometry of parametric solids is the same as the graphical mesh. Besides the wing body, the collisions of parametric solids are computed analytically.
+The most efficient dynamic bodies are parametric solids, which include: box, sphere, cylinder, torus and wing. The physical geometry of parametric solids is the same as the graphical mesh. Besides the wing body, the collisions of parametric solids are computed analytically. Definition of parametric solids always includes the ``dimensions`` tag. The attributes of this tag depend on the type of the solid. There is one standard attribute which is always available, called ``thickness``, used to define wall thickness if the user wants to create a shell body instead of a solid one.
 
 1. Sphere ``type="sphere"`` - a sphere (ball) with a specified radius:
 
@@ -187,6 +187,16 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
 
 5. Wing profile ``type="wing"`` - a solid based on an extruded NACA profile (4-digit system), aligned with local Y axis:
 
+.. code-block:: xml
+
+    <dynamic name="Wing" type="wing" physics="aerodynamic" buoyant="true">
+        <dimensions base_chord="1.0" tip_chord="0.5" length="3.0" naca="4000"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <material name="Steel"/>
+        <look name="Yellow"/>
+        <world_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </dynamic>
+
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Wing.h>
@@ -214,7 +224,7 @@ The dynamic bodies can be created based on arbitrary geometry, loaded from mesh 
         <world_transform xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     </dynamic>
 
-The ``<origin>`` tag is used to apply local transformation to the geometry, i.e., transformation in the frame defined by the 3D software used to save the geometry.
+The ``<origin>`` tag is used to apply local transformation to the geometry, i.e., transformation in the frame defined by the 3D software used to save the geometry. Optionally, if the user wants to create a shell body instead of a solid body, a line ``<thickness value="#.#"/>`` has to be defined between the ``<physical>`` tags. 
 
 .. code-block:: cpp
 

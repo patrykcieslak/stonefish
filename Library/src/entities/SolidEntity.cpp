@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/SolidEntity.h"
@@ -618,6 +618,10 @@ void SolidEntity::ComputeSphericalApprox()
     fdApproxParams[0] = btSqrt(r);
     
     Scalar rho = Scalar(1000);
+    Ocean* ocn;
+    if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
+        rho = ocn->getLiquid().density;
+
     Scalar m = Scalar(2)*M_PI*rho*r*r*r/Scalar(3);
     aMass = Vector3(m,m,m);
     aI = V0();
@@ -697,6 +701,10 @@ void SolidEntity::ComputeCylindricalApprox()
     
     //Added mass and inertia
     Scalar rho = Scalar(1000);
+    Ocean* ocn;
+    if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
+        rho = ocn->getLiquid().density;
+
     Scalar m1 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]; //Parallel to axis
     Scalar m2 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]*Scalar(2)*fdApproxParams[1]; //Perpendicular to axis
     Scalar I1 = Scalar(0);
@@ -902,7 +910,11 @@ void SolidEntity::ComputeEllipsoidalApprox()
     fdApproxParams[2] = d.getZ();
     
     //Compute added mass
-    Scalar rho = Scalar(1000); //Fluid density
+    Scalar rho = Scalar(1000);
+    Ocean* ocn;
+    if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
+        rho = ocn->getLiquid().density;
+
     Scalar r12 = (fdApproxParams[1] + fdApproxParams[2])/Scalar(2);
     aMass.setX(LambKFactor(fdApproxParams[0], r12)*Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[0]*r12*r12);
     aMass.setY(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[2]*fdApproxParams[2]*fdApproxParams[0]);

@@ -761,7 +761,7 @@ void GraphicalSimulationApp::DoHUD()
             waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
             offset += 50.f;
         
-            ocn->SetupWaterProperties(waterType);
+            ocn->setWaterType(waterType);
         }
         
         offset += 7.f;

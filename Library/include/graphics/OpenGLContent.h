@@ -439,9 +439,10 @@ namespace sf
          \param scaleX the scale of the terrain in X
          \param scaleY the scale of the terrain in Y
          \param maxHeight the height of the terrain [m]
+         \param uvScale scaling of the texture coordinates
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight);
+        static Mesh* BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight, GLfloat uvScale = 1.f);
         
         //! A static method to transform mesh vertices.
         /*!

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ScenarioParser.h"
@@ -268,15 +268,13 @@ bool ScenarioParser::PreProcess(XMLNode* root)
 
 bool ScenarioParser::ParseEnvironment(XMLElement* element)
 {
-    //Get setting nodes
+    XMLElement* item;
+
+    //Setup NED home
     XMLElement* ned = element->FirstChildElement("ned");
-    XMLElement* sun = element->FirstChildElement("sun");
-    XMLElement* ocean = element->FirstChildElement("ocean");
-    
-    if(ned == nullptr || sun == nullptr || ocean == nullptr)
+    if(ned == nullptr) //Obligatory
         return false;
     
-    //Setup NED home
     Scalar lat, lon;
     if(ned->QueryAttribute("latitude", &lat) != XML_SUCCESS)
         return false;
@@ -284,94 +282,166 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         return false;
     sm->getNED()->Init(lat, lon, Scalar(0));
     
-    //Setup sun position
-    Scalar az, elev;
-    if(sun->QueryAttribute("azimuth", &az) != XML_SUCCESS)
-        return false;
-    if(sun->QueryAttribute("elevation", &elev) != XML_SUCCESS)
-        return false;
-    sm->getAtmosphere()->SetupSunPosition(az, elev);
-    
     //Setup ocean
-    XMLElement* item;
-    bool oceanEnabled;
-    Scalar wavesHeight(0);
-    Scalar waterDensity(1000);
-    
-    //Basic setup
-    if(ocean->QueryAttribute("enabled", &oceanEnabled) != XML_SUCCESS)
-        return false;
-    if((item = ocean->FirstChildElement("waves")) != nullptr 
-        && item->QueryAttribute("height", &wavesHeight) != XML_SUCCESS)
-        return false;
-    if((item = ocean->FirstChildElement("water")) != nullptr
-        && item->QueryAttribute("density", &waterDensity) != XML_SUCCESS)
-        return false;
-    if(oceanEnabled)
+    XMLElement* ocean = element->FirstChildElement("ocean");
+    if(ocean != nullptr)
     {
+        //Basic setup
+        Scalar wavesHeight(0);
+        Scalar waterDensity(1000);
+        Scalar jerlov(0.2);
+
+        if((item = ocean->FirstChildElement("waves")) != nullptr)
+        {
+            item->QueryAttribute("height", &wavesHeight);
+        }
+        if((item = ocean->FirstChildElement("water")) != nullptr)
+        {
+            item->QueryAttribute("density", &waterDensity);
+            item->QueryAttribute("jerlov", &jerlov);
+        }
+        
         std::string waterName = sm->getMaterialManager()->CreateFluid("Water", waterDensity, 1.308e-3, 1.55); 
         sm->EnableOcean(wavesHeight, sm->getMaterialManager()->getFluid(waterName));
-    }
-    
-    //Currents
-    if((item = ocean->FirstChildElement("current")) != nullptr)
-    {
-        Ocean* ocn = sm->getOcean();
-        XMLElement* item2;
-        do
-        {
-            //Get type of current
-            const char* currentType;
-            if(item->QueryStringAttribute("type", &currentType) != XML_SUCCESS)
-                return false;
-            std::string currentTypeStr(currentType);
-            
-            //Create current
-            if(currentTypeStr == "uniform")
-            {
-                const char* vel;
-                Scalar vx,vy,vz;
+        sm->getOcean()->setWaterType(jerlov);
         
-                if((item2 = item->FirstChildElement("velocity")) == nullptr)
-                    return false;
-                if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
-                    return false;
-                if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
-                    return false;
-       
-                ocn->AddVelocityField(new Uniform(Vector3(vx, vy, vz)));
-            }
-            else if(currentTypeStr == "jet")
+        //Currents
+        if((item = ocean->FirstChildElement("current")) != nullptr)
+        {
+            Ocean* ocn = sm->getOcean();
+            XMLElement* item2;
+            do
             {
-                const char* center;
-                const char* vel;
-                Scalar cx, cy, cz;
-                Scalar vx, vy, vz;
-                Scalar radius;
+                //Get type of current
+                const char* currentType;
+                if(item->QueryStringAttribute("type", &currentType) != XML_SUCCESS)
+                    return false;
+                std::string currentTypeStr(currentType);
                 
-                if((item2 = item->FirstChildElement("center")) == nullptr)
-                    return false;
-                if(item2->QueryStringAttribute("xyz", &center) != XML_SUCCESS)
-                    return false;
-                if(sscanf(center, "%lf %lf %lf", &cx, &cy, &cz) != 3)
-                    return false;
-                if((item2 = item->FirstChildElement("outlet")) == nullptr)
-                    return false;
-                if(item2->QueryAttribute("radius", &radius) != XML_SUCCESS)
-                    return false;
-                if((item2 = item->FirstChildElement("velocity")) == nullptr)
-                    return false;
-                if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
-                    return false;
-                if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
-                    return false;
-                
-                Vector3 velocity(vx, vy, vz);
-                Vector3 dir = velocity.normalized();
-                ocn->AddVelocityField(new Jet(Vector3(cx, cy, cz), dir, radius, velocity.norm()));
+                //Create current
+                if(currentTypeStr == "uniform")
+                {
+                    const char* vel;
+                    Scalar vx,vy,vz;
+            
+                    if((item2 = item->FirstChildElement("velocity")) == nullptr)
+                        return false;
+                    if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
+                        return false;
+                    if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
+                        return false;
+        
+                    ocn->AddVelocityField(new Uniform(Vector3(vx, vy, vz)));
+                }
+                else if(currentTypeStr == "jet")
+                {
+                    const char* center;
+                    const char* vel;
+                    Scalar cx, cy, cz;
+                    Scalar vx, vy, vz;
+                    Scalar radius;
+                    
+                    if((item2 = item->FirstChildElement("center")) == nullptr)
+                        return false;
+                    if(item2->QueryStringAttribute("xyz", &center) != XML_SUCCESS)
+                        return false;
+                    if(sscanf(center, "%lf %lf %lf", &cx, &cy, &cz) != 3)
+                        return false;
+                    if((item2 = item->FirstChildElement("outlet")) == nullptr)
+                        return false;
+                    if(item2->QueryAttribute("radius", &radius) != XML_SUCCESS)
+                        return false;
+                    if((item2 = item->FirstChildElement("velocity")) == nullptr)
+                        return false;
+                    if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
+                        return false;
+                    if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
+                        return false;
+                    
+                    Vector3 velocity(vx, vy, vz);
+                    Vector3 dir = velocity.normalized();
+                    ocn->AddVelocityField(new Jet(Vector3(cx, cy, cz), dir, radius, velocity.norm()));
+                }
             }
+            while((item = item->NextSiblingElement("current")) != nullptr);
         }
-        while((item = item->NextSiblingElement("current")) != nullptr);
+    }
+
+    //Setup atmosphere
+    XMLElement* atmosphere = element->FirstChildElement("atmosphere");
+    if(atmosphere != nullptr)
+    {
+        //Basic setup
+        if((item = atmosphere->FirstChildElement("sun")) != nullptr)
+        {
+            Scalar az, elev;
+            if(item->QueryAttribute("azimuth", &az) != XML_SUCCESS)
+                return false;
+            if(item->QueryAttribute("elevation", &elev) != XML_SUCCESS)
+                return false;
+            sm->getAtmosphere()->SetupSunPosition(az, elev);
+        }
+
+        //Winds
+        if((item = atmosphere->FirstChildElement("wind")) != nullptr)
+        {
+            Atmosphere* atm = sm->getAtmosphere();
+            XMLElement* item2;
+            do
+            {
+                //Get type of wind
+                const char* windType;
+                if(item->QueryStringAttribute("type", &windType) != XML_SUCCESS)
+                    return false;
+                std::string windTypeStr(windType);
+                
+                //Create wind
+                if(windTypeStr == "uniform")
+                {
+                    const char* vel;
+                    Scalar vx,vy,vz;
+            
+                    if((item2 = item->FirstChildElement("velocity")) == nullptr)
+                        return false;
+                    if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
+                        return false;
+                    if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
+                        return false;
+        
+                    atm->AddVelocityField(new Uniform(Vector3(vx, vy, vz)));
+                }
+                else if(windTypeStr == "jet")
+                {
+                    const char* center;
+                    const char* vel;
+                    Scalar cx, cy, cz;
+                    Scalar vx, vy, vz;
+                    Scalar radius;
+                    
+                    if((item2 = item->FirstChildElement("center")) == nullptr)
+                        return false;
+                    if(item2->QueryStringAttribute("xyz", &center) != XML_SUCCESS)
+                        return false;
+                    if(sscanf(center, "%lf %lf %lf", &cx, &cy, &cz) != 3)
+                        return false;
+                    if((item2 = item->FirstChildElement("outlet")) == nullptr)
+                        return false;
+                    if(item2->QueryAttribute("radius", &radius) != XML_SUCCESS)
+                        return false;
+                    if((item2 = item->FirstChildElement("velocity")) == nullptr)
+                        return false;
+                    if(item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS)
+                        return false;
+                    if(sscanf(vel, "%lf %lf %lf", &vx, &vy, &vz) != 3)
+                        return false;
+                    
+                    Vector3 velocity(vx, vy, vz);
+                    Vector3 dir = velocity.normalized();
+                    atm->AddVelocityField(new Jet(Vector3(cx, cy, cz), dir, radius, velocity.norm()));
+                }
+            }
+            while((item = item->NextSiblingElement("wind")) != nullptr);
+        }
     }
     
     return true;
@@ -608,7 +678,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         if(item->QueryAttribute("height", &height) != XML_SUCCESS)
             return false;
             
-        object = new Terrain(std::string(name), GetFullPath(std::string(heightmap)), scaleX, scaleY, height, std::string(mat), std::string(look));
+        object = new Terrain(std::string(name), GetFullPath(std::string(heightmap)), scaleX, scaleY, height, std::string(mat), std::string(look), uvScale);
     }
     else
         return false;
@@ -813,6 +883,30 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 thickness = Scalar(-1);
             
             solid = new Torus(solidName, radiusMaj, radiusMin, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+        }
+        else if(typeStr == "wing")
+        {
+            Scalar baseChord, tipChord, length, thickness;
+            const char* naca = nullptr;
+
+            if((item = element->FirstChildElement("dimensions")) == nullptr)
+                return false;
+            if(item->QueryAttribute("base_chord", &baseChord) != XML_SUCCESS)
+                return false;
+            if(item->QueryAttribute("tip_chord", &tipChord) != XML_SUCCESS)
+                return false;
+            if(item->QueryAttribute("length", &length) != XML_SUCCESS)
+                return false;
+            if(item->QueryStringAttribute("naca", &naca) != XML_SUCCESS)
+                return false;
+            if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
+                thickness = Scalar(-1);
+
+            std::string nacaStr(naca);
+            if(nacaStr.size() != 4)
+                return false;
+            
+            solid = new Wing(solidName, baseChord, tipChord, nacaStr, length, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
         }
         else if(typeStr == "model")
         {
