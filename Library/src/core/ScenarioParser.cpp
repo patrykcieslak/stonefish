@@ -109,6 +109,7 @@ bool ScenarioParser::Parse(std::string filename)
     XMLElement* element = root->FirstChildElement("include");
     while(element != nullptr)
     {
+        //Get file path
         const char* path = nullptr;
         if(element->QueryStringAttribute("file", &path) != XML_SUCCESS)
         {
@@ -116,6 +117,25 @@ bool ScenarioParser::Parse(std::string filename)
             return false;
         }
         
+        //Read optional arguments
+        std::map<std::string, std::string> args;	
+		XMLElement* argElement = element->FirstChildElement("arg");
+		while(argElement != nullptr)
+        {
+			const char* name = argElement->Attribute("name");
+			const char* value = argElement->Attribute("value");
+			
+			if(value == nullptr || name == nullptr)
+			{
+				cError("Scenario parser: Include file argument not properly defiled!");
+				return false;
+			}
+
+			args.insert(std::make_pair(std::string(name), std::string(value)));
+			argElement = argElement->NextSiblingElement("arg");
+		}
+
+        //Load file
         std::string includedPath = GetFullPath(std::string(path));
         XMLDocument includedDoc;
         if(includedDoc.LoadFile(includedPath.c_str()) != XML_SUCCESS)
@@ -133,7 +153,7 @@ bool ScenarioParser::Parse(std::string filename)
             return false;
         }
         
-        if(!PreProcess(includedRoot))
+        if(!PreProcess(includedRoot, args))
         {
             cError("Scenario parser: pre-processing of included file '%s' failed!", includedPath.c_str());
             return false;
@@ -261,8 +281,62 @@ bool ScenarioParser::Parse(std::string filename)
     return true;
 }
 
-bool ScenarioParser::PreProcess(XMLNode* root)
+bool ScenarioParser::PreProcess(XMLNode* root, const std::map<std::string, std::string>& args)
 {
+    if(args.size() > 0)
+        return ReplaceArguments(root, args);
+    else
+        return true; 
+}
+
+bool ScenarioParser::ReplaceArguments(XMLNode* node, const std::map<std::string, std::string>& args)
+{
+    XMLElement* element = node->ToElement();
+    if(element != nullptr)
+    {
+        for(const XMLAttribute* attr = element->FirstAttribute(); attr != nullptr; attr = attr->Next())
+        {
+            std::string value = std::string(attr->Value());
+
+            //Replace ${arg ....} with the actual value
+            std::string replacedValue = "";
+            size_t currentPos = 0;
+            size_t startPos, endPos;
+
+            //Fing "arg" keywords
+            while((startPos = value.find("$(arg ", currentPos)) != std::string::npos && (endPos = value.find(")", startPos+2)) != std::string::npos)
+            {
+                //Append prefix
+                replacedValue += value.substr(currentPos, startPos - currentPos);
+                
+                //Check if argument defined and replace value
+                std::string argName = value.substr(startPos+6, endPos-startPos-6);              
+                try
+                {
+                    replacedValue += args.at(argName);
+                }
+                catch(const std::out_of_range& e)
+                {
+                    cError("Scenario parser: argument '%s' does not exist!", argName.c_str());
+                    return false;
+                }
+
+                currentPos = endPos + 1;
+            }
+            //Append postfix
+            replacedValue += value.substr(currentPos, value.size() - currentPos);
+
+            if(replacedValue != value)
+                element->SetAttribute(attr->Name(), replacedValue.c_str());
+        }
+    }
+
+    for(XMLNode* child = node->FirstChild(); child != nullptr; child = child->NextSibling())
+    {
+        if(!ReplaceArguments(child, args))
+            return false;
+    }
+
     return true;
 }
 

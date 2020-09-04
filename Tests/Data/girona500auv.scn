@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <scenario>
-    <robot name="GIRONA500" fixed="false" self_collisions="false">
+    <robot name="$(arg robot_name)" fixed="false" self_collisions="false">
 		<base_link name="Vehicle" type="compound" physical="submerged">
 			<external_part name="HullBottom" type="model" physical="submerged" buoyant="false">
 				<physical>

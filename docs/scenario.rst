@@ -17,9 +17,9 @@ For the convenience of the users, the *Stonefish* library implements a parser cl
 Scenario file syntax
 --------------------
 
-Scenario files are `XML <https://www.w3.org/XML/>`_ files, with a syntax similar to the `URDF <http://wiki.ros.org/urdf>`_. Due to the unique features of the *Stonefish* library, some of the tags used in the scenario files are specific to it, and different from other formats. Every scenario file has to contain a root node called ``<scenario>``, i.e., all definitions have to be written between the tags ``<scenario> ... </scenario>``. It is possible to include one file in another to allow for the reuse of common definitions. The includes can only be used at the root level, by writing ``<include file="path_to_file"/>``. All paths defined in the scenario files are automatically recognised as absolute if they begin with ``/`` or ``~``, or as relative to the data directory passed to the constructor of the ``sf::SimulationApp`` otherwise. Whenever an attribute requires passing multiple values, these values have to be separated by spaces, e.g., ``<world_transform rpy="0.0 3.1415 0.0" xyz="1.0 2.0 3.0"/>``.
+Scenario files are `XML <https://www.w3.org/XML/>`_ files, with a syntax similar to the `URDF <http://wiki.ros.org/urdf>`_. Due to the unique features of the *Stonefish* library, some of the tags used in the scenario files are specific to it, and different from other formats. Every scenario file has to contain a root node called ``<scenario>``, i.e., all definitions have to be written between the tags ``<scenario> ... </scenario>``. All paths defined in the scenario files are automatically recognised as absolute if they begin with ``/`` or ``~``, or as relative to the data directory passed to the constructor of the ``sf::SimulationApp`` otherwise. Whenever an attribute requires passing multiple values, these values have to be separated by spaces, e.g., ``<world_transform rpy="0.0 3.1415 0.0" xyz="1.0 2.0 3.0"/>``.
 
-A properly defined scenario file has to contain a set of obligatory tags, specifying the type of the simulated environment as well as the list of the materials and looks used throguhout the scenario. The rest of the definitions are used to actually create the simulated static bodies, dynamics bodies and robots. A skeleton of a scenario file is shown below:
+A properly defined scenario file has to contain a set of **obligatory tags**, specifying the type of the simulated environment as well as the list of the materials and looks used throguhout the scenario. The rest of the definitions are used to actually create the simulated static bodies, dynamics bodies and robots. A skeleton of a scenario file is shown below:
 
 .. code-block:: xml
 
@@ -38,6 +38,27 @@ A properly defined scenario file has to contain a set of obligatory tags, specif
             <!-- Definitions of looks -->
         </looks>
         <!-- Definitions of bodies and robots -->
+    </scenario>
+
+It is possible to **include one file in another**, to allow for the reuse of common definitions. The includes can only be used at the root level. The include mechanism also supports passing arguments that are automatically replaced when loading the file contents. To define an argument the user has to add ``<arg name="{1}" value="{2}"/>`` to the ``<include>`` node, where {1} is the argument name and {2} is the argument value. In the included file the argument is retrieved by using ``$(arg {1})`` inside an attribute value. An example of including a file with arguments is presented below:
+
+.. code-block:: xml
+
+    <!-- main.scn -->
+    <?xml version="1.0"?>
+    <scenario>
+        <!-- some definitions -->
+        <include file="robot.scn">
+            <arg name="robot_name" value="GIRONA500"/>
+        </include>
+    </scenario>
+
+    <!-- robot.scn -->
+    <?xml version="1.0"?>
+    <scenario>
+        <robot name="$(arg robot_name)" fixed="false">
+            <!-- robot definitions -->
+        </robot>
     </scenario>
 
 Using the code

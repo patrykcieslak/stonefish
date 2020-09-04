@@ -28,6 +28,7 @@
 
 #include "StonefishCommon.h"
 #include "utils/tinyxml2.h"
+#include <map>
 
 using namespace tinyxml2;
 
@@ -55,6 +56,7 @@ namespace sf
         //! A method used to parse a scenario description file.
         /*!
          \param filename path to the scenario description file
+         \return success
          */
         virtual bool Parse(std::string filename);
         
@@ -65,30 +67,45 @@ namespace sf
         //! A method used to pre-process the xml description file after loading.
         /*!
          \param root a pointer to a root node
+         \param args a map of arguments and their values
+         \return success
          */
-        virtual bool PreProcess(XMLNode* root);
-    
+        virtual bool PreProcess(XMLNode* root, 
+                                const std::map<std::string, std::string>& args = std::map<std::string, std::string>());
+
+        //! A method used to replace the arguments passed to the include files.
+        /*!
+         \param node a pointer to a node
+         \param args a map of arguments and their values
+         \return success
+         */
+        virtual bool ReplaceArguments(XMLNode* node, const std::map<std::string, std::string>& args);
+
         //! A method used to parse environment configuration.
         /*!
          \param element a pointer to the XML node
+         \return success
          */
         virtual bool ParseEnvironment(XMLElement* element);
         
         //! A method used to parse the physical materials information.
         /*!
          \param element a pointer to the XML node
+         \return success
          */
         virtual bool ParseMaterials(XMLElement* element);
         
         //! A method used to parse the graphical materials information.
         /*!
          \param element a pointer to the XML node
+         \return success
          */
         virtual bool ParseLooks(XMLElement* element);
         
         //! A method used to parse a static object description.
         /*!
          \param element a pointer to the XML node
+         \return success
          */
         virtual bool ParseStatic(XMLElement* element);
         
@@ -98,6 +115,7 @@ namespace sf
          \param solid a reference to the loaded solid entity
          \param ns an optional namespace
          \param compoundPart is this solid a part of a compound body?
+         \return success
          */
         virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, 
                                         std::string ns = "", bool compoundPart = false);
@@ -105,6 +123,7 @@ namespace sf
         //! A method used to parse a robot description.
         /*!
          \param element a pointer to the XML node
+         \return success
          */
         virtual bool ParseRobot(XMLElement* element);
         
@@ -113,6 +132,7 @@ namespace sf
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
          \param link a reference to the loaded robot link
+         \return success
          */
         virtual bool ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link);
         
@@ -120,6 +140,7 @@ namespace sf
         /*!
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
+         \return success
          */
         virtual bool ParseJoint(XMLElement* element, Robot* robot);
         
@@ -127,6 +148,7 @@ namespace sf
         /*!
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
+         \return success
          */
         virtual bool ParseSensor(XMLElement* element, Robot* robot);
         
@@ -134,6 +156,7 @@ namespace sf
         /*!
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
+         \return success
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
         
@@ -141,18 +164,21 @@ namespace sf
         /*!
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
+         \return success
          */
         virtual bool ParseComm(XMLElement* element, Robot* robot = nullptr);
         
         //! A method used to parse a single contact description.
         /*!
          \param element a pointer to the XML node
+         \return success
          */
         virtual bool ParseContact(XMLElement* element);
         
         //! A method to get the full file path depending on the format of the passed string.
         /*!
          \param path a file path candidate
+         \return full file path
          */
         std::string GetFullPath(const std::string& path);
         
