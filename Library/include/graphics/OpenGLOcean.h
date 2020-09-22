@@ -125,6 +125,13 @@ namespace sf
 		 \param cam a pointer to the active camera
 		 */
 		void DrawParticles(OpenGLCamera* cam);
+
+        //! A method that draw water velocity field.
+        /*!
+         \param cam a pointer to the camera
+         \param velocityMax velocity corresponding to the display limit
+         */
+        void DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax);
 		
         //! A method that draws the underwater blur (scattering).
         /*!
@@ -154,7 +161,16 @@ namespace sf
          \param t type of water
          */
         void setWaterType(GLfloat t);
-        
+
+        //! A method to set if the particles should be rendered.
+        /*!
+         \param enabled a flag specifying if the particles should be rendered
+         */
+        void setParticles(bool enabled);
+
+        //! A method returning informing if the particles are enabled.
+        bool getParticlesEnabled();
+
         //! A method to get wave height at a specified coordinate.
         /*!
          \param x the x coordinate in world frame [m]
@@ -206,6 +222,7 @@ namespace sf
         float omega(float k);
 
         int oceanBoxObj;
+        bool particlesEnabled;
     };
 }
 

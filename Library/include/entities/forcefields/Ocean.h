@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Ocean__
@@ -84,6 +84,7 @@ namespace sf
          \return fluid velocity at specified point [m/s]
          */
         Vector3 GetFluidVelocity(const Vector3& point) const;
+        glm::vec3 GetFluidVelocity(const glm::vec3& point) const;
         
         //! A method checking if a point is inside fluid
         /*!
@@ -105,6 +106,7 @@ namespace sf
          \return the distance from the point to the surfacer of fluid [m]
          */
         Scalar GetDepth(const Vector3& point);
+        GLfloat GetDepth(const glm::vec3& point);
         
         //! A method to enable all defined currents.
         void EnableCurrents();

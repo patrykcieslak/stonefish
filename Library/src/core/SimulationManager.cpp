@@ -25,15 +25,15 @@
 
 #include "core/SimulationManager.h"
 
-#include <BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.h>
-#include <BulletDynamics/MLCPSolvers/btDantzigSolver.h>
-#include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
-#include <BulletDynamics/MLCPSolvers/btLemkeSolver.h>
-#include <BulletDynamics/MLCPSolvers/btMLCPSolver.h>
-#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
-#include <BulletCollision/Gimpact/btGImpactShape.h>
+#include "BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.h"
+#include "BulletDynamics/MLCPSolvers/btDantzigSolver.h"
+#include "BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h"
+#include "BulletDynamics/MLCPSolvers/btLemkeSolver.h"
+#include "BulletDynamics/MLCPSolvers/btMLCPSolver.h"
+#include "tinyxml2.h"
 #include <chrono>
 #include <thread>
+#include <typeinfo>
 #include "core/FilteredCollisionDispatcher.h"
 #include "core/GraphicalSimulationApp.h"
 #include "core/NameManager.h"
@@ -48,7 +48,6 @@
 #include "graphics/OpenGLTrackball.h"
 #include "graphics/OpenGLDebugDrawer.h"
 #include "utils/SystemUtil.hpp"
-#include "utils/tinyxml2.h"
 #include "utils/UnitSystem.h"
 #include "entities/Entity.h"
 #include "entities/FeatherstoneEntity.h"
@@ -65,7 +64,6 @@
 #include "comms/Comm.h"
 #include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
-#include <typeinfo>
 
 extern ContactAddedCallback gContactAddedCallback;
 extern ContactProcessedCallback gContactProcessedCallback;

@@ -10,7 +10,7 @@ Welcome to Stonefish
 An advanced simulation tool developed for marine robotics
 =========================================================
 
-Stonefish is a *C++ library* which wraps around `Bullet Physics library <https://pybullet.org>`_ to deliver intuitive simulation of marine robots in realistic scenarios. It is directed towards researchers in the field of marine robotics but can as well be used as a general robot simulator.
+Stonefish is a C++ library combining a physics engine and a lightweight rendering pipeline. The physics engine is based on the core functionality of the `Bullet Physics <https://pybullet.org>`_ library, extended to deliver realistic simulation of marine robots. It is directed towards researchers in the field of marine robotics but can as well be used as a general purpose robot simulator.
 
 Stonefish includes advanced hydrodynamics computation based on actual geometry of bodies to better approximate hydrodynamic forces and allow for effects not possible when using symbolic models. The rendering pipeline, developed from the ground up, delivers realistic rendering of atmosphere, ocean and underwater environment. Special focus was put on the latter, where effects of wavelength-dependent light absorption and scattering were considered.
 
@@ -19,7 +19,7 @@ Stonefish can be used to create standalone simulators or combined with a ROS pac
 Cite Me
 =======
 
-This software was written and is continuously developed by Patryk Cieślak. Small parts of the software based on code developed by other authors are marked clearly as such.
+This software was written and is continuously developed by Patryk Cieślak. Parts of the software based on code developed by other authors are clearly marked as such.
 
 If you find this software useful in your research, please cite:
 

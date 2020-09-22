@@ -26,7 +26,7 @@
 #ifndef __Stonefish_ForcefieldEntity__
 #define __Stonefish_ForcefieldEntity__
 
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include "BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "entities/Entity.h"
 
 namespace sf

@@ -52,7 +52,7 @@ void UnderwaterTestApp::DoHUD()
     sf::Uid id;
     id.owner = 10;
     id.item = 0;
-    
+/*    
     sf::FLS* fls = (sf::FLS*)getSimulationManager()->getSensor("FLS");  //->getRobot("GIRONA500")->getSensor("FLS");
     sf::Scalar range = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), fls->getRangeMax(), "FLS Range[m]"));
     fls->setRangeMax(range);
@@ -71,7 +71,7 @@ void UnderwaterTestApp::DoHUD()
     id.item = 3;
     sf::Scalar gain2 = (getGUI()->DoSlider(id, 180.f, 160.f, 150.f, sf::Scalar(0.1), sf::Scalar(10.0), sss->getGain(), "SSS Gain"));
     sss->setGain(gain2);
-    
+  */  
     /*
     sf::USBL* usbl = (sf::USBL*)getSimulationManager()->getComm("GIRONA500/USBL");
     std::map<uint64_t, std::pair<sf::Scalar, sf::Vector3>>& transPos = usbl->getTransponderPositions();
@@ -104,11 +104,15 @@ void UnderwaterTestApp::DoHUD()
     //sf::VariableBuoyancy* vbs = (sf::VariableBuoyancy*)getSimulationManager()->getRobot("GIRONA500")->getActuator("VBS");
     //vbs->setFlowRate((getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-0.0005), sf::Scalar(0.0005), vbs->getFlowRate(), "VBS flow rate", 4)));
     
-    /*
-    sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveStern");
+    
+    /*sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveStern");
     sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveBow");
     sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterHeaveStern"));
     th->setSetpoint(sp);
-    th2->setSetpoint(sp);
-    */
+    th2->setSetpoint(sp);*/
+    
+
+    sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterSurgePort");
+    sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterSurgePort"));
+    th->setSetpoint(sp);
 }

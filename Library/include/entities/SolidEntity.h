@@ -26,7 +26,7 @@
 #ifndef __Stonefish_SolidEntity__
 #define __Stonefish_SolidEntity__
 
-#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
+#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
 #include "core/MaterialManager.h"
 #include "entities/MovingEntity.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -353,7 +353,6 @@ namespace sf
         void ComputeSphericalApprox();
         void ComputeCylindricalApprox();
         void ComputeEllipsoidalApprox();
-        static void ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Vector3& linear, Vector3& quadratic, Vector3& skin);
         
         Scalar LambKFactor(Scalar r1, Scalar r2);
         virtual void BuildRigidBody();

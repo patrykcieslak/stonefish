@@ -565,6 +565,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 //if(sim->getSolidDisplayMode() == DisplayMode::PHYSICAL) DrawObjects();
                 DrawHelpers();
+                if(hSettings.showOceanVelocityField && ocean != NULL) ocean->getOpenGLOcean()->DrawVelocityField(camera, 5.f);
                 if(hSettings.showBulletDebugInfo) sim->RenderBulletDebug();
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 

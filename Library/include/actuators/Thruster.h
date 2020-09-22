@@ -70,6 +70,9 @@ namespace sf
         
         //! A method returning the generated thrust.
         Scalar getThrust();
+
+        //! A method returning the induced torque.
+        Scalar getTorque();
         
         //! A method returning the angular position of the propeller [rad]
         Scalar getAngle();
@@ -88,6 +91,8 @@ namespace sf
         Scalar D;
         std::pair<Scalar, Scalar> kT;
         Scalar kQ;
+        Scalar alpha;
+        Scalar beta;
         Scalar kp;
         Scalar ki;
         Scalar iLim;

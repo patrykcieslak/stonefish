@@ -25,7 +25,7 @@
 
 #include "comms/AcousticModem.h"
 
-#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"

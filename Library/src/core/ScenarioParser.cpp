@@ -127,7 +127,7 @@ bool ScenarioParser::Parse(std::string filename)
 			
 			if(value == nullptr || name == nullptr)
 			{
-				cError("Scenario parser: Include file argument not properly defiled!");
+				cError("Scenario parser: Include file argument not properly defined!");
 				return false;
 			}
 

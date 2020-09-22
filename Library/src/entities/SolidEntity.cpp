@@ -1160,28 +1160,6 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* ocn)
     else
         return BodyFluidPosition::CROSSING_SURFACE;
 }
-    
-void SolidEntity::ComputeDampingForces(Vector3 vc, Vector3 fn, Scalar A, Vector3& linear, Vector3& quadratic, Vector3& skin)
-{
-    Vector3 vn = vc.dot(fn) * fn; //Normal velocity
-    Vector3 vt = vc - vn; //Tangent velocity
-    //linear = mu * vt * A / Scalar(0.0001);
-    
-    if(fn.dot(vn) < Scalar(0))
-    {
-        Scalar vmag = vn.safeNorm();
-        linear = vn * btExp(-0.5*vmag*vmag) * A; //0.5*rho in CorrectDampingForces
-        quadratic = vn * vmag * A; // 0.5*rho in CorrectDampingForces
-    }
-    else
-    {
-        linear = Vector3(0,0,0);
-        quadratic = Vector3(0,0,0);
-    }
-    
-    Scalar vmag = vt.safeNorm();
-    skin = vt * vmag * A;
-}
 
 void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
 {
@@ -1222,32 +1200,46 @@ void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdl, Vector3& 
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
-                                            const Vector3& v, const Vector3& omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Renderable& debug)
+                                            const Vector3& _v, const Vector3& _omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Renderable& debug)
 {
-    //Buoyancy
-    if(settings.reallisticBuoyancy)
+    if(mesh == nullptr)
     {
-        _Fb.setZero();
-        _Tb.setZero();
+        if(settings.reallisticBuoyancy)
+        {
+            _Fb.setZero();
+            _Tb.setZero();
+        }
+
+        if(settings.dampingForces)
+        {
+            _Fdl.setZero();
+            _Tdl.setZero();
+            _Fdq.setZero();
+            _Tdq.setZero();
+            _Fds.setZero();
+            _Tds.setZero();
+        }
+
+        return;
     }
-    
-    //Damping forces
-    if(settings.dampingForces)
-    {
-        _Fdl.setZero();
-        _Tdl.setZero();
-        _Fdq.setZero();
-        _Tdq.setZero();
-        _Fds.setZero();
-        _Tds.setZero();
-    }
-    
-    //Set zeros
-    if(mesh == nullptr) return;
-      
+
+    //Computation with floats (geometry has float precision)
+    glm::vec3 Fb(0.f);
+    glm::vec3 Tb(0.f);
+    glm::vec3 Fdl(0.f);
+    glm::vec3 Tdl(0.f);
+    glm::vec3 Fdq(0.f);
+    glm::vec3 Tdq(0.f);
+    glm::vec3 Fds(0.f);
+    glm::vec3 Tds(0.f);
+    glm::mat4 TCG = glMatrixFromTransform(T_CG);
+    glm::mat4 TC = glMatrixFromTransform(T_C);
+    glm::vec3 v = glVectorFromVector(_v);
+    glm::vec3 omega = glVectorFromVector(_omega);
+   
     //Calculate fluid dynamics forces and torques
-    Vector3 p = T_CG.getOrigin();
- 
+    glm::vec3 p = glm::vec3(TCG[3]);
+    
     //Loop through all faces...
     for(size_t i=0; i<mesh->faces.size(); ++i)
     {
@@ -1255,334 +1247,375 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         glm::vec3 p1gl = mesh->getVertexPos(i, 0);
         glm::vec3 p2gl = mesh->getVertexPos(i, 1);
         glm::vec3 p3gl = mesh->getVertexPos(i, 2);
-        Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
-        Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
-        Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
+        glm::vec3 p1 = glm::vec3(TC * glm::vec4(p1gl, 1.f));
+        glm::vec3 p2 = glm::vec3(TC * glm::vec4(p2gl, 1.f));
+        glm::vec3 p3 = glm::vec3(TC * glm::vec4(p3gl, 1.f));
         
         //Check if face underwater
-        Scalar depth[3];
+        GLfloat depth[3];
         depth[0] = ocn->GetDepth(p1);
         depth[1] = ocn->GetDepth(p2);
         depth[2] = ocn->GetDepth(p3);
         
-        if(depth[0] < Scalar(0) && depth[1] < Scalar(0) && depth[2] < Scalar(0))
+        if(depth[0] < 0.f && depth[1] < 0.f && depth[2] < 0.f)
             continue;
         
         //Calculate face properties
-        Vector3 fc;
-        Vector3 fn;
-        Vector3 fn1;
-        Scalar A;
+        glm::vec3 fc;
+        glm::vec3 fn;
+        glm::vec3 fn1;
+        GLfloat A;
         
-        if(depth[0] < Scalar(0)) //Vertex 1 above water
+        if(depth[0] < 0.f) //Vertex 1 above water
         {
-            if(depth[1] < Scalar(0)) //Two vertices above water (triangle)
+            if(depth[1] < 0.f) //Two vertices above water (triangle)
             {
-                p1 = p3 + (p1-p3) * (depth[2]/(btFabs(depth[0]) + depth[2]));
-                p2 = p3 + (p2-p3) * (depth[2]/(btFabs(depth[1]) + depth[2]));
+                p1 = p3 + (p1-p3) * (depth[2]/(fabsf(depth[0]) + depth[2]));
+                p2 = p3 + (p2-p3) * (depth[2]/(fabsf(depth[1]) + depth[2]));
                 //p3 without change
                 
                 //Calculate
-                Vector3 fv1 = p2-p1; //One side of the face (triangle)
-                Vector3 fv2 = p3-p1; //Another side of the face (triangle)
-                fc = (p1+p2+p3)/Scalar(3); //Face centroid
+                glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
+                glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
+                fc = (p1+p2+p3)/3.f; //Face centroid
         
-                fn = fv1.cross(fv2); //Normal of the face (length != 1)
-                Scalar len = fn.length();
-                
-                if(btFuzzyZero(len)) //Check for invalid triangle
-                    continue;
-                
+                fn = glm::cross(fv1, fv2); //Normal of the face (length != 1)
+                GLfloat len = glm::length2(fn); //Double area
+                if(len < 1e-12f) continue;
+                len = glm::sqrt(len);
                 fn1 = fn/len; //Normalised normal (length = 1)
-                A = len/Scalar(2); //Area of the face (triangle)                
-#ifdef DEBUG
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                A = len/2.f; //Area of the face (triangle)         
+#ifdef DEBUG_HYDRO
+                debug.points.push_back(p1);
+                debug.points.push_back(p2);
+                debug.points.push_back(p2);
+                debug.points.push_back(p3);
+                debug.points.push_back(p3);
+                debug.points.push_back(p1);
 #endif
             }
-            else if(depth[2] < Scalar(0)) //Two vertices above water (triangle)
+            else if(depth[2] < 0.f) //Two vertices above water (triangle)
             {
-                p1 = p2 + (p1-p2) * (depth[1]/(btFabs(depth[0]) + depth[1]));
+                p1 = p2 + (p1-p2) * (depth[1]/(fabsf(depth[0]) + depth[1]));
                 //p2 without change
-                p3 = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
+                p3 = p2 + (p3-p2) * (depth[1]/(fabsf(depth[2]) + depth[1]));
                 
                 //Calculate
-                Vector3 fv1 = p2-p1; //One side of the face (triangle)
-                Vector3 fv2 = p3-p1; //Another side of the face (triangle)
-                fc = (p1+p2+p3)/Scalar(3); //Face centroid
+                glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
+                glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
+                fc = (p1+p2+p3)/3.f; //Face centroid
         
-                fn = fv1.cross(fv2); //Normal of the face (length != 1)
-                Scalar len = fn.length();
-                
-                if(btFuzzyZero(len)) //Check for invalid triangle
-                    continue;
-                
+                fn = glm::cross(fv1, fv2); //Normal of the face (length != 1)
+                GLfloat len = glm::length2(fn);
+                if(len < 1e-12f) continue;
+                len = glm::sqrt(len);
                 fn1 = fn/len; //Normalised normal (length = 1)
-                A = len/Scalar(2); //Area of the face (triangle)         
-#ifdef DEBUG
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                A = len/2.f; //Area of the face (triangle)         
+#ifdef DEBUG_HYDRO
+                debug.points.push_back(p1);
+                debug.points.push_back(p2);
+                debug.points.push_back(p2);
+                debug.points.push_back(p3);
+                debug.points.push_back(p3);
+                debug.points.push_back(p1);
 #endif
             }
             else //depth[1] >= 0 && depth[2] >= 0 --> Two vertices under water (quad = two triangles)
             {
                 //Quad!!!!
-                Vector3 p1temp = p2 + (p1-p2) * (depth[1]/(btFabs(depth[0]) + depth[1]));
+                glm::vec3 p4 = p3 + (p1-p3) * (depth[2]/(fabsf(depth[0]) + depth[2]));
+                p1 = p2 + (p1-p2) * (depth[1]/(fabsf(depth[0]) + depth[1]));
                 //p2 without change
                 //p3 without change
-                Vector3 p4 = p3 + (p1-p3) * (depth[2]/(btFabs(depth[0]) + depth[2]));
-                p1 = p1temp;
                 
                 //Calculate
-                Vector3 fv1 = p2-p1;
-                Vector3 fv2 = p4-p1;
-                Vector3 fv3 = p2-p3;
-                Vector3 fv4 = p4-p3;
+                glm::vec3 fv1 = p2-p1;
+                glm::vec3 fv2 = p4-p1;
+                glm::vec3 fv3 = p2-p3;
+                glm::vec3 fv4 = p4-p3;
+                fc = (p1 + p2 + p3 + p4)/4.f;
                 
-                fc = (p1 + p2 + p3 + p4)/Scalar(4);
-                fn = fv1.cross(fv2);
-                Scalar len = fn.length();
-                
-                if(btFuzzyZero(len)) //Check validity
-                    continue;
-                
+                fn = glm::cross(fv1, fv2);
+                GLfloat len = glm::length2(fn);
+                if(len < 1e-12f) continue;
+                len = glm::sqrt(len);
                 fn1 = fn/len;
-                A = (len + fv3.cross(fv4).length())/Scalar(2); //Quad
+                A = (len + glm::length(glm::cross(fv3, fv4)))/2.f; //Quad
                 fn = fn1 * A;
-#ifdef DEBUG
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#ifdef DEBUG_HYDRO
+                debug.points.push_back(p1);
+                debug.points.push_back(p2);
+                debug.points.push_back(p2);
+                debug.points.push_back(p3);
+                debug.points.push_back(p3);
+                debug.points.push_back(p4);
+                debug.points.push_back(p4);
+                debug.points.push_back(p1);
 #endif  
             }
         }
-        else if(depth[1] < Scalar(0))
+        else if(depth[1] < 0.f)
         {
-            if(depth[2] < Scalar(0))
+            if(depth[2] < 0.f)
             {
                 //p1 without change
-                p2 = p1 + (p2-p1) * (depth[0]/(btFabs(depth[1]) + depth[0]));
-                p3 = p1 + (p3-p1) * (depth[0]/(btFabs(depth[2]) + depth[0]));
+                p2 = p1 + (p2-p1) * (depth[0]/(fabsf(depth[1]) + depth[0]));
+                p3 = p1 + (p3-p1) * (depth[0]/(fabsf(depth[2]) + depth[0]));
                 
                 //Calculate
-                Vector3 fv1 = p2-p1; //One side of the face (triangle)
-                Vector3 fv2 = p3-p1; //Another side of the face (triangle)
-                fc = (p1+p2+p3)/Scalar(3); //Face centroid
+                glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
+                glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
+                fc = (p1+p2+p3)/3.f; //Face centroid
         
-                fn = fv1.cross(fv2); //Normal of the face (length != 1)
-                Scalar len = fn.length();
-                
-                if(btFuzzyZero(len))
-                    continue;
-                
+                fn = glm::cross(fv1, fv2); //Normal of the face (length != 1)
+                GLfloat len = glm::length2(fn);
+                if(len < 1e-12f) continue;
+                len = glm::sqrt(len);
                 fn1 = fn/len; //Normalised normal (length = 1)
-                A = len/Scalar(2); //Area of the face (triangle)
-#ifdef DEBUG
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+                A = len/2.f; //Area of the face (triangle)
+#ifdef DEBUG_HYDRO
+                debug.points.push_back(p1);
+                debug.points.push_back(p2);
+                debug.points.push_back(p2);
+                debug.points.push_back(p3);
+                debug.points.push_back(p3);
+                debug.points.push_back(p1);
 #endif                
             }
             else
             {
                 //Quad!!!!
+                glm::vec3 p4 = p3 + (p2-p3) * (depth[2]/(fabsf(depth[1]) + depth[2]));
                 //p1 without change
-                Vector3 p2temp = p1 + (p2-p1) * (depth[0]/(btFabs(depth[1]) + depth[0]));
+                p2 = p1 + (p2-p1) * (depth[0]/(fabsf(depth[1]) + depth[0]));
                 //p3 without change
-                Vector3 p4 = p3 + (p2-p3) * (depth[2]/(btFabs(depth[1]) + depth[2]));
-                p2 = p2temp;
                 
                 //Calculate
-                Vector3 fv1 = p2-p1;
-                Vector3 fv2 = p3-p1;
-                Vector3 fv3 = p2-p3;
-                Vector3 fv4 = p4-p3;
-                
-                fc = (p1 + p2 + p3 + p4)/Scalar(4);
-                fn = fv1.cross(fv2); //Triangle 1
-                Scalar len = fn.length();
-                
-                if(btFuzzyZero(len)) //Check validity
-                    continue;
-                
+                glm::vec3 fv1 = p2-p1;
+                glm::vec3 fv2 = p3-p1;
+                glm::vec3 fv3 = p2-p3;
+                glm::vec3 fv4 = p4-p3;
+                fc = (p1 + p2 + p3 + p4)/4.f;
+                fn = glm::cross(fv1, fv2); //Triangle 1
+                GLfloat len = glm::length2(fn);
+                if(len < 1e-12f) continue;    
+                len = glm::sqrt(len);
                 fn1 = fn/len;
-                A = (len + fv3.cross(fv4).length())/Scalar(2); //Quad
+                A = (len + glm::length(glm::cross(fv3, fv4)))/2.f; //Quad
                 fn = fn1 * A;
-#ifdef DEBUG
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-                debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#ifdef DEBUG_HYDRO
+                debug.points.push_back(p1);
+                debug.points.push_back(p2);
+                debug.points.push_back(p2);
+                debug.points.push_back(p4);
+                debug.points.push_back(p4);
+                debug.points.push_back(p3);
+                debug.points.push_back(p3);
+                debug.points.push_back(p1);
 #endif                 
             }
         }
-        else if(depth[2] < Scalar(0))
+        else if(depth[2] < 0.f)
         {
             //Quad!!!!
+            glm::vec3 p4 = p1 + (p3-p1) * (depth[0]/(fabsf(depth[2]) + depth[0]));
             //p1 without change
             //p2 without change
-            Vector3 p3temp = p2 + (p3-p2) * (depth[1]/(btFabs(depth[2]) + depth[1]));
-            Vector3 p4 = p1 + (p3-p1) * (depth[0]/(btFabs(depth[2]) + depth[0]));
-            p3 = p3temp;
+            p3 = p2 + (p3-p2) * (depth[1]/(fabsf(depth[2]) + depth[1]));
                 
             //Calculate
-            Vector3 fv1 = p2-p1;
-            Vector3 fv2 = p4-p1;
-            Vector3 fv3 = p2-p3;
-            Vector3 fv4 = p4-p3;
-                
-            fc = (p1 + p2 + p3 + p4)/Scalar(4);
-            fn = fv1.cross(fv2);
-            Scalar len = fn.length();
-            
-            if(btFuzzyZero(len)) //Check validity
-                continue;
-            
+            glm::vec3 fv1 = p2-p1;
+            glm::vec3 fv2 = p4-p1;
+            glm::vec3 fv3 = p2-p3;
+            glm::vec3 fv4 = p4-p3;
+            fc = (p1 + p2 + p3 + p4)/4.f;
+            fn = glm::cross(fv1, fv2);
+            GLfloat len = glm::length2(fn);
+            if(len < 1e-12f) continue;
+            len = glm::sqrt(len);
             fn1 = fn/len;
-            A = (len + fv3.cross(fv4).length())/Scalar(2); //Quad
+            A = (len + glm::length(glm::cross(fv3, fv4)))/2.f; //Quad
             fn = fn1 * A;
-#ifdef DEBUG
-            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p4.x(), (GLfloat)p4.y(), (GLfloat)p4.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+#ifdef DEBUG_HYDRO
+            debug.points.push_back(p1);
+            debug.points.push_back(p2);
+            debug.points.push_back(p2);
+            debug.points.push_back(p3);
+            debug.points.push_back(p3);
+            debug.points.push_back(p4);
+            debug.points.push_back(p4);
+            debug.points.push_back(p1);
 #endif             
         }
         else //All underwater
         {
-            Vector3 fv1 = p2-p1; //One side of the face (triangle)
-            Vector3 fv2 = p3-p1; //Another side of the face (triangle)
-            fc = (p1+p2+p3)/Scalar(3); //Face centroid
-        
-            fn = fv1.cross(fv2); //Normal of the face (length != 1)
-            Scalar len = fn.length();
-            
-            if(btFuzzyZero(len))
-                continue;
-            
+            //Face properties
+            glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
+            glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
+            fn = glm::cross(fv1, fv2); //Normal of the face (length != 1)
+            GLfloat len = glm::length2(fn);
+            if(len < 1e-12f) continue;
+            len = glm::sqrt(len);
             fn1 = fn/len; //Normalised normal (length = 1)
-            A = len/Scalar(2); //Area of the face (triangle)
-#ifdef DEBUGG
-            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p2.x(), (GLfloat)p2.y(), (GLfloat)p2.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p3.x(), (GLfloat)p3.y(), (GLfloat)p3.z()));
-            debug.points.push_back(glm::vec3((GLfloat)p1.x(), (GLfloat)p1.y(), (GLfloat)p1.z()));
+            A = len/2.f; //Area of the face (triangle)
+            fc = (p1+p2+p3)/3.f; //Face centroid
+#ifdef DEBUG_HYDRO
+            debug.points.push_back(p1);
+            debug.points.push_back(p2);
+            debug.points.push_back(p2);
+            debug.points.push_back(p3);
+            debug.points.push_back(p3);
+            debug.points.push_back(p1);
 #endif             
         }
-        
-        Scalar pressure = ocn->GetPressure(fc);
         
         //Buoyancy force
         if(settings.reallisticBuoyancy)
         {
-            Vector3 Fbi = -fn1 * A * pressure; //Buoyancy force per face (based on pressure)
+            GLfloat depthc = ocn->GetDepth(fc);
+            glm::vec3 Fbi = -fn1 * A * depthc; //Buoyancy force per face (based on pressure)        
             
             //Accumulate
-            _Fb += Fbi;
-            _Tb += (fc - p).cross(Fbi);
+            Fb += Fbi;
+            Tb += glm::cross(fc-p, Fbi);
         }
         
         //Damping force
         if(settings.dampingForces)
         {
-            Vector3 vc = ocn->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
-            Vector3 Fdlf;
-            Vector3 Fdqf;
-            Vector3 Fdsf;
-            ComputeDampingForces(vc, fn1, A, Fdlf, Fdqf, Fdsf);
+            glm::vec3 vc = ocn->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
+            glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
+            glm::vec3 vt = vc - vn; //Tangent velocity
             
-            //Accumulate
-            _Fdl += Fdlf;
-            _Tdl += (fc - p).cross(Fdlf);
-            _Fdq += Fdqf;
-            _Tdq += (fc - p).cross(Fdqf);
-            _Fds += Fdsf;
-            _Tds += (fc - p).cross(Fdsf);
+            if(glm::dot(fn1, vn) < -1e-12f)
+            {
+                GLfloat vmag2 = glm::length2(vn);
+                glm::vec3 linear = vn * expf(-0.5f*vmag2) * A; 
+                glm::vec3 quadratic = vn * sqrtf(vmag2) * A;
+                
+                Fdl += linear;
+                Tdl += glm::cross(fc - p, linear);
+                Fdq += quadratic;
+                Tdq += glm::cross(fc - p, quadratic);
+            }
+
+            GLfloat vmag2 = glm::length2(vt);
+            if(vmag2 > 1e-3f)
+            {
+                glm::vec3 skin = vt * sqrtf(vmag2) * A;
+
+                Fds += skin;
+                Tds += glm::cross(fc - p, skin);
+            }
         }
+    }
+
+    //Multiply by common factors
+    //Buoyancy
+    if(settings.reallisticBuoyancy)
+    {
+        Fb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
+        Tb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
+        _Fb = Vector3(Fb.x, Fb.y, Fb.z);
+        _Tb = Vector3(Tb.x, Tb.y, Tb.z);
+    }
+    
+    //Damping forces
+    if(settings.dampingForces)
+    {
+        _Fdl = Vector3(Fdl.x, Fdl.y, Fdl.z);
+        _Tdl = Vector3(Tdl.x, Tdl.y, Tdl.z);
+        _Fdq = Vector3(Fdq.x, Fdq.y, Fdq.z);
+        _Tdq = Vector3(Tdq.x, Tdq.y, Tdq.z);
+        _Fds = Vector3(Fds.x, Fds.y, Fds.z);
+        _Tds = Vector3(Tds.x, Tds.y, Tds.z);
     }
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
-                                              const Vector3& v, const Vector3& omega, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
+                                              const Vector3& _v, const Vector3& _omega, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
 {
-    if(mesh == nullptr) return;
-    
-    //Damping forces
-    _Fdl.setZero();
-    _Tdl.setZero();
-    _Fdq.setZero();
-    _Tdq.setZero();
-    _Fds.setZero();
-    _Tds.setZero();
+    if(mesh == nullptr)
+    {
+        _Fdl.setZero();
+        _Tdl.setZero();
+        _Fdq.setZero();
+        _Tdq.setZero();
+        _Fds.setZero();
+        _Tds.setZero();
+        return;
+    }
+
+    //Computation with floats (geometry has float precision)
+    glm::vec3 Fdl(0.f);
+    glm::vec3 Tdl(0.f);
+    glm::vec3 Fdq(0.f);
+    glm::vec3 Tdq(0.f);
+    glm::vec3 Fds(0.f);
+    glm::vec3 Tds(0.f);
+    glm::mat4 TCG = glMatrixFromTransform(T_CG);
+    glm::mat4 TC = glMatrixFromTransform(T_C);
+    glm::vec3 v = glVectorFromVector(_v);
+    glm::vec3 omega = glVectorFromVector(_omega);
     
     //Calculate fluid dynamics forces and torques
-    Vector3 p = T_CG.getOrigin();
-    
+    glm::vec3 p = glm::vec3(TCG[3]);
+
     //Loop through all faces...
-    for(unsigned int i=0; i<mesh->faces.size(); ++i)
+    for(size_t i=0; i<mesh->faces.size(); ++i)
     {
         //Global coordinates
         glm::vec3 p1gl = mesh->getVertexPos(i, 0);
         glm::vec3 p2gl = mesh->getVertexPos(i, 1);
         glm::vec3 p3gl = mesh->getVertexPos(i, 2);
-        Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
-        Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
-        Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
+        glm::vec3 p1 = glm::vec3(TC * glm::vec4(p1gl, 1.f));
+        glm::vec3 p2 = glm::vec3(TC * glm::vec4(p2gl, 1.f));
+        glm::vec3 p3 = glm::vec3(TC * glm::vec4(p3gl, 1.f));
         
-        //Calculate face properties
-        Vector3 fv1 = p2-p1; //One side of the face (triangle)
-        Vector3 fv2 = p3-p1; //Another side of the face (triangle)
-        Vector3 fn = fv1.cross(fv2); //Normal of the face (length != 1)
-        Scalar len = fn.safeNorm();
-        
-        if(len == Scalar(0)) continue; //If triangle is incorrect (two sides parallel)
-        
-        Vector3 fc = (p1+p2+p3)/Scalar(3); //Face centroid
-        Vector3 fn1 = fn/len; //Normalised normal (length = 1)
-        Scalar A = len/Scalar(2); //Area of the face (triangle)
-        
-        //Damping forces
-        Vector3 vc = ocn->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Water velocity at face center
-        Vector3 Fdlf;
-        Vector3 Fdqf;
-        Vector3 Fdsf;
-        ComputeDampingForces(vc, fn1, A, Fdlf, Fdqf, Fdsf);
-        
-        //Accumulate
-        _Fdl += Fdlf;
-        _Tdl += (fc - p).cross(Fdlf);
-        _Fdq += Fdqf;
-        _Tdq += (fc - p).cross(Fdqf);
-        _Fds += Fdsf;
-        _Tds += (fc - p).cross(Fdsf);
-        
+        //Face properties
+        glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
+        glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
+        glm::vec3 fn = glm::cross(fv1, fv2); //Normal of the face (length != 1)
+        GLfloat len = glm::length2(fn);
+        if(len < 1e-12f) continue;
+        len = glm::sqrt(len);
+        glm::vec3 fn1 = fn/len; //Normalised normal (length = 1)
+        GLfloat A = len/2.f; //Area of the face (triangle)
+        glm::vec3 fc = (p1+p2+p3)/3.f; //Face centroid
+     
+        //Forces
+        glm::vec3 vc = ocn->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
+        glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
+        glm::vec3 vt = vc - vn; //Tangent velocity
+            
+        if(glm::dot(fn1, vn) < -1e-12f)
+        {
+            GLfloat vmag2 = glm::length2(vn);
+            glm::vec3 linear = vn * expf(-0.5f*vmag2) * A; 
+            glm::vec3 quadratic = vn * sqrtf(vmag2) * A;
+                
+            Fdl += linear;
+            Tdl += glm::cross(fc - p, linear);
+            Fdq += quadratic;
+            Tdq += glm::cross(fc - p, quadratic);
+        }
+
+        GLfloat vmag2 = glm::length2(vt);
+        if(vmag2 > 1e-3f)
+        {
+            glm::vec3 skin = vt * sqrtf(vmag2) * A;
+
+            Fds += skin;
+            Tds += glm::cross(fc - p, skin);
+        }
     }
+
+    _Fdl = Vector3(Fdl.x, Fdl.y, Fdl.z);
+    _Tdl = Vector3(Tdl.x, Tdl.y, Tdl.z);
+    _Fdq = Vector3(Fdq.x, Fdq.y, Fdq.z);
+    _Tdq = Vector3(Tdq.x, Tdq.y, Tdq.z);
+    _Fds = Vector3(Fds.x, Fds.y, Fds.z);
+    _Tds = Vector3(Tds.x, Tds.y, Tds.z);
 }
 
 void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
@@ -1650,17 +1683,25 @@ void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
 }
 
 void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, const Transform& T_CG, const Transform& T_C,
-                                           const Vector3& v, const Vector3& omega, Vector3& _Fda, Vector3& _Tda)
+                                           const Vector3& _v, const Vector3& _omega, Vector3& _Fda, Vector3& _Tda)
 {
-    if(mesh == nullptr) return;
-        
-    _Fda.setZero();
-    _Tda.setZero();
+    if(mesh == nullptr) 
+    {
+        _Fda.setZero();
+        _Tda.setZero();
+        return;
+    }
+    
+    glm::vec3 Fda(0.f);
+    glm::vec3 Tda(0.f);
+    glm::mat4 TCG = glMatrixFromTransform(T_CG);
+    glm::mat4 TC = glMatrixFromTransform(T_C);
+    glm::vec3 v = glVectorFromVector(_v);
+    glm::vec3 omega = glVectorFromVector(_omega);
     
     //Calculate fluid dynamics forces and torques
-    Vector3 p = T_CG.getOrigin();
-    Scalar density = atm->getGas().density;
-  
+    glm::vec3 p = glm::vec3(TCG[3]);
+
     //Loop through all faces...
     for(size_t i=0; i<mesh->faces.size(); ++i)
     {
@@ -1668,37 +1709,37 @@ void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, co
         glm::vec3 p1gl = mesh->getVertexPos(i, 0);
         glm::vec3 p2gl = mesh->getVertexPos(i, 1);
         glm::vec3 p3gl = mesh->getVertexPos(i, 2);
-        Vector3 p1 = T_C * Vector3(p1gl.x,p1gl.y,p1gl.z);
-        Vector3 p2 = T_C * Vector3(p2gl.x,p2gl.y,p2gl.z);
-        Vector3 p3 = T_C * Vector3(p3gl.x,p3gl.y,p3gl.z);
+        glm::vec3 p1 = glm::vec3(TC * glm::vec4(p1gl, 1.f));
+        glm::vec3 p2 = glm::vec3(TC * glm::vec4(p2gl, 1.f));
+        glm::vec3 p3 = glm::vec3(TC * glm::vec4(p3gl, 1.f));
         
         //Calculate face properties
-        Vector3 fv1 = p2-p1; //One side of the face (triangle)
-        Vector3 fv2 = p3-p1; //Another side of the face (triangle)
-        Vector3 fn = fv1.cross(fv2); //Normal of the face (length != 1)
-        Scalar len = fn.safeNorm();
-        
-        if(len == Scalar(0)) continue; //If triangle is incorrect (two sides parallel)
-        
-        Vector3 fc = (p1+p2+p3)/Scalar(3); //Face centroid
-        Vector3 fn1 = fn/len; //Normalised normal (length = 1)
-        Scalar A = len/Scalar(2); //Area of the face (triangle)
-        
+        glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
+        glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
+        glm::vec3 fn = glm::cross(fv1, fv2); //Normal of the face (length != 1)
+        GLfloat len = glm::length2(fn);
+        if(len < 1e-12f) continue;
+        len = glm::sqrt(len);
+        glm::vec3 fn1 = fn/len; //Normalised normal (length = 1)
+        GLfloat A = len/2.f; //Area of the face (triangle)
+        glm::vec3 fc = (p1+p2+p3)/3.f; //Face centroid
+
         //Damping forces
-        Vector3 vc = atm->GetFluidVelocity(fc) - (v + omega.cross(fc - p)); //Air velocity at face center
-        Vector3 vn = vc.dot(fn1) * fn1; //Normal velocity
-        Vector3 Fdaf(0,0,0);
+        glm::vec3 vc = atm->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
+        glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
         
-        if(fn1.dot(vn) < Scalar(0))
-            Fdaf = vn * vn.safeNorm() * A;
-        
-        //Accumulate
-        _Fda += Fdaf;
-        _Tda += (fc - p).cross(Fdaf);
+        if(glm::dot(fn1, vn) < -1e-12f)
+        {
+            glm::vec3 quadratic = vn * vn.length() * A;
+            //Accumulate
+            Fda += quadratic;
+            Tda += glm::cross(fc - p, quadratic);
+        }
     }
-    
-    _Fda *= Scalar(0.5) * density;
-    _Tda *= Scalar(0.5) * density;
+
+    Scalar density = atm->getGas().density;
+    _Fda = Scalar(0.5) * density * Vector3(Fda.x, Fda.y, Fda.z);
+    _Tda = Scalar(0.5) * density * Vector3(Tda.x, Tda.y, Tda.z);
 }
 
 void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vector3& _Tda)

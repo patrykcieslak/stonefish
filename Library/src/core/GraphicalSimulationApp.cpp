@@ -332,7 +332,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             Quit();
             break;
             
-        case SDLK_SPACE:
+        /*case SDLK_SPACE:
             selectedEntity = nullptr;
             if(!getSimulationManager()->isSimulationFresh())
             {
@@ -340,7 +340,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
                 getSimulationManager()->RestartScenario();
             }
             StartSimulation();
-            break;
+            break;*/
             
         case SDLK_h:
             displayHUD = !displayHUD;
@@ -673,7 +673,7 @@ void GraphicalSimulationApp::DoHUD()
     Ocean* ocn = getSimulationManager()->getOcean();
     
     GLfloat offset = 10.f;
-    gui->DoPanel(10.f, offset, 160.f, ocn != NULL ? 204.f : 159.f);
+    gui->DoPanel(10.f, offset, 160.f, ocn != NULL ? 226.f : 159.f);
     offset += 5.f;
     gui->DoLabel(15.f, offset, "DEBUG");
     offset += 15.f;
@@ -716,6 +716,10 @@ void GraphicalSimulationApp::DoHUD()
         id.item = 7;
         hs.showFluidDynamics = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
         offset += 22.f;
+
+        id.item = 8;
+        hs.showOceanVelocityField = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showOceanVelocityField, "Water velocity");
+        offset += 22.f;
     }
     
     offset += 14.f;
@@ -747,7 +751,7 @@ void GraphicalSimulationApp::DoHUD()
         
         bool oceanOn = ocn->isRenderable();
         
-        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 82.f : 33.f);
+        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 112.f : 33.f);
         offset += 5.f;
        
         id.owner = 2;
@@ -759,12 +763,15 @@ void GraphicalSimulationApp::DoHUD()
         {
             id.item = 1;
             waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
-            offset += 50.f;
-        
             ocn->setWaterType(waterType);
+            offset += 50.f;
+            
+            id.item = 2;
+            ocn->getOpenGLOcean()->setParticles(gui->DoCheckBox(id, 19.f, offset, 110.f, ocn->getOpenGLOcean()->getParticlesEnabled(), "Suspended particles"));
+            offset += 29.f;
         }
-        
-        offset += 7.f;
+
+        offset += 8.f;
     }
     
     //Main view exposure

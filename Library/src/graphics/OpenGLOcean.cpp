@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <fstream>
+#include "stb_image_write.h"
 #include "core/Console.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
@@ -38,7 +39,6 @@
 #include "graphics/OpenGLOceanParticles.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "utils/SystemUtil.hpp"
-#include "utils/stb_image_write.h"
 #include "entities/forcefields/Atmosphere.h"
 #include "entities/forcefields/Uniform.h"
 #include "entities/forcefields/Jet.h"
@@ -68,6 +68,7 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     params.spectrum34 = NULL;
     GLint layers = 4;
     oceanSize = size;
+    particlesEnabled = true;
 
     //Create simulation textures
     oceanTextures[3] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(params.fftSize, params.fftSize, layers), 
@@ -186,7 +187,22 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     OpenGLState::UseProgram(0);
     
 	glDeleteShader(oceanOpticsFragment);
- 
+
+    //Vector field
+    sources.clear();
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "oceanVField.vert"));
+    sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "oceanVField.geom"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanVField.frag"));
+    oceanShaders["vectorfield"] = new GLSLShader(sources);
+    oceanShaders["vectorfield"]->AddUniform("gridOrigin", ParameterType::IVEC3);
+    oceanShaders["vectorfield"]->AddUniform("gridSize", ParameterType::IVEC3);
+    oceanShaders["vectorfield"]->AddUniform("gridScale", ParameterType::FLOAT);
+    oceanShaders["vectorfield"]->AddUniform("VP", ParameterType::MAT4);
+    oceanShaders["vectorfield"]->AddUniform("vectorSize", ParameterType::FLOAT);
+    oceanShaders["vectorfield"]->AddUniform("velocityMax", ParameterType::FLOAT);
+    oceanShaders["vectorfield"]->AddUniform("eyePos", ParameterType::VEC3);
+    oceanShaders["vectorfield"]->BindUniformBlock("OceanCurrents", UBO_OCEAN_CURRENTS);
+
     //Box around ocean (background)
     glm::vec3 v1(-0.5f, -0.5f, 0.5f);
     glm::vec3 v2(-0.5f,  0.5f, 0.5f);
@@ -333,6 +349,16 @@ void OpenGLOcean::setWaterType(GLfloat t)
     }
 }
     
+void OpenGLOcean::setParticles(bool enabled)
+{
+    particlesEnabled = enabled;
+}
+
+bool OpenGLOcean::getParticlesEnabled()
+{
+    return particlesEnabled;
+}
+
 glm::vec3 OpenGLOcean::getLightAttenuation()
 {
     return lightAbsorption + getLightScattering();
@@ -489,12 +515,17 @@ void OpenGLOcean::Simulate(GLfloat dt)
     
     OpenGLState::BindVertexArray(0);
     
-    //Simulate particles (this is done every frame becasue even if the camera is not updated the particels need to move)
+    //Update currents uniform buffer
     glBindBuffer(GL_UNIFORM_BUFFER, oceanCurrentsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(OceanCurrentsUBO), &oceanCurrentsUBOData);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
-        it->second->Update(it->first, dt);
+    
+    //Simulate particles (this is done every frame becasue even if the camera is not updated the particels need to move)
+    if(particlesEnabled)
+    {
+        for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
+            it->second->Update(it->first, dt);
+    }
 }
 
 void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
@@ -528,6 +559,9 @@ void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
 
 void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
 {
+    if(!particlesEnabled)
+        return;
+
     OpenGLOceanParticles* particles;
     
     try
@@ -541,6 +575,85 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
     }
 
     particles->Draw(cam, this);
+}
+
+void OpenGLOcean::DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax)
+{
+    //1. Compute AABB of the limited camera frustum
+    glm::vec3 frustum[5];
+    frustum[0] = cam->GetEyePosition();
+    glm::mat4 V = cam->GetViewMatrix();
+    glm::mat4 invP = glm::inverse(cam->GetProjectionMatrix());
+    glm::mat4 invV = glm::inverse(V);
+    glm::vec4 proj[4];
+    proj[0] = invP * glm::vec4(-1.f, -1.f, -1.f, 1.f);
+    proj[1] = invP * glm::vec4(1.f, -1.f, -1.f, 1.f);
+    proj[2] = invP * glm::vec4(1.f, 1.f, -1.f, 1.f);
+    proj[3] = invP * glm::vec4(-1.f, 1.f, -1.f, 1.f);
+    frustum[1] = invV * (proj[0]/proj[0].w);
+    frustum[2] = invV * (proj[1]/proj[1].w);
+    frustum[3] = invV * (proj[2]/proj[2].w);
+    frustum[4] = invV * (proj[3]/proj[3].w);
+
+    GLfloat scaling = 10.f/cam->GetNearClip(); //5m of distance
+    frustum[1] = frustum[0] + (frustum[1]-frustum[0])*scaling;
+    frustum[2] = frustum[0] + (frustum[2]-frustum[0])*scaling;
+    frustum[3] = frustum[0] + (frustum[3]-frustum[0])*scaling;
+    frustum[4] = frustum[0] + (frustum[4]-frustum[0])*scaling;
+
+    glm::vec3 aabbMin(BT_LARGE_FLOAT);
+    glm::vec3 aabbMax(-BT_LARGE_FLOAT);
+
+    for(unsigned int i=0; i<5; ++i)
+    {
+        if(frustum[i].x < aabbMin.x)
+            aabbMin.x = frustum[i].x;
+        if(frustum[i].x > aabbMax.x)
+            aabbMax.x = frustum[i].x;
+        if(frustum[i].y < aabbMin.y)
+            aabbMin.y = frustum[i].y;
+        if(frustum[i].y > aabbMax.y)
+            aabbMax.y = frustum[i].y;
+        if(frustum[i].z < aabbMin.z)
+            aabbMin.z = frustum[i].z;
+        if(frustum[i].z > aabbMax.z)
+            aabbMax.z = frustum[i].z;
+    }
+
+    if(aabbMax.z < 0.f) return;
+    if(aabbMin.z < 0.f) aabbMin.z = 0.f;
+
+    //2. Snap to grid
+    GLfloat gridScale = 0.2f;
+    glm::ivec3 gridMin;
+    glm::ivec3 gridMax;
+    gridMin.x = (GLint)floorf(aabbMin.x/gridScale);
+    gridMin.y = (GLint)floorf(aabbMin.y/gridScale);
+    gridMin.z = (GLint)floorf(aabbMin.z/gridScale);
+    gridMax.x = (GLint)ceilf(aabbMax.x/gridScale);
+    gridMax.y = (GLint)ceilf(aabbMax.y/gridScale);
+    gridMax.z = (GLint)ceilf(aabbMax.z/gridScale);
+
+    glm::ivec3 gridSize = gridMax - gridMin + 1;
+    GLsizei numPoints = gridSize.x*gridSize.y*gridSize.z;
+    if(numPoints > 1e7) numPoints = 1e7;
+    
+    //3. Generate vertices and render
+    oceanShaders["vectorfield"]->Use();
+    oceanShaders["vectorfield"]->SetUniform("gridOrigin", gridMin);
+    oceanShaders["vectorfield"]->SetUniform("gridSize", gridSize);
+    oceanShaders["vectorfield"]->SetUniform("gridScale", gridScale);
+    oceanShaders["vectorfield"]->SetUniform("vectorSize", 0.2f);
+    oceanShaders["vectorfield"]->SetUniform("velocityMax", velocityMax);
+    oceanShaders["vectorfield"]->SetUniform("VP", cam->GetProjectionMatrix() * V);
+    oceanShaders["vectorfield"]->SetUniform("eyePos", frustum[0]);
+    OpenGLState::EnableBlend();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    glDrawArrays(GL_POINTS, 0, numPoints);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UseProgram(0);
+    OpenGLState::DisableBlend();
 }
 
 void OpenGLOcean::DrawBlur(OpenGLCamera* cam)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -116,21 +116,30 @@ bool Ocean::IsInsideFluid(const Vector3& point)
     return GetDepth(point) >= Scalar(0);
 }
 
-Scalar Ocean::GetDepth(const Vector3& point)
+float Ocean::GetDepth(const glm::vec3& point)
 {
     if(hasWaves()) //Geometric waves
     {
-        GLfloat waveHeight = glOcean->ComputeWaveHeight((GLfloat)point.x(), (GLfloat)point.y());
-        glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), waveHeight);
+        GLfloat waveHeight = glOcean->ComputeWaveHeight(point.x, point.y);
+        glm::vec3 wavePoint(point.x, point.y, waveHeight);
+#ifdef DEBUG_HYDRO
         wavesDebug.points.push_back(wavePoint);
-        return point.z() - Scalar(waveHeight);
+#endif
+        return point.z - waveHeight;
     }
     else //Flat surface
     {
-        glm::vec3 wavePoint((GLfloat)point.x(), (GLfloat)point.y(), 0.f);
+        glm::vec3 wavePoint(point.x, point.y, 0.f);
+#ifdef DEBUG_HYDRO  
         wavesDebug.points.push_back(wavePoint);
-        return point.z();
+#endif
+        return point.z;
     }
+}
+
+Scalar Ocean::GetDepth(const Vector3& point)
+{
+    return Scalar(GetDepth(glm::vec3((GLfloat)point.getX(), (GLfloat)point.getY(), (GLfloat)point.getZ())));
 }
 
 Scalar Ocean::GetPressure(const Vector3& point)
@@ -152,6 +161,11 @@ Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
     }
     else
         return V0();
+}
+
+glm::vec3 Ocean::GetFluidVelocity(const glm::vec3& point) const
+{
+    return glVectorFromVector(GetFluidVelocity(Vector3(point.x, point.y, point.z)));
 }
 
 void Ocean::EnableCurrents()

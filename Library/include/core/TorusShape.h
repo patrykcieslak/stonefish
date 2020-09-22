@@ -26,8 +26,8 @@
 #ifndef __Stonefish_TorusShape__
 #define __Stonefish_TorusShape__
 
-#include <BulletCollision/CollisionShapes/btConvexInternalShape.h>
-#include <BulletCollision/BroadphaseCollision/btBroadphaseProxy.h>
+#include "BulletCollision/CollisionShapes/btConvexInternalShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
 #include "StonefishCommon.h"
 
 namespace sf

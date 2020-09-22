@@ -14,18 +14,6 @@ Dependencies
 
 The following dependencies have to be installed prior to building the library:
 
-* `Bullet Physics <https://pybullet.org>`_ (version 2.89, from source)
-
-.. code-block:: console
-
-    $ git clone "https://github.com/bulletphysics/bullet3.git" -b 2.89
-    $ cd bullet3
-    $ mkdir build
-    $ cd build
-    $ cmake -DBUILD_PYBULLET=OFF -DBUILD_SHARED_LIBS=ON -DUSE_DOUBLE_PRECISION=ON -DCMAKE_BUILD_TYPE=Release ..
-    $ make -jX
-    $ sudo make install
-
 * `OpenGL Mathematics <https://glm.g-truc.net/>`_ (libglm-dev, version >= 0.9.9.0)
 
 * `SDL2 <https://www.libsdl.org/>`_ (libsdl2-dev)

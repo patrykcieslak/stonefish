@@ -26,8 +26,8 @@
 #ifndef __Stonefish_ResearchConstraintSolver__
 #define __Stonefish_ResearchConstraintSolver__
 
-#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
-#include <BulletDynamics/MLCPSolvers/btMLCPSolverInterface.h>
+#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
+#include "BulletDynamics/MLCPSolvers/btMLCPSolverInterface.h"
 #include "StonefishCommon.h"
 
 namespace sf

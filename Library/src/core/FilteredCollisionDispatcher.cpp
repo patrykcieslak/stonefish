@@ -25,7 +25,7 @@
 
 #include "core/FilteredCollisionDispatcher.h"
 
-#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"

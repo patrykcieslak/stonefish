@@ -27,7 +27,7 @@
 #define __Stonefish_ScenarioParser__
 
 #include "StonefishCommon.h"
-#include "utils/tinyxml2.h"
+#include "tinyxml2.h"
 #include <map>
 
 using namespace tinyxml2;

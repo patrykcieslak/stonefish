@@ -39,12 +39,14 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diamet
     D = diameter;
     kT = thrustCoeff;
     kQ = torqueCoeff;
-    kp = Scalar(3.0);
-    ki = Scalar(2.0);
-    iLim = Scalar(10.0);
+    alpha = Scalar(-1) * kT.first;
+    beta = Scalar(-1) * kQ;
+    kp = Scalar(8.0);
+    ki = Scalar(3.0);
+    iLim = Scalar(2.0);
     RH = rightHand;
     inv = inverted;
-    omegaLim = (RH ? Scalar(1.0) : Scalar(-1.0)) *  maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
+    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //[rad/s] (always positive)
 
     theta = Scalar(0);
     omega = Scalar(0);
@@ -94,6 +96,11 @@ Scalar Thruster::getThrust()
     return thrust;
 }
 
+Scalar Thruster::getTorque()
+{
+    return torque;
+}
+
 Scalar Thruster::getDiameter()
 {
     return D;
@@ -105,13 +112,13 @@ void Thruster::Update(Scalar dt)
     {
         //Update thruster velocity
         Scalar error = setpoint * omegaLim - omega;
-        Scalar motorTorque = kp * error + ki * iError; //error*kp*btFabs(setpoint) + iError*ki*btFabs(setpoint); //Seaeye mimicking
-        omega += (motorTorque - torque)*dt; ///prop->getInertia().x() * dt; //Damping due to axial torque
+        Scalar motorTorque = kp * error + ki * iError;
+        omega += (motorTorque - (-torque))*dt;
         theta += omega * dt; //Just for animation
     
         //Integrate error
         iError += error * dt;
-        iError = iError > iLim ? iLim : iError;
+        iError = iError > iLim ? iLim : (iError < -iLim ? -iLim : iError);
         
         //Get transforms
         Transform solidTrans = attach->getCGTransform();
@@ -126,36 +133,30 @@ void Thruster::Update(Scalar dt)
         {
             bool backward = (RH && omega < Scalar(0)) || (!RH && omega > Scalar(0));
             
-            //kT depends on advance ratio J = u/(omega*D)
-            Scalar kT0 = backward ? kT.second : kT.first;            
-            Scalar A = M_PI*D*D/Scalar(4);
-            Scalar k1(-0.3);
-            Scalar k2(-0.3);
-            Scalar k3 = Scalar(2)*kT0/M_PI;
-            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming fluid velocity
+            /*kT and kQ depend on the advance ratio J
+                J = u/(omega*D), where:
+                u - ambient velocity [m/s]
+                n - propeller rotational rate [1/s]
+                D - propeller diameter [m] */
+            Scalar n = omega/(Scalar(2) * M_PI);
+            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming water velocity
             
-            Scalar rate = (RH ? Scalar(1.0) : Scalar(-1.0)) * omega/(Scalar(2) * M_PI);
-            thrust = Scalar(2) * liquid->getLiquid().density * A * (k1*u*u + k2*u*D*rate + k3*D*D*rate*rate);
-            if(backward) 
-                thrust = -thrust;
+            //Thrust
+            Scalar kT0 = backward ? kT.second : kT.first; //In case of non-symmetrical thrusters the coefficient may be different
+            //kT(J) = kT0 + alpha * J --> approximated with linear function
+            thrust = (RH ? Scalar(1) : Scalar(-1)) * liquid->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
             
-            //Scalar kt = thrust/(liquid->getFluid()->density * D*D*D*D * btFabs(omega)*omega);
-            //std::cout << getName() << " omega: " << omega << " u:" << u << " kT:" << kt << std::endl;
-            //thrust = liquid->getFluid()->density * kT * btFabs(omega)*omega * D*D*D*D;
-            
-            torque = liquid->getLiquid().density * kQ * btFabs(rate)*rate * D*D*D*D*D;
-            if(!RH)
-                torque = -torque;
-            
-            Vector3 thrustV(thrust, 0, 0);
-            Vector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to water drag
+            //Torque
+            Scalar kQ0 = kQ;
+            //kQ(J) = kQ0 + beta * J --> approximated with linear function
+            torque = -liquid->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
             
             //Apply forces and torques
+            Vector3 thrustV(thrust, 0, 0);
+            Vector3 torqueV(torque, 0, 0);
             attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
             attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
             attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
-            
-            //printf("%s setpoint: %1.3lf thrust: %1.3lf torque: %1.3lf\n", getName().c_str(), setpoint, thrust, torque);
         }
     }
 }

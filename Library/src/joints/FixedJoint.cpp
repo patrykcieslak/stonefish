@@ -25,7 +25,7 @@
 
 #include "joints/FixedJoint.h"
 
-#include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
+#include "BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"

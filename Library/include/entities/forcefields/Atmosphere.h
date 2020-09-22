@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Atmosphere__
@@ -29,6 +29,7 @@
 #include <ctime>
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
+#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
@@ -98,6 +99,7 @@ namespace sf
          \return air velocity at specified point [m/s]
          */
         Vector3 GetFluidVelocity(const Vector3& point) const;
+        glm::vec3 GetFluidVelocity(const glm::vec3& point) const;
         
         //! A method checking if a point is inside atmosphere.
         /*!

@@ -26,12 +26,12 @@
 #ifndef __Stonefish_FeatherstoneEntity__
 #define __Stonefish_FeatherstoneEntity__
 
-#include <BulletDynamics/Featherstone/btMultiBody.h>
-#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
-#include <BulletDynamics/Featherstone/btMultiBodyLink.h>
-#include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
-#include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
-#include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
+#include "BulletDynamics/Featherstone/btMultiBody.h"
+#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
+#include "BulletDynamics/Featherstone/btMultiBodyLink.h"
+#include "BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h"
+#include "BulletDynamics/Featherstone/btMultiBodyJointFeedback.h"
+#include "BulletDynamics/Featherstone/btMultiBodyJointMotor.h"
 #include "entities/SolidEntity.h"
 
 namespace sf

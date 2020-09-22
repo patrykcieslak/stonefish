@@ -26,7 +26,7 @@
 #ifndef __Stonefish_Joint__
 #define __Stonefish_Joint__
 
-#include <BulletDynamics/Featherstone/btMultiBodyConstraint.h>
+#include "BulletDynamics/Featherstone/btMultiBodyConstraint.h"
 #include "StonefishCommon.h"
 
 //#define CONSTRAINT_ERP 0.1

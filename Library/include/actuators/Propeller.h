@@ -71,6 +71,9 @@ namespace sf
         //! A method returning the generated thrust.
         Scalar getThrust();
         
+        //! A method returning the induced torque.
+        Scalar getTorque();
+
         //! A method returning the angular position of the propeller [rad]
         Scalar getAngle();
         

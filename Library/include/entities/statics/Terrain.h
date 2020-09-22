@@ -26,7 +26,7 @@
 #ifndef __Stonefish_Terrain__
 #define __Stonefish_Terrain__
 
-#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
 #include "entities/StaticEntity.h"
 
 namespace sf

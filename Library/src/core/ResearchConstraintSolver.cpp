@@ -42,9 +42,9 @@
 
 #include "core/ResearchConstraintSolver.h"
 
-#include <LinearMath/btMatrixX.h>
-#include <LinearMath/btQuickprof.h>
-#include <BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h>
+#include "LinearMath/btMatrixX.h"
+#include "LinearMath/btQuickprof.h"
+#include "BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h"
 
 namespace sf
 {

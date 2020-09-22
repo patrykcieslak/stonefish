@@ -52,7 +52,7 @@ void FloatingTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
     EnableOcean(0.5);
-    getOcean()->SetupWaterProperties(0.2);
+    getOcean()->setWaterType(0.2);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
     sf::Polyhedron* hull = new sf::Polyhedron("Hull", sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 

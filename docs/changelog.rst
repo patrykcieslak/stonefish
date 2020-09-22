@@ -2,6 +2,14 @@
 Changelog
 ==========
 
+1.1
+===
+
+- Removed external dependence on the Bullet Physics Library and included necessary parts in the source tree
+- Updated the mathematical models of the thruster and the propeller actuators
+- Optimised computation of the geometry-based hydrodynamics/aerodynamics
+- Implemented new visualisation of underwater currents (water velocity field)
+
 1.0
 ===
 

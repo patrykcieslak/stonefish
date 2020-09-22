@@ -26,7 +26,7 @@
 #ifndef __Stonefish_FilteredCollisionDispatcher__
 #define __Stonefish_FilteredCollisionDispatcher__
 
-#include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 
 namespace sf
 {

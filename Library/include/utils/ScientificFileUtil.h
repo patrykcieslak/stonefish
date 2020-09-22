@@ -26,7 +26,7 @@
 #ifndef __Stonefish_ScientificFileUtil__
 #define __Stonefish_ScientificFileUtil__
 
-#include <LinearMath/btMatrixX.h>
+#include "LinearMath/btMatrixX.h"
 #include "StonefishCommon.h"
 
 namespace sf

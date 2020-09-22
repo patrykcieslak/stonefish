@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Atmosphere.h"
@@ -129,6 +129,11 @@ Vector3 Atmosphere::GetFluidVelocity(const Vector3& point) const
     for(size_t i=0; i<wind.size(); ++i)
         fv += wind[i]->GetVelocityAtPoint(point);
     return fv;    
+}
+
+glm::vec3 Atmosphere::GetFluidVelocity(const glm::vec3& point) const
+{
+    return glVectorFromVector(GetFluidVelocity(Vector3(point.x, point.y, point.z)));
 }
 
 bool Atmosphere::IsInsideFluid(const Vector3& point) const

@@ -26,7 +26,7 @@
 #ifndef __Stonefish_OpenGLDebugDrawer__
 #define __Stonefish_OpenGLDebugDrawer__
 
-#include <LinearMath/btIDebugDraw.h>
+#include "LinearMath/btIDebugDraw.h"
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
 

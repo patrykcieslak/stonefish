@@ -26,7 +26,7 @@
 #ifndef __Stonefish_OpenGLDataStructs__
 #define __Stonefish_OpenGLDataStructs__
 
-#include "utils/glad.h"
+#include "glad.h"
 #define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -89,6 +89,7 @@
 #define SPOT_LIGHT_SHADOWMAP_SIZE   ((GLint)2048)
 
 class btTransform;
+class btVector3;
 
 namespace sf
 {
@@ -518,6 +519,7 @@ namespace sf
         bool showActuators;
         bool showSensors;
         bool showFluidDynamics;
+        bool showOceanVelocityField;
         bool showForces;
         bool showBulletDebugInfo;
         
@@ -529,12 +531,14 @@ namespace sf
             showActuators = false;
             showSensors = false;
             showFluidDynamics = false;
+            showOceanVelocityField = false;
             showForces = false;
             showBulletDebugInfo = false;
         }
     };
     
     typedef btTransform Transform;
+    typedef btVector3 Vector3;
     
     //! A method converting a physics engine transform into an OpenGL matrix.
     /*!
@@ -542,6 +546,13 @@ namespace sf
      \return OpenGL 4x4 matrix
      */
     glm::mat4 glMatrixFromTransform(const Transform& T);
+
+    //! A method converting a physics engine vector into an OpenGL vector.
+    /*!
+     \param v vector
+     \return OpenGL vector
+     */
+    glm::vec3 glVectorFromVector(const Vector3& v);
 }
 
 #endif

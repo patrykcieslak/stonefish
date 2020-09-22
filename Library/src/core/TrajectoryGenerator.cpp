@@ -25,7 +25,7 @@
 
 #include "core/TrajectoryGenerator.h"
 
-#include<algorithm>
+#include <algorithm>
 
 namespace sf
 {

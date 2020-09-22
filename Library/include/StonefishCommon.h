@@ -31,9 +31,9 @@
 #include <vector>
 
 //Bullet Physics
-#include <btBulletDynamicsCommon.h>
-#include <btBulletCollisionCommon.h>
-#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include "btBulletDynamicsCommon.h"
+#include "btBulletCollisionCommon.h"
+#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
 
 //Stonefish
 #include <version.h>

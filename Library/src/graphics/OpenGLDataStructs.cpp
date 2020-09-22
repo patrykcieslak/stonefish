@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #define GLAD_GL_IMPLEMENTATION
@@ -163,6 +163,11 @@ glm::mat4 glMatrixFromTransform(const Transform& T)
     //T.getOpenGLMatrix(&M[0].x);
 #endif
     return M;
+}
+
+glm::vec3 glVectorFromVector(const Vector3& v)
+{
+    return glm::vec3((GLfloat)v.getX(), (GLfloat)v.getY(), (GLfloat)v.getZ());
 }
 
 }

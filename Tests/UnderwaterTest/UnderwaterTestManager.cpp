@@ -58,6 +58,7 @@
 #include <sensors/vision/FLS.h>
 #include <sensors/vision/SSS.h>
 #include <sensors/vision/MSIS.h>
+#include <sensors/Sample.h>
 #include <actuators/Light.h>
 #include <sensors/scalar/RotaryEncoder.h>
 #include <sensors/scalar/Accelerometer.h>
@@ -108,16 +109,19 @@ void UnderwaterTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
     EnableOcean(0.0);
-    getOcean()->SetupWaterProperties(0.2);
-    //getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 1.0));
-    //getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.1,0.0,0.0)));
+    getOcean()->setWaterType(0.2);
+    getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 5.0));
+    //getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0,0.0,0.0)));
+    getOcean()->EnableCurrents();
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
     //sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
     //AddStaticEntity(tank, sf::I4());
-    sf::Plane* seabed = new sf::Plane("Seabed", 1000.0, "Rock", "seabed", 5.f);
-    AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,5.0)));
+    //sf::Plane* seabed = new sf::Plane("Seabed", 1000.0, "Rock", "seabed", 5.f);
+    //AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,5.0)));
+    sf::Terrain* seabed = new sf::Terrain("Seabed", sf::GetDataPath() + "terrain.png", 1.0, 1.0, 5.0, "Rock", "seabed", 5.f);
+    AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,15.0)));
     sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, "Fiberglass", "seabed");
     AddStaticEntity(cyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(6.0,2.0,5.0)));
 	
@@ -202,9 +206,9 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* prop4 = new sf::Polyhedron("Propeller4", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
     sf::Polyhedron* prop5 = new sf::Polyhedron("Propeller5", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
     sf::Thruster* thSway = new sf::Thruster("ThrusterSway", prop1, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
-    sf::Thruster* thSurgeP = new sf::Thruster("ThrusterSurgePort", prop2, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
+    sf::Thruster* thSurgeP = new sf::Thruster("ThrusterSurgePort", prop2, 0.18, std::make_pair(0.88, 0.48), 0.05, 1000.0, true);
     sf::Thruster* thSurgeS = new sf::Thruster("ThrusterSurgeStarboard", prop3, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
-    sf::Thruster* thHeaveS = new sf::Thruster("ThrusterHeaveStern", prop4, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, false);
+    sf::Thruster* thHeaveS = new sf::Thruster("ThrusterHeaveStern", prop4, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
     sf::Thruster* thHeaveB = new sf::Thruster("ThrusterHeaveBow", prop5, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
     
     //Create VBS
@@ -234,16 +238,17 @@ void UnderwaterTestManager::BuildScenario()
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
     sf::FLS* fls = new sf::FLS("FLS", 256, 500, 150.0, 30.0, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
-    fls->setDisplayOnScreen(true, 0, 500, 0.5f);
-    sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
-    sss->setDisplayOnScreen(true, 485, 500, 0.6f);
-    sf::MSIS* msis = new sf::MSIS("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
-    msis->setDisplayOnScreen(true, 0, 0, 1.0f);
+    //fls->setDisplayOnScreen(true, 0, 500, 0.5f);
+    sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 100.0, sf::ColorMap::GREEN_BLUE);
+    //sss->setDisplayOnScreen(true, 485, 500, 0.6f);
+    sf::MSIS* msis = new sf::MSIS("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 100.0, sf::ColorMap::GREEN_BLUE);
+    //msis->setDisplayOnScreen(true, 0, 0, 1.0f);
     //sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0, 10.0);
     //cam->setDisplayOnScreen(true);
     //sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
+    
     //Create AUV
-    sf::Robot* auv = new sf::Robot("GIRONA500");
+    sf::Robot* auv = new sf::Robot("GIRONA500", false);
     
     //Mechanical structure
     auv->DefineLinks(vehicle, arm);
@@ -283,14 +288,15 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.8), sf::Vector3(0.0,0.0,1.0)));
     auv->AddVisionSensor(sss, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(0.0,0.0,0.0)));
-    auv->AddVisionSensor(msis, "Vehicle", sf::Transform(sf::Quaternion(0.0, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
+    //auv->AddVisionSensor(msis, "Vehicle", sf::Transform(sf::Quaternion(0.0, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam2, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,2.0)));
-    AddRobot(auv, sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(2.0,0.0,1.0)));
+    AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,2.0)));
     
-    thSurgeP->setSetpoint(0.55);
-    thSurgeS->setSetpoint(0.58);
-/*
+    //thSurgeP->setSetpoint(0.55);
+    //thSurgeS->setSetpoint(0.58);
+    
+    /*
     sf::TrajectoryGenerator* tg = new sf::TrajectoryGenerator();
     sf::PWLSegment* seg = new sf::PWLSegment(sf::TrajectoryPoint(sf::Vector3(0,0,0), 0),
                                              sf::TrajectoryPoint(sf::Vector3(10,0,4), 10));
@@ -300,4 +306,10 @@ void UnderwaterTestManager::BuildScenario()
     AddAnimatedEntity(anim, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)));*/
 
 #endif
+} 
+
+void UnderwaterTestManager::SimulationStepCompleted(sf::Scalar timeStep)
+{
+    //sf::Thruster* th = (sf::Thruster*)getRobot("GIRONA500")->getActuator("ThrusterSurgePort");
+    //printf("Setpoint: %1.3lf Thrust: %1.3lf Torque: %1.3lf\n", th->getSetpoint(), th->getThrust(), th->getTorque());
 }

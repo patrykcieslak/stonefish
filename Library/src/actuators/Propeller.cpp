@@ -39,12 +39,12 @@ Propeller::Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diam
     D = diameter;
     kT0 = thrustCoeff;
     kQ0 = torqueCoeff;
-    kp = Scalar(3.0);
-    ki = Scalar(2.0);
-    iLim = Scalar(10.0);
+    kp = Scalar(8.0);
+    ki = Scalar(3.0);
+    iLim = Scalar(2.0);
     RH = rightHand;
     inv = inverted;
-    omegaLim = (RH ? Scalar(1.0) : Scalar(-1.0)) *  maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
+    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
 
     theta = Scalar(0);
     omega = Scalar(0);
@@ -94,17 +94,22 @@ Scalar Propeller::getThrust()
     return thrust;
 }
 
+Scalar Propeller::getTorque()
+{
+    return torque;
+}
+
 void Propeller::Update(Scalar dt)
 {
     //Update thruster velocity
     Scalar error = setpoint * omegaLim - omega;
     Scalar motorTorque = kp * error + ki * iError;
-    omega += (motorTorque - torque)*dt; ///prop->getInertia().x() * dt; //Damping due to axial torque
+    omega += (motorTorque - torque)*dt;
     theta += omega * dt; //Just for animation
     
     //Integrate error
     iError += error * dt;
-    iError = iError > iLim ? iLim : iError;
+    iError = iError > iLim ? iLim : (iError < -iLim ? -iLim : iError);
     
     if(attach != NULL)
     {
@@ -121,26 +126,19 @@ void Propeller::Update(Scalar dt)
             //Calculate thrust
             //Thrust coefficient depends on advance ratio J = u/(n*D), kT0 -> J=0
             //The lower the p/D the more linear the dependence of Kt on J
-            Scalar u = -propTrans.getBasis().getColumn(0).dot(atm->GetFluidVelocity(propTrans.getOrigin()) - velocity); //Incoming fluid velocity
-            Scalar n =  (RH ? Scalar(1.0) : Scalar(-1.0)) * omega/(Scalar(2) * M_PI); //Rate
-            Scalar J = btFuzzyZero(n) ? 0.0 : u/(n*D);
-            J = J < Scalar(0) ? Scalar(0) : J;
-            Scalar s(-0.095/0.8);
-            Scalar kT = kT0 + s * J;
-            thrust = kT * atm->getGas().density * btFabs(n)*n * D*D*D*D; 
-     
-            torque = kQ0 * atm->getGas().density * btFabs(n)*n * D*D*D*D*D;
-            if(!RH) torque = -torque; //Depending on type of propeller torque changes direction
-            
-            Vector3 thrustV(thrust, 0, 0);
-            Vector3 torqueV(-torque, 0, 0); //Torque is the loading of propeller due to drag
+            Scalar n = omega/(Scalar(2) * M_PI);
+            Scalar u = -propTrans.getBasis().getColumn(0).dot(atm->GetFluidVelocity(propTrans.getOrigin()) - velocity); //Incoming air velocity
+            Scalar alpha(-0.095/0.8);
+            //kT(J) = kT0 + alpha * J --> approximated with linear function
+            thrust = (RH ? Scalar(1) : Scalar(-1)) * atm->getGas().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
+            torque = -kQ0 * atm->getGas().density * btFabs(n)*n * D*D*D*D*D; //Torque is the loading of propeller due to drag
             
             //Apply forces and torques
+            Vector3 thrustV(thrust, 0, 0);
+            Vector3 torqueV(torque, 0, 0); 
             attach->ApplyCentralForce(propTrans.getBasis() * thrustV);
             attach->ApplyTorque((propTrans.getOrigin() - solidTrans.getOrigin()).cross(propTrans.getBasis() * thrustV));
             attach->ApplyTorque(propTrans.getBasis() * torqueV);
-            
-            //printf("%s: u:%1.3lf n:%1.3lf T:%1.3lf tau:%1.6lf\n", getName().c_str(), u, n, thrust, torque);
         }
     }
 }
