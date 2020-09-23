@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/10/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Thruster.h"
@@ -127,9 +127,8 @@ void Thruster::Update(Scalar dt)
         Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
         
         //Calculate thrust
-        Ocean* liquid = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        
-        if(liquid->IsInsideFluid(thrustTrans.getOrigin()))
+        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        if(ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
         {
             bool backward = (RH && omega < Scalar(0)) || (!RH && omega > Scalar(0));
             
@@ -139,17 +138,17 @@ void Thruster::Update(Scalar dt)
                 n - propeller rotational rate [1/s]
                 D - propeller diameter [m] */
             Scalar n = omega/(Scalar(2) * M_PI);
-            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(liquid->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming water velocity
+            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(ocn->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming water velocity
             
             //Thrust
             Scalar kT0 = backward ? kT.second : kT.first; //In case of non-symmetrical thrusters the coefficient may be different
             //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust = (RH ? Scalar(1) : Scalar(-1)) * liquid->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
+            thrust = (RH ? Scalar(1) : Scalar(-1)) * ocn->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
             
             //Torque
             Scalar kQ0 = kQ;
             //kQ(J) = kQ0 + beta * J --> approximated with linear function
-            torque = -liquid->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
+            torque = -ocn->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
             
             //Apply forces and torques
             Vector3 thrustV(thrust, 0, 0);
@@ -157,6 +156,11 @@ void Thruster::Update(Scalar dt)
             attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
             attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
             attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+        }
+        else
+        {
+            thrust = Scalar(0);
+            torque = Scalar(0);
         }
     }
 }

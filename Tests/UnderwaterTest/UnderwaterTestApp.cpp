@@ -111,8 +111,8 @@ void UnderwaterTestApp::DoHUD()
     th->setSetpoint(sp);
     th2->setSetpoint(sp);*/
     
-
+    /*
     sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterSurgePort");
     sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterSurgePort"));
-    th->setSetpoint(sp);
+    th->setSetpoint(sp);*/
 }

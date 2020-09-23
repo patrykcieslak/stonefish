@@ -9,6 +9,7 @@ Changelog
 - Updated the mathematical models of the thruster and the propeller actuators
 - Optimised computation of the geometry-based hydrodynamics/aerodynamics
 - Implemented new visualisation of underwater currents (water velocity field)
+- Fixed crashes when trying to create marine actuators in a simulation without ocean
 
 1.0
 ===

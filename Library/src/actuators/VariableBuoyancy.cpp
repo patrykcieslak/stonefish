@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/VariableBuoyancy.h"
@@ -38,7 +38,10 @@ VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std
     if(volumeMeshPaths.size() < 2)
         cCritical("VBS volume definition requires loading at least two meshes - for the full/empty states!");
     
-    density = SimulationApp::getApp()->getSimulationManager()->getOcean()->getLiquid().density;
+    density = Scalar(1000.0);
+    Ocean* ocn;
+    if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
+        density = ocn->getLiquid().density;
     gravity = SimulationApp::getApp()->getSimulationManager()->getGravity();
     
     for(size_t i=0; i<volumeMeshPaths.size(); ++i)
@@ -53,6 +56,7 @@ VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std
     std::sort(Vprops.begin(), Vprops.end(), volumeCompare);
     
     flowRate = Scalar(0);
+    force = V0();
     Vmin = Vprops.front().volume;
     Vmax = Vprops.back().volume;
     
@@ -84,6 +88,11 @@ Scalar VariableBuoyancy::getLiquidVolume()
     return V;
 }
 
+Scalar VariableBuoyancy::getForce()
+{
+    return force.safeNorm();
+}
+
 void VariableBuoyancy::InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg)
 {
     if(volume <= Vmin)
@@ -113,7 +122,8 @@ void VariableBuoyancy::InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg)
     
 void VariableBuoyancy::Update(Scalar dt)
 {
-    if(attach != NULL)
+    Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    if(ocn != nullptr && attach != NULL)
     {
         //Update volume
         V += flowRate*dt;
@@ -123,7 +133,7 @@ void VariableBuoyancy::Update(Scalar dt)
         InterpolateVProps(V, m, CG);
         
         //Compute forces
-        Vector3 force = m*gravity;
+        force = m*gravity;
 
         //Apply forces and torques
         Vector3 solidCG = attach->getCGTransform().getOrigin();
@@ -140,8 +150,6 @@ std::vector<Renderable> VariableBuoyancy::Render()
         vbsTrans.setOrigin(attach->getOTransform() * o2a * CG);
     else
         LinkActuator::Render();
-    
-    Vector3 force = V*density*gravity;
     
     //Add renderable
     std::vector<Renderable> items(0);

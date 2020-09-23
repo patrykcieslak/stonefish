@@ -52,7 +52,7 @@ int main(int argc, const char * argv[])
     UnderwaterTestManager simulationManager(200.0);
     simulationManager.setRealtimeFactor(1.0);
     UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
-    app.Run(false);
+    app.Run();
     
     return 0;
 }

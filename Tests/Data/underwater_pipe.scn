@@ -2,7 +2,7 @@
 <scenario>
 	<environment>
 		<ned latitude="40.0" longitude="3.0"/>
-		<ocean>
+		<!--<ocean>
 			<water density="1025.0" jerlov="0.5"/>
 			<waves height="0.0"/>
 			<current type="uniform">
@@ -13,7 +13,7 @@
 				<outlet radius="0.2"/>
 				<velocity xyz="1.0 1.0 0.0"/>
 			</current>
-		</ocean>
+		</ocean>-->
 		<atmosphere>
 			<sun azimuth="120.0" elevation="50.0"/>
 		</atmosphere>

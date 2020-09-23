@@ -1,8 +1,11 @@
+<?xml version="1.0"?>
 <scenario>
 	<environment>
 		<ned latitude="20.0" longitude="50.0"/>
-		<sun azimuth="20.0" elevation="30.0"/> <!-- or <sun date="dd.mm.yyyy" time="hh.mm.ss"/> -->
-		<ocean enabled="true" waves="0.0"/>
+		<ocean />
+		<atmosphere>
+			<sun azimuth="20.0" elevation="30.0"/>
+		</atmosphere>
 	</environment>
 
 	<materials>

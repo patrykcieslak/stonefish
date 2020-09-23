@@ -63,6 +63,9 @@ namespace sf
         
         //! A method returning the current volume of the liquid in the system.
         Scalar getLiquidVolume();
+
+        //! A method returning the generated force.
+        Scalar getForce();
         
         //! A method returning the type of the actuator.
         ActuatorType getType();
@@ -76,6 +79,7 @@ namespace sf
         Scalar Vmax;
         Scalar flowRate;
         Scalar density;
+        Vector3 force;
         Vector3 gravity;
         std::vector<MeshProperties> Vprops;
     };
