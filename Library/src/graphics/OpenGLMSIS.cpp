@@ -77,12 +77,9 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
         cError("Sonar input FBO initialization failed!");
 
     //Setup matrices
-    GLfloat near = range.x / 2.f;
+    GLfloat near = range.x * glm::cos(glm::max(fov.x/2.f, fov.y/2.f));
     GLfloat far = range.y;
-    projection[0] = glm::vec4(near/(near*tanf(fov.x/2.f)), 0.f, 0.f, 0.f);
-    projection[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
-    projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
-    projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
+    projection = glm::perspective(fov.y, tanf(fov.x/2.f)/tanf(fov.y/2.f), near, far);
     
     //Output shader: sonar range data
     outputTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(nBeamSamples.y, nBins, 1), 
@@ -286,7 +283,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindFramebuffer(renderFBO);
     OpenGLState::Viewport(0, 0, nBeamSamples.x, nBeamSamples.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    glDisable(GL_DEPTH_CLAMP);
     sonarInputShader[1]->Use();
     sonarInputShader[1]->SetUniform("eyePos", GetEyePosition());
     sonarInputShader[0]->Use();
@@ -315,6 +312,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
             OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalTexture);
         content->DrawObject(objects[i].objectId, objects[i].lookId, objects[i].model);
     }
+    glEnable(GL_DEPTH_CLAMP);
     OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
     OpenGLState::BindFramebuffer(0);
 

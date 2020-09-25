@@ -58,12 +58,9 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     UpdateTransform();
     
     //Setup matrices
-    GLfloat near = range.x/2.f;
+    GLfloat near = range.x * glm::cos(glm::max(fov.x/2.f, fov.y/2.f));
     GLfloat far = range.y;
-    projection[0] = glm::vec4(near/(near*tanf(fov.x/2.f)), 0.f, 0.f, 0.f);
-    projection[1] = glm::vec4(0.f, near/(near*tanf(fov.y/2.f)), 0.f, 0.f);
-    projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
-    projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
+    projection = glm::perspective(fov.y, tanf(fov.x/2.f)/tanf(fov.y/2.f), near, far);
     GLfloat offsetAngle = M_PI_2 - tilt;
     views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
     views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
@@ -274,6 +271,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     //Generate sonar input
     OpenGLState::BindFramebuffer(renderFBO);
     OpenGLState::Viewport(0, 0, nBeamSamples.x, nBeamSamples.y);
+    glDisable(GL_DEPTH_CLAMP);
     sonarInputShader[1]->Use();
     sonarInputShader[1]->SetUniform("eyePos", GetEyePosition());
     sonarInputShader[0]->Use();
@@ -307,6 +305,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
             content->DrawObject(objects[h].objectId, objects[h].lookId, objects[h].model);
         }
     }
+    glEnable(GL_DEPTH_CLAMP);
     OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
     OpenGLState::BindFramebuffer(0);
     
