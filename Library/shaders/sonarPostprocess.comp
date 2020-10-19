@@ -25,7 +25,7 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout(r32f) uniform image2D sonarOutput;
 
 // One output - intensity for each bin/beam combination
-layout(r32f) uniform image2D sonarPost;
+layout(r8) uniform image2D sonarPost;
 
 #define GAUSSIAN_WIDTH 5
 

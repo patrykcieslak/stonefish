@@ -51,7 +51,7 @@ void main()
 
             //Get sample value
             vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
-            if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
+            if(rangeIntensity.x < range.x || rangeIntensity.x >= range.y) //Outside valid range?
                 continue;
 
             //Compute bin and accumulate intensity data

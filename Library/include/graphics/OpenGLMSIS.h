@@ -57,6 +57,9 @@ namespace sf
         ~OpenGLMSIS();
         
         //! A method that computes simulated sonar data.
+        /*!
+         \param objects a reference to a vector of renderable objects
+         */
         void ComputeOutput(std::vector<Renderable>& objects);
         
         //! A method to render the low dynamic range (final) image to the screen.
@@ -84,6 +87,7 @@ namespace sf
         glm::mat4 beamRotation;
         GLint currentStep;
         glm::vec2 fov;
+        glm::vec2 rotationLimits;
         //OpenGL
         GLuint outputTex[2];
         GLuint fanDiv;

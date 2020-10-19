@@ -339,9 +339,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(rSettings.shadows > RenderQuality::DISABLED)
     {
         glCullFace(GL_FRONT);
+        glDisable(GL_DEPTH_CLAMP);
         content->SetDrawingMode(DrawingMode::SHADOW);
         for(unsigned int i=0; i<content->getLightsCount(); ++i)
             content->getLight(i)->BakeShadowmap(this);
+        glEnable(GL_DEPTH_CLAMP);
         glCullFace(GL_BACK);
     }
     
@@ -403,19 +405,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             
         if(view->getType() == ViewType::DEPTH_CAMERA)
         {
-            OpenGLDepthCamera* camera = (OpenGLDepthCamera*)view;
-            GLint* viewport = camera->GetViewport();
-            content->SetViewportSize(viewport[2],viewport[3]);
-            OpenGLState::BindFramebuffer(camera->getRenderFBO());
-            glClear(GL_DEPTH_BUFFER_BIT); //Only depth is rendered
-            camera->SetViewport();
-            content->SetCurrentView(camera);
-            content->SetDrawingMode(DrawingMode::FLAT);
-            DrawObjects();
+            OpenGLDepthCamera* camera = static_cast<OpenGLDepthCamera*>(view);
+            //Draw objects and compute depth data
+            camera->ComputeOutput(drawingQueueCopy);
             //Draw camera output
             camera->DrawLDR(screenFBO, true);
-            OpenGLState::BindFramebuffer(0);
-            delete [] viewport;
         }
         else if(view->getType() == ViewType::SONAR)
         {

@@ -37,8 +37,7 @@
 namespace sf
 {
 
-GLSLShader* OpenGLDepthCamera::depthLinearizeShader = NULL;
-GLSLShader* OpenGLDepthCamera::depth2RangesShader = NULL;
+GLSLShader** OpenGLDepthCamera::depthCameraOutputShader = NULL;
 GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
 
 OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
@@ -226,14 +225,33 @@ ViewType OpenGLDepthCamera::getType()
     return ViewType::DEPTH_CAMERA;
 }
 
+void OpenGLDepthCamera::ComputeOutput(std::vector<Renderable>& objects)
+{
+    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    content->SetCurrentView(this);
+    content->SetDrawingMode(DrawingMode::SHADOW);
+    OpenGLState::BindFramebuffer(renderFBO);
+    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_CLAMP);
+    for(size_t h=0; h<objects.size(); ++h)
+    {
+        if(objects[h].type != RenderableType::SOLID)
+            continue;
+        content->DrawObject(objects[h].objectId, -1, objects[h].model);
+    }
+    glEnable(GL_DEPTH_CLAMP);
+    OpenGLState::BindFramebuffer(0);
+}
+
 void OpenGLDepthCamera::LinearizeDepth()
 {
     OpenGLState::BindFramebuffer(linearDepthFBO);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthTex);
-    depthLinearizeShader->Use();
-    depthLinearizeShader->SetUniform("texLogDepth", TEX_POSTPROCESS1);
-    depthLinearizeShader->SetUniform("FC", GetLogDepthConstant());
+    depthCameraOutputShader[0]->Use();
+    depthCameraOutputShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
+    depthCameraOutputShader[0]->SetUniform("rangeInfo", glm::vec4(range.x, range.y, range.x*range.y, range.x-range.y));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -253,11 +271,10 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     OpenGLState::BindFramebuffer(linearDepthFBO);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderDepthTex);
-    depth2RangesShader->Use();
-    depth2RangesShader->SetUniform("projInfo", projInfo);
-    depth2RangesShader->SetUniform("rangeInfo", range);
-    depth2RangesShader->SetUniform("texLogDepth", TEX_POSTPROCESS1);
-    depth2RangesShader->SetUniform("FC", GetLogDepthConstant());
+    depthCameraOutputShader[1]->Use();
+    depthCameraOutputShader[1]->SetUniform("projInfo", projInfo);
+    depthCameraOutputShader[1]->SetUniform("rangeInfo", glm::vec4(range.x, range.y, range.x*range.y, range.x-range.y));
+    depthCameraOutputShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -315,16 +332,16 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
 ///////////////////////// Static /////////////////////////////
 void OpenGLDepthCamera::Init()
 {
-    depthLinearizeShader = new GLSLShader("depthLinearizeVFlip.frag");
-    depthLinearizeShader->AddUniform("texLogDepth", ParameterType::INT);
-    depthLinearizeShader->AddUniform("FC", ParameterType::FLOAT);
+    depthCameraOutputShader = new GLSLShader*[2];
+    depthCameraOutputShader[0] = new GLSLShader("depthCameraOutput.frag");
+    depthCameraOutputShader[0]->AddUniform("rangeInfo", ParameterType::VEC4);
+    depthCameraOutputShader[0]->AddUniform("texDepth", ParameterType::INT);
     
-    depth2RangesShader = new GLSLShader("depth2Ranges.frag");
-    depth2RangesShader->AddUniform("projInfo", ParameterType::VEC4);
-    depth2RangesShader->AddUniform("rangeInfo", ParameterType::VEC2);
-    depth2RangesShader->AddUniform("texLogDepth", ParameterType::INT);
-    depth2RangesShader->AddUniform("FC", ParameterType::FLOAT);
-
+    depthCameraOutputShader[1] = new GLSLShader("depthCameraOutput2.frag");
+    depthCameraOutputShader[1]->AddUniform("projInfo", ParameterType::VEC4);
+    depthCameraOutputShader[1]->AddUniform("rangeInfo", ParameterType::VEC4);
+    depthCameraOutputShader[1]->AddUniform("texDepth", ParameterType::INT);
+    
     depthVisualizeShader = new GLSLShader("depthVisualize.frag");
     depthVisualizeShader->AddUniform("range", ParameterType::VEC2);
     depthVisualizeShader->AddUniform("texLinearDepth", ParameterType::INT);
@@ -332,8 +349,12 @@ void OpenGLDepthCamera::Init()
 
 void OpenGLDepthCamera::Destroy()
 {
-    if(depthLinearizeShader != NULL) delete depthLinearizeShader;
-    if(depth2RangesShader != NULL) delete depth2RangesShader;
+    if(depthCameraOutputShader != NULL) 
+    {
+        if(depthCameraOutputShader[0] != NULL) delete depthCameraOutputShader[0];
+        if(depthCameraOutputShader[1] != NULL) delete depthCameraOutputShader[1];
+        delete [] depthCameraOutputShader;
+    }
     if(depthVisualizeShader != NULL) delete depthVisualizeShader;
 }
 

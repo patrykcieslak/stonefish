@@ -22,18 +22,21 @@
 in vec2 texcoord;
 layout(location = 0) out float fragColor;
 
-uniform sampler2D texLogDepth;
-uniform float FC;
+uniform sampler2D texDepth;
+uniform vec4 rangeInfo; //zNear, zFar, zNear*zFar, zNear-zFar
 
-float linearDepth(float logd)
+float linearDepth(float d)
 {
-    return pow(2, logd/FC) - 1.0;
+    return rangeInfo.z/(rangeInfo.y + d * rangeInfo.w);
 }
 
 void main() 
 {
-    float depth = texture(texLogDepth, vec2(texcoord.x, 1.0-texcoord.y)).r;
-	fragColor = linearDepth(depth);
+    float depth = texture(texDepth, vec2(texcoord.x, 1.0-texcoord.y)).r; //Vertical flip
+    if(depth == 1.0) //Check if out of range
+        fragColor = 0.0;
+    else
+	    fragColor = linearDepth(depth);
 }
 
 

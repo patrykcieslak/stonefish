@@ -22,14 +22,13 @@
 in vec2 texcoord;
 out float range;
 
+uniform vec4 rangeInfo;
 uniform vec4 projInfo;
-uniform vec2 rangeInfo;
-uniform sampler2D texLogDepth;
-uniform float FC;
+uniform sampler2D texDepth;
 
-float linearDepth(float logd)
+float linearDepth(float d)
 {
-    return pow(2, logd/FC) - 1.0;
+    return rangeInfo.z/(rangeInfo.y + d * rangeInfo.w);
 }
 
 //Position from UV and linear depth
@@ -40,8 +39,8 @@ vec3 viewPositionFromDepth(vec2 uv, float d)
 
 void main()
 {
-    vec2 uv = vec2(texcoord.x, 1.0-texcoord.y);
-    float depth = linearDepth(texture(texLogDepth, uv).r);
+    vec2 uv = vec2(texcoord.x, 1.0-texcoord.y); //Vertical flip 
+    float depth = linearDepth(texture(texDepth, uv).r);
     vec3 position = viewPositionFromDepth(uv, depth);
     range = clamp(length(position), rangeInfo.x, rangeInfo.y);
 }

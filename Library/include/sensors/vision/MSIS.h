@@ -158,7 +158,7 @@ namespace sf
         void InitGraphics();
         
         OpenGLMSIS* glMSIS;
-        GLfloat* sonarData;
+        GLubyte* sonarData;
         GLubyte* displayData;
         int currentStep;
         bool cw;

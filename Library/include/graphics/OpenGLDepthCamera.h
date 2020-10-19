@@ -62,6 +62,12 @@ namespace sf
         //! A destructor.
         ~OpenGLDepthCamera();
         
+        //! A method that computes simulated depth data.
+        /*
+         \param objects a reference to a vector of renderable objects
+         */
+        void ComputeOutput(std::vector<Renderable>& objects);
+
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
@@ -145,8 +151,7 @@ namespace sf
         GLuint linearDepthTex;
         GLuint linearDepthFBO;
         GLuint linearDepthPBO;
-        static GLSLShader* depth2RangesShader;
-        static GLSLShader* depthLinearizeShader;
+        static GLSLShader** depthCameraOutputShader;
         static GLSLShader* depthVisualizeShader;
     };
 }

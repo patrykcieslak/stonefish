@@ -136,7 +136,7 @@ namespace sf
         void InitGraphics();
         
         OpenGLFLS* glFLS;
-        GLfloat* sonarData;
+        GLubyte* sonarData;
         GLubyte* displayData;
         glm::vec2 range;
         Scalar gain;

@@ -194,7 +194,7 @@ void MSIS::NewDataReady(void* data, unsigned int index)
         }
         else
         {
-            sonarData = (GLfloat*)data;
+            sonarData = (GLubyte*)data;
             newDataCallback(this);
             sonarData = NULL;
         }

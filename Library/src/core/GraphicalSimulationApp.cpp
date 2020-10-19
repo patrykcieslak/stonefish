@@ -326,6 +326,10 @@ void GraphicalSimulationApp::WindowEvent(SDL_Event* event)
 
 void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 {
+    GLfloat moveStep = 0.1f;
+    if(event->key.keysym.mod & KMOD_SHIFT)
+        moveStep = 1.f;
+
     switch (event->key.keysym.sym)
     {
         case SDLK_ESCAPE:
@@ -355,7 +359,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(trackball->GetLookingDirection() * 0.1f);
+                trackball->MoveCenter(trackball->GetLookingDirection() * moveStep);
         }
             break;
             
@@ -363,7 +367,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(-trackball->GetLookingDirection() * 0.1f);
+                trackball->MoveCenter(-trackball->GetLookingDirection() * moveStep);
         }
             break;
             
@@ -373,7 +377,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             if(trackball->isEnabled())
             {
                 glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-                trackball->MoveCenter(-axis * 0.1f);
+                trackball->MoveCenter(-axis * moveStep);
             }
         }
             break;
@@ -384,7 +388,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             if(trackball->isEnabled())
             {
                 glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-                trackball->MoveCenter(axis * 0.1f);
+                trackball->MoveCenter(axis * moveStep);
             }
         }
             break;
@@ -393,7 +397,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(glm::vec3(0,0,-0.1f));
+                trackball->MoveCenter(glm::vec3(0.f, 0.f, -moveStep));
         }
             break;
             
@@ -401,7 +405,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
-                trackball->MoveCenter(glm::vec3(0,0,0.1f));
+                trackball->MoveCenter(glm::vec3(0.f, 0.f, moveStep));
         }
             break;
 

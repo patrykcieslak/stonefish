@@ -97,7 +97,7 @@ void main()
 
             //Get sample value
             vec2 rangeIntensity = imageLoad(sonarInput, sampleCoord).xy;
-            if(rangeIntensity.x < range.x || rangeIntensity.x > range.y) //Outside valid range?
+            if(rangeIntensity.x < range.x || rangeIntensity.x >= range.y) //Outside valid range?
                 continue;
 
             //Compute bin and accumulate intensity data
@@ -119,7 +119,7 @@ void main()
             float data = gain * gaussian(-noiseCoord.xy, noiseStddev.y, 0.0); //Additive noise
             if(binHistogram[i].y > 0.0)
                 data += gain * (binHistogram[i].x/binHistogram[i].y) * mulNoise; //Signal + multiplicative noise
-            imageStore(sonarOutput, ivec2(globalBeam, i), vec4(data));
+            imageStore(sonarOutput, ivec2(globalBeam, N_BINS-1-i), vec4(data));
         }
     }
 }

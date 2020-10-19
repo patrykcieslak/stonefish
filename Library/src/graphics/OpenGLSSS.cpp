@@ -88,9 +88,9 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
                                                   GL_RG32F, GL_RG, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     //b. Waterfall output (ping-pong)
     outputTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 1), 
-                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+                                                  GL_R8, GL_RED, GL_UNSIGNED_BYTE, NULL, FilteringMode::NEAREST, false);
     outputTex[2] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 1), 
-                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+                                                  GL_R8, GL_RED, GL_UNSIGNED_BYTE, NULL, FilteringMode::NEAREST, false);
     pingpong = 0;
     //Visualisation shader: sonar data color mapped
     glGenTextures(1, &displayTex);
@@ -238,10 +238,10 @@ void OpenGLSSS::UpdateTransform()
         }
         
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-        GLfloat* src2 = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-        if(src2)
+        src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        if(src)
         {
-            sonar->NewDataReady(src2, 1);
+            sonar->NewDataReady(src, 1);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -255,7 +255,7 @@ void OpenGLSSS::setSonar(SSS* s)
 
     glGenBuffers(1, &outputPBO);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * sizeof(GLfloat), 0, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight, 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     glGenBuffers(1, &displayPBO);
@@ -322,8 +322,8 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     glDispatchCompute((GLuint)ceilf(nBeamSamples.x/64.f), 2, 1);
     
     //Shift old sonar output
-    glBindImageTexture(TEX_POSTPROCESS1, outputTex[pingpong + 1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-    glBindImageTexture(TEX_POSTPROCESS2, outputTex[1-pingpong + 1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    glBindImageTexture(TEX_POSTPROCESS1, outputTex[pingpong + 1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
+    glBindImageTexture(TEX_POSTPROCESS2, outputTex[1-pingpong + 1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8);
     sonarShiftShader->Use();
     glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1);
     
@@ -393,7 +393,7 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
     {
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[pingpong+1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, NULL);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTex);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);

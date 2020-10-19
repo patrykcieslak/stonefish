@@ -63,6 +63,9 @@ namespace sf
         ~OpenGLFLS();
         
         //! A method that computes simulated sonar data.
+        /*!
+         \param objects a reference to a vector of renderable objects
+         */
         void ComputeOutput(std::vector<Renderable>& objects);
         
         //! A method to render the low dynamic range (final) image to the screen.

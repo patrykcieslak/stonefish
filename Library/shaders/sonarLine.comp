@@ -26,7 +26,7 @@ layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 layout(rg32f) uniform image2DArray sonarHist;
 
 // One output
-layout(r32f) uniform image2D sonarOutput;
+layout(r8) uniform image2D sonarOutput;
 
 uniform vec3 noiseSeed;
 uniform vec2 noiseStddev;

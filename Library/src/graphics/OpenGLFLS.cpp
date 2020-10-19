@@ -110,7 +110,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     outputTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(nBeams, nBins, 1), 
                                                   GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     outputTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(nBeams, nBins, 1), 
-                                                  GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::TRILINEAR, false);
+                                                  GL_R8, GL_RED, GL_UNSIGNED_BYTE, NULL, FilteringMode::TRILINEAR, false);
         
     //Sonar display fan
     glGenTextures(1, &displayTex);
@@ -142,12 +142,12 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
         fanData[i*2][0] = -Rmin*sinf(alpha)*1.f/hFactor;
         fanData[i*2][1] = (1.f-Rmin*cosf(alpha))*2.f-1.f;
         fanData[i*2][2] = i/(GLfloat)fanDiv;
-        fanData[i*2][3] = 0.f;
+        fanData[i*2][3] = 1.f;
         //Max range edge
         fanData[i*2+1][0] = -sinf(alpha)*1.f/hFactor;
         fanData[i*2+1][1] = (1.f-cosf(alpha))*2.f-1.f;
         fanData[i*2+1][2] = i/(GLfloat)fanDiv;
-        fanData[i*2+1][3] = 1.f;
+        fanData[i*2+1][3] = 0.f;
     }
     
     glGenBuffers(1, &displayVBO);
@@ -246,12 +246,12 @@ void OpenGLFLS::UpdateTransform()
             fanData[i*2][0] = -Rmin*sinf(alpha)*1.f/hFactor;
             fanData[i*2][1] = (1.f-Rmin*cosf(alpha))*2.f-1.f;
             fanData[i*2][2] = i/(GLfloat)fanDiv;
-            fanData[i*2][3] = 0.f;
+            fanData[i*2][3] = 1.f;
             //Max range edge
             fanData[i*2+1][0] = -sinf(alpha)*1.f/hFactor;
             fanData[i*2+1][1] = (1.f-cosf(alpha))*2.f-1.f;
             fanData[i*2+1][2] = i/(GLfloat)fanDiv;
-            fanData[i*2+1][3] = 1.f;
+            fanData[i*2+1][3] = 0.f;
         }
     
         glBindBuffer(GL_ARRAY_BUFFER, displayVBO);
@@ -271,10 +271,10 @@ void OpenGLFLS::UpdateTransform()
         }
         
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-        GLfloat* src2 = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-        if(src2)
+        src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        if(src)
         {
-            sonar->NewDataReady(src2, 1);
+            sonar->NewDataReady(src, 1);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -288,7 +288,7 @@ void OpenGLFLS::setSonar(FLS* s)
 
     glGenBuffers(1, &outputPBO);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, nBeams * nBins * sizeof(GLfloat), 0, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, nBeams * nBins, 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     glGenBuffers(1, &displayPBO);
@@ -348,7 +348,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     sonarOutputShader->Use();
     sonarOutputShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.02f, 0.03f));
+    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.025f, 0.035f)); //Multiplicative, additive (0.02,0.03)
     if(settingsUpdated)
     {
         sonarOutputShader->SetUniform("range", glm::vec3(range.x, range.y, (range.y-range.x)/(GLfloat)nBins));
@@ -360,7 +360,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
 
     //Postprocess sonar output
     glBindImageTexture(TEX_POSTPROCESS1, outputTex[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-    glBindImageTexture(TEX_POSTPROCESS2, outputTex[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    glBindImageTexture(TEX_POSTPROCESS2, outputTex[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8);
     sonarPostprocessShader->Use();
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nBeams/16.f), (GLuint)ceilf(nBins/16.f), 1);
@@ -423,7 +423,7 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO, bool updated)
     {
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex[1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, NULL);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTex);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);

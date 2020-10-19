@@ -475,6 +475,7 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
 
     //Render maps
     glCullFace(GL_FRONT); //GL_FRONT -> no shadow acne but problems with filtering
+    glDisable(GL_DEPTH_CLAMP);
 
     OpenGLState::BindFramebuffer(sunShadowFBO);
     OpenGLState::Viewport(0, 0, sunShadowmapSize, sunShadowmapSize);
@@ -504,6 +505,7 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
 
     OpenGLState::BindFramebuffer(0);
 
+    glEnable(GL_DEPTH_CLAMP);
     glCullFace(GL_BACK);
 }
 
