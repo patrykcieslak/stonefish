@@ -24,6 +24,10 @@ layout(location = 0) out float fragColor;
 
 uniform sampler2D texDepth;
 uniform vec4 rangeInfo; //zNear, zFar, zNear*zFar, zNear-zFar
+uniform vec3 noiseSeed;
+uniform float noiseStddev;
+
+#inject "gaussianNoise.glsl"
 
 float linearDepth(float d)
 {
@@ -36,7 +40,8 @@ void main()
     if(depth == 1.0) //Check if out of range
         fragColor = 0.0;
     else
-	    fragColor = linearDepth(depth);
+    {
+        depth = linearDepth(depth);
+	    fragColor = depth + gaussian(texcoord, noiseSeed, depth*depth*noiseStddev, 0.0);
+    }
 }
-
-

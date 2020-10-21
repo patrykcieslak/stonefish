@@ -39,6 +39,7 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
 {
     range.x = 0.f;
     range.y = 0.f;
+    noise = glm::vec2(0.f);
     setRangeMax(maxRange);
     setRangeMin(minRange);
     gain = Scalar(1);
@@ -47,12 +48,13 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
     sonarData = NULL;
     displayData = NULL;
     newDataCallback = NULL;
+    glFLS = nullptr;
 }
 
 FLS::~FLS()
 {
     if(displayData != NULL) delete [] displayData;
-    glFLS = NULL;
+    glFLS = nullptr;
 }
 
 void FLS::setRangeMin(Scalar r)
@@ -70,6 +72,16 @@ void FLS::setRangeMax(Scalar r)
 void FLS::setGain(Scalar g)
 {
     gain = g > Scalar(0) ? g : Scalar(1);
+}
+
+void FLS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+{
+    if(multiplicativeStdDev >= 0.f)
+        noise.x = multiplicativeStdDev;
+    if(additiveStdDev >= 0.f)
+        noise.y = additiveStdDev;
+    if(glFLS != nullptr)
+        glFLS->setNoise(noise);
 }
 
 void* FLS::getImageDataPointer(unsigned int index)
@@ -114,6 +126,7 @@ void FLS::InitGraphics()
 {
     glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range);
+    glFLS->setNoise(noise);
     glFLS->setSonar(this);
     glFLS->setColorMap(cMap);
     UpdateTransform();
@@ -160,7 +173,8 @@ void FLS::NewDataReady(void* data, unsigned int index)
 
 void FLS::InternalUpdate(Scalar dt)
 {
-    glFLS->Update();
+    if(glFLS != nullptr)
+        glFLS->Update();
 }
 
 std::vector<Renderable> FLS::Render()

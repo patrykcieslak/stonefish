@@ -55,6 +55,7 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     fov.y = glm::radians(horizontalBeamWidthDeg);
     nBeamSamples.x = glm::min((GLuint)ceilf(verticalBeamWidthDeg * (GLfloat)numOfBins/2.f * SSS_VRES_FACTOR), (GLuint)2048);
     nBeamSamples.y = glm::min((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
+    noise = glm::vec2(0.f);
     UpdateTransform();
     
     //Setup matrices
@@ -249,6 +250,11 @@ void OpenGLSSS::UpdateTransform()
     }
 }
 
+void OpenGLSSS::setNoise(glm::vec2 signalStdDev)
+{
+    noise = signalStdDev;
+}
+
 void OpenGLSSS::setSonar(SSS* s)
 {
     sonar = s;
@@ -331,7 +337,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS1, outputTex[0], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
     sonarOutputShader[1]->Use();
     sonarOutputShader[1]->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarOutputShader[1]->SetUniform("noiseStddev", glm::vec2(0.01f, 0.02f));
+    sonarOutputShader[1]->SetUniform("noiseStddev", noise); // Multiplicative, additive (0.01f, 0.02f)
     sonarOutputShader[1]->SetUniform("gain", gain);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(viewportWidth/2.f/64.f), 2, 1);

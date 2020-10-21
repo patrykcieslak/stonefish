@@ -1751,6 +1751,18 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             return false;
         
         DepthCamera* dcam = new DepthCamera(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
+
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            float depth;
+            if(item->QueryAttribute("depth", &depth) != XML_SUCCESS)
+            {
+                delete dcam;
+                return false;
+            }
+            dcam->setNoise(depth);
+        }
+
         robot->AddVisionSensor(dcam, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "multibeam2d")
@@ -1813,6 +1825,22 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, rate);
         fls->setGain(gain);
+
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            float mul, add;
+            if(item->QueryAttribute("multiplicative", &mul) != XML_SUCCESS || item->QueryAttribute("additive", &add) != XML_SUCCESS)
+            {
+                delete fls;
+                return false;
+            }
+            fls->setNoise(mul, add);
+        }
+        else
+        {
+            fls->setNoise(0.025f, 0.035f); //Default values that look realistic
+        }
+        
         robot->AddVisionSensor(fls, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "sss")
@@ -1851,6 +1879,22 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         SSS* sss = new SSS(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, rate);
         sss->setGain(gain);
+
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            float mul, add;
+            if(item->QueryAttribute("multiplicative", &mul) != XML_SUCCESS || item->QueryAttribute("additive", &add) != XML_SUCCESS)
+            {
+                delete sss;
+                return false;
+            }
+            sss->setNoise(mul, add);
+        }
+        else
+        {
+            sss->setNoise(0.01f, 0.02f); //Default values that look realistic
+        }
+
         robot->AddVisionSensor(sss, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "msis")
@@ -1892,6 +1936,22 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         
         MSIS* msis = new MSIS(sensorName, stepAngle, nBins, hFov, vFov, rotMin, rotMax, rangeMin, rangeMax, cMap, rate);
         msis->setGain(gain);
+
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            float mul, add;
+            if(item->QueryAttribute("multiplicative", &mul) != XML_SUCCESS || item->QueryAttribute("additive", &add) != XML_SUCCESS)
+            {
+                delete msis;
+                return false;
+            }
+            msis->setNoise(mul, add);
+        }
+        else
+        {
+            msis->setNoise(0.02f, 0.04f); //Default values that look realistic
+        }
+
         robot->AddVisionSensor(msis, robot->getName() + "/" + std::string(linkName), origin);
     }
     else

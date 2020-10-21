@@ -80,6 +80,12 @@ namespace sf
          */
         void InstallNewDataHandler(std::function<void(DepthCamera*)> callback);
         
+        //! A method used to set the noise characteristics of the sensor.
+        /*!
+         \param depthStdDev standard deviation of the depth measurement at 1m distance
+         */
+        void setNoise(float depthStdDev);
+
         //! A method returning the depth range of the camera.
         glm::vec2 getDepthRange();
         
@@ -99,6 +105,7 @@ namespace sf
         OpenGLDepthCamera* glCamera;
         GLfloat* imageData;
         glm::vec2 depthRange;
+        GLfloat noiseStdDev;
         std::function<void(DepthCamera*)> newDataCallback;
     };
 }

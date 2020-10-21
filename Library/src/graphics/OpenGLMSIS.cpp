@@ -56,6 +56,7 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
     rotationLimits = glm::vec2(-180.f, 180.f);
     nBeamSamples.x = glm::min((GLuint)ceilf(horizontalBeamWidthDeg * (GLfloat)numOfBins * MSIS_RES_FACTOR), (GLuint)2048);
     nBeamSamples.y = glm::min((GLuint)ceilf(verticalBeamWidthDeg * (GLfloat)numOfBins * MSIS_RES_FACTOR), (GLuint)2048);
+    noise = glm::vec2(0.f);
     fov.x = glm::radians(horizontalBeamWidthDeg);
     fov.y = glm::radians(verticalBeamWidthDeg);
     UpdateTransform();
@@ -268,6 +269,11 @@ void OpenGLMSIS::UpdateTransform()
     beamRotation = glm::rotate(rotAngle, glm::vec3(0.f,1.f,0.f));
 }
 
+void OpenGLMSIS::setNoise(glm::vec2 signalStdDev)
+{
+    noise = signalStdDev;
+}
+
 void OpenGLMSIS::setSonar(MSIS* s)
 {
     sonar = s;
@@ -351,7 +357,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
     sonarUpdateShader->SetUniform("rotationStep", rotationStep);
     sonarUpdateShader->SetUniform("gain", gain);
     sonarUpdateShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarUpdateShader->SetUniform("noiseStddev", glm::vec2(0.02f, 0.04f)); //Multiplicative, additive (0.02, 0.03)
+    sonarUpdateShader->SetUniform("noiseStddev", noise); //Multiplicative, additive (0.02f, 0.04f)
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nBins/64.f), 1, 1);
     

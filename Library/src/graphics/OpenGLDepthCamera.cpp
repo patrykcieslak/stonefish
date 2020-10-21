@@ -44,12 +44,13 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
                                      GLint originX, GLint originY, GLint width, GLint height,
                                      GLfloat horizontalFOVDeg, GLfloat minDepth, GLfloat maxDepth,
                                      bool continuousUpdate, bool useRanges, GLfloat verticalFOVDeg)
- : OpenGLView(originX, originY, width, height)
+ : OpenGLView(originX, originY, width, height), randDist(0.f, 1.f)
 {
     _needsUpdate = false;
     continuous = continuousUpdate;
     newData = false;
     camera = NULL;
+    noiseDepth = 0.f;
     idx = 0;
     range.x = minDepth;
     range.y = maxDepth;
@@ -220,6 +221,11 @@ void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
+void OpenGLDepthCamera::setNoise(GLfloat depthStdDev)
+{
+    noiseDepth = depthStdDev;
+}
+
 ViewType OpenGLDepthCamera::getType()
 {
     return ViewType::DEPTH_CAMERA;
@@ -252,6 +258,8 @@ void OpenGLDepthCamera::LinearizeDepth()
     depthCameraOutputShader[0]->Use();
     depthCameraOutputShader[0]->SetUniform("texDepth", TEX_POSTPROCESS1);
     depthCameraOutputShader[0]->SetUniform("rangeInfo", glm::vec4(range.x, range.y, range.x*range.y, range.x-range.y));
+    depthCameraOutputShader[0]->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
+    depthCameraOutputShader[0]->SetUniform("noiseStddev", noiseDepth);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -336,6 +344,8 @@ void OpenGLDepthCamera::Init()
     depthCameraOutputShader[0] = new GLSLShader("depthCameraOutput.frag");
     depthCameraOutputShader[0]->AddUniform("rangeInfo", ParameterType::VEC4);
     depthCameraOutputShader[0]->AddUniform("texDepth", ParameterType::INT);
+    depthCameraOutputShader[0]->AddUniform("noiseSeed", ParameterType::VEC3);
+    depthCameraOutputShader[0]->AddUniform("noiseStddev", ParameterType::FLOAT);
     
     depthCameraOutputShader[1] = new GLSLShader("depthCameraOutput2.frag");
     depthCameraOutputShader[1]->AddUniform("projInfo", ParameterType::VEC4);

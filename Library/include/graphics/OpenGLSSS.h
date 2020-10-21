@@ -73,6 +73,12 @@ namespace sf
         //! A method that updates sonar world transform.
         void UpdateTransform();
 
+        //! A method to set the noise properties of the sonar.
+        /*!
+         \param signalStdDev the standard deviation of the echo intensity
+         */
+        void setNoise(glm::vec2 signalStdDev);
+
         //! A method to set a pointer to a sonar sensor.
         /*!
          \param son a pointer to a sonar sensor
@@ -85,6 +91,7 @@ namespace sf
         GLfloat tilt;
         glm::uvec2 nBeamSamples;
         glm::vec2 fov;
+        glm::vec2 noise;
         glm::mat4 views[2];
         
         //OpenGL

@@ -39,6 +39,7 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
 {
     range.x = 0.f;
     range.y = 0.f;
+    noise = glm::vec2(0.f);
     setRangeMax(maxRange);
     setRangeMin(minRange);
     gain = Scalar(1);
@@ -48,12 +49,13 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
     sonarData = NULL;
     displayData = NULL;
     newDataCallback = NULL;
+    glSSS = nullptr;
 }
 
 SSS::~SSS()
 {
     if(displayData != NULL) delete [] displayData;
-    glSSS = NULL;
+    glSSS = nullptr;
 }
 
 void SSS::setRangeMin(Scalar r)
@@ -71,6 +73,16 @@ void SSS::setRangeMax(Scalar r)
 void SSS::setGain(Scalar g)
 {
     gain = g > Scalar(0) ? g : Scalar(1);
+}
+
+void SSS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+{
+    if(multiplicativeStdDev >= 0.f)
+        noise.x = multiplicativeStdDev;
+    if(additiveStdDev >= 0.f)
+        noise.y = additiveStdDev;
+    if(glSSS != nullptr)
+        glSSS->setNoise(noise);
 }
 
 void* SSS::getImageDataPointer(unsigned int index)
@@ -115,6 +127,7 @@ void SSS::InitGraphics()
 {
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range);
+    glSSS->setNoise(noise);
     glSSS->setSonar(this);
     glSSS->setColorMap(cMap);
     UpdateTransform();
@@ -161,7 +174,8 @@ void SSS::NewDataReady(void* data, unsigned int index)
 
 void SSS::InternalUpdate(Scalar dt)
 {
-    glSSS->Update();
+    if(glSSS != nullptr)
+        glSSS->Update();
 }
 
 std::vector<Renderable> SSS::Render()

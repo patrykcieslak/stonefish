@@ -34,47 +34,14 @@ uniform float gain;
 uniform vec3 noiseSeed;
 uniform vec2 noiseStddev;
 
-#define M_PI 3.1415926535897932384626433832795
-
 vec2 binHistogram[N_BINS];
+
+#inject "gaussianNoise.glsl"
 
 float sigmoid(float x)
 {
     float t = (x - 0.6666667) * 18.0;
     return (0.5 * tanh(0.5 * t) + 0.5);
-}
-
-float rand(vec2 coord)
-{
-    // This one-liner can be found in many places, including:
-    // http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-    // I can't find any explanation for it, but experimentally it does seem to
-    // produce approximately uniformly distributed values in the interval [0,1].
-    return fract(sin(dot(coord.xy, vec2(12.9898,78.233))) * 43758.5453);
-}
-
-float gaussian(vec2 coord, float stddev, float mean)
-{
-    // Box-Muller method for sampling from the normal distribution
-    // http://en.wikipedia.org/wiki/Normal_distribution#Generating_values_from_normal_distribution
-    // This method requires 2 uniform random inputs and produces 2 
-    // Gaussian random outputs. 3rd random variable is used to switch between the two outputs.
-    float U, V, R, Z;
-    // Add in the CPU-supplied random noiseSeed to generate the 3 random values.
-    U = rand(coord + vec2(noiseSeed.x, noiseSeed.x))+0.0000001;
-    V = rand(coord + vec2(noiseSeed.y, noiseSeed.y))+0.0000001;
-    R = rand(coord + vec2(noiseSeed.z, noiseSeed.z))+0.0000001;
-    // Switch between the two random outputs.
-    if(R < 0.5)
-        Z = sqrt(-2.0 * log(U)) * sin(2.0 * M_PI * V);
-    else
-        Z = sqrt(-2.0 * log(U)) * cos(2.0 * M_PI * V);
-
-    // Apply the stddev and mean.
-    Z = Z * stddev + mean;
-
-    // Return it as a vec4, to be added to the input ("true") color.
-    return Z;
 }
 
 void main()
@@ -110,13 +77,13 @@ void main()
         //Compute and store bin values
         vec2 noiseCoord;
         noiseCoord.x = float(sampleCoord.x*(sampleCoord.z+1))/float(viewBeams * (inDim.z+1));
-        float mulNoise = gaussian(noiseCoord.xx, noiseStddev.x, 1.0);
+        float mulNoise = gaussian(noiseCoord.xx, noiseSeed, noiseStddev.x, 1.0);
         uint globalBeam = gl_GlobalInvocationID.x + beams.x * gl_GlobalInvocationID.y;
         
         for(uint i=0; i<N_BINS; ++i)
         {
             noiseCoord.y = i/float(N_BINS-1);
-            float data = gain * gaussian(-noiseCoord.xy, noiseStddev.y, 0.0); //Additive noise
+            float data = gain * gaussian(-noiseCoord.xy, noiseSeed, noiseStddev.y, 0.0); //Additive noise
             if(binHistogram[i].y > 0.0)
                 data += gain * (binHistogram[i].x/binHistogram[i].y) * mulNoise; //Signal + multiplicative noise
             imageStore(sonarOutput, ivec2(globalBeam, N_BINS-1-i), vec4(data));

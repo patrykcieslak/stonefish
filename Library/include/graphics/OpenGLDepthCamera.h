@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLDepthCamera__
 
 #include "graphics/OpenGLView.h"
+#include <random>
 
 namespace sf
 {
@@ -120,6 +121,12 @@ namespace sf
          */
         void setCamera(Camera* cam, unsigned int index = 0);
         
+        //! A method to set the noise properties of the depth camera.
+        /*!
+         \param depthStdDev the standard deviation of the depth measurement at 1m
+         */
+        void setNoise(GLfloat depthStdDev);
+
         //! A method returning the type of the view.
         ViewType getType();
         
@@ -146,6 +153,9 @@ namespace sf
         bool _needsUpdate;
         bool newData;
         glm::vec2 range;
+        GLfloat noiseDepth;
+        std::default_random_engine randGen;
+        std::uniform_real_distribution<float> randDist;
         bool usesRanges;
         GLuint renderDepthTex;
         GLuint linearDepthTex;

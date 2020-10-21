@@ -112,6 +112,13 @@ namespace sf
          */
         void setGain(Scalar g);
 
+        //! A method setting the noise characteristics of the sensor.
+        /*!
+         \param multiplicativeStdDev the standard deviation of the multiplicative noise
+         \param additiveStdDev the standard deviation of the additive noise
+         */
+        void setNoise(float multiplicativeStdDev, float additiveStdDev);
+
         //! A method returning the rotation limits.
         /*!
          \param l1Deg first limit of rotation angle [deg]
@@ -165,6 +172,7 @@ namespace sf
         glm::ivec2 roi;
         bool fullRotation;
         glm::vec2 range;
+        glm::vec2 noise;
         Scalar gain;
         Scalar fovV;
         Scalar stepSize;

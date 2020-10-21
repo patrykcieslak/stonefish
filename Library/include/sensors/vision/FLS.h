@@ -103,6 +103,13 @@ namespace sf
          */
         void setGain(Scalar g);
 
+        //! A method setting the noise characteristics of the sensor.
+        /*!
+         \param multiplicativeStdDev the standard deviation of the multiplicative noise
+         \param additiveStdDev the standard deviation of the additive noise
+         */
+        void setNoise(float multiplicativeStdDev, float additiveStdDev);
+
         //! A method returning the minimum range of the sonar.
         Scalar getRangeMin() const;
         
@@ -139,6 +146,7 @@ namespace sf
         GLubyte* sonarData;
         GLubyte* displayData;
         glm::vec2 range;
+        glm::vec2 noise;
         Scalar gain;
         Scalar fovV;
         ColorMap cMap;

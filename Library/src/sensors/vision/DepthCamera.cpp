@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/05/18.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/DepthCamera.h"
@@ -38,13 +38,25 @@ DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsig
 {
     depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
     depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
-    newDataCallback = NULL;
-    imageData = NULL;
+    noiseStdDev = 0.f;
+    newDataCallback = nullptr;
+    imageData = nullptr;
+    glCamera = nullptr;
 }
 
 DepthCamera::~DepthCamera()
 {
-    glCamera = NULL;
+    glCamera = nullptr;
+}
+
+void DepthCamera::setNoise(float depthStdDev)
+{
+    if(depthStdDev >= 0.f && depthStdDev != noiseStdDev)
+    {
+        noiseStdDev = depthStdDev;
+        if(glCamera != nullptr)
+            glCamera->setNoise(noiseStdDev);
+    }
 }
 
 void* DepthCamera::getImageDataPointer(unsigned int index)
@@ -65,6 +77,7 @@ VisionSensorType DepthCamera::getVisionSensorType()
 void DepthCamera::InitGraphics()
 {
     glCamera = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange.x, depthRange.y, freq < Scalar(0));
+    glCamera->setNoise(noiseStdDev);
     glCamera->setCamera(this);
     UpdateTransform();
     glCamera->UpdateTransform();
@@ -87,11 +100,11 @@ void DepthCamera::InstallNewDataHandler(std::function<void(DepthCamera*)> callba
 
 void DepthCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != NULL)
+    if(newDataCallback != nullptr)
     {
         imageData = (GLfloat*)data;
         newDataCallback(this);
-        imageData = NULL;
+        imageData = nullptr;
     }
 }
 

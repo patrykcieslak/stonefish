@@ -39,6 +39,7 @@ MSIS::MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, 
 {
     range.x = 0.f;
     range.y = 0.f;
+    noise = glm::vec2(0.f);
     fullRotation = false;
     stepSize = radians(btScalar(360)/ceil(Scalar(360)/stepAngleDeg)); //Corrected step angle in radians
     setRotationLimits(minRotationDeg, maxRotationDeg);
@@ -50,12 +51,13 @@ MSIS::MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, 
     sonarData = NULL;
     displayData = NULL;
     newDataCallback = NULL;
+    glMSIS = nullptr;
 }
 
 MSIS::~MSIS()
 {
     if(displayData != NULL) delete [] displayData;
-    glMSIS = NULL;
+    glMSIS = nullptr;
 }
 
 void MSIS::setRotationLimits(Scalar l1Deg, Scalar l2Deg)
@@ -97,6 +99,16 @@ void MSIS::setRangeMax(Scalar r)
 void MSIS::setGain(Scalar g)
 {
     gain = g > Scalar(0) ? g : Scalar(1);
+}
+
+void MSIS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+{
+    if(multiplicativeStdDev >= 0.f)
+        noise.x = multiplicativeStdDev;
+    if(additiveStdDev >= 0.f)
+        noise.y = additiveStdDev;
+    if(glMSIS != nullptr)
+        glMSIS->setNoise(noise);
 }
 
 void* MSIS::getImageDataPointer(unsigned int index)
@@ -157,6 +169,7 @@ void MSIS::InitGraphics()
 {
     glMSIS = new OpenGLMSIS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
                            (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range);
+    glMSIS->setNoise(noise);
     glMSIS->setSonar(this);
     glMSIS->setColorMap(cMap);
     UpdateTransform();
@@ -223,7 +236,8 @@ void MSIS::NewDataReady(void* data, unsigned int index)
 
 void MSIS::InternalUpdate(Scalar dt)
 {
-    glMSIS->Update();
+    if(glMSIS != nullptr)
+        glMSIS->Update();
 }
 
 std::vector<Renderable> MSIS::Render()

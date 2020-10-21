@@ -51,6 +51,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     nBeams = numOfBeams;
     nBins = numOfBins;
     nBeamSamples = glm::min((GLuint)ceilf(verticalFOVDeg * (GLfloat)numOfBins * FLS_VRES_FACTOR), (GLuint)2048);
+    noise = glm::vec2(0.f);
     
     fov.x = glm::radians(horizontalFOVDeg);
     fov.y = glm::radians(verticalFOVDeg);
@@ -282,6 +283,11 @@ void OpenGLFLS::UpdateTransform()
     }
 }
 
+void OpenGLFLS::setNoise(glm::vec2 signalStdDev)
+{
+    noise = signalStdDev;
+}
+
 void OpenGLFLS::setSonar(FLS* s)
 {
     sonar = s;
@@ -348,7 +354,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glBindImageTexture(TEX_POSTPROCESS2, outputTex[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     sonarOutputShader->Use();
     sonarOutputShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
-    sonarOutputShader->SetUniform("noiseStddev", glm::vec2(0.025f, 0.035f)); //Multiplicative, additive (0.02,0.03)
+    sonarOutputShader->SetUniform("noiseStddev", noise); //Multiplicative, additive (0.025f, 0.035f)
     if(settingsUpdated)
     {
         sonarOutputShader->SetUniform("range", glm::vec3(range.x, range.y, (range.y-range.x)/(GLfloat)nBins));
