@@ -40,7 +40,8 @@ namespace sf
     {
         MASK_NONCOLLIDING = 0,
         MASK_STATIC = BIT(0),
-        MASK_DEFAULT = BIT(1)
+        MASK_DEFAULT = BIT(1),
+        MASK_ANIMATED = BIT(2)
     }
     CollisionMask;
     

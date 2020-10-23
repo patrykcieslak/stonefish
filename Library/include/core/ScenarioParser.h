@@ -108,7 +108,14 @@ namespace sf
          \return success
          */
         virtual bool ParseStatic(XMLElement* element);
-        
+
+        //! A method used to parse an animated object description.
+        /*!
+         \param element a pointer to the XML node
+         \return success
+         */
+        virtual bool ParseAnimated(XMLElement* element);
+
         //! A method used to parse a dynamic object description.
         /*!
          \param element a pointer to the XML node
@@ -119,7 +126,7 @@ namespace sf
          */
         virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, 
                                         std::string ns = "", bool compoundPart = false);
-        
+
         //! A method used to parse a robot description.
         /*!
          \param element a pointer to the XML node

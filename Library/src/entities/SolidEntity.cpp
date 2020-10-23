@@ -91,8 +91,7 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     angularAcc.setZero();
     
     //Set pointers
-    rigidBody = NULL;
-    multibodyCollider = NULL;
+    multibodyCollider = nullptr;
     phyMesh = nullptr;
     graObjectId = -1;
     phyObjectId = -1;
@@ -112,7 +111,7 @@ EntityType SolidEntity::getType() const
 
 void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
 {
-    if(rigidBody != NULL || multibodyCollider != NULL)
+    if(rigidBody != nullptr || multibodyCollider != nullptr)
     {
         cWarning("Physical properties of bodies cannot be changed after adding to simulation!");
         return;
@@ -125,7 +124,7 @@ void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
 
 void SolidEntity::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& CG)
 {
-    if(rigidBody != NULL || multibodyCollider != NULL)
+    if(rigidBody != nullptr || multibodyCollider != nullptr)
     {
         cWarning("Physical properties of bodies cannot be changed after adding to simulation!");
         return;
@@ -154,7 +153,7 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
         contactD = Scalar(0);
     }
     
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         if(soft)
             rigidBody->setContactStiffnessAndDamping(contactK, contactD);
@@ -165,7 +164,7 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
             rigidBody->setCollisionFlags(cflags);
         }
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         if(soft)
             multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
@@ -195,9 +194,9 @@ BodyPhysicsType SolidEntity::getBodyPhysicsType() const
 
 void SolidEntity::getAABB(Vector3& min, Vector3& max)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
         rigidBody->getAabb(min, max);
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
         multibodyCollider->getCollisionShape()->getAabb(getCGTransform(), min, max);
     else
     {
@@ -210,7 +209,7 @@ std::vector<Renderable> SolidEntity::Render()
 {
     std::vector<Renderable> items(0);
     
-    if( (rigidBody != NULL || multibodyCollider != NULL)  && isRenderable() )
+    if( (rigidBody != nullptr || multibodyCollider != nullptr)  && isRenderable() )
     {
         Renderable item;
         item.type = RenderableType::SOLID;
@@ -320,13 +319,13 @@ Vector3 SolidEntity::getCB() const
 
 Transform SolidEntity::getCGTransform() const
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         Transform trans;
         rigidBody->getMotionState()->getWorldTransform(trans);
         return trans;
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         return multibodyCollider->getWorldTransform();
     }
@@ -371,11 +370,11 @@ Transform SolidEntity::getOTransform() const
 
 void SolidEntity::setCGTransform(const Transform& trans)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         rigidBody->getMotionState()->setWorldTransform(trans);
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         multibodyCollider->setWorldTransform(trans);
     }
@@ -383,11 +382,11 @@ void SolidEntity::setCGTransform(const Transform& trans)
 
 Vector3 SolidEntity::getLinearVelocity() const
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         return rigidBody->getLinearVelocity();
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         //Get multibody and link id
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
@@ -434,11 +433,11 @@ Vector3 SolidEntity::getLinearVelocity() const
 
 Vector3 SolidEntity::getAngularVelocity() const
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         return rigidBody->getAngularVelocity();
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         //Get multibody and link id
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
@@ -467,11 +466,11 @@ Vector3 SolidEntity::getAngularVelocity() const
 
 Vector3 SolidEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) const
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         return rigidBody->getVelocityInLocalPoint(relPos);
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         return getLinearVelocity() + getAngularVelocity().cross(relPos);
     }
@@ -481,11 +480,11 @@ Vector3 SolidEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) const
 
 Vector3 SolidEntity::getAppliedForce()
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         return rigidBody->getTotalForce();
     }
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
         int index = multibodyCollider->m_link;
@@ -950,7 +949,7 @@ Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)
 
 void SolidEntity::BuildGraphicalObject()
 {
-    if(phyMesh == NULL || !SimulationApp::getApp()->hasGraphics())
+    if(phyMesh == nullptr || !SimulationApp::getApp()->hasGraphics())
         return;
         
     graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
@@ -959,7 +958,7 @@ void SolidEntity::BuildGraphicalObject()
 
 void SolidEntity::BuildRigidBody()
 {
-    if(rigidBody == NULL)
+    if(rigidBody == nullptr)
     {
         btDefaultMotionState* motionState = new btDefaultMotionState();
         
@@ -1012,7 +1011,7 @@ void SolidEntity::BuildRigidBody()
 
 void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child, btMultiBodyDynamicsWorld *world)
 {
-    if(multibodyCollider == NULL)
+    if(multibodyCollider == nullptr)
     {
         //Generate collision shape
         btCollisionShape* colShape0 = BuildCollisionShape();
@@ -1051,7 +1050,7 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         else
             mb->setBaseCollider(multibodyCollider);
         
-        world->addCollisionObject(multibodyCollider, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
+        world->addCollisionObject(multibodyCollider, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT | MASK_ANIMATED);
         
         if(contactK > Scalar(0))
             multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
@@ -1070,14 +1069,14 @@ void SolidEntity::AddToSimulation(SimulationManager* sm)
 
 void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin)
 {
-    if(rigidBody == NULL)
+    if(rigidBody == nullptr)
     {
         BuildRigidBody();
         BuildGraphicalObject();
         
         rigidBody->setMotionState(new btDefaultMotionState(origin * T_CG2O.inverse()));
         //rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT);
+        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT | MASK_ANIMATED);
     }
 }
 
@@ -1099,7 +1098,7 @@ void SolidEntity::UpdateAcceleration(Scalar dt)
 
 void SolidEntity::ApplyGravity(const Vector3& g)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
     {
         rigidBody->applyCentralForce(g * mass);
     }
@@ -1107,9 +1106,9 @@ void SolidEntity::ApplyGravity(const Vector3& g)
 
 void SolidEntity::ApplyCentralForce(const Vector3& force)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
         rigidBody->applyCentralForce(force);
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
         int index = multibodyCollider->m_link;
@@ -1123,9 +1122,9 @@ void SolidEntity::ApplyCentralForce(const Vector3& force)
 
 void SolidEntity::ApplyTorque(const Vector3& torque)
 {
-    if(rigidBody != NULL)
+    if(rigidBody != nullptr)
         rigidBody->applyTorque(torque);
-    else if(multibodyCollider != NULL)
+    else if(multibodyCollider != nullptr)
     {
         btMultiBody* multiBody = multibodyCollider->m_multiBody;
         int index = multibodyCollider->m_link;

@@ -146,9 +146,8 @@ namespace sf
         //! A method that adds an animated rigid body to the simulation world.
         /*!
          \param ent a pointer to the animated object
-         \param origin a pose of the body in the world frame
          */
-        void AddAnimatedEntity(AnimatedEntity* ent, const Transform& origin);
+        void AddAnimatedEntity(AnimatedEntity* ent);
         
         //! A method that adds a dynamic rigid body to the simulation world.
         /*!

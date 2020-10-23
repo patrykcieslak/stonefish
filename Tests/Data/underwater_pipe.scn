@@ -71,6 +71,21 @@
 		<world_transform rpy="0.0 0.0 0.0" xyz="2.0 0.0 3.0"/>
 	</static>
 
+	<animated name="Anim" type="model" collisions="false">
+		<physical>
+			<mesh filename="multi_object_test.obj" scale="1.0"/>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+		</physical>
+		<material name="Aluminium"/>
+		<look name="gray"/>
+		<trajectory type="spline" playback="onetime">
+			<keypoint time="0.0" xyz="0.0 0.0 -4.0" rpy="0.0 2.0 0.0"/>
+			<keypoint time="1.0" xyz="10.0 0.0 0.0" rpy="0.0 2.0 0.0"/>
+			<keypoint time="4.0" xyz="10.0 4.0 0.0" rpy="0.0 0.0 0.0"/>
+			<keypoint time="10.0" xyz="0.0 0.0 5.0" rpy="1.0 2.0 0.0"/>
+		</trajectory>
+	</animated>
+
     <include file="girona500auv.scn">
 		<arg name="robot_name" value="GIRONA500"/>
 	</include>

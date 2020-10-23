@@ -116,6 +116,8 @@ namespace sf
         int getGraphicalObject() const;
         
     protected:
+        //Body
+        btRigidBody* rigidBody;
         Material mat;
 
         //Motion

@@ -16,14 +16,14 @@
 */
 
 //
-//  Trajectory.cpp
+//  Pose.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
-#include "sensors/scalar/Trajectory.h"
+#include "sensors/scalar/Pose.h"
 
 #include "sensors/Sample.h"
 #include "graphics/OpenGLPipeline.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Trajectory::Trajectory(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pose::Pose(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("Coordinate Y", QUANTITY_LENGTH));
@@ -41,7 +41,7 @@ Trajectory::Trajectory(std::string uniqueName, Scalar frequency, int historyLeng
     channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
 }
 
-void Trajectory::InternalUpdate(Scalar dt)
+void Pose::InternalUpdate(Scalar dt)
 {
     //get angles
     Transform trajFrame = getSensorFrame();
@@ -54,9 +54,9 @@ void Trajectory::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-ScalarSensorType Trajectory::getScalarSensorType()
+ScalarSensorType Pose::getScalarSensorType()
 {
-    return ScalarSensorType::TRAJECTORY;
+    return ScalarSensorType::POSE;
 }
 
 }

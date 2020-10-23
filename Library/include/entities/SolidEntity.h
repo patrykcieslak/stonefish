@@ -358,8 +358,7 @@ namespace sf
         virtual void BuildRigidBody();
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
         
-        //Rigid body
-        btRigidBody* rigidBody;
+        //Body
         btMultiBodyLinkCollider* multibodyCollider;
         
         Mesh* phyMesh; //Mesh used for physics calculation

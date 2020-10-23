@@ -155,12 +155,12 @@ void SimulationManager::AddStaticEntity(StaticEntity* ent, const Transform& orig
     }
 }
 
-void SimulationManager::AddAnimatedEntity(AnimatedEntity* ent, const Transform& origin)
+void SimulationManager::AddAnimatedEntity(AnimatedEntity* ent)
 {
     if(ent != NULL)
     {
         entities.push_back(ent);
-        ent->AddToSimulation(this, origin);
+        ent->AddToSimulation(this);
     }
 }
 
@@ -1438,7 +1438,7 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
     
-    //Update acceleration data
+    //Update motion data
     for(size_t i = 0; i < simManager->entities.size(); ++i)
     {
         Entity* ent = simManager->entities[i];

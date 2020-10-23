@@ -220,6 +220,8 @@ void OpenGLPipeline::DrawHelpers()
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::JOINT_LINES)
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
+            else if(drawingQueueCopy[h].type == RenderableType::PATH_LINE_STRIP)
+                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
         }
     }
     
@@ -565,8 +567,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 
                 //Overlay selection outline
                 ((OpenGLTrackball*)camera)->DrawSelection(selectedDrawingQueueCopy, screenFBO);
-                
-                /* 
+                 
                 //Graphics debugging
                 //if(ocean != NULL)
                 //{
@@ -580,8 +581,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);
                 
                 //content->DrawTexturedQuad(0,0,800,600,camera->getPostprocessTexture(0));
-                //camera->ShowSceneTexture(SceneComponent::NORMAL, glm::vec4(0,0,300,200));
-                //camera->ShowViewNormalTexture(glm::vec4(0,200,300,200));
+                //camera->ShowViewNormalTexture(glm::vec4(0,0,400,300));
                 //camera->ShowSceneTexture(glm::vec4(0,200,300,200));
                 //camera->ShowLinearDepthTexture(glm::vec4(0,0,600,500), true);
                 //camera->ShowLinearDepthTexture(glm::vec4(0,400,300,200), false);
@@ -592,8 +592,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //camera->ShowDeinterleavedAOTexture(glm::vec4(0,600,300,200), 0);
                 //camera->ShowAmbientOcclusion(glm::vec4(0,800,300,200));
                 //camera->ShowDepthStencilTexture(glm::vec4(0,400,300,200)); 
-                */
-                
+                                
                 OpenGLState::BindFramebuffer(0);
             }
         

@@ -44,7 +44,7 @@
 #define __Stonefish_AnimatedEntity__
 
 #include "entities/MovingEntity.h"
-#include "core/TrajectoryGenerator.h"
+#include "entities/animation/Trajectory.h"
 
 namespace sf
 {
@@ -52,31 +52,70 @@ namespace sf
     class AnimatedEntity : public MovingEntity
     {
     public:
-        //! A constructor.
+        //! A constructor building an empty body.
         /*!
          \param uniqueName a name for the entity
+         \param traj a pointer to the body trajectory
+         */
+        AnimatedEntity(std::string uniqueName, Trajectory* traj);
+
+        //! A constructor building a spherical body.
+        /*!
+         \param uniqueName a name for the entity
+         \param traj a pointer to the body trajectory
+         \param sphereRadius the radius of the sphere [m]
+         \param origin a pose of the mesh with respect to the body origin frame
+         \param material the name of the material the entity is made of
+         \param look the name of the graphical material used for rendering
+         \param collides a flag determining if the body can collide with other bodies
+         */
+        AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+
+        //! A constructor building a box body.
+        /*!
+         \param uniqueName a name for the entity
+         \param traj a pointer to the body trajectory
+         \param boxDimensions the dimensions of the box [m]
+         \param origin a pose of the mesh with respect to the body origin frame
+         \param material the name of the material the entity is made of
+         \param look the name of the graphical material used for rendering
+         \param collides a flag determining if the body can collide with other bodies
+         */
+        AnimatedEntity(std::string uniqueName, Trajectory* traj, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        
+        //! A constructor building a mesh body. 
+        /*!
+         \param uniqueName a name for the entity
+         \param traj a pointer to the body trajectory
+         \param modelFilename a path to the 3d model used for rendering
+         \param scale a scale factor to be used when reading the mesh file
+         \param origin a pose of the mesh with respect to the body origin frame
+         \param material the name of the material the entity is made of
+         \param look the name of the graphical material used for rendering
+         \param collides a flag determining if the body can collide with other bodies
+         */
+        AnimatedEntity(std::string uniqueName, Trajectory* traj, std::string modelFilename, Scalar scale, const Transform& origin,
+                       std::string material, std::string look = "", bool collides = false);
+        
+        //! A constructor building a mesh body. 
+        /*!
+         \param uniqueName a name for the entity
+         \param traj a pointer to the body trajectory
          \param graphicsFilename a path to the 3d model used for rendering
          \param graphicsScale a scale factor to be used when reading the mesh file
          \param graphicsOrigin a pose of the mesh with respect to the body origin frame
+         \param physicsFilename a path to the 3d model used for collision
+         \param physicsScale a scale factor to be used when reading the mesh file
+         \param physicsOrigin a pose of the mesh with respect to the body origin frame
          \param material the name of the material the entity is made of
          \param look the name of the graphical material used for rendering
+         \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin, std::string material, std::string look = "");
+        AnimatedEntity(std::string uniqueName, Trajectory* traj, std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                       std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, std::string material, std::string look = "", bool collides = false);
         
         //! A destructor.
         virtual ~AnimatedEntity();
-        
-        //! A method conneting a trajectroy generator with the animated entity to animate automatically.
-        /*!
-         \param generator a pointer to the trajectory generator object
-         */
-        void ConnectTrajectoryGenerator(TrajectoryGenerator* generator);
-        
-        //! A method updating the transformation and velocities of the animated body.
-        /*!
-         \param dt time step [s]
-         */
-        void Update(Scalar dt);
 
         //! A method adding the body to the simulation manager.
         /*!
@@ -90,16 +129,16 @@ namespace sf
          \param origin a pose of the body CG in the world frame
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
+
+        //! A method updating the position and velocity of the body.
+        /*!
+         \param dt a time step [s]
+         */
+        void Update(Scalar dt);
         
         //! A method returning the elements that should be rendered.
         std::vector<Renderable> Render();
-                  
-        //! A method used to set new origin of the entity in the world frame.
-        /*!
-         \param trans a transformation of the entity origin in the world frame
-         */
-        void setOTransform(const Transform& trans);
-  
+        
         //! A method returning the type of the entity.
         EntityType getType() const;
         
@@ -131,16 +170,14 @@ namespace sf
          */
         void getAABB(Vector3& min, Vector3& max);
       
-        //void AddTrajectoryPoint(Vector3 p, Scalar twist);
-
-        //void RemoveTrajectoryPoint(Vector3 );
-
-        //void ClearTrajectory();        
     private:
-        Transform T_O;
-        Vector3 vel;
-        Vector3 aVel;
-        TrajectoryGenerator* tg;
+        void BuildRigidBody(btCollisionShape* shape, bool collides);
+
+        Transform T_CG2O;
+        Transform T_O2G;
+        Transform T_O2C;
+        Trajectory* tr;
+        int phyObjectId;
     };
 }
 

@@ -31,6 +31,9 @@
 #include "entities/statics/Obstacle.h"
 #include "entities/statics/Plane.h"
 #include "entities/statics/Terrain.h"
+#include "entities/AnimatedEntity.h"
+#include "entities/animation/PWLTrajectory.h"
+#include "entities/animation/CRTrajectory.h"
 #include "entities/solids/Box.h"
 #include "entities/solids/Cylinder.h"
 #include "entities/solids/Sphere.h"
@@ -215,10 +218,22 @@ bool ScenarioParser::Parse(std::string filename)
     {
         if(!ParseStatic(element))
         {
-            cError("Scenario parser: static objects not properly defined!");
+            cError("Scenario parser: static object not properly defined!");
             return false;
         }
         element = element->NextSiblingElement("static");
+    }
+
+    //Load animated objects (optional)
+    element = root->FirstChildElement("animated");
+    while(element != nullptr)
+    {
+        if(!ParseAnimated(element))
+        {
+            cError("Scenario parser: animated object not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("animated");
     }
     
     //Load dynamic objects (optional)
@@ -228,7 +243,7 @@ bool ScenarioParser::Parse(std::string filename)
         SolidEntity* solid;
         if(!ParseSolid(element, solid))
         {
-            cError("Scenario parser: dynamic objects not properly defined!");
+            cError("Scenario parser: dynamic object not properly defined!");
             return false;
         }
         XMLElement* item;
@@ -758,6 +773,189 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         return false;
         
     sm->AddStaticEntity(object, trans);
+    return true;
+}
+
+bool ScenarioParser::ParseAnimated(XMLElement* element)
+{
+    //---- Basic ----
+    const char* name = nullptr;
+    const char* type = nullptr;
+    bool collides = false;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return false;
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+        return false;
+    element->QueryAttribute("collisions", &collides); //Optional
+    std::string typestr(type);
+        
+    //---- Common ----
+    XMLElement* item;
+    const char* mat = nullptr;
+    const char* look = nullptr;
+    unsigned int uvMode = 0;
+    float uvScale = 1.f;
+    Transform trans;
+    
+    if(typestr != "empty")
+    {
+        //Material
+        if((item = element->FirstChildElement("material")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+            return false;
+        //Look
+        if((item = element->FirstChildElement("look")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &look) != XML_SUCCESS)
+            return false;
+        item->QueryAttribute("uv_mode", &uvMode); //Optional
+        item->QueryAttribute("uv_scale", &uvScale); //Optional
+    }
+        
+    //---- Trajectory ----
+    Trajectory* tr;
+    if((item = element->FirstChildElement("trajectory")) != nullptr)
+    {
+        const char* trType = nullptr;
+        const char* playMode = nullptr;
+        if(item->QueryStringAttribute("type", &trType) != XML_SUCCESS)
+            return false;
+        if(item->QueryStringAttribute("playback", &playMode) != XML_SUCCESS)
+            return false;
+        
+        std::string playModeStr(playMode);
+        PlaybackMode pm;
+        if(playModeStr == "onetime")
+            pm = PlaybackMode::ONETIME;
+        else if(playModeStr == "repeat")
+            pm = PlaybackMode::REPEAT;
+        else if(playModeStr == "boomerang")
+            pm = PlaybackMode::BOOMERANG;
+        else
+        {
+            cError("Scenario parser: incorrect trajectory playback mode!");
+            return false;
+        }
+
+        std::string trTypeStr(trType);
+        if(trTypeStr == "pwl" || trTypeStr == "spline")
+        {
+            tr = trTypeStr == "pwl" ? new PWLTrajectory(pm) : new CRTrajectory(pm);
+            PWLTrajectory* pwl = (PWLTrajectory*)tr; //Spline has the same mechanism of adding points
+            
+            XMLElement* key = item->FirstChildElement("keypoint");
+            while(key != nullptr)
+            {
+                Transform T;
+                Scalar t;
+                if(key->QueryAttribute("time", &t) != XML_SUCCESS || !ParseTransform(key, T))
+                {
+                    cError("Scenario parser: trajectory keypoint not properly defined!");
+                    delete tr;
+                    return false;
+                }
+                pwl->AddKeyPoint(t, T);
+                key = key->NextSiblingElement("keypoint");
+            }
+        }
+        else
+        {
+            cError("Scenario parser: unknown trajectory type!");
+            return false;        
+        }
+    }
+    else
+    {
+        cError("Scenario parser: no trajectory defined for animated object!");
+        return false;
+    }
+
+    //---- Object specific ----
+    AnimatedEntity* object;
+        
+    if(typestr == "empty")
+    {
+        object = new AnimatedEntity(std::string(name), tr);
+    }
+    else if(typestr == "box")
+    {
+        const char* dims = nullptr;
+        Scalar dimX, dimY, dimZ;
+        Transform origin;
+
+        if((item = element->FirstChildElement("dimensions")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("xyz", &dims) != XML_SUCCESS)
+            return false;
+        if(sscanf(dims, "%lf %lf %lf", &dimX, &dimY, &dimZ) != 3)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;        
+
+        object = new AnimatedEntity(std::string(name), tr, Vector3(dimX, dimY, dimZ), origin, std::string(mat), std::string(look), collides);
+    }
+    else if(typestr == "sphere")
+    {
+        Scalar radius;
+        Transform origin;
+            
+        if((item = element->FirstChildElement("dimensions")) == nullptr)
+            return false;
+        if(item->QueryAttribute("radius", &radius) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+            
+        object = new AnimatedEntity(std::string(name), tr, radius, origin, std::string(mat), std::string(look), collides);
+    }
+    else if(typestr == "model")
+    {
+        const char* phyMesh = nullptr;
+        Scalar phyScale;
+        Transform phyOrigin;
+        
+        if((item = element->FirstChildElement("physical")) == nullptr)
+            return false;
+        if((item = item->FirstChildElement("mesh")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("filename", &phyMesh) != XML_SUCCESS)
+            return false;
+        if(item->QueryAttribute("scale", &phyScale) != XML_SUCCESS)
+            phyScale = Scalar(1);
+        if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, phyOrigin))
+            return false;
+        
+        if((item = element->FirstChildElement("visual")) != nullptr)
+        {
+            const char* graMesh = nullptr;
+            Scalar graScale;
+            Transform graOrigin;
+            
+            if((item = item->FirstChildElement("mesh")) == nullptr)
+                return false;
+            if(item->QueryStringAttribute("filename", &graMesh) != XML_SUCCESS)
+                return false;
+            if(item->QueryAttribute("scale", &graScale) != XML_SUCCESS)
+                graScale = Scalar(1);
+            if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
+                return false;
+          
+            object = new AnimatedEntity(std::string(name), tr, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
+        }
+        else
+        {
+            object = new AnimatedEntity(std::string(name), tr, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
+        }
+    }
+    else
+    {
+        cError("Scenario parser: incorrect animated object type!");
+        delete tr;
+        return false;
+    }
+        
+    sm->AddAnimatedEntity(object);
     return true;
 }
 

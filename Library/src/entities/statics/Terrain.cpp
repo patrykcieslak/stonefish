@@ -105,7 +105,7 @@ void Terrain::AddToSimulation(SimulationManager* sm, const Transform& origin)
     {
         btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,-maxHeight/Scalar(2))));
         rigidBody->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_STATIC | MASK_DEFAULT);
+        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_DEFAULT);
     }
 }
 
