@@ -77,6 +77,8 @@ void DVL::InternalUpdate(Scalar dt)
             Vector3 from_ = from[i] + step*Scalar(h);
             Vector3 to_ = from[i] + step*Scalar(h+1);
             btCollisionWorld::ClosestRayResultCallback closest(from_, to_);
+            closest.m_collisionFilterGroup = MASK_DYNAMIC;
+            closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
             SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from_, to_, closest);
             
             if(closest.hasHit())

@@ -180,7 +180,8 @@ void main()
 	
 	//Sea contribution
     fragColor = vec4(outColor, fresnel);
-    fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  //vec4(normalize(MV * normal), 1.0);
+    fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  
+    //fragNormal = vec4(normalize(MV * normal), 1.0);
     //fragColor = vec4(outColor, 1.0);
     //fragNormal = vec4(normalize(MV * vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);
     //fragNormal = vec4(normalize(vec3(0.0, 0.0, 1.0))  * 0.5 + 0.5, 1.0);

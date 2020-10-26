@@ -53,7 +53,7 @@ btPairCachingGhostObject* ForcefieldEntity::getGhost()
 
 void ForcefieldEntity::AddToSimulation(SimulationManager* sm)
 {
-    sm->getDynamicsWorld()->addCollisionObject(ghost, MASK_DEFAULT, MASK_DEFAULT);
+    sm->getDynamicsWorld()->addCollisionObject(ghost, MASK_GHOST, MASK_DYNAMIC);
 }
 
 std::vector<Renderable> ForcefieldEntity::Render()

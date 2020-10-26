@@ -93,6 +93,9 @@ bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
         return false;
         
     btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
+    closest.m_collisionFilterGroup = MASK_DYNAMIC;
+    closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
+    SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(pos1, pos2, closest);
     return !closest.hasHit();
 }
 

@@ -157,7 +157,7 @@ void StaticEntity::AddToSimulation(SimulationManager* sm, const Transform& origi
     {
         btDefaultMotionState* motionState = new btDefaultMotionState(origin);
         rigidBody->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_DEFAULT);
+        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_DYNAMIC);
     }
 }
 

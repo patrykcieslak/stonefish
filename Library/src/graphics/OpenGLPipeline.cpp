@@ -479,11 +479,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glOcean->DrawBackground(camera);
                 
                 //Draw surface to back buffer
-                camera->SetRenderBuffers(1, false, true);
-                camera->SetRenderBuffers(1, true, false);
-                //camera->SetRenderBuffers(1, true, true);
+                camera->SetRenderBuffers(1, false, true); //Clearing color buffer
+                camera->SetRenderBuffers(1, true, false); //Color + Normal
                 glOcean->DrawSurface(camera);
-                camera->SetRenderBuffers(0, true, false);
+                camera->SetRenderBuffers(0, false, false); //Color only
                 
                 //Blend surface on top of scene
                 OpenGLState::DisableDepthTest();
@@ -494,6 +493,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 OpenGLState::EnableDepthTest();
                 
                 //Draw backsurface
+                camera->SetRenderBuffers(0, true, false); //Color + Normal
                 glOcean->DrawBacksurface(camera);                    
                 
                 //Stencil masking

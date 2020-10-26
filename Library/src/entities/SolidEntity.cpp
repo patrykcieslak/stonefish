@@ -1050,7 +1050,7 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         else
             mb->setBaseCollider(multibodyCollider);
         
-        world->addCollisionObject(multibodyCollider, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT | MASK_ANIMATED);
+        world->addCollisionObject(multibodyCollider, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
         
         if(contactK > Scalar(0))
             multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
@@ -1076,7 +1076,7 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
         
         rigidBody->setMotionState(new btDefaultMotionState(origin * T_CG2O.inverse()));
         //rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DEFAULT, MASK_STATIC | MASK_DEFAULT | MASK_ANIMATED);
+        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
     }
 }
 

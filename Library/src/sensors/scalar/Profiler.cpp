@@ -59,6 +59,8 @@ void Profiler::InternalUpdate(Scalar dt)
     Vector3 to = profTrans.getOrigin() + dir * channels[1].rangeMax;
     
     btCollisionWorld::ClosestRayResultCallback closest(from, to);
+    closest.m_collisionFilterGroup = MASK_DYNAMIC;
+    closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
     SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from, to, closest);
         
     if(closest.hasHit())

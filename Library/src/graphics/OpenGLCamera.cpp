@@ -70,7 +70,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     renderColorTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
                                                      GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     renderViewNormalTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
-                                                         GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);                                                    
+                                                         GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);                                                  
     renderDepthStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
                                                            GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
     std::vector<FBOTexture> fboTextures;
@@ -778,6 +778,7 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     ssrShader->SetUniform("pixelStride", 2.f);
     ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
     ssrShader->SetUniform("maxRayDistance", 200.f);
+    //ssrShader->SetUniform("maxRayDistance", 10.f);
     ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
     ssrShader->SetUniform("eyeFadeStart", 0.2f);
     ssrShader->SetUniform("eyeFadeEnd", 0.8f);

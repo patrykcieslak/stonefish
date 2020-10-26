@@ -39,9 +39,11 @@ namespace sf
     typedef enum
     {
         MASK_NONCOLLIDING = 0,
-        MASK_STATIC = BIT(0),
-        MASK_DEFAULT = BIT(1),
-        MASK_ANIMATED = BIT(2)
+        MASK_GHOST = BIT(0),
+        MASK_STATIC = BIT(1),
+        MASK_DYNAMIC = BIT(2),
+        MASK_ANIMATED_NONCOLLIDING = BIT(3),
+        MASK_ANIMATED_COLLIDING = BIT(4)
     }
     CollisionMask;
     

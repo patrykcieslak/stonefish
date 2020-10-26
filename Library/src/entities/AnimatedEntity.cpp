@@ -243,7 +243,12 @@ void AnimatedEntity::BuildRigidBody(btCollisionShape* shape, bool collides)
 void AnimatedEntity::AddToSimulation(SimulationManager* sm)
 {
     if(rigidBody != nullptr)
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_ANIMATED, MASK_DEFAULT); //Only collide with dynamic bodies
+    {
+        if(rigidBody->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE) //No collisions
+            sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_ANIMATED_NONCOLLIDING, MASK_DYNAMIC);
+        else
+            sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_ANIMATED_COLLIDING, MASK_DYNAMIC); //Only collide with dynamic bodies
+    }
 }
         
 void AnimatedEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)

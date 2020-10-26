@@ -1050,6 +1050,8 @@ Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
 {
     ray *= Scalar(100000);
     btCollisionWorld::ClosestRayResultCallback rayCallback(eye, eye+ray);
+    rayCallback.m_collisionFilterGroup = MASK_DYNAMIC;
+    rayCallback.m_collisionFilterMask = MASK_DYNAMIC | MASK_STATIC | MASK_ANIMATED_COLLIDING | MASK_ANIMATED_NONCOLLIDING;
     dynamicsWorld->rayTest(eye, eye+ray, rayCallback);
                 
     if(rayCallback.hasHit())
