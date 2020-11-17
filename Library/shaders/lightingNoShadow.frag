@@ -26,17 +26,6 @@ const float sunLightRadius = 0.03;
 uniform vec3 eyePos;
 uniform vec3 viewDir;
 
-layout (std140) uniform SunSky
-{
-    mat4 sunClipSpace[4];
-    vec4 sunFrustumNear;
-    vec4 sunFrustumFar;
-    vec3 sunDirection;
-	float planetRadiusInUnits;
-	vec3 whitePoint;
-    float atmLengthUnitInMeters;
-};
-
 #inject "lightingDef.glsl"
 
 vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo);

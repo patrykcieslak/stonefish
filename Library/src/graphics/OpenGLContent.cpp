@@ -403,7 +403,7 @@ OpenGLContent::OpenGLContent()
     glDeleteShader(lightSourceFragment);
 
     commonLightShaders.push_back(oceanOpticsFragment);
-    lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "uwLightSource.frag", "", &compiled);
+    lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSourceU.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
     lightSourceShader[1] = new GLSLShader(sources, commonLightShaders);

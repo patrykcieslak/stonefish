@@ -106,6 +106,11 @@ Scalar Thruster::getDiameter()
     return D;
 }
 
+bool Thruster::isPropellerRight()
+{
+    return RH;
+}
+
 void Thruster::Update(Scalar dt)
 {
     if(attach != NULL)

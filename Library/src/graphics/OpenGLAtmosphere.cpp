@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLAtmosphere.h"
@@ -240,19 +240,19 @@ OpenGLAtmosphere::OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow)
     switch(quality)
     {
         case RenderQuality::LOW:
-            nPrecomputedWavelengths = 5;
+            nPrecomputedWavelengths = 7;
             nScatteringOrders = 2;
             break;
         
         default:
         case RenderQuality::MEDIUM:
-            nPrecomputedWavelengths = 15;
-            nScatteringOrders = 4;
+            nPrecomputedWavelengths = 12;
+            nScatteringOrders = 3;
             break;
         
         case RenderQuality::HIGH:
-            nPrecomputedWavelengths = 30;
-            nScatteringOrders = 6;
+            nPrecomputedWavelengths = 20;
+            nScatteringOrders = 5;
     }
     
     Precompute();
@@ -513,15 +513,17 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLCamera* view)
 void OpenGLAtmosphere::UpdateSplitDist(GLfloat nd, GLfloat fd)
 {
     fd = fd > 250.f ? 250.f : fd; //Limit camera frustum to max 250.0 m (to avoid shadow blocks)
+    nd = 0.1f;
     GLfloat lambda = 0.95f;
     GLfloat ratio = fd/nd;
     sunShadowFrustum[0].near = nd;
 
-    for(unsigned int i = 1; i < sunShadowmapSplits; ++i) {
+    for(unsigned int i = 1; i < sunShadowmapSplits; ++i) 
+    {
         GLfloat si = i / (GLfloat)sunShadowmapSplits;
 
         sunShadowFrustum[i].near = lambda*(nd*powf(ratio, si)) + (1.f-lambda)*(nd + (fd - nd)*si);
-        sunShadowFrustum[i-1].far = sunShadowFrustum[i].near * 1.005f;
+        sunShadowFrustum[i-1].far = sunShadowFrustum[i].near * 1.05f;
     }
 
     sunShadowFrustum[sunShadowmapSplits-1].far = fd;

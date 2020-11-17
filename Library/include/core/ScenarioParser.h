@@ -36,6 +36,7 @@ namespace sf
 {
     class SimulationManager;
     class Robot;
+    class Entity;
     class SolidEntity;
     class Sensor;
     class Actuator;
@@ -166,6 +167,22 @@ namespace sf
          \return success
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
+        
+        //! A method used to parse a description of a sensor attached to single body.
+        /*!
+         \param element a pointer to the XML node
+         \param ent a pointer to an entity (static, solid, animated)
+         \return success
+         */
+        virtual bool ParseSensor(XMLElement* element, Entity* ent);
+        
+        //! A method used to parse a description of a sensor.
+        /*!
+         \param element a pointer to the XML node
+         \param namePrefix a string added at the beginning of the sensor name
+         \return pointer to sensor
+         */
+        virtual Sensor* ParseSensor(XMLElement* element, const std::string& namePrefix);
         
         //! A method used to parse a communication device description.
         /*!

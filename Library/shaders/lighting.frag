@@ -55,7 +55,7 @@
 #version 330
 
 //Constants
-const float sunLightRadius = 0.03;
+const float sunLightRadius = 0.05;
 
 const vec2 Poisson25[25] = vec2[](
     vec2(-0.978698, -0.0884121),
@@ -425,17 +425,6 @@ const vec2 Poisson128[128] = vec2[](
 uniform vec3 eyePos;
 uniform vec3 viewDir;
 
-layout (std140) uniform SunSky
-{
-    mat4 sunClipSpace[4];
-    vec4 sunFrustumNear;
-    vec4 sunFrustumFar;
-    vec3 sunDirection;
-	float planetRadiusInUnits;
-	vec3 whitePoint;
-    float atmLengthUnitInMeters;
-};
-
 #inject "lightingDef.glsl"
 
 uniform sampler2DArray spotLightsDepthMap;
@@ -501,7 +490,7 @@ vec2 projectToLightUV(vec2 sizeUV, float lightZNear, float zWorld)
 // Sample depth from multilayer depth texture (works for sun and spot lights)
 float borderDepthTexture(int layer, sampler2DArray tex, vec2 uv)
 {
-	return ((uv.x <= 1.0) && (uv.y <= 1.0) && (uv.x >= 0.0) && (uv.y >= 0.0)) ? textureLod(tex, vec3(uv, float(layer)), 0.0).z : 1.0;
+	return ((uv.x <= 1.0) && (uv.y <= 1.0) && (uv.x >= 0.0) && (uv.y >= 0.0)) ? textureLod(tex, vec3(uv, float(layer)), 0.0).r : 1.0;
 }
 
 // Sample shadow from multilayer shadow texture (works for sun and spot lights)
@@ -525,11 +514,11 @@ void findBlocker(
 {
     accumBlockerDepth = 0.0;
     numBlockers = 0.0;
-	maxBlockers = 25.0;
+	maxBlockers = 32.0;
 	
-    for (int i = 0; i < 25; ++i)
+    for (int i = 0; i < 32; ++i)
     {
-		vec2 offset = Poisson25[i] * _searchRegionRadiusUV;
+		vec2 offset = Poisson32[i] * _searchRegionRadiusUV;
         float shadowMapDepth = borderDepthTexture(layer, tex, uv + offset);
         float z = biasedZ(z0, dz_duv, offset);
         
@@ -592,12 +581,16 @@ float SpotShadow(int id, vec3 P)
     return pcfFilter(id, spotLightsShadowMap, uv, z, dz_duv, filterRadius);
 }
 
-//Calculate in-shadow coefficient by sampling shadow edges
+//Calculate out-shadow coefficient by sampling shadow edges
 float SunShadow(vec3 P)
 {
 	//1. Find the appropriate CSM split to look up in based on the depth of the fragment
     float depth = dot(P - eyePos, viewDir); 
-	int index = 3;
+
+	if(depth >= sunFrustumFar.w) //Outside of the sun shadow frustum
+        return 1.0;
+    
+    int index = 3;
 	float splitNear = sunFrustumNear.w;
     float splitFar = sunFrustumFar.w;
 
@@ -621,7 +614,8 @@ float SunShadow(vec3 P)
     }
 	
 	//2. Compute search parameters
-	vec2 sunRadiusUV = vec2(sunLightRadius) * (sunFrustumFar.x - sunFrustumNear.x)/(splitFar - splitNear);
+    float csmCorrection = (sunFrustumFar.x - sunFrustumNear.x)/(splitFar - splitNear);
+	vec2 sunRadiusUV = vec2(sunLightRadius) * csmCorrection;
 	vec4 posLight = sunClipSpace[index] * vec4(P, 1.0);
 	vec2 uv = posLight.xy;
 	float z = posLight.z;
@@ -642,10 +636,13 @@ float SunShadow(vec3 P)
 	//4. Penumbra size calculation
 	float avgBlockerDepth = accumBlockerDepth / numBlockers;
 	float avgBlockerDepthWorld = linearDepthOrtho(avgBlockerDepth, splitNear, splitFar);
-	vec2 penumbraRadiusUV = 0.1 * sunRadiusUV * (avgBlockerDepthWorld - zEye);
+    float blockerDistance = clamp(zEye - avgBlockerDepthWorld, 0.2, 100.0);
+	vec2 penumbraRadiusUV = 0.1 * sunRadiusUV * blockerDistance;
 	
 	//5. Filtering
-	return pcfFilter(index, sunShadowMap, uv, z, dz_duv, penumbraRadiusUV);
+    return mix(pcfFilter(index, sunShadowMap, uv, z, dz_duv, penumbraRadiusUV),
+               1.0, 
+               smoothstep(sunFrustumFar.w * 0.8, sunFrustumFar.w, depth));
 }
 
 //Calculate contribution of different light types

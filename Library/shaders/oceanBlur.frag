@@ -27,6 +27,7 @@ uniform vec3 bWater;
 uniform vec2 blurShape;
 uniform float blurScale;
 uniform sampler2D texScene;
+uniform sampler2D texBlur;
 uniform sampler2D texLinearDepth;
 
 const vec2 Poisson32[32] = vec2[](
@@ -134,6 +135,9 @@ const vec2 Poisson64[64] = vec2[](
 
 void main(void)
 {
+    fragColor = vec4(texture(texScene, texcoord).rgb + 5.0*bWater*texture(texBlur, texcoord).rgb, 1.0);
+
+    /*
     float depth = texture(texLinearDepth, texcoord).r;
     vec3 color = texture(texScene, texcoord).rgb;
     int nr = int(clamp(depth, 0, 10));
@@ -160,6 +164,7 @@ void main(void)
     }
 
     fragColor = vec4(color/w, 1.0);
+    */
     //Sample color based on b
     //vec2 r = dot(normalize(color), bWater) * blurScale * blurShape;
     /*vec2 r = depth;

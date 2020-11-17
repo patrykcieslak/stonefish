@@ -199,6 +199,9 @@ namespace sf
         //! A method returning the postprocessing framebuffer of the camera.
         GLuint getPostprocessFBO();
 
+        //! A method returning the quater resolution postprocessing framebuffer of the camera.
+        GLuint getQuaterPostprocessFBO();
+
         //! A method returning the id of the color texture.
         /*!
          \param index the id of the texture in the list
@@ -219,13 +222,23 @@ namespace sf
          */
         GLuint getLinearDepthTexture(bool frontFace);
         
-        //! A method returning the id of a postprocessing texture
+        //! A method returning the id of a postprocessing texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
         GLuint getPostprocessTexture(unsigned int index);
         
+        //! A method returning the id of a quater resolution postprocessing texture.
+        /*!
+         \param index the id of the texture in the list
+         \return OpenGL id of the texture
+         */
+        GLuint getQuaterPostprocessTexture(unsigned int index);
+
+        //! A method returning the id of the last used color buffer.
+        GLuint getLastActiveColorBuffer();
+
         //! A method informing if view is using ambient occlusion.
         bool hasAO();
 		
@@ -257,11 +270,13 @@ namespace sf
         GLuint lastActiveRenderColorBuffer;
         
         //Postprocessing
+        GLuint linearDepthFBO;
+        GLuint linearDepthTex[2];
         GLuint postprocessFBO;
         GLuint postprocessTex[2];
         GLuint postprocessStencilTex;
-        GLuint linearDepthFBO;
-        GLuint linearDepthTex[2];
+        GLuint quaterPostprocessFBO;
+        GLuint quaterPostprocessTex[2];
         
         //HBAO Cache-aware (NVIDIA designworks)
         GLuint aoBlurTex;

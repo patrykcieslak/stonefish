@@ -149,14 +149,23 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     oceanShaders["mask_back"]->AddUniform("FC", ParameterType::FLOAT);
     oceanShaders["mask_back"]->AddUniform("size", ParameterType::FLOAT);
     
-    //Blur
+    //Blur and bloom
+    /*
+    oceanShaders["downsample"] = new GLSLShader("downsample2x.frag");
+    oceanShaders["downsample"]->AddUniform("source", INT);
+    oceanShaders["downsample"]->AddUniform("srcViewport", VEC2);
+    oceanShaders["gaussian"] = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
+    oceanShaders["gaussian"]->AddUniform("source", INT);
+    oceanShaders["gaussian"]->AddUniform("texelOffset", VEC2);
     oceanShaders["blur"] = new GLSLShader("oceanBlur.frag");
     oceanShaders["blur"]->AddUniform("cWater", ParameterType::VEC3);
     oceanShaders["blur"]->AddUniform("bWater", ParameterType::VEC3);
     oceanShaders["blur"]->AddUniform("blurScale", ParameterType::FLOAT);
     oceanShaders["blur"]->AddUniform("blurShape", ParameterType::VEC2);
     oceanShaders["blur"]->AddUniform("texScene", ParameterType::INT);
+    oceanShaders["blur"]->AddUniform("texBlur", ParameterType::INT);
     oceanShaders["blur"]->AddUniform("texLinearDepth", ParameterType::INT);
+    */
 
     //Background
     std::vector<GLuint> precompiled;
@@ -313,15 +322,9 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
 
 OpenGLOcean::~OpenGLOcean()
 {
-    delete oceanShaders["init"];
-    delete oceanShaders["fftx"];
-    delete oceanShaders["ffty"];
-    delete oceanShaders["variance"];
-    delete oceanShaders["spectrum"];
-    delete oceanShaders["mask_back"];
-    delete oceanShaders["blur"];
-    delete oceanShaders["background"];
-
+    for(const auto& shader : oceanShaders)
+        delete shader.second;
+    
     glDeleteFramebuffers(3, oceanFBOs);
     glDeleteTextures(6, oceanTextures);
     glDeleteBuffers(1, &oceanCurrentsUBO);
@@ -329,9 +332,8 @@ OpenGLOcean::~OpenGLOcean()
     if(params.spectrum12 != NULL) delete [] params.spectrum12;
     if(params.spectrum34 != NULL) delete [] params.spectrum34;
 
-    for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
-        delete it->second;  
-    oceanParticles.clear();
+    for(const auto& particles : oceanParticles)
+        delete particles.second;
 }
 
 void OpenGLOcean::setWaterType(GLfloat t)
@@ -533,7 +535,7 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     oceanShaders["mask_back"]->Use();
     oceanShaders["mask_back"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders["mask_back"]->SetUniform("FC", cam->GetLogDepthConstant());
-    oceanShaders["mask_back"]->SetUniform("size", oceanSize);
+    oceanShaders["mask_back"]->SetUniform("size", oceanSize*0.5f);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj, -1, glm::mat4(1.f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
@@ -545,7 +547,7 @@ void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
     oceanShaders["background"]->Use();
     oceanShaders["background"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
     oceanShaders["background"]->SetUniform("FC", cam->GetLogDepthConstant());
-    oceanShaders["background"]->SetUniform("size", oceanSize);
+    oceanShaders["background"]->SetUniform("size", oceanSize*0.5f);
     oceanShaders["background"]->SetUniform("eyePos", cam->GetEyePosition());
     oceanShaders["background"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["background"]->SetUniform("bWater", getLightScattering());
@@ -656,77 +658,62 @@ void OpenGLOcean::DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax)
     OpenGLState::DisableBlend();
 }
 
-void OpenGLOcean::DrawBlur(OpenGLCamera* cam)
+void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
 {
+    /* SHADERS DISABLED */
+    /*
     GLint* viewport = cam->GetViewport();
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getColorTexture(1));
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, cam->getLinearDepthTexture(true));
+    
+    //Downsample
+    OpenGLState::BindFramebuffer(cam->getQuaterPostprocessFBO());
+    OpenGLState::Viewport(0, 0, viewport[2]/4, viewport[3]/4);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getColorTexture(1 - cam->getLastActiveColorBuffer()));
+    oceanShaders["downsample"]->Use();
+    oceanShaders["downsample"]->SetUniform("source", TEX_POSTPROCESS1);
+    oceanShaders["downsample"]->SetUniform("srcViewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+
+    //Blur
+    oceanShaders["gaussian"]->Use();
+    oceanShaders["gaussian"]->SetUniform("source", TEX_POSTPROCESS1);
+    for(int i=0; i<9; ++i)
+    {
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(0));
+        oceanShaders["gaussian"]->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)viewport[2], 0.f));
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(1));
+        oceanShaders["gaussian"]->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)viewport[3]));
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    }
+    OpenGLState::UseProgram(0);
+    OpenGLState::BindFramebuffer(0);    
+
+    //Apply
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getColorTexture(1 - cam->getLastActiveColorBuffer()));
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(0));
+    OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_2D, cam->getLinearDepthTexture(true));
+
+    OpenGLState::BindFramebuffer(cam->getRenderFBO());
+    OpenGLState::Viewport(0, 0, viewport[2], viewport[3]);
+    cam->SetRenderBuffers(cam->getLastActiveColorBuffer(), false, false);
     oceanShaders["blur"]->Use();
     oceanShaders["blur"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["blur"]->SetUniform("bWater", getLightScattering());
     oceanShaders["blur"]->SetUniform("blurScale", 0.002f);
     oceanShaders["blur"]->SetUniform("blurShape", glm::vec2(1.f/(GLfloat)viewport[2], 1.f/(GLfloat)viewport[3]));
     oceanShaders["blur"]->SetUniform("texScene", TEX_POSTPROCESS1);
-    oceanShaders["blur"]->SetUniform("texLinearDepth", TEX_POSTPROCESS2);
+    oceanShaders["blur"]->SetUniform("texBlur", TEX_POSTPROCESS2);
+    oceanShaders["blur"]->SetUniform("texLinearDepth", TEX_POSTPROCESS3);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
+    
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    delete [] viewport;
-}
-
-void OpenGLOcean::DrawWaterline(OpenGLCamera* cam)
-{
-    /*
-    // This is a concept but it became obsolete when the near plane of th camera is so close!
-    GLint* viewport = cam->GetViewport();
-    OpenGLState::DisableDepthTest();
-    
-    //1. Draw white SAQ to convert stencil to color texture in renderbuffer
-    OpenGLState::BindFramebuffer(cam->getRenderFBO());
-    GLenum renderBuffs[1] = {GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(1, renderBuffs);
-    glClear(GL_COLOR_BUFFER_BIT);
-    OpenGLState::EnableStencilTest();
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
-    oceanShaders["waterline_flat"]->Use();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    OpenGLState::UseProgram(0);
-    OpenGLState::DisableStencilTest();
-
-    //2. Use renderbuffer texture to draw downsampled, blurred image to postprocess buffer
-    OpenGLState::BindFramebuffer(cam->getPostprocessHalfFBO());
-    OpenGLState::Viewport(viewport[0], viewport[1], viewport[2]/2, viewport[3]/2);
-    renderBuffs[0] = GL_COLOR_ATTACHMENT0;
-    glDrawBuffers(1, renderBuffs);
-    ///OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getColorTexture(1));
-    //Draw blur H
-    //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(cam->getColorTexture(1));
-
-    //3. Do second pass of separable blur
-    renderBuffs[0] = GL_COLOR_ATTACHMENT1;
-    glDrawBuffers(1, renderBuffs);
-    //OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getPostprocessTexture(2));
-    //Draw blur V
-    //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(cam->getPostprocessTexture(2));
-   
-    //4. Use the blurred result to draw waterline to the framebuffer with blending
-    OpenGLState::BindFramebuffer(cam->getRenderFBO());
-    OpenGLState::Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-    renderBuffs[0] = GL_COLOR_ATTACHMENT0;
-    glDrawBuffers(1, renderBuffs);
-    // OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getPostprocessTexture(3));
-    // OpenGLState::EnableBlend();
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // //Draw waterline
-    // ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    // OpenGLState::DisableBlend();
-    // OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(cam->getPostprocessTexture(3));
-    OpenGLState::BindFramebuffer(0);
-
     delete [] viewport;
     */
 }

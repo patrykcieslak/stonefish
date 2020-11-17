@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GraphicalSimulationApp__
@@ -198,6 +198,7 @@ namespace sf
         SolidEntity* trackballCenter;
         Entity* selectedEntity;
         bool displayHUD;
+        bool displayKeymap;
         bool displayConsole;
         std::string shaderPath;
         bool loading;

@@ -39,22 +39,14 @@ uniform vec3 eyePos;
 uniform mat3 MV;
 uniform float FC;
 
-layout (std140) uniform SunSky
-{
-    mat4 sunClipSpace[4];
-    vec4 sunFrustumNear;
-    vec4 sunFrustumFar;
-    vec3 sunDirection;
-	float planetRadiusInUnits;
-	vec3 whitePoint;
-    float atmLengthUnitInMeters;
-};
+#inject "lightingDef.glsl"
 
 //Atmosphere
 vec3 GetSolarLuminance();
 vec3 GetSkyLuminance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSkyLuminanceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
+float SunShadow(vec3 P);
 
 const float M_PI = 3.14159265358979323846;
 
@@ -166,17 +158,17 @@ void main()
 	vec3 outColor = vec3(0.0);
 	
 	//Sun contribution
-    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun/whitePoint;
+    outColor += reflectedSunRadiance(sunDirection, toEye, normal, Tx, Ty, sigmaSq) * Isun * SunShadow(P)/whitePoint;
 	
 	//Sky and scene reflection
 	vec3 ray = reflect(-toEye, normalize(vec3(normal.xy, -3.0)));
 	vec3 trans;
 	vec3 Lsky = GetSkyLuminance(Psky - center, ray, 0.0, sunDirection, trans);
-    outColor += Lsky/whitePoint; //fresnel *
+    outColor += Lsky/whitePoint;
     
 	//Aerial perspective
-    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, Psky - center, 0.0, sunDirection, trans);///whitePoint/30000.0;
-    //outColor = L2P;//trans * outColor + L2P;
+    //vec3 L2P = GetSkyLuminanceToPoint(eyePos - center, Psky - center, 0.0, sunDirection, trans)/whitePoint;
+    //outColor = trans * outColor + L2P;
 	
 	//Sea contribution
     fragColor = vec4(outColor, fresnel);

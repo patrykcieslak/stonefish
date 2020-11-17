@@ -92,10 +92,7 @@ void* SSS::getImageDataPointer(unsigned int index)
 
 void SSS::getDisplayResolution(unsigned int& x, unsigned int& y)
 {
-    GLint* viewport = glSSS->GetViewport();
-    x = viewport[2];
-    y = viewport[3];
-    delete [] viewport;
+    getResolution(x, y); //numOfBins x numOfLines
 }
 
 GLubyte* SSS::getDisplayDataPointer()

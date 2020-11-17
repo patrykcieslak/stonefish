@@ -388,14 +388,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         ++updateCount;
         viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]));
     }
-    /*
-    printf("\nUpdate: %u Queue: ", updateCount);
-    for(size_t i=0; i<viewsQueue.size(); ++i)
-       printf("\t%u", viewsQueue[i]);
-    printf("\nNo-update: %u Queue: ", viewsNoUpdate.size());
-    for(size_t i=0; i<viewsNoUpdate.size(); ++i)
-       printf("\t%u", viewsNoUpdate[i]);
-    */
    
     //Loop through all views -> trackballs, cameras, depth cameras...
     for(unsigned int i=0; i<updateCount; ++i)
@@ -508,7 +500,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 
                 //Render sky (left for the end to only fill empty spaces)
                 atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
-                
+
                 OpenGLState::DisableStencilTest();
                 
                 //Linear depth front faces
@@ -525,23 +517,19 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
                 camera->GenerateLinearDepth(false);
                 
-                //Postprocessing
-                OpenGLState::DisableDepthTest();
-
-                //Draw reflections
+                //Draw screen-space reflections
                 OpenGLState::BindFramebuffer(camera->getRenderFBO());
                 camera->SetRenderBuffers(1, false, true);
+                OpenGLState::DisableDepthTest();
                 camera->DrawSSR();
-                
-                //Draw blur and particles only below surface
-                OpenGLState::EnableStencilTest();
+
+                //Suspended particles only below surface
+                OpenGLState::EnableDepthTest();
+                OpenGLState::EnableStencilTest();           
                 glStencilFunc(GL_EQUAL, 1, 0xFF);
+                glDepthMask(GL_FALSE);
                 glOcean->DrawParticles(camera);
-                //camera->SetRenderBuffers(0, false, false);
-                //glOcean->DrawBlur(camera);
-                
-                //glStencilFunc(GL_EQUAL, 0, 0xFF);
-                //content->DrawTexturedSAQ(camera->getColorTexture(1));
+                glDepthMask(GL_TRUE);
                 OpenGLState::DisableStencilTest();
             }
         

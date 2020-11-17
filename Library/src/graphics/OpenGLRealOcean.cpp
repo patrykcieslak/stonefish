@@ -70,8 +70,11 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["indirect"]->BindShaderStorageBlock("TreeSize", SSBO_QTREE_SIZE);
 
     sources.clear();
+    GLint compiled;
+    GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
     std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    precompiled.push_back(pcssFragment);
 
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "qt.vert"));
     sources.push_back(GLSLSource(GL_TESS_CONTROL_SHADER, "qt.tesc"));
@@ -82,6 +85,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["surface"] = new GLSLShader(sources, precompiled);
     oceanShaders["surface"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders["surface"]->AddUniform("eyePos", ParameterType::VEC3);
+    oceanShaders["surface"]->AddUniform("viewDir", ParameterType::VEC3);
     oceanShaders["surface"]->AddUniform("MVP", ParameterType::MAT4);
     oceanShaders["surface"]->AddUniform("MV", ParameterType::MAT3);
     oceanShaders["surface"]->AddUniform("FC", ParameterType::FLOAT);
@@ -93,6 +97,8 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["surface"]->AddUniform("transmittance_texture", ParameterType::INT);
     oceanShaders["surface"]->AddUniform("scattering_texture", ParameterType::INT);
     oceanShaders["surface"]->AddUniform("irradiance_texture", ParameterType::INT);
+    oceanShaders["surface"]->AddUniform("sunShadowMap", ParameterType::INT);
+    oceanShaders["surface"]->AddUniform("sunDepthMap", ParameterType::INT);
     oceanShaders["surface"]->BindUniformBlock("SunSky", UBO_SUNSKY);
     oceanShaders["surface"]->BindShaderStorageBlock("QTreeCull", SSBO_QTREE_CULL);
     
@@ -100,8 +106,11 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["surface"]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     oceanShaders["surface"]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     oceanShaders["surface"]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+    oceanShaders["surface"]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+    oceanShaders["surface"]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);    
     OpenGLState::UseProgram(0);
 
+    precompiled.pop_back();
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
@@ -221,11 +230,6 @@ OpenGLRealOcean::~OpenGLRealOcean()
         glDeleteBuffers(1, &it->second.patchAC);
     }
     oceanTrees.clear();
-	delete oceanShaders["lod"];
-    delete oceanShaders["indirect"];
-    delete oceanShaders["surface"];
-    delete oceanShaders["backsurface"];
-    delete oceanShaders["mask"];
     delete fftData;
 }
 
@@ -432,6 +436,7 @@ void OpenGLRealOcean::DrawSurface(OpenGLCamera* cam)
     oceanShaders["surface"]->SetUniform("FC", cam->GetLogDepthConstant());
     oceanShaders["surface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["surface"]->SetUniform("eyePos", cam->GetEyePosition());
+    oceanShaders["surface"]->SetUniform("viewDir", cam->GetLookingDirection());
     oceanShaders["surface"]->SetUniform("gridSizes", params.gridSizes);
     oceanShaders["surface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["surface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);

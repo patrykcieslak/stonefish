@@ -90,7 +90,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     OpenGLState::BindVertexArray(0);
     
     //Load translucent shaders
-    downsampleShader = new GLSLShader("simpleDownsample.frag");
+    downsampleShader = new GLSLShader("downsample2x.frag");
     downsampleShader->AddUniform("source", INT);
     downsampleShader->AddUniform("srcViewport", VEC2);
     gaussianShader = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
@@ -245,30 +245,25 @@ void IMGUI::GenerateBackground()
     OpenGLState::Viewport(0, 0, windowW/4, windowH/4);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
     downsampleShader->Use();
-    downsampleShader->SetUniform("source", 0);
+    downsampleShader->SetUniform("source", TEX_BASE);
     downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-    OpenGLState::UseProgram(0);
     
+    gaussianShader->Use();
+    gaussianShader->SetUniform("source", TEX_BASE);
     for(int i=0; i<3; ++i)
     {
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);
-        gaussianShader->Use();
-        gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-        OpenGLState::UseProgram(0);
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[1]);
-        gaussianShader->Use();
-        gaussianShader->SetUniform("source", 0);
         gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-        OpenGLState::UseProgram(0);
     }
-    
+    OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_BASE);
     OpenGLState::BindFramebuffer(0);
 }

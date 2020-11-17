@@ -82,6 +82,9 @@ namespace sf
 
         //! A method returning the diameter of the thruster propeller [m].
         Scalar getDiameter();
+
+        //! A method informing if the propeller is right-handed.
+        bool isPropellerRight();
         
         //! A method returning the type of the actuator.
         ActuatorType getType();

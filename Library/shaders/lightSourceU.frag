@@ -34,17 +34,6 @@ uniform float FC;
 uniform vec3 color;
 uniform ivec2 lightId;
 
-layout (std140) uniform SunSky
-{
-    mat4 sunClipSpace[4];
-    vec4 sunFrustumNear;
-    vec4 sunFrustumFar;
-    vec3 sunDirection;
-	float planetRadiusInUnits;
-	vec3 whitePoint;
-    float atmLengthUnitInMeters;
-};
-
 #inject "lightingDef.glsl"
 
 const vec3 waterSurfaceN = vec3(0.0, 0.0, -1.0);

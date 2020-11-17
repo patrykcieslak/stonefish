@@ -108,12 +108,6 @@ namespace sf
          */
         virtual void DrawUnderwaterMask(OpenGLCamera* cam);
 
-        //! A method that draws the waterline when the camera is crossing the water surface.
-        /*!
-         \param cam a pointer to the active camera
-         */
-        void DrawWaterline(OpenGLCamera* cam);
-        
         //! A method that draws the distant background of the ocean.
         /*!
          \param cam a pointer to the active camera
@@ -133,11 +127,11 @@ namespace sf
          */
         void DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax);
 		
-        //! A method that draws the underwater blur (scattering).
+        //! A method that draws the underwater bloom and blur effects (scattering).
         /*!
          \param cam a pointer to the active camera
          */
-        void DrawBlur(OpenGLCamera* cam);
+        void ApplySpecialEffects(OpenGLCamera* cam);
         
         //! A method that drawsd the spectrum of waves.
         /*!

@@ -96,6 +96,15 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, postprocessStencilTex));
     postprocessFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
 
+    quaterPostprocessTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth/4, viewportHeight/4, 0),
+                                                            GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    quaterPostprocessTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth/4, viewportHeight/4, 0),
+                                                            GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    fboTextures.clear();
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, quaterPostprocessTex[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, quaterPostprocessTex[1]));                                              
+    quaterPostprocessFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+
     //Linear depth
     linearDepthTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
                                                        GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
@@ -214,9 +223,11 @@ OpenGLCamera::~OpenGLCamera()
     glDeleteTextures(2, linearDepthTex);
     glDeleteTextures(2, postprocessTex);
     glDeleteTextures(1, &postprocessStencilTex);
-    
+    glDeleteTextures(2, quaterPostprocessTex);
+
     glDeleteFramebuffers(1, &renderFBO);
     glDeleteFramebuffers(1, &postprocessFBO);
+    glDeleteFramebuffers(1, &quaterPostprocessFBO);
     glDeleteFramebuffers(1, &linearDepthFBO);
     
     glDeleteBuffers(1, &histogramSSBO);
@@ -316,6 +327,11 @@ GLuint OpenGLCamera::getPostprocessFBO()
     return postprocessFBO;
 }
     
+GLuint OpenGLCamera::getQuaterPostprocessFBO()
+{
+    return quaterPostprocessFBO;
+}
+
 GLfloat OpenGLCamera::getExposureCompensation()
 {
     return exposureComp;
@@ -342,6 +358,19 @@ GLuint OpenGLCamera::getPostprocessTexture(unsigned int id)
         return postprocessTex[id];
     else
         return 0;
+}
+
+GLuint OpenGLCamera::getQuaterPostprocessTexture(unsigned int id)
+{
+    if(id < 2)
+        return quaterPostprocessTex[id];
+    else
+        return 0;
+}
+
+GLuint OpenGLCamera::getLastActiveColorBuffer()
+{
+    return lastActiveRenderColorBuffer;
 }
 
 bool OpenGLCamera::hasAO()
@@ -772,13 +801,12 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     ssrShader->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
 
     ssrShader->Use();
-    ssrShader->SetUniform("maxIterations", 100);
-    ssrShader->SetUniform("maxBinarySearchIterations", 5);
+    ssrShader->SetUniform("maxIterations", 200);
+    ssrShader->SetUniform("maxBinarySearchIterations", 10);
     ssrShader->SetUniform("pixelZSize", 0.1f);
     ssrShader->SetUniform("pixelStride", 2.f);
     ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
-    ssrShader->SetUniform("maxRayDistance", 200.f);
-    //ssrShader->SetUniform("maxRayDistance", 10.f);
+    ssrShader->SetUniform("maxRayDistance", 100.f);
     ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
     ssrShader->SetUniform("eyeFadeStart", 0.2f);
     ssrShader->SetUniform("eyeFadeEnd", 0.8f);

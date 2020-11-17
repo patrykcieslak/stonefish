@@ -28,17 +28,6 @@ layout(location = 1) out vec4 fragNormal;
 uniform vec3 eyePos;
 uniform float FC;
 
-layout (std140) uniform SunSky
-{
-    mat4 sunClipSpace[4];
-    vec4 sunFrustumNear;
-    vec4 sunFrustumFar;
-    vec3 sunDirection;
-	float planetRadiusInUnits;
-	vec3 whitePoint;
-    float atmLengthUnitInMeters;
-};
-
 #inject "lightingDef.glsl"
 
 vec3 GetSunAndSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);

@@ -39,17 +39,6 @@ uniform vec3 eyePos;
 uniform mat3 MV;
 uniform float FC;
 
-layout (std140) uniform SunSky
-{
-    mat4 sunClipSpace[4];
-    vec4 sunFrustumNear;
-    vec4 sunFrustumFar;
-    vec3 sunDirection;
-	float planetRadiusInUnits;
-	vec3 whitePoint;
-    float atmLengthUnitInMeters;
-};
-
 #inject "lightingDef.glsl"
 
 //Atmosphere

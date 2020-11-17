@@ -193,10 +193,12 @@ void SimulationManager::EnableOcean(Scalar waves, Fluid f)
         f = getMaterialManager()->getFluid(water);
     }
     
-    ocean = new Ocean("Ocean", waves, f);
+    bool hasGraphics = SimulationApp::getApp()->hasGraphics();
+
+    ocean = new Ocean("Ocean", hasGraphics ? waves : 0.0, f);
     ocean->AddToSimulation(this);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(hasGraphics)
     {
         ocean->InitGraphics(simHydroMutex);
         ocean->setRenderable(true);

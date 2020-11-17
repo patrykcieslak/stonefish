@@ -91,10 +91,9 @@ void* FLS::getImageDataPointer(unsigned int index)
 
 void FLS::getDisplayResolution(unsigned int& x, unsigned int& y)
 {
-    GLint* viewport = glFLS->GetViewport();
-    x = viewport[2];
-    y = viewport[3];
-    delete [] viewport;
+    getResolution(x, y);
+    GLfloat hFactor = sinf(glm::radians((float)fovH)/2.f);
+    x = (int)ceilf(2.f*hFactor*y);
 }
 
 GLubyte* FLS::getDisplayDataPointer()

@@ -58,6 +58,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     trackballCenter = NULL;
     selectedEntity = nullptr;
     displayHUD = true;
+    displayKeymap = false;
     displayConsole = false;
     joystick = NULL;
     joystickAxes = NULL;
@@ -348,6 +349,10 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             
         case SDLK_h:
             displayHUD = !displayHUD;
+            break;
+
+        case SDLK_k:
+            displayKeymap = !displayKeymap;
             break;
             
         case SDLK_c:
@@ -891,6 +896,28 @@ void GraphicalSimulationApp::DoHUD()
     
     std::sprintf(buf, "Simulation time: %1.2lf s", getSimulationManager()->getSimulationTime());
     gui->DoLabel(320, getWindowHeight() - 20.f, buf);
+
+    gui->DoLabel(getWindowWidth() - 100.f, getWindowHeight() - 20.f, "Hit [K] for keymap");
+
+    //Keymap
+    if(displayKeymap)
+    {
+        offset = getWindowHeight()-246.f;
+        GLfloat left = getWindowWidth()-130.f; 
+        gui->DoPanel(left - 10.f, offset, 130.f, 206.f); offset += 10.f;
+        gui->DoLabel(left, offset, "[H] show/hide GUI"); offset += 16.f;
+        gui->DoLabel(left, offset, "[C] show/hide console"); offset += 16.f;
+        gui->DoLabel(left, offset, "[W] move forward"); offset += 16.f;
+        gui->DoLabel(left, offset, "[S] move backward"); offset += 16.f;
+        gui->DoLabel(left, offset, "[A] move left"); offset += 16.f;
+        gui->DoLabel(left, offset, "[D] move right"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Q] move up"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Z] move down"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Shift] move fast"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Mouse right] rotate"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Mouse middle] move"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Mouse scroll] zoom"); offset += 16.f;
+    }
 }
 
 void GraphicalSimulationApp::StartSimulation()

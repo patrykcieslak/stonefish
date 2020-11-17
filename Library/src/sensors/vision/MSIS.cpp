@@ -118,10 +118,8 @@ void* MSIS::getImageDataPointer(unsigned int index)
 
 void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y)
 {
-    GLint* viewport = glMSIS->GetViewport();
-    x = viewport[2];
-    y = viewport[3];
-    delete [] viewport;
+    getResolution(x, y);
+    x = y; //numOfBins x numOfBins
 }
 
 GLubyte* MSIS::getDisplayDataPointer()
