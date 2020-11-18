@@ -2,7 +2,7 @@
 <scenario>
 	<environment>
 		<ned latitude="40.0" longitude="3.0"/>
-		<!--<ocean>
+		<ocean>
 			<water density="1025.0" jerlov="0.5"/>
 			<waves height="0.0"/>
 			<current type="uniform">
@@ -13,7 +13,7 @@
 				<outlet radius="0.2"/>
 				<velocity xyz="1.0 1.0 0.0"/>
 			</current>
-		</ocean>-->
+		</ocean>
 		<atmosphere>
 			<sun azimuth="120.0" elevation="50.0"/>
 		</atmosphere>
@@ -69,6 +69,10 @@
 		<material name="Aluminium"/>
 		<look name="gray"/>
 		<world_transform rpy="0.0 0.0 0.0" xyz="2.0 0.0 3.0"/>
+		<sensor name="cam" type="camera" rate="10.0">
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+			<specs resolution_x="1360" resolution_y="1024" horizontal_fov="55.0"/>
+		</sensor>
 	</static>
 
 	<animated name="Anim" type="model" collisions="false">
@@ -84,7 +88,25 @@
 			<keypoint time="4.0" xyz="10.0 4.0 0.0" rpy="0.0 0.0 0.0"/>
 			<keypoint time="10.0" xyz="0.0 0.0 5.0" rpy="1.0 2.0 0.0"/>
 		</trajectory>
+		<sensor name="gpsanim" type="gps" rate="1.0">
+			<origin rpy="0.0 0.0 0.0" xyz="-0.54 -0.35 -0.74"/>
+			<noise ned_position="0.5"/>
+		</sensor>
 	</animated>
+
+	<dynamic name="Ball" type="sphere" physics="submerged">
+		<dimensions radius="0.5"/>
+		<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+		<material name="Aluminium"/>
+		<look name="gray"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 -2.0"/>
+		<sensor name="dvl" type="dvl" rate="5.0">
+			<origin rpy="3.1416 0.0 -0.785" xyz="0.0 0.0 0.4"/>
+			<specs beam_angle="30.0"/>
+			<range velocity="9.0 9.0 9.0" altitude_min="0.5" altitude_max="81.0"/>
+			<noise velocity="0.0015" altitude="0.001"/>
+		</sensor>
+	</dynamic>
 
     <include file="girona500auv.scn">
 		<arg name="robot_name" value="GIRONA500"/>

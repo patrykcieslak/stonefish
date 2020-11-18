@@ -33,6 +33,8 @@ namespace sf
     //! An enum defining types of vision sensors.
     enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
     
+    class Entity;
+    class StaticEntity;
     class MovingEntity;
     
     //! An abstract class representing a vision sensor.
@@ -58,12 +60,25 @@ namespace sf
         //! A method performing sensor transformation update.
         virtual void UpdateTransform() = 0;
         
-        //! A method used to attach the sensor to a rigid body.
+        //! A method used to attach the sensor to the world frame.
         /*!
-         \param solid a pointer to the rigid body
-         \param origin the place where the sensor should be attached in the solid origin frame
+         \param origin the place where the sensor should be attached in the world frame
          */
-        void AttachToSolid(MovingEntity* solid, const Transform& origin);
+        void AttachToWorld(const Transform& origin);
+        
+        //! A method used to attach the sensor to a static body.
+        /*!
+         \param body a pointer to the static body
+         \param origin the place where the sensor should be attached in the body origin frame
+         */
+        void AttachToStatic(StaticEntity* body, const Transform& origin);
+
+        //! A method used to attach the sensor to a moving body.
+        /*!
+         \param body a pointer to the moving body
+         \param origin the place where the sensor should be attached in the body origin frame
+         */
+        void AttachToSolid(MovingEntity* body, const Transform& origin);
         
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame();
@@ -78,7 +93,7 @@ namespace sf
         virtual void InitGraphics() = 0;
         
     private:
-        MovingEntity* attach;
+        Entity* attach;
         Transform o2s;
     };
 }

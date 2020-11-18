@@ -20,13 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/VisionSensor.h"
 
 #include "core/SimulationApp.h"
 #include "core/Console.h"
+#include "entities/StaticEntity.h"
 #include "entities/SolidEntity.h"
 
 namespace sf
@@ -48,7 +49,12 @@ VisionSensor::~VisionSensor()
 Transform VisionSensor::getSensorFrame()
 {
     if(attach != nullptr)
-        return attach->getOTransform() * o2s;
+    {
+        if(attach->getType() == EntityType::STATIC)
+            return ((StaticEntity*)attach)->getTransform() * o2s;
+        else
+            return ((MovingEntity*)attach)->getOTransform() * o2s;
+    }
     else
         return o2s;
 }
@@ -58,12 +64,29 @@ SensorType VisionSensor::getType()
     return SensorType::VISION;
 }
 
-void VisionSensor::AttachToSolid(MovingEntity* solid, const Transform& origin)
+void VisionSensor::AttachToWorld(const Transform& origin)
 {
-    if(solid != nullptr)
+    attach = nullptr;
+    o2s = origin;
+    InitGraphics();
+}
+
+void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
+{
+    if(body != nullptr)
     {
+        attach = body;
         o2s = origin;
-        attach = solid;
+        InitGraphics();
+    }
+}
+
+void VisionSensor::AttachToSolid(MovingEntity* body, const Transform& origin)
+{
+    if(body != nullptr)
+    {
+        attach = body;
+        o2s = origin;
         InitGraphics();
     }
 }

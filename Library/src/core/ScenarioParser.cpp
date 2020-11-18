@@ -242,20 +242,11 @@ bool ScenarioParser::Parse(std::string filename)
     element = root->FirstChildElement("dynamic");
     while(element != nullptr)
     {
-        SolidEntity* solid;
-        if(!ParseSolid(element, solid))
+        if(!ParseDynamic(element))
         {
             cError("Scenario parser: dynamic object not properly defined!");
             return false;
         }
-        XMLElement* item;
-        Transform trans;
-        if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
-        {
-            cError("Scenario parser: dynamic objects not properly defined!");
-            return false;
-        }
-        sm->AddSolidEntity(solid, trans);
         element = element->NextSiblingElement("dynamic");
     }
     
@@ -271,7 +262,19 @@ bool ScenarioParser::Parse(std::string filename)
         element = element->NextSiblingElement("robot");
     }
     
-    //Load standalone communication devices (beacons)
+    //Load standalone vision sensors (optional)
+    element = root->FirstChildElement("sensor");
+    while(element != nullptr)
+    {
+        if(!ParseSensor(element))
+        {
+            cError("Scenario parser: sensor not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("sensor");
+    }
+
+    //Load standalone communication devices (beacons, optional)
     element = root->FirstChildElement("comm");
     while(element != nullptr)
     {
@@ -773,8 +776,23 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     }
     else
         return false;
-        
+
+    //---- Vision sensors ----
+    item = element->FirstChildElement("sensor");
+    while(item != nullptr)
+    {
+        if(!ParseSensor(item, (Entity*)object))
+        {
+            cError("Scenario parser: sensor of static body '%s' not properly defined!", name);
+            delete object;
+            return false;
+        }
+        item = item->NextSiblingElement("sensor");
+    }
+
+    //---- Add to world ----
     sm->AddStaticEntity(object, trans);
+
     return true;
 }
 
@@ -972,6 +990,40 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
 
     //---- Add to world ----
     sm->AddAnimatedEntity(object);
+
+    return true;
+}
+
+bool ScenarioParser::ParseDynamic(XMLElement* element)
+{
+    //---- Solid ----
+    SolidEntity* solid;
+    if(!ParseSolid(element, solid))
+        return false;
+    
+    XMLElement* item;
+    Transform trans;
+    if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
+    {
+        delete solid;
+        return false;
+    }
+
+    //---- Sensors -----
+    item = element->FirstChildElement("sensor");
+    while(item != nullptr)
+    {
+        if(!ParseSensor(item, (Entity*)solid))
+        {
+            cError("Scenario parser: sensor of dynamic body '%s' not properly defined!", solid->getName().c_str());
+            delete solid;
+            return false;
+        }
+        item = item->NextSiblingElement("sensor");
+    }
+
+    //---- Add to world ----
+    sm->AddSolidEntity(solid, trans);
 
     return true;
 }
@@ -1687,7 +1739,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
 {
     //Parse
-    Sensor* sens = ParseSensor(element, ent->getName());
+    Sensor* sens = ParseSensor(element, ent != nullptr ? ent->getName() : "");
     if(sens == nullptr)
         return false;
 
@@ -1712,7 +1764,13 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
                 delete sens;
                 return false;
             }
-            if(ent->getType() == EntityType::SOLID || ent->getType() == EntityType::ANIMATED)
+            if(ent == nullptr)
+            {
+                cError("Scenario parser: link sensors can only be attached to robotic links and moving bodies!");
+                delete sens;
+                return false;
+            }
+            else if(ent->getType() == EntityType::SOLID || ent->getType() == EntityType::ANIMATED)
             {
                 LinkSensor* lsens = (LinkSensor*)sens;
                 lsens->AttachToSolid((MovingEntity*)ent, origin);
@@ -1720,6 +1778,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
             }
             else
             {
+                cError("Scenario parser: link sensors can only be attached to robotic links and moving bodies!");
                 delete sens;
                 return false;
             }
@@ -1735,22 +1794,20 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
                 delete sens;
                 return false;
             }
-            if(ent->getType() == EntityType::SOLID || ent->getType() == EntityType::ANIMATED)
-            {
-                VisionSensor* vsens = (VisionSensor*)sens;
+            VisionSensor* vsens = (VisionSensor*)sens;
+            if(ent == nullptr)
+                vsens->AttachToWorld(origin);
+            else if(ent->getType() == EntityType::SOLID || ent->getType() == EntityType::ANIMATED)
                 vsens->AttachToSolid((MovingEntity*)ent, origin);
-                sm->AddSensor(vsens);
-            }
-            /*else if(ent->getType() == EntityType::STATIC)
-            {
-                
-                
-            }*/
+            else if(ent->getType() == EntityType::STATIC)
+                vsens->AttachToStatic((StaticEntity*)ent, origin);   
             else
             {
+                cError("Scenario parser: trying to attach vision sensor to a non-physical body!");
                 delete sens;
                 return false;
             }
+            sm->AddSensor(vsens);
         }
             break;
 

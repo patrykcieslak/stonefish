@@ -120,6 +120,13 @@ namespace sf
         //! A method used to parse a dynamic object description.
         /*!
          \param element a pointer to the XML node
+         \return success
+         */
+        virtual bool ParseDynamic(XMLElement* element);
+
+        //! A method used to parse a dynamic object description.
+        /*!
+         \param element a pointer to the XML node
          \param solid a reference to the loaded solid entity
          \param ns an optional namespace
          \param compoundPart is this solid a part of a compound body?
@@ -168,13 +175,13 @@ namespace sf
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
         
-        //! A method used to parse a description of a sensor attached to single body.
+        //! A method used to parse a description of a sensor attached to single body or world.
         /*!
          \param element a pointer to the XML node
          \param ent a pointer to an entity (static, solid, animated)
          \return success
          */
-        virtual bool ParseSensor(XMLElement* element, Entity* ent);
+        virtual bool ParseSensor(XMLElement* element, Entity* ent = nullptr);
         
         //! A method used to parse a description of a sensor.
         /*!
