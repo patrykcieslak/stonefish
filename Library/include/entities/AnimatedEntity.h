@@ -71,6 +71,19 @@ namespace sf
          */
         AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "", bool collides = false);
 
+        //! A constructor building a cylindrical body.
+        /*!
+         \param uniqueName a name for the entity
+         \param traj a pointer to the body trajectory
+         \param cylinderRadius the radius of the cylinder [m]
+         \param cylinderHeight the height of the cylinder [m]
+         \param origin a pose of the mesh with respect to the body origin frame
+         \param material the name of the material the entity is made of
+         \param look the name of the graphical material used for rendering
+         \param collides a flag determining if the body can collide with other bodies
+         */
+        AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+
         //! A constructor building a box body.
         /*!
          \param uniqueName a name for the entity

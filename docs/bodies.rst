@@ -4,7 +4,7 @@
 Dynamic bodies
 ==============
 
-The dynamic bodies represent all of the rigid bodies that are not fixed to the world frame and thus require simulation of dynamics and hydrodynamics. It includes free bodies, constituting the dynamic parts of the :ref:`environment <environment>`, as well as :ref:`links of the robots <robot-links>`.
+The dynamic bodies represent all of the rigid bodies that are not fixed to the world frame and require simulation of dynamics and hydrodynamics. It includes free bodies, constituting the dynamic parts of the :ref:`environment <environment>`, as well as :ref:`links of the robots <robot-links>`.
 
 Common properties
 =================

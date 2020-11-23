@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Stonefish VERSION 1.1.0)
+project(Stonefish VERSION 1.2.0)
 
 configure_file(version.h.in version.h)
 configure_file(stonefish.pc.in stonefish.pc)
@@ -12,7 +12,7 @@ endif()
 option(BUILD_TESTS "Build applications testing different features of the Stonefish library" OFF)
 
 # Set up CMAKE flags
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "-DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -DDEBUG")

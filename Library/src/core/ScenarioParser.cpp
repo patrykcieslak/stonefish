@@ -915,6 +915,23 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
 
         object = new AnimatedEntity(std::string(name), tr, Vector3(dimX, dimY, dimZ), origin, std::string(mat), std::string(look), collides);
     }
+    else if(typestr == "cylinder")
+    {
+        Scalar radius;
+        Scalar height;
+        Transform origin;
+            
+        if((item = element->FirstChildElement("dimensions")) == nullptr)
+            return false;
+        if(item->QueryAttribute("radius", &radius) != XML_SUCCESS)
+            return false;
+        if(item->QueryAttribute("height", &height) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+            
+        object = new AnimatedEntity(std::string(name), tr, radius, height, origin, std::string(mat), std::string(look), collides);
+    }
     else if(typestr == "sphere")
     {
         Scalar radius;

@@ -128,6 +128,10 @@ The *Stonefish* library uses the concept of an immediate-mode GUI (IMGUI), which
 
     If the standard keyboard handling was not overridden, the ``h`` key can be used to show/hide the IMGUI and the ``c`` key can be used to show/hide the console. The console can be scrolled using the mouse.
 
+.. note::
+
+    If the standard GUI was not overridden, a keymap of the standard keyboard commands can be displayed hitting the ``k`` key, in the right bottom corner of the simulation window.
+
 Customising the IMGUI
 ---------------------
 

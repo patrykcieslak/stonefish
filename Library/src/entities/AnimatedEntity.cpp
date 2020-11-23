@@ -62,7 +62,30 @@ AnimatedEntity::AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar 
     //Build graphical objects
     if(SimulationApp::getApp()->hasGraphics())
     { 
-        Mesh* phyMesh = OpenGLContent::BuildSphere(sphereRadius);
+        Mesh* phyMesh = OpenGLContent::BuildSphere((GLfloat)sphereRadius);
+        phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+        graObjectId = phyObjectId;
+    }
+}
+
+AnimatedEntity::AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look, bool collides)
+    : MovingEntity(uniqueName, material, look), tr(traj)
+{
+    if(traj == nullptr)
+        return;
+
+    T_O2C = T_O2G = I4();
+    T_CG2O = origin.inverse();
+
+    //Build rigid body
+    Scalar halfHeight = cylinderHeight/Scalar(2);
+    btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
+    BuildRigidBody(shape, collides);
+
+    //Build graphical objects
+    if(SimulationApp::getApp()->hasGraphics())
+    { 
+        Mesh* phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
         phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
         graObjectId = phyObjectId;
     }

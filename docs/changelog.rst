@@ -2,6 +2,24 @@
 Changelog
 ==========
 
+1.2
+===
+
+- Animated bodies - bodies moving according to a predefined trajectory
+- Trajectory generators for animated bodies (piece-wise linear and spline interpolation)
+- Sensors can now be attached to dynamic, static and animated bodies, as well as the world frame
+- Noise definition for sonars and the depth camera
+- Sonar output reduced to 8 bit, to better reflect real sensors
+- Looks are now parsed from the included files
+- "Shift" key can be used to move the main window camera faster
+- Display of keymap in the GUI (press 'K')
+- Sun light shadows on ocean surface
+- Fixed reflections on ocean surface
+- Fixed horizon rendering problems
+- Fixed particle motion
+- Fixed cascaded shadow mapping
+- Fixed depth camera minimum range
+
 1.1
 ===
 

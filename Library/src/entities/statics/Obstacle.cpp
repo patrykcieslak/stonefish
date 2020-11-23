@@ -108,7 +108,7 @@ Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string ma
 Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     Scalar halfHeight = cylinderHeight/Scalar(2);
-    phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)halfHeight*2.f);
+    phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
     graMesh = phyMesh;
     graObjectId = -1;
     

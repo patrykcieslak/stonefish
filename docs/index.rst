@@ -51,6 +51,7 @@ This work was part of a project titled ”Force/position control system to enabl
    scenario
    materials
    environment
+   animated
    bodies
    robots
    sensors

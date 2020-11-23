@@ -47,3 +47,18 @@ The following steps are needed to generate and open the documentation of the lib
 1. Go to "stonefish" directory.
 2. ``$ doxygen doxygen``
 3. Open "docs/html/index.html".
+
+3rd party code
+==============
+
+The following 3rd party code is included in the source of the library and will be updated manually by the author: 
+
+* `Bullet Physics <https://pybullet.org/wordpress/>`_ (C++ library, parts)
+
+* `TinyXML-2 <http://www.grinninglizard.com/tinyxml2/>`_ (C++ library)
+
+* `stb_image <https://github.com/nothings/stb>`_ (C library)
+
+* `stb_image_write <https://github.com/nothings/stb>`_ (C library)
+
+* OpenGL 4.6 functions loader generated with `GLAD2 <https://gen.glad.sh>`_
