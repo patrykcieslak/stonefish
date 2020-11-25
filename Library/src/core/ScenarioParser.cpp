@@ -32,6 +32,7 @@
 #include "entities/statics/Plane.h"
 #include "entities/statics/Terrain.h"
 #include "entities/AnimatedEntity.h"
+#include "entities/animation/ManualTrajectory.h"
 #include "entities/animation/PWLTrajectory.h"
 #include "entities/animation/CRTrajectory.h"
 #include "entities/solids/Box.h"
@@ -43,6 +44,7 @@
 #include "entities/solids/Compound.h"
 #include "entities/forcefields/Uniform.h"
 #include "entities/forcefields/Jet.h"
+#include "sensors/scalar/Gyroscope.h"
 #include "sensors/scalar/IMU.h"
 #include "sensors/scalar/DVL.h"
 #include "sensors/scalar/GPS.h"
@@ -274,18 +276,58 @@ bool ScenarioParser::Parse(std::string filename)
         element = element->NextSiblingElement("sensor");
     }
 
+    //Load standalone lights (optional)
+    element = root->FirstChildElement("light");
+    while(element != nullptr)
+    {
+        Light* l = ParseLight(element, "");
+        if(l == nullptr)
+        {
+            cError("Scenario parser: light not properly defined!");
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item;
+            if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, origin))
+            {
+                cError("Scenario parser: light not properly defined!");
+                delete l;
+                return false;
+            }
+            l->AttachToWorld(origin);
+            sm->AddActuator(l);
+        }
+        element = element->NextSiblingElement("light");
+    }
+
     //Load standalone communication devices (beacons, optional)
     element = root->FirstChildElement("comm");
     while(element != nullptr)
     {
-        if(!ParseComm(element))
+        Comm* comm = ParseComm(element, "");
+        if(comm == nullptr)
         {
             cError("Scenario parser: communication device not properly defined!");
             return false;
         }
+        else
+        {
+            Transform origin;
+            XMLElement* item;
+            if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, origin))
+            {
+                cError("Scenario parser: communication device not properly defined!");
+                delete comm;
+                return false;
+            }
+            comm->AttachToWorld(origin);
+            sm->AddComm(comm);
+        }
         element = element->NextSiblingElement("comm");
     }
-    
+        
     //Load contacts (optional)
     element = root->FirstChildElement("contact");
     while(element != nullptr)
@@ -790,6 +832,62 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         item = item->NextSiblingElement("sensor");
     }
 
+    //---- Lights ----
+    item = element->FirstChildElement("light");
+    while(item != nullptr)
+    {
+        Light* l = ParseLight(item, object->getName());
+        if(l == nullptr)
+        {
+            cError("Scenario parser: light of static body '%s' not properly defined!", name);
+            delete object;
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item2;
+            if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
+            {
+                cError("Scenario parser: light of static body '%s' not properly defined!", name);
+                delete l;
+                delete object;
+                return false;
+            }
+            l->AttachToStatic(object, origin);
+            sm->AddActuator(l);
+        }
+        item = item->NextSiblingElement("light");
+    }
+    
+    //---- Communication devices ----
+    item = element->FirstChildElement("comm");
+    while(item != nullptr)
+    {
+        Comm* comm = ParseComm(item, object->getName());
+        if(comm == nullptr)
+        {
+            cError("Scenario parser: communication device of static body '%s' not properly defined!", name);
+            delete object;
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item2;
+            if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
+            {
+                cError("Scenario parser: communication device of static body '%s' not properly defined!", name);
+                delete comm;
+                delete object;
+                return false;
+            }
+            comm->AttachToStatic(object, origin);
+            sm->AddComm(comm);
+        }
+        item = item->NextSiblingElement("comm");
+    }
+
     //---- Add to world ----
     sm->AddStaticEntity(object, trans);
 
@@ -838,13 +936,21 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     if((item = element->FirstChildElement("trajectory")) != nullptr)
     {
         const char* trType = nullptr;
-        const char* playMode = nullptr;
         if(item->QueryStringAttribute("type", &trType) != XML_SUCCESS)
+        {
+            cError("Scenario parser: trajectory type not defined!");
             return false;
-        if(item->QueryStringAttribute("playback", &playMode) != XML_SUCCESS)
+        }
+        std::string trTypeStr(trType);
+
+        const char* playMode = nullptr;
+        if(item->QueryStringAttribute("playback", &playMode) != XML_SUCCESS && trTypeStr != "manual")
+        {
+            cError("Scenario parser: trajectory playback mode not defined!");
             return false;
+        }
         
-        std::string playModeStr(playMode);
+        std::string playModeStr = playMode == nullptr ? "onetime" : std::string(playMode);
         PlaybackMode pm;
         if(playModeStr == "onetime")
             pm = PlaybackMode::ONETIME;
@@ -857,9 +963,20 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             cError("Scenario parser: incorrect trajectory playback mode!");
             return false;
         }
-
-        std::string trTypeStr(trType);
-        if(trTypeStr == "pwl" || trTypeStr == "spline")
+        
+        if(trTypeStr == "manual")
+        {
+            tr = new ManualTrajectory();
+            XMLElement* key = item->FirstChildElement("keypoint");
+            Transform T;
+            Scalar t;    
+            if(key != nullptr && key->QueryAttribute("time", &t) == XML_SUCCESS
+                && ParseTransform(key, T) && t == 0.0)
+            {
+                ((ManualTrajectory*)tr)->setTransform(T);
+            }
+        }
+        else if(trTypeStr == "pwl" || trTypeStr == "spline")
         {
             tr = trTypeStr == "pwl" ? new PWLTrajectory(pm) : new CRTrajectory(pm);
             PWLTrajectory* pwl = (PWLTrajectory*)tr; //Spline has the same mechanism of adding points
@@ -1005,6 +1122,62 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
         item = item->NextSiblingElement("sensor");
     }
 
+    //---- Lights ----
+    item = element->FirstChildElement("light");
+    while(item != nullptr)
+    {
+        Light* l = ParseLight(item, object->getName());
+        if(l == nullptr)
+        {
+            cError("Scenario parser: light of animated body '%s' not properly defined!", name);
+            delete object;
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item2;
+            if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
+            {
+                cError("Scenario parser: light of animated body '%s' not properly defined!", name);
+                delete l;
+                delete object;
+                return false;
+            }
+            l->AttachToAnimated(object, origin);
+            sm->AddActuator(l);
+        }
+        item = item->NextSiblingElement("light");
+    }
+
+    //---- Communication devices ----
+    item = element->FirstChildElement("comm");
+    while(item != nullptr)
+    {
+        Comm* comm = ParseComm(item, object->getName());
+        if(comm == nullptr)
+        {
+            cError("Scenario parser: communication device of animated body '%s' not properly defined!", name);
+            delete object;
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item2;
+            if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
+            {
+                cError("Scenario parser: communication device of animated body '%s' not properly defined!", name);
+                delete comm;
+                delete object;
+                return false;
+            }
+            comm->AttachToSolid(object, origin);
+            sm->AddComm(comm);
+        }
+        item = item->NextSiblingElement("comm");
+    }
+
     //---- Add to world ----
     sm->AddAnimatedEntity(object);
 
@@ -1037,6 +1210,62 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
             return false;
         }
         item = item->NextSiblingElement("sensor");
+    }
+
+    //---- Lights ----
+    item = element->FirstChildElement("light");
+    while(item != nullptr)
+    {
+        Light* l = ParseLight(item, solid->getName());
+        if(l == nullptr)
+        {
+            cError("Scenario parser: light of dynamic body '%s' not properly defined!", solid->getName().c_str());
+            delete solid;
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item2;
+            if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
+            {
+                cError("Scenario parser: light of dynamic body '%s' not properly defined!", solid->getName().c_str());
+                delete l;
+                delete solid;
+                return false;
+            }
+            l->AttachToSolid(solid, origin);
+            sm->AddActuator(l);
+        }
+        item = item->NextSiblingElement("light");
+    }
+
+    //---- Communication devices ----
+    item = element->FirstChildElement("comm");
+    while(item != nullptr)
+    {
+        Comm* comm = ParseComm(item, solid->getName());
+        if(comm == nullptr)
+        {
+            cError("Scenario parser: communication device of dynamic body '%s' not properly defined!", solid->getName().c_str());
+            delete solid;
+            return false;
+        }
+        else
+        {
+            Transform origin;
+            XMLElement* item2;
+            if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
+            {
+                cError("Scenario parser: communication device of dynamic body '%s' not properly defined!", solid->getName().c_str());
+                delete comm;
+                delete solid;
+                return false;
+            }
+            comm->AttachToSolid(solid, origin);
+            sm->AddComm(comm);
+        }
+        item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
@@ -1443,16 +1672,61 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         }
         item = item->NextSiblingElement("actuator");
     }
+
+    //---- Lights ----
+    item = element->FirstChildElement("light");
+    while(item != nullptr)
+    {
+        Light* l = ParseLight(item, robot->getName());
+        if(l == nullptr)
+        {
+            cError("Scenario parser: light of robot '%s' not properly defined!", name);
+            delete robot;
+            return false;
+        }
+        else
+        {
+            const char* linkName = nullptr;
+            Transform origin;
+            XMLElement* item2;
+            if( ((item2 = item->FirstChildElement("link")) == nullptr || item2->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+                || ((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin)) )
+            {
+                cError("Scenario parser: light of robot '%s' not properly defined!", name);
+                delete l;
+                delete robot;
+                return false;
+            }
+            robot->AddLinkActuator(l, robot->getName() + "/" + std::string(linkName), origin);
+        }
+        item = item->NextSiblingElement("light");
+    }
     
-    //---- Comms ----
+    //---- Communication devices ----
     item = element->FirstChildElement("comm");
     while(item != nullptr)
     {
-        if(!ParseComm(item, robot))
+        Comm* comm = ParseComm(item, robot->getName());
+        if(comm == nullptr)
         {
-            cError("Scenario parser: comunication device of robot '%s' not properly defined!", name);
+            cError("Scenario parser: communication device of robot '%s' not properly defined!", name);
             delete robot;
             return false;
+        }
+        else
+        {
+            const char* linkName = nullptr;
+            Transform origin;
+            XMLElement* item2;
+            if( ((item2 = item->FirstChildElement("link")) == nullptr || item2->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+                || ((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin)) )
+            {
+                cError("Scenario parser: communication device of robot '%s' not properly defined!", name);
+                delete comm;
+                delete robot;
+                return false;
+            }
+            robot->AddComm(comm, robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("comm");
     }
@@ -1712,41 +1986,6 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         VariableBuoyancy* vbs = new VariableBuoyancy(actuatorName, vMeshes, initialV);
         robot->AddLinkActuator(vbs, robot->getName() + "/" + std::string(linkName), origin);
     }
-    else if(typeStr == "light")
-    {
-        const char* linkName = nullptr;
-        Scalar illu, radius;
-		Scalar cone = Scalar(0);
-        Color color = Color::Gray(1.f);
-        Transform origin;
-        
-        if((item = element->FirstChildElement("link")) == nullptr)
-            return false;
-        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
-            return false;
-        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-            return false;
-        if((item = element->FirstChildElement("specs")) != nullptr)
-        {
-            if(item->QueryAttribute("illuminance", &illu) != XML_SUCCESS)
-                return false;
-			if(item->QueryAttribute("radius", &radius) != XML_SUCCESS)
-				return false;
-            item->QueryAttribute("cone_angle", &cone);
-        } 
-        else
-            return false;
-        if((item = element->FirstChildElement("color")) == nullptr || !ParseColor(item, color))
-            return false;
-            
-        Light* light;
-        if(cone > Scalar(0))
-            light = new Light(actuatorName, radius, cone, color, illu);
-        else
-            light = new Light(actuatorName, radius, color, illu);
-            
-        robot->AddLinkActuator(light, robot->getName() + "/" + std::string(linkName), origin);
-    }
     else
         return false;
     
@@ -1805,7 +2044,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
         case SensorType::VISION:
         {
             Transform origin;
-            if((item = element->FirstChildElement("origin")) == nullptr 
+            if((item = element->FirstChildElement(ent == nullptr ? "world_transform" : "origin")) == nullptr 
                 || !ParseTransform(item, origin))
             {
                 delete sens;
@@ -1859,7 +2098,41 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     
     //---- Specific ----
     XMLElement* item;
-    if(typeStr == "imu")
+    if(typeStr == "gyro")
+    {
+        int history;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        Gyroscope* gyro = new Gyroscope(sensorName, rate, history);
+        
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar velocity;
+            if(item->QueryAttribute("angular_velocity", &velocity) != XML_SUCCESS)
+            {
+                delete gyro;
+                return nullptr;
+            }
+            gyro->setRange(velocity);
+        }
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar velocity;
+            Scalar bias = Scalar(0);
+            if(item->QueryAttribute("angular_velocity", &velocity) != XML_SUCCESS)
+            {
+                delete gyro;
+                return nullptr;
+            }
+            item->QueryAttribute("bias", &bias);
+            gyro->setNoise(velocity, bias);
+        }
+        
+        return gyro;
+    }
+    else if(typeStr == "imu")
     {
         int history;
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
@@ -1869,25 +2142,57 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         
         if((item = element->FirstChildElement("range")) != nullptr)    
         {
-            Scalar velocity;
-            if(item->QueryAttribute("angular_velocity", &velocity) != XML_SUCCESS)
+            const char* velocity = nullptr;
+            Vector3 vxyz;
+            Scalar v;
+            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS  
+               && ParseVector(velocity, vxyz))
+            {
+                imu->setRange(vxyz);    
+            }
+            else if(item->QueryAttribute("angular_velocity", &v) == XML_SUCCESS)
+            {
+                imu->setRange(Vector3(v, v, v));
+            }
+            else
             {
                 delete imu;
                 return nullptr;
             }
-            imu->setRange(velocity);
         }
         
         if((item = element->FirstChildElement("noise")) != nullptr)    
         {
-            Scalar angle;
-            Scalar velocity;
-            if(item->QueryAttribute("angle", &angle) != XML_SUCCESS || item->QueryAttribute("angular_velocity", &velocity) != XML_SUCCESS)
+            const char* angle = nullptr;
+            const char* velocity = nullptr;
+            Vector3 axyz;
+            Vector3 avxyz;
+            Scalar a;
+            Scalar av;
+            Scalar yawDrift = Scalar(0);
+            item->QueryAttribute("yaw_drift", &yawDrift);
+
+            if(item->QueryStringAttribute("angle", &angle) == XML_SUCCESS && ParseVector(angle, axyz))
+                ;
+            else if(item->QueryAttribute("angle", &a) == XML_SUCCESS)
+                axyz = Vector3(a, a, a);
+            else
             {
                 delete imu;
                 return nullptr;
             }
-            imu->setNoise(angle, velocity);
+            
+            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS && ParseVector(velocity, avxyz))
+                ;
+            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
+                avxyz = Vector3(av, av, av);
+            else
+            {
+                delete imu;
+                return nullptr;
+            }
+            
+            imu->setNoise(axyz, avxyz, yawDrift);
         }
         
         return imu;
@@ -2401,46 +2706,85 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         return nullptr;
 }
 
-bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
+Light* ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
 {
+    const char* name = nullptr;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+        return nullptr;
+
+    std::string lightName = std::string(name);
+    if(namePrefix != "")
+        lightName = namePrefix + "/" + lightName;
+    
     XMLElement* item;
+    Scalar illu, radius;
+	Scalar cone = Scalar(0);
+    Color color = Color::Gray(1.f);
+    
+    if((item = element->FirstChildElement("specs")) != nullptr)
+    {
+        if(item->QueryAttribute("illuminance", &illu) != XML_SUCCESS)
+            return nullptr;
+        if(item->QueryAttribute("radius", &radius) != XML_SUCCESS)
+            return nullptr;
+        item->QueryAttribute("cone_angle", &cone);
+    } 
+    else
+        return nullptr;
+    
+    if((item = element->FirstChildElement("color")) == nullptr || !ParseColor(item, color))
+        return nullptr;
+        
+    Light* light;
+    if(cone > Scalar(0))
+        light = new Light(lightName, radius, cone, color, illu);
+    else
+        light = new Light(lightName, radius, color, illu);
+    return light;
+}
+
+Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePrefix)
+{
     const char* name = nullptr;
     const char* type = nullptr;
     unsigned int devId;
-    Transform origin;
-
+    
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
-        return false;
+        return nullptr;
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
-        return false;
+        return nullptr;
     if(element->QueryAttribute("device_id", &devId) != XML_SUCCESS)
-        return false;
-    if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-        return false;
+        return nullptr;
      
     std::string typeStr(type);
-    std::string commName = robot != nullptr ? robot->getName() + "/" + std::string(name) : std::string(name);
+    std::string commName = std::string(name);
+    if(namePrefix != "")
+        commName = namePrefix + "/" + commName;
+
+    XMLElement* item;
     Comm* comm;
-    
     if(typeStr == "acoustic_modem")
     {
         Scalar hFovDeg;
         Scalar vFovDeg;
         Scalar range;
         unsigned int cId = 0;
+        bool occlusion = true;
         
         if((item = element->FirstChildElement("specs")) == nullptr
             || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
             || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS)
-            return false;
-        if((item = element->FirstChildElement("connect")) == nullptr
-            || item->QueryAttribute("device_id", &cId) != XML_SUCCESS
-            || cId == 0)
-            return false;
-            
+            return nullptr;
+        item = element->FirstChildElement("connect");
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS || cId == 0)
+            return nullptr;
+        item->QueryAttribute("occlusion_test", &occlusion);
+    
         comm = new AcousticModem(commName, devId, hFovDeg, vFovDeg, range);
         comm->Connect(cId);
+        ((AcousticModem*)comm)->setOcclusionTest(occlusion);
+        return comm;
     }
     else if(typeStr == "usbl")
     {
@@ -2449,19 +2793,21 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         Scalar range;
         unsigned int cId = 0;
         Scalar pingRate;
+        bool occlusion = true;
         
         if((item = element->FirstChildElement("specs")) == nullptr
             || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
             || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS)
-            return false;
-        if((item = element->FirstChildElement("connect")) == nullptr
-            || item->QueryAttribute("device_id", &cId) != XML_SUCCESS
-            || cId == 0)
-            return false;
-            
+            return nullptr;
+        item = element->FirstChildElement("connect");
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS || cId == 0)
+            return nullptr;
+        item->QueryAttribute("occlusion_test", &occlusion);
+
         comm = new USBL(commName, devId, hFovDeg, vFovDeg, range);
         comm->Connect(cId);
+        ((AcousticModem*)comm)->setOcclusionTest(occlusion);
         
         if((item = element->FirstChildElement("autoping")) != nullptr
             && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
@@ -2470,64 +2816,29 @@ bool ScenarioParser::ParseComm(XMLElement* element, Robot* robot)
         if((item = element->FirstChildElement("noise")) != nullptr)
         {
             Scalar rangeDev = Scalar(0);
-            Scalar angleDevDeg = Scalar(0);
-            Scalar depthDev = Scalar(0);
-            Scalar nedDev = Scalar(0);
+            Scalar hAngleDevDeg = Scalar(0);
+            Scalar vAngleDevDeg = Scalar(0);
             item->QueryAttribute("range", &rangeDev);
-            item->QueryAttribute("angle", &angleDevDeg);
-            item->QueryAttribute("depth", &depthDev);
-            item->QueryAttribute("ned", &nedDev);
-            ((USBL*)comm)->setNoise(rangeDev, angleDevDeg, depthDev, nedDev);
+            item->QueryAttribute("horizontal_angle", &hAngleDevDeg);
+            item->QueryAttribute("vertical_angle", &vAngleDevDeg);
+            ((USBL*)comm)->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
         }
+
+        if((item = element->FirstChildElement("resolution")) != nullptr)
+        {
+            Scalar rangeRes = Scalar(0);
+            Scalar angleResDeg = Scalar(0);
+            item->QueryAttribute("range", &rangeRes);
+            item->QueryAttribute("angle", &angleResDeg);
+            ((USBL*)comm)->setResolution(rangeRes, angleResDeg);
+        }
+        return comm;
     }
     else 
-        return false;
-    
-    //Attach communication device to a body if required
-    const char* attachName = nullptr;
-    
-    if(robot != nullptr)
     {
-        if((item = element->FirstChildElement("link")) != nullptr
-            && item->QueryStringAttribute("name", &attachName) == XML_SUCCESS)
-        {
-            robot->AddComm(comm, robot->getName() + "/" + std::string(attachName), origin);
-        }
-        else
-        {
-            delete comm;
-            return false;
-        }
+        cError("Scenario parser: unknown communication device type!");
+        return nullptr;
     }
-    else if((item = element->FirstChildElement("body")) != nullptr)
-    {
-        if(item->QueryStringAttribute("name", &attachName) == XML_SUCCESS)
-        {
-            Entity* body = sm->getEntity(std::string(attachName));
-            if(body->getType() == EntityType::STATIC)
-            {
-                comm->AttachToStatic((StaticEntity*)body, origin);
-                sm->AddComm(comm);
-            }
-            else if(body->getType() == EntityType::SOLID)
-            {
-                comm->AttachToSolid((SolidEntity*)body, origin);
-                sm->AddComm(comm);
-            }
-            else
-            {
-                delete comm;
-                return false;
-            }
-        }
-    }
-    else //Communication device attached to the world origin
-    {
-        comm->AttachToWorld(origin);
-        sm->AddComm(comm);
-    }
-    
-    return true;
 }
 
 bool ScenarioParser::ParseContact(XMLElement* element)
@@ -2650,22 +2961,34 @@ bool ScenarioParser::CopyNode(XMLNode* destParent, const XMLNode* src)
     return true;
 }
 
+
+bool ScenarioParser::ParseVector(const char* components, Vector3& v)
+{
+    Scalar x, y, z;
+    if(sscanf(components, "%lf %lf %lf", &x, &y, &z) != 3) return false;
+    v.setX(x);
+    v.setY(y);
+    v.setZ(z);
+    return true;
+}
+
 bool ScenarioParser::ParseTransform(XMLElement* element, Transform& T)
 {
     const char* trans = nullptr;
     const char* rot = nullptr;
-    Scalar x, y, z, roll, pitch, yaw;
+    Vector3 xyz;
+    Vector3 rpy;
     
     if(element->QueryStringAttribute("xyz", &trans) != XML_SUCCESS)
         return false;
     if(element->QueryStringAttribute("rpy", &rot) != XML_SUCCESS)
         return false;
-    if(sscanf(trans, "%lf %lf %lf", &x, &y, &z) != 3)
+    if(!ParseVector(trans, xyz))
         return false;
-    if(sscanf(rot, "%lf %lf %lf", &roll, &pitch, &yaw) != 3)
+    if(!ParseVector(rot, rpy))
         return false;
         
-    T = Transform(Quaternion(yaw, pitch, roll), Vector3(x, y, z));
+    T = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz);
     return true;
 }
 

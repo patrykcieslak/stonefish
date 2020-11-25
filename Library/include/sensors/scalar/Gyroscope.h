@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Gyroscope__
@@ -29,27 +29,18 @@
 #include "sensors/scalar/LinkSensor.h"
 
 namespace sf
-{
-    class ADC;
-    
-    //! A class representing a realistic gyroscope.
+{   
+    //! A class representing a 3-axis gyroscope.
     class Gyroscope : public LinkSensor
     {
     public:
         //! A constructor.
         /*!
          \param uniqueName a name for the sensor
-         \param rangeMin minimum measured angular velocity [rad/s]
-         \param rangeMax maximum measured angular velocity [rad/s]
-         \param sensitivity sensor sensitivity [rad/V]
-         \param zeroVoltage the offset of the zero measurement [V]
-         \param driftSpeed a factor defining how fast the gyroscope drifts
-         \param adc a pointer to an analog-digital converter
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage,
-                  Scalar driftSpeed, ADC* adc, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Gyroscope(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -57,21 +48,24 @@ namespace sf
          */
         void InternalUpdate(Scalar dt);
         
-        //! A method resetting the state of the sensor.
-        void Reset();
+        //! A method used to set the range of the sensor.
+        /*!
+         \param angularVelMax the maximum measured angular velocity [rad/s]
+         */
+        void setRange(Scalar angularVelMax);
         
+        //! A method used to set the noise characteristics of the sensor.
+        /*!
+         \param angularVelStdDev standard deviation of the angular velocity measurement noise
+         \param angularVelBias bias of the angular velocity measurement [rad/s]
+         */
+        void setNoise(Scalar angularVelStdDev, Scalar angularVelBias);
+
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();
         
     private:
-        Scalar range[2];
-        Scalar sens;
-        Scalar zeroV;
-        Scalar drift;
-        ADC* adc;
-        
-        //temporary
-        Scalar accumulatedDrift;
+        Scalar bias;
     };
 }
 

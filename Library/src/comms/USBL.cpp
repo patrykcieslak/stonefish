@@ -36,20 +36,32 @@ USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, S
 {
     ping = false;
     noise = false;
+    rangeRes = Scalar(0);
+    angleRes = Scalar(0);
 }
     
-void USBL::setNoise(Scalar rangeDev, Scalar angleDevDeg, Scalar nedDev, Scalar depthDev)
+void USBL::setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg)
 {
-    noiseRange = std::normal_distribution<Scalar>(Scalar(0), fabs(rangeDev));
-    noiseAngle = std::normal_distribution<Scalar>(Scalar(0), fabs(angleDevDeg)/Scalar(180)*M_PI);
-    noiseNED = std::normal_distribution<Scalar>(Scalar(0), fabs(nedDev));
-    noiseDepth = std::normal_distribution<Scalar>(Scalar(0), fabs(depthDev));
+    noiseRange = std::normal_distribution<Scalar>(Scalar(0), btFabs(rangeDev));
+    noiseHAngle = std::normal_distribution<Scalar>(Scalar(0), btFabs(horizontalAngleDevDeg)/Scalar(180)*M_PI);
+    noiseVAngle = std::normal_distribution<Scalar>(Scalar(0), btFabs(verticalAngleDevDeg)/Scalar(180)*M_PI);
     noise = true;
+}
+
+void USBL::setResolution(Scalar range, Scalar angleDeg)
+{
+    rangeRes = btFabs(range);
+    angleRes = btFabs(angleDeg)/Scalar(180)*M_PI;
 }
 
 std::map<uint64_t, std::pair<Scalar, Vector3>>& USBL::getTransponderPositions()
 {
     return transponderPos;
+}
+
+CommType USBL::getType() const
+{
+    return CommType::USBL;
 }
 
 void USBL::EnableAutoPing(Scalar rate)
@@ -98,36 +110,38 @@ void USBL::ProcessMessages()
             Transform dT = getDeviceFrame();
             Vector3 dO = dT.getOrigin();
             Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
-            Scalar distance = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
-            Scalar t = msg->timeStamp + distance/SOUND_VELOCITY_WATER;
+            Scalar slantRange = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
+            Scalar t = msg->timeStamp + slantRange/SOUND_VELOCITY_WATER;
             
             //Find ranging angles
             Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
-            Scalar vAngle = atan2(d, dir.getZ());
             Scalar hAngle = atan2(dir.getY(), dir.getX());
+            Scalar vAngle = atan2(d, dir.getZ());
         
-            //Find position of receiver
-            Vector3 pos;
-        
+            //Apply noise and quantization
             if(noise)
             {
-                dT.getOrigin().setX(dT.getOrigin().getX() + noiseNED(randomGenerator));
-                dT.getOrigin().setY(dT.getOrigin().getY() + noiseNED(randomGenerator));
-                dT.getOrigin().setZ(dT.getOrigin().getZ() + noiseDepth(randomGenerator));
-                distance += noiseRange(randomGenerator);
-                vAngle += noiseAngle(randomGenerator);
-                hAngle += noiseAngle(randomGenerator);
-            
-                Vector3 corruptedDir;
-                corruptedDir.setX(btCos(hAngle) * btSin(vAngle));
-                corruptedDir.setY(btSin(hAngle) * btSin(vAngle));
-                corruptedDir.setZ(btCos(vAngle));
-                corruptedDir.normalize();
-            
-                pos = corruptedDir * distance;
+                slantRange += noiseRange(randomGenerator);
+                hAngle += noiseHAngle(randomGenerator);
+                vAngle += noiseVAngle(randomGenerator);
             }
-            else 
-                pos = dir * distance;
+
+            if(rangeRes > Scalar(0))
+                slantRange -= btFmod(slantRange, rangeRes); //Quantization
+
+            if(angleRes > Scalar(0))
+            {
+                hAngle -= btFmod(hAngle, angleRes); //Quantization
+                vAngle -= btFmod(vAngle, angleRes); //Quantization
+            }
+            
+            //Calculate receiver position
+            Vector3 pos;
+            dir.setX(btCos(hAngle) * btSin(vAngle));
+            dir.setY(btSin(hAngle) * btSin(vAngle));
+            dir.setZ(btCos(vAngle));
+            dir.normalize();
+            pos = dir * slantRange;
 
             //Update position in the transponder and in the USBL
             Vector3 worldPos = dT * pos;

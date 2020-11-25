@@ -20,12 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/IMU.h"
 
-#include "entities/SolidEntity.h"
+#include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 
 namespace sf
@@ -39,6 +39,8 @@ IMU::IMU(std::string uniqueName, Scalar frequency, int historyLength) : LinkSens
     channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
     channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
     channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
+    yawDriftRate = Scalar(0);
+    accumulatedYawDrift = Scalar(0);
 }
 
 void IMU::InternalUpdate(Scalar dt)
@@ -53,30 +55,41 @@ void IMU::InternalUpdate(Scalar dt)
     Scalar yaw, pitch, roll;
     imuTrans.getBasis().getEulerYPR(yaw, pitch, roll);
     
+    //accumulate and add drift
+    accumulatedYawDrift += yawDriftRate * dt;
+    yaw += accumulatedYawDrift;
+
     //record sample
     Scalar values[6] = {roll, pitch, yaw, av.x(), av.y(), av.z()};
     Sample s(6, values);
     AddSampleToHistory(s);
 }
 
-void IMU::setRange(Scalar angularVelocityMax)
+void IMU::Reset()
 {
-    channels[3].rangeMin = -angularVelocityMax;
-    channels[4].rangeMin = -angularVelocityMax;
-    channels[5].rangeMin = -angularVelocityMax;
-    channels[3].rangeMax = angularVelocityMax;
-    channels[4].rangeMax = angularVelocityMax;
-    channels[5].rangeMax = angularVelocityMax;
+    ScalarSensor::Reset();
+    accumulatedYawDrift = Scalar(0);
+}
+
+void IMU::setRange(Vector3 angularVelocityMax)
+{
+    channels[3].rangeMin = -angularVelocityMax.x();
+    channels[4].rangeMin = -angularVelocityMax.y();
+    channels[5].rangeMin = -angularVelocityMax.z();
+    channels[3].rangeMax = angularVelocityMax.x();
+    channels[4].rangeMax = angularVelocityMax.y();
+    channels[5].rangeMax = angularVelocityMax.z();
 }
     
-void IMU::setNoise(Scalar angleStdDev, Scalar angularVelocityStdDev)
+void IMU::setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift)
 {
-    channels[0].setStdDev(angleStdDev);
-    channels[1].setStdDev(angleStdDev);
-    channels[2].setStdDev(angleStdDev);
-    channels[3].setStdDev(angularVelocityStdDev);
-    channels[4].setStdDev(angularVelocityStdDev);
-    channels[5].setStdDev(angularVelocityStdDev);
+    channels[0].setStdDev(angleStdDev.x());
+    channels[1].setStdDev(angleStdDev.y());
+    channels[2].setStdDev(angleStdDev.z());
+    channels[3].setStdDev(angularVelocityStdDev.x());
+    channels[4].setStdDev(angularVelocityStdDev.y());
+    channels[5].setStdDev(angularVelocityStdDev.z());
+    yawDriftRate = yawAngleDrift;
 }
 
 ScalarSensorType IMU::getScalarSensorType()

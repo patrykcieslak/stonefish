@@ -2,18 +2,28 @@
 Changelog
 ==========
 
+The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
+
 1.2
 ===
 
 - Animated bodies - bodies moving according to a predefined trajectory
 - Trajectory generators for animated bodies (piece-wise linear and spline interpolation)
-- Sensors can now be attached to dynamic, static and animated bodies, as well as the world frame
+- Sensors can now be attached to all kinds of bodies, as well as the world frame
+- *New implementation of the 3-axis gyroscope, with a measurement bias*
+- *IMU implementation extended with yaw angle drift and per channel characteristics*
 - Noise definition for sonars and the depth camera
 - Sonar output reduced to 8 bit, to better reflect real sensors
+- *Lights can now be easily attached to any kind of body, as well as the world frame*
+- *New XML syntax for defining lights*
+- *Communication devices can now be attached to all kinds of bodies, as well as the world frame*
+- Fixed beam occlusion testing for acoustic comms and introduced option to disable it
+- *New implementation of the USBL, including measurement resolution*
 - Looks are now parsed from the included files
 - "Shift" key can be used to move the main window camera faster
 - Display of keymap in the GUI (press 'K')
 - Sun light shadows on ocean surface
+- Screen-space reflections quality settings
 - Fixed reflections on ocean surface
 - Fixed horizon rendering problems
 - Fixed particle motion

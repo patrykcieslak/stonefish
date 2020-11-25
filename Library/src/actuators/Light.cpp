@@ -33,12 +33,13 @@
 #include "graphics/OpenGLContent.h"
 #include "entities/SolidEntity.h"
 #include "entities/StaticEntity.h"
+#include "entities/AnimatedEntity.h"
 
 namespace sf
 {
 
 Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
-	: LinkActuator(uniqueName), c(color), coneAngle(0), attach2(nullptr)
+	: LinkActuator(uniqueName), c(color), coneAngle(0), attach2(nullptr), attach3(nullptr), glLight(nullptr)
 {
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
@@ -61,17 +62,23 @@ ActuatorType Light::getType()
 Transform Light::getActuatorFrame()
 {
 	if(attach != nullptr)
-        return attach->getOTransform() * o2a;
+        return attach->getOTransform() * o2a; //Solid
     else if(attach2 != nullptr)
-		return attach2->getTransform() * o2a;
-	else
+		return attach2->getTransform() * o2a; //Static
+	else if(attach3 != nullptr)
+        return attach3->getOTransform() * o2a; //Animated
+    else
         return o2a;
 }
 
 void Light::AttachToWorld(const Transform& origin)
 {
 	o2a = origin;
-	InitGraphics();
+    attach = nullptr;
+    attach2 = nullptr;
+    attach3 = nullptr;
+    if(glLight == nullptr)
+	    InitGraphics();
 }
         
 void Light::AttachToStatic(StaticEntity* body, const Transform& origin)
@@ -79,17 +86,37 @@ void Light::AttachToStatic(StaticEntity* body, const Transform& origin)
 	if(body != nullptr)
 	{
 		o2a = origin;
-		attach2 = body;
-		InitGraphics();
+		attach = nullptr;
+        attach2 = body;
+        attach3 = nullptr;
+        if(glLight == nullptr)
+		    InitGraphics();
 	}
+}
+
+void Light::AttachToAnimated(AnimatedEntity* body, const Transform& origin)
+{
+    if(body != nullptr)
+    {
+        o2a = origin;
+        attach = nullptr;
+        attach2 = nullptr;
+        attach3 = body;
+        if(glLight == nullptr)
+            InitGraphics();
+    }
 }
 
 void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
 {
     LinkActuator::AttachToSolid(body, origin);
-    
-    if(attach != nullptr)
-        InitGraphics();
+    if(body != nullptr)
+    {
+        attach2 = nullptr;
+        attach3 = nullptr;
+        if(glLight == nullptr)
+            InitGraphics();
+    }
 }
 
 void Light::InitGraphics()

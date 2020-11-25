@@ -28,7 +28,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "entities/SolidEntity.h"
+#include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 #include "graphics/OpenGLPipeline.h"
 

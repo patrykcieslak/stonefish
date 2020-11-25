@@ -28,7 +28,7 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
-#include "entities/SolidEntity.h"
+#include "entities/MovingEntity.h"
 #include "entities/StaticEntity.h"
 
 namespace sf
@@ -43,7 +43,7 @@ Comm::Comm(std::string uniqueName, uint64_t deviceId)
     newDataAvailable = false;
     updateMutex = SDL_CreateMutex();
     attach = nullptr;
-    o2c = Transform();
+    o2c = I4();
     txSeq = 0;
 }
 
@@ -59,15 +59,10 @@ Transform Comm::getDeviceFrame()
     if(attach != nullptr)
     {
         if(attach->getType() == EntityType::STATIC)
-        {
             return ((StaticEntity*)attach)->getTransform() * o2c;
-        }
-        else if(attach->getType() == EntityType::SOLID)
-        {
-            return ((SolidEntity*)attach)->getOTransform() * o2c;
-        }
+        else if(attach->getType() == EntityType::SOLID || attach->getType() == EntityType::ANIMATED)
+            return ((MovingEntity*)attach)->getOTransform() * o2c;
     }
-    
     return o2c;
 }
 
@@ -152,7 +147,7 @@ void Comm::AttachToStatic(StaticEntity* body, const Transform& origin)
     }
 }
 
-void Comm::AttachToSolid(SolidEntity* body, const Transform& origin)
+void Comm::AttachToSolid(MovingEntity* body, const Transform& origin)
 {
     if(body != nullptr)
     {

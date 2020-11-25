@@ -25,7 +25,7 @@
 
 #include "sensors/scalar/Odometry.h"
 
-#include "entities/SolidEntity.h"
+#include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 
 namespace sf

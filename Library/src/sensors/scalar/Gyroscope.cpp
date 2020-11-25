@@ -20,35 +20,23 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Gyroscope.h"
 
-#include "entities/SolidEntity.h"
-#include "sensors/scalar/ADC.h"
+#include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 
 namespace sf
 {
 
-Gyroscope::Gyroscope(std::string uniqueName, Scalar rangeMin, Scalar rangeMax, Scalar sensitivity, Scalar zeroVoltage, Scalar driftSpeed, ADC* adc, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
-    
-    range[0] = rangeMin;
-    range[1] = rangeMax;
-    sens = sensitivity;
-    drift = driftSpeed;
-
-    zeroV = zeroVoltage;
-    this->adc = adc;
-}
-
-void Gyroscope::Reset()
-{
-    accumulatedDrift = 0;
-    ScalarSensor::Reset();
+    channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
+    bias = Scalar(0);
 }
 
 void Gyroscope::InternalUpdate(Scalar dt)
@@ -57,23 +45,33 @@ void Gyroscope::InternalUpdate(Scalar dt)
     Matrix3 toGyroFrame = getSensorFrame().getBasis().inverse();
     
     //get angular velocity
-    Vector3 actualAV = attach->getAngularVelocity();
-    actualAV = toGyroFrame * actualAV;
-    
-    //select axis Z
-    Scalar av = actualAV.getZ();
-    
-    //add limits/noise/nonlinearity/drift
-    accumulatedDrift += drift * dt;
-    av += accumulatedDrift;
-    av = av < range[0] ? range[0] : (av > range[1] ? range[1] : av);
-    
-    //put through ADC
-    av = (adc->MeasureVoltage(av * sens + zeroV) - zeroV) / sens; //sensitivity V/(rad/s)
-    
-    //save sample
-    Sample s(1, &av);
+    Vector3 omega = toGyroFrame * attach->getAngularVelocity();
+
+    //add bias error
+    omega += Vector3(bias, bias, bias);
+
+    //record sample
+    Scalar values[3] = {omega.x(), omega.y(), omega.z()};
+    Sample s(3, values);
     AddSampleToHistory(s);
+}
+
+void Gyroscope::setRange(Scalar angularVelMax)
+{
+    channels[0].rangeMin = -angularVelMax;
+    channels[1].rangeMin = -angularVelMax;
+    channels[2].rangeMin = -angularVelMax;
+    channels[0].rangeMax = angularVelMax;
+    channels[1].rangeMax = angularVelMax;
+    channels[2].rangeMax = angularVelMax;
+}
+
+void Gyroscope::setNoise(Scalar angularVelStdDev, Scalar angularVelBias)
+{
+    channels[0].setStdDev(angularVelStdDev);
+    channels[1].setStdDev(angularVelStdDev);
+    channels[2].setStdDev(angularVelStdDev);
+    bias = angularVelBias;
 }
 
 ScalarSensorType Gyroscope::getScalarSensorType()

@@ -71,10 +71,14 @@ namespace sf
         //! A method returning the current playback time.
         Scalar getPlaybackTime() const;
 
+        //! A method returning the current playback iteration.
+        unsigned int getPlaybackIteration() const;
+
     protected:
         PlaybackMode playMode;
         Scalar playTime;
         Scalar endTime;
+        unsigned int iteration;
         bool forward;
         Transform interpTrans;
         Vector3 interpVel;

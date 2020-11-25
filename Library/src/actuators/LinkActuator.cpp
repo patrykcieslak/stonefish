@@ -20,13 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/LinkActuator.h"
 
 #include "entities/SolidEntity.h"
-#include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
@@ -34,7 +33,7 @@ namespace sf
 LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
 {
     attach = nullptr;
-    o2a = Transform::getIdentity();
+    o2a = I4();
 }
     
 Transform LinkActuator::getActuatorFrame()

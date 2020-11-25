@@ -92,11 +92,16 @@ bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
     if(!node1->isReceptionPossible(dir, distance) || !node2->isReceptionPossible(-dir, distance))
         return false;
         
-    btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
-    closest.m_collisionFilterGroup = MASK_DYNAMIC;
-    closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-    SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(pos1, pos2, closest);
-    return !closest.hasHit();
+    if(node1->getOcclusionTest() || node2->getOcclusionTest())
+    {
+        btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
+        closest.m_collisionFilterGroup = MASK_DYNAMIC;
+        closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
+        SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(pos1, pos2, closest);
+        return !closest.hasHit();
+    }
+    else
+        return true;
 }
 
 //Member 
@@ -108,6 +113,7 @@ AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId,
     range = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
     position = V0();
     frame = std::string("");
+    occlusion = true;
     addNode(this);
 }
 
@@ -129,13 +135,23 @@ bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     return fabs(hAngle) <= hFov2 && fabs(vAngle) <= vFov2;
 }
 
+void AcousticModem::setOcclusionTest(bool enabled)
+{
+    occlusion = enabled;
+}
+
+bool AcousticModem::getOcclusionTest() const
+{
+    return occlusion;
+}
+
 void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
 {
     pos = position;
     referenceFrame = frame;
 }
 
-CommType AcousticModem::getType()
+CommType AcousticModem::getType() const
 {
     return CommType::ACOUSTIC;
 }

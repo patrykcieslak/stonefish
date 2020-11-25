@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_LinkActuator__
@@ -30,7 +30,6 @@
 
 namespace sf
 {
-    class FeatherstoneEntity;
     class SolidEntity;
     
     //! An abstract class representing an actuator that can be attached to a rigid body.

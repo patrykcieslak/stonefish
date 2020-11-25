@@ -500,28 +500,31 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 
                 //Render sky (left for the end to only fill empty spaces)
                 atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
-
                 OpenGLState::DisableStencilTest();
                 
-                //Linear depth front faces
-                camera->GenerateLinearDepth(true);
-                
-                //Linear depth back faces
-                OpenGLState::BindFramebuffer(camera->getPostprocessFBO());
-                glClear(GL_DEPTH_BUFFER_BIT);
-                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-                glCullFace(GL_FRONT);
-                content->SetDrawingMode(DrawingMode::FLAT);
-                DrawObjects();
-                glCullFace(GL_BACK);
-                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                camera->GenerateLinearDepth(false);
-                
-                //Draw screen-space reflections
-                OpenGLState::BindFramebuffer(camera->getRenderFBO());
-                camera->SetRenderBuffers(1, false, true);
-                OpenGLState::DisableDepthTest();
-                camera->DrawSSR();
+                //Postprocess
+                if(rSettings.ssr > RenderQuality::DISABLED)
+                {
+                    //Linear depth front faces
+                    camera->GenerateLinearDepth(true);
+                    
+                    //Linear depth back faces
+                    OpenGLState::BindFramebuffer(camera->getPostprocessFBO());
+                    glClear(GL_DEPTH_BUFFER_BIT);
+                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                    glCullFace(GL_FRONT);
+                    content->SetDrawingMode(DrawingMode::FLAT);
+                    DrawObjects();
+                    glCullFace(GL_BACK);
+                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                    camera->GenerateLinearDepth(false);
+                    
+                    //Draw screen-space reflections
+                    OpenGLState::BindFramebuffer(camera->getRenderFBO());
+                    camera->SetRenderBuffers(1, false, true);
+                    OpenGLState::DisableDepthTest();
+                    camera->DrawSSR();
+                }
 
                 //Suspended particles only below surface
                 OpenGLState::EnableDepthTest();

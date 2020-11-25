@@ -38,15 +38,15 @@
 namespace sf
 {
 
-GLSLShader** OpenGLCamera::tonemappingShaders =  NULL;
-GLSLShader* OpenGLCamera::depthLinearizeShader = NULL;
-GLSLShader* OpenGLCamera::aoDeinterleaveShader = NULL;
-GLSLShader* OpenGLCamera::aoCalcShader = NULL;
-GLSLShader* OpenGLCamera::aoReinterleaveShader = NULL;
-GLSLShader** OpenGLCamera::aoBlurShader = NULL;
-GLSLShader* OpenGLCamera::ssrShader = NULL;
-GLSLShader* OpenGLCamera::fxaaShader = NULL;
-GLSLShader* OpenGLCamera::flipShader = NULL;
+GLSLShader** OpenGLCamera::tonemappingShaders =  nullptr;
+GLSLShader* OpenGLCamera::depthLinearizeShader = nullptr;
+GLSLShader* OpenGLCamera::aoDeinterleaveShader = nullptr;
+GLSLShader* OpenGLCamera::aoCalcShader = nullptr;
+GLSLShader* OpenGLCamera::aoReinterleaveShader = nullptr;
+GLSLShader** OpenGLCamera::aoBlurShader = nullptr;
+GLSLShader* OpenGLCamera::ssrShader = nullptr;
+GLSLShader* OpenGLCamera::fxaaShader = nullptr;
+GLSLShader* OpenGLCamera::flipShader = nullptr;
 
 OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec2 range) : OpenGLView(x, y, width, height)
 {
@@ -578,6 +578,9 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
 
 void OpenGLCamera::DrawSSR()
 {
+    if(ssrShader == nullptr)
+        return;
+    
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[0]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderViewNormalTex);
     OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_2D, getLinearDepthTexture(true));
@@ -778,39 +781,60 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
     }
 
     //SSR - Screen Space Reflections
-    ssrShader = new GLSLShader("ssr.frag");
-    ssrShader->AddUniform("texColor", ParameterType::INT);
-    ssrShader->AddUniform("texViewNormal", ParameterType::INT);
-    ssrShader->AddUniform("texLinearDepth", ParameterType::INT);
-    ssrShader->AddUniform("texLinearBackfaceDepth", ParameterType::INT);
-    ssrShader->AddUniform("P", ParameterType::MAT4);
-    ssrShader->AddUniform("invP", ParameterType::MAT4);
-    ssrShader->AddUniform("projInfo", ParameterType::VEC4);
-    ssrShader->AddUniform("viewportSize", ParameterType::VEC2);
-    ssrShader->AddUniform("invViewportSize", ParameterType::VEC2);
-    ssrShader->AddUniform("near", ParameterType::FLOAT);
-    ssrShader->AddUniform("far", ParameterType::FLOAT);
-    ssrShader->AddUniform("maxIterations", ParameterType::INT);
-    ssrShader->AddUniform("maxBinarySearchIterations", ParameterType::INT);
-    ssrShader->AddUniform("pixelZSize", ParameterType::FLOAT);
-    ssrShader->AddUniform("pixelStride", ParameterType::FLOAT);
-    ssrShader->AddUniform("pixelStrideZCutoff", ParameterType::FLOAT);
-    ssrShader->AddUniform("maxRayDistance", ParameterType::FLOAT);
-    ssrShader->AddUniform("screenEdgeFadeStart", ParameterType::FLOAT);
-    ssrShader->AddUniform("eyeFadeStart", ParameterType::FLOAT);
-    ssrShader->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
+    if(rSettings.ssr != RenderQuality::DISABLED)
+    {
+        ssrShader = new GLSLShader("ssr.frag");
+        ssrShader->AddUniform("texColor", ParameterType::INT);
+        ssrShader->AddUniform("texViewNormal", ParameterType::INT);
+        ssrShader->AddUniform("texLinearDepth", ParameterType::INT);
+        ssrShader->AddUniform("texLinearBackfaceDepth", ParameterType::INT);
+        ssrShader->AddUniform("P", ParameterType::MAT4);
+        ssrShader->AddUniform("invP", ParameterType::MAT4);
+        ssrShader->AddUniform("projInfo", ParameterType::VEC4);
+        ssrShader->AddUniform("viewportSize", ParameterType::VEC2);
+        ssrShader->AddUniform("invViewportSize", ParameterType::VEC2);
+        ssrShader->AddUniform("near", ParameterType::FLOAT);
+        ssrShader->AddUniform("far", ParameterType::FLOAT);
+        ssrShader->AddUniform("maxIterations", ParameterType::INT);
+        ssrShader->AddUniform("maxBinarySearchIterations", ParameterType::INT);
+        ssrShader->AddUniform("pixelZSize", ParameterType::FLOAT);
+        ssrShader->AddUniform("pixelStride", ParameterType::FLOAT);
+        ssrShader->AddUniform("pixelStrideZCutoff", ParameterType::FLOAT);
+        ssrShader->AddUniform("maxRayDistance", ParameterType::FLOAT);
+        ssrShader->AddUniform("screenEdgeFadeStart", ParameterType::FLOAT);
+        ssrShader->AddUniform("eyeFadeStart", ParameterType::FLOAT);
+        ssrShader->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
 
-    ssrShader->Use();
-    ssrShader->SetUniform("maxIterations", 200);
-    ssrShader->SetUniform("maxBinarySearchIterations", 10);
-    ssrShader->SetUniform("pixelZSize", 0.1f);
-    ssrShader->SetUniform("pixelStride", 2.f);
-    ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
-    ssrShader->SetUniform("maxRayDistance", 100.f);
-    ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
-    ssrShader->SetUniform("eyeFadeStart", 0.2f);
-    ssrShader->SetUniform("eyeFadeEnd", 0.8f);
-    OpenGLState::UseProgram(0);
+        ssrShader->Use();
+        switch(rSettings.ssr)
+        {
+            case RenderQuality::DISABLED:
+            case RenderQuality::LOW:
+                ssrShader->SetUniform("maxIterations", 50);
+                ssrShader->SetUniform("maxBinarySearchIterations", 2);
+                ssrShader->SetUniform("maxRayDistance", 20.f);
+                break;
+
+            case RenderQuality::MEDIUM:
+                ssrShader->SetUniform("maxIterations", 100);
+                ssrShader->SetUniform("maxBinarySearchIterations", 5);
+                ssrShader->SetUniform("maxRayDistance", 50.f);
+                break;
+
+            case RenderQuality::HIGH:
+                ssrShader->SetUniform("maxIterations", 200);
+                ssrShader->SetUniform("maxBinarySearchIterations", 10);
+                ssrShader->SetUniform("maxRayDistance", 100.f);
+                break;
+        }
+        ssrShader->SetUniform("pixelStride", 2.f);
+        ssrShader->SetUniform("pixelStrideZCutoff", 10.f);
+        ssrShader->SetUniform("pixelZSize", 0.1f);
+        ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
+        ssrShader->SetUniform("eyeFadeStart", 0.2f);
+        ssrShader->SetUniform("eyeFadeEnd", 0.8f);
+        OpenGLState::UseProgram(0);
+    }
 
     //FXAA
     if(rSettings.aa != RenderQuality::DISABLED)
@@ -846,26 +870,26 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
 
 void OpenGLCamera::Destroy()
 {
-    if(tonemappingShaders != NULL)
+    if(tonemappingShaders != nullptr)
     {
-        if(tonemappingShaders[0] != NULL) delete tonemappingShaders[0];
-        if(tonemappingShaders[1] != NULL) delete tonemappingShaders[1];
-        if(tonemappingShaders[2] != NULL) delete tonemappingShaders[2];
+        if(tonemappingShaders[0] != nullptr) delete tonemappingShaders[0];
+        if(tonemappingShaders[1] != nullptr) delete tonemappingShaders[1];
+        if(tonemappingShaders[2] != nullptr) delete tonemappingShaders[2];
         delete [] tonemappingShaders;
     }
-    if(depthLinearizeShader != NULL) delete depthLinearizeShader;
-    if(aoDeinterleaveShader != NULL) delete aoDeinterleaveShader;
-    if(aoCalcShader != NULL) delete aoCalcShader;
-    if(aoReinterleaveShader != NULL) delete aoReinterleaveShader;
-    if(aoBlurShader != NULL)
+    if(depthLinearizeShader != nullptr) delete depthLinearizeShader;
+    if(aoDeinterleaveShader != nullptr) delete aoDeinterleaveShader;
+    if(aoCalcShader != nullptr) delete aoCalcShader;
+    if(aoReinterleaveShader != nullptr) delete aoReinterleaveShader;
+    if(aoBlurShader != nullptr)
     {
-        if(aoBlurShader[0] != NULL) delete aoBlurShader[0];
-        if(aoBlurShader[1] != NULL) delete aoBlurShader[1];
+        if(aoBlurShader[0] != nullptr) delete aoBlurShader[0];
+        if(aoBlurShader[1] != nullptr) delete aoBlurShader[1];
         delete [] aoBlurShader;
     }
-    if(ssrShader != NULL) delete ssrShader;    
-    if(fxaaShader != NULL) delete fxaaShader;
-    if(flipShader != NULL) delete flipShader;
+    if(ssrShader != nullptr) delete ssrShader;    
+    if(fxaaShader != nullptr) delete fxaaShader;
+    if(flipShader != nullptr) delete flipShader;
 }
 
 }

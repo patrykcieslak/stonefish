@@ -40,6 +40,7 @@ namespace sf
     class SolidEntity;
     class Sensor;
     class Actuator;
+    class Light;
     class Comm;
     struct Color;
     enum class ColorMap;
@@ -191,13 +192,21 @@ namespace sf
          */
         virtual Sensor* ParseSensor(XMLElement* element, const std::string& namePrefix);
         
+        //! A method used to parse a description of a light source.
+        /*!
+         \param element a pointer to the XML node
+         \param namePrefix a string added at the beginning of the light name
+         \return pointer to light
+         */
+        virtual Light* ParseLight(XMLElement* element, const std::string& namePrefix);
+
         //! A method used to parse a communication device description.
         /*!
          \param element a pointer to the XML node
-         \param robot a pointer to the robot object
-         \return success
+         \param namePrefix a string added at the beginning of the comm name
+         \return pointer to the communication device
          */
-        virtual bool ParseComm(XMLElement* element, Robot* robot = nullptr);
+        virtual Comm* ParseComm(XMLElement* element, const std::string& namePrefix);
         
         //! A method used to parse a single contact description.
         /*!
@@ -215,6 +224,7 @@ namespace sf
         
     private:
         bool CopyNode(XMLNode* destParent, const XMLNode* src);
+        bool ParseVector(const char* components, Vector3& v);
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
         bool ParseColorMap(XMLElement* element, ColorMap& cm);

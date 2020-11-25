@@ -77,15 +77,24 @@ namespace sf
         //! A method implementing the rendering of the comm device.
         std::vector<Renderable> Render();
         
+        //! A method to set if occlusion test should be enabled.
+        /*!
+         \param enabled a flag to indicate if the occusion test should be enabled
+         */
+        void setOcclusionTest(bool enabled);
+
         //! A method to retrieve the position of the device in the designated reference frame.
         /*!
          \param pos a pointer to the position vector
          \param referenceFrame a pointer to the name of the reference frame
          */
         void getPosition(Vector3& pos, std::string& referenceFrame);
+
+        //! A method informing if occlusion testing is enabled for the modem device.
+        bool getOcclusionTest() const;
         
         //! A method returning the type of the comm.
-        virtual CommType getType();
+        virtual CommType getType() const;
         
     protected:
         virtual void ProcessMessages();
@@ -100,6 +109,7 @@ namespace sf
         Scalar hFov2, vFov2;
         Vector3 position;
         std::string frame;
+        bool occlusion;
         
         static void addNode(AcousticModem* node);
         static void removeNode(uint64_t deviceId);

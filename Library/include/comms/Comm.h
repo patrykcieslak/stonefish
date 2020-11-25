@@ -33,12 +33,12 @@
 namespace sf
 {
     //! An enum defining types of comms.
-    enum class CommType {RADIO, ACOUSTIC, VLC};
+    enum class CommType {RADIO, ACOUSTIC, USBL, VLC};
     
     struct Renderable;
     class Entity;
     class StaticEntity;
-    class SolidEntity;
+    class MovingEntity;
     
     struct CommDataFrame
     {
@@ -99,7 +99,7 @@ namespace sf
          \param body a pointer to the rigid body
          \param origin the place where the comm should be attached in the solid origin frame
          */
-        void AttachToSolid(SolidEntity* body, const Transform& origin);
+        void AttachToSolid(MovingEntity* body, const Transform& origin);
         
         //! A method implementing the rendering of the comm device.
         virtual std::vector<Renderable> Render();
@@ -141,7 +141,7 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the comm.
-        virtual CommType getType() = 0;
+        virtual CommType getType() const = 0;
         
     protected:
         //! A method used for data reception.

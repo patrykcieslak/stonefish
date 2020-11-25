@@ -28,7 +28,8 @@
 namespace sf
 {
 
-Trajectory::Trajectory(PlaybackMode playback) : playMode(playback), playTime(0), endTime(0), forward(true)
+Trajectory::Trajectory(PlaybackMode playback) 
+    : playMode(playback), playTime(0), endTime(0), forward(true), iteration(0)
 {
 }
 
@@ -39,6 +40,11 @@ Trajectory::~Trajectory()
 Scalar Trajectory::getPlaybackTime() const
 {
     return playTime;
+}
+
+unsigned int Trajectory::getPlaybackIteration() const
+{
+    return iteration;
 }
 
 Transform Trajectory::getInterpolatedTransform() const
@@ -73,7 +79,10 @@ void Trajectory::Play(Scalar dt)
         {
             playTime += dt;
             if(playTime > endTime)
+            {
                 playTime -= endTime;
+                ++iteration;
+            }
         }
             break;
 
@@ -84,11 +93,13 @@ void Trajectory::Play(Scalar dt)
             {
                 playTime = endTime - (playTime - endTime);
                 forward = false;
+                ++iteration;
             }
             else if(playTime < Scalar(0))
             {
                 playTime = -playTime;
                 forward = true;
+                ++iteration;
             }
         }
             break;

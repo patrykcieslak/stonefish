@@ -33,6 +33,7 @@ namespace sf
 {
     class OpenGLLight;
 	class StaticEntity;
+    class AnimatedEntity;
     
     //! A class representing a light of two common types: omni and spot.
     class Light : public LinkActuator
@@ -70,6 +71,13 @@ namespace sf
          */
         void AttachToStatic(StaticEntity* body, const Transform& origin);
 		
+        //! A method used to attach the light to an animated body.
+        /*!
+         \param body a pointer to the animated body
+         \param origin the place where the light should be attached in the body origin frame
+         */
+        void AttachToAnimated(AnimatedEntity* body, const Transform& origin);
+
         //! A method used to attach the actuator to a specified rigid body.
         /*!
          \param solid a pointer to a rigid body
@@ -97,8 +105,9 @@ namespace sf
         
     private:
         void InitGraphics();
-        
+        //attach -> SolidEntity
 		StaticEntity* attach2;
+        AnimatedEntity* attach3;
         Color c;
 		Scalar R;
         Scalar Fi;

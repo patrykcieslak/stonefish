@@ -25,7 +25,7 @@
 
 #include "sensors/scalar/LinkSensor.h"
 
-#include "entities/SolidEntity.h"
+#include "entities/MovingEntity.h"
 #include "entities/FeatherstoneEntity.h"
 
 namespace sf

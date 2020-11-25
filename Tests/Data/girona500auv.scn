@@ -141,7 +141,8 @@
         	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
         	<specs horizontal_fov="360.0" vertical_fov="220.0" range="1000.0"/>
         	<autoping rate="10.0"/>
-        	<noise range="0.01" angle="0.1" depth="0.0" ned="0.0"/>
+        	<noise range="0.01" horizontal_angle="0.05" vertical_angle="0.1"/>
+			<resolution range="0.1" angle="0.1"/>
         </comm>
 
 		<sensor name="dynamics" type="odometry" rate="30.0">
@@ -166,7 +167,7 @@
 		<sensor name="imu_filter" type="imu" rate="20.0">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-			<noise angle="0.000001745" angular_velocity="0.00001745"/>
+			<noise angle="0.000001745 0.000001745 0.000001745" angular_velocity="0.00001745"/>
 		</sensor>
 
 		<sensor name="gps" type="gps" rate="1.0">
@@ -235,6 +236,13 @@
 				<look name="propeller"/>
 			</propeller>
 		</actuator>
+
+		<light name="Omni">
+			<link name="Vehicle"/>
+			<specs illuminance="20000.0" radius="0.01"/>
+			<color temperature="3000.0"/>
+			<origin xyz="0.0 0.0 -1.0" rpy="0.0 0.0 0.0"/>
+		</light>
         
 		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
 	</robot>

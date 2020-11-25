@@ -149,22 +149,29 @@ A variable buoyancy system (VBS) is a container with an elastic wall, which can 
     sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", meshes, 0.5);
     robot->AddLinkActuator(vbs, "Link1", sf::I4());
 
-Light
------
+Lights
+======
 
-A light is a special actuator that does not generate any forces but represents an omnidirectional or spot light. It can be used to simulate artificial lighting in dark environments, light beacons etc.
+The *Stonefish* library delivers high quality, physically based rendering, to enable testing of computer vision algorithms on reallistic synthetic images. Lighting is one of the most important components to be considered. The library implements omnidirectional and spot lights, with physically correct illuminance and attenuation model, and multiple options to specify color. The spot lights are created automatically when the user specifies the cone angle. The color can be defined as black body temperature in Kelvins, RGB triplet or HSV triplet. Lights can be attached to any kind of body, as well as directly to the world frame (like :ref:`vision sensors <vision-sensors>`). 
 
 .. code-block:: xml
 
-    <actuator name="Light" type="light">
-        <specs radius="0.1" cone_angle="30.0" illuminance="1000.0"/>
+    <light name="Omni">
+        <specs radius="0.2" illuminance="10000.0"/>
+        <color rgb="0.2 0.3 1.0"/>
+        <world_transform xyz="1.0 5.0 2.0" rpy="0.0 0.0 0.0"/>
+    </light>
+    <light name="Spot">
+        <specs radius="0.1" cone_angle="30.0" illuminance="2000.0"/>
         <color temperature="5600.0"/>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="1.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <link name="Link1"/>
-    </actuator>
+    </light>
 
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Light.h>
-    sf::Light* lt = new sf::Light("Light", 0.1, 30.0, sf::Color::BlackBody(5600.0), 1000.0);
-    robot->AddLinkActuator(lt, "Link1", sf::I4());
+    sf::Light* l1 = new sf::Light("Omni", 0.2, sf::Color::RGB(0.2, 0.3, 1.0), 10000.0);
+    AddActuator(l1, sf::Transform(sf::IQ(), sf::Vector3(1.0, 5.0, 2.0)));
+    sf::Light* l2 = new sf::Light("Spot", 0.1, 30.0, sf::Color::BlackBody(5600.0), 2000.0);
+    robot->AddLinkActuator(l2, "Link1", sf::Transform(sf::IQ(), sf::Vector3(1.0, 0.0, 0.0)));
