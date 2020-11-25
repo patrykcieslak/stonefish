@@ -232,6 +232,11 @@ Vector3 AnimatedEntity::getAngularAcceleration() const
     return V0();
 }
 
+Trajectory* AnimatedEntity::getTrajectory()
+{
+    return tr;
+}
+
 void AnimatedEntity::getAABB(Vector3& min, Vector3& max)
 {
     if(rigidBody != nullptr)

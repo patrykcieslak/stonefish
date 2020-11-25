@@ -176,6 +176,9 @@ namespace sf
         //! A method returning the angular acceleration of the body.
         Vector3 getAngularAcceleration() const;
 
+        //! A method returning a pointer to the body trajectory.
+        Trajectory* getTrajectory();
+
         //! A method returning the extents of the body axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
