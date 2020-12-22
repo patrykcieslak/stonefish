@@ -27,6 +27,7 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
@@ -75,7 +76,7 @@ Fluid Atmosphere::getGas() const
 
 void Atmosphere::InitGraphics(const RenderSettings& s)
 {
-    glAtmosphere = new OpenGLAtmosphere(s.atmosphere, s.shadows);
+    glAtmosphere = new OpenGLAtmosphere(GetShaderPath() + "earth_atm.dat", s.shadows);
 }
 
 void Atmosphere::SetupSunPosition(Scalar longitudeDeg, Scalar latitudeDeg, std::tm& utc)

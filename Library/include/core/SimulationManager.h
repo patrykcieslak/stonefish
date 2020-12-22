@@ -86,19 +86,15 @@ namespace sf
         //! A method used to construct simulation scenario. This has to be implemented by the subclass.
         virtual void BuildScenario() = 0;
         
-        //! A method loading a simulation world from an XML file.
-        /*!
-         \param path a path to the XML file describing the simulation scenario
-         \return was the file successfully parsed?
-         */
-        bool LoadSDF(const std::string& path);
-        
         //! A method called after the simulation step is completed. Useful to implement interaction with outside code.
         /*!
          \param timeStep amount of time that passed in the simulation world
          */
         virtual void SimulationStepCompleted(Scalar timeStep);
-        
+
+        //! A method returning the current simulation clock time in us (overriding allows for external time source).
+        virtual uint64_t getSimulationClock();
+
         //! A method solving the initial conditions problem.
         bool SolveICProblem();
         

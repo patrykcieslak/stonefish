@@ -207,6 +207,6 @@ void main()
 											   spotLights[i].color,
 											   eyePos, -V, P, d, dw);
 	}
-	
+
 	fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);
 }

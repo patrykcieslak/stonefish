@@ -29,6 +29,9 @@
 #include <entities/solids/Sphere.h>
 #include <core/Robot.h>
 #include <utils/UnitSystem.h>
+#include <utils/SystemUtil.hpp>
+#include <core/ScenarioParser.h>
+#include <core/Console.h>
 
 ConsoleTestManager::ConsoleTestManager(sf::Scalar stepsPerSecond) 
     : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
@@ -37,6 +40,14 @@ ConsoleTestManager::ConsoleTestManager(sf::Scalar stepsPerSecond)
 
 void ConsoleTestManager::BuildScenario()
 {
+#ifdef PARSED_SCENARIO
+    sf::ScenarioParser parser(this);
+    bool success = parser.Parse(sf::GetDataPath() + "console_test.scn");
+    if(success)
+        sf::cInfo("Scenario description parsed successfully.");
+    else
+        sf::cError("Errors detected when parsing scenario description!");
+#else
     //Create materials
     CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);
     SetMaterialsInteraction("Rock", "Rock", 0.9, 0.7);
@@ -61,4 +72,10 @@ void ConsoleTestManager::BuildScenario()
                                std::make_pair<sf::Scalar,sf::Scalar>(-1.0,1.0));
 	robot->BuildKinematicTree();
     AddRobot(robot, sf::I4());
+#endif
+}
+
+void ConsoleTestManager::SimulationStepCompleted(sf::Scalar timeStep)
+{
+    sf::cInfo("Simulation time: %1.3lf", getSimulationTime());
 }

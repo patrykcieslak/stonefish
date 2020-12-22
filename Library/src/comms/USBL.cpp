@@ -36,24 +36,8 @@ USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, S
 {
     ping = false;
     noise = false;
-    rangeRes = Scalar(0);
-    angleRes = Scalar(0);
 }
     
-void USBL::setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg)
-{
-    noiseRange = std::normal_distribution<Scalar>(Scalar(0), btFabs(rangeDev));
-    noiseHAngle = std::normal_distribution<Scalar>(Scalar(0), btFabs(horizontalAngleDevDeg)/Scalar(180)*M_PI);
-    noiseVAngle = std::normal_distribution<Scalar>(Scalar(0), btFabs(verticalAngleDevDeg)/Scalar(180)*M_PI);
-    noise = true;
-}
-
-void USBL::setResolution(Scalar range, Scalar angleDeg)
-{
-    rangeRes = btFabs(range);
-    angleRes = btFabs(angleDeg)/Scalar(180)*M_PI;
-}
-
 std::map<uint64_t, std::pair<Scalar, Vector3>>& USBL::getTransponderPositions()
 {
     return transponderPos;
@@ -94,64 +78,6 @@ void USBL::InternalUpdate(Scalar dt)
             SendMessage("PING");
             pingTime -= invRate;
         }
-    }
-}
-
-void USBL::ProcessMessages()
-{
-    AcousticDataFrame* msg;
-    while((msg = (AcousticDataFrame*)ReadMessage()) != nullptr)
-    {
-        if(msg->data == "ACK")
-        {  
-            //Get message data
-            AcousticModem* cNode = getNode(msg->source);
-            Vector3 cO = msg->txPosition;
-            Transform dT = getDeviceFrame();
-            Vector3 dO = dT.getOrigin();
-            Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
-            Scalar slantRange = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
-            Scalar t = msg->timeStamp + slantRange/SOUND_VELOCITY_WATER;
-            
-            //Find ranging angles
-            Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
-            Scalar hAngle = atan2(dir.getY(), dir.getX());
-            Scalar vAngle = atan2(d, dir.getZ());
-        
-            //Apply noise and quantization
-            if(noise)
-            {
-                slantRange += noiseRange(randomGenerator);
-                hAngle += noiseHAngle(randomGenerator);
-                vAngle += noiseVAngle(randomGenerator);
-            }
-
-            if(rangeRes > Scalar(0))
-                slantRange -= btFmod(slantRange, rangeRes); //Quantization
-
-            if(angleRes > Scalar(0))
-            {
-                hAngle -= btFmod(hAngle, angleRes); //Quantization
-                vAngle -= btFmod(vAngle, angleRes); //Quantization
-            }
-            
-            //Calculate receiver position
-            Vector3 pos;
-            dir.setX(btCos(hAngle) * btSin(vAngle));
-            dir.setY(btSin(hAngle) * btSin(vAngle));
-            dir.setZ(btCos(vAngle));
-            dir.normalize();
-            pos = dir * slantRange;
-
-            //Update position in the transponder and in the USBL
-            Vector3 worldPos = dT * pos;
-            cNode->UpdatePosition(worldPos, true);
-            
-            transponderPos[msg->source] = std::make_pair(t, pos);
-            newDataAvailable = true;
-        }
-        
-        delete msg;
     }
 }
 

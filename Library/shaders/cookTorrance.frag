@@ -24,6 +24,8 @@ uniform float metallic;
 uniform float roughness;
 const float PI = 3.14159265359;
 
+//Schlick's approximation to Fresnel function (assuming wavelength dependent IOR)
+// R0 = ((n1-n2)/(n1+n2))^2
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
 	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -66,14 +68,13 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 
 vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 {
-	vec3 halfway = normalize(V + L);
-	
+    vec3 H = normalize(V+L); //Half-way vector (bisection vector)
 	vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
 	
-	float NDF = DistributionGGX(N, halfway, roughness);        
+	float NDF = DistributionGGX(N, H, roughness);        
 	float G = GeometrySmith(N, V, L, roughness);      
-	vec3 F = fresnelSchlick(max(dot(halfway, V), 0.0), F0);       
+	vec3 F = fresnelSchlick(max(min(dot(H, V), 1.0), 0.0), F0);       
 	
 	vec3 nominator = NDF * G * F;
 	float NdotL = max(dot(N, L), 0.0);                
@@ -83,6 +84,6 @@ vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS;
 	kD *= 1.0 - metallic;	  
-        
+    
     return Lcolor * (kD * albedo / PI + specular) * NdotL;
 }

@@ -55,6 +55,12 @@ inline int64_t GetTimeInMicroseconds()
     return std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
 }
 
+inline int64_t GetTimeInNanoseconds()
+{
+    std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+}
+
 inline void GetCWD(char* buffer, int length)
 {
 #ifdef _MSC_VER

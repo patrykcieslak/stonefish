@@ -45,7 +45,7 @@ OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3
 
 LightType OpenGLPointLight::getType() const
 {
-    return POINT_LIGHT;
+    return LightType::POINT;
 }
 
 void OpenGLPointLight::SetupShader(LightUBO* ubo)

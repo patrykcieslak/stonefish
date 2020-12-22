@@ -99,7 +99,7 @@ void OpenGLSpotLight::InitShadowmap(GLint shadowmapLayer)
 
 LightType OpenGLSpotLight::getType() const
 {
-    return SPOT_LIGHT;
+    return LightType::SPOT;
 }
 
 glm::vec3 OpenGLSpotLight::getDirection()

@@ -221,7 +221,10 @@ namespace sf
          \return full file path
          */
         std::string GetFullPath(const std::string& path);
-        
+
+        //! A method informing if the simulation is working in graphical mode.
+        bool isGraphicalSim();
+
     private:
         bool CopyNode(XMLNode* destParent, const XMLNode* src);
         bool ParseVector(const char* components, Vector3& v);
@@ -231,6 +234,7 @@ namespace sf
     
         XMLDocument doc;
         SimulationManager* sm;
+        bool graphical;
     };
 }
 

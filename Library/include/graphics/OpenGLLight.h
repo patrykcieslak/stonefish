@@ -31,7 +31,7 @@
 namespace sf
 {
     //! An enum defining supported light types.
-    typedef enum {POINT_LIGHT, SPOT_LIGHT} LightType;
+    enum class LightType {POINT, SPOT}; 
     
     //! A structure representing a generic light in the Lights UBO.
     #pragma pack(1)

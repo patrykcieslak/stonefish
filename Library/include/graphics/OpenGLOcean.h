@@ -197,7 +197,6 @@ namespace sf
         OceanParams params;
         glm::vec3 lightAbsorption;
         glm::vec3 lightScattering;
-        int64_t lastTime;
 
         std::map<std::string, GLSLShader*> oceanShaders;
         GLuint oceanFBOs[3];

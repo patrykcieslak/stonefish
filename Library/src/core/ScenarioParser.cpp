@@ -69,7 +69,8 @@
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
 #include "comms/AcousticModem.h"
-#include "comms/USBL.h"
+#include "comms/USBLSimple.h"
+#include "comms/USBLReal.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 
@@ -78,6 +79,7 @@ namespace sf
 
 ScenarioParser::ScenarioParser(SimulationManager* sm) : sm(sm) 
 {
+    graphical = SimulationApp::getApp()->hasGraphics();
 }
 
 SimulationManager* ScenarioParser::getSimulationManager()
@@ -202,20 +204,23 @@ bool ScenarioParser::Parse(std::string filename)
     }
     
     //Load looks (optional)
-    element = root->FirstChildElement("looks");
-    if(element == nullptr)
-        cWarning("Scenario parser: looks not defined -> using standard look.");
-
-    while(element != nullptr)
+    if(isGraphicalSim())
     {
-        if(!ParseLooks(element))
+        element = root->FirstChildElement("looks");
+        if(element == nullptr)
+            cWarning("Scenario parser: looks not defined -> using standard look.");
+
+        while(element != nullptr)
         {
-            cError("Scenario parser: looks not properly defined!");
-            return false;
+            if(!ParseLooks(element))
+            {
+                cError("Scenario parser: looks not properly defined!");
+                return false;
+            }
+            element = element->NextSiblingElement("looks");
         }
-        element = element->NextSiblingElement("looks");
     }
-    
+        
     //Load static objects (optional)
     element = root->FirstChildElement("static");
     while(element != nullptr)
@@ -2498,6 +2503,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     }
     else if(typeStr == "camera")
     {
+        if(!isGraphicalSim())
+        {
+            cError("Scenario parser: cameras not supported in console mode!");
+            return nullptr;
+        }
+
         int resX, resY;
         Scalar hFov;
         if((item = element->FirstChildElement("specs")) == nullptr 
@@ -2524,6 +2535,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     }
     else if(typeStr == "depthcamera")
     {
+        if(!isGraphicalSim())
+        {
+            cError("Scenario parser: depth cameras not supported in console mode!");
+            return nullptr;
+        }
+
         int resX, resY;
         Scalar hFov;
         Scalar depthMin, depthMax;
@@ -2551,6 +2568,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     }
     else if(typeStr == "multibeam2d")
     {
+        if(!isGraphicalSim())
+        {
+            cError("Scenario parser: multibeam 2D not supported in console mode!");
+            return nullptr;
+        }
+
         int resX, resY;
         Scalar hFov, vFov;
         Scalar rangeMin, rangeMax;
@@ -2568,6 +2591,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     }
     else if(typeStr == "fls")
     {
+        if(!isGraphicalSim())
+        {
+            cError("Scenario parser: FLS not supported in console mode!");
+            return nullptr;
+        }
+
         Scalar hFov, vFov;
         int nBeams, nBins;
         Scalar rangeMin(0.5);
@@ -2611,6 +2640,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     }
     else if(typeStr == "sss")
     {
+        if(!isGraphicalSim())
+        {
+            cError("Scenario parser: SSS not supported in console mode!");
+            return nullptr;
+        }
+
         Scalar hFov, vFov;
         int nLines, nBins;
         Scalar tilt;
@@ -2656,6 +2691,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     }
     else if(typeStr == "msis")
     {
+        if(!isGraphicalSim())
+        {
+            cError("Scenario parser: MSIS not supported in console mode!");
+            return nullptr;
+        }
+
         Scalar stepAngle;
         int nBins;
         Scalar hFov, vFov;
@@ -2708,6 +2749,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
 
 Light* ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
 {
+    if(!isGraphicalSim())
+    {
+        cError("Scenario parser: lights not supported in console mode!");
+        return nullptr;
+    }
+
     const char* name = nullptr;
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
         return nullptr;
@@ -2805,7 +2852,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             return nullptr;
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = new USBL(commName, devId, hFovDeg, vFovDeg, range);
+        comm = new USBLSimple(commName, devId, hFovDeg, vFovDeg, range);
         comm->Connect(cId);
         ((AcousticModem*)comm)->setOcclusionTest(occlusion);
         
@@ -2821,7 +2868,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             item->QueryAttribute("range", &rangeDev);
             item->QueryAttribute("horizontal_angle", &hAngleDevDeg);
             item->QueryAttribute("vertical_angle", &vAngleDevDeg);
-            ((USBL*)comm)->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
+            ((USBLSimple*)comm)->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
         }
 
         if((item = element->FirstChildElement("resolution")) != nullptr)
@@ -2830,7 +2877,54 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             Scalar angleResDeg = Scalar(0);
             item->QueryAttribute("range", &rangeRes);
             item->QueryAttribute("angle", &angleResDeg);
-            ((USBL*)comm)->setResolution(rangeRes, angleResDeg);
+            ((USBLSimple*)comm)->setResolution(rangeRes, angleResDeg);
+        }
+        return comm;
+    }
+    else if(typeStr == "usbl2")
+    {
+        Scalar hFovDeg;
+        Scalar vFovDeg;
+        Scalar range;
+        Scalar freq;
+        Scalar baseline;
+        unsigned int cId = 0;
+        Scalar pingRate;
+        bool occlusion = true;
+        
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("range", &range) != XML_SUCCESS
+            || item->QueryAttribute("frequency", &freq) != XML_SUCCESS
+            || item->QueryAttribute("baseline", &baseline) != XML_SUCCESS)
+            return nullptr;
+        item = element->FirstChildElement("connect");
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS || cId == 0)
+            return nullptr;
+        item->QueryAttribute("occlusion_test", &occlusion);
+
+        comm = new USBLReal(commName, devId, hFovDeg, vFovDeg, range, freq, baseline);
+        comm->Connect(cId);
+        ((AcousticModem*)comm)->setOcclusionTest(occlusion);
+        
+        if((item = element->FirstChildElement("autoping")) != nullptr
+            && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
+            ((USBL*)comm)->EnableAutoPing(pingRate);
+        
+        if((item = element->FirstChildElement("noise")) != nullptr)
+        {
+            Scalar timeDev(0);
+            Scalar svDev(0);
+            Scalar phaseDev(0);
+            Scalar blError(0);
+            Scalar depthDev(0);
+            item->QueryAttribute("tof", &timeDev);
+            item->QueryAttribute("sound_velocity", &svDev);
+            item->QueryAttribute("phase", &phaseDev);
+            item->QueryAttribute("baseline_error", &blError);
+            item->QueryAttribute("depth", &depthDev);
+            ((USBLReal*)comm)->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
         }
         return comm;
     }
@@ -3037,6 +3131,11 @@ bool ScenarioParser::ParseColorMap(XMLElement* element, ColorMap& cm)
     }
     else 
         return false;
+}
+
+bool ScenarioParser::isGraphicalSim()
+{
+    return graphical;
 }
 
 }

@@ -59,22 +59,7 @@ namespace sf
         
         //! A method to diable the autp pinging funtion.
         void DisableAutoPing();
-        
-        //! A method used to set the resolution of the measurements.
-        /*!
-         \param range the range measurement resolution [m]
-         \param angleDeg the angle measurement resolution [deg]
-         */
-        void setResolution(Scalar range, Scalar angleDeg);
-
-        //! A method used to set the noise characteristics of the device.
-        /*!
-         \param rangeDev standard deviation of the range measurement noise [m]
-         \param horizontalAngleDevDeg standard deviation of the angle measurement noise [deg]
-         \param verticalAngleDevDeg standard deviation of the angle measurement noise [deg]
-         */
-        void setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg);
-        
+           
         //! A method to get the current estimated position of transponders
         std::map<uint64_t, std::pair<Scalar, Vector3>>& getTransponderPositions(); 
 
@@ -82,19 +67,13 @@ namespace sf
         CommType getType() const;
        
     protected:
-        void ProcessMessages();
-    
-    private:
+        virtual void ProcessMessages() = 0;
+
         bool ping;
         Scalar pingRate;
         Scalar pingTime;
         std::map<uint64_t, std::pair<Scalar, Vector3>> transponderPos;
-        Scalar rangeRes;
-        Scalar angleRes;
         bool noise;
-        std::normal_distribution<Scalar> noiseRange;
-        std::normal_distribution<Scalar> noiseHAngle;
-        std::normal_distribution<Scalar> noiseVAngle;
         
         static std::random_device randomDevice;
         static std::mt19937 randomGenerator;

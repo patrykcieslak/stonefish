@@ -316,8 +316,6 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
         dataFile.read((char*)scattering, sizeof(scattering));
         dataFile.close();
     }
-    
-    lastTime = GetTimeInMicroseconds();
 }
 
 OpenGLOcean::~OpenGLOcean()

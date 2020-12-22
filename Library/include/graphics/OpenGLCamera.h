@@ -98,6 +98,12 @@ namespace sf
         
         //! A method drawing the screen-space refflections effect.
         void DrawSSR();
+
+        //! A method generating a bloom effect.
+        void GenerateBloom();
+
+        //! A method drawing the bloom effect.
+        void DrawBloom(GLfloat amount);
         
         //! A method to set current projection matrix.
         void SetProjection();
@@ -306,6 +312,8 @@ namespace sf
         static GLSLShader* ssrShader;
         static GLSLShader* fxaaShader;
         static GLSLShader* flipShader;
+        static GLSLShader* ssrBlur;
+        static GLSLShader* bloomBlur;
     };
 }
 

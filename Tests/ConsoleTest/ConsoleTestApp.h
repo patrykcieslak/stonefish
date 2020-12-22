@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish__ConsoleTestApp__
@@ -33,8 +33,6 @@ class ConsoleTestApp : public sf::ConsoleSimulationApp
 {
 public:
     ConsoleTestApp(std::string dataDirPath, ConsoleTestManager* sim);
-	
-	void Loop();
 };
 
 #endif

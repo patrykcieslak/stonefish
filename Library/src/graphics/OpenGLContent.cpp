@@ -818,8 +818,8 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
     //Render light source
     glm::vec4 colorLi = lights[lightId]->getColorLi();
     glm::mat4 M = lights[lightId]->getTransform();
-    GLint type = lights[lightId]->getType() == LightType::POINT_LIGHT ? 0 : 1; 
-    GLint id = lights[lightId]->getType() == LightType::POINT_LIGHT ? lightId : lightId - lightsUBOData.numPointLights;
+    GLint type = lights[lightId]->getType() == LightType::POINT ? 0 : 1; 
+    GLint id = lights[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData.numPointLights;
 
     GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
     shader->Use();
@@ -852,7 +852,7 @@ void OpenGLContent::SetupLights()
     
     for(size_t i=0; i<lights.size(); ++i)
     {
-        if(lights[i]->getType() == POINT_LIGHT)
+        if(lights[i]->getType() == LightType::POINT)
         {
             lights[i]->SetupShader(&lightsUBOData.pointLights[pointId]);
             ++pointId;
@@ -1106,11 +1106,11 @@ void OpenGLContent::AddLight(OpenGLLight* light)
     {
         switch(lights[i]->getType())
         {
-            case LightType::POINT_LIGHT:
+            case LightType::POINT:
                 ++lightsUBOData.numPointLights;
                 break;
 
-            case LightType::SPOT_LIGHT:
+            case LightType::SPOT:
                 ++lightsUBOData.numSpotLights;
                 break;
         }

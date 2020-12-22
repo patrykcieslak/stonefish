@@ -31,27 +31,6 @@
 
 namespace sf
 {
-    // An atmosphere layer of width 'width', and whose density is defined as
-    // 'exp_term' * exp('exp_scale' * h) + 'linear_term' * h + 'constant_term',
-    // clamped to [0,1], and where h is the altitude.
-    struct DensityProfileLayer
-    {
-        float width;
-        float exp_term;
-        float exp_scale;
-        float linear_term;
-        float constant_term;
-    };
-	
-    // An atmosphere density profile made of several layers on top of each other
-    // (from bottom to top). The width of the last layer is ignored, i.e. it always
-    // extend to the top atmosphere boundary. The profile values vary between 0
-    // (null density) to 1 (maximum density).
-    struct DensityProfile
-    {
-        DensityProfileLayer layers[2];
-    };
-	
 	//! A structure representing data of the SunSky UBO (std140 aligned).
     #pragma pack(1)
 	struct SunSkyUBO
@@ -85,13 +64,19 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param quality a rendering quality of the sky
+         \param modelFilename a path to the atmosphere model file
          \param shadow a rendering quality od the shadow
          */
-        OpenGLAtmosphere(RenderQuality quality, RenderQuality shadow);
+        OpenGLAtmosphere(const std::string& modelFilename, RenderQuality shadow);
         
         //! A destructor.
         ~OpenGLAtmosphere();
+
+        //! A method loading the precomputed atmosphere model.
+        /*!
+         \param filename a path to the model data file
+         */
+        void LoadAtmosphereData(const std::string& filename);
         
         //! A method that draws the sky and sun.
         /*!
@@ -133,13 +118,6 @@ namespace sf
         //! A method returning the sun direction.
         glm::vec3 GetSunDirection();
          
-        //! A method displaying a texture.
-        /*!
-         \param id the type of texture to display
-         \param rect a rectangle in which the texture will be displayed
-         */
-        void ShowAtmosphereTexture(AtmosphereTextures id, glm::vec4 rect);
-        
         //! A method displaying the sun shadow maps.
         /*!
          \param x the x coordinate of the origin of the shadow map display on screen
@@ -148,37 +126,18 @@ namespace sf
          */
         void ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale);
         
-        //! A static method that builds the atmosphere rendering API.
-        /*!
-         \param quality the quality of generated sky
-         */
-        static void BuildAtmosphereAPI(RenderQuality quality);
+        //! Load atmosphere API needed for loading shaders of other objects.
+        static void Init();
         
         //! A static method returning the OpenGL id of the compiled API shader.
         static GLuint getAtmosphereAPI();
         
     private:
-        //Precomputation
-        void Precompute();
-        void PrecomputePass(GLuint fbo, GLuint delta_irradiance_texture, GLuint delta_rayleigh_scattering_texture,
-                            GLuint delta_mie_scattering_texture, GLuint delta_scattering_density_texture,
-                            GLuint delta_multiple_scattering_texture, const glm::dvec3& lambdas, const glm::dmat3& luminance_from_radiance, bool blend);
-        void DrawBlendedSAQ(const std::vector<bool>& enableBlend);
-        
-        static std::string EarthsAtmosphere(const glm::dvec3& lambdas);
-        static void ComputeSpectralRadianceToLuminanceFactors(const std::vector<double>& wavelengths,
-                                                              const std::vector<double>& solarIrradiance,
-                                                              double lambdaPower, double* k_r, double* k_g, double* k_b);
-        static void ConvertSpectrumToLinearSrgb(const std::vector<double>& wavelengths,
-                                                const std::vector<double>& spectrum,
-                                                double* r, double* g, double* b);
-        
-        static unsigned int nPrecomputedWavelengths;
-        static unsigned int nScatteringOrders;
-        static glm::vec3 whitePoint;
-        static std::string glslDefinitions;
-        static std::string glslFunctions;
-        static GLuint atmosphereAPI;
+        //Data
+        unsigned int nPrecomputedWavelengths;
+        unsigned int nScatteringOrders;
+        GLuint sunSkyUBO;
+        SunSkyUBO sunSkyUBOData;
         
         //Shadows
         glm::mat4 BuildCropProjMatrix(ViewFrustum &f);
@@ -194,15 +153,14 @@ namespace sf
         glm::mat4x4 sunModelView;
         ViewFrustum* sunShadowFrustum;
         GLuint sunShadowFBO;
-		GLuint sunSkyUBO;
-        SunSkyUBO sunSkyUBOData;
-        GLSLShader* sunShadowmapShader; //debug draw shadowmap
+		GLSLShader* sunShadowmapShader; //debug draw shadowmap
         
         //Rendering
         GLfloat sunAzimuth;
         GLfloat sunElevation;
         GLSLShader* skySunShader;
         GLuint textures[AtmosphereTextures::TEXTURE_COUNT];
+        static GLuint atmosphereAPI;
     };
 }
 

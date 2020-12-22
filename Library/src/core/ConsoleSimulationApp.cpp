@@ -60,7 +60,8 @@ void ConsoleSimulationApp::Init()
 
 void ConsoleSimulationApp::Loop()
 {
-    while(!hasFinished());
+    while(!hasFinished())
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void ConsoleSimulationApp::StartSimulation()

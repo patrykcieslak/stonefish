@@ -48,7 +48,7 @@ void main()
 	vec3 V = normalize(eyePos - P);
     vec3 center = vec3(0,0, planetRadiusInUnits);
     fragColor = vec3(0.0);
-
+	
     //1. In-scattering from Sun/Sky
     vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
     if(R.z > 0.0 && sunDirection.z < 0.0)

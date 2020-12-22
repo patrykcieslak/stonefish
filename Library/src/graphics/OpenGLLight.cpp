@@ -130,7 +130,7 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
     //Count spotlights
     unsigned int numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
-        if(lights[i]->getType() == LightType::SPOT_LIGHT) ++numOfSpotLights;
+        if(lights[i]->getType() == LightType::SPOT) ++numOfSpotLights;
         
     //Generate shadowmap array
     glGenTextures(1, &spotShadowArrayTex);
@@ -156,7 +156,7 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
     //Initialize lights shadow FBOs
     numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
-        if(lights[i]->getType() == LightType::SPOT_LIGHT) lights[i]->InitShadowmap(numOfSpotLights++);		
+        if(lights[i]->getType() == LightType::SPOT) lights[i]->InitShadowmap(numOfSpotLights++);		
         
     //Bind textures and samplers
     OpenGLState::BindTexture(TEX_SPOT_SHADOW, GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);

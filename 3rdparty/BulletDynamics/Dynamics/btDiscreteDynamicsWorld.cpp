@@ -420,6 +420,8 @@ int btDiscreteDynamicsWorld::stepSimulation(btScalar timeStep, int maxSubSteps, 
 		btIDebugDraw* debugDrawer = getDebugDrawer();
 		gDisableDeactivation = (debugDrawer->getDebugMode() & btIDebugDraw::DBG_NoDeactivation) != 0;
 	}
+
+	//printf("Sim substeps %u\n", numSimulationSubSteps);
 	if (numSimulationSubSteps)
 	{
 		//clamp the number of substeps, to prevent simulation grinding spiralling down to a halt
@@ -427,7 +429,7 @@ int btDiscreteDynamicsWorld::stepSimulation(btScalar timeStep, int maxSubSteps, 
 
 		saveKinematicState(fixedTimeStep * clampedSimulationSteps);
 
-		applyGravity();
+		//applyGravity(); //OVERRIDEN by pre-tick callback
 
 		for (int i = 0; i < clampedSimulationSteps; i++)
 		{

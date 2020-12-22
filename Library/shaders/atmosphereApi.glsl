@@ -27,6 +27,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#inject "atmosphere.glsl"
+
 uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_texture;
 uniform sampler3D single_mie_scattering_texture;

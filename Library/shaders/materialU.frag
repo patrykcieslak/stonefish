@@ -68,9 +68,14 @@ void main()
 	float dw = d;
 	float waterLevel = displace(P.xy);
 	float depth = P.z - waterLevel;
-
+	float VdotNs = dot(V, waterSurfaceN);
 	if(eyePos.z < waterLevel)
-		dw = max(P.z - waterLevel, 0.0)/dot(V, waterSurfaceN);
+	{
+		if(VdotNs > 0.0)
+			dw = max(P.z - waterLevel, 0.0)/VdotNs;
+		else
+			dw = 0.0;
+	}
 	
 	//Diffuse color
 	vec4 albedo = vec4(color.rgb, 1.0);
@@ -95,13 +100,14 @@ void main()
 		vec4 Ld = PointLightContribution(i, P, N, V, albedo.rgb);
 		fragColor.rgb += Ld.rgb * BeerLambert(dw + Ld.a);
 	}
+
 	//Spot lights
 	for(int i=0; i<numSpotLights; ++i)
 	{
 		vec4 Ld = SpotLightContribution(i, P, N, V, albedo.rgb);
 		fragColor.rgb += Ld.rgb * BeerLambert(dw + Ld.a);
 	}
-	
+
 	//2. In-scattering from Sun/Sky
     vec3 R = RefractToWater(-sunDirection, waterSurfaceN);
     if(R.z > 0.0 && sunDirection.z < 0.0)

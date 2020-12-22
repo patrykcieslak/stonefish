@@ -25,9 +25,9 @@ uniform float specularStrength;
 
 vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo)
 {
-	vec3 halfway = normalize(V + L);
+	vec3 H = normalize(V+L);
 	float diffuse = max(dot(N, L), 0.0);
-	float specular = pow(max(dot(N, halfway), 0.0), shininess) * specularStrength;
+	float specular = pow(max(dot(N, H), 0.0), shininess) * specularStrength;
     
 	return Lcolor * (diffuse * albedo + specular);
 }

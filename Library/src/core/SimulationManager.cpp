@@ -121,13 +121,6 @@ SimulationManager::~SimulationManager()
     delete ned;
 }
 
-bool SimulationManager::LoadSDF(const std::string& path)
-{
-    tinyxml2::XMLDocument doc;
-    doc.LoadFile(path.c_str());
-    return doc.ErrorID() == 0;
-}
-
 void SimulationManager::AddRobot(Robot* robot, const Transform& worldTransform)
 {
     if(robot != NULL)
@@ -484,6 +477,11 @@ Scalar SimulationManager::getSimulationTime()
     Scalar st = simulationTime;
     SDL_UnlockMutex(simInfoMutex);
     return st;
+}
+
+uint64_t SimulationManager::getSimulationClock()
+{
+    return (uint64_t)ceil(realtimeFactor * (Scalar)GetTimeInMicroseconds());
 }
 
 MaterialManager* SimulationManager::getMaterialManager()
@@ -931,47 +929,37 @@ void SimulationManager::AdvanceSimulation()
     //Check if initial conditions solved
     if(!icProblemSolved)
         return;
-        
+
     //Calculate eleapsed time
-    uint64_t timeInMicroseconds = GetTimeInMicroseconds();
     uint64_t deltaTime;
-    
-    //Start of simulation
-    if(currentTime == 0)
+
+    if(currentTime == 0) //Start of simulation
     {
         deltaTime = 0.0;
-        currentTime = timeInMicroseconds;
+        currentTime = getSimulationClock();
         return;
     }
+
+    uint64_t timeInMicroseconds = getSimulationClock(); //Realtime factor included in clock
+    deltaTime = timeInMicroseconds - currentTime; 
     
-    //Calculate and adjust delta
-    deltaTime = timeInMicroseconds - currentTime;
+    if(deltaTime < ssus) //Skip if clock did not tick one simulation step
+        return;
+
     currentTime = timeInMicroseconds;
-    
-    if(deltaTime < ssus)
-    {
-        std::this_thread::sleep_for(std::chrono::microseconds(ssus - deltaTime));
-        timeInMicroseconds = GetTimeInMicroseconds();
-        deltaTime = timeInMicroseconds - (currentTime - deltaTime);
-        currentTime = timeInMicroseconds;
-    }
     
     //Step simulation
     SDL_LockMutex(simSettingsMutex);
-    uint64_t physicsStart = GetTimeInMicroseconds();
-    dynamicsWorld->stepSimulation((Scalar)deltaTime * realtimeFactor/Scalar(1000000.0), 1000000, (Scalar)ssus/Scalar(1000000.0));
-    uint64_t physicsEnd = GetTimeInMicroseconds();
+    uint64_t physicsStart = GetTimeInNanoseconds();
+    dynamicsWorld->stepSimulation((Scalar)deltaTime/Scalar(1000000.0), 1000000, (Scalar)ssus/Scalar(1000000.0));
+    uint64_t physicsEnd = GetTimeInNanoseconds();
     SDL_UnlockMutex(simSettingsMutex);
-    
+
     SDL_LockMutex(simInfoMutex);
     physicsTime = physicsEnd - physicsStart;
-    cpuUsage = Scalar(physicsTime)/Scalar(deltaTime) * Scalar(100);
-    
-    /*Scalar factor1 = (Scalar)deltaTime/(Scalar)physicsTime;
-    Scalar factor2 = Scalar(1000000.0/60.0)/(Scalar)physicsTime;
-    realtimeFactor *=  factor1*factor2;
-    realtimeFactor = realtimeFactor < Scalar(0.05) ? Scalar(0.05) : (realtimeFactor > Scalar(1) ? Scalar(1) : realtimeFactor);*/
-    //realtimeFactor = Scalar(1);
+    Scalar cpuUsageNow = (Scalar)physicsTime/Scalar(1000)/(Scalar)deltaTime * Scalar(100);
+    Scalar filter(0.001);
+    cpuUsage = filter * cpuUsageNow + (Scalar(1)-filter) * cpuUsage;   
     
     //Inform about MLCP failures
     if(solver != SolverType::SOLVER_SI)

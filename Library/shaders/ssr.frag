@@ -238,6 +238,13 @@ float calculateAlphaForIntersection(bool intersect,
     return alpha;
 }
 
+//Schlick's approximation to Fresnel function (assuming equal IOR for all wavelengths)
+// R0 = ((n1-n2)/(n1+n2))^2
+float fresnelSchlick(float cosTheta, float R0)
+{
+	return R0 + (1.0 - R0) * pow(1.0 - cosTheta, 5.0);
+}
+
 void main(void)
 {
     //Get view space normal
@@ -247,7 +254,7 @@ void main(void)
     
     //If pixel belongs to sky there is no reflection! --> ADD REFLECTION OF THE SKY!!!!
     if(dot(vsNormal, vsNormal) < 0.01 || reflectionStrength < 0.01) 
-        fragColor = vec4(texture(texColor, texcoord).rgb, 1.0);
+        fragColor = vec4(texture(texColor, texcoord).rgb, 0.0);
     else
     {    
         //Get eye space position
@@ -267,10 +274,12 @@ void main(void)
         int iterationCount;
         bool intersect = traceScreenSpaceRay(vsRayOrigin, vsRayDirection, jitter, hitPixel, hitPoint, iterationCount, texcoord.x > 0.5);
         float alpha = calculateAlphaForIntersection(intersect, iterationCount, reflectionStrength, hitPixel, hitPoint, vsRayOrigin, vsRayDirection);
-        
+        alpha *= fresnelSchlick(max(vsNormal.z, 0.0), 0.02);
+
         //Add sky fallback or underwater background fallback
         hitPixel = mix(texcoord, hitPixel, float(intersect));
-        fragColor = vec4(mix(texture(texColor, texcoord).rgb, texture(texColor, hitPixel).rgb, alpha * reflectionStrength), 1.0);
+        fragColor = vec4(mix(texture(texColor, texcoord).rgb, texture(texColor, hitPixel).rgb, alpha), alpha);
+        //fragColor = vec4(texture(texColor, hitPixel).rgb, alpha * reflectionStrength);
         //fragColor = vec4(vec3(alpha * reflectionStrength), 1.0);
         //fragColor = vec4(100*(vsNormal*0.5+0.5), 1.0);
         //fragColor = vec4(vec3(-vsRayOrigin.z), 1.0);

@@ -57,7 +57,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
      
     //Load shaders and create rendering buffers
     cInfo("Loading shaders...");
-    OpenGLAtmosphere::BuildAtmosphereAPI(rSettings.atmosphere);
+    OpenGLAtmosphere::Init();
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
     OpenGLSonar::Init();
@@ -461,79 +461,99 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 if(ocean->hasWaves())
                     glOcean->UpdateSurface(camera);
 
-                //Generating stencil mask
-                glOcean->DrawUnderwaterMask(camera);
-                
-                //Drawing underwater without stencil test
-                content->SetDrawingMode(DrawingMode::UNDERWATER);
-                DrawObjects();
-                DrawLights();
-                glOcean->DrawBackground(camera);
-                
-                //Draw surface to back buffer
-                camera->SetRenderBuffers(1, false, true); //Clearing color buffer
-                camera->SetRenderBuffers(1, true, false); //Color + Normal
-                glOcean->DrawSurface(camera);
-                camera->SetRenderBuffers(0, false, false); //Color only
-                
-                //Blend surface on top of scene
-                OpenGLState::DisableDepthTest();
-                OpenGLState::EnableBlend();
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                content->DrawTexturedSAQ(camera->getColorTexture(1));
-                OpenGLState::DisableBlend();
-                OpenGLState::EnableDepthTest();
-                
-                //Draw backsurface
-                camera->SetRenderBuffers(0, true, false); //Color + Normal
-                glOcean->DrawBacksurface(camera);                    
-                
-                //Stencil masking
-                OpenGLState::EnableStencilTest();
-                glStencilMask(0x00);
-                glStencilFunc(GL_EQUAL, 0, 0xFF);
-                
-                //Draw all objects as above surface (depth testing will secure drawing only what is above water)
-                content->SetDrawingMode(DrawingMode::FULL);
-                DrawObjects();
-                DrawLights();
-                
-                //Render sky (left for the end to only fill empty spaces)
-                atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);
-                OpenGLState::DisableStencilTest();
-                
-                //Postprocess
-                if(rSettings.ssr > RenderQuality::DISABLED)
-                {
-                    //Linear depth front faces
-                    camera->GenerateLinearDepth(true);
-                    
-                    //Linear depth back faces
-                    OpenGLState::BindFramebuffer(camera->getPostprocessFBO());
-                    glClear(GL_DEPTH_BUFFER_BIT);
-                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-                    glCullFace(GL_FRONT);
-                    content->SetDrawingMode(DrawingMode::FLAT);
+                //Two separate rendering paths: above water and under water, 
+                //possible because camera near plane is (virtually) removed with logarithmic depth buffer.
+                glm::vec3 eye = camera->GetEyePosition();
+                if(ocean->GetDepth(eye) > 0.0) //Underwater
+                {  
+                    content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
-                    glCullFace(GL_BACK);
-                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                    camera->GenerateLinearDepth(false);
+                    glOcean->DrawBackground(camera);
+                    glOcean->DrawBacksurface(camera);
+                    //camera->GenerateBloom();
+                    DrawLights();
                     
-                    //Draw screen-space reflections
-                    OpenGLState::BindFramebuffer(camera->getRenderFBO());
-                    camera->SetRenderBuffers(1, false, true);
-                    OpenGLState::DisableDepthTest();
-                    camera->DrawSSR();
-                }
+                    if(rSettings.ssr > RenderQuality::DISABLED)
+                    {
+                        //Linear depth front faces
+                        camera->GenerateLinearDepth(true);
+                        
+                        //Linear depth back faces
+                        OpenGLState::BindFramebuffer(camera->getPostprocessFBO());
+                        glClear(GL_DEPTH_BUFFER_BIT);
+                        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                        glCullFace(GL_FRONT);
+                        content->SetDrawingMode(DrawingMode::FLAT);
+                        DrawObjects();
+                        glCullFace(GL_BACK);
+                        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                        camera->GenerateLinearDepth(false);
+                        
+                        //Draw screen-space reflections
+                        camera->DrawSSR();
+                    }
 
-                //Suspended particles only below surface
-                OpenGLState::EnableDepthTest();
-                OpenGLState::EnableStencilTest();           
-                glStencilFunc(GL_EQUAL, 1, 0xFF);
-                glDepthMask(GL_FALSE);
-                glOcean->DrawParticles(camera);
-                glDepthMask(GL_TRUE);
-                OpenGLState::DisableStencilTest();
+                    //Draw bloom effect simulating scattering
+                    //camera->DrawBloom((GLfloat)ocean->getWaterType());
+
+                    //Suspended particles only below surface
+                    glDepthMask(GL_FALSE);
+                    glOcean->DrawParticles(camera);
+                    glDepthMask(GL_TRUE);
+                    
+                }
+                else //Above water
+                {
+                    content->SetDrawingMode(DrawingMode::UNDERWATER);
+                    DrawObjects();
+                    DrawLights();
+                    glOcean->DrawBackground(camera);
+
+                    //Draw surface to back buffer
+                    camera->SetRenderBuffers(1, false, true); //Clearing color buffer
+                    camera->SetRenderBuffers(1, true, false); //Color + Normal
+                    glOcean->DrawSurface(camera);
+                    camera->SetRenderBuffers(0, false, false); //Color only
+                    
+                    //Blend surface on top of scene
+                    OpenGLState::DisableDepthTest();
+                    OpenGLState::EnableBlend();
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    content->DrawTexturedSAQ(camera->getColorTexture(1));
+                    OpenGLState::DisableBlend();
+                    OpenGLState::EnableDepthTest();
+                    
+                    //Draw all objects as above surface 
+                    //(depth testing will secure drawing only what is above water)
+                    camera->SetRenderBuffers(0, true, false); //Color + Normal
+                    content->SetDrawingMode(DrawingMode::FULL);
+                    DrawObjects();
+                    DrawLights();
+                
+                    //Render sky (left for the end to only fill empty spaces)
+                    atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);    
+
+                     //Postprocess
+                    if(rSettings.ssr > RenderQuality::DISABLED)
+                    {
+                        //Linear depth front faces
+                        camera->GenerateLinearDepth(true);
+                    
+                        //Linear depth back faces
+                        OpenGLState::BindFramebuffer(camera->getPostprocessFBO());
+                        glClear(GL_DEPTH_BUFFER_BIT);
+                        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                        glCullFace(GL_FRONT);
+                        content->SetDrawingMode(DrawingMode::FLAT);
+                        DrawObjects();
+                        glCullFace(GL_BACK);
+                        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                        camera->GenerateLinearDepth(false);
+                        
+                        //Draw screen-space reflections
+                        camera->DrawSSR();
+                    }
+                }
             }
         
             //Tone mapping
@@ -566,9 +586,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     //ocean->getOpenGLOcean()->ShowTexture(3, glm::vec4(0,0,512,512));
                 //}
         
-                //atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::TRANSMITTANCE,glm::vec4(0,0,200,200));
-                //atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::IRRADIANCE,glm::vec4(200,0,200,200));
-                //atm->getOpenGLAtmosphere()->ShowAtmosphereTexture(AtmosphereTextures::SCATTERING,glm::vec4(400,0,200,200));
                 //atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);
                 
                 //content->DrawTexturedQuad(0,0,800,600,camera->getPostprocessTexture(0));

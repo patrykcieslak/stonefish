@@ -73,7 +73,6 @@
 #include <utils/UnitSystem.h>
 #include <core/ScenarioParser.h>
 #include <core/NED.h>
-#include <core/TrajectoryGenerator.h>
 
 UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
 : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
@@ -84,7 +83,7 @@ void UnderwaterTestManager::BuildScenario()
 {
 #ifdef PARSED_SCENARIO
     sf::ScenarioParser parser(this);
-    parser.Parse(sf::GetDataPath() + "underwater_pipe.scn");
+    parser.Parse(sf::GetDataPath() + "underwater_test.scn");
 #else
     ///////MATERIALS////////
     CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.3);

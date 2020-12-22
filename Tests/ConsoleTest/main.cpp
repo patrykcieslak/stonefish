@@ -30,7 +30,7 @@ int main(int argc, const char * argv[])
 {
     ConsoleTestManager* simulationManager = new ConsoleTestManager(500.0);
     ConsoleTestApp app(std::string(DATA_DIR_PATH), simulationManager);
-    app.Run(false);
+    app.Run(true);
     
     return 0;
 }

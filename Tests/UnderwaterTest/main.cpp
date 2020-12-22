@@ -33,7 +33,7 @@ int main(int argc, const char * argv[])
     //feenableexcept(FE_INVALID | FE_OVERFLOW);
     
     sf::RenderSettings s;
-    s.windowW = 1000;
+    s.windowW = 1200;
     s.windowH = 800;
     s.aa = sf::RenderQuality::HIGH;
     s.shadows = sf::RenderQuality::HIGH;
