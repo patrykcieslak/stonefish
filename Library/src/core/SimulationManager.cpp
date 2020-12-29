@@ -484,6 +484,12 @@ uint64_t SimulationManager::getSimulationClock()
     return (uint64_t)ceil(realtimeFactor * (Scalar)GetTimeInMicroseconds());
 }
 
+void SimulationManager::SimulationClockSleep(uint64_t us)
+{
+    uint64_t t = (uint64_t)ceil((Scalar)us/realtimeFactor);
+    std::this_thread::sleep_for(std::chrono::microseconds(t));
+}
+
 MaterialManager* SimulationManager::getMaterialManager()
 {
     return materialManager;
@@ -942,11 +948,15 @@ void SimulationManager::AdvanceSimulation()
 
     uint64_t timeInMicroseconds = getSimulationClock(); //Realtime factor included in clock
     deltaTime = timeInMicroseconds - currentTime; 
-    
-    if(deltaTime < ssus) //Skip if clock did not tick one simulation step
-        return;
-
     currentTime = timeInMicroseconds;
+
+    if(deltaTime < ssus) //Sleep if clock did not tick one simulation step
+    {
+        SimulationClockSleep(ssus - deltaTime);
+        timeInMicroseconds = getSimulationClock();
+        deltaTime += timeInMicroseconds - currentTime;
+        currentTime = timeInMicroseconds;
+    }
     
     //Step simulation
     SDL_LockMutex(simSettingsMutex);

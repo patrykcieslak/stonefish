@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationManager__
@@ -94,6 +94,12 @@ namespace sf
 
         //! A method returning the current simulation clock time in us (overriding allows for external time source).
         virtual uint64_t getSimulationClock();
+
+        //! A method sleeping for a given simulation clock time (overriding allows for external time source).
+        /*!
+         \param us time to sleep in simulation time [us]
+         */
+        virtual void SimulationClockSleep(uint64_t us);
 
         //! A method solving the initial conditions problem.
         bool SolveICProblem();
