@@ -45,13 +45,13 @@
 namespace sf
 {
 
-GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
+GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim, const std::string& shaderPath)
 : SimulationApp(name, dataDirPath, sim)
 {
 #ifdef SHADER_DIR_PATH
-    shaderPath = SHADER_DIR_PATH;
+    this->shaderPath = SHADER_DIR_PATH;
 #else
-    shaderPath = "/usr/local/share/Stonefish/shaders/";
+    this->shaderPath = shaderPath;
 #endif
     glLoadingContext = NULL;
     glMainContext = NULL;

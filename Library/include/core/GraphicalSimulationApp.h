@@ -50,7 +50,7 @@ namespace sf
          \param h a structure containing the helper objects display settings
          \param sim a pointer to the simulation manager
          */
-        GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim);
+        GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim, const std::string& shaderPath="/usr/local/share/Stonefish/shaders/");
         
         //! A destructor.
         virtual ~GraphicalSimulationApp();
