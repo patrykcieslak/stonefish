@@ -53,22 +53,22 @@ else()
     # Install library in the system
     install(
         TARGETS Stonefish 
-        LIBRARY DESTINATION /usr/local/lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     )
     
     # Install Stonefish headers
-    install(DIRECTORY Library/include/ DESTINATION /usr/local/include/Stonefish)
+    install(DIRECTORY Library/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Stonefish)
     
     # Install 3rdparty headers
     file(GLOB_RECURSE INCLUDES_3RD "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.h")
     foreach(f ${INCLUDES_3RD})
         file(RELATIVE_PATH frel "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" ${f})
         get_filename_component(dir ${frel} DIRECTORY)
-        install(FILES ${f} DESTINATION /usr/local/include/Stonefish/${dir})
+        install(FILES ${f} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Stonefish/${dir})
     endforeach()
     
     #Install other files
-    install(DIRECTORY Library/shaders/ DESTINATION /usr/local/share/Stonefish/shaders)
-    install(FILES ${PROJECT_BINARY_DIR}/version.h DESTINATION /usr/local/include/Stonefish)
-    install(FILES ${PROJECT_BINARY_DIR}/stonefish.pc DESTINATION /usr/local/lib/pkgconfig)
+    install(DIRECTORY Library/shaders/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/Stonefish/shaders)
+    install(FILES ${PROJECT_BINARY_DIR}/version.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Stonefish)
+    install(FILES ${PROJECT_BINARY_DIR}/stonefish.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
 endif()
