@@ -2,5 +2,5 @@ Name: @PROJECT_NAME@
 Description: Advanced marine and terrestial robotics simulation library
 Requires: freetype2 sdl2
 Version: @PROJECT_VERSION@
-Libs: -L/usr/local/lib -lStonefish -lfreetype -lSDL2 -lGL -lGLU
-Cflags: -I/usr/local/include -I/usr/local/include/Stonefish -DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION
+Libs: -L@CMAKE_INSTALL_PREFIX@/lib -lStonefish -lfreetype -lSDL2 -lGL -lGLU
+Cflags: -I@CMAKE_INSTALL_PREFIX@/include -I@CMAKE_INSTALL_PREFIX@/include/Stonefish -DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION

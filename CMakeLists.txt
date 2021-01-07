@@ -43,12 +43,13 @@ if(BUILD_TESTS)
     # Create tests and use library locally (has to be disabled when installing system-wide!)
     add_library(Stonefish_test SHARED ${SOURCES} ${SOURCES_3RD})
     target_link_libraries(Stonefish_test ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
-    add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Library/shaders/\") #Modifies shader path of the library
+    add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Library/shaders/\") #Sets shader path for the library
     add_subdirectory(Tests)
 else()
     # Create shared library to be installed system-wide
     add_library(Stonefish SHARED ${SOURCES} ${SOURCES_3RD})
     target_link_libraries(Stonefish ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
+    add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_INSTALL_PREFIX}/share/Stonefish/shaders/\") #Sets shader path for the library
 
     # Install library in the system
     install(
