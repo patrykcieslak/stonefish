@@ -112,34 +112,30 @@ void btMultiBodySphericalJointMotor::createConstraintRows(btMultiBodyConstraintA
 	if (m_maxAppliedImpulse == 0.f)
 		return;
 
-	const btScalar posError = 0;
+	//const btScalar posError = 0;
 	const btVector3 dummy(0, 0, 0);
 
 	
-	btVector3 axis[3] = { btVector3(1, 0, 0), btVector3(0, 1, 0), btVector3(0, 0, 1) };
+	//btVector3 axis[3] = { btVector3(1, 0, 0), btVector3(0, 1, 0), btVector3(0, 0, 1) };
 	
 	btQuaternion desiredQuat = m_desiredPosition;
 	btQuaternion currentQuat(m_bodyA->getJointPosMultiDof(m_linkA)[0],
-		m_bodyA->getJointPosMultiDof(m_linkA)[1],
-		m_bodyA->getJointPosMultiDof(m_linkA)[2],
-		m_bodyA->getJointPosMultiDof(m_linkA)[3]);
+	m_bodyA->getJointPosMultiDof(m_linkA)[1],
+	m_bodyA->getJointPosMultiDof(m_linkA)[2],
+	m_bodyA->getJointPosMultiDof(m_linkA)[3]);
 
-btQuaternion relRot = currentQuat.inverse() * desiredQuat;
+	btQuaternion relRot = currentQuat.inverse() * desiredQuat;
 	btVector3 angleDiff;
 	btGeneric6DofSpring2Constraint::matrixToEulerXYZ(btMatrix3x3(relRot), angleDiff);
-
-
 
 	for (int row = 0; row < getNumRows(); row++)
 	{
 		btMultiBodySolverConstraint& constraintRow = constraintRows.expandNonInitializing();
 
-		int dof = row;
-		
-		btScalar currentVelocity = m_bodyA->getJointVelMultiDof(m_linkA)[dof];
-		btScalar desiredVelocity = this->m_desiredVelocity[row];
-		
-		btScalar velocityError = desiredVelocity - currentVelocity;
+		//int dof = row;
+		//btScalar currentVelocity = m_bodyA->getJointVelMultiDof(m_linkA)[dof];
+		//btScalar desiredVelocity = this->m_desiredVelocity[row];
+		//btScalar velocityError = desiredVelocity - currentVelocity;
 
 		btMatrix3x3 frameAworld;
 		frameAworld.setIdentity();

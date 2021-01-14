@@ -26,7 +26,6 @@
 #include "graphics/OpenGLRealCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
-#include "core/Console.h"
 #include "sensors/vision/ColorCamera.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"

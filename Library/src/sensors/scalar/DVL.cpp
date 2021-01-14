@@ -151,24 +151,22 @@ std::vector<Renderable> DVL::Render()
 
 void DVL::setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax)
 {
-    channels[0].rangeMin = -velocityMax.getX();
-    channels[1].rangeMin = -velocityMax.getY();
-    channels[2].rangeMin = -velocityMax.getZ();
-    
-    channels[0].rangeMax = velocityMax.getX();
-    channels[1].rangeMax = velocityMax.getY();
-    channels[2].rangeMax = velocityMax.getZ();
-    
-    channels[3].rangeMin = altitudeMin;
-    channels[3].rangeMax = altitudeMax;
+    channels[0].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[1].rangeMin = -btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[2].rangeMin = -btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[0].rangeMax = btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[1].rangeMax = btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[2].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[3].rangeMin = btClamped(altitudeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[3].rangeMax = btClamped(altitudeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
 void DVL::setNoise(Scalar velocityStdDev, Scalar altitudeStdDev)
 {
-    channels[0].setStdDev(velocityStdDev);
-    channels[1].setStdDev(velocityStdDev);
-    channels[2].setStdDev(velocityStdDev);
-    channels[3].setStdDev(altitudeStdDev);
+    channels[0].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[1].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[2].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[3].setStdDev(btClamped(altitudeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType DVL::getScalarSensorType()

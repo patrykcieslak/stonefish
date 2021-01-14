@@ -39,7 +39,6 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOceanParticles.h"
-#include "core/Console.h"
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"

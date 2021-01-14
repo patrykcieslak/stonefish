@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Gyroscope__
@@ -50,22 +50,22 @@ namespace sf
         
         //! A method used to set the range of the sensor.
         /*!
-         \param angularVelMax the maximum measured angular velocity [rad/s]
+         \param angularVelocityMax the maximum measured angular velocity for each axis [rad/s]
          */
-        void setRange(Scalar angularVelMax);
+        void setRange(Vector3 angularVelocityMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param angularVelStdDev standard deviation of the angular velocity measurement noise
-         \param angularVelBias bias of the angular velocity measurement [rad/s]
+         \param angularVelocityStdDev standard deviation of the angular velocity measurement noise
+         \param angularVelocityBias bias of the angular velocity measurement fo each axis [rad/s]
          */
-        void setNoise(Scalar angularVelStdDev, Scalar angularVelBias);
+        void setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias);
 
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();
         
     private:
-        Scalar bias;
+        Vector3 bias;
     };
 }
 

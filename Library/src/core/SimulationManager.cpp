@@ -40,7 +40,6 @@
 #include "core/MaterialManager.h"
 #include "core/Robot.h"
 #include "core/ResearchConstraintSolver.h"
-#include "core/Console.h"
 #include "core/NED.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/OpenGLPipeline.h"

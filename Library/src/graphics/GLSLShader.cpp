@@ -26,7 +26,7 @@
 #include "graphics/GLSLShader.h"
 
 #include <fstream>
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 #include "graphics/OpenGLState.h"
 #include "utils/SystemUtil.hpp"
 

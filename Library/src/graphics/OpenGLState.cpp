@@ -25,7 +25,7 @@
 
 #include "graphics/OpenGLState.h"
 
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 
 namespace sf
 {

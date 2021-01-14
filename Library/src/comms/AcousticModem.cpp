@@ -29,7 +29,6 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
-#include "core/Console.h"
 
 namespace sf
 {

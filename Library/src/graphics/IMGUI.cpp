@@ -25,7 +25,7 @@
 
 #include "graphics/IMGUI.h"
 
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"

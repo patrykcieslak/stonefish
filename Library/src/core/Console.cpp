@@ -20,16 +20,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/Console.h"
+#include <iostream>
+#include <fstream>
 
 namespace sf
 {
     
-Console::Console()
+Console::Console(bool useStdout)
 {
+    stdoutEnabled = useStdout;
     lines = std::vector<ConsoleMessage>(0);
     linesMutex = SDL_CreateMutex();
 }
@@ -50,7 +53,7 @@ std::vector<ConsoleMessage> Console::getLines()
     return lines;
 }
 
-void Console::Print(int messageType, std::string format, ...)
+void Console::Print(MessageType t, std::string format, ...)
 {
     va_list args;
     char buffer[4096];
@@ -58,50 +61,53 @@ void Console::Print(int messageType, std::string format, ...)
     vsnprintf(buffer, sizeof(buffer), format.c_str(), args);
     va_end(args);
     
+    if(stdoutEnabled)
+    {
 #ifdef COLOR_CONSOLE
-    switch(messageType)
-    {
-        default:
-        case 0: //Info
-            printf("[INFO] %s\n", buffer);
-            break;
-            
-        case 1: //Warning
-            printf("\033[33m[WARN] %s\033[0m\n", buffer);
-            break;
-            
-        case 2: //Error
-            printf("\033[31m[ERROR] %s\033[0m\n", buffer);
-            break;
-            
-        case 3: //Critical
-            printf("\033[1;31m[CRITICAL] %s\033[0m\n", buffer);
-            break;
-    }
+        switch(t)
+        {
+            default:
+            case MessageType::INFO:
+                printf("[INFO] %s\n", buffer);
+                break;
+                
+            case MessageType::WARNING:
+                printf("\033[33m[WARN] %s\033[0m\n", buffer);
+                break;
+                
+            case MessageType::ERROR:
+                printf("\033[31m[ERROR] %s\033[0m\n", buffer);
+                break;
+                
+            case MessageType::CRITICAL:
+                printf("\033[1;31m[CRITICAL] %s\033[0m\n", buffer);
+                break;
+        }
 #else
-    switch(messageType)
-    {
-        default:
-        case 0: //Info
-            printf("[INFO] %s\n", buffer);
-            break;
-            
-        case 1: //Warning
-            printf("[WARN] %s\n", buffer);
-            break;
-            
-        case 2: //Error
-            printf("[ERROR] %s\n", buffer);
-            break;
-            
-        case 3: //Critical
-            printf("[CRITICAL] %s\n", buffer);
-            break;
-    }
+        switch(t)
+        {
+            default:
+            case MessageType::INFO:
+                printf("[INFO] %s\n", buffer);
+                break;
+                
+            case MessageType::WARNING:
+                printf("[WARN] %s\n", buffer);
+                break;
+                
+            case MessageType::ERROR:
+                printf("[ERROR] %s\n", buffer);
+                break;
+                
+            case MessageType::CRITICAL:
+                printf("[CRITICAL] %s\n", buffer);
+                break;
+        }
 #endif
-    
+    }
+
     ConsoleMessage msg;
-    msg.type = messageType;
+    msg.type = t;
     msg.text = std::string(buffer);
     SDL_LockMutex(linesMutex);
     lines.push_back(msg);
@@ -120,6 +126,38 @@ void Console::Clear()
     SDL_LockMutex(linesMutex);
     lines.clear();
     SDL_UnlockMutex(linesMutex);
+}
+
+bool Console::SaveToFile(std::string filename)
+{
+    std::ofstream outFile(filename);
+    if(outFile.is_open())
+    {
+        SDL_LockMutex(linesMutex);
+        for(size_t i=0; i<lines.size(); ++i)
+        {
+            switch(lines[i].type)
+            {
+                case MessageType::INFO:
+                    outFile << "[INFO] " << lines[i].text << std::endl;
+                    break;
+                case MessageType::WARNING:
+                    outFile << "[WARN] " << lines[i].text << std::endl;
+                    break;
+                case MessageType::ERROR:
+                    outFile << "[ERROR] " << lines[i].text << std::endl;
+                    break;
+                case MessageType::CRITICAL:
+                    outFile << "[CRITICAL] " << lines[i].text << std::endl;
+                    break;
+            }
+        }
+        SDL_UnlockMutex(linesMutex);
+        outFile.close();
+        return true;
+    }
+    else
+        return false;
 }
 
 }

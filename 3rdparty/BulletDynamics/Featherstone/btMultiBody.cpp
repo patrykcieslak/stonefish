@@ -99,8 +99,8 @@ btMultiBody::btMultiBody(int n_links,
 	: m_baseCollider(0),
 	  m_baseName(0),
 	  m_basePos(0, 0, 0),
-	  m_baseQuat(0, 0, 0, 1),
       m_basePos_interpolate(0, 0, 0),
+	  m_baseQuat(0, 0, 0, 1),
       m_baseQuat_interpolate(0, 0, 0, 1),
 	  m_baseMass(mass),
 	  m_baseInertia(inertia),
@@ -344,6 +344,7 @@ void btMultiBody::finalizeMultiDof()
 {
 	m_deltaV.resize(0);
 	m_deltaV.resize(6 + m_dofCount);
+	m_acc.resize(6 + m_dofCount);
 	m_realBuf.resize(6 + m_dofCount + m_dofCount * m_dofCount + 6 + m_dofCount);  //m_dofCount for joint-space vels + m_dofCount^2 for "D" matrices + delta-pos vector (6 base "vels" + joint "vels")
 	m_vectorBuf.resize(2 * m_dofCount);                                           //two 3-vectors (i.e. one six-vector) for each system dof	("h" matrices)
 	m_matrixBuf.resize(m_links.size() + 1);
@@ -652,6 +653,9 @@ void btMultiBody::clearForcesAndTorques()
 		m_links[i].m_appliedTorque.setValue(0, 0, 0);
 		m_links[i].m_jointTorque[0] = m_links[i].m_jointTorque[1] = m_links[i].m_jointTorque[2] = m_links[i].m_jointTorque[3] = m_links[i].m_jointTorque[4] = m_links[i].m_jointTorque[5] = 0.f;
 	}
+
+	for(size_t dof = 0; dof < m_acc.size(); ++dof)
+		m_acc[dof] = 0; 
 }
 
 void btMultiBody::clearVelocities()

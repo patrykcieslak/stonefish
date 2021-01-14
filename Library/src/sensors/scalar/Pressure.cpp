@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Pressure.h"
@@ -53,12 +53,12 @@ void Pressure::InternalUpdate(Scalar dt)
 void Pressure::setRange(Scalar max)
 {
     channels[0].rangeMin = Scalar(0);
-    channels[0].rangeMax = max;
+    channels[0].rangeMax = btClamped(max, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
 void Pressure::setNoise(Scalar pressureStdDev)
 {
-    channels[0].setStdDev(pressureStdDev);
+    channels[0].setStdDev(btClamped(pressureStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType Pressure::getScalarSensorType()

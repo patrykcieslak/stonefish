@@ -27,6 +27,7 @@
 #define __Stonefish_ScenarioParser__
 
 #include "StonefishCommon.h"
+#include "core/Console.h"
 #include "tinyxml2.h"
 #include <map>
 
@@ -61,11 +62,23 @@ namespace sf
          \return success
          */
         virtual bool Parse(std::string filename);
-        
+
+        //! A method saving the log to a text file.
+        /*!
+         \param filename path to the log file
+         \return success
+         */
+        bool SaveLog(std::string filename);
+
+        //! A method returning a copy of the log.
+        std::vector<ConsoleMessage> getLog();
+
         //! A method used to get the pointer to the associated simulation manager.
         SimulationManager* getSimulationManager();
-        
+
     protected:
+        Console log;
+
         //! A method used to pre-process the xml description file after loading.
         /*!
          \param root a pointer to a root node

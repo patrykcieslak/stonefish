@@ -27,10 +27,16 @@
 #define __Stonefish_SimulationApp__
 
 #include "StonefishCommon.h"
+#include "core/Console.h"
+
+//Console output aliases
+#define cInfo(format, ...)     sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::INFO, format, ##__VA_ARGS__)
+#define cWarning(format, ...)  sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::WARNING, format, ##__VA_ARGS__)
+#define cError(format, ...)    sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::ERROR, format, ##__VA_ARGS__)
+#define cCritical(format, ...) {sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::CRITICAL, format, ##__VA_ARGS__);abort();}
 
 namespace sf
 {
-    class Console;
     class SimulationManager;
     
     //! An abstract class that defines an application interface hosting a simulation manager.

@@ -27,7 +27,6 @@
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
-#include "core/Console.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "utils/SystemUtil.hpp"
@@ -85,8 +84,8 @@ SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysi
     Tdq.setZero();
     Fda.setZero();
     Tda.setZero();
-    filteredLinearVel.setZero();
-    filteredAngularVel.setZero();
+    lastV.setZero();
+    lastOmega.setZero();
     linearAcc.setZero();
     angularAcc.setZero();
     
@@ -1082,18 +1081,12 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
 
 void SolidEntity::UpdateAcceleration(Scalar dt)
 {
-    //Filter velocity
-    Scalar alpha = 0.5;
-    Vector3 currentLinearVel = alpha * getLinearVelocity() + (Scalar(1)-alpha) * filteredLinearVel;
-    Vector3 currentAngularVel = alpha * getAngularVelocity() + (Scalar(1)-alpha) * filteredAngularVel;
-        
-    //Compute derivative
-    linearAcc = (currentLinearVel - filteredLinearVel)/dt;
-    angularAcc = (currentAngularVel - filteredAngularVel)/dt;
-        
-    //Update filtered
-    filteredLinearVel = currentLinearVel;
-    filteredAngularVel = currentAngularVel;
+    Vector3 currentV = getLinearVelocity();
+    Vector3 currentOmega = getAngularVelocity();
+    linearAcc = (currentV - lastV)/dt;
+    angularAcc = (currentOmega - lastOmega)/dt;
+    lastV = currentV;
+    lastOmega = currentOmega;
 }
 
 void SolidEntity::ApplyGravity(const Vector3& g)

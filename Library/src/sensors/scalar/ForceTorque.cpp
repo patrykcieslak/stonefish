@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/ForceTorque.h"
@@ -97,29 +97,29 @@ void ForceTorque::InternalUpdate(Scalar dt)
 
 void ForceTorque::setRange(const Vector3& forceMax, const Vector3& torqueMax)
 {
-    channels[0].rangeMin = -forceMax.getX();
-    channels[1].rangeMin = -forceMax.getY();
-    channels[2].rangeMin = -forceMax.getZ();
-    channels[0].rangeMax = forceMax.getX();
-    channels[1].rangeMax = forceMax.getY();
-    channels[2].rangeMax = forceMax.getZ();
+    channels[0].rangeMin = -btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[1].rangeMin = -btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[2].rangeMin = -btClamped(forceMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[0].rangeMax = btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[1].rangeMax = btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[2].rangeMax = btClamped(forceMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     
-    channels[3].rangeMin = -torqueMax.getX();
-    channels[4].rangeMin = -torqueMax.getY();
-    channels[5].rangeMin = -torqueMax.getZ();
-    channels[3].rangeMax = torqueMax.getX();
-    channels[4].rangeMax = torqueMax.getY();
-    channels[5].rangeMax = torqueMax.getZ();
+    channels[3].rangeMin = -btClamped(torqueMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[4].rangeMin = -btClamped(torqueMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[5].rangeMin = -btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[3].rangeMax = btClamped(torqueMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[4].rangeMax = btClamped(torqueMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[5].rangeMax = btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
 void ForceTorque::setNoise(Scalar forceStdDev, Scalar torqueStdDev)
 {
-    channels[0].setStdDev(forceStdDev);
-    channels[1].setStdDev(forceStdDev);
-    channels[2].setStdDev(forceStdDev);
-    channels[3].setStdDev(torqueStdDev);
-    channels[4].setStdDev(torqueStdDev);
-    channels[5].setStdDev(torqueStdDev);
+    channels[0].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[1].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[2].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[3].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[4].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[5].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
     
 std::vector<Renderable> ForceTorque::Render()

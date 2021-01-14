@@ -41,7 +41,7 @@ MSIS::MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, 
     range.y = 0.f;
     noise = glm::vec2(0.f);
     fullRotation = false;
-    stepSize = radians(btScalar(360)/ceil(Scalar(360)/stepAngleDeg)); //Corrected step angle in radians
+    stepSize = btRadians(btScalar(360)/ceil(Scalar(360)/stepAngleDeg)); //Corrected step angle in radians
     setRotationLimits(minRotationDeg, maxRotationDeg);
     setRangeMax(maxRange);
     setRangeMin(minRange);
@@ -73,10 +73,10 @@ void MSIS::setRotationLimits(Scalar l1Deg, Scalar l2Deg)
     }
 
     //Clamp and convert to number of steps
-    l1Deg = clamp(l1Deg, Scalar(-180), Scalar(180));
-    l2Deg = clamp(l2Deg, Scalar(-180), Scalar(180));
-    roi.x = (GLint)round(radians(l1Deg)/stepSize);
-    roi.y = (GLint)round(radians(l2Deg)/stepSize);
+    btClamp(l1Deg, Scalar(-180), Scalar(180));
+    btClamp(l2Deg, Scalar(-180), Scalar(180));
+    roi.x = (GLint)round(btRadians(l1Deg)/stepSize);
+    roi.y = (GLint)round(btRadians(l2Deg)/stepSize);
     fullRotation = (roi.x == -(int)resX/2) && (roi.y == (int)resX/2);
     if(roi.y == (int)resX/2)
         --roi.y;
@@ -129,13 +129,13 @@ GLubyte* MSIS::getDisplayDataPointer()
 
 void MSIS::getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const
 {
-    l1Deg = degrees(Scalar(roi.x) * stepSize);
-    l2Deg = degrees(Scalar(roi.y) * stepSize);
+    l1Deg = btDegrees(Scalar(roi.x) * stepSize);
+    l2Deg = btDegrees(Scalar(roi.y) * stepSize);
 }
 
 Scalar MSIS::getRotationStepAngle() const
 {
-    return degrees(stepSize);
+    return btDegrees(stepSize);
 }
 
 int MSIS::getCurrentRotationStep() const

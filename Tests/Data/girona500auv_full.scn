@@ -135,6 +135,16 @@
 			</internal_part>
 		</base_link>
         
+		<comm name="USBL" type="usbl2" device_id="1">
+        	<link name="Vehicle"/>
+        	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
+        	<specs horizontal_fov="360.0" vertical_fov="360.0" range="1000.0" frequency="25000" baseline="0.1"/>
+        	<connect device_id="2"/>
+			<autoping rate="0.5"/>
+        	<noise tof="0.0015" sound_velocity="0.0133" phase="0.07" baseline_error="0.0008" depth="0.003"/>
+        </comm>
+		
+		<!--
         <comm name="USBL" type="usbl" device_id="1">
         	<connect device_id="2"/>
         	<link name="Vehicle"/>
@@ -144,6 +154,7 @@
         	<noise range="0.01" horizontal_angle="0.05" vertical_angle="0.1"/>
 			<resolution range="0.1" angle="0.1"/>
         </comm>
+		-->
 
 		<sensor name="dynamics" type="odometry" rate="30.0">
 			<link name="Vehicle"/>
@@ -164,10 +175,17 @@
 			<noise velocity="0.0015" altitude="0.001"/>
 		</sensor>
 
-		<sensor name="imu_filter" type="imu" rate="20.0">
+		<sensor name="acc" type="accelerometer" rate="100.0">
+			<history samples="1000"/>
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-			<noise angle="0.000001745 0.000001745 0.000001745" angular_velocity="0.00001745"/>
+		</sensor>
+
+		<sensor name="imu_filter" type="imu" rate="20.0">
+			<history samples="1000"/>
+			<link name="Vehicle"/>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+			<!--<noise angle="0.000001745 0.000001745 0.000001745" angular_velocity="0.00001745" linear_acceleration="0.0"/>-->
 		</sensor>
 
 		<sensor name="gps" type="gps" rate="1.0">
@@ -244,6 +262,6 @@
 			<origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
 		</light>
         
-		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+		<world_transform rpy="3.1415 0.0 0.0" xyz="0.0 0.0 0.0"/>
 	</robot>
 </scenario>

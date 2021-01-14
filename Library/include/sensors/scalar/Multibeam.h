@@ -59,9 +59,9 @@ namespace sf
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param stdDev standard deviation of the range measurement noise
+         \param rangeStdDev standard deviation of the range measurement noise
          */
-        void setNoise(Scalar stdDev);
+        void setNoise(Scalar rangeStdDev);
         
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();

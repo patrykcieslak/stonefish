@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/08/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Multibeam.h"
@@ -104,6 +104,9 @@ std::vector<Renderable> Multibeam::Render()
 
 void Multibeam::setRange(Scalar rangeMin, Scalar rangeMax)
 {
+    btClamp(rangeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    btClamp(rangeMax, Scalar(0), Scalar(BT_LARGE_FLOAT)); 
+
     for(unsigned int i=0; i<=angSteps; ++i)
     {
         channels[i].rangeMin = rangeMin;
@@ -111,10 +114,12 @@ void Multibeam::setRange(Scalar rangeMin, Scalar rangeMax)
     }
 }
 
-void Multibeam::setNoise(Scalar stdDev)
+void Multibeam::setNoise(Scalar rangeStdDev)
 {
+    btClamp(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
+
     for(unsigned int i=0; i<=angSteps; ++i)
-        channels[i].setStdDev(stdDev);
+        channels[i].setStdDev(rangeStdDev);
 }
 
 ScalarSensorType Multibeam::getScalarSensorType()

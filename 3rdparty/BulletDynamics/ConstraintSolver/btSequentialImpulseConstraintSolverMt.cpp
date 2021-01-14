@@ -403,8 +403,8 @@ void btSequentialImpulseConstraintSolverMt::internalCollectContactManifoldCached
 		cachedInfo->solverBodyIds[1] = solverBodyIdB;
 		cachedInfo->numTouchingContacts = 0;
 
-		btSolverBody* solverBodyA = &m_tmpSolverBodyPool[solverBodyIdA];
-		btSolverBody* solverBodyB = &m_tmpSolverBodyPool[solverBodyIdB];
+		//btSolverBody* solverBodyA = &m_tmpSolverBodyPool[solverBodyIdA];
+		//btSolverBody* solverBodyB = &m_tmpSolverBodyPool[solverBodyIdB];
 
 		// A contact manifold between 2 static object should not exist!
 		// check the collision flags of your objects if this assert fires.
@@ -1101,7 +1101,7 @@ btScalar btSequentialImpulseConstraintSolverMt::resolveMultipleContactConstraint
 																							 int batchEnd)
 {
 	btScalar leastSquaresResidual = 0.f;
-	int numPoolConstraints = m_tmpSolverContactConstraintPool.size();
+	//int numPoolConstraints = m_tmpSolverContactConstraintPool.size();
 
 	for (int iiCons = batchBegin; iiCons < batchEnd; iiCons++)
 	{

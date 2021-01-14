@@ -27,7 +27,7 @@
 
 #include <map>
 #include <algorithm>
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"

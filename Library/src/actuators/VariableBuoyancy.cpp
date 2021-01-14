@@ -27,7 +27,6 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "core/Console.h"
 #include <algorithm>
 
 namespace sf 

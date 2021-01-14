@@ -29,7 +29,7 @@ namespace sf
 {
 
 Trajectory::Trajectory(PlaybackMode playback) 
-    : playMode(playback), playTime(0), endTime(0), forward(true), iteration(0)
+    : playMode(playback), playTime(0), endTime(0), iteration(0), forward(true)
 {
 }
 

@@ -274,15 +274,10 @@ public:
 		return &m_realBuf[0];
 	}
     
-    const btScalar *getDeltaVelocityVector() const
+	const btScalar *getDeltaVelocityVector() const
     {
-        return &m_deltaV[0];
+	    return &m_acc[0];
     }
-	/*    btScalar * getVelocityVector() 
-	{ 
-		return &real_buf[0]; 
-	}
-  */
 
 	//
 	// get the frames of reference (positions and orientations) of the child m_links
@@ -346,6 +341,8 @@ public:
 
 	const btVector3 &getBaseForce() const { return m_baseForce; }
 	const btVector3 &getBaseTorque() const { return m_baseTorque; }
+	const btVector3 &getBaseConstraintForce() const { return m_baseConstraintForce; }
+	const btVector3 &getBaseConstraintTorque() const { return m_baseConstraintTorque; }
 	const btVector3 &getLinkForce(int i) const;
 	const btVector3 &getLinkTorque(int i) const;
 	btScalar getJointTorque(int i) const;
@@ -434,6 +431,7 @@ public:
 
 		for (int dof = 0; dof < 6 + getNumDofs(); ++dof)
 		{
+			m_acc[dof] += delta_vee[dof] * multiplier;
 			m_realBuf[dof] += delta_vee[dof] * multiplier;
 			btClamp(m_realBuf[dof], -m_maxCoordinateVelocity, m_maxCoordinateVelocity);
 		}
@@ -718,7 +716,8 @@ private:
 	//  offset         size         array
 	//   0              num_links+1  rot_from_parent
 	//
-	btAlignedObjectArray<btScalar> m_deltaV;
+	btAlignedObjectArray<btScalar> m_deltaV; // dV (acceleration) scratch
+	btAlignedObjectArray<btScalar> m_acc; 	 // Accumulated dV
 	btAlignedObjectArray<btScalar> m_realBuf;
 	btAlignedObjectArray<btVector3> m_vectorBuf;
 	btAlignedObjectArray<btMatrix3x3> m_matrixBuf;

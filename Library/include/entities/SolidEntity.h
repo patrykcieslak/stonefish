@@ -401,10 +401,8 @@ namespace sf
         Vector3 Tda;
         
         //Motion
-        Vector3 filteredLinearVel;
-        Vector3 filteredAngularVel;
-        Vector3 linearAcc;
-        Vector3 angularAcc;
+        Vector3 lastV;
+        Vector3 lastOmega;
         
         //Display
         int phyObjectId;

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Gyroscope.h"
@@ -36,7 +36,7 @@ Gyroscope::Gyroscope(std::string uniqueName, Scalar frequency, int historyLength
     channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
     channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
     channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
-    bias = Scalar(0);
+    bias = V0();
 }
 
 void Gyroscope::InternalUpdate(Scalar dt)
@@ -48,7 +48,7 @@ void Gyroscope::InternalUpdate(Scalar dt)
     Vector3 omega = toGyroFrame * attach->getAngularVelocity();
 
     //add bias error
-    omega += Vector3(bias, bias, bias);
+    omega += bias;
 
     //record sample
     Scalar values[3] = {omega.x(), omega.y(), omega.z()};
@@ -56,22 +56,22 @@ void Gyroscope::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-void Gyroscope::setRange(Scalar angularVelMax)
+void Gyroscope::setRange(Vector3 angularVelocityMax)
 {
-    channels[0].rangeMin = -angularVelMax;
-    channels[1].rangeMin = -angularVelMax;
-    channels[2].rangeMin = -angularVelMax;
-    channels[0].rangeMax = angularVelMax;
-    channels[1].rangeMax = angularVelMax;
-    channels[2].rangeMax = angularVelMax;
+    channels[0].rangeMin = -btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[1].rangeMin = -btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[2].rangeMin = -btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[0].rangeMax = btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[1].rangeMax = btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[2].rangeMax = btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Gyroscope::setNoise(Scalar angularVelStdDev, Scalar angularVelBias)
+void Gyroscope::setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias)
 {
-    channels[0].setStdDev(angularVelStdDev);
-    channels[1].setStdDev(angularVelStdDev);
-    channels[2].setStdDev(angularVelStdDev);
-    bias = angularVelBias;
+    channels[0].setStdDev(btClamped(angularVelocityStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[1].setStdDev(btClamped(angularVelocityStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[2].setStdDev(btClamped(angularVelocityStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    bias = angularVelocityBias;
 }
 
 ScalarSensorType Gyroscope::getScalarSensorType()

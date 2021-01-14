@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/11/2017.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Odometry__
@@ -52,13 +52,18 @@ namespace sf
         /*!
          \param positionStdDev standard deviation of the position measurement noise
          \param velocityStdDev standard deviation of the linear velocity measurement noise
-         \param orientationStdDev standard deviation of the orientation measurement noise
+         \param angleStdDev standard deviation of the angle measurement noise
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise
          */
-        void setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev);
+        void setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar angleStdDev, Scalar angularVelocityStdDev);
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();
+
+    private:
+        //Custom noise generation
+        Scalar ornStdDev;
+        std::normal_distribution<Scalar> ornNoise;
     };
 }
     

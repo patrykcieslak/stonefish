@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/11/2017.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Odometry.h"
@@ -46,6 +46,8 @@ Odometry::Odometry(std::string uniqueName, Scalar frequency, int historyLength) 
     channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
     channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
     channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
+    ornStdDev = Scalar(0);
+    ornNoise = std::normal_distribution<Scalar>(Scalar(0), ornStdDev);
 }
 
 void Odometry::InternalUpdate(Scalar dt)
@@ -57,6 +59,9 @@ void Odometry::InternalUpdate(Scalar dt)
     Vector3 v = odomTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(odomTrans.getOrigin() - attach->getCGTransform().getOrigin());
     
     Quaternion orn = odomTrans.getRotation();
+    Scalar angle = orn.getAngle() + ornNoise(randomGenerator);
+    orn = Quaternion(orn.getAxis(), angle);
+
     Vector3 av = odomTrans.getBasis().inverse() * attach->getAngularVelocity();
     
     //Record sample
@@ -65,11 +70,19 @@ void Odometry::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
    
-void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar orientationStdDev, Scalar angularVelocityStdDev)
+void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar angleStdDev, Scalar angularVelocityStdDev)
 {
-    channels[0].setStdDev(positionStdDev);
-    channels[1].setStdDev(positionStdDev);
-    channels[2].setStdDev(positionStdDev);
+    channels[0].setStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[1].setStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[2].setStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[3].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[4].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[5].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[10].setStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[11].setStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels[12].setStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    ornStdDev = btClamped(angleStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    ornNoise = std::normal_distribution<Scalar>(Scalar(0), ornStdDev);
 }
 
 ScalarSensorType Odometry::getScalarSensorType()

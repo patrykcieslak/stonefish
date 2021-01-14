@@ -26,7 +26,6 @@
 #include "sensors/VisionSensor.h"
 
 #include "core/SimulationApp.h"
-#include "core/Console.h"
 #include "entities/StaticEntity.h"
 #include "entities/SolidEntity.h"
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/03/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Torque.h"
@@ -53,15 +53,15 @@ void Torque::InternalUpdate(Scalar dt)
     }
 }
 
-void Torque::setRange(Scalar max)
+void Torque::setRange(Scalar torqueMax)
 {
-    channels[0].rangeMin = -max;
-    channels[0].rangeMax = max;
+    channels[0].rangeMin = -btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels[0].rangeMax = btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Torque::setNoise(Scalar stdDev)
+void Torque::setNoise(Scalar torqueStdDev)
 {
-    channels[0].setStdDev(stdDev);
+    channels[0].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType Torque::getScalarSensorType()

@@ -678,7 +678,15 @@ void FeatherstoneEntity::AddLinkTorque(unsigned int index, const Vector3& tau)
 
 void FeatherstoneEntity::UpdateAcceleration(Scalar dt)
 {
-    for(unsigned int i=0; i<links.size(); ++i)
+    const Scalar* dV = multiBody->getDeltaVelocityVector();
+    //Base
+    Vector3 a = Vector3(dV[3], dV[4], dV[5])/dt;
+    Vector3 epsilon = Vector3(dV[0], dV[1], dV[2])/dt;
+    links[0].solid->setLinearAcceleration(a);
+    links[0].solid->setAngularAcceleration(epsilon);
+
+    //Links
+    for(size_t i = 1; i<links.size(); ++i)
         links[i].solid->UpdateAcceleration(dt);
 }
 

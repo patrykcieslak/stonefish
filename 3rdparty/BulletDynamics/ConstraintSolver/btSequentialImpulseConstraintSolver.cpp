@@ -310,7 +310,7 @@ static btScalar gResolveSplitPenetrationImpulse_scalar_reference(
 	}
 	return deltaImpulse * (1. / c.m_jacDiagABInv);
 }
-
+/*
 static btScalar gResolveSplitPenetrationImpulse_sse2(btSolverBody& bodyA, btSolverBody& bodyB, const btSolverConstraint& c)
 {
 #ifdef USE_SIMD
@@ -347,7 +347,7 @@ static btScalar gResolveSplitPenetrationImpulse_sse2(btSolverBody& bodyA, btSolv
 	return gResolveSplitPenetrationImpulse_scalar_reference(bodyA, bodyB, c);
 #endif
 }
-
+*/
 btSequentialImpulseConstraintSolver::btSequentialImpulseConstraintSolver()
 {
 	m_btSeed2 = 0;

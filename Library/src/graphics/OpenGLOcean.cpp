@@ -28,7 +28,6 @@
 #include <iostream>
 #include <fstream>
 #include "stb_image_write.h"
-#include "core/Console.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLState.h"

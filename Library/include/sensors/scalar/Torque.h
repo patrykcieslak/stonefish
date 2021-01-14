@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/03/2018.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Torque__
@@ -50,15 +50,15 @@ namespace sf
         
         //! A method used to set the range of the sensor.
         /*!
-         \param max the maximum measured torque [Nm]
+         \param torqueMax the maximum measured torque [Nm]
          */
-        void setRange(Scalar max);
+        void setRange(Scalar torqueMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param stdDev standard deviation of torque measurement noise
+         \param torqueStdDev standard deviation of torque measurement noise
          */
-        void setNoise(Scalar stdDev);
+        void setNoise(Scalar torqueStdDev);
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();

@@ -27,7 +27,6 @@
 
 #include <chrono>
 #include <thread>
-#include "core/Console.h"
 #include "core/SimulationManager.h"
 #include "utils/SystemUtil.hpp"
 

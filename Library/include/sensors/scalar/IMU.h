@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_IMU__
@@ -54,16 +54,18 @@ namespace sf
         //! A method used to set the range of the sensor.
         /*!
          \param angularVelocityMax the maximum measured angular velocity for each axis [rad s^-1]
+         \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 angularVelocityMax);
+        void setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param angleStdDev standard deviation of the angle measurement noise for each axis
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise for each axis
-         \param yawAngleDrift drift of the yaw angle measurement due to gyroscope bias [rad/s]
+         \param yawAngleDrift drift of the yaw angle measurement due to gyroscope bias [rad s^-1]
+         \param linearAccelerationStdDev the standard deviation of the acceleration measurement for each axis
          */
-        void setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift);
+        void setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();

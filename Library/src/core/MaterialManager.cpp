@@ -25,7 +25,7 @@
 
 #include "core/MaterialManager.h"
 
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 
 namespace sf
 {

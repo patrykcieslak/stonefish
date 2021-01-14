@@ -26,7 +26,7 @@
 #include "utils/GeometryFileUtil.h"
 
 #include <algorithm>
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 #include "utils/SystemUtil.hpp"
 
 namespace sf

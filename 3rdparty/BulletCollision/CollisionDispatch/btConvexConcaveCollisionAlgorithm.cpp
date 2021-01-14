@@ -216,7 +216,7 @@ void btConvexConcaveCollisionAlgorithm::processCollision(const btCollisionObject
 					resultOut->setPersistentManifold(m_btConvexTriangleCallback.m_manifoldPtr);
 					//m_btConvexTriangleCallback.m_manifoldPtr->clearManifold();
 
-					btPolyhedralConvexShape* poly = (btPolyhedralConvexShape*)convex;
+					//btPolyhedralConvexShape* poly = (btPolyhedralConvexShape*)convex;
 					for (int v = 0; v < queryVertices.size(); v++)
 					{
 						const btVector3& vtx = queryVertices[v];

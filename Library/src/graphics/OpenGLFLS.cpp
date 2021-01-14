@@ -25,7 +25,6 @@
 
 #include "graphics/OpenGLFLS.h"
 
-#include "core/Console.h"
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/MaterialManager.h"

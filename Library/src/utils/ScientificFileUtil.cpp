@@ -27,7 +27,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 
 namespace sf
 {

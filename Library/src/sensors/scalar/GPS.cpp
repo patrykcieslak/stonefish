@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/GPS.h"
@@ -36,12 +36,11 @@ namespace sf
 
 GPS::GPS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    nedStdDev = Scalar(0);
-    
     channels.push_back(SensorChannel("Latitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("Longitude", QUANTITY_ANGLE));
     channels.push_back(SensorChannel("North", QUANTITY_LENGTH));
     channels.push_back(SensorChannel("East", QUANTITY_LENGTH));
+    setNoise(Scalar(0));
 }
 
 void GPS::InternalUpdate(Scalar dt)
@@ -83,7 +82,7 @@ void GPS::InternalUpdate(Scalar dt)
 
 void GPS::setNoise(Scalar nedDev)
 {
-    nedStdDev = nedDev > Scalar(0) ? nedDev : Scalar(0);
+    nedStdDev = btClamped(nedDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
     noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
 }
 

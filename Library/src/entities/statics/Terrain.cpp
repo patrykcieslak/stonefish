@@ -26,7 +26,7 @@
 #include "entities/statics/Terrain.h"
 
 #include "stb_image.h"
-#include "core/Console.h"
+#include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLContent.h"
 

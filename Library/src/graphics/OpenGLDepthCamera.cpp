@@ -25,7 +25,6 @@
 
 #include "graphics/OpenGLDepthCamera.h"
 
-#include "core/Console.h"
 #include "core/GraphicalSimulationApp.h"
 #include "entities/SolidEntity.h"
 #include "sensors/vision/Camera.h"

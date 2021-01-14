@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/11/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Accelerometer__
@@ -50,17 +50,15 @@ namespace sf
         
         //! A method used to set the range of the sensor.
         /*!
-         \param linearAccMax the maximum measured linear acceleration [m s^-2]
-         \param angularAccMax the maximum measured angular acceleration [rad s^-2]
+         \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Scalar linearAccMax, Scalar angularAccMax);
+        void setRange(Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param linearAccStdDev standard deviation of the linear acceleration measurement noise
-         \param angularAccStdDev standard deviation of the angular acceleration measurement noise
+         \param linearAccelerationStdDev standard deviation of the linear acceleration measurement noise for each axis
          */
-        void setNoise(Scalar linearAccStdDev, Scalar angularAccStdDev);
+        void setNoise(Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();

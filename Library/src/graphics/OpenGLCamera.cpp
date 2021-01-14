@@ -27,7 +27,6 @@
 
 #include <random>
 #include "core/GraphicalSimulationApp.h"
-#include "core/Console.h"
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"

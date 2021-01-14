@@ -86,7 +86,19 @@ namespace sf
         
         //! A method returning the angular acceleration of the body.
         virtual Vector3 getAngularAcceleration() const = 0;
-         
+
+        //! A method setting the linear acceleration of the body.
+        /*!
+         \param a linear acceleration [m s^-2]
+         */
+        void setLinearAcceleration(Vector3 a);
+        
+        //! A method setting the angular acceleration of the body.
+        /*!
+         \param epsilon angular acceleration [rad s^-2]
+         */
+        void setAngularAcceleration(Vector3 epsilon);
+
         //! A method returning the extents of the body axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner

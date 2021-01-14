@@ -1067,7 +1067,7 @@ void btMultiBodyConstraintSolver::setupMultiBodyTorsionalFrictionConstraint(btMu
 	//compute rhs and remaining solverConstraint fields
 
 	btScalar restitution = 0.f;
-	btScalar penetration = isFriction ? 0 : cp.getDistance();
+	//btScalar penetration = isFriction ? 0 : cp.getDistance();
 
 	btScalar rel_vel = 0.f;
 	int ndofA = 0;

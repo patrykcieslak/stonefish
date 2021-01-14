@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/01/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_StonefishCommon__
@@ -52,13 +52,11 @@ namespace sf
     inline Matrix3 I3() { return Matrix3::getIdentity(); }
     inline Quaternion IQ() { return Quaternion::getIdentity(); }
     inline Vector3 V0() { return Vector3(0,0,0); }
+    inline Vector3 VMAX() { return Vector3(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT); }
     inline Vector3 VX() { return Vector3(1,0,0); }
     inline Vector3 VY() { return Vector3(0,1,0); }
     inline Vector3 VZ() { return Vector3(0,0,1); }
-    inline Scalar clamp(Scalar v, Scalar bottom, Scalar top) { return (v < bottom) ? bottom : ((v > top) ? top : v); }
-    inline Scalar radians(Scalar deg) { return deg / Scalar(180) * Scalar(M_PI); }
-    inline Scalar degrees(Scalar rad) { return rad / Scalar(M_PI) * Scalar(180); }
-
+    
     //Various constants
     const Scalar SOUND_VELOCITY_WATER = Scalar(1531);
 }

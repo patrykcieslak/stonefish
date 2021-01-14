@@ -26,7 +26,6 @@
 #include "actuators/Light.h"
 
 #include "core/GraphicalSimulationApp.h"
-#include "core/Console.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
@@ -39,7 +38,7 @@ namespace sf
 {
 
 Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
-	: LinkActuator(uniqueName), c(color), coneAngle(0), attach2(nullptr), attach3(nullptr), glLight(nullptr)
+	: LinkActuator(uniqueName), attach2(nullptr), attach3(nullptr), c(color), coneAngle(0), glLight(nullptr)
 {
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");

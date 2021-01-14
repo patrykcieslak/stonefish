@@ -27,7 +27,6 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "core/Console.h"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
 #include "actuators/LinkActuator.h"

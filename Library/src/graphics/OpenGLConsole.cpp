@@ -115,8 +115,7 @@ void OpenGLConsole::Render(bool overlay)
     glm::vec4 info(1.f, 1.f, 1.f, 1.f);
     glm::vec4 warning(1.f, 1.f, 0.f, 1.f);
     glm::vec4 error(1.f, 0.f, 0.f, 1.f);
-    glm::vec4 colors[3] = {info, warning, error};
-        
+    
     if(linesCount < maxVisibleLines) //there is enough space to display all lines
     {
         scrollOffset = 0.f;
@@ -187,7 +186,21 @@ void OpenGLConsole::Render(bool overlay)
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
             ConsoleMessage* msg = &lines[linesCount-1-i];
-            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
+            glm::vec4 color;
+            switch(msg->type)
+            {
+                case MessageType::INFO:
+                    color = info;
+                    break;
+                case MessageType::WARNING:
+                    color = warning;
+                    break;
+                case MessageType::ERROR:
+                case MessageType::CRITICAL:
+                    color = error;
+                    break;
+            }
+            printer->Print(msg->text.c_str(), color, 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
         }
         
         OpenGLState::BindVertexArray(0);
@@ -212,7 +225,21 @@ void OpenGLConsole::Render(bool overlay)
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
             ConsoleMessage* msg = &lines[linesCount-1-i];
-            printer->Print(msg->text.c_str(), colors[msg->type], 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE, true);
+            glm::vec4 color;
+            switch(msg->type)
+            {
+                case MessageType::INFO:
+                    color = info;
+                    break;
+                case MessageType::WARNING:
+                    color = warning;
+                    break;
+                case MessageType::ERROR:
+                case MessageType::CRITICAL:
+                    color = error;
+                    break;
+            }
+            printer->Print(msg->text.c_str(), color, 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE, true);
         }
     }
     

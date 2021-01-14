@@ -54,6 +54,16 @@ Material MovingEntity::getMaterial() const
     return mat;
 }
 
+void MovingEntity::setLinearAcceleration(Vector3 a)
+{
+    linearAcc = a;
+}
+        
+void MovingEntity::setAngularAcceleration(Vector3 epsilon)
+{
+    angularAcc = epsilon;
+}
+
 void MovingEntity::setDisplayMode(DisplayMode m)
 {
     dm = m;

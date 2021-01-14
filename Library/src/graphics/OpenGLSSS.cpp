@@ -26,7 +26,6 @@
 #include "graphics/OpenGLSSS.h"
 
 #include <algorithm>
-#include "core/Console.h"
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/MaterialManager.h"
