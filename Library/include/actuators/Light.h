@@ -98,7 +98,7 @@ namespace sf
         std::vector<Renderable> Render();
         
 		//! A method returning actuator frame in the world frame.
-		Transform getActuatorFrame();
+		Transform getActuatorFrame() const;
 		
         //! A method returning the type of the actuator.
         ActuatorType getType();

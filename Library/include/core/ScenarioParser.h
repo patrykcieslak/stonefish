@@ -173,14 +173,6 @@ namespace sf
          */
         virtual bool ParseJoint(XMLElement* element, Robot* robot);
         
-        //! A method used to parse a single robot sensor description.
-        /*!
-         \param element a pointer to the XML node
-         \param robot a pointer to the robot object
-         \return success
-         */
-        virtual bool ParseSensor(XMLElement* element, Robot* robot);
-        
         //! A method used to parse a single robot actuator description.
         /*!
          \param element a pointer to the XML node
@@ -188,6 +180,14 @@ namespace sf
          \return success
          */
         virtual bool ParseActuator(XMLElement* element, Robot* robot);
+        
+        //! A method used to parse a single robot sensor description.
+        /*!
+         \param element a pointer to the XML node
+         \param robot a pointer to the robot object
+         \return success
+         */
+        virtual bool ParseSensor(XMLElement* element, Robot* robot);
         
         //! A method used to parse a description of a sensor attached to single body or world.
         /*!
@@ -197,6 +197,14 @@ namespace sf
          */
         virtual bool ParseSensor(XMLElement* element, Entity* ent = nullptr);
         
+        //! A method used to parse a description of an actuator.
+        /*!
+         \param element a pointer to the XML node
+         \param namePrefix a string added at the beginning of the actuator name
+         \return pointer to actuator
+         */
+        virtual Actuator* ParseActuator(XMLElement* element, const std::string& namePrefix);
+
         //! A method used to parse a description of a sensor.
         /*!
          \param element a pointer to the XML node

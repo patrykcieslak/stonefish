@@ -58,7 +58,7 @@ ActuatorType Light::getType()
     return ActuatorType::LIGHT;
 }
 
-Transform Light::getActuatorFrame()
+Transform Light::getActuatorFrame() const
 {
 	if(attach != nullptr)
         return attach->getOTransform() * o2a; //Solid

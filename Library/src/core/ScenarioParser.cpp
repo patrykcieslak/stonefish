@@ -2037,7 +2037,71 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
     
     return true;
 }
-        
+
+bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
+{
+    //Parse
+    Actuator* act = ParseActuator(element, robot->getName());
+    if(act == nullptr)
+        return false;
+
+    //Attach
+    XMLElement* item;
+    switch(act->getType())
+    {
+        //Joint actuators
+        case ActuatorType::SERVO:
+        {
+            const char* jointName = nullptr;
+            
+            if((item = element->FirstChildElement("joint")) == nullptr
+                || item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
+            {
+                log.Print(MessageType::ERROR, "Joint definition for actuator '%s' missing!", act->getName().c_str());
+                delete act;
+                return false;
+            }
+            robot->AddJointActuator((JointActuator*)act, robot->getName() + "/" + std::string(jointName));
+        }
+            break;
+
+        //Link actuators
+        case ActuatorType::THRUSTER:
+        case ActuatorType::PROPELLER:
+        case ActuatorType::VBS:
+        {
+            const char* linkName = nullptr;
+            Transform origin; 
+
+            if((item = element->FirstChildElement("link")) == nullptr
+                || item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            {
+                log.Print(MessageType::ERROR, "Link definition for actuator '%s' missing!", act->getName().c_str());
+                delete act;
+                return false;
+            }
+            if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            {
+                log.Print(MessageType::ERROR, "Origin frame of actuator '%s' missing!", act->getName().c_str());
+                delete act;
+                return false;
+            }
+            robot->AddLinkActuator((LinkActuator*)act, robot->getName() + "/" + std::string(linkName), origin);
+        }
+            break;
+
+        //Unsupported
+        default:
+        {
+            log.Print(MessageType::ERROR, "Unsupported actuator type found in definition of robot '%s'!", robot->getName().c_str());
+            delete act;
+            return false;
+        }
+            break;
+    }
+    return true;
+}
+
 bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
 {
     //Parse
@@ -2056,6 +2120,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             if((item = element->FirstChildElement("joint")) == nullptr
                  || item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
             {
+                log.Print(MessageType::ERROR, "Joint definition for sensor '%s' missing!", sens->getName().c_str());
                 delete sens;
                 return false;
             }
@@ -2072,12 +2137,14 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
             if((item = element->FirstChildElement("link")) == nullptr 
                 || item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
             {
+                log.Print(MessageType::ERROR, "Link definition for sensor '%s' missing!", sens->getName().c_str());
                 delete sens;
                 return false;
             }
             if((item = element->FirstChildElement("origin")) == nullptr 
                 || !ParseTransform(item, origin))
             {
+                log.Print(MessageType::ERROR, "Origin frame of sensor '%s' missing!", sens->getName().c_str());
                 delete sens;
                 return false;
             }
@@ -2088,195 +2155,15 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         }
             break;
 
+        //Unsupported
         default:
         {
+            log.Print(MessageType::ERROR, "Unsupported sensor type found in definition of robot '%s'!", robot->getName().c_str());
             delete sens;
             return false;
         }
             break;
     }
-    return true;
-}
-
-bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
-{
-    //---- Common ----
-    const char* name = nullptr;
-    const char* type = nullptr;
-    
-    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
-    {
-        log.Print(MessageType::ERROR, "Actuator name missing (namespace '%s')!", robot->getName().c_str());   
-        return false;
-    }
-    std::string actuatorName = robot->getName() + "/" + std::string(name);
-
-    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
-    {
-        log.Print(MessageType::ERROR, "Type of actuator '%s' missing!", actuatorName.c_str());
-        return false;
-    }
-    std::string typeStr(type);
-    
-    //---- Specific ----
-    XMLElement* item;
-    if(typeStr == "servo")
-    {
-        const char* jointName = nullptr;
-        Scalar kp, kv, maxTau;
-        
-        if((item = element->FirstChildElement("joint")) == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Joint definition for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if(item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Joint name for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if((item = element->FirstChildElement("controller")) == nullptr 
-            || item->QueryAttribute("position_gain", &kp) != XML_SUCCESS 
-            || item->QueryAttribute("velocity_gain", &kv) != XML_SUCCESS
-            || item->QueryAttribute("max_torque", &maxTau) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Controller definition for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }    
-        Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
-        robot->AddJointActuator(srv, robot->getName() + "/" + std::string(jointName));
-    }
-    else if(typeStr == "thruster" || typeStr == "propeller")
-    {
-        const char* linkName = nullptr;
-        const char* propFile = nullptr;
-        const char* mat = nullptr;
-        const char* look = nullptr;
-        Scalar diameter, cThrust, cTorque, maxRpm, propScale, cThrustBack;
-        bool rightHand;
-        bool inverted = false;
-        Transform origin;
-        
-        if((item = element->FirstChildElement("link")) == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Link definition for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Link name for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-        {
-            log.Print(MessageType::ERROR, "Origin frame of actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("thrust_coeff", &cThrust) != XML_SUCCESS 
-            || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
-            || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of actuator '%s' not properly defined!", actuatorName.c_str());
-            return false;
-        }
-        cThrustBack = cThrust;
-        item->QueryAttribute("thrust_coeff_backward", &cThrustBack); //Optional
-        item->QueryAttribute("inverted", &inverted); //Optional
-        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        XMLElement* item2;
-        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
-            propScale = Scalar(1);
-        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        std::string lookStr = "";
-        if((item2 = item->FirstChildElement("look")) != nullptr)
-        {
-            item2->QueryStringAttribute("name", &look);
-            lookStr = std::string(look);
-        }
-
-        if(typeStr == "thruster")
-        {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED, lookStr);
-            Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
-            robot->AddLinkActuator(th, robot->getName() + "/" + std::string(linkName), origin);
-        }
-        else //propeller
-        {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC, lookStr);
-            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
-            robot->AddLinkActuator(p, robot->getName() + "/" + std::string(linkName), origin);
-        }
-    }
-    else if(typeStr == "vbs")
-    {
-        const char* linkName = nullptr;
-        Scalar initialV;
-        std::vector<std::string> vMeshes;
-        Transform origin;
-        
-        if((item = element->FirstChildElement("link")) == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Link definition for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Link name for actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-        {
-            log.Print(MessageType::ERROR, "Origin frame of actuator '%s' missing!", actuatorName.c_str());
-            return false;
-        }
-        if((item = element->FirstChildElement("volume")) == nullptr || item->QueryAttribute("initial", &initialV) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Volume of actuator '%s' not properly defined!", actuatorName.c_str());
-            return false;
-        }
-        XMLElement* item2;
-        const char* meshFile;
-        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &meshFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Volume mesh of actuator '%s' not properly defined!", actuatorName.c_str());
-            return false;
-        }
-        vMeshes.push_back(GetFullPath(std::string(meshFile)));
-        while((item2 = item2->NextSiblingElement("mesh")) != nullptr)
-        {
-            const char* meshFile2;
-            if(item2->QueryStringAttribute("filename", &meshFile2) != XML_SUCCESS)
-            {
-                log.Print(MessageType::ERROR, "Volume mesh of actuator '%s' not properly defined!", actuatorName.c_str());
-                return false;
-            }
-            vMeshes.push_back(GetFullPath(std::string(meshFile2)));
-        }
-        if(vMeshes.size() < 2)
-        {
-            log.Print(MessageType::ERROR, "Actuator '%s' requires definition of at least two volumes!", actuatorName.c_str());
-            return false;
-        }
-        VariableBuoyancy* vbs = new VariableBuoyancy(actuatorName, vMeshes, initialV);
-        robot->AddLinkActuator(vbs, robot->getName() + "/" + std::string(linkName), origin);
-    }
-    else
-        return false;
-    
     return true;
 }
 
@@ -2363,6 +2250,141 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
             break;
     }
     return true;
+}
+
+Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& namePrefix)
+{
+    //---- Common ----
+    const char* name = nullptr;
+    const char* type = nullptr;
+    
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Actuator name missing (namespace '%s')!", namePrefix.c_str());   
+        return nullptr;
+    }
+    std::string actuatorName = std::string(name);
+    if(namePrefix != "")
+        actuatorName = namePrefix + "/" + actuatorName;
+
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Type of actuator '%s' missing!", actuatorName.c_str());
+        return nullptr;
+    }
+    std::string typeStr(type);
+    
+    //---- Specific ----
+    XMLElement* item;
+    if(typeStr == "servo")
+    {
+        Scalar kp, kv, maxTau;
+        if((item = element->FirstChildElement("controller")) == nullptr 
+            || item->QueryAttribute("position_gain", &kp) != XML_SUCCESS 
+            || item->QueryAttribute("velocity_gain", &kv) != XML_SUCCESS
+            || item->QueryAttribute("max_torque", &maxTau) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Controller definition for actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }    
+        Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
+        return srv;
+    }
+    else if(typeStr == "thruster" || typeStr == "propeller")
+    {
+        const char* propFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        Scalar diameter, cThrust, cTorque, maxRpm, propScale, cThrustBack;
+        bool rightHand;
+        bool inverted = false;
+        
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("thrust_coeff", &cThrust) != XML_SUCCESS 
+            || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
+            || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of actuator '%s' not properly defined!", actuatorName.c_str());
+            return nullptr;
+        }
+        cThrustBack = cThrust;
+        item->QueryAttribute("thrust_coeff_backward", &cThrustBack); //Optional
+        item->QueryAttribute("inverted", &inverted); //Optional
+        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
+            propScale = Scalar(1);
+        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        std::string lookStr = "";
+        if((item2 = item->FirstChildElement("look")) != nullptr)
+        {
+            item2->QueryStringAttribute("name", &look);
+            lookStr = std::string(look);
+        }
+
+        if(typeStr == "thruster")
+        {
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED, lookStr);
+            Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
+            return th;
+        }
+        else //propeller
+        {
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC, lookStr);
+            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
+            return p;
+        }
+    }
+    else if(typeStr == "vbs")
+    {
+        Scalar initialV;
+        std::vector<std::string> vMeshes;
+        if((item = element->FirstChildElement("volume")) == nullptr || item->QueryAttribute("initial", &initialV) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Volume of actuator '%s' not properly defined!", actuatorName.c_str());
+            return nullptr;
+        }
+        XMLElement* item2;
+        const char* meshFile;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &meshFile) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Volume mesh of actuator '%s' not properly defined!", actuatorName.c_str());
+            return nullptr;
+        }
+        vMeshes.push_back(GetFullPath(std::string(meshFile)));
+        while((item2 = item2->NextSiblingElement("mesh")) != nullptr)
+        {
+            const char* meshFile2;
+            if(item2->QueryStringAttribute("filename", &meshFile2) != XML_SUCCESS)
+            {
+                log.Print(MessageType::ERROR, "Volume mesh of actuator '%s' not properly defined!", actuatorName.c_str());
+                return nullptr;
+            }
+            vMeshes.push_back(GetFullPath(std::string(meshFile2)));
+        }
+        if(vMeshes.size() < 2)
+        {
+            log.Print(MessageType::ERROR, "Actuator '%s' requires definition of at least two volumes!", actuatorName.c_str());
+            return nullptr;
+        }
+        VariableBuoyancy* vbs = new VariableBuoyancy(actuatorName, vMeshes, initialV);
+        return vbs;
+    }
+    else
+        return nullptr;
 }
 
 Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& namePrefix)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_LinkActuator__
@@ -52,8 +52,14 @@ namespace sf
 		//! A method implementing the rendering of the actuator.
         virtual std::vector<Renderable> Render();
 		
+        //! A method used to set the actuator origin frame.
+        /*!
+         \param origin a transformation from teh body origin to the actuator origin
+         */
+        void setRelativeActuatorFrame(const Transform& origin);
+        
         //! A method returning actuator frame in the world frame.
-        virtual Transform getActuatorFrame();
+        virtual Transform getActuatorFrame() const;
        
     protected:
         SolidEntity* attach;

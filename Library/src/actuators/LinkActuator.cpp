@@ -35,8 +35,13 @@ LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
     attach = nullptr;
     o2a = I4();
 }
-    
-Transform LinkActuator::getActuatorFrame()
+
+void LinkActuator::setRelativeActuatorFrame(const Transform& origin)
+{
+    o2a = origin;
+}
+
+Transform LinkActuator::getActuatorFrame() const
 {
     if(attach != nullptr)
         return attach->getOTransform() * o2a;
