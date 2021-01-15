@@ -52,7 +52,7 @@ ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar
 {
 }
 
-Transform ForceTorque::getSensorFrame()
+Transform ForceTorque::getSensorFrame() const
 {
     return lastFrame;
 }

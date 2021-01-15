@@ -64,9 +64,15 @@ namespace sf
          */
         void AttachToSolid(MovingEntity* solid, const Transform& origin);
         
+        //! A method used to set the sensor frame in the body frame.
+        /*!
+         \param origin a tranformation from the body frame to the sensor frame
+         */
+        void setRelativeSensorFrame(const Transform& origin);
+
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame();
-        
+        virtual Transform getSensorFrame() const;
+
         //! A method returning the type of the sensor.
         SensorType getType();
         

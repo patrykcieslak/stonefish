@@ -43,7 +43,7 @@ SensorType JointSensor::getType()
     return SensorType::JOINT;
 }
 
-Transform JointSensor::getSensorFrame()
+Transform JointSensor::getSensorFrame() const
 {
     return I4();
 }

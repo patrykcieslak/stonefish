@@ -79,7 +79,7 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame();
+        Transform getSensorFrame() const;
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();

@@ -41,7 +41,12 @@ LinkSensor::~LinkSensor()
 {
 }
 
-Transform LinkSensor::getSensorFrame()
+void LinkSensor::setRelativeSensorFrame(const Transform& origin)
+{
+    o2s = origin;
+}
+
+Transform LinkSensor::getSensorFrame() const
 {
     if(attach != nullptr)
         return attach->getOTransform() * o2s;

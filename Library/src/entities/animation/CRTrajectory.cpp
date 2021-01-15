@@ -82,12 +82,23 @@ void CRTrajectory::Interpolate()
             t3 = (it+1)->t;
         }
         
-        interpTrans.setOrigin(catmullRom(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
+        //Linear quantities
+        if(btFuzzyZero((T2.getOrigin()-T1.getOrigin()).safeNorm())) //Coinciding points
+        {
+            interpTrans.setOrigin(T2.getOrigin());
+            interpVel = V0();
+        }
+        else
+        {
+            interpTrans.setOrigin(catmullRom(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
                                                                                     t0, t1, t2, t3, playTime));
-        interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1) ));
-        btTransformUtil::calculateVelocity(T1, T2, t2-t1, interpVel, interpAngVel); //Only for angular velocity
-        interpVel = catmullRomDerivative(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
-                                                                                    t0, t1, t2, t3, playTime);
+            interpVel = catmullRomDerivative(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
+                                                                                    t0, t1, t2, t3, playTime);        
+        }
+        //Angular quantities
+        Vector3 dummy;
+        interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1)));
+        btTransformUtil::calculateVelocity(T1, T2, t2-t1, dummy, interpAngVel);
     }
 }
 
