@@ -68,7 +68,7 @@ Following the steps above should result in 3 new files: *main.cpp*, *MySimulatio
 
     #include "MySimulationManager.h"
     #include <Stonefish/entities/statics/Plane.h>
-    #include <Stonefish/entities/statics/Sphere.h>
+    #include <Stonefish/entities/solids/Sphere.h>
 
     MySimulationManager::MySimulationManager(sf::Scalar stepsPerSecond) : SimulationManager(stepsPerSecond)
     {
@@ -92,7 +92,7 @@ Following the steps above should result in 3 new files: *main.cpp*, *MySimulatio
         AddStaticEntity(plane, sf::I4());
 
         //Create object
-        sf::Sphere* sph = new sf::Sphere("Sphere", 0.1, sf::I4(), "Aluminium", sf::BodyPhysicsType::SURFACE_BODY, "red");
+        sf::Sphere* sph = new sf::Sphere("Sphere", 0.1, sf::I4(), "Aluminium", sf::BodyPhysicsType::SURFACE, "red");
         AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));
     }
 

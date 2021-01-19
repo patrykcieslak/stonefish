@@ -28,6 +28,9 @@
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include <stdio.h>
+#ifdef EMBEDDED_RESOURCES
+#include "ResourceHandle.h"
+#endif
 
 namespace sf
 {
@@ -57,9 +60,15 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
         printf("Freetype: Could not init library!\n");
     else
     {
-        if((error = FT_New_Face(ft, fontPath.c_str(), 0, &face)))
+#ifdef EMBEDDED_RESOURCES
+        ResourceHandle rh(fontPath);
+        error = FT_New_Memory_Face(ft, rh.data(), rh.size(), 0, &face);
+#else
+        error = FT_New_Face(ft, fontPath.c_str(), 0, &face);
+#endif
+        if(error)
         {
-            printf("Freetype: Could not open font from file: %s!\n", fontPath.c_str());
+            printf("Freetype: Could not load font from: %s!\n", fontPath.c_str());
             FT_Done_FreeType(ft);
         }
     }

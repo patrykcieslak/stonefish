@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = Stonefish
-PROJECT_NUMBER         = 1.2
+PROJECT_NUMBER         = 1.3
 PROJECT_BRIEF          = "An advanced simulation tool designed for marine robotics"
 PROJECT_LOGO           = ./Library/shaders/logo_64.png
 OUTPUT_DIRECTORY       = ./docs

@@ -135,15 +135,38 @@ The link sensors measure motion related or environment related quantities. They 
        <link name="{6}"/>
     </sensor>
 
+Accelerometer
+-------------
+
+The accelerometer measures the linear acceleration of the link, along three perpendicular axes. The linear acceleration measurement range, as well as the standard deviation of the measurements, can be optionally defined for each axis.
+
+.. code-block:: xml
+
+    <sensor name="Acc" rate="10.0" type="accelerometer">
+        <range linear_acceleration="1000.0 1000.0 2000.0"/>
+        <noise linear_acceleration="0.1"/>
+        <history samples="1"/>
+        <origin xyz="0.1 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/scalar/Accelerometer.h>
+    sf::Accelerometer* acc = new sf::Accelerometer("Acc", 10.0, 1);
+    acc->setRange(sf::Vector3(1000.0, 1000.0, 2000.0));
+    acc->setNoise(sf::Vector3(0.1, 0.1, 0.1));
+    robot->AddLinkSensor(acc, "Link1", sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.1, 0.0, 0.0));
+
 Gyroscope
 ---------
 
-The gyroscope measures the angular velocities of the link, around three perpendicular axes. The angular velocity measurement range, as well as the standard deviation of the measurements and the measurement bias, can be optionally defined.
+The gyroscope measures the angular velocities of the link, around three perpendicular axes. The angular velocity measurement range, as well as the standard deviation of the measurements and the measurement bias, can be optionally defined, for each axis.
 
 .. code-block:: xml
 
     <sensor name="Gyro" rate="10.0" type="gyro">
-        <range angular_velocity="100.0"/>
+        <range angular_velocity="100.0 100.0 200.0"/>
         <noise angular_velocity="0.05" bias="0.003"/>
         <history samples="1"/>
         <origin xyz="0.1 0.0 0.0" rpy="0.0 0.0 0.0"/>
@@ -154,20 +177,20 @@ The gyroscope measures the angular velocities of the link, around three perpendi
 
     #include <Stonefish/sensors/scalar/Gyroscope.h>
     sf::Gyroscope* gyro = new sf::Gyroscope("Gyro", 10.0, 1);
-    gyro->setRange(100.0);
-    gyro->setNoise(0.05, 0.003);
+    gyro->setRange(sf::Vector3(100.0, 100.0, 200.0));
+    gyro->setNoise(sf::Vector3(0.05, 0.05, 0.05), sf::Vector3(0.003, 0.003, 0.003));
     robot->AddLinkSensor(gyro, "Link1", sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.1, 0.0, 0.0));
     
 IMU
 ---
 
-The inertial measurement unit (IMU) measures the orientation and the angular velocities of the link. The angular velocity measurement range and the standard deviation of angle and angular velocity measurements can be optionally defined. All characteristics can be defined separately for each of the 3 axes or as common value for all of them. Additionally, the IMU yaw angle drift rate can be specified.
+The inertial measurement unit (IMU) measures the orientation, angular velocities, and linear accelerations of the link. The angular velocity and linear acceleration measurement ranges and the standard deviation of angle, angular velocity, and linear acceleration measurements can be optionally defined, for each axis. Additionally, the IMU yaw angle drift rate can be specified.
 
 .. code-block:: xml
 
     <sensor name="IMU" rate="10.0" type="imu">
-        <range angular_velocity="10.0 10.0 5.0"/>
-        <noise angle="0.1 0.1 0.5" angular_velocity="0.05" yaw_drift="0.001"/>
+        <range angular_velocity="10.0 10.0 5.0" linear_acceleration="10.0"/>
+        <noise angle="0.1 0.1 0.5" angular_velocity="0.05" yaw_drift="0.001" linear_acceleration="0.1"/>
         <history samples="1"/>
         <origin xyz="0.1 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <link name="Link1"/>
@@ -177,8 +200,8 @@ The inertial measurement unit (IMU) measures the orientation and the angular vel
 
     #include <Stonefish/sensors/scalar/IMU.h>
     sf::IMU* imu = new sf::IMU("IMU", 10.0, 1);
-    imu->setRange(sf::Vector3(10.0, 10.0, 5.0));
-    imu->setNoise(sf::Vector3(0.1, 0.1, 0.5), sf::Vector3(0.05, 0.05, 0.05), 0.001);
+    imu->setRange(sf::Vector3(10.0, 10.0, 5.0), sf::Vector3(10.0, 10.0, 10.0));
+    imu->setNoise(sf::Vector3(0.1, 0.1, 0.5), sf::Vector3(0.05, 0.05, 0.05), 0.001, sf::Vector3(0.1, 0.1, 0.1));
     robot->AddLinkSensor(imu, "Link1", sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.1, 0.0, 0.0));
 
 Odometry

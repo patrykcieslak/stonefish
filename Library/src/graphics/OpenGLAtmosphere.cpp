@@ -34,6 +34,10 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLContent.h"
 #include "utils/SystemUtil.hpp"
+#ifdef EMBEDDED_RESOURCES
+#include <sstream>
+#include "ResourceHandle.h"
+#endif
 
 namespace sf
 {
@@ -243,16 +247,22 @@ void OpenGLAtmosphere::LoadAtmosphereData(const std::string& filename)
     glm::uvec3 scatteringSize;
     GLfloat lengthUnitInMeters;
     GLfloat bottomRadius;
-
+#ifdef EMBEDDED_RESOURCES
+    ResourceHandle rh(filename);
+    std::istringstream dataString(rh.string());
+    std::istream& data(dataString);
+#else
     std::ifstream dataFile(filename, std::ios::binary | std::ios::in);
-    dataFile.read((char*)&transmittanceSize, sizeof(transmittanceSize));
-    dataFile.read((char*)&irradianceSize, sizeof(irradianceSize));
-    dataFile.read((char*)&scatteringSize, sizeof(scatteringSize));
-    dataFile.read((char*)&lengthUnitInMeters, sizeof(lengthUnitInMeters));
-    dataFile.read((char*)&bottomRadius, sizeof(bottomRadius));
-    dataFile.read((char*)&sunSkyUBOData.whitePoint, sizeof(sunSkyUBOData.whitePoint));
-    dataFile.read((char*)&nPrecomputedWavelengths, sizeof(nPrecomputedWavelengths));
-    dataFile.read((char*)&nScatteringOrders, sizeof(nScatteringOrders));
+    std::istream& data(dataFile);
+#endif    
+    data.read((char*)&transmittanceSize, sizeof(transmittanceSize));
+    data.read((char*)&irradianceSize, sizeof(irradianceSize));
+    data.read((char*)&scatteringSize, sizeof(scatteringSize));
+    data.read((char*)&lengthUnitInMeters, sizeof(lengthUnitInMeters));
+    data.read((char*)&bottomRadius, sizeof(bottomRadius));
+    data.read((char*)&sunSkyUBOData.whitePoint, sizeof(sunSkyUBOData.whitePoint));
+    data.read((char*)&nPrecomputedWavelengths, sizeof(nPrecomputedWavelengths));
+    data.read((char*)&nScatteringOrders, sizeof(nScatteringOrders));
 
     sunSkyUBOData.atmLengthUnitInMeters = lengthUnitInMeters;
     sunSkyUBOData.planetRadiusInUnits = bottomRadius/lengthUnitInMeters;
@@ -260,20 +270,20 @@ void OpenGLAtmosphere::LoadAtmosphereData(const std::string& filename)
     //Load atmosphere textures
     glm::vec4* pixels;
     pixels = new glm::vec4[transmittanceSize.x * transmittanceSize.y];
-    dataFile.read((char*)pixels, sizeof(glm::vec4) * transmittanceSize.x * transmittanceSize.y);
+    data.read((char*)pixels, sizeof(glm::vec4) * transmittanceSize.x * transmittanceSize.y);
     textures[AtmosphereTextures::TRANSMITTANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, transmittanceSize, GL_RGBA32F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
     delete [] pixels;
     pixels = new glm::vec4[irradianceSize.x * irradianceSize.y];
-    dataFile.read((char*)pixels, sizeof(glm::vec4) * irradianceSize.x * irradianceSize.y);
+    data.read((char*)pixels, sizeof(glm::vec4) * irradianceSize.x * irradianceSize.y);
     textures[AtmosphereTextures::IRRADIANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, irradianceSize, GL_RGBA32F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
     delete [] pixels;
     pixels = new glm::vec4[scatteringSize.x * scatteringSize.y * scatteringSize.z];
-    dataFile.read((char*)pixels, sizeof(glm::vec4) * scatteringSize.x * scatteringSize.y * scatteringSize.z);
+    data.read((char*)pixels, sizeof(glm::vec4) * scatteringSize.x * scatteringSize.y * scatteringSize.z);
     textures[AtmosphereTextures::SCATTERING] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, scatteringSize, GL_RGBA16F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
     delete [] pixels;
-    
+#ifndef EMBEDDED_RESOURCES
     dataFile.close();
-
+#endif
     cInfo("Loaded precomputed atmosphere model (%u wavelengths, %u scattering orders)", 
            nPrecomputedWavelengths, nScatteringOrders);
 }

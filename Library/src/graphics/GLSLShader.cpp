@@ -29,6 +29,10 @@
 #include "core/SimulationApp.h"
 #include "graphics/OpenGLState.h"
 #include "utils/SystemUtil.hpp"
+#ifdef EMBEDDED_RESOURCES
+#include <sstream>
+#include "ResourceHandle.h"
+#endif
 
 namespace sf
 {
@@ -438,24 +442,34 @@ void GLSLShader::Verbose()
 GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, const std::string& header, GLint *shaderCompiled)
 {
     GLuint shader = 0;
-    
-    std::string basePath = GetShaderPath();
-    std::string sourcePath = basePath + filename;
-    
+    std::string sourcePath = GetShaderPath() + filename;
+#ifdef EMBEDDED_RESOURCES
+    ResourceHandle rh(sourcePath);
+    if(!rh.isValid())
+    {
+        cCritical("Shader resource not found: %s", sourcePath.c_str());
+        return 0;
+    }
+    std::istringstream sourceString(rh.string());
+    std::istream& sourceBuf(sourceString);
+#else
     std::ifstream sourceFile(sourcePath);
-    if(!sourceFile.is_open()) 
+    if(!sourceFile.is_open())
+    {
         cCritical("Shader file not found: %s", sourcePath.c_str());
-    
-    std::string source = header + "\n";
-    std::string line;
-
+        return 0;
+    }
+    std::istream& sourceBuf(sourceFile);
+#endif
 #ifdef DEBUG
     if(verbose)
         cInfo("Loading shader from: %s", sourcePath.c_str());
 #endif
-    while(!sourceFile.eof())
+    std::string source = header + "\n";
+    std::string line;
+    while(!sourceBuf.eof())
     {
-        std::getline(sourceFile, line);
+        std::getline(sourceBuf, line);
         
         if(line.find("#inject") == std::string::npos)
             source.append(line + "\n");
@@ -466,30 +480,46 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, co
             
             if(pos1 > 0 && pos2 > pos1)
             {
-                std::string injectedPath = basePath + line.substr(pos1+1, pos2-pos1-1);
+                std::string injectedPath = GetShaderPath() + line.substr(pos1+1, pos2-pos1-1);
+#ifdef EMBEDDED_RESOURCES
+                ResourceHandle rh2(injectedPath);
+                if(!rh2.isValid())
+                {
+                    cCritical("Shader include resource not found: %s", injectedPath.c_str());
+                    return 0;
+                }
+                std::istringstream injectedString(rh2.string());
+                std::istream& injectedBuf(injectedString);
+#else
+                
                 std::ifstream injectedFile(injectedPath);
                 if(!injectedFile.is_open())
                 {
                     sourceFile.close();
                     cCritical("Shader include file not found: %s", injectedPath.c_str());
+                    return 0;
                 }
+                std::istream& injectedBuf(injectedFile);
+#endif
 #ifdef DEBUG
                 if(verbose)
                     cInfo("--> Injecting source from: %s", injectedPath.c_str());
 #endif
-                while(!injectedFile.eof())
+                while(!injectedBuf.eof())
                 {
-                    std::getline(injectedFile, line);
+                    std::getline(injectedBuf, line);
                     source.append(line + "\n");
                 }
+#ifndef EMBEDDED_RESOURCES
                 injectedFile.close();
+#endif
             }
         }
     }
+#ifndef EMBEDDED_RESOURCES
     sourceFile.close();
-    
+#endif    
     const char* shaderSource = source.c_str();
-    
     if(shaderSource != NULL)
     {
         shader = glCreateShader(shaderType);
@@ -497,7 +527,10 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, co
         glCompileShader(shader);
         glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
         if(*shaderCompiled == 0)
+        {
             cError("Failed to compile shader: %s", shaderSource);
+            shader = 0;
+        }
 #ifdef DEBUG	
         GLint infoLogLength = 0;	
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);

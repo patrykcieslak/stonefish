@@ -42,6 +42,10 @@
 #include "entities/forcefields/Uniform.h"
 #include "entities/forcefields/Jet.h"
 #include "entities/forcefields/Pipe.h"
+#ifdef EMBEDDED_RESOURCES
+#include <sstream>
+#include "ResourceHandle.h"
+#endif
 
 namespace sf
 {
@@ -308,13 +312,21 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     
     //Load absorption coefficient table
+#ifdef EMBEDDED_RESOURCES
+    ResourceHandle rh(GetShaderPath() + "jerlov.dat");
+    if(!rh.isValid())
+        cCritical("Ocean water data could not be loaded!");    
+    std::istringstream dataStream(rh.string());
+    dataStream.read((char*)absorption, sizeof(absorption));
+    dataStream.read((char*)scattering, sizeof(scattering));
+#else
     std::ifstream dataFile(GetShaderPath() + "jerlov.dat", std::ios::in | std::ios::binary);
-    if(dataFile.is_open())
-    {
-        dataFile.read((char*)absorption, sizeof(absorption));
-        dataFile.read((char*)scattering, sizeof(scattering));
-        dataFile.close();
-    }
+    if(!dataFile.is_open())
+        cCritical("Ocean water data could not be loaded!");
+    dataFile.read((char*)absorption, sizeof(absorption));
+    dataFile.read((char*)scattering, sizeof(scattering));
+    dataFile.close();
+#endif
 }
 
 OpenGLOcean::~OpenGLOcean()

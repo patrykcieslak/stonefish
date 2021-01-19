@@ -330,9 +330,10 @@ namespace sf
          \param filename the path to the texture file
          \param hasAlphaChannel a flag to indicate if the texture has transparency
          \param anisotropy defines maximum anisotropic filtering
+         \param internal a flag to indicate if the texture is an internal resource
          \return the id of the loaded texture
          */
-        static GLuint LoadTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f);
+        static GLuint LoadTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f, bool internal = false);
         
         //! A static method to load an internal texture.
         /*!

@@ -44,9 +44,9 @@ void ConsoleTestManager::BuildScenario()
     sf::ScenarioParser parser(this);
     bool success = parser.Parse(sf::GetDataPath() + "console_test.scn");
     if(success)
-        sf::cInfo("Scenario description parsed successfully.");
+        cInfo("Scenario description parsed successfully.");
     else
-        sf::cError("Errors detected when parsing scenario description!");
+        cError("Errors detected when parsing scenario description!");
 #else
     //Create materials
     CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);
@@ -77,5 +77,5 @@ void ConsoleTestManager::BuildScenario()
 
 void ConsoleTestManager::SimulationStepCompleted(sf::Scalar timeStep)
 {
-    sf::cInfo("Simulation time: %1.3lf", getSimulationTime());
+    cInfo("Simulation time: %1.3lf", getSimulationTime());
 }

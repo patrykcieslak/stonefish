@@ -43,6 +43,9 @@
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#ifdef EMBEDDED_RESOURCES
+#include "ResourceHandle.h"
+#endif
 
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
@@ -1150,7 +1153,7 @@ const Look& OpenGLContent::getLook(size_t id)
 }
     
 //Static methods
-GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
+GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy, bool internal)
 {
     int width, height, channels;
     int reqChannels = hasAlphaChannel ? 4 : 3;
@@ -1158,7 +1161,18 @@ GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GL
     
     // Allocate image; fail out on error
     stbi_set_flip_vertically_on_load(true);
+#ifdef EMBEDDED_RESOURCES
+    unsigned char* dataBuffer;
+    if(internal)
+    {
+        ResourceHandle rh(filename);
+        dataBuffer = stbi_load_from_memory(rh.data(), rh.size(), &width, &height, &channels, reqChannels);
+    }
+    else
+        dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, reqChannels);
+#else
     unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, reqChannels);
+#endif
     if(dataBuffer == NULL)
     {
         cError("Failed to load texture from: %s", filename.c_str());
@@ -1191,7 +1205,7 @@ GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GL
 
 GLuint OpenGLContent::LoadInternalTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
-    return LoadTexture(GetShaderPath() + filename, hasAlphaChannel, anisotropy);
+    return LoadTexture(GetShaderPath() + filename, hasAlphaChannel, anisotropy, true);
 }
 
 GLuint OpenGLContent::GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, GLenum type, const void* data, 
