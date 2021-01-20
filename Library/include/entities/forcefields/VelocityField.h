@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VelocityField__
@@ -31,6 +31,9 @@
 
 namespace sf
 {
+    //! An enum representing the type of a velocity field.
+    enum class VelocityFieldType {UNIFORM, JET, PIPE, STREAM};
+
     //! An abstract class representing a velocity field.
     class VelocityField
     {
@@ -46,10 +49,22 @@ namespace sf
          \param p a point at which the velocity is requested
          \return velocity [m/s]
          */
-        virtual Vector3 GetVelocityAtPoint(const Vector3& p) = 0;
+        virtual Vector3 GetVelocityAtPoint(const Vector3& p) const = 0;
         
         //! A method implementing the rendering of the velocity field.
         virtual std::vector<Renderable> Render(VelocityFieldUBO& ubo) = 0;
+
+        //! A method to enable/disable the velocity field.
+        void setEnabled(bool en);
+
+        //! A method informing if the velocity field is enabled.
+        bool isEnabled() const;
+
+        //! A method returning the type of the velocity field.
+        virtual VelocityFieldType getType() const = 0;
+
+    private:
+        bool enabled;
     };
 }
 

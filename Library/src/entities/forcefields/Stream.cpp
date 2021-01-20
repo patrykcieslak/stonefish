@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Stream.h"
@@ -35,8 +35,13 @@ Stream::Stream(const std::vector<Vector3>& streamline, const std::vector<Scalar>
     vin = inputVelocity;
     gamma = exponent;
 }
-    
-Vector3 Stream::GetVelocityAtPoint(const Vector3& p)
+
+VelocityFieldType Stream::getType() const
+{
+    return VelocityFieldType::STREAM;
+}
+
+Vector3 Stream::GetVelocityAtPoint(const Vector3& p) const
 {
     return Vector3(0,0,0);
 }

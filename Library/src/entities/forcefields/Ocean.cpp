@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -96,7 +96,15 @@ Fluid Ocean::getLiquid() const
 {
     return liquid;
 }
-    
+
+VelocityField* Ocean::getCurrent(unsigned int index)
+{
+    if(index < currents.size())
+        return currents[index];
+    else
+        return nullptr;
+}
+
 void Ocean::setWaterType(Scalar jerlov)
 { 
     if(glOcean != NULL)
@@ -156,11 +164,13 @@ Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
     {
         Vector3 fv = V0();
         for(size_t i=0; i<currents.size(); ++i)
-            fv += currents[i]->GetVelocityAtPoint(point);
+        {
+            if(currents[i]->isEnabled())
+                fv += currents[i]->GetVelocityAtPoint(point);
+        }
         return fv;
     }
-    else
-        return V0();
+    return V0();
 }
 
 glm::vec3 Ocean::GetFluidVelocity(const glm::vec3& point) const
@@ -248,15 +258,15 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
     if(currentsEnabled)
     {
         for(size_t i=0; i<currents.size(); ++i)
-        {
-            std::vector<Renderable> citems = currents[i]->Render(glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents]);
-            items.insert(items.end(), citems.begin(), citems.end());
-            ++glOceanCurrentsUBOData.numCurrents;
-        }
+            if(currents[i]->isEnabled())
+            {
+                std::vector<Renderable> citems = currents[i]->Render(glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents]);
+                items.insert(items.end(), citems.begin(), citems.end());
+                ++glOceanCurrentsUBOData.numCurrents;
+            }
     }
     
     for(size_t i=0; i<act.size(); ++i)
-    {
         if(act[i]->getType() == ActuatorType::THRUSTER)
         {
             Thruster* th = (Thruster*)act[i];
@@ -276,7 +286,6 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
             glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].type = 10;
             ++glOceanCurrentsUBOData.numCurrents;
         }
-    }
 
     if(wavesDebug.points.size() > 0)
     {

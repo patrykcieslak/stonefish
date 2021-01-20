@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Pipe.h"
@@ -39,7 +39,12 @@ Pipe::Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar 
     gamma = exponent;
 }
 
-Vector3 Pipe::GetVelocityAtPoint(const Vector3& p)
+VelocityFieldType Pipe::getType() const
+{
+    return VelocityFieldType::PIPE;
+}
+
+Vector3 Pipe::GetVelocityAtPoint(const Vector3& p) const
 {
     //Calculate distance to line
     Vector3 p1p = p-p1;

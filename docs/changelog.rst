@@ -4,6 +4,23 @@ Changelog
 
 The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
 
+1.3
+===
+
+- Updated definition of accelerometer, gyroscope and IMU sensors, including parser support
+- Implemented methods which enable live updates of sensor and actuator frames
+- Improved support for console simulations
+- Improved support for non-realitime simulations
+- Separated underwater and above water rendering paths
+- Eliminated precomputation of atmospheric scattering (loaded from resources)
+- Improved ocean reflections
+- Reimplemented XML parser logging mechanism
+- Significantly improved XML parser error and warning messages (easier location of errors)
+- Extended implementation of velocity fields to facilitate online updates
+- Added optional functionality to embed internal resources in the library binary
+- Fixed spline interpolation of trajectories with subsequent overlapping points
+- Fixed measurement of accelerations
+
 1.2
 ===
 

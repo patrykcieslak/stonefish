@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Jet.h"
@@ -33,10 +33,20 @@ Jet::Jet(const Vector3& point, const Vector3& direction, Scalar radius, Scalar o
     c = point;
     n = direction.normalized();
     r = radius;
-    vout = outletVelocity;
+    setOutletVelocity(outletVelocity);
 }
 
-Vector3 Jet::GetVelocityAtPoint(const Vector3& p)
+void Jet::setOutletVelocity(Scalar x)
+{
+    vout = x;
+}
+
+VelocityFieldType Jet::getType() const
+{
+    return VelocityFieldType::JET;
+}
+
+Vector3 Jet::GetVelocityAtPoint(const Vector3& p) const
 {
     //Calculate distance to axis
     Vector3 cp = p-c;

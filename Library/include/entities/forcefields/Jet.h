@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Jet__
@@ -53,10 +53,19 @@ namespace sf
          \param p a point at which the velocity is requested
          \return velocity [m/s]
          */
-        Vector3 GetVelocityAtPoint(const Vector3& p);
+        Vector3 GetVelocityAtPoint(const Vector3& p) const;
         
         //! A method implementing the rendering of the jet.
         std::vector<Renderable> Render(VelocityFieldUBO& ubo);
+
+        //! A method to change the flow velocity.
+        /*!
+         \param x new outlet velocity [m/s]
+         */
+        void setOutletVelocity(Scalar x);
+
+         //! A method returning the type of the velocity field.
+        VelocityFieldType getType() const;
         
     private:
         Vector3 c, n;

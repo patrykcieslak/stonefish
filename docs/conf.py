@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = u'Stonefish'
-copyright = u'2020, Patryk Cieślak'
+copyright = u'2021, Patryk Cieślak'
 author = u'Patryk Cieślak'
 
 # The short X.Y version

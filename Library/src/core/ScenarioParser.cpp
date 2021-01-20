@@ -481,68 +481,11 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         if((item = ocean->FirstChildElement("current")) != nullptr)
         {
             Ocean* ocn = sm->getOcean();
-            XMLElement* item2;
             do
             {
-                //Get type of current
-                const char* currentType;
-                if(item->QueryStringAttribute("type", &currentType) != XML_SUCCESS)
-                {
-                    log.Print(MessageType::WARNING, "Ocean current type missing - skipping.");
-                    continue;
-                }
-                std::string currentTypeStr(currentType);
-                
-                //Create current
-                if(currentTypeStr == "uniform")
-                {
-                    const char* vel;
-                    Vector3 v;
-            
-                    if((item2 = item->FirstChildElement("velocity")) == nullptr
-                       || item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS
-                       || !ParseVector(vel, v))
-                    {
-                        log.Print(MessageType::WARNING, "Uniform current velocity missing - skipping.");
-                        continue;
-                    }
-                    ocn->AddVelocityField(new Uniform(v));
-                }
-                else if(currentTypeStr == "jet")
-                {
-                    const char* center;
-                    const char* vel;
-                    Vector3 c;
-                    Vector3 v;
-                    Scalar radius;
-                    
-                    if((item2 = item->FirstChildElement("center")) == nullptr
-                        || item2->QueryStringAttribute("xyz", &center) != XML_SUCCESS
-                        || !ParseVector(center, c))
-                    {
-                        log.Print(MessageType::WARNING, "Jet current center missing - skipping.");
-                        continue;
-                    }
-                    if((item2 = item->FirstChildElement("outlet")) == nullptr
-                        || item2->QueryAttribute("radius", &radius) != XML_SUCCESS)
-                    {
-                        log.Print(MessageType::WARNING, "Jet current outlet radius missing - skipping.");
-                        continue;
-                    }
-                    if((item2 = item->FirstChildElement("velocity")) == nullptr
-                        || item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS
-                        || !ParseVector(vel, v))
-                    {
-                        log.Print(MessageType::WARNING, "Jet current velocity missing - skipping.");
-                        continue;
-                    }
-                    Vector3 dir = v.normalized();
-                    ocn->AddVelocityField(new Jet(c, dir, radius, v.norm()));
-                }
-                else
-                {
-                    log.Print(MessageType::WARNING, "Current type not supported - skipping.");
-                }
+                VelocityField* current = ParseVelocityField(item);
+                if(current != nullptr)
+                    ocn->AddVelocityField(current);
             }
             while((item = item->NextSiblingElement("current")) != nullptr);
         }
@@ -569,69 +512,15 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         if((item = atmosphere->FirstChildElement("wind")) != nullptr)
         {
             Atmosphere* atm = sm->getAtmosphere();
-            XMLElement* item2;
             do
             {
-                //Get type of wind
-                const char* windType;
-                if(item->QueryStringAttribute("type", &windType) != XML_SUCCESS)
-                {
-                    log.Print(MessageType::WARNING, "Wind type missing - skipping.");
-                    continue;
-                }
-                std::string windTypeStr(windType);
-                
-                //Create wind
-                if(windTypeStr == "uniform")
-                {
-                    const char* vel;
-                    Vector3 v;
-            
-                    if((item2 = item->FirstChildElement("velocity")) == nullptr
-                       || item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS
-                       || !ParseVector(vel, v))
-                    {
-                        log.Print(MessageType::WARNING, "Uniform wind velocity missing - skipping.");
-                        continue;
-                    }        
-                    atm->AddVelocityField(new Uniform(v));
-                }
-                else if(windTypeStr == "jet")
-                {
-                    const char* center;
-                    const char* vel;
-                    Vector3 c;
-                    Vector3 v;
-                    Scalar radius;
-                    
-                    if((item2 = item->FirstChildElement("center")) == nullptr
-                        || item2->QueryStringAttribute("xyz", &center) != XML_SUCCESS
-                        || !ParseVector(center, c))
-                    {
-                        log.Print(MessageType::WARNING, "Jet wind center missing - skipping.");
-                        continue;
-                    }
-                    if((item2 = item->FirstChildElement("outlet")) == nullptr
-                        || item2->QueryAttribute("radius", &radius) != XML_SUCCESS)
-                    {
-                        log.Print(MessageType::WARNING, "Jet wind outlet radius missing - skipping.");
-                        continue;
-                    }
-                    if((item2 = item->FirstChildElement("velocity")) == nullptr
-                        || item2->QueryStringAttribute("xyz", &vel) != XML_SUCCESS
-                        || !ParseVector(vel, v))
-                    {
-                        log.Print(MessageType::WARNING, "Jet wind velocity missing - skipping.");
-                        continue;
-                    }
-                    Vector3 dir = v.normalized();
-                    atm->AddVelocityField(new Jet(c, dir, radius, v.norm()));
-                }
+                VelocityField* wind = ParseVelocityField(item);
+                if(wind != nullptr)
+                    atm->AddVelocityField(wind);
             }
             while((item = item->NextSiblingElement("wind")) != nullptr);
         }
     }
-    
     return true;
 }
 
@@ -759,6 +648,71 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
     }
     
     return true;
+}
+
+VelocityField* ScenarioParser::ParseVelocityField(XMLElement* element)
+{
+    //Get type of current
+    const char* vfType;
+    if(element->QueryStringAttribute("type", &vfType) != XML_SUCCESS)
+    {
+        log.Print(MessageType::WARNING, "Velocity field type missing - skipping.");
+        return nullptr;
+    }
+    std::string vfTypeStr(vfType);
+
+    if(vfTypeStr == "uniform")
+    {
+        XMLElement* item;
+        const char* vel;
+        Vector3 v;
+            
+        if((item = element->FirstChildElement("velocity")) == nullptr
+            || item->QueryStringAttribute("xyz", &vel) != XML_SUCCESS
+            || !ParseVector(vel, v))
+        {
+            log.Print(MessageType::WARNING, "Velocity definition of uniform velocity field missing - skipping.");
+            return nullptr;        
+        }
+        return new Uniform(v);
+    }
+    else if(vfTypeStr == "jet")
+    {
+        XMLElement* item;
+        const char* center;
+        const char* vel;
+        Vector3 c;
+        Vector3 v;
+        Scalar radius;
+                   
+        if((item = element->FirstChildElement("center")) == nullptr
+            || item->QueryStringAttribute("xyz", &center) != XML_SUCCESS
+            || !ParseVector(center, c))
+        {
+            log.Print(MessageType::WARNING, "Center definition of jet velocity field missing - skipping.");
+            return nullptr;
+        }
+        if((item = element->FirstChildElement("outlet")) == nullptr
+            || item->QueryAttribute("radius", &radius) != XML_SUCCESS)
+        {
+            log.Print(MessageType::WARNING, "Outlet radius definition of jet velocity field missing - skipping.");
+            return nullptr;               
+        }
+        if((item = element->FirstChildElement("velocity")) == nullptr
+            || item->QueryStringAttribute("xyz", &vel) != XML_SUCCESS
+            || !ParseVector(vel, v))
+        {
+            log.Print(MessageType::WARNING, "Velocity definition of jet velocity field missing - skipping.");
+            return nullptr;
+        }
+        Vector3 dir = v.normalized();
+        return new Jet(c, dir, radius, v.norm());
+    }
+    else
+    {
+        log.Print(MessageType::WARNING, "Velocity field type not supported - skipping.");
+        return nullptr;
+    }
 }
 
 bool ScenarioParser::ParseStatic(XMLElement* element)

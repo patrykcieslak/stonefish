@@ -43,6 +43,7 @@ namespace sf
     class Actuator;
     class Light;
     class Comm;
+    class VelocityField;
     struct Color;
     enum class ColorMap;
   
@@ -117,6 +118,13 @@ namespace sf
          */
         virtual bool ParseLooks(XMLElement* element);
         
+        //! A method used to parse a definition of a velocity field (current, wind).
+        /*!
+         \param element a pointer to the XML node
+         \return a pointer to the new velocity field object
+         */
+        virtual VelocityField* ParseVelocityField(XMLElement* element);
+
         //! A method used to parse a static object description.
         /*!
          \param element a pointer to the XML node

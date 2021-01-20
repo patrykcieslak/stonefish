@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/05/19.
-//  Copyright(c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Uniform.h"
@@ -30,10 +30,20 @@ namespace sf
 
 Uniform::Uniform(const Vector3& velocity)
 {
-    v = velocity;
+    setVelocity(velocity);
 }
 
-Vector3 Uniform::GetVelocityAtPoint(const Vector3& p)
+VelocityFieldType Uniform::getType() const
+{
+    return VelocityFieldType::UNIFORM;
+}
+
+void Uniform::setVelocity(const Vector3& x)
+{
+    v = x;
+}
+
+Vector3 Uniform::GetVelocityAtPoint(const Vector3& p) const
 {    
     return v;
 }

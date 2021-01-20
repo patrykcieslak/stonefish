@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/05/19.
-//  Copyright(c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Uniform__
@@ -48,10 +48,19 @@ namespace sf
          \param p a point at which the velocity is requested
          \return velocity [m/s]
          */
-        Vector3 GetVelocityAtPoint(const Vector3& p);
+        Vector3 GetVelocityAtPoint(const Vector3& p) const;
         
         //! A method implementing the rendering of the uniform field.
         std::vector<Renderable> Render(VelocityFieldUBO& ubo);
+
+        //! A method to change the flow velocity.
+        /*!
+         \param x new velocity [m/s]
+         */
+        void setVelocity(const Vector3& x);
+
+        //! A method returning the type of the velocity field.
+        VelocityFieldType getType() const;
         
     private:
         Vector3 v;
