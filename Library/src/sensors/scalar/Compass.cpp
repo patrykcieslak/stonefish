@@ -32,7 +32,7 @@ namespace sf
 
 Compass::Compass(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Heading", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Heading", QuantityType::ANGLE));
 }
 
 void Compass::InternalUpdate(Scalar dt)

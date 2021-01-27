@@ -34,7 +34,7 @@ namespace sf
 Current::Current(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     motor = NULL;
-    channels.push_back(SensorChannel("Current", QUANTITY_CURRENT));
+    channels.push_back(SensorChannel("Current", QuantityType::CURRENT));
 }
 
 void Current::AttachToMotor(DCMotor* m)

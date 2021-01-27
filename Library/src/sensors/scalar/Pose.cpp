@@ -33,12 +33,12 @@ namespace sf
 
 Pose::Pose(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Coordinate X", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("Coordinate Y", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("Coordinate Z", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Pitch", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
+    channels.push_back(SensorChannel("Coordinate X", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("Coordinate Y", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("Coordinate Z", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("Roll", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Yaw", QuantityType::ANGLE));
 }
 
 void Pose::InternalUpdate(Scalar dt)

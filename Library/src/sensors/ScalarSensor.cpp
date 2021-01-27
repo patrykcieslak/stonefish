@@ -98,7 +98,7 @@ SensorChannel ScalarSensor::getSensorChannelDescription(unsigned int channel)
     if(channel < channels.size())
         return channels[channel];
     else
-        return SensorChannel("Invalid", QUANTITY_INVALID);
+        return SensorChannel("Invalid", QuantityType::INVALID);
 }
 
 void ScalarSensor::Reset()

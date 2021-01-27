@@ -33,15 +33,15 @@ namespace sf
 
 IMU::IMU(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Roll", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Pitch", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Yaw", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Linear acceleration X", QUANTITY_ACCELERATION));
-    channels.push_back(SensorChannel("Linear acceleration Y", QUANTITY_ACCELERATION));
-    channels.push_back(SensorChannel("Linear acceleration Z", QUANTITY_ACCELERATION));
+    channels.push_back(SensorChannel("Roll", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Yaw", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Z", QuantityType::ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Linear acceleration X", QuantityType::ACCELERATION));
+    channels.push_back(SensorChannel("Linear acceleration Y", QuantityType::ACCELERATION));
+    channels.push_back(SensorChannel("Linear acceleration Z", QuantityType::ACCELERATION));
     
     yawDriftRate = Scalar(0);
     accumulatedYawDrift = Scalar(0);

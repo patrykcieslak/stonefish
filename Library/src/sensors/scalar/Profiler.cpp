@@ -39,8 +39,8 @@ Profiler::Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int an
 {
     angRange = UnitSystem::Angle(true, angleRangeDeg);
     angSteps = angleSteps;
-    channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Distance", QUANTITY_LENGTH));
+    channels.push_back(SensorChannel("Angle", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Distance", QuantityType::LENGTH));
     channels[1].rangeMin = Scalar(0);
     channels[1].rangeMax = BT_LARGE_FLOAT;
     currentAngStep = 0;

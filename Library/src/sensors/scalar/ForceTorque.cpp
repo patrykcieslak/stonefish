@@ -39,12 +39,12 @@ ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const 
     o2s = origin;
     lastFrame = Transform::getIdentity();
     
-    channels.push_back(SensorChannel("Force X", QUANTITY_FORCE));
-    channels.push_back(SensorChannel("Force Y", QUANTITY_FORCE));
-    channels.push_back(SensorChannel("Force Z", QUANTITY_FORCE));
-    channels.push_back(SensorChannel("Torque X", QUANTITY_TORQUE));
-    channels.push_back(SensorChannel("Torque Y", QUANTITY_TORQUE));
-    channels.push_back(SensorChannel("Torque Z", QUANTITY_TORQUE));
+    channels.push_back(SensorChannel("Force X", QuantityType::FORCE));
+    channels.push_back(SensorChannel("Force Y", QuantityType::FORCE));
+    channels.push_back(SensorChannel("Force Z", QuantityType::FORCE));
+    channels.push_back(SensorChannel("Torque X", QuantityType::TORQUE));
+    channels.push_back(SensorChannel("Torque Y", QuantityType::TORQUE));
+    channels.push_back(SensorChannel("Torque Z", QuantityType::TORQUE));
 }
 
 ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar frequency, int historyLength) :

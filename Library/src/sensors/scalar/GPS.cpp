@@ -36,10 +36,10 @@ namespace sf
 
 GPS::GPS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Latitude", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Longitude", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("North", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("East", QUANTITY_LENGTH));
+    channels.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("North", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("East", QuantityType::LENGTH));
     setNoise(Scalar(0));
 }
 

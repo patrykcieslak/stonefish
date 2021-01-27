@@ -44,7 +44,7 @@ Multibeam::Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int 
     {
         angles.push_back(i/(Scalar)angSteps * angRange - Scalar(0.5) * angRange);
     
-        channels.push_back(SensorChannel("Distance", QUANTITY_LENGTH));
+        channels.push_back(SensorChannel("Distance", QuantityType::LENGTH));
         channels.back().rangeMin = Scalar(0);
         channels.back().rangeMax = BT_LARGE_FLOAT;
     }

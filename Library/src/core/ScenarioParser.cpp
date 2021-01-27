@@ -2633,22 +2633,43 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 dvl->setRange(vxyz, altMin, altMax);
         }
+        //Optional water mass measurmeent definition
+        if((item = element->FirstChildElement("water_layer")) != nullptr)
+        {
+            Scalar minSize(0);
+            Scalar boundaryNear(0);
+            Scalar boundaryFar(0);
+            item->QueryAttribute("minimum_layer_size", &minSize);
+            item->QueryAttribute("boundary_near", &boundaryNear);
+            item->QueryAttribute("boundary_far", &boundaryFar);
+            dvl->setWaterLayer(minSize, boundaryNear, boundaryFar);
+        }
+
         //Optional range definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
         {
             Scalar v(0);
+            Scalar vp(0);
+            Scalar wv(0);
+            Scalar wvp(0);
             Scalar altitude(0);
             int c = 0;
 
             if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
                 ++c;
+            if(item->QueryAttribute("velocity_percent", &vp) == XML_SUCCESS)
+                ++c;
             if(item->QueryAttribute("altitude", &altitude) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("water_velocity", &wv) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("water_velocity_percent", &wvp) == XML_SUCCESS)
                 ++c;
             
             if(c == 0)
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
             else
-                dvl->setNoise(v, altitude);
+                dvl->setNoise(vp, v, altitude, wvp, wv);
         }
         return dvl;
     }
@@ -2794,7 +2815,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         return prof;
     }
-    else if(typeStr == "multibeam1d")
+    else if(typeStr == "multibeam" || typeStr == "multibeam1d")
     {
         int history;
         Scalar fov;

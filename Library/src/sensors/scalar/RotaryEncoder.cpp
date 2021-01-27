@@ -40,8 +40,8 @@ RotaryEncoder::RotaryEncoder(std::string uniqueName, Scalar frequency, int histo
     angle = lastAngle = Scalar(0);
     motor = NULL;
     thrust = NULL;
-    channels.push_back(SensorChannel("Angle", QUANTITY_ANGLE));
-    channels.push_back(SensorChannel("Angular velocity", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angle", QuantityType::ANGLE));
+    channels.push_back(SensorChannel("Angular velocity", QuantityType::ANGULAR_VELOCITY));
 }
 
 void RotaryEncoder::AttachToMotor(Motor* m)

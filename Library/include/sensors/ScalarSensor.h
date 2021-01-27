@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScalarSensor__
@@ -35,21 +35,20 @@ namespace sf
     enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE};
     
     //! An enum defining the type of quantity represented by the measurement.
-    typedef enum
+    enum class QuantityType
     {
-        QUANTITY_LENGTH = 0,
-        QUANTITY_ANGLE,
-        QUANTITY_VELOCITY,
-        QUANTITY_ANGULAR_VELOCITY,
-        QUANTITY_ACCELERATION,
-        QUANTITY_FORCE,
-        QUANTITY_TORQUE,
-        QUANTITY_CURRENT,
-        QUANTITY_PRESSURE,
-        QUANTITY_UNITLESS,
-        QUANTITY_INVALID
-    }
-    QuantityType;
+        UNITLESS,
+        LENGTH,
+        ANGLE,
+        VELOCITY,
+        ANGULAR_VELOCITY,
+        ACCELERATION,
+        FORCE,
+        TORQUE,
+        CURRENT,
+        PRESSURE,
+        INVALID
+    };
     
     //! A structure desribing a single channel of the sensor.
     struct SensorChannel

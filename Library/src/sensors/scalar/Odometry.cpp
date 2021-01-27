@@ -33,19 +33,19 @@ namespace sf
 
 Odometry::Odometry(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Position X", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("Position Y", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("Position Z", QUANTITY_LENGTH));
-    channels.push_back(SensorChannel("Velocity X", QUANTITY_VELOCITY));
-    channels.push_back(SensorChannel("Velocity Y", QUANTITY_VELOCITY));
-    channels.push_back(SensorChannel("Velocity Z", QUANTITY_VELOCITY));
-    channels.push_back(SensorChannel("Orientation X", QUANTITY_UNITLESS));
-    channels.push_back(SensorChannel("Orientation Y", QUANTITY_UNITLESS));
-    channels.push_back(SensorChannel("Orientation Z", QUANTITY_UNITLESS));
-    channels.push_back(SensorChannel("Orientation W", QUANTITY_UNITLESS));
-    channels.push_back(SensorChannel("Angular velocity X", QUANTITY_ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Y", QUANTITY_ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Z", QUANTITY_ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Position X", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("Position Y", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("Position Z", QuantityType::LENGTH));
+    channels.push_back(SensorChannel("Velocity X", QuantityType::VELOCITY));
+    channels.push_back(SensorChannel("Velocity Y", QuantityType::VELOCITY));
+    channels.push_back(SensorChannel("Velocity Z", QuantityType::VELOCITY));
+    channels.push_back(SensorChannel("Orientation X", QuantityType::UNITLESS));
+    channels.push_back(SensorChannel("Orientation Y", QuantityType::UNITLESS));
+    channels.push_back(SensorChannel("Orientation Z", QuantityType::UNITLESS));
+    channels.push_back(SensorChannel("Orientation W", QuantityType::UNITLESS));
+    channels.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
+    channels.push_back(SensorChannel("Angular velocity Z", QuantityType::ANGULAR_VELOCITY));
     ornStdDev = Scalar(0);
     ornNoise = std::normal_distribution<Scalar>(Scalar(0), ornStdDev);
 }

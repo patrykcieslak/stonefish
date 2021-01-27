@@ -294,14 +294,15 @@ The pressure sensor measures the gauge pressure underwater. Pressure range as we
 Doppler velocity log (DVL)
 --------------------------
 
-The Doppler velocity log (DVL) is a classic marine craft sensor, used for measuring vehicle velocity as well as water velocity. The current implementation of DVL in the Stonefish library is using four acoustic beams to determine the altitude above terrain. The shortest distance is reported. Moreover, it provides robot velocity along all three Cartesian axes. The velocity is calculated based on the simulation of motion rather than the Doppler effect, which may be improved in future. It is possible to specify sensor operating range in terms of the altitude limits as well as the maximum measured velocity. Noise can be added to the measurements as well.
+The Doppler velocity log (DVL) is a classic marine craft sensor, used for measuring vehicle velocity as well as water velocity. The current implementation of DVL in the Stonefish library is using four acoustic beams to determine the altitude above terrain. The shortest distance is reported. Moreover, it provides robot velocity along all three Cartesian axes. The velocity is calculated based on the simulation of motion rather than the Doppler effect, which may be improved in future. Additionally, the sensor model implements measurement of the water velocity across a specified layer. Water velocity is sampled in multiple points between layer boundaries and a weighted average is used to compute the result (center of the layer has the highest influence). It is possible to specify sensor operating range in terms of the altitude limits as well as the maximum measured velocity. Noise can be added to the measurements as well. The standard deviation of the velocity measurement noise depends on the percentage of the measured velocity and a constant additive component.
 
 .. code-block:: xml
 
     <sensor name="DVL" rate="10.0" type="dvl">
         <specs beam_angle="30.0"/>
         <range velocity="10.0 10.0 5.0" altitude_min="0.5" altitude_max="50.0"/>
-        <noise velocity="0.1" altitude="0.03"/>
+        <water_layer minimum_layer_size="10.0" boundary_near="10.0" boundary_far="30.0"/>
+        <noise velocity_percent= "0.3" velocity="0.1" altitude="0.03" water_velocity_percent="0.1" water_velocity="0.1"/>
         <history samples="1"/>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <link name="Link1"/>
@@ -312,7 +313,8 @@ The Doppler velocity log (DVL) is a classic marine craft sensor, used for measur
     #include <Stonefish/sensors/scalar/DVL.h>
     sf::DVL* dvl = new sf::DVL("DVL", 30.0, 10.0, 1);
     dvl->setRange(sf::Vector3(10.0, 10.0, 5.0), 0.5, 50.0);
-    dvl->setNoise(0.1, 0.03);
+    dvl->setWaterLayer(10.0, 10.0, 30.0);
+    dvl->setNoise(0.3, 0.1, 0.03, 0.1, 0.1);
     robot->AddLinkSensor(dvl, "Link1", sf::I4());
 
 Profiler
@@ -347,7 +349,7 @@ The output of the multibeam is a planar distance map, in a cylindrical coordinat
 
 .. code-block:: xml
 
-    <sensor name="Multibeam" rate="1.0" type="multibeam1d">
+    <sensor name="Multibeam" rate="1.0" type="multibeam">
         <specs fov="120.0" steps="128"/>
         <range distance_min="0.5" distance_max="50.0"/>
         <noise distance="0.1"/>

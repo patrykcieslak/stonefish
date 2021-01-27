@@ -183,7 +183,7 @@ void Servo::Update(Scalar dt)
             case POSITION_CTRL: 
             {
                 fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-                fe->MotorVelocitySetpoint(jId, Scalar(0), Scalar(0));
+                fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
             }
                 break;
                 

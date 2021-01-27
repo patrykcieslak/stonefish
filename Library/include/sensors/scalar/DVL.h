@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_DVL__
@@ -52,17 +52,28 @@ namespace sf
         //! A method used to set the range of the sensor.
         /*!
          \param velocityMax the maximum measured linear velocity [m s^-1]
-         \param altitudeMin the minimum measured altitude [m]
+         \param altitudeMin the minimum measured altitude (blanking) [m]
          \param altitudeMax the maximum measured altitude [m]
          */
         void setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
         
+        //! A method used to set the water mass ping parameters.
+        /*!
+         \param minSize the minimum thickness of the water layer [m]
+         \param nearBoundary the distance from the sensor to the near layer boundary [m]
+         \param farBoundary the distance from the sensor to the far layer boundary [m]
+         */
+        void setWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary);
+
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param velocityStdDev standard deviation of the linear velocity measurement noise
+         \param velPercent multiplicative bottom velocity mesurement noise factor as percent of velocity
+         \param velStdDev standard deviation of the bottom velocity measurement noise
          \param altitudeStdDev standard deviation of the altitude measurement noise
+         \param waterVelPercent multiplicative water velocity mesurement noise factor as percent of water velocity
+         \param waterVelStdDev standard deviation of the water velocity measurement noise
          */
-        void setNoise(Scalar velocityStdDev, Scalar altitudeStdDev);
+        void setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev);
         
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();
@@ -73,6 +84,9 @@ namespace sf
     private:
         Scalar beamAngle;
         Scalar range[4];
+        Vector3 waterLayer;
+        Scalar addNoiseStdDev[2]; //Additive noise
+        Scalar mulNoiseFactor[2]; //Noise dependent on distance
     };
 }
 

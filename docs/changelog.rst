@@ -7,7 +7,8 @@ The changelog of the library code is presented below. **Breaking changes** were 
 1.3
 ===
 
-- Updated definition of accelerometer, gyroscope and IMU sensors, including parser support
+- *Updated definition of accelerometer, gyroscope and IMU sensors, including parser support*
+- *Extended DVL model, with water layer velocity measurement and new noise models, including parser support*
 - Implemented methods which enable live updates of sensor and actuator frames
 - Improved support for console simulations
 - Improved support for non-realitime simulations
@@ -20,6 +21,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 - Added optional functionality to embed internal resources in the library binary
 - Fixed spline interpolation of trajectories with subsequent overlapping points
 - Fixed measurement of accelerations
+- Fixed unstable multibody joint position control
 
 1.2
 ===

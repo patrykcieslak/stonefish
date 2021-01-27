@@ -33,9 +33,9 @@ namespace sf
 
 Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Linear Acceleration X", QUANTITY_ACCELERATION));
-    channels.push_back(SensorChannel("Linear Acceleration Y", QUANTITY_ACCELERATION));
-    channels.push_back(SensorChannel("Linear Acceleration Z", QUANTITY_ACCELERATION));
+    channels.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
+    channels.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
+    channels.push_back(SensorChannel("Linear Acceleration Z", QuantityType::ACCELERATION));
 }
 
 void Accelerometer::InternalUpdate(Scalar dt)

@@ -34,7 +34,7 @@ namespace sf
 
 Torque::Torque(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Torque", QUANTITY_TORQUE));
+    channels.push_back(SensorChannel("Torque", QuantityType::TORQUE));
 }
 
 void Torque::InternalUpdate(Scalar dt)

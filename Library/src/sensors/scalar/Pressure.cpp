@@ -34,7 +34,7 @@ namespace sf
 
 Pressure::Pressure(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Pressure", QUANTITY_PRESSURE));
+    channels.push_back(SensorChannel("Pressure", QuantityType::PRESSURE));
 }
 
 void Pressure::InternalUpdate(Scalar dt)
