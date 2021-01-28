@@ -38,7 +38,7 @@ namespace sf
 DVL::DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     range[0] = range[1] = range[2] = range[3] = Scalar(0.);
-    beamAngle = beamSpreadAngleDeg/Scalar(180)*M_PI;
+    beamAngle = btRadians(beamSpreadAngleDeg);
     channels.push_back(SensorChannel("Velocity X", QuantityType::VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QuantityType::VELOCITY));
     channels.push_back(SensorChannel("Velocity Z", QuantityType::VELOCITY));
@@ -65,15 +65,13 @@ void DVL::InternalUpdate(Scalar dt)
 {
     /*
     Status:
-    0 - no error, bottom ping only
-    1 - no error, bottom and water ping
-    2 - bottom ping error
-    3 - water ping error
+    0 - bottom ping only
+    1 - water ping only
+    2 - bottom and water ping
+    3 - no ping at all
     */
-
     //Check hit with bottom
-    unsigned short status = 0; //No error, bottom ping only
-    Scalar minRange(-1);
+    unsigned short status = 0;
     Transform dvlTrans = getSensorFrame();
     
     //Simulate 4 beam DVL (typical design)
@@ -86,7 +84,7 @@ void DVL::InternalUpdate(Scalar dt)
     dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
     
     unsigned int divs = ceil(channels[3].rangeMax - channels[3].rangeMin);
-    
+    Scalar minRange(-1);
     for(unsigned int i=0; i<4; ++i)
     {
         from[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMin;
@@ -115,14 +113,42 @@ void DVL::InternalUpdate(Scalar dt)
         if(range[i] > Scalar(0) && (range[i] < minRange || minRange < Scalar(0)))
                 minRange = range[i];
     }
-   
+
     //Get altitude
-    Scalar altitude = minRange * btCos(beamAngle/Scalar(2));
-    if(altitude < Scalar(0))
-        status = 2; //No bottom ping!
-    
-    //Get velocity
-    Vector3 v = (status != 2) ? dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getCGTransform().getOrigin()) : V0();
+    Scalar altitude = channels[3].rangeMax;
+    Vector3 v = V0();
+    status = 3;
+
+    //Check where the out of range happened
+    bool tooClose = false;
+    if(minRange < Scalar(0)) //No hit recorded in DVL operating range
+    {
+        for(unsigned int i=0; i<4; ++i)
+        {
+            range[i] = Scalar(-1);
+            from[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMin;
+            to[i] = dvlTrans.getOrigin();
+            btCollisionWorld::ClosestRayResultCallback closest(from[i], to[i]);
+            closest.m_collisionFilterGroup = MASK_DYNAMIC;
+            closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
+            SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from[i], to[i], closest);
+            
+            if(closest.hasHit() && btDot(closest.m_hitNormalWorld, -dir[i]) > Scalar(0))
+            {
+                Vector3 p = from[i].lerp(to[i], closest.m_closestHitFraction);
+                range[i] = (p - dvlTrans.getOrigin()).length();
+                if(range[i] < minRange || minRange < Scalar(0)) minRange = range[i];
+            }
+        }
+        if(minRange > Scalar(0)) //Detection closer than minimum range of DVL - no water ping possible
+            tooClose = true;
+    }
+    else //Successful bottom ping
+    {
+        altitude = minRange * btCos(beamAngle/Scalar(2));
+        v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getCGTransform().getOrigin());
+        status = 0;
+    }
     
     //Get water velocity
     Vector3 wv = V0();
@@ -130,39 +156,34 @@ void DVL::InternalUpdate(Scalar dt)
     //a) layer thickness = 0
     //b) compressed layer thickness is less than minimum layer thickness
     //ASSUME: Water layer far boundary has to be closer than 80% of altitude.
-    if(status == 0 && waterLayer.getX() > Scalar(0)) //Water layer ping enabled
+    if(!tooClose && waterLayer.getX() > Scalar(0) && Scalar(0.8)*altitude > waterLayer.getX() + waterLayer.getY()) //Water layer ping possible
     {
-        if((Scalar(0.8)*altitude > waterLayer.getX() + waterLayer.getY())) //Water layer ping possible
+        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        if(ocn != nullptr)
         {
-            Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
-            if(ocn != nullptr)
+            Vector3 zDir = dvlTrans.getBasis().getColumn(2);
+            //Layer compressed until minimum layer thinckness is reached.
+            Scalar layerSize = btClamped(Scalar(0.8) * altitude - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());
+            //Sample velocity
+            unsigned int n = ceil(layerSize/Scalar(0.1)); //ASSUME: Mesurement resolution = 0.1 m.
+            Scalar dist = waterLayer.getY();
+            Scalar weight(0);
+            for(unsigned int i=0; i<=n; ++i)
             {
-                Vector3 zDir = dvlTrans.getBasis().getColumn(2);
-                //Layer compressed until minimum layer thinckness is reached.
-                Scalar layerSize = btClamped(Scalar(0.8) * altitude - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());
-                //Sample velocity
-                unsigned int n = ceil(layerSize/Scalar(0.1)); //ASSUME: Mesurement resolution = 0.1 m.
-                Scalar dist = waterLayer.getY();
-                Scalar weight(0);
-                for(unsigned int i=0; i<=n; ++i)
-                {
-                    Scalar x = Scalar(i)/Scalar(n);
-                    Scalar w = btMin(x, 1-x); //f(x) = mu min{x, 1-x} where mu changes the sharpness of the triangle
-                    Vector3 p = dvlTrans.getOrigin() + zDir * dist;
-                    wv += w * ocn->GetFluidVelocity(p);
-                    weight += w;
-                    dist += layerSize/Scalar(n);
-                }
-                wv /= weight;
+                Scalar x = Scalar(i)/Scalar(n);
+                Scalar w = btMin(x, 1-x); //f(x) = mu min{x, 1-x} where mu changes the sharpness of the triangle
+                Vector3 p = dvlTrans.getOrigin() + zDir * dist;
+                wv += w * ocn->GetFluidVelocity(p);
+                weight += w;
+                dist += layerSize/Scalar(n);
             }
-            //Transform to DVL frame and add DVL velocity
-            wv = dvlTrans.getBasis().inverse() * wv - v;
-            status = 1; //Good water ping
+            wv /= weight;
         }
-        else
-            status = 3; //No water ping!
+        //Transform to DVL frame and add DVL velocity
+        wv = dvlTrans.getBasis().inverse() * wv - v;
+        status = status == 3 ? 1 : 2;
     }
-        
+    
     //Update noise characteristics
     channels[0].setStdDev(mulNoiseFactor[0] * v.x() + addNoiseStdDev[0]);
     channels[1].setStdDev(mulNoiseFactor[0] * v.y() + addNoiseStdDev[0]);
@@ -175,17 +196,17 @@ void DVL::InternalUpdate(Scalar dt)
     Scalar data[8] = {v.x(), v.y(), v.z(), altitude, wv.x(), wv.y(), wv.z(), Scalar(status)};
     Sample s(8, data);
     AddSampleToHistory(s);
-    
-    //Hack to set invalid altitude when all of the beams miss (needed because range limit is applied when adding sample to history)
-    if(status == 2)
-        history.back()->getDataPointer()[3] = Scalar(-1);
 }
 
 std::vector<Renderable> DVL::Render()
 {
     std::vector<Renderable> items(0);
     unsigned short status = (unsigned short)trunc(getLastValue(7));
-    if(status != 2) //Good bottom ping
+    Renderable item;
+    item.type = RenderableType::SENSOR_LINES;
+    item.model = glMatrixFromTransform(getSensorFrame());    
+    //Bottom ping
+    if(status == 0 || status == 2) //Good bottom ping
     {
         //Beams
         Vector3 dir[4];
@@ -193,10 +214,6 @@ std::vector<Renderable> DVL::Render()
         dir[1] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
         dir[2] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
         dir[3] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
-        
-        Renderable item;
-        item.type = RenderableType::SENSOR_LINES;
-        item.model = glMatrixFromTransform(getSensorFrame());
         
         if(range[0] > Scalar(0))
         {
@@ -221,29 +238,28 @@ std::vector<Renderable> DVL::Render()
             item.points.push_back(glm::vec3(0,0,0));
             item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
         }
-        
-        //Water layer
-        if(status == 1) //Good water ping
-        {
-            Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
-            GLfloat a1 = (GLfloat)waterLayer.getY();
-            GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
-            GLfloat r1 = a1 * btSin(beamAngle/Scalar(2));
-            GLfloat r2 = a2 * btSin(beamAngle/Scalar(2));
-            for(unsigned int i=0; i<24; ++i)
-            {
-                GLfloat ang1 = (GLfloat)i/12.f * glm::pi<GLfloat>();
-                GLfloat ang2 = (GLfloat)(i+1)/12.f * glm::pi<GLfloat>();
-                glm::vec3 d1(glm::sin(ang1), glm::cos(ang1), 0.f);
-                glm::vec3 d2(glm::sin(ang2), glm::cos(ang2), 0.f);
-                item.points.push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));
-                item.points.push_back(r1 * d2 + glm::vec3(0.f, 0.f, -a1));
-                item.points.push_back(r2 * d1 + glm::vec3(0.f, 0.f, -a2));
-                item.points.push_back(r2 * d2 + glm::vec3(0.f, 0.f, -a2));
-            }
-        }
-        items.push_back(item);
     }
+    //Water ping
+    if(status == 1 || status == 2) //Good water ping
+    {
+        Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
+        GLfloat a1 = (GLfloat)waterLayer.getY();
+        GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
+        GLfloat r1 = a1 * btSin(beamAngle/Scalar(2));
+        GLfloat r2 = a2 * btSin(beamAngle/Scalar(2));
+        for(unsigned int i=0; i<4; ++i)
+        {
+            GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>();
+            GLfloat ang2 = (GLfloat)(i+1)/2.f * glm::pi<GLfloat>();
+            glm::vec3 d1(glm::sin(ang1), glm::cos(ang1), 0.f);
+            glm::vec3 d2(glm::sin(ang2), glm::cos(ang2), 0.f);
+            item.points.push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));
+            item.points.push_back(r1 * d2 + glm::vec3(0.f, 0.f, -a1));
+            item.points.push_back(r2 * d1 + glm::vec3(0.f, 0.f, -a2));
+            item.points.push_back(r2 * d2 + glm::vec3(0.f, 0.f, -a2));
+        }
+    }
+    items.push_back(item);
     return items;
 }
 
@@ -275,6 +291,20 @@ void DVL::setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, S
     addNoiseStdDev[1] = btClamped(waterVelStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));;
     mulNoiseFactor[0] = btClamped(velPercent, Scalar(0), Scalar(100))/Scalar(100);
     mulNoiseFactor[1] = btClamped(waterVelPercent, Scalar(0), Scalar(100))/Scalar(100);
+}
+
+void DVL::getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const
+{
+    velocityMax.setX(channels[0].rangeMax);
+    velocityMax.setY(channels[1].rangeMax);
+    velocityMax.setZ(channels[2].rangeMax);
+    altitudeMin = channels[3].rangeMin;
+    altitudeMax = channels[3].rangeMax;
+}
+
+Scalar DVL::getBeamSpreadAngle() const
+{
+    return beamAngle;
 }
 
 ScalarSensorType DVL::getScalarSensorType()

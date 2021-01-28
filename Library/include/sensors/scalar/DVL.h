@@ -75,6 +75,17 @@ namespace sf
          */
         void setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev);
         
+        //! A method that returns the measurement ranges of the DVL.
+        /*!
+         \param velocityMax the output variable to store the maximum measured linear velocity [m s^-1]
+         \param altitudeMin the output variable to store the minimum measured altitude (blanking) [m]
+         \param altitudeMax the output variable to store the maximum measured altitude [m]
+         */
+        void getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const;
+
+        //! A method that return the angle between the beams.
+        Scalar getBeamSpreadAngle() const;
+
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();
         
