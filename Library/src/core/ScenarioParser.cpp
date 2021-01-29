@@ -66,6 +66,7 @@
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
+#include "actuators/Rudder.h"
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
 #include "comms/AcousticModem.h"
@@ -2301,6 +2302,52 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             return p;
         }
+    }
+    else if(typeStr == "rudder")
+    {
+        const char* linkName = nullptr;
+        const char* rudderFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        const char* jointName = nullptr;
+
+        Scalar area, dragCoeff, liftCoeff, maxAngle, rudderScale;
+        bool inverted = false;
+        Transform origin;
+        
+        if((item = element->FirstChildElement("link")) == nullptr)
+            return false;
+        if(item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
+            return false;
+        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+            return false;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("drag_coeff", &dragCoeff) != XML_SUCCESS
+            || item->QueryAttribute("lift_coeff", &liftCoeff) != XML_SUCCESS
+            || item->QueryAttribute("max_angle", &maxAngle) != XML_SUCCESS
+            || item->QueryAttribute("area", &area) != XML_SUCCESS)
+            return false;
+        item->QueryAttribute("inverted", &inverted); //Optional
+
+        if((item = element->FirstChildElement("visual")) == nullptr)
+            return false;
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &rudderFile) != XML_SUCCESS)
+            return false;
+        if(item2->QueryAttribute("scale", &rudderScale) != XML_SUCCESS)
+            rudderScale = Scalar(1);
+        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+            return false;
+        if((item2 = item->FirstChildElement("look")) == nullptr || item2->QueryStringAttribute("name", &look) != XML_SUCCESS)
+            return false;
+
+        Transform graOrigin = I4();
+        if((item2 = item->FirstChildElement("origin")) != nullptr && !ParseTransform(item2, graOrigin))
+            return false;
+
+        Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), BodyPhysicsType::AERODYNAMIC, std::string(look));
+        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, maxAngle, inverted);
+        robot->AddLinkActuator(r, robot->getName() + "/" + std::string(linkName), origin);
     }
     else if(typeStr == "vbs")
     {
