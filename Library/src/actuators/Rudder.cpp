@@ -97,8 +97,7 @@ void Rudder::Update(Scalar dt)
         // If rudder facing velocity, reverse equations
         if (fabs(angle) > .5*M_PI)
         {
-            velocity *= -1.;
-            angle = atan2(velocity.getY(), velocity.getX());
+            angle = atan2(-velocity.getY(), -velocity.getX());
         }
         
         Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
