@@ -145,6 +145,7 @@ void Rudder::Update(Scalar dt)
             attach->ApplyTorque(dragT);
             attach->ApplyTorque(liftT);
             attach->ApplyCentralForce(rudderTrans.getBasis() * dragV);
+            attach->ApplyCentralForce(rudderTrans.getBasis() * liftV);
         }
     }
 }
