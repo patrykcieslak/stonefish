@@ -125,7 +125,7 @@ void Rudder::Update(Scalar dt)
             Scalar lift = du2 * X;
 
             // Equation 3.2.21
-            Scalar drag = angle * du2 * .5 * X;
+            Scalar drag = angle * du2 * X;
 
             // Drag is opposite to velocity
             dragV = -velocity;
