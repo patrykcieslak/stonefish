@@ -135,7 +135,8 @@ btCollisionShape* Wing::BuildCollisionShape()
         Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }
-    convex->optimizeConvexHull();
+    //convex->optimizeConvexHull();
+    convex->setMargin(0);
     return convex;
 }
 

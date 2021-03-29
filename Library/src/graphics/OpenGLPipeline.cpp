@@ -136,6 +136,16 @@ void OpenGLPipeline::AddToSelectedDrawingQueue(const std::vector<Renderable>& r)
     selectedDrawingQueue.insert(selectedDrawingQueue.end(), r.begin(), r.end());
 }
 
+void OpenGLPipeline::PurgeDrawingQueue()
+{
+    drawingQueue.clear();
+}
+
+void OpenGLPipeline::PurgeSelectedDrawingQueue()
+{
+    selectedDrawingQueue.clear();
+}
+
 bool OpenGLPipeline::isDrawingQueueEmpty()
 {
     return drawingQueue.empty();

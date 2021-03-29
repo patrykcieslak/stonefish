@@ -220,7 +220,7 @@ namespace sf
     typedef struct
     {
         GraphicalSimulationApp* app;
-        SDL_mutex* drawMutex;
+        SDL_mutex* drawingQueueMutex;
     }
     GraphicalSimulationThreadData;
     

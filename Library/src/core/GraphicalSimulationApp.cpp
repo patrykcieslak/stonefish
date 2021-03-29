@@ -926,7 +926,7 @@ void GraphicalSimulationApp::StartSimulation()
     
     GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData();
     data->app = this;
-    data->drawMutex = glPipeline->getDrawingQueueMutex();
+    data->drawingQueueMutex = glPipeline->getDrawingQueueMutex();
     simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
 }
 
@@ -936,7 +936,7 @@ void GraphicalSimulationApp::ResumeSimulation()
     
     GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData();
     data->app = this;
-    data->drawMutex = glPipeline->getDrawingQueueMutex();
+    data->drawingQueueMutex = glPipeline->getDrawingQueueMutex();
     simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
 }
 
@@ -1019,9 +1019,9 @@ int GraphicalSimulationApp::RunSimulation(void* data)
         sim->AdvanceSimulation();
         if(stdata->app->getGLPipeline()->isDrawingQueueEmpty())
         {
-            SDL_LockMutex(stdata->drawMutex);
+            SDL_LockMutex(stdata->drawingQueueMutex);
             sim->UpdateDrawingQueue();
-            SDL_UnlockMutex(stdata->drawMutex);
+            SDL_UnlockMutex(stdata->drawingQueueMutex);
         }
     }
     

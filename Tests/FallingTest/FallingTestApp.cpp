@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestApp.h"
@@ -41,16 +41,15 @@ void FallingTestApp::DoHUD()
     slider.owner = 1;
     slider.item = 0;
     getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
-    /*
+    
     sf::Uid plot;
     plot.owner = 1;
     plot.item = 1;
     std::vector<unsigned short> dims;
-    dims.push_back(0);
-    dims.push_back(1);
     dims.push_back(2);
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("IMU"), dims, "RPY");
-    
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Odom"), dims, "Height");
+
+    /*
     dims.clear();
     dims.push_back(0);
     plot.item = 2;

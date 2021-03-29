@@ -84,6 +84,12 @@ namespace sf
         //! A method that blits the screen FBO to the main framebuffer.
         void DrawDisplay();
         
+        //! A method that clears the drawing queue.
+        void PurgeDrawingQueue();
+
+        //! A method that clears the drawing queue for selected objects.
+        void PurgeSelectedDrawingQueue();
+
         //! A method that informs if the drawing queue is empty.
         bool isDrawingQueueEmpty();
         

@@ -43,12 +43,13 @@ namespace sf
          \param physicsFilename a path to the 3d model used for physics computation (collisions, fluid dynamics)
          \param physicsScale a scale factor to be used when reading the mesh file
          \param physicsOrigin a pose of the mesh with respect to the body origin frame
+         \param convexHull a flag determining if the physics mesh should be treated as convex (faster collision)
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
         Obstacle(std::string uniqueName,
                  std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                 std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
+                 std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
                  std::string material, std::string look = "");
         
         //! A constructor building an obstacle based on a mesh file.
@@ -57,10 +58,11 @@ namespace sf
          \param modelFilename a path to the 3d model used for both physics and rendering
          \param scale a scale factor to be used when reading the mesh file
          \param origin a pose of the mesh with respect to the body origin frame
+         \param convexHull a flag determining if the physics mesh should be treated as convex (faster collision)
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, std::string material, std::string look = "");
+        Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string material, std::string look = "");
         
         //! A constructor building a spherical obstacle.
         /*!

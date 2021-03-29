@@ -72,7 +72,7 @@ SolidType Sphere::getSolidType()
 
 btCollisionShape* Sphere::BuildCollisionShape()
 {
-    return new btSphereShape(r);
+    return new btSphereShape(r); //Note: Entire radius is a collision margin.
 }
 
 }

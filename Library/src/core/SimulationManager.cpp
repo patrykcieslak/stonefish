@@ -678,17 +678,17 @@ void SimulationManager::InitializeSolver()
 	
     //Quality/stability
     dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.25);  //non-contact constraint error reduction //0.25
-    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(0.75); //contact constraint error reduction //0.75
-    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.5); //friction constraint error reduction //0.5
-    dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations
+    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.1); //non-contact constraint Baumgarte factor //0.25
+    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(10)/getStepsPerSecond(); //contact constraint Baumgarte factor //0.75
+    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.1); //friction constraint Baumgarte factor //0.5
+    dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations //100
     dynamicsWorld->getSolverInfo().m_sor = Scalar(1.); //not used
     dynamicsWorld->getSolverInfo().m_maxErrorReduction = Scalar(0.); //not used
     
     //Collision
     dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = Scalar(0.0); //value close to zero needed for accurate friction // -0.001
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = Scalar(1.0); //error reduction for rigid body angular velocity //1.0
+    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = Scalar(-COLLISION_MARGIN); //value close to zero needed for accurate friction // -0.001
+    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = Scalar(0.1); //rigid body angular velocity Baumgarte factor //1.0
     dynamicsWorld->getDispatchInfo().m_useContinuous = false;
     dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = Scalar(0.0);
     dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
@@ -699,10 +699,10 @@ void SimulationManager::InitializeSolver()
     
     //Unrealistic components
     dynamicsWorld->getSolverInfo().m_globalCfm = Scalar(0.); //global constraint force mixing factor
+    dynamicsWorld->getSolverInfo().m_frictionCFM = Scalar(0.); //friction constraint force mixing factor
     dynamicsWorld->getSolverInfo().m_damping = Scalar(0.); //global damping
     dynamicsWorld->getSolverInfo().m_friction = Scalar(0.); //global friction
     dynamicsWorld->getSolverInfo().m_restitution = Scalar(0.); // global restitution
-    dynamicsWorld->getSolverInfo().m_frictionCFM = Scalar(0.); //friction constraint force mixing factor
     dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = Scalar(1e30); //single axis rolling velocity threshold
     dynamicsWorld->getSolverInfo().m_linearSlop = Scalar(0.); //position bias
     
@@ -999,7 +999,7 @@ void SimulationManager::UpdateDrawingQueue()
 {
     //Build new drawing queue
     OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
-    
+ 
     //Solids, manipulators, systems....
     for(size_t i=0; i<entities.size(); ++i)
         glPipeline->AddToDrawingQueue(entities[i]->Render());
@@ -1172,8 +1172,8 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     cp.m_combinedFriction = (f.fStatic - f.fDynamic)/(sigma * slipVel.length2() + Scalar(1)) + f.fDynamic;
     
     //Rolling friction not possible to generalize - needs special treatment
-    cp.m_combinedRollingFriction = Scalar(0.0);
-    cp.m_combinedSpinningFriction = Scalar(0.0);
+    cp.m_combinedRollingFriction = Scalar(0);
+    cp.m_combinedSpinningFriction = Scalar(0);
     
     //Save user data
     ContactInfo* cInfo = new ContactInfo();

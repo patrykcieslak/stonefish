@@ -34,7 +34,7 @@ namespace sf
 
 Obstacle::Obstacle(std::string uniqueName,
          std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-         std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
+         std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
          std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
@@ -50,36 +50,50 @@ Obstacle::Obstacle(std::string uniqueName,
         
     graObjectId = -1;
 
-    Scalar* vertices = new Scalar[phyMesh->getNumOfVertices() * 3];
-    int* indices = new int[phyMesh->faces.size()*3];
-    
-    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+    //Buidling collision shape
+    if(convexHull) // Convex approximation
     {
-        glm::vec3 pos = phyMesh->getVertexPos(i);
-        vertices[i*3+0] = pos.x;
-        vertices[i*3+1] = pos.y;
-        vertices[i*3+2] = pos.z;
+        btConvexHullShape* shape = new btConvexHullShape();
+        for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+        {
+            glm::vec3 pos = phyMesh->getVertexPos(i);
+            Vector3 v(pos.x, pos.y, pos.z);
+            shape->addPoint(v);
+        }
+        //shape->optimizeConvexHull();
+        shape->setMargin(0);
+        BuildRigidBody(shape);    
     }
-    
-    for(size_t i=0; i<phyMesh->faces.size(); ++i)
+    else // Non-convex (arbitrary triangle mesh)
     {
-        indices[i*3+0] = phyMesh->faces[i].vertexID[0];
-        indices[i*3+1] = phyMesh->faces[i].vertexID[1];
-        indices[i*3+2] = phyMesh->faces[i].vertexID[2];
+        Scalar* vertices = new Scalar[phyMesh->getNumOfVertices() * 3];
+        int* indices = new int[phyMesh->faces.size()*3];
+        
+        for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+        {
+            glm::vec3 pos = phyMesh->getVertexPos(i);
+            vertices[i*3+0] = pos.x;
+            vertices[i*3+1] = pos.y;
+            vertices[i*3+2] = pos.z;
+        }
+        
+        for(size_t i=0; i<phyMesh->faces.size(); ++i)
+        {
+            indices[i*3+0] = phyMesh->faces[i].vertexID[0];
+            indices[i*3+1] = phyMesh->faces[i].vertexID[1];
+            indices[i*3+2] = phyMesh->faces[i].vertexID[2];
+        }
+        
+        btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray((int)phyMesh->faces.size(), indices, 3*sizeof(int),
+                                                                                (int)phyMesh->getNumOfVertices(), vertices, 3*sizeof(Scalar));
+        btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
+        shape->setMargin(0);
+        BuildRigidBody(shape);
     }
-    
-    btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray((int)phyMesh->faces.size(), indices, 3*sizeof(int),
-                                                                               (int)phyMesh->getNumOfVertices(), vertices, 3*sizeof(Scalar));
-    btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
-    BuildRigidBody(shape);
-    
-    //delete[] vertices;
-    //delete[] indices;
-    //delete triangleArray;
 }
     
-Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, std::string material, std::string look)
-    : Obstacle(uniqueName, modelFilename, scale, origin, "", scale, origin, material, look)
+Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string material, std::string look)
+    : Obstacle(uniqueName, modelFilename, scale, origin, "", scale, origin, convexHull, material, look)
 {
 }
 
@@ -102,6 +116,7 @@ Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string ma
 	graObjectId = -1;
     
     btBoxShape* shape = new btBoxShape(halfExtents);
+    shape->setMargin(COLLISION_MARGIN);
     BuildRigidBody(shape);
 }
 
@@ -113,6 +128,7 @@ Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinde
     graObjectId = -1;
     
     btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
+    shape->setMargin(COLLISION_MARGIN);
     BuildRigidBody(shape);
 }
     

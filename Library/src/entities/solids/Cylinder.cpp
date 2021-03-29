@@ -79,7 +79,9 @@ SolidType Cylinder::getSolidType()
 
 btCollisionShape* Cylinder::BuildCollisionShape()
 {
-    return new btCylinderShapeZ(Vector3(r, r, halfHeight));
+    btCollisionShape* cyl = new btCylinderShapeZ(Vector3(r, r, halfHeight));
+    cyl->setMargin(COLLISION_MARGIN);
+    return cyl;
 }
 
 }

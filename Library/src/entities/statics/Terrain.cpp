@@ -79,6 +79,7 @@ Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar sca
     btHeightfieldTerrainShape* shape = new btHeightfieldTerrainShape(w, h, heightfield, Scalar(1), Scalar(0), maxHeight, 2, PHY_FLOAT, false);
     shape->setLocalScaling(Vector3(scaleX, scaleY, 1.0));
     shape->setUseDiamondSubdivision(true);
+    shape->setMargin(0);
     BuildRigidBody(shape);
 }
 

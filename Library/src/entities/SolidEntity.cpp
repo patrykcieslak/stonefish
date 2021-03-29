@@ -969,18 +969,13 @@ void SolidEntity::BuildRigidBody()
         {
             colShape = (btCompoundShape*)colShape0;
             for(int i=0; i < colShape->getNumChildShapes(); ++i)
-            {
-                colShape->getChildShape(i)->setMargin(Scalar(0));
                 colShape->updateChildTransform(i, T_CG2C * colShape->getChildTransform(i), true);
-            }
         }
         else //For other shapes, create compound shape which allow for the shift against gravity centre
         {
             colShape = new btCompoundShape();
-            colShape0->setMargin(Scalar(0));
             colShape->addChildShape(T_CG2C, colShape0);
         }
-        colShape->setMargin(Scalar(0));
         
         //Construct Bullet rigid body
         Scalar M = getAugmentedMass();
@@ -998,6 +993,7 @@ void SolidEntity::BuildRigidBody()
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
+        //rigidBody->setContactProcessingThreshold(0.002);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
         

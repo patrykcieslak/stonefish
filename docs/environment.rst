@@ -173,7 +173,7 @@ In the XML syntax the plane does not have any additional parameters. It is only 
     <static name="Floor" type="plane">
         <material name="Steel"/>
         <look name="Yellow"/>
-        <world_transform xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0">
+        <world_transform xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
     </static>
 
 The same can be achieved in code:
@@ -216,7 +216,7 @@ In case of the **parameteric solids** the specific definitions are reduced to th
 
     Box definition has one special functionality. It is possible to choose from 3 automatically generated texture coordinate schemes: scheme 0 (default) assumes that the texture is in a cubemap format and applies it to the box faces accordingly, scheme 1 applies the whole texture to each face of the box, and scheme 2 tiles the whole texture along each of the box faces, based on face dimensions. In the XML syntax the ``<look>`` tag has to be augmented to include attribute ``uv_mode="#"`` and in the C++ code the mode can be passed as the last argument in the object constructor.
    
-Definition of arbitrary **triangle meshes** ``type="model"``, loaded from geometry files, is more complex. Their geometry can be specified separately for the physics computations ``<physical> .. </physical>`` and the rendering ``<visual> ... </visual>``. The physics mesh should be optimised to improve collision performance.  If only physics geometry is specified, it is also used for rendering. Moreover, the physics mesh is used when simulating operation of :ref:`link sensors <link-sensors>` and the graphics mesh is used for the :ref:`vision sensors <vision-sensors>`. For more details on preparing mesh data check :ref:`preparing-geometry`.
+Definition of arbitrary **triangle meshes** ``type="model"``, loaded from geometry files, is more complex. Their geometry can be specified separately for the physics computations ``<physical> .. </physical>`` and the rendering ``<visual> ... </visual>``. If no visual geometry is specified, the physical geometry is used for rendering. Moreover, the physical mesh is used when simulating operation of the :ref:`link sensors <link-sensors>` while the visual mesh is used by the :ref:`vision sensors <vision-sensors>`. Finally, the collision response, which depends on the physical mesh, can be significantly improved, by enabling the convex hull approximation ``<mesh ... convex="true"/>``. Without this option, the collision mesh is treated as a concave triangle mesh, which severly impacts collision performance and in most cases can be avoided, by partitioning the concave body into multiple convex bodies. For more details on preparing mesh data check :ref:`preparing-geometry`.
 
 An example of creating obstacles, including triangle meshes, is presented below:
 
@@ -238,7 +238,7 @@ An example of creating obstacles, including triangle meshes, is presented below:
 
     <static name="Canyon" type="model">
         <physical>
-            <mesh filename="canyon_phy.obj" scale="1.0"/>
+            <mesh filename="canyon_phy.obj" scale="1.0" convex="true"/>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/> 
         </physical>
         <visual>
@@ -260,7 +260,7 @@ The same can be achieved using the following code:
     AddStaticEntity(ball, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(2.0, 0.0, 5.0)));
     sf::Obstacle* wall = new sf::Obstacle("Wall", sf::Vector3(10.0, 0.2, 5.0), "Steel", "Gray");
     AddStaticEntity(wall, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 5.0, 2.0)));
-    sf::Obstacle* canyon = new sf::Obstacle("Canyon", sf::GetDataPath() + "canyon_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "canyon_phy.obj", 1.0, sf::I4(), "Rock", "Gray");
+    sf::Obstacle* canyon = new sf::Obstacle("Canyon", sf::GetDataPath() + "canyon_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "canyon_phy.obj", 1.0, sf::I4(), true, "Rock", "Gray");
     AddStaticEntity(canyon, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 10.0)));
 
 .. note::

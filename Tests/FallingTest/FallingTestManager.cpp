@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestManager.h"
@@ -39,10 +39,11 @@
 #include <graphics/OpenGLContent.h>
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/RotaryEncoder.h>
+#include <sensors/scalar/Odometry.h>
 #include <actuators/Light.h>
 
 FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) 
-    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
 }
 
@@ -84,7 +85,7 @@ void FallingTestManager::BuildScenario()
     
     //---Robot---
     //Mechanical parts
-    sf::Polyhedron* obj = new sf::Polyhedron("Base", sf::GetDataPath() + "sphere_R=1.obj", 0.1, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0,0,0)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    sf::Sphere* obj = new sf::Sphere("Base", 0.1, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
     sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "");
     sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
     
@@ -110,10 +111,17 @@ void FallingTestManager::BuildScenario()
     
     AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));
     
-    //---Collision test
-    /*sf::Obstacle* funnel = new sf::Obstacle("Funnel", sf::GetDataPath() + "funnel.obj", 1.0, sf::I4(), "Steel", "Green");
-    AddStaticEntity(funnel, sf::Transform(sf::IQ(), sf::Vector3(1.0, 1.0, -0.5)));
+    //Collisions tests
+    sf::Sphere* sph = new sf::Sphere("Sphere", 0.1, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(1.0,5.0,-2.0)));
+    
+    sf::Cylinder* cyl = new sf::Cylinder("Cyl1", 0.2,0.5,sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    AddSolidEntity(cyl, sf::Transform(sf::Quaternion(0.0,0.0,1.5), sf::Vector3(1.0,2.2,-3.0)));
 
-    sf::Polyhedron* obj2 = new sf::Polyhedron("Cylinder", sf::GetDataPath() + "sphere_R=1.obj", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
-    AddSolidEntity(obj2, sf::Transform(sf::IQ(), sf::Vector3(1.0, 1.4, -2.0)));*/
+    sf::Polyhedron* poly1 = new sf::Polyhedron("Poly1", sf::GetDataPath() + "sphere_R=1.obj", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    AddSolidEntity(poly1, sf::Transform(sf::IQ(), sf::Vector3(1.0, 2.0, -2.0)));
+
+    sf::Odometry* odom = new sf::Odometry("Odom", -1, 0);
+    odom->AttachToSolid(sph, sf::I4());
+    AddSensor(odom);
 }

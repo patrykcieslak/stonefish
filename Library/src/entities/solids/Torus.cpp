@@ -77,8 +77,10 @@ SolidType Torus::getSolidType()
 }
 
 btCollisionShape* Torus::BuildCollisionShape()
-{
-    return new TorusShape(MR, mR);
+{   
+    btCollisionShape* torus = new TorusShape(MR, mR);
+    torus->setMargin(COLLISION_MARGIN);
+    return torus;
 }
 
 }

@@ -809,8 +809,9 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     else if(typestr == "model")
     {
         const char* phyMesh = nullptr;
-        Scalar phyScale;
+        Scalar phyScale(1);
         Transform phyOrigin;
+        bool convex = false;
         
         if((item = element->FirstChildElement("physical")) == nullptr)
         {
@@ -823,8 +824,8 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             log.Print(MessageType::ERROR, "Physical mesh of static body '%s' not properly defined!", objectName.c_str());
             return false;
         }
-        if(item->QueryAttribute("scale", &phyScale) != XML_SUCCESS)
-            phyScale = Scalar(1);
+        item->QueryAttribute("scale", &phyScale);
+        item->QueryAttribute("convex", &convex); 
         if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, phyOrigin))
         {
             log.Print(MessageType::ERROR, "Physical mesh of static body '%s' not properly defined!", objectName.c_str());
@@ -834,7 +835,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         if((item = element->FirstChildElement("visual")) != nullptr)
         {
             const char* graMesh = nullptr;
-            Scalar graScale;
+            Scalar graScale(1);
             Transform graOrigin;
             
             if((item = item->FirstChildElement("mesh")) == nullptr
@@ -843,18 +844,17 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
                 log.Print(MessageType::ERROR, "Visual mesh of static body '%s' not properly defined!", objectName.c_str());
                 return false;
             }
-            if(item->QueryAttribute("scale", &graScale) != XML_SUCCESS)
-                graScale = Scalar(1);
+            item->QueryAttribute("scale", &graScale);
             if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
             {
                 log.Print(MessageType::ERROR, "Visual mesh of static body '%s' not properly defined!", objectName.c_str());
                 return false;
             }
-            object = new Obstacle(objectName, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look));
+            object = new Obstacle(objectName, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, convex, std::string(mat), std::string(look));
         }
         else
         {
-            object = new Obstacle(objectName, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look));
+            object = new Obstacle(objectName, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, convex, std::string(mat), std::string(look));
         }
     }
     else if(typestr == "plane")

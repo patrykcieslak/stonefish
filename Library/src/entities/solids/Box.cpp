@@ -81,7 +81,9 @@ SolidType Box::getSolidType()
 
 btCollisionShape* Box::BuildCollisionShape()
 {
-    return new btBoxShape(halfExtents);
+    btCollisionShape* box = new btBoxShape(halfExtents);
+    box->setMargin(COLLISION_MARGIN);
+    return box;
 }
 
 }

@@ -59,6 +59,7 @@ namespace sf
     
     //Various constants
     const Scalar SOUND_VELOCITY_WATER = Scalar(1531);
+    const Scalar COLLISION_MARGIN = Scalar(0.001);
 }
 
 #endif
