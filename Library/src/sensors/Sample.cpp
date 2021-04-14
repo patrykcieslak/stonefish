@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sample.h"
@@ -52,12 +52,12 @@ Sample::~Sample()
     delete [] data;
 }
 
-Scalar Sample::getTimestamp()
+Scalar Sample::getTimestamp() const
 {
     return timestamp;
 }
     
-unsigned short Sample::getNumOfDimensions()
+unsigned short Sample::getNumOfDimensions() const
 {
     return nDim;
 }

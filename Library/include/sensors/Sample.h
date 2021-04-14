@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sample__
@@ -51,7 +51,7 @@ namespace sf
         ~Sample();
         
         //! A method returning the timestamp of the sample.
-        Scalar getTimestamp();
+        Scalar getTimestamp() const;
         
         //! A method returning a value of the single dimension of the measurement.
         /*!
@@ -64,7 +64,7 @@ namespace sf
         std::vector<Scalar> getData() const;
         
         //! A method returning the number of dimensions of the measurement.
-        unsigned short getNumOfDimensions();
+        unsigned short getNumOfDimensions() const;
         
         //! A method returning a pointer to the sample data.
         Scalar* getDataPointer();
