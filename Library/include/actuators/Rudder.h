@@ -41,10 +41,11 @@ namespace sf
          \param area the area of the rudder [m^2]
          \param liftCoeff the lift coefficient
          \param dragCoeff the drag coefficient
+         \param stallAngle the angle of attack above which lift ceases to be generated [rad]
          \param maxAngle the maximum angle of the rudder [rad]
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in left-handed rotation)
         */
-        Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar maxAngle, bool inverted = false);
+        Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, Scalar maxAngle, bool inverted = false);
         
         //! A destructor.
         ~Rudder();
@@ -78,6 +79,7 @@ namespace sf
         Scalar dragCoeff;
         Scalar liftCoeff;
         Scalar area;
+        Scalar stallAngle;
         Scalar maxAngle;
         SolidEntity* rudder;
         bool inv;

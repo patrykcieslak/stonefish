@@ -2311,6 +2311,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         const char* look = nullptr;
 
         Scalar area, dragCoeff, liftCoeff, maxAngle, rudderScale;
+        Scalar stallAngle = 0.25*M_PI;
         bool inverted = false;
         
         if((item = element->FirstChildElement("specs")) == nullptr 
@@ -2323,6 +2324,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             return nullptr;
         }
         item->QueryAttribute("inverted", &inverted); //Optional
+        item->QueryAttribute("stall_angle", &stallAngle); //Optional
 
         if((item = element->FirstChildElement("visual")) == nullptr)
         {
@@ -2357,7 +2359,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
 
         Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), BodyPhysicsType::AERODYNAMIC, lookStr);
-        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, maxAngle, inverted);
+        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted);
         return r;
     }
     else if(typeStr == "vbs")

@@ -34,11 +34,12 @@
 namespace sf
 {
 
-Rudder::Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar maxAngle, bool inverted) : LinkActuator(uniqueName)
+Rudder::Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, Scalar maxAngle, bool inverted) : LinkActuator(uniqueName)
 {
     this->dragCoeff = dragCoeff;
     this->liftCoeff = liftCoeff;
     this->area = area;
+    this->stallAngle = stallAngle;
     this->maxAngle = maxAngle;
     inv = inverted;
 
@@ -90,7 +91,11 @@ void Rudder::Update(Scalar dt)
         Transform rudderTrans = attach->getOTransform() * o2a * Transform(rudderRot);
         Vector3 relPos = rudderTrans.getOrigin() - solidTrans.getOrigin();
 
-        Vector3 velocity = rudderTrans.getBasis().transpose()*attach->getLinearVelocityInLocalPoint(relPos);
+        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+
+        Vector3 absVel = attach->getLinearVelocityInLocalPoint(relPos);
+        Vector3 fluidVel = ocn->GetFluidVelocity(rudderTrans.getOrigin());
+        Vector3 velocity = rudderTrans.getBasis().transpose()*(absVel - fluidVel);
 
         Scalar angle = atan2(velocity.getY(), velocity.getX());
 
@@ -99,8 +104,7 @@ void Rudder::Update(Scalar dt)
         {
             angle = atan2(-velocity.getY(), -velocity.getX());
         }
-        
-        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+
         if(ocn->IsInsideFluid(rudderTrans.getOrigin()) && !velocity.isZero())
         {
             // Calculate quadratic approximations for lift and drag
@@ -135,6 +139,12 @@ void Rudder::Update(Scalar dt)
             // liftV = (-vy, vx, 0)
             liftV = Vector3(0., 0., -1.).cross(velocity);
             liftV.normalize() *= lift;
+
+            // if angle greater than stall -> no lift
+            if (fabs(angle) > stallAngle)
+            {
+                liftV = Vector3(0, 0, 0);
+            }
 
             // Torque vectors
             Vector3 dragT = relPos.cross(rudderTrans.getBasis() * dragV);
