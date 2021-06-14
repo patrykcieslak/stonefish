@@ -66,6 +66,7 @@
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
+#include "actuators/Rudder.h"
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
 #include "comms/AcousticModem.h"
@@ -2022,6 +2023,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         //Link actuators
         case ActuatorType::THRUSTER:
         case ActuatorType::PROPELLER:
+        case ActuatorType::RUDDER:
         case ActuatorType::VBS:
         {
             const char* linkName = nullptr;
@@ -2301,6 +2303,64 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             return p;
         }
+    }
+    else if(typeStr == "rudder")
+    {
+        const char* rudderFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+
+        Scalar area, dragCoeff, liftCoeff, maxAngle, rudderScale;
+        Scalar stallAngle = 0.25*M_PI;
+        bool inverted = false;
+        
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("drag_coeff", &dragCoeff) != XML_SUCCESS
+            || item->QueryAttribute("lift_coeff", &liftCoeff) != XML_SUCCESS
+            || item->QueryAttribute("max_angle", &maxAngle) != XML_SUCCESS
+            || item->QueryAttribute("area", &area) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of actuator '%s' not properly defined!", actuatorName.c_str());
+            return nullptr;
+        }
+        item->QueryAttribute("inverted", &inverted); //Optional
+        item->QueryAttribute("stall_angle", &stallAngle); //Optional
+
+        if((item = element->FirstChildElement("visual")) == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Visual definition of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &rudderFile) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Visual mesh path of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        if(item2->QueryAttribute("scale", &rudderScale) != XML_SUCCESS)
+            rudderScale = Scalar(1);
+        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Visual material of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        std::string lookStr = "";
+        if((item2 = item->FirstChildElement("look")) != nullptr)
+        {
+            item2->QueryStringAttribute("name", &look);
+            lookStr = std::string(look);
+        }
+
+        Transform graOrigin = I4();
+        if((item2 = item->FirstChildElement("origin")) != nullptr && !ParseTransform(item2, graOrigin))
+        {
+            log.Print(MessageType::ERROR, "Visual origin of actuator '%s' is not properly defined!", actuatorName.c_str());
+            return nullptr;
+        }
+
+        Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), BodyPhysicsType::AERODYNAMIC, lookStr);
+        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted);
+        return r;
     }
     else if(typeStr == "vbs")
     {
