@@ -106,7 +106,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
         viewFovAcc += viewFov;
     }
     
-    //Output shader: sonar range data
+    //Output shader: sonar image data
     outputTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(nBeams, nBins, 1), 
                                                   GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     outputTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(nBeams, nBins, 1), 

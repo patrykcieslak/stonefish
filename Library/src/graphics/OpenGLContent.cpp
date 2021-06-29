@@ -1393,6 +1393,10 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvScale)
     mesh->ComputeFaceTangent(0, T);
     for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
         mesh->vertices[i].tangent = T;
+    
+    int n = btClamped((int)roundf(log2f(halfExtents/50.f)), 0, 8);
+    for(int i=0; i<n; ++i)
+        Subdivide(mesh, false);
 
     return mesh;
 }
@@ -2380,13 +2384,16 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
             glm::vec3 edge1 = m->vertices[secondID].pos;
             glm::vec3 edge0n = m->vertices[firstID].normal;
             glm::vec3 edge1n = m->vertices[secondID].normal;
+            glm::vec3 edge0t = m->vertices[firstID].tangent;
+            glm::vec3 edge1t = m->vertices[secondID].tangent;
             glm::vec2 edge0uv = m->vertices[firstID].uv;
             glm::vec2 edge1uv = m->vertices[secondID].uv;
             
             TexturableVertex vt;
-            vt.pos = (edge0 + edge1)/(GLfloat)2;
+            vt.pos = (edge0 + edge1)/2.f;
             vt.normal = glm::normalize(edge0n + edge1n);
-            vt.uv = (edge0uv + edge1uv)/(GLfloat)2;
+            vt.tangent = glm::normalize(edge0t + edge1t);
+            vt.uv = (edge0uv + edge1uv)/2.f;
             m->vertices.push_back(vt);
         }
         else
@@ -2398,7 +2405,7 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
             glm::vec3 edge1n = m->vertices[secondID].normal;
             
             Vertex vt;
-            vt.pos = (edge0 + edge1)/(GLfloat)2;
+            vt.pos = (edge0 + edge1)/2.f;
             vt.normal = glm::normalize(edge0n + edge1n);
             m->vertices.push_back(vt);
         }
