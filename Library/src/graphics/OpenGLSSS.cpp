@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/06/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSSS.h"
@@ -386,9 +386,12 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
         else
         {
             int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-            OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(dispX, windowHeight-viewportHeight*dispScale-dispY, viewportWidth*dispScale, viewportHeight*dispScale);
-            content->DrawTexturedSAQ(displayTex);
+            int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+            OpenGLState::BindFramebuffer(destinationFBO);    
+            OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
+            OpenGLState::DisableCullFace();
+            content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
+            OpenGLState::EnableCullFace();
             OpenGLState::BindFramebuffer(0);   
         }
     }

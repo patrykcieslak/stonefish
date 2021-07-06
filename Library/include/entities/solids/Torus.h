@@ -19,8 +19,8 @@
 //  Torus.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 3/5/14.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 30/01/13.
+//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Torus__
@@ -37,17 +37,16 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the torus
+         \param phy the specific settings of the physics computation for the body
          \param majorRadius a major radius of the torus
          \param minorRadius a minor radius of the torus
          \param origin a transformation of the physical mesh (graphical is the same for torus)
          \param material the name of the material the torus is made of
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the torus walls, if positive the torus is treated as shell
-         \param isBuoyant defines if the torus should be subject to buoyancy force
          */
-        Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
-              std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Torus(std::string uniqueName, BodyPhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
+              std::string material, std::string look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
         SolidType getSolidType();

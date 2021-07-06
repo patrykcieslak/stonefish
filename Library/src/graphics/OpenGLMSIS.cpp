@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLMSIS.h"
@@ -391,10 +391,13 @@ void OpenGLMSIS::DrawLDR(GLuint destinationFBO, bool updated)
     {
         OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
         int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
-        OpenGLState::Viewport(dispX, windowHeight-viewportHeight*dispScale-dispY, viewportWidth*dispScale, viewportHeight*dispScale);
-        content->DrawTexturedSAQ(displayTex);
-        OpenGLState::BindFramebuffer(0);
+        OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
+        OpenGLState::DisableCullFace();
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
+        OpenGLState::EnableCullFace();
+        OpenGLState::BindFramebuffer(0);   
     }
     
     //Copy texture to sonar buffer

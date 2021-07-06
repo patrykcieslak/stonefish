@@ -30,8 +30,8 @@
 namespace sf
 {
 
-Sphere::Sphere(std::string uniqueName, Scalar radius, const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
-    : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+Sphere::Sphere(std::string uniqueName, BodyPhysicsSettings phy, Scalar radius, const Transform& origin, std::string material, std::string look, Scalar thickness)
+    : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     r = radius;
     T_O2G = T_O2C = T_O2H = origin;

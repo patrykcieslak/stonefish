@@ -47,7 +47,7 @@ int main(int argc, const char * argv[])
     
     FlyingTestManager* simulationManager = new FlyingTestManager(200.0);
     sf::GraphicalSimulationApp app("FlyingTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
-    app.Run(false);
+    app.Run();
     
     return 0;
 }

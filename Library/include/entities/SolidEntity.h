@@ -19,8 +19,8 @@
 //  SolidEntity.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 12/29/12.
-//  Copyright(c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 29/12/12.
+//  Copyright(c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SolidEntity__
@@ -41,13 +41,25 @@ namespace sf
     enum class BodyFluidPosition {INSIDE, OUTSIDE, CROSSING_SURFACE};
     //! An enum defining what is the medium in which the body moves (affects which forces are computed, needed because it is not possible to change mass during simulation).
     /*!
+     DISABLED -> no computation of physics, zero mass and inertia
      SURFACE -> no aerodynamics or hydrodynamics
      FLOATING -> hydrodynamics with buoyancy
      SUBMERGED -> hydrodynamics with buoyancy and added mass
      AERODYNAMIC -> aerodynamics
     */
-    enum class BodyPhysicsType {SURFACE, FLOATING, SUBMERGED, AERODYNAMIC};
-    
+    enum class BodyPhysicsMode {DISABLED, SURFACE, FLOATING, SUBMERGED, AERODYNAMIC};
+    //! A structure defining the physics computation settings for the body.
+    struct BodyPhysicsSettings
+    {
+        BodyPhysicsMode mode;
+        bool collisions;
+        bool buoyancy;
+
+        BodyPhysicsSettings() : mode(BodyPhysicsMode::SUBMERGED), collisions(true), buoyancy(true)
+        {
+        }
+    };
+
     struct HydrodynamicsSettings;
     class Ocean;
     class Atmosphere;
@@ -59,13 +71,12 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the body
+         \param phy the specific settings of the physics computation for the body
          \param material the name of the material the body is made of
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param look the name of the graphical material used for rendering
-         \param thickness body wall thickness, if provided the body is considered a shell
-         \param isBuoyant a flag to enable computation of buoyancy force
+         \param thickness if positive the body is considered a shell instead of a solid
          */
-        SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant);
+        SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::string material, std::string look, Scalar thickness);
         
         //! A destructor.
         virtual ~SolidEntity();
@@ -325,7 +336,7 @@ namespace sf
         bool isBuoyant() const;
         
         //! A method informing what kind of physics computations are performed for the body.
-        BodyPhysicsType getBodyPhysicsType() const;
+        BodyPhysicsMode getBodyPhysicsMode() const;
         
         //Rendering
         //! A method used to build the graphical representation of the body.
@@ -387,8 +398,7 @@ namespace sf
         std::vector<Scalar> fdApproxParams;
         Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame
         
-        BodyPhysicsType phyType;
-        bool buoyant;
+        BodyPhysicsSettings phy;
         Vector3 Fb;
         Vector3 Tb;
         Vector3 Fdl;

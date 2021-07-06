@@ -30,8 +30,8 @@
 namespace sf
 {
 
-Box::Box(std::string uniqueName, const Vector3& dimensions, const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
-         : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness)
+         : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     halfExtents = dimensions * Scalar(0.5);
     T_O2G = T_O2C = T_O2H = origin;

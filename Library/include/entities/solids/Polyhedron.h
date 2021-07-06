@@ -19,8 +19,8 @@
 //  Polyhedron.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 29/12/12.
+//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Polyhedron__
@@ -37,6 +37,7 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the body
+         \param phy the specific settings of the physics computation for the body
          \param graphicsFilename a path to the 3d model used for rendering
          \param graphicsScale a scale factor to be used when reading the mesh file
          \param graphicsOrigin a pose of the mesh with respect to the body origin frame
@@ -44,34 +45,29 @@ namespace sf
          \param physicsScale a scale factor to be used when reading the mesh file
          \param physicsOrigin a pose of the mesh with respect to the body origin frame
          \param material the name of the material the body is made of
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
-         \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
-        Polyhedron(std::string uniqueName,
+        Polyhedron(std::string uniqueName, BodyPhysicsSettings phy, 
                    std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                    std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                   std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), 
-                   bool isBuoyant = true, GeometryApproxType approx =  GeometryApproxType::AUTO);
+                   std::string material, std::string look, Scalar thickness = Scalar(-1), GeometryApproxType approx = GeometryApproxType::AUTO);
         
         //! A constructor.
         /*!
          \param uniqueName a name for the body
+         \param phy the specific settings of the physics computation for the body
          \param modelFilename a path to the 3d model used for both physics and rendering
          \param scale a scale factor to be used when reading the mesh file
          \param origin a pose of the mesh with respect to the body origin frame
          \param material the name of the material the body is made of
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
-         \param isBuoyant defines if buoyancy forces should be calculated for the body
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
-        Polyhedron(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin,
-                   std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), 
-                   bool isBuoyant = true, GeometryApproxType approx =  GeometryApproxType::AUTO);
+        Polyhedron(std::string uniqueName, BodyPhysicsSettings phy, std::string modelFilename, Scalar scale, const Transform& origin,
+                   std::string material, std::string look, Scalar thickness = Scalar(-1), GeometryApproxType approx =  GeometryApproxType::AUTO);
         
         //! A destructor.
         ~Polyhedron();

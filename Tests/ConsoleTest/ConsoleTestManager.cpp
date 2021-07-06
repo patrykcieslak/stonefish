@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/09/2018.
-//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "ConsoleTestManager.h"
@@ -56,8 +56,11 @@ void ConsoleTestManager::BuildScenario()
     sf::Plane* plane = new sf::Plane("Bottom", 1000.0, "Rock");
     AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
     
-    sf::Sphere* sph1 = new sf::Sphere("Sphere1", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE);
-    sf::Sphere* sph2 = new sf::Sphere("Sphere2", 0.1, sf::I4(), "Rock", sf::BodyPhysicsType::SURFACE);
+    sf::BodyPhysicsSettings phy;
+    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    phy.collisions = true;
+    sf::Sphere* sph1 = new sf::Sphere("Sphere1", phy, 0.1, sf::I4(), "Rock", "");
+    sf::Sphere* sph2 = new sf::Sphere("Sphere2", phy, 0.1, sf::I4(), "Rock", "");
     
     std::vector<sf::SolidEntity*> links(0);
     links.push_back(sph2);

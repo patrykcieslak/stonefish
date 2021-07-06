@@ -32,8 +32,8 @@
 namespace sf
 {
 
-Compound::Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, BodyPhysicsType bpt)
-    : SolidEntity(uniqueName, "", bpt, "", Scalar(-1), true)
+Compound::Compound(std::string uniqueName, BodyPhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin)
+    : SolidEntity(uniqueName, phy, "", "", Scalar(-1))
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
     phyMesh = NULL; // There is no single mesh
@@ -269,7 +269,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 
 void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phyType != BodyPhysicsType::FLOATING && phyType != BodyPhysicsType::SUBMERGED) return;
+    if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
     
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
@@ -404,7 +404,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
 void Compound::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phyType != BodyPhysicsType::AERODYNAMIC) return;
+    if(phy.mode != BodyPhysicsMode::AERODYNAMIC) return;
     
     //Set zero
     Fda.setZero();

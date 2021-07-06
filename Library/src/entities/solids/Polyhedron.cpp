@@ -19,8 +19,8 @@
 //  Polyhedron.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 29/12/12.
+//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Polyhedron.h"
@@ -33,12 +33,11 @@
 namespace sf
 {
 
-Polyhedron::Polyhedron(std::string uniqueName,
+Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy, 
                        std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                        std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                       std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness,
-                       bool isBuoyant, GeometryApproxType approx)
-                        : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+                       std::string material, std::string look, Scalar thickness, GeometryApproxType approx)
+                        : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     //1.Load geometry from file
     graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
@@ -74,10 +73,10 @@ Polyhedron::Polyhedron(std::string uniqueName,
     P_CB = Vector3(0,0,0);
 }
     
-Polyhedron::Polyhedron(std::string uniqueName,
+Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy, 
                        std::string modelFilename, Scalar scale, const Transform& origin,
-                       std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant, GeometryApproxType approx)
-    : Polyhedron(uniqueName, modelFilename, scale, origin, "", scale, origin, material, bpt, look, thickness, isBuoyant, approx)
+                       std::string material, std::string look, Scalar thickness, GeometryApproxType approx)
+                        : Polyhedron(uniqueName, phy, modelFilename, scale, origin, "", scale, origin, material, look, thickness, approx)
 {
 }
 

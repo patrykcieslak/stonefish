@@ -48,7 +48,7 @@ int main(int argc, const char * argv[])
     
     JointsTestManager simulationManager(1000.0);
     sf::GraphicalSimulationApp app("JointTest", std::string(DATA_DIR_PATH), s, h, &simulationManager);
-    app.Run(false);
+    app.Run();
     
     return 0;
 }

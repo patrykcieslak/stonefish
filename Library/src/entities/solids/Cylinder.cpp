@@ -30,8 +30,8 @@
 namespace sf
 {
 
-Cylinder::Cylinder(std::string uniqueName, Scalar radius, Scalar height, const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
-    : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+Cylinder::Cylinder(std::string uniqueName, BodyPhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string material, std::string look, Scalar thickness)
+    : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     r = radius;
     halfHeight = height/Scalar(2);

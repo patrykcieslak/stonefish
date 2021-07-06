@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "SlidingTestManager.h"
@@ -59,8 +59,11 @@ void SlidingTestManager::BuildScenario()
   
     sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), "Ground", "grid", 2);
     AddStaticEntity(ramp, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
-  
-    sf::Box* box = new sf::Box("Box", sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "green");
+
+    sf::BodyPhysicsSettings phy;
+    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    phy.collisions = true;  
+    sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", "green");
     AddSolidEntity(box, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -1.72)));
     
     sf::Odometry* traj = new sf::Odometry("Odometry", -1, 1000);

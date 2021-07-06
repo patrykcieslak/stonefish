@@ -25,9 +25,13 @@
 
 #include "UnderwaterTestApp.h"
 
+#include <actuators/Servo.h>
 #include <actuators/Thruster.h>
 #include <actuators/VariableBuoyancy.h>
 #include <core/Robot.h>
+#include <sensors/scalar/Accelerometer.h>
+#include <sensors/scalar/IMU.h>
+#include <sensors/scalar/DVL.h>
 #include <sensors/vision/FLS.h>
 #include <sensors/vision/SSS.h>
 #include <graphics/IMGUI.h>
@@ -49,9 +53,52 @@ void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
 
+    /*sf::Uid id;
+    id.owner = 10;
+    id.item = 0;
+
+    sf::Servo* srv1 = (sf::Servo*)getSimulationManager()->getActuator("LOLO/Servo1");
+    sf::Servo* srv2 = (sf::Servo*)getSimulationManager()->getActuator("LOLO/Servo2");
+    sf::Scalar sp = getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), srv1->getPosition(), "Servo1");
+    srv1->setDesiredPosition(sp);
+    srv2->setDesiredPosition(sp);
+
+    id.item = 1;
+
+    sf::Thruster* th1 = (sf::Thruster*)getSimulationManager()->getActuator("LOLO/ThrusterSurge1");
+    sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getActuator("LOLO/ThrusterSurge2");
+    sf::Scalar sp2 = getGUI()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th1->getSetpoint(), "Surge");
+    th1->setSetpoint(sp2);
+    th2->setSetpoint(sp2);*/
+    
+    /*
     sf::Uid id;
     id.owner = 10;
     id.item = 0;
+
+    std::vector<unsigned short> dims;
+    dims.push_back(2);
+    dims.push_back(6);
+    //dims.push_back(6);
+    sf::ScalarSensor* dvl = (sf::ScalarSensor*)getSimulationManager()->getSensor("GIRONA500/dvl");
+    getGUI()->DoTimePlot(id, 200, 20, 400, 200, dvl, dims, "Water velocity");
+
+    getSimulationManager()->getOcean()->EnableCurrents();
+*/
+/*
+    std::vector<unsigned short> dims;
+    dims.push_back(6);
+    dims.push_back(7);
+    dims.push_back(8);
+    sf::IMU* imu = (sf::IMU*)getSimulationManager()->getSensor("GIRONA500/imu_filter");
+    getGUI()->DoTimePlot(id, 200, 20, 400, 200, imu, dims, "Acceleration");
+*/
+    /*sf::Accelerometer* acc = (sf::Accelerometer*)getSimulationManager()->getSensor("GIRONA500/acc");
+    dims.push_back(0);
+    dims.push_back(1);
+    dims.push_back(2);
+    getGUI()->DoTimePlot(id, 200, 20, 400, 200, acc, dims, "Acceleration");*/
+
 /*    
     sf::FLS* fls = (sf::FLS*)getSimulationManager()->getSensor("FLS");  //->getRobot("GIRONA500")->getSensor("FLS");
     sf::Scalar range = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(1.0), sf::Scalar(100.0), fls->getRangeMax(), "FLS Range[m]"));
@@ -103,11 +150,11 @@ void UnderwaterTestApp::DoHUD()
     
     //sf::VariableBuoyancy* vbs = (sf::VariableBuoyancy*)getSimulationManager()->getRobot("GIRONA500")->getActuator("VBS");
     //vbs->setFlowRate((getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-0.0005), sf::Scalar(0.0005), vbs->getFlowRate(), "VBS flow rate", 4)));
+    /*id.item = 1;
     
-    
-    /*sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveStern");
-    sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterHeaveBow");
-    sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "ThrusterHeaveStern"));
+    sf::Thruster* th = (sf::Thruster*)getSimulationManager()->getActuator("GIRONA500/ThrusterHeaveStern");
+    sf::Thruster* th2 = (sf::Thruster*)getSimulationManager()->getActuator("GIRONA500/ThrusterHeaveBow");
+    sf::Scalar sp = (getGUI()->DoSlider(id, 180.f, 250.f, 150.f, sf::Scalar(-1), sf::Scalar(1), th->getSetpoint(), "Heave"));
     th->setSetpoint(sp);
     th2->setSetpoint(sp);*/
     

@@ -19,8 +19,8 @@
 //  Torus.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 30/01/13.
+//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Torus.h"
@@ -31,8 +31,8 @@
 namespace sf
 {
 
-Torus::Torus(std::string uniqueName, Scalar majorRadius, Scalar minorRadius, const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
-    : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+Torus::Torus(std::string uniqueName, BodyPhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin, std::string material, std::string look, Scalar thickness)
+    : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     MR = majorRadius;
     mR = minorRadius;

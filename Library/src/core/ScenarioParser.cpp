@@ -1389,8 +1389,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     const char* name = nullptr;
     const char* type = nullptr;
     const char* phyType = nullptr;
-    bool buoyant;
-    BodyPhysicsType ePhyType;
+    BodyPhysicsSettings phy;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
@@ -1404,29 +1403,27 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         log.Print(MessageType::ERROR, "Type of rigid body '%s' missing!", solidName.c_str());
         return false;
     }
-    if(element->QueryStringAttribute("physics", &phyType) != XML_SUCCESS)
-    {
-        ePhyType = BodyPhysicsType::SUBMERGED;
-    }
-    else
+    if(element->QueryStringAttribute("physics", &phyType) == XML_SUCCESS)
     {
         std::string phyTypeStr(phyType);
-        if(phyTypeStr == "surface")
-            ePhyType = BodyPhysicsType::SURFACE;
+        if(phyTypeStr == "disabled")
+            phy.mode = BodyPhysicsMode::DISABLED;
+        else if(phyTypeStr == "surface")
+            phy.mode = BodyPhysicsMode::SURFACE;
         else if(phyTypeStr == "floating")
-            ePhyType = BodyPhysicsType::FLOATING;
+            phy.mode = BodyPhysicsMode::FLOATING;
         else if(phyTypeStr == "submerged")
-            ePhyType = BodyPhysicsType::SUBMERGED;
+            phy.mode = BodyPhysicsMode::SUBMERGED;
         else if(phyTypeStr == "aerodynamic")
-            ePhyType = BodyPhysicsType::AERODYNAMIC;
+            phy.mode = BodyPhysicsMode::AERODYNAMIC;
         else 
         {
             log.Print(MessageType::ERROR, "Incorrect physics type for rigid body '%s'!", solidName.c_str());
             return false;
         }
     }
-    if(element->QueryAttribute("buoyant", &buoyant) != XML_SUCCESS)
-        buoyant = true;
+    element->QueryAttribute("buoyant", &phy.buoyancy);
+    element->QueryAttribute("collisions", &phy.collisions);
     
     std::string typeStr(type);
     
@@ -1451,7 +1448,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             log.Print(MessageType::ERROR, "Incorrect definition of external part's '%s' origin frame, for rigid body '%s'!", part->getName().c_str(), solidName.c_str());
             return false;
         }
-        comp = new Compound(solidName, part, partOrigin, ePhyType);
+        comp = new Compound(solidName, phy, part, partOrigin);
         
         //Iterate through all external parts
         item = item->NextSiblingElement("external_part");
@@ -1562,7 +1559,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             }    
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Box(solidName, dim, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Box(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "cylinder")
         {
@@ -1576,7 +1573,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Cylinder(solidName, radius, height, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Cylinder(solidName, phy, radius, height, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "sphere")
         {
@@ -1589,7 +1586,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Sphere(solidName, radius, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Sphere(solidName, phy, radius, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "torus")
         {
@@ -1603,7 +1600,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Torus(solidName, radiusMaj, radiusMin, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Torus(solidName, phy, radiusMaj, radiusMin, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "wing")
         {
@@ -1627,7 +1624,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 log.Print(MessageType::ERROR, "Incorrect NACA code for wind '%s'!", solidName.c_str());
                 return false;
             }
-            solid = new Wing(solidName, baseChord, tipChord, nacaStr, length, origin, std::string(mat), ePhyType, std::string(look), thickness, buoyant);
+            solid = new Wing(solidName, phy, baseChord, tipChord, nacaStr, length, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "model")
         {
@@ -1675,11 +1672,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                     log.Print(MessageType::ERROR, "Visual mesh of rigid body '%s' not properly defined!", solidName.c_str());
                     return false;
                 }          
-                solid = new Polyhedron(solidName, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(solidName, phy, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), thickness); 
             }
             else
             {
-                solid = new Polyhedron(solidName, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), ePhyType, std::string(look), thickness, buoyant); 
+                solid = new Polyhedron(solidName, phy, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), thickness); 
             }
         }
         else
@@ -2291,15 +2288,21 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             lookStr = std::string(look);
         }
 
+        BodyPhysicsSettings phy;
+        phy.collisions = false;
+        phy.buoyancy = false;
+        
         if(typeStr == "thruster")
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::SUBMERGED, lookStr);
+            phy.mode = BodyPhysicsMode::SUBMERGED;
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
             Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
             return th;
         }
         else //propeller
         {
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), BodyPhysicsType::AERODYNAMIC, lookStr);
+            phy.mode = BodyPhysicsMode::AERODYNAMIC;
+            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
             Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
             return p;
         }
@@ -2358,7 +2361,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             return nullptr;
         }
 
-        Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), BodyPhysicsType::AERODYNAMIC, lookStr);
+        BodyPhysicsSettings phy;
+        phy.mode = BodyPhysicsMode::SUBMERGED;
+        phy.collisions = false;
+        phy.buoyancy = false;
+
+        Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
         Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted);
         return r;
     }

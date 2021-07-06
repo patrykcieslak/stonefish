@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFLS.h"
@@ -416,9 +416,12 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO, bool updated)
         else
         {
             int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+            int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
             OpenGLState::BindFramebuffer(destinationFBO);    
-            OpenGLState::Viewport(dispX, windowHeight-viewportHeight*dispScale-dispY, viewportWidth*dispScale, viewportHeight*dispScale);
-            content->DrawTexturedSAQ(displayTex);
+            OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
+            OpenGLState::DisableCullFace();
+            content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
+            OpenGLState::EnableCullFace();
             OpenGLState::BindFramebuffer(0);   
         }
     }

@@ -45,11 +45,11 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the body
+         \param phy the specific settings of the physics computation for the body
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          */
-        Compound(std::string uniqueName, SolidEntity* firstExternalPart, const Transform& origin, BodyPhysicsType bpt);
+        Compound(std::string uniqueName, BodyPhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin);
         
         //! A destructor.
         ~Compound();

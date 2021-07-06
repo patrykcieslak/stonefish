@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright(c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestManager.h"
@@ -58,6 +58,7 @@
 #include <sensors/vision/FLS.h>
 #include <sensors/vision/SSS.h>
 #include <sensors/vision/MSIS.h>
+#include <comms/AcousticModem.h>
 #include <sensors/Sample.h>
 #include <actuators/Light.h>
 #include <sensors/scalar/RotaryEncoder.h>
@@ -83,7 +84,9 @@ void UnderwaterTestManager::BuildScenario()
 {
 #ifdef PARSED_SCENARIO
     sf::ScenarioParser parser(this);
-    parser.Parse(sf::GetDataPath() + "underwater_test.scn");
+    bool success = parser.Parse(sf::GetDataPath() + "underwater_test.scn");
+    if(!success)
+        cCritical("Scenario parser: Parsing failed!");
 #else
     ///////MATERIALS////////
     CreateMaterial("Dummy", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.3);
@@ -134,26 +137,33 @@ void UnderwaterTestManager::BuildScenario()
 
     //Create underwater vehicle body
     //Externals
-    sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SUBMERGED, "yellow", sf::Scalar(0.003), false);
-    sf::Polyhedron* hullP = new sf::Polyhedron("HullPort", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SUBMERGED, "yellow", sf::Scalar(0.003), false);
-    sf::Polyhedron* hullS = new sf::Polyhedron("HullStarboard", sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SUBMERGED, "yellow", sf::Scalar(0.003), false);
-    sf::Polyhedron* vBarStern = new sf::Polyhedron("VBarStern", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "grey", sf::Scalar(0.003), false);
-    sf::Polyhedron* vBarBow = new sf::Polyhedron("VBarBow", sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "grey", sf::Scalar(0.003), false);
-    sf::Polyhedron* ductSway = new sf::Polyhedron("DuctSway", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "black");
-    sf::Polyhedron* ductSurgeP = new sf::Polyhedron("DuctSurgePort", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "black");
-    sf::Polyhedron* ductSurgeS = new sf::Polyhedron("DuctSurgeStarboard", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "black");
-    sf::Polyhedron* ductHeaveS = new sf::Polyhedron("DuctHeaveStern", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "black");
-    sf::Polyhedron* ductHeaveB = new sf::Polyhedron("DuctHeaveBow", sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "black");
+    sf::BodyPhysicsSettings phy;
+    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    phy.collisions = true;
+    
+    phy.buoyancy = false;
+    sf::Polyhedron* hullB = new sf::Polyhedron("HullBottom", phy, sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "yellow", sf::Scalar(0.003));
+    sf::Polyhedron* hullP = new sf::Polyhedron("HullPort", phy, sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "yellow", sf::Scalar(0.003));
+    sf::Polyhedron* hullS = new sf::Polyhedron("HullStarboard", phy, sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "yellow", sf::Scalar(0.003));
+    sf::Polyhedron* vBarStern = new sf::Polyhedron("VBarStern", phy, sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "grey", sf::Scalar(0.003));
+    sf::Polyhedron* vBarBow = new sf::Polyhedron("VBarBow", phy, sf::GetDataPath() + "vbar_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "grey", sf::Scalar(0.003));
+
+    phy.buoyancy = true;
+    sf::Polyhedron* ductSway = new sf::Polyhedron("DuctSway", phy, sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "black");
+    sf::Polyhedron* ductSurgeP = new sf::Polyhedron("DuctSurgePort", phy, sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "black");
+    sf::Polyhedron* ductSurgeS = new sf::Polyhedron("DuctSurgeStarboard", phy, sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "black");
+    sf::Polyhedron* ductHeaveS = new sf::Polyhedron("DuctHeaveStern", phy, sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "black");
+    sf::Polyhedron* ductHeaveB = new sf::Polyhedron("DuctHeaveBow", phy, sf::GetDataPath() + "duct_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "black");
     //Internals
-    sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", 0.13, 0.6, sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
+    sf::Cylinder* batteryCyl = new sf::Cylinder("BatteryCylinder", phy, 0.13, 0.6, sf::I4(), "Dummy", "manipulator");
     batteryCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(70));
-    sf::Cylinder* portCyl = new sf::Cylinder("PortCylinder", 0.13, 1.0, sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
+    sf::Cylinder* portCyl = new sf::Cylinder("PortCylinder", phy, 0.13, 1.0, sf::I4(), "Dummy", "manipulator");
     portCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(20));
-    sf::Cylinder* starboardCyl = new sf::Cylinder("StarboardCylinder", 0.13, 1.0, sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
+    sf::Cylinder* starboardCyl = new sf::Cylinder("StarboardCylinder", phy, 0.13, 1.0, sf::I4(), "Dummy", "manipulator");
     starboardCyl->ScalePhysicalPropertiesToArbitraryMass(sf::Scalar(20));
     
     //Build whole body
-    sf::Compound* vehicle = new sf::Compound("Vehicle", hullB, sf::I4(), sf::BodyPhysicsType::SUBMERGED);
+    sf::Compound* vehicle = new sf::Compound("Vehicle", phy, hullB, sf::I4());
     vehicle->AddExternalPart(hullP, sf::Transform(sf::IQ(), sf::Vector3(0,-0.35,-0.7)));
     vehicle->AddExternalPart(hullS, sf::Transform(sf::IQ(), sf::Vector3(0,0.35,-0.7)));
     vehicle->AddExternalPart(vBarStern, sf::Transform(sf::Quaternion::getIdentity(), sf::Vector3(-0.25,0.0,-0.15)));
@@ -170,14 +180,14 @@ void UnderwaterTestManager::BuildScenario()
     vehicle->setDisplayInternalParts(false);
     
     //Manipulator bodies
-    sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", sf::GetDataPath() + "base_link_uji_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
-    sf::Polyhedron* link1 = new sf::Polyhedron("ArmLink1", sf::GetDataPath() + "link1_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
-    sf::Polyhedron* link2 = new sf::Polyhedron("ArmLink2", sf::GetDataPath() + "link2_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
-    sf::Polyhedron* link3 = new sf::Polyhedron("ArmLink3", sf::GetDataPath() + "link3_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
-    sf::Polyhedron* link4 = new sf::Polyhedron("ArmLink4", sf::GetDataPath() + "link4ft_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "link4");
-    sf::Polyhedron* ee = new sf::Polyhedron("EE", sf::GetDataPath() + "eeprobe_hydro.obj", sf::Scalar(1), sf::I4(), "Neutral", sf::BodyPhysicsType::SUBMERGED, "manipulator");
-    sf::Polyhedron* finger1 = new sf::Polyhedron("Finger1", sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
-    sf::Polyhedron* finger2 = new sf::Polyhedron("Finger2", sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "manipulator");
+    sf::Polyhedron* baseLink = new sf::Polyhedron("ArmBaseLink", phy, sf::GetDataPath() + "base_link_uji_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
+    sf::Polyhedron* link1 = new sf::Polyhedron("ArmLink1", phy, sf::GetDataPath() + "link1_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
+    sf::Polyhedron* link2 = new sf::Polyhedron("ArmLink2", phy, sf::GetDataPath() + "link2_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
+    sf::Polyhedron* link3 = new sf::Polyhedron("ArmLink3", phy, sf::GetDataPath() + "link3_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
+    sf::Polyhedron* link4 = new sf::Polyhedron("ArmLink4", phy, sf::GetDataPath() + "link4ft_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "link4");
+    sf::Polyhedron* ee = new sf::Polyhedron("EE", phy, sf::GetDataPath() + "eeprobe_hydro.obj", sf::Scalar(1), sf::I4(), "Neutral", "manipulator");
+    sf::Polyhedron* finger1 = new sf::Polyhedron("Finger1", phy, sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
+    sf::Polyhedron* finger2 = new sf::Polyhedron("Finger2", phy, sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
     
     
     std::vector<sf::SolidEntity*> arm;
@@ -199,11 +209,11 @@ void UnderwaterTestManager::BuildScenario()
     sf::Servo* srv6 = new sf::Servo("FServo2", 1.0, 1.0, 10.0);
     
     //Create thrusters
-    sf::Polyhedron* prop1 = new sf::Polyhedron("Propeller1", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
-    sf::Polyhedron* prop2 = new sf::Polyhedron("Propeller2", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
-    sf::Polyhedron* prop3 = new sf::Polyhedron("Propeller3", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
-    sf::Polyhedron* prop4 = new sf::Polyhedron("Propeller4", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
-    sf::Polyhedron* prop5 = new sf::Polyhedron("Propeller5", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", sf::BodyPhysicsType::SUBMERGED, "propeller");
+    sf::Polyhedron* prop1 = new sf::Polyhedron("Propeller1", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
+    sf::Polyhedron* prop2 = new sf::Polyhedron("Propeller2", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
+    sf::Polyhedron* prop3 = new sf::Polyhedron("Propeller3", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
+    sf::Polyhedron* prop4 = new sf::Polyhedron("Propeller4", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
+    sf::Polyhedron* prop5 = new sf::Polyhedron("Propeller5", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
     sf::Thruster* thSway = new sf::Thruster("ThrusterSway", prop1, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
     sf::Thruster* thSurgeP = new sf::Thruster("ThrusterSurgePort", prop2, 0.18, std::make_pair(0.88, 0.48), 0.05, 1000.0, true);
     sf::Thruster* thSurgeS = new sf::Thruster("ThrusterSurgeStarboard", prop3, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
@@ -225,9 +235,9 @@ void UnderwaterTestManager::BuildScenario()
     sf::Pressure* press = new sf::Pressure("Pressure");
     press->setNoise(1.0);
     sf::DVL* dvl = new sf::DVL("DVL", 30.0);
-    dvl->setNoise(0.02, 0.05);
+    dvl->setNoise(0.0, 0.02, 0.05, 0.0, 0.02);
     sf::IMU* imu = new sf::IMU("IMU");
-    imu->setNoise(0.01, 0.05);
+    imu->setNoise(sf::V0(), sf::Vector3(0.05, 0.05, 0.1), 0.0, sf::Vector3(0.01, 0.01, 0.02));
     sf::Compass* fog = new sf::Compass("FOG");
     fog->setNoise(0.01);
     sf::GPS* gps = new sf::GPS("GPS");
@@ -236,12 +246,13 @@ void UnderwaterTestManager::BuildScenario()
     //mb->setDisplayOnScreen(true);
     //sf::DepthCamera* dc = new sf::DepthCamera("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
-    sf::FLS* fls = new sf::FLS("FLS", 256, 500, 150.0, 30.0, 1.0, 10.0, sf::ColorMap::GREEN_BLUE);
-    //fls->setDisplayOnScreen(true, 0, 500, 0.5f);
+    sf::FLS* fls = new sf::FLS("FLS", 256, 500, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE);
+    fls->setNoise(0.05, 0.05);
+    fls->setDisplayOnScreen(true, 800, 250, 0.4f);
     sf::SSS* sss = new sf::SSS("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 100.0, sf::ColorMap::GREEN_BLUE);
-    //sss->setDisplayOnScreen(true, 485, 500, 0.6f);
+    sss->setDisplayOnScreen(true, 710, 5, 0.6f);
     sf::MSIS* msis = new sf::MSIS("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 100.0, sf::ColorMap::GREEN_BLUE);
-    //msis->setDisplayOnScreen(true, 0, 0, 1.0f);
+    msis->setDisplayOnScreen(true, 880, 455, 0.6f);
     //sf::ColorCamera* cam = new sf::ColorCamera("Cam", 300, 200, 60.0, 10.0);
     //cam->setDisplayOnScreen(true);
     //sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
@@ -287,7 +298,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkSensor(gps, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0,-0.9)));
     auv->AddVisionSensor(fls, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.8), sf::Vector3(0.0,0.0,1.0)));
     auv->AddVisionSensor(sss, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(0.0,0.0,0.0)));
-    //auv->AddVisionSensor(msis, "Vehicle", sf::Transform(sf::Quaternion(0.0, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
+    auv->AddVisionSensor(msis, "Vehicle", sf::Transform(sf::Quaternion(0.0, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam2, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,2.0)));
     AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,2.0)));
@@ -302,4 +313,16 @@ void UnderwaterTestManager::SimulationStepCompleted(sf::Scalar timeStep)
 {
     //sf::Thruster* th = (sf::Thruster*)getRobot("GIRONA500")->getActuator("ThrusterSurgePort");
     //printf("Setpoint: %1.3lf Thrust: %1.3lf Torque: %1.3lf\n", th->getSetpoint(), th->getThrust(), th->getTorque());
+
+    /*
+    sf::Comm* modem = getComm("Modem");
+    if(modem->isNewDataAvailable())
+    {
+        sf::Vector3 pos;
+        std::string frame;
+        ((sf::AcousticModem*)modem)->getPosition(pos, frame);
+        printf("%1.3lf %1.3lf %1.3lf\n", pos.getX(), pos.getY(), pos.getZ());
+        modem->MarkDataOld();
+    }
+    */
 }

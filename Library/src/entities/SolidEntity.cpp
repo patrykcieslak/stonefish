@@ -19,8 +19,8 @@
 //  SolidEntity.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 12/29/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 29/12/12.
+//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/SolidEntity.h"
@@ -38,17 +38,17 @@
 namespace sf
 {
 
-SolidEntity::SolidEntity(std::string uniqueName, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant) : MovingEntity(uniqueName, material, look)
+SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::string material, std::string look, Scalar thickness) 
+    : MovingEntity(uniqueName, material, look), phy(phy), thick(thickness)
 {
+    //Check if ocean is enabled and change physics mode accordingly
+    if((phy.mode == BodyPhysicsMode::SUBMERGED || phy.mode == BodyPhysicsMode::FLOATING) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        this->phy.mode = BodyPhysicsMode::SURFACE;
+    
+    //Get material
     mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
-    thick = thickness;
     
-    if((bpt == BodyPhysicsType::SUBMERGED || bpt == BodyPhysicsType::FLOATING) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-        phyType = BodyPhysicsType::SURFACE;
-    else
-        phyType = bpt;
-    
-    buoyant = isBuoyant;
+    //Get Look
     if(SimulationApp::getApp()->hasGraphics())
         lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
@@ -183,12 +183,12 @@ int SolidEntity::getPhysicalObject() const
 
 bool SolidEntity::isBuoyant() const
 {
-    return buoyant;
+    return phy.buoyancy;
 }
     
-BodyPhysicsType SolidEntity::getBodyPhysicsType() const
+BodyPhysicsMode SolidEntity::getBodyPhysicsMode() const
 {
-    return phyType;
+    return phy.mode;
 }
 
 void SolidEntity::getAABB(Vector3& min, Vector3& max)
@@ -534,7 +534,7 @@ Vector3 SolidEntity::getAddedInertia() const
 
 Scalar SolidEntity::getAugmentedMass() const
 {
-    if(phyType == BodyPhysicsType::SUBMERGED)
+    if(phy.mode == BodyPhysicsMode::SUBMERGED)
         return mass + (aMass.x() + aMass.y() + aMass.z())/Scalar(3);
     else
         return mass;
@@ -542,7 +542,7 @@ Scalar SolidEntity::getAugmentedMass() const
 
 Vector3 SolidEntity::getAugmentedInertia() const
 {
-    if(phyType == BodyPhysicsType::SUBMERGED)
+    if(phy.mode == BodyPhysicsMode::SUBMERGED)
         return Ipri + aI;
     else
         return Ipri;
@@ -1608,7 +1608,7 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
 
 void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phyType != BodyPhysicsType::FLOATING && phyType != BodyPhysicsType::SUBMERGED) return;
+    if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
     
 #ifdef DEBUG
     submerged.points.clear();
@@ -1659,7 +1659,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 
 void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phyType != BodyPhysicsType::AERODYNAMIC) return;
+    if(phy.mode != BodyPhysicsMode::AERODYNAMIC) return;
     
     //Get velocities and transformations
     Vector3 v = getLinearVelocity();

@@ -83,9 +83,10 @@ void main()
         for(uint i=0; i<N_BINS; ++i)
         {
             noiseCoord.y = i/float(N_BINS-1);
-            float data = gain * gaussian(-noiseCoord.xy, noiseSeed, noiseStddev.y, 0.0); //Additive noise
+            float data = gain * gaussian(-noiseCoord.xy, noiseSeed, noiseStddev.y, 0.0); //Additive noise (Gaussian background noise)
             if(binHistogram[i].y > 0.0)
-                data += gain * (binHistogram[i].x/binHistogram[i].y) * mulNoise; //Signal + multiplicative noise
+                data += gain * (binHistogram[i].x/binHistogram[i].y) * mulNoise; //Signal + multiplicative noise (Gaussian beam gain noise)
+            //data += data * rand(vec2(noiseSeed.x * i, noiseSeed.x * globalBeam)) * 0.5; // Speckle noise (Uniform multiplicative noise)
             imageStore(sonarOutput, ivec2(globalBeam, N_BINS-1-i), vec4(data));
         }
     }

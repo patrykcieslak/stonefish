@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 17/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Wing.h"
@@ -31,10 +31,10 @@
 namespace sf
 {
 
-Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength,
-           Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength,
-           const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
-           : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+Wing::Wing(std::string uniqueName, BodyPhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+           Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
+           std::string material, std::string look, Scalar thickness)
+           : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     T_O2G = T_O2C = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
@@ -66,9 +66,9 @@ Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength
     P_CB = Vector3(0,0,0);
 }
     
-Wing::Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength,
-           const Transform& origin, std::string material, BodyPhysicsType bpt, std::string look, Scalar thickness, bool isBuoyant)
-           : SolidEntity(uniqueName, material, bpt, look, thickness, isBuoyant)
+Wing::Wing(std::string uniqueName, BodyPhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
+           std::string material, std::string look, Scalar thickness)
+           : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     T_O2G = T_O2C = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;

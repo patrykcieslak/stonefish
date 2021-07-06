@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "FlyingTestManager.h"
@@ -61,22 +61,26 @@ void FlyingTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 10000, "Ground", "grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
 
-    sf::Box* leaf = new sf::Box("Leaf", sf::Vector3(5,3,0.0001), sf::I4(), "Fiberglass", sf::BodyPhysicsType::AERODYNAMIC, "white");
+    sf::BodyPhysicsSettings phy;
+    phy.mode = sf::BodyPhysicsMode::AERODYNAMIC;
+    phy.collisions = true;
+
+    sf::Box* leaf = new sf::Box("Leaf", phy, sf::Vector3(5,3,0.0001), sf::I4(), "Fiberglass","white");
     AddSolidEntity(leaf, sf::Transform(sf::Quaternion(0,0.3,0), sf::Vector3(10,0,-10)));
     
-    sf::Polyhedron* propeller1 = new sf::Polyhedron("Propeller1", sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SURFACE, "propeller");
-    sf::Polyhedron* propeller2 = new sf::Polyhedron("Propeller2", sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SURFACE, "propeller");
-    sf::Polyhedron* propeller3 = new sf::Polyhedron("Propeller3", sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SURFACE, "propeller");
-    sf::Polyhedron* propeller4 = new sf::Polyhedron("Propeller4", sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", sf::BodyPhysicsType::SURFACE, "propeller");
+    sf::Polyhedron* propeller1 = new sf::Polyhedron("Propeller1", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
+    sf::Polyhedron* propeller2 = new sf::Polyhedron("Propeller2", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
+    sf::Polyhedron* propeller3 = new sf::Polyhedron("Propeller3", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
+    sf::Polyhedron* propeller4 = new sf::Polyhedron("Propeller4", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
     
     sf::Propeller* prop1 = new sf::Propeller("Prop1", propeller1, 0.2, 0.1, 0.01, 10000, true);
     sf::Propeller* prop2 = new sf::Propeller("Prop2", propeller2, 0.2, 0.1, 0.01, 10000, true);
     sf::Propeller* prop3 = new sf::Propeller("Prop3", propeller3, 0.2, 0.1, 0.01, 10000, false);
     sf::Propeller* prop4 = new sf::Propeller("Prop4", propeller4, 0.2, 0.1, 0.01, 10000, false);
     
-    sf::Box* arm1 = new sf::Box("Arm1", sf::Vector3(1.0,0.01,0.01), sf::I4(), "Fiberglass", sf::BodyPhysicsType::AERODYNAMIC, "white");
-    sf::Box* arm2 = new sf::Box("Arm2", sf::Vector3(0.01,1.0,0.01), sf::I4(), "Fiberglass", sf::BodyPhysicsType::AERODYNAMIC, "white");
-    sf::Compound* fuselage = new sf::Compound("Fuselage", arm1, sf::I4(), sf::BodyPhysicsType::AERODYNAMIC);
+    sf::Box* arm1 = new sf::Box("Arm1", phy, sf::Vector3(1.0,0.01,0.01), sf::I4(), "Fiberglass", "white");
+    sf::Box* arm2 = new sf::Box("Arm2", phy, sf::Vector3(0.01,1.0,0.01), sf::I4(), "Fiberglass", "white");
+    sf::Compound* fuselage = new sf::Compound("Fuselage", phy, arm1, sf::I4());
     fuselage->AddExternalPart(arm2, sf::I4());
     
     sf::Robot* quadCopter = new sf::Robot("Quadcopter");
@@ -87,8 +91,8 @@ void FlyingTestManager::BuildScenario()
     quadCopter->AddLinkActuator(prop4, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.5,-0.02)));
     AddRobot(quadCopter, sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.02)));
     
-    prop1->setSetpoint(0.395);
-    prop2->setSetpoint(0.395);
-    prop3->setSetpoint(0.395);
-    prop4->setSetpoint(0.395);
+    prop1->setSetpoint(0.5);
+    prop2->setSetpoint(0.5);
+    prop3->setSetpoint(0.5);
+    prop4->setSetpoint(0.5);
 }

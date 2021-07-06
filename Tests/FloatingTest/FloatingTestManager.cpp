@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/05/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "FloatingTestManager.h"
@@ -51,25 +51,32 @@ void FloatingTestManager::BuildScenario()
 
     ////////OBJECTS    
     //Create environment
-    EnableOcean(0.5);
+    EnableOcean(0.2);
     getOcean()->setWaterType(0.2);
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     
-    sf::Polyhedron* hull = new sf::Polyhedron("Hull", sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
-                                              sf::BodyPhysicsType::FLOATING, "white", sf::Scalar(0.05), true);
-    
-    sf::Polyhedron* prop = new sf::Polyhedron("Propeller", sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", 
-                                              sf::BodyPhysicsType::SUBMERGED, "propeller");
-    
-    sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.18, std::make_pair(0.48, 0.48), 0.05, 10000.0, false);
-    
+    //Hull
+    sf::BodyPhysicsSettings phy;
+    phy.mode = sf::BodyPhysicsMode::FLOATING;
+    phy.collisions = true;
+    phy.buoyancy = true;
+    sf::Polyhedron* hull = new sf::Polyhedron("Hull", phy, sf::GetDataPath() + "boat_gra.obj", sf::Scalar(2), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(2), sf::I4(), 
+                                              "Fiberglass", "white", sf::Scalar(0.09));
+    //Propeller
+    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    phy.buoyancy = false;
+    sf::Polyhedron* prop = new sf::Polyhedron("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");   
+    sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.3, std::make_pair(0.48, 0.48), 0.05, 500.0, true);
+
+    //Sensors   
     sf::Odometry* odom = new sf::Odometry("Odom");
     
+    //Boat
     sf::Robot* boat = new sf::Robot("Boat");
     boat->DefineLinks(hull);
-    boat->AddLinkActuator(thrust, "Hull", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-0.8,0.02,0.3)));
+    boat->AddLinkActuator(thrust, "Hull", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-1.6,0.02,0.3)));
     boat->AddLinkSensor(odom, "Hull", sf::I4());
     AddRobot(boat, sf::Transform(sf::IQ(), sf::Vector3(0,0,-1.0)));
     
-    thrust->setSetpoint(0.2);
+    thrust->setSetpoint(0.5);
 }

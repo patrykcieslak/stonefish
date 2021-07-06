@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 17/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Wing__
@@ -37,6 +37,7 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the wing
+         \param phy the specific settings of the physics computation for the body
          \param baseChordLength the length of the chord at the base of the wing [m]
          \param tipChordLength the length of the chord at the tip of the wing [m]
          \param maxCamber the maximum camber as percent of the chord length
@@ -45,31 +46,28 @@ namespace sf
          \param wingLength the length of the wing [m]
          \param origin a transformation of the physical mesh (graphical is the same for wing)
          \param material the name of the material the wing is made of
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell [m]
-         \param isBuoyant defines if the wing should be subject to buoyancy force
          */
-        Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength,
-             Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, std::string material,
-             BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Wing(std::string uniqueName, BodyPhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+             Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
+             std::string material, std::string look, Scalar thickness = Scalar(-1));
         
         //! A constructor.
         /*!
          \param uniqueName a name for the wing
+         \param phy the specific settings of the physics computation for the body
          \param baseChordLength the length of the chord at the base of the wing [m]
          \param tipChordLength the length of the chord at the tip of the wing [m]
          \param NACA the code of the profile in 4-digit NACA system
          \param wingLength the length of the wing [m]
          \param origin a transformation of the physical mesh (graphical is the same for wing)
          \param material the name of the material the wing is made of
-         \param bpt an enum defining the type of physics computations required for the body (currently bodies cannot transfer between mediums)
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell
-         \param isBuoyant defines if the wing should be subject to buoyancy force
          */
-        Wing(std::string uniqueName, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
-             std::string material, BodyPhysicsType bpt, std::string look = "", Scalar thickness = Scalar(-1), bool isBuoyant = true);
+        Wing(std::string uniqueName, BodyPhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
+             std::string material, std::string look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
         SolidType getSolidType();
