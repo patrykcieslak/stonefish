@@ -704,7 +704,7 @@ void SolidEntity::ComputeCylindricalApprox()
         rho = ocn->getLiquid().density;
 
     Scalar m1 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]; //Parallel to axis
-    Scalar m2 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]*Scalar(2)*fdApproxParams[1]; //Perpendicular to axis
+    Scalar m2 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]*fdApproxParams[1]; //Perpendicular to axis
     Scalar I1 = Scalar(0);
     Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3));
     

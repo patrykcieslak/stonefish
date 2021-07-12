@@ -80,42 +80,44 @@ void Camera::UpdateTransform()
 
 std::vector<Renderable> Camera::Render()
 {
-    std::vector<Renderable> items(0);
-    
-    Renderable item;
-    item.model = glMatrixFromTransform(getSensorFrame());
-    item.type = RenderableType::SENSOR_LINES;
-    
-    //Create camera dummy
-    GLfloat iconSize = 0.5f;
-    GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
-    GLfloat aspect = (GLfloat)resX/(GLfloat)resY;
-    GLfloat y = x/aspect;
-    
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(x,  y, iconSize));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-x,  y, iconSize));
-    
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    item.points.push_back(glm::vec3(x, y, iconSize));
-    item.points.push_back(glm::vec3(x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, y, iconSize));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(-x, -y, iconSize));
-    item.points.push_back(glm::vec3(x, -y, iconSize));
-    
-    item.points.push_back(glm::vec3(-0.5f*x, -y, iconSize));
-    item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
-    item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
-    item.points.push_back(glm::vec3(0.5f*x, -y, iconSize));
-    
-    items.push_back(item);
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
+    {
+        Renderable item;
+        item.model = glMatrixFromTransform(getSensorFrame());
+        item.type = RenderableType::SENSOR_LINES;
+        
+        //Create camera dummy
+        GLfloat iconSize = 0.5f;
+        GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
+        GLfloat aspect = (GLfloat)resX/(GLfloat)resY;
+        GLfloat y = x/aspect;
+        
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(x, -y, iconSize));
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(x,  y, iconSize));
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(-x, -y, iconSize));
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(-x,  y, iconSize));
+        
+        item.points.push_back(glm::vec3(x, -y, iconSize));
+        item.points.push_back(glm::vec3(x, y, iconSize));
+        item.points.push_back(glm::vec3(x, y, iconSize));
+        item.points.push_back(glm::vec3(-x, y, iconSize));
+        item.points.push_back(glm::vec3(-x, y, iconSize));
+        item.points.push_back(glm::vec3(-x, -y, iconSize));
+        item.points.push_back(glm::vec3(-x, -y, iconSize));
+        item.points.push_back(glm::vec3(x, -y, iconSize));
+        
+        item.points.push_back(glm::vec3(-0.5f*x, -y, iconSize));
+        item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
+        item.points.push_back(glm::vec3(0.f, -1.5f*y, iconSize));
+        item.points.push_back(glm::vec3(0.5f*x, -y, iconSize));
+        
+        items.push_back(item);
+    }
     return items;
 }
 

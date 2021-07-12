@@ -2238,7 +2238,7 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
 Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
     Mesh* mesh = LoadGeometryFromFile(filename, scale);
-    if(mesh == NULL)
+    if(mesh == nullptr)
         abort();
     if(smooth)
         SmoothNormals(mesh);

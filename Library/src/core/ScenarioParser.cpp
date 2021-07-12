@@ -2412,9 +2412,11 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
 Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& namePrefix)
 {
     //---- Common ----
+    Sensor* sens = nullptr;
     const char* name = nullptr;
     const char* type = nullptr;
     Scalar rate;
+    XMLElement* item;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
@@ -2433,9 +2435,8 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     if(element->QueryAttribute("rate", &rate) != XML_SUCCESS)
         rate = Scalar(-1);
     std::string typeStr(type);
-    
+
     //---- Specific ----
-    XMLElement* item;
     if(typeStr == "accelerometer")
     {
         int history;
@@ -2486,7 +2487,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
             }
         }
-        return acc;
+        sens = acc;
     }
     else if(typeStr == "gyro")
     {
@@ -2553,7 +2554,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 gyro->setNoise(avxyz, bxyz);
         }
-        return gyro;
+        sens = gyro;
     }
     else if(typeStr == "imu")
     {
@@ -2657,7 +2658,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 imu->setNoise(axyz, avxyz, yawDrift, laxyz);
         }
-        return imu;
+        sens = imu;
     }
     else if(typeStr == "dvl")
     {
@@ -2739,7 +2740,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 dvl->setNoise(vp, v, altitude, wvp, wv);
         }
-        return dvl;
+        sens = dvl;
     }
     else if(typeStr == "gps")
     {
@@ -2758,7 +2759,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return gps;
+        sens = gps;
     }
     else if(typeStr == "pressure")
     {
@@ -2786,7 +2787,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return press;
+        sens = press;
     }
     else if(typeStr == "odometry")
     {
@@ -2819,7 +2820,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 odom->setNoise(p, v, angle, av);
         }
-        return odom;
+        sens = odom;
     }
     else if(typeStr == "compass")
     {
@@ -2838,7 +2839,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return compass;
+        sens = compass;
     }
     else if(typeStr == "profiler")
     {
@@ -2881,7 +2882,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return prof;
+        sens = prof;
     }
     else if(typeStr == "multibeam" || typeStr == "multibeam1d")
     {
@@ -2921,7 +2922,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return mult;
+        sens = mult;
     }
     else if(typeStr == "torque")
     {
@@ -2949,7 +2950,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return torque;
+        sens = torque;
     }
     else if(typeStr == "forcetorque")
     {
@@ -2995,7 +2996,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 ft->setNoise(f, t);
         }
-        return ft;
+        sens = ft;
     }
     else if(typeStr == "encoder")
     {
@@ -3004,7 +3005,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             history = -1;
             
         RotaryEncoder* enc = new RotaryEncoder(sensorName, rate, history);
-        return enc;
+        sens = enc;
     }
     else if(typeStr == "camera")
     {
@@ -3049,7 +3050,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         else
             cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
-        return cam;
+        sens = cam;
     }
     else if(typeStr == "depthcamera")
     {
@@ -3084,7 +3085,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        return dcam;
+        sens = dcam;
     }
     else if(typeStr == "multibeam2d")
     {
@@ -3110,7 +3111,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
 
         Multibeam2* mb = new Multibeam2(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
-        return mb;
+        sens = mb;
     }
     else if(typeStr == "fls")
     {
@@ -3175,7 +3176,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             fls->setNoise(0.025f, 0.035f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
-        return fls;
+        sens = fls;
     }
     else if(typeStr == "sss")
     {
@@ -3242,7 +3243,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             sss->setNoise(0.01f, 0.02f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
-        return sss;
+        sens = sss;
     }
     else if(typeStr == "msis")
     {
@@ -3314,10 +3315,32 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             msis->setNoise(0.02f, 0.04f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
-        return msis;
+        sens = msis;
     }
     else
         return nullptr;
+
+    //---- Visuals ----
+    const char* visFile = nullptr;
+    if((item = element->FirstChildElement("visual")) != nullptr && item->QueryStringAttribute("filename", &visFile) == XML_SUCCESS)
+    {
+        if(!isGraphicalSim())
+        {
+            log.Print(MessageType::WARNING, "Visual representation of sensor '%s' not available in console mode!", sensorName.c_str());
+            return sens;
+        }
+
+        Scalar scale(1.0);
+        item->QueryAttribute("scale", &scale);
+
+        const char* look = nullptr;
+        std::string lookStr = "";
+        if(item->QueryStringAttribute("look", &look) == XML_SUCCESS)
+            lookStr = std::string(look);
+
+        sens->setVisual(GetFullPath(std::string(visFile)), scale, lookStr);
+    }
+    return sens;
 }
 
 Light* ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)

@@ -238,58 +238,60 @@ void Multibeam2::NewDataReady(void* data, unsigned int index)
     
 std::vector<Renderable> Multibeam2::Render()
 {
-    std::vector<Renderable> items(0);
-    
-    Renderable item;
-    item.model = glMatrixFromTransform(getSensorFrame());
-    item.type = RenderableType::SENSOR_LINES;
-    
-    unsigned int div = (unsigned int)ceil(fovH/5.0);
-    GLfloat iconSize = 0.5f;
-    GLfloat cosFovV2 = cosf(fovV/360.f*M_PI);
-    GLfloat sinFovV2 = sinf(fovV/360.f*M_PI);
-    GLfloat r = iconSize/cosFovV2;
-    GLfloat thetaDiv = fovH/180.f * M_PI/(GLfloat)div;
-    GLfloat offset = -fovH/360.f * M_PI;
-    GLfloat y = sinFovV2 * r;
-    
-    for(unsigned int i=0; i<div; ++i)
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
     {
-        GLfloat theta1 = i*thetaDiv + offset;
-        GLfloat theta2 = theta1 + thetaDiv;
-        GLfloat d1 = cosf(theta1) * r;
-        GLfloat d2 = cosf(theta2) * r;
-        GLfloat z1 = cosFovV2 * d1;
-        GLfloat z2 = cosFovV2 * d2;
-        GLfloat x1 = sinf(theta1) * r;
-        GLfloat x2 = sinf(theta2) * r;
+        Renderable item;
+        item.model = glMatrixFromTransform(getSensorFrame());
+        item.type = RenderableType::SENSOR_LINES;
         
-        item.points.push_back(glm::vec3(x1,y,z1));
-        item.points.push_back(glm::vec3(x2,y,z2));
-        item.points.push_back(glm::vec3(x1,-y,z1));
-        item.points.push_back(glm::vec3(x2,-y,z2));
+        unsigned int div = (unsigned int)ceil(fovH/5.0);
+        GLfloat iconSize = 0.5f;
+        GLfloat cosFovV2 = cosf(fovV/360.f*M_PI);
+        GLfloat sinFovV2 = sinf(fovV/360.f*M_PI);
+        GLfloat r = iconSize/cosFovV2;
+        GLfloat thetaDiv = fovH/180.f * M_PI/(GLfloat)div;
+        GLfloat offset = -fovH/360.f * M_PI;
+        GLfloat y = sinFovV2 * r;
         
-        if(i == 0) //End 1
+        for(unsigned int i=0; i<div; ++i)
         {
+            GLfloat theta1 = i*thetaDiv + offset;
+            GLfloat theta2 = theta1 + thetaDiv;
+            GLfloat d1 = cosf(theta1) * r;
+            GLfloat d2 = cosf(theta2) * r;
+            GLfloat z1 = cosFovV2 * d1;
+            GLfloat z2 = cosFovV2 * d2;
+            GLfloat x1 = sinf(theta1) * r;
+            GLfloat x2 = sinf(theta2) * r;
+            
             item.points.push_back(glm::vec3(x1,y,z1));
-            item.points.push_back(glm::vec3(x1,-y,z1));
-            item.points.push_back(glm::vec3(x1,y,z1));
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(x1,-y,z1));
-            item.points.push_back(glm::vec3(0,0,0));
-        }
-        else if(i == div-1) //End 2
-        {
             item.points.push_back(glm::vec3(x2,y,z2));
+            item.points.push_back(glm::vec3(x1,-y,z1));
             item.points.push_back(glm::vec3(x2,-y,z2));
-            item.points.push_back(glm::vec3(x2,y,z2));
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(x2,-y,z2));
-            item.points.push_back(glm::vec3(0,0,0));
+            
+            if(i == 0) //End 1
+            {
+                item.points.push_back(glm::vec3(x1,y,z1));
+                item.points.push_back(glm::vec3(x1,-y,z1));
+                item.points.push_back(glm::vec3(x1,y,z1));
+                item.points.push_back(glm::vec3(0,0,0));
+                item.points.push_back(glm::vec3(x1,-y,z1));
+                item.points.push_back(glm::vec3(0,0,0));
+            }
+            else if(i == div-1) //End 2
+            {
+                item.points.push_back(glm::vec3(x2,y,z2));
+                item.points.push_back(glm::vec3(x2,-y,z2));
+                item.points.push_back(glm::vec3(x2,y,z2));
+                item.points.push_back(glm::vec3(0,0,0));
+                item.points.push_back(glm::vec3(x2,-y,z2));
+                item.points.push_back(glm::vec3(0,0,0));
+            }
         }
+        
+        items.push_back(item);
     }
-    
-    items.push_back(item);
     return items;
 }
     

@@ -21,7 +21,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
 btMultiBodyGearConstraint::btMultiBodyGearConstraint(btMultiBody* bodyA, int linkA, btMultiBody* bodyB, int linkB, const btVector3& pivotInA, const btVector3& pivotInB, const btMatrix3x3& frameInA, const btMatrix3x3& frameInB)
-	: btMultiBodyConstraint(bodyA, bodyB, linkA, linkB, 1, false),
+	: btMultiBodyConstraint(bodyA, bodyB, linkA, linkB, 1, false, MULTIBODY_CONSTRAINT_GEAR),
 	  m_gearRatio(1),
 	  m_gearAuxLink(-1),
 	  m_erp(0),
@@ -110,8 +110,8 @@ void btMultiBodyGearConstraint::createConstraintRows(btMultiBodyConstraintArray&
 	btScalar posError = 0;
 	const btVector3 dummy(0, 0, 0);
 
-	//btScalar kp = 1;
-	//btScalar kd = 1;
+	btScalar kp = 1;
+	btScalar kd = 1;
 	int numRows = getNumRows();
 
 	for (int row = 0; row < numRows; row++)
@@ -119,7 +119,7 @@ void btMultiBodyGearConstraint::createConstraintRows(btMultiBodyConstraintArray&
 		btMultiBodySolverConstraint& constraintRow = constraintRows.expandNonInitializing();
 
 		int dof = 0;
-		//btScalar currentPosition = m_bodyA->getJointPosMultiDof(m_linkA)[dof];
+		btScalar currentPosition = m_bodyA->getJointPosMultiDof(m_linkA)[dof];
 		btScalar currentVelocity = m_bodyA->getJointVelMultiDof(m_linkA)[dof];
 		btScalar auxVel = 0;
 

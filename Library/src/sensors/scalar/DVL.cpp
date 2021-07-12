@@ -200,66 +200,69 @@ void DVL::InternalUpdate(Scalar dt)
 
 std::vector<Renderable> DVL::Render()
 {
-    std::vector<Renderable> items(0);
-    unsigned short status = (unsigned short)trunc(getLastValue(7));
-    Renderable item;
-    item.type = RenderableType::SENSOR_LINES;
-    item.model = glMatrixFromTransform(getSensorFrame());    
-    //Bottom ping
-    if(status == 0 || status == 2) //Good bottom ping
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
     {
-        //Beams
-        Vector3 dir[4];
-        dir[0] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
-        dir[1] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
-        dir[2] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
-        dir[3] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
-        
-        if(range[0] > Scalar(0))
+        unsigned short status = (unsigned short)trunc(getLastValue(7));
+        Renderable item;
+        item.type = RenderableType::SENSOR_LINES;
+        item.model = glMatrixFromTransform(getSensorFrame());    
+        //Bottom ping
+        if(status == 0 || status == 2) //Good bottom ping
         {
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
+            //Beams
+            Vector3 dir[4];
+            dir[0] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
+            dir[1] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
+            dir[2] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
+            dir[3] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
+            
+            if(range[0] > Scalar(0))
+            {
+                item.points.push_back(glm::vec3(0,0,0));
+                item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
+            }
+            
+            if(range[1] > Scalar(0))
+            {
+                item.points.push_back(glm::vec3(0,0,0));
+                item.points.push_back(glm::vec3(-dir[1].x()*range[1], -dir[1].y()*range[1], -dir[1].z()*range[1]));
+            }
+            
+            if(range[2] > Scalar(0))
+            {
+                item.points.push_back(glm::vec3(0,0,0));
+                item.points.push_back(glm::vec3(-dir[2].x()*range[2], -dir[2].y()*range[2], -dir[2].z()*range[2]));
+            }
+            
+            if(range[3] > Scalar(0))
+            {
+                item.points.push_back(glm::vec3(0,0,0));
+                item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
+            }
         }
-        
-        if(range[1] > Scalar(0))
+        //Water ping
+        if(status == 1 || status == 2) //Good water ping
         {
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(-dir[1].x()*range[1], -dir[1].y()*range[1], -dir[1].z()*range[1]));
+            Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
+            GLfloat a1 = (GLfloat)waterLayer.getY();
+            GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
+            GLfloat r1 = a1 * btSin(beamAngle/Scalar(2));
+            GLfloat r2 = a2 * btSin(beamAngle/Scalar(2));
+            for(unsigned int i=0; i<4; ++i)
+            {
+                GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>();
+                GLfloat ang2 = (GLfloat)(i+1)/2.f * glm::pi<GLfloat>();
+                glm::vec3 d1(glm::sin(ang1), glm::cos(ang1), 0.f);
+                glm::vec3 d2(glm::sin(ang2), glm::cos(ang2), 0.f);
+                item.points.push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));
+                item.points.push_back(r1 * d2 + glm::vec3(0.f, 0.f, -a1));
+                item.points.push_back(r2 * d1 + glm::vec3(0.f, 0.f, -a2));
+                item.points.push_back(r2 * d2 + glm::vec3(0.f, 0.f, -a2));
+            }
         }
-        
-        if(range[2] > Scalar(0))
-        {
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(-dir[2].x()*range[2], -dir[2].y()*range[2], -dir[2].z()*range[2]));
-        }
-        
-        if(range[3] > Scalar(0))
-        {
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
-        }
+        items.push_back(item);
     }
-    //Water ping
-    if(status == 1 || status == 2) //Good water ping
-    {
-        Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
-        GLfloat a1 = (GLfloat)waterLayer.getY();
-        GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
-        GLfloat r1 = a1 * btSin(beamAngle/Scalar(2));
-        GLfloat r2 = a2 * btSin(beamAngle/Scalar(2));
-        for(unsigned int i=0; i<4; ++i)
-        {
-            GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>();
-            GLfloat ang2 = (GLfloat)(i+1)/2.f * glm::pi<GLfloat>();
-            glm::vec3 d1(glm::sin(ang1), glm::cos(ang1), 0.f);
-            glm::vec3 d2(glm::sin(ang2), glm::cos(ang2), 0.f);
-            item.points.push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));
-            item.points.push_back(r1 * d2 + glm::vec3(0.f, 0.f, -a1));
-            item.points.push_back(r2 * d1 + glm::vec3(0.f, 0.f, -a2));
-            item.points.push_back(r2 * d2 + glm::vec3(0.f, 0.f, -a2));
-        }
-    }
-    items.push_back(item);
     return items;
 }
 

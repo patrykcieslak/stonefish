@@ -78,13 +78,14 @@ void LinkSensor::AttachToSolid(MovingEntity* solid, const Transform& origin)
 
 std::vector<Renderable> LinkSensor::Render()
 {
-    std::vector<Renderable> items(0);
-
-    Renderable item;
-    item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromTransform(getSensorFrame());
-    items.push_back(item);
-
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
+    {
+        Renderable item;
+        item.type = RenderableType::SENSOR_CS;
+        item.model = glMatrixFromTransform(getSensorFrame());
+        items.push_back(item);
+    }
     return items;
 }
 

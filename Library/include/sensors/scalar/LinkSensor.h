@@ -70,11 +70,11 @@ namespace sf
          */
         void setRelativeSensorFrame(const Transform& origin);
 
-        //! A method returning the current sensor frame in world.
-        virtual Transform getSensorFrame() const;
-
         //! A method returning the type of the sensor.
         SensorType getType();
+
+        //! A method returning the current sensor frame in world.
+        virtual Transform getSensorFrame() const;
         
         //! A method returning the name of the link that the sensor is attached to.
         std::string getLinkName();

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Entity__
@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum specifying the type of entity.
-    enum class EntityType {STATIC, SOLID, ANIMATED, FEATHERSTONE, FORCEFIELD};
+    enum class EntityType {STATIC, SOLID, ANIMATED, FEATHERSTONE, CABLE, FORCEFIELD};
     
     //! An enum used for collision filtering.
     typedef enum

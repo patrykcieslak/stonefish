@@ -33,7 +33,8 @@
 //Bullet Physics
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
-#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
+//#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
+#include "BulletSoftBody/btSoftMultiBodyDynamicsWorld.h"
 
 //Stonefish
 #include <version.h>

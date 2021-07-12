@@ -14,7 +14,9 @@ subject to the following restrictions:
 */
 
 //#define COMPUTE_IMPULSE_DENOM 1
-//#define BT_ADDITIONAL_DEBUG
+#ifdef BT_DEBUG
+#	define BT_ADDITIONAL_DEBUG
+#endif
 
 //It is not necessary (redundant) to refresh contact manifolds, this refresh has been moved to the collision algorithms.
 
@@ -310,7 +312,7 @@ static btScalar gResolveSplitPenetrationImpulse_scalar_reference(
 	}
 	return deltaImpulse * (1. / c.m_jacDiagABInv);
 }
-/*
+
 static btScalar gResolveSplitPenetrationImpulse_sse2(btSolverBody& bodyA, btSolverBody& bodyB, const btSolverConstraint& c)
 {
 #ifdef USE_SIMD
@@ -347,7 +349,7 @@ static btScalar gResolveSplitPenetrationImpulse_sse2(btSolverBody& bodyA, btSolv
 	return gResolveSplitPenetrationImpulse_scalar_reference(bodyA, bodyB, c);
 #endif
 }
-*/
+
 btSequentialImpulseConstraintSolver::btSequentialImpulseConstraintSolver()
 {
 	m_btSeed2 = 0;
@@ -690,8 +692,10 @@ int btSequentialImpulseConstraintSolver::getOrInitSolverBody(btCollisionObject& 
 {
 #if BT_THREADSAFE
 	int solverBodyId = -1;
-	bool isRigidBodyType = btRigidBody::upcast(&body) != NULL;
-	if (isRigidBodyType && !body.isStaticOrKinematicObject())
+	const bool isRigidBodyType = btRigidBody::upcast(&body) != NULL;
+	const bool isStaticOrKinematic = body.isStaticOrKinematicObject();
+	const bool isKinematic = body.isKinematicObject();
+	if (isRigidBodyType && !isStaticOrKinematic)
 	{
 		// dynamic body
 		// Dynamic bodies can only be in one island, so it's safe to write to the companionId
@@ -704,7 +708,7 @@ int btSequentialImpulseConstraintSolver::getOrInitSolverBody(btCollisionObject& 
 			body.setCompanionId(solverBodyId);
 		}
 	}
-	else if (isRigidBodyType && body.isKinematicObject())
+	else if (isRigidBodyType && isKinematic)
 	{
 		//
 		// NOTE: must test for kinematic before static because some kinematic objects also

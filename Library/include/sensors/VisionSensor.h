@@ -86,11 +86,11 @@ namespace sf
          */
         void setRelativeSensorFrame(const Transform& origin);
 
-        //! A method returning the sensor measurement frame.
-        virtual Transform getSensorFrame() const;
-        
         //! A method returning the type of the sensor.
         virtual SensorType getType();
+
+        //! A method returning the sensor measurement frame.
+        virtual Transform getSensorFrame() const;
         
         //! A method returning the type of the vision sensor.
         virtual VisionSensorType getVisionSensorType() = 0;

@@ -85,20 +85,20 @@ void Multibeam::InternalUpdate(Scalar dt)
 
 std::vector<Renderable> Multibeam::Render()
 {
-    std::vector<Renderable> items(0);
-    
-    Renderable item;
-    item.type = RenderableType::SENSOR_LINES;
-    item.model = glMatrixFromTransform(getSensorFrame());
-    
-    for(unsigned int i=0; i <= angSteps; ++i)
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
     {
-        Vector3 dir = Vector3(1, 0, 0) * btCos(angles[i]) + Vector3(0, 1, 0) * btSin(angles[i]);
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(dir.x() * distances[i], dir.y() * distances[i], dir.z() * distances[i]));
-    }        
-    
-    items.push_back(item);
+        Renderable item;
+        item.type = RenderableType::SENSOR_LINES;
+        item.model = glMatrixFromTransform(getSensorFrame());    
+        for(unsigned int i=0; i <= angSteps; ++i)
+        {
+            Vector3 dir = Vector3(1, 0, 0) * btCos(angles[i]) + Vector3(0, 1, 0) * btSin(angles[i]);
+            item.points.push_back(glm::vec3(0,0,0));
+            item.points.push_back(glm::vec3(dir.x() * distances[i], dir.y() * distances[i], dir.z() * distances[i]));
+        }        
+        items.push_back(item);
+    }
     return items;
 }
 

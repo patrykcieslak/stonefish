@@ -420,8 +420,6 @@ int btDiscreteDynamicsWorld::stepSimulation(btScalar timeStep, int maxSubSteps, 
 		btIDebugDraw* debugDrawer = getDebugDrawer();
 		gDisableDeactivation = (debugDrawer->getDebugMode() & btIDebugDraw::DBG_NoDeactivation) != 0;
 	}
-
-	//printf("Sim substeps %u\n", numSimulationSubSteps);
 	if (numSimulationSubSteps)
 	{
 		//clamp the number of substeps, to prevent simulation grinding spiralling down to a halt
@@ -429,7 +427,7 @@ int btDiscreteDynamicsWorld::stepSimulation(btScalar timeStep, int maxSubSteps, 
 
 		saveKinematicState(fixedTimeStep * clampedSimulationSteps);
 
-		//applyGravity(); //OVERRIDEN by pre-tick callback
+		applyGravity();
 
 		for (int i = 0; i < clampedSimulationSteps; i++)
 		{
@@ -802,6 +800,14 @@ public:
 		///don't do CCD when the collision filters are not matching
 		if (!ClosestConvexResultCallback::needsCollision(proxy0))
 			return false;
+		if (m_pairCache->getOverlapFilterCallback()) {
+			btBroadphaseProxy* proxy1 = m_me->getBroadphaseHandle();
+			bool collides = m_pairCache->needsBroadphaseCollision(proxy0, proxy1);
+			if (!collides)
+			{
+				return false;
+			}
+		}
 
 		btCollisionObject* otherObj = (btCollisionObject*)proxy0->m_clientObject;
 

@@ -177,70 +177,92 @@ void SSS::InternalUpdate(Scalar dt)
 
 std::vector<Renderable> SSS::Render()
 {
-    std::vector<Renderable> items(0);
-    
-    Renderable item;
-    item.type = RenderableType::SENSOR_LINES;    
-    
-    //Create single transducer dummy
-    GLfloat iconSize = 0.5f;
-    int div = 12;
-    GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
-    GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * iconSize;
-    GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * iconSize;
-    
-    //Arcs
-    GLfloat hAngle = -fovStep*(div/2);
-    for(int i=0; i<=div; ++i)
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
     {
-        GLfloat z = cosf(hAngle) * cosVAngle;
-        GLfloat x = sinf(hAngle) * cosVAngle;
-        item.points.push_back(glm::vec3(x, sinVAngle, z));
-        if(i > 0 && i < div)
+        Renderable item;
+        item.type = RenderableType::SENSOR_LINES;    
+        
+        //Create single transducer dummy
+        int div = 12;
+        GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
+        //Arcs min
+        GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * range.x;
+        GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * range.x;        
+        GLfloat hAngle = -fovStep*(div/2);
+        for(int i=0; i<=div; ++i)
+        {
+            GLfloat z = cosf(hAngle) * cosVAngle;
+            GLfloat x = sinf(hAngle) * cosVAngle;
             item.points.push_back(glm::vec3(x, sinVAngle, z));
-        hAngle += fovStep;
-    }
-    hAngle = -fovStep*(div/2);
-    for(int i=0; i<=div; ++i)
-    {
-        GLfloat z = cosf(hAngle) * cosVAngle;
-        GLfloat x = sinf(hAngle) * cosVAngle;
-        item.points.push_back(glm::vec3(x, -sinVAngle, z));
-        if(i > 0 && i < div)
+            if(i > 0 && i < div)
+                item.points.push_back(glm::vec3(x, sinVAngle, z));
+            hAngle += fovStep;
+        }
+        hAngle = -fovStep*(div/2);
+        for(int i=0; i<=div; ++i)
+        {
+            GLfloat z = cosf(hAngle) * cosVAngle;
+            GLfloat x = sinf(hAngle) * cosVAngle;
             item.points.push_back(glm::vec3(x, -sinVAngle, z));
-        hAngle += fovStep;
-    }
-    //Ends
-    hAngle = -fovStep*(div/2);
-    GLfloat zs = cosf(hAngle) * cosVAngle;
-    GLfloat xs = sinf(hAngle) * cosVAngle;
-    item.points.push_back(glm::vec3(xs, sinVAngle, zs));
-    item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
-    hAngle = fovStep*(div/2);
-    GLfloat ze = cosf(hAngle) * cosVAngle;
-    GLfloat xe = sinf(hAngle) * cosVAngle;
-    item.points.push_back(glm::vec3(xe, sinVAngle, ze));
-    item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
-    //Pyramid
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(xs, sinVAngle, zs));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(xe, sinVAngle, ze));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+            if(i > 0 && i < div)
+                item.points.push_back(glm::vec3(x, -sinVAngle, z));
+            hAngle += fovStep;
+        }
+        //Arcs max
+        cosVAngle = cosf(glm::radians(fovV)/2.f) * range.y;
+        sinVAngle = sinf(glm::radians(fovV)/2.f) * range.y;        
+        hAngle = -fovStep*(div/2);
+        for(int i=0; i<=div; ++i)
+        {
+            GLfloat z = cosf(hAngle) * cosVAngle;
+            GLfloat x = sinf(hAngle) * cosVAngle;
+            item.points.push_back(glm::vec3(x, sinVAngle, z));
+            if(i > 0 && i < div)
+                item.points.push_back(glm::vec3(x, sinVAngle, z));
+            hAngle += fovStep;
+        }
+        hAngle = -fovStep*(div/2);
+        for(int i=0; i<=div; ++i)
+        {
+            GLfloat z = cosf(hAngle) * cosVAngle;
+            GLfloat x = sinf(hAngle) * cosVAngle;
+            item.points.push_back(glm::vec3(x, -sinVAngle, z));
+            if(i > 0 && i < div)
+                item.points.push_back(glm::vec3(x, -sinVAngle, z));
+            hAngle += fovStep;
+        }
+        //Ends
+        hAngle = -fovStep*(div/2);
+        GLfloat zs = cosf(hAngle) * cosVAngle;
+        GLfloat xs = sinf(hAngle) * cosVAngle;
+        item.points.push_back(glm::vec3(xs, sinVAngle, zs));
+        item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
+        hAngle = fovStep*(div/2);
+        GLfloat ze = cosf(hAngle) * cosVAngle;
+        GLfloat xe = sinf(hAngle) * cosVAngle;
+        item.points.push_back(glm::vec3(xe, sinVAngle, ze));
+        item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+        //Pyramid
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(xs, sinVAngle, zs));
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(xe, sinVAngle, ze));
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
 
-    //Add two transducer dummies
-    GLfloat offsetAngle = M_PI_2 - glm::radians(tilt);
-    glm::mat4 views[2];
-    views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
-    views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
-    item.model = glMatrixFromTransform(getSensorFrame()) * views[0];
-    items.push_back(item);
-    item.model = glMatrixFromTransform(getSensorFrame()) * views[1];
-    items.push_back(item);
-    
+        //Add two transducer dummies
+        GLfloat offsetAngle = M_PI_2 - glm::radians(tilt);
+        glm::mat4 views[2];
+        views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
+        views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
+        item.model = glMatrixFromTransform(getSensorFrame()) * views[0];
+        items.push_back(item);
+        item.model = glMatrixFromTransform(getSensorFrame()) * views[1];
+        items.push_back(item);
+    }
     return items;
 }
 

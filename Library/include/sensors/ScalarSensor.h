@@ -162,6 +162,9 @@ namespace sf
         
         //! A method returning the type of scalar sensor.
         virtual ScalarSensorType getScalarSensorType() = 0;
+
+        //! A method returning the sensor measurement frame.
+        virtual Transform getSensorFrame() const = 0;
         
     protected:
         void AddSampleToHistory(const Sample& s);

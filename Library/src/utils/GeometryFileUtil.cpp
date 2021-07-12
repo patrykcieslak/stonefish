@@ -35,7 +35,7 @@ namespace sf
 Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
 {
     std::string extension = path.substr(path.length()-3,3);
-    Mesh* mesh = NULL;
+    Mesh* mesh = nullptr;
     
     if(extension == "stl" || extension == "STL")
         mesh = LoadSTL(path, scale);
@@ -55,7 +55,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     if(file == NULL)
     {
         cCritical("Failed to open geometry file: %s", path.c_str());
-        return NULL;
+        return nullptr;
     }
     
     cInfo("Loading geometry from: %s", path.c_str());
@@ -253,7 +253,7 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     if(file == NULL)
     {
         cCritical("Failed to open geometry file: %s", path.c_str());
-        return NULL;
+        return nullptr;
     }
     
     cInfo("Loading geometry from: %s", path.c_str());

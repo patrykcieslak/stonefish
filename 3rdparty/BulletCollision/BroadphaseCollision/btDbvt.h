@@ -204,7 +204,7 @@ struct btDbvntNode
     btDbvntNode(const btDbvtNode* n)
     : volume(n->volume)
     , normal(0,0,0)
-	, angle(0)
+    , angle(0)
     , data(n->data)
     {
         childs[0] = 0;

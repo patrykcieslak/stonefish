@@ -15,6 +15,29 @@ A rich set of sensor simulations is available in the *Stonefish* library, includ
 
     When creating sensors in the XML syntax, their definitions have to always be located inside the definition of the robot/body that the sensor is to be attached to. In case of vision sensors attached to the world, the definitions should be located at the root level.
 
+Common properties
+=================
+
+All of the sensors share a few common properties. Each sensor has a **name**, a refresh **rate** and a **type**. Moreover, all sensors include some type of visual representation of the sensor location and basic properties, e.g., field of view. 
+
+Optionally, the user can specify a mesh file, which is used to render a visualisation of a particular device. This can be achieved by using the following syntax:
+
+.. code-block:: xml
+    
+    <sensor name="Profiler" rate="10.0" type="profiler">
+       <!-- profiler definitions here -->
+       <visual filename="profiler_vis.obj" scale="1.0" look="black"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    sf::Profiler* prof = new sf::Profiler(...);  
+    prof->setVisual(sf::GetDataPath() + "profiler_vis.obj", 1.0, "black");
+
+.. warning::
+
+    It is important to export the visualisation geometry already aligned with the frame of the sensor, i.e., with the same location of the origin and with properly defined axes. When rendering the model, the simulator will transform it automatically to the current sensor frame. 
+
 .. note::
 
     In the following sections, description of each specific sensor implementation is accompanied with an example of sensor instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of C++ code, it is assumed that an object ``sf::Robot* robot = new sf::Robot(...);`` was created before the sensor definition. 

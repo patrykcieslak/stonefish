@@ -101,18 +101,19 @@ void Profiler::InternalUpdate(Scalar dt)
 
 std::vector<Renderable> Profiler::Render()
 {
-    std::vector<Renderable> items(0);
-    
-    Scalar currentAngle = currentAngStep/(Scalar)angSteps * angRange - Scalar(0.5) * angRange;
-    Vector3 dir = Vector3(1, 0, 0) * btCos(currentAngle) + Vector3(0, 1, 0) * btSin(currentAngle);
-    
-    Renderable item;
-    item.type = RenderableType::SENSOR_LINES;
-    item.model = glMatrixFromTransform(getSensorFrame());
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(dir.x()*distance, dir.y()*distance, dir.z()*distance));
-    items.push_back(item);
-
+    std::vector<Renderable> items = Sensor::Render();
+    if(isRenderable())
+    {
+        Scalar currentAngle = currentAngStep/(Scalar)angSteps * angRange - Scalar(0.5) * angRange;
+        Vector3 dir = Vector3(1, 0, 0) * btCos(currentAngle) + Vector3(0, 1, 0) * btSin(currentAngle);
+        
+        Renderable item;
+        item.type = RenderableType::SENSOR_LINES;
+        item.model = glMatrixFromTransform(getSensorFrame());
+        item.points.push_back(glm::vec3(0,0,0));
+        item.points.push_back(glm::vec3(dir.x()*distance, dir.y()*distance, dir.z()*distance));
+        items.push_back(item);
+    }
     return items;
 }
 

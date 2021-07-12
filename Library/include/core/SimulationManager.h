@@ -292,6 +292,9 @@ namespace sf
         
         //! A method returning the type of solver used.
         SolverType getSolverType();
+
+        //! A method returning soft body world information.
+        btSoftBodyWorldInfo& getSoftBodyWorldInfo();
         
         //! A method returning a robot by index
         /*!
@@ -436,7 +439,7 @@ namespace sf
         bool isOceanEnabled();
         
         //! A method returning a pointer to the Bullet dynamics world.
-        btMultiBodyDynamicsWorld* getDynamicsWorld();
+        btSoftMultiBodyDynamicsWorld* getDynamicsWorld();
         
         //------ Aliases created to shorten the code needed to build the scenario ------
         
@@ -481,8 +484,10 @@ namespace sf
         static bool ContactInfoUpdateCallback(btManifoldPoint& cp, void* body0, void* body1);
         static bool ContactInfoDestroyCallback(void* userPersistentData);
 
-        btMultiBodyDynamicsWorld* dynamicsWorld;
-        btMultiBodyConstraintSolver* dwSolver;
+        btSoftMultiBodyDynamicsWorld* dynamicsWorld;
+        btMultiBodyConstraintSolver* mbSolver;
+        btSoftBodySolver* sbSolver;
+        btSoftBodyWorldInfo sbInfo;
         btCollisionDispatcher* dwDispatcher;
         btBroadphaseInterface* dwBroadphase;
         btDefaultCollisionConfiguration* dwCollisionConfig;

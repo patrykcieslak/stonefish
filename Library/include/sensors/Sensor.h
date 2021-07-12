@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sensor__
@@ -83,6 +83,9 @@ namespace sf
         
         //! A method to set if the sensor is renderable.
         void setRenderable(bool render);
+
+        //! A method to set the visual representation of the sensor.
+        void setVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
         
         //! A method returning the sensor name.
         std::string getName();
@@ -95,6 +98,9 @@ namespace sf
         
         //! A method returning the type of the sensor.
         virtual SensorType getType() = 0;
+
+        //! A method returning the sensor measurement frame.
+        virtual Transform getSensorFrame() const = 0;
         
     protected:
         Scalar freq;
@@ -106,8 +112,10 @@ namespace sf
     private:
         std::string name;
         Scalar eleapsedTime;
-        bool renderable;
         bool newDataAvailable;
+        bool renderable;
+        int lookId;
+        int graObjectId;
     };
 }
 

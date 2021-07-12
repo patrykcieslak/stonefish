@@ -20,15 +20,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/6/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sensor.h"
 
-#include "core/SimulationApp.h"
+#include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/Console.h"
 #include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLContent.h"
 
 namespace sf
 {
@@ -41,9 +42,11 @@ Sensor::Sensor(std::string uniqueName, Scalar frequency)
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     setUpdateFrequency(frequency);
     eleapsedTime = Scalar(0);
-    renderable = false;
+    renderable = true;
     newDataAvailable = false;
     updateMutex = SDL_CreateMutex();
+    lookId = -1;
+    graObjectId = -1;
 }
 
 Sensor::~Sensor()
@@ -88,6 +91,20 @@ bool Sensor::isRenderable()
     return renderable;
 }
 
+void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
+{
+    if(!SimulationApp::getApp()->hasGraphics())
+        return;
+
+    Mesh* mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
+    if(mesh == nullptr)
+        return;
+
+    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    delete mesh;
+}
+
 void Sensor::Reset()
 {
     eleapsedTime = Scalar(0.);
@@ -122,6 +139,16 @@ void Sensor::Update(Scalar dt)
 std::vector<Renderable> Sensor::Render()
 {
     std::vector<Renderable> items(0);
+    if(renderable && graObjectId > 0)
+    {
+        Renderable item;
+        item.type = RenderableType::SOLID;
+        item.materialName = "";
+        item.objectId = graObjectId;
+        item.lookId = lookId;
+        item.model = glMatrixFromTransform(getSensorFrame());
+        items.push_back(item);
+    }
     return items;
 }
     
