@@ -39,7 +39,7 @@ Moreover, an occlusion test is performed as default, to take into account obstac
 .. code-block:: xml
 
     <comm name="Modem" device_id="5" type="acoustic_modem">
-        <specs horizontal_fov="360.0" vertical_fov="120.0" range="1000.0"/>
+        <specs min_vertical_fov="0.0" max_vertical_fov="220.0" range="1000.0"/>
         <connect device_id="9" occlusion_test="true"/>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <link name="Link1"/>
@@ -48,7 +48,7 @@ Moreover, an occlusion test is performed as default, to take into account obstac
 .. code-block:: cpp
 
     #include <Stonefish/comms/AcousticModem.h>
-    sf::AcousticModem* modem = new sf::AcousticModem("Modem", 5, 360.0, 120.0, 1000.0);
+    sf::AcousticModem* modem = new sf::AcousticModem("Modem", 5, 0.0, 220.0, 1000.0);
     modem->Connect(9);
     modem->setOcclusionTest(true);
     robot->AddComm(modem, "Link1", sf::I4());
@@ -63,7 +63,7 @@ Another feature of the USBL implementation is an automatic ping function used to
 .. code-block:: xml    
 
     <comm name="USBL" device_id="5" type="usbl">
-        <specs horizontal_fov="360.0" vertical_fov="160.0" range="1000.0"/>
+        <specs min_vertical_fov="0.0" max_vertical_fov="220.0" range="1000.0"/>
         <connect device_id="9" occlusion_test="false"/>
         <autoping rate="1.0"/>
         <noise range="0.05" horizontal_angle="0.2" vertical_angle="0.5"/>
@@ -75,7 +75,7 @@ Another feature of the USBL implementation is an automatic ping function used to
 .. code-block:: cpp
 
     #include <Stonefish/comms/USBL.h>
-    sf::USBL* usbl = new sf::USBL("USBL", 5, 360.0, 160.0, 1000.0);
+    sf::USBL* usbl = new sf::USBL("USBL", 5, 0.0, 220.0, 1000.0);
     usbl->Connect(9);
     usbl->EnableAutoPing(1.0);
     usbl->setOcclusionTest(false);

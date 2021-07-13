@@ -9,11 +9,11 @@
 			<current type="uniform">
 				<velocity xyz="1.0 0.0 0.0"/>
 			</current>
-			<current type="jet">
+			<!-- <current type="jet">
 				<center xyz="0.0 0.0 2.0"/>
 				<outlet radius="0.2"/>
 				<velocity xyz="1.0 1.0 0.0"/>
-			</current>
+			</current> -->
 		</ocean>
 		
 		<atmosphere>
@@ -53,7 +53,7 @@
 	<static name="Bottom" type="plane">
 		<material name="Rock"/>
 		<look name="seabed"/>
-		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 5.0"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 40.0"/>
 	</static>
 	<!--
 	<static name="HorizontalPipe" type="cylinder">
@@ -76,26 +76,24 @@
 			<specs resolution_x="1360" resolution_y="1024" horizontal_fov="55.0"/>
 		</sensor>
 	</static>
-	
-	<animated name="Anim" type="model" collisions="false">
-		<physical>
-			<mesh filename="multi_object_test.obj" scale="1.0"/>
-			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-		</physical>
-		<material name="Aluminium"/>
-		<look name="gray"/>
-		<trajectory type="spline" playback="onetime">
+	-->	
+	<animated name="Anim" type="empty" collisions="false">
+		<trajectory type="spline" playback="boomerang">
 			<keypoint time="0.0" xyz="0.0 0.0 -4.0" rpy="0.0 2.0 0.0"/>
 			<keypoint time="1.0" xyz="10.0 0.0 0.0" rpy="0.0 2.0 0.0"/>
-			<keypoint time="4.0" xyz="10.0 4.0 0.0" rpy="0.0 0.0 0.0"/>
+			<keypoint time="4.0" xyz="10.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+			<keypoint time="7.0" xyz="10.0 4.0 0.0" rpy="0.0 0.0 10.0"/>
 			<keypoint time="10.0" xyz="0.0 0.0 5.0" rpy="1.0 2.0 0.0"/>
+			<keypoint time="14.0" xyz="0.0 0.0 5.0" rpy="1.0 2.0 0.0"/>
 		</trajectory>
+		<!--
 		<sensor name="gpsanim" type="gps" rate="1.0">
 			<origin rpy="0.0 0.0 0.0" xyz="-0.54 -0.35 -0.74"/>
 			<noise ned_position="0.5"/>
 		</sensor>
+		-->
 	</animated>
-
+	<!--
 	<dynamic name="Ball" type="sphere" physics="submerged">
 		<dimensions radius="0.5"/>
 		<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
@@ -116,7 +114,7 @@
     
     <comm name="Modem" type="acoustic_modem" device_id="2">
 		<connect device_id="1"/>
-		<specs horizontal_fov="360.0" vertical_fov="360.0" range="1000.0"/>
+		<specs min_vertical_fov="0.0" max_vertical_fov="360.0" range="1000.0"/>
 		<world_transform rpy="3.14159 0.0 0.0" xyz="100.0 20.0 4.0"/>
 	</comm>
 

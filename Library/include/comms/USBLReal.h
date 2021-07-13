@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/12/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_USBLReal__
@@ -38,13 +38,13 @@ namespace sf
         /*!
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
-         \param horizontalFOVDeg the horizontal beam angle [deg]
-         \param verticalFOVDeg the vertical beam angle [deg]
+         \param minVerticalFOVDeg the minimum vertical angle of radiation pattern [deg]
+         \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          \param carrierFrequency the base frequency of the signal [Hz]
          \param baseline the distance between transducers forming one pair [m]
          */
-        USBLReal(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange,
+        USBLReal(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
                  Scalar carrierFrequency, Scalar baseline);
            
         //! A method used to set the noise characteristics of the device.

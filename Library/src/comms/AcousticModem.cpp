@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 26/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/AcousticModem.h"
@@ -104,11 +104,13 @@ bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
 }
 
 //Member 
-AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, 
-                             Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange) : Comm(uniqueName, deviceId)
+AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+                                : Comm(uniqueName, deviceId)
 {
-    hFov2 = horizontalFOVDeg <= Scalar(0) || horizontalFOVDeg > Scalar(360) ? Scalar(M_PI) : horizontalFOVDeg/Scalar(180*2)*Scalar(M_PI);
-    vFov2 = verticalFOVDeg <= Scalar(0) || verticalFOVDeg > Scalar(360) ? Scalar(M_PI) : verticalFOVDeg/Scalar(180*2)*Scalar(M_PI);
+    btClamp(maxVerticalFOVDeg, Scalar(0), Scalar(360));
+    btClamp(minVerticalFOVDeg, Scalar(0), maxVerticalFOVDeg);
+    minFov2 = btRadians(minVerticalFOVDeg/Scalar(2));
+    maxFov2 = btRadians(maxVerticalFOVDeg/Scalar(2));
     range = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
     position = V0();
     frame = std::string("");
@@ -130,8 +132,7 @@ bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     Vector3 dir = (getDeviceFrame().inverse() * worldDir).normalized();
     Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
     Scalar vAngle = atan2(d, dir.getZ());
-    Scalar hAngle = atan2(dir.getY(), dir.getX());
-    return fabs(hAngle) <= hFov2 && fabs(vAngle) <= vFov2;
+    return btFabs(vAngle) >= minFov2 && btFabs(vAngle) <= maxFov2;
 }
 
 void AcousticModem::setOcclusionTest(bool enabled)
@@ -248,9 +249,71 @@ std::vector<Renderable> AcousticModem::Render()
 {
     std::vector<Renderable> items(0);
     
+    //Fov indicator
     Renderable item;
-    item.type = RenderableType::SENSOR_CS;
     item.model = glMatrixFromTransform(getDeviceFrame());
+    item.type = RenderableType::SENSOR_LINES;
+    GLfloat iconSize = 0.25f;
+    int div = 24;
+    //Upper circle
+    if(minFov2 > Scalar(0))
+    {
+        GLfloat r = iconSize * glm::sin((GLfloat)minFov2);
+        GLfloat h = iconSize * glm::cos((GLfloat)minFov2);
+        for(int i=0; i<=div; ++i)
+        {
+            GLfloat angle = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
+            item.points.push_back(glm::vec3(glm::cos(angle)*r, glm::sin(angle)*r, -h));
+            if(i > 0 && i < div)
+                item.points.push_back(item.points.back());
+        }
+    }
+    //Lower circle
+    if(maxFov2 < Scalar(M_PI))
+    {
+        GLfloat r = iconSize * glm::sin((GLfloat)maxFov2);
+        GLfloat h = iconSize * glm::cos((GLfloat)maxFov2);
+        for(int i=0; i<=div; ++i)
+        {
+            GLfloat angle = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
+            item.points.push_back(glm::vec3(glm::cos(angle)*r, glm::sin(angle)*r, -h));
+            if(i > 0 && i < div)
+                item.points.push_back(item.points.back());
+        }
+    }
+    //4 bars
+    div = 16;
+    if(maxFov2 - minFov2 > Scalar(0))
+    {
+        for(int i=0; i<4; ++i)
+        {
+            GLfloat hangle = (GLfloat)(i * M_PI_2);
+            GLfloat x = iconSize * glm::cos(hangle);
+            GLfloat y = iconSize * glm::sin(hangle);
+            for(int h=0; h<=div; ++h)
+            {
+                GLfloat angle = (GLfloat)h/(GLfloat)div * (maxFov2-minFov2) + minFov2;
+                item.points.push_back(glm::vec3(glm::sin(angle)*x, glm::sin(angle)*y, -glm::cos(angle)*iconSize));
+                if(h == 0 && minFov2 > Scalar(0))
+                {
+                    glm::vec3 v = item.points.back();
+                    item.points.push_back(glm::vec3(0.f,0.f,0.f));
+                    item.points.push_back(v);
+                }
+                else if(h == div && maxFov2 < Scalar(M_PI))
+                {
+                    item.points.push_back(item.points.back());
+                    item.points.push_back(glm::vec3(0.f,0.f,0.f));
+                }
+                else if(h > 0 && h < div)
+                    item.points.push_back(item.points.back());
+            }
+        }
+    }
+    items.push_back(item);
+
+    //Axes
+    item.type = RenderableType::SENSOR_CS;
     items.push_back(item);
 
 #ifdef DEBUG

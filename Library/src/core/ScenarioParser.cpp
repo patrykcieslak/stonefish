@@ -3429,15 +3429,15 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
     Comm* comm;
     if(typeStr == "acoustic_modem")
     {
-        Scalar hFovDeg;
-        Scalar vFovDeg;
+        Scalar minFovDeg;
+        Scalar maxFovDeg;
         Scalar range;
         unsigned int cId = 0;
         bool occlusion = true;
         
         if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("min_vertical_fov", &minFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("max_vertical_fov", &maxFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
@@ -3451,23 +3451,23 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         item->QueryAttribute("occlusion_test", &occlusion);
     
-        comm = new AcousticModem(commName, devId, hFovDeg, vFovDeg, range);
+        comm = new AcousticModem(commName, devId, minFovDeg, maxFovDeg, range);
         comm->Connect(cId);
         ((AcousticModem*)comm)->setOcclusionTest(occlusion);
         return comm;
     }
     else if(typeStr == "usbl")
     {
-        Scalar hFovDeg;
-        Scalar vFovDeg;
+        Scalar minFovDeg;
+        Scalar maxFovDeg;
         Scalar range;
         unsigned int cId = 0;
         Scalar pingRate;
         bool occlusion = true;
         
         if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("min_vertical_fov", &minFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("max_vertical_fov", &maxFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
@@ -3481,7 +3481,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = new USBLSimple(commName, devId, hFovDeg, vFovDeg, range);
+        comm = new USBLSimple(commName, devId, minFovDeg, maxFovDeg, range);
         comm->Connect(cId);
         ((AcousticModem*)comm)->setOcclusionTest(occlusion);
         
@@ -3526,8 +3526,8 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
     }
     else if(typeStr == "usbl2")
     {
-        Scalar hFovDeg;
-        Scalar vFovDeg;
+        Scalar minFovDeg;
+        Scalar maxFovDeg;
         Scalar range;
         Scalar freq;
         Scalar baseline;
@@ -3536,8 +3536,8 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         bool occlusion = true;
         
         if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("horizontal_fov", &hFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("vertical_fov", &vFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("min_vertical_fov", &minFovDeg) != XML_SUCCESS
+            || item->QueryAttribute("max_vertical_fov", &maxFovDeg) != XML_SUCCESS
             || item->QueryAttribute("range", &range) != XML_SUCCESS
             || item->QueryAttribute("frequency", &freq) != XML_SUCCESS
             || item->QueryAttribute("baseline", &baseline) != XML_SUCCESS)
@@ -3553,7 +3553,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = new USBLReal(commName, devId, hFovDeg, vFovDeg, range, freq, baseline);
+        comm = new USBLReal(commName, devId, minFovDeg, maxFovDeg, range, freq, baseline);
         comm->Connect(cId);
         ((AcousticModem*)comm)->setOcclusionTest(occlusion);
         

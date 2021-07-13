@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_USBLSimple__
@@ -38,11 +38,11 @@ namespace sf
         /*!
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
-         \param horizontalFOVDeg the horizontal beam angle [deg]
-         \param verticalFOVDeg the vertical beam angle [deg]
+         \param minVerticalFOVDeg the minimum vertical angle of radiation pattern [deg]
+         \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange);
+        USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A method used to set the resolution of the measurements.
         /*!

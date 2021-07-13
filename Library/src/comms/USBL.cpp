@@ -31,8 +31,8 @@ namespace sf
 std::random_device USBL::randomDevice;
 std::mt19937 USBL::randomGenerator(randomDevice());
     
-USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange) 
-           : AcousticModem(uniqueName, deviceId, horizontalFOVDeg, verticalFOVDeg, operatingRange)
+USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+           : AcousticModem(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
     ping = false;
     noise = false;

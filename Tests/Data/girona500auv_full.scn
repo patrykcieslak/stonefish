@@ -138,7 +138,7 @@
 		<comm name="USBL" type="usbl2" device_id="1">
         	<link name="Vehicle"/>
         	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
-        	<specs horizontal_fov="360.0" vertical_fov="360.0" range="1000.0" frequency="25000" baseline="0.1"/>
+        	<specs min_vertical_fov="100.0" max_vertical_fov="220.0" range="1000.0" frequency="25000" baseline="0.1"/>
         	<connect device_id="2"/>
 			<autoping rate="0.5"/>
         	<noise tof="0.0015" sound_velocity="0.0133" phase="0.07" baseline_error="0.0008" depth="0.003"/>
@@ -149,7 +149,7 @@
         	<connect device_id="2"/>
         	<link name="Vehicle"/>
         	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
-        	<specs horizontal_fov="360.0" vertical_fov="220.0" range="1000.0"/>
+        	<specs min_vertical_fov="0.0" max_vertical_fov="220.0" range="1000.0"/>
         	<autoping rate="10.0"/>
         	<noise range="0.01" horizontal_angle="0.05" vertical_angle="0.1"/>
 			<resolution range="0.1" angle="0.1"/>
@@ -167,12 +167,15 @@
 			<noise pressure="5.0"/>
 		</sensor>
 
-		<sensor name="dvl" type="dvl" rate="5.0">
+		<sensor name="dvl" type="dvl" rate="20.0">
+			<history samples="1000"/>
 			<link name="Vehicle"/>
 			<origin rpy="3.1416 0.0 -0.785" xyz="-0.75 0.0 0.4"/>
 			<specs beam_angle="30.0"/>
 			<range velocity="9.0 9.0 9.0" altitude_min="0.5" altitude_max="81.0"/>
+			<water_layer minimum_layer_size="5.0" boundary_near="10.0" boundary_far="30.0"/>
 			<noise velocity="0.0015" altitude="0.001"/>
+			<visual filename="icosphere.obj" scale="1.0" look="yellow"/>
 		</sensor>
 
 		<sensor name="acc" type="accelerometer" rate="100.0">
@@ -262,6 +265,6 @@
 			<origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
 		</light>
         
-		<world_transform rpy="3.1415 0.0 0.0" xyz="0.0 0.0 0.0"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
 	</robot>
 </scenario>

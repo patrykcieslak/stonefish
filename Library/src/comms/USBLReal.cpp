@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/12/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/USBLReal.h"
@@ -28,9 +28,9 @@
 namespace sf
 {
 
-USBLReal::USBLReal(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange,
+USBLReal::USBLReal(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
              Scalar carrierFrequency, Scalar baseline) 
-           : USBL(uniqueName, deviceId, horizontalFOVDeg, verticalFOVDeg, operatingRange)
+           : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
     freq = carrierFrequency;
     bl = baseline;

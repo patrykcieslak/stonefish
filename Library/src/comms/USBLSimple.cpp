@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/USBLSimple.h"
@@ -28,8 +28,8 @@
 namespace sf
 {
         
-USBLSimple::USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange) 
-           : USBL(uniqueName, deviceId, horizontalFOVDeg, verticalFOVDeg, operatingRange)
+USBLSimple::USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange) 
+           : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
     rangeRes = Scalar(0);
     angleRes = Scalar(0);

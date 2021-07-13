@@ -45,11 +45,11 @@ namespace sf
         /*!
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
-         \param horizontalFOVDeg the horizontal beam angle [deg]
-         \param verticalFOVDeg the vertical beam angle [deg]
+         \param minVerticalFOVDeg the minimum vertical angle of radiation pattern [deg]
+         \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar horizontalFOVDeg, Scalar verticalFOVDeg, Scalar operatingRange);
+        AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A destructor.
         virtual ~AcousticModem();
@@ -106,7 +106,7 @@ namespace sf
         
         std::map<AcousticDataFrame*, Vector3> propagating;
         Scalar range;
-        Scalar hFov2, vFov2;
+        Scalar minFov2, maxFov2;
         Vector3 position;
         std::string frame;
         bool occlusion;
