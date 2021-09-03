@@ -95,7 +95,7 @@ vec3 accurateLinearToSRGB(vec3 linearCol)
     return sRGB;
 }
 
-vec3 rgb2hsv(vec3 c)
+vec3 rgbToHsv(vec3 c)
 {
     vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0);
     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
@@ -105,7 +105,7 @@ vec3 rgb2hsv(vec3 c)
     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 
-vec3 hsv2rgb(vec3 c)
+vec3 hsvToRgb(vec3 c)
 {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
@@ -182,10 +182,17 @@ vec3 Reinhard(vec3 color, float burn, float scale, float Lwhite)
 
 void main(void) 
 {
+    //Read exposure
     float exposure = clamp(texelFetch(texExposure, ivec2(0,0), 0).r, 0.0, 0.0004);
+    //Tone mapping
     vec3 color = texture(texSource, texcoord).rgb; 
     color = accurateLinearToSRGB(exposure * exposureComp * color); //Gamma correction
     float lum = dot(color, RGB_TO_LUM); //FXAA
     color = ACESFitted(color); //Filmic tonemapping
+    //Saturation bump-up
+    vec3 hsv = rgbToHsv(color);
+    hsv.y = clamp(hsv.y*1.1, 0.0, 1.0);
+    color = hsvToRgb(hsv);
+    //Final output
     fragColor = vec4(color, lum);
 }
