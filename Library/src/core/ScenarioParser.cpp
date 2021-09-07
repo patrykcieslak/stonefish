@@ -99,10 +99,25 @@ bool ScenarioParser::Parse(std::string filename)
     log.Print(MessageType::INFO, "Scenario file: %s", filename.c_str());
     
     //Open file
-    if(doc.LoadFile(filename.c_str()) != XML_SUCCESS)
+    XMLError result = doc.LoadFile(filename.c_str());
+    if(result != XML_SUCCESS)
     {
-        cInfo("Scenario parser: File not found!");
-        log.Print(MessageType::ERROR, "File not found!");
+        switch(result)
+        {
+            case XMLError::XML_ERROR_FILE_NOT_FOUND:
+            {
+                cInfo("Scenario parser: File not found!");
+                log.Print(MessageType::ERROR, "File not found!");
+            }
+                break;
+
+            default:
+            {
+                cInfo("Scenario parser: Syntax error in file!");
+                log.Print(MessageType::ERROR, "Syntax error in file!");
+            }
+                break;
+        }
         return false;
     }
     
@@ -153,9 +168,25 @@ bool ScenarioParser::Parse(std::string filename)
         //Load file
         std::string includedPath = GetFullPath(std::string(path));
         XMLDocument includedDoc;
-        if(includedDoc.LoadFile(includedPath.c_str()) != XML_SUCCESS)
+        result = includedDoc.LoadFile(includedPath.c_str());
+        if(result != XML_SUCCESS)
         {
-            log.Print(MessageType::ERROR, "Included file '%s' not found!", includedPath.c_str());
+            switch(result)
+            {
+                case XMLError::XML_ERROR_FILE_NOT_FOUND:
+                {
+                    cInfo("Scenario parser: Included file not found!");
+                    log.Print(MessageType::ERROR, "Included file '%s' not found!", includedPath.c_str());
+                }
+                    break;
+
+                default:
+                {
+                    cInfo("Scenario parser: Syntax error in included file!");
+                    log.Print(MessageType::ERROR, "Syntax error in included file '%s'!", includedPath.c_str());
+                }
+                    break;
+            }
             return false;
         }
         
