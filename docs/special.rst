@@ -62,8 +62,8 @@ Magnetic properties are defined by extending the standard material definition wi
 
 The "magnetic" factor has different meaning depending on its value:
 
-- **<0** - ferromagnetic material
-- **=0** - paramagnetic material
-- **>0** - permanent magnet.
+-  **<0** - ferromagnetic material
+-  **=0** - paramagnetic material
+-  **>0** - permanent magnet.
 
 The absolute value of the factor defines the strength of magnetic interactions. Only a pair of bodies, first made of a ferromagnetic material and second being a permanent magnet, will interact. Interaction between two magnets is not implemented due to the lack of information about polarity.

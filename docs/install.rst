@@ -12,15 +12,14 @@ Dependencies
 
 The following dependencies have to be installed prior to building the library:
 
-* `OpenGL Mathematics <https://glm.g-truc.net/>`_ (libglm-dev, version >= 0.9.9.0)
-
-* `SDL2 <https://www.libsdl.org/>`_ (libsdl2-dev)
+-  `OpenGL Mathematics <https://glm.g-truc.net/>`_ (libglm-dev, version >= 0.9.9.0)
+-  `SDL2 <https://www.libsdl.org/>`_ (libsdl2-dev)
 
 .. note::
     
     SDL2 library may need a small fix to the CMake configuration file, to avoid build errors. Remove a space after ``-lSDL2`` in ``/usr/lib/x86_64-linux-gnu/cmake/SDL2/sdl2-config.cmake``.
 
-* `Freetype <https://www.freetype.org>`_ (libfreetype6-dev)
+-  `Freetype <https://www.freetype.org>`_ (libfreetype6-dev)
 
 Building
 ========
@@ -33,14 +32,14 @@ It is possible to define the install location by modifying the standard variable
 There are two special build options defined for CMake:
 
 1) ``BUILD_TESTS``
-    * build dynamic library for local use, without an option for system-wide installation
-    * set path of internal resources to the source code location
-    * build tests/examples of simulators
+    -  build dynamic library for local use, without an option for system-wide installation
+    -  set path of internal resources to the source code location
+    -  build tests/examples of simulators
 2) ``EMBED_RESOURCES``
-    * generate C++ code from all internal resources
-    * compile the resources and embed them inside the library binary file
-    * no need to install resources as files in the shared system location
-    * useful for a binary release
+    -  generate C++ code from all internal resources
+    -  compile the resources and embed them inside the library binary file
+    -  no need to install resources as files in the shared system location
+    -  useful for a binary release
 
 The following terminal commands are necessary to clone, build and install the library with a standard configuration (*X* number of cores to use):
  
@@ -68,14 +67,9 @@ The following steps are needed to generate and open the documentation of the lib
 
 The following 3rd party code is included in the source of the library and will be updated manually by the author: 
 
-* `Bullet Physics <https://pybullet.org/wordpress/>`_ (C++ library, parts)
-
-* `TinyXML-2 <http://www.grinninglizard.com/tinyxml2/>`_ (C++ library)
-
-* `stb_image <https://github.com/nothings/stb>`_ (C library)
-
-* `stb_image_write <https://github.com/nothings/stb>`_ (C library)
-
-* OpenGL 4.6 functions loader generated with `GLAD2 <https://gen.glad.sh>`_
-
-* `ResourceManager <https://github.com/Johnnyborov/ResourceManager>`_ (C++ class and tool) 
+-  `Bullet Physics <https://pybullet.org/wordpress/>`_ (C++ library, parts)
+-  `TinyXML-2 <http://www.grinninglizard.com/tinyxml2/>`_ (C++ library)
+-  `stb_image <https://github.com/nothings/stb>`_ (C library)
+-  `stb_image_write <https://github.com/nothings/stb>`_ (C library)
+-  OpenGL 4.6 functions loader generated with `GLAD2 <https://gen.glad.sh>`_
+-  `ResourceManager <https://github.com/Johnnyborov/ResourceManager>`_ (C++ class and tool)

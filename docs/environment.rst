@@ -39,11 +39,9 @@ Currents
 
 Water currents have a significant impact on the operation of underwater robots. Therefore, the *Stonefish* library implements some basic forms of water currents, treated as water velocity fields. Currently implemented types of water currents include:
 
-- ``Uniform`` the same velocity in the whole ocean
-
-- ``Jet`` a velocity distribution coming from an circular underwater outlet
-
-- ``Pipe`` a velocity distrubution resambling a virtual pipe submerged in the ocean
+-  ``Uniform`` the same velocity in the whole ocean
+-  ``Jet`` a velocity distribution coming from an circular underwater outlet
+-  ``Pipe`` a velocity distrubution resambling a virtual pipe submerged in the ocean
 
 Ocean optics
 ------------
@@ -91,11 +89,9 @@ Winds
 
 Winds have a significant impact on the motion of flying robots. Therefore, the *Stonefish* library implements some basic forms of wind, treated as air velocity fields. Currently implemented types of wind include:
 
-- ``Uniform`` the same velocity in the whole atmosphere
-
-- ``Jet`` a velocity distribution coming from an circular outlet
-
-- ``Pipe`` a velocity distrubution resambling a virtual pipe submerged in the atmosphere
+-  ``Uniform`` the same velocity in the whole atmosphere
+-  ``Jet`` a velocity distribution coming from an circular outlet
+-  ``Pipe`` a velocity distrubution resambling a virtual pipe submerged in the atmosphere
 
 Sky and Sun
 -----------

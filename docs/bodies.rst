@@ -26,13 +26,13 @@ Physics mode
 
 Dynamic bodies are affected by different forces, depending on the type of environment, the position of the body with respect to the ocean surface (if it is enabled) and the selected body physics mode. The last one was introduced as an optimization to help determine which forces have to be computed for a specific body and thus how the body should be prepared for the simulation. The physics mode of each dynamic body ``sf::BodyPhysicsType`` has to be selected from one of the following options:
 
-- ``SURFACE`` - no aerodynamic or hydrodynamic forces computed
+-  ``SURFACE`` - no aerodynamic or hydrodynamic forces computed
 
-- ``FLOATING`` - buoyancy and hydrodynamic drag is computed, no added mass effect
+-  ``FLOATING`` - buoyancy and hydrodynamic drag is computed, no added mass effect
 
-- ``SUBMERGED`` - buoyancy and hydrodynamic forces including added mass effect are computed
+-  ``SUBMERGED`` - buoyancy and hydrodynamic forces including added mass effect are computed
 
-- ``AERODYNAMIC`` - aerodynamic drag is computed (lift not supported for general bodies)
+-  ``AERODYNAMIC`` - aerodynamic drag is computed (lift not supported for general bodies)
 
 Collisions
 ^^^^^^^^^^
