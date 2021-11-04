@@ -78,42 +78,42 @@ Overriding calculated properties
 
 It is possible to override some of the automatically calculated properties of a dynamic body. There are two methods to do it:
 
-1. Set an arbitrary mass and allow the library to automatically scale the moments of inertia
+1) Set an arbitrary mass and allow the library to automatically scale the moments of inertia
 
-    .. code-block:: xml
+.. code-block:: xml
 
-        <dynamic>
-            <!-- all standard definitions -->
-            <mass value="30.0"/>
-        </dynamic>
+    <dynamic>
+        <!-- all standard definitions -->
+        <mass value="30.0"/>
+    </dynamic>
 
-    .. code-block:: cpp
+.. code-block:: cpp
 
-        sf::SolidEntity* solid = ...;
-        solid->ScalePhysicalPropertiesToArbitraryMass(30.0);
+    sf::SolidEntity* solid = ...;
+    solid->ScalePhysicalPropertiesToArbitraryMass(30.0);
 
-2. Set an arbitrary mass, moments of inertia and location of the CG
+2) Set an arbitrary mass, moments of inertia and location of the CG
 
-    .. code-block:: xml
+.. code-block:: xml
 
-        <dynamic>
-            <!-- all standard definitions -->
-            <mass value="30.0"/>
-            <inertia xyz="1.0 0.5 0.2"/>
-            <cg xyz="0.2 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        </dynamic>
+    <dynamic>
+        <!-- all standard definitions -->
+        <mass value="30.0"/>
+        <inertia xyz="1.0 0.5 0.2"/>
+        <cg xyz="0.2 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </dynamic>
 
-    .. code-block:: cpp
+.. code-block:: cpp
 
-        sf::SolidEntity* solid = ...;
-        solid->SetArbitraryPhysicalProperties(30.0, sf::Vector3(1.0, 0.5, 0.2), sf::Transform(sf::IQ(), sf::Vector3(0.2, 0.0, 0.0)));
+    sf::SolidEntity* solid = ...;
+    solid->SetArbitraryPhysicalProperties(30.0, sf::Vector3(1.0, 0.5, 0.2), sf::Transform(sf::IQ(), sf::Vector3(0.2, 0.0, 0.0)));
 
 Parametric solids
 =================
 
 The most efficient dynamic bodies are parametric solids, which include: box, sphere, cylinder, torus and wing. The physical geometry of parametric solids is the same as the graphical mesh. Besides the wing body, the collisions of parametric solids are computed analytically. Definition of parametric solids always includes the ``dimensions`` tag. The attributes of this tag depend on the type of the solid. There is one standard attribute which is always available, called ``thickness``, used to define wall thickness if the user wants to create a shell body instead of a solid one.
 
-1. Sphere ``type="sphere"`` - a sphere (ball) with a specified radius:
+1) Sphere ``type="sphere"`` - a sphere (ball) with a specified radius:
 
 .. code-block:: xml
 
@@ -131,7 +131,7 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
     sf::Sphere* sph = new sf::Sphere("Sphere", 0.5, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
     AddSolidEntity(sph, sf::I4());
 
-2. Cylinder ``type="cylinder"`` - a cylinder with a specified radius and height, with its axis coincident with the local Z axis:  
+2) Cylinder ``type="cylinder"`` - a cylinder with a specified radius and height, with its axis coincident with the local Z axis:  
 
 .. code-block:: xml
 
@@ -149,7 +149,7 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
     sf::Cylinder* cyl = new sf::Cylinder("Cyl", 1.0, 2.0, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Yellow");
     AddSolidEntity(cyl, sf::I4());
 
-3. Box ``type="box"`` - a box with specified width, height and length:  
+3) Box ``type="box"`` - a box with specified width, height and length:  
 
 .. code-block:: xml
 
@@ -167,7 +167,7 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
     sf::Box* box = new sf::Box("Box", sf::Vector3(0.5, 1.0, 2.0), sf::Transform(sf::IQ(), sf::Vector3(0.5, 0.0, 0.0)), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
 
-4. Torus ``type="torus"`` - a torus with a specified major and minor radius, with its axis coincident with the local Y axis:
+4) Torus ``type="torus"`` - a torus with a specified major and minor radius, with its axis coincident with the local Y axis:
 
 .. code-block:: xml
 
@@ -185,7 +185,7 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
     sf::Torus* tr = new sf::Torus("Torus", 1.0, 0.1, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Yellow");
     AddSolidEntity(tr, sf::I4());
 
-5. Wing profile ``type="wing"`` - a solid based on an extruded NACA profile (4-digit system), aligned with local Y axis:
+5) Wing profile ``type="wing"`` - a solid based on an extruded NACA profile (4-digit system), aligned with local Y axis:
 
 .. code-block:: xml
 

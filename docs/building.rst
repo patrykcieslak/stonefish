@@ -16,16 +16,16 @@ Building a simple graphical simulator
 
 The following steps have to be completed to create a simple graphical simulator:
 
-1. Create a new class ``MySimulationManager`` being a subclass of ``sf::SimulationManager``.
-2. Override method ``void BuildScenario()`` of the base class, **creating the whole simulation scenario inside**.
-3. Create a .cpp file with the ``int main(int argc, char **argv)`` function.
-4. Include the header files: ``#include <Stonefish/core/GraphicalSimulationApp.h>`` and ``#include "MySimulationManager.h"``.
-5. Create and fill two structures of types ``sf::RenderSettings`` and ``sf::HelperSettings``.
-6. Create a new object of class ``MySimulationManager``.
-7. Create a new object of class ``sf::GraphicalSimulationApp``, passing the previous one to the constructor, together with the structures defined before.
-8. Use method ``void Run()`` from the second object.
-9. Build application and link with libraries.
-10. Run the simulator from the terminal.
+1) Create a new class ``MySimulationManager`` being a subclass of ``sf::SimulationManager``.
+2) Override method ``void BuildScenario()`` of the base class, **creating the whole simulation scenario inside**.
+3) Create a .cpp file with the ``int main(int argc, char **argv)`` function.
+4) Include the header files: ``#include <Stonefish/core/GraphicalSimulationApp.h>`` and ``#include "MySimulationManager.h"``.
+5) Create and fill two structures of types ``sf::RenderSettings`` and ``sf::HelperSettings``.
+6) Create a new object of class ``MySimulationManager``.
+7) Create a new object of class ``sf::GraphicalSimulationApp``, passing the previous one to the constructor, together with the structures defined before.
+8) Use method ``void Run()`` from the second object.
+9) Build application and link with libraries.
+10) Run the simulator from the terminal.
 
 Following the steps above should result in 3 new files: *main.cpp*, *MySimulationManager.h* and *MySimulationManager.cpp*. The exemplary contents of these files are attached below. The simulated scenario is a ball bouncing on a flat surface.
 

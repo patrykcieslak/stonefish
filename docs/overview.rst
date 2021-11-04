@@ -37,5 +37,6 @@ Screenshots
 ===========
 
 .. image:: images/sunset.png
-    
+    :alt: Simulation window - robot at the surface, during a sunset.
 .. image:: images/valve_panel.png
+    :alt: Simulation window - robot operating a valve on an underwater panel.

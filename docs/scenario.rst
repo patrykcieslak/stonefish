@@ -134,6 +134,7 @@ The last step of the *Blender* workflow is exporting the finished geometry to a 
 .. image:: images/blender_obj_export.png
     :width: 477
     :align: center
+    :alt: Screenshot of Blender OBJ file export interface.
 
 .. warning::
 
