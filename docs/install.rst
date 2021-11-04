@@ -32,11 +32,11 @@ It is possible to define the install location by modifying the standard variable
 
 There are two special build options defined for CMake:
 
-1. ``BUILD_TESTS``
+1) ``BUILD_TESTS``
     * build dynamic library for local use, without an option for system-wide installation
     * set path of internal resources to the source code location
     * build tests/examples of simulators
-2. ``EMBED_RESOURCES``
+2) ``EMBED_RESOURCES``
     * generate C++ code from all internal resources
     * compile the resources and embed them inside the library binary file
     * no need to install resources as files in the shared system location
@@ -59,9 +59,9 @@ Generating code documentation
 
 The following steps are needed to generate and open the documentation of the library code. It is assumed that `Doxygen <https://www.doxygen.nl>`_ is already installed in the system.
 
-1. Go to "stonefish" directory.
-2. ``$ doxygen doxygen``
-3. Open "docs/html/index.html".
+1) Go to "stonefish" directory.
+2) ``$ doxygen doxygen``
+3) Open "docs/html/index.html".
 
 3rd party code
 ==============
