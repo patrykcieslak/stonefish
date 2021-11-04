@@ -35,10 +35,11 @@
 namespace sf
 {
 
-DVL::DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+DVL::DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     range[0] = range[1] = range[2] = range[3] = Scalar(0.);
     beamAngle = btRadians(beamSpreadAngleDeg);
+    beamPosZ = beamPositiveZ;
     channels.push_back(SensorChannel("Velocity X", QuantityType::VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QuantityType::VELOCITY));
     channels.push_back(SensorChannel("Velocity Z", QuantityType::VELOCITY));
@@ -83,12 +84,15 @@ void DVL::InternalUpdate(Scalar dt)
     dir[2] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) + dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
     dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
     
+    Scalar dirFactor = beamPosZ ? Scalar(1) : Scalar(-1);
+
     unsigned int divs = ceil(channels[3].rangeMax - channels[3].rangeMin);
     Scalar minRange(-1);
+
     for(unsigned int i=0; i<4; ++i)
     {
-        from[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMin;
-        to[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMax;
+        from[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels[3].rangeMin;
+        to[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels[3].rangeMax;
 
         Vector3 step = (to[i]-from[i])/Scalar(divs);
         range[i] = Scalar(-1);
@@ -126,14 +130,14 @@ void DVL::InternalUpdate(Scalar dt)
         for(unsigned int i=0; i<4; ++i)
         {
             range[i] = Scalar(-1);
-            from[i] = dvlTrans.getOrigin() - dir[i] * channels[3].rangeMin;
+            from[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels[3].rangeMin;
             to[i] = dvlTrans.getOrigin();
             btCollisionWorld::ClosestRayResultCallback closest(from[i], to[i]);
             closest.m_collisionFilterGroup = MASK_DYNAMIC;
             closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
             SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from[i], to[i], closest);
             
-            if(closest.hasHit() && btDot(closest.m_hitNormalWorld, -dir[i]) > Scalar(0))
+            if(closest.hasHit() && btDot(closest.m_hitNormalWorld, dirFactor * dir[i]) > Scalar(0))
             {
                 Vector3 p = from[i].lerp(to[i], closest.m_closestHitFraction);
                 range[i] = (p - dvlTrans.getOrigin()).length();
@@ -200,7 +204,7 @@ void DVL::InternalUpdate(Scalar dt)
 
 std::vector<Renderable> DVL::Render()
 {
-    std::vector<Renderable> items = Sensor::Render();
+    std::vector<Renderable> items = LinkSensor::Render();
     if(isRenderable())
     {
         unsigned short status = (unsigned short)trunc(getLastValue(7));
@@ -217,28 +221,36 @@ std::vector<Renderable> DVL::Render()
             dir[2] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
             dir[3] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
             
+            if(!beamPosZ)
+            {
+                dir[0] = -dir[0];
+                dir[1] = -dir[1];
+                dir[2] = -dir[2];
+                dir[3] = -dir[3];
+            }
+
             if(range[0] > Scalar(0))
             {
                 item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(-dir[0].x()*range[0], -dir[0].y()*range[0], -dir[0].z()*range[0]));
+                item.points.push_back(glm::vec3(dir[0].x()*range[0], dir[0].y()*range[0], dir[0].z()*range[0]));
             }
             
             if(range[1] > Scalar(0))
             {
                 item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(-dir[1].x()*range[1], -dir[1].y()*range[1], -dir[1].z()*range[1]));
+                item.points.push_back(glm::vec3(dir[1].x()*range[1], dir[1].y()*range[1], dir[1].z()*range[1]));
             }
             
             if(range[2] > Scalar(0))
             {
                 item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(-dir[2].x()*range[2], -dir[2].y()*range[2], -dir[2].z()*range[2]));
+                item.points.push_back(glm::vec3(dir[2].x()*range[2], dir[2].y()*range[2], dir[2].z()*range[2]));
             }
             
             if(range[3] > Scalar(0))
             {
                 item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(-dir[3].x()*range[3], -dir[3].y()*range[3], -dir[3].z()*range[3]));
+                item.points.push_back(glm::vec3(dir[3].x()*range[3], dir[3].y()*range[3], dir[3].z()*range[3]));
             }
         }
         //Water ping

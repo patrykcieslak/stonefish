@@ -37,6 +37,7 @@ namespace sf
         std::string name;
         Scalar density;
         Scalar restitution;
+        Scalar magnetic; // <0 ferromagnetic, 0 nonmagnetic, >0 magnet
     };
     
     //! A structure holding fluid properties.
@@ -104,9 +105,10 @@ namespace sf
          \param uniqueName a name for the material
          \param density a density of the material [kg*m^-3]
          \param restitution a restitution factor <0,1>
+         \param magnetic a factor defining magnetic properties
          \return a name of the created material
          */
-        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution);
+        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution, Scalar magnetic = Scalar(0));
         
         //! A method that sets interaction between a pair of materials.
         /*!

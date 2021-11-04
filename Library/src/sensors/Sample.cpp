@@ -31,12 +31,15 @@
 namespace sf
 {
 
-Sample::Sample(unsigned short nDimensions, Scalar* values)
+Sample::Sample(unsigned short nDimensions, Scalar* values, bool invalid)
 {
     nDim = nDimensions > 0 ? nDimensions : 1;
     data = new Scalar[nDim];
     std::memcpy(data, values, sizeof(Scalar)*nDim);
-    timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+    if(invalid)
+        timestamp = Scalar(-1);
+    else
+        timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
 }
 
 Sample::Sample(const Sample& other)

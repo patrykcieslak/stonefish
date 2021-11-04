@@ -44,3 +44,26 @@ Collisions of all bodies defined in the simulation scenario are considered rigid
 
     sf::SolidEntity* solid = ...;
     solid->SetContactProperties(true, 1000.0, 0.5);
+
+Magnetic materials
+==================
+
+A special feature of the material system allows for defining magnetic properties of bodies. 
+This can be used, e.g., for a simple simulation of permanent magnet grippers. 
+Magnetic properties are defined by extending the standard material definition with a factor specifying the type of magnetic behaviour and its strengt, according to the following syntax:
+
+.. code-block:: xml
+
+    <material name="Aluminium" density="2710.0" restitution="0.7" magnetic="1.0"/>
+
+.. code-block:: cpp
+
+    CreateMaterial("Aluminium", sf::Scalar(2791), sf::Scalar(0.7), sf::Scalar(1.0));
+
+The "magnetic" factor has different meaning depending on its value:
+
+- **<0** - ferromagnetic material
+- **=0** - paramagnetic material
+- **>0** - permanent magnet.
+
+The absolute value of the factor defines the strength of magnetic interactions. Only a pair of bodies, first made of a ferromagnetic material and second being a permanent magnet, will interact. Interaction between two magnets is not implemented due to the lack of information about polarity.

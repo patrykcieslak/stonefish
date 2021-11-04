@@ -1109,9 +1109,11 @@ std::string SimulationManager::CreateLook(const std::string& name, Color color, 
 
 bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)
 {
+    //Retrieve entities associated with colliding objects
     Entity* ent0 = (Entity*)colObj0Wrap->getCollisionObject()->getUserPointer();
     Entity* ent1 = (Entity*)colObj1Wrap->getCollisionObject()->getUserPointer();
     
+    //Check if entities are real
     if(ent0 == nullptr || ent1 == nullptr)
     {
         cp.m_combinedFriction = Scalar(0.);
@@ -1120,6 +1122,7 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         return true;
     }
     
+    //Get material and contact velocity information
     MaterialManager* mm = SimulationApp::getApp()->getSimulationManager()->getMaterialManager();
     
     Material mat0;
@@ -1145,13 +1148,6 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         contactVelocity0 = sent0->getLinearVelocityInLocalPoint(localPoint0);
         contactAngularVelocity0 = sent0->getAngularVelocity().dot(-cp.m_normalWorldOnB);
     }
-    /*else if(ent0->getType() == EntityType::CABLE)
-    {
-        CableEntity* cent0 = (CableEntity*)ent0;
-        mat0 = cent0->getMaterial();
-        contactVelocity0.setZero();
-        contactAngularVelocity0 = Scalar(0);
-    }*/
     else
     {
         cp.m_combinedFriction = Scalar(0);
@@ -1183,13 +1179,6 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         contactVelocity1 = sent1->getLinearVelocityInLocalPoint(localPoint1);
         contactAngularVelocity1 = sent1->getAngularVelocity().dot(cp.m_normalWorldOnB);
     }
-    /*else if(ent1->getType() == EntityType::CABLE)
-    {
-        CableEntity* cent1 = (CableEntity*)ent1;
-        mat1 = cent1->getMaterial();
-        contactVelocity1.setZero();
-        contactAngularVelocity1 = Scalar(0);
-    }*/
     else
     {
         cp.m_combinedFriction = Scalar(0);
@@ -1197,7 +1186,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
         cp.m_combinedRestitution = Scalar(0);
         return true;
     }
-  
+
+    //Calculate contact forces
+    //A. Stribeck friction model
     Vector3 relLocalVel = contactVelocity1 - contactVelocity0;
     Vector3 normalVel = cp.m_normalWorldOnB * cp.m_normalWorldOnB.dot(relLocalVel);
     Vector3 slipVel = relLocalVel - normalVel;
@@ -1231,9 +1222,34 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     
     if(ent1->getType() == EntityType::SOLID && !btFuzzyZero(relAngularVelocity10))
         ((SolidEntity*)ent1)->ApplyTorque(cp.m_normalWorldOnB * relAngularVelocity10/btFabs(relAngularVelocity10) * T);
-
+    
     //Restitution
     cp.m_combinedRestitution = mat0.restitution * mat1.restitution;
+    
+    //B. Magnetic attraction (only between magnet and ferromagnetic body, no magnet-magnet support)
+    if((mat0.magnetic < Scalar(0) && mat1.magnetic > Scalar(0))
+        || (mat0.magnetic > Scalar(0) && mat1.magnetic < Scalar(0)))
+    {
+        Scalar d = btClamped(cp.getDistance(), Scalar(0.0001), BT_LARGE_FLOAT);
+        Scalar mag = (btFabs(mat0.magnetic) * btFabs(mat1.magnetic))/(d*d)/Scalar(1e4);
+        btClamp(mag, Scalar(0), Scalar(10000)); //Arbitrary limit of 10kN
+        Vector3 mForce = cp.m_normalWorldOnB * mag;
+
+        if(ent0->getType() == EntityType::SOLID)
+        {
+            SolidEntity* sent0 = (SolidEntity*)ent0;
+            sent0->ApplyCentralForce(-mForce);
+            sent0->ApplyTorque((cp.m_positionWorldOnA - sent0->getCGTransform().getOrigin()).cross(-mForce));
+        }
+        if(ent1->getType() == EntityType::SOLID)
+        {
+            SolidEntity* sent1 = (SolidEntity*)ent1;
+            sent1->ApplyCentralForce(mForce);
+            sent1->ApplyTorque((cp.m_positionWorldOnB - sent1->getCGTransform().getOrigin()).cross(mForce));
+        }
+
+        cp.m_combinedRestitution = Scalar(0); //Allows sticking of bodies together
+    }
     
     return true;
 }

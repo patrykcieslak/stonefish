@@ -234,7 +234,7 @@ void UnderwaterTestManager::BuildScenario()
     sf::Odometry* odom = new sf::Odometry("Odom");
     sf::Pressure* press = new sf::Pressure("Pressure");
     press->setNoise(1.0);
-    sf::DVL* dvl = new sf::DVL("DVL", 30.0);
+    sf::DVL* dvl = new sf::DVL("DVL", 30.0, false);
     dvl->setNoise(0.0, 0.02, 0.05, 0.0, 0.02);
     sf::IMU* imu = new sf::IMU("IMU");
     imu->setNoise(sf::V0(), sf::Vector3(0.05, 0.05, 0.1), 0.0, sf::Vector3(0.01, 0.01, 0.02));

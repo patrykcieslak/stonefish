@@ -38,10 +38,11 @@ namespace sf
         /*!
          \param uniqueName a name for the sensor
          \param beamSpreadAngleDeg the angle between the beams [deg]
+         \param beamPositiveZ a flag specifying if beams are pointing in the same direction as the z axis of the sensor
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, Scalar frequency = Scalar(-1), int historyLength = -1);
+        DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, bool beamPositiveZ, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -94,6 +95,7 @@ namespace sf
         
     private:
         Scalar beamAngle;
+        bool beamPosZ;
         Scalar range[4];
         Vector3 waterLayer;
         Scalar addNoiseStdDev[2]; //Additive noise

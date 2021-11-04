@@ -322,7 +322,7 @@ The Doppler velocity log (DVL) is a classic marine craft sensor, used for measur
 .. code-block:: xml
 
     <sensor name="DVL" rate="10.0" type="dvl">
-        <specs beam_angle="30.0"/>
+        <specs beam_angle="30.0" beam_positive_z="false"/>
         <range velocity="10.0 10.0 5.0" altitude_min="0.5" altitude_max="50.0"/>
         <water_layer minimum_layer_size="10.0" boundary_near="10.0" boundary_far="30.0"/>
         <noise velocity_percent= "0.3" velocity="0.1" altitude="0.03" water_velocity_percent="0.1" water_velocity="0.1"/>
@@ -339,6 +339,32 @@ The Doppler velocity log (DVL) is a classic marine craft sensor, used for measur
     dvl->setWaterLayer(10.0, 10.0, 30.0);
     dvl->setNoise(0.3, 0.1, 0.03, 0.1, 0.1);
     robot->AddLinkSensor(dvl, "Link1", sf::I4());
+
+Inertial Navigation System (INS)
+--------------------------------
+
+The inertial navigation system is an advanced navigation device combining readings from its high accuracy on-board gyroscopes and accelerometers with measurement from external sensors like DVL or GPS. Each measurement is a full set of naviation data, in the body frame, the NED frame, and the global frame. This is a preliminary implementation not including the EKF inside the device.
+
+.. code-block:: xml
+
+    <sensor name="INS" rate="100.0" type="ins">
+        <lever_arm xyz="-0.2 -0.4 0.3"/>
+        <noise angular_velocity="0.00001745" linear_acceleration="0.00005"/>
+        <external_sensors dvl="dvl" gps="gps" pressure="pressure"/>
+        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/scalar/INS.h>
+    sf::INS* ins = new sf::INS("INS", 100.0, 1);
+    ins->setLeverArm(sf::Vector3(-0.2, -0.4, 0.3));
+    ins->setNoise(sf::Vector3(0.00001745, 0.00001745, 0.00001745), sf::Vector3(0.00005, 0.00005, 0.00005));
+    ins->ConnectDVL(robot->getName() + "/dvl");
+    ins->ConnectGPS(robot->getName() + "/gps");
+    ins->ConnectPressure(robot->getName() + "/pressure");
+    robot->AddLinkSensor(ins, "Link1", sf::I4());
 
 Profiler
 --------

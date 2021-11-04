@@ -48,13 +48,14 @@ void MaterialManager::ClearMaterialsAndFluids()
     fluidNameManager.ClearNames();
 }
 
-std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution)
+std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution, Scalar magnetic)
 {
     //Create and add new material
     Material mat;
     mat.name = materialNameManager.AddName(uniqueName);
     mat.density = density;
     mat.restitution = restitution;
+    mat.magnetic = magnetic;
     materials.push_back(mat);
     
     cInfo("Material %s (%d) created.", mat.name.c_str(), materials.size()-1);

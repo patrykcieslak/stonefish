@@ -38,8 +38,9 @@ namespace sf
         /*!
          \param nDimensions the number of dimensions of the measurement
          \param values a pointer to the data
+         \param invalid a flag to mark if it is and invalid output
          */
-        Sample(unsigned short nDimensions, Scalar* values);
+        Sample(unsigned short nDimensions, Scalar* values, bool invalid = false);
         
         //! A copy constructor.
         /*!

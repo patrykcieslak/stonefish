@@ -48,6 +48,7 @@
 #include "sensors/scalar/IMU.h"
 #include "sensors/scalar/DVL.h"
 #include "sensors/scalar/GPS.h"
+#include "sensors/scalar/INS.h"
 #include "sensors/scalar/Compass.h"
 #include "sensors/scalar/Odometry.h"
 #include "sensors/scalar/Pressure.h"
@@ -572,6 +573,7 @@ bool ScenarioParser::ParseMaterials(XMLElement* element)
     {
         const char* name = nullptr;
         Scalar density, restitution;
+        Scalar magnetic(0);
         if(mat->QueryStringAttribute("name", &name) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Material name missing!");
@@ -588,7 +590,8 @@ bool ScenarioParser::ParseMaterials(XMLElement* element)
             log.Print(MessageType::ERROR, "Restitution of material '%s' missing!", materialName.c_str());
             return false;
         }
-        sm->getMaterialManager()->CreateMaterial(materialName, density, restitution);
+        mat->QueryAttribute("magnetic", &magnetic);
+        sm->getMaterialManager()->CreateMaterial(materialName, density, restitution, magnetic);
         mat = mat->NextSiblingElement("material");
     }
     
@@ -2694,13 +2697,18 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     else if(typeStr == "dvl")
     {
         int history;
-        Scalar beamAngle;
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
-        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("beam_angle", &beamAngle) != XML_SUCCESS)
-            return nullptr;
-            
-        DVL* dvl = new DVL(sensorName, beamAngle, rate, history);
+        
+        Scalar beamAngle = 30.0;
+        bool beamPosZ = false;
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            item->QueryAttribute("beam_angle", &beamAngle);
+            item->QueryAttribute("beam_positive_z", &beamPosZ);
+        }
+
+        DVL* dvl = new DVL(sensorName, beamAngle, beamPosZ, rate, history);
 
         //Optional range definition        
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -2852,6 +2860,122 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
                 odom->setNoise(p, v, angle, av);
         }
         sens = odom;
+    }
+    else if(typeStr == "ins")
+    {
+        int history;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+
+        INS* ins = new INS(sensorName, rate, history);
+
+        //Connect with external sensors
+        if((item = element->FirstChildElement("external_sensors")) != nullptr)
+        {
+            const char* dvl = "";
+            const char* press = "";
+            const char* gps = "";
+            std::string prefix = "";
+            if(namePrefix != "")
+                prefix = namePrefix + "/";
+    
+            if(item->QueryStringAttribute("dvl", &dvl) == XML_SUCCESS)
+                ins->ConnectDVL(prefix + std::string(dvl));
+            if(item->QueryStringAttribute("pressure", &press) == XML_SUCCESS)
+                ins->ConnectPressure(prefix + std::string(press));
+            if(item->QueryStringAttribute("gps", &gps) == XML_SUCCESS)
+                ins->ConnectGPS(prefix + std::string(gps));
+        }
+
+        //Optional output frame definition
+        if((item = element->FirstChildElement("lever_arm")) != nullptr)
+        {
+            const char* lever = "";
+            Vector3 vLever;
+            if(item->QueryStringAttribute("xyz", &lever) == XML_SUCCESS 
+                && ParseVector(lever, vLever))
+            {
+                ins->setLeverArm(vLever);
+            }
+        }
+
+        //Optional range definition
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            const char* velocity = nullptr;
+            Vector3 avxyz = VMAX();
+            Scalar av;
+            const char* acc = nullptr;
+            Vector3 laxyz = VMAX();
+            Scalar la;
+            int c = 0;
+            
+            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS  
+               && ParseVector(velocity, avxyz))
+            {
+                ++c;
+            }
+            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
+            {
+                avxyz = Vector3(av, av, av);
+                ++c;
+            }
+            
+            if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS  
+               && ParseVector(acc, laxyz))
+            {
+                ++c;
+            }
+            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
+            {
+                laxyz = Vector3(la, la, la);
+                ++c;
+            }
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                ins->setRange(avxyz, laxyz);
+        }
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            const char* velocity = nullptr;
+            const char* acc = nullptr;
+            Vector3 avxyz = V0();
+            Vector3 laxyz = V0();
+            Scalar av;
+            Scalar la;
+            int c = 0;
+
+            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS 
+               && ParseVector(velocity, avxyz))
+            {
+                ++c;
+            }
+            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
+            {
+                avxyz = Vector3(av, av, av);
+                ++c;
+            }
+
+            if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS 
+               && ParseVector(acc, laxyz))
+            {
+                ++c;
+            }
+            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
+            {
+                laxyz = Vector3(la, la, la);
+                ++c;
+            }
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                ins->setNoise(avxyz, laxyz);
+        }
+        sens = ins;
     }
     else if(typeStr == "compass")
     {

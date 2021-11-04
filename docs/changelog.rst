@@ -9,7 +9,9 @@ The changelog of the library code is presented below. **Breaking changes** were 
 
 - *Updated definition of accelerometer, gyroscope and IMU sensors, including parser support*
 - *Extended DVL model, with water layer velocity measurement and new noise models, including parser support*
+- Implemented an INS combining internal gyroscopes and accelerometers with external sensors like DVL and GPS, including parser support
 - Implemented methods which enable live updates of sensor and actuator frames
+- Implemented magnetic interaction between materials to enable simulation of permanent magnets
 - Improved support for console simulations
 - Improved support for non-realitime simulations
 - Separated underwater and above water rendering paths

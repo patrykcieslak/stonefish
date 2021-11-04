@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum defining types of scalar sensors.
-    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE};
+    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE};
     
     //! An enum defining the type of quantity represented by the measurement.
     enum class QuantityType
