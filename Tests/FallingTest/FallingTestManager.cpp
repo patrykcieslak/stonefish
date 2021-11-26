@@ -36,6 +36,7 @@
 #include <entities/solids/Sphere.h>
 #include <entities/solids/Torus.h>
 #include <entities/solids/Cylinder.h>
+#include <entities/CableEntity.h>
 #include <graphics/OpenGLContent.h>
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/RotaryEncoder.h>
@@ -50,7 +51,7 @@ FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond)
 void FallingTestManager::BuildScenario()
 {
     setICSolverParams(false);
-    
+
     ///////MATERIALS////////
     CreateMaterial("Ground", 1000.0, 1.0);
     CreateMaterial("Steel", sf::UnitSystem::Density(sf::CGS, sf::MKS, 1.0), 0.1);
@@ -66,16 +67,16 @@ void FallingTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
 	
-	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon.obj", 0.1, sf::I4(),"Steel", "Green");
+	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon.obj", 0.1, sf::I4(), "Steel", "Green");
 	AddStaticEntity(dragon, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0,0,0)));
 	
-	sf::Obstacle* pillar = new sf::Obstacle("Pillar", sf::Vector3(0.5,0.3,4.0), "Steel", "Green");
+	sf::Obstacle* pillar = new sf::Obstacle("Pillar", sf::Vector3(0.5,0.3,4.0), sf::I4(), "Steel", "Green");
 	AddStaticEntity(pillar, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-2.0)));
 	
 	for(int i=1; i<=10; ++i)
 		for(int k=0; k<5; ++k)
 		{
-			sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(0.45,0.45,sin(i/2.0)+0.2*i), "Steel", "Green");
+			sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(0.45,0.45,sin(i/2.0)+0.2*i), sf::I4(), "Steel", "Green");
 			AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.5*i+5.0,0.5*k,-sin(i/2.0)/2.0-0.2*i/2.0)));
 		}
 	
@@ -87,7 +88,7 @@ void FallingTestManager::BuildScenario()
     sf::BodyPhysicsSettings phy;
     phy.mode = sf::BodyPhysicsMode::SURFACE;
     phy.collisions = true;
-
+    /*
     //Mechanical parts
     sf::Sphere* obj = new sf::Sphere("Base", phy, 0.1, sf::I4(), "Steel", "Green");
     sf::Box* link1 = new sf::Box("Link1", phy, sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", "Green");
@@ -113,12 +114,12 @@ void FallingTestManager::BuildScenario()
     robot->AddLinkSensor(imu, "Link2", sf::I4());
     robot->AddJointSensor(enc, "Joint2");
     
-    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));
+    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));*/
     
     //Collisions tests
-    sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.1, sf::I4(), "Steel", "Green");
-    AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(1.0,5.0,-2.0)));
-    
+    //sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.1, sf::I4(), "Steel", "Green");
+    //AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(1.0,5.0,-2.0)));
+    /*
     sf::Cylinder* cyl = new sf::Cylinder("Cyl1", phy, 0.2,0.5,sf::I4(), "Steel", "Green");
     AddSolidEntity(cyl, sf::Transform(sf::Quaternion(0.0,0.0,1.5), sf::Vector3(1.0,2.2,-3.0)));
 
@@ -127,5 +128,9 @@ void FallingTestManager::BuildScenario()
 
     sf::Odometry* odom = new sf::Odometry("Odom", -1, 0);
     odom->AttachToSolid(sph, sf::I4());
-    AddSensor(odom);
+    AddSensor(odom);*/
+
+    //Cable test
+    //sf::CableEntity* cab = new sf::CableEntity("Cable", sf::Transform(sf::IQ(), sf::Vector3(0.0,2.0,-5)), sf::Transform(sf::IQ(), sf::Vector3(0.0,2.2,-2)), 0.02, 0.1, phy, "Steel", "Green");
+    //AddEntity(cab);
 }

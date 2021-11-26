@@ -124,7 +124,7 @@ void UnderwaterTestManager::BuildScenario()
     //AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,5.0)));
     sf::Terrain* seabed = new sf::Terrain("Seabed", sf::GetDataPath() + "terrain.png", 1.0, 1.0, 5.0, "Rock", "seabed", 5.f);
     AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,15.0)));
-    sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, "Fiberglass", "seabed");
+    sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, sf::I4(), "Fiberglass", "seabed");
     AddStaticEntity(cyl, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(6.0,2.0,5.0)));
 	
 	sf::Light* spot = new sf::Light("Spot", 0.02, 50.0, sf::Color::BlackBody(5000.0), 100.0);

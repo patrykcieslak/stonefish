@@ -7,6 +7,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 1.3
 ===
 
+-  *Added origin definition to standard obstacle solids to enable local transformations*
 -  *Updated definition of accelerometer, gyroscope and IMU sensors, including parser support*
 -  *Extended DVL model, with water layer velocity measurement and new noise models, including parser support*
 -  Implemented an INS combining internal gyroscopes and accelerometers with external sensors like DVL and GPS, including parser support

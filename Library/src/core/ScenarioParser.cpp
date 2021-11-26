@@ -816,7 +816,10 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             log.Print(MessageType::ERROR, "Dimensions of static body '%s' not properly defined!", objectName.c_str());
             return false;
         }
-        object = new Obstacle(objectName, dim, std::string(mat), std::string(look), uvMode);
+        Transform origin = I4();
+        if((item = element->FirstChildElement("origin")) != nullptr) 
+            ParseTransform(item, origin);
+        object = new Obstacle(objectName, dim, origin, std::string(mat), std::string(look), uvMode);
     }
     else if(typestr == "cylinder")
     {
@@ -828,7 +831,10 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             log.Print(MessageType::ERROR, "Dimensions of static body '%s' not properly defined!", objectName.c_str());
             return false;
         }       
-        object = new Obstacle(objectName, radius, height, std::string(mat), std::string(look));
+        Transform origin = I4();
+        if((item = element->FirstChildElement("origin")) != nullptr) 
+            ParseTransform(item, origin);
+        object = new Obstacle(objectName, radius, height, origin, std::string(mat), std::string(look));
     }
     else if(typestr == "sphere")
     {
@@ -838,8 +844,11 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         {
             log.Print(MessageType::ERROR, "Dimensions of static body '%s' not properly defined!", objectName.c_str());
             return false;
-        }   
-        object = new Obstacle(objectName, radius, std::string(mat), std::string(look));
+        }
+        Transform origin = I4();
+        if((item = element->FirstChildElement("origin")) != nullptr) 
+            ParseTransform(item, origin);
+        object = new Obstacle(objectName, radius, origin, std::string(mat), std::string(look));
     }
     else if(typestr == "model")
     {

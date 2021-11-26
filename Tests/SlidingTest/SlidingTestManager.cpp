@@ -57,7 +57,7 @@ void SlidingTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", sf::Scalar(10000), "Ground", "grid");
     AddStaticEntity(floor, sf::I4());
   
-    sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), "Ground", "grid", 2);
+    sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), sf::I4(), "Ground", "grid", 2);
     AddStaticEntity(ramp, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
 
     sf::BodyPhysicsSettings phy;

@@ -40,12 +40,12 @@ int main(int argc, const char * argv[])
     sf::HelperSettings h;
     h.showFluidDynamics = false;
     h.showCoordSys = false;
-    h.showBulletDebugInfo = false;
+    h.showBulletDebugInfo = true;
     h.showSensors = false;
     h.showActuators = false;
     h.showForces = false;
     
-    FallingTestManager* simulationManager = new FallingTestManager(50.0);
+    FallingTestManager* simulationManager = new FallingTestManager(200.0);
     FallingTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
     app.Run(true);
     

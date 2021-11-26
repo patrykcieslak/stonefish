@@ -42,12 +42,12 @@ void FallingTestApp::DoHUD()
     slider.item = 0;
     getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
     
-    sf::Uid plot;
+    /*sf::Uid plot;
     plot.owner = 1;
     plot.item = 1;
     std::vector<unsigned short> dims;
     dims.push_back(2);
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Odom"), dims, "Height");
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Odom"), dims, "Height");*/
 
     /*
     dims.clear();

@@ -97,17 +97,25 @@ Obstacle::Obstacle(std::string uniqueName, std::string modelFilename, Scalar sca
 {
 }
 
-Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string uniqueName, Scalar sphereRadius, const Transform& origin, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     phyMesh = OpenGLContent::BuildSphere(sphereRadius);
     graMesh = phyMesh;
     graObjectId = -1;
     
     btSphereShape* shape = new btSphereShape(sphereRadius);
-    BuildRigidBody(shape);
+    if(origin == I4())
+        BuildRigidBody(shape);
+    else
+    {
+        OpenGLContent::TransformMesh(phyMesh, origin);
+        btCompoundShape* cShape = new btCompoundShape();
+        cShape->addChildShape(origin, shape);
+        BuildRigidBody(cShape);
+    }
 }
 
-Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string material, std::string look, unsigned int uvMode) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look, unsigned int uvMode) : StaticEntity(uniqueName, material, look)
 {
     Vector3 halfExtents = boxDimensions/Scalar(2);
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
@@ -117,10 +125,18 @@ Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string ma
     
     btBoxShape* shape = new btBoxShape(halfExtents);
     shape->setMargin(COLLISION_MARGIN);
-    BuildRigidBody(shape);
+    if(origin == I4())
+        BuildRigidBody(shape);
+    else
+    {
+        OpenGLContent::TransformMesh(phyMesh, origin);
+        btCompoundShape* cShape = new btCompoundShape();
+        cShape->addChildShape(origin, shape);
+        BuildRigidBody(cShape);
+    }
 }
 
-Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     Scalar halfHeight = cylinderHeight/Scalar(2);
     phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
@@ -129,7 +145,15 @@ Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinde
     
     btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
     shape->setMargin(COLLISION_MARGIN);
-    BuildRigidBody(shape);
+    if(origin == I4())
+        BuildRigidBody(shape);
+    else
+    {
+        OpenGLContent::TransformMesh(phyMesh, origin);
+        btCompoundShape* cShape = new btCompoundShape();
+        cShape->addChildShape(origin, shape);
+        BuildRigidBody(cShape);
+    }
 }
     
 Obstacle::~Obstacle()

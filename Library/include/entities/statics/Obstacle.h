@@ -68,30 +68,33 @@ namespace sf
         /*!
          \param uniqueName a name for the body
          \param sphereRadius a radius of the spherical body
+         \param origin a local transformation of the mesh origin
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar sphereRadius, std::string material, std::string look = "");
+        Obstacle(std::string uniqueName, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "");
     
         //! A constructor building a box obstacle.
         /*!
          \param uniqueName a name for the body
          \param boxDimensions a vector of box dimensions (side lengths)
+         \param origin a local transformation of the mesh origin
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          */
-        Obstacle(std::string uniqueName, Vector3 boxDimensions, std::string material, std::string look = "", unsigned int uvMode = 0);
+        Obstacle(std::string uniqueName, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look = "", unsigned int uvMode = 0);
         
         //! A constructor building a cylindrical obstacle.
         /*!
          \param uniqueName a name for the body
          \param cylinderRadius a radius of the cylindrical body
          \param cylinderHeight a height of the cylindrical body
+         \param origin a local transformation of the mesh origin
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, std::string material, std::string look = "");
+        Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look = "");
         
         //! A destructor.
         ~Obstacle();
