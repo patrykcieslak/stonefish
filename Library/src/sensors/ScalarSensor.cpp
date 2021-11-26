@@ -128,7 +128,7 @@ void ScalarSensor::AddSampleToHistory(const Sample& s)
         Scalar* data = sample->getDataPointer();
         
         //Add noise
-        if(channels[i].stdDev > Scalar(0))
+        if(channels[i].stdDev > Scalar(0) && data[i] < channels[i].rangeMax && data[i] > channels[i].rangeMin)
             data[i] += channels[i].noise(randomGenerator);
     
         //Limit readings
