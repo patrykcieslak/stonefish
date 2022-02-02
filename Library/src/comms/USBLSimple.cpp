@@ -98,8 +98,18 @@ void USBLSimple::ProcessMessages()
             //Update position in the transponder and in the USBL
             Vector3 worldPos = dT * pos;
             cNode->UpdatePosition(worldPos, true);
-            
-            transponderPos[msg->source] = std::make_pair(t, pos);
+
+            //Populate beacon info structure
+            BeaconInfo b;
+            b.t = t;
+            b.relPos = pos;
+            b.azimuth = hAngle;
+            b.elevation = vAngle;
+            b.range = slantRange;
+            b.localDepth = dO.getZ();
+            b.localOri = dT.getRotation();
+            beacons[msg->source] = b;
+
             newDataAvailable = true;
         }
         

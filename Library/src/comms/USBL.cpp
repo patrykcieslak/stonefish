@@ -38,9 +38,9 @@ USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, 
     noise = false;
 }
     
-std::map<uint64_t, std::pair<Scalar, Vector3>>& USBL::getTransponderPositions()
+std::map<uint64_t, BeaconInfo>& USBL::getBeaconInfo()
 {
-    return transponderPos;
+    return beacons;
 }
 
 CommType USBL::getType() const

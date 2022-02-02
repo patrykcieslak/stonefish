@@ -31,23 +31,25 @@
 namespace sf
 {
 
-Sample::Sample(unsigned short nDimensions, Scalar* values, bool invalid)
+Sample::Sample(unsigned short nDimensions, Scalar* values, bool invalid, uint64_t index)
 {
     nDim = nDimensions > 0 ? nDimensions : 1;
     data = new Scalar[nDim];
     std::memcpy(data, values, sizeof(Scalar)*nDim);
+    id = index;
     if(invalid)
         timestamp = Scalar(-1);
     else
         timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
 }
 
-Sample::Sample(const Sample& other)
+Sample::Sample(const Sample& other, uint64_t index)
 {
     timestamp = other.timestamp;
     nDim = other.nDim;
     data = new Scalar[nDim];
     std::memcpy(data, other.data, sizeof(Scalar)*nDim);
+    id = index;
 }
 
 Sample::~Sample()
@@ -81,6 +83,11 @@ Scalar Sample::getValue(unsigned short dimension) const
 std::vector<Scalar> Sample::getData() const
 {
     return std::vector<Scalar>(data, data+nDim);
+}
+
+uint64_t Sample::getId() const
+{
+    return id;
 }
 
 }

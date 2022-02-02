@@ -170,6 +170,7 @@ namespace sf
         void AddSampleToHistory(const Sample& s);
         std::deque<Sample*> history;
         std::vector<SensorChannel> channels;
+        uint64_t sampleCount;
         
     private:
         int historyLen;

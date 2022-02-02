@@ -31,6 +31,17 @@
 
 namespace sf
 {
+    struct BeaconInfo
+    {
+        Quaternion localOri; // Orientation of the USBL in the world frame (internal IMU)
+        Scalar localDepth;   // Depth measured by the USBL (internal pressure sensor) 
+        Scalar t;            // Roundtrip acoustic signal travel time
+        Vector3 relPos;      // Position of beacon in the USBL frame
+        Scalar elevation;    // Elevation angle computed from beacon response
+        Scalar azimuth;      // Azimuth angle computed from beacon response
+        Scalar range;        // Distance to the beacon
+    };
+
     //! An abstract class representing a USBL.
     class USBL : public AcousticModem
     {
@@ -60,8 +71,8 @@ namespace sf
         //! A method to diable the autp pinging funtion.
         void DisableAutoPing();
            
-        //! A method to get the current estimated position of transponders
-        std::map<uint64_t, std::pair<Scalar, Vector3>>& getTransponderPositions(); 
+        //! A method to get the current information about the acoustic beacons.
+        std::map<uint64_t, BeaconInfo>& getBeaconInfo(); 
 
         //! A method returning the type of the comm.
         CommType getType() const;
@@ -72,7 +83,7 @@ namespace sf
         bool ping;
         Scalar pingRate;
         Scalar pingTime;
-        std::map<uint64_t, std::pair<Scalar, Vector3>> transponderPos;
+        std::map<uint64_t, BeaconInfo> beacons;
         bool noise;
         
         static std::random_device randomDevice;

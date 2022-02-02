@@ -142,19 +142,19 @@ void Thruster::Update(Scalar dt)
                 u - ambient velocity [m/s]
                 n - propeller rotational rate [1/s]
                 D - propeller diameter [m] */
-            Scalar n = omega/(Scalar(2) * M_PI);
+            Scalar n = (backward ? Scalar(-1) : Scalar(1)) * btFabs(omega)/(Scalar(2) * M_PI); // Accounts for propoller handedness
             Scalar u = -thrustTrans.getBasis().getColumn(0).dot(ocn->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming water velocity
             
             //Thrust
             Scalar kT0 = backward ? kT.second : kT.first; //In case of non-symmetrical thrusters the coefficient may be different
             //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust = (RH ? Scalar(1) : Scalar(-1)) * ocn->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
+            thrust = ocn->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
             
             //Torque
             Scalar kQ0 = kQ;
             //kQ(J) = kQ0 + beta * J --> approximated with linear function
-            torque = -ocn->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
-            
+            torque = (RH ? Scalar(-1) : Scalar(1)) * ocn->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
+
             //Apply forces and torques
             Vector3 thrustV(thrust, 0, 0);
             Vector3 torqueV(torque, 0, 0);

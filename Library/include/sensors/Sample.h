@@ -39,14 +39,16 @@ namespace sf
          \param nDimensions the number of dimensions of the measurement
          \param values a pointer to the data
          \param invalid a flag to mark if it is and invalid output
+         \param index a number specifying the id of the sample
          */
-        Sample(unsigned short nDimensions, Scalar* values, bool invalid = false);
+        Sample(unsigned short nDimensions, Scalar* values, bool invalid = false, uint64_t index = 0);
         
         //! A copy constructor.
         /*!
          \param other a reference to a sample object
+         \param index a number specifying the id of the sample
          */
-        Sample(const Sample& other);
+        Sample(const Sample& other, uint64_t index = 0);
         
         //! A destructor.
         ~Sample();
@@ -69,11 +71,15 @@ namespace sf
         
         //! A method returning a pointer to the sample data.
         Scalar* getDataPointer();
+
+        //! A method returning the id of the sample.
+        uint64_t getId() const;
         
     private:
         Scalar timestamp;
         unsigned short nDim;
         Scalar* data;
+        uint64_t id;
     };
 }
 

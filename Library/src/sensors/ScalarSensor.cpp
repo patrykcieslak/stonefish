@@ -37,6 +37,7 @@ ScalarSensor::ScalarSensor(std::string uniqueName, Scalar frequency, int history
 {
     historyLen = historyLength;
     history = std::deque<Sample*>(0);
+    sampleCount = 0;
 }
 
 ScalarSensor::~ScalarSensor()
@@ -121,7 +122,8 @@ void ScalarSensor::AddSampleToHistory(const Sample& s)
     }
     //else == 0 --> unlimited history
     
-    Sample* sample = new Sample(s);
+    Sample* sample = new Sample(s, sampleCount);
+    ++sampleCount;
     
     for(unsigned int i=0; i<sample->getNumOfDimensions(); ++i)
     {

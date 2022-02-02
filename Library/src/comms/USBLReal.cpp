@@ -80,7 +80,21 @@ void USBLReal::ProcessMessages()
             worldPos.setZ(zGlobal);
             cNode->UpdatePosition(worldPos, true);
             
-            transponderPos[msg->source] = std::make_pair(t, dT.inverse() * worldPos);
+            //Populate beacon info structure
+            Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
+            Scalar hAngle = atan2(dir.getY(), dir.getX());
+            Scalar vAngle = atan2(d, dir.getZ());
+        
+            BeaconInfo b;
+            b.t = t;
+            b.relPos = dT.inverse() * worldPos;
+            b.azimuth = hAngle;
+            b.elevation = vAngle;
+            b.range = slantRange;
+            b.localDepth = dO.getZ();
+            b.localOri = dT.getRotation();
+            beacons[msg->source] = b;
+            
             newDataAvailable = true;
         }
         
