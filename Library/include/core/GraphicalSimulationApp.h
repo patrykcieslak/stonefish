@@ -36,7 +36,7 @@ namespace sf
     class IMGUI;
     class OpenGLPipeline;
     class Entity;
-    class SolidEntity;
+    class MovingEntity;
     
     //! A class that implements an interface of a graphical application.
     class GraphicalSimulationApp : public SimulationApp
@@ -195,7 +195,7 @@ namespace sf
         IMGUI* gui;
         OpenGLPipeline* glPipeline;
         
-        SolidEntity* trackballCenter;
+        MovingEntity* trackballCenter;
         Entity* selectedEntity;
         bool displayHUD;
         bool displayKeymap;

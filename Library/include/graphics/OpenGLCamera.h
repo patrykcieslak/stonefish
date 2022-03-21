@@ -64,7 +64,6 @@ namespace sf
     };
  
     class GLSLShader;
-    class SolidEntity;
     
     //! An abstract class implementing a camera view.
     class OpenGLCamera : public OpenGLView

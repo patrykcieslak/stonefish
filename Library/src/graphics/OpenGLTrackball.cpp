@@ -48,7 +48,7 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
     dragging = false;
     transMode = false;
     continuous = true;
-    holdingEntity = NULL;
+    holdingEntity = nullptr;
 
     outlineShader[0] = new GLSLShader("outline.frag");
     outlineShader[0]->AddUniform("color", ParameterType::VEC4);
@@ -98,7 +98,7 @@ glm::vec3 OpenGLTrackball::GetUpDirection() const
 
 void OpenGLTrackball::UpdateCenterPos()
 {
-    if(holdingEntity != NULL)
+    if(holdingEntity != nullptr)
     {
         Vector3 org = holdingEntity->getOTransform().getOrigin();
         tempCenter = glm::vec3((GLfloat)org.x(), (GLfloat)org.y(), (GLfloat)org.z());
@@ -107,7 +107,7 @@ void OpenGLTrackball::UpdateCenterPos()
 
 void OpenGLTrackball::UpdateTransform()
 {
-    if(holdingEntity != NULL) center = tempCenter;
+    if(holdingEntity != nullptr) center = tempCenter;
     trackballTransform = glm::lookAt(GetEyePosition(), center, GetUpDirection());
     
     viewUBOData.VP = GetProjectionMatrix() * GetViewMatrix();
@@ -190,9 +190,9 @@ void OpenGLTrackball::MoveCenter(glm::vec3 step)
     center += step;
 }
 
-void OpenGLTrackball::GlueToEntity(SolidEntity* solid)
+void OpenGLTrackball::GlueToMoving(MovingEntity* ent)
 {
-    holdingEntity = solid;
+    holdingEntity = ent;
 }
 
 void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint destinationFBO)

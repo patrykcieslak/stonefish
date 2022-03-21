@@ -39,6 +39,7 @@
 #include "entities/Entity.h"
 #include "entities/StaticEntity.h"
 #include "entities/SolidEntity.h"
+#include "entities/MovingEntity.h"
 #include "entities/solids/Compound.h"
 #include "utils/icon.h"
 
@@ -793,26 +794,50 @@ void GraphicalSimulationApp::DoHUD()
     id.item = 0;
     std::vector<std::string> options;
     options.push_back("Free");
+
     unsigned int selected = 0;
     unsigned int newSelected = 0;
-    unsigned int rid = 0;
+
+    //Add robots to the list
+    size_t rid = 0;
     Robot* rob;
-    while((rob = getSimulationManager()->getRobot(rid)) != NULL)
+    while((rob = getSimulationManager()->getRobot(rid)) != nullptr)
     {
         options.push_back(rob->getName());
         if(rob->getBaseLink() == trackballCenter)
-            selected = rid + 1;
+            selected = (unsigned int)(rid + 1);
         ++rid;
     }
+    //Add animated entities to the list
+    size_t eid = 0;
+    size_t aid = 0;
+    Entity* ent;
+    while((ent = getSimulationManager()->getEntity(eid)) != nullptr)
+    {
+        if(ent->getType() == sf::EntityType::ANIMATED)
+        {
+            options.push_back(ent->getName());
+            if(ent == trackballCenter)
+                selected = (unsigned int)(rid + 1 + aid);
+            ++aid;
+        }
+        ++eid;
+    }
+
     newSelected = gui->DoComboBox(id, 15.f, offset, 150.f, options, selected, "Trackball center");
+    
     if(newSelected != selected)
     {
         if(newSelected == 0)
-            trackballCenter = NULL;
+            trackballCenter = nullptr;
         else
-            trackballCenter = getSimulationManager()->getRobot(newSelected-1)->getBaseLink();
-            
-        getSimulationManager()->getTrackball()->GlueToEntity(trackballCenter);
+        {
+            if(newSelected <= rid)
+                trackballCenter = getSimulationManager()->getRobot(options[newSelected])->getBaseLink();
+            else if(newSelected > rid)
+                trackballCenter = (MovingEntity*)getSimulationManager()->getEntity(options[newSelected]);
+        }     
+        getSimulationManager()->getTrackball()->GlueToMoving(trackballCenter);
     }
     offset += 51.f;
     

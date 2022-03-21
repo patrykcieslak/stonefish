@@ -30,7 +30,7 @@
 
 namespace sf
 {
-    class Entity;
+    class MovingEntity;
 
     //! A class implementing a camera that can be rotated as a trackball, with mouse.
     class OpenGLTrackball : public OpenGLCamera
@@ -67,11 +67,11 @@ namespace sf
          */
         void MoveCenter(glm::vec3 step);
         
-        //! A method to glue the trackball to a rigid body.
+        //! A method to glue the trackball to a moving body.
         /*!
-         \param solid a pointer to a rigid body
+         \param ent a pointer to a moving body
          */
-        void GlueToEntity(SolidEntity* solid);
+        void GlueToMoving(MovingEntity* ent);
         
         //! A method saving the new centre for update.
         void UpdateCenterPos();
@@ -130,7 +130,7 @@ namespace sf
     private:
         GLfloat calculateZ(GLfloat x, GLfloat y);
         
-        SolidEntity* holdingEntity;
+        MovingEntity* holdingEntity;
         
         glm::vec3 tempCenter;
         glm::mat4 trackballTransform;
