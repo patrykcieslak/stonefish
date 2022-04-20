@@ -37,12 +37,12 @@ namespace sf
         //! A constructor.
         /*!
          \param uniqueName a name for the sensor
-         \param beamSpreadAngleDeg the angle between the beams [deg]
+         \param beamAngleDeg the angle between the beams and the vertical axis [deg]
          \param beamPositiveZ a flag specifying if beams are pointing in the same direction as the z axis of the sensor
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, bool beamPositiveZ, Scalar frequency = Scalar(-1), int historyLength = -1);
+        DVL(std::string uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -84,8 +84,8 @@ namespace sf
          */
         void getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const;
 
-        //! A method that return the angle between the beams.
-        Scalar getBeamSpreadAngle() const;
+        //! A method that return the angle between the beams and the vertical axis.
+        Scalar getBeamAngle() const;
 
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();

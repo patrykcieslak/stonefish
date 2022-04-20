@@ -35,10 +35,10 @@
 namespace sf
 {
 
-DVL::DVL(std::string uniqueName, Scalar beamSpreadAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+DVL::DVL(std::string uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     range[0] = range[1] = range[2] = range[3] = Scalar(0.);
-    beamAngle = btRadians(beamSpreadAngleDeg);
+    beamAngle = btRadians(beamAngleDeg);
     beamPosZ = beamPositiveZ;
     channels.push_back(SensorChannel("Velocity X", QuantityType::VELOCITY));
     channels.push_back(SensorChannel("Velocity Y", QuantityType::VELOCITY));
@@ -79,10 +79,12 @@ void DVL::InternalUpdate(Scalar dt)
     Vector3 dir[4];
     Vector3 from[4];
     Vector3 to[4];
-    dir[0] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) + dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/Scalar(2));
-    dir[1] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(0) * btSin(beamAngle/Scalar(2));
-    dir[2] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) + dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
-    dir[3] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle/Scalar(2)) - dvlTrans.getBasis().getColumn(1) * btSin(beamAngle/Scalar(2));
+    for(unsigned int i=0; i<4; ++i)
+    {
+        Scalar alpha = M_PI_4 + i * M_PI_2;
+        dir[i] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle) 
+                 + (dvlTrans.getBasis().getColumn(0) * btCos(alpha) + dvlTrans.getBasis().getColumn(1) * btSin(alpha)) * btSin(beamAngle);
+    }
     
     Scalar dirFactor = beamPosZ ? Scalar(1) : Scalar(-1);
 
@@ -149,7 +151,7 @@ void DVL::InternalUpdate(Scalar dt)
     }
     else //Successful bottom ping
     {
-        altitude = minRange * btCos(beamAngle/Scalar(2));
+        altitude = minRange * btCos(beamAngle);
         v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getCGTransform().getOrigin());
         status = 0;
     }
@@ -216,10 +218,12 @@ std::vector<Renderable> DVL::Render()
         {
             //Beams
             Vector3 dir[4];
-            dir[0] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
-            dir[1] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(1,0,0) * btSin(beamAngle/Scalar(2));
-            dir[2] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) + Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
-            dir[3] = Vector3(0,0,1) * btCos(beamAngle/Scalar(2)) - Vector3(0,1,0) * btSin(beamAngle/Scalar(2));
+            for(unsigned int i=0; i<4; ++i)
+            {
+                Scalar alpha = M_PI_4 + i * M_PI_2;
+                dir[i] = Vector3(0,0,1) * btCos(beamAngle) 
+                         + (Vector3(1,0,0) * btCos(alpha) + Vector3(0,1,0) * btSin(alpha)) * btSin(beamAngle);
+            }
             
             if(!beamPosZ)
             {
@@ -259,8 +263,8 @@ std::vector<Renderable> DVL::Render()
             Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
             GLfloat a1 = (GLfloat)waterLayer.getY();
             GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
-            GLfloat r1 = a1 * btSin(beamAngle/Scalar(2));
-            GLfloat r2 = a2 * btSin(beamAngle/Scalar(2));
+            GLfloat r1 = a1 * btSin(beamAngle);
+            GLfloat r2 = a2 * btSin(beamAngle);
             for(unsigned int i=0; i<4; ++i)
             {
                 GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>();
@@ -317,7 +321,7 @@ void DVL::getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMa
     altitudeMax = channels[3].rangeMax;
 }
 
-Scalar DVL::getBeamSpreadAngle() const
+Scalar DVL::getBeamAngle() const
 {
     return beamAngle;
 }
