@@ -105,7 +105,7 @@ namespace sf
         bool SolveICProblem();
         
         //! A method cleaning the simulation world.
-        void DestroyScenario();
+        virtual void DestroyScenario();
         
         //! A method which starts the simulation.
         bool StartSimulation();
