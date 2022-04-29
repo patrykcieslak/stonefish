@@ -104,7 +104,7 @@ void USBLSimple::ProcessMessages()
             b.t = t;
             b.relPos = pos;
             b.azimuth = hAngle;
-            b.elevation = vAngle;
+            b.elevation = M_PI_2 - vAngle;
             b.range = slantRange;
             b.localDepth = dO.getZ();
             b.localOri = dT.getRotation();

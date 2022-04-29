@@ -89,7 +89,7 @@ void USBLReal::ProcessMessages()
             b.t = t;
             b.relPos = dT.inverse() * worldPos;
             b.azimuth = hAngle;
-            b.elevation = vAngle;
+            b.elevation = M_PI_2 - vAngle;
             b.range = slantRange;
             b.localDepth = dO.getZ();
             b.localOri = dT.getRotation();
