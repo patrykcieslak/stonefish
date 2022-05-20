@@ -510,6 +510,14 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         sm->EnableOcean(wavesHeight, sm->getMaterialManager()->getFluid(waterName));
         sm->getOcean()->setWaterType(jerlov);
         
+        //Particles
+        bool particles = true;
+        if((item = ocean->FirstChildElement("particles")) != nullptr)
+        {
+            item->QueryAttribute("enabled", &particles);
+        }
+        sm->getOcean()->setParticles(particles);
+
         //Currents
         if((item = ocean->FirstChildElement("current")) != nullptr)
         {

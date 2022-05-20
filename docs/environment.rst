@@ -49,6 +49,11 @@ Ocean optics
 As mentioned before, underwater rendering plays an important role in realistic simulation of optical sensors. The *Stonefish* library implements optical effects encountered in ocean waters like light absorption, out-scattering, and in-scattering, also called the airlight.
 The absorption and scattering coefficeints are computed for three wavelengths, corresponding to the red, green and blue channels of the rendering pipeline, based on the Jerlov measurements covering wide spectrum of the coastal water types. The water quality is defined with a single parameter ranging from 0.0 to 1.0, where the lower limit corresponds to the Jerlov type I water and the upper limit represents the Jerlov type 9C water.
 
+Suspended particles
+-------------------
+
+An additional visual effect included in the ocean rendering is suspended particles, sometimes referred to as underwater snow. It is enabled by default but can easily be disabled from the scenario file or the standard GUI.
+
 Definitions
 -----------
 
@@ -59,6 +64,7 @@ The ocean definitions have to be placed inside the environment node of the scena
     <ocean>
         <water density="1031.0" jerlov="0.2"/>
         <waves height="0.0"/>
+        <particles enabled="true"/>
         <current type="uniform">
             <velocity xyz="1.0 0.0 0.0"/>
         </current>
