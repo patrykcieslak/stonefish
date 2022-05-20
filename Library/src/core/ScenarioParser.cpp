@@ -516,7 +516,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         {
             item->QueryAttribute("enabled", &particles);
         }
-        sm->getOcean()->setParticles(particles);
+        sm->getOcean()->getOpenGLOcean()->setParticles(particles);
 
         //Currents
         if((item = ocean->FirstChildElement("current")) != nullptr)
