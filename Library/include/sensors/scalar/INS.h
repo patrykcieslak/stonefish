@@ -72,11 +72,11 @@ namespace sf
          */
         void ConnectDVL(const std::string& name);
 
-        //! A method used to set the output transformation by defining the position of the output frame.
+        //! A method used to set the output frame (in device frame).
         /*!
-         \param l a vector representing the lever arm from the device origin to the output frame
+         \param T a transformation from the device origin to the output frame
          */
-        void setLeverArm(const Vector3& l);
+        void setOutputFrame(const Transform& T);
 
         //! A method used to set the range of the sensor.
         /*!
@@ -92,6 +92,9 @@ namespace sf
          */
         void setNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev);
         
+        //! A method rendering the sensor representation.
+        std::vector<Renderable> Render();
+
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType();
 

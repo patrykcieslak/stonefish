@@ -2905,15 +2905,11 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
 
         //Optional output frame definition
-        if((item = element->FirstChildElement("lever_arm")) != nullptr)
-        {
-            const char* lever = "";
-            Vector3 vLever;
-            if(item->QueryStringAttribute("xyz", &lever) == XML_SUCCESS 
-                && ParseVector(lever, vLever))
-            {
-                ins->setLeverArm(vLever);
-            }
+        Transform Tout;
+        if((item = element->FirstChildElement("output_frame")) != nullptr 
+            && ParseTransform(item, Tout))
+        {        
+            ins->setOutputFrame(Tout);
         }
 
         //Optional range definition

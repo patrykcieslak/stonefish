@@ -87,7 +87,7 @@ namespace sf
         //! A method that return the angle between the beams and the vertical axis.
         Scalar getBeamAngle() const;
 
-        //! A method resetting the state of the sensor.
+        //! A method rendering the sensor representation.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.

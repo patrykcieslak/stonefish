@@ -343,12 +343,12 @@ The Doppler velocity log (DVL) is a classic marine craft sensor, used for measur
 Inertial Navigation System (INS)
 --------------------------------
 
-The inertial navigation system is an advanced navigation device combining readings from its high accuracy on-board gyroscopes and accelerometers with measurement from external sensors like DVL or GPS. Each measurement is a full set of naviation data, in the body frame, the NED frame, and the global frame. This is a preliminary implementation not including the EKF inside the device.
+The inertial navigation system is an advanced navigation device combining readings from its high accuracy on-board gyroscopes and accelerometers with measurement from external sensors like DVL or GPS. Each measurement is a full set of naviation data, in the body frame, the NED frame, and the global frame. This is a preliminary implementation not including the EKF inside the device but only a simple constant acceleration prediction model.
 
 .. code-block:: xml
 
     <sensor name="INS" rate="100.0" type="ins">
-        <lever_arm xyz="-0.2 -0.4 0.3"/>
+        <output_frame rpy="0.0 0.0 0.0" xyz="-0.2 -0.4 0.3"/>
         <noise angular_velocity="0.00001745" linear_acceleration="0.00005"/>
         <external_sensors dvl="dvl" gps="gps" pressure="pressure"/>
         <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
@@ -359,7 +359,7 @@ The inertial navigation system is an advanced navigation device combining readin
 
     #include <Stonefish/sensors/scalar/INS.h>
     sf::INS* ins = new sf::INS("INS", 100.0, 1);
-    ins->setLeverArm(sf::Vector3(-0.2, -0.4, 0.3));
+    ins->setOutputFrame(sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(-0.2, -0.4, 0.3)));
     ins->setNoise(sf::Vector3(0.00001745, 0.00001745, 0.00001745), sf::Vector3(0.00005, 0.00005, 0.00005));
     ins->ConnectDVL(robot->getName() + "/dvl");
     ins->ConnectGPS(robot->getName() + "/gps");
