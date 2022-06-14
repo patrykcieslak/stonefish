@@ -75,6 +75,7 @@
 #include "comms/USBLReal.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
+#include "tinyexpr.h"
 
 namespace sf
 {
@@ -405,10 +406,15 @@ bool ScenarioParser::SaveLog(std::string filename)
 
 bool ScenarioParser::PreProcess(XMLNode* root, const std::map<std::string, std::string>& args)
 {
-    if(args.size() > 0)
-        return ReplaceArguments(root, args);
-    else
-        return true; 
+    //Replace arguments passed to the files
+    if(args.size() > 0 && !ReplaceArguments(root, args))
+        return false;
+
+    //Parse and evaluate mathematical expressions
+    if(!EvaluateMath(root))
+        return false;
+
+    return true;
 }
 
 bool ScenarioParser::ReplaceArguments(XMLNode* node, const std::map<std::string, std::string>& args)
@@ -420,7 +426,7 @@ bool ScenarioParser::ReplaceArguments(XMLNode* node, const std::map<std::string,
         {
             std::string value = std::string(attr->Value());
 
-            //Replace ${arg ....} with the actual value
+            //Replace $(arg ....) with the actual value
             std::string replacedValue = "";
             size_t currentPos = 0;
             size_t startPos, endPos;
@@ -456,6 +462,58 @@ bool ScenarioParser::ReplaceArguments(XMLNode* node, const std::map<std::string,
     for(XMLNode* child = node->FirstChild(); child != nullptr; child = child->NextSibling())
     {
         if(!ReplaceArguments(child, args))
+            return false;
+    }
+
+    return true;
+}
+
+bool ScenarioParser::EvaluateMath(XMLNode* node)
+{
+    XMLElement* element = node->ToElement();
+    if(element != nullptr)
+    {
+        for(const XMLAttribute* attr = element->FirstAttribute(); attr != nullptr; attr = attr->Next())
+        {
+            std::string value = std::string(attr->Value());
+
+            //Evaluate expressions between ${ and }
+            std::string replacedValue = "";
+            size_t currentPos = 0;
+            size_t startPos, endPos;
+
+            //Fing expression start and end
+            while((startPos = value.find("${", currentPos)) != std::string::npos && (endPos = value.find("}", startPos+2)) != std::string::npos)
+            {
+                //Append prefix
+                replacedValue += value.substr(currentPos, startPos - currentPos);
+                
+                //Parse and evaluate expression 
+                std::string expr = value.substr(startPos+2, endPos-startPos-2);              
+                int err;
+                double result = te_interp(expr.c_str(), &err);
+                if(err != 0)
+                {
+                    log.Print(MessageType::ERROR, "Evaluating expression '%s' failed. Parse error at position %d.", expr.c_str(), err);
+                    return false;
+                }
+
+                //Replace text with result
+                replacedValue += std::to_string(result);
+
+                currentPos = endPos + 1;
+            }
+            //Append postfix
+            replacedValue += value.substr(currentPos, value.size() - currentPos);
+
+            if(replacedValue != value)
+                element->SetAttribute(attr->Name(), replacedValue.c_str());
+        }
+    }
+
+    for(XMLNode* child = node->FirstChild(); child != nullptr; child = child->NextSibling())
+    {
+        if(!EvaluateMath(child))
             return false;
     }
 

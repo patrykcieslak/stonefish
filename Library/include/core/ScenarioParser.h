@@ -97,6 +97,13 @@ namespace sf
          */
         virtual bool ReplaceArguments(XMLNode* node, const std::map<std::string, std::string>& args);
 
+        //! A method used to evaluate mathematical expressions.
+        /*!
+         \param node a pointer to a node
+         \return success
+         */
+        virtual bool EvaluateMath(XMLNode* node);
+
         //! A method used to parse environment configuration.
         /*!
          \param element a pointer to the XML node

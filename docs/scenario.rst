@@ -40,6 +40,9 @@ A properly defined scenario file has to contain a set of **obligatory tags**, sp
         <!-- Definitions of bodies, robots, sensors... -->
     </scenario>
 
+Include files
+-------------
+
 It is possible to **include one file in another**, to allow for the reuse of common definitions. The includes can only be used at the root level of the main file. Moreover, **looks can be defined at the root level of any include file**, to keep them together with the body definitions that they correspond to. **Physical materials can only be defined in the main file.** The include mechanism also supports passing arguments that are automatically replaced when loading the file contents. To define an argument the user has to add ``<arg name="{1}" value="{2}"/>`` to the ``<include>`` node, where {1} is the argument name and {2} is the argument value. In the included file the argument is retrieved by using ``$(arg {1})`` inside an attribute value. An example of including a file with arguments is presented below:
 
 .. code-block:: xml
@@ -60,6 +63,13 @@ It is possible to **include one file in another**, to allow for the reuse of com
             <!-- robot definitions -->
         </robot>
     </scenario>
+
+Mathematical expressions
+------------------------
+
+The XML parser supports evaluating mathematical expressions for all numerical values. The result of the evaluation is always a double floating point number. A mathematical expression has to be written between ``${`` and ``}``.
+
+
 
 Using the code
 ==============

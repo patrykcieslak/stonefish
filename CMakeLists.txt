@@ -48,7 +48,7 @@ include_directories(
 
 # Find library source files
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
-file(GLOB_RECURSE SOURCES_3RD "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.cpp")
+file(GLOB_RECURSE SOURCES_3RD "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.c")
 
 # Define targets
 if(BUILD_TESTS)
