@@ -2348,8 +2348,14 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         {
             log.Print(MessageType::ERROR, "Controller definition for actuator '%s' missing!", actuatorName.c_str());
             return nullptr;
-        }    
+        }
+        Scalar initialPos(0);
+        if((item = element->FirstChildElement("initial")) != nullptr)
+            item->QueryAttribute("position", &initialPos);
+
         Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
+        srv->setControlMode(ServoControlMode::POSITION_CTRL);
+        srv->setDesiredPosition(initialPos);
         return srv;
     }
     else if(typeStr == "thruster" || typeStr == "propeller")

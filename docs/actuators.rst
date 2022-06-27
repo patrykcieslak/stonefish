@@ -37,18 +37,22 @@ Servomotor
 ----------
 
 A servomotor is an electric motor connected with control and power circuits that allow for controlling it in different modes: torque, position or velocity.
+It is possible to define an initial position of the joint that will be achieved at the beginning of the simulation.
 
 .. code-block:: xml
 
     <actuator name="Servo" type="servo">
         <controller position_gain="1.0" velocity_gain="0.5" max_torque="10.0"/>
         <joint name="Joint1"/>
+        <initial position="0.5"/>
     </actuator>
 
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Servo.h>
     sf::Servo* srv = new sf::Servo("Servo", 1.0, 0.5, 10.0);
+    srv->setControlMode(sf::ServoControlMode::POSITION_CTRL);
+    srv->setDesiredPosition(0.5);
     robot->AddJointActuator(srv, "Joint1");
 
 Link actuators

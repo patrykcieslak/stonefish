@@ -138,6 +138,7 @@ namespace sf
         Entity* A;
         Entity* B;
         std::deque<ContactPoint> points;
+        std::deque<ContactPoint>::iterator pointsLastBeg;
         unsigned int historyLen;
         int16_t displayMask;
         bool newDataAvailable;

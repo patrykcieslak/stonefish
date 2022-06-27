@@ -42,6 +42,7 @@ Contact::Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsig
     historyLen = inclusiveHistoryLength;
     displayMask = CONTACT_DISPLAY_NONE;
     newDataAvailable = false;
+    pointsLastBeg = points.begin();
 }
 
 Contact::~Contact()
@@ -85,6 +86,7 @@ bool Contact::isNewDataAvailable()
 
 void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped, Scalar dt)
 {
+    size_t added = 0;
     for(int i=0; i<manifold->getNumContacts(); ++i)
     {
         const btManifoldPoint& mp = manifold->getContactPoint(i);
@@ -104,7 +106,9 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
         p.slippingVelocityA = (swapped ? Scalar(-1.) : Scalar(1.)) * cInfo->slip;
         p.normalForceA = normalForceA;
         AddContactPoint(p);
+        ++added;
     }
+    pointsLastBeg = points.end()-added; // Save iterator to the beginning of new points
 }
 
 void Contact::AddContactPoint(ContactPoint p)
@@ -205,18 +209,24 @@ std::vector<Renderable> Contact::Render()
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_A)
     {
-        Vector3 p1 = points.back().locationA;
-        Vector3 p2 = points.back().locationA + points.back().normalForceA;
-        vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
-        vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        for(auto it=pointsLastBeg; it != points.end(); ++it)
+        {
+            Vector3 p1 = (*it).locationA;
+            Vector3 p2 = (*it).locationA + (*it).normalForceA;
+            vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+            vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        }
     }
     
     if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_B)
     {
-        Vector3 p1 = points.back().locationB;
-        Vector3 p2 = points.back().locationB - points.back().normalForceA;
-        vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
-        vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        for(auto it=pointsLastBeg; it != points.end(); ++it)
+        {
+            Vector3 p1 = (*it).locationB;
+            Vector3 p2 = (*it).locationB - (*it).normalForceA;
+            vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
+            vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
+        }
     }
     
     if(vertices.size() > 0)
