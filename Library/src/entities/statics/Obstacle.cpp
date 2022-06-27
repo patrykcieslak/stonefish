@@ -139,7 +139,7 @@ Obstacle::Obstacle(std::string uniqueName, Vector3 boxDimensions, const Transfor
 Obstacle::Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look) : StaticEntity(uniqueName, material, look)
 {
     Scalar halfHeight = cylinderHeight/Scalar(2);
-    phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
+    phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight, (unsigned int)btMax(ceil(2.0*M_PI*cylinderRadius/0.1), 12.0)); //Max 0.1 m cylinder wall slice width
     graMesh = phyMesh;
     graObjectId = -1;
     

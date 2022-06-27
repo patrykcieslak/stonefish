@@ -65,7 +65,7 @@ Cylinder::Cylinder(std::string uniqueName, BodyPhysicsSettings phy, Scalar radiu
     }
     
     //Build geometry
-    phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2));
+    phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2), (unsigned int)btMax(ceil(2.0*M_PI*r/0.1), 12.0)); //Max 0.1 m cylinder wall slice width
     
     //Compute hydrodynamic properties
     ComputeFluidDynamicsApprox( GeometryApproxType::CYLINDER);
