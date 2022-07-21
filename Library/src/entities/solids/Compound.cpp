@@ -87,6 +87,20 @@ size_t Compound::getPartId(size_t collisionShapeId) const
     else
         return 0;
 }
+
+const CompoundPart Compound::getPart(size_t partId) const
+{
+    try
+    {
+        return parts.at(partId);
+    }
+    catch(const std::exception& e)
+    {
+        CompoundPart nopart;
+        nopart.solid = nullptr;
+        return nopart;
+    }
+}
     
 SolidType Compound::getSolidType()
 {
@@ -435,6 +449,78 @@ void Compound::BuildGraphicalObject()
         parts[i].solid->BuildGraphicalObject();
 }
 
+std::vector<Renderable> Compound::Render(size_t partId)
+{
+    std::vector<Renderable> items(0);
+    Transform oCompoundTrans = getOTransform();
+
+    try
+    {
+        Renderable item;
+
+        if((parts.at(partId).isExternal && !displayInternals)  
+            || (!parts.at(partId).isExternal && displayInternals))
+        {
+            item.type = RenderableType::SOLID;
+            item.materialName = parts.at(partId).solid->getMaterial().name;
+                
+            if(dm == DisplayMode::GRAPHICAL)
+            {
+                Transform oTrans = oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2GTransform();
+                item.objectId = parts.at(partId).solid->getGraphicalObject();
+                item.lookId = parts.at(partId).solid->getLook();
+                item.model = glMatrixFromTransform(oTrans);
+                items.push_back(item);
+            }
+            else if(dm == DisplayMode::PHYSICAL)
+            {
+                Transform oTrans = oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2CTransform();
+                item.objectId = parts.at(partId).solid->getPhysicalObject();
+                item.lookId = -1;
+                item.model = glMatrixFromTransform(oTrans);
+                items.push_back(item);
+            }
+        }
+            
+        GeometryApproxType atype;
+        std::vector<Scalar> aparams;
+        parts.at(partId).solid->getGeometryApprox(atype, aparams);
+        item.model = glMatrixFromTransform(oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2HTransform());
+        
+        switch(atype)
+        {
+            case  GeometryApproxType::AUTO:
+                break;
+            
+            case  GeometryApproxType::SPHERE:
+                item.type = RenderableType::HYDRO_ELLIPSOID;
+                item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
+                items.push_back(item);
+                break;
+            
+            case  GeometryApproxType::CYLINDER:
+                item.type = RenderableType::HYDRO_CYLINDER;
+                item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
+                items.push_back(item);
+                break;
+            
+            case  GeometryApproxType::ELLIPSOID:
+                item.type = RenderableType::HYDRO_ELLIPSOID;
+                item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
+                items.push_back(item);
+                break;
+        }
+        
+        item.points.clear();
+    }
+    catch(const std::exception& e)
+    {
+        //Error finding part id
+    }      
+
+    return items;
+}
+
 std::vector<Renderable> Compound::Render()
 {
     std::vector<Renderable> items(0);
@@ -457,59 +543,8 @@ std::vector<Renderable> Compound::Render()
         
         for(size_t i=0; i<parts.size(); ++i)
         {
-            if((parts[i].isExternal && !displayInternals) || (!parts[i].isExternal && displayInternals))
-            {
-                item.type = RenderableType::SOLID;
-                item.materialName = parts[i].solid->getMaterial().name;
-                
-                if(dm == DisplayMode::GRAPHICAL)
-                {
-                    Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2GTransform();
-                    item.objectId = parts[i].solid->getGraphicalObject();
-                    item.lookId = parts[i].solid->getLook();
-                    item.model = glMatrixFromTransform(oTrans);
-                    items.push_back(item);
-                }
-                else if(dm == DisplayMode::PHYSICAL)
-                {
-                    Transform oTrans = oCompoundTrans * parts[i].origin * parts[i].solid->getO2CTransform();
-                    item.objectId = parts[i].solid->getPhysicalObject();
-                    item.lookId = -1;
-                    item.model = glMatrixFromTransform(oTrans);
-                    items.push_back(item);
-                }
-            }
-            
-            GeometryApproxType atype;
-            std::vector<Scalar> aparams;
-            parts[i].solid->getGeometryApprox(atype, aparams);
-            item.model = glMatrixFromTransform(oCompoundTrans * parts[i].origin * parts[i].solid->getO2HTransform());
-            
-            switch(atype)
-            {
-                case  GeometryApproxType::AUTO:
-                    break;
-                
-                case  GeometryApproxType::SPHERE:
-                    item.type = RenderableType::HYDRO_ELLIPSOID;
-                    item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
-                    items.push_back(item);
-                    break;
-                
-                case  GeometryApproxType::CYLINDER:
-                    item.type = RenderableType::HYDRO_CYLINDER;
-                    item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
-                    items.push_back(item);
-                    break;
-                
-                case  GeometryApproxType::ELLIPSOID:
-                    item.type = RenderableType::HYDRO_ELLIPSOID;
-                    item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
-                    items.push_back(item);
-                    break;
-            }
-            
-            item.points.clear();
+            std::vector<Renderable> partItems = Render(i);
+            items.insert(items.end(), partItems.begin(), partItems.end());
         }
         
         //Forces

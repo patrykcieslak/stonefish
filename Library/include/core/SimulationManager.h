@@ -231,9 +231,9 @@ namespace sf
         /*!
          \param eye the position of the camera eye in the world frame
          \param ray a unit vector representing the ray generated in the world frame
-         \return a pointer to the hit entity
+         \return a pointer to the hit entity and the index of the child collision shape
          */
-        Entity* PickEntity(Vector3 eye, Vector3 ray);
+        std::pair<Entity*, int> PickEntity(Vector3 eye, Vector3 ray);
         
         //! A method that sets new valve for the amount of simulation steps in a second.
         /*!

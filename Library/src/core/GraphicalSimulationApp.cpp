@@ -57,7 +57,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     glLoadingContext = NULL;
     glMainContext = NULL;
     trackballCenter = NULL;
-    selectedEntity = nullptr;
+    selectedEntity = std::make_pair(nullptr, -1);
     displayHUD = true;
     displayKeymap = false;
     displayConsole = false;
@@ -127,7 +127,7 @@ IMGUI* GraphicalSimulationApp::getGUI()
     return gui;
 }
 
-Entity* GraphicalSimulationApp::getSelectedEntity()
+std::pair<Entity*, int> GraphicalSimulationApp::getSelectedEntity()
 {
     return selectedEntity;
 }
@@ -847,13 +847,13 @@ void GraphicalSimulationApp::DoHUD()
     offset += 61.f;
     
     //Picked entity information
-    if(selectedEntity != nullptr)
+    if(selectedEntity.first != nullptr)
     {
-        switch(selectedEntity->getType())
+        switch(selectedEntity.first->getType())
         {
             case EntityType:: STATIC:
             {
-                StaticEntity* ent = (StaticEntity*)selectedEntity;
+                StaticEntity* ent = (StaticEntity*)selectedEntity.first;
                 
                 gui->DoPanel(10.f, offset, 160.f, 66.f);
                 offset += 5.f;
@@ -869,9 +869,10 @@ void GraphicalSimulationApp::DoHUD()
                 
             case EntityType:: SOLID:
             {
-                SolidEntity* ent = (SolidEntity*)selectedEntity;
+                SolidEntity* ent = (SolidEntity*)selectedEntity.first;
                 
-                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::COMPOUND ? 143.f : 122.f);
+                GLfloat infoOffset = offset;
+                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::COMPOUND ? 130.f : 122.f);
                 offset += 5.f;
                 gui->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
@@ -879,8 +880,11 @@ void GraphicalSimulationApp::DoHUD()
                 offset += 14.f;
                 gui->DoLabel(18.f, offset, std::string("Type: Dynamic"));
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, ent->getSolidType() == SolidType::COMPOUND ? std::string("Material: Compound") : std::string("Material: ") + ent->getMaterial().name);
-                offset += 14.f;
+                if(ent->getSolidType() != SolidType::COMPOUND)
+                {
+                    gui->DoLabel(18.f, offset, std::string("Material: ") + ent->getMaterial().name);
+                    offset += 14.f;
+                }
                 std::sprintf(buf, "%1.3lf", ent->getMass());
                 gui->DoLabel(18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
                 offset += 14.f;
@@ -901,6 +905,34 @@ void GraphicalSimulationApp::DoHUD()
                     id.item = 0;
                     cmp->setDisplayInternalParts(gui->DoCheckBox(id, 15.f, offset, 110.f, cmp->isDisplayingInternalParts(), "Show internals"));
                     offset += 22.f;
+
+                    CompoundPart part = cmp->getPart(cmp->getPartId(selectedEntity.second));
+                    if(part.solid != nullptr)
+                    {
+                        offset = infoOffset + 10.f;
+                        GLfloat hOffset = 165.f;
+                        gui->DoPanel(hOffset + 10.f, offset, 130.f, 110.f);
+                        offset += 5.f;
+                        gui->DoLabel(hOffset + 15.f, offset, "PART INFO");
+                        offset += 16.f;
+                        std::string partName = part.solid->getName();
+                        int beginIdx = partName.rfind('/');
+                        gui->DoLabel(hOffset + 18.f, offset, std::string("Name: ") + partName.substr(beginIdx + 1));
+                        offset += 14.f;
+                        gui->DoLabel(hOffset + 18.f, offset, std::string("Material: ") + part.solid->getMaterial().name);
+                        offset += 14.f;
+                        std::sprintf(buf, "%1.3lf", part.solid->getMass());
+                        gui->DoLabel(hOffset + 18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
+                        offset += 14.f;
+                        gui->DoLabel(hOffset + 18.f, offset, std::string("Inertia[kgm2]: "));
+                        offset += 14.f;
+                        Vector3 I = part.solid->getInertia();
+                        std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
+                        gui->DoLabel(hOffset + 23.f, offset, std::string(buf));
+                        offset += 14.f;
+                        std::sprintf(buf, "%1.3lf", part.solid->getVolume()*1e3);
+                        gui->DoLabel(hOffset + 18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
+                    }
                 }
             }
                 break;
@@ -968,7 +1000,7 @@ void GraphicalSimulationApp::ResumeSimulation()
 void GraphicalSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
-	selectedEntity = nullptr;
+	selectedEntity = std::make_pair(nullptr, -1);
 	trackballCenter = NULL;
     
     int status;

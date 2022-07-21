@@ -96,9 +96,12 @@ namespace sf
         //! A method returning the material of the body.
         Material getMaterial(size_t partId) const;
         
-        //! A method returning the part id for the collision shape id
+        //! A method returning the part id for the collision shape id.
         size_t getPartId(size_t collisionShapeId) const;
-        
+
+        //! A method returning a pointer to one part of the compound body.
+        const CompoundPart getPart(size_t partId) const;
+
         //! A method that returns the type of solid.
         SolidType getSolidType();
         
@@ -116,6 +119,9 @@ namespace sf
         
         //! A method that returns elements that have to be rendered for the body.
         std::vector<Renderable> Render();
+
+        //! A method that returns elements that have to be rendered for a signle part of the body.
+        std::vector<Renderable> Render(size_t partId);
         
     private:
         std::vector<CompoundPart> parts; //Parts of the compound solid

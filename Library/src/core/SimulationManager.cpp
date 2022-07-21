@@ -50,6 +50,7 @@
 #include "graphics/OpenGLDebugDrawer.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/UnitSystem.h"
+#include "utils/RayTest.hpp"
 #include "entities/Entity.h"
 //#include "entities/CableEntity.h"
 #include "entities/FeatherstoneEntity.h"
@@ -1025,9 +1026,14 @@ void SimulationManager::UpdateDrawingQueue()
     for(size_t i=0; i<entities.size(); ++i)
         glPipeline->AddToDrawingQueue(entities[i]->Render());
 
-    Entity* selected = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSelectedEntity();
-    if(selected != nullptr)
-        glPipeline->AddToSelectedDrawingQueue(selected->Render());
+    std::pair<Entity*, int> selected = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSelectedEntity();
+    if(selected.first != nullptr)
+    {
+        if(selected.first->getType() == EntityType::SOLID && ((SolidEntity*)selected.first)->getSolidType() == SolidType::COMPOUND)
+            glPipeline->AddToSelectedDrawingQueue(((Compound*)selected.first)->Render(selected.second));
+        else
+            glPipeline->AddToSelectedDrawingQueue(selected.first->Render());
+    }
 
     //Joints
     for(size_t i=0; i<joints.size(); ++i)
@@ -1066,10 +1072,11 @@ void SimulationManager::UpdateDrawingQueue()
         glPipeline->AddToDrawingQueue(ocean->Render(actuators));
 }
 
-Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
+std::pair<Entity*, int>  SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
 {
     ray *= Scalar(100000);
-    btCollisionWorld::ClosestRayResultCallback rayCallback(eye, eye+ray);
+    //btCollisionWorld::ClosestRayResultCallback rayCallback(eye, eye+ray);
+    DetailedRayResultCallback rayCallback(eye, eye+ray);
     rayCallback.m_collisionFilterGroup = MASK_DYNAMIC;
     rayCallback.m_collisionFilterMask = MASK_DYNAMIC | MASK_STATIC | MASK_ANIMATED_COLLIDING | MASK_ANIMATED_NONCOLLIDING;
     dynamicsWorld->rayTest(eye, eye+ray, rayCallback);
@@ -1077,10 +1084,10 @@ Entity* SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
     if(rayCallback.hasHit())
     {
         Entity* ent = (Entity*)rayCallback.m_collisionObject->getUserPointer();
-        return ent;
+        return std::make_pair(ent, rayCallback.m_childShapeIndex);
     }
     else
-        return nullptr;
+        return std::make_pair(nullptr, -1);
 }
 
 void SimulationManager::RenderBulletDebug()

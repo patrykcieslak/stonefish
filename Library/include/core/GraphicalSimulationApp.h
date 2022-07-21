@@ -134,7 +134,7 @@ namespace sf
         IMGUI* getGUI();
 
         //! A method returning a pointer to the selected entity.
-        Entity* getSelectedEntity();
+        std::pair<Entity*, int> getSelectedEntity();
         
         //! A method informing if the application is graphical.
         bool hasGraphics();
@@ -196,7 +196,7 @@ namespace sf
         OpenGLPipeline* glPipeline;
         
         MovingEntity* trackballCenter;
-        Entity* selectedEntity;
+        std::pair<Entity*, int> selectedEntity;
         bool displayHUD;
         bool displayKeymap;
         bool displayConsole;

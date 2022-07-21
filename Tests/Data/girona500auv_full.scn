@@ -175,7 +175,7 @@
 			<range velocity="9.0 9.0 9.0" altitude_min="0.5" altitude_max="81.0"/>
 			<water_layer minimum_layer_size="5.0" boundary_near="10.0" boundary_far="30.0"/>
 			<noise velocity="0.0015" altitude="0.001"/>
-			<visual filename="icosphere.obj" scale="1.0" look="yellow"/>
+			<!-- <visual filename="icosphere.obj" scale="1.0" look="yellow"/> -->
 		</sensor>
 
 		<sensor name="acc" type="accelerometer" rate="100.0">
