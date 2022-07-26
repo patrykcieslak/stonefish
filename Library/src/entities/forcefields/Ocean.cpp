@@ -130,7 +130,7 @@ float Ocean::GetDepth(const glm::vec3& point)
     {
         GLfloat waveHeight = glOcean->ComputeWaveHeight(point.x, point.y);
         glm::vec3 wavePoint(point.x, point.y, waveHeight);
-#ifdef DEBUG_HYDRO
+#ifdef DEBUG_WAVES
         wavesDebug.points.push_back(wavePoint);
 #endif
         return point.z - waveHeight;
@@ -138,7 +138,7 @@ float Ocean::GetDepth(const glm::vec3& point)
     else //Flat surface
     {
         glm::vec3 wavePoint(point.x, point.y, 0.f);
-#ifdef DEBUG_HYDRO  
+#ifdef DEBUG_WAVES  
         wavesDebug.points.push_back(wavePoint);
 #endif
         return point.z;

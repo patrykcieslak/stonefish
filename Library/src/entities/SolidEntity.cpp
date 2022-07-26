@@ -96,6 +96,7 @@ SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::s
     phyObjectId = -1;
     dm = DisplayMode::GRAPHICAL;
     submerged.type = RenderableType::HYDRO_LINES;
+    submerged.model = glm::mat4(1.f);
 }
 
 SolidEntity::~SolidEntity()
@@ -239,10 +240,75 @@ std::vector<Renderable> SolidEntity::Render()
         item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         items.push_back(item);
 
-        //Surface crossing debug
-        //submerged.model = glMatrixFromTransform(sf::I4());
-        //items.push_back(submerged);
+        //Forces
+        Vector3 cg = getCGTransform().getOrigin();
+        glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
+        item.points.clear();
+        item.points.push_back(cgv);
+        item.model = glm::mat4(1.f);
+        
+        item.type = RenderableType::FORCE_BUOYANCY;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        items.push_back(item);
+        
+        item.points.pop_back();
+        item.type = RenderableType::FORCE_LINEAR_DRAG;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fdl.x(), (GLfloat)Fdl.y(), (GLfloat)Fdl.z()));
+        items.push_back(item);
+        
+        item.points.pop_back();
+        item.type = RenderableType::FORCE_QUADRATIC_DRAG;
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
+        items.push_back(item);
 
+        //Surface crossing debug
+#ifdef DEBUG_HYDRO
+        items.push_back(submerged);
+
+        item.type = RenderableType::HYDRO_LINES;
+        item.model = glm::mat4(1.f);
+        
+        Vector3 min, max;
+        getAABB(min, max);
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        items.push_back(item);
+#else
         //Geometry approximation
         switch(fdApproxType)
         {
@@ -270,27 +336,7 @@ std::vector<Renderable> SolidEntity::Render()
                 items.push_back(item);
                 break;
         }
-
-        //Forces
-        Vector3 cg = getCGTransform().getOrigin();
-        glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
-        item.points.clear();
-        item.points.push_back(cgv);
-        item.model = glm::mat4(1.f);
-        
-        item.type = RenderableType::FORCE_BUOYANCY;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
-        items.push_back(item);
-        
-        item.points.pop_back();
-        item.type = RenderableType::FORCE_LINEAR_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdl.x(), (GLfloat)Fdl.y(), (GLfloat)Fdl.z()));
-        items.push_back(item);
-        
-        item.points.pop_back();
-        item.type = RenderableType::FORCE_QUADRATIC_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
-        items.push_back(item);
+#endif
     }
     
     return items;
@@ -495,6 +541,16 @@ Vector3 SolidEntity::getAppliedForce()
     }
     else
         return V0();
+}
+
+void SolidEntity::getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Fs, Vector3& Ts)
+{
+    Fb = this->Fb;
+    Tb = this->Tb;
+    Fd = this->Fdl + this->Fdq;
+    Td = this->Tdl + this->Tdq;
+    Fs = this->Fds;
+    Ts = this->Tds;
 }
 
 Vector3 SolidEntity::getLinearAcceleration() const
@@ -1131,19 +1187,19 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* ocn)
     getAABB(aabbMin, aabbMax);
     Vector3 d = aabbMax-aabbMin;
     
-    unsigned int submerged = 0;
-    if(ocn->GetDepth(aabbMin) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMax) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMin + Vector3(d.x(), 0, 0)) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), 0)) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMin + Vector3(d.x(), d.y(), 0)) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMin + Vector3(0, 0, d.z())) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMin + Vector3(d.x(), 0, d.z())) > Scalar(0)) ++submerged;
-    if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), d.z())) > Scalar(0)) ++submerged;
+    unsigned int underwater = 0;
+    if(ocn->GetDepth(aabbMin) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMax) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMin + Vector3(d.x(), 0, 0)) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), 0)) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMin + Vector3(d.x(), d.y(), 0)) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMin + Vector3(0, 0, d.z())) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMin + Vector3(d.x(), 0, d.z())) > Scalar(0)) ++underwater;
+    if(ocn->GetDepth(aabbMin + Vector3(0, d.y(), d.z())) > Scalar(0)) ++underwater;
     
-    if(submerged == 0)
+    if(underwater == 0)
         return BodyFluidPosition::OUTSIDE;
-    else if(submerged == 8)
+    else if(underwater == 8)
         return BodyFluidPosition::INSIDE;
     else
         return BodyFluidPosition::CROSSING_SURFACE;
@@ -1610,10 +1666,8 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 {
     if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
     
-#ifdef DEBUG
     submerged.points.clear();
-#endif
-    
+
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     
     //If completely outside fluid just set all torques and forces to 0

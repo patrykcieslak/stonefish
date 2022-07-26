@@ -94,7 +94,7 @@ class btVector3;
 namespace sf
 {
     //! An enum defining a type of a rendered primitive.
-    enum class PrimitiveType {POINTS, LINES, LINE_STRIP};
+    enum class PrimitiveType {POINTS, LINES, LINE_STRIP, TRIANGLES};
     
     struct DrawElementsIndirectCommand 
     {
@@ -463,7 +463,7 @@ namespace sf
     //! An enum used to designate type of helper object to be drawn.
     enum class RenderableType {
         SOLID = 0, SOLID_CS, MULTIBODY_AXIS,
-        HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP,
+        HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, HYDRO_TRIANGLES,
         SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES, PATH_LINE_STRIP,
         FORCE_GRAVITY, FORCE_BUOYANCY, FORCE_LINEAR_DRAG, FORCE_QUADRATIC_DRAG
     };

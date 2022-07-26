@@ -290,6 +290,10 @@ void OpenGLPipeline::DrawHelpers()
                 case RenderableType::HYDRO_LINE_STRIP:
                     content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
                     break;
+
+                case RenderableType::HYDRO_TRIANGLES:
+                    content->DrawPrimitives(PrimitiveType::TRIANGLES, drawingQueueCopy[h].points, glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    break;
                     
                 default:
                     break;

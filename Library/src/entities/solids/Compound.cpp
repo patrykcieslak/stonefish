@@ -285,10 +285,10 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 {
     if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
     
-    BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
-    
     submerged.points.clear();
-    
+
+    BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
+     
     //If completely outside fluid just set all torques and forces to 0
     if(bf == BodyFluidPosition::OUTSIDE)
     {
@@ -349,7 +349,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                 }
         }
     }
-    else //CROSSING FLUID SURFACE
+    else //CROSSING FLUID SURFACE (compound body but not necessarily all parts!)
     {
         if(settings.reallisticBuoyancy || settings.dampingForces)
         {
@@ -390,7 +390,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                 Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
                 HydrodynamicsSettings pSettings = settings;
                 pSettings.reallisticBuoyancy &= parts[i].solid->isBuoyant();
-                
+
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
                     ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, submerged);
@@ -481,7 +481,8 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 items.push_back(item);
             }
         }
-            
+
+#ifndef DEBUG_HYDRO
         GeometryApproxType atype;
         std::vector<Scalar> aparams;
         parts.at(partId).solid->getGeometryApprox(atype, aparams);
@@ -509,9 +510,8 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
                 items.push_back(item);
                 break;
-        }
-        
-        item.points.clear();
+        }   
+#endif
     }
     catch(const std::exception& e)
     {
@@ -546,7 +546,7 @@ std::vector<Renderable> Compound::Render()
             std::vector<Renderable> partItems = Render(i);
             items.insert(items.end(), partItems.begin(), partItems.end());
         }
-        
+
         //Forces
         Vector3 cg = getCGTransform().getOrigin();
         glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
@@ -567,6 +567,54 @@ std::vector<Renderable> Compound::Render()
         item.type = RenderableType::FORCE_QUADRATIC_DRAG;
         item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
         items.push_back(item);
+
+#ifdef DEBUG_HYDRO
+        items.push_back(submerged);
+
+        item.type = RenderableType::HYDRO_LINES;
+        item.model = glm::mat4(1.f);
+        
+        Vector3 min, max;
+        getAABB(min, max);
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+
+        items.push_back(item);
+#endif
     }
         
     return items;

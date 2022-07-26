@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Robot__
@@ -173,7 +173,7 @@ namespace sf
          \param index the id of the actuator
          \return a pointer to the actuator object
          */
-        Actuator* getActuator(unsigned int index);
+        Actuator* getActuator(size_t index);
         
         //! A method returning a pointer to the sensor with a given name.
         /*!
@@ -187,7 +187,7 @@ namespace sf
          \param index the id of the sensor
          \return a pointer to the sensor object
          */
-        Sensor* getSensor(unsigned int index);
+        Sensor* getSensor(size_t index);
         
         //! A method returning a pointer to the communication device with a given name.
         /*!
@@ -201,8 +201,7 @@ namespace sf
          \param index the id of the communication device
          \return a pointer to the comm object
          */
-        Comm* getComm(unsigned int index);
-        
+        Comm* getComm(size_t index);
         
         //! A method returning a pointer to the base link solid.
         SolidEntity* getBaseLink();
@@ -213,6 +212,13 @@ namespace sf
          \return a pointer to the link solid
          */
         SolidEntity* getLink(const std::string& name);
+
+        //! A method returning a pointer to the link by index.
+        /*!
+         \param index the id of the link
+         \return a pointer to the link solid
+         */
+        SolidEntity* getLink(size_t index);
         
         //! A method returning the pose of the robot in the world frame.
         virtual Transform getTransform() const;

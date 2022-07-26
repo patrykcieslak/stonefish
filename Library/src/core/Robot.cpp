@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/Robot.h"
@@ -42,13 +42,13 @@ namespace sf
 Robot::Robot(std::string uniqueName, bool fixedBase)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    dynamics = NULL;
+    dynamics = nullptr;
     fixed = fixedBase;
 }
 
 Robot::~Robot()
 {
-    if(SimulationApp::getApp() != NULL)
+    if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
@@ -59,7 +59,7 @@ std::string Robot::getName()
 
 void Robot::getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId)
 {
-    if(dynamics == NULL)
+    if(dynamics == nullptr)
         cCritical("Robot links not defined!");
         
     if(detachedLinks.size() == 0)
@@ -92,12 +92,20 @@ SolidEntity* Robot::getLink(const std::string& name)
     for(size_t i=0; i<detachedLinks.size(); ++i)
         if(detachedLinks[i]->getName() == name) return detachedLinks[i];
     
-    return NULL;
+    return nullptr;
+}
+
+SolidEntity* Robot::getLink(size_t index)
+{
+    if(index < links.size())
+        return links[index];
+    else
+        return nullptr;
 }
 
 int Robot::getJoint(const std::string& name)
 {
-    if(dynamics == NULL)
+    if(dynamics == nullptr)
         cCritical("Robot links not defined!");
     
     for(unsigned int i=0; i<dynamics->getNumOfJoints(); ++i)
@@ -112,15 +120,15 @@ Actuator* Robot::getActuator(std::string name)
         if(actuators[i]->getName() == name)
             return actuators[i];
 
-    return NULL;
+    return nullptr;
 }
 
-Actuator* Robot::getActuator(unsigned int index)
+Actuator* Robot::getActuator(size_t index)
 {
     if(index < actuators.size())
         return actuators[index];
     else
-        return NULL;
+        return nullptr;
 }
     
 Sensor* Robot::getSensor(std::string name)
@@ -129,15 +137,15 @@ Sensor* Robot::getSensor(std::string name)
         if(sensors[i]->getName() == name)
             return sensors[i];
     
-    return NULL;
+    return nullptr;
 }
 
-Sensor* Robot::getSensor(unsigned int index)
+Sensor* Robot::getSensor(size_t index)
 {
     if(index < sensors.size())
         return sensors[index];
     else
-        return NULL;
+        return nullptr;
 }
 
 Comm* Robot::getComm(std::string name)
@@ -146,15 +154,15 @@ Comm* Robot::getComm(std::string name)
         if(comms[i]->getName() == name)
             return comms[i];
     
-    return NULL;
+    return nullptr;
 }
 
-Comm* Robot::getComm(unsigned int index)
+Comm* Robot::getComm(size_t index)
 {
     if(index < comms.size())
         return comms[index];
     else
-        return NULL;
+        return nullptr;
 }
 
 SolidEntity* Robot::getBaseLink()
@@ -164,7 +172,7 @@ SolidEntity* Robot::getBaseLink()
 
 Transform Robot::getTransform() const
 {
-    if(dynamics != NULL)
+    if(dynamics != nullptr)
         return dynamics->getLinkTransform(0);
     else
         return Transform::getIdentity();
@@ -172,7 +180,7 @@ Transform Robot::getTransform() const
 
 void Robot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks, bool selfCollision)
 {
-    if(dynamics != NULL)
+    if(dynamics != nullptr)
         cCritical("Robot cannot be redefined!");
     
     links.push_back(baseLink);
@@ -322,7 +330,7 @@ void Robot::BuildKinematicTree()
 void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(monitoredLinkName);
-    if(link != NULL)
+    if(link != nullptr)
     {
         s->AttachToSolid(link, origin);
         sensors.push_back(s);
@@ -346,7 +354,7 @@ void Robot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName
 void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(attachmentLinkName);
-    if(link != NULL)
+    if(link != nullptr)
     {
         s->AttachToSolid(link, origin);
         sensors.push_back(s);
@@ -358,7 +366,7 @@ void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkNa
 void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(actuatedLinkName);
-    if(link != NULL)
+    if(link != nullptr)
     {
         a->AttachToSolid(link, origin);
         actuators.push_back(a);
@@ -382,7 +390,7 @@ void Robot::AddJointActuator(JointActuator* a, const std::string& actuatedJointN
 void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(attachmentLinkName);
-    if(link != NULL)
+    if(link != nullptr)
     {
         c->AttachToSolid(link, origin);
         comms.push_back(c);

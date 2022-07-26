@@ -745,6 +745,10 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
         case PrimitiveType::LINE_STRIP:
             glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
             break;
+
+        case PrimitiveType::TRIANGLES:
+            glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
+            break;
             
         case PrimitiveType::POINTS:
         default:
@@ -1787,11 +1791,30 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
     //Subdivide to get smooth sphere
     for(unsigned int i=0; i<subdivisions; ++i)
         Subdivide(mesh, true);
-        
-    //Scale by radius
-    for(unsigned int i=0; i<mesh->vertices.size(); ++i)
-        mesh->vertices[i].pos *= radius;
-    
+
+    //Compute polyhedron volume
+    Scalar volume = 0;
+    for(size_t i=0; i<mesh->faces.size(); ++i)
+    {
+        //Get triangle, convert from OpenGL to physics
+        glm::vec3 v1gl = mesh->getVertexPos(i, 0);
+        glm::vec3 v2gl = mesh->getVertexPos(i, 1);
+        glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+        Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
+        Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
+        Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
+            
+        //Calculate signed volume of a tetrahedra
+        Scalar tetraVolume6 = v1.dot(v2.cross(v3));
+        volume += tetraVolume6;
+    }
+    volume /= Scalar(6);
+
+    //Scale to get volume equal to an analytic sphere
+    GLfloat scale = glm::pow((GLfloat)((4.0/3.0*M_PI*radius*radius*radius)/volume), 1.f/3.f);
+    for(size_t i=0; i<mesh->vertices.size(); ++i)
+        mesh->vertices[i].pos *= scale;
+
     return mesh;
 }
 
@@ -1801,7 +1824,11 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
     GLfloat halfHeight = height/2.f;
     TexturableVertex vt;
     Face f;
-    
+
+    //Compute corrected radius to ensure correct volume.
+    GLfloat dPhi = 2.f * glm::pi<GLfloat>() / slices; 
+    radius = glm::sqrt(dPhi * radius*radius/glm::sin(dPhi));
+
     //SIDE
     //Side vertices
     for(unsigned int i=0; i<=slices; ++i)
@@ -1885,6 +1912,12 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
     Face f;
     TexturableVertex vt;
 
+    //Compute corrected radius to ensure correct volume.
+    GLfloat dPhi = 2.f * glm::pi<GLfloat>() / minorSlices; 
+    minorRadius = glm::sqrt(dPhi * minorRadius*minorRadius/glm::sin(dPhi));
+    GLfloat dTheta = 2.f * glm::pi<GLfloat>() / majorSlices;
+    majorRadius = glm::sqrt(dTheta * majorRadius*majorRadius/glm::sin(dTheta));
+
     //Vertices
     for(unsigned int i=0; i<=majorSlices; ++i)
     {
@@ -1898,8 +1931,7 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
             vt.pos = glm::vec3((rx + majorRadius)*cosf(alpha), ry, (rx + majorRadius)*sinf(alpha));
             vt.normal = glm::vec3(sinf(h/(GLfloat)minorSlices*M_PI*2.f)*cosf(alpha), cosf(h/(GLfloat)minorSlices*M_PI*2.f), sinf(h/(GLfloat)minorSlices*M_PI*2.f)*sinf(alpha));
             vt.uv = glm::vec2(i/(GLfloat)majorSlices, h/(GLfloat)minorSlices);
-            mesh->vertices.push_back(vt);
-            
+            mesh->vertices.push_back(vt);        
         }
     }
     

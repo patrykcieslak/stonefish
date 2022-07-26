@@ -297,6 +297,9 @@ namespace sf
 
         //! A method returning the force applied to the body.
         Vector3 getAppliedForce();
+
+        //! A method returning the hydrodynamic forces computed for the body.
+        void getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Fs, Vector3& Ts);
         
         //! A method returning the mass of the body.
         Scalar getMass() const;

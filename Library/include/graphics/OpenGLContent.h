@@ -393,7 +393,7 @@ namespace sf
          */
         static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3, unsigned int uvMode = 0);
         
-        //! A static method to build a graphical sphere object.
+        //! A static method to build a graphical sphere object. The volume of the discretized sphere is equal to the volume of an analytical sphere.
         /*!
          \param radius the radius of the sphere [m]
          \param subdivisions number of subdivisions used when generating the mesh (needed for hydrodynamics)
@@ -401,7 +401,7 @@ namespace sf
          */
         static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
         
-        //! A static method to build a graphical cylinder object.
+        //! A static method to build a graphical cylinder object. The volume of the discretized cylinder is equal to the volume of an analytical cylinder.
         /*!
          \param radius the radius of the cylinder [m]
          \param height the height of the cylinder [m]
@@ -410,7 +410,7 @@ namespace sf
          */
         static Mesh* BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
         
-        //! A static method to build a graphical torus object.
+        //! A static method to build a graphical torus object. The volume of the discretized torus is equal to the volume of an analytical torus.
         /*!
          \param majorRadius the radius of the torus [m]
          \param minorRadius the radius of the tube [m]
