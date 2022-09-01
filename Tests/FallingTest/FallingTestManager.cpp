@@ -36,7 +36,7 @@
 #include <entities/solids/Sphere.h>
 #include <entities/solids/Torus.h>
 #include <entities/solids/Cylinder.h>
-#include <entities/CableEntity.h>
+// #include <entities/CableEntity.h>
 #include <graphics/OpenGLContent.h>
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/RotaryEncoder.h>
