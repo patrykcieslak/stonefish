@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/IMGUI.h"
@@ -957,6 +957,157 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     delete data;
         
     //title
+    glm::vec2 titleDim = PlainTextDimensions(title);
+    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
+    
+    return result;
+}
+
+bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, const std::string& title, Scalar fixedRange[2])
+{
+    //Check if enough data
+    if(data.size() < 1 || data[0].size() < 2)
+        return false;
+
+    //Check consistency of data
+    if(data.size() > 1)
+    {
+        for(size_t i = 1; i < data.size(); ++i)
+            if(data[i].size() != data[0].size())
+                return false;
+    }
+    
+    //Data preprocessing
+    GLfloat minValue;
+    GLfloat maxValue;
+    
+    if(fixedRange != NULL)
+    {
+        minValue = fixedRange[0];
+        maxValue = fixedRange[1];
+    }
+    else //Autoscale
+    {
+        minValue = 10e12;
+        maxValue = -10e12;
+    
+        for(size_t i = 0; i < data.size(); ++i)
+        {
+            for(size_t k = 0; k < data[i].size(); ++k)
+            {
+                if(data[i][k] > maxValue)
+                    maxValue = data[i][k];
+                if(data[i][k] < minValue)
+                    minValue = data[i][k];
+            }
+        }
+    
+        if(maxValue == minValue) //secure division by zero
+        {
+            maxValue += 0.1f * maxValue;
+            minValue -= 0.1f * minValue;
+        }
+    }
+
+    //Mouse events
+    bool result = false;   
+    if(MouseInRect(x, y, w, h))
+        setHot(id);
+    
+    if(isActive(id))
+    {
+        if(!MouseIsDown(true)) //mouse went up
+        {
+            if(isHot(id))
+                result = true;
+            clearActive();
+        }
+    }
+    else if(isHot(id))
+    {
+        if(MouseIsDown(true)) //mouse went down
+            setActive(id);
+    }
+    
+    //Drawing
+    GLfloat pltW = w/windowW * 2.f;
+    GLfloat pltH = h/windowH * 2.f;
+    GLfloat pltX = x/windowW * 2.f - 1.f;
+    GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
+    GLfloat pltMargin = 10.f/windowH*2.f; 
+    
+    DrawRoundedRect(x, y, w, h, theme[PLOT_COLOR]);
+    GLfloat dy = (pltH-2.f*pltMargin)/(maxValue-minValue);
+    GLfloat dt = pltW/(GLfloat)(data[0].size()-1); //Autostretch
+
+    for(size_t i = 0; i < data.size(); ++i)
+    {
+        //Set color
+        glm::vec4 color = glm::vec4(Color::HSV(i/(GLfloat)(data.size())*0.5, 1.f, 1.f).rgb, 1.f);
+        
+        //Draw graph
+        std::vector<glm::vec2> points;
+        for(size_t k = 0;  k < data[i].size(); ++k)
+            points.push_back(glm::vec2(pltX + dt*k, pltY - pltH + pltMargin + (data[i][k] - minValue) * dy));
+                
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+    
+        guiShader[0]->Use();
+        guiShader[0]->SetUniform("color", color);
+    
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+        glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)points.size());
+        
+        OpenGLState::UseProgram(0);
+        glDeleteBuffers(1, &vbo);
+        
+        //Legend
+        DrawRect(x - 10.f, y+i*10.f+5.f, 10.f, 10.f, color);
+    }
+    
+    //Grid
+    if(minValue < 0.f && maxValue > 0.f)
+    {
+        GLfloat axisData[2][2] = {{pltX, pltY - pltH + pltMargin - minValue * dy},
+                                    {pltX + pltW, pltY - pltH + pltMargin - minValue * dy}};
+        
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+    
+        guiShader[0]->Use();
+        guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
+    
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(axisData), axisData, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+        glDrawArrays(GL_LINES, 0, 2);
+        
+        OpenGLState::UseProgram(0);
+        glDeleteBuffers(1, &vbo);
+    }
+    
+    //Check if mouse cursor above legend item and display signal info
+    if(MouseInRect(x - 10.f, y + 5.f, 10.f, data.size() * 10.f)) //mouse above legend
+    {
+        long selectedDim = (long)floorf((mouseY - y - 5.f)/10.f);
+        if(selectedDim < 0)
+            selectedDim = 0;
+        if(selectedDim > (int)data.size()-1)
+            selectedDim = data.size()-1;
+        
+        char buffer[64];
+        sprintf(buffer, "%1.6f", data[selectedDim].back());
+        DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[PLOT_TEXT_COLOR], buffer);
+    }
+        
+    //Title
     glm::vec2 titleDim = PlainTextDimensions(title);
     DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
     

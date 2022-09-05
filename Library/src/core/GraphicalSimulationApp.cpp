@@ -61,6 +61,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     displayHUD = true;
     displayKeymap = false;
     displayConsole = false;
+    displayPerformance = false;
     joystick = NULL;
     joystickAxes = NULL;
     joystickButtons = NULL;
@@ -355,7 +356,11 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         case SDLK_k:
             displayKeymap = !displayKeymap;
             break;
-            
+
+        case SDLK_p:
+            displayPerformance = !displayPerformance;
+            break;
+
         case SDLK_c:
             displayConsole = !displayConsole;
             ((OpenGLConsole*)console)->ResetScroll();
@@ -974,6 +979,18 @@ void GraphicalSimulationApp::DoHUD()
         gui->DoLabel(left, offset, "[Mouse right] rotate"); offset += 16.f;
         gui->DoLabel(left, offset, "[Mouse middle] move"); offset += 16.f;
         gui->DoLabel(left, offset, "[Mouse scroll] zoom"); offset += 16.f;
+    }
+
+    //Performance
+    if(displayPerformance)
+    {
+        std::vector<std::vector<GLfloat> > perfData;    
+        perfData.push_back(getSimulationManager()->getPerformanceMonitor().getPhysicsTimeHistory<GLfloat>(100));
+        perfData.push_back(getSimulationManager()->getPerformanceMonitor().getHydrodynamicsTimeHistory<GLfloat>(100));
+
+        id.owner = 4;
+        id.item = 0;
+        gui->DoTimePlot(id, getWindowWidth()-300, getWindowHeight()-200, 290, 160, perfData, "Performance Monitor", new Scalar[2]{-1, 10000});
     }
 }
 

@@ -29,6 +29,7 @@
 //STL
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 //Bullet Physics
 #include "btBulletDynamicsCommon.h"

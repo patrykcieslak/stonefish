@@ -36,7 +36,6 @@
 #include <entities/solids/Sphere.h>
 #include <entities/solids/Torus.h>
 #include <entities/solids/Cylinder.h>
-#include <entities/CableEntity.h>
 #include <graphics/OpenGLContent.h>
 #include <sensors/scalar/IMU.h>
 #include <sensors/scalar/RotaryEncoder.h>
@@ -129,8 +128,4 @@ void FallingTestManager::BuildScenario()
     sf::Odometry* odom = new sf::Odometry("Odom", -1, 0);
     odom->AttachToSolid(sph, sf::I4());
     AddSensor(odom);*/
-
-    //Cable test
-    //sf::CableEntity* cab = new sf::CableEntity("Cable", sf::Transform(sf::IQ(), sf::Vector3(0.0,2.0,-5)), sf::Transform(sf::IQ(), sf::Vector3(0.0,2.2,-2)), 0.02, 0.1, phy, "Steel", "Green");
-    //AddEntity(cab);
 }

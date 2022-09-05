@@ -75,7 +75,8 @@ extern ContactDestroyedCallback gContactDestroyedCallback;
 namespace sf
 {
 
-SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft)
+SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft) 
+    : perfMon(PerformanceMonitor(100))
 {
     //Initialize simulation world
     realtimeFactor = Scalar(1);
@@ -84,7 +85,6 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     collisionFilter = cft;
     fdCounter = 0;
     currentTime = 0;
-    physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
     dynamicsWorld = nullptr;
@@ -504,6 +504,11 @@ NameManager* SimulationManager::getNameManager()
     return nameManager;
 }
 
+PerformanceMonitor& SimulationManager::getPerformanceMonitor()
+{
+    return perfMon;
+}
+
 OpenGLTrackball* SimulationManager::getTrackball()
 {
     return trackball;
@@ -532,14 +537,6 @@ void SimulationManager::setRealtimeFactor(Scalar f)
 Scalar SimulationManager::getStepsPerSecond()
 {
     return sps;
-}
-
-Scalar SimulationManager::getPhysicsTimeInMiliseconds()
-{
-    SDL_LockMutex(simInfoMutex);
-    Scalar t = (Scalar)physicsTime/Scalar(1000);
-    SDL_UnlockMutex(simInfoMutex);
-    return t;
 }
 
 Scalar SimulationManager::getCpuUsage()
@@ -863,7 +860,6 @@ bool SimulationManager::StartSimulation()
 {
     simulationFresh = false;
     currentTime = 0;
-    physicsTime = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
     fdCounter = 0;
@@ -879,6 +875,8 @@ bool SimulationManager::StartSimulation()
     //Reset sensors
     for(unsigned int i = 0; i < sensors.size(); i++)
         sensors[i]->Reset();
+
+    perfMon.SimulationStarted();
     
     return true;
 }
@@ -893,6 +891,7 @@ void SimulationManager::ResumeSimulation()
 
 void SimulationManager::StopSimulation()
 {
+    perfMon.SimulationFinished();
 }
 
 bool SimulationManager::SolveICProblem()
@@ -980,14 +979,13 @@ void SimulationManager::AdvanceSimulation()
     
     //Step simulation
     SDL_LockMutex(simSettingsMutex);
-    uint64_t physicsStart = GetTimeInNanoseconds();
+    perfMon.PhysicsStarted();
     dynamicsWorld->stepSimulation((Scalar)deltaTime/Scalar(1000000.0), 1000000, (Scalar)ssus/Scalar(1000000.0));
-    uint64_t physicsEnd = GetTimeInNanoseconds();
+    perfMon.PhysicsFinished();
     SDL_UnlockMutex(simSettingsMutex);
 
     SDL_LockMutex(simInfoMutex);
-    physicsTime = physicsEnd - physicsStart;
-    Scalar cpuUsageNow = (Scalar)physicsTime/Scalar(1000)/(Scalar)deltaTime * Scalar(100);
+    Scalar cpuUsageNow = (Scalar)perfMon.getPhysicsTime()/(Scalar)deltaTime * Scalar(100);
     Scalar filter(0.001);
     cpuUsage = filter * cpuUsageNow + (Scalar(1)-filter) * cpuUsage;   
     
@@ -1466,6 +1464,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     if(simManager->ocean != nullptr)
     {
         if(recompute) SDL_LockMutex(simManager->simHydroMutex);
+        simManager->perfMon.HydrodynamicsStarted();
         
         btBroadphasePairArray& pairArray = simManager->ocean->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
         int numPairs = pairArray.size();
@@ -1493,6 +1492,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
             //    printf("Hydro compute time: %ld us\n", e-s);
         }
         
+        simManager->perfMon.HydrodynamicsFinished();
         if(recompute) SDL_UnlockMutex(simManager->simHydroMutex);
     }
 }

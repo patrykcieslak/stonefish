@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_IMGUI__
@@ -221,7 +221,7 @@ namespace sf
          */
         unsigned int DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, const std::string& title);
         
-        //! A method used to create a time plot widget.
+        //! A method used to create a time plot widget for a sensor.
         /*!
          \param id a Uid structure
          \param x the x coordinate of the plot origin
@@ -235,6 +235,19 @@ namespace sf
          */
         bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2] = NULL);
         
+        //! A method used to create a time plot widget for and arbitrary array od data.
+        /*!
+         \param id a Uid structure
+         \param x the x coordinate of the plot origin
+         \param y the y coordinate of the plot origin
+         \param w the width of the plot
+         \param h the height of the plot
+         \param data a reference to the vector of vectors of data points
+         \param title the title string
+         \param fixedRange a range of the Y axis (if NULL the plot adjusts automatically)
+         */        
+        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, const std::string& title, Scalar fixedRange[2] = NULL);
+
         //! A method used to create a XY plot widget.
         /*!
          \param id a Uid structure

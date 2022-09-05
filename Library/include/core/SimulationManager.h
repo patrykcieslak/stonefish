@@ -26,11 +26,11 @@
 #ifndef __Stonefish_SimulationManager__
 #define __Stonefish_SimulationManager__
 
-#include <SDL2/SDL_mutex.h>
 #include "StonefishCommon.h"
 #include "entities/forcefields/Ocean.h"
 #include "entities/forcefields/Atmosphere.h"
 #include "entities/SolidEntity.h"
+#include "utils/PerformanceMonitor.h"
 
 namespace sf
 {
@@ -271,9 +271,6 @@ namespace sf
          */
         DisplayMode getSolidDisplayMode();
         
-        //! A method returning the physics computation time in ms.
-        Scalar getPhysicsTimeInMiliseconds();
-        
         //! A method returning the usage of the CPU by the physics computation in percent.
         Scalar getCpuUsage();
         
@@ -429,6 +426,9 @@ namespace sf
         //! A method returning a pointer to the name manager.
         NameManager* getNameManager();
         
+        //! A method returning a reference to the performance monitor.
+        PerformanceMonitor& getPerformanceMonitor();
+
         //! A method returning a pointer to the trackball view.
         OpenGLTrackball* getTrackball();
         
@@ -512,7 +512,6 @@ namespace sf
         
         Scalar simulationTime;
         uint64_t currentTime;
-        uint64_t physicsTime;
         uint64_t ssus;
         bool icUseGravity;
         Scalar icTimeStep;
@@ -523,6 +522,7 @@ namespace sf
         unsigned int mlcpFallbacks;
         bool icProblemSolved;
         bool simulationFresh;
+        PerformanceMonitor perfMon;
         
         NameManager* nameManager;
         std::vector<Robot*> robots;

@@ -200,6 +200,7 @@ namespace sf
         bool displayHUD;
         bool displayKeymap;
         bool displayConsole;
+        bool displayPerformance;
         std::string shaderPath;
         bool loading;
         double drawingTime;
