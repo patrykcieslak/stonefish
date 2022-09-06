@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationApp__
@@ -88,7 +88,7 @@ namespace sf
         static SimulationApp* getApp();
         
     protected:
-        virtual void Init() = 0;
+        virtual void Init();
         virtual void Loop() = 0;
         virtual void CleanUp();
         virtual void Quit();

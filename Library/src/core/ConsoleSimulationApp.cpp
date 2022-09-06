@@ -20,13 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2022 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ConsoleSimulationApp.h"
 
 #include <chrono>
 #include <thread>
+#include <omp.h>
 #include "core/SimulationManager.h"
 #include "utils/SystemUtil.hpp"
 
@@ -51,7 +52,7 @@ bool ConsoleSimulationApp::hasGraphics()
 
 void ConsoleSimulationApp::Init()
 {
-    //Initialization
+    SimulationApp::Init();
     cInfo("Initializing simulation:");
     InitializeSimulation();
     cInfo("Ready for running...");
@@ -95,6 +96,9 @@ int ConsoleSimulationApp::RunSimulation(void* data)
 {
     ConsoleSimulationThreadData* stdata = (ConsoleSimulationThreadData*)data;
     SimulationManager* sim = stdata->app->getSimulationManager();
+
+    int maxThreads = std::max(omp_get_max_threads()/2, 1);
+    omp_set_num_threads(maxThreads);
     
     while(stdata->app->isRunning())
         sim->AdvanceSimulation();

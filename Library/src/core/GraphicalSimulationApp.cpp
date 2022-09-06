@@ -20,13 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
 
 #include <chrono>
 #include <thread>
+#include <omp.h>
 #include "core/SimulationManager.h"
 #include "core/Robot.h"
 #include "graphics/OpenGLState.h"
@@ -178,6 +179,8 @@ HelperSettings& GraphicalSimulationApp::getHelperSettings()
 
 void GraphicalSimulationApp::Init()
 {
+    //General initialization
+    SimulationApp::Init();
     //Window initialization + loading thread
     loading = true;
     InitializeSDL();
@@ -1087,6 +1090,9 @@ int GraphicalSimulationApp::RunSimulation(void* data)
 {
     GraphicalSimulationThreadData* stdata = (GraphicalSimulationThreadData*)data;
     SimulationManager* sim = stdata->app->getSimulationManager();
+
+    int maxThreads = std::max(omp_get_max_threads()/2, 1);
+    omp_set_num_threads(maxThreads);
     
     while(stdata->app->isRunning())
     {

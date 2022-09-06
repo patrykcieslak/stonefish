@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationApp.h"
@@ -86,6 +86,10 @@ std::string SimulationApp::getName()
 Console* SimulationApp::getConsole()
 {
     return console;
+}
+
+void SimulationApp::Init()
+{
 }
 
 void SimulationApp::InitializeSimulation()

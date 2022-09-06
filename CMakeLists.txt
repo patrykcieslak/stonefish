@@ -24,6 +24,7 @@ set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(OpenMP REQUIRED)
 
 # Generate C++ code from all resource files (optional)
 set(RESOURCES) # This variable stores array of generated resource files
@@ -55,6 +56,10 @@ if(BUILD_TESTS)
     # Create tests and use library locally (has to be disabled when installing system-wide!)
     add_library(Stonefish_test SHARED ${SOURCES} ${SOURCES_3RD} ${RESOURCES})
     target_link_libraries(Stonefish_test ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(Stonefish_test OpenMP::OpenMP_CXX)
+    endif()
+
     if(NOT EMBED_RESOURCES)
         add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Library/shaders/\") #Sets shader path for the library
     endif()
@@ -63,6 +68,10 @@ else()
     # Create shared library to be installed system-wide
     add_library(Stonefish SHARED ${SOURCES} ${SOURCES_3RD} ${RESOURCES})
     target_link_libraries(Stonefish ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(Stonefish OpenMP::OpenMP_CXX)
+    endif()
+    
     if(NOT EMBED_RESOURCES)
         add_definitions(-DSHADER_DIR_PATH=\"${CMAKE_INSTALL_PREFIX}/share/Stonefish/shaders/\") #Sets shader path for the library
     endif()

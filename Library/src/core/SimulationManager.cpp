@@ -37,6 +37,7 @@
 #include <chrono>
 #include <thread>
 #include <typeinfo>
+#include <omp.h>
 #include "core/FilteredCollisionDispatcher.h"
 #include "core/GraphicalSimulationApp.h"
 #include "core/NameManager.h"
@@ -524,6 +525,7 @@ void SimulationManager::setStepsPerSecond(Scalar steps)
     ssus = (uint64_t)(1000000.0/steps);
     fdPrescaler = (unsigned int)round(sps/Scalar(50));
     fdPrescaler = fdPrescaler == 0 ? 1 : fdPrescaler;
+    //fdPrescaler = 1; //TESTING
     SDL_UnlockMutex(simSettingsMutex);
 }
 
@@ -1433,7 +1435,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     //Geometry-based forces
     bool recompute = simManager->fdCounter % simManager->fdPrescaler == 0;
     ++simManager->fdCounter;
-        
+    
     //Aerodynamic forces
     if(simManager->atmosphere != nullptr)
     {
@@ -1441,7 +1443,8 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
-        {    
+        {
+            #pragma omp parallel for schedule(dynamic)
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
@@ -1470,8 +1473,8 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
-        {   
-            //uint64_t s = GetTimeInMicroseconds();
+        {
+            #pragma omp parallel for schedule(dynamic)
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
@@ -1487,9 +1490,6 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 else if(co2 == simManager->ocean->getGhost())
                     simManager->ocean->ApplyFluidForces(world, co1, recompute);
             }
-            //uint64_t e = GetTimeInMicroseconds();
-            //if(recompute)
-            //    printf("Hydro compute time: %ld us\n", e-s);
         }
         
         simManager->perfMon.HydrodynamicsFinished();
