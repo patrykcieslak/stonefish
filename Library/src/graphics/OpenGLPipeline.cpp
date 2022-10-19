@@ -153,35 +153,35 @@ bool OpenGLPipeline::isDrawingQueueEmpty()
     
 void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
 {
+    SDL_LockMutex(drawingQueueMutex);
+
+    //Update vision sensor transforms and copy generated data to ensure consistency
+    glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
+    for(unsigned int i=0; i < content->getViewsCount(); ++i)
+        content->getView(i)->UpdateTransform();
+    //Update light transforms to ensure consistency
+    for(unsigned int i=0; i < content->getLightsCount(); ++i)
+        content->getLight(i)->UpdateTransform();
+    //Update ocean currents for particle systems
+    Ocean* ocean = sim->getOcean();
+    if(ocean != NULL) ocean->UpdateCurrentsData();
+
     if(!drawingQueue.empty())
     {
         drawingQueueCopy.clear();
         selectedDrawingQueueCopy.clear();
-
-        SDL_LockMutex(drawingQueueMutex);
         //Double buffering
         drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
         selectedDrawingQueueCopy.insert(selectedDrawingQueueCopy.end(), selectedDrawingQueue.begin(), selectedDrawingQueue.end());
-
-        //Update vision sensor transforms and copy generated data to ensure consistency
-        glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
-        for(unsigned int i=0; i < content->getViewsCount(); ++i)
-            content->getView(i)->UpdateTransform();
-        //Update light transforms to ensure consistency
-        for(unsigned int i=0; i < content->getLightsCount(); ++i)
-            content->getLight(i)->UpdateTransform();
-        //Update ocean currents for particle systems
-        Ocean* ocean = sim->getOcean();
-        if(ocean != NULL) ocean->UpdateCurrentsData();
-
         //Enable update of drawing queue by clearing old queue
         drawingQueue.clear(); 
         selectedDrawingQueue.clear();
-        SDL_UnlockMutex(drawingQueueMutex);
-			
-		//Sort objects by material to reduce uniform/texture switching
-        std::sort(drawingQueueCopy.begin(), drawingQueueCopy.end(), Renderable::SortByMaterial);
     }
+
+    SDL_UnlockMutex(drawingQueueMutex);
+
+    //Sort objects by material to reduce uniform/texture switching
+    std::sort(drawingQueueCopy.begin(), drawingQueueCopy.end(), Renderable::SortByMaterial);
 }
 
 void OpenGLPipeline::DrawDisplay()
