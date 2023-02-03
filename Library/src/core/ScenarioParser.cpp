@@ -20,13 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ScenarioParser.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
-#include "core/Robot.h"
+#include "core/FeatherstoneRobot.h"
+#include "core/GeneralRobot.h"
 #include "entities/statics/Obstacle.h"
 #include "entities/statics/Plane.h"
 #include "entities/statics/Terrain.h"
@@ -217,6 +218,11 @@ bool ScenarioParser::Parse(std::string filename)
         }
         element = root->FirstChildElement("include");
     }
+
+    //Load solver settings
+    element = root->FirstChildElement("solver");
+    if(element != nullptr)
+        ParseSolver(element);
     
     //Load environment settings
     element = root->FirstChildElement("environment");
@@ -517,6 +523,28 @@ bool ScenarioParser::EvaluateMath(XMLNode* node)
             return false;
     }
 
+    return true;
+}
+
+bool ScenarioParser::ParseSolver(XMLElement* element)
+{
+    XMLElement* item;
+    Scalar erp = sm->getDynamicsWorld()->getSolverInfo().m_erp;
+    Scalar erp2 = sm->getDynamicsWorld()->getSolverInfo().m_erp2;
+    Scalar globalDamping = sm->getDynamicsWorld()->getSolverInfo().m_damping;
+    Scalar globalFriction = sm->getDynamicsWorld()->getSolverInfo().m_friction;
+
+    if((item = element->FirstChildElement("erp")) != nullptr)
+        item->QueryAttribute("value", &erp);
+    if((item = element->FirstChildElement("erp2")) != nullptr)
+        item->QueryAttribute("value", &erp2);
+    if((item = element->FirstChildElement("global_damping")) != nullptr)
+        item->QueryAttribute("value", &globalDamping);
+    if((item = element->FirstChildElement("global_friction")) != nullptr)
+        item->QueryAttribute("value", &globalFriction);
+
+    sm->setSolverParams(erp, erp2, globalDamping, globalFriction);
+    
     return true;
 }
 
@@ -1831,10 +1859,12 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     //---- Basic ----
     XMLElement* item;
     const char* name = nullptr;
+    const char* algo = nullptr;
     bool fixed;
     bool selfCollisions;
     Transform trans;
-    
+    std::string algorithm = "featherstone";
+
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Robot name missing!");
@@ -1851,13 +1881,26 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         log.Print(MessageType::ERROR, "Self-collision flag for robot '%s' not specified!", robotName.c_str());
         return false;
     }
+    if(element->QueryStringAttribute("algorithm", &algo) == XML_SUCCESS)
+    {
+        algorithm = std::string(algo);
+        if(algorithm != "featherstone" && algorithm != "general")
+        {
+            log.Print(MessageType::ERROR, "Wrong algorithm specified for robot '%s' not specified!", robotName.c_str());
+            return false;
+        }
+    }
     if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
     {
         log.Print(MessageType::ERROR, "Initial pose of robot '%s', in the world frame, missing!", robotName.c_str());
         return false;
     }
 
-    Robot* robot = new Robot(robotName, fixed);
+    Robot* robot;
+    if(algorithm == "featherstone")
+        robot = new FeatherstoneRobot(robotName, fixed);
+    else if(algorithm == "general")
+        robot = new GeneralRobot(robotName, fixed);
 
     //---- Links ----
     //Base link
@@ -1908,7 +1951,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         item = item->NextSiblingElement("joint");
     }
     
-    robot->BuildKinematicTree();
+    robot->BuildKinematicStructure();
     
     //---- Sensors ----
     item = element->FirstChildElement("sensor");
@@ -2354,7 +2397,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             item->QueryAttribute("position", &initialPos);
 
         Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
-        srv->setControlMode(ServoControlMode::POSITION_CTRL);
+        srv->setControlMode(ServoControlMode::POSITION);
         srv->setDesiredPosition(initialPos);
         return srv;
     }

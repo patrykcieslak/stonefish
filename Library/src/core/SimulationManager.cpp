@@ -600,6 +600,17 @@ void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsi
     icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : Scalar(1e-6);
 }
 
+void SimulationManager::setSolverParams(Scalar erp, Scalar erp2, Scalar globalDamping, Scalar globalFriction)
+{
+    if(dynamicsWorld == nullptr)
+        return;
+
+    dynamicsWorld->getSolverInfo().m_erp = erp;
+    dynamicsWorld->getSolverInfo().m_erp2 = erp2;
+    dynamicsWorld->getSolverInfo().m_damping = globalDamping;
+    dynamicsWorld->getSolverInfo().m_friction = globalFriction;
+}
+
 void SimulationManager::setSolidDisplayMode(DisplayMode m)
 {
     if(sdm == m) 

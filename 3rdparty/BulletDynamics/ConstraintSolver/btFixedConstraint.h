@@ -22,6 +22,7 @@ ATTRIBUTE_ALIGNED16(class)
 btFixedConstraint : public btGeneric6DofSpring2Constraint
 {
 public:
+	btFixedConstraint(btRigidBody & rbA, const btTransform& frameInA);
 	btFixedConstraint(btRigidBody & rbA, btRigidBody & rbB, const btTransform& frameInA, const btTransform& frameInB);
 
 	virtual ~btFixedConstraint();

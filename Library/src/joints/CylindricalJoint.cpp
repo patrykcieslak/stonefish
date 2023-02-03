@@ -91,7 +91,7 @@ void CylindricalJoint::setIC(Scalar displacement, Scalar angle)
 
 JointType CylindricalJoint::getType()
 {
-    return JOINT_CYLINDRICAL;
+    return JointType::CYLINDRICAL;
 }
 
 void CylindricalJoint::ApplyForce(Scalar F)

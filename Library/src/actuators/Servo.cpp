@@ -39,7 +39,7 @@ Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, S
     tauMax = maxTorque > Scalar(0) ? maxTorque : Scalar(0);
     pSetpoint = Scalar(0);
     vSetpoint = Scalar(0);
-    mode = ServoControlMode::VELOCITY_CTRL;
+    mode = ServoControlMode::VELOCITY;
 }
 
 ActuatorType Servo::getType()
@@ -57,7 +57,7 @@ void Servo::setDesiredPosition(Scalar pos)
     if(btFuzzyZero(pSetpoint - pos)) //Check if setpoint changed
         return;
     
-    if(fe != NULL)
+    if(fe != nullptr)
     {
         FeatherstoneJoint jnt = fe->getJoint(jId);
         if(jnt.lowerLimit < jnt.upperLimit) //Does it have joint limits?
@@ -83,7 +83,7 @@ void Servo::setDesiredTorque(Scalar tau)
     vSetpoint = tau > Scalar(0) ? Scalar(1000) : (tau < Scalar(0) ? Scalar(-1000) : Scalar(0));
     tau = tau < -tauMax ? -tauMax : (tau > tauMax ? tauMax : tau);
     
-    if(fe != NULL)
+    if(fe != nullptr)
     {
         fe->setMaxMotorForceTorque(jId, tau);
     }
@@ -91,18 +91,18 @@ void Servo::setDesiredTorque(Scalar tau)
     
 Scalar Servo::getPosition()
 {
-    if(j != NULL)
+    if(j != nullptr)
     {
         switch(j->getType())
         {
-            case JointType::JOINT_REVOLUTE:
+            case JointType::REVOLUTE:
                 return ((RevoluteJoint*)j)->getAngle();
             
             default:
                 return Scalar(0);
         }
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         Scalar pos;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -115,18 +115,18 @@ Scalar Servo::getPosition()
     
 Scalar Servo::getVelocity()
 {
-    if(j != NULL)
+    if(j != nullptr)
     {
         switch(j->getType())
         {
-            case JointType::JOINT_REVOLUTE:
+            case JointType::REVOLUTE:
                 return ((RevoluteJoint*)j)->getAngularVelocity();
             
             default:
                 return Scalar(0);
         }
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         Scalar vel;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -139,7 +139,7 @@ Scalar Servo::getVelocity()
     
 Scalar Servo::getEffort()
 {
-    if(fe != NULL)
+    if(fe != nullptr)
         return fe->getMotorForceTorque(jId);
     else
         return Scalar(0);
@@ -149,46 +149,67 @@ void Servo::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
     JointActuator::AttachToJoint(multibody, jointId);
     
-    if(fe != NULL) //Actuator succesfully attached?
+    if(fe != nullptr) //Actuator succesfully attached?
     {
         fe->AddJointMotor(jId, tauMax);
         fe->MotorPositionSetpoint(jId, Scalar(0), Kp);
         fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
     }
 }
-    
-void Servo::Update(Scalar dt)
+
+void Servo::AttachToJoint(Joint* joint)
 {
-    if(j != NULL)
+    JointActuator::AttachToJoint(joint);
+    
+    if(j != nullptr)
     {
-        //Compute torque using a simple proportional controller
-        
-        
-        //Apply torque
         switch(j->getType())
         {
-            case JointType::JOINT_REVOLUTE:
-                //((RevoluteJoint*)j)->ApplyTorque(torque);
+            case JointType::REVOLUTE:
+                ((RevoluteJoint*)j)->EnableMotor(true, tauMax);
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
+void Servo::Update(Scalar dt)
+{
+    if(j != nullptr)
+    {
+        Scalar vSetpoint2 = vSetpoint;
+        if(mode == ServoControlMode::POSITION || btFuzzyZero(vSetpoint))
+        {
+            Scalar err = pSetpoint - getPosition();
+            vSetpoint2 = err;
+        }
+
+        switch(j->getType())
+        {
+            case JointType::REVOLUTE:
+                ((RevoluteJoint*)j)->setMotorVelocity(vSetpoint2);
                 break;
             
             default:
                 break;
         }
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         //Use internal multibody motors
         switch(mode)
         {
-            case POSITION_CTRL: 
+            case ServoControlMode::POSITION: 
             {
                 fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
                 fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
             }
                 break;
                 
-            case VELOCITY_CTRL:
-            case TORQUE_CTRL:
+            case ServoControlMode::VELOCITY:
+            case ServoControlMode::TORQUE:
             {
                 if(btFuzzyZero(vSetpoint))
                 { 

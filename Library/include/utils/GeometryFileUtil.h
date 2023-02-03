@@ -92,7 +92,21 @@ namespace sf
      \param value the moment of inertia for which to find inertial axis
      \return versor of the inertial axis
      */
-    Vector3 FindInertialAxis(Matrix3 I, Scalar value);
+    Vector3 FindInertialAxis(const Matrix3& I, Scalar value);
+
+    //! A fuction that checks if a matrix is diagonal.
+    /*!
+     \param A matrix
+     \return is diagonal
+    */
+    bool IsDiagonal(const Matrix3& A);
+
+    //! A function that wraps the angle to keep in between <-PI, PI>.
+    /*!
+     \param angle angle to wrap
+     \return wrapped angle
+    */
+    Scalar WrapAngle(Scalar angle);
 }
 
 #endif

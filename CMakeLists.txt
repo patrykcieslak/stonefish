@@ -78,11 +78,6 @@ if(BUILD_TESTS)
     endif()
     add_subdirectory(Tests)
 else()
-    # Define installation directories
-    set(LIBRARY_DEST "lib")
-    set(INCLUDE_DEST "include/${CMAKE_PROJECT_NAME}")
-    set(RESOURCES_DEST "share/${CMAKE_PROJECT_NAME}")
-    
     # Create shared library to be installed system-wide
     add_library(Stonefish SHARED 
         ${SOURCES} 
@@ -94,7 +89,7 @@ else()
     )
     target_include_directories(Stonefish PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Library/include>"
-        "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${INCLUDE_DEST}>"
+        "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/${CMAKE_PROJECT_NAME}>"
     )
     target_compile_definitions(Stonefish PUBLIC 
         BT_EULER_DEFAULT_ZYX 
@@ -110,37 +105,37 @@ else()
     # Install library in the system
     install(TARGETS Stonefish 
         EXPORT StonefishTargets
-        LIBRARY DESTINATION ${LIBRARY_DEST}
-        ARCHIVE DESTINATION ${LIBRARY_DEST}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
-        INCLUDES DESTINATION ${INCLUDE_DEST}
+        INCLUDES DESTINATION include
     )
     
     # Install Stonefish headers
-    install(FILES ${PROJECT_BINARY_DIR}/version.h DESTINATION ${CMAKE_INSTALL_PREFIX}/${INCLUDE_DEST}) # Version header
-    install(DIRECTORY Library/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/${INCLUDE_DEST})
+    install(FILES ${PROJECT_BINARY_DIR}/version.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${CMAKE_PROJECT_NAME}) # Version header
+    install(DIRECTORY Library/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${CMAKE_PROJECT_NAME})
     
     # Install 3rdparty headers
     file(GLOB_RECURSE INCLUDES_3RD "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.h")
     foreach(f ${INCLUDES_3RD})
         file(RELATIVE_PATH frel "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" ${f})
         get_filename_component(dir ${frel} DIRECTORY)
-        install(FILES ${f} DESTINATION ${CMAKE_INSTALL_PREFIX}/${INCLUDE_DEST}/${dir})
+        install(FILES ${f} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${CMAKE_PROJECT_NAME}/${dir})
     endforeach()
     
     # Install shaders
     if(NOT EMBED_RESOURCES)
-        install(DIRECTORY Library/shaders/ DESTINATION ${CMAKE_INSTALL_PREFIX}/${RESOURCES_DEST}/shaders) # Resources
+        install(DIRECTORY Library/shaders/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/shaders) # Resources
     endif()
 
     # Install configuration scripts
     configure_file(stonefish.pc.in stonefish.pc)
-    install(FILES ${PROJECT_BINARY_DIR}/stonefish.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/${LIBRARY_DEST}/pkgconfig) # Pkg-config configuration
+    install(FILES ${PROJECT_BINARY_DIR}/stonefish.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig) # Pkg-config configuration
 
     install(EXPORT StonefishTargets
         FILE StonefishTargets.cmake
         NAMESPACE Stonefish::
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/${LIBRARY_DEST}/cmake/${CMAKE_PROJECT_NAME}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${CMAKE_PROJECT_NAME}
     )
     include(CMakePackageConfigHelpers)
     write_basic_package_version_file(
@@ -151,6 +146,6 @@ else()
     install(FILES 
         "StonefishConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/StonefishConfigVersion.cmake" 
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/${LIBRARY_DEST}/cmake/${CMAKE_PROJECT_NAME}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${CMAKE_PROJECT_NAME}
     )
 endif()

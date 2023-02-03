@@ -12,7 +12,7 @@ target_link_libraries(FloatingTest Stonefish_test)
 add_executable(FlyingTest FlyingTest/main.cpp FlyingTest/FlyingTestManager.cpp)
 target_link_libraries(FlyingTest Stonefish_test)
 
-add_executable(JointsTest JointsTest/main.cpp JointsTest/JointsTestManager.cpp)
+add_executable(JointsTest JointsTest/main.cpp JointsTest/JointsTestManager.cpp JointsTest/JointsTestApp.cpp)
 target_link_libraries(JointsTest Stonefish_test)
 
 add_executable(SlidingTest SlidingTest/main.cpp SlidingTest/SlidingTestApp.cpp SlidingTest/SlidingTestManager.cpp)

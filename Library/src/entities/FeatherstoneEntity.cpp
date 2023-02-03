@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/FeatherstoneEntity.h"
@@ -55,7 +55,7 @@ FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, unsigned int tota
 
 FeatherstoneEntity::~FeatherstoneEntity()
 {
-    multiBody = NULL;
+    multiBody = nullptr;
     
     for(unsigned int i=0; i<links.size(); ++i)
         delete links[i].solid;
@@ -103,14 +103,14 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform&
     //Creating joint limit constraints
     for(size_t i=0; i<joints.size(); ++i)
     {    
-        if(joints[i].limit != NULL)
+        if(joints[i].limit != nullptr)
             sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].limit);
     }
     
     //Creating motors (has to be after joint limits and not interleaved!)
     for(size_t i=0; i<joints.size(); ++i)
     {
-        if(joints[i].motor != NULL)
+        if(joints[i].motor != nullptr)
             sm->getDynamicsWorld()->addMultiBodyConstraint(joints[i].motor);
     }
     
@@ -125,7 +125,7 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform&
     //Move joints to the limits
     for(size_t i=0; i<joints.size(); ++i)
     {
-        if(joints[i].limit != NULL)
+        if(joints[i].limit != nullptr)
         {
             if(joints[i].lowerLimit > Scalar(0))
                 multiBody->setJointPos((int)i, joints[i].lowerLimit);
@@ -297,7 +297,7 @@ void FeatherstoneEntity::setMaxMotorForceTorque(unsigned int index, Scalar maxT)
     if(index >= joints.size())
         return;
         
-    if(joints[index].motor == NULL)
+    if(joints[index].motor == nullptr)
         return;
         
     joints[index].motor->setMaxAppliedImpulse(maxT * Scalar(1)/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
@@ -305,7 +305,7 @@ void FeatherstoneEntity::setMaxMotorForceTorque(unsigned int index, Scalar maxT)
 
 Scalar FeatherstoneEntity::getMotorForceTorque(unsigned int index)
 {
-    if(index >= joints.size() || joints[index].motor == NULL)
+    if(index >= joints.size() || joints[index].motor == nullptr)
         return Scalar(0);
     else
         return joints[index].motor->getAppliedImpulse(0) * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond();
@@ -408,7 +408,7 @@ unsigned int FeatherstoneEntity::getNumOfMovingJoints()
 
 void FeatherstoneEntity::AddLink(SolidEntity *solid, const Transform& transform)
 {
-    if(solid != NULL)
+    if(solid != nullptr)
     {
         //Add link
         links.push_back(FeatherstoneLink(solid, transform));
@@ -538,7 +538,7 @@ int FeatherstoneEntity::AddFixedJoint(std::string name, unsigned int parent, uns
 
 void FeatherstoneEntity::AddJointLimit(unsigned int index, Scalar lower, Scalar upper)
 {
-    if(joints[index].limit != NULL
+    if(joints[index].limit != nullptr
        || index >= joints.size()
        || lower > upper)
         return;
@@ -554,7 +554,7 @@ void FeatherstoneEntity::AddJointMotor(unsigned int index, Scalar maxForceTorque
     if(index >= joints.size())
         return;
     
-    if(joints[index].motor != NULL)
+    if(joints[index].motor != nullptr)
     {
         joints[index].motor->setMaxAppliedImpulse(maxForceTorque * Scalar(1)/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
     }
@@ -570,7 +570,7 @@ void FeatherstoneEntity::MotorPositionSetpoint(unsigned int index, Scalar pos, S
     if(index >= joints.size())
         return;
         
-    if(joints[index].motor == NULL)
+    if(joints[index].motor == nullptr)
         return;
     
     if(joints[index].lowerLimit < joints[index].upperLimit) //if joint limits exist the desired position has to be restricted to avoid violating constraints!
@@ -584,7 +584,7 @@ void FeatherstoneEntity::MotorVelocitySetpoint(unsigned int index, Scalar vel, S
     if(index >= joints.size())
         return;
         
-    if(joints[index].motor == NULL)
+    if(joints[index].motor == nullptr)
         return;
         
     joints[index].motor->setVelocityTarget(vel, kd);

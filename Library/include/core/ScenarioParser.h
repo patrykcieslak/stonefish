@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScenarioParser__
@@ -103,6 +103,13 @@ namespace sf
          \return success
          */
         virtual bool EvaluateMath(XMLNode* node);
+
+        //! A method used to parse solver configuration.
+        /*!
+         \param element a pointer to the XML node
+         \return success
+         */
+        virtual bool ParseSolver(XMLElement* element);
 
         //! A method used to parse environment configuration.
         /*!

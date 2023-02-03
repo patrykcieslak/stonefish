@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_FixedJoint__
@@ -37,6 +37,13 @@ namespace sf
     class FixedJoint : public Joint
     {
     public:
+        //! A constructor to create fixed joint between solid and world.
+        /*!
+         \param uniqueName a name for the joint
+         \param solid a pointer to the solid body
+         */
+        FixedJoint(std::string uniqueName, SolidEntity* solid);
+
         //! A constructor to create fixed joint between two solid bodies.
         /*!
          \param uniqueName a name for the joint

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/PrismaticJoint.h"
@@ -37,7 +37,7 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;
-    if(fabs(sliderAxis.z()) > 0.8) v2 = Vector3(1,0,0); else v2 = Vector3(0,0,1);
+    if(fabs(sliderAxis.z()) > Scalar(0.8)) v2 = Vector3(1,0,0); else v2 = Vector3(0,0,1);
     Vector3 v3 = (sliderAxis.cross(v2)).normalized();
     v2 = (v3.cross(sliderAxis)).normalized();
     Matrix3 sliderBasis(sliderAxis.x(), v2.x(), v3.x(),
@@ -50,16 +50,15 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     axisInA = frameInA.getBasis().getColumn(0).normalized();
     
     btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
-    slider->setLowerLinLimit(1.);
-    slider->setUpperLinLimit(-1.);
-    slider->setLowerAngLimit(0.);
-    slider->setUpperAngLimit(0.);
+    slider->setLowerLinLimit(Scalar(1));
+    slider->setUpperLinLimit(Scalar(-1));
+    slider->setLowerAngLimit(Scalar(0));
+    slider->setUpperAngLimit(Scalar(0));
     setConstraint(slider);
     
-    sigDamping = Scalar(0.);
-    velDamping = Scalar(0.);
-    
-    displacementIC = Scalar(0.);
+    sigDamping = Scalar(0);
+    velDamping = Scalar(0);
+    displacementIC = Scalar(0);
 }
 
 void PrismaticJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
@@ -70,9 +69,17 @@ void PrismaticJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 
 void PrismaticJoint::setLimits(Scalar min, Scalar max)
 {
-    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();
-    slider->setLowerLinLimit(min);
-    slider->setUpperLinLimit(max);
+    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();    
+    if(min > max) // No limit
+    {    
+        slider->setLowerLinLimit(Scalar(1));
+        slider->setUpperAngLimit(Scalar(-1));
+    }
+    else
+    {
+        slider->setLowerLinLimit(min);
+        slider->setUpperLinLimit(max);
+    }
 }
 
 void PrismaticJoint::setIC(Scalar displacement)
@@ -82,7 +89,7 @@ void PrismaticJoint::setIC(Scalar displacement)
 
 JointType PrismaticJoint::getType()
 {
-    return JOINT_PRISMATIC;
+    return JointType::PRISMATIC;
 }
 
 void PrismaticJoint::ApplyForce(Scalar F)
@@ -97,7 +104,7 @@ void PrismaticJoint::ApplyForce(Scalar F)
 
 void PrismaticJoint::ApplyDamping()
 {
-    if(sigDamping > Scalar(0.) || velDamping > Scalar(0.))
+    if(sigDamping > Scalar(0) || velDamping > Scalar(0))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
         btRigidBody& bodyB = getConstraint()->getRigidBodyB();

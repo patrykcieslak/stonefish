@@ -28,10 +28,11 @@
 namespace sf
 {
 
+// WGS-84
 const Scalar NED::a = Scalar(6378137);
 const Scalar NED::b = Scalar(6356752.3142);
 const Scalar NED::esq = Scalar(6.69437999014 * 0.001);
-const Scalar NED::e1sq = Scalar(6.73949674228 * 0.001);
+const Scalar NED::e1sq = Scalar(6.73949674228 * 0.001); 
 const Scalar NED::f = Scalar(1.0 / 298.257223563);
 
 NED::NED()
@@ -42,8 +43,8 @@ NED::NED()
 void NED::Init(const Scalar lat, const Scalar lon, const Scalar height)
 {
     // Save NED origin
-    _init_lat = lat/180.0 * M_PI;
-    _init_lon = lon/180.0 * M_PI;
+    _init_lat = lat/Scalar(180) * M_PI;
+    _init_lon = lon/Scalar(180) * M_PI;
     _init_h = height;
 
     // Compute ECEF of NED origin

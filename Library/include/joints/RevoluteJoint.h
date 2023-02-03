@@ -76,6 +76,20 @@ namespace sf
         //! A method implementing the rendering of the joint.
         std::vector<Renderable> Render();
         
+        //! A method to enable the built in joint motor.
+        /*!
+         \param enable a flag defining if the motor should be enabled or disabled
+         \param maxTorque maximum torque used to drive the joint
+         */
+        void EnableMotor(bool enable, Scalar maxTorque);
+
+        //! A method to update the motor of the joint.
+        /*!
+         \param av setpoint of angular velocity [rad/s]
+         \param dt time step of the simulation
+        */
+        void setMotorVelocity(Scalar av);
+        
         //! A method to set the damping characteristics of the joint.
         /*!
          \param constantFactor a constant damping torque [Nm]
@@ -111,6 +125,8 @@ namespace sf
         Scalar sigDamping;
         Scalar velDamping;
         Scalar angleIC;
+        Scalar angleICError;
+        Scalar angleOffset;
     };
 }
 

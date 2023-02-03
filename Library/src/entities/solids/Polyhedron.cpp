@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Polyhedron.h"

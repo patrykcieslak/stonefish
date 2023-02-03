@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 05/07/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/RotaryEncoder.h"
@@ -38,31 +38,31 @@ namespace sf
 RotaryEncoder::RotaryEncoder(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     angle = lastAngle = Scalar(0);
-    motor = NULL;
-    thrust = NULL;
+    motor = nullptr;
+    thrust = nullptr;
     channels.push_back(SensorChannel("Angle", QuantityType::ANGLE));
     channels.push_back(SensorChannel("Angular velocity", QuantityType::ANGULAR_VELOCITY));
 }
 
 void RotaryEncoder::AttachToMotor(Motor* m)
 {
-    if(m != NULL)
+    if(m != nullptr)
         motor = m;
 }
 
 void RotaryEncoder::AttachToThruster(Thruster* th)
 {
-    if(th != NULL)
+    if(th != nullptr)
         thrust = th;
 }
 
 Scalar RotaryEncoder::GetRawAngle()
 {
-    if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
+    if(j != nullptr && j->getType() == JointType::REVOLUTE)
     {
         return ((RevoluteJoint*)j)->getAngle();
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         Scalar mbAngle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -73,11 +73,11 @@ Scalar RotaryEncoder::GetRawAngle()
         else
             return Scalar(0);
     }
-    else if(motor != NULL)
+    else if(motor != nullptr)
     {
         return motor->getAngle();
     }
-    else if(thrust != NULL)
+    else if(thrust != nullptr)
     {
         return thrust->getAngle();
     }
@@ -87,11 +87,11 @@ Scalar RotaryEncoder::GetRawAngle()
 
 Scalar RotaryEncoder::GetRawAngularVelocity()
 {
-    if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
+    if(j != nullptr && j->getType() == JointType::REVOLUTE)
     {
         return ((RevoluteJoint*)j)->getAngularVelocity();
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         Scalar mbAV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -102,11 +102,11 @@ Scalar RotaryEncoder::GetRawAngularVelocity()
         else
             return Scalar(0);
     }
-    else if(motor != NULL)
+    else if(motor != nullptr)
     {
         return motor->getAngularVelocity();
     }
-    else if(thrust != NULL)
+    else if(thrust != nullptr)
     {
         return thrust->getOmega();
     }
@@ -120,17 +120,17 @@ void RotaryEncoder::InternalUpdate(Scalar dt)
     Scalar actualAngle = GetRawAngle();
     
     //accumulate
-    if(lastAngle * actualAngle < Scalar(0.))
+    if(lastAngle * actualAngle < Scalar(0))
     {
         if(lastAngle > M_PI_4)
-            angle += ((actualAngle + FULL_ANGLE) - lastAngle);
+            angle += ((actualAngle + 2 * M_PI) - lastAngle);
         else if(lastAngle < -M_PI_4)
-            angle += (actualAngle - (lastAngle + FULL_ANGLE));
+            angle += (actualAngle - (lastAngle + 2 * M_PI));
         else
-            angle += (actualAngle-lastAngle);
+            angle += (actualAngle - lastAngle);
     }
     else
-        angle += (actualAngle-lastAngle);
+        angle += (actualAngle - lastAngle);
     
     lastAngle = actualAngle;
     

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ServoMotor__
@@ -31,7 +31,7 @@
 namespace sf
 {
     //! An enum defining possible control modes.
-    typedef enum {POSITION_CTRL, VELOCITY_CTRL, TORQUE_CTRL} ServoControlMode;
+    enum class ServoControlMode {POSITION, VELOCITY, TORQUE};
     
     //! A class implementing a position/velocity servo motor.
     class Servo : public JointActuator
@@ -52,6 +52,12 @@ namespace sf
          \param jointId the index of the multibody joint to be actuated
          */
         void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
+        
+        //! A method used to attach the actuator to a discrete joint.
+        /*!
+         \param joint a pointer to a joint object
+         */
+        void AttachToJoint(Joint* joint);
         
         //! A method used to update the internal state of the actuator.
         /*!

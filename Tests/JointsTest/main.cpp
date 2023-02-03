@@ -25,6 +25,7 @@
 
 #include <core/GraphicalSimulationApp.h>
 #include "JointsTestManager.h"
+#include "JointsTestApp.h"
 
 int main(int argc, const char * argv[])
 {
@@ -46,8 +47,8 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     h.showJoints = true;
     
-    JointsTestManager simulationManager(1000.0);
-    sf::GraphicalSimulationApp app("JointTest", std::string(DATA_DIR_PATH), s, h, &simulationManager);
+    JointsTestManager simulationManager(500.0);
+    JointsTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run();
     
     return 0;

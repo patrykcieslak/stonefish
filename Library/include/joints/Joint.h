@@ -37,7 +37,7 @@
 namespace sf
 {
     //! An enum representing the type of joint.
-    typedef enum {JOINT_FIXED, JOINT_REVOLUTE, JOINT_SPHERICAL, JOINT_PRISMATIC, JOINT_CYLINDRICAL} JointType;
+    enum class JointType {FIXED, REVOLUTE, SPHERICAL, PRISMATIC, CYLINDRICAL};
     
     struct Renderable;
     class SimulationManager;

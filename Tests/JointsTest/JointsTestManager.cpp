@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "JointsTestManager.h"
@@ -29,6 +29,7 @@
 #include <entities/solids/Box.h>
 #include <entities/solids/Sphere.h>
 #include <entities/solids/Cylinder.h>
+#include <entities/solids/Polyhedron.h>
 #include <graphics/OpenGLPointLight.h>
 #include <graphics/OpenGLTrackball.h>
 #include <joints/FixedJoint.h>
@@ -38,6 +39,10 @@
 #include <joints/CylindricalJoint.h>
 #include <utils/UnitSystem.h>
 #include <utils/SystemUtil.hpp>
+#include <core/GeneralRobot.h>
+#include <actuators/Servo.h>
+#include <sensors/scalar/GPS.h>
+#include <core/NED.h>
 
 JointsTestManager::JointsTestManager(sf::Scalar stepsPerSecond) 
   : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
@@ -61,6 +66,7 @@ void JointsTestManager::BuildScenario()
     ////////OBJECTS
     getAtmosphere()->SetupSunPosition(0.0, 70.0);
     getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
+    getNED()->Init(-10.0, -10.0, 0.0);
     
     sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "grid");
     AddStaticEntity(floor, sf::I4());
@@ -68,6 +74,38 @@ void JointsTestManager::BuildScenario()
     sf::BodyPhysicsSettings phy;
     phy.mode = sf::BodyPhysicsMode::SURFACE;
     phy.collisions = true;
+
+    // sf::GeneralRobot* robot = new sf::GeneralRobot("Manipulator", true);
+    
+    // // Base link
+    // sf::Box* base = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), "Plastic","green");
+    // // Arm
+    // sf::Box* arm1 = new sf::Box("Arm1", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, -0.25)), "Plastic","green");
+    // sf::Box* arm2 = new sf::Box("Arm2", phy, sf::Vector3(0.8,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.4, 0, -0.5)), "Plastic","green");
+    // sf::Box* arm3 = new sf::Box("Arm3", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.8, 0, -0.25)), "Plastic","green");
+
+    // std::vector<sf::SolidEntity*> links;
+    // links.push_back(arm1);
+    // links.push_back(arm2);
+    // links.push_back(arm3);
+    // robot->DefineLinks(base, links);
+    
+    // robot->DefineRevoluteJoint("joint1", "Box", "Arm1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), sf::Vector3(0, 0, 1.0));
+    // robot->DefineRevoluteJoint("joint2", "Arm1", "Arm2", sf::Transform(sf::IQ(), sf::Vector3(0, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
+    // robot->DefineRevoluteJoint("joint3", "Arm2", "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.8, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
+    // robot->DefineRevoluteJoint("joint4", "Arm3", "Box", sf::Transform(sf::IQ(), sf::Vector3(0.79, 0.0, 0.0)), sf::Vector3(0, 1.0, 0.0));
+    
+    // robot->BuildKinematicStructure();
+
+    // sf::Servo* srv1 = new sf::Servo("Servo1", 1.0, 1.0, 1.0);
+    // srv1->setControlMode(sf::ServoControlMode::POSITION);
+    // robot->AddJointActuator(srv1, "joint1");
+
+    // sf::GPS* gps = new sf::GPS("GPS", 1.0);
+    // robot->AddLinkSensor(gps, "Arm1", sf::I4());
+
+    // AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));
+    // setSolverParams(0.25, 0.1, 0.1, 0.1);
 
     //----Fixed Joint----
     sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic","green");

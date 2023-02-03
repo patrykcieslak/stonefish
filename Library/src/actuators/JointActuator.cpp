@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/JointActuator.h"
@@ -33,16 +33,16 @@ namespace sf
 
 JointActuator::JointActuator(std::string uniqueName) : Actuator(uniqueName)
 {
-    fe = NULL;
+    fe = nullptr;
     jId = 0;
-    j = NULL;
+    j = nullptr;
 }
 
 std::string JointActuator::getJointName()
 {
-    if(fe != NULL)
+    if(fe != nullptr)
         return fe->getJointName(jId);
-    else if(j != NULL)
+    else if(j != nullptr)
         return j->getName();
     else
         return std::string("");
@@ -50,7 +50,7 @@ std::string JointActuator::getJointName()
 
 void JointActuator::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
-    if(multibody != NULL && jointId < multibody->getNumOfJoints())
+    if(multibody != nullptr && jointId < multibody->getNumOfJoints())
     {
         fe = multibody;
         jId = jointId;
@@ -59,7 +59,7 @@ void JointActuator::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jo
 
 void JointActuator::AttachToJoint(Joint* joint)
 {
-    if(joint != NULL)
+    if(joint != nullptr)
         j = joint;
 }
     

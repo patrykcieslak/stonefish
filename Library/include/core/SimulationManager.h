@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationManager__
@@ -259,6 +259,15 @@ namespace sf
         void setICSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000,
                                Scalar maxTime = BT_LARGE_FLOAT, Scalar linearTolerance = Scalar(1e-6), Scalar angularTolerance = Scalar(1e-6));
         
+        //! A method used to change some global solver params for stability tuning.
+        /*!
+         \param erp error reduction for constraint solving
+         \param erp2 error reduction for contact solving
+         \param globalDamping damping added globally to all dynamic bodies
+         \param globalFriction friction added globally to all dynamic bodies
+        */
+        void setSolverParams(Scalar erp, Scalar erp2, Scalar globalDamping, Scalar globalFriction);
+
         //! A method that sets the display mode of dynamical rigid bodies.
         /*!
          \param m a flag that defines the display style of dynamical bodies

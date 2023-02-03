@@ -28,12 +28,12 @@
 
 #include <utility>
 #include "StonefishCommon.h"
+#include "joints/Joint.h"
 
 namespace sf
 {
     class SimulationManager;
     class SolidEntity;
-    class FeatherstoneEntity;
     class Sensor;
     class Actuator;
     class Comm;
@@ -64,7 +64,7 @@ namespace sf
          \param otherLinks a vector of subsequent links
          \param selfCollision a flag determining if self collision between multibody links should be enabled (subsequent links never collide)
          */
-        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false);
+        virtual void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false) = 0;
         
         //! A method used to define a revolute joint between two mechanical parts of the robot.
         /*!
@@ -102,7 +102,7 @@ namespace sf
         void DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin);
         
         //! A method which uses links and joints definitions to build the kinematic structure of the robot.
-        void BuildKinematicTree();
+        virtual void BuildKinematicStructure() = 0;
         
         //PERCEPTION
         //! A method used to attach a sensor to a specified link of the robot.
@@ -118,7 +118,7 @@ namespace sf
          \param s a pointer to a joint sensor object
          \param monitoredJointName a name of the joint at which the sensor is attached
          */
-        void AddJointSensor(JointSensor* s, const std::string& monitoredJointName);
+        virtual void AddJointSensor(JointSensor* s, const std::string& monitoredJointName) = 0;
         
         //! A method used to attach a vision sensor to a specified link of the robot.
         /*!
@@ -142,7 +142,7 @@ namespace sf
          \param a a pointer to a joint actuator object
          \param actuatedJointName a name of the joint which is to be driven
          */
-        void AddJointActuator(JointActuator* a, const std::string& actuatedJointName);
+        virtual void AddJointActuator(JointActuator* a, const std::string& actuatedJointName) = 0;
         
         //COMMUNICATION DEVICES
         //! A method used to attach a communication device to a specified link of the robot.
@@ -159,7 +159,7 @@ namespace sf
          \param sm a pointer to a simulation manager
          \param origin a trasformation from the world origin to the robot origin
          */
-        void AddToSimulation(SimulationManager* sm, const Transform& origin);
+        virtual void AddToSimulation(SimulationManager* sm, const Transform& origin);
         
         //! A method returning a pointer to the actuator with a given name.
         /*!
@@ -221,15 +221,15 @@ namespace sf
         SolidEntity* getLink(size_t index);
         
         //! A method returning the pose of the robot in the world frame.
-        virtual Transform getTransform() const;
+        virtual Transform getTransform() const = 0;
         
         //! A method returning the name of the robot.
         std::string getName();
         
-    private:
+    protected:
         struct JointData
         {
-            int jtype;
+            JointType jtype;
             std::string name;
             std::string parent;
             std::string child;
@@ -238,19 +238,15 @@ namespace sf
             std::pair<Scalar, Scalar> posLim;
             Scalar damping;
         };
-        
-        void getFreeLinkPair(const std::string& parentName, const std::string& childName, unsigned int& parentId, unsigned int& childId);
-        int getJoint(const std::string& name);
-        
-        FeatherstoneEntity* dynamics;
-        bool fixed;
+        std::vector<JointData> jointsData; // For construction
+
         std::vector<SolidEntity*> detachedLinks;
         std::vector<SolidEntity*> links;
-        std::vector<JointData> joints;
         std::vector<Sensor*> sensors;
         std::vector<Actuator*> actuators;
         std::vector<Comm*> comms;
         std::string name;
+        bool fixed;
     };
 }
 

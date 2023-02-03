@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 22/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "utils/GeometryFileUtil.h"
@@ -496,10 +496,7 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
     Ipri = Vector3(I.getRow(0).getX(), I.getRow(1).getY(), I.getRow(2).getZ());
     Irot = I3();
     
-    //Check if inertia matrix is not diagonal
-    if(!(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
-         && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
-         && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY())))
+    if(!IsDiagonal(I)) // If inertia matrix is not diagonal
     {
         //3.1. Calculate principal moments of inertia
         Scalar T = I[0][0] + I[1][1] + I[2][2]; //Ixx + Iyy + Izz
@@ -521,7 +518,7 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         
         //3.3. Rotate body so that principal axes are parallel to (x,y,z) system
         Irot = Matrix3(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-    }   
+    }
 }
 
 MeshProperties ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density)
@@ -531,16 +528,8 @@ MeshProperties ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Sca
     return mp;
 }
 
-Vector3 FindInertialAxis(Matrix3 I, Scalar value)
+Vector3 FindInertialAxis(const Matrix3& I, Scalar value)
 {
-    //Check if not I matrix already diagonal
-    if(btFuzzyZero(I.getRow(0).getY()) && btFuzzyZero(I.getRow(0).getZ())
-       && btFuzzyZero(I.getRow(1).getX()) && btFuzzyZero(I.getRow(1).getZ())
-       && btFuzzyZero(I.getRow(2).getX()) && btFuzzyZero(I.getRow(2).getY()))
-    {
-        return Vector3(0,0,0);
-    }
-    
     //Diagonalize
     Matrix3 L;
     Vector3 candidates[3];
@@ -568,9 +557,34 @@ Vector3 FindInertialAxis(Matrix3 I, Scalar value)
             axis = candidates[1].normalized();
         else
             axis = candidates[2].normalized();
-    }
-    
+    }   
     return axis;
+}
+
+bool IsDiagonal(const Matrix3& A)
+{
+    Scalar minDiagElem = btMin( btMin( btFabs(A.getRow(0).getX()), btFabs(A.getRow(1).getY())), btFabs(A.getRow(2).getZ()) );
+    const Scalar delta = 1e6;
+    if(btFabs(A.getRow(0).getY()) < minDiagElem/delta
+        && btFabs(A.getRow(0).getZ()) < minDiagElem/delta
+        && btFabs(A.getRow(1).getX()) < minDiagElem/delta
+        && btFabs(A.getRow(1).getZ()) < minDiagElem/delta
+        && btFabs(A.getRow(2).getX()) < minDiagElem/delta
+        && btFabs(A.getRow(2).getY()) < minDiagElem/delta)
+    {
+        return true;
+    }
+    return false;
+}
+
+Scalar WrapAngle(Scalar angle)
+{
+    angle -= trunc(angle/SIMD_2_PI) * SIMD_2_PI; // To range <-2PI, +2PI>
+    if(angle < -SIMD_PI)
+        angle += SIMD_2_PI;
+    else if(angle > SIMD_PI)
+        angle -= SIMD_2_PI;
+    return angle;
 }
 
 }

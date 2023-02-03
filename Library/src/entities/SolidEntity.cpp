@@ -1125,9 +1125,12 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
         BuildRigidBody();
         BuildGraphicalObject();
         
-        rigidBody->setMotionState(new btDefaultMotionState(origin * T_CG2O.inverse()));
-        //rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
+        Transform Tcg = origin * T_CG2O.inverse();
+        rigidBody->setMotionState(new btDefaultMotionState(Tcg));
+        // rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
         sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+        
+        //sm->getDynamicsWorld()->synchronizeMotionStates();
     }
 }
 

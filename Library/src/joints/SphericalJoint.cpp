@@ -62,7 +62,7 @@ void SphericalJoint::setIC(Vector3 angles)
 
 JointType SphericalJoint::getType()
 {
-    return JOINT_SPHERICAL;
+    return JointType::SPHERICAL;
 }
 
 void SphericalJoint::ApplyTorque(Vector3 T)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/FixedJoint.h"
@@ -33,6 +33,14 @@
 
 namespace sf
 {
+
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) : Joint(uniqueName, false)
+{
+    btRigidBody* body = solid->rigidBody;
+    
+    btFixedConstraint* fixed = new btFixedConstraint(*body, Transform::getIdentity());
+    setConstraint(fixed);
+}
 
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {
@@ -79,7 +87,7 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
 
 JointType FixedJoint::getType()
 {
-    return JOINT_FIXED;
+    return JointType::FIXED;
 }
     
 std::vector<Renderable> FixedJoint::Render()

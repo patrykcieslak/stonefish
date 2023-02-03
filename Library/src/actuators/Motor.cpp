@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Motor.h"
@@ -53,11 +53,11 @@ Scalar Motor::getTorque()
 
 Scalar Motor::getAngle()
 {
-    if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
+    if(j != nullptr && j->getType() == JointType::REVOLUTE)
     {
         return ((RevoluteJoint*)j)->getAngle();
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         Scalar angle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -74,11 +74,11 @@ Scalar Motor::getAngle()
 
 Scalar Motor::getAngularVelocity()
 {
-    if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
+    if(j != nullptr && j->getType() == JointType::REVOLUTE)
     {
         return ((RevoluteJoint*)j)->getAngularVelocity();
     }
-    else if(fe != NULL)
+    else if(fe != nullptr)
     {
         Scalar angularV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
@@ -95,9 +95,9 @@ Scalar Motor::getAngularVelocity()
 
 void Motor::Update(Scalar dt)
 {
-    if(j != NULL && j->getType() == JointType::JOINT_REVOLUTE)
+    if(j != nullptr && j->getType() == JointType::REVOLUTE)
         ((RevoluteJoint*)j)->ApplyTorque(torque);
-    else if(fe != NULL)
+    else if(fe != nullptr)
         fe->DriveJoint(jId, torque);
 }
 

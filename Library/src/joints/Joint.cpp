@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/Joint.h"
@@ -36,19 +36,19 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     collisionEnabled = collideLinkedEntities;
-    mbConstraint = NULL;
-    constraint = NULL;
+    mbConstraint = nullptr;
+    constraint = nullptr;
 }
 
 Joint::~Joint(void)
 {
-    if(SimulationApp::getApp() != NULL)
+    if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 
 bool Joint::isMultibodyJoint()
 {
-    return (constraint == NULL) && (mbConstraint != NULL);
+    return (constraint == nullptr) && (mbConstraint != nullptr);
 }
 
 btTypedConstraint* Joint::getConstraint()
@@ -76,7 +76,7 @@ Scalar Joint::getFeedback(unsigned int dof)
     if(dof > 5)
         return Scalar(0);
     
-    if(constraint != NULL)
+    if(constraint != nullptr)
     {
         btJointFeedback* fb = constraint->getJointFeedback();
         if(dof < 3)
@@ -84,7 +84,7 @@ Scalar Joint::getFeedback(unsigned int dof)
         else
             return fb->m_appliedTorqueBodyA[dof-3];
     }
-    else if(mbConstraint != NULL)
+    else if(mbConstraint != nullptr)
     {
         return mbConstraint->getAppliedImpulse(dof);
     }
@@ -94,26 +94,36 @@ Scalar Joint::getFeedback(unsigned int dof)
 
 void Joint::AddToSimulation(SimulationManager* sm)
 {
-    if(constraint != NULL)
+    if(constraint != nullptr)
     {
         //Force feedback
         btJointFeedback* fb = new btJointFeedback();
         constraint->enableFeedback(true);
         constraint->setJointFeedback(fb);
-    
-        constraint->setParam(BT_CONSTRAINT_ERP, 0.75);
-        constraint->setParam(BT_CONSTRAINT_STOP_ERP, 1.0);
-        constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
-        constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
-        
-        //Avoid explosion by softening the joint limits
-        if(constraint->getConstraintType() != FIXED_CONSTRAINT_TYPE)
-            constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2);
+        constraint->setBreakingImpulseThreshold(1000);
+                
+        if(constraint->getConstraintType() == D6_SPRING_2_CONSTRAINT_TYPE)
+        {
+            for(int i=0; i<6; ++i) // Go through all axes
+            {
+                constraint->setParam(BT_CONSTRAINT_ERP, 0.25, i);
+                constraint->setParam(BT_CONSTRAINT_STOP_ERP, 1.0, i);
+                constraint->setParam(BT_CONSTRAINT_CFM, 0.0, i);
+                constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
+            }
+        }
+        else // Use default axis
+        {
+            constraint->setParam(BT_CONSTRAINT_ERP, 0.25);
+            constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2); //Avoid explosion by softening the joint limits
+            constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
+            constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
+        }
     
         //Add joint to dynamics world
         sm->getDynamicsWorld()->addConstraint(constraint, !collisionEnabled);
     }
-    else if(mbConstraint != NULL)
+    else if(mbConstraint != nullptr)
     {
         sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
     }

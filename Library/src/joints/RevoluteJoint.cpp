@@ -20,12 +20,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/RevoluteJoint.h"
 
 #include "entities/SolidEntity.h"
+#include "utils/GeometryFileUtil.h"
+#include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 
 namespace sf
 {
@@ -41,13 +44,13 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidE
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(pivot);
     
     btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
-    hinge->setLimit(1.0, -1.0); //no limit (min > max)
-    hinge->enableMotor(false);
+    hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
     setConstraint(hinge);
     
     sigDamping = Scalar(0);
     velDamping = Scalar(0);
-    angleIC = Scalar(0);
+    angleOffset = hinge->getHingeAngle();
+    setIC(Scalar(0));
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
@@ -58,13 +61,13 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const V
     pivotInA = body->getCenterOfMassTransform().inverse()(pivot);
     
     btHingeConstraint* hinge = new btHingeConstraint(*body, pivotInA, axisInA);
-    hinge->setLimit(1.0, -1.0); //no limit (min > max)
+    hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
     setConstraint(hinge);
     
-    sigDamping = Scalar(0.);
-    velDamping = Scalar(0.);
-    
-    angleIC = Scalar(0.);
+    sigDamping = Scalar(0);
+    velDamping = Scalar(0);
+    angleOffset = hinge->getHingeAngle();
+    setIC(Scalar(0));
 }
 
 void RevoluteJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
@@ -75,23 +78,35 @@ void RevoluteJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 
 void RevoluteJoint::setLimits(Scalar min, Scalar max)
 {
+    if(min > max) // No limit
+    {
+        btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
+        hinge->setLimit(Scalar(1), Scalar(-1));    
+        return;
+    }
+
     btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
+    Scalar l1 = WrapAngle(min + angleOffset);
+    Scalar l2 = WrapAngle(max + angleOffset);
+    min = btMin(l1, l2);
+    max = btMax(l1, l2);    
     hinge->setLimit(min, max);
 }
 
 void RevoluteJoint::setIC(Scalar angle)
 {
     angleIC = angle;
+    angleICError = angleIC - getAngle();
 }
 
 JointType RevoluteJoint::getType()
 {
-    return JOINT_REVOLUTE;
+    return JointType::REVOLUTE;
 }
 
 Scalar RevoluteJoint::getAngle()
 {
-    return ((btHingeConstraint*)getConstraint())->getHingeAngle();
+    return WrapAngle(((btHingeConstraint*)getConstraint())->getHingeAngle() - angleOffset);
 }
 
 Scalar RevoluteJoint::getAngularVelocity()
@@ -101,6 +116,18 @@ Scalar RevoluteJoint::getAngularVelocity()
     Vector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
     Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
     return relativeAV.dot(axis);
+}
+
+void RevoluteJoint::EnableMotor(bool enable, Scalar maxTorque)
+{
+    btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
+    hinge->enableAngularMotor(enable, Scalar(0), maxTorque * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+}
+
+void RevoluteJoint::setMotorVelocity(Scalar av)
+{
+    btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
+    hinge->setMotorTargetVelocity(av);
 }
 
 void RevoluteJoint::ApplyTorque(Scalar T)
@@ -137,14 +164,15 @@ void RevoluteJoint::ApplyDamping()
 
 bool RevoluteJoint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
 {
-    Scalar angleError = angleIC - getAngle();
+    Scalar lastAngleICError = angleICError;
+    angleICError = angleIC - getAngle();
     
     //Check if IC reached
-    if(fabs(angleError) < angularTolerance)
+    if(btFabs(angleICError) < angularTolerance)
         return true;
     
     //Move joint
-    Scalar torque = angleError * Scalar(1000.) - getAngularVelocity() * Scalar(2000.0);
+    Scalar torque = angleICError * Scalar(50) + (angleICError - lastAngleICError) * Scalar(300);
     ApplyTorque(torque);
     
     return false;
@@ -164,16 +192,8 @@ std::vector<Renderable> RevoluteJoint::Render()
     Vector3 axis = (revo->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
     
     //Calculate axis ends
-    Scalar e1 = (A-pivot).dot(axis);
-    Scalar e2 = (B-pivot).dot(axis);
-    Vector3 C1 = pivot + e1 * axis;
-    Vector3 C2 = pivot + e2 * axis;
-    
-    item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-    item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-    item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-    item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
-    
+    Vector3 C1 = pivot;
+    Vector3 C2 = pivot + axis * btMax(0.05, btFabs((A-B).safeNorm())/Scalar(2));
     item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
     item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
     

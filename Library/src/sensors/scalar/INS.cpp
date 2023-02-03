@@ -130,7 +130,7 @@ void INS::InternalUpdate(Scalar dt)
     {
         Sample s = gps->getLastSample();
         Scalar ts = s.getTimestamp();
-        if(ts >= 0.0 && now-ts <= dt && s.getValue(1) >= 0.0) //Is GPS valid?
+        if(ts >= 0.0 && now-ts <= dt && s.getValue(0) <= Scalar(90) && s.getValue(1) <= Scalar(180)) //Is GPS valid?
         {
             Vector3 trans = imuTrans.getOrigin() - gps->getSensorFrame().getOrigin();
             ned.setX(trans.x() + s.getValue(2));

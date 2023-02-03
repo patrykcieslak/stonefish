@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/Entity.h"
@@ -40,7 +40,7 @@ Entity::Entity(std::string uniqueName)
 
 Entity::~Entity(void)
 {
-    if(SimulationApp::getApp() != NULL)
+    if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 

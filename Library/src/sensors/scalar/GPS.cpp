@@ -50,9 +50,11 @@ void GPS::InternalUpdate(Scalar dt)
     
     //GPS not updating underwater
     Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(liq != NULL && liq->IsInsideFluid(gpsTrans.getOrigin()))
+    if(liq != nullptr && liq->IsInsideFluid(gpsTrans.getOrigin()))
     {
-        Scalar data[4] = {Scalar(0), Scalar(-1), Scalar(0), Scalar(0)};
+        Scalar data[4] = {BT_LARGE_FLOAT, 
+                          BT_LARGE_FLOAT, 
+                          Scalar(0), Scalar(0)};
         Sample s(4, data);
         AddSampleToHistory(s);
     }
