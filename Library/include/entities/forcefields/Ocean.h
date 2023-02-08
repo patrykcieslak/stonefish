@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Ocean__
@@ -57,12 +57,6 @@ namespace sf
         
         //! A destructor.
         ~Ocean();
-        
-        //! A method used to setup the properties of the water.
-        /*!
-         \param jerlov the type of water according to Jerlov (I-9C) <0,1>
-         */
-        void setWaterType(Scalar jerlov);
         
         //! A method used to add a velocity field to the ocean.
         /*!
@@ -117,8 +111,20 @@ namespace sf
         //! A method updating the currents data in the OpenGL ocean.
         void UpdateCurrentsData();
         
+        //! A method used to setup the properties of the water.
+        /*!
+         \param jerlov the type of water according to Jerlov (I-9C) <0,1>
+         */
+        void setWaterType(Scalar jerlov);
+
+        //! A method to enable rendering of suspended particles (underwater snow).
+        void setParticles(bool enabled);
+
+        //! A method informing if the particles are enabled.
+        bool hasParticles() const;
+
         //! A method returning the type of the water.
-        Scalar getWaterType();
+        Scalar getWaterType() const;
           
         //! A method informing if the ocean waves are simulated.
         bool hasWaves() const;

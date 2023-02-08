@@ -265,6 +265,6 @@
 			<origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
 		</light>
         
-		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="$(arg robot_position)"/>
 	</robot>
 </scenario>

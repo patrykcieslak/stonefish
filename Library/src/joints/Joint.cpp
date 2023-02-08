@@ -101,21 +101,24 @@ void Joint::AddToSimulation(SimulationManager* sm)
         constraint->enableFeedback(true);
         constraint->setJointFeedback(fb);
         constraint->setBreakingImpulseThreshold(1000);
-                
+
+        Scalar erp, stopErp;
+        sm->getJointErp(erp, stopErp);
+
         if(constraint->getConstraintType() == D6_SPRING_2_CONSTRAINT_TYPE)
         {
             for(int i=0; i<6; ++i) // Go through all axes
             {
-                constraint->setParam(BT_CONSTRAINT_ERP, 0.25, i);
-                constraint->setParam(BT_CONSTRAINT_STOP_ERP, 1.0, i);
+                constraint->setParam(BT_CONSTRAINT_ERP, erp, i);
+                constraint->setParam(BT_CONSTRAINT_STOP_ERP, stopErp, i);
                 constraint->setParam(BT_CONSTRAINT_CFM, 0.0, i);
                 constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
             }
         }
         else // Use default axis
         {
-            constraint->setParam(BT_CONSTRAINT_ERP, 0.25);
-            constraint->setParam(BT_CONSTRAINT_STOP_ERP, 0.2); //Avoid explosion by softening the joint limits
+            constraint->setParam(BT_CONSTRAINT_ERP, erp);
+            constraint->setParam(BT_CONSTRAINT_STOP_ERP, stopErp); //Avoid explosion by softening the joint limits
             constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
             constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
         }

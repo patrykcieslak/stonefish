@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -56,7 +56,7 @@ Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(u
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
     waterType = Scalar(0.0);
-    glOcean = NULL;
+    glOcean = nullptr;
 }
 
 Ocean::~Ocean()
@@ -68,7 +68,7 @@ Ocean::~Ocean()
         currents.clear();
     }
     
-    if(glOcean != NULL)
+    if(glOcean != nullptr)
         delete glOcean;
 }
 
@@ -77,7 +77,15 @@ bool Ocean::hasWaves() const
     return oceanState > Scalar(0);
 }
 
-Scalar Ocean::getWaterType()
+bool Ocean::hasParticles() const
+{
+    if(glOcean != nullptr)
+        return glOcean->getParticlesEnabled();
+    else
+        return false;
+}
+
+Scalar Ocean::getWaterType() const
 {
     return waterType;
 }
@@ -107,11 +115,17 @@ VelocityField* Ocean::getCurrent(unsigned int index)
 
 void Ocean::setWaterType(Scalar jerlov)
 { 
-    if(glOcean != NULL)
+    if(glOcean != nullptr)
     {
         waterType = jerlov > Scalar(1) ? Scalar(1) : (jerlov < Scalar(0) ? Scalar(0) : jerlov);
         glOcean->setWaterType((float)waterType);
     }
+}
+
+void Ocean::setParticles(bool enabled)
+{
+    if(glOcean != nullptr)
+        glOcean->setParticles(enabled);
 }
 
 void Ocean::AddVelocityField(VelocityField* field)

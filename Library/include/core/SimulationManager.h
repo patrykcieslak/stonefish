@@ -93,7 +93,7 @@ namespace sf
         virtual void SimulationStepCompleted(Scalar timeStep);
 
         //! A method returning the current simulation clock time in us (overriding allows for external time source).
-        virtual uint64_t getSimulationClock();
+        virtual uint64_t getSimulationClock() const;
 
         //! A method sleeping for a given simulation clock time (overriding allows for external time source).
         /*!
@@ -262,11 +262,15 @@ namespace sf
         //! A method used to change some global solver params for stability tuning.
         /*!
          \param erp error reduction for constraint solving
+         \param stopErp error reduction for constraint limit solving
          \param erp2 error reduction for contact solving
          \param globalDamping damping added globally to all dynamic bodies
          \param globalFriction friction added globally to all dynamic bodies
+         \param linearSleepingThreshold a linear velocity below which the dynamic bodies will sleep [m/s]
+         \param angularSleepingThreshold an angular velocity below which the dynamic bodies will sleep [rad/s]
         */
-        void setSolverParams(Scalar erp, Scalar erp2, Scalar globalDamping, Scalar globalFriction);
+        void setSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction, 
+                                Scalar linearSleepingThreshold, Scalar angularSleepingThreshold);
 
         //! A method that sets the display mode of dynamical rigid bodies.
         /*!
@@ -278,13 +282,13 @@ namespace sf
         /*!
          \return flag defining the display style
          */
-        DisplayMode getSolidDisplayMode();
+        DisplayMode getSolidDisplayMode() const;
         
         //! A method returning the usage of the CPU by the physics computation in percent.
-        Scalar getCpuUsage();
+        Scalar getCpuUsage() const;
         
         //! A method returning the current number of steps per second used.
-        Scalar getStepsPerSecond();
+        Scalar getStepsPerSecond() const;
         
         //! A method returning the axis-aligned bounding box of the simulation world.
         /*!
@@ -294,10 +298,10 @@ namespace sf
         void getWorldAABB(Vector3& min, Vector3& max);
         
         //! A method returning the collision filtering used in simulation.
-        CollisionFilteringType getCollisionFilter();
+        CollisionFilteringType getCollisionFilter() const;
         
         //! A method returning the type of solver used.
-        SolverType getSolverType();
+        SolverType getSolverType() const;
 
         //! A method returning soft body world information.
         btSoftBodyWorldInfo& getSoftBodyWorldInfo();
@@ -421,13 +425,13 @@ namespace sf
         void setGravity(Scalar gravityConstant);
         
         //! A method returning the gravity vector.
-        Vector3 getGravity();
+        Vector3 getGravity() const;
         
         //! A method returning the simulation time in seconds.
-        Scalar getSimulationTime();
+        Scalar getSimulationTime() const;
         
         //! A method informing about the relation between the simulated time and real time.
-        Scalar getRealtimeFactor();
+        Scalar getRealtimeFactor() const;
         
         //! A method returning a pointer to the material manager.
         MaterialManager* getMaterialManager();
@@ -442,13 +446,19 @@ namespace sf
         OpenGLTrackball* getTrackball();
         
         //! A method informing if the simulation is freshly started.
-        bool isSimulationFresh();
+        bool isSimulationFresh() const;
         
         //! A method informing if the ocean is enabled in the simulation.
-        bool isOceanEnabled();
+        bool isOceanEnabled() const;
         
         //! A method returning a pointer to the Bullet dynamics world.
         btSoftMultiBodyDynamicsWorld* getDynamicsWorld();
+
+        //! A method returning the simulation sleeping settings.
+        void getSleepingThresholds(Scalar& linear, Scalar& angular) const;
+
+        //! A method returning the simulation setup related to joint constraints.
+        void getJointErp(Scalar& erp, Scalar& stopErp) const;
         
         //------ Aliases created to shorten the code needed to build the scenario ------
         
@@ -508,20 +518,25 @@ namespace sf
         void InitializeSolver();
         void InitializeScenario();
         
-        SolverType solver;
-        CollisionFilteringType collisionFilter;
-        Scalar sps;
+        // State
+        Scalar simulationTime;
+        uint64_t currentTime;
+        uint64_t ssus;
+        bool simulationFresh;
+
+        // Performance
+        PerformanceMonitor perfMon;
         Scalar realtimeFactor;
         Scalar cpuUsage;
         unsigned int fdPrescaler;
         unsigned int fdCounter;
+        
+        // Threading
         SDL_mutex* simSettingsMutex;
         SDL_mutex* simInfoMutex;
         SDL_mutex* simHydroMutex;
         
-        Scalar simulationTime;
-        uint64_t currentTime;
-        uint64_t ssus;
+        // IC solver settings
         bool icUseGravity;
         Scalar icTimeStep;
         unsigned int icMaxIter;
@@ -530,9 +545,17 @@ namespace sf
         Scalar icAngTolerance;
         unsigned int mlcpFallbacks;
         bool icProblemSolved;
-        bool simulationFresh;
-        PerformanceMonitor perfMon;
-        
+
+        // Sover settings
+        SolverType solver;
+        CollisionFilteringType collisionFilter;
+        Scalar sps;
+        Scalar linSleepThreshold;
+        Scalar angSleepThreshold;
+        Scalar jointErp;
+        Scalar jointLimitErp;
+
+        // Scenario
         NameManager* nameManager;
         std::vector<Robot*> robots;
         std::vector<Entity*> entities;
@@ -548,7 +571,7 @@ namespace sf
         Scalar g;
         DisplayMode sdm;
         
-        //graphics
+        // Graphics
         OpenGLTrackball* trackball;
         OpenGLDebugDrawer* debugDrawer;
     };

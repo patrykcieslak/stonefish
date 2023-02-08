@@ -135,16 +135,6 @@
 			</internal_part>
 		</base_link>
         
-        <comm name="USBL" type="usbl" device_id="1">
-        	<connect device_id="2"/>
-        	<link name="Vehicle"/>
-        	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
-        	<specs horizontal_fov="360.0" vertical_fov="220.0" range="1000.0"/>
-        	<autoping rate="10.0"/>
-        	<noise range="0.01" horizontal_angle="0.05" vertical_angle="0.1"/>
-			<resolution range="0.1" angle="0.1"/>
-        </comm>
-
 		<sensor name="dynamics" type="odometry" rate="30.0">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>

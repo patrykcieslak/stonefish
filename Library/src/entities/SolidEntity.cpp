@@ -1040,22 +1040,20 @@ void SolidEntity::BuildRigidBody()
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0.); //not used
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0.); //not used
-        rigidBodyCI.m_linearSleepingThreshold = Scalar(0.5); //not used
-        rigidBodyCI.m_angularSleepingThreshold = Scalar(1.0); //not used
         rigidBodyCI.m_additionalDamping = false;
         
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-        rigidBody->setActivationState(DISABLE_DEACTIVATION);
         //rigidBody->setContactProcessingThreshold(0.002);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
         
+        // Soft contact
         if(contactK > Scalar(0))
             rigidBody->setContactStiffnessAndDamping(contactK, contactD);
-        
+
         cInfo("Built rigid body %s [mass: %1.3lf; inertia: %1.3lf, %1.3lf, %1.3lf; volume: %1.1lf]", getName().c_str(), mass, Ipri.x(), Ipri.y(), Ipri.z(), volume*1e6);
     }
 }
@@ -1122,15 +1120,22 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
 {
     if(rigidBody == nullptr)
     {
+        // Build
         BuildRigidBody();
         BuildGraphicalObject();
         
+        // Setup sleeping
+        Scalar linSleep, angSleep;
+        sm->getSleepingThresholds(linSleep, angSleep);
+        if(linSleep <= Scalar(0) || angSleep <= Scalar(0))        
+            rigidBody->setActivationState(DISABLE_DEACTIVATION);
+        else
+            rigidBody->setSleepingThresholds(linSleep, angSleep);
+
+        // Add to world
         Transform Tcg = origin * T_CG2O.inverse();
         rigidBody->setMotionState(new btDefaultMotionState(Tcg));
-        // rigidBody->setCenterOfMassTransform(origin * T_CG2O.inverse());
         sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
-        
-        //sm->getDynamicsWorld()->synchronizeMotionStates();
     }
 }
 

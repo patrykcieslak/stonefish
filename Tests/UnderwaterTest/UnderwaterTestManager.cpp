@@ -20,13 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright(c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestManager.h"
 
 #include "UnderwaterTestApp.h"
-#include <core/Robot.h>
+#include <core/FeatherstoneRobot.h>
 #include <entities/statics/Plane.h>
 #include <entities/statics/Obstacle.h>
 #include <entities/solids/Polyhedron.h>
@@ -258,7 +258,7 @@ void UnderwaterTestManager::BuildScenario()
     //sf::ColorCamera* cam2 = new sf::ColorCamera("Cam", 300, 200, 60.0);
     
     //Create AUV
-    sf::Robot* auv = new sf::Robot("GIRONA500", false);
+    sf::Robot* auv = new sf::FeatherstoneRobot("GIRONA500", false);
     
     //Mechanical structure
     auv->DefineLinks(vehicle, arm);
@@ -270,7 +270,7 @@ void UnderwaterTestManager::BuildScenario()
     auv->DefineFixedJoint("Fix", "ArmLink4", "EE", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.05)));
     auv->DefineRevoluteJoint("Joint5", "EE", "Finger1", sf::Transform(sf::IQ(), sf::Vector3(0.03,0,0.1)), sf::VY(), std::make_pair(0.0, 1.0));
     auv->DefineRevoluteJoint("Joint6", "EE", "Finger2", sf::Transform(sf::Quaternion(M_PI, 0.0, 0.0), sf::Vector3(-0.03,0,0.1)), sf::VY(), std::make_pair(0.0, 1.0));
-    auv->BuildKinematicTree();
+    auv->BuildKinematicStructure();
     
     //Joint motors
     auv->AddJointActuator(srv1, "Joint1");

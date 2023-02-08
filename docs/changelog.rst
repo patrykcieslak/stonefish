@@ -7,9 +7,11 @@ The changelog of the library code is presented below. **Breaking changes** were 
 1.3
 ===
 
+-  *Reimplemented Robot definition to allow for two different algorithms: the Featherstone's algorithm and a general constraint solving algorithm; the general algorithm allows for kinematic loops in the robot structure*
 -  *Added origin definition to standard obstacle solids to enable local transformations*
 -  *Updated definition of accelerometer, gyroscope and IMU sensors, including parser support*
 -  *Extended DVL model, with water layer velocity measurement and new noise models, including parser support*
+-  Added easy access to the parameters of the constraint solver, including parser support
 -  Implemented an INS combining internal gyroscopes and accelerometers with external sensors like DVL and GPS, including parser support
 -  Implemented methods which enable live updates of sensor and actuator frames
 -  Implemented magnetic interaction between materials to enable simulation of permanent magnets
@@ -26,6 +28,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Fixed spline interpolation of trajectories with subsequent overlapping points
 -  Fixed measurement of accelerations
 -  Fixed unstable multibody joint position control
+-  Fixed computation of moments of inertia
 
 1.2
 ===

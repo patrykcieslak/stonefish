@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "FlyingTestManager.h"
@@ -30,7 +30,7 @@
 #include <entities/solids/Box.h>
 #include <utils/UnitSystem.h>
 #include <utils/SystemUtil.hpp>
-#include <core/Robot.h>
+#include <core/FeatherstoneRobot.h>
 #include <sensors/scalar/Odometry.h>
 #include <entities/statics/Plane.h>
 #include <actuators/Propeller.h>
@@ -83,8 +83,9 @@ void FlyingTestManager::BuildScenario()
     sf::Compound* fuselage = new sf::Compound("Fuselage", phy, arm1, sf::I4());
     fuselage->AddExternalPart(arm2, sf::I4());
     
-    sf::Robot* quadCopter = new sf::Robot("Quadcopter");
+    sf::FeatherstoneRobot* quadCopter = new sf::FeatherstoneRobot("Quadcopter");
     quadCopter->DefineLinks(fuselage);
+    quadCopter->BuildKinematicStructure();
     quadCopter->AddLinkActuator(prop1, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.5,0.0,-0.02)));
     quadCopter->AddLinkActuator(prop2, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(-0.5,0.0,-0.02)));
     quadCopter->AddLinkActuator(prop3, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.5,-0.02)));
@@ -93,6 +94,6 @@ void FlyingTestManager::BuildScenario()
     
     prop1->setSetpoint(0.5);
     prop2->setSetpoint(0.5);
-    prop3->setSetpoint(0.5);
-    prop4->setSetpoint(0.5);
+    prop3->setSetpoint(-0.5);
+    prop4->setSetpoint(-0.5);
 }

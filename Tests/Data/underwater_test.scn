@@ -110,6 +110,17 @@
 	-->
     <include file="girona500auv_full.scn">
 		<arg name="robot_name" value="GIRONA500"/>
+		<arg name="robot_position" value="0.0 0.0 1.0"/>
+	</include>
+
+	<include file="girona500auv_full.scn">
+		<arg name="robot_name" value="GIRONA500_2"/>
+		<arg name="robot_position" value="2.5 0.0 1.0"/>
+	</include>
+
+	<include file="girona500auv_full.scn">
+		<arg name="robot_name" value="GIRONA500_3"/>
+		<arg name="robot_position" value="5.0 0.0 1.0"/>
 	</include>
     
     <comm name="Modem" type="acoustic_modem" device_id="2">

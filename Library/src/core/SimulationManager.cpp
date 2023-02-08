@@ -84,6 +84,10 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     cpuUsage = Scalar(0);
     solver = st;
     collisionFilter = cft;
+    jointErp = Scalar(0.1);
+    jointLimitErp = Scalar(0.2);
+    linSleepThreshold = Scalar(0);
+    angSleepThreshold = Scalar(0);
     fdCounter = 0;
     currentTime = 0;
     simulationTime = 0;
@@ -339,12 +343,12 @@ Contact* SimulationManager::getContact(const std::string& name)
     return nullptr;
 }
 
-CollisionFilteringType SimulationManager::getCollisionFilter()
+CollisionFilteringType SimulationManager::getCollisionFilter() const
 {
     return collisionFilter;
 }
 
-SolverType SimulationManager::getSolverType()
+SolverType SimulationManager::getSolverType() const
 {
     return solver;
 }
@@ -471,12 +475,12 @@ btSoftMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
     return dynamicsWorld;
 }
 
-bool SimulationManager::isSimulationFresh()
+bool SimulationManager::isSimulationFresh() const
 {
     return simulationFresh;
 }
 
-Scalar SimulationManager::getSimulationTime()
+Scalar SimulationManager::getSimulationTime() const
 {
     SDL_LockMutex(simInfoMutex);
     Scalar st = simulationTime;
@@ -484,7 +488,7 @@ Scalar SimulationManager::getSimulationTime()
     return st;
 }
 
-uint64_t SimulationManager::getSimulationClock()
+uint64_t SimulationManager::getSimulationClock() const
 {
     return (uint64_t)ceil(realtimeFactor * (Scalar)GetTimeInMicroseconds());
 }
@@ -536,12 +540,12 @@ void SimulationManager::setRealtimeFactor(Scalar f)
     SDL_UnlockMutex(simInfoMutex);
 }
 
-Scalar SimulationManager::getStepsPerSecond()
+Scalar SimulationManager::getStepsPerSecond() const
 {
     return sps;
 }
 
-Scalar SimulationManager::getCpuUsage()
+Scalar SimulationManager::getCpuUsage() const
 {
     SDL_LockMutex(simInfoMutex);
     Scalar cpu = cpuUsage;
@@ -549,7 +553,7 @@ Scalar SimulationManager::getCpuUsage()
     return cpu;
 }
 
-Scalar SimulationManager::getRealtimeFactor()
+Scalar SimulationManager::getRealtimeFactor() const
 {
     SDL_LockMutex(simInfoMutex);
     Scalar rf = realtimeFactor;
@@ -585,7 +589,7 @@ void SimulationManager::setGravity(Scalar gravityConstant)
     g = gravityConstant;
 }
 
-Vector3 SimulationManager::getGravity()
+Vector3 SimulationManager::getGravity() const
 {
     return Vector3(0,0,g);
 }
@@ -600,7 +604,8 @@ void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsi
     icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : Scalar(1e-6);
 }
 
-void SimulationManager::setSolverParams(Scalar erp, Scalar erp2, Scalar globalDamping, Scalar globalFriction)
+void SimulationManager::setSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction,
+                                            Scalar linearSleepingThreshold, Scalar angularSleepingThreshold)
 {
     if(dynamicsWorld == nullptr)
         return;
@@ -609,6 +614,11 @@ void SimulationManager::setSolverParams(Scalar erp, Scalar erp2, Scalar globalDa
     dynamicsWorld->getSolverInfo().m_erp2 = erp2;
     dynamicsWorld->getSolverInfo().m_damping = globalDamping;
     dynamicsWorld->getSolverInfo().m_friction = globalFriction;
+    
+    jointErp = erp;
+    jointLimitErp = stopErp;
+    linSleepThreshold = linearSleepingThreshold;
+    angSleepThreshold = angularSleepingThreshold;
 }
 
 void SimulationManager::setSolidDisplayMode(DisplayMode m)
@@ -631,14 +641,26 @@ void SimulationManager::setSolidDisplayMode(DisplayMode m)
         actuators[i]->setDisplayMode(sdm);
 }
 
-DisplayMode SimulationManager::getSolidDisplayMode()
+DisplayMode SimulationManager::getSolidDisplayMode() const
 {
     return sdm;
 }
     
-bool SimulationManager::isOceanEnabled()
+bool SimulationManager::isOceanEnabled() const
 {
     return ocean != nullptr;
+}
+
+void SimulationManager::getSleepingThresholds(Scalar& linear, Scalar& angular) const
+{
+    linear = linSleepThreshold;
+    angular = angSleepThreshold;
+}
+
+void SimulationManager::getJointErp(Scalar& erp, Scalar& stopErp) const
+{
+    erp = jointErp;
+    stopErp = jointLimitErp;
 }
 
 void SimulationManager::InitializeSolver()
@@ -701,7 +723,7 @@ void SimulationManager::InitializeSolver()
 	
     //Quality/stability
     dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = Scalar(0.1); //non-contact constraint Baumgarte factor //0.25
+    dynamicsWorld->getSolverInfo().m_erp = jointErp; //non-contact constraint Baumgarte factor //0.25
     dynamicsWorld->getSolverInfo().m_erp2 = Scalar(10)/getStepsPerSecond(); //contact constraint Baumgarte factor //0.75
     dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.1); //friction constraint Baumgarte factor //0.5
     dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations //100

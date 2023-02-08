@@ -46,7 +46,31 @@ void ConsoleTestManager::BuildScenario()
     if(success)
         cInfo("Scenario description parsed successfully.");
     else
+    {
         cError("Errors detected when parsing scenario description!");
+        auto log = parser.getLog();
+        for(size_t i=0; i<log.size(); ++i)
+        {
+            switch(log[i].type)
+            {
+                case sf::MessageType::INFO:
+                    cInfo(log[i].text.c_str());
+                    break;
+                
+                case sf::MessageType::ERROR:
+                    cError(log[i].text.c_str());
+                    break;
+
+                case sf::MessageType::WARNING:
+                    cWarning(log[i].text.c_str());
+                    break;
+
+                case sf::MessageType::CRITICAL:
+                    cCritical(log[i].text.c_str());
+                    break;
+            }
+        }
+    }
 #else
     //Create materials
     CreateMaterial("Rock", sf::UnitSystem::Density(sf::CGS, sf::MKS, 3.0), 0.8);

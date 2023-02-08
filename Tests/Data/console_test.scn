@@ -108,12 +108,6 @@
 		<arg name="robot_name" value="GIRONA500"/>
 	</include>
 
-    <comm name="Modem" type="acoustic_modem" device_id="2">
-		<connect device_id="1"/>
-		<specs horizontal_fov="360.0" vertical_fov="220.0" range="1000.0"/>
-		<world_transform rpy="3.14159 0.0 0.0" xyz="10.0 0.0 4.0"/>
-	</comm>
-
     <contact name="EEPipeContact">
 		<bodyA name="HorizontalPipe" display="path"/>
 		<bodyB name="GIRONA500/Vehicle"/>

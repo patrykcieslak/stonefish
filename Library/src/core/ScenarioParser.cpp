@@ -529,21 +529,31 @@ bool ScenarioParser::EvaluateMath(XMLNode* node)
 bool ScenarioParser::ParseSolver(XMLElement* element)
 {
     XMLElement* item;
-    Scalar erp = sm->getDynamicsWorld()->getSolverInfo().m_erp;
+    Scalar erp, stopErp;
+    sm->getJointErp(erp, stopErp);
     Scalar erp2 = sm->getDynamicsWorld()->getSolverInfo().m_erp2;
     Scalar globalDamping = sm->getDynamicsWorld()->getSolverInfo().m_damping;
     Scalar globalFriction = sm->getDynamicsWorld()->getSolverInfo().m_friction;
+    Scalar linSleep, angSleep;
+    sm->getSleepingThresholds(linSleep, angSleep);
 
     if((item = element->FirstChildElement("erp")) != nullptr)
         item->QueryAttribute("value", &erp);
+    if((item = element->FirstChildElement("stop_erp")) != nullptr)
+        item->QueryAttribute("value", &stopErp);
     if((item = element->FirstChildElement("erp2")) != nullptr)
         item->QueryAttribute("value", &erp2);
     if((item = element->FirstChildElement("global_damping")) != nullptr)
         item->QueryAttribute("value", &globalDamping);
     if((item = element->FirstChildElement("global_friction")) != nullptr)
         item->QueryAttribute("value", &globalFriction);
+    if((item = element->FirstChildElement("sleeping_thresholds")) != nullptr)
+    {
+        item->QueryAttribute("linear", &linSleep);
+        item->QueryAttribute("angular", &angSleep);
+    }
 
-    sm->setSolverParams(erp, erp2, globalDamping, globalFriction);
+    sm->setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
     
     return true;
 }
@@ -602,7 +612,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         {
             item->QueryAttribute("enabled", &particles);
         }
-        sm->getOcean()->getOpenGLOcean()->setParticles(particles);
+        sm->getOcean()->setParticles(particles);
 
         //Currents
         if((item = ocean->FirstChildElement("current")) != nullptr)

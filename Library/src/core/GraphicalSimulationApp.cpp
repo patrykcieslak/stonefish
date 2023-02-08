@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -342,15 +342,15 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             Quit();
             break;
             
-        /*case SDLK_SPACE:
-            selectedEntity = nullptr;
-            if(!getSimulationManager()->isSimulationFresh())
-            {
-                StopSimulation();
-                getSimulationManager()->RestartScenario();
-            }
-            StartSimulation();
-            break;*/
+        // case SDLK_SPACE:
+        //     selectedEntity = std::make_pair(nullptr, 0);
+        //     if(!getSimulationManager()->isSimulationFresh())
+        //     {
+        //         StopSimulation();
+        //         getSimulationManager()->RestartScenario();
+        //     }
+        //     StartSimulation();
+        //     break;
             
         case SDLK_h:
             displayHUD = !displayHUD;
@@ -725,7 +725,7 @@ void GraphicalSimulationApp::DoHUD()
     hs.showBulletDebugInfo = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showBulletDebugInfo, "Collision");
     offset += 22.f;
     
-    if(ocn != NULL)
+    if(ocn != nullptr)
     {
         id.item = 6;
         hs.showForces = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showForces, "Fluid Forces");
@@ -763,7 +763,7 @@ void GraphicalSimulationApp::DoHUD()
     getSimulationManager()->getAtmosphere()->SetupSunPosition(az, elev);
     
     //Ocean settings
-    if(ocn != NULL)
+    if(ocn != nullptr)
     {
         Scalar waterType = ocn->getWaterType();
         
@@ -785,7 +785,7 @@ void GraphicalSimulationApp::DoHUD()
             offset += 50.f;
             
             id.item = 2;
-            ocn->getOpenGLOcean()->setParticles(gui->DoCheckBox(id, 19.f, offset, 110.f, ocn->getOpenGLOcean()->getParticlesEnabled(), "Suspended particles"));
+            ocn->setParticles(gui->DoCheckBox(id, 19.f, offset, 110.f, ocn->hasParticles(), "Suspended particles"));
             offset += 29.f;
         }
 
