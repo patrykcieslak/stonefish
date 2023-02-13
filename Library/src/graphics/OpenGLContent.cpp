@@ -1552,7 +1552,7 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     switch(uvMode)
     {
         default:
-        case 0:
+        case 0: // Cubemap
             mesh->vertices[0].uv = glm::vec2(2.f/3.f, 1.f);
             mesh->vertices[1].uv = glm::vec2(1.f/3.f, 1.f);
             mesh->vertices[2].uv = glm::vec2(1.f/3.f, 2.f/3.f);
@@ -1584,7 +1584,7 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
             mesh->vertices[23].uv = glm::vec2(1.f, 2.f/3.f);
             break;
             
-        case 1:
+        case 1: // Same on all faces streched
             mesh->vertices[0].uv = glm::vec2(1.f, 1.f);
             mesh->vertices[1].uv = glm::vec2(0.f, 1.f);
             mesh->vertices[2].uv = glm::vec2(0.f, 0.f);
@@ -1616,7 +1616,7 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
             mesh->vertices[23].uv = glm::vec2(1.f, 1.f);
             break;
             
-        case 2:
+        case 2: // Same on all faces tiled
             mesh->vertices[0].uv = glm::vec2(halfExtents.y*2.f, halfExtents.x*2.f);
             mesh->vertices[1].uv = glm::vec2(0.f, halfExtents.x*2.f);
             mesh->vertices[2].uv = glm::vec2(0.f, 0.f);
@@ -1646,6 +1646,13 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
             mesh->vertices[21].uv = glm::vec2(0.f, 0.f);
             mesh->vertices[22].uv = glm::vec2(halfExtents.x*2.f, 0.f);
             mesh->vertices[23].uv = glm::vec2(halfExtents.x*2.f, halfExtents.z*2.f);
+            break;
+
+        case 3: // Only on one face (XY plane)
+            mesh->vertices[0].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[1].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[2].uv = glm::vec2(1.f, 1.f);
+            mesh->vertices[3].uv = glm::vec2(1.f, 0.f);
             break;
     }
     

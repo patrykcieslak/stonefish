@@ -120,6 +120,8 @@ void RotaryEncoder::InternalUpdate(Scalar dt)
     Scalar actualAngle = GetRawAngle();
     
     //accumulate
+    Scalar angle0 = angle;
+
     if(lastAngle * actualAngle < Scalar(0))
     {
         if(lastAngle > M_PI_4)
@@ -135,7 +137,7 @@ void RotaryEncoder::InternalUpdate(Scalar dt)
     lastAngle = actualAngle;
     
     //angular velocity
-    Scalar angularVelocity = GetRawAngularVelocity();
+    Scalar angularVelocity = (angle - angle0)/dt; // Less noisy than reading raw velocity
     
     //record sample
     Scalar m[2];

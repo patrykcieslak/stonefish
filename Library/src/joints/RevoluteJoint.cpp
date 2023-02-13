@@ -127,7 +127,7 @@ void RevoluteJoint::EnableMotor(bool enable, Scalar maxTorque)
 void RevoluteJoint::setMotorVelocity(Scalar av)
 {
     btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
-    hinge->setMotorTargetVelocity(av);
+    hinge->setMotorTargetVelocity(av/Scalar(4));
 }
 
 void RevoluteJoint::ApplyTorque(Scalar T)
