@@ -424,6 +424,7 @@ namespace sf
     private:
         friend class FeatherstoneEntity;
         friend class FixedJoint;
+        friend class SpringJoint;
         friend class RevoluteJoint;
         friend class PrismaticJoint;
         friend class CylindricalJoint;

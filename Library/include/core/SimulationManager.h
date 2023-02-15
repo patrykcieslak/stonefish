@@ -170,6 +170,12 @@ namespace sf
          \param jnt a pointer to the joint object
          */
         void AddJoint(Joint* jnt);
+
+        //! A method that removes a discrete joint from the simulation world.
+        /*!
+         \param jnt a pointer to the joint object
+         */
+        void RemoveJoint(Joint* jnt);
         
         //! A method that adds an actuator to the simulation world.
         /*!

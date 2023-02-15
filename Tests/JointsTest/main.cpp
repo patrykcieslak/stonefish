@@ -47,7 +47,7 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     h.showJoints = true;
     
-    JointsTestManager simulationManager(500.0);
+    JointsTestManager simulationManager(1000.0);
     JointsTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run();
     

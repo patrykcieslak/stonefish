@@ -49,7 +49,7 @@ void Actuator::setDisplayMode(DisplayMode m)
     dm = m;
 }
 
-std::string Actuator::getName()
+std::string Actuator::getName() const
 {
     return name;
 }

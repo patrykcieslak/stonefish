@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationManager.h"
@@ -38,6 +38,7 @@
 #include <thread>
 #include <typeinfo>
 #include <omp.h>
+#include <algorithm>
 #include "core/FilteredCollisionDispatcher.h"
 #include "core/GraphicalSimulationApp.h"
 #include "core/NameManager.h"
@@ -64,6 +65,7 @@
 #include "joints/Joint.h"
 #include "actuators/Actuator.h"
 #include "actuators/Light.h"
+#include "actuators/SuctionCup.h"
 #include "sensors/Sensor.h"
 #include "comms/Comm.h"
 #include "sensors/Contact.h"
@@ -246,6 +248,20 @@ void SimulationManager::AddJoint(Joint* jnt)
     }
 }
 
+void SimulationManager::RemoveJoint(Joint* jnt)
+{
+    if(jnt != nullptr)
+    {
+        auto it = std::find(joints.begin(), joints.end(), jnt);
+        if(it != joints.end())
+        {
+            (*it)->RemoveFromSimulation(this);
+            delete *it;
+            joints.erase(it);
+        }
+    }
+}
+
 void SimulationManager::AddActuator(Actuator *act)
 {
     if(act != nullptr)
@@ -293,17 +309,18 @@ void SimulationManager::EnableCollision(const Entity* entA, const Entity* entB)
 void SimulationManager::DisableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
-    
     if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = const_cast<Entity*>(entA);
         c.B = const_cast<Entity*>(entB);
         collisions.push_back(c);
+        cInfo("Disabling collisions between '%s' and '%s'.", entA->getName().c_str(), entB->getName().c_str());
     }
     else if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId > -1)
     {
         collisions.erase(collisions.begin() + colId);
+        cInfo("Disabling collisions between '%s' and '%s'.", entA->getName().c_str(), entB->getName().c_str());
     }
 }
 
@@ -669,7 +686,7 @@ void SimulationManager::InitializeSolver()
     dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
 
     //Choose collision dispatcher
-    /*switch(collisionFilter)
+    switch(collisionFilter)
     {
         case CollisionFilteringType::COLLISION_INCLUSIVE:
             dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, true);
@@ -678,8 +695,8 @@ void SimulationManager::InitializeSolver()
         case CollisionFilteringType::COLLISION_EXCLUSIVE:
             dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, false);
             break;
-    }*/
-    dwDispatcher = new btCollisionDispatcher(dwCollisionConfig);
+    }
+    //dwDispatcher = new btCollisionDispatcher(dwCollisionConfig);
     
     //Choose constraint solver
     if(solver == SolverType::SOLVER_SI)
@@ -1556,7 +1573,12 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
             anim->Update(timeStep);
         }
     }
-    
+
+    //Special treatment of suction cup actuator
+    for(size_t i = 0; i < simManager->actuators.size(); ++i)
+        if(simManager->actuators[i]->getType() == ActuatorType::SUCTION_CUP)
+            ((SuctionCup*)simManager->actuators[i])->Engage(simManager);
+
     //Loop through all sensors -> update measurements
     for(size_t i = 0; i < simManager->sensors.size(); ++i)
         simManager->sensors[i]->Update(timeStep);
@@ -1566,17 +1588,20 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
         simManager->comms[i]->Update(timeStep);
     
     //Loop through contact manifolds -> update contacts
-    int numManifolds = world->getDispatcher()->getNumManifolds();
-    for(int i=0; i<numManifolds; ++i)
+    if(simManager->getContact(0) != nullptr) // If at least one contact is defined
     {
-        btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
-        btCollisionObject* coA = (btCollisionObject*)contactManifold->getBody0();
-        btCollisionObject* coB = (btCollisionObject*)contactManifold->getBody1();
-        Entity* entA = (Entity*)coA->getUserPointer();
-        Entity* entB = (Entity*)coB->getUserPointer();
-        Contact* contact = simManager->getContact(entA, entB);
-        if(contact != nullptr && contactManifold->getNumContacts() > 0)
-            contact->AddContactPoint(contactManifold, contact->getEntityA() != entA, timeStep);        
+        int numManifolds = world->getDispatcher()->getNumManifolds();
+        for(int i=0; i<numManifolds; ++i)
+        {
+            btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
+            btCollisionObject* coA = (btCollisionObject*)contactManifold->getBody0();
+            btCollisionObject* coB = (btCollisionObject*)contactManifold->getBody1();
+            Entity* entA = (Entity*)coA->getUserPointer();
+            Entity* entB = (Entity*)coB->getUserPointer();
+            Contact* contact = simManager->getContact(entA, entB);
+            if(contact != nullptr && contactManifold->getNumContacts() > 0)
+                contact->AddContactPoint(contactManifold, contact->getEntityA() != entA, timeStep);        
+        }
     }
 
     //Update simulation time

@@ -83,23 +83,29 @@ namespace sf
          */
         void setDesiredVelocity(Scalar vel);
         
-        //! A method to set the desired torque setpoint.
+        //! A method to set the maximum torque applied by the servo.
         /*!
-         \param tau the desired torque [Nm]
+         \param tau the max torque [Nm]
          */
-        void setDesiredTorque(Scalar tau);
+        void setMaxTorque(Scalar tau);
+
+        //! A method returning the desired position setpoint.
+        Scalar getDesiredPosition() const;
+        
+        //! A method returning the desired velocity setpoint.
+        Scalar getDesiredVelocity() const;
         
         //! A method returning the position of the servo motor.
-        Scalar getPosition();
+        Scalar getPosition() const;
         
         //! A method returning the velocity of the servo motor.
-        Scalar getVelocity();
+        Scalar getVelocity() const;
         
         //! A method returning the effort of the servo motor (force or torque).
-        Scalar getEffort();
+        Scalar getEffort() const;
         
         //! A method returning the type of the actuator.
-        ActuatorType getType();
+        ActuatorType getType() const;
         
     private:
         ServoControlMode mode;

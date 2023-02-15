@@ -47,7 +47,7 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     btRigidBody* bodyA = solidA->rigidBody;
     btRigidBody* bodyB = solidB->rigidBody;
     Transform frameInA = Transform::getIdentity();
-    Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * bodyA->getCenterOfMassTransform(); //CHECK IT!!!!!!!!!!
+    Transform frameInB = solidB->getCGTransform().inverse() * solidA->getCGTransform();
     
     btFixedConstraint* fixed = new btFixedConstraint(*bodyA, *bodyB, frameInA, frameInB);
     setConstraint(fixed);
@@ -62,8 +62,8 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneE
     Matrix3 frameInB = solidTransform.getBasis().inverse() * linkTransform.getBasis();
     
     btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
-    setConstraint(fixed);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
+    setConstraint(fixed);
     
     //Disable collision
     SimulationApp::getApp()->getSimulationManager()->DisableCollision(fe->getLink(linkId+1).solid, solid);
@@ -78,33 +78,33 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
     Matrix3 frameInB = linkBTransform.getBasis().inverse() * linkATransform.getBasis();	
     
     btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
-    setConstraint(fixed);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
-
+    setConstraint(fixed);
+    
     //Disable collision
     SimulationApp::getApp()->getSimulationManager()->DisableCollision(feA->getLink(linkIdA+1).solid, feB->getLink(linkIdB+1).solid);
 }
 
-JointType FixedJoint::getType()
+JointType FixedJoint::getType() const
 {
     return JointType::FIXED;
 }
-    
+
 std::vector<Renderable> FixedJoint::Render()
 {
     std::vector<Renderable> items(0);
-    Renderable item;
-    item.model = glm::mat4(1.f);
-    item.type = RenderableType::JOINT_LINES;
-    
-    btTypedConstraint* revo = getConstraint();
-    Vector3 A = revo->getRigidBodyA().getCenterOfMassPosition();
-    Vector3 B = revo->getRigidBodyB().getCenterOfMassPosition();
-    
-    item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-    item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-    items.push_back(item);
-    
+    btTypedConstraint* c = getConstraint();
+    if(c != nullptr)
+    {
+        Renderable item;
+        item.model = glm::mat4(1.f);
+        item.type = RenderableType::JOINT_LINES;
+        Vector3 A = c->getRigidBodyA().getCenterOfMassPosition();
+        Vector3 B = c->getRigidBodyB().getCenterOfMassPosition();
+        item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+        item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+        items.push_back(item);    
+    }
     return items;
 }
 

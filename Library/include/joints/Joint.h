@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Joint__
@@ -29,15 +29,10 @@
 #include "BulletDynamics/Featherstone/btMultiBodyConstraint.h"
 #include "StonefishCommon.h"
 
-//#define CONSTRAINT_ERP 0.1
-//#define CONSTRAINT_CFM 0.0
-//#define CONSTRAINT_STOP_ERP 1.0
-//#define CONSTRAINT_STOP_CFM 0.0
-
 namespace sf
 {
     //! An enum representing the type of joint.
-    enum class JointType {FIXED, REVOLUTE, SPHERICAL, PRISMATIC, CYLINDRICAL};
+    enum class JointType {FIXED, SPRING, REVOLUTE, SPHERICAL, PRISMATIC, CYLINDRICAL};
     
     struct Renderable;
     class SimulationManager;
@@ -61,6 +56,12 @@ namespace sf
          \param sm a pointer to the simulation manager
          */
         void AddToSimulation(SimulationManager* sm);
+
+        //! A method used to remove joint from the simulation.
+        /*!
+         \param sm a pointer to the simulation manager
+         */
+        void RemoveFromSimulation(SimulationManager* sm);
         
         //! A method applying damping to the joint.
         virtual void ApplyDamping();
@@ -76,10 +77,10 @@ namespace sf
         virtual std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
-        virtual JointType getType() = 0;
+        virtual JointType getType() const = 0;
         
         //! A method returning the name of the joint.
-        std::string getName();
+        std::string getName() const;
         
         //! A method returning the internal constraint.
         btTypedConstraint* getConstraint();

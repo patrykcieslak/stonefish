@@ -36,7 +36,7 @@ Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
     torque = Scalar(0);
 }
 
-ActuatorType Motor::getType()
+ActuatorType Motor::getType() const
 {
     return ActuatorType::MOTOR;
 }
@@ -46,12 +46,12 @@ void Motor::setIntensity(Scalar tau)
     torque = tau;
 }
 
-Scalar Motor::getTorque()
+Scalar Motor::getTorque() const
 {
     return torque;
 }
 
-Scalar Motor::getAngle()
+Scalar Motor::getAngle() const
 {
     if(j != nullptr && j->getType() == JointType::REVOLUTE)
     {
@@ -72,7 +72,7 @@ Scalar Motor::getAngle()
         return Scalar(0);
 }
 
-Scalar Motor::getAngularVelocity()
+Scalar Motor::getAngularVelocity() const
 {
     if(j != nullptr && j->getType() == JointType::REVOLUTE)
     {

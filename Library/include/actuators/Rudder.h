@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Nils Bore on 29/01/2021.
-//  Copyright (c) 2021 Nils Bore, Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2023 Nils Bore, Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Rudder__
@@ -66,13 +66,13 @@ namespace sf
         void setSetpoint(Scalar s);
         
         //! A method returning the current setpoint.
-        Scalar getSetpoint();
+        Scalar getSetpoint() const;
 
         //! A method returning the angular position of the rudder [rad]
-        Scalar getAngle();
+        Scalar getAngle() const;
         
         //! A method returning the type of the actuator.
-        ActuatorType getType();
+        ActuatorType getType() const;
         
     private:
         //Params

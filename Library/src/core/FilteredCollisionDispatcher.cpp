@@ -37,7 +37,7 @@ namespace sf
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
     inclusive = inclusiveMode;
-    //setNearCallback(myNearCallback);
+    // setNearCallback(myNearCallback);
 }
 
 bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1)
@@ -47,17 +47,19 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
         return false;
     
     Entity* ent0 = (Entity*)body0->getUserPointer();
-    if(ent0 == NULL)
+    if(ent0 == nullptr)
         return false;
         
     Entity* ent1 = (Entity*)body1->getUserPointer();
-    if(ent1 == NULL)
+    if(ent1 == nullptr)
         return false;
-    
+
     if(inclusive)
-        return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
+        needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
     else //exclusive
-        return SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
+        needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
+    
+    return needs;
 }
 
 void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Light.h"
@@ -53,7 +53,7 @@ Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color c
     coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
     
-ActuatorType Light::getType()
+ActuatorType Light::getType() const
 {
     return ActuatorType::LIGHT;
 }

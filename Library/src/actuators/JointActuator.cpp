@@ -38,7 +38,7 @@ JointActuator::JointActuator(std::string uniqueName) : Actuator(uniqueName)
     j = nullptr;
 }
 
-std::string JointActuator::getJointName()
+std::string JointActuator::getJointName() const
 {
     if(fe != nullptr)
         return fe->getJointName(jId);

@@ -48,6 +48,11 @@ FeatherstoneRobot::~FeatherstoneRobot()
 {
 }
 
+RobotType FeatherstoneRobot::getType() const
+{
+    return RobotType::FEATHERSTONE;    
+}
+
 int FeatherstoneRobot::getJoint(const std::string& name)
 {
     if(dynamics == nullptr)
@@ -65,6 +70,26 @@ Transform FeatherstoneRobot::getTransform() const
         return dynamics->getLinkTransform(0);
     else
         return Transform::getIdentity();
+}
+
+int FeatherstoneRobot::getLinkIndex(const std::string& name) const
+{
+    int index = -2;
+    if(dynamics != nullptr)
+    {
+        for(int i=0; i<dynamics->getNumOfLinks(); ++i)
+            if(dynamics->getLink(i).solid->getName() == name)
+            {
+                index = i-1;
+                break;
+            }
+    }
+    return index;
+}
+
+FeatherstoneEntity* FeatherstoneRobot::getDynamics()
+{
+    return dynamics;
 }
 
 void FeatherstoneRobot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks, bool selfCollision)

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SphericalJoint.h"
@@ -60,7 +60,7 @@ void SphericalJoint::setIC(Vector3 angles)
     angleIC = angles;
 }
 
-JointType SphericalJoint::getType()
+JointType SphericalJoint::getType() const
 {
     return JointType::SPHERICAL;
 }

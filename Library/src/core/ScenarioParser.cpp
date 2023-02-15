@@ -44,6 +44,7 @@
 #include "entities/solids/Compound.h"
 #include "entities/forcefields/Uniform.h"
 #include "entities/forcefields/Jet.h"
+#include "entities/FeatherstoneEntity.h"
 #include "sensors/scalar/Accelerometer.h"
 #include "sensors/scalar/Gyroscope.h"
 #include "sensors/scalar/IMU.h"
@@ -74,6 +75,7 @@
 #include "comms/AcousticModem.h"
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
+#include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
@@ -314,6 +316,18 @@ bool ScenarioParser::Parse(std::string filename)
             return false;
         }
         element = element->NextSiblingElement("robot");
+    }
+
+    //Load glue (optional)
+    element = root->FirstChildElement("glue");
+    while(element != nullptr)
+    {
+        if(!ParseGlue(element))
+        {
+            log.Print(MessageType::ERROR, "Glue not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("glue");
     }
     
     //Load standalone vision sensors (optional)
@@ -3891,8 +3905,8 @@ bool ScenarioParser::ParseContact(XMLElement* element)
         
     XMLElement* itemA;
     XMLElement* itemB;
-    if((itemA = element->FirstChildElement("bodyA")) == nullptr
-        || (itemB = element->FirstChildElement("bodyB")) == nullptr)
+    if((itemA = element->FirstChildElement("first_body")) == nullptr
+        || (itemB = element->FirstChildElement("second_body")) == nullptr)
     {
         log.Print(MessageType::ERROR, "Body definitions for contact '%s' missing!", contactName.c_str());
         return false;
@@ -3974,6 +3988,122 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     sm->AddContact(cnt);
     
     return true;
+}
+
+bool ScenarioParser::ParseGlue(XMLElement* element)
+{
+    const char* name = nullptr;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+    {        
+        log.Print(MessageType::ERROR, "Name of glue missing!");
+        return false;
+    }
+    std::string glueName(name);
+        
+    XMLElement* itemA;
+    XMLElement* itemB;
+    if((itemA = element->FirstChildElement("first_body")) == nullptr
+        || (itemB = element->FirstChildElement("second_body")) == nullptr)
+    {
+        log.Print(MessageType::ERROR, "Body definitions for glue '%s' missing!", glueName.c_str());
+        return false;
+    }
+    
+    const char* nameA = nullptr;
+    const char* nameB = nullptr;
+    if(itemA->QueryStringAttribute("name", &nameA) != XML_SUCCESS
+        || itemB->QueryStringAttribute("name", &nameB) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Body names for glue '%s' missing!", glueName.c_str());
+        return false;
+    }
+    
+    Entity* entA = sm->getEntity(std::string(nameA));
+    Entity* entB = sm->getEntity(std::string(nameB));
+    FixedJoint* fix = nullptr;
+
+    if(entA != nullptr && entB != nullptr)
+    {
+        // Check bodies
+        if(entA->getType() != EntityType::SOLID
+            || entB->getType() != EntityType::SOLID)
+        {
+            log.Print(MessageType::ERROR, "Only solid bodies and manipulator links can be glued (glue '%s')!", glueName.c_str());
+            return false;
+        }
+        fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA, (SolidEntity*)entB);
+        log.Print(MessageType::INFO, "Glue created");
+    }
+    else if(entA != nullptr)
+    {
+        // Check first body
+        if(entA->getType() != EntityType::SOLID)
+        {
+            log.Print(MessageType::ERROR, "Only solid bodies and manipulator links can be glued (glue '%s')!", glueName.c_str());
+            return false;
+        }
+    
+        // Find robot link
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int entBId = -2;
+                if( (entBId = fr->getLinkIndex(std::string(nameB))) >= -1)
+                {
+                    fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA, 
+                                        fr->getDynamics(), entBId, ((SolidEntity*)entA)->getCGTransform().getOrigin());
+                    break;
+                }
+            }
+        }
+        if(fix == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Manipulator link not found (glue '%s')!", glueName.c_str());
+            return false;
+        }
+    }        
+    else if(entB != nullptr)
+    {
+        // Check first body
+        if(entB->getType() != EntityType::SOLID)
+        {
+            log.Print(MessageType::ERROR, "Only solid bodies and manipulator links can be glued (glue '%s')!", glueName.c_str());
+            return false;
+        }
+    
+        // Find robot link
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int entAId = -2;
+                if( (entAId = fr->getLinkIndex(std::string(nameA))) >= -1)
+                {
+                    fix = new FixedJoint(std::string(glueName), (SolidEntity*)entB, 
+                                        fr->getDynamics(), entAId, ((SolidEntity*)entB)->getCGTransform().getOrigin());
+                    break;
+                }
+            }
+        }
+        if(fix == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Manipulator link not found (glue '%s')!", glueName.c_str());
+            return false;
+        }
+    }
+    if(fix != nullptr)
+    {
+        sm->AddJoint(fix);
+        return true;
+    }
+    return false;
 }
 
 std::string ScenarioParser::GetFullPath(const std::string& path)

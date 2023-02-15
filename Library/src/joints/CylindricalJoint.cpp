@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/CylindricalJoint.h"
@@ -89,7 +89,7 @@ void CylindricalJoint::setIC(Scalar displacement, Scalar angle)
     angleIC = angle;
 }
 
-JointType CylindricalJoint::getType()
+JointType CylindricalJoint::getType() const
 {
     return JointType::CYLINDRICAL;
 }

@@ -87,7 +87,7 @@ void PrismaticJoint::setIC(Scalar displacement)
     displacementIC = displacement;
 }
 
-JointType PrismaticJoint::getType()
+JointType PrismaticJoint::getType() const
 {
     return JointType::PRISMATIC;
 }

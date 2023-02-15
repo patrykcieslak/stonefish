@@ -101,7 +101,7 @@ namespace sf
 		Transform getActuatorFrame() const;
 		
         //! A method returning the type of the actuator.
-        ActuatorType getType();
+        ActuatorType getType() const;
         
     private:
         void InitGraphics();

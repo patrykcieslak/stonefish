@@ -46,6 +46,11 @@ GeneralRobot::~GeneralRobot()
 {
 }
 
+RobotType GeneralRobot::getType() const
+{
+    return RobotType::GENERAL;
+}
+
 Joint* GeneralRobot::getJoint(const std::string& name)
 {
     for(size_t i=0; i<joints.size(); ++i)

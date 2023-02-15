@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/VariableBuoyancy.h"
@@ -67,7 +67,7 @@ VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std
     InterpolateVProps(V, mass, CG);
 }    
 
-ActuatorType VariableBuoyancy::getType()
+ActuatorType VariableBuoyancy::getType() const
 {
     return ActuatorType::VBS;
 }
@@ -77,17 +77,17 @@ void VariableBuoyancy::setFlowRate(Scalar rate)
     flowRate = rate;
 }
     
-Scalar VariableBuoyancy::getFlowRate()
+Scalar VariableBuoyancy::getFlowRate() const
 {
     return flowRate;
 }
     
-Scalar VariableBuoyancy::getLiquidVolume()
+Scalar VariableBuoyancy::getLiquidVolume() const
 {
     return V;
 }
 
-Scalar VariableBuoyancy::getForce()
+Scalar VariableBuoyancy::getForce() const
 {
     return force.safeNorm();
 }

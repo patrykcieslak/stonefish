@@ -257,6 +257,13 @@ namespace sf
          \return success
          */
         virtual bool ParseContact(XMLElement* element);
+
+        //! A method used to parse a single glue joint description.
+        /*!
+         \param element a pointer to the XML node
+         \return success
+        */
+        virtual bool ParseGlue(XMLElement* element);
         
         //! A method to get the full file path depending on the format of the passed string.
         /*!

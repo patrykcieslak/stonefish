@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_RevoluteJoint__
@@ -117,7 +117,7 @@ namespace sf
         Scalar getAngularVelocity();
         
         //! A method returning the type of the joint.
-        JointType getType();
+        JointType getType() const;
         
     private:
         Vector3 axisInA;

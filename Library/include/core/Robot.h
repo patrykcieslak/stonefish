@@ -43,6 +43,9 @@ namespace sf
     class LinkActuator;
     class JointActuator;
     
+    //! An enum specifying the type of entity.
+    enum class RobotType {GENERAL, FEATHERSTONE};
+
     //! A class implementing a robotic system composed of a dynamic rigid-body tree, actuators and sensors.
     class Robot
     {
@@ -225,6 +228,9 @@ namespace sf
         
         //! A method returning the name of the robot.
         std::string getName();
+
+        //! A method returning type of algorithm used for the robot.
+        virtual RobotType getType() const = 0;
         
     protected:
         struct JointData

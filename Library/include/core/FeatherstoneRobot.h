@@ -81,6 +81,19 @@ namespace sf
         //! A method returning the pose of the robot in the world frame.
         Transform getTransform() const;
 
+        //! A method returning the index of the link.
+        /*!
+         \param name the name of the link
+         \return index of the link
+        */
+        int getLinkIndex(const std::string& name) const;
+
+        //! A method returning type of algorithm used for the robot.
+        RobotType getType() const;
+
+        //! A method returning a point to the underlaying Featherstone entity.
+        FeatherstoneEntity* getDynamics();
+
     private:
         int getJoint(const std::string& name);
 

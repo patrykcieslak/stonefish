@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 20192023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Propeller.h"
@@ -59,11 +59,11 @@ Propeller::Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diam
 
 Propeller::~Propeller()
 {
-    if(prop != NULL)
+    if(prop != nullptr)
         delete prop;
 }
 
-ActuatorType Propeller::getType()
+ActuatorType Propeller::getType() const
 {
     return ActuatorType::PROPELLER;
 }
@@ -74,27 +74,27 @@ void Propeller::setSetpoint(Scalar s)
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
 }
 
-Scalar Propeller::getSetpoint()
+Scalar Propeller::getSetpoint() const
 {
     return inv ? -setpoint : setpoint;
 }
 
-Scalar Propeller::getAngle()
+Scalar Propeller::getAngle() const
 {
     return theta;
 }
 
-Scalar Propeller::getOmega()
+Scalar Propeller::getOmega() const
 {
     return omega;
 }
 
-Scalar Propeller::getThrust()
+Scalar Propeller::getThrust() const
 {
     return thrust;
 }
 
-Scalar Propeller::getTorque()
+Scalar Propeller::getTorque() const
 {
     return torque;
 }

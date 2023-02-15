@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Nils Bore on 29/01/2021.
-//  Copyright (c) 2021 Nils Bore, Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2023 Nils Bore, Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Rudder.h"
@@ -51,11 +51,11 @@ Rudder::Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar 
 
 Rudder::~Rudder()
 {
-    if(rudder != NULL)
+    if(rudder != nullptr)
         delete rudder;
 }
 
-ActuatorType Rudder::getType()
+ActuatorType Rudder::getType() const
 {
     return ActuatorType::RUDDER;
 }
@@ -66,12 +66,12 @@ void Rudder::setSetpoint(Scalar s)
     setpoint = std::max(std::min(s, maxAngle), -maxAngle);
 }
 
-Scalar Rudder::getSetpoint()
+Scalar Rudder::getSetpoint() const
 {
     return inv ? -setpoint : setpoint;
 }
 
-Scalar Rudder::getAngle()
+Scalar Rudder::getAngle() const
 {
     return theta;
 }

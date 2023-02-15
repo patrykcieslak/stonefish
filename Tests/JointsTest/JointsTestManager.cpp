@@ -37,6 +37,7 @@
 #include <joints/RevoluteJoint.h>
 #include <joints/PrismaticJoint.h>
 #include <joints/CylindricalJoint.h>
+#include <actuators/SuctionCup.h>
 #include <utils/UnitSystem.h>
 #include <utils/SystemUtil.hpp>
 #include <core/GeneralRobot.h>
@@ -64,6 +65,7 @@ void JointsTestManager::BuildScenario()
     CreateLook("green", sf::Color(0.5f,1.0f,0.4f), 0.5f);
     
     ////////OBJECTS
+    setSolverParams(0.25, 0.5, 0.25, 0.25, 0.0, -1.0, -1.0);
     getAtmosphere()->SetupSunPosition(0.0, 70.0);
     getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
     getNED()->Init(-10.0, -10.0, 0.0);
@@ -74,38 +76,6 @@ void JointsTestManager::BuildScenario()
     sf::BodyPhysicsSettings phy;
     phy.mode = sf::BodyPhysicsMode::SURFACE;
     phy.collisions = true;
-
-    // sf::GeneralRobot* robot = new sf::GeneralRobot("Manipulator", true);
-    
-    // // Base link
-    // sf::Box* base = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), "Plastic","green");
-    // // Arm
-    // sf::Box* arm1 = new sf::Box("Arm1", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, -0.25)), "Plastic","green");
-    // sf::Box* arm2 = new sf::Box("Arm2", phy, sf::Vector3(0.8,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.4, 0, -0.5)), "Plastic","green");
-    // sf::Box* arm3 = new sf::Box("Arm3", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.8, 0, -0.25)), "Plastic","green");
-
-    // std::vector<sf::SolidEntity*> links;
-    // links.push_back(arm1);
-    // links.push_back(arm2);
-    // links.push_back(arm3);
-    // robot->DefineLinks(base, links);
-    
-    // robot->DefineRevoluteJoint("joint1", "Box", "Arm1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), sf::Vector3(0, 0, 1.0));
-    // robot->DefineRevoluteJoint("joint2", "Arm1", "Arm2", sf::Transform(sf::IQ(), sf::Vector3(0, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
-    // robot->DefineRevoluteJoint("joint3", "Arm2", "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.8, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
-    // robot->DefineRevoluteJoint("joint4", "Arm3", "Box", sf::Transform(sf::IQ(), sf::Vector3(0.79, 0.0, 0.0)), sf::Vector3(0, 1.0, 0.0));
-    
-    // robot->BuildKinematicStructure();
-
-    // sf::Servo* srv1 = new sf::Servo("Servo1", 1.0, 1.0, 1.0);
-    // srv1->setControlMode(sf::ServoControlMode::POSITION);
-    // robot->AddJointActuator(srv1, "joint1");
-
-    // sf::GPS* gps = new sf::GPS("GPS", 1.0);
-    // robot->AddLinkSensor(gps, "Arm1", sf::I4());
-
-    // AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));
-    // setSolverParams(0.25, 0.1, 0.1, 0.1);
 
     //----Fixed Joint----
     sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic","green");
@@ -118,13 +88,13 @@ void JointsTestManager::BuildScenario()
     AddJoint(fixed);
     
     //----Revolute Joint----
-    box = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.5,0.0,-1.0)));
+    box = new sf::Box("Box1", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
+    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-2.5,0.0,-1.0)));
     
-    sf::Box* box2 = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange");
-    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(0.5,0.2,-1.0)));
+    sf::Box* box2 = new sf::Box("Box2", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange");
+    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(-2.5,0.2,-1.0)));
     
-    sf::RevoluteJoint* revo = new sf::RevoluteJoint("Revolute", box, box2, sf::Vector3(0.5,0.1,-0.9), sf::Vector3(0,1,0), false);
+    sf::RevoluteJoint* revo = new sf::RevoluteJoint("Revolute", box, box2, sf::Vector3(-2.5,0.1,-0.9), sf::Vector3(0,1,0), false);
     AddJoint(revo);
     
     sph = new sf::Sphere("Sph2", phy, sf::Scalar(0.2), sf::I4(), "Plastic", "green");
@@ -144,15 +114,15 @@ void JointsTestManager::BuildScenario()
     
     //----Prismatic Joint----
     box = new sf::Box("Box4", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(1.0,0.0,-0.051)));
+    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(2.0,0.0,-0.051)));
     
     box2 = new sf::Box("Box5", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange");
-    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(1.0,0.0,-0.5)));
+    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(2.0,0.0,-0.5)));
     
     sf::PrismaticJoint* trans = new sf::PrismaticJoint("Prismatic", box, box2, sf::Vector3(0.5,0,-1.0));
     AddJoint(trans);
     
-    //----Cylindrical Joint----
+    // //----Cylindrical Joint----
     box = new sf::Box("Box6", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.051)));
     
@@ -161,4 +131,47 @@ void JointsTestManager::BuildScenario()
     
     sf::CylindricalJoint* cyli = new sf::CylindricalJoint("Cylindrical", box, box2, sf::Vector3(-1.0, 0.050, -0.25), sf::Vector3(0,0,1));
     AddJoint(cyli);
+
+    //----General robot
+    sf::GeneralRobot* robot = new sf::GeneralRobot("Manipulator", true);
+    
+    // Base link
+    sf::Box* base = new sf::Box("Base", phy, sf::Vector3(0.1,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, 0.0)), "Plastic","green");
+    // Arm
+    sf::Box* arm1 = new sf::Box("Arm1", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, -0.25)), "Plastic","green");
+    sf::Box* arm2 = new sf::Box("Arm2", phy, sf::Vector3(0.8,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.4, 0, -0.5)), "Plastic","green");
+    sf::Box* arm3 = new sf::Box("Arm3", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.8, 0, -0.25)), "Plastic","green");
+
+    std::vector<sf::SolidEntity*> links;
+    links.push_back(arm1);
+    links.push_back(arm2);
+    links.push_back(arm3);
+    robot->DefineLinks(base, links);
+    
+    robot->DefineRevoluteJoint("joint1", "Base", "Arm1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), sf::Vector3(0, 0, 1.0));
+    robot->DefineRevoluteJoint("joint2", "Arm1", "Arm2", sf::Transform(sf::IQ(), sf::Vector3(0, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
+    robot->DefineRevoluteJoint("joint3", "Arm2", "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.8, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
+    
+    robot->BuildKinematicStructure();
+
+    sf::Servo* srv1 = new sf::Servo("Servo1", 1.0, 1.0, 1000.0);
+    srv1->setControlMode(sf::ServoControlMode::POSITION);
+    robot->AddJointActuator(srv1, "joint1");
+
+    sf::Servo* srv2 = new sf::Servo("Servo2", 1.0, 1.0, 1000.0);
+    srv2->setControlMode(sf::ServoControlMode::POSITION);
+    robot->AddJointActuator(srv2, "joint2");
+
+    sf::Servo* srv3 = new sf::Servo("Servo3", 1.0, 1.0, 1000.0);
+    srv3->setControlMode(sf::ServoControlMode::POSITION);
+    robot->AddJointActuator(srv3, "joint3");
+
+    sf::SuctionCup* suction = new sf::SuctionCup("Suction");
+    robot->AddLinkActuator(suction, "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)));
+
+    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-0.75)));
+
+    sf::Box* tallbox = new sf::Box("BoxBig", phy, sf::Vector3(0.2,0.2,0.6), sf::I4(), "Plastic","green");
+    tallbox->ScalePhysicalPropertiesToArbitraryMass(1.0);
+    AddSolidEntity(tallbox, sf::Transform(sf::IQ(), sf::Vector3(0.7, 0.0, -0.3) ));
 }

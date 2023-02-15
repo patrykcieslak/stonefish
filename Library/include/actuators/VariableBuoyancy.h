@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VariableBuoyancy__
@@ -59,16 +59,16 @@ namespace sf
         void setFlowRate(Scalar rate);
         
         //! A method returning the current flow rate setpoint.
-        Scalar getFlowRate();
+        Scalar getFlowRate() const;
         
         //! A method returning the current volume of the liquid in the system.
-        Scalar getLiquidVolume();
+        Scalar getLiquidVolume() const;
 
         //! A method returning the generated force.
-        Scalar getForce();
+        Scalar getForce() const;
         
         //! A method returning the type of the actuator.
-        ActuatorType getType();
+        ActuatorType getType() const;
         
     private:
         void InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg);

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Propeller__
@@ -66,22 +66,22 @@ namespace sf
         void setSetpoint(Scalar s);
         
         //! A method returning the current setpoint.
-        Scalar getSetpoint();
+        Scalar getSetpoint() const;
         
         //! A method returning the generated thrust.
-        Scalar getThrust();
+        Scalar getThrust() const;
         
         //! A method returning the induced torque.
-        Scalar getTorque();
+        Scalar getTorque() const;
 
         //! A method returning the angular position of the propeller [rad]
-        Scalar getAngle();
+        Scalar getAngle() const;
         
         //! A method returning the angular velocity of the propeller [rad/s]
-        Scalar getOmega();
+        Scalar getOmega() const;
         
         //! A method returning the type of the actuator.
-        ActuatorType getType();
+        ActuatorType getType() const;
         
     private:
         //Params

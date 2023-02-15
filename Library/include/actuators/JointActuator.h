@@ -57,7 +57,7 @@ namespace sf
         virtual void AttachToJoint(Joint* joint);
         
         //! A method returning the name of the joint that the actuator is driving.
-        std::string getJointName();
+        std::string getJointName() const;
         
     protected:
         FeatherstoneEntity* fe;

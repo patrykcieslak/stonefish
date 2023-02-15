@@ -34,7 +34,7 @@ namespace sf
     struct Renderable;
     
     //! An enum designating a type of the actuator.
-    enum class ActuatorType {MOTOR, SERVO, PROPELLER, THRUSTER, VBS, LIGHT, RUDDER};
+    enum class ActuatorType {MOTOR, SERVO, PROPELLER, THRUSTER, VBS, LIGHT, RUDDER, SUCTION_CUP};
     
     //! An abstract class representing any actuator.
     class Actuator
@@ -65,10 +65,10 @@ namespace sf
         void setDisplayMode(DisplayMode m);
 
         //! A method returning the type of the actuator.
-        virtual ActuatorType getType() = 0;
+        virtual ActuatorType getType() const = 0;
 
         //! A method returning the name of the actuator.
-        std::string getName();
+        std::string getName() const;
     
     protected:
         DisplayMode dm;

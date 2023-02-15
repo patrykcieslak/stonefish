@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/11/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/DCMotor.h"
@@ -46,27 +46,27 @@ DCMotor::DCMotor(std::string uniqueName, Scalar motorR, Scalar motorL, Scalar mo
     lastVoverL = Scalar(0.);
 }
 
-Scalar DCMotor::getKe()
+Scalar DCMotor::getKe() const
 {
     return Ke;
 }
 
-Scalar DCMotor::getKt()
+Scalar DCMotor::getKt() const
 {
     return Kt;
 }
 
-Scalar DCMotor::getR()
+Scalar DCMotor::getR() const
 {
     return R;
 }
 
-Scalar DCMotor::getL()
+Scalar DCMotor::getL() const
 {
     return L;
 }
 
-Scalar DCMotor::getGearRatio()
+Scalar DCMotor::getGearRatio() const
 {
     return gearRatio;
 }
@@ -76,28 +76,28 @@ void DCMotor::setIntensity(Scalar volt)
     V = volt;
 }
 
-Scalar DCMotor::getVoltage()
+Scalar DCMotor::getVoltage() const
 {
     return V;
 }
 
-Scalar DCMotor::getTorque()
+Scalar DCMotor::getTorque() const
 {
     return torque;
 }
 
-Scalar DCMotor::getCurrent()
+Scalar DCMotor::getCurrent() const
 {
     return I;
 }
 
-Scalar DCMotor::getAngle()
+Scalar DCMotor::getAngle() const
 {
     Scalar angle = Motor::getAngle();
     return angle * gearRatio;
 }
 
-Scalar DCMotor::getAngularVelocity()
+Scalar DCMotor::getAngularVelocity() const
 {
     Scalar angularV = Motor::getAngularVelocity();
     return angularV * gearRatio;

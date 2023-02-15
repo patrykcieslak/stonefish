@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/10/2017.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Thruster.h"
@@ -61,11 +61,11 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diamet
 
 Thruster::~Thruster()
 {
-    if(prop != NULL)
+    if(prop != nullptr)
         delete prop;
 }
 
-ActuatorType Thruster::getType()
+ActuatorType Thruster::getType() const
 {
     return ActuatorType::THRUSTER;
 }
@@ -76,37 +76,37 @@ void Thruster::setSetpoint(Scalar s)
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
 }
 
-Scalar Thruster::getSetpoint()
+Scalar Thruster::getSetpoint() const
 {
     return inv ? -setpoint : setpoint;
 }
 
-Scalar Thruster::getAngle()
+Scalar Thruster::getAngle() const
 {
     return theta;
 }
 
-Scalar Thruster::getOmega()
+Scalar Thruster::getOmega() const
 {
     return omega;
 }
 
-Scalar Thruster::getThrust()
+Scalar Thruster::getThrust() const
 {
     return thrust;
 }
 
-Scalar Thruster::getTorque()
+Scalar Thruster::getTorque() const
 {
     return torque;
 }
 
-Scalar Thruster::getDiameter()
+Scalar Thruster::getDiameter() const
 {
     return D;
 }
 
-bool Thruster::isPropellerRight()
+bool Thruster::isPropellerRight() const
 {
     return RH;
 }

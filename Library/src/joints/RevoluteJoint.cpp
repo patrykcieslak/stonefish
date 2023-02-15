@@ -99,7 +99,7 @@ void RevoluteJoint::setIC(Scalar angle)
     angleICError = angleIC - getAngle();
 }
 
-JointType RevoluteJoint::getType()
+JointType RevoluteJoint::getType() const
 {
     return JointType::REVOLUTE;
 }
@@ -121,7 +121,7 @@ Scalar RevoluteJoint::getAngularVelocity()
 void RevoluteJoint::EnableMotor(bool enable, Scalar maxTorque)
 {
     btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
-    hinge->enableAngularMotor(enable, Scalar(0), maxTorque * SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+    hinge->enableAngularMotor(enable, Scalar(0), maxTorque / SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
 }
 
 void RevoluteJoint::setMotorVelocity(Scalar av)

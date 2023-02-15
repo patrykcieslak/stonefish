@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Servo.h"
@@ -42,7 +42,7 @@ Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, S
     mode = ServoControlMode::VELOCITY;
 }
 
-ActuatorType Servo::getType()
+ActuatorType Servo::getType() const
 {
     return ActuatorType::SERVO;
 }    
@@ -78,18 +78,24 @@ void Servo::setDesiredVelocity(Scalar vel)
     vSetpoint = vel;
 }
 
-void Servo::setDesiredTorque(Scalar tau)
+void Servo::setMaxTorque(Scalar tau)
 {
-    vSetpoint = tau > Scalar(0) ? Scalar(1000) : (tau < Scalar(0) ? Scalar(-1000) : Scalar(0));
-    tau = tau < -tauMax ? -tauMax : (tau > tauMax ? tauMax : tau);
-    
+    tauMax = tau;
     if(fe != nullptr)
-    {
-        fe->setMaxMotorForceTorque(jId, tau);
-    }
+        fe->setMaxMotorForceTorque(jId, tauMax);
+}
+
+Scalar Servo::getDesiredPosition() const
+{
+    return pSetpoint;
+}
+        
+Scalar Servo::getDesiredVelocity() const
+{
+    return vSetpoint;
 }
     
-Scalar Servo::getPosition()
+Scalar Servo::getPosition() const
 {
     if(j != nullptr)
     {
@@ -113,7 +119,7 @@ Scalar Servo::getPosition()
         return Scalar(0);
 }
     
-Scalar Servo::getVelocity()
+Scalar Servo::getVelocity() const
 {
     if(j != nullptr)
     {
@@ -137,7 +143,7 @@ Scalar Servo::getVelocity()
         return Scalar(0);
 }
     
-Scalar Servo::getEffort()
+Scalar Servo::getEffort() const
 {
     if(fe != nullptr)
         return fe->getMotorForceTorque(jId);

@@ -56,7 +56,7 @@ btTypedConstraint* Joint::getConstraint()
     return constraint;
 }
 
-std::string Joint::getName()
+std::string Joint::getName() const
 {
     return name;
 }
@@ -100,8 +100,11 @@ void Joint::AddToSimulation(SimulationManager* sm)
         btJointFeedback* fb = new btJointFeedback();
         constraint->enableFeedback(true);
         constraint->setJointFeedback(fb);
-        constraint->setBreakingImpulseThreshold(1000);
 
+        //Breaking
+        constraint->setBreakingImpulseThreshold(BT_LARGE_FLOAT);
+
+        //Solver setup
         Scalar erp, stopErp;
         sm->getJointErp(erp, stopErp);
 
@@ -128,7 +131,23 @@ void Joint::AddToSimulation(SimulationManager* sm)
     }
     else if(mbConstraint != nullptr)
     {
+        Scalar erp, stopErp;
+        sm->getJointErp(erp, stopErp);
+        mbConstraint->setErp(erp);
         sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
+    }
+}
+
+void Joint::RemoveFromSimulation(SimulationManager* sm)
+{
+    if(constraint != nullptr)
+    {
+        delete constraint->getJointFeedback();
+        sm->getDynamicsWorld()->removeConstraint(constraint);
+    }
+    else if(mbConstraint != nullptr)
+    {
+        sm->getDynamicsWorld()->removeMultiBodyConstraint(mbConstraint);
     }
 }
     

@@ -72,12 +72,12 @@ namespace sf
          \param pivot a connection point
          */
         FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot);
-        
-        //! A method implementing the rendering of the fixed joint.
+
+        //! A method implementing the rendering of the joint.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
-        JointType getType();
+        JointType getType() const;
     };
 }
     

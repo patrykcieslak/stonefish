@@ -81,6 +81,9 @@ namespace sf
         //! A method returning the pose of the robot in the world frame.
         Transform getTransform() const;
 
+        //! A method returning type of algorithm used for the robot.
+        RobotType getType() const;
+        
     private:
         Joint* getJoint(const std::string& name);
         std::vector<Joint*> joints;

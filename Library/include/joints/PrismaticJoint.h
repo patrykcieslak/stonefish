@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_PrismaticJoint__
@@ -80,7 +80,7 @@ namespace sf
         void setIC(Scalar displacement);
         
         //! A method returning the type of the joint.
-        JointType getType();
+        JointType getType() const;
         
     private:
         Vector3 axisInA;
