@@ -1649,10 +1649,10 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
             break;
 
         case 3: // Only on one face (XY plane)
-            mesh->vertices[0].uv = glm::vec2(0.f, 0.f);
-            mesh->vertices[1].uv = glm::vec2(0.f, 1.f);
-            mesh->vertices[2].uv = glm::vec2(1.f, 1.f);
-            mesh->vertices[3].uv = glm::vec2(1.f, 0.f);
+            mesh->vertices[0].uv = glm::vec2(0.f, 1.f);
+            mesh->vertices[1].uv = glm::vec2(0.f, 0.f);
+            mesh->vertices[2].uv = glm::vec2(1.f, 0.f);
+            mesh->vertices[3].uv = glm::vec2(1.f, 1.f);
             break;
     }
     

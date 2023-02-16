@@ -72,6 +72,7 @@
 #include "actuators/Rudder.h"
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
+#include "actuators/SuctionCup.h"
 #include "comms/AcousticModem.h"
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
@@ -2198,6 +2199,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         case ActuatorType::PROPELLER:
         case ActuatorType::RUDDER:
         case ActuatorType::VBS:
+        case ActuatorType::SUCTION_CUP:
         {
             const char* linkName = nullptr;
             Transform origin; 
@@ -2586,6 +2588,11 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
         VariableBuoyancy* vbs = new VariableBuoyancy(actuatorName, vMeshes, initialV);
         return vbs;
+    }
+    else if(typeStr == "suction_cup")
+    {
+        SuctionCup* suction = new SuctionCup(actuatorName);
+        return suction;
     }
     else
         return nullptr;
