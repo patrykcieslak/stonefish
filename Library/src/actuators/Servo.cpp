@@ -25,6 +25,7 @@
 
 #include "actuators/Servo.h"
 
+#include "core/SimulationApp.h"
 #include "entities/FeatherstoneEntity.h"
 #include "joints/Joint.h"
 #include "joints/RevoluteJoint.h"
@@ -34,9 +35,9 @@ namespace sf
 
 Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
 {
-    Kp = positionGain > Scalar(0) ? positionGain : Scalar(1);
-    Kv = velocityGain > Scalar(0) ? velocityGain : Scalar(1);
-    tauMax = maxTorque > Scalar(0) ? maxTorque : Scalar(0);
+    Kp = btFabs(positionGain);
+    Kv = btFabs(velocityGain);
+    tauMax = btFabs(maxTorque);
     pSetpoint = Scalar(0);
     vSetpoint = Scalar(0);
     mode = ServoControlMode::VELOCITY;
@@ -172,7 +173,10 @@ void Servo::AttachToJoint(Joint* joint)
         switch(j->getType())
         {
             case JointType::REVOLUTE:
+            {
+                pSetpoint = getPosition();
                 ((RevoluteJoint*)j)->EnableMotor(true, tauMax);
+            }
                 break;
 
             default:
@@ -185,11 +189,15 @@ void Servo::Update(Scalar dt)
 {
     if(j != nullptr)
     {
-        Scalar vSetpoint2 = vSetpoint;
+        Scalar vSetpoint2;
         if(mode == ServoControlMode::POSITION || btFuzzyZero(vSetpoint))
         {
             Scalar err = pSetpoint - getPosition();
-            vSetpoint2 = err;
+            vSetpoint2 = Kp * err;
+        }
+        else
+        {
+            vSetpoint2 = vSetpoint;  //Kv * (vSetpoint - getVelocity()) + vSetpoint; (not natural to use)
         }
 
         switch(j->getType())

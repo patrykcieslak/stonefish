@@ -577,14 +577,4 @@ bool IsDiagonal(const Matrix3& A)
     return false;
 }
 
-Scalar WrapAngle(Scalar angle)
-{
-    angle -= trunc(angle/SIMD_2_PI) * SIMD_2_PI; // To range <-2PI, +2PI>
-    if(angle < -SIMD_PI)
-        angle += SIMD_2_PI;
-    else if(angle > SIMD_PI)
-        angle -= SIMD_2_PI;
-    return angle;
-}
-
 }

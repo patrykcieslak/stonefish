@@ -43,13 +43,14 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidE
     pivotInA = bodyA->getCenterOfMassTransform().inverse()(pivot);
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(pivot);
     
-    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB);
+    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB, true);
     hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
     setConstraint(hinge);
-    
+
     sigDamping = Scalar(0);
     velDamping = Scalar(0);
     angleOffset = hinge->getHingeAngle();
+    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset);
     setIC(Scalar(0));
 }
 
@@ -60,13 +61,14 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const V
     axisInA = body->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
     pivotInA = body->getCenterOfMassTransform().inverse()(pivot);
     
-    btHingeConstraint* hinge = new btHingeConstraint(*body, pivotInA, axisInA);
+    btHingeConstraint* hinge = new btHingeConstraint(*body, pivotInA, axisInA, true);
     hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
     setConstraint(hinge);
     
     sigDamping = Scalar(0);
     velDamping = Scalar(0);
     angleOffset = hinge->getHingeAngle();
+    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset);
     setIC(Scalar(0));
 }
 
@@ -86,11 +88,10 @@ void RevoluteJoint::setLimits(Scalar min, Scalar max)
     }
 
     btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
-    Scalar l1 = WrapAngle(min + angleOffset);
-    Scalar l2 = WrapAngle(max + angleOffset);
-    min = btMin(l1, l2);
-    max = btMax(l1, l2);    
+    min = btFmod(min + angleOffset, SIMD_2_PI); 
+    max = btFmod(max + angleOffset, SIMD_2_PI);
     hinge->setLimit(min, max);
+    cInfo("Setting limits of revolute joint '%s': %lf, %lf.", getName().c_str(), min, max);
 }
 
 void RevoluteJoint::setIC(Scalar angle)
@@ -106,7 +107,7 @@ JointType RevoluteJoint::getType() const
 
 Scalar RevoluteJoint::getAngle()
 {
-    return WrapAngle(((btHingeConstraint*)getConstraint())->getHingeAngle() - angleOffset);
+    return btNormalizeAngle(((btHingeConstraint*)getConstraint())->getHingeAngle() - angleOffset);
 }
 
 Scalar RevoluteJoint::getAngularVelocity()

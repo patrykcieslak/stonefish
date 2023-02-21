@@ -100,13 +100,6 @@ namespace sf
      \return is diagonal
     */
     bool IsDiagonal(const Matrix3& A);
-
-    //! A function that wraps the angle to keep in between <-PI, PI>.
-    /*!
-     \param angle angle to wrap
-     \return wrapped angle
-    */
-    Scalar WrapAngle(Scalar angle);
 }
 
 #endif
