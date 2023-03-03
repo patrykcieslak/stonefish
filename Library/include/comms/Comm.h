@@ -157,7 +157,7 @@ namespace sf
     private:
         std::string name;
         uint64_t id;
-        uint64_t cId;
+        int64_t cId;
         SDL_mutex* updateMutex;
         Entity* attach;
         Transform o2c;

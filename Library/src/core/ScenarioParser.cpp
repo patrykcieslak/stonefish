@@ -3750,7 +3750,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             return nullptr;
         }
         item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS || cId == 0)
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
             return nullptr;
@@ -3780,7 +3780,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             return nullptr;
         }
         item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS || cId == 0)
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
             return nullptr;
@@ -3852,7 +3852,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             return nullptr;
         }
         item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS || cId == 0)
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
             return nullptr;

@@ -38,7 +38,7 @@ Comm::Comm(std::string uniqueName, uint64_t deviceId)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     id = deviceId;
-    cId = 0;
+    cId = -1;
     renderable = false;
     newDataAvailable = false;
     updateMutex = SDL_CreateMutex();
@@ -108,13 +108,18 @@ void Comm::Connect(uint64_t deviceId)
 
 void Comm::SendMessage(std::string data)
 {
-    CommDataFrame* msg = new CommDataFrame();
-    msg->seq = txSeq++;
-    msg->source = id;
-    msg->destination = cId;
-    msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
-    msg->data = data;
-    txBuffer.push_back(msg);
+    if(cId > 0)
+    {
+        CommDataFrame* msg = new CommDataFrame();
+        msg->seq = txSeq++;
+        msg->source = id;
+        msg->destination = cId;
+        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+        msg->data = data;
+        txBuffer.push_back(msg);
+    }
+    else
+        return;
 }
 
 CommDataFrame* Comm::ReadMessage()

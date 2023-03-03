@@ -63,7 +63,7 @@ void AcousticModem::removeNode(uint64_t deviceId)
 AcousticModem* AcousticModem::getNode(uint64_t deviceId)
 {
     if(deviceId == 0)
-        return NULL;
+        return nullptr;
     
     try
     {
@@ -71,16 +71,24 @@ AcousticModem* AcousticModem::getNode(uint64_t deviceId)
     }
     catch(const std::out_of_range& oor)
     {
-        return NULL;
+        return nullptr;
     }
-}   
+} 
+
+std::vector<uint64_t> AcousticModem::getNodeIds()
+{
+    std::vector<uint64_t> ids;
+    for(auto it=nodes.begin(); it != nodes.end(); ++it)
+        ids.push_back(it->first);
+    return ids;
+}
 
 bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
 {
     AcousticModem* node1 = getNode(device1Id);
     AcousticModem* node2 = getNode(device2Id);
     
-    if(node1 == NULL || node2 == NULL)
+    if(node1 == nullptr || node2 == nullptr)
         return false;
         
     Vector3 pos1 = node1->getDeviceFrame().getOrigin();
@@ -158,18 +166,40 @@ CommType AcousticModem::getType() const
 
 void AcousticModem::SendMessage(std::string data)
 {    
-    if(!mutualContact(getDeviceId(), getConnectedId()))
-       return;
-    
-    AcousticDataFrame* msg = new AcousticDataFrame();
-    msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
-    msg->seq = txSeq++;
-    msg->source = getDeviceId();
-    msg->destination = getConnectedId();
-    msg->data = data;
-    msg->txPosition = getDeviceFrame().getOrigin();
-    msg->travelled = Scalar(0);
-    txBuffer.push_back(msg);
+    if(getConnectedId() < 0)
+        return;
+    else if(getConnectedId() == 0)
+    {
+        std::vector<uint64_t> nodeIds = getNodeIds();
+        for(size_t i=0; i<nodeIds.size(); ++i)
+            if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
+            {
+                AcousticDataFrame* msg = new AcousticDataFrame();
+                msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+                msg->seq = txSeq++;
+                msg->source = getDeviceId();
+                msg->destination = nodeIds[i];
+                msg->data = data;
+                msg->txPosition = getDeviceFrame().getOrigin();
+                msg->travelled = Scalar(0);
+                txBuffer.push_back(msg);
+            }
+    }
+    else
+    {
+        if(!mutualContact(getDeviceId(), getConnectedId()))
+            return;
+        
+        AcousticDataFrame* msg = new AcousticDataFrame();
+        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+        msg->seq = txSeq++;
+        msg->source = getDeviceId();
+        msg->destination = getConnectedId();
+        msg->data = data;
+        msg->txPosition = getDeviceFrame().getOrigin();
+        msg->travelled = Scalar(0);
+        txBuffer.push_back(msg);
+    }
 }
 
 void AcousticModem::ProcessMessages()

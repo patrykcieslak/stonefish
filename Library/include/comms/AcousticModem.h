@@ -114,6 +114,7 @@ namespace sf
         static void addNode(AcousticModem* node);
         static void removeNode(uint64_t deviceId);
         static bool mutualContact(uint64_t device1Id, uint64_t device2Id);
+        static std::vector<uint64_t> getNodeIds();
         
         static std::map<uint64_t, AcousticModem*> nodes;
     };
