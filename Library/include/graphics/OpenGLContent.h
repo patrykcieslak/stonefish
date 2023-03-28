@@ -53,7 +53,7 @@ namespace sf
         : attach(attachment), target(target), tex(texture), lvl(level), z(zoffset) {}
     };
     
-    #pragma pack(1)
+    #pragma pack(push, 1)
     //! A structure representing data of the Lights UBO (std140 aligned)
     struct LightsUBO
     {
@@ -70,7 +70,7 @@ namespace sf
         glm::vec3 params; //Additional params
         GLuint type;      //Type of velocity field
     };
-    #pragma pack(0)
+    #pragma pack(pop)
 
     //! A structure representing a material shader collection.
     struct MaterialShader

@@ -26,7 +26,7 @@
 #include "FallingTestApp.h"
 #include "FallingTestManager.h"
 
-int main(int argc, const char * argv[])
+int main(int argc, char * argv[])
 {
     sf::RenderSettings s;
     s.windowW = 1200;

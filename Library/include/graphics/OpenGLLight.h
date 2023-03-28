@@ -34,9 +34,9 @@ namespace sf
     enum class LightType {POINT, SPOT}; 
     
     //! A structure representing a generic light in the Lights UBO.
-    #pragma pack(1)
+    #pragma pack(push, 1)  
     struct LightUBO {};
-    #pragma pack(0)
+    #pragma pack(pop)
 
     class GLSLShader;
     class OpenGLPipeline;

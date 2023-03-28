@@ -43,6 +43,18 @@ Sample::Sample(unsigned short nDimensions, Scalar* values, bool invalid, uint64_
         timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
 }
 
+Sample::Sample(unsigned short nDimensions, bool invalid, uint64_t index)
+{
+    nDim = nDimensions > 0 ? nDimensions : 1;
+    data = new Scalar[nDim];
+    std::memset(data, 0, sizeof(Scalar) * nDim);
+    id = index;
+    if (invalid)
+        timestamp = Scalar(-1);
+    else
+        timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+}
+
 Sample::Sample(const Sample& other, uint64_t index)
 {
     timestamp = other.timestamp;

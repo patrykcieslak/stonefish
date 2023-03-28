@@ -33,7 +33,7 @@ namespace sf
     //! An enum defining types of views.
     enum class ViewType {CAMERA, TRACKBALL, DEPTH_CAMERA, SONAR};
 
-    #pragma pack(1)
+    #pragma pack(push, 1)
     struct ViewUBO
     {
         glm::mat4 VP;
@@ -41,7 +41,7 @@ namespace sf
         glm::vec3 eye;
         GLfloat pad;
     };
-    #pragma pack(0)
+    #pragma pack(pop)
     
     //! An abstract class representing an OpenGL view.
     class OpenGLView

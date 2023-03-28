@@ -52,10 +52,7 @@ Sample ScalarSensor::getLastSample()
         return Sample(*history.back());
     else
     {
-        unsigned short chs = getNumOfChannels();
-        Scalar values[chs];
-        memset(values, 0, sizeof(Scalar) * chs);
-        return Sample(chs, values, true);
+        return Sample(getNumOfChannels(), true);
     }
 }
 

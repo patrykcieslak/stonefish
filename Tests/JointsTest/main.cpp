@@ -27,7 +27,7 @@
 #include "JointsTestManager.h"
 #include "JointsTestApp.h"
 
-int main(int argc, const char * argv[])
+int main(int argc, char * argv[])
 {
     sf::RenderSettings s;
     s.windowW = 800;

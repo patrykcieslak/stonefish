@@ -23,6 +23,9 @@
 //  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
+#define _USE_MATH_DEFINES // for Microsoft Visual C++
+#include <cmath>
+
 #include "entities/solids/Sphere.h"
 
 #include "graphics/OpenGLContent.h"

@@ -104,7 +104,11 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
     
     //Display fan
     fanDiv = btMin((GLuint)ceil(360), nSteps);
+#ifdef _MSC_VER
+    GLfloat(*fanData)[4] = (GLfloat(*)[4]) calloc((fanDiv + 1) * 2, sizeof * fanData);
+#else
     GLfloat fanData[(fanDiv+1)*2][4];
+#endif
     GLfloat Rmin = range.x/range.y;
     
     //Flipped vertically to account for OpenGL window coordinates
@@ -163,6 +167,9 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
     sonarUpdateShader->SetUniform("sonarHist", TEX_POSTPROCESS1);
     sonarUpdateShader->SetUniform("sonarOutput", TEX_POSTPROCESS2);
     OpenGLState::UseProgram(0);
+#ifdef _MSC_VER
+    free(fanData);
+#endif
 }
 
 OpenGLMSIS::~OpenGLMSIS()
@@ -217,7 +224,11 @@ void OpenGLMSIS::UpdateTransform()
         projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
         projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
 
+#ifdef _MSC_VER
+        GLfloat(*fanData)[4] = (GLfloat(*)[4]) calloc((fanDiv + 1) * 2, sizeof * fanData);
+#else
         GLfloat fanData[(fanDiv+1)*2][4];
+#endif
         GLfloat Rmin = range.x/range.y;
         //Flipped vertically to account for OpenGL window coordinates
         for(GLuint i=0; i<fanDiv+1; ++i)
@@ -238,6 +249,9 @@ void OpenGLMSIS::UpdateTransform()
         glBindBuffer(GL_ARRAY_BUFFER, displayVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(fanData), fanData);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+#ifdef _MSC_VER
+        free(fanData);
+#endif
     }
 
     //Inform sonar to run callback
@@ -340,10 +354,17 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
         settingsUpdated = false;
         //Clear image
         OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_2D, outputTex[1]);
+#ifdef _MSC_VER
+        uint8_t* zeros = new uint8_t[nSteps * nBins];
+#else
         uint8_t zeros[nSteps * nBins];
+#endif
         memset(zeros, 0, sizeof(zeros));
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, nSteps, nBins, GL_RED, GL_UNSIGNED_BYTE, (GLvoid*)zeros);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
+#ifdef _MSC_VER
+        delete[] zeros;
+#endif
     }
     glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(nBeamSamples.y/64.f), 1, 1); 

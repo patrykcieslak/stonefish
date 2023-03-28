@@ -27,7 +27,7 @@
 #include "UnderwaterTestManager.h"
 #include <cfenv>
 
-int main(int argc, const char * argv[])
+int main(int argc, char * argv[])
 {
     //feenableexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
     //feenableexcept(FE_INVALID | FE_OVERFLOW);

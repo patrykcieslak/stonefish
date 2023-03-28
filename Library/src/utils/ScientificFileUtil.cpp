@@ -158,7 +158,11 @@ ScientificData* LoadOctaveData(const std::string& path)
         if(file.eof())
             break;
         
+#ifdef _MSC_VER
+        char cname[_MAX_PATH];
+#else   
         char cname[nameLen + 1];
+#endif
         cname[nameLen] = '\0';
         file.read(cname, nameLen);
         
@@ -211,7 +215,11 @@ ScientificData* LoadOctaveData(const std::string& path)
             int32_t typeLen = 0;
             file.read(reinterpret_cast<char*>(&typeLen), 4);
             
+#ifdef _MSC_VER
+            char typeName[_MAX_PATH];
+#else 
             char typeName[typeLen + 1];
+#endif
             typeName[typeLen] = '\0';
             file.read(typeName, typeLen);
             

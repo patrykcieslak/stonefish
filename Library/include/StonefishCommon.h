@@ -31,6 +31,10 @@
 #include <vector>
 #include <stdexcept>
 
+// cmath
+#define _USE_MATH_DEFINES // for Microsoft Visual C++ to get M_PI, M_PI_2 etc.
+#include <cmath>
+
 //Bullet Physics
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
