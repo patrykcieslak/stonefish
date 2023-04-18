@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Box.h"
@@ -30,7 +30,7 @@
 namespace sf
 {
 
-Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness)
+Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness, unsigned int uvMode)
          : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     halfExtents = dimensions * Scalar(0.5);
@@ -67,7 +67,7 @@ Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensi
     
     //Build geometry
 	glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
-	phyMesh = OpenGLContent::BuildBox(glHalfExtents);
+	phyMesh = OpenGLContent::BuildBox(glHalfExtents, 3, uvMode);
     
     //Compute hydrodynamic properties
     ComputeFluidDynamicsApprox( GeometryApproxType::ELLIPSOID);

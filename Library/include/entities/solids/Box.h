@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Box__
@@ -43,9 +43,10 @@ namespace sf
          \param material the name of the material the box is made of
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the box walls, if positive the box is treated as shell
+         \param uvMode texture coordinates generation mode
         */
         Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensions, const Transform& origin, 
-                std::string material, std::string look, Scalar thickness = Scalar(-1));
+                std::string material, std::string look, Scalar thickness = Scalar(-1), unsigned int uvMode = 0);
         
         //! A method that returns the type of body.
         SolidType getSolidType();

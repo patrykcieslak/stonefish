@@ -195,6 +195,8 @@ bool ScenarioParser::Parse(std::string filename)
             }
             return false;
         }
+        cInfo("Scenario parser: Including file '%s'", includedPath.c_str());
+        log.Print(MessageType::INFO, "Including file '%s'", includedPath.c_str());
         
         root->DeleteChild(element); //Delete "include" element
         
@@ -1670,6 +1672,8 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         Scalar ix, iy, iz;
         Vector3 I;
         bool cgok;
+        unsigned int uvMode = 0;
+        float uvScale = 1.f;
         
         //Material
         if((item = element->FirstChildElement("material")) == nullptr
@@ -1684,6 +1688,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         {
             log.Print(MessageType::ERROR, "Look of rigid body '%s' not properly defined!", solidName.c_str());
             return false;
+        }
+        else
+        {
+            item->QueryAttribute("uv_mode", &uvMode); //Optional
+            item->QueryAttribute("uv_scale", &uvScale); //Optional
         }
         //Dynamic parameters  
         if((item = element->FirstChildElement("mass")) == nullptr || item->QueryAttribute("value", &mass) != XML_SUCCESS)
@@ -1721,7 +1730,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             }    
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Box(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness);
+            solid = new Box(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness, uvMode);
         }
         else if(typeStr == "cylinder")
         {
