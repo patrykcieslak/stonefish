@@ -66,6 +66,7 @@
 #include "sensors/vision/SSS.h"
 #include "sensors/vision/MSIS.h"
 #include "sensors/Contact.h"
+#include "actuators/Push.h"
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
@@ -2204,6 +2205,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             break;
 
         //Link actuators
+        case ActuatorType::PUSH:
         case ActuatorType::THRUSTER:
         case ActuatorType::PROPELLER:
         case ActuatorType::RUDDER:
@@ -2435,6 +2437,27 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         srv->setControlMode(ServoControlMode::POSITION);
         srv->setDesiredPosition(initialPos);
         return srv;
+    }
+    else if(typeStr == "simple_thruster" || typeStr == "push")
+    {
+        Push* push; 
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            bool inverted = false;
+            item->QueryAttribute("inverted", &inverted);
+            
+            push = new Push(actuatorName, inverted, typeStr == "simple_thruster");
+
+            double lower, upper;
+            if(item->QueryAttribute("lower_limit", &lower) == XML_SUCCESS 
+                && item->QueryAttribute("upper_limit", &upper) == XML_SUCCESS)
+            {
+                push->setForceLimits(lower, upper);
+            }
+        }
+        else
+            push = new Push(actuatorName, false, typeStr == "simple_thruster");
+        return push;
     }
     else if(typeStr == "thruster" || typeStr == "propeller")
     {

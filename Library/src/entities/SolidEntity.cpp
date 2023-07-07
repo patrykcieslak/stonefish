@@ -1130,7 +1130,9 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
         if(linSleep <= Scalar(0) || angSleep <= Scalar(0))        
             rigidBody->setActivationState(DISABLE_DEACTIVATION);
         else
+        {
             rigidBody->setSleepingThresholds(linSleep, angSleep);
+        }
 
         // Add to world
         Transform Tcg = origin * T_CG2O.inverse();

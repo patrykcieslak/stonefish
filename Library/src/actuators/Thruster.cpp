@@ -113,7 +113,7 @@ bool Thruster::isPropellerRight() const
 
 void Thruster::Update(Scalar dt)
 {
-    if(attach != NULL)
+    if(attach != nullptr)
     {
         //Update thruster velocity
         Scalar error = setpoint * omegaLim - omega;
@@ -173,7 +173,7 @@ void Thruster::Update(Scalar dt)
 std::vector<Renderable> Thruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
-    if(attach != NULL)
+    if(attach != nullptr)
         thrustTrans = attach->getOTransform() * o2a;
     else
         LinkActuator::Render();

@@ -40,7 +40,7 @@ Actuator::Actuator(std::string uniqueName)
 
 Actuator::~Actuator()
 {
-    if(SimulationApp::getApp() != NULL)
+    if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
 }
 

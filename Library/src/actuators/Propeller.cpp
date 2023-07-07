@@ -146,7 +146,7 @@ void Propeller::Update(Scalar dt)
 std::vector<Renderable> Propeller::Render()
 {
     Transform propTrans = Transform::getIdentity();
-    if(attach != NULL)
+    if(attach != nullptr)
         propTrans = attach->getOTransform() * o2a;
     else
         LinkActuator::Render();
