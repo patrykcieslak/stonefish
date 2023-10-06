@@ -155,7 +155,7 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
         if(transMode)
         {
             glm::vec3 right = glm::normalize(glm::cross(GetLookingDirection(), GetUpDirection()));
-            center = translation_start + GetUpDirection() * (y-y_start) * -0.5f + right * (x-x_start) * -0.5f; 
+            center = translation_start + (GetUpDirection() * (y-y_start) * -0.5f + right * (x-x_start) * -0.5f) * radius;
         }
         else //rotate
         {
@@ -168,11 +168,8 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 
 void OpenGLTrackball::MouseScroll(GLfloat s)
 {
-    Scalar factor = pow(radius/5.0, 2.0);
-    factor = factor > 1.0 ? 1.0 : factor;
-    
-    radius += s * factor;
-    if(radius < 0.1) radius = 0.1;
+    radius += s * radius/15.f;
+    if(radius < 0.05f) radius = 0.05f;
 }
 
 glm::mat4 OpenGLTrackball::GetViewMatrix() const

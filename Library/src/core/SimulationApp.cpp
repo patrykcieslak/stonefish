@@ -26,6 +26,7 @@
 #include "core/SimulationApp.h"
 
 #include "core/SimulationManager.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
@@ -107,6 +108,13 @@ void SimulationApp::Run(bool autostart)
     if(autostart) StartSimulation();
 	Loop();
 	CleanUp();
+}
+
+void SimulationApp::Loop()
+{
+    startTime = GetTimeInMicroseconds();
+    while(!finished)
+        LoopInternal();
 }
 
 void SimulationApp::StartSimulation()

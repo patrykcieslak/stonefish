@@ -52,16 +52,14 @@ namespace sf
         bool hasGraphics();
         
     protected:
-        virtual void Loop();
+        void Init();
+        void LoopInternal();
         void StartSimulation();
         void ResumeSimulation();
         void StopSimulation();
         
     private:
-        void Init();
-        
         SDL_Thread* simulationThread;
-        
         static int RunSimulation(void* data);
     };
     

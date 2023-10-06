@@ -166,11 +166,14 @@ namespace sf
         
         //! A method returning a mutable reference to the helper object rendering settings.
         HelperSettings& getHelperSettings();
+
+        //! A method used to enable frame rate limitting.
+        void setLimitFramerate(bool enabled);
         
     protected:
-        void Loop();
+        void Init();
+        void LoopInternal();
         void CleanUp();
-        
         void StartSimulation();
         void ResumeSimulation();
         void StopSimulation();
@@ -178,7 +181,6 @@ namespace sf
         virtual void InitializeGUI();
         
     private:
-        void Init();
         void InitializeSDL();
         void RenderLoop();
         
@@ -191,6 +193,7 @@ namespace sf
         bool* joystickButtons;
         int16_t* joystickAxes;
         uint8_t* joystickHats;
+        SDL_Event mouseWasDown;
         
         IMGUI* gui;
         OpenGLPipeline* glPipeline;
@@ -212,6 +215,7 @@ namespace sf
         HelperSettings hSettings;
         GLuint timeQuery[2];
         GLint timeQueryPingpong;
+        bool limitFramerate;
 
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);
