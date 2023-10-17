@@ -85,8 +85,9 @@ void INS::InternalUpdate(Scalar dt)
     //get acceleration
     Vector3 acc = imuTrans.getBasis().inverse() * (
                    attach->getLinearAcceleration() 
-                   + attach->getAngularAcceleration().cross(R))
-                   + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R));
+                   + attach->getAngularAcceleration().cross(R)
+                   + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
+                ); // NO GRAVITY
     //get angular acceleration
     Vector3 aacc = imuTrans.getBasis().inverse() * attach->getAngularAcceleration();
 

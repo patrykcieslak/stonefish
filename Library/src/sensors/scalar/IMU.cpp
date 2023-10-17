@@ -27,6 +27,8 @@
 
 #include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
+#include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 
 namespace sf
 {
@@ -64,7 +66,13 @@ void IMU::InternalUpdate(Scalar dt)
     yaw += accumulatedYawDrift;
 
     //get acceleration
-    Vector3 la = imuTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(imuTrans.getOrigin() - attach->getCGTransform().getOrigin()));
+    Vector3 R = imuTrans.getOrigin() - attach->getCGTransform().getOrigin();
+    Vector3 la = imuTrans.getBasis().inverse() * (
+                   attach->getLinearAcceleration() 
+                   + attach->getAngularAcceleration().cross(R)
+                   + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
+                   + SimulationApp::getApp()->getSimulationManager()->getGravity()                   
+                );
     
     //record sample
     Scalar values[9] = {roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()};

@@ -4,6 +4,11 @@ Changelog
 
 The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
 
+1.4
+===
+
+-  Fixed IMU readings, adding the missing gravitational and centrifugal acceleration
+
 1.3
 ===
 
