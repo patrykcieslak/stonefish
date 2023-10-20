@@ -82,16 +82,16 @@ void PWLTrajectory::Interpolate()
     {
         interpTrans = it->T;
         if(it == points.begin()) //Time = 0
-            btTransformUtil::calculateVelocity(it->T, (it+1)->T, (it+1)->t, interpVel, interpAngVel);
+            calculateVelocityShortestPath(it->T, (it+1)->T, (it+1)->t, interpVel, interpAngVel);
         else
-            btTransformUtil::calculateVelocity((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
+            calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
     }
     else
     {
         Scalar alpha = (playTime - (it-1)->t)/(it->t - (it-1)->t);
         interpTrans.setOrigin(lerp((it-1)->T.getOrigin(), it->T.getOrigin(), alpha));
         interpTrans.setRotation(slerp((it-1)->T.getRotation(), it->T.getRotation(), alpha));
-        btTransformUtil::calculateVelocity((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
+        calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
     }
 }
 

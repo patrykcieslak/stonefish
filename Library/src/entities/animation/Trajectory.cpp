@@ -109,4 +109,32 @@ void Trajectory::Play(Scalar dt)
     Interpolate();
 }
 
+void Trajectory::calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel)
+{
+    linVel = (transform1.getOrigin() - transform0.getOrigin()) / timeStep;
+
+    //  https://doi.org/10.48550/arXiv.1812.01537 Appendix B, SO(3) Logarithm (Lie Theory)
+    Matrix3 R0, R1;
+    R0 = transform0.getBasis();
+    R1 = transform1.getBasis();
+    Matrix3 dR = R0.transpose() * R1;
+
+    // trace of dR
+    Scalar tr = dR[0][0] + dR[1][1] + dR[2][2];
+
+    Scalar theta = btAcos((tr - 1.0) / 2.0);
+
+    // check for divide by zero
+    if (btFabs(theta) < SIMD_EPSILON)
+    {
+        angVel.setZero();
+    }
+    else
+    {
+        Matrix3 R3 = dR - dR.transpose();
+        Vector3 v(R3[2][1], R3[0][2], R3[1][0]);
+
+        angVel = R0 * (v * theta / (2.0 * btSin(theta)) / timeStep);
+    }
+}
 }
