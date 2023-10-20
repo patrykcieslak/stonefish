@@ -71,7 +71,7 @@ void IMU::InternalUpdate(Scalar dt)
                    attach->getLinearAcceleration() 
                    + attach->getAngularAcceleration().cross(R)
                    + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
-                   + SimulationApp::getApp()->getSimulationManager()->getGravity()                   
+                   - SimulationApp::getApp()->getSimulationManager()->getGravity() // Negative to get readings like in actual sensor
                 );
     
     //record sample

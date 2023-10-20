@@ -27,6 +27,8 @@
 
 #include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
+#include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 
 namespace sf
 {
@@ -44,7 +46,13 @@ void Accelerometer::InternalUpdate(Scalar dt)
     Transform accTrans = getSensorFrame();
     
     //get acceleration
-    Vector3 la = accTrans.getBasis().inverse() * (attach->getLinearAcceleration() + attach->getAngularAcceleration().cross(accTrans.getOrigin() - attach->getCGTransform().getOrigin()));
+    Vector3 R = accTrans.getOrigin() - attach->getCGTransform().getOrigin();
+    Vector3 la = accTrans.getBasis().inverse() * (
+                                                attach->getLinearAcceleration() 
+                                                + attach->getAngularAcceleration().cross(R)
+                                                + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
+                                                - SimulationApp::getApp()->getSimulationManager()->getGravity()
+                                                );
     
     //record sample
     Scalar values[3] = {la.x(), la.y(), la.z()};
