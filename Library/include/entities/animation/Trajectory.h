@@ -77,6 +77,8 @@ namespace sf
         //! A method returning the current playback iteration.
         unsigned int getPlaybackIteration() const;
 
+        static void calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
+    
     protected:
         PlaybackMode playMode;
         Scalar playTime;

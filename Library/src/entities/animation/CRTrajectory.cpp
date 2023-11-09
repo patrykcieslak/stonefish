@@ -98,7 +98,7 @@ void CRTrajectory::Interpolate()
         //Angular quantities
         Vector3 dummy;
         interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1)));
-        btTransformUtil::calculateVelocity(T1, T2, t2-t1, dummy, interpAngVel);
+        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel);
     }
 }
 
