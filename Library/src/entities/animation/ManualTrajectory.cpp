@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/11/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/ManualTrajectory.h"

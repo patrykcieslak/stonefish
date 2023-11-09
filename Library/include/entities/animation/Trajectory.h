@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Trajectory__
