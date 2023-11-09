@@ -31,8 +31,18 @@ namespace sf
 
 PWLTrajectory::PWLTrajectory(PlaybackMode playback) : Trajectory(playback)
 {
-    path.type = RenderableType::PATH_LINE_STRIP;
-    path.model = glm::mat4(1.f);    
+    Renderable pathPoints;
+    pathPoints.type = RenderableType::PATH_POINTS;
+    pathPoints.model = glm::mat4(1.f);
+
+    Renderable pathLine;
+    pathLine.type = RenderableType::PATH_LINE_STRIP;
+    pathLine.model = glm::mat4(1.f);
+
+    vis.push_back(pathPoints);
+    vis.push_back(pathLine);
+    
+    interpAcc = V0();
     AddKeyPoint(Scalar(0), I4());
 }
 
@@ -97,14 +107,16 @@ void PWLTrajectory::Interpolate()
 
 void PWLTrajectory::BuildGraphicalPath()
 {
-    path.points.clear();
+    vis[0].points.clear();
+    vis[1].points.clear();
     for(size_t i=0; i<points.size(); ++i)
-        path.points.push_back(glVectorFromVector(points[i].T.getOrigin()));
+        vis[0].points.push_back(glVectorFromVector(points[i].T.getOrigin()));
+    vis[1].points = vis[0].points;
 }
 
-Renderable PWLTrajectory::Render()
+std::vector<Renderable> PWLTrajectory::Render()
 {
-    return path;
+    return vis;
 }
 
 }

@@ -57,7 +57,7 @@ namespace sf
         virtual void Interpolate() = 0;
 
         //! A method returning the elements that should be rendered.
-        virtual Renderable Render() = 0;
+        virtual std::vector<Renderable> Render() = 0;
 
         //! A method returning the current interpolated transform.
         Transform getInterpolatedTransform() const;
@@ -67,6 +67,9 @@ namespace sf
 
         //! A method returning the current interpolated angular velocity.
         Vector3 getInterpolatedAngularVelocity() const;
+
+        //! A method returning the current interpolated linear acceleration.
+        Vector3 getInterpolatedLinearAcceleration() const;
 
         //! A method returning the current playback time.
         Scalar getPlaybackTime() const;
@@ -83,6 +86,7 @@ namespace sf
         Transform interpTrans;
         Vector3 interpVel;
         Vector3 interpAngVel;
+        Vector3 interpAcc;
     };
 }
 

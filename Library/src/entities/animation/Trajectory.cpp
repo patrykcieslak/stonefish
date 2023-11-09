@@ -62,6 +62,11 @@ Vector3 Trajectory::getInterpolatedAngularVelocity() const
     return interpAngVel;
 }
 
+Vector3 Trajectory::getInterpolatedLinearAcceleration() const
+{
+    return interpAcc;
+}
+
 void Trajectory::Play(Scalar dt)
 {
     //Update time

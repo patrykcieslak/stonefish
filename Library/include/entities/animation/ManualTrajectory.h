@@ -59,7 +59,7 @@ namespace sf
         virtual void Interpolate();
 
         //! A method returning the elements that should be rendered.
-        Renderable Render();
+        std::vector<Renderable> Render();
     };
 }
 

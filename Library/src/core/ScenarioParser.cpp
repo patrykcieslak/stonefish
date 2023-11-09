@@ -35,6 +35,7 @@
 #include "entities/animation/ManualTrajectory.h"
 #include "entities/animation/PWLTrajectory.h"
 #include "entities/animation/CRTrajectory.h"
+#include "entities/animation/BSTrajectory.h"
 #include "entities/solids/Box.h"
 #include "entities/solids/Cylinder.h"
 #include "entities/solids/Sphere.h"
@@ -1227,9 +1228,15 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 ((ManualTrajectory*)tr)->setTransform(T);
             }
         }
-        else if(trTypeStr == "pwl" || trTypeStr == "spline")
+        else if(trTypeStr == "pwl" || trTypeStr == "spline" || trTypeStr == "catmull-rom")
         {
-            tr = trTypeStr == "pwl" ? new PWLTrajectory(pm) : new CRTrajectory(pm);
+            if(trTypeStr == "pwl")
+                tr = new PWLTrajectory(pm);
+            else if(trTypeStr == "spline")
+                tr = new BSTrajectory(pm);
+            else
+                tr = new CRTrajectory(pm);
+            
             PWLTrajectory* pwl = (PWLTrajectory*)tr; //Spline has the same mechanism of adding points
             
             XMLElement* key = item->FirstChildElement("keypoint");
