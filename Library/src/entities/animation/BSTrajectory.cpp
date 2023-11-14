@@ -31,6 +31,7 @@ namespace sf
 
 BSTrajectory::BSTrajectory(PlaybackMode playback) : PWLTrajectory(playback)
 {
+    lastPlayTime = 0.0;
 }
 
 void BSTrajectory::AddKeyPoint(Scalar keyTime, Transform keyTransform)
@@ -70,8 +71,7 @@ void BSTrajectory::AddKeyPoint(Scalar keyTime, Transform keyTransform)
             cp[i*4+3] = points[i].T.getOrigin().getZ();
         }
         spline = tinyspline::BSpline::interpolateCubicNatural(cp, 4);
-        deriv1 = spline.derive(1, Scalar(0.001));
-        deriv2 = spline.derive(2, Scalar(0.001));
+        deriv = spline.derive(1);
     }
     
     BuildGraphicalPath();
@@ -124,10 +124,17 @@ void BSTrajectory::Interpolate()
             tinyspline::DeBoorNet net = spline.bisect(playTime, 0.0001);
             std::vector<Scalar> p = net.result();
             interpTrans.setOrigin(Vector3(p[1], p[2], p[3]));
-            p = deriv1.eval(net.knot()).result();
-            interpVel = Vector3(p[1], p[2], p[3]);
-            p = deriv2.eval(net.knot()).result();
-            interpAcc = Vector3(p[1], p[2], p[3]);
+            
+            Vector3 lastInterpVel = interpVel;
+            std::vector<Scalar> v = deriv.eval(net.knot()).result();
+            interpVel = Vector3(v[1]/v[0], v[2]/v[0], v[3]/v[0]);  // dx/dt = (dx/ds) / (ds/dt)
+
+            if(lastPlayTime > 0.0)
+                interpAcc = (interpVel - lastInterpVel)/(playTime - lastPlayTime);
+            else
+                interpAcc.setZero();
+                
+            lastPlayTime = playTime;
         }
         //Angular quantities
         Vector3 dummy;

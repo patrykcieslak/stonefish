@@ -56,8 +56,8 @@ namespace sf
 
     private:
         tinyspline::BSpline spline;
-        tinyspline::BSpline deriv1;
-        tinyspline::BSpline deriv2;
+        tinyspline::BSpline deriv;
+        double lastPlayTime;
     };
 }
 
