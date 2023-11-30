@@ -4,9 +4,16 @@ Changelog
 
 The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
 
+1.4
+===
+
+-  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
+-  Fixed IMU readings, adding the missing gravitational and centrifugal acceleration
+
 1.3
 ===
 
+-  *Restructured the SimulationApp class and its children to support the new ROS2 interface*
 -  *Reimplemented Robot definition to allow for two different algorithms: the Featherstone's algorithm and a general constraint solving algorithm; the general algorithm allows for kinematic loops in the robot structure*
 -  *Added origin definition to standard obstacle solids to enable local transformations*
 -  *Updated definition of accelerometer, gyroscope and IMU sensors, including parser support*
@@ -29,6 +36,8 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Fixed measurement of accelerations
 -  Fixed unstable multibody joint position control
 -  Fixed computation of moments of inertia
+-  Fixed trackball implementation - better zoom and translation of the main 3D view
+-  Fixed mouse issues in the main 3D view
 
 1.2
 ===

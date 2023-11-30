@@ -35,6 +35,7 @@
 #include "entities/animation/ManualTrajectory.h"
 #include "entities/animation/PWLTrajectory.h"
 #include "entities/animation/CRTrajectory.h"
+#include "entities/animation/BSTrajectory.h"
 #include "entities/solids/Box.h"
 #include "entities/solids/Cylinder.h"
 #include "entities/solids/Sphere.h"
@@ -66,6 +67,7 @@
 #include "sensors/vision/SSS.h"
 #include "sensors/vision/MSIS.h"
 #include "sensors/Contact.h"
+#include "actuators/Push.h"
 #include "actuators/Light.h"
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
@@ -195,6 +197,8 @@ bool ScenarioParser::Parse(std::string filename)
             }
             return false;
         }
+        cInfo("Scenario parser: Including file '%s'", includedPath.c_str());
+        log.Print(MessageType::INFO, "Including file '%s'", includedPath.c_str());
         
         root->DeleteChild(element); //Delete "include" element
         
@@ -1224,9 +1228,15 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 ((ManualTrajectory*)tr)->setTransform(T);
             }
         }
-        else if(trTypeStr == "pwl" || trTypeStr == "spline")
+        else if(trTypeStr == "pwl" || trTypeStr == "spline" || trTypeStr == "catmull-rom")
         {
-            tr = trTypeStr == "pwl" ? new PWLTrajectory(pm) : new CRTrajectory(pm);
+            if(trTypeStr == "pwl")
+                tr = new PWLTrajectory(pm);
+            else if(trTypeStr == "spline")
+                tr = new BSTrajectory(pm);
+            else
+                tr = new CRTrajectory(pm);
+            
             PWLTrajectory* pwl = (PWLTrajectory*)tr; //Spline has the same mechanism of adding points
             
             XMLElement* key = item->FirstChildElement("keypoint");
@@ -1670,6 +1680,8 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         Scalar ix, iy, iz;
         Vector3 I;
         bool cgok;
+        unsigned int uvMode = 0;
+        float uvScale = 1.f;
         
         //Material
         if((item = element->FirstChildElement("material")) == nullptr
@@ -1684,6 +1696,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         {
             log.Print(MessageType::ERROR, "Look of rigid body '%s' not properly defined!", solidName.c_str());
             return false;
+        }
+        else
+        {
+            item->QueryAttribute("uv_mode", &uvMode); //Optional
+            item->QueryAttribute("uv_scale", &uvScale); //Optional
         }
         //Dynamic parameters  
         if((item = element->FirstChildElement("mass")) == nullptr || item->QueryAttribute("value", &mass) != XML_SUCCESS)
@@ -1721,7 +1738,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             }    
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Box(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness);
+            solid = new Box(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness, uvMode);
         }
         else if(typeStr == "cylinder")
         {
@@ -2195,6 +2212,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             break;
 
         //Link actuators
+        case ActuatorType::PUSH:
         case ActuatorType::THRUSTER:
         case ActuatorType::PROPELLER:
         case ActuatorType::RUDDER:
@@ -2426,6 +2444,27 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         srv->setControlMode(ServoControlMode::POSITION);
         srv->setDesiredPosition(initialPos);
         return srv;
+    }
+    else if(typeStr == "simple_thruster" || typeStr == "push")
+    {
+        Push* push; 
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            bool inverted = false;
+            item->QueryAttribute("inverted", &inverted);
+            
+            push = new Push(actuatorName, inverted, typeStr == "simple_thruster");
+
+            double lower, upper;
+            if(item->QueryAttribute("lower_limit", &lower) == XML_SUCCESS 
+                && item->QueryAttribute("upper_limit", &upper) == XML_SUCCESS)
+            {
+                push->setForceLimits(lower, upper);
+            }
+        }
+        else
+            push = new Push(actuatorName, false, typeStr == "simple_thruster");
+        return push;
     }
     else if(typeStr == "thruster" || typeStr == "propeller")
     {

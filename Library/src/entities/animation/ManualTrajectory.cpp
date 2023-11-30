@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/11/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/ManualTrajectory.h"
@@ -33,6 +33,7 @@ ManualTrajectory::ManualTrajectory() : Trajectory(PlaybackMode::ONETIME)
     interpTrans = I4();
     interpVel = V0();
     interpAngVel = V0();
+    interpAcc = V0();
     endTime = 1e16; //Never ends
 }
 
@@ -56,12 +57,12 @@ void ManualTrajectory::Interpolate()
     return;
 }
 
-Renderable ManualTrajectory::Render()
+std::vector<Renderable> ManualTrajectory::Render()
 {
     Renderable frame;
     frame.type = RenderableType::SENSOR_CS;
     frame.model = glMatrixFromTransform(interpTrans);
-    return frame;
+    return {frame};
 }
 
 }

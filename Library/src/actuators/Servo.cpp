@@ -197,7 +197,10 @@ void Servo::Update(Scalar dt)
         }
         else
         {
-            vSetpoint2 = vSetpoint;  //Kv * (vSetpoint - getVelocity()) + vSetpoint; (not natural to use)
+            //vSetpoint2 = vSetpoint;
+            Scalar err = vSetpoint - getVelocity();  
+            vSetpoint2 = Kv * err + vSetpoint;
+            cInfo("Velocity setpoint: %1.6lf Error: %1.6lf", vSetpoint, err);
         }
 
         switch(j->getType())

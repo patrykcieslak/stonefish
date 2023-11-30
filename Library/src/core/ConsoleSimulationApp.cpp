@@ -58,10 +58,9 @@ void ConsoleSimulationApp::Init()
     cInfo("Ready for running...");
 }
 
-void ConsoleSimulationApp::Loop()
+void ConsoleSimulationApp::LoopInternal()
 {
-    while(!hasFinished())
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void ConsoleSimulationApp::StartSimulation()

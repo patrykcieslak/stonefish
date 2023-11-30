@@ -71,10 +71,10 @@ namespace sf
         
         //! A method informing if the simulation is running.
         bool isRunning();
-        
+
         //! A method informing if the simulation has finished.
         bool hasFinished();
-        
+          
         //! A method returning the path to the directory containing simulation data.
         std::string getDataPath();
         
@@ -88,8 +88,10 @@ namespace sf
         static SimulationApp* getApp();
         
     protected:
+        void Loop();
+
         virtual void Init();
-        virtual void Loop() = 0;
+        virtual void LoopInternal() = 0;
         virtual void CleanUp();
         virtual void Quit();
         
@@ -99,6 +101,7 @@ namespace sf
         virtual void StopSimulation();
         
         Console* console;
+        uint64_t startTime;
         
     private:
         SimulationManager* simulation;

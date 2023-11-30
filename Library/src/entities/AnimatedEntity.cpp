@@ -39,6 +39,9 @@ AnimatedEntity::AnimatedEntity(std::string uniqueName, Trajectory* traj) : Movin
         return;        
 
     T_CG2O = T_O2C = T_O2G = I4();
+    
+    linearAcc.setZero();
+    angularAcc.setZero();
 
     //Build rigid body
     btEmptyShape* shape = new btEmptyShape();
@@ -224,12 +227,12 @@ Vector3 AnimatedEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) con
 
 Vector3 AnimatedEntity::getLinearAcceleration() const
 {
-    return V0();
+    return linearAcc;
 }
         
 Vector3 AnimatedEntity::getAngularAcceleration() const
 {
-    return V0();
+    return angularAcc;
 }
 
 Trajectory* AnimatedEntity::getTrajectory()
@@ -293,6 +296,7 @@ void AnimatedEntity::Update(Scalar dt)
     rigidBody->getMotionState()->setWorldTransform(tr->getInterpolatedTransform() *  T_CG2O.inverse());
     rigidBody->setLinearVelocity(tr->getInterpolatedLinearVelocity());
     rigidBody->setAngularVelocity(tr->getInterpolatedAngularVelocity());    
+    setLinearAcceleration(tr->getInterpolatedLinearAcceleration());
 }
 
 std::vector<Renderable> AnimatedEntity::Render()
@@ -314,8 +318,9 @@ std::vector<Renderable> AnimatedEntity::Render()
             item.lookId = dm == DisplayMode::GRAPHICAL ? lookId : -1;
             items.push_back(item);
         }
-
-        items.push_back(tr->Render());
+        
+        std::vector<Renderable> trajectoryItems = tr->Render();
+        items.insert(items.begin(), trajectoryItems.begin(), trajectoryItems.end());
     }
 
     return items;

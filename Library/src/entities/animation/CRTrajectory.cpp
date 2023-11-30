@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/10/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/CRTrajectory.h"
@@ -98,17 +98,17 @@ void CRTrajectory::Interpolate()
         //Angular quantities
         Vector3 dummy;
         interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1)));
-        btTransformUtil::calculateVelocity(T1, T2, t2-t1, dummy, interpAngVel);
+        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel);
     }
 }
 
 void CRTrajectory::BuildGraphicalPath()
 {
-    if(points.size() < 3)
-        PWLTrajectory::BuildGraphicalPath();
-    else
+    PWLTrajectory::BuildGraphicalPath();
+
+    if(points.size() >= 3)
     {
-        path.points.clear();
+        vis[1].points.clear();
         for(size_t i=0; i<points.size()-1; ++i)
         {
             Vector3 P1 = points[i].T.getOrigin();
@@ -146,9 +146,9 @@ void CRTrajectory::BuildGraphicalPath()
 
             Scalar dt = (t2-t1)/Scalar(100.0);
             for(Scalar t=t1; t<t2; t+=dt)
-                path.points.push_back(glVectorFromVector(catmullRom(P0, P1, P2, P3, t0, t1, t2, t3, t)));    
+                vis[1].points.push_back(glVectorFromVector(catmullRom(P0, P1, P2, P3, t0, t1, t2, t3, t)));    
         }
-        path.points.push_back(glVectorFromVector(points.back().T.getOrigin()));
+        vis[1].points.push_back(glVectorFromVector(points.back().T.getOrigin()));
     }
 }
 

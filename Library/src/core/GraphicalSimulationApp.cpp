@@ -67,6 +67,8 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     joystickAxes = NULL;
     joystickButtons = NULL;
     joystickHats = NULL;
+    mouseWasDown.type = SDL_LASTEVENT;
+    limitFramerate = true;
     simulationThread = NULL;
     loadingThread = NULL;
     glPipeline = NULL;
@@ -117,6 +119,11 @@ void GraphicalSimulationApp::ShowConsole()
 void GraphicalSimulationApp::HideConsole()
 {
     displayConsole = false;
+}
+
+void GraphicalSimulationApp::setLimitFramerate(bool enabled)
+{
+    limitFramerate = enabled;
 }
 
 OpenGLPipeline* GraphicalSimulationApp::getGLPipeline()
@@ -460,161 +467,158 @@ void GraphicalSimulationApp::ProcessInputs()
 {
 }
 
-void GraphicalSimulationApp::Loop()
+void GraphicalSimulationApp::LoopInternal()
 {
     SDL_Event event;
-    bool mouseWasDown = false;
-    uint64_t startTime = GetTimeInMicroseconds();
-    
-    while(!hasFinished())
-    {
-        SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
+    SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
             
-        while(SDL_PollEvent(&event))
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
         {
-            switch(event.type)
-            {
-                case SDL_WINDOWEVENT:
-                    WindowEvent(&event);
-                    break;
+            case SDL_WINDOWEVENT:
+                WindowEvent(&event);
+                break;
+            
+            case SDL_TEXTINPUT:
+                break;
                 
-                case SDL_TEXTINPUT:
-                    break;
-                    
-                case SDL_KEYDOWN:
+            case SDL_KEYDOWN:
+            {
+                gui->KeyDown(event.key.keysym.sym);
+                KeyDown(&event);
+                break;
+            }
+                
+            case SDL_KEYUP:
+            {
+                gui->KeyUp(event.key.keysym.sym);
+                KeyUp(&event);
+                break;
+            }
+                
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                gui->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
+                mouseWasDown = event;
+            }
+                break;
+                
+            case SDL_MOUSEBUTTONUP:
+            {
+                //GUI
+                gui->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
+                
+                //Trackball
+                if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
                 {
-                    gui->KeyDown(event.key.keysym.sym);
-                    KeyDown(&event);
-                    break;
-                }
-                    
-                case SDL_KEYUP:
-                {
-                    gui->KeyUp(event.key.keysym.sym);
-                    KeyUp(&event);
-                    break;
-                }
-                    
-                case SDL_MOUSEBUTTONDOWN:
-                {
-                    gui->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
-                    mouseWasDown = true;
-                }
-                    break;
-                    
-                case SDL_MOUSEBUTTONUP:
-                {
-                    //GUI
-                    gui->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
-                    
-                    //Trackball
-                    if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
-                    {
-                        OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-                        if(trackball->isEnabled())
-                            trackball->MouseUp();
-                    }
-                    
-                    //Pass
-                    MouseUp(&event);
-                }
-                    break;
-                    
-                case SDL_MOUSEMOTION:
-                {
-                    //GUI
-                    gui->MouseMove(event.motion.x, event.motion.y);
-                    
                     OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
                     if(trackball->isEnabled())
-                    {
-                        GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                        GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                        trackball->MouseMove(xPos, yPos);
-                    }
-                        
-                    //Pass
-                    MouseMove(&event);
+                        trackball->MouseUp();
                 }
-                    break;
-                    
-                case SDL_MOUSEWHEEL:
-                {
-                    if(displayConsole) //GUI
-                        ((OpenGLConsole*)console)->Scroll((GLfloat)-event.wheel.y);
-                    else
-                    {
-                        //Trackball
-                        OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-                        if(trackball->isEnabled())
-                            trackball->MouseScroll(event.wheel.y * -1.f);
-                        
-                        //Pass
-                        MouseScroll(&event);
-                    }
-                }
-                    break;
-                    
-                case SDL_JOYBUTTONDOWN:
-                    joystickButtons[event.jbutton.button] = true;
-                    JoystickDown(&event);
-                    break;
-                    
-                case SDL_JOYBUTTONUP:
-                    joystickButtons[event.jbutton.button] = false;
-                    JoystickUp(&event);
-                    break;
-                    
-                case SDL_QUIT:
-                {
-                    if(isRunning())
-                        StopSimulation();
-                        
-                    Quit();
-                }   
-                    break;
+                
+                //Pass
+                MouseUp(&event);
             }
-        }
-
-        if(joystick != NULL)
-        {
-            for(int i=0; i<SDL_JoystickNumAxes(joystick); i++)
-                joystickAxes[i] = SDL_JoystickGetAxis(joystick, i);
-        
-            for(int i=0; i<SDL_JoystickNumHats(joystick); i++)
-                joystickHats[i] = SDL_JoystickGetHat(joystick, i);
-        }
-        
-        ProcessInputs();
-        RenderLoop();
-        
-        //workaround for checking if IMGUI is being manipulated
-        if(mouseWasDown && !gui->isAnyActive())
-        {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            
-            if(trackball->isEnabled())
+                break;
+                
+            case SDL_MOUSEMOTION:
             {
-                if(event.button.button == SDL_BUTTON_LEFT)
-                {
-                    glm::vec3 eye = trackball->GetEyePosition();
-                    glm::vec3 ray = trackball->Ray(event.button.x, event.button.y);
-                    selectedEntity = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
-                }
-                else //RIGHT OR MIDDLE
+                //GUI
+                gui->MouseMove(event.motion.x, event.motion.y);
+                
+                OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
+                if(trackball->isEnabled())
                 {
                     GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
                     GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                    trackball->MouseDown(xPos, yPos, event.button.button == SDL_BUTTON_MIDDLE);
+                    trackball->MouseMove(xPos, yPos);
+                }
+                    
+                //Pass
+                MouseMove(&event);
+            }
+                break;
+                
+            case SDL_MOUSEWHEEL:
+            {
+                if(displayConsole) //GUI
+                    ((OpenGLConsole*)console)->Scroll((GLfloat)-event.wheel.y);
+                else
+                {
+                    //Trackball
+                    OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
+                    if(trackball->isEnabled())
+                        trackball->MouseScroll(event.wheel.y * -1.f);
+                    
+                    //Pass
+                    MouseScroll(&event);
                 }
             }
-            
-            //Pass
-            MouseDown(&event);
+                break;
+                
+            case SDL_JOYBUTTONDOWN:
+                joystickButtons[event.jbutton.button] = true;
+                JoystickDown(&event);
+                break;
+                
+            case SDL_JOYBUTTONUP:
+                joystickButtons[event.jbutton.button] = false;
+                JoystickUp(&event);
+                break;
+                
+            case SDL_QUIT:
+            {
+                if(isRunning())
+                    StopSimulation();
+                    
+                Quit();
+            }   
+                break;
         }
-        mouseWasDown = false;
+    }
 
-        //Framerate limitting (60Hz)
+    if(joystick != NULL)
+    {
+        for(int i=0; i<SDL_JoystickNumAxes(joystick); i++)
+            joystickAxes[i] = SDL_JoystickGetAxis(joystick, i);
+    
+        for(int i=0; i<SDL_JoystickNumHats(joystick); i++)
+            joystickHats[i] = SDL_JoystickGetHat(joystick, i);
+    }
+    
+    ProcessInputs();
+    RenderLoop();
+    
+    //workaround for checking if IMGUI is being manipulated
+    if(mouseWasDown.type == SDL_MOUSEBUTTONDOWN && !gui->isAnyActive())
+    {
+        OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
+        
+        if(trackball->isEnabled())
+        {
+            if(mouseWasDown.button.button == SDL_BUTTON_LEFT)
+            {
+                glm::vec3 eye = trackball->GetEyePosition();
+                glm::vec3 ray = trackball->Ray(mouseWasDown.button.x, mouseWasDown.button.y);
+                selectedEntity = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
+            }
+            else //RIGHT OR MIDDLE
+            {
+                GLfloat xPos = (GLfloat)(mouseWasDown.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+                GLfloat yPos = -(GLfloat)(mouseWasDown.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
+                trackball->MouseDown(xPos, yPos, mouseWasDown.button.button == SDL_BUTTON_MIDDLE);
+            }
+        }
+        
+        //Pass
+        MouseDown(&event);
+    }
+    mouseWasDown.type = SDL_LASTEVENT;
+
+    //Framerate limitting (60Hz)
+    if(limitFramerate)
+    {
         uint64_t elapsedTime = GetTimeInMicroseconds() - startTime;
         if(elapsedTime < 16000)
             std::this_thread::sleep_for(std::chrono::microseconds(16000 - elapsedTime));

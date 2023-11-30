@@ -16,59 +16,48 @@
 */
 
 //
-//  PWLTrajectory.h
+//  BSTrajectory.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 08/11/23.
+//  Copyright(c) 2023 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PWLTrajectory__
-#define __Stonefish_PWLTrajectory__
+#ifndef __Stonefish_BSTrajectory__
+#define __Stonefish_BSTrajectory__
 
-#include "entities/animation/Trajectory.h"
+#include "entities/animation/PWLTrajectory.h"
+#include "tinysplinecxx.h"
 
 namespace sf
 {
-    //! A structure representing a trajectory point.
-    struct KeyPoint
-    {
-        Scalar t;
-        Transform T;
-
-        bool operator< (const KeyPoint& rhs) const { return (t < rhs.t); }
-        bool operator== (const KeyPoint& rhs) const { return (t == rhs.t); }
-    };
-
-    //! A class representing a piece-wise linear trajectory.
-    class PWLTrajectory : public Trajectory
+    //! A class representing a B-spline trajectory.
+    class BSTrajectory : public PWLTrajectory
     {
     public:
         //! A constructor.
         /*!
          \param playback an enum representing the desired playback mode
          */
-        PWLTrajectory(PlaybackMode playback);
+        BSTrajectory(PlaybackMode playback);
 
         //! A method adding a new key point.
         /*!
          \param keyTime the time at point
          \param keyTransform the transform at point
          */
-        virtual void AddKeyPoint(Scalar keyTime, Transform keyTransform);
+        void AddKeyPoint(Scalar keyTime, Transform keyTransform);
 
         //! A method updating the interpolated transform and velocities.
-        virtual void Interpolate();
+        void Interpolate();
 
         //! A method that builds a graphical representation of the trajectory.
-        virtual void BuildGraphicalPath();
+        void BuildGraphicalPath();
 
-        //! A method returning the elements that should be rendered.
-        std::vector<Renderable> Render();
-
-    protected:
-        std::vector<KeyPoint> points;
-        std::vector<Renderable> vis;
+    private:
+        tinyspline::BSpline spline;
+        tinyspline::BSpline deriv;
+        double lastPlayTime;
     };
 }
 
