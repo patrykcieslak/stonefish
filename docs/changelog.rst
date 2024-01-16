@@ -9,6 +9,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
 -  Fixed IMU readings, adding the missing gravitational and centrifugal acceleration
+-  Added an option to set internal parts of a compound body as always visible
 
 1.3
 ===

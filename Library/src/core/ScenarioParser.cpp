@@ -1661,8 +1661,10 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 delete comp;
                 return false;
             }
+            bool alwaysVisible = false;
+            item->QueryBoolAttribute("always_visible", &alwaysVisible);
                 
-            comp->AddInternalPart(part, partOrigin);
+            comp->AddInternalPart(part, partOrigin, alwaysVisible);
             item = item->NextSiblingElement("internal_part");
         }
         

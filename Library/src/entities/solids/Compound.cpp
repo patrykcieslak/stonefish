@@ -129,7 +129,7 @@ std::vector<Vector3>* Compound::getMeshVertices() const
     return pVert;
 }
     
-void Compound::AddInternalPart(SolidEntity* solid, const Transform& origin)
+void Compound::AddInternalPart(SolidEntity* solid, const Transform& origin, bool alwaysVisible)
 {
     if(solid != NULL)
     {
@@ -137,6 +137,7 @@ void Compound::AddInternalPart(SolidEntity* solid, const Transform& origin)
         part.solid = solid;
         part.origin = origin;
         part.isExternal = false;
+        part.alwaysVisible = alwaysVisible;
         parts.push_back(part);
         RecalculatePhysicalProperties();
     }
@@ -150,6 +151,7 @@ void Compound::AddExternalPart(SolidEntity* solid, const Transform& origin)
         part.solid = solid;
         part.origin = origin;
         part.isExternal = true;
+        part.alwaysVisible = false;
         parts.push_back(part);
         RecalculatePhysicalProperties();
     }
@@ -459,7 +461,8 @@ std::vector<Renderable> Compound::Render(size_t partId)
         Renderable item;
 
         if((parts.at(partId).isExternal && !displayInternals)  
-            || (!parts.at(partId).isExternal && displayInternals))
+            || (!parts.at(partId).isExternal && displayInternals)
+            || (parts.at(partId).alwaysVisible))
         {
             item.type = RenderableType::SOLID;
             item.materialName = parts.at(partId).solid->getMaterial().name;
