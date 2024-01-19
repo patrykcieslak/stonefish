@@ -59,7 +59,7 @@ Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy,
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, Ipri, Irot);
+    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
     

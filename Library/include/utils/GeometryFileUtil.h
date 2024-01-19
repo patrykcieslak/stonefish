@@ -36,6 +36,7 @@ namespace sf
         Scalar mass;
         Vector3 CG;
         Scalar volume;
+        Scalar surface;
         Vector3 Ipri;
         Matrix3 Irot;
     };
@@ -72,10 +73,11 @@ namespace sf
      \param mass output of the computed mass [kg]
      \param CG output of the computed location of the centre of gravity [m]
      \param volume output of the computed volume [m3]
+     \param surface output of the computed surface area [m2]
      \param Ipri output of the computed moments of inertia [kgm2]
      \param Irot output of the rotation matrix between mesh origin and the computed principal inertial axes
      */
-    void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot);
+    void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Scalar& surface, Vector3& Ipri, Matrix3& Irot);
     
     //! A function to compute all physical properties of a mesh.
     /*!

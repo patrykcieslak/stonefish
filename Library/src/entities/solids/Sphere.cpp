@@ -40,18 +40,20 @@ Sphere::Sphere(std::string uniqueName, BodyPhysicsSettings phy, Scalar radius, c
     P_CB = Vector3(0,0,0);
     
     //Calculate physical properties
-    if(thick > Scalar(0) && thick/Scalar(2) < radius)
+    if(thick > Scalar(0) && thick/Scalar(2) < r)
     {
         Scalar r1 = r - thick/Scalar(2);
         Scalar r2 = r + thick/Scalar(2);
         volume = Scalar(4)/Scalar(3)*M_PI*(r2*r2*r2 - r1*r1*r1);
+        surface = Scalar(4)*M_PI*r2*r2;
         mass = volume * mat.density;
         Scalar I = Scalar(2)/Scalar(5)*mass*((r2*r2*r2*r2*r2 - r1*r1*r1*r1*r1)/(r2*r2*r2 - r1*r1*r1));
         Ipri = Vector3(I,I,I);
     }    
     else
     {
-        volume = Scalar(4)/Scalar(3)*M_PI*radius*r*r;
+        volume = Scalar(4)/Scalar(3)*M_PI*r*r*r;
+        surface = Scalar(4)*M_PI*r*r;
         mass = volume * mat.density;
         Scalar I = Scalar(2)/Scalar(5)*mass*r*r;
         Ipri = Vector3(I,I,I);

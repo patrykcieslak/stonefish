@@ -142,9 +142,11 @@ namespace sf
          \param _Tdq output of the torque induced by form drag
          \param _Fds output of the damping force resulting from skin friction
          \param _Tds output of the torque induced by skin friction
+         \param _Swet output of the wetted surface area
+         \param debug output of the debug rendering
         */
         static void ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
-                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Renderable& debug);
+                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Scalar& _Swet, Renderable& debug);
         
         //! A static method that computes fluid dynamics when a body is completely submerged.
         /*!
@@ -301,6 +303,9 @@ namespace sf
         //! A method returning the hydrodynamic forces computed for the body.
         void getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Fs, Vector3& Ts);
         
+        //! A method returning the wetted surface area of the body.
+        Scalar getWettedSurface() const;
+
         //! A method returning the mass of the body.
         Scalar getMass() const;
         
@@ -321,6 +326,9 @@ namespace sf
         
         //! A method returning the volume of the body.
         Scalar getVolume() const;
+
+        //! A method returning the surface area of the body.
+        Scalar getSurface() const;
         
         //! A method returning the parameters of the approximation of body shape
         /*!
@@ -378,6 +386,7 @@ namespace sf
         Mesh* phyMesh; //Mesh used for physics calculation
         Scalar thick;
         Scalar volume;
+        Scalar surface;
         
         Scalar mass;  //Mass of solid
         Vector3 Ipri; //Principal moments of inertia
@@ -412,6 +421,7 @@ namespace sf
         Vector3 Tds;
         Vector3 Fda;
         Vector3 Tda;
+        Scalar Swet; //Wetted surface of the body
         
         //Motion
         Vector3 lastV;

@@ -172,9 +172,10 @@ void Compound::RecalculatePhysicalProperties()
     //1. Calculate compound mass, CG and CB
     Vector3 compoundCG(0,0,0); //In compound body origin frame
     Vector3 compoundCB(0,0,0); //In compound body origin frame
-    Scalar compoundMass = 0;
-    Scalar compoundAugmentedMass = 0;
-    Scalar compoundVolume = 0;
+    Scalar compoundMass(0);
+    Scalar compoundAugmentedMass(0);
+    Scalar compoundVolume(0);
+    Scalar compoundSurface(0);
     
     T_CG2O = T_CG2C = T_CG2G = Transform::getIdentity();
     P_CB = Vector3(0,0,0);
@@ -191,6 +192,9 @@ void Compound::RecalculatePhysicalProperties()
             compoundVolume += parts[i].solid->getVolume();
             compoundCB += parts[i].origin * parts[i].solid->getCG2OTransform().inverse() * parts[i].solid->getCB() * parts[i].solid->getVolume();
         }
+
+        if(parts[i].isExternal)
+            compoundSurface += parts[i].solid->getSurface();
     }
     
     //Set transform origin
@@ -263,6 +267,7 @@ void Compound::RecalculatePhysicalProperties()
     aMass.setY(compoundAugmentedMass - compoundMass);
     aMass.setZ(compoundAugmentedMass - compoundMass);
     volume = compoundVolume;
+    surface = compoundSurface;
     Ipri = compoundPriInertia;
 }
 
@@ -302,6 +307,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         Tdq.setZero();
         Fds.setZero();
         Tds.setZero();
+        Swet = Scalar(0);
         return;
     }
     
@@ -350,6 +356,8 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                     Tds += Tdsp;
                 }
         }
+
+        Swet = surface;
     }
     else //CROSSING FLUID SURFACE (compound body but not necessarily all parts!)
     {
@@ -371,6 +379,8 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                 Fds.setZero();
                 Tds.setZero();
             }
+
+            Swet = Scalar(0);
         
             //Get velocity data
             Vector3 v = getLinearVelocity();
@@ -386,7 +396,8 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             Vector3 Tdqp(0,0,0);
             Vector3 Fdsp(0,0,0);
             Vector3 Tdsp(0,0,0);
-            
+            Scalar Swetp(0);
+
             for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
             {
                 Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
@@ -395,7 +406,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, submerged);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, Swetp, submerged);
                     parts[i].solid->CorrectHydrodynamicForces(ocn, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
                     Fb += Fbp;
                     Tb += Tbp;
@@ -405,11 +416,12 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                     Tdq += Tdqp;
                     Fds += Fdsp;
                     Tds += Tdsp;
+                    Swet += Swetp;
                 }
                 else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
                     pSettings.dampingForces = false;
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, submerged);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, Swetp, submerged);
                     Fb += Fbp;
                     Tb += Tbp;
                 }
