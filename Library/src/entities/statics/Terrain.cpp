@@ -47,7 +47,7 @@ Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar sca
         heightmap = new GLfloat[w*h];
         for(int i=0; i<h; ++i)
             for(int j=0; j<w; ++j)
-                heightmap[i*w+j] = (1.f - data[i*w+j]/(GLfloat)(__UINT16_MAX__)) * height;
+                heightmap[i*w+j] = (1.f - data[i*w+j]/(GLfloat)(UINT16_MAX)) * height;
         stbi_image_free(data);
     }
     else //8 bit image
@@ -57,7 +57,7 @@ Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar sca
         heightmap = new GLfloat[w*h];
         for(int i=0; i<h; ++i)
             for(int j=0; j<w; ++j)
-                heightmap[i*w+j] = (1.f - data[i*w+j]/(GLfloat)(__UINT8_MAX__)) * height;
+                heightmap[i*w+j] = (1.f - data[i*w+j]/(GLfloat)(UINT8_MAX)) * height;
         stbi_image_free(data);
     }
     

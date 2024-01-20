@@ -14,8 +14,12 @@ option(EMBED_RESOURCES "Embed internal resources in the library executable" OFF)
 # Compile flags
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -DDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+if(MSVC)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
+else()
+    set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -DDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+endif()
 set(OpenGL_GL_PREFERENCE "GLVND")
 
 # Find required libraries

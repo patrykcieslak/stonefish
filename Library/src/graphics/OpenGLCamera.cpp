@@ -119,13 +119,17 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     //---- Tonemapping ----
     histogramBins = 256;
     histogramRange = glm::vec2(-1.f,11.f);
+#ifdef _MSC_VER
+    GLuint histogram[256];
+#else
     GLuint histogram[histogramBins];
+#endif
     memset(histogram, 0, histogramBins * sizeof(GLuint));
     glGenBuffers(1, &histogramSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins * sizeof(GLuint), histogram, GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    
+
     GLfloat zero = 0.f;
     exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
                                                  GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);

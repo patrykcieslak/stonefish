@@ -131,7 +131,17 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glEnableVertexAttribArray(0);
     
     fanDiv = btMin((GLuint)ceil(horizontalFOVDeg), nBeams);
+#ifdef _MSC_VER
+    //make a (fanDiv + 1) * 2 x 4 automatic array, can't resize but is _really fast_.
+    //std::vector<std::array<GLfloat, 4>> fanData((fanDiv + 1) * 2);
+    //auto fanData = std::unique_ptr<GLfloat[]>([(fanDiv + 1) * 2][4]);
+
+    //GLfloat** fanData = (GLfloat**)malloc((fanDiv + 1) * 2 * 4 * sizeof(GLfloat*));
+
+    GLfloat (*fanData)[4] = (GLfloat(*)[4]) calloc((fanDiv + 1) * 2, sizeof * fanData);
+#else
     GLfloat fanData[(fanDiv+1)*2][4];
+#endif
     GLfloat Rmin = range.x/range.y;
     
     //Flipped vertically to account for OpenGL window coordinates
@@ -189,6 +199,9 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     sonarPostprocessShader->SetUniform("sonarOutput", TEX_POSTPROCESS1);
     sonarPostprocessShader->SetUniform("sonarPost", TEX_POSTPROCESS2);
     OpenGLState::UseProgram(0);
+#ifdef _MSC_VER
+    free(fanData);
+#endif
 }
 
 OpenGLFLS::~OpenGLFLS()
@@ -235,7 +248,11 @@ void OpenGLFLS::UpdateTransform()
         projection[2] = glm::vec4(0.f, 0.f, -(far + near)/(far-near), -1.f);
         projection[3] = glm::vec4(0.f, 0.f, -2.f*far*near/(far-near), 0.f);
 
+#ifdef _MSC_VER
+        GLfloat(*fanData)[4] = (GLfloat(*)[4]) calloc((fanDiv + 1) * 2, sizeof * fanData);
+#else
         GLfloat fanData[(fanDiv+1)*2][4];
+#endif
         GLfloat Rmin = range.x/range.y;
         GLfloat hFactor = sinf(fov.x/2.f);
         //Flipped vertically to account for OpenGL window coordinates
@@ -257,6 +274,9 @@ void OpenGLFLS::UpdateTransform()
         glBindBuffer(GL_ARRAY_BUFFER, displayVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(fanData), fanData);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+#ifdef _MSC_VER
+        free(fanData);
+#endif
     }
 
     //Inform sonar to run callback

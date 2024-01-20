@@ -32,7 +32,7 @@
 namespace sf
 {
 	//! A structure representing data of the SunSky UBO (std140 aligned).
-    #pragma pack(1)
+    #pragma pack(push, 1)
 	struct SunSkyUBO
 	{
 		glm::mat4 sunClipSpace[4];      
@@ -43,7 +43,7 @@ namespace sf
         glm::vec3 whitePoint;
         GLfloat atmLengthUnitInMeters;
 	};
-    #pragma pack(0)
+    #pragma pack(pop)
 
     //! An enum definind id's of atmosphere textures.
     enum AtmosphereTextures

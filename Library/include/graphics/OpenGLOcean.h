@@ -50,7 +50,7 @@ namespace sf
         float t;
     };
 
-    #pragma pack(1)
+    #pragma pack(push, 1)
     //! A structure representing the ocean currents UBO.
     struct OceanCurrentsUBO
     {
@@ -58,7 +58,7 @@ namespace sf
         glm::vec3 gravity;
         GLuint numCurrents;
     };
-    #pragma pack(0)
+    #pragma pack(pop)
 
     class GLSLShader;
 	class OpenGLCamera;

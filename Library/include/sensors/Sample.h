@@ -42,6 +42,14 @@ namespace sf
          \param index a number specifying the id of the sample
          */
         Sample(unsigned short nDimensions, Scalar* values, bool invalid = false, uint64_t index = 0);
+
+        //! Constructor for initialized sample.
+       /*!
+        \param nDimensions the number of dimensions of the measurement
+        \param invalid a flag to mark if it is and invalid output
+        \param index a number specifying the id of the sample
+        */
+        Sample(unsigned short nDimensions, bool invalid = false, uint64_t index = 0);
         
         //! A copy constructor.
         /*!

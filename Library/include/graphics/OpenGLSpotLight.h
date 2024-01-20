@@ -31,7 +31,7 @@
 namespace sf
 {
     //! A structure representing a spot light in the Ligths UBO (std140 aligned).
-    #pragma pack(1)
+    #pragma pack(push, 1)  
     struct SpotLightUBO : public LightUBO
     {
         glm::mat4 clipSpace;
@@ -44,7 +44,7 @@ namespace sf
         glm::vec3 radius; //UV + physical radius
         uint8_t pad[4];
     };
-    #pragma pack(0)
+    #pragma pack(pop)
 
     //! A class implementing an OpenGL spot light with shadow.
     class OpenGLSpotLight : public OpenGLLight

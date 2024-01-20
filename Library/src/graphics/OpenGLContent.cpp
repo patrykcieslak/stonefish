@@ -1972,7 +1972,7 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
     GLfloat taper = tipChordLength/baseChordLength;
     GLfloat offset = baseChordLength/2.f;
     
-    int div = 20;
+    constexpr int div = 20;
     GLfloat xt[div+1];
     GLfloat yt[div+1];
     for(int i=0; i<=div; ++i)

@@ -31,7 +31,7 @@
 namespace sf
 {
     //! A structure representing point light in the Lights UBO.
-    #pragma pack(1)
+    #pragma pack(push, 1)
     struct PointLightUBO : public LightUBO
     {
         glm::vec3 position;
@@ -39,7 +39,8 @@ namespace sf
         glm::vec3 color;
         uint8_t pad[4];
     };
-    #pragma pack(0)
+    #pragma pack(pop)
+
 
     //! A class implementing an OpenGL point light (shadow not supported).
     class OpenGLPointLight : public OpenGLLight

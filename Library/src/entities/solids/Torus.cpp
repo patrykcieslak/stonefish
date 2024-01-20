@@ -23,6 +23,10 @@
 //  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
 //
 
+#define _USE_MATH_DEFINES // for Microsoft Visual C++
+#include <cmath>
+
+
 #include "entities/solids/Torus.h"
 
 #include "core/TorusShape.h"

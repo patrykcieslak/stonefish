@@ -198,7 +198,11 @@ void OpenGLOceanParticles::Init()
 
     unsigned int seed = (unsigned int)GetTimeInMicroseconds();
     std::mt19937 generator(seed);
+#ifdef _MSC_VER
+    std::uniform_int_distribution<int> dist(-127, 127);
+#else
     std::uniform_int_distribution<int8_t> dist(-127,127);
+#endif
     glm::uvec3 noiseSize3(noiseSize, noiseSize, noiseSize);
     int8_t* noiseData = new int8_t[noiseSize3.x * noiseSize3.y * noiseSize3.z * 4];
     int8_t *ptr = noiseData;

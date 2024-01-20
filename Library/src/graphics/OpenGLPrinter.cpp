@@ -163,6 +163,16 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     if(!initialized)
         return;
     
+#ifdef _MSC_VER
+    struct Point
+    {
+        GLfloat x;
+        GLfloat y;
+        GLfloat s;
+        GLfloat t;
+    };
+    Point* coords = new Point[6 * text.length()];
+#else
     struct Point
     {
         GLfloat x;
@@ -170,7 +180,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
         GLfloat s;
         GLfloat t;
     } coords[6 * text.length()];
-    
+#endif
     memset(coords, 0, sizeof coords);
     
     unsigned int n = 0;
@@ -209,13 +219,13 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
         
         if(!w || !h)
             continue;
-        
-        coords[n++] = (Point){x2, -y2,     ch.offset, 0};
-        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth, 0};
-        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight};
-        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth, 0};
-        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight};
-        coords[n++] = (Point){x2+w, -y2-h, ch.offset + ch.size.x/texWidth, ch.size.y/texHeight};
+
+        coords[n++] = Point({ x2, -y2,     ch.offset, 0 });
+        coords[n++] = Point({ x2 + w, -y2,   ch.offset + ch.size.x / texWidth, 0 });
+        coords[n++] = Point({ x2, -y2 - h,   ch.offset, ch.size.y / texHeight });
+        coords[n++] = Point({ x2 + w, -y2,   ch.offset + ch.size.x / texWidth, 0 });
+        coords[n++] = Point({ x2, -y2 - h,   ch.offset, ch.size.y / texHeight });
+        coords[n++] = Point({ x2 + w, -y2 - h, ch.offset + ch.size.x / texWidth, ch.size.y / texHeight });
     }
     
     glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
@@ -235,6 +245,9 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
         OpenGLState::UnbindTexture(TEX_GUI1);
         OpenGLState::UseProgram(0);
     }
+#ifdef _MSC_VER
+    delete[] coords;
+#endif
 }
 
 GLuint OpenGLPrinter::TextLength(const std::string& text)

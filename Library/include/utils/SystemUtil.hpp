@@ -40,7 +40,6 @@
     #include <unistd.h>
     #include <Carbon/Carbon.h>
 #else //WINDOWS
-    #include <windows.h>
 #endif
 
 #include "core/GraphicalSimulationApp.h"
@@ -61,14 +60,7 @@ inline int64_t GetTimeInNanoseconds()
     return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 }
 
-inline void GetCWD(char* buffer, int length)
-{
-#ifdef _MSC_VER
-	GetCurrentDirectory(length, buffer);
-#else
-    getcwd(buffer, length);
-#endif
-}
+void GetCWD(char* buffer, int length);
 
 inline std::string GetShaderPath()
 {
@@ -80,48 +72,11 @@ inline std::string GetDataPath()
     return SimulationApp::getApp()->getDataPath();
 }
 
-inline const char* GetDataPathPrefix(const char* directory)
-{
-    static char dataPathPrefix[PATH_MAX];
-    
-#ifdef __linux__
-
-#elif __APPLE__    
-    CFStringRef dir = CFStringCreateWithCString(CFAllocatorGetDefault(), directory, kCFStringEncodingMacRoman);
-    
-    CFURLRef datafilesURL = CFBundleCopyResourceURL(CFBundleGetMainBundle(), dir, 0, 0);
-    
-    CFURLGetFileSystemRepresentation(datafilesURL, true, reinterpret_cast<UInt8*>(dataPathPrefix), PATH_MAX);
-    
-    if(datafilesURL != NULL)
-        CFRelease(datafilesURL);
-    
-    CFRelease(dir);
-#else //WINDOWS
-    char* envDataPath = 0;
-    
-    // get data path from environment var
-    envDataPath = getenv(DATAPATH_VAR_NAME);
-    
-    // set data path prefix / base directory.  This will
-    // be either from an environment variable, or from
-    // a compiled in default based on original configure
-    // options
-    if (envDataPath != 0)
-        strcpy(dataPathPrefix, envDataPath);
-    else
-        strcpy(dataPathPrefix, CEGUI_SAMPLE_DATAPATH);
-#endif
-    
-    return dataPathPrefix;
-}
+const char* GetDataPathPrefix(const char* directory);
 
 //Extensions
 inline bool CheckForExtension(const char* extensionName)
 {
-#ifdef _MSC_VER
-	return glewIsSupported(extensionName);
-#else
     char* extensions = (char*)glGetString(GL_EXTENSIONS);
     if(extensions == NULL)
         return false;
@@ -137,7 +92,6 @@ inline bool CheckForExtension(const char* extensionName)
         extensions += (n+1);
     }
     return false;
-#endif
 }
 
 //Random functions
