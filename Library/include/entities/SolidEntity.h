@@ -239,6 +239,13 @@ namespace sf
          \param damping a damping coefficient used when simulating compliant contact [N s m^-1]
          */
         void SetContactProperties(bool soft, Scalar stiffness = Scalar(0), Scalar damping = Scalar(0));
+
+        //! A method used to set hydrodynamic coeffcients.
+        /*!
+         \param Cd a vector of form drag coefficients 
+         \param Cf a vector of skin friction coefficients
+         */
+        void SetHydrodynamicCoefficients(const Vector3& Cd, const Vector3& Cf);
         
         //! A method to set the body pose in the world frame.
         void setCGTransform(const Transform& trans);
@@ -408,6 +415,8 @@ namespace sf
 		Vector3 aI; //Hydrodynamic added inertia
         GeometryApproxType fdApproxType;
         std::vector<Scalar> fdApproxParams;
+        Vector3 fdCd;
+        Vector3 fdCf;
         Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame
         
         BodyPhysicsSettings phy;
