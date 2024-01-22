@@ -301,12 +301,10 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
     {
         Fb.setZero();
         Tb.setZero();
-        Fdl.setZero();
-        Tdl.setZero();
         Fdq.setZero();
         Tdq.setZero();
-        Fds.setZero();
-        Tds.setZero();
+        Fdf.setZero();
+        Tdf.setZero();
         Swet = Scalar(0);
         return;
     }
@@ -323,37 +321,31 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         if(settings.dampingForces)
         {
             //Set zero
-            Fdl.setZero();
-            Tdl.setZero();
             Fdq.setZero();
             Tdq.setZero();
-            Fds.setZero();
-            Tds.setZero();
+            Fdf.setZero();
+            Tdf.setZero();
             
             //Get velocity data
             Vector3 v = getLinearVelocity();
             Vector3 omega = getAngularVelocity();
             
             //Create temporary vectors for summing
-            Vector3 Fdlp(0,0,0);
-            Vector3 Tdlp(0,0,0);
             Vector3 Fdqp(0,0,0);
             Vector3 Tdqp(0,0,0);
-            Vector3 Fdsp(0,0,0);
-            Vector3 Tdsp(0,0,0);
+            Vector3 Fdfp(0,0,0);
+            Vector3 Tdfp(0,0,0);
             
             for(size_t i=0; i<parts.size(); ++i) //Go through all parts
                 if(parts[i].isExternal) //Compute drag only for external parts
                 {
                     Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
-                    ComputeHydrodynamicForcesSubmerged(parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
-                    parts[i].solid->CorrectHydrodynamicForces(ocn, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
-                    Fdl += Fdlp;
-                    Tdl += Tdlp;
+                    ComputeHydrodynamicForcesSubmerged(parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdqp, Tdqp, Fdfp, Tdfp);
+                    parts[i].solid->CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp);
                     Fdq += Fdqp;
                     Tdq += Tdqp;
-                    Fds += Fdsp;
-                    Tds += Tdsp;
+                    Fdf += Fdfp;
+                    Tdf += Tdfp;
                 }
         }
 
@@ -372,12 +364,10 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         
             if(settings.dampingForces)
             {
-                Fdl.setZero();
-                Tdl.setZero();
                 Fdq.setZero();
                 Tdq.setZero();
-                Fds.setZero();
-                Tds.setZero();
+                Fdf.setZero();
+                Tdf.setZero();
             }
 
             Swet = Scalar(0);
@@ -389,13 +379,10 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             //Create temporary vectors for summing
             Vector3 Fbp(0,0,0);
             Vector3 Tbp(0,0,0);
-            
-            Vector3 Fdlp(0,0,0);
-            Vector3 Tdlp(0,0,0);
             Vector3 Fdqp(0,0,0);
             Vector3 Tdqp(0,0,0);
-            Vector3 Fdsp(0,0,0);
-            Vector3 Tdsp(0,0,0);
+            Vector3 Fdfp(0,0,0);
+            Vector3 Tdfp(0,0,0);
             Scalar Swetp(0);
 
             for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
@@ -406,22 +393,20 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, Swetp, submerged);
-                    parts[i].solid->CorrectHydrodynamicForces(ocn, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, submerged);
+                    parts[i].solid->CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp);
                     Fb += Fbp;
                     Tb += Tbp;
-                    Fdl += Fdlp;
-                    Tdl += Tdlp;
                     Fdq += Fdqp;
                     Tdq += Tdqp;
-                    Fds += Fdsp;
-                    Tds += Tdsp;
+                    Fdf += Fdfp;
+                    Tdf += Tdfp;
                     Swet += Swetp;
                 }
                 else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
                     pSettings.dampingForces = false;
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdlp, Tdlp, Fdqp, Tdqp, Fdsp, Tdsp, Swetp, submerged);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, submerged);
                     Fb += Fbp;
                     Tb += Tbp;
                 }
@@ -575,7 +560,7 @@ std::vector<Renderable> Compound::Render()
         
         item.points.pop_back();
         item.type = RenderableType::FORCE_LINEAR_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdl.x(), (GLfloat)Fdl.y(), (GLfloat)Fdl.z()));
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
         items.push_back(item);
         
         item.points.pop_back();

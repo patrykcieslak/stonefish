@@ -116,14 +116,12 @@ namespace sf
         //! A method that corrects damping forces based on geometry approximation
         /*!
          \param ocn a pointer to the fluid entity generating forces (currently only Ocean supported)
-         \param _Fdl output of the damping force resulting from linear drag
-         \param _Tdl output of the torque induced by linear drag
-         \param _Fdq output of the damping force resulting from form drag
-         \param _Tdq output of the torque induced by form drag
-         \param _Fds output of the damping force resulting from skin friction
-         \param _Tds output of the torque induced by skin friction
+         \param _Fdq the form drag force [N]
+         \param _Tdq the torque induced by the form drag force [Nm]
+         \param _Fdf the skin friction force [N]
+         \param _Tdf the torque induced by the skin friction force [Nm]
         */
-        void CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds);
+        void CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf);
         
         //! A static method that computes fluid dynamics when a body is crossing the fluid surface.
         /*!
@@ -136,17 +134,16 @@ namespace sf
          \param angularV the angular velocity of the body in the world frame
          \param _Fb output of the buoyancy force
          \param _Tb output of the torque induced by buoyancy force
-         \param _Fdl output of the damping force resulting from linear drag
-         \param _Tdl output of the torque induced by linear drag
          \param _Fdq output of the damping force resulting from form drag
          \param _Tdq output of the torque induced by form drag
-         \param _Fds output of the damping force resulting from skin friction
-         \param _Tds output of the torque induced by skin friction
+         \param _Fdf output of the damping force resulting from skin friction
+         \param _Tdf output of the torque induced by skin friction
          \param _Swet output of the wetted surface area
          \param debug output of the debug rendering
         */
         static void ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
-                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Scalar& _Swet, Renderable& debug);
+                                                     const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf, 
+                                                     Scalar& _Swet, Renderable& debug);
         
         //! A static method that computes fluid dynamics when a body is completely submerged.
         /*!
@@ -156,15 +153,13 @@ namespace sf
          \param T_C a transform from the world frame to the body physics frame
          \param linearV the linear velocity of the body in the world frame
          \param angularV the angular velocity of the body in the world frame
-         \param _Fdl output of the damping force resulting from linear drag
-         \param _Tdl output of the torque induced by linear drag
          \param _Fdq output of the damping force resulting from form drag
          \param _Tdq output of the torque induced by form drag
-         \param _Fds output of the damping force resulting from skin friction
-         \param _Tds output of the torque induced by skin friction
+         \param _Fdf output of the damping force resulting from skin friction
+         \param _Tdf output of the torque induced by skin friction
         */
         static void ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
-                                                       const Vector3& linearV, const Vector3& angularV, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds);
+                                                       const Vector3& linearV, const Vector3& angularV, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf);
         
         //! A method that computes aerodynamics.
         /*!
@@ -242,8 +237,8 @@ namespace sf
 
         //! A method used to set hydrodynamic coeffcients.
         /*!
-         \param Cd a vector of form drag coefficients 
-         \param Cf a vector of skin friction coefficients
+         \param Cd a vector of form quadratic drag (quadratic drag) coefficients 
+         \param Cf a vector of skin friction (viscous drag) coefficients
          */
         void SetHydrodynamicCoefficients(const Vector3& Cd, const Vector3& Cf);
         
@@ -308,8 +303,23 @@ namespace sf
         Vector3 getAppliedForce();
 
         //! A method returning the hydrodynamic forces computed for the body.
-        void getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Fs, Vector3& Ts);
+        /*!
+         \param Fb the buoyancy force [N]
+         \param Tb the buoyancy induced torque [Nm]
+         \param Fd the form drag force [N]
+         \param Td the form drag induced torque [Nm]
+         \param Ff the skin friction force [N]
+         \param Tf the skin friction induced torque [Nm]
+         */
+        void getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Ff, Vector3& Tf);
         
+        //! A method returning the hydrodynamic coefficents for the body.
+        /*!
+         \param Cd a vector of form quadratic drag (quadratic drag) coefficients 
+         \param Cf a vector of skin friction (viscous drag) coefficients
+         */
+        void getHydrodynamicCoefficients(Vector3& Cd, Vector3& Cf) const;
+
         //! A method returning the wetted surface area of the body.
         Scalar getWettedSurface() const;
 
@@ -422,15 +432,14 @@ namespace sf
         BodyPhysicsSettings phy;
         Vector3 Fb;
         Vector3 Tb;
-        Vector3 Fdl;
-        Vector3 Tdl;
         Vector3 Fdq;
         Vector3 Tdq;
-        Vector3 Fds;
-        Vector3 Tds;
+        Vector3 Fdf;
+        Vector3 Tdf;
+        Scalar Swet; //Wetted surface of the body
+        
         Vector3 Fda;
         Vector3 Tda;
-        Scalar Swet; //Wetted surface of the body
         
         //Motion
         Vector3 lastV;

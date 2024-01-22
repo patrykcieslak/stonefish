@@ -48,20 +48,17 @@ Wing::Wing(std::string uniqueName, BodyPhysicsSettings phy, Scalar baseChordLeng
     phyMesh = OpenGLContent::BuildWing((GLfloat)baseChordLength, (GLfloat)tipChordLength, (GLfloat)maxCamber, (GLfloat)maxCamberPos,
                                        (GLfloat)profileThickness, (GLfloat)wingLength);
     
-    
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
     ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
-    
-    //3. Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox( GeometryApproxType::ELLIPSOID);
-    
-    //4. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
     T_CG2G = T_CG2O * T_O2G;
+    
+    //3. Compute hydrodynamic properties
+    ComputeFluidDynamicsApprox(GeometryApproxType::ELLIPSOID);
     T_O2H = T_CG2O.inverse() * T_CG2H;
     P_CB = Vector3(0,0,0);
 }
@@ -110,13 +107,11 @@ Wing::Wing(std::string uniqueName, BodyPhysicsSettings phy, Scalar baseChordLeng
     ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
-    
-    //4. Compute hydrodynamic properties
-    ComputeFluidDynamicsApprox(GeometryApproxType::ELLIPSOID);
-    
-    //5. Compute missing transformations
     T_CG2O = T_CG2C * T_O2C.inverse();
     T_CG2G = T_CG2O * T_O2G;
+
+    //4. Compute hydrodynamic properties
+    ComputeFluidDynamicsApprox(GeometryApproxType::ELLIPSOID);
     T_O2H = T_CG2O.inverse() * T_CG2H;
     P_CB = Vector3(0,0,0);
 }

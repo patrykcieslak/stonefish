@@ -1681,6 +1681,8 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         Scalar mass;
         Scalar ix, iy, iz;
         Vector3 I;
+        Vector3 Cf(-1,-1,-1);
+        Vector3 Cd(-1,-1,-1);    
         bool cgok;
         unsigned int uvMode = 0;
         float uvScale = 1.f;
@@ -1715,6 +1717,16 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             I = Vector3(ix, iy, iz);
         cgok = (item = element->FirstChildElement("cg")) != nullptr && ParseTransform(item, cg);
         
+        //Hydrodynamic parameters
+        if((item = element->FirstChildElement("hydrodynamics")) != nullptr)
+        {   
+            const char* xyz = nullptr;
+            if(item->QueryStringAttribute("viscous_drag", &xyz) == XML_SUCCESS)
+                ParseVector(xyz, Cf);
+            if(item->QueryStringAttribute("quadratic_drag", &xyz) == XML_SUCCESS)
+                ParseVector(xyz, Cd);  
+        } 
+
         //Origin    
         if(typeStr != "model")
         {
@@ -1876,6 +1888,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             Transform newCg = cgok ? cg : solid->getCG2OTransform().inverse();  
             solid->SetArbitraryPhysicalProperties(newMass, newI, newCg);
         }
+        solid->SetHydrodynamicCoefficients(Cd, Cf);
     }
 
     //Contact properties (soft contact)
