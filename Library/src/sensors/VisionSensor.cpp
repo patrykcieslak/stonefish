@@ -63,7 +63,7 @@ Transform VisionSensor::getSensorFrame() const
         return o2s;
 }
 
-SensorType VisionSensor::getType()
+SensorType VisionSensor::getType() const
 {
     return SensorType::VISION;
 }

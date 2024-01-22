@@ -62,7 +62,7 @@ namespace sf
         void setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias);
 
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
         
     private:
         Vector3 bias;

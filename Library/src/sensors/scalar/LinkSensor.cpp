@@ -54,12 +54,12 @@ Transform LinkSensor::getSensorFrame() const
         return o2s;
 }
 
-SensorType LinkSensor::getType()
+SensorType LinkSensor::getType() const
 {
     return SensorType::LINK;
 }
 
-std::string LinkSensor::getLinkName()
+std::string LinkSensor::getLinkName() const
 {
     if(attach != nullptr)
         return attach->getName();

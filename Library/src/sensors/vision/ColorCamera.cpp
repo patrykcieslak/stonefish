@@ -52,7 +52,7 @@ void ColorCamera::setExposureCompensation(Scalar comp)
         glCamera->setExposureCompensation((GLfloat)comp);
 }
     
-Scalar ColorCamera::getExposureCompensation()
+Scalar ColorCamera::getExposureCompensation() const
 {
     if(glCamera != NULL)
         return (Scalar)glCamera->getExposureCompensation();
@@ -65,7 +65,7 @@ void* ColorCamera::getImageDataPointer(unsigned int index)
     return imageData;
 }
 
-VisionSensorType ColorCamera::getVisionSensorType()
+VisionSensorType ColorCamera::getVisionSensorType() const
 {
     return VisionSensorType::COLOR_CAMERA;
 }

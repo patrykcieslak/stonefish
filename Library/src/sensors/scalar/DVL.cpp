@@ -326,7 +326,7 @@ Scalar DVL::getBeamAngle() const
     return beamAngle;
 }
 
-ScalarSensorType DVL::getScalarSensorType()
+ScalarSensorType DVL::getScalarSensorType() const
 {
     return ScalarSensorType::DVL;
 }

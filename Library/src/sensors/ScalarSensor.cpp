@@ -46,7 +46,7 @@ ScalarSensor::~ScalarSensor()
     channels.clear();
 }
 
-Sample ScalarSensor::getLastSample()
+Sample ScalarSensor::getLastSample() const
 {
     if(history.size() > 0)
         return Sample(*history.back());
@@ -72,12 +72,12 @@ const std::vector<Sample>* ScalarSensor::getHistory()
     return historyCopy;
 }
 
-unsigned short ScalarSensor::getNumOfChannels()
+unsigned short ScalarSensor::getNumOfChannels() const
 {
     return channels.size();
 }
 
-Scalar ScalarSensor::getValue(unsigned long int index, unsigned int channel)
+Scalar ScalarSensor::getValue(unsigned long int index, unsigned int channel) const
 {
     if(index < history.size() && channel < channels.size())
     {
@@ -89,12 +89,12 @@ Scalar ScalarSensor::getValue(unsigned long int index, unsigned int channel)
     return Scalar(0);
 }
 
-Scalar ScalarSensor::getLastValue(unsigned int channel)
+Scalar ScalarSensor::getLastValue(unsigned int channel) const
 {
     return getValue(history.size() - 1, channel);
 }
 
-SensorChannel ScalarSensor::getSensorChannelDescription(unsigned int channel)
+SensorChannel ScalarSensor::getSensorChannelDescription(unsigned int channel) const
 {
     if(channel < channels.size())
         return channels[channel];

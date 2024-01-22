@@ -128,7 +128,7 @@ void Profiler::setNoise(Scalar rangeStdDev)
     channels[1].setStdDev(btClamped(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Profiler::getScalarSensorType()
+ScalarSensorType Profiler::getScalarSensorType() const
 {
     return ScalarSensorType::PROFILER;
 }

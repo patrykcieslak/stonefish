@@ -87,7 +87,7 @@ namespace sf
         void setNoise(float depthStdDev);
 
         //! A method returning the depth range of the camera.
-        glm::vec2 getDepthRange();
+        glm::vec2 getDepthRange() const;
         
         //! A method returning the pointer to the image data.
         /*!
@@ -97,7 +97,7 @@ namespace sf
         void* getImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType();
+        VisionSensorType getVisionSensorType() const;
         
     private:
         void InitGraphics();

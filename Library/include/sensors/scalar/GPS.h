@@ -55,10 +55,10 @@ namespace sf
         void setNoise(Scalar nedDev);
         
         //! A method that returns the standard deviation of position in meters.
-        Scalar getNoise();
+        Scalar getNoise() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
         
     private:
         //Custom noise generation specific to GPS

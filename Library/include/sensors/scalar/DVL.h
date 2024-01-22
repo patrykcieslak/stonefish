@@ -91,7 +91,7 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
         
     private:
         Scalar beamAngle;

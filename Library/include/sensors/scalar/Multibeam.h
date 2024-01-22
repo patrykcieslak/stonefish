@@ -67,10 +67,10 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
 
         //! A method returning the angleRangeDeg parameter
-        Scalar getAngleRange();
+        Scalar getAngleRange() const;
         
     private:
         Scalar angRange;

@@ -64,7 +64,7 @@ void Torque::setNoise(Scalar torqueStdDev)
     channels[0].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Torque::getScalarSensorType()
+ScalarSensorType Torque::getScalarSensorType() const
 {
     return ScalarSensorType::TORQUE;
 }

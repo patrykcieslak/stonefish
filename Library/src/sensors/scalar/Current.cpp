@@ -55,12 +55,12 @@ void Current::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-SensorType Current::getType()
+SensorType Current::getType() const
 {
     return SensorType::OTHER;
 }
 
-ScalarSensorType Current::getScalarSensorType()
+ScalarSensorType Current::getScalarSensorType() const
 {
     return ScalarSensorType::CURRENT;
 }

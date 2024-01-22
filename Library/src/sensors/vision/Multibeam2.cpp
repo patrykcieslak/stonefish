@@ -69,17 +69,17 @@ float* Multibeam2::getRangeDataPointer()
     return rangeData;
 }
     
-glm::vec2 Multibeam2::getRangeLimits()
+glm::vec2 Multibeam2::getRangeLimits() const
 {
     return range;
 }
 
-Scalar Multibeam2::getVerticalFOV()
+Scalar Multibeam2::getVerticalFOV() const
 {
     return fovV;
 }
 
-VisionSensorType Multibeam2::getVisionSensorType()
+VisionSensorType Multibeam2::getVisionSensorType() const
 {
     return VisionSensorType::MULTIBEAM2;
 }

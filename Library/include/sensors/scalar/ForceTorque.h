@@ -82,7 +82,7 @@ namespace sf
         Transform getSensorFrame() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
         
     private:
         SolidEntity* attach;

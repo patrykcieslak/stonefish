@@ -96,7 +96,7 @@ void RealRotaryEncoder::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-ScalarSensorType RealRotaryEncoder::getScalarSensorType()
+ScalarSensorType RealRotaryEncoder::getScalarSensorType() const
 {
     return ScalarSensorType::ENCODER;
 }

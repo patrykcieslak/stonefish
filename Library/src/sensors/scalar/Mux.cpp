@@ -71,7 +71,7 @@ Scalar* Mux::getLastSample()
     return sample;
 }
 
-unsigned int Mux::getNumOfComponents()
+unsigned int Mux::getNumOfComponents() const
 {
     return (unsigned int)components.size();
 }

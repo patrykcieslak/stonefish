@@ -88,12 +88,12 @@ void GPS::setNoise(Scalar nedDev)
     noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
 }
 
-Scalar GPS::getNoise()
+Scalar GPS::getNoise() const
 {
     return nedStdDev;
 }
 
-ScalarSensorType GPS::getScalarSensorType()
+ScalarSensorType GPS::getScalarSensorType() const
 {
     return ScalarSensorType::GPS;
 }

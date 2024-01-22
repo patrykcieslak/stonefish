@@ -77,7 +77,7 @@ void Accelerometer::setNoise(Vector3 linearAccelerationStdDev)
     channels[2].setStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Accelerometer::getScalarSensorType()
+ScalarSensorType Accelerometer::getScalarSensorType() const
 {
     return ScalarSensorType::ACC;
 }

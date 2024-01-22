@@ -87,7 +87,7 @@ namespace sf
         void setExposureCompensation(Scalar comp);
         
         //! A method returning the exposure compensation factor [EV].
-        Scalar getExposureCompensation();
+        Scalar getExposureCompensation() const;
     
         //! A method returning the pointer to the image data.
         /*!
@@ -97,7 +97,7 @@ namespace sf
         void* getImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType();
+        VisionSensorType getVisionSensorType() const;
         
     private:
         void InitGraphics();

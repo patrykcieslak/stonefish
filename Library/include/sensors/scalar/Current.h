@@ -57,10 +57,10 @@ namespace sf
         void AttachToMotor(DCMotor* m);
         
         //! A method returning the type of the sensor.
-        SensorType getType();
+        SensorType getType() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
         
     private:
         DCMotor* motor;

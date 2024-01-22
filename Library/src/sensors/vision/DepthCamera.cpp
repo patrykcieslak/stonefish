@@ -64,12 +64,12 @@ void* DepthCamera::getImageDataPointer(unsigned int index)
     return imageData;
 }
 
-glm::vec2 DepthCamera::getDepthRange()
+glm::vec2 DepthCamera::getDepthRange() const
 {
     return depthRange;
 }
     
-VisionSensorType DepthCamera::getVisionSensorType()
+VisionSensorType DepthCamera::getVisionSensorType() const
 {
     return VisionSensorType::DEPTH_CAMERA;
 }

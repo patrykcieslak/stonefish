@@ -49,7 +49,7 @@ namespace sf
         void InternalUpdate(Scalar dt);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType();
+        ScalarSensorType getScalarSensorType() const;
     };
 }
 

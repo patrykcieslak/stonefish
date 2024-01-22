@@ -65,9 +65,9 @@ namespace sf
         
         //! A method used to mark data as old.
         void MarkDataOld();
-        
+
         //! A method to check if new data is available.
-        bool isNewDataAvailable();
+        bool isNewDataAvailable() const;
         
         //! A method to set the sampling rate of the sensor.
         /*!
@@ -75,21 +75,27 @@ namespace sf
          */
         void setUpdateFrequency(Scalar f);
 
+        //! A method returning the sensor's name.
+        std::string getName() const;
+
         //! A method returning the sampling rate of the sensor.
-        Scalar getUpdateFrequency();
+        Scalar getUpdateFrequency() const;
         
+        //! A method informing if the sensor is enabled.
+        bool isEnabled() const;
+
         //! A method informing if the sensor is renderable.
-        bool isRenderable();
+        bool isRenderable() const;
         
+        //! A method to set if the sensor is enabled.
+        void setEnabled(bool en);
+
         //! A method to set if the sensor is renderable.
         void setRenderable(bool render);
 
         //! A method to set the visual representation of the sensor.
         void setVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
-        
-        //! A method returning the sensor name.
-        std::string getName();
-        
+                
         //! A method performing an internal update of the sensor state.
         /*!
          \param dt the sampling time of the simulation [s]
@@ -97,7 +103,7 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the sensor.
-        virtual SensorType getType() = 0;
+        virtual SensorType getType() const = 0;
 
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame() const = 0;
@@ -114,6 +120,7 @@ namespace sf
         Scalar eleapsedTime;
         bool newDataAvailable;
         bool renderable;
+        bool enabled;
         int lookId;
         int graObjectId;
     };

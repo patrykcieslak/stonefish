@@ -135,7 +135,7 @@ std::vector<Renderable> ForceTorque::Render()
     return items;
 }
 
-ScalarSensorType ForceTorque::getScalarSensorType()
+ScalarSensorType ForceTorque::getScalarSensorType() const
 {
     return ScalarSensorType::FT;
 }

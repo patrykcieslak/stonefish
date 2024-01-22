@@ -153,7 +153,7 @@ void RotaryEncoder::Reset()
     ScalarSensor::Reset();
 }
 
-ScalarSensorType RotaryEncoder::getScalarSensorType()
+ScalarSensorType RotaryEncoder::getScalarSensorType() const
 {
     return ScalarSensorType::ENCODER;
 }

@@ -122,12 +122,12 @@ void Multibeam::setNoise(Scalar rangeStdDev)
         channels[i].setStdDev(rangeStdDev);
 }
 
-ScalarSensorType Multibeam::getScalarSensorType()
+ScalarSensorType Multibeam::getScalarSensorType() const
 {
     return ScalarSensorType::MULTIBEAM;
 }
 
-Scalar Multibeam::getAngleRange()
+Scalar Multibeam::getAngleRange() const
 {
     return angRange;
 }
