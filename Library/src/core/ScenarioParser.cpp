@@ -4079,89 +4079,97 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         return false;
     }
     
+    //Find if bodies are independent dynamic bodies or links of robots
     Entity* entA = sm->getEntity(std::string(nameA));
     Entity* entB = sm->getEntity(std::string(nameB));
+    FeatherstoneRobot* robotA = nullptr;
+    FeatherstoneRobot* robotB = nullptr;
+    int linkIdA = -2;
+    int linkIdB = -2;
+
+    if((entA != nullptr && entA->getType() != EntityType::SOLID)
+        ||(entB != nullptr && entB->getType() != EntityType::SOLID))
+    {
+        log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", glueName.c_str()); 
+        return false;
+    }
+
+    if(entA == nullptr) //Not an independent dynamic body. Maybe a robot link?
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int linkId = -2;
+                if( (linkId = fr->getLinkIndex(std::string(nameA))) >= -1)
+                {
+                    robotA = fr;
+                    linkIdA = linkId;
+                    break;
+                }
+            }
+        }   
+        if(robotA == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", glueName.c_str()); 
+            return false;
+        }
+    }
+
+    if(entB == nullptr) //Not an independent dynamic body. Maybe a robot link?
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int linkId = -2;
+                if( (linkId = fr->getLinkIndex(std::string(nameB))) >= -1)
+                {
+                    robotB = fr;
+                    linkIdB = linkId;
+                    break;
+                }
+            }
+        }   
+        if(robotB == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", glueName.c_str()); 
+            return false;
+        }
+    }
+
     FixedJoint* fix = nullptr;
 
-    if(entA != nullptr && entB != nullptr)
+    if(entA != nullptr && entB != nullptr) //Glue two independent dynamic bodies
     {
-        // Check bodies
-        if(entA->getType() != EntityType::SOLID
-            || entB->getType() != EntityType::SOLID)
-        {
-            log.Print(MessageType::ERROR, "Only solid bodies and manipulator links can be glued (glue '%s')!", glueName.c_str());
-            return false;
-        }
         fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA, (SolidEntity*)entB);
-        log.Print(MessageType::INFO, "Glue created");
     }
-    else if(entA != nullptr)
+    else if(entA != nullptr && robotB != nullptr) //Glue dynamic body A with a link of robot B
     {
-        // Check first body
-        if(entA->getType() != EntityType::SOLID)
-        {
-            log.Print(MessageType::ERROR, "Only solid bodies and manipulator links can be glued (glue '%s')!", glueName.c_str());
-            return false;
-        }
-    
-        // Find robot link
-        Robot* rob;
-        unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != nullptr)
-        {
-            if(rob->getType() == RobotType::FEATHERSTONE)
-            {
-                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
-                int entBId = -2;
-                if( (entBId = fr->getLinkIndex(std::string(nameB))) >= -1)
-                {
-                    fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA, 
-                                        fr->getDynamics(), entBId, ((SolidEntity*)entA)->getCGTransform().getOrigin());
-                    break;
-                }
-            }
-        }
-        if(fix == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Manipulator link not found (glue '%s')!", glueName.c_str());
-            return false;
-        }
+        fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA, 
+                                robotB->getDynamics(), linkIdB, ((SolidEntity*)entA)->getCGTransform().getOrigin());
     }        
-    else if(entB != nullptr)
+    else if(entB != nullptr && robotA != nullptr) //Glue dynamic body B with a link of robot A
     {
-        // Check first body
-        if(entB->getType() != EntityType::SOLID)
-        {
-            log.Print(MessageType::ERROR, "Only solid bodies and manipulator links can be glued (glue '%s')!", glueName.c_str());
-            return false;
-        }
-    
-        // Find robot link
-        Robot* rob;
-        unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != nullptr)
-        {
-            if(rob->getType() == RobotType::FEATHERSTONE)
-            {
-                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
-                int entAId = -2;
-                if( (entAId = fr->getLinkIndex(std::string(nameA))) >= -1)
-                {
-                    fix = new FixedJoint(std::string(glueName), (SolidEntity*)entB, 
-                                        fr->getDynamics(), entAId, ((SolidEntity*)entB)->getCGTransform().getOrigin());
-                    break;
-                }
-            }
-        }
-        if(fix == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Manipulator link not found (glue '%s')!", glueName.c_str());
-            return false;
-        }
+        fix = new FixedJoint(std::string(glueName), (SolidEntity*)entB, 
+                                robotA->getDynamics(), linkIdA, ((SolidEntity*)entB)->getCGTransform().getOrigin());
     }
+    else //Glue together links of two robots
+    {
+        fix = new FixedJoint(std::string(glueName), robotA->getDynamics(), robotB->getDynamics(), linkIdA, linkIdB, 
+                                        robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin());
+    }
+    
     if(fix != nullptr)
     {
         sm->AddJoint(fix);
+        log.Print(MessageType::INFO, "Glue created between '%s' and '%s'.", nameA, nameB);
         return true;
     }
     return false;
