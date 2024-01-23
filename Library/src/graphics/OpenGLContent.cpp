@@ -2277,6 +2277,8 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
 Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
     Mesh* mesh = LoadGeometryFromFile(filename, scale);
+    CheckAndRepairFaceVertexOrder(mesh);
+
     if(mesh == nullptr)
         abort();
     if(smooth)
@@ -2309,6 +2311,45 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
             m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
             m->vertices[i].normal = gR * m->vertices[i].normal;
         }    
+    }
+}
+
+void OpenGLContent::CheckAndRepairFaceVertexOrder(Mesh* mesh)
+{
+    size_t repaired = 0;
+    if(mesh->isTexturable())
+    {
+        TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
+        for(size_t i=0; i<m->faces.size(); ++i)
+        {
+            glm::vec3 Nc = m->ComputeFaceNormal(i);
+            if(glm::dot(m->vertices[m->faces[i].vertexID[0]].normal, Nc) < 0.f
+               && glm::dot(m->vertices[m->faces[i].vertexID[1]].normal, Nc) < 0.f
+               && glm::dot(m->vertices[m->faces[i].vertexID[2]].normal, Nc) < 0.f)
+            {
+                GLuint old = m->faces[i].vertexID[1];
+                m->faces[i].vertexID[1] = m->faces[i].vertexID[2];
+                m->faces[i].vertexID[2] = old;
+                ++repaired;
+            }
+        }
+    }
+    else
+    {
+        PlainMesh* m = static_cast<PlainMesh*>(mesh);
+        for(size_t i=0; i<m->faces.size(); ++i)
+        {
+            glm::vec3 Nc = m->ComputeFaceNormal(i);
+            if(glm::dot(m->vertices[m->faces[i].vertexID[0]].normal, Nc) < 0.f
+               && glm::dot(m->vertices[m->faces[i].vertexID[1]].normal, Nc) < 0.f
+               && glm::dot(m->vertices[m->faces[i].vertexID[2]].normal, Nc) < 0.f)
+            {
+                GLuint old = m->faces[i].vertexID[1];
+                m->faces[i].vertexID[1] = m->faces[i].vertexID[2];
+                m->faces[i].vertexID[2] = old;
+                ++repaired;
+            }
+        }
     }
 }
 

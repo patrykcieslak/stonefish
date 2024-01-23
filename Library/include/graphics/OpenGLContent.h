@@ -452,6 +452,12 @@ namespace sf
          */
         static void TransformMesh(Mesh* mesh, const Transform& T);
         
+        //! A static method to check if normals correspond to the vertex order and fix the errors.
+        /*!
+         \param mesh a pointer to a mesh structure
+         */
+        static void CheckAndRepairFaceVertexOrder(Mesh* mesh);
+
         //! A static method to smooth the mesh normals.
         /*!
          \param mesh a pointer to a mesh structure

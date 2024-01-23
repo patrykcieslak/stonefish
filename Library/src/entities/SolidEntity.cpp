@@ -1656,7 +1656,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
     }
 
     //Multiply by common factors
-    //Buoyancy
+    //Buoyancy - not working
     // if(settings.reallisticBuoyancy && Vsubmerged > 1e-9f)
     // {
     //     CBsubmerged /= Vsubmerged;
@@ -1671,8 +1671,16 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
     {
         Fb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
         Tb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
-        _Fb = Vector3(Fb.x, Fb.y, Fb.z);
-        _Tb = Vector3(Tb.x, Tb.y, 0.0); // Torque aroung global Z axis cannot be caused by the buoyancy force and is considered a numerical error
+        if(!ocn->hasWaves())
+        {
+            _Fb = Vector3(0.0, 0.0, Fb.z);  // Buoyancy force points always in the direction of static pressure gradient (X,Y components considered numerical errors)
+            _Tb = Vector3(Tb.x, Tb.y, 0.0); // Torque aroung global Z axis cannot be caused by the buoyancy force (Z component considered a numerical error)
+        }
+        else
+        {
+            _Fb = Vector3(Fb.x, Fb.y, Fb.z);
+            _Tb = Vector3(Tb.x, Tb.y, Tb.z);
+        }
     }
     
     //Damping forces
