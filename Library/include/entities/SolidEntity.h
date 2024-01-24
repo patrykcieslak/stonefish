@@ -139,11 +139,12 @@ namespace sf
          \param _Fdf output of the damping force resulting from skin friction
          \param _Tdf output of the torque induced by skin friction
          \param _Swet output of the wetted surface area
+         \param _Vsub output of the submerged volume
          \param debug output of the debug rendering
         */
         static void ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* liquid, const Transform& T_CG, const Transform& T_C,
                                                      const Vector3& linearV, const Vector3& angularV, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf, 
-                                                     Scalar& _Swet, Renderable& debug);
+                                                     Scalar& _Swet, Scalar& _Vsub, Renderable& debug);
         
         //! A static method that computes fluid dynamics when a body is completely submerged.
         /*!
@@ -323,6 +324,9 @@ namespace sf
         //! A method returning the wetted surface area of the body.
         Scalar getWettedSurface() const;
 
+        //! A method returning the submerged volume of the body.
+        Scalar getSubmergedVolume() const;
+
         //! A method returning the mass of the body.
         Scalar getMass() const;
         
@@ -437,6 +441,7 @@ namespace sf
         Vector3 Fdf;
         Vector3 Tdf;
         Scalar Swet; //Wetted surface of the body
+        Scalar Vsub; //Submerged part of body
         
         Vector3 Fda;
         Vector3 Tda;

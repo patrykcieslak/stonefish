@@ -306,6 +306,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         Fdf.setZero();
         Tdf.setZero();
         Swet = Scalar(0);
+        Vsub = Scalar(0);
         return;
     }
     
@@ -350,6 +351,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         }
 
         Swet = surface;
+        Vsub = volume;
     }
     else //CROSSING FLUID SURFACE (compound body but not necessarily all parts!)
     {
@@ -371,6 +373,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             }
 
             Swet = Scalar(0);
+            Vsub = Scalar(0);
         
             //Get velocity data
             Vector3 v = getLinearVelocity();
@@ -384,6 +387,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             Vector3 Fdfp(0,0,0);
             Vector3 Tdfp(0,0,0);
             Scalar Swetp(0);
+            Scalar Vsubp(0);
 
             for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
             {
@@ -393,7 +397,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, submerged);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged);
                     parts[i].solid->CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp);
                     Fb += Fbp;
                     Tb += Tbp;
@@ -402,13 +406,15 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                     Fdf += Fdfp;
                     Tdf += Tdfp;
                     Swet += Swetp;
+                    Vsub += Vsubp;
                 }
                 else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
                     pSettings.dampingForces = false;
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, submerged);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged);
                     Fb += Fbp;
                     Tb += Tbp;
+                    Vsub += Vsubp;
                 }
             }
         }
