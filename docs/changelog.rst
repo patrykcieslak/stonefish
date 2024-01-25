@@ -7,11 +7,14 @@ The changelog of the library code is presented below. **Breaking changes** were 
 1.4
 ===
 
+-  *Rewritten computation of hydrodynamic drag*
+-  Fixed buoyancy force calculation for flat ocean (floating bodies are not rotating or moving anymore!)
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
 -  Fixed IMU readings, adding the missing gravitational and centrifugal acceleration
+-  Extended glue to support joining links of two robots together
+-  Added access to the viscous and quadratic hydrodynamic drag coefficients, including parser support
 -  Added an option to set internal parts of a compound body as always visible
--  Added access to the computed wetted surface area
--  Fixed buoyancy force causing torque around global Z axis
+-  Added access to the computed wetted surface area and submerged volume
 
 1.3
 ===

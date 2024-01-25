@@ -59,9 +59,10 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneE
     Transform solidTransform = solid->getCGTransform();
     Vector3 pivotInA = linkTransform.inverse() * pivot;
     Vector3 pivotInB = solidTransform.inverse() * pivot;
+    Matrix3 frameInA = Matrix3::getIdentity();
     Matrix3 frameInB = solidTransform.getBasis().inverse() * linkTransform.getBasis();
     
-    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
+    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB, frameInA, frameInB);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
     
@@ -75,9 +76,10 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
     Transform linkBTransform = feB->getLinkTransform(linkIdB+1);
     Vector3 pivotInA = linkATransform.inverse() * pivot;
     Vector3 pivotInB = linkBTransform.inverse() * pivot;
+    Matrix3 frameInA = Matrix3::getIdentity();
     Matrix3 frameInB = linkBTransform.getBasis().inverse() * linkATransform.getBasis();	
     
-    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
+    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, frameInA, frameInB);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
     
