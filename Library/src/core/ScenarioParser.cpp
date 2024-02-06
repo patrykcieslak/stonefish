@@ -4051,13 +4051,13 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     return true;
 }
 
-bool ScenarioParser::ParseGlue(XMLElement* element)
+FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
 {
     const char* name = nullptr;
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {        
         log.Print(MessageType::ERROR, "Name of glue missing!");
-        return false;
+        return nullptr;
     }
     std::string glueName(name);
         
@@ -4067,7 +4067,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         || (itemB = element->FirstChildElement("second_body")) == nullptr)
     {
         log.Print(MessageType::ERROR, "Body definitions for glue '%s' missing!", glueName.c_str());
-        return false;
+        return nullptr;
     }
     
     const char* nameA = nullptr;
@@ -4076,7 +4076,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         || itemB->QueryStringAttribute("name", &nameB) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Body names for glue '%s' missing!", glueName.c_str());
-        return false;
+        return nullptr;
     }
     
     //Find if bodies are independent dynamic bodies or links of robots
@@ -4108,7 +4108,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         if(robotA == nullptr)
         {
             log.Print(MessageType::ERROR, "Invalid body name '%s' (glue '%s')!", nameA, glueName.c_str()); 
-            return false;
+            return nullptr;
         }
     }
 
@@ -4133,7 +4133,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         if(robotB == nullptr)
         {
             log.Print(MessageType::ERROR, "Invalid body name '%s' (glue '%s')!", nameB, glueName.c_str()); 
-            return false;
+            return nullptr;
         }
     }
 
@@ -4150,7 +4150,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         else
         {
             log.Print(MessageType::ERROR, "Only two dynamic bodies or a static and dynamic body can be glued together (glue '%s')!", glueName.c_str()); 
-            return false;
+            return nullptr;
         }
     }
     else if(entA != nullptr && robotB != nullptr) //Glue body A with a link of robot B
@@ -4160,7 +4160,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         else
         {
             log.Print(MessageType::ERROR, "A robot link can only be glued to a dynamic body (glue '%s')!", glueName.c_str()); 
-            return false;
+            return nullptr;
         }
     }        
     else if(entB != nullptr && robotA != nullptr) //Glue body B with a link of robot A
@@ -4170,7 +4170,7 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
         else
         {
             log.Print(MessageType::ERROR, "A robot link can only be glued to a dynamic body (glue '%s')!", glueName.c_str()); 
-            return false;
+            return nullptr;
         }
     }
     else //Glue together links of two robots
@@ -4182,9 +4182,8 @@ bool ScenarioParser::ParseGlue(XMLElement* element)
     {
         sm->AddJoint(fix);
         log.Print(MessageType::INFO, "Glue created between '%s' and '%s'.", nameA, nameB);
-        return true;
     }
-    return false;
+    return fix;
 }
 
 std::string ScenarioParser::GetFullPath(const std::string& path)

@@ -44,6 +44,7 @@ namespace sf
     class Light;
     class Comm;
     class VelocityField;
+    class FixedJoint;
     struct Color;
     enum class ColorMap;
   
@@ -261,9 +262,9 @@ namespace sf
         //! A method used to parse a single glue joint description.
         /*!
          \param element a pointer to the XML node
-         \return success
+         \return pointer to the fixed joint
         */
-        virtual bool ParseGlue(XMLElement* element);
+        virtual FixedJoint* ParseGlue(XMLElement* element);
         
         //! A method to get the full file path depending on the format of the passed string.
         /*!
