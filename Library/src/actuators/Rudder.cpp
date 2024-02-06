@@ -105,7 +105,7 @@ void Rudder::Update(Scalar dt)
             angle = atan2(-velocity.getY(), -velocity.getX());
         }
 
-        if(ocn->IsInsideFluid(rudderTrans.getOrigin()) && !velocity.isZero())
+        if(ocn != nullptr && ocn->IsInsideFluid(rudderTrans.getOrigin()) && !velocity.isZero())
         {
             // Calculate quadratic approximations for lift and drag
 
@@ -155,6 +155,11 @@ void Rudder::Update(Scalar dt)
             attach->ApplyTorque(liftT);
             attach->ApplyCentralForce(rudderTrans.getBasis() * dragV);
             attach->ApplyCentralForce(rudderTrans.getBasis() * liftV);
+        }
+        else
+        {
+            dragV = Vector3(0, 0, 0);
+            liftV = Vector3(0, 0, 0);
         }
     }
 }
