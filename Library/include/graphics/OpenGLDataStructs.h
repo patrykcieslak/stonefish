@@ -476,8 +476,21 @@ namespace sf
         int objectId;
         std::string materialName;
         glm::mat4 model;
+        glm::vec3 vel;
+        glm::vec3 avel;
         std::vector<glm::vec3> points;
 		
+        Renderable() 
+        {
+            type = RenderableType::SOLID;
+            lookId = -1;
+            objectId = -1;
+            materialName = "";
+            model = glm::mat4(1.f);
+            vel = glm::vec3(0.f);
+            avel = glm::vec3(0.f);
+        }
+
 		static bool SortByMaterial(const Renderable& r1, const Renderable& r2) 
 		{
 			return r1.lookId < r2.lookId;

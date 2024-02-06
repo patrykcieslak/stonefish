@@ -197,7 +197,7 @@ int SolidEntity::getPhysicalObject() const
 
 bool SolidEntity::isBuoyant() const
 {
-    return phy.buoyancy;
+    return (phy.mode == BodyPhysicsMode::SUBMERGED || phy.mode == BodyPhysicsMode::FLOATING) && phy.buoyancy;
 }
     
 BodyPhysicsMode SolidEntity::getBodyPhysicsMode() const
@@ -233,6 +233,8 @@ std::vector<Renderable> SolidEntity::Render()
             item.objectId = graObjectId;
             item.lookId = lookId;
             item.model = glMatrixFromTransform(getGTransform());
+            item.vel = glVectorFromVector(getLinearVelocity());
+            item.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item);
         }
         else if(dm == DisplayMode::PHYSICAL && phyObjectId >= 0)
@@ -240,6 +242,8 @@ std::vector<Renderable> SolidEntity::Render()
             item.objectId = phyObjectId;
             item.lookId = -1;
             item.model = glMatrixFromTransform(getCTransform());
+            item.vel = glVectorFromVector(getLinearVelocity());
+            item.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item);
         }
         
@@ -1272,23 +1276,26 @@ void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& 
     Vector3 Fdq = getOTransform().getBasis().inverse() * _Fdq; // In origin frame
     Fdq = Fdq.safeNormalize();
     Scalar Fdqc = btFabs(Fdq.getX()) * fdCd.getX() + btFabs(Fdq.getY()) * fdCd.getY() + btFabs(Fdq.getZ()) * fdCd.getZ();
+    //Fdqc = 1.0;
     _Fdq = Scalar(0.5) * ocn->getLiquid().density * Fdqc * _Fdq; //0.5*rho*Cd*S*v2 from drag equation    
 
     Vector3 Tdq = getOTransform().getBasis().inverse() * _Tdq; // In origin frame
     Tdq = Tdq.safeNormalize();
     Scalar Tdqc = btFabs(Tdq.getX()) * fdCd.getX() + btFabs(Tdq.getY()) * fdCd.getY() + btFabs(Tdq.getZ()) * fdCd.getZ();
+    //Tdqc = 1.0;
     _Tdq = Scalar(0.5) * ocn->getLiquid().density * Tdqc * _Tdq; //0.5*rho*Cd*S*v2 from drag equation
 
     Vector3 Fdf = getOTransform().getBasis().inverse() * _Fdf; // In origin frame
     Fdf = Fdf.safeNormalize();
-    Scalar Fdqs = btFabs(Fdf.getX()) * fdCf.getX() + btFabs(Fdf.getY()) * fdCf.getY() + btFabs(Fdf.getZ()) * fdCf.getZ(); 
-    _Fdf = ocn->getLiquid().density * Fdqs * _Fdf; //rho*Cf*S*v from viscous drag equation
+    Scalar Fdfc = btFabs(Fdf.getX()) * fdCf.getX() + btFabs(Fdf.getY()) * fdCf.getY() + btFabs(Fdf.getZ()) * fdCf.getZ(); 
+    //Fdfc = 1.0;
+    _Fdf = ocn->getLiquid().density * Fdfc * _Fdf; //rho*Cf*S*v from viscous drag equation
     
     Vector3 Tdf = getOTransform().getBasis().inverse() * _Tdf; // In origin frame
     Tdf = Tdf.safeNormalize();
     Scalar Tdfc = btFabs(Tdf.getX()) * fdCf.getX() + btFabs(Tdf.getY()) * fdCf.getY() + btFabs(Tdf.getZ()) * fdCf.getZ();
+    //Tdfc = 1.0;
     _Tdf = ocn->getLiquid().density * Tdfc * _Tdf; //rho*S*v from viscous drag equation
-    
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
@@ -1664,13 +1671,14 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         if(settings.dampingForces)
         {
             glm::vec3 vc = ocn->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
-            glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
+            GLfloat vc_n = glm::dot(vc, fn1);
+            glm::vec3 vn = vc_n  * fn1; //Normal velocity
             glm::vec3 vt = vc - vn; //Tangent velocity
             
-            if(glm::dot(fn1, vn) < -1e-12f)
+            if(vc_n < -1e-12f) //If liquid is approaching the surface
             {
-                GLfloat vmag2 = glm::length2(vn);
-                glm::vec3 quadratic = vn * sqrtf(vmag2) * A;
+                GLfloat vmag2 = glm::length2(vc);
+                glm::vec3 quadratic = vc * sqrtf(vmag2) * -vc_n * A;
                 Fdq += quadratic;
                 Tdq += glm::cross(fc - p, quadratic);
             }
@@ -1771,13 +1779,14 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
      
         //Forces
         glm::vec3 vc = ocn->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
-        glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
+        GLfloat vc_n = glm::dot(vc, fn1);
+        glm::vec3 vn = vc_n  * fn1; //Normal velocity
         glm::vec3 vt = vc - vn; //Tangent velocity
-            
-        if(glm::dot(fn1, vn) < -1e-12f)
+        
+        if(vc_n < -1e-12f) //If liquid is approaching the surface
         {
-            GLfloat vmag2 = glm::length2(vn);
-            glm::vec3 quadratic = vn * sqrtf(vmag2) * A;    
+            GLfloat vmag2 = glm::length2(vc);
+            glm::vec3 quadratic = vc * sqrtf(vmag2) * -vc_n * A;
             Fdq += quadratic;
             Tdq += glm::cross(fc - p, quadratic);
         }
@@ -1785,8 +1794,7 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
         GLfloat vmag2 = glm::length2(vt);
         if(vmag2 > 1e-9f)
         {
-            glm::vec3 skin = vt * A; //sqrtf(vmag2) * A;
-
+            glm::vec3 skin = vt * A;
             Fdf += skin;
             Tdf += glm::cross(fc - p, skin);
         }

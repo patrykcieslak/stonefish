@@ -308,6 +308,8 @@ std::vector<Renderable> AnimatedEntity::Render()
         Renderable item;
         item.type = RenderableType::SOLID_CS;
         item.model = glMatrixFromTransform(getOTransform());
+        item.vel = glVectorFromVector(getLinearVelocity());
+        item.avel = glVectorFromVector(getAngularVelocity());
         items.push_back(item);
 
         if(graObjectId >= 0)

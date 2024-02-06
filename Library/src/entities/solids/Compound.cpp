@@ -338,7 +338,9 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             Vector3 Tdfp(0,0,0);
             
             for(size_t i=0; i<parts.size(); ++i) //Go through all parts
-                if(parts[i].isExternal) //Compute drag only for external parts
+                if(parts[i].isExternal 
+                    && (parts[i].solid->getBodyPhysicsMode() == BodyPhysicsMode::SUBMERGED
+                    || parts[i].solid->getBodyPhysicsMode() == BodyPhysicsMode::FLOATING)) //Compute drag only for external parts
                 {
                     Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
                     ComputeHydrodynamicForcesSubmerged(parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdqp, Tdqp, Fdfp, Tdfp);
@@ -391,6 +393,10 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
             for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
             {
+                if(parts[i].solid->getBodyPhysicsMode() != BodyPhysicsMode::SUBMERGED
+                    && parts[i].solid->getBodyPhysicsMode() != BodyPhysicsMode::FLOATING)
+                    continue;
+
                 Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
                 HydrodynamicsSettings pSettings = settings;
                 pSettings.reallisticBuoyancy &= parts[i].solid->isBuoyant();
@@ -476,6 +482,8 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 item.objectId = parts.at(partId).solid->getGraphicalObject();
                 item.lookId = parts.at(partId).solid->getLook();
                 item.model = glMatrixFromTransform(oTrans);
+                item.vel = glVectorFromVector(getLinearVelocity());
+                item.avel = glVectorFromVector(getAngularVelocity());
                 items.push_back(item);
             }
             else if(dm == DisplayMode::PHYSICAL)
@@ -484,6 +492,8 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 item.objectId = parts.at(partId).solid->getPhysicalObject();
                 item.lookId = -1;
                 item.model = glMatrixFromTransform(oTrans);
+                item.vel = glVectorFromVector(getLinearVelocity());
+                item.avel = glVectorFromVector(getAngularVelocity());
                 items.push_back(item);
             }
         }
