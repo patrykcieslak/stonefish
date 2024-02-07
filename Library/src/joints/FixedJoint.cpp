@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/FixedJoint.h"
@@ -34,7 +34,8 @@
 namespace sf
 {
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) : Joint(uniqueName, false)
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) 
+    : Joint(uniqueName, false), jSolidA(nullptr), jSolidB(nullptr)
 {
     btRigidBody* body = solid->rigidBody;
     
@@ -42,7 +43,8 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) : Joint(uniqu
     setConstraint(fixed);
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
+    : Joint(uniqueName, false), jSolidA(nullptr), jSolidB(nullptr)
 {
     btRigidBody* bodyA = solidA->rigidBody;
     btRigidBody* bodyB = solidB->rigidBody;
@@ -53,7 +55,8 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     setConstraint(fixed);
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot) : Joint(uniqueName, false)
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot) 
+    : Joint(uniqueName, false)
 {
     Transform linkTransform = fe->getLinkTransform(linkId+1);
     Transform solidTransform = solid->getCGTransform();
@@ -66,8 +69,8 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneE
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
     
-    //Disable collision
-    SimulationApp::getApp()->getSimulationManager()->DisableCollision(fe->getLink(linkId+1).solid, solid);
+    jSolidA = fe->getLink(linkId+1).solid;
+    jSolidB = solid;
 }
 
 FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot) : Joint(uniqueName, false)
@@ -83,8 +86,22 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
     
-    //Disable collision
-    SimulationApp::getApp()->getSimulationManager()->DisableCollision(feA->getLink(linkIdA+1).solid, feB->getLink(linkIdB+1).solid);
+    jSolidA = feA->getLink(linkIdA+1).solid;
+    jSolidB = feB->getLink(linkIdB+1).solid;
+}
+
+void FixedJoint::AddToSimulation(SimulationManager* sm)
+{
+    Joint::AddToSimulation(sm);
+    if(isMultibodyJoint())
+        SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA, jSolidB);
+}
+
+void FixedJoint::RemoveFromSimulation(SimulationManager* sm)
+{
+    if(isMultibodyJoint())
+        SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA, jSolidB);
+    Joint::RemoveFromSimulation(sm);
 }
 
 JointType FixedJoint::getType() const
