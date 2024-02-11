@@ -67,7 +67,7 @@ int FeatherstoneRobot::getJoint(const std::string& name)
 Transform FeatherstoneRobot::getTransform() const
 {
     if(dynamics != nullptr)
-        return dynamics->getLinkTransform(0);
+        return dynamics->getLink(0).solid->getOTransform();
     else
         return Transform::getIdentity();
 }

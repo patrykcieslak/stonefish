@@ -16,6 +16,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Added access to the viscous and quadratic hydrodynamic drag coefficients, including parser support
 -  Added an option to set internal parts of a compound body as always visible
 -  Added access to the computed wetted surface area and submerged volume
+-  Fixed getting robot transform
 -  Fixed Stonefish logo and icon
 
 1.3
