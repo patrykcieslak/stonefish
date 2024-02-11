@@ -79,9 +79,9 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     backgroundMargin = 5.f;
     
     //Load logo texture
-    logoTexture = OpenGLContent::LoadInternalTexture("logo_gray_64.png", true);
+    logoTexture = OpenGLContent::LoadInternalTexture("logo_gray_64.png", false, true);
     //Load corner texture
-    guiTexture = OpenGLContent::LoadInternalTexture("gui.png", true);
+    guiTexture = OpenGLContent::LoadInternalTexture("gui.png", false, true);
     
     //Generate VAO
     glGenVertexArrays(1, &guiVAO);

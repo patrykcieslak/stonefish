@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/2017.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLContent__
@@ -311,7 +311,7 @@ namespace sf
          \param name the name of the look
          \return the id of the corresponding look structure
          */
-        int getLookId(std::string name);
+        int getLookId(const std::string& name);
 
         //! A method returning a reference to the object structure.
         /*!
@@ -328,21 +328,23 @@ namespace sf
         //! A static method to load a texture.
         /*!
          \param filename the path to the texture file
-         \param hasAlphaChannel a flag to indicate if the texture has transparency
+         \param srgb a flag to indicate if the texture is in SRGB space (non-linear)
+         \param alpha a flag to indicate if the texture has transparency
          \param anisotropy defines maximum anisotropic filtering
          \param internal a flag to indicate if the texture is an internal resource
          \return the id of the loaded texture
          */
-        static GLuint LoadTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f, bool internal = false);
+        static GLuint LoadTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f, bool internal = false);
         
         //! A static method to load an internal texture.
         /*!
          \param filename the name of the texture file
-         \param hasAlphaChannel a flag to indicate if the texture has transparency
+         \param srgb a flag to indicate if the texture is in SRGB space (non-linear)
+         \param alpha a flag to indicate if the texture has transparency
          \param anisotropy defines maximum anisotropic filtering
          \return the id of the loaded texture
          */
-        static GLuint LoadInternalTexture(std::string filename, bool hasAlphaChannel = false, GLfloat anisotropy = 0.f);
+        static GLuint LoadInternalTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f);
         
         //! A static method to generate a new texture.
         /*!
@@ -374,7 +376,7 @@ namespace sf
          \param smooth a flag to decide if model normals should be smoothed after loading
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* LoadMesh(std::string filename, GLfloat scale, bool smooth);
+        static Mesh* LoadMesh(const std::string& filename, GLfloat scale, bool smooth);
         
         //! A static method to build a graphical plane object.
         /*!
