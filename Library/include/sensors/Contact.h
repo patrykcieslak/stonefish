@@ -103,7 +103,7 @@ namespace sf
         void MarkDataOld();
         
         //! A method to check if new data is available.
-        bool isNewDataAvailable() const;
+        bool isNewDataAvailable();
         
         //! A method that saves contact data to an Octave file.
         /*!
@@ -122,7 +122,7 @@ namespace sf
         void setDisplayMask(int16_t mask);
         
         //! A method returning the sensor name.
-        std::string getName() const;
+        std::string getName();
         
         //! A method returning a pointer to the first entity.
         const Entity* getEntityA();

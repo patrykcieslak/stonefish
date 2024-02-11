@@ -33,12 +33,13 @@
 namespace sf
 {
 
-ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency, 
-    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
+ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, double bl, Scalar frequency, 
+    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, bl, frequency)
 {
     depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
     newDataCallback = NULL;
     imageData = NULL;
+    baseline=bl;
 }
 
 ColorCamera::~ColorCamera()
@@ -52,7 +53,7 @@ void ColorCamera::setExposureCompensation(Scalar comp)
         glCamera->setExposureCompensation((GLfloat)comp);
 }
     
-Scalar ColorCamera::getExposureCompensation() const
+Scalar ColorCamera::getExposureCompensation()
 {
     if(glCamera != NULL)
         return (Scalar)glCamera->getExposureCompensation();
@@ -65,7 +66,7 @@ void* ColorCamera::getImageDataPointer(unsigned int index)
     return imageData;
 }
 
-VisionSensorType ColorCamera::getVisionSensorType() const
+VisionSensorType ColorCamera::getVisionSensorType()
 {
     return VisionSensorType::COLOR_CAMERA;
 }

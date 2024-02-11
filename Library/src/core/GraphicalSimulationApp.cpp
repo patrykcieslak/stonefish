@@ -43,6 +43,7 @@
 #include "entities/MovingEntity.h"
 #include "entities/solids/Compound.h"
 #include "utils/icon.h"
+#include <iostream>
 
 namespace sf
 {
@@ -187,9 +188,11 @@ HelperSettings& GraphicalSimulationApp::getHelperSettings()
 void GraphicalSimulationApp::Init()
 {
     //General initialization
+    cInfo("Initializing rendering pipeline:");
     SimulationApp::Init();
     //Window initialization + loading thread
     loading = true;
+    cInfo("Initializing rendering pipeline:");
     InitializeSDL();
 
     //Continue initialization with console visible
@@ -337,6 +340,7 @@ void GraphicalSimulationApp::WindowEvent(SDL_Event* event)
     }
 }
 
+
 void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 {
     GLfloat moveStep = 0.1f;
@@ -349,15 +353,15 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             Quit();
             break;
             
-        // case SDLK_SPACE:
-        //     selectedEntity = std::make_pair(nullptr, 0);
-        //     if(!getSimulationManager()->isSimulationFresh())
-        //     {
-        //         StopSimulation();
-        //         getSimulationManager()->RestartScenario();
-        //     }
-        //     StartSimulation();
-        //     break;
+        case SDLK_SPACE:
+             selectedEntity = std::make_pair(nullptr, 0);
+             if(!getSimulationManager()->isSimulationFresh())
+             {
+                 StopSimulation();
+                 getSimulationManager()->RestartScenario();
+             }
+             StartSimulation();
+             break;
             
         case SDLK_h:
             displayHUD = !displayHUD;
@@ -1111,5 +1115,14 @@ int GraphicalSimulationApp::RunSimulation(void* data)
     
     return 0;
 }
+
+void GraphicalSimulationApp::StopSimulationWrapper() {
+        StopSimulation();
+}
+
+void GraphicalSimulationApp::ResumeSimulationWrapper() {
+        ResumeSimulation();
+}
+
 
 }

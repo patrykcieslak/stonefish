@@ -54,7 +54,7 @@ void Pose::InternalUpdate(Scalar dt)
     AddSampleToHistory(s);
 }
 
-ScalarSensorType Pose::getScalarSensorType() const
+ScalarSensorType Pose::getScalarSensorType()
 {
     return ScalarSensorType::POSE;
 }

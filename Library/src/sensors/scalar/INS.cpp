@@ -228,7 +228,7 @@ void INS::setNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdD
     imuNoise = true;
 }
 
-ScalarSensorType INS::getScalarSensorType() const
+ScalarSensorType INS::getScalarSensorType()
 {
     return ScalarSensorType::INS;
 }

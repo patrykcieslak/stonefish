@@ -36,7 +36,6 @@ namespace sf
         SolidEntity* solid;
         Transform origin;
         bool isExternal;
-        bool alwaysVisible;
     } CompoundPart;
     
     //! A class representing a rigid body built of multiple other rigid bodies.
@@ -59,9 +58,8 @@ namespace sf
         /*!
          \param solid a pointer to the rigid part
          \param origin a tranformation from the compound body origin to the part origin
-         \param alwaysVisible the part is always rendered although it is an internal part
          */
-        void AddInternalPart(SolidEntity* solid, const Transform& origin, bool alwaysVisible = false);
+        void AddInternalPart(SolidEntity* solid, const Transform& origin);
         
         //! A method adding new external rigid body to the compound body.
         /*!

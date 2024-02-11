@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Joint__
@@ -55,13 +55,13 @@ namespace sf
         /*!
          \param sm a pointer to the simulation manager
          */
-        virtual void AddToSimulation(SimulationManager* sm);
+        void AddToSimulation(SimulationManager* sm);
 
         //! A method used to remove joint from the simulation.
         /*!
          \param sm a pointer to the simulation manager
          */
-        virtual void RemoveFromSimulation(SimulationManager* sm);
+        void RemoveFromSimulation(SimulationManager* sm);
         
         //! A method applying damping to the joint.
         virtual void ApplyDamping();

@@ -35,7 +35,6 @@
 #include "entities/animation/ManualTrajectory.h"
 #include "entities/animation/PWLTrajectory.h"
 #include "entities/animation/CRTrajectory.h"
-#include "entities/animation/BSTrajectory.h"
 #include "entities/solids/Box.h"
 #include "entities/solids/Cylinder.h"
 #include "entities/solids/Sphere.h"
@@ -60,6 +59,7 @@
 #include "sensors/scalar/ForceTorque.h"
 #include "sensors/scalar/Profiler.h"
 #include "sensors/scalar/Multibeam.h"
+#include "sensors/scalar/LaserMEMS.h"
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
@@ -79,9 +79,12 @@
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
 #include "joints/FixedJoint.h"
+#include "joints/RevoluteJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
+#include <iostream>
+
 
 namespace sf
 {
@@ -334,6 +337,21 @@ bool ScenarioParser::Parse(std::string filename)
         }
         element = element->NextSiblingElement("glue");
     }
+
+
+
+    //Load tether (optional)
+    element = root->FirstChildElement("tether");
+    while(element != nullptr)
+    {
+        if(!ParseTether(element))
+        {
+            log.Print(MessageType::ERROR, "Tether not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("tether");
+    }
+    
     
     //Load standalone vision sensors (optional)
     element = root->FirstChildElement("sensor");
@@ -1228,15 +1246,9 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 ((ManualTrajectory*)tr)->setTransform(T);
             }
         }
-        else if(trTypeStr == "pwl" || trTypeStr == "spline" || trTypeStr == "catmull-rom")
+        else if(trTypeStr == "pwl" || trTypeStr == "spline")
         {
-            if(trTypeStr == "pwl")
-                tr = new PWLTrajectory(pm);
-            else if(trTypeStr == "spline")
-                tr = new BSTrajectory(pm);
-            else
-                tr = new CRTrajectory(pm);
-            
+            tr = trTypeStr == "pwl" ? new PWLTrajectory(pm) : new CRTrajectory(pm);
             PWLTrajectory* pwl = (PWLTrajectory*)tr; //Spline has the same mechanism of adding points
             
             XMLElement* key = item->FirstChildElement("keypoint");
@@ -1661,10 +1673,8 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 delete comp;
                 return false;
             }
-            bool alwaysVisible = false;
-            item->QueryBoolAttribute("always_visible", &alwaysVisible);
                 
-            comp->AddInternalPart(part, partOrigin, alwaysVisible);
+            comp->AddInternalPart(part, partOrigin);
             item = item->NextSiblingElement("internal_part");
         }
         
@@ -1681,8 +1691,6 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         Scalar mass;
         Scalar ix, iy, iz;
         Vector3 I;
-        Vector3 Cf(-1,-1,-1);
-        Vector3 Cd(-1,-1,-1);    
         bool cgok;
         unsigned int uvMode = 0;
         float uvScale = 1.f;
@@ -1717,16 +1725,6 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             I = Vector3(ix, iy, iz);
         cgok = (item = element->FirstChildElement("cg")) != nullptr && ParseTransform(item, cg);
         
-        //Hydrodynamic parameters
-        if((item = element->FirstChildElement("hydrodynamics")) != nullptr)
-        {   
-            const char* xyz = nullptr;
-            if(item->QueryStringAttribute("viscous_drag", &xyz) == XML_SUCCESS)
-                ParseVector(xyz, Cf);
-            if(item->QueryStringAttribute("quadratic_drag", &xyz) == XML_SUCCESS)
-                ParseVector(xyz, Cd);  
-        } 
-
         //Origin    
         if(typeStr != "model")
         {
@@ -1888,7 +1886,6 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             Transform newCg = cgok ? cg : solid->getCG2OTransform().inverse();  
             solid->SetArbitraryPhysicalProperties(newMass, newI, newCg);
         }
-        solid->SetHydrodynamicCoefficients(Cd, Cf);
     }
 
     //Contact properties (soft contact)
@@ -1992,9 +1989,60 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         links.push_back(link);
         item = item->NextSiblingElement("link");
     }
+    if(robot->getName().find("Tether") != std::string::npos){
+    double length=1;
+    BodyPhysicsSettings phy;
+    phy.mode = BodyPhysicsMode::SUBMERGED;
+    Scalar radius=0.012;
+    char* look = "yellow";
+    char* material ="TetherMaterial";
+    char* inertia = nullptr;
+    Scalar mass=0.005;
+    Vector3 xyz = Vector3(0.0,0.0,0.0);
+    Vector3 xyz2 = Vector3(-0.042,0.0,0.0);
+    Vector3 rpy = Vector3(0.0,0.0,0.0);
+    Scalar thickness = Scalar(-1);
+    Transform T = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz);
+    Transform origin = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+    int num_link=0;
+    //std::cout<<"Act length"<< actual_length << "  " << length << std::endl;
+    std::string parentName;
+    std::string childName;
+    Vector3 axis = Vector3(0,1,1);
+    Scalar posMin(1);
+    Scalar posMax(-1);
+    Scalar damping(-1);
+    double actual_length=0.0;
+    SolidEntity* link=nullptr;
+    while(actual_length<length)
+    {
+        std::cout<<robot->getName()+"/Link"<<std::endl;
+        actual_length+=0.042+0.015;
+        link=new Sphere(robot->getName()+"/LinkTether"+std::to_string(num_link), phy, radius, T, std::string(material), std::string(look), thickness);
+        link->ScalePhysicalPropertiesToArbitraryMass(mass);
+        links.push_back(link);
+        std::cout<<"ADDED LINK"<<num_link<<std::endl;
+	num_link+=1;
+    }
+    std::string tether="LinkTether"+std::to_string(num_link-1);
+
+    
     
     robot->DefineLinks(baseLink, links, selfCollisions);
-    
+    for(int i=0;i<num_link;i++){
+        if(i==0){
+        	parentName = robot->getName() + "/" + std::string("LinkTether");
+        	childName = robot->getName() + "/" + "LinkTether"+std::to_string(i);
+        }
+        else{
+        	parentName = robot->getName() + "/" + "LinkTether"+std::to_string(i-1);
+        	childName = robot->getName() + "/" + "LinkTether"+std::to_string(i);
+	}
+    	robot->DefineRevoluteJoint("JointTether"+std::to_string(i), parentName, childName, origin, axis, std::make_pair(posMin, posMax), damping);
+    	}
+    }else{
+    	robot->DefineLinks(baseLink, links, selfCollisions);
+    }
     //---- Joints ----
     item = element->FirstChildElement("joint");
     while(item != nullptr)
@@ -2007,6 +2055,9 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         }
         item = item->NextSiblingElement("joint");
     }
+    
+    /*if(robot->getName()=="bluerov")
+        robot->DefineRevoluteJoint("JointTether"+std::to_string(1), robot->getName() + "/LinkTether6", robot->getName() + "/LinkTether67", origin, axis, std::make_pair(posMin, posMax), damping);*/
     
     robot->BuildKinematicStructure();
     
@@ -3284,6 +3335,51 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         sens = mult;
     }
+    
+    else if(typeStr == "lasermems")
+    {
+        int history;
+        Scalar fovH;
+        Scalar fovV;
+        int numL;
+        int numP;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fovH", &fovH) != XML_SUCCESS || item->QueryAttribute("numL", &numL) != XML_SUCCESS  || item->QueryAttribute("numP", &numP) != XML_SUCCESS  || item->QueryAttribute("fovV", &fovV) != XML_SUCCESS)
+            return nullptr;
+            
+        //std::cout<<"numL "<< numL << " " << numP << std::endl;
+        LaserMEMS* laser = new LaserMEMS(sensorName, numL, numP,fovH, fovV, rate, history);
+        
+        //Optional range definition
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar distMin(0);
+            Scalar distMax(BT_LARGE_FLOAT);
+            int c = 0;
+
+            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
+                ++c;
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                laser->setRange(distMin, distMax);
+        }
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar distance;
+            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
+                laser->setNoise(distance);
+            else
+                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+        }
+        sens = laser;
+    }
+    
     else if(typeStr == "torque")
     {
         int history;
@@ -3377,6 +3473,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
 
         int resX, resY;
         Scalar hFov;
+        double baseline=0.0;
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
@@ -3387,7 +3484,8 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
 
         ColorCamera* cam;
-        
+        item->QueryAttribute("baseline", &baseline);
+        std::cout<<"BASELINE  " << baseline <<std::endl;
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
         {
@@ -3403,13 +3501,13 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+                cam = new ColorCamera(sensorName, resX, resY, hFov, baseline, rate);
             }
             else
-                cam = new ColorCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+                cam = new ColorCamera(sensorName, resX, resY, hFov, baseline, rate, minDist, maxDist);
         }
         else
-            cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+            cam = new ColorCamera(sensorName, resX, resY, hFov, baseline,rate);
         sens = cam;
     }
     else if(typeStr == "depthcamera")
@@ -3473,6 +3571,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         Multibeam2* mb = new Multibeam2(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
         sens = mb;
     }
+
     else if(typeStr == "fls")
     {
         if(!isGraphicalSim())
@@ -4051,13 +4150,13 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     return true;
 }
 
-FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
+bool ScenarioParser::ParseGlue(XMLElement* element)
 {
     const char* name = nullptr;
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {        
         log.Print(MessageType::ERROR, "Name of glue missing!");
-        return nullptr;
+        return false;
     }
     std::string glueName(name);
         
@@ -4067,7 +4166,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         || (itemB = element->FirstChildElement("second_body")) == nullptr)
     {
         log.Print(MessageType::ERROR, "Body definitions for glue '%s' missing!", glueName.c_str());
-        return nullptr;
+        return false;
     }
     
     const char* nameA = nullptr;
@@ -4076,7 +4175,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         || itemB->QueryStringAttribute("name", &nameB) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Body names for glue '%s' missing!", glueName.c_str());
-        return nullptr;
+        return false;
     }
     
     //Find if bodies are independent dynamic bodies or links of robots
@@ -4108,7 +4207,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         if(robotA == nullptr)
         {
             log.Print(MessageType::ERROR, "Invalid body name '%s' (glue '%s')!", nameA, glueName.c_str()); 
-            return nullptr;
+            return false;
         }
     }
 
@@ -4133,7 +4232,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         if(robotB == nullptr)
         {
             log.Print(MessageType::ERROR, "Invalid body name '%s' (glue '%s')!", nameB, glueName.c_str()); 
-            return nullptr;
+            return false;
         }
     }
 
@@ -4150,7 +4249,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         else
         {
             log.Print(MessageType::ERROR, "Only two dynamic bodies or a static and dynamic body can be glued together (glue '%s')!", glueName.c_str()); 
-            return nullptr;
+            return false;
         }
     }
     else if(entA != nullptr && robotB != nullptr) //Glue body A with a link of robot B
@@ -4160,7 +4259,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         else
         {
             log.Print(MessageType::ERROR, "A robot link can only be glued to a dynamic body (glue '%s')!", glueName.c_str()); 
-            return nullptr;
+            return false;
         }
     }        
     else if(entB != nullptr && robotA != nullptr) //Glue body B with a link of robot A
@@ -4170,7 +4269,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         else
         {
             log.Print(MessageType::ERROR, "A robot link can only be glued to a dynamic body (glue '%s')!", glueName.c_str()); 
-            return nullptr;
+            return false;
         }
     }
     else //Glue together links of two robots
@@ -4182,8 +4281,148 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     {
         sm->AddJoint(fix);
         log.Print(MessageType::INFO, "Glue created between '%s' and '%s'.", nameA, nameB);
+        return true;
     }
-    return fix;
+    return false;
+}
+
+bool ScenarioParser::ParseTether(XMLElement* element)
+{
+    const char* name = nullptr;
+    double length;
+    Transform origin;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+    {        
+        log.Print(MessageType::ERROR, "Name of tether missing!");
+        return false;
+    }
+    if(element->QueryAttribute("length", &length) != XML_SUCCESS)
+    {        
+        log.Print(MessageType::ERROR, "Length of tether missing!");
+        return false;
+    }
+    std::string tetherName(name);
+        
+    XMLElement* itemA;
+    XMLElement* itemB;
+    if((itemA = element->FirstChildElement("first_body")) == nullptr
+        || (itemB = element->FirstChildElement("second_body")) == nullptr)
+    {
+        log.Print(MessageType::ERROR, "Body definitions for rope '%s' missing!", tetherName.c_str());
+        return false;
+    }
+    const char* nameA = nullptr;
+    const char* nameB = nullptr;
+    if(itemA->QueryStringAttribute("name", &nameA) != XML_SUCCESS
+        || itemB->QueryStringAttribute("name", &nameB) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Body names for tether '%s' missing!", tetherName.c_str());
+        return false;
+    }
+    const char* linkA = nullptr;
+    const char* linkB = nullptr;
+    if(itemA->QueryStringAttribute("link", &linkA) != XML_SUCCESS
+        || itemB->QueryStringAttribute("link", &linkB) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Link names for tether '%s' missing!", tetherName.c_str());
+        return false;
+    }
+    //linkA=tether.c_str();
+    
+    std::cout<<"LINK DONE"<<std::endl;
+    
+    
+//Find if bodies are independent dynamic bodies or links of robots
+    Entity* entA = sm->getEntity(std::string(nameA));
+    Entity* entB = sm->getEntity(std::string(nameB));
+    std::cout<<"LINK DONE"<<std::endl;
+    FeatherstoneRobot* robotA = nullptr;
+    FeatherstoneRobot* robotB = nullptr;
+    int linkIdA = -2;
+    int linkIdB = -2;
+
+    if((entA != nullptr && entA->getType() != EntityType::SOLID)
+        ||(entB != nullptr && entB->getType() != EntityType::SOLID))
+    {
+        log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", tetherName.c_str()); 
+        return false;
+    }
+    std::cout<<"LINK DONE"<<std::endl;
+
+    if(entA == nullptr) //Not an independent dynamic body. Maybe a robot link?
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                int data=length/(0.042+0.015);
+                std::cout<<"LINK DONE "<<std::string(nameA)+"/"+std::string(linkA)<<"  "<<data<< std::endl;
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int linkId = -2;
+                if( (linkId = fr->getLinkIndex(std::string(nameA)+"/LinkTether"+std::to_string(data))) >= -1)
+                {
+                    std::cout<<"ROBOT A: " << linkId << "  " << linkA <<std::endl;
+                    robotA = fr;
+                    linkIdA = linkId;
+                    break;
+                }
+            }
+        }   
+        if(robotA == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", tetherName.c_str()); 
+            return false;
+        }
+    }
+
+    
+    
+
+    if(entB == nullptr) //Not an independent dynamic body. Maybe a robot link?
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int linkId = -2;
+                if( (linkId = fr->getLinkIndex(std::string(nameB)+"/"+std::string(linkB))) >= -1)
+                {
+                   std::cout<<"ROBOT B: " << linkId << "  " << linkB <<std::endl;
+                    robotB = fr;
+                    linkIdB = linkId;
+                    break;
+                }
+            }
+        }   
+        if(robotB == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", tetherName.c_str()); 
+            return false;
+        }
+    }
+
+    FixedJoint* fix = nullptr;
+
+    if(linkIdA!=-2 && linkIdB!=-2) //Glue two independent dynamic bodies
+    {
+        std::cout<<"TRY JOINT"<<robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin()[0]<< "  " << robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin()[1] << "  " << robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin()[2] << std::endl;
+        fix = new FixedJoint(std::string(tetherName), robotA->getDynamics(), robotB->getDynamics(), linkIdA, linkIdB, robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin());
+    }
+    
+    if(fix != nullptr)
+    {
+        sm->AddJoint(fix);
+        log.Print(MessageType::INFO, "Tether created between '%s' and '%s'.", nameA, nameB);
+        return true;
+    }else{
+        std::cout<<"Tether not created between "<< " "<< nameA << " "<<  nameB << std::endl;
+    }
+    return false;
 }
 
 std::string ScenarioParser::GetFullPath(const std::string& path)
@@ -4312,5 +4551,6 @@ bool ScenarioParser::isGraphicalSim()
 {
     return graphical;
 }
+
 
 }

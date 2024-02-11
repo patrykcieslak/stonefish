@@ -38,7 +38,7 @@ JointSensor::JointSensor(std::string uniqueName, Scalar frequency, int historyLe
     j = NULL;
 }
 
-SensorType JointSensor::getType() const
+SensorType JointSensor::getType()
 {
     return SensorType::JOINT;
 }
@@ -48,7 +48,7 @@ Transform JointSensor::getSensorFrame() const
     return I4();
 }
 
-std::string JointSensor::getJointName() const
+std::string JointSensor::getJointName()
 {
     if(j != NULL)
         return j->getName();

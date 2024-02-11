@@ -61,7 +61,7 @@ void Pressure::setNoise(Scalar pressureStdDev)
     channels[0].setStdDev(btClamped(pressureStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Pressure::getScalarSensorType() const
+ScalarSensorType Pressure::getScalarSensorType()
 {
     return ScalarSensorType::PRESSURE;
 }

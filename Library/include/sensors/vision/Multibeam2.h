@@ -108,10 +108,10 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method that returns the limits of measured range.
-        glm::vec2 getRangeLimits() const;
+        glm::vec2 getRangeLimits();
         
         //! A method that returns the vertical field of view of the sensor.
-        Scalar getVerticalFOV() const;
+        Scalar getVerticalFOV();
         
         //! A method returning a pointer to the image data.
         /*!
@@ -124,7 +124,7 @@ namespace sf
         float* getRangeDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const;
+        VisionSensorType getVisionSensorType();
         
     private:
         void InitGraphics();

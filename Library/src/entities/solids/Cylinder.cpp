@@ -48,7 +48,6 @@ Cylinder::Cylinder(std::string uniqueName, BodyPhysicsSettings phy, Scalar radiu
         Scalar h1 = halfHeight - thick/Scalar(2);
         Scalar h2 = halfHeight + thick/Scalar(2);
         volume = M_PI*(r2*r2*h2 - r1*r1*h1)*Scalar(2);
-        surface = (Scalar(2)*M_PI*r2*h2 + M_PI*r2*r2)*Scalar(2);
         mass = volume * mat.density;
         Scalar m1 = M_PI*(r1*r1*h1)*Scalar(2)*mat.density;
         Scalar m2 = M_PI*(r2*r2*h2)*Scalar(2)*mat.density;
@@ -59,7 +58,6 @@ Cylinder::Cylinder(std::string uniqueName, BodyPhysicsSettings phy, Scalar radiu
     else
     {
         volume = M_PI*r*r*halfHeight*Scalar(2);
-        surface = (Scalar(2)*M_PI*r*halfHeight + M_PI*r*r)*Scalar(2);
         mass = volume * mat.density;
         Scalar Ia = mass*r*r/Scalar(2);
         Scalar Ip = mass*(Scalar(3)*r*r + (halfHeight*Scalar(2))*(halfHeight*Scalar(2)))/Scalar(12);

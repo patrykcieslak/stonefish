@@ -62,7 +62,7 @@ void main()
             float theta = tilt + (factor-0.5) * fov;
             vec2 bs = imageLoad(sonarHist, ivec3(i, gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).rg;
             bs.x *= smoothstep(0.0, 0.2, factor) * (1.0 - smoothstep(0.8, 1.0, factor));
-            bs.x /= clamp(sin(theta), 0.01, 1.0); //Intensity compensation based on flat bottom model
+            bs.x /= sin(theta); //Intensity compensation based on flat bottom model
             data += bs;
         }
 

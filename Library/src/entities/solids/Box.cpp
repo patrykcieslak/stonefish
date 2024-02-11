@@ -45,7 +45,6 @@ Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensi
         Vector3 halfExtents1 = halfExtents - Vector3(thick, thick, thick)/Scalar(2);
         Vector3 halfExtents2 = halfExtents + Vector3(thick, thick, thick)/Scalar(2);
         volume = (halfExtents2.x()*halfExtents2.y()*halfExtents2.z() - halfExtents1.x()*halfExtents1.y()*halfExtents1.z())*Scalar(8);
-        surface = (halfExtents2.x()*halfExtents2.y()+halfExtents2.x()*halfExtents2.z()+halfExtents2.y()*halfExtents2.z())*Scalar(8);
         mass = volume * mat.density;
         Scalar m1 = halfExtents1.x()*halfExtents1.y()*halfExtents1.z()*Scalar(8)*mat.density;
         Scalar m2 = halfExtents2.x()*halfExtents2.y()*halfExtents2.z()*Scalar(8)*mat.density; 
@@ -60,7 +59,6 @@ Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensi
     else
     {
         volume = halfExtents.x()*halfExtents.y()*halfExtents.z()*Scalar(8);
-        surface = (halfExtents.x()*halfExtents.y()+halfExtents.x()*halfExtents.z()+halfExtents.y()*halfExtents.z())*Scalar(8);
         mass = volume * mat.density;
         Ipri = Vector3(Scalar(1)/Scalar(12)*mass*((halfExtents.y()*Scalar(2))*(halfExtents.y()*Scalar(2))+(halfExtents.z()*Scalar(2))*(halfExtents.z()*Scalar(2))),
                         Scalar(1)/Scalar(12)*mass*((halfExtents.x()*Scalar(2))*(halfExtents.x()*Scalar(2))+(halfExtents.z()*Scalar(2))*(halfExtents.z()*Scalar(2))),

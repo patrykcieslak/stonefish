@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum defining types of scalar sensors.
-    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE};
+    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE, LASERMEMS};
     
     //! An enum defining the type of quantity represented by the measurement.
     enum class QuantityType
@@ -105,7 +105,7 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the sensor.
-        virtual SensorType getType() const = 0;
+        virtual SensorType getType() = 0;
         
         //! A method resetting the sensor.
         virtual void Reset();
@@ -130,10 +130,10 @@ namespace sf
         void SaveMeasurementsToOctaveFile(const std::string& path, bool includeTime = true, bool separateChannels = false);
         
         //! A method returning the number of channels of the sensor.
-        unsigned short getNumOfChannels() const;
+        unsigned short getNumOfChannels();
         
         //! A method returning the last sample.
-        Sample getLastSample() const;
+        Sample getLastSample();
         
         //! A method returing a pointer to a copy of the history of sensor measurements.
         const std::vector<Sample>* getHistory();
@@ -144,24 +144,24 @@ namespace sf
          \param channel the index of the channel
          \return value of the measurement
          */
-        Scalar getValue(unsigned long int index, unsigned int channel) const;
+        Scalar getValue(unsigned long int index, unsigned int channel);
         
         //! A method returning the last value of the measurement.
         /*!
          \param channel the index of the channel
          \return last value of the measurement
          */
-        Scalar getLastValue(unsigned int channel) const;
+        Scalar getLastValue(unsigned int channel);
         
         //! A method returning the description of a specified channel.
         /*!
          \param channel the infdex of the channel
          \return a structure discribing the channel
          */
-        SensorChannel getSensorChannelDescription(unsigned int channel) const;
+        SensorChannel getSensorChannelDescription(unsigned int channel);
         
         //! A method returning the type of scalar sensor.
-        virtual ScalarSensorType getScalarSensorType() const = 0;
+        virtual ScalarSensorType getScalarSensorType() = 0;
 
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame() const = 0;

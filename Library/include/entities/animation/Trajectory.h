@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Trajectory__
@@ -57,7 +57,7 @@ namespace sf
         virtual void Interpolate() = 0;
 
         //! A method returning the elements that should be rendered.
-        virtual std::vector<Renderable> Render() = 0;
+        virtual Renderable Render() = 0;
 
         //! A method returning the current interpolated transform.
         Transform getInterpolatedTransform() const;
@@ -68,17 +68,12 @@ namespace sf
         //! A method returning the current interpolated angular velocity.
         Vector3 getInterpolatedAngularVelocity() const;
 
-        //! A method returning the current interpolated linear acceleration.
-        Vector3 getInterpolatedLinearAcceleration() const;
-
         //! A method returning the current playback time.
         Scalar getPlaybackTime() const;
 
         //! A method returning the current playback iteration.
         unsigned int getPlaybackIteration() const;
 
-        static void calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
-    
     protected:
         PlaybackMode playMode;
         Scalar playTime;
@@ -88,7 +83,6 @@ namespace sf
         Transform interpTrans;
         Vector3 interpVel;
         Vector3 interpAngVel;
-        Vector3 interpAcc;
     };
 }
 

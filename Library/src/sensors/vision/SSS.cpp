@@ -90,7 +90,7 @@ void* SSS::getImageDataPointer(unsigned int index)
     return sonarData;
 }
 
-void SSS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void SSS::getDisplayResolution(unsigned int& x, unsigned int& y)
 {
     getResolution(x, y); //numOfBins x numOfLines
 }
@@ -115,7 +115,7 @@ Scalar SSS::getGain() const
     return gain;
 }
    
-VisionSensorType SSS::getVisionSensorType() const
+VisionSensorType SSS::getVisionSensorType()
 {
     return VisionSensorType::SSS;
 }

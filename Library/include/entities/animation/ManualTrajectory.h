@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/11/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ManualTrajectory__
@@ -59,7 +59,7 @@ namespace sf
         virtual void Interpolate();
 
         //! A method returning the elements that should be rendered.
-        std::vector<Renderable> Render();
+        Renderable Render();
     };
 }
 

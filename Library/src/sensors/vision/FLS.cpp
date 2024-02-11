@@ -89,7 +89,7 @@ void* FLS::getImageDataPointer(unsigned int index)
     return sonarData;
 }
 
-void FLS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void FLS::getDisplayResolution(unsigned int& x, unsigned int& y)
 {
     getResolution(x, y);
     GLfloat hFactor = sinf(glm::radians((float)fovH)/2.f);
@@ -116,7 +116,7 @@ Scalar FLS::getGain() const
     return gain;
 }
     
-VisionSensorType FLS::getVisionSensorType() const
+VisionSensorType FLS::getVisionSensorType()
 {
     return VisionSensorType::FLS;
 }

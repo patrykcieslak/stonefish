@@ -66,7 +66,7 @@ void OpenGLConsole::Init(int w, int h)
     if(logoTexture > 0) //Check if not already initialized
         return;
     //Load logo texture
-    logoTexture = OpenGLContent::LoadInternalTexture("logo_64.png", false, true);
+    logoTexture = OpenGLContent::LoadInternalTexture("logo_64.png", true);
     
     glGenVertexArrays(1, &consoleVAO);
     OpenGLState::BindVertexArray(consoleVAO);

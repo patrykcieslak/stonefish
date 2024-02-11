@@ -44,7 +44,6 @@ namespace sf
     class Light;
     class Comm;
     class VelocityField;
-    class FixedJoint;
     struct Color;
     enum class ColorMap;
   
@@ -186,6 +185,9 @@ namespace sf
          \param link a reference to the loaded robot link
          \return success
          */
+         
+         
+         
         virtual bool ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link);
         
         //! A method used to parse a single robot joint description.
@@ -262,10 +264,10 @@ namespace sf
         //! A method used to parse a single glue joint description.
         /*!
          \param element a pointer to the XML node
-         \return pointer to the fixed joint
+         \return success
         */
-        virtual FixedJoint* ParseGlue(XMLElement* element);
-        
+        virtual bool ParseGlue(XMLElement* element);
+        virtual bool ParseTether(XMLElement* element);
         //! A method to get the full file path depending on the format of the passed string.
         /*!
          \param path a file path candidate
@@ -282,10 +284,10 @@ namespace sf
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
         bool ParseColorMap(XMLElement* element, ColorMap& cm);
-    
         XMLDocument doc;
         SimulationManager* sm;
         bool graphical;
+        
     };
 }
 

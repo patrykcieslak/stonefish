@@ -47,7 +47,6 @@ Torus::Torus(std::string uniqueName, BodyPhysicsSettings phy, Scalar majorRadius
         Scalar mr1 = mR - thick/Scalar(2);
         Scalar mr2 = mR + thick/Scalar(2);
         volume = M_PI*MR*M_PI*(mr2*mr2 - mr1*mr1)*Scalar(2);
-        surface = Scalar(2)*M_PI*mr2 * Scalar(2)*M_PI*MR;
         mass = volume * mat.density;
         Scalar m1 = M_PI*MR*M_PI*mr1*mr1;
         Scalar m2 = M_PI*MR*M_PI*mr2*mr2;
@@ -58,7 +57,6 @@ Torus::Torus(std::string uniqueName, BodyPhysicsSettings phy, Scalar majorRadius
     else
     {
         volume = M_PI*mR*mR*M_PI*MR*Scalar(2);
-        surface = Scalar(2)*M_PI*mR * Scalar(2)*M_PI*MR;
         mass = volume * mat.density;
         Scalar Id = (Scalar(4)*MR*MR + Scalar(5)*mR*mR)*mass/Scalar(8);
         Scalar Ia = (MR*MR + Scalar(3)/Scalar(4)*mR*mR)*mass;

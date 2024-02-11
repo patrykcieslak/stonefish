@@ -229,8 +229,6 @@ void OpenGLPipeline::DrawHelpers()
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::JOINT_LINES)
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
-            else if(drawingQueueCopy[h].type == RenderableType::PATH_POINTS)
-                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::PATH_LINE_STRIP)
                 content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
         }

@@ -27,6 +27,7 @@
 #define __Stonefish_ConsoleSimulationApp__
 
 #include <SDL2/SDL_thread.h>
+#include <SDL2/SDL.h>
 #include "core/SimulationApp.h"
 
 namespace sf
@@ -47,10 +48,13 @@ namespace sf
         
         //! A destructor.
         virtual ~ConsoleSimulationApp();
+        virtual void KeyDown(SDL_Event* event);
         
         //! A method informing if the application is graphical.
         bool hasGraphics();
-        
+        void StopSimulationWrapper();
+        void ResumeSimulationWrapper();
+        void StartSimulationWrapper();
     protected:
         void Init();
         void LoopInternal();

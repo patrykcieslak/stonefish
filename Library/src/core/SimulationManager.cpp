@@ -233,6 +233,13 @@ void SimulationManager::AddSensor(Sensor* sens)
         sensors.push_back(sens);
 }
 
+/*void SimulationManager::AddRope(Rope* rope)
+{
+    if(rope != nullptr)
+        ropes.push_back(rope);
+}
+*/
+
 void SimulationManager::AddComm(Comm* comm)
 {
     if(comm != nullptr)

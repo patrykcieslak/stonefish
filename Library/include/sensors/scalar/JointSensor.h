@@ -65,13 +65,13 @@ namespace sf
         virtual void AttachToJoint(Joint* joint);
         
         //! A method returning the type of the sensor.
-        SensorType getType() const;
+        SensorType getType();
         
         //! A method returning the current sensor frame in world.
         virtual Transform getSensorFrame() const;
         
         //! A method returning the name of the joint that the sensor is attached to.
-        std::string getJointName() const;
+        std::string getJointName();
         
     protected:
         FeatherstoneEntity* fe;

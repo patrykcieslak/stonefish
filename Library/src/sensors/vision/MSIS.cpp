@@ -116,7 +116,7 @@ void* MSIS::getImageDataPointer(unsigned int index)
     return sonarData;
 }
 
-void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y)
 {
     getResolution(x, y);
     x = y; //numOfBins x numOfBins
@@ -158,7 +158,7 @@ Scalar MSIS::getGain() const
     return gain;
 }
     
-VisionSensorType MSIS::getVisionSensorType() const
+VisionSensorType MSIS::getVisionSensorType()
 {
     return VisionSensorType::MSIS;
 }

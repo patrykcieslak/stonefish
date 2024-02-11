@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_PWLTrajectory__
@@ -55,7 +55,7 @@ namespace sf
          \param keyTime the time at point
          \param keyTransform the transform at point
          */
-        virtual void AddKeyPoint(Scalar keyTime, Transform keyTransform);
+        void AddKeyPoint(Scalar keyTime, Transform keyTransform);
 
         //! A method updating the interpolated transform and velocities.
         virtual void Interpolate();
@@ -64,11 +64,11 @@ namespace sf
         virtual void BuildGraphicalPath();
 
         //! A method returning the elements that should be rendered.
-        std::vector<Renderable> Render();
+        Renderable Render();
 
     protected:
         std::vector<KeyPoint> points;
-        std::vector<Renderable> vis;
+        Renderable path;
     };
 }
 

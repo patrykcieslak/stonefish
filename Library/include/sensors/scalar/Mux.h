@@ -68,7 +68,7 @@ namespace sf
         Scalar* getLastSample();
         
         //! A method returning a number of channels of the mux.
-        unsigned int getNumOfComponents() const;
+        unsigned int getNumOfComponents();
         
     private:
         std::vector<MuxComponent> components;

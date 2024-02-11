@@ -296,12 +296,11 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     return mesh;
 }
 
-void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Scalar& surface, Vector3& Ipri, Matrix3& Irot)
+void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Vector3& Ipri, Matrix3& Irot)
 {
     //1.Calculate mesh volume, CG and mass
     CG = Vector3(0,0,0);
-    volume = Scalar(0);
-    surface = Scalar(0);
+    volume = 0;
     
     if(thickness > Scalar(0)) //Shell
     {
@@ -317,7 +316,6 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
             
             //Calculate volume of shell triangle
             Scalar A = (v2-v1).cross(v3-v1).length()/Scalar(2);
-            surface += A;
             Vector3 triCG = (v1+v2+v3)/Scalar(3);
             Scalar triVolume = A * thickness;
             CG += triCG * triVolume;
@@ -341,10 +339,7 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
             Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
-
-            //Calculate surface
-            surface += (v2-v1).cross(v3-v1).length()/Scalar(2);
-
+            
             //Calculate signed volume of a tetrahedra
             Vector3 tetraCG = (v1+v2+v3)/Scalar(4);
             Scalar tetraVolume6 = v1.dot(v2.cross(v3));
@@ -529,7 +524,7 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
 MeshProperties ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density)
 {
     MeshProperties mp;
-    ComputePhysicalProperties(mesh, thickness, density, mp.mass, mp.CG, mp.volume, mp.surface, mp.Ipri, mp.Irot);
+    ComputePhysicalProperties(mesh, thickness, density, mp.mass, mp.CG, mp.volume, mp.Ipri, mp.Irot);
     return mp;
 }
 

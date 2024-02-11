@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2020.
-//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/PWLTrajectory.h"
@@ -31,18 +31,8 @@ namespace sf
 
 PWLTrajectory::PWLTrajectory(PlaybackMode playback) : Trajectory(playback)
 {
-    Renderable pathPoints;
-    pathPoints.type = RenderableType::PATH_POINTS;
-    pathPoints.model = glm::mat4(1.f);
-
-    Renderable pathLine;
-    pathLine.type = RenderableType::PATH_LINE_STRIP;
-    pathLine.model = glm::mat4(1.f);
-
-    vis.push_back(pathPoints);
-    vis.push_back(pathLine);
-    
-    interpAcc = V0();
+    path.type = RenderableType::PATH_LINE_STRIP;
+    path.model = glm::mat4(1.f);    
     AddKeyPoint(Scalar(0), I4());
 }
 
@@ -92,31 +82,29 @@ void PWLTrajectory::Interpolate()
     {
         interpTrans = it->T;
         if(it == points.begin()) //Time = 0
-            calculateVelocityShortestPath(it->T, (it+1)->T, (it+1)->t, interpVel, interpAngVel);
+            btTransformUtil::calculateVelocity(it->T, (it+1)->T, (it+1)->t, interpVel, interpAngVel);
         else
-            calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
+            btTransformUtil::calculateVelocity((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
     }
     else
     {
         Scalar alpha = (playTime - (it-1)->t)/(it->t - (it-1)->t);
         interpTrans.setOrigin(lerp((it-1)->T.getOrigin(), it->T.getOrigin(), alpha));
         interpTrans.setRotation(slerp((it-1)->T.getRotation(), it->T.getRotation(), alpha));
-        calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
+        btTransformUtil::calculateVelocity((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
     }
 }
 
 void PWLTrajectory::BuildGraphicalPath()
 {
-    vis[0].points.clear();
-    vis[1].points.clear();
+    path.points.clear();
     for(size_t i=0; i<points.size(); ++i)
-        vis[0].points.push_back(glVectorFromVector(points[i].T.getOrigin()));
-    vis[1].points = vis[0].points;
+        path.points.push_back(glVectorFromVector(points[i].T.getOrigin()));
 }
 
-std::vector<Renderable> PWLTrajectory::Render()
+Renderable PWLTrajectory::Render()
 {
-    return vis;
+    return path;
 }
 
 }

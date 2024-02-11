@@ -35,6 +35,7 @@
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
 #include "comms/Comm.h"
+#include <iostream>
 
 namespace sf
 {
@@ -67,7 +68,7 @@ int FeatherstoneRobot::getJoint(const std::string& name)
 Transform FeatherstoneRobot::getTransform() const
 {
     if(dynamics != nullptr)
-        return dynamics->getLink(0).solid->getOTransform();
+        return dynamics->getLinkTransform(0);
     else
         return Transform::getIdentity();
 }
@@ -102,6 +103,19 @@ void FeatherstoneRobot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEnti
     dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, baseLink, fixed);
     dynamics->setSelfCollision(selfCollision);
 }
+
+void FeatherstoneRobot::DefineLinksTether(std::vector<SolidEntity*> otherLinks, bool selfCollision)
+{
+    for (SolidEntity* link : otherLinks) {
+        // Check if the link already exists in detachedLinks
+            std::cout<<"LINK NAME "<< link->getName()<<std::endl;
+            detachedLinks.push_back(link);
+        }
+    
+    dynamics = new FeatherstoneEntity(name + "_Dynamics", (unsigned short)detachedLinks.size() + 1, getBaseLink(), fixed);
+    dynamics->setSelfCollision(selfCollision);
+}
+        
 
 void FeatherstoneRobot::BuildKinematicStructure()
 {
@@ -176,9 +190,11 @@ void FeatherstoneRobot::BuildKinematicStructure()
                 cCritical("Parent link '%s' not yet joined with robot!", jointsData[i].parent.c_str());
 
             // Find child link
-            for(size_t h=0; h<detachedLinks.size(); ++h)
+            for(size_t h=0; h<detachedLinks.size(); ++h){
+                std::cout<<detachedLinks[h]->getName() << " " << jointsData[i].child << std::endl;
                 if(detachedLinks[h]->getName() == jointsData[i].child)
                 childId = h;
+            }
 
             if(childId >= detachedLinks.size())
             {

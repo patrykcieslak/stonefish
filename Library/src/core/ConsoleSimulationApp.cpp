@@ -58,9 +58,58 @@ void ConsoleSimulationApp::Init()
     cInfo("Ready for running...");
 }
 
+void ConsoleSimulationApp::KeyDown(SDL_Event *event)
+{
+    GLfloat moveStep = 0.1f;
+    if(event->key.keysym.mod & KMOD_SHIFT)
+        moveStep = 1.f;
+
+    switch (event->key.keysym.sym)
+    {
+        case SDLK_ESCAPE:
+            Quit();
+            break;
+            
+        case SDLK_SPACE:
+             if(!getSimulationManager()->isSimulationFresh())
+             {
+                 StopSimulation();
+                 getSimulationManager()->RestartScenario();
+             }
+             StartSimulation();
+             break;
+        default:
+            break;
+    }
+}
+
 void ConsoleSimulationApp::LoopInternal()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    SDL_Event event;
+    SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
+            
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+                
+            case SDL_KEYDOWN:
+            {
+                KeyDown(&event);
+                break;
+            }
+                 
+            case SDL_QUIT:
+            {
+                if(isRunning())
+                    StopSimulation();
+                    
+                Quit();
+            }   
+                break;
+        }
+    }
 }
 
 void ConsoleSimulationApp::StartSimulation()
@@ -104,5 +153,15 @@ int ConsoleSimulationApp::RunSimulation(void* data)
 
     return 0;
 }
+void ConsoleSimulationApp::StopSimulationWrapper() {
+        StopSimulation();
+}
 
+void ConsoleSimulationApp::ResumeSimulationWrapper() {
+        ResumeSimulation();
+}
+
+void ConsoleSimulationApp::StartSimulationWrapper() {
+        StartSimulation();
+}
 }

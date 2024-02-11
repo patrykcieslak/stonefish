@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/17.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLContent.h"
@@ -1077,8 +1077,8 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);
-    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName, true, false, maxAnisotropy);
-    if(normalTextureName != "") look.normalTexture = LoadTexture(normalTextureName, false);
+    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName, false, maxAnisotropy);
+    if(normalTextureName != "") look.normalTexture = LoadTexture(normalTextureName);
     looks.push_back(look);
     return look.name;
 }
@@ -1137,7 +1137,7 @@ size_t OpenGLContent::getLightsCount()
     return lights.size();
 }
 
-int OpenGLContent::getLookId(const std::string& name)
+int OpenGLContent::getLookId(std::string name)
 {
     for(size_t i=0; i<looks.size(); ++i)
         if(looks[i].name == name)
@@ -1157,10 +1157,10 @@ const Look& OpenGLContent::getLook(size_t id)
 }
     
 //Static methods
-GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy, bool internal)
+GLuint OpenGLContent::LoadTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy, bool internal)
 {
     int width, height, channels;
-    int reqChannels = alpha ? 4 : 3;
+    int reqChannels = hasAlphaChannel ? 4 : 3;
     GLuint texture;
     
     // Allocate image; fail out on error
@@ -1192,10 +1192,7 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
     
     glGenTextures(1, &texture);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    if(srgb)
-        glTexImage2D(GL_TEXTURE_2D, 0, alpha ? GL_SRGB8_ALPHA8 : GL_SRGB8, width, height, 0, alpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
-    else
-        glTexImage2D(GL_TEXTURE_2D, 0, alpha ? GL_RGBA8 : GL_RGB8, width, height, 0, alpha? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, reqChannels == 3 ? GL_SRGB8 : GL_SRGB8_ALPHA8, width, height, 0, reqChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, dataBuffer);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     if(anisotropy > 0.f)
@@ -1210,9 +1207,9 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
     return texture;
 }
 
-GLuint OpenGLContent::LoadInternalTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy)
+GLuint OpenGLContent::LoadInternalTexture(std::string filename, bool hasAlphaChannel, GLfloat anisotropy)
 {
-    return LoadTexture(GetShaderPath() + filename, srgb, alpha, anisotropy, true);
+    return LoadTexture(GetShaderPath() + filename, hasAlphaChannel, anisotropy, true);
 }
 
 GLuint OpenGLContent::GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, GLenum type, const void* data, 
@@ -2277,7 +2274,7 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
     return mesh;
 }
 
-Mesh* OpenGLContent::LoadMesh(const std::string& filename, GLfloat scale, bool smooth)
+Mesh* OpenGLContent::LoadMesh(std::string filename, GLfloat scale, bool smooth)
 {
     Mesh* mesh = LoadGeometryFromFile(filename, scale);
     CheckAndRepairFaceVertexOrder(mesh);

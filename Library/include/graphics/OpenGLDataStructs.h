@@ -464,7 +464,7 @@ namespace sf
     enum class RenderableType {
         SOLID = 0, SOLID_CS, MULTIBODY_AXIS,
         HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, HYDRO_TRIANGLES,
-        SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES, PATH_POINTS, PATH_LINE_STRIP,
+        SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES, PATH_LINE_STRIP,
         FORCE_GRAVITY, FORCE_BUOYANCY, FORCE_LINEAR_DRAG, FORCE_QUADRATIC_DRAG
     };
     
@@ -476,21 +476,8 @@ namespace sf
         int objectId;
         std::string materialName;
         glm::mat4 model;
-        glm::vec3 vel;
-        glm::vec3 avel;
         std::vector<glm::vec3> points;
 		
-        Renderable() 
-        {
-            type = RenderableType::SOLID;
-            lookId = -1;
-            objectId = -1;
-            materialName = "";
-            model = glm::mat4(1.f);
-            vel = glm::vec3(0.f);
-            avel = glm::vec3(0.f);
-        }
-
 		static bool SortByMaterial(const Renderable& r1, const Renderable& r2) 
 		{
 			return r1.lookId < r2.lookId;

@@ -36,18 +36,28 @@ Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int re
     resX = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
     resY = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
     setDisplayOnScreen(false, 0, 0, 1.f);
+    baseline=0.0;
+}
+
+Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, double baseline, Scalar frequency) : VisionSensor(uniqueName, frequency)
+{
+    fovH = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
+    resX = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
+    resY = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
+    setDisplayOnScreen(false, 0, 0, 1.f);
+    baseline=baseline;
 }
     
 Camera::~Camera()
 {
 }
 
-Scalar Camera::getHorizontalFOV() const
+Scalar Camera::getHorizontalFOV()
 {
     return fovH;
 }
 
-void Camera::getResolution(unsigned int& x, unsigned int& y) const
+void Camera::getResolution(unsigned int& x, unsigned int& y)
 {
     x = resX;
     y = resY;
@@ -61,7 +71,7 @@ void Camera::setDisplayOnScreen(bool display, unsigned int x, unsigned int y, fl
     screenScale = scale;
 }
 
-bool Camera::getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const
+bool Camera::getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale)
 {
     x = screenX;
     y = screenY;
@@ -119,6 +129,14 @@ std::vector<Renderable> Camera::Render()
         items.push_back(item);
     }
     return items;
+}
+
+void Camera::setBaseline(double bl){
+     baseline=bl;
+}
+
+double Camera::getBaseline(){
+     return baseline;
 }
 
 }

@@ -48,9 +48,9 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency = Scalar(-1),
+        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, double bl, Scalar frequency = Scalar(-1),
            Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
-        
+
         //! A destructor.
         ~ColorCamera();
         
@@ -87,7 +87,7 @@ namespace sf
         void setExposureCompensation(Scalar comp);
         
         //! A method returning the exposure compensation factor [EV].
-        Scalar getExposureCompensation() const;
+        Scalar getExposureCompensation();
     
         //! A method returning the pointer to the image data.
         /*!
@@ -97,7 +97,7 @@ namespace sf
         void* getImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const;
+        VisionSensorType getVisionSensorType();
         
     private:
         void InitGraphics();

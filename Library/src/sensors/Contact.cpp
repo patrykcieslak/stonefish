@@ -54,7 +54,7 @@ Contact::~Contact()
     points.clear();
 }
 
-std::string Contact::getName() const
+std::string Contact::getName()
 {
     return name;
 }
@@ -79,7 +79,7 @@ void Contact::MarkDataOld()
     newDataAvailable = false;
 }
 
-bool Contact::isNewDataAvailable() const
+bool Contact::isNewDataAvailable()
 {
     return newDataAvailable;
 }

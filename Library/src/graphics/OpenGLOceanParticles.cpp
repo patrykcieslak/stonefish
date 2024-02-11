@@ -194,7 +194,7 @@ void OpenGLOceanParticles::Init()
     OpenGLState::UseProgram(0);
 
     //Load textures
-    flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, true);
+    flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, 0.f);
 
     unsigned int seed = (unsigned int)GetTimeInMicroseconds();
     std::mt19937 generator(seed);

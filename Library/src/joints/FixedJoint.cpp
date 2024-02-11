@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/FixedJoint.h"
@@ -30,12 +30,12 @@
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
+#include <iostream>
 
 namespace sf
 {
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) 
-    : Joint(uniqueName, false), jSolidA(nullptr), jSolidB(nullptr)
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) : Joint(uniqueName, false)
 {
     btRigidBody* body = solid->rigidBody;
     
@@ -43,8 +43,7 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid)
     setConstraint(fixed);
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
-    : Joint(uniqueName, false), jSolidA(nullptr), jSolidB(nullptr)
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->rigidBody;
     btRigidBody* bodyB = solidB->rigidBody;
@@ -55,53 +54,37 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     setConstraint(fixed);
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot) 
-    : Joint(uniqueName, false)
+FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot) : Joint(uniqueName, false)
 {
     Transform linkTransform = fe->getLinkTransform(linkId+1);
     Transform solidTransform = solid->getCGTransform();
     Vector3 pivotInA = linkTransform.inverse() * pivot;
     Vector3 pivotInB = solidTransform.inverse() * pivot;
-    Matrix3 frameInA = Matrix3::getIdentity();
     Matrix3 frameInB = solidTransform.getBasis().inverse() * linkTransform.getBasis();
     
-    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB, frameInA, frameInB);
+    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
     
-    jSolidA = fe->getLink(linkId+1).solid;
-    jSolidB = solid;
+    //Disable collision
+    SimulationApp::getApp()->getSimulationManager()->DisableCollision(fe->getLink(linkId+1).solid, solid);
 }
 
 FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot) : Joint(uniqueName, false)
 {
     Transform linkATransform = feA->getLinkTransform(linkIdA+1);
     Transform linkBTransform = feB->getLinkTransform(linkIdB+1);
-    Vector3 pivotInA = linkATransform.inverse() * pivot;
-    Vector3 pivotInB = linkBTransform.inverse() * pivot;
-    Matrix3 frameInA = Matrix3::getIdentity();
-    Matrix3 frameInB = linkBTransform.getBasis().inverse() * linkATransform.getBasis();	
+    Vector3 pivotInA = Vector3(-0.0,0,0);
+    Vector3 pivotInB = Vector3(0,0,0);
+    Matrix3 frameInB = linkBTransform.getBasis().inverse() * linkATransform.getBasis();
     
-    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, frameInA, frameInB);
-    fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
+    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(feA->getMultiBody(), linkIdA, feB->getMultiBody(), linkIdB, pivotInA, pivotInB, Matrix3::getIdentity(), frameInB);
+    std::cout<<"LARGE " << BT_LARGE_FLOAT<<std::endl;
+    fixed->setMaxAppliedImpulse(0.027);
     setConstraint(fixed);
     
-    jSolidA = feA->getLink(linkIdA+1).solid;
-    jSolidB = feB->getLink(linkIdB+1).solid;
-}
-
-void FixedJoint::AddToSimulation(SimulationManager* sm)
-{
-    Joint::AddToSimulation(sm);
-    if(isMultibodyJoint())
-        SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA, jSolidB);
-}
-
-void FixedJoint::RemoveFromSimulation(SimulationManager* sm)
-{
-    if(isMultibodyJoint())
-        SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA, jSolidB);
-    Joint::RemoveFromSimulation(sm);
+    //Disable collision
+    SimulationApp::getApp()->getSimulationManager()->DisableCollision(feA->getLink(linkIdA+1).solid, feB->getLink(linkIdB+1).solid);
 }
 
 JointType FixedJoint::getType() const

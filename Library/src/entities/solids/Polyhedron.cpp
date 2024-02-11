@@ -59,14 +59,16 @@ Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy,
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
+    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, Ipri, Irot);
     T_CG2C.setOrigin(-CG); //Set CG position
     T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
-    T_CG2O = T_CG2C * T_O2C.inverse();
-    T_CG2G = T_CG2O * T_O2G;
-
+    
     //3.Calculate equivalent ellipsoid for hydrodynamic force computation
     ComputeFluidDynamicsApprox(approx);
+    
+    //4. Compute missing transformations
+    T_CG2O = T_CG2C * T_O2C.inverse();
+    T_CG2G = T_CG2O * T_O2G;
     T_O2H = T_CG2O.inverse() * T_CG2H;
     P_CB = Vector3(0,0,0);
 }

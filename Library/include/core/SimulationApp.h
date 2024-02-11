@@ -87,6 +87,8 @@ namespace sf
         //! A static method returning the pointer to the currently running application.
         static SimulationApp* getApp();
         
+        void QuitWrapper();
+        
     protected:
         void Loop();
 

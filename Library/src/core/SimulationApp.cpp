@@ -141,6 +141,11 @@ void SimulationApp::Quit()
     finished = true;
 }
 
+void SimulationApp::QuitWrapper()
+{
+    Quit();
+}
+
 void SimulationApp::CleanUp()
 {
 }

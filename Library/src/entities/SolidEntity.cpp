@@ -66,7 +66,6 @@ SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::s
     //Set properties
     mass = Scalar(0);
     aMass.setZero();
-    surface = Scalar(0);
     aI.setZero();
     Ipri.setZero();
     contactK = Scalar(-1);
@@ -74,21 +73,17 @@ SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::s
     volume = Scalar(0);
     fdApproxType =  GeometryApproxType::AUTO;
     fdApproxParams = std::vector<Scalar>(0);
-    fdCd = Vector3(-1.0, -1.0, -1.0);
-    fdCf = Vector3(-1.0, -1.0, -1.0);
     T_CG2H = Transform::getIdentity();
     
     //Set vectors to zero
     Fb.setZero();
     Tb.setZero();
+    Fdl.setZero();
+    Tdl.setZero();
     Fdq.setZero();
     Tdq.setZero();
-    Fdf.setZero();
-    Tdf.setZero();
     Fda.setZero();
     Tda.setZero();
-    Swet = Scalar(0);
-    Vsub = Scalar(0);
     lastV.setZero();
     lastOmega.setZero();
     linearAcc.setZero();
@@ -182,14 +177,6 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
     }
 }
 
-void SolidEntity::SetHydrodynamicCoefficients(const Vector3& Cd, const Vector3& Cf)
-{
-    if(Cd.getX() >= Scalar(0) && Cd.getY() >= Scalar(0) && Cd.getZ() >= Scalar(0))
-        fdCd = Cd;
-    if(Cf.getX() >= Scalar(0) && Cf.getY() >= Scalar(0) && Cf.getZ() >= Scalar(0))
-        fdCf = Cf;
-}
-
 int SolidEntity::getPhysicalObject() const
 {
     return phyObjectId;
@@ -197,7 +184,7 @@ int SolidEntity::getPhysicalObject() const
 
 bool SolidEntity::isBuoyant() const
 {
-    return (phy.mode == BodyPhysicsMode::SUBMERGED || phy.mode == BodyPhysicsMode::FLOATING) && phy.buoyancy;
+    return phy.buoyancy;
 }
     
 BodyPhysicsMode SolidEntity::getBodyPhysicsMode() const
@@ -233,8 +220,6 @@ std::vector<Renderable> SolidEntity::Render()
             item.objectId = graObjectId;
             item.lookId = lookId;
             item.model = glMatrixFromTransform(getGTransform());
-            item.vel = glVectorFromVector(getLinearVelocity());
-            item.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item);
         }
         else if(dm == DisplayMode::PHYSICAL && phyObjectId >= 0)
@@ -242,8 +227,6 @@ std::vector<Renderable> SolidEntity::Render()
             item.objectId = phyObjectId;
             item.lookId = -1;
             item.model = glMatrixFromTransform(getCTransform());
-            item.vel = glVectorFromVector(getLinearVelocity());
-            item.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item);
         }
         
@@ -270,7 +253,7 @@ std::vector<Renderable> SolidEntity::Render()
         
         item.points.pop_back();
         item.type = RenderableType::FORCE_LINEAR_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
+        item.points.push_back(cgv + glm::vec3((GLfloat)Fdl.x(), (GLfloat)Fdl.y(), (GLfloat)Fdl.z()));
         items.push_back(item);
         
         item.points.pop_back();
@@ -560,30 +543,14 @@ Vector3 SolidEntity::getAppliedForce()
         return V0();
 }
 
-void SolidEntity::getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Ff, Vector3& Tf)
+void SolidEntity::getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Fs, Vector3& Ts)
 {
     Fb = this->Fb;
     Tb = this->Tb;
-    Fd = this->Fdq;
-    Td = this->Tdq;
-    Ff = this->Fdf;
-    Tf = this->Tdf;
-}
-
-void SolidEntity::getHydrodynamicCoefficients(Vector3& Cd, Vector3& Cf) const
-{
-    Cd = fdCd;
-    Cf = fdCf;
-}
-
-Scalar SolidEntity::getWettedSurface() const
-{
-    return Swet;
-}
-
-Scalar SolidEntity::getSubmergedVolume() const
-{
-    return Vsub;
+    Fd = this->Fdl + this->Fdq;
+    Td = this->Tdl + this->Tdq;
+    Fs = this->Fds;
+    Ts = this->Tds;
 }
 
 Vector3 SolidEntity::getLinearAcceleration() const
@@ -609,11 +576,6 @@ Vector3 SolidEntity::getInertia() const
 Scalar SolidEntity::getMass() const
 {
     return mass;
-}
-
-Scalar SolidEntity::getSurface() const
-{
-    return surface;
 }
 
 Vector3 SolidEntity::getAddedMass() const
@@ -723,9 +685,6 @@ void SolidEntity::ComputeSphericalApprox()
     sphereTransform.setOrigin(P_CB);
     T_CG2H = sphereTransform;
 
-    Vector3 Cd(1,1,1);
-    SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd); //No need to trasform (all equal)
-
     delete x;
 }
 
@@ -806,14 +765,7 @@ void SolidEntity::ComputeCylindricalApprox()
     Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3));
     
     aMass = T_CG2H.getBasis() * Vector3(m2, m2, m1);
-    aMass = Vector3(btFabs(aMass.getX()), btFabs(aMass.getY()), btFabs(aMass.getZ()));
     aI = T_CG2H.getBasis() * Vector3(I2, I2, I1);
-    aI = Vector3(btFabs(aI.getX()), btFabs(aI.getY()), btFabs(aI.getZ()));
-
-    Vector3 Cd(0.5, 0.5, 1.0);
-    Cd = T_CG2O.getBasis().inverse() * T_CG2H.getBasis() * Cd; // To origin frame
-    Cd = Vector3(btFabs(Cd.getX()), btFabs(Cd.getY()), btFabs(Cd.getZ()));
-    SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd);
 
     delete x;
 }
@@ -1030,14 +982,6 @@ void SolidEntity::ComputeEllipsoidalApprox()
     ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
     ellipsoidTransform.setOrigin(P_CB);
     T_CG2H = ellipsoidTransform;
-
-    Vector3 Cd(Scalar(1)/fdApproxParams[0] , Scalar(1)/fdApproxParams[1], Scalar(1)/fdApproxParams[2]);
-    Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
-    Cd /= maxCd;
-    Cd = T_CG2O.getBasis().inverse() * Cd; // To origin frame
-    Cd = Vector3(btFabs(Cd.getX()), btFabs(Cd.getY()), btFabs(Cd.getZ()));
-    SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd);
-
 #ifdef DEBUG
     cInfo("--------------------------------------------------------------------");
 #endif
@@ -1271,36 +1215,46 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* ocn)
         return BodyFluidPosition::CROSSING_SURFACE;
 }
 
-void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf)
+void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
 {
-    Vector3 Fdq = getOTransform().getBasis().inverse() * _Fdq; // In origin frame
-    Fdq = Fdq.safeNormalize();
-    Scalar Fdqc = btFabs(Fdq.getX()) * fdCd.getX() + btFabs(Fdq.getY()) * fdCd.getY() + btFabs(Fdq.getZ()) * fdCd.getZ();
-    //Fdqc = 1.0;
-    _Fdq = Scalar(0.5) * ocn->getLiquid().density * Fdqc * _Fdq; //0.5*rho*Cd*S*v2 from drag equation    
-
-    Vector3 Tdq = getOTransform().getBasis().inverse() * _Tdq; // In origin frame
-    Tdq = Tdq.safeNormalize();
-    Scalar Tdqc = btFabs(Tdq.getX()) * fdCd.getX() + btFabs(Tdq.getY()) * fdCd.getY() + btFabs(Tdq.getZ()) * fdCd.getZ();
-    //Tdqc = 1.0;
-    _Tdq = Scalar(0.5) * ocn->getLiquid().density * Tdqc * _Tdq; //0.5*rho*Cd*S*v2 from drag equation
-
-    Vector3 Fdf = getOTransform().getBasis().inverse() * _Fdf; // In origin frame
-    Fdf = Fdf.safeNormalize();
-    Scalar Fdfc = btFabs(Fdf.getX()) * fdCf.getX() + btFabs(Fdf.getY()) * fdCf.getY() + btFabs(Fdf.getZ()) * fdCf.getZ(); 
-    //Fdfc = 1.0;
-    _Fdf = ocn->getLiquid().density * Fdfc * _Fdf; //rho*Cf*S*v from viscous drag equation
+    Vector3 Fdqn = (T_CG2H.getBasis().inverse() * _Fdq).safeNormalize(); //Transform force to approximate geometry frame
+    Scalar corFactor(1.0);
     
-    Vector3 Tdf = getOTransform().getBasis().inverse() * _Tdf; // In origin frame
-    Tdf = Tdf.safeNormalize();
-    Scalar Tdfc = btFabs(Tdf.getX()) * fdCf.getX() + btFabs(Tdf.getY()) * fdCf.getY() + btFabs(Tdf.getZ()) * fdCf.getZ();
-    //Tdfc = 1.0;
-    _Tdf = ocn->getLiquid().density * Tdfc * _Tdf; //rho*S*v from viscous drag equation
+    switch(fdApproxType)
+    {
+        case  GeometryApproxType::AUTO:
+        case  GeometryApproxType::SPHERE:
+            break;
+                
+        case  GeometryApproxType::CYLINDER:
+        {
+            Vector3 Cd(0.5, 0.5, 1.0);
+            corFactor = Cd.dot(Fdqn);
+        }
+            break;
+                
+        case  GeometryApproxType::ELLIPSOID:
+        {
+            Vector3 Cd(Scalar(1)/fdApproxParams[0] , Scalar(1)/fdApproxParams[1], Scalar(1)/fdApproxParams[2]);
+            Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
+            Cd /= maxCd;
+            corFactor = Cd.dot(Fdqn);
+        }
+            break;
+    }
+    
+    //corFactor *= 2.0;
+    
+    _Fdl *= 0.1 * btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    _Tdl *= 0.1 * btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    _Fdq *= btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    _Tdq *= btFabs(corFactor) * 0.5 * ocn->getLiquid().density;
+    _Fds *= 0.1 * 0.5 * ocn->getLiquid().density;
+    _Tds *= 0.1 * 0.5 * ocn->getLiquid().density;
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& settings, const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
-                                            const Vector3& _v, const Vector3& _omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf, 
-                                            Scalar& _Swet, Scalar& _Vsub, Renderable& debug)
+                                            const Vector3& _v, const Vector3& _omega, Vector3& _Fb, Vector3& _Tb, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds, Renderable& debug)
 {
     if(mesh == nullptr)
     {
@@ -1312,36 +1266,33 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
 
         if(settings.dampingForces)
         {
+            _Fdl.setZero();
+            _Tdl.setZero();
             _Fdq.setZero();
             _Tdq.setZero();
-            _Fdf.setZero();
-            _Tdf.setZero();
+            _Fds.setZero();
+            _Tds.setZero();
         }
 
-        _Swet = Scalar(0);
-        _Vsub = Scalar(0);
         return;
     }
 
     //Computation with floats (geometry has float precision)
     glm::vec3 Fb(0.f);
     glm::vec3 Tb(0.f);
+    glm::vec3 Fdl(0.f);
+    glm::vec3 Tdl(0.f);
     glm::vec3 Fdq(0.f);
     glm::vec3 Tdq(0.f);
-    glm::vec3 Fdf(0.f);
-    glm::vec3 Tdf(0.f);
-    GLfloat Swet(0.f);
-    GLfloat Vsub(0.f);
+    glm::vec3 Fds(0.f);
+    glm::vec3 Tds(0.f);
     glm::mat4 TCG = glMatrixFromTransform(T_CG);
     glm::mat4 TC = glMatrixFromTransform(T_C);
     glm::vec3 v = glVectorFromVector(_v);
     glm::vec3 omega = glVectorFromVector(_omega);
-    glm::vec3 CBsub(0.f);
    
     //Calculate fluid dynamics forces and torques
     glm::vec3 p = glm::vec3(TCG[3]);
-    glm::vec3 p0 = p; //Point used as a center of mesh for volume calculation.
-    p0.z = 0.f;       //When the robot is far from the world origin numerical erros would explode without translating the mesh data!
     
     //Loop through all faces...
     for(size_t i=0; i<mesh->faces.size(); ++i)
@@ -1377,16 +1328,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 p2 = p3 + (p2-p3) * (depth[2]/(fabsf(depth[1]) + depth[2]));
                 //p3 without change
                 
-                //Volume properties
-                glm::vec3 p01 = p1-p0;
-                glm::vec3 p02 = p2-p0;
-                glm::vec3 p03 = p3-p0;
-                glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-                GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;
-                
-                //Face properties
+                //Calculate
                 glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
                 glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
                 fc = (p1+p2+p3)/3.f; //Face centroid
@@ -1412,16 +1354,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 //p2 without change
                 p3 = p2 + (p3-p2) * (depth[1]/(fabsf(depth[2]) + depth[1]));
                 
-                //Volume properties
-                glm::vec3 p01 = p1-p0;
-                glm::vec3 p02 = p2-p0;
-                glm::vec3 p03 = p3-p0;
-                glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-                GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;
-                
-                //Face properties
+                //Calculate
                 glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
                 glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
                 fc = (p1+p2+p3)/3.f; //Face centroid
@@ -1449,23 +1382,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 //p2 without change
                 //p3 without change
                 
-                //Volume properties
-                //Tetra 1
-                glm::vec3 p01 = p1-p0;
-                glm::vec3 p02 = p2-p0;
-                glm::vec3 p03 = p3-p0;
-                glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-                GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;
-                //Tetra 2
-                glm::vec3 p04 = p4-p0;
-                tetraCG = (p01+p03+p04)/4.f;
-                tetraV6 = glm::dot(p01, glm::cross(p03, p04));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;
-                
-                //Face properties
+                //Calculate
                 glm::vec3 fv1 = p2-p1;
                 glm::vec3 fv2 = p4-p1;
                 glm::vec3 fv3 = p2-p3;
@@ -1499,16 +1416,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 p2 = p1 + (p2-p1) * (depth[0]/(fabsf(depth[1]) + depth[0]));
                 p3 = p1 + (p3-p1) * (depth[0]/(fabsf(depth[2]) + depth[0]));
                 
-                //Volume properties
-                glm::vec3 p01 = p1-p0;
-                glm::vec3 p02 = p2-p0;
-                glm::vec3 p03 = p3-p0;
-                glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-                GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;
-
-                //Face properties
+                //Calculate
                 glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
                 glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
                 fc = (p1+p2+p3)/3.f; //Face centroid
@@ -1536,23 +1444,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 p2 = p1 + (p2-p1) * (depth[0]/(fabsf(depth[1]) + depth[0]));
                 //p3 without change
                 
-                //Volume properties
-                //Tetra 1
-                glm::vec3 p01 = p1-p0;
-                glm::vec3 p02 = p2-p0;
-                glm::vec3 p03 = p3-p0;
-                glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-                GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;
-                //Tetra 2
-                glm::vec3 p04 = p4-p0;
-                tetraCG = (p02+p04+p03)/4.f;
-                tetraV6 = glm::dot(p02, glm::cross(p04, p03));
-                CBsub += tetraCG * tetraV6;
-                Vsub += tetraV6;              
-
-                //Face properties
+                //Calculate
                 glm::vec3 fv1 = p2-p1;
                 glm::vec3 fv2 = p3-p1;
                 glm::vec3 fv3 = p2-p3;
@@ -1585,23 +1477,7 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
             //p2 without change
             p3 = p2 + (p3-p2) * (depth[1]/(fabsf(depth[2]) + depth[1]));
                 
-            //Volume properties
-            //Tetra 1
-            glm::vec3 p01 = p1-p0;
-            glm::vec3 p02 = p2-p0;
-            glm::vec3 p03 = p3-p0;
-            glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-            GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-            CBsub += tetraCG * tetraV6;
-            Vsub += tetraV6;
-            //Tetra 2
-            glm::vec3 p04 = p4-p0;
-            tetraCG = (p01+p03+p04)/4.f;
-            tetraV6 = glm::dot(p01, glm::cross(p03, p04));
-            CBsub += tetraCG * tetraV6;
-            Vsub += tetraV6;
-            
-            //Face properties
+            //Calculate
             glm::vec3 fv1 = p2-p1;
             glm::vec3 fv2 = p4-p1;
             glm::vec3 fv3 = p2-p3;
@@ -1627,15 +1503,6 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         }
         else //All underwater
         {
-            //Volume properties
-            glm::vec3 p01 = p1-p0;
-            glm::vec3 p02 = p2-p0;
-            glm::vec3 p03 = p3-p0;
-            glm::vec3 tetraCG = (p01+p02+p03)/4.f;
-            GLfloat tetraV6 = glm::dot(p01, glm::cross(p02, p03));
-            CBsub += tetraCG * tetraV6;
-            Vsub += tetraV6;
-
             //Face properties
             glm::vec3 fv1 = p2-p1; //One side of the face (triangle)
             glm::vec3 fv2 = p3-p1; //Another side of the face (triangle)
@@ -1655,9 +1522,9 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
             debug.points.push_back(p1);
 #endif             
         }
-
+        
         //Buoyancy force
-        if(settings.reallisticBuoyancy && ocn->hasWaves())
+        if(settings.reallisticBuoyancy)
         {
             GLfloat depthc = ocn->GetDepth(fc);
             glm::vec3 Fbi = -fn1 * A * depthc; //Buoyancy force per face (based on pressure)        
@@ -1671,82 +1538,81 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         if(settings.dampingForces)
         {
             glm::vec3 vc = ocn->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
-            GLfloat vc_n = glm::dot(vc, fn1);
-            glm::vec3 vn = vc_n  * fn1; //Normal velocity
+            glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
             glm::vec3 vt = vc - vn; //Tangent velocity
             
-            if(vc_n < -1e-12f) //If liquid is approaching the surface
+            if(glm::dot(fn1, vn) < -1e-12f)
             {
-                GLfloat vmag2 = glm::length2(vc);
-                glm::vec3 quadratic = vc * sqrtf(vmag2) * -vc_n * A;
+                GLfloat vmag2 = glm::length2(vn);
+                glm::vec3 linear = vn * expf(-0.5f*vmag2) * A; 
+                glm::vec3 quadratic = vn * sqrtf(vmag2) * A;
+                
+                Fdl += linear;
+                Tdl += glm::cross(fc - p, linear);
                 Fdq += quadratic;
                 Tdq += glm::cross(fc - p, quadratic);
             }
 
             GLfloat vmag2 = glm::length2(vt);
-            if(vmag2 > 1e-9f)
+            if(vmag2 > 1e-3f)
             {
-                glm::vec3 skin = vt * A;
-                Fdf += skin;
-                Tdf += glm::cross(fc - p, skin);
+                glm::vec3 skin = vt * sqrtf(vmag2) * A;
+
+                Fds += skin;
+                Tds += glm::cross(fc - p, skin);
             }
         }
-
-        //Wetted surface area
-        Swet += A;
     }
 
+    //Multiply by common factors
     //Buoyancy
-    if(settings.reallisticBuoyancy && Vsub > 1e-9f)
+    
+    if(settings.reallisticBuoyancy)
     {
-        _Vsub = Vsub/6.f;
+        Fb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
+        Tb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
+        _Fb = Vector3(Fb.x, Fb.y, Fb.z);
+        _Tb = Vector3(Tb.x, Tb.y, Tb.z*0.0);
         
-        if(ocn->hasWaves())
-        {
-            Fb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
-            Tb *= ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
-            _Fb = Vector3(Fb.x, Fb.y, Fb.z);
-            _Tb = Vector3(Tb.x, Tb.y, Tb.z);
-        }
-        else
-        {
-            CBsub = CBsub/Vsub + p0;
-            Vector3 _CBsub(CBsub.x, CBsub.y, CBsub.z);
-            _Fb = -_Vsub * ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
-            _Tb = (_CBsub - T_CG.getOrigin()).cross(_Fb);
-        }        
     }
+    
     
     //Damping forces
     if(settings.dampingForces)
     {
+        
+        _Fdl = Vector3(Fdl.x, Fdl.y, Fdl.z);
+        _Tdl = Vector3(Tdl.x, Tdl.y, Tdl.z);
         _Fdq = Vector3(Fdq.x, Fdq.y, Fdq.z);
         _Tdq = Vector3(Tdq.x, Tdq.y, Tdq.z);
-        _Fdf = Vector3(Fdf.x, Fdf.y, Fdf.z);
-        _Tdf = Vector3(Tdf.x, Tdf.y, Tdf.z);
+        _Fds = Vector3(Fds.x, Fds.y, Fds.z);
+        _Tds = Vector3(Tds.x, Tds.y, Tds.z);
+        
     }
-
-    //Wetted surface area
-    _Swet = Swet;
+    
 }
 
 void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* ocn, const Transform& T_CG, const Transform& T_C,
-                                              const Vector3& _v, const Vector3& _omega, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf)
+                                              const Vector3& _v, const Vector3& _omega, Vector3& _Fdl, Vector3& _Tdl, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fds, Vector3& _Tds)
 {
     if(mesh == nullptr)
     {
+        _Fdl.setZero();
+        _Tdl.setZero();
         _Fdq.setZero();
         _Tdq.setZero();
-        _Fdf.setZero();
-        _Tdf.setZero();
+        _Fds.setZero();
+        _Tds.setZero();
         return;
     }
 
     //Computation with floats (geometry has float precision)
+    glm::vec3 Fdl(0.f);
+    glm::vec3 Tdl(0.f);
     glm::vec3 Fdq(0.f);
     glm::vec3 Tdq(0.f);
-    glm::vec3 Fdf(0.f);
-    glm::vec3 Tdf(0.f);
+    glm::vec3 Fds(0.f);
+    glm::vec3 Tds(0.f);
     glm::mat4 TCG = glMatrixFromTransform(T_CG);
     glm::mat4 TC = glMatrixFromTransform(T_C);
     glm::vec3 v = glVectorFromVector(_v);
@@ -1779,31 +1645,37 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
      
         //Forces
         glm::vec3 vc = ocn->GetFluidVelocity(fc) - (v + glm::cross(omega, fc-p));
-        GLfloat vc_n = glm::dot(vc, fn1);
-        glm::vec3 vn = vc_n  * fn1; //Normal velocity
+        glm::vec3 vn = glm::dot(vc, fn1) * fn1; //Normal velocity
         glm::vec3 vt = vc - vn; //Tangent velocity
-        
-        if(vc_n < -1e-12f) //If liquid is approaching the surface
+            
+        if(glm::dot(fn1, vn) < -1e-12f)
         {
-            GLfloat vmag2 = glm::length2(vc);
-            glm::vec3 quadratic = vc * sqrtf(vmag2) * -vc_n * A;
+            GLfloat vmag2 = glm::length2(vn);
+            glm::vec3 linear = vn * expf(-0.5f*vmag2) * A; 
+            glm::vec3 quadratic = vn * sqrtf(vmag2) * A;
+                
+            Fdl += linear;
+            Tdl += glm::cross(fc - p, linear);
             Fdq += quadratic;
             Tdq += glm::cross(fc - p, quadratic);
         }
 
         GLfloat vmag2 = glm::length2(vt);
-        if(vmag2 > 1e-9f)
+        if(vmag2 > 1e-3f)
         {
-            glm::vec3 skin = vt * A;
-            Fdf += skin;
-            Tdf += glm::cross(fc - p, skin);
+            glm::vec3 skin = vt * sqrtf(vmag2) * A;
+
+            Fds += skin;
+            Tds += glm::cross(fc - p, skin);
         }
     }
 
+    _Fdl = Vector3(Fdl.x, Fdl.y, Fdl.z);
+    _Tdl = Vector3(Tdl.x, Tdl.y, Tdl.z);
     _Fdq = Vector3(Fdq.x, Fdq.y, Fdq.z);
     _Tdq = Vector3(Tdq.x, Tdq.y, Tdq.z);
-    _Fdf = Vector3(Fdf.x, Fdf.y, Fdf.z);
-    _Tdf = Vector3(Tdf.x, Tdf.y, Tdf.z);
+    _Fds = Vector3(Fds.x, Fds.y, Fds.z);
+    _Tds = Vector3(Tds.x, Tds.y, Tds.z);
 }
 
 void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
@@ -1819,12 +1691,12 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     {
         Fb.setZero();
         Tb.setZero();
+        Fdl.setZero();
+        Tdl.setZero();
         Fdq.setZero();
         Tdq.setZero();
-        Fdf.setZero();
-        Tdf.setZero();
-        Swet = Scalar(0);
-        Vsub = Scalar(0);
+        Fds.setZero();
+        Tds.setZero();
         return;
     }
     
@@ -1843,18 +1715,16 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
         }
         
         if(settings.dampingForces)
-            ComputeHydrodynamicForcesSubmerged(getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fdq, Tdq, Fdf, Tdf);
-
-        Swet = surface;
+            ComputeHydrodynamicForcesSubmerged(getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fdl, Tdl, Fdq, Tdq, Fds, Tds);
     }
     else //CROSSING_FLUID_SURFACE
     {
         if(!isBuoyant()) settings.reallisticBuoyancy = false;
-        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fdq, Tdq, Fdf, Tdf, Swet, Vsub, submerged);
+        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fdl, Tdl, Fdq, Tdq, Fds, Tds, submerged);
     }
     
     if(settings.dampingForces)
-        CorrectHydrodynamicForces(ocn, Fdq, Tdq, Fdf, Tdf);
+        CorrectHydrodynamicForces(ocn, Fdl, Tdl, Fdq, Tdq, Fds, Tds);
 }
 
 void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
@@ -1965,8 +1835,8 @@ void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vecto
 
 void SolidEntity::ApplyHydrodynamicForces()
 {
-    ApplyCentralForce(Fb + Fdq + Fdf);
-    ApplyTorque(Tb + Tdq + Tdf);
+    ApplyCentralForce(Fb + Fdl + Fdq + Fds);
+    ApplyTorque(Tb + Tdq + Tdl + Tds);
 }
 
 void SolidEntity::ApplyAerodynamicForces()

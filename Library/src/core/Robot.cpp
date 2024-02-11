@@ -34,6 +34,12 @@
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
 #include "comms/Comm.h"
+#include <btBulletDynamicsCommon.h>
+#include <BulletSoftBody/btSoftBodyHelpers.h>
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <iostream>
+
 
 namespace sf
 {
@@ -57,8 +63,10 @@ std::string Robot::getName()
 
 SolidEntity* Robot::getLink(const std::string& name)
 {
-    for(size_t i=0; i<links.size(); ++i)
+    for(size_t i=0; i<links.size(); ++i){
+        std::cout<<"LINK NAME: "<< links[i]->getName()<<std::endl;
         if(links[i]->getName() == name) return links[i];
+    }
     
     for(size_t i=0; i<detachedLinks.size(); ++i)
         if(detachedLinks[i]->getName() == name) return detachedLinks[i];
@@ -166,6 +174,10 @@ void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std:
     jd.parent = parentName;
     jd.child = childName;
     jd.origin = origin;
+    Scalar x = origin.getOrigin()[0];
+    Scalar y = origin.getOrigin()[1];
+    Scalar z = origin.getOrigin()[2];
+    std::cout<<"origin: " << x <<" " << y  << "  " << "  " << z << "  "<< parentName << "  " << childName << std::endl;
     jointsData.push_back(jd);
 }
 
@@ -225,6 +237,36 @@ void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
         sm->AddActuator(actuators[i]);
     for(size_t i=0; i<comms.size(); ++i)
         sm->AddComm(comms[i]);
+        // Simulate underwater rope
+   /* // Create a chain of rigid bodies as the rope
+    // Parameters for the rope
+   int numLinks = 10;  // Adjust as needed
+   btScalar linkLength = 1.0;  // Adjust as needed
+   btRigidBody* previousBody = nullptr;
+   for (int i = 0; i < numLinks; ++i) {
+        btVector3 segmentPosition(0, i * linkLength, 0);
+        btCollisionShape* shape = new btCapsuleShape(0.1, 1.0); // Adjust the shape as needed
+        btTransform startTransform;
+        startTransform.setIdentity();
+        startTransform.setOrigin(segmentPosition);
+        btScalar mass = 1.0; // Adjust the mass as needed
+        btVector3 localInertia(0, 0, 0);
+        shape->calculateLocalInertia(mass, localInertia);
+        btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
+        btRigidBody* currentBody = new btRigidBody(rbInfo);
+        btVector3 pivotA(0, 0, 0);  // Pivot point on current body in local coordinates
+        btVector3 pivotB(0, 0, -linkLength);  // Pivot point on previous body in local coordinates
+        btPoint2PointConstraint* p2pConstraint = new btPoint2PointConstraint(*currentBody, pivotA);
+        if (previousBody) {
+          p2pConstraint->setPivotB(pivotB);
+          sm->getDynamicsWorld()->addConstraint(p2pConstraint, true);
+        }
+       sm->getDynamicsWorld()->addRigidBody(currentBody);
+       previousBody = currentBody;
+    }
+    std::cout << "ADDED CHAIN OF RIGID BODIES" << std::endl;
+    */
 }
 
 }

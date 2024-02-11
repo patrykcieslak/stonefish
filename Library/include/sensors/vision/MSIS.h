@@ -153,13 +153,13 @@ namespace sf
          \param x a reference to a variable that will store the horizontal resolution [pix]
          \param y a reference to a variable that will store the vertical resolution [pix]
          */
-        void getDisplayResolution(unsigned int& x, unsigned int& y) const;
+        void getDisplayResolution(unsigned int& x, unsigned int& y);
         
         //! A method returning a pointer to the visualisation image data.
         GLubyte* getDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const;
+        VisionSensorType getVisionSensorType();
         
     private:
         void InitGraphics();
