@@ -374,26 +374,14 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
     if(display)
     {
         OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        if(0)
-        {    
-            content->SetViewportSize(nBeamSamples.x/2, nBeamSamples.y/4);
-            OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, nBeamSamples.x/2, nBeamSamples.y/4);
-            content->DrawTexturedQuad(0.f, 0.f, (GLfloat)nBeamSamples.x/4, (GLfloat)nBeamSamples.y/4, inputRangeIntensityTex, 0, true);
-            content->DrawTexturedQuad((GLfloat)nBeamSamples.x/4, 0.f, (GLfloat)nBeamSamples.x/4, (GLfloat)nBeamSamples.y/4, inputRangeIntensityTex, 1, true);
-            OpenGLState::BindFramebuffer(0);
-        }
-        else
-        {
-            int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-            int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
-            OpenGLState::BindFramebuffer(destinationFBO);    
-            OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
-            OpenGLState::DisableCullFace();
-            content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
-            OpenGLState::EnableCullFace();
-            OpenGLState::BindFramebuffer(0);   
-        }
+        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLState::BindFramebuffer(destinationFBO);    
+        OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
+        OpenGLState::DisableCullFace();
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
+        OpenGLState::EnableCullFace();
+        OpenGLState::BindFramebuffer(0);
     }
     
     //Copy texture to sonar buffer
