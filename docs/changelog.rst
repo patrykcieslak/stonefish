@@ -17,6 +17,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Added an option to set internal parts of a compound body as always visible
 -  Added access to the computed wetted surface area and submerged volume
 -  Fixed getting robot transform
+-  Fixed acoustic modem implementation eliminating problem with modems not seeing each other
 -  Fixed Stonefish logo and icon
 
 1.3
