@@ -365,11 +365,15 @@ std::vector<Renderable> AcousticModem::Render()
     }
     else if(getConnectedId() > 0)
     {
-        Transform Tn = getNode(getConnectedId())->getDeviceFrame();
-        item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
-        item.points.push_back(glVectorFromVector(Tn.getOrigin()));
+        AcousticModem* cNode = getNode(getConnectedId());
+        if(cNode != nullptr)
+        {
+            item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+            item.points.push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
+        }
     }
-    items.push_back(item);
+    if(!item.points.empty())
+        items.push_back(item);
 
 #ifdef DEBUG
     item.type = RenderableType::SENSOR_POINTS;
