@@ -11,7 +11,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  *Fixed loading SRGB and linear textures (fixes normal map issues)*
 -  Fixed buoyancy force calculation for flat ocean (floating bodies are not rotating or moving anymore!)
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
--  Fixed IMU readings, adding the missing gravitational and centrifugal acceleration
+-  Fixed IMU readings, adding the missing gravitational and centrifugal accelerations
 -  Extended glue to support joining links of two robots together
 -  Added access to the viscous and quadratic hydrodynamic drag coefficients, including parser support
 -  Added an option to set internal parts of a compound body as always visible

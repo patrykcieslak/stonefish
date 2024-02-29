@@ -49,7 +49,9 @@ Animated bodies require a definition of a trajectory to follow, when the simulat
 
 - **Piece-wise linear** ``type="pwl"`` - position and orientation of the body are interpolated linearly. Linear and angular velocities are computed based on time differences between the key points.
 
-- **Spline** ``type="spline"`` - position of the body is interpolated using a Catmull-Rom spline, orientation of the body is interpolated linearly. Linear velocities are computed as 1st order derivatives of the Catmull-Rom spline, while angular velocities using simple differentation, both based on time differences between the key points.
+- **B-spline** ``type="spline"`` - position of the body is interpolated using a cubic B-spline, orientation of the body is interpolated linearly. Linear velocities are computed as 1st order derivatives, while angular velocities using simple differentation, both based on time differences between the key points.
+
+- **Catmull-Rom** ``type="catmull-rom"`` - position of the body is interpolated using a Catmull-Rom spline, orientation of the body is interpolated linearly. Linear velocities are computed as 1st order derivatives, while angular velocities using simple differentation, both based on time differences between the key points.
 
 When any of the trajectories, other than the manual, is selected, the body is animated automatically along it, with three possible **playback modes**:
 
@@ -81,7 +83,7 @@ The same can be achieved using the following code:
 
 .. code-block:: cpp
 
-    sf::CRTrajectory* traj = new sf::CRTrajectory(sf::PlaybackMode::REPEAT);
+    sf::BSTrajectory* traj = new sf::BSTrajectory(sf::PlaybackMode::REPEAT);
     traj->AddKeyPoint(0.0, sf::Transform(sf::IQ(), sf::Vector3(0.0, 1.0, 2.0)));
     traj->AddKeyPoint(5.0, sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(10.0, 1.0, 2.0)));
     traj->AddKeyPoint(20.0, sf::Transform(sf::IQ(), sf::Vector3(10.0, 2.0, 2.0)));

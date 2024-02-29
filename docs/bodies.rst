@@ -121,6 +121,23 @@ It is possible to override some of the automatically calculated properties of a 
     sf::SolidEntity* solid = ...;
     solid->SetArbitraryPhysicalProperties(30.0, sf::Vector3(1.0, 0.5, 0.2), sf::Transform(sf::IQ(), sf::Vector3(0.2, 0.0, 0.0)));
 
+Overriding estimated hydrodynamic coefficients
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to override some automatically estimated hydrodynamic coeffcients of a dynamic body:
+
+.. code-block:: xml
+
+    <dynamic>
+        <!-- all standard definitions -->
+        <hydrodynamics viscous_drag="0.05 0.08 0.08" quadratic_drag="0.2 0.6 0.6"/>
+    </dynamic>
+
+.. code-block:: cpp
+
+    sf::SolidEntity* solid = ...;
+    solid->SetHydrodynamicCoefficients(sf::Vector3(0.2, 0.6, 0.6), sf::Vector3(0.05, 0.08, 0.08));
+
 Parametric solids
 =================
 

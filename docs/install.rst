@@ -68,8 +68,10 @@ The following steps are needed to generate and open the documentation of the lib
 The following 3rd party code is included in the source of the library and will be updated manually by the author: 
 
 -  `Bullet Physics <https://pybullet.org/wordpress/>`_ (C++ library, parts)
--  `TinyXML-2 <http://www.grinninglizard.com/tinyxml2/>`_ (C++ library)
+-  `TinyXML-2 <https://github.com/leethomason/tinyxml2>`_ (C++ library)
+-  `TinySpline <https://github.com/msteinbeck/tinyspline>`_ (C++ library)
+-  `TinyExpr <https://github.com/codeplea/tinyexpr>`_ (C library)
 -  `stb_image <https://github.com/nothings/stb>`_ (C library)
 -  `stb_image_write <https://github.com/nothings/stb>`_ (C library)
--  OpenGL 4.6 functions loader generated with `GLAD2 <https://gen.glad.sh>`_
 -  `ResourceManager <https://github.com/Johnnyborov/ResourceManager>`_ (C++ class and tool)
+-  OpenGL 4.6 functions loader generated with `GLAD2 <https://gen.glad.sh>`_

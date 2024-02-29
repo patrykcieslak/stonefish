@@ -14,7 +14,7 @@ The *Stonefish* library is used to build a dynamic simulation world with rigid b
 
 Kinematic trees of rigid bodies are supported and solved using the Featherstone's algorithm. Collision is detected analytically between simple solids, using convex hull algorithms for dynamic meshes and concave-convex algorithms for static meshes. Material properties include density and coefficient of restitution, while interaction between different materials is described by a table of static and dynamic friction coefficients. Moreover, physical properties of bodies - mass, volume, inertia - are automaticall computed based on the supplied geometry and defined material.
 
-**Hydrodynamic and hydrostatic forces** are approximated taking into account the actual geometry of the bodies, to deliver effects not possible when using analytic equations. These forces include **buoyancy, different types of drag (linear, quadratic and skin) and added mass**. Thanks to using real geometry in computations, buoyancy of partially submerged bodies can be reallisticaly simulated, as well as, local water velocity is impacting the behaviour of the bodies.
+**Hydrodynamic and hydrostatic forces** are approximated taking into account the actual geometry of the bodies, to deliver effects not possible when using analytic equations. These forces include **buoyancy, different types of drag (quadratic drag and skin friction) and added mass**. Thanks to using real geometry in computations, buoyancy of partially submerged bodies can be reallisticaly simulated, as well as, local water velocity is impacting the behaviour of the bodies.
 
 Actuators, sensors and communication devices
 --------------------------------------------
