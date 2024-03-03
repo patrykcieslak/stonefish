@@ -22,6 +22,10 @@
 //  Created by Patryk Cieslak on 1/08/2018.
 //  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
+/* Author: Michele Grimaldi
+* Email: michelegrmld@gmail.com
+* Description: Laser scanner sensor (vertical scanning)
+*/
 
 #ifndef __Stonefish_LaserMEMS__
 #define __Stonefish_LaserMEMS__

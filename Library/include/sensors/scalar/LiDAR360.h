@@ -22,6 +22,10 @@
 //  Created by Patryk Cieslak on 1/08/2018.
 //  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
+/* Author: Michele Grimaldi
+* Email: michelegrmld@gmail.com
+* Description: 360 LiDAR sensor 
+*/
 
 #ifndef __Stonefish_LiDAR360__
 #define __Stonefish_LiDAR360__
