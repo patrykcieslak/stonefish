@@ -266,6 +266,8 @@ namespace sf
         */
         virtual FixedJoint* ParseGlue(XMLElement* element);
         
+        
+        virtual bool ParseTether(XMLElement* element);
         //! A method to get the full file path depending on the format of the passed string.
         /*!
          \param path a file path candidate

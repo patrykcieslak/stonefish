@@ -63,6 +63,8 @@
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
+#include "sensors/scalar/LaserMEMS.h"
+#include "sensors/scalar/LiDAR360.h"
 #include "sensors/vision/FLS.h"
 #include "sensors/vision/SSS.h"
 #include "sensors/vision/MSIS.h"
@@ -3284,6 +3286,88 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         sens = mult;
     }
+        else if(typeStr == "lidar360")
+    {
+        int history;
+        int steps;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
+            return nullptr;
+            
+        LiDAR360* lidar = new LiDAR360(sensorName, steps, rate, history);
+        
+        //Optional range definition
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar distMin(0);
+            Scalar distMax(BT_LARGE_FLOAT);
+            int c = 0;
+
+            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
+                ++c;
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                lidar->setRange(distMin, distMax);
+        }
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar distance;
+            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
+                lidar->setNoise(distance);
+            else
+                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+        }
+        sens = lidar;
+    }
+    else if(typeStr == "lasermems")
+    {
+        int history;
+        Scalar fovH;
+        Scalar fovV;
+        int numL;
+        int numP;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fovH", &fovH) != XML_SUCCESS || item->QueryAttribute("numL", &numL) != XML_SUCCESS  || item->QueryAttribute("numP", &numP) != XML_SUCCESS  || item->QueryAttribute("fovV", &fovV) != XML_SUCCESS)
+            return nullptr;
+            
+        //std::cout<<"numL "<< numL << " " << numP << std::endl;
+        LaserMEMS* laser = new LaserMEMS(sensorName, numL, numP,fovH, fovV, rate, history);
+        
+        //Optional range definition
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar distMin(0);
+            Scalar distMax(BT_LARGE_FLOAT);
+            int c = 0;
+
+            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
+                ++c;
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                laser->setRange(distMin, distMax);
+        }
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar distance;
+            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
+                laser->setNoise(distance);
+            else
+                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+        }
+        sens = laser;
+    }
     else if(typeStr == "torque")
     {
         int history;
@@ -3377,6 +3461,8 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
 
         int resX, resY;
         Scalar hFov;
+        double baseline=0.0;
+        bool event=false;
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
@@ -3387,6 +3473,8 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
 
         ColorCamera* cam;
+        item->QueryAttribute("baseline", &baseline);
+        item->QueryAttribute("event",&event);
         
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
@@ -3403,13 +3491,13 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+                cam = new ColorCamera(sensorName, resX, resY, hFov, baseline,event, rate);
             }
             else
-                cam = new ColorCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+               cam = new ColorCamera(sensorName, resX, resY, hFov, baseline, event, rate, minDist, maxDist);
         }
         else
-            cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+            cam = new ColorCamera(sensorName, resX, resY, hFov, baseline, event,rate);
         sens = cam;
     }
     else if(typeStr == "depthcamera")
@@ -4184,6 +4272,143 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         log.Print(MessageType::INFO, "Glue created between '%s' and '%s'.", nameA, nameB);
     }
     return fix;
+}
+
+bool ScenarioParser::ParseTether(XMLElement* element)
+{
+    const char* name = nullptr;
+    double length;
+    Transform origin;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+    {        
+        log.Print(MessageType::ERROR, "Name of tether missing!");
+        return false;
+    }
+    if(element->QueryAttribute("length", &length) != XML_SUCCESS)
+    {        
+        log.Print(MessageType::ERROR, "Length of tether missing!");
+        return false;
+    }
+    std::string tetherName(name);
+        
+    XMLElement* itemA;
+    XMLElement* itemB;
+    if((itemA = element->FirstChildElement("first_body")) == nullptr
+        || (itemB = element->FirstChildElement("second_body")) == nullptr)
+    {
+        log.Print(MessageType::ERROR, "Body definitions for rope '%s' missing!", tetherName.c_str());
+        return false;
+    }
+    const char* nameA = nullptr;
+    const char* nameB = nullptr;
+    if(itemA->QueryStringAttribute("name", &nameA) != XML_SUCCESS
+        || itemB->QueryStringAttribute("name", &nameB) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Body names for tether '%s' missing!", tetherName.c_str());
+        return false;
+    }
+    const char* linkA = nullptr;
+    const char* linkB = nullptr;
+    if(itemA->QueryStringAttribute("link", &linkA) != XML_SUCCESS
+        || itemB->QueryStringAttribute("link", &linkB) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Link names for tether '%s' missing!", tetherName.c_str());
+        return false;
+    }
+    //linkA=tether.c_str();
+    
+    
+    
+//Find if bodies are independent dynamic bodies or links of robots
+    Entity* entA = sm->getEntity(std::string(nameA));
+    Entity* entB = sm->getEntity(std::string(nameB));
+    FeatherstoneRobot* robotA = nullptr;
+    FeatherstoneRobot* robotB = nullptr;
+    int linkIdA = -2;
+    int linkIdB = -2;
+
+    if((entA != nullptr && entA->getType() != EntityType::SOLID)
+        ||(entB != nullptr && entB->getType() != EntityType::SOLID))
+    {
+        log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", tetherName.c_str()); 
+        return false;
+    }
+
+
+    if(entA == nullptr) //Not an independent dynamic body. Maybe a robot link?
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                int data=length/(0.042+0.015);
+                //std::cout<<"LINK DONE "<<std::string(nameA)+"/"+std::string(linkA)<<"  "<<data<< std::endl;
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int linkId = -2;
+                if( (linkId = fr->getLinkIndex(std::string(nameA)+"/LinkTether"+std::to_string(data))) >= -1)
+                {
+                    //std::cout<<"ROBOT A: " << linkId << "  " << linkA <<std::endl;
+                    robotA = fr;
+                    linkIdA = linkId;
+                    break;
+                }
+            }
+        }   
+        if(robotA == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", tetherName.c_str()); 
+            return false;
+        }
+    }
+
+    
+    
+
+    if(entB == nullptr) //Not an independent dynamic body. Maybe a robot link?
+    {
+        Robot* rob;
+        unsigned int i = 0;
+        while((rob = sm->getRobot(i++)) != nullptr)
+        {
+            if(rob->getType() == RobotType::FEATHERSTONE)
+            {
+                FeatherstoneRobot* fr = (FeatherstoneRobot*)rob;
+                int linkId = -2;
+                if( (linkId = fr->getLinkIndex(std::string(nameB)+"/"+std::string(linkB))) >= -1)
+                {
+                   //std::cout<<"ROBOT B: " << linkId << "  " << linkB <<std::endl;
+                    robotB = fr;
+                    linkIdB = linkId;
+                    break;
+                }
+            }
+        }   
+        if(robotB == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Only dynamic bodies and manipulator links can be glued (glue '%s')!", tetherName.c_str()); 
+            return false;
+        }
+    }
+
+    FixedJoint* fix = nullptr;
+
+    if(linkIdA!=-2 && linkIdB!=-2) //Glue two independent dynamic bodies
+    {
+        //std::cout<<"TRY JOINT"<<robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin()[0]<< "  " << robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin()[1] << "  " << robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin()[2] << std::endl;
+        fix = new FixedJoint(std::string(tetherName), robotA->getDynamics(), robotB->getDynamics(), linkIdA, linkIdB, robotA->getDynamics()->getLink(linkIdA).solid->getCGTransform().getOrigin());
+    }
+    
+    if(fix != nullptr)
+    {
+        sm->AddJoint(fix);
+        log.Print(MessageType::INFO, "Tether created between '%s' and '%s'.", nameA, nameB);
+        return true;
+    }else{
+        //std::cout<<"Tether not created between "<< " "<< nameA << " "<<  nameB << std::endl;
+    }
+    return false;
 }
 
 std::string ScenarioParser::GetFullPath(const std::string& path)

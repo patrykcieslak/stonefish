@@ -1112,4 +1112,12 @@ int GraphicalSimulationApp::RunSimulation(void* data)
     return 0;
 }
 
+void GraphicalSimulationApp::StopSimulationWrapper() {
+        StopSimulation();
+}
+
+void GraphicalSimulationApp::ResumeSimulationWrapper() {
+        ResumeSimulation();
+}
+
 }

@@ -36,7 +36,20 @@ Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int re
     resX = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
     resY = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
     setDisplayOnScreen(false, 0, 0, 1.f);
+    baseline=0.0;
+    event=false;
 }
+
+Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, double baseline, bool event, Scalar frequency) : VisionSensor(uniqueName, frequency)
+{
+    fovH = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
+    resX = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
+    resY = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
+    setDisplayOnScreen(false, 0, 0, 1.f);
+    baseline=baseline;
+    event=event;
+}
+    
     
 Camera::~Camera()
 {
@@ -119,6 +132,18 @@ std::vector<Renderable> Camera::Render()
         items.push_back(item);
     }
     return items;
+}
+
+void Camera::setBaseline(double bl){
+     baseline=bl;
+}
+
+double Camera::getBaseline(){
+     return baseline;
+}
+
+bool Camera::isEvent(){
+     return event;
 }
 
 }
