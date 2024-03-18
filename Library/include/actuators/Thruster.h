@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/10/2017.
-//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Thruster__
@@ -90,6 +90,8 @@ namespace sf
         ActuatorType getType() const;
         
     private:
+        void WatchdogTimeout() override;
+
         //Params
         Scalar D;
         std::pair<Scalar, Scalar> kT;

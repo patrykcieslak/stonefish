@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Push.h"
@@ -56,6 +56,7 @@ void Push::setForce(Scalar f)
         setpoint = f < limits.first ? limits.first : (f > limits.second ? limits.second : f);
     else
         setpoint = f;
+    ResetWatchdog();
 }
 
 Scalar Push::getForce() const
@@ -64,7 +65,9 @@ Scalar Push::getForce() const
 }
 
 void Push::Update(Scalar dt)
-{
+{    
+    Actuator::Update(dt);
+
     if(attach != nullptr)
     {
         //Get transforms
@@ -105,6 +108,11 @@ std::vector<Renderable> Push::Render()
     items.push_back(item);
     
     return items;
+}
+
+void Push::WatchdogTimeout()
+{
+    setForce(Scalar(0));
 }
     
 }

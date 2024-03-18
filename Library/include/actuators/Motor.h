@@ -66,6 +66,9 @@ namespace sf
         
     protected:
         Scalar torque;
+
+    private:
+        void WatchdogTimeout() override;
     };
 }
 

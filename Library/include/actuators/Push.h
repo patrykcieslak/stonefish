@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Push__
@@ -67,6 +67,8 @@ namespace sf
         ActuatorType getType() const;
         
     private:
+        void WatchdogTimeout() override;
+
         Scalar setpoint;
         bool underwater;
         bool inv;

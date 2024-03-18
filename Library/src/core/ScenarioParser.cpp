@@ -2205,9 +2205,17 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     Actuator* act = ParseActuator(element, robot->getName());
     if(act == nullptr)
         return false;
-
-    //Attach
+    
+    //Watchdog
     XMLElement* item;
+    Scalar timeout(-1);
+    if((item = element->FirstChildElement("watchdog")) != nullptr
+        && item->QueryAttribute("timeout", &timeout) == XML_SUCCESS)
+        {
+            act->setWatchdog(timeout);
+        }
+   
+    //Attach
     switch(act->getType())
     {
         //Joint actuators
@@ -2437,7 +2445,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         return nullptr;
     }
     std::string typeStr(type);
-    
+ 
     //---- Specific ----
     XMLElement* item;
     if(typeStr == "servo")

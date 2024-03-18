@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/10/2017.
-//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Thruster.h"
@@ -74,6 +74,7 @@ void Thruster::setSetpoint(Scalar s)
 {
     if(inv) s *= Scalar(-1);
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
+    ResetWatchdog();
 }
 
 Scalar Thruster::getSetpoint() const
@@ -113,6 +114,8 @@ bool Thruster::isPropellerRight() const
 
 void Thruster::Update(Scalar dt)
 {
+    Actuator::Update(dt);
+
     if(attach != nullptr)
     {
         //Update thruster velocity
@@ -197,6 +200,11 @@ std::vector<Renderable> Thruster::Render()
     items.push_back(item);
     
     return items;
+}
+
+void Thruster::WatchdogTimeout()
+{
+    setSetpoint(Scalar(0));
 }
     
 }

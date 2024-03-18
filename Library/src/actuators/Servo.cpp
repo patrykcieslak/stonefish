@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Servo.h"
@@ -77,6 +77,7 @@ void Servo::setDesiredVelocity(Scalar vel)
         pSetpoint = getPosition();
         
     vSetpoint = vel;
+    ResetWatchdog();
 }
 
 void Servo::setMaxTorque(Scalar tau)
@@ -187,6 +188,8 @@ void Servo::AttachToJoint(Joint* joint)
 
 void Servo::Update(Scalar dt)
 {
+    Actuator::Update(dt);
+
     if(j != nullptr)
     {
         Scalar vSetpoint2;
@@ -253,6 +256,12 @@ void Servo::Update(Scalar dt)
                 break;
         }
     }
+}
+
+void Servo::WatchdogTimeout()
+{
+    if(mode == ServoControlMode::VELOCITY)
+        setDesiredVelocity(Scalar(0));
 }
 
 }

@@ -10,10 +10,32 @@ A set of common actuator models is available in the *Stonefish* library, includi
 
     Actuators can only be created in connection with a definition of a :ref:`robot <robots>`, because they have to be attached to a robot's joint or link.
 
+Common properties
+=================
+
+All of the actuators share a few common properties. Each actuator has a **name** and a **type**.
+
+Optionally, the user can enable a watchdog timer that will reset the actuator if no new setpoint was received for a specified timeout time. This can be achieved by using the following syntax:
+
+.. code-block:: xml
+    
+    <actuator name="Thruster" type="thruster">
+       <!-- thruster definitions here -->
+       <watchdog timeout="1.0"/>
+    </actuator>
+
+.. code-block:: cpp
+
+    sf::Thruster* th = new sf::Thruster(...);  
+    th->setWatchdog(Scalar(1));
+
+Not all of the actuators are going to use the watchdog as it is limitted to the ones that have a clear zero state.
+
 .. note::
 
     In the following sections, description of each specific actuator implementation is accompanied with an example of actuator instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of C++ code, it is assumed that an object ``sf::Robot* robot = new sf::Robot(...);`` was created before the actuator definition. 
 
+.. _joint-actuators:
 
 Joint actuators
 ===============

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Propeller__
@@ -84,6 +84,8 @@ namespace sf
         ActuatorType getType() const;
         
     private:
+        void WatchdogTimeout() override;
+
         //Params
         Scalar D;
         Scalar kT0;
