@@ -105,6 +105,13 @@ namespace sf
          */
         virtual bool EvaluateMath(XMLNode* node);
 
+        //! A method that includes content of possibly multiple files inside the processed file.
+        /*!
+         \param node a pointer to a node
+         \return success
+         */
+        virtual bool IncludeFiles(XMLNode* node);
+
         //! A method used to parse solver configuration.
         /*!
          \param element a pointer to the XML node
