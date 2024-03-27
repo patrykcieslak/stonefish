@@ -1,0 +1,7 @@
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/Stonefish.dir
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/edit_cache.dir
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/rebuild_cache.dir
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/list_install_components.dir
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/install.dir
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/install/local.dir
+/home/michele/Desktop/stonefish_mike/stonefish/build/CMakeFiles/install/strip.dir
