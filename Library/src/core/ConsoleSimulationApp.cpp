@@ -104,5 +104,16 @@ int ConsoleSimulationApp::RunSimulation(void* data)
 
     return 0;
 }
+void ConsoleSimulationApp::StopSimulationWrapper() {
+        StopSimulation();
+}
+
+void ConsoleSimulationApp::ResumeSimulationWrapper() {
+        ResumeSimulation();
+}
+
+void ConsoleSimulationApp::StartSimulationWrapper() {
+        StartSimulation();
+}
 
 }

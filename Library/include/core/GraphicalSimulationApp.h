@@ -169,6 +169,8 @@ namespace sf
 
         //! A method used to enable frame rate limitting.
         void setLimitFramerate(bool enabled);
+        void StopSimulationWrapper();
+        void ResumeSimulationWrapper();
         
     protected:
         void Init();

@@ -43,6 +43,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
         Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency);
+        Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, double baseline, bool event, Scalar frequency);
         
         //! A destructor.
         virtual ~Camera();
@@ -94,6 +95,11 @@ namespace sf
         
         //! A method returning the horizontal field of view of the camera [deg].
         Scalar getHorizontalFOV() const;
+        double getBaseline();
+        
+        void setBaseline(double bl);
+        
+        bool isEvent();
         
         //! A method returning the resolution of the camera image.
         /*!
@@ -117,6 +123,8 @@ namespace sf
         unsigned int screenY;
         float screenScale;
         bool screen;
+        double baseline;
+        bool event;
     };
 }
 

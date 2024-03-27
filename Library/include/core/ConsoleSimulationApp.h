@@ -50,6 +50,9 @@ namespace sf
         
         //! A method informing if the application is graphical.
         bool hasGraphics();
+        void StopSimulationWrapper();
+        void ResumeSimulationWrapper();
+        void StartSimulationWrapper();
         
     protected:
         void Init();
