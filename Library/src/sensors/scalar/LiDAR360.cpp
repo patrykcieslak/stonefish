@@ -21,7 +21,10 @@
 //
 //  Created by Patryk Cieslak on 1/08/2018.
 //  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
-//
+/* Author: Michele Grimaldi
+* Email: michelegrmld@gmail.com
+* Description: 360 LiDAR sensor 
+*/
 
 #include "sensors/scalar/LiDAR360.h"
 
@@ -59,13 +62,13 @@ void LiDAR360::InternalUpdate(Scalar dt)
     Transform mbTrans = getSensorFrame();
     Scalar angRange = UnitSystem::Angle(true, 45);
     // Rotate beam
-    Scalar currentAngle = currentAngStep / (Scalar)(3) * angRange - Scalar(0.5) * angRange;
+    Scalar currentAngle = currentAngStep / (Scalar)(20) * angRange - Scalar(0.5) * angRange;
 
     // Shoot rays
     for (unsigned int i = 0; i <= angSteps; ++i)
     {
         // Calculate direction based on current angle step
-        Vector3 dir = mbTrans.getBasis().getColumn(0) * btCos(currentAngle) + mbTrans.getBasis().getColumn(1) * btSin(angles[i])+mbTrans.getBasis().getColumn(2)*btSin(angles[i]);
+        Vector3 dir = mbTrans.getBasis().getColumn(0) * btCos(currentAngle) + mbTrans.getBasis().getColumn(1) * btSin(currentAngle)+mbTrans.getBasis().getColumn(2)*btSin(angles[i]);
 
         Vector3 from = mbTrans.getOrigin() + dir * channels[1].rangeMin;
         Vector3 to = mbTrans.getOrigin() + dir * channels[1].rangeMax;
@@ -102,7 +105,7 @@ std::vector<Renderable> LiDAR360::Render()
     if (isRenderable())
     {
         Renderable item;
-        Scalar currentAngle = currentAngStep / (Scalar)(3) * angRange - Scalar(0.5) * angRange;
+        Scalar currentAngle = currentAngStep / (Scalar)(20) * angRange - Scalar(0.5) * angRange;
         item.type = RenderableType::SENSOR_LINES;
         item.model = glMatrixFromTransform(getSensorFrame());    
 
@@ -140,7 +143,7 @@ void LiDAR360::setNoise(Scalar rangeStdDev)
         channels[i].setStdDev(rangeStdDev);
 }
 
-ScalarSensorType LiDAR360::getScalarSensorType() const
+ScalarSensorType LiDAR360::getScalarSensorType()
 {
     return ScalarSensorType::LiDAR360;
 }
