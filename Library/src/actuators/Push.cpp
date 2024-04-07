@@ -31,11 +31,10 @@
 namespace sf
 {
 
-Push::Push(std::string uniqueName, bool inverted, bool onlyWorksSubmerged) : LinkActuator(uniqueName)
+Push::Push(std::string uniqueName, bool inverted) : LinkActuator(uniqueName)
 {
     setpoint = Scalar(0);
     inv = inverted;
-    underwater = onlyWorksSubmerged;
     setForceLimits(1, -1); // No limits
 }
 
@@ -44,7 +43,7 @@ ActuatorType Push::getType() const
     return ActuatorType::PUSH;
 }
 
-void Push::setForceLimits(double lower, double upper)
+void Push::setForceLimits(Scalar lower, Scalar upper)
 {
     limits.first = lower;
     limits.second = upper;
@@ -74,15 +73,7 @@ void Push::Update(Scalar dt)
         Transform solidTrans = attach->getCGTransform();
         Transform pushTrans = attach->getOTransform() * o2a;
         
-        Scalar force(0);
-        if(underwater)
-        {
-            Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
-            if(ocn != nullptr && ocn->IsInsideFluid(pushTrans.getOrigin()))
-                force = inv ? -setpoint : setpoint;
-        }
-        else
-            force = inv ? -setpoint : setpoint;
+        Scalar force = inv ? -setpoint : setpoint;
         
         Vector3 forceV(force, 0, 0);
         attach->ApplyCentralForce(pushTrans.getBasis() * forceV);

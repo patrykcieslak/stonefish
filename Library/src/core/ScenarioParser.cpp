@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ScenarioParser.h"
@@ -72,6 +72,7 @@
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
 #include "actuators/Rudder.h"
+#include "actuators/SimpleThruster.h"
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
 #include "actuators/SuctionCup.h"
@@ -2236,6 +2237,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         //Link actuators
         case ActuatorType::PUSH:
+        case ActuatorType::SIMPLE_THRUSTER:
         case ActuatorType::THRUSTER:
         case ActuatorType::PROPELLER:
         case ActuatorType::RUDDER:
@@ -2468,7 +2470,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         srv->setDesiredPosition(initialPos);
         return srv;
     }
-    else if(typeStr == "simple_thruster" || typeStr == "push")
+    else if(typeStr == "push")
     {
         Push* push; 
         if((item = element->FirstChildElement("specs")) != nullptr)
@@ -2476,7 +2478,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             bool inverted = false;
             item->QueryAttribute("inverted", &inverted);
             
-            push = new Push(actuatorName, inverted, typeStr == "simple_thruster");
+            push = new Push(actuatorName, inverted);
 
             double lower, upper;
             if(item->QueryAttribute("lower_limit", &lower) == XML_SUCCESS 
@@ -2486,8 +2488,69 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             }
         }
         else
-            push = new Push(actuatorName, false, typeStr == "simple_thruster");
+            push = new Push(actuatorName, false);
         return push;
+    }
+    else if(typeStr == "simple_thruster")
+    {
+        const char* propFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        Scalar propScale;
+        bool rightHand;
+        
+        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
+            propScale = Scalar(1);
+        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        std::string lookStr = "";
+        if((item2 = item->FirstChildElement("look")) != nullptr)
+        {
+            item2->QueryStringAttribute("name", &look);
+            lookStr = std::string(look);
+        }
+
+        BodyPhysicsSettings phy;
+        phy.collisions = false;
+        phy.buoyancy = false;
+        
+        phy.mode = BodyPhysicsMode::SUBMERGED;
+        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            bool inverted = false;
+            item->QueryAttribute("inverted", &inverted); //Optional
+
+            SimpleThruster* th = new SimpleThruster(actuatorName, prop, rightHand, inverted);
+
+            Scalar lower, upper;
+            if(item->QueryAttribute("lower_thrust_limit", &lower) == XML_SUCCESS 
+                && item->QueryAttribute("upper_thrust_limit", &upper) == XML_SUCCESS)
+            {
+                th->setThrustLimits(lower, upper);
+            }
+            return th;
+        }
+        else
+        {
+            SimpleThruster* th = new SimpleThruster(actuatorName, prop, rightHand);
+            return th;
+        }
     }
     else if(typeStr == "thruster" || typeStr == "propeller")
     {
@@ -2560,7 +2623,8 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         const char* look = nullptr;
 
         Scalar area, dragCoeff, liftCoeff, maxAngle, rudderScale;
-        Scalar stallAngle = 0.25*M_PI;
+        Scalar stallAngle = Scalar(0.25*M_PI);
+        Scalar maxAngularRate = Scalar(0);
         bool inverted = false;
         
         if((item = element->FirstChildElement("specs")) == nullptr 
@@ -2574,6 +2638,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
         item->QueryAttribute("inverted", &inverted); //Optional
         item->QueryAttribute("stall_angle", &stallAngle); //Optional
+        item->QueryAttribute("max_angular_rate", &maxAngularRate); //Optional
 
         if((item = element->FirstChildElement("visual")) == nullptr)
         {
@@ -2613,7 +2678,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.buoyancy = false;
 
         Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
-        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted);
+        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
         return r;
     }
     else if(typeStr == "vbs")

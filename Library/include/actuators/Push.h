@@ -38,9 +38,8 @@ namespace sf
         /*!
          \param uniqueName a name for the push
          \param inverted a flag indicating if the direction of the generated force should be reversed
-         \param onlyWorksSubmerged a flag indicating if the actuator is simulating an underwater thruster
         */
-        Push(std::string uniqueName, bool inverted = false, bool onlyWorksSubmerged = false);
+        Push(std::string uniqueName, bool inverted = false);
         
         //! A method used to update the internal state of the push actuator.
         /*!
@@ -52,7 +51,7 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method used to set the force limits.
-        void setForceLimits(double lower, double upper);
+        void setForceLimits(Scalar lower, Scalar upper);
 
         //! A method setting the new value of the desired force.
         /*!
@@ -62,7 +61,7 @@ namespace sf
         
         //! A method returning the current setpoint.
         Scalar getForce() const;
-        
+
         //! A method returning the type of the actuator.
         ActuatorType getType() const;
         
@@ -70,9 +69,8 @@ namespace sf
         void WatchdogTimeout() override;
 
         Scalar setpoint;
-        bool underwater;
         bool inv;
-        std::pair<double, double> limits;
+        std::pair<Scalar, Scalar> limits;
     };
 }
 

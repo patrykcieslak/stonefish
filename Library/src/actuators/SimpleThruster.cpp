@@ -19,11 +19,11 @@
 //  Thruster.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 10/10/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 07/04/2024.
+//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
 //
 
-#include "actuators/Thruster.h"
+#include "actuators/SimpleThruster.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
@@ -34,105 +34,82 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, std::pair<Scalar, Scalar> thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+SimpleThruster::SimpleThruster(std::string uniqueName, SolidEntity* propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
-    D = diameter;
-    kT = thrustCoeff;
-    kQ = torqueCoeff;
-    alpha = Scalar(-1) * kT.first;
-    beta = Scalar(-1) * kQ;
-    kp = Scalar(8.0);
-    ki = Scalar(3.0);
-    iLim = Scalar(2.0);
     RH = rightHand;
     inv = inverted;
-    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //[rad/s] (always positive)
-
     theta = Scalar(0);
-    omega = Scalar(0);
     thrust = Scalar(0);
     torque = Scalar(0);
-    setpoint = Scalar(0);
-    iError = Scalar(0);
+    setThrustLimits(1, -1); // No limits
     
     prop = propeller;
     prop->BuildGraphicalObject();
 }
 
-Thruster::~Thruster()
+SimpleThruster::~SimpleThruster()
 {
     if(prop != nullptr)
         delete prop;
 }
 
-ActuatorType Thruster::getType() const
+ActuatorType SimpleThruster::getType() const
 {
-    return ActuatorType::THRUSTER;
+    return ActuatorType::SIMPLE_THRUSTER;
 }
 
-void Thruster::setSetpoint(Scalar s)
+void SimpleThruster::setSetpoint(Scalar _thrust, Scalar _torque)
 {
-    if(inv) s *= Scalar(-1);
-    setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
+    if(limits.second > limits.first) // Limitted
+        sThrust = _thrust < limits.first ? limits.first : (_thrust > limits.second ? limits.second : _thrust);
+    
+    sTorque = _torque;
+
+    if(inv)
+    { 
+        sThrust *= Scalar(-1);
+        sTorque *= Scalar(-1);
+    }
+
     ResetWatchdog();
 }
 
-Scalar Thruster::getSetpoint() const
+void SimpleThruster::setThrustLimits(Scalar lower, Scalar upper)
 {
-    return inv ? -setpoint : setpoint;
+    limits.first = lower;
+    limits.second = upper;
 }
 
-Scalar Thruster::getAngle() const
+Scalar SimpleThruster::getAngle() const
 {
     return theta;
 }
 
-Scalar Thruster::getOmega() const
-{
-    return omega;
-}
-
-Scalar Thruster::getThrust() const
+Scalar SimpleThruster::getThrust() const
 {
     return thrust;
 }
 
-Scalar Thruster::getTorque() const
+Scalar SimpleThruster::getTorque() const
 {
     return torque;
 }
 
-Scalar Thruster::getDiameter() const
-{
-    return D;
-}
-
-Scalar Thruster::getMaxRPM() const
-{
-    return omegaLim * Scalar(60)/(Scalar(2) * M_PI);
-}
-
-bool Thruster::isPropellerRight() const
-{
-    return RH;
-}
-
-void Thruster::Update(Scalar dt)
+void SimpleThruster::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
     if(attach != nullptr)
     {
-        //Update thruster velocity
-        Scalar error = setpoint * omegaLim - omega;
-        Scalar motorTorque = kp * error + ki * iError;
-        omega += (motorTorque - (-torque))*dt;
+        //Update thruster rotation (visualization only)
+        Scalar omega(0);
+        if(!btFuzzyZero(sThrust))
+        {
+            omega = sThrust > Scalar(0) ? Scalar(2.0*M_PI) : Scalar(-2.0*M_PI);
+            omega = RH ? omega : -omega; 
+        }
         theta += omega * dt; //Just for animation
     
-        //Integrate error
-        iError += error * dt;
-        iError = iError > iLim ? iLim : (iError < -iLim ? -iLim : iError);
-        
         //Get transforms
         Transform solidTrans = attach->getCGTransform();
         Transform thrustTrans = attach->getOTransform() * o2a;
@@ -143,25 +120,8 @@ void Thruster::Update(Scalar dt)
         Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
         if(ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
         {
-            bool backward = (RH && omega < Scalar(0)) || (!RH && omega > Scalar(0));
-            
-            /*kT and kQ depend on the advance ratio J
-                J = u/(omega*D), where:
-                u - ambient velocity [m/s]
-                n - propeller rotational rate [1/s]
-                D - propeller diameter [m] */
-            Scalar n = (backward ? Scalar(-1) : Scalar(1)) * btFabs(omega)/(Scalar(2) * M_PI); // Accounts for propoller handedness
-            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(ocn->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming water velocity
-            
-            //Thrust
-            Scalar kT0 = backward ? kT.second : kT.first; //In case of non-symmetrical thrusters the coefficient may be different
-            //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust = ocn->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
-            
-            //Torque
-            Scalar kQ0 = kQ;
-            //kQ(J) = kQ0 + beta * J --> approximated with linear function
-            torque = (RH ? Scalar(-1) : Scalar(1)) * ocn->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
+            thrust = sThrust;
+            torque = sTorque;
 
             //Apply forces and torques
             Vector3 thrustV(thrust, 0, 0);
@@ -178,7 +138,7 @@ void Thruster::Update(Scalar dt)
     }
 }
 
-std::vector<Renderable> Thruster::Render()
+std::vector<Renderable> SimpleThruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
     if(attach != nullptr)
@@ -207,9 +167,9 @@ std::vector<Renderable> Thruster::Render()
     return items;
 }
 
-void Thruster::WatchdogTimeout()
+void SimpleThruster::WatchdogTimeout()
 {
-    setSetpoint(Scalar(0));
+    setSetpoint(Scalar(0), Scalar(0));
 }
     
 }
