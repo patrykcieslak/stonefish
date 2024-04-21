@@ -164,6 +164,13 @@ namespace sf
          */
         virtual void AddToSimulation(SimulationManager* sm, const Transform& origin);
         
+        //! A method respawning the robot in the simulation world.
+        /*!
+         \param sm a pointer to a simulation manager
+         \param origin a trasformation from the world origin to the robot origin
+         */
+        virtual void Respawn(SimulationManager* sm, const Transform& origin);
+
         //! A method returning a pointer to the actuator with a given name.
         /*!
          \param name the name of the actuator

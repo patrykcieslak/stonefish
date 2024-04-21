@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/07/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/AnimatedEntity.h"
@@ -68,6 +68,7 @@ AnimatedEntity::AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar 
         Mesh* phyMesh = OpenGLContent::BuildSphere((GLfloat)sphereRadius);
         phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
         graObjectId = phyObjectId;
+        delete phyMesh;
     }
 }
 
@@ -91,6 +92,7 @@ AnimatedEntity::AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar 
         Mesh* phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
         phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
         graObjectId = phyObjectId;
+        delete phyMesh;
     }
 }
 
@@ -113,6 +115,7 @@ AnimatedEntity::AnimatedEntity(std::string uniqueName, Trajectory* traj, Vector3
         Mesh* phyMesh = OpenGLContent::BuildBox(glm::vec3((GLfloat)boxDimensions.getX()/2.f, (GLfloat)boxDimensions.getY()/2.f, (GLfloat)boxDimensions.getZ()/2.f));
         phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
         graObjectId = phyObjectId;
+        delete phyMesh;
     }
 }
 

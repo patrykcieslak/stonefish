@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationManager__
@@ -158,12 +158,24 @@ namespace sf
          */
         void AddSolidEntity(SolidEntity* ent, const Transform& origin);
 
+        //! A method that removes a dynamic rigid body from the simulation world.
+        /*!
+         \param ent a pointer to the dynamic body object
+         */
+        void RemoveSolidEntity(SolidEntity* ent);
+
         //! A method that adds a rigid multibody to the simulation world.
         /*!
          \param ent a pointer to the multibody object
          \param origin a pose of the multibody base link in the world frame
          */
         void AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& origin);
+
+        //! A method that removes a rigid multibody from the simulation world.
+        /*!
+         \param ent a pointer to the multibody object
+         */
+        void RemoveFeatherstoneEntity(FeatherstoneEntity* ent);
         
         //! A method that adds a discrete joint to the simulation world.
         /*!

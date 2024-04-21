@@ -78,6 +78,13 @@ namespace sf
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
 
+        //! A method respawning the robot in the simulation world.
+        /*!
+         \param sm a pointer to a simulation manager
+         \param origin a trasformation from the world origin to the robot origin
+         */
+        void Respawn(SimulationManager* sm, const Transform& origin) override;
+
         //! A method returning the pose of the robot in the world frame.
         Transform getTransform() const;
 

@@ -93,7 +93,13 @@ namespace sf
          \param origin a pose of the body CG in the world frame
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
-        
+
+        //! A method removing the body from the simulation manager.
+        /*!
+         \param sm a pointer to the simulation manager
+         */
+        void RemoveFromSimulation(SimulationManager* sm);
+
         //! A pure virtual method building a collision shape for the body.
         virtual btCollisionShape* BuildCollisionShape() = 0;
         

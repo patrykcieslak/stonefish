@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/SolidEntity.h"
@@ -106,7 +106,8 @@ SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::s
 
 SolidEntity::~SolidEntity()
 {
-    if(phyMesh != nullptr) delete phyMesh;
+    if(phyMesh != nullptr) 
+        delete phyMesh;
 }
 
 EntityType SolidEntity::getType() const
@@ -1172,7 +1173,7 @@ void SolidEntity::AddToSimulation(SimulationManager* sm)
     AddToSimulation(sm, Transform::getIdentity());
 }
 
-void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin)
+void SolidEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     if(rigidBody == nullptr)
     {
@@ -1195,6 +1196,12 @@ void SolidEntity::AddToSimulation(SimulationManager *sm, const Transform& origin
         rigidBody->setMotionState(new btDefaultMotionState(Tcg));
         sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
     }
+}
+
+void SolidEntity::RemoveFromSimulation(SimulationManager* sm)
+{
+    sm->getDynamicsWorld()->removeRigidBody(rigidBody);
+    rigidBody = nullptr;
 }
 
 void SolidEntity::UpdateAcceleration(Scalar dt)

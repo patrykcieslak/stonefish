@@ -348,7 +348,10 @@ namespace sf
         
         //! A method used to set if self collision is enabled for the whole multibody.
         void setSelfCollision(bool enabled);
-        
+
+        //! A method informing if the self collisions are enabled for the whole multibody.
+        bool hasSelfCollision() const;
+
         //! A method used to set the display mode of the links.
         /*!
          \param m a flag that defines the display style.
@@ -367,6 +370,18 @@ namespace sf
          \param origin the transformation of the multibody base in the world frame
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
+        
+        //! A method used to remove the multibody from the simulation.
+        /*!
+         \param sm a pointer to the simulation manager
+         */
+        void RemoveFromSimulation(SimulationManager* sm);
+
+        //! A method used to respawn the multibody at new position.
+        /*!
+         \param origin the transformation of the multibody base in the world frame
+         */
+        void Respawn(const Transform& origin);
         
         //! A method implementing the rendering of the multibody.
         std::vector<Renderable> Render();

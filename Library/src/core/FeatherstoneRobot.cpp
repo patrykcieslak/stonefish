@@ -245,6 +245,11 @@ void FeatherstoneRobot::AddToSimulation(SimulationManager* sm, const Transform& 
     sm->AddFeatherstoneEntity(dynamics, origin);
 }
 
+void FeatherstoneRobot::Respawn(SimulationManager* sm, const Transform& origin)
+{
+    dynamics->Respawn(origin);
+}
+
 void FeatherstoneRobot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName)
 {
     int jointId = getJoint(monitoredJointName);

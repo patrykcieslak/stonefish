@@ -227,4 +227,8 @@ void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
         sm->AddComm(comms[i]);
 }
 
+void Robot::Respawn(SimulationManager* sm, const Transform& origin)
+{
+}
+
 }
