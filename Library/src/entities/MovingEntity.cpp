@@ -84,4 +84,9 @@ int MovingEntity::getGraphicalObject() const
     return graObjectId;
 }
 
+btRigidBody* MovingEntity::getRigidBody()
+{
+    return rigidBody;
+}
+
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/FeatherstoneRobot.h"
@@ -31,6 +31,7 @@
 #include "entities/FeatherstoneEntity.h"
 #include "actuators/LinkActuator.h"
 #include "actuators/JointActuator.h"
+#include "actuators/SuctionCup.h"
 #include "sensors/scalar/LinkSensor.h"
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
@@ -272,6 +273,25 @@ void FeatherstoneRobot::AddJointActuator(JointActuator* a, const std::string& ac
     }
     else
         cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
+}
+
+void FeatherstoneRobot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
+{
+    int linkId = getLinkIndex(actuatedLinkName);
+    if(linkId < -1)
+    {
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
+        return;
+    }
+    if(a->getType() == ActuatorType::SUCTION_CUP) // Special case
+    {
+        static_cast<SuctionCup*>(a)->AttachToLink(getDynamics(), linkId);
+    }
+    else
+    {
+        a->AttachToSolid(getLink(actuatedLinkName), origin);
+    }
+    actuators.push_back(a);
 }
 
 }

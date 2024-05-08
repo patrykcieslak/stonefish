@@ -36,6 +36,7 @@ namespace sf
     
     struct Renderable;
     class SimulationManager;
+    class SolidEntity;
     
     //! An abstract class implementing a general joint.
     class Joint
@@ -94,10 +95,18 @@ namespace sf
         
         //! A method that informs if the joint is of multibody type.
         bool isMultibodyJoint();
+
+        //! A method returning the first body affected by the joint.
+        SolidEntity* getSolidA();
+
+        //! A method returning the second body affected by the joint.
+        SolidEntity* getSolidB();
         
     protected:
         void setConstraint(btTypedConstraint* c);
         void setConstraint(btMultiBodyConstraint* c);
+        SolidEntity* jSolidA;
+        SolidEntity* jSolidB;
         
     private:
         std::string name;

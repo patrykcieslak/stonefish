@@ -20,12 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SphericalJoint.h"
 
+#include "BulletDynamics/Featherstone/btMultiBodyPoint2Point.h"
 #include "entities/SolidEntity.h"
+#include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
@@ -40,14 +42,38 @@ SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, Soli
     btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*bodyA, *bodyB, pivotInA, pivotInB);
     setConstraint(p2p);
     
+    jSolidA = solidA;
+    jSolidB = solidB;
+
     sigDamping = Vector3(0.,0.,0.);
     velDamping = Vector3(0.,0.,0.);
+    angleIC = Vector3(0.,0.,0.);
+}
+
+SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
+{
+    Transform linkTransform = fe->getLinkTransform(linkId+1);
+    Transform solidTransform = solid->getCGTransform();
+    Vector3 pivotInA = linkTransform.inverse() * pivot;
+    Vector3 pivotInB = solidTransform.inverse() * pivot;
     
+    btMultiBodyPoint2Point* p2p = new btMultiBodyPoint2Point(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB);
+    p2p->setMaxAppliedImpulse(BT_LARGE_FLOAT);
+    setConstraint(p2p);
+    
+    jSolidA = fe->getLink(linkId+1).solid;
+    jSolidB = solid;
+
+    sigDamping = Vector3(0.,0.,0.);
+    velDamping = Vector3(0.,0.,0.);
     angleIC = Vector3(0.,0.,0.);
 }
 
 void SphericalJoint::setDamping(Vector3 constantFactor, Vector3 viscousFactor)
 {
+    if(isMultibodyJoint())
+        return; 
+
     for(int i = 0; i < 3; i++)
     {
         sigDamping[i] = constantFactor[i] > Scalar(0.) ? constantFactor[i] : Scalar(0.);
@@ -67,6 +93,9 @@ JointType SphericalJoint::getType() const
 
 void SphericalJoint::ApplyTorque(Vector3 T)
 {
+    if(isMultibodyJoint())
+        return;
+
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
     Vector3 torque = T;
@@ -76,6 +105,9 @@ void SphericalJoint::ApplyTorque(Vector3 T)
 
 void SphericalJoint::ApplyDamping()
 {
+    if(isMultibodyJoint())
+        return;
+
     if(sigDamping.length2() > Scalar(0.) || velDamping.length2() > Scalar(0.))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
@@ -98,21 +130,25 @@ void SphericalJoint::ApplyDamping()
 std::vector<Renderable> SphericalJoint::Render()
 {
     std::vector<Renderable> items(0);
-    Renderable item;
-    item.model = glm::mat4(1.f);
-    item.type = RenderableType::JOINT_LINES;
-    
-    btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
-    Vector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
-    Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
-    Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
-    
-    item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-    item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-    item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-    item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-    
-    items.push_back(item);
+    btTypedConstraint* c = getConstraint();
+    if(c != nullptr)
+    {
+        Renderable item;
+        item.model = glm::mat4(1.f);
+        item.type = RenderableType::JOINT_LINES;
+        
+        btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
+        Vector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
+        Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
+        Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
+        
+        item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+        item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+        item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+        item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+        
+        items.push_back(item);
+    }
     return items;
 }
 

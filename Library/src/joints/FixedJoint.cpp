@@ -35,16 +35,18 @@ namespace sf
 {
 
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) 
-    : Joint(uniqueName, false), jSolidA(nullptr), jSolidB(nullptr)
+    : Joint(uniqueName, false)
 {
     btRigidBody* body = solid->rigidBody;
     
     btFixedConstraint* fixed = new btFixedConstraint(*body, Transform::getIdentity());
     setConstraint(fixed);
+
+    cInfo("Fixed joint created between the world and '%s'.", solid->getName().c_str());
 }
 
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
-    : Joint(uniqueName, false), jSolidA(nullptr), jSolidB(nullptr)
+    : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->rigidBody;
     btRigidBody* bodyB = solidB->rigidBody;
@@ -53,6 +55,8 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     
     btFixedConstraint* fixed = new btFixedConstraint(*bodyA, *bodyB, frameInA, frameInB);
     setConstraint(fixed);
+
+    cInfo("Fixed joint created between '%s' and '%s'.", solidA->getName().c_str(), solidB->getName().c_str());
 }
 
 FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot) 
@@ -71,6 +75,8 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneE
     
     jSolidA = fe->getLink(linkId+1).solid;
     jSolidB = solid;
+
+    cInfo("Fixed joint created between '%s' and '%s'.", jSolidA->getName().c_str(), jSolidB->getName().c_str());
 }
 
 FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot) : Joint(uniqueName, false)
@@ -88,20 +94,8 @@ FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, Feathers
     
     jSolidA = feA->getLink(linkIdA+1).solid;
     jSolidB = feB->getLink(linkIdB+1).solid;
-}
 
-void FixedJoint::AddToSimulation(SimulationManager* sm)
-{
-    Joint::AddToSimulation(sm);
-    if(isMultibodyJoint())
-        SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA, jSolidB);
-}
-
-void FixedJoint::RemoveFromSimulation(SimulationManager* sm)
-{
-    if(isMultibodyJoint())
-        SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA, jSolidB);
-    Joint::RemoveFromSimulation(sm);
+    cInfo("Fixed joint created between '%s' and '%s'.", jSolidA->getName().c_str(), jSolidB->getName().c_str());
 }
 
 JointType FixedJoint::getType() const

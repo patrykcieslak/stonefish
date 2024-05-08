@@ -138,7 +138,7 @@ namespace sf
          \param actuatedLinkName a name of the link which is to be actuated
          \param origin a transformation from the link origin to the actuator frame
          */
-        void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
+        virtual void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
         
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
