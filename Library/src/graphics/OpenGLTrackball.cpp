@@ -179,7 +179,8 @@ glm::mat4 OpenGLTrackball::GetViewMatrix() const
 
 void OpenGLTrackball::Rotate(glm::quat rot)
 {
-    rotation = glm::rotation(up,  glm::vec3(0,0,1.f)) * rot;
+    rotation = rotation * rot;
+    UpdateTransform();
 }
 
 void OpenGLTrackball::MoveCenter(glm::vec3 step)
