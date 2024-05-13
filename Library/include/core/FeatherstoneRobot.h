@@ -71,12 +71,27 @@ namespace sf
          */
         void AddJointActuator(JointActuator* a, const std::string& actuatedJointName);
 
+        //! A method used to attach an actuator to a specified link of the robot.
+        /*!
+         \param a a pointer to a link actuator object
+         \param actuatedLinkName a name of the link which is to be actuated
+         \param origin a transformation from the link origin to the actuator frame
+         */
+        void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
+
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
          \param sm a pointer to a simulation manager
          \param origin a trasformation from the world origin to the robot origin
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
+
+        //! A method respawning the robot in the simulation world.
+        /*!
+         \param sm a pointer to a simulation manager
+         \param origin a trasformation from the world origin to the robot origin
+         */
+        void Respawn(SimulationManager* sm, const Transform& origin) override;
 
         //! A method returning the pose of the robot in the world frame.
         Transform getTransform() const;

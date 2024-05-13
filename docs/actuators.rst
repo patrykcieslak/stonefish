@@ -10,10 +10,32 @@ A set of common actuator models is available in the *Stonefish* library, includi
 
     Actuators can only be created in connection with a definition of a :ref:`robot <robots>`, because they have to be attached to a robot's joint or link.
 
+Common properties
+=================
+
+All of the actuators share a few common properties. Each actuator has a **name** and a **type**.
+
+Optionally, the user can enable a watchdog timer that will reset the actuator if no new setpoint was received for a specified timeout time. This can be achieved by using the following syntax:
+
+.. code-block:: xml
+    
+    <actuator name="Thruster" type="thruster">
+       <!-- thruster definitions here -->
+       <watchdog timeout="1.0"/>
+    </actuator>
+
+.. code-block:: cpp
+
+    sf::Thruster* th = new sf::Thruster(...);  
+    th->setWatchdog(Scalar(1));
+
+Not all of the actuators are going to use the watchdog as it is limitted to the ones that have a clear zero state.
+
 .. note::
 
     In the following sections, description of each specific actuator implementation is accompanied with an example of actuator instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of C++ code, it is assumed that an object ``sf::Robot* robot = new sf::Robot(...);`` was created before the actuator definition. 
 
+.. _joint-actuators:
 
 Joint actuators
 ===============
@@ -76,6 +98,26 @@ The link actuators are attached to the robot's links and they apply forces or to
        <link name="{4}"/>
     </sensor>
 
+Push
+----
+
+A push actuator is a virtual actuator that applies a given force to the attached body.
+
+.. code-block:: xml
+
+    <actuator name="Push" type="push">
+        <specs lower_limit="-10.0" upper_limit="10.0" inverted="false"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </actuator>
+
+.. code-block:: cpp
+
+    #include <Stonefish/actuators/Push.h>
+    sf::Push* push = new sf::Push("Push", false, false);
+    push->setForceLimits(-10.0, 10.0);
+    robot->AddLinkActuator(push, "Link1", sf::I4()); 
+
 Propeller
 ---------
 
@@ -98,8 +140,33 @@ A propeller is an actuator working in atmosphere, representing an airplane prope
 
     #include <Stonefish/actuators/Propeller.h>
     sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", sf::BodyPhysicsType::AERODYNAMIC, "Red");
-    sf::Propeller* prop = new sf::Propeller("Prop", propMesh, 0.5, 0.45, 0.02, 1000, true, false);
-    robot->AddLinkActuator(prop, "Link1", sf::I4()); 
+    sf::Propeller* propeller = new sf::Propeller("Prop", propMesh, 0.5, 0.45, 0.02, 1000, true, false);
+    robot->AddLinkActuator(propeller, "Link1", sf::I4()); 
+
+Simple thruster
+---------------
+
+A simple thruster is an extension of the *push* actuator that functions only underwater. It can be used, for example, in development of control systems that use idealised actuators for preliminary implementation or when the thruster model is supplied externally. 
+
+.. code-block:: xml
+
+    <actuator name="SimpleThruster" type="simple_thruster">
+        <specs lower_thrust_limit="-10.0" upper_thrust_limit="10.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="propeller.obj" scale="1.0"/>
+            <material name="Steel"/>
+            <look name="Red"/>
+        </propeller>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </actuator>
+
+.. code-block:: cpp
+
+    #include <Stonefish/actuators/SimpleThruster.h>
+    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Red");
+    sf::SimpleThruster* thruster = new sf::SimpleThruster("SimpleThruster", propMesh, true, false);
+    robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
 
 Thruster
 --------
@@ -123,8 +190,8 @@ A thruster is an actuator working underwater, representing an underwater thruste
 
     #include <Stonefish/actuators/Thruster.h>
     sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Red");
-    sf::Thruster* th = new sf::Thruster("Thruster", propMesh, 0.2, std::make_pair(0.45, 0.35), 0.02, 1000, true, false);
-    robot->AddLinkActuator(th, "Link1", sf::I4()); 
+    sf::Thruster* thruster = new sf::Thruster("Thruster", propMesh, 0.2, std::make_pair(0.45, 0.35), 0.02, 1000, true, false);
+    robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
 
 Variable buoyancy system (VBS)
 ------------------------------
@@ -152,6 +219,37 @@ A variable buoyancy system (VBS) is a container with an elastic wall, which can 
     meshes.push_back(sf::GetDataPath() + "full.obj");
     sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", meshes, 0.5);
     robot->AddLinkActuator(vbs, "Link1", sf::I4());
+
+Rudder (control surface)
+------------------------
+
+A rudder, or a control surface in general, is an actuated hydrofoil that can be used to change the direction of motion of a floating or underwater vehicle.
+The forces generated by this actuator include hydrodynamic lift and drag. The models are based on quadratic approximations with lift and drag coefficients. Moreover, the angle of attack is compared with the stall angle to account for rapid change in forces when the latter is exceeded.
+
+.. code-block:: xml
+
+    <actuator name="Rudder" type="rudder">
+        <specs lift_coeff="0.5" drag_coeff="0.1" max_angle="1.0" area="0.05" stall_angle="0.9" max_angular_rate="0.2" inverted="false"/>
+        <visual>
+            <mesh filename="rudder.obj" scale="1.0"/>
+            <material name="Steel"/>
+            <look name="Red"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        </visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </actuator>
+
+.. code-block:: cpp
+
+    #include <Stonefish/actuators/Rudder.h>
+    sf::BodyPhysicsSettings phy;
+    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    phy.collisions = false;
+    phy.buoyancy = false;
+    sf::Polyhedron* rudderMesh = new sf::Polyhedron("RudderMesh", phy, sf::GetDataPath() + "rudder.obj", 1.0, sf::I4(), "Steel", "Red");
+    sf::Rudder* rudder = new sf::Rudder("Rudder", rudderMesh, 0.05, 0.5, 0.1, 0.9, 1.0, false, 0.2);        
+    robot->AddLinkActuator(rudder, "Link1", sf::I4());
 
 Lights
 ======

@@ -126,6 +126,9 @@ namespace sf
         
         //! A method returning the index of the graphical object used in rendering.
         int getGraphicalObject() const;
+
+        //! A method returning the rigid body associated with the entity.
+        btRigidBody* getRigidBody();
         
     protected:
         //Body

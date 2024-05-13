@@ -44,6 +44,7 @@ ActuatorType Motor::getType() const
 void Motor::setIntensity(Scalar tau)
 {
     torque = tau;
+    ResetWatchdog();
 }
 
 Scalar Motor::getTorque() const
@@ -95,10 +96,17 @@ Scalar Motor::getAngularVelocity() const
 
 void Motor::Update(Scalar dt)
 {
+    Actuator::Update(dt);
+
     if(j != nullptr && j->getType() == JointType::REVOLUTE)
         ((RevoluteJoint*)j)->ApplyTorque(torque);
     else if(fe != nullptr)
         fe->DriveJoint(jId, torque);
+}
+
+void Motor::WatchdogTimeout()
+{
+    setIntensity(Scalar(0));
 }
 
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Actuator.h"
@@ -36,6 +36,7 @@ Actuator::Actuator(std::string uniqueName)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     dm = DisplayMode::GRAPHICAL;
+    setWatchdog(Scalar(-1));
 }
 
 Actuator::~Actuator()
@@ -49,15 +50,40 @@ void Actuator::setDisplayMode(DisplayMode m)
     dm = m;
 }
 
+void Actuator::setWatchdog(Scalar timeout)
+{
+    watchdogTimeout = timeout;
+    watchdog = Scalar(0);
+}
+
 std::string Actuator::getName() const
 {
     return name;
+}
+
+void Actuator::Update(Scalar dt)
+{
+    if(watchdogTimeout > Scalar(0))
+    {
+        watchdog += dt;
+        if(watchdog > watchdogTimeout)
+            WatchdogTimeout();
+    }
 }
 
 std::vector<Renderable> Actuator::Render()
 {
     std::vector<Renderable> items(0);
     return items;
+}
+
+void Actuator::WatchdogTimeout()
+{
+}
+
+void Actuator::ResetWatchdog()
+{
+    watchdog = Scalar(0);
 }
 
 }

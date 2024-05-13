@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 20192023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Propeller.h"
@@ -72,6 +72,7 @@ void Propeller::setSetpoint(Scalar s)
 {
     if(inv) s *= Scalar(-1);
     setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
+    ResetWatchdog();
 }
 
 Scalar Propeller::getSetpoint() const
@@ -101,6 +102,8 @@ Scalar Propeller::getTorque() const
 
 void Propeller::Update(Scalar dt)
 {
+    Actuator::Update(dt);
+
     //Update thruster velocity
     Scalar error = setpoint * omegaLim - omega;
     Scalar motorTorque = kp * error + ki * iError;
@@ -172,4 +175,9 @@ std::vector<Renderable> Propeller::Render()
     return items;
 }
     
+void Propeller::WatchdogTimeout()
+{
+    setSetpoint(Scalar(0));
+}
+
 }

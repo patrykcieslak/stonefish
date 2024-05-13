@@ -51,7 +51,7 @@ SimulationApp::SimulationApp(std::string name, std::string dataDirPath, Simulati
 SimulationApp::~SimulationApp()
 {
     if(SimulationApp::handle == this)
-        SimulationApp::handle = NULL;
+        SimulationApp::handle = nullptr;
 }
 
 SimulationManager* SimulationApp::getSimulationManager()

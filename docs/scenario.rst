@@ -19,25 +19,25 @@ Scenario file syntax
 
 Scenario files are `XML <https://www.w3.org/XML/>`_ files, with a syntax similar to the `URDF <http://wiki.ros.org/urdf>`_. Due to the unique features of the *Stonefish* library, some of the tags used in the scenario files are specific to it, and different from other formats. Every scenario file has to contain a root node called ``<scenario>``, i.e., all definitions have to be written between the tags ``<scenario> ... </scenario>``. All paths defined in the scenario files are automatically recognised as absolute if they begin with ``/`` or ``~``, or as relative to the data directory passed to the constructor of the ``sf::SimulationApp`` otherwise. Whenever an attribute requires passing multiple values, these values have to be separated by spaces, e.g., ``<world_transform rpy="0.0 3.1415 0.0" xyz="1.0 2.0 3.0"/>``.
 
-A properly defined scenario file has to contain a set of **obligatory tags**, specifying the type of the simulated environment as well as the list of the materials and looks used throguhout the scenario. The rest of the definitions are used to actually create the simulated static bodies, dynamics bodies and robots. A skeleton of a scenario file is shown below:
+A properly defined scenario file has to contain a set of **obligatory tags**, specifying the type of the simulated **environment** as well as the list of the **materials** used throguhout the scenario. The rest of the definitions are used to actually create the simulated static bodies, dynamics bodies and robots. A skeleton of a scenario file is shown below:
 
 .. code-block:: xml
 
     <?xml version="1.0"?>
     <scenario>
+        <solver>
+            <!-- Optional parameters that override the default solver settings -->
+        </solver>
         <environment>
-            <!-- Parameters of simulated environment -->
+            <!-- Parameters of simulated environment (obligatory) -->
         </environment>
         <materials>
-            <!-- Definitions of materials -->
+            <!-- Definitions of materials (obligatory) -->
             <friction_table>
                 <!-- Interaction between materials -->
             </friction_table>
         </materials>
-        <looks>
-            <!-- Definitions of looks -->
-        </looks>
-        <!-- Definitions of bodies, robots, sensors... -->
+        <!-- Definitions of looks, bodies, robots, sensors... -->
     </scenario>
 
 Include files
@@ -69,7 +69,16 @@ Mathematical expressions
 
 The XML parser supports evaluating mathematical expressions for all numerical values. The result of the evaluation is always a double floating point number. A mathematical expression has to be written between ``${`` and ``}``.
 
+Solver settings
+---------------
 
+The solver parameters that can be set through the XML definitions, with their corresponding ranges of values, are listed below. They have to be included between the tags ``<solver> ... </solver>``.
+
+- ``<erp value="(0.0,1.0]"/>`` error correction factor (Baumgarte) for non-contact contraints
+- ``<stop_erp value="(0.0,1.0]"/>`` error correction factor (Baumgarte) for joint limits
+- ``<erp2 value="(0.0,1.0]"/>`` error correction factor (Baumgarte) for contact contraints
+- ``<global_damping value="[0.0,1.0]"/>`` damping factor used globally
+- ``<sleeping_thresholds linear="[0.0,+inf)" angular="[0.0,+inf)"/>`` magnitude of linear and angular velocities below which the bodies are considered immobile
 
 Using the code
 ==============

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Nils Bore on 29/01/2021.
-//  Copyright (c) 2021-2023 Nils Bore, Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2024 Nils Bore, Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Rudder.h"
@@ -34,13 +34,15 @@
 namespace sf
 {
 
-Rudder::Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, Scalar maxAngle, bool inverted) : LinkActuator(uniqueName)
+Rudder::Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
+    Scalar maxAngle, bool inverted, Scalar maxAngularRate) : LinkActuator(uniqueName)
 {
     this->dragCoeff = dragCoeff;
     this->liftCoeff = liftCoeff;
     this->area = area;
     this->stallAngle = stallAngle;
     this->maxAngle = maxAngle;
+    this->maxAngularRate = btFabs(maxAngularRate);
     inv = inverted;
 
     setpoint = Scalar(0);
@@ -79,7 +81,13 @@ Scalar Rudder::getAngle() const
 void Rudder::Update(Scalar dt)
 {
     //Update rudder angle
-    theta = setpoint;
+    if(maxAngularRate > Scalar(0) && btFabs(setpoint-theta)/dt > maxAngularRate)
+    {
+        Scalar dTheta = setpoint-theta > Scalar(0) ? maxAngularRate * dt : -maxAngularRate * dt;
+        theta += dTheta;
+    }
+    else
+        theta = setpoint;
 
     if(attach != NULL)
     {

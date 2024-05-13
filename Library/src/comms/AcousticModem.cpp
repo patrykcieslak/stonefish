@@ -137,9 +137,11 @@ bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     if(distance > range) return false;
         
     //Check if direction is in the FOV of the device
-    Vector3 dir = (getDeviceFrame().inverse() * worldDir).normalized();
-    Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
-    Scalar vAngle = atan2(d, dir.getZ());
+    Vector3 dir = (getDeviceFrame().getBasis().inverse() * worldDir).normalized();
+    Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).safeNorm();
+    Scalar vAngle = M_PI_2; // When dir.z == 0.0
+    if(!btFuzzyZero(dir.getZ()))
+        vAngle = atan2(d, -dir.getZ());
     return btFabs(vAngle) >= minFov2 && btFabs(vAngle) <= maxFov2;
 }
 
@@ -345,6 +347,33 @@ std::vector<Renderable> AcousticModem::Render()
     //Axes
     item.type = RenderableType::SENSOR_CS;
     items.push_back(item);
+
+    //Connected nodes
+    item.type = RenderableType::SENSOR_LINES;
+    item.model = glm::mat4(1.f);
+    item.points.clear();
+    if(getConnectedId() == 0)
+    {
+        std::vector<uint64_t> nodeIds = getNodeIds();
+        for(size_t i=0; i<nodeIds.size(); ++i)
+            if(nodeIds[i] != getDeviceId())
+            {               
+                Transform Tn = getNode(nodeIds[i])->getDeviceFrame();
+                item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+                item.points.push_back(glVectorFromVector(Tn.getOrigin()));
+            }
+    }
+    else if(getConnectedId() > 0)
+    {
+        AcousticModem* cNode = getNode(getConnectedId());
+        if(cNode != nullptr)
+        {
+            item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+            item.points.push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
+        }
+    }
+    if(!item.points.empty())
+        items.push_back(item);
 
 #ifdef DEBUG
     item.type = RenderableType::SENSOR_POINTS;

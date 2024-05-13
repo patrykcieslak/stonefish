@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/Joint.h"
@@ -38,6 +38,8 @@ Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
     collisionEnabled = collideLinkedEntities;
     mbConstraint = nullptr;
     constraint = nullptr;
+    jSolidA = nullptr;
+    jSolidB = nullptr;
 }
 
 Joint::~Joint(void)
@@ -92,6 +94,16 @@ Scalar Joint::getFeedback(unsigned int dof)
         return Scalar(0);
 }
 
+SolidEntity* Joint::getSolidA()
+{
+    return jSolidA;
+}
+
+SolidEntity* Joint::getSolidB()
+{
+    return jSolidB;
+}
+
 void Joint::AddToSimulation(SimulationManager* sm)
 {
     if(constraint != nullptr)
@@ -135,6 +147,8 @@ void Joint::AddToSimulation(SimulationManager* sm)
         sm->getJointErp(erp, stopErp);
         mbConstraint->setErp(erp);
         sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
+        if(!collisionEnabled)
+            SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA, jSolidB);
     }
 }
 
@@ -148,6 +162,8 @@ void Joint::RemoveFromSimulation(SimulationManager* sm)
     else if(mbConstraint != nullptr)
     {
         sm->getDynamicsWorld()->removeMultiBodyConstraint(mbConstraint);
+        if(!collisionEnabled)
+            SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA, jSolidB);
     }
 }
     

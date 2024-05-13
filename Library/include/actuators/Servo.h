@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ServoMotor__
@@ -108,6 +108,8 @@ namespace sf
         ActuatorType getType() const;
         
     private:
+        void WatchdogTimeout() override;
+
         ServoControlMode mode;
         Scalar pSetpoint;
         Scalar vSetpoint;

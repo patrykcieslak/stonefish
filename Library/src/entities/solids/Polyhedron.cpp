@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Polyhedron.h"
@@ -80,11 +80,8 @@ Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy,
 
 Polyhedron::~Polyhedron()
 {
-    if(graMesh != NULL)
-    {
-        if(graMesh == phyMesh) phyMesh = NULL;
+    if(graMesh != nullptr && graMesh != phyMesh)
         delete graMesh;
-    }
 }
     
 SolidType Polyhedron::getSolidType()

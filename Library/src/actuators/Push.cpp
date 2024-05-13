@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Push.h"
@@ -31,11 +31,10 @@
 namespace sf
 {
 
-Push::Push(std::string uniqueName, bool inverted, bool onlyWorksSubmerged) : LinkActuator(uniqueName)
+Push::Push(std::string uniqueName, bool inverted) : LinkActuator(uniqueName)
 {
     setpoint = Scalar(0);
     inv = inverted;
-    underwater = onlyWorksSubmerged;
     setForceLimits(1, -1); // No limits
 }
 
@@ -44,7 +43,7 @@ ActuatorType Push::getType() const
     return ActuatorType::PUSH;
 }
 
-void Push::setForceLimits(double lower, double upper)
+void Push::setForceLimits(Scalar lower, Scalar upper)
 {
     limits.first = lower;
     limits.second = upper;
@@ -56,6 +55,7 @@ void Push::setForce(Scalar f)
         setpoint = f < limits.first ? limits.first : (f > limits.second ? limits.second : f);
     else
         setpoint = f;
+    ResetWatchdog();
 }
 
 Scalar Push::getForce() const
@@ -64,22 +64,16 @@ Scalar Push::getForce() const
 }
 
 void Push::Update(Scalar dt)
-{
+{    
+    Actuator::Update(dt);
+
     if(attach != nullptr)
     {
         //Get transforms
         Transform solidTrans = attach->getCGTransform();
         Transform pushTrans = attach->getOTransform() * o2a;
         
-        Scalar force(0);
-        if(underwater)
-        {
-            Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
-            if(ocn != nullptr && ocn->IsInsideFluid(pushTrans.getOrigin()))
-                force = inv ? -setpoint : setpoint;
-        }
-        else
-            force = inv ? -setpoint : setpoint;
+        Scalar force = inv ? -setpoint : setpoint;
         
         Vector3 forceV(force, 0, 0);
         attach->ApplyCentralForce(pushTrans.getBasis() * forceV);
@@ -105,6 +99,11 @@ std::vector<Renderable> Push::Render()
     items.push_back(item);
     
     return items;
+}
+
+void Push::WatchdogTimeout()
+{
+    setForce(Scalar(0));
 }
     
 }

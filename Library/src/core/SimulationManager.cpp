@@ -177,14 +177,42 @@ void SimulationManager::AddSolidEntity(SolidEntity* ent, const Transform& origin
     }
 }
 
- void SimulationManager::AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& origin)
- {
-     if(ent != nullptr)
-     {
-         entities.push_back(ent);
-         ent->AddToSimulation(this, origin);
-     }
- }
+void SimulationManager::RemoveSolidEntity(SolidEntity* ent)
+{
+    if(ent != nullptr)
+    {
+        auto it = std::find(entities.begin(), entities.end(), ent);
+        if(it != entities.end() && (*it)->getType() == EntityType::SOLID)
+        {
+            SolidEntity* solid = static_cast<SolidEntity*>(*it);
+            solid->RemoveFromSimulation(this);
+            entities.erase(it);
+        }
+    }
+}
+
+void SimulationManager::AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& origin)
+{
+    if(ent != nullptr)
+    {
+        entities.push_back(ent);
+        ent->AddToSimulation(this, origin);
+    }
+}
+
+void SimulationManager::RemoveFeatherstoneEntity(FeatherstoneEntity* ent)
+{
+    if(ent != nullptr)
+    {
+        auto it = std::find(entities.begin(), entities.end(), ent);
+        if(it != entities.end() && (*it)->getType() == EntityType::FEATHERSTONE)
+        {
+            FeatherstoneEntity* fe = static_cast<FeatherstoneEntity*>(*it);
+            fe->RemoveFromSimulation(this);
+            entities.erase(it);
+        }
+    }
+}
     
 void SimulationManager::EnableOcean(Scalar waves, Fluid f)
 {

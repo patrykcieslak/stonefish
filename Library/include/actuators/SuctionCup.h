@@ -31,7 +31,8 @@
 namespace sf
 {
     class SimulationManager;
-    class SpringJoint;
+    class FeatherstoneEntity;
+    class Joint;
 
     //! A class representing a thruster.
     class SuctionCup : public LinkActuator
@@ -52,6 +53,13 @@ namespace sf
          \param origin a transformation from the body origin to the actuator origin
          */
         void AttachToSolid(SolidEntity* body, const Transform& origin);
+
+        //! A method used to attach the actuator to the specified joint of a rigid multibody.
+        /*!
+         \param multibody a pointer to the multibody
+         \param linkId the index of the multibody link
+         */
+        void AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -73,7 +81,9 @@ namespace sf
         
     private:
         bool pump;
-        SpringJoint* spring;
+        Joint* joint;
+        FeatherstoneEntity* attachFe;
+        unsigned int attachLinkId;
     };
 }
 

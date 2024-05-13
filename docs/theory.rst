@@ -21,7 +21,7 @@ The *Stonefish* library utilises algoritms implemented in the *Bullet Physics* l
 Hydrodynamics
 =============
 
-The *Stonefish* library delivers a novel approach to simulating hydrodynamics and aerodynamics, by performing geometry based computations. The main focus is put on hydrodynamics as the library is directed towards marine robotics. The simulated effects include: added mass, buoyancy and drag. The drag is composed of 3 elements: potential drag (linear), form drag (quadratic) and skin drag. 
+The *Stonefish* library delivers a novel approach to simulating hydrodynamics and aerodynamics, by performing geometry based computations. The main focus is put on hydrodynamics as the library is directed towards marine robotics. The simulated effects include: added mass, buoyancy and drag. The drag is composed of 2 elements: form drag (quadratic) and skin friction. Hydrodynamic lift is not computed for general bodies but can be found in the model of a rudder actuator, which is considered an actuated hydrofoil.
 
 Added mass
 ----------
