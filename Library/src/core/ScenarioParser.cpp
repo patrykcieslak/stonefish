@@ -155,6 +155,13 @@ bool ScenarioParser::Parse(std::string filename)
             log.Print(MessageType::ERROR, "Include not properly defined!");
             return false;
         }
+        std::string spath(path);
+        if(spath == "")
+        {
+            log.Print(MessageType::WARNING, "Include file path empty! Skipping...");
+            element = root->FirstChildElement("include");
+            continue;
+        }
         
         //Read optional arguments
         std::map<std::string, std::string> args;	
@@ -175,7 +182,7 @@ bool ScenarioParser::Parse(std::string filename)
 		}
 
         //Load file
-        std::string includedPath = GetFullPath(std::string(path));
+        std::string includedPath = GetFullPath(spath);
         XMLDocument includedDoc;
         result = includedDoc.LoadFile(includedPath.c_str());
         if(result != XML_SUCCESS)

@@ -332,7 +332,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
             const Look& look = content->getLook(objects[h].lookId);
             glm::mat4 M = objects[h].model;
             Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[h].materialName);
-            bool normalMapping = obj.texturable && (look.normalTexture > 0);
+            bool normalMapping = obj.texturable && (look.normalMap > 0);
             shader = normalMapping ? sonarInputShader[1] : sonarInputShader[0];
             shader->Use();
             shader->SetUniform("MVP", VP * M);
@@ -340,7 +340,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
             shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
             shader->SetUniform("restitution", (GLfloat)mat.restitution);
             if(normalMapping)
-                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalTexture);
+                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalMap);
             content->DrawObject(objects[h].objectId, objects[h].lookId, objects[h].model);
         }
     }

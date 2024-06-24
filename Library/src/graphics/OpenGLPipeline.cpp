@@ -35,6 +35,7 @@
 #include "graphics/OpenGLCamera.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLDepthCamera.h"
+#include "graphics/OpenGLThermalCamera.h"
 #include "graphics/OpenGLSonar.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
@@ -59,6 +60,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLAtmosphere::Init();
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
+    OpenGLThermalCamera::Init();
     OpenGLSonar::Init();
     OpenGLOceanParticles::Init();
     content = new OpenGLContent();
@@ -86,6 +88,7 @@ OpenGLPipeline::~OpenGLPipeline()
 {
     OpenGLCamera::Destroy();
     OpenGLDepthCamera::Destroy();
+    OpenGLThermalCamera::Destroy();
     OpenGLSonar::Destroy();
     OpenGLOceanParticles::Destroy();
     OpenGLLight::Destroy();
@@ -416,6 +419,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         {
             OpenGLDepthCamera* camera = static_cast<OpenGLDepthCamera*>(view);
             //Draw objects and compute depth data
+            camera->ComputeOutput(drawingQueueCopy);
+            //Draw camera output
+            camera->DrawLDR(screenFBO, true);
+        }
+        else if(view->getType() == ViewType::THERMAL_CAMERA)
+        {
+            OpenGLThermalCamera* camera = static_cast<OpenGLThermalCamera*>(view);
+            //Draw objects and compute thermal data
             camera->ComputeOutput(drawingQueueCopy);
             //Draw camera output
             camera->DrawLDR(screenFBO, true);

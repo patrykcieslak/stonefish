@@ -335,17 +335,22 @@ namespace sf
         LookType type;
         glm::vec3 color;
         std::vector<GLfloat> params;
-        GLuint albedoTexture;
-        GLuint normalTexture;
         GLfloat reflectivity;
+        GLuint albedoTexture;
+        GLuint normalMap;
+        GLuint thermalMap;
+        glm::vec2 thermalRange;
 
         Look()
         {
             name = "";
             type = LookType::SIMPLE;
             color = glm::vec3(0.f);
-            albedoTexture = normalTexture = 0;
             reflectivity = 0.f;
+            albedoTexture = 0;
+            normalMap = 0;
+            thermalMap = 0;
+            thermalRange = glm::vec2(20.f);
         }
     };
     

@@ -500,8 +500,8 @@ void OpenGLContent::DestroyContent()
     {
         if(looks[i].albedoTexture != 0)
             glDeleteTextures(1, &looks[i].albedoTexture);
-        if(looks[i].normalTexture != 0)
-            glDeleteTextures(1, &looks[i].normalTexture);
+        if(looks[i].normalMap != 0)
+            glDeleteTextures(1, &looks[i].normalMap);
     }
     looks.clear();
     lookNameManager.ClearNames();
@@ -883,7 +883,7 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
     if(ocean != NULL && ocean->hasWaves()) waves = true;
     
     Look& l = looks[lookId];
-    texturable = texturable && (l.albedoTexture > 0 || l.normalTexture > 0);
+    texturable = texturable && (l.albedoTexture > 0 || l.normalMap > 0);
     int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
 
     bool updateMaterial = ((int)lookId != currentLookId) 
@@ -941,10 +941,10 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
                 OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
             }
 
-            if(l.normalTexture > 0)
+            if(l.normalMap > 0)
             {
                 shader->SetUniform("enableNormalTex", true);
-                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalTexture);
+                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalMap);
             }
             else
             {
@@ -1053,7 +1053,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 }
 
 std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
-                                            GLfloat reflectivity, const std::string& albedoTextureName)
+                                            GLfloat reflectivity, const std::string& albedoTexturePath)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1062,13 +1062,14 @@ std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 r
     look.reflectivity = reflectivity;
     look.params.push_back(specular);
     look.params.push_back(shininess);
-    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName);
+    if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath);
     looks.push_back(look);
     return look.name;
 }
 
 std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
-                                              GLfloat reflectivity, const std::string& albedoTextureName, const std::string& normalTextureName)
+                                              GLfloat reflectivity, const std::string& albedoTexturePath, const std::string& normalMapPath, 
+                                              const std::string& thermalMapPath, glm::vec2 thermalRange)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1077,8 +1078,10 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);
-    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName, true, false, maxAnisotropy);
-    if(normalTextureName != "") look.normalTexture = LoadTexture(normalTextureName, false);
+    if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath, true, false, maxAnisotropy);
+    if(normalMapPath != "") look.normalMap = LoadTexture(normalMapPath, false);
+    if(thermalMapPath != "") look.thermalMap = LoadTexture(thermalMapPath, false);
+    look.thermalRange = thermalRange;
     looks.push_back(look);
     return look.name;
 }

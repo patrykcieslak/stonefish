@@ -315,7 +315,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
         const Look& look = content->getLook(objects[i].lookId);
         glm::mat4 M = objects[i].model;
         Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[i].materialName);
-        bool normalMapping = obj.texturable && (look.normalTexture > 0);
+        bool normalMapping = obj.texturable && (look.normalMap > 0);
         shader = normalMapping ? sonarInputShader[1] : sonarInputShader[0];
         shader->Use();
         shader->SetUniform("MVP", VP * M);
@@ -323,7 +323,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
         shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
         shader->SetUniform("restitution", (GLfloat)mat.restitution);
         if(normalMapping)
-            OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalTexture);
+            OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalMap);
         content->DrawObject(objects[i].objectId, objects[i].lookId, objects[i].model);
     }
     glEnable(GL_DEPTH_CLAMP);
