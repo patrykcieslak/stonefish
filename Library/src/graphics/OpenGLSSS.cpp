@@ -377,6 +377,7 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
         int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
         int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
+        content->SetViewportSize(windowWidth, windowHeight); 
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
         content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);

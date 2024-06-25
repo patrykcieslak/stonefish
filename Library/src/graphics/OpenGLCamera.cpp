@@ -126,7 +126,7 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins * sizeof(GLuint), histogram, GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
-    GLfloat zero = 0.f;
+    GLfloat zero = 1.0f;
     exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
                                                  GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);
     
@@ -728,11 +728,11 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
                                                                         0.1f, (GLfloat)(viewportWidth * viewportHeight)));    
             glDispatchCompute(1, 1, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-            
-			//Bind exposure texture
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
-			OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
 		}
+
+        //Bind color and exposure textures
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
+		OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
 
         if(antiAliasing)
         {
@@ -740,7 +740,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             GLenum renderBuffs[1] = {GL_COLOR_ATTACHMENT1};
             glDrawBuffers(1, renderBuffs);    
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
             tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
@@ -753,7 +753,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 
             //Drawing to screen with anti-aliasing
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             fxaaShader->Use();
             fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
@@ -765,7 +765,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
         else
         {
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
@@ -782,7 +782,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 	else
 	{
 		OpenGLState::BindFramebuffer(destinationFBO);
-		OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
+		OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex[lastActiveRenderColorBuffer]);
 		OpenGLState::BindFramebuffer(0);

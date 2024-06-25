@@ -8,7 +8,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 ===
 
 -  *Rewritten computation of hydrodynamic drag*
--  *Fixed loading SRGB and linear textures (fixes normal map issues)*
+-  *Fixed loading sRGB and linear textures (fixes normal map issues)*
 -  *Simple thruster is now a new actuator class and displays a rotating propeller*
 -  Fixed buoyancy force calculation for flat ocean (floating bodies are not rotating or moving anymore!)
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
@@ -19,6 +19,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Added an option to set internal parts of a compound body as always visible
 -  Added access to the computed wetted surface area and submerged volume
 -  Added maximum angular rate of change of the rudder actuator angle, to represent the actuator's dynamics
+-  Fixed rendering of vision sensor outputs for debug purposes
 -  Fixed getting robot transform
 -  Fixed acoustic modem implementation eliminating problem with modems not seeing each other
 -  Fixed Stonefish logo and icon

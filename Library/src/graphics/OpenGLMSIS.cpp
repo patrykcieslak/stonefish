@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLMSIS.h"
@@ -393,6 +393,7 @@ void OpenGLMSIS::DrawLDR(GLuint destinationFBO, bool updated)
         int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
         int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
+        content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
         content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
