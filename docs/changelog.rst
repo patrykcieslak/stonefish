@@ -17,6 +17,8 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Added access to the computed wetted surface area and submerged volume
 -  Added maximum angular rate of change of the rudder actuator angle, to represent the actuator's dynamics
 -  *Fixed loading sRGB and linear textures (fixes normal map issues)*
+-  Fixed ocean rendering error when switching between different views 
+-  Fixed calculation and rendering of the ellipsoidal approximation used for added mass estimation
 -  Fixed buoyancy force calculation for flat ocean (floating bodies are not rotating or moving anymore!)
 -  Fixed IMU readings, adding the missing gravitational and centrifugal accelerations
 -  Fixed rendering of vision sensor outputs for debug purposes

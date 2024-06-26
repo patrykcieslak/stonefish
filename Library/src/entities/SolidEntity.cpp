@@ -328,28 +328,25 @@ std::vector<Renderable> SolidEntity::Render()
         items.push_back(item);
 #else
         //Geometry approximation
+        item.model = glMatrixFromTransform(getHTransform());
+        item.points.clear();
         switch(fdApproxType)
-        {
-            case  GeometryApproxType::AUTO:
-                break;
-                
-            case  GeometryApproxType::SPHERE:
+        {    
+            case GeometryApproxType::SPHERE:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0]));
                 items.push_back(item);
                 break;
                 
-            case  GeometryApproxType::CYLINDER:
+            case GeometryApproxType::CYLINDER:
                 item.type = RenderableType::HYDRO_CYLINDER;
-                item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1]));
                 items.push_back(item);
                 break;
-                
-            case  GeometryApproxType::ELLIPSOID:
+
+            case GeometryApproxType::AUTO:       
+            case GeometryApproxType::ELLIPSOID:
                 item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.model = glMatrixFromTransform(getHTransform());
                 item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1], (GLfloat)fdApproxParams[2]));
                 items.push_back(item);
                 break;
@@ -675,12 +672,12 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
         case  GeometryApproxType::SPHERE:
             ComputeSphericalApprox();
             break;
-            
+
         case  GeometryApproxType::CYLINDER:
             ComputeCylindricalApprox();
             break;
             
-        case  GeometryApproxType::AUTO:
+        case  GeometryApproxType::AUTO:    
         case  GeometryApproxType::ELLIPSOID:
             ComputeEllipsoidalApprox();
             break;
@@ -828,35 +825,41 @@ void SolidEntity::ComputeEllipsoidalApprox()
     if(x->size() < 2)
         return;
     for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C * x->at(i) - P_CB;
+        x->at(i) = T_CG2C * x->at(i) - P_CB; //Points in CG frame around center of buoyancy
     
+    //P. Kumar, E.A. Yıldırım, Computing Minimum-Volume Enclosing Axis-Aligned Ellipsoids
+    //J Optim Theory Appl (2008) 136: 211–228
+
     //Initial volume approximation algorithm
     std::vector<Vector3> x0;
     for(size_t k=0; k<3; ++k) //3 dimensions
     {
+        //Construct vector for current dimension
         std::vector<Scalar> x_k(x->size());
         for(size_t i=0; i<x->size(); ++i)
             x_k[i] = x->at(i).m_floats[k];
 
+        //Find range of values
         auto result = std::minmax_element(x_k.begin(), x_k.end());
+        
+        //Add limits to the set x0
         x0.push_back(x->at(result.first - x_k.begin()));
         x0.push_back(x->at(result.second - x_k.begin()));
     }
 
-    //Minimum-volume enclosing axis-aligned ellipsoid algorithm
+    //Initial sigma
     std::vector<Scalar> sigma(x->size());
     for(size_t i=0; i<x->size(); ++i)
     {
         std::vector<Vector3>::iterator it;
         it = std::find(x0.begin(), x0.end(), x->at(i));
         if(it != x0.end())
-            sigma[i] = Scalar(1)/Scalar(x0.size());
+            sigma[i] = Scalar(1)/Scalar(6);
         else
             sigma[i] = Scalar(0);
     }
     
-    int k = 0;
-    
+    //Utility functions
     auto u = [](auto j, auto& x, auto& sigma)
     {
         auto sum = Scalar(0);
@@ -873,7 +876,6 @@ void SolidEntity::ComputeEllipsoidalApprox()
         return sum;	
     };
     
-    /*
     auto lambda = [&x, &sigma, &u, &v](int i)
     {
         auto sum = Scalar(0);
@@ -881,108 +883,57 @@ void SolidEntity::ComputeEllipsoidalApprox()
         {
             auto vj = v(j, x, sigma);
             auto uj = u(j, x, sigma);
-            sum += (x[i].m_floats[j] - vj)*(x[i].m_floats[j] - vj)/(3*(uj - vj*vj));
+            sum += (x->at(i).m_floats[j] - vj)*(x->at(i).m_floats[j] - vj)/(3*(uj - vj*vj));
         }
         return sum;
     };
-    
-    Scalar epsilon0 = btPow(Scalar(1) + Scalar(0.1), Scalar(2)/Scalar(3)) - Scalar(1);
-    Scalar epsilon;
-    
-    while(1)
+
+    //Initialize i* and epsilon
+    size_t iStar;
+    std::vector<Scalar> I(x->size());
+    for(size_t i=0; i<x->size(); ++i) I[i] = lambda(i);
+    auto IStar = std::max_element(I.begin(), I.end());
+    iStar = IStar - I.begin();
+    Scalar epsilon = lambda(iStar) - Scalar(1);
+
+    //Run optimization
+    Scalar errorTol(0.2);
+    Scalar epsilonTol = btPow(Scalar(1) + errorTol, Scalar(2)/Scalar(3)) - Scalar(1);
+    size_t maxIter = 10;
+
+    size_t k=0;
+#ifdef DEBUG
+    cInfo("%s MVAE iteration %ld --> %lf", getName().c_str(), k, epsilon);
+#endif
+    while(epsilon > epsilonTol && k < maxIter)
     {
-        std::vector<Scalar> xk(x.size());
-        for(size_t i=0; i<xk.size(); ++i) xk[i] = lambda(i);
-    
-        std::vector<Scalar>::iterator ik = std::max_element(xk.begin(), xk.end());
-        size_t max_id = ik - xk.begin();
-        Scalar epsilon_upper = xk[max_id] - Scalar(1);
-    
-        size_t min_id = 0;
-        Scalar min_v(10e9);
-        for(size_t i=0; i<xk.size(); ++i)
-        {
-            if(xk[i] < min_v && sigma[i] > Scalar(0))
-            {
-                min_v = xk[i];
-                min_id = i;
-            }
-        }
-        Scalar epsilon_lower = Scalar(1) - min_v;
+        x0.push_back(x->at(iStar));
         
-        Scalar epsilon = std::max(epsilon_upper, epsilon_lower);
-        epsilon = epsilon_upper;
-        
-        if(epsilon <= epsilon0)
-            break;
-            
+        Scalar beta = epsilon/(Scalar(3+1)*(Scalar(1)+epsilon));
+
+        //Update sigma
+        for(size_t i=0; i<sigma.size(); ++i)
+            sigma[i] = (Scalar(1)-beta)*sigma[i];
+        sigma[iStar] += beta;
+
+        //Update i* and epsilon
+        for(size_t i=0; i<x->size(); ++i) I[i] = lambda(i);
+        IStar = std::max_element(I.begin(), I.end());
+        iStar = IStar - I.begin();
+        epsilon = lambda(iStar) - Scalar(1);
+
         ++k;
-            
-        if(epsilon == epsilon_upper)
-        {
 #ifdef DEBUG
-            cInfo("Iteration: %d  Epsilon(+): %1.3lf", k, epsilon);
+        cInfo("%s MVAE iteration %ld --> %lf\n", getName().c_str(), k, epsilon);
 #endif
-            x0.push_back(x[max_id]);
-            
-            Scalar sum = Scalar(0);
-            for(int j=0; j<3; ++j)
-            {
-                auto vj = v(j, x, sigma);
-                auto uj = u(j, x, sigma);
-                sum += btPow((x[max_id].m_floats[j] - vj)*(x[max_id].m_floats[j] - vj)/(3*(uj - vj*vj)), Scalar(2));
-            }
-            
-            Scalar beta = epsilon/(Scalar(1) + Scalar(3)*sum);
-            
-            std::vector<Scalar> e(sigma.size(), Scalar(0));
-            e[max_id] = Scalar(1);
-        
-            for(size_t i=0; i<sigma.size(); ++i)
-                sigma[i] = (Scalar(1) - beta)*sigma[i] + beta*e[i];  
-        }
-        else
-        {
-#ifdef DEBUG
-            cInfo("Iteration: %d  Epsilon(-): %1.3lf", k, epsilon);
-#endif
-            Scalar maxwj(-10e9);
-            for(int j=0; j<3; ++j)
-            {
-                auto vj = v(j, x, sigma);
-                auto uj = u(j, x, sigma);
-                Scalar wj = (x[min_id].m_floats[j] - vj)*(x[min_id].m_floats[j] - vj)/(3*(uj - vj*vj));
-                if(wj > maxwj)
-                    maxwj = wj;
-            }
-            
-            Scalar beta = std::min(epsilon/(Scalar(1)-epsilon+Scalar(3)*maxwj), sigma[min_id]/(Scalar(1)-sigma[min_id])                    );
-            */
-            /*if(beta == sigma[min_id]/(Scalar(1)-sigma[min_id]))
-            {
-                std::vector<Vector3>::iterator it;
-                it = std::find(x0.begin(), x0.end(), x[min_id]);
-                x0.erase(it);
-            }*/
-            /*
-            std::vector<Scalar> e(sigma.size(), Scalar(0));
-            e[min_id] = Scalar(1);
-        
-            for(size_t i=0; i<sigma.size(); ++i)
-                sigma[i] = (Scalar(1) + beta)*sigma[i] - beta*e[i];
-        }
     }
-    */
     
-    Vector3 c;
-    Vector3 d;
-    
+    Vector3 c, d;
     if(k == 0)
     {
         c.setX((x0[0].x() + x0[1].x())/Scalar(2)); 
         c.setY((x0[2].y() + x0[3].y())/Scalar(2)); 
         c.setZ((x0[4].z() + x0[5].z())/Scalar(2));
-
         d.setX(btFabs(x0[0].x()-c.x()));
         d.setY(btFabs(x0[2].y()-c.y()));
         d.setZ(btFabs(x0[4].z()-c.z()));
@@ -992,14 +943,12 @@ void SolidEntity::ComputeEllipsoidalApprox()
         c.setX(v(0,x,sigma));
         c.setY(v(1,x,sigma));
         c.setZ(v(2,x,sigma));
-    
         for(int j=0; j<3; ++j)
         {
             d.m_floats[j] = Scalar(1)/(Scalar(3)*(u(j,x,sigma) - v(j,x,sigma)*v(j,x,sigma)));
             d.m_floats[j] = Scalar(1)/btSqrt(d.m_floats[j]);
         }
     }
-    
 #ifdef DEBUG
     cInfo("Ellipsoid center: %1.3lf %1.3lf %1.3lf", c.x(), c.y(), c.z());
     cInfo("Ellipsoid axis: %1.3lf %1.3lf %1.3lf", d.x(), d.y(), d.z());
