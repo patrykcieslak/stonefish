@@ -103,6 +103,12 @@ void PWLTrajectory::Interpolate()
         interpTrans.setRotation(slerp((it-1)->T.getRotation(), it->T.getRotation(), alpha));
         calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
     }
+
+    if(!forward)
+    {
+        interpVel = -interpVel;
+        interpAngVel = -interpAngVel;
+    }
 }
 
 void PWLTrajectory::BuildGraphicalPath()

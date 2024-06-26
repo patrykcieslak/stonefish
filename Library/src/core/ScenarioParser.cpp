@@ -145,90 +145,14 @@ bool ScenarioParser::Parse(std::string filename)
     }
 
     //Include other scenario files
-    XMLElement* element = root->FirstChildElement("include");
-    while(element != nullptr)
+    if(!IncludeFiles(root))
     {
-        //Get file path
-        const char* path = nullptr;
-        if(element->QueryStringAttribute("file", &path) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Include not properly defined!");
-            return false;
-        }
-        
-        //Read optional arguments
-        std::map<std::string, std::string> args;	
-		XMLElement* argElement = element->FirstChildElement("arg");
-		while(argElement != nullptr)
-        {
-			const char* name = argElement->Attribute("name");
-			const char* value = argElement->Attribute("value");
-			
-			if(value == nullptr || name == nullptr)
-			{
-			    log.Print(MessageType::ERROR, "Include file argument not properly defined!");
-				return false;
-			}
-
-			args.insert(std::make_pair(std::string(name), std::string(value)));
-			argElement = argElement->NextSiblingElement("arg");
-		}
-
-        //Load file
-        std::string includedPath = GetFullPath(std::string(path));
-        XMLDocument includedDoc;
-        result = includedDoc.LoadFile(includedPath.c_str());
-        if(result != XML_SUCCESS)
-        {
-            switch(result)
-            {
-                case XMLError::XML_ERROR_FILE_NOT_FOUND:
-                {
-                    cInfo("Scenario parser: Included file not found!");
-                    log.Print(MessageType::ERROR, "Included file '%s' not found!", includedPath.c_str());
-                }
-                    break;
-
-                default:
-                {
-                    cInfo("Scenario parser: Syntax error in included file!");
-                    log.Print(MessageType::ERROR, "Syntax error in included file '%s'!", includedPath.c_str());
-                }
-                    break;
-            }
-            return false;
-        }
-        cInfo("Scenario parser: Including file '%s'", includedPath.c_str());
-        log.Print(MessageType::INFO, "Including file '%s'", includedPath.c_str());
-        
-        root->DeleteChild(element); //Delete "include" element
-        
-        XMLNode* includedRoot = includedDoc.FirstChildElement("scenario");
-        if(includedRoot == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Root node not found in included file '%s'!", includedPath.c_str());
-            return false;
-        }
-        
-        if(!PreProcess(includedRoot, args))
-        {
-            log.Print(MessageType::ERROR, "Pre-processing of included file '%s' failed!", includedPath.c_str());
-            return false;
-        }
-        
-        for(const XMLNode* child = includedRoot->FirstChild(); child != nullptr; child = child->NextSibling())
-        {
-            if(!CopyNode(root, child))
-            {
-                log.Print(MessageType::ERROR, "Could not copy included XML elements!");
-                return false;
-            }
-        }
-        element = root->FirstChildElement("include");
+        log.Print(MessageType::ERROR, "Including files failed!");
+        return false;
     }
 
     //Load solver settings
-    element = root->FirstChildElement("solver");
+    XMLElement* element = root->FirstChildElement("solver");
     if(element != nullptr)
         ParseSolver(element);
     
@@ -543,6 +467,92 @@ bool ScenarioParser::EvaluateMath(XMLNode* node)
             return false;
     }
 
+    return true;
+}
+
+bool ScenarioParser::IncludeFiles(XMLNode* node)
+{
+    XMLElement* element = node->FirstChildElement("include");
+    while(element != nullptr)
+    {
+        //Get file path
+        const char* path = nullptr;
+        if(element->QueryStringAttribute("file", &path) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Include not properly defined!");
+            return false;
+        }
+        
+        //Read optional arguments
+        std::map<std::string, std::string> args;	
+		XMLElement* argElement = element->FirstChildElement("arg");
+		while(argElement != nullptr)
+        {
+			const char* name = argElement->Attribute("name");
+			const char* value = argElement->Attribute("value");
+			
+			if(value == nullptr || name == nullptr)
+			{
+			    log.Print(MessageType::ERROR, "Include file argument not properly defined!");
+				return false;
+			}
+
+			args.insert(std::make_pair(std::string(name), std::string(value)));
+			argElement = argElement->NextSiblingElement("arg");
+		}
+
+        //Load file
+        std::string includedPath = GetFullPath(std::string(path));
+        XMLDocument includedDoc;
+        XMLError result = includedDoc.LoadFile(includedPath.c_str());
+        if(result != XML_SUCCESS)
+        {
+            switch(result)
+            {
+                case XMLError::XML_ERROR_FILE_NOT_FOUND:
+                {
+                    cInfo("Scenario parser: Included file not found!");
+                    log.Print(MessageType::ERROR, "Included file '%s' not found!", includedPath.c_str());
+                }
+                    break;
+
+                default:
+                {
+                    cInfo("Scenario parser: Syntax error in included file!");
+                    log.Print(MessageType::ERROR, "Syntax error in included file '%s'!", includedPath.c_str());
+                }
+                    break;
+            }
+            return false;
+        }
+        cInfo("Scenario parser: Including file '%s'", includedPath.c_str());
+        log.Print(MessageType::INFO, "Including file '%s'", includedPath.c_str());
+        
+        node->DeleteChild(element); //Delete "include" element
+        
+        XMLNode* includedRoot = includedDoc.FirstChildElement("scenario");
+        if(includedRoot == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Root node not found in included file '%s'!", includedPath.c_str());
+            return false;
+        }
+        
+        if(!PreProcess(includedRoot, args))
+        {
+            log.Print(MessageType::ERROR, "Pre-processing of included file '%s' failed!", includedPath.c_str());
+            return false;
+        }
+        
+        for(const XMLNode* child = includedRoot->FirstChild(); child != nullptr; child = child->NextSibling())
+        {
+            if(!CopyNode(node, child))
+            {
+                log.Print(MessageType::ERROR, "Could not copy included XML elements!");
+                return false;
+            }
+        }
+        element = node->FirstChildElement("include");
+    }
     return true;
 }
 
@@ -1963,7 +1973,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         robot = new FeatherstoneRobot(robotName, fixed);
     else if(algorithm == "general")
         robot = new GeneralRobot(robotName, fixed);
-
+            
     //---- Links ----
     //Base link
     SolidEntity* baseLink = nullptr;
@@ -3755,7 +3765,10 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         sens = msis;
     }
     else
+    {
+        log.Print(MessageType::ERROR, "Sensor type '%s' not supported!", typeStr.c_str());
         return nullptr;
+    }
 
     //---- Visuals ----
     const char* visFile = nullptr;
@@ -4287,6 +4300,10 @@ bool ScenarioParser::CopyNode(XMLNode* destParent, const XMLNode* src)
     {
         log.Print(MessageType::ERROR, "Performing XML node copy failed!");
         return false;
+    }
+    else
+    {
+        log.Print(MessageType::INFO, "Copied XML node '%s'", srcCopy->Value());
     }
 
     //Add this child

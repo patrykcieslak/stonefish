@@ -8,19 +8,23 @@ The changelog of the library code is presented below. **Breaking changes** were 
 ===
 
 -  *Rewritten computation of hydrodynamic drag*
--  *Fixed loading SRGB and linear textures (fixes normal map issues)*
 -  *Simple thruster is now a new actuator class and displays a rotating propeller*
--  Fixed buoyancy force calculation for flat ocean (floating bodies are not rotating or moving anymore!)
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
--  Fixed IMU readings, adding the missing gravitational and centrifugal accelerations
 -  Extended glue to support joining links of two robots together
 -  Added a watchdog timer to the actuators, including parser support
 -  Added access to the viscous and quadratic hydrodynamic drag coefficients, including parser support
 -  Added an option to set internal parts of a compound body as always visible
 -  Added access to the computed wetted surface area and submerged volume
 -  Added maximum angular rate of change of the rudder actuator angle, to represent the actuator's dynamics
+-  *Fixed loading sRGB and linear textures (fixes normal map issues)*
+-  Fixed ocean rendering error when switching between different views 
+-  Fixed calculation and rendering of the ellipsoidal approximation used for added mass estimation
+-  Fixed buoyancy force calculation for flat ocean (floating bodies are not rotating or moving anymore!)
+-  Fixed IMU readings, adding the missing gravitational and centrifugal accelerations
+-  Fixed rendering of vision sensor outputs for debug purposes
 -  Fixed getting robot transform
 -  Fixed acoustic modem implementation eliminating problem with modems not seeing each other
+-  Fixed sonar update frequency implementation to allow for slow updates
 -  Fixed Stonefish logo and icon
 
 1.3

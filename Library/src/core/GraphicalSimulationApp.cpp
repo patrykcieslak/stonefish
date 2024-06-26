@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -55,24 +55,24 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
 #else
     shaderPath = "/usr/local/share/Stonefish/shaders/";
 #endif
-    glLoadingContext = NULL;
-    glMainContext = NULL;
-    trackballCenter = NULL;
+    glLoadingContext = nullptr;
+    glMainContext = nullptr;
+    trackballCenter = nullptr;
     selectedEntity = std::make_pair(nullptr, -1);
     displayHUD = true;
     displayKeymap = false;
     displayConsole = false;
     displayPerformance = false;
-    joystick = NULL;
-    joystickAxes = NULL;
-    joystickButtons = NULL;
-    joystickHats = NULL;
+    joystick = nullptr;
+    joystickAxes = nullptr;
+    joystickButtons = nullptr;
+    joystickHats = nullptr;
     mouseWasDown.type = SDL_LASTEVENT;
     limitFramerate = true;
-    simulationThread = NULL;
-    loadingThread = NULL;
-    glPipeline = NULL;
-    gui = NULL;
+    simulationThread = nullptr;
+    loadingThread = nullptr;
+    glPipeline = nullptr;
+    gui = nullptr;
     timeQuery[0] = 0;
     timeQuery[1] = 0;
     timeQueryPingpong = 0;
@@ -89,11 +89,11 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
 
 GraphicalSimulationApp::~GraphicalSimulationApp()
 {
-    if(console != NULL) delete console;
-    if(glPipeline != NULL) delete glPipeline;
-    if(gui != NULL) delete gui;
+    if(console != nullptr) delete console;
+    if(glPipeline != nullptr) delete glPipeline;
+    if(gui != nullptr) delete gui;
     
-    if(joystick != NULL)
+    if(joystick != nullptr)
     {
         delete [] joystickButtons;
         delete [] joystickAxes;
@@ -264,11 +264,11 @@ void GraphicalSimulationApp::InitializeSDL()
     
     //Create OpenGL contexts
     glLoadingContext = SDL_GL_CreateContext(window);
-    if(glLoadingContext == NULL)
+    if(glLoadingContext == nullptr)
         cCritical("SDL2: %s", SDL_GetError());
     
     glMainContext = SDL_GL_CreateContext(window);
-    if(glMainContext == NULL)
+    if(glMainContext == nullptr)
         cCritical("SDL2: %s", SDL_GetError());
     
     //Disable vertical synchronization --> use framerate limitting instead (e.g. max 60 FPS)
@@ -578,7 +578,7 @@ void GraphicalSimulationApp::LoopInternal()
         }
     }
 
-    if(joystick != NULL)
+    if(joystick != nullptr)
     {
         for(int i=0; i<SDL_JoystickNumAxes(joystick); i++)
             joystickAxes[i] = SDL_JoystickGetAxis(joystick, i);
@@ -695,7 +695,7 @@ void GraphicalSimulationApp::DoHUD()
     Ocean* ocn = getSimulationManager()->getOcean();
     
     GLfloat offset = 10.f;
-    gui->DoPanel(10.f, offset, 160.f, ocn != NULL ? 226.f : 159.f);
+    gui->DoPanel(10.f, offset, 160.f, ocn != nullptr ? 226.f : 159.f);
     offset += 5.f;
     gui->DoLabel(15.f, offset, "DEBUG");
     offset += 15.f;
@@ -1025,11 +1025,11 @@ void GraphicalSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
 	selectedEntity = std::make_pair(nullptr, -1);
-	trackballCenter = NULL;
+	trackballCenter = nullptr;
     
     int status;
     SDL_WaitThread(simulationThread, &status);
-    simulationThread = NULL;
+    simulationThread = nullptr;
 }
 
 void GraphicalSimulationApp::CleanUp()
@@ -1037,10 +1037,10 @@ void GraphicalSimulationApp::CleanUp()
     SimulationApp::CleanUp();
     glDeleteQueries(2, timeQuery);
 
-    if(joystick != NULL)
+    if(joystick != nullptr)
         SDL_JoystickClose(0);
     
-    if(glLoadingContext != NULL)
+    if(glLoadingContext != nullptr)
         SDL_GL_DeleteContext(glLoadingContext);
     
     SDL_GL_DeleteContext(glMainContext);
@@ -1086,7 +1086,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     glDeleteVertexArrays(1, &vao);
     
     //Detach thread from GL context
-    SDL_GL_MakeCurrent(ltdata->app->window, NULL);
+    SDL_GL_MakeCurrent(ltdata->app->window, nullptr);
     return 0;
 }
 

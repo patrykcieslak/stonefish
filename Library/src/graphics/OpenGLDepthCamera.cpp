@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLDepthCamera.h"
@@ -36,8 +36,8 @@
 namespace sf
 {
 
-GLSLShader** OpenGLDepthCamera::depthCameraOutputShader = NULL;
-GLSLShader* OpenGLDepthCamera::depthVisualizeShader = NULL;
+GLSLShader** OpenGLDepthCamera::depthCameraOutputShader = nullptr;
+GLSLShader* OpenGLDepthCamera::depthVisualizeShader = nullptr;
 
 OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                      GLint originX, GLint originY, GLint width, GLint height,
@@ -48,7 +48,7 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     _needsUpdate = false;
     continuous = continuousUpdate;
     newData = false;
-    camera = NULL;
+    camera = nullptr;
     noiseDepth = 0.f;
     idx = 0;
     range.x = minDepth;
@@ -123,7 +123,7 @@ OpenGLDepthCamera::~OpenGLDepthCamera()
     glDeleteTextures(1, &linearDepthTex);
     glDeleteFramebuffers(1, &linearDepthFBO);
 
-    if(camera != NULL)
+    if(camera != nullptr)
     {
         glDeleteBuffers(1, &linearDepthPBO);
     }
@@ -294,7 +294,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
     bool display = true;
     unsigned int dispX, dispY;
     GLfloat dispScale;
-    if(camera != NULL)
+    if(camera != nullptr)
         display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
@@ -303,11 +303,13 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
         if(usesRanges) Depth2LinearRanges();
         else LinearizeDepth();
         
+        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+        
         //Bind depth texture
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex);
         //LDR drawing
         OpenGLState::BindFramebuffer(destinationFBO);
-        OpenGLState::Viewport(originX, originY, viewportWidth, viewportHeight);
+        OpenGLState::Viewport(dispX, windowHeight-viewportHeight*dispScale-dispY, viewportWidth*dispScale, viewportHeight*dispScale);
         depthVisualizeShader->Use();
         depthVisualizeShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         depthVisualizeShader->SetUniform("range", range);
@@ -319,7 +321,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
     }
     
     //Copy texture to camera buffer
-    if(camera != NULL && updated)
+    if(camera != nullptr && updated)
     {
         if(!display)
         {
@@ -358,13 +360,13 @@ void OpenGLDepthCamera::Init()
 
 void OpenGLDepthCamera::Destroy()
 {
-    if(depthCameraOutputShader != NULL) 
+    if(depthCameraOutputShader != nullptr) 
     {
-        if(depthCameraOutputShader[0] != NULL) delete depthCameraOutputShader[0];
-        if(depthCameraOutputShader[1] != NULL) delete depthCameraOutputShader[1];
+        if(depthCameraOutputShader[0] != nullptr) delete depthCameraOutputShader[0];
+        if(depthCameraOutputShader[1] != nullptr) delete depthCameraOutputShader[1];
         delete [] depthCameraOutputShader;
     }
-    if(depthVisualizeShader != NULL) delete depthVisualizeShader;
+    if(depthVisualizeShader != nullptr) delete depthVisualizeShader;
 }
 
 }

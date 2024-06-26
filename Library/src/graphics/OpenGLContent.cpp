@@ -914,7 +914,7 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
                 shader->SetUniform("specularStrength", l.params[0]);
                 shader->SetUniform("shininess", l.params[1]);
                 shader->SetUniform("reflectivity", l.reflectivity);
-                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+                shader->SetUniform("color", glm::vec4(l.color.rgb, 1.f));
             }
             break;
             
@@ -923,7 +923,7 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
                 shader->SetUniform("roughness", l.params[0]);
                 shader->SetUniform("metallic", l.params[1]);
                 shader->SetUniform("reflectivity", l.reflectivity);
-                shader->SetUniform("color", glm::vec4(l.color, 1.f));
+                shader->SetUniform("color", glm::vec4(l.color.rgb, 1.f));
             }
             break;
         }
@@ -1058,7 +1058,7 @@ std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 r
     Look look;
     look.name = lookNameManager.AddName(name);
     look.type = LookType::SIMPLE;
-    look.color = rgbColor;
+    look.color.rgb = rgbColor;
     look.reflectivity = reflectivity;
     look.params.push_back(specular);
     look.params.push_back(shininess);
@@ -1073,7 +1073,7 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     Look look;
     look.name = lookNameManager.AddName(name);
     look.type = LookType::PHYSICAL;
-    look.color = rgbColor;
+    look.color.rgb = rgbColor;
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);

@@ -321,9 +321,24 @@ void OpenGLRealOcean::Simulate(GLfloat dt)
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
 }
 
+void OpenGLRealOcean::ResetSurface(OpenGLCamera* cam)
+{
+    auto it = oceanTrees.find(cam); //Check if a quad tree exists for this camera
+    if(it != oceanTrees.end())
+    {
+        //Delete buffers in GPU memory
+        glDeleteBuffers(4, it->second.patchSSBO);
+        glDeleteBuffers(1, &it->second.patchDEI);
+        glDeleteBuffers(1, &it->second.patchDI);
+        glDeleteBuffers(1, &it->second.patchAC);
+        //Delete map entry
+        oceanTrees.erase(it);
+    }
+}
+
 void OpenGLRealOcean::UpdateSurface(OpenGLCamera* cam)
 {
-    //Check if quad tree was created for this camera
+    //Check if a quad tree exists for this camera
     OceanQT* tree;
     try
     {

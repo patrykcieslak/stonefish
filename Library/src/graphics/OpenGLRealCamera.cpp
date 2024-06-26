@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLRealCamera.h"
@@ -168,97 +168,48 @@ glm::mat4 OpenGLRealCamera::GetViewMatrix() const
 
 void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
 {
+    if(camera != nullptr && updated)
+    {
+        OpenGLCamera::DrawLDR(cameraFBO, updated);
+
+        OpenGLState::BindFramebuffer(cameraFBO);
+        OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[0]);
+        flipShader->Use();
+        flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        OpenGLState::UseProgram(0);
+        OpenGLState::BindFramebuffer(0);
+
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[1]);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+        newData = true;
+    }
+    
     //Check if there is a need to display image on screen
     bool display = true;
     unsigned int dispX, dispY;
     GLfloat dispScale;
-    if(camera != NULL)
+    if(camera != nullptr)
         display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
-        OpenGLCamera::DrawLDR(destinationFBO, updated);
-    
-    //Draw to camera buffer
-    if(camera != NULL && updated)
     {
-        if(display) //No need to calculate exposure again
-        {
-            if(antiAliasing)
-            {
-                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[1]);
-                OpenGLState::BindFramebuffer(cameraFBO);
-                OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-                glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                fxaaShader->Use();
-                fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
-                fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
-                ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-                
-                glDrawBuffer(GL_COLOR_ATTACHMENT1);
-                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[0]);
-                flipShader->Use();
-                flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
-                ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-                OpenGLState::UseProgram(0);
-                OpenGLState::BindFramebuffer(0);
-
-                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[1]);
-                glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
-                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-                glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-                OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-            }
-            else
-            {
-                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
-			    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
-                OpenGLState::BindFramebuffer(cameraFBO);
-                OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-                glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                tonemappingShaders[2]->Use();
-                tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
-                tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
-                tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
-                ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-                OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
-
-                glDrawBuffer(GL_COLOR_ATTACHMENT1);
-                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[0]);
-                flipShader->Use();
-                flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
-                ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-                OpenGLState::UseProgram(0);
-                OpenGLState::BindFramebuffer(0);
-
-                OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[1]);
-                glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
-                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-                glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-                OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-            }
-        }
-        else
-        {
-            OpenGLCamera::DrawLDR(cameraFBO, updated);
-            OpenGLState::BindFramebuffer(cameraFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-            glDrawBuffer(GL_COLOR_ATTACHMENT1);
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[0]);
-            flipShader->Use();
-            flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
-            OpenGLState::UseProgram(0);
-            OpenGLState::BindFramebuffer(0);
-
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[1]);
-            glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-            OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-        }
-        
-        newData = true;
+        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLState::BindFramebuffer(destinationFBO);
+        OpenGLState::DisableCullFace();
+        OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
+        content->SetViewportSize(windowWidth, windowHeight);
+        content->DrawTexturedQuad(dispX, dispY, viewportWidth*dispScale, viewportHeight*dispScale, cameraColorTex[0]);
+        OpenGLState::EnableCullFace();
+        OpenGLState::BindFramebuffer(0);
     }
 }
 

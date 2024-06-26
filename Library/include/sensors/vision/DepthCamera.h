@@ -43,12 +43,12 @@ namespace sf
          \param uniqueName a name for the sensor
          \param resolutionX the horizontal resolution [pix]
          \param resolutionY the vertical resolution[pix]
-         \param horizontalFOVDeg the horizontal field of view [deg]
+         \param hFOVDeg the horizontal field of view [deg]
          \param minDepth the minimum measured depth [m]
          \param maxDepth the maximum measured depth [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizontalFOVDeg,
+        DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
                     Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
        
         //! A destructor.
