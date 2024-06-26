@@ -572,9 +572,13 @@ bool ScenarioParser::ParseSolver(XMLElement* element)
         item->QueryAttribute("linear", &linSleep);
         item->QueryAttribute("angular", &angSleep);
     }
-
     sm->setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
     
+    unsigned int presc;
+    if((item = element->FirstChildElement("fluid_dynamics")) != nullptr
+        && item->QueryAttribute("prescaler", &presc) == XML_SUCCESS)
+            sm->setFluidDynamicsPrescaler(presc);
+
     return true;
 }
 

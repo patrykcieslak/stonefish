@@ -258,7 +258,13 @@ namespace sf
          \param steps number steps of simulation per second
          */
         void setStepsPerSecond(Scalar steps);
-        
+
+        //! A method that directly sets the fluid dynamics prescaler.
+        /*!
+         \param presc a prescaler used to compute the update frequency of fluid dynamics computations
+         */
+        void setFluidDynamicsPrescaler(unsigned int presc);
+
         //! A method that sets how simulation time relates to real time.
         /*!
          \param f a multiple of real time (1.0 = real time)

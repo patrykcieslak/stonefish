@@ -572,10 +572,16 @@ void SimulationManager::setStepsPerSecond(Scalar steps)
     SDL_LockMutex(simSettingsMutex);
     sps = steps;
     ssus = (uint64_t)(1000000.0/steps);
-    fdPrescaler = (unsigned int)round(sps/Scalar(50));
-    fdPrescaler = fdPrescaler == 0 ? 1 : fdPrescaler;
-    //fdPrescaler = 1; //TESTING
+    setFluidDynamicsPrescaler((unsigned int)round(sps/Scalar(50)));
     SDL_UnlockMutex(simSettingsMutex);
+}
+
+void SimulationManager::setFluidDynamicsPrescaler(unsigned int presc)
+{
+    if(presc == 0)
+        fdPrescaler = 1;
+    else
+        fdPrescaler = presc;
 }
 
 void SimulationManager::setRealtimeFactor(Scalar f)
