@@ -2571,70 +2571,75 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
 
         if (item->QueryStringAttribute("type", &aux) == XML_SUCCESS)
         {
-        rotor_model_type = std::string(aux);
+            rotor_model_type = std::string(aux);
         }
 
         if (rotor_model_type == "" || rotor_model_type == "zero_order")
         {
-        rotor_model = std::make_shared<td::ZeroOrder>();
+            rotor_model = std::make_shared<td::ZeroOrder>();
         }
-        else
-        {
-        // Get params, an item that must be present in the rotor model except for the zero order model
-        auto params = item->FirstChildElement("params");
-        if (params == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Rotor model parameters of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        // First order model
-        if (rotor_model_type == "first_order")
+        else if (rotor_model_type == "first_order")
         {
             Scalar time_constant;
-            if (params->QueryAttribute("time_constant", &time_constant) != XML_SUCCESS)
+            if ((item2 = item->FirstChildElement("time_constant")) != nullptr && //
+                 item2->QueryAttribute("value", &time_constant) == XML_SUCCESS)
             {
-            log.Print(MessageType::ERROR, "Time constant of First Order rotor model in actuator '%s' missing!",
-                        actuatorName.c_str());
-            return nullptr;
+                rotor_model = std::make_shared<td::FirstOrder>(time_constant);
             }
-            rotor_model = std::make_shared<td::FirstOrder>(time_constant);
+            else
+            {
+                log.Print(MessageType::ERROR, "Time constant of First Order rotor model in actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
         }
         // Yoerger model
         else if (rotor_model_type == "yoerger")
         {
             Scalar alpha, beta;
-            if (params->QueryAttribute("alpha", &alpha) != XML_SUCCESS ||
-                params->QueryAttribute("beta", &beta) != XML_SUCCESS)
+            if ((item2 = item->FirstChildElement("alpha")) != nullptr && //
+                 item2->QueryAttribute("value", &alpha) == XML_SUCCESS && //
+                 (item2 = item->FirstChildElement("beta")) != nullptr && //
+                 item2->QueryAttribute("value", &beta) == XML_SUCCESS)
             {
-            log.Print(MessageType::ERROR, "Alpha or Beta of Yoerger rotor model in actuator '%s' missing!",
-                        actuatorName.c_str());
-            return nullptr;
+                rotor_model = std::make_shared<td::Yoerger>(alpha, beta);
             }
-            rotor_model = std::make_shared<td::Yoerger>(alpha, beta);
+            else
+            {
+                log.Print(MessageType::ERROR, "Alpha or Beta of Yoerger rotor model in actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
         }
         // Bessa modoel
         else if (rotor_model_type == "bessa")
         {
             Scalar jmsp, kv1, kv2, kt, rm;
 
-            if (params->QueryAttribute("jmsp", &jmsp) != XML_SUCCESS ||  //
-                params->QueryAttribute("kv1", &kv1) != XML_SUCCESS ||    //
-                params->QueryAttribute("kv2", &kv2) != XML_SUCCESS ||    //
-                params->QueryAttribute("kt", &kt) != XML_SUCCESS ||      //
-                params->QueryAttribute("rm", &rm) != XML_SUCCESS)
+            if ((item2 = item->FirstChildElement("jmsp")) != nullptr && //
+                item2->QueryAttribute("value", &jmsp)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("kv1")) != nullptr && //
+                item2->QueryAttribute("value", &kv1)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("kv2")) != nullptr && //
+                item2->QueryAttribute("value", &kv2)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("kt")) != nullptr && //
+                item2->QueryAttribute("value", &kt)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("rm")) != nullptr && //
+                item2->QueryAttribute("value", &rm)== XML_SUCCESS)
             {
-            log.Print(MessageType::ERROR, "Bessa rotor model parameters in actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
+                rotor_model = std::make_shared<td::Bessa>(jmsp, kv1, kv2, kt, rm);
             }
-            rotor_model = std::make_shared<td::Bessa>(jmsp, kv1, kv2, kt, rm);
+            else
+            {
+                log.Print(MessageType::ERROR, "Bessa rotor model parameters in actuator '%s' missing!", actuatorName.c_str());
+                return nullptr;
+            }
         }
-
         //
         else
         {
             log.Print(MessageType::ERROR, "Unknown rotor model type in actuator '%s'!", actuatorName.c_str());
             return nullptr;
-        }
         }
 
         // Thrust Model
@@ -2644,60 +2649,53 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
 
         if ((item = element->FirstChildElement("thrust_model")) == nullptr)
         {
-        log.Print(MessageType::ERROR, "Thrust model of actuator '%s' missing!", actuatorName.c_str());
-        return nullptr;
+            log.Print(MessageType::ERROR, "Thrust model of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
         }
 
         if (item->QueryStringAttribute("type", &aux) == XML_SUCCESS)
         {
-        thrust_model_type = std::string(aux);
+            thrust_model_type = std::string(aux);
         }
 
         // Basic
         if (thrust_model_type == "basic")
         {
-        Scalar cf;
-        // get params
-        auto params = item->FirstChildElement("params");
-        if (params == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Thrust model parameters of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
+            Scalar cf;
+            // get params
+            if ((item2 = item->FirstChildElement("rotor_constant")) != nullptr && //
+                item2->QueryAttribute("value", &cf) == XML_SUCCESS)
+            {
+                thrust_model = std::make_shared<td::BasicThrustConversion>(cf);
+            }
+            else
+            { 
+                log.Print(MessageType::ERROR, "Basic thrust model rotor_constant of actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
 
-        if (params->QueryAttribute("rotor_constant", &cf) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Basic thrust model rotor_constant of actuator '%s' missing!",
-                    actuatorName.c_str());
-            return nullptr;
-        }
-
-        thrust_model = std::make_shared<td::BasicThrustConversion>(cf);
         }
         // Dead-zone
         else if (thrust_model_type == "deadzone")
         {
-        Scalar rcl, rcr, dl, dr;
+            Scalar rcl, rcr, dl, dr;
+            // get params
+            if ((item2 = item->FirstChildElement("rotor_constant")) != nullptr && //
+                 item2->QueryAttribute("left",&rcl) == XML_SUCCESS &&   //
+                 item2->QueryAttribute("right",&rcr) == XML_SUCCESS &&  //
+                (item2 = item->FirstChildElement("delta")) != nullptr && //
+                 item2->QueryAttribute("left",&dl) == XML_SUCCESS &&          //
+                 item2->QueryAttribute("right",&dr) == XML_SUCCESS)
+            {
+                thrust_model = std::make_shared<td::DeadBandConversion>(rcl, rcr, dl, dr);
+            }
+            else{    
+                log.Print(MessageType::ERROR, "Deadzone thrust model parameters in actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
 
-        // get params
-        auto params = item->FirstChildElement("params");
-        if (params == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Thrust model parameters of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        if (params->QueryAttribute("rotor_constant_left", &rcl) != XML_SUCCESS ||   //
-            params->QueryAttribute("rotor_constant_right", &rcr) != XML_SUCCESS ||  //
-            params->QueryAttribute("deadzone_left", &dl) != XML_SUCCESS ||          //
-            params->QueryAttribute("deadzone_right", &dr) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Deadzone thrust model parameters in actuator '%s' missing!",
-                    actuatorName.c_str());
-            return nullptr;
-        }
-
-        thrust_model = std::make_shared<td::DeadBandConversion>(rcl, rcr, dl, dr);
         }
         // Linear Interpolation
         else if (thrust_model_type == "linear_interp")
@@ -2706,35 +2704,36 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         // get params
         const char* cinput;
         const char* coutput;
-        if (item->QueryStringAttribute("input", &cinput) != XML_SUCCESS)
+        if ((item2 = item->FirstChildElement("input")) != nullptr &&  //
+             item2->QueryStringAttribute("value", &cinput) == XML_SUCCESS &&
+             (item2 = item->FirstChildElement("output")) != nullptr &&  //
+             item2->QueryStringAttribute("value", &coutput) == XML_SUCCESS)
         {
-            log.Print(MessageType::ERROR, "Linear interpolation input of actuator '%s' missing!", actuatorName.c_str());
+            
+            // Lambda function to convert a space-separated string to a vector of Scalars
+            // @TODO: Add as standard in the library?
+            auto stringToVector = [](const std::string& str) -> std::vector<Scalar> {
+                std::vector<Scalar> result;
+                std::stringstream ss(str);
+                Scalar temp;
+                while (ss >> temp)
+                {
+                result.push_back(temp);
+                }
+                return result;
+            };
+
+            input = stringToVector(std::string(cinput));
+            output = stringToVector(std::string(coutput));
+            
+            thrust_model = std::make_shared<td::LinearInterpolation>(input, output);
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Linear interpolation of actuator '%s' missing!", actuatorName.c_str());
             return nullptr;
         }
 
-        if (item->QueryStringAttribute("output", &coutput) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Linear interpolation output of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        // Lambda function to convert a space-separated string to a vector of Scalars
-        // @TODO: Add as standard in the library?
-        auto stringToVector = [](const std::string& str) -> std::vector<Scalar> {
-            std::vector<Scalar> result;
-            std::stringstream ss(str);
-            Scalar temp;
-            while (ss >> temp)
-            {
-            result.push_back(temp);
-            }
-            return result;
-        };
-
-        input = stringToVector(std::string(cinput));
-        output = stringToVector(std::string(coutput));
-
-        thrust_model = std::make_shared<td::LinearInterpolation>(input, output);
         }
         //
         else
