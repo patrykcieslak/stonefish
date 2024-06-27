@@ -73,6 +73,8 @@
 #include "actuators/Propeller.h"
 #include "actuators/Rudder.h"
 #include "actuators/SimpleThruster.h"
+#include "actuators/ConfigurableThruster.h"
+#include "actuators/ConfigurableThrusterModels.h"
 #include "actuators/Thruster.h"
 #include "actuators/VariableBuoyancy.h"
 #include "actuators/SuctionCup.h"
@@ -83,6 +85,7 @@
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
+#include <sstream>
 
 namespace sf
 {
@@ -2252,6 +2255,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         //Link actuators
         case ActuatorType::PUSH:
         case ActuatorType::SIMPLE_THRUSTER:
+        case ActuatorType::CONFIGURABLE_THRUSTER:
         case ActuatorType::THRUSTER:
         case ActuatorType::PROPELLER:
         case ActuatorType::RUDDER:
@@ -2505,6 +2509,267 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             push = new Push(actuatorName, false);
         return push;
     }
+    else if (typeStr == "configurable_thruster")
+    {
+        const char* propFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        Scalar propScale;
+        bool rightHand;
+
+        if ((item = element->FirstChildElement("propeller")) == nullptr ||
+            item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
+        {
+        log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
+        return nullptr;
+        }
+        XMLElement* item2;
+        if ((item2 = item->FirstChildElement("mesh")) == nullptr ||
+            item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
+        {
+        log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
+        return nullptr;
+        }
+        if (item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
+        propScale = Scalar(1);
+        if ((item2 = item->FirstChildElement("material")) == nullptr ||
+            item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+        {
+        log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
+        return nullptr;
+        }
+        std::string lookStr = "";
+        if ((item2 = item->FirstChildElement("look")) != nullptr)
+        {
+        item2->QueryStringAttribute("name", &look);
+        lookStr = std::string(look);
+        }
+
+        BodyPhysicsSettings phy;
+        phy.collisions = false;
+        phy.buoyancy = false;
+
+        phy.mode = BodyPhysicsMode::SUBMERGED;
+        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale,
+                                        I4(), std::string(mat), lookStr);
+
+        bool has_inverted = false;
+        bool has_limits = false;
+
+        std::pair<Scalar, Scalar> vel_limits = std::make_pair(1, -1);  // lower, upper
+        bool inverted = false;
+
+        if ((item = element->FirstChildElement("specs")) != nullptr)
+        {
+        if (item->QueryAttribute("inverted", &inverted) != XML_SUCCESS)
+            has_inverted = false;
+
+        if (item->QueryAttribute("lower_velocity_limit", &vel_limits.first) == XML_SUCCESS &&
+            item->QueryAttribute("upper_velocity_limit", &vel_limits.second) == XML_SUCCESS)
+        {
+            has_limits = true;
+        }
+        }
+
+        if ((item = element->FirstChildElement("dynamics")) == nullptr)
+        {
+        log.Print(MessageType::ERROR, "Dynamics of actuator '%s' missing!", actuatorName.c_str());
+        return nullptr;
+        }
+
+        // Rotor model
+        std::shared_ptr<td::RotorDynamics> rotor_model;
+
+        const char* aux = nullptr;
+        std::string rotor_model_type = "";
+
+        if (item->QueryStringAttribute("type", &aux) == XML_SUCCESS)
+        {
+            rotor_model_type = std::string(aux);
+        }
+
+        if (rotor_model_type == "" || rotor_model_type == "zero_order")
+        {
+            rotor_model = std::make_shared<td::ZeroOrder>();
+        }
+        else if (rotor_model_type == "first_order")
+        {
+            Scalar time_constant;
+            if ((item2 = item->FirstChildElement("time_constant")) != nullptr && //
+                 item2->QueryAttribute("value", &time_constant) == XML_SUCCESS)
+            {
+                rotor_model = std::make_shared<td::FirstOrder>(time_constant);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Time constant of First Order rotor model in actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
+        }
+        // Yoerger model
+        else if (rotor_model_type == "yoerger")
+        {
+            Scalar alpha, beta;
+            if ((item2 = item->FirstChildElement("alpha")) != nullptr && //
+                 item2->QueryAttribute("value", &alpha) == XML_SUCCESS && //
+                 (item2 = item->FirstChildElement("beta")) != nullptr && //
+                 item2->QueryAttribute("value", &beta) == XML_SUCCESS)
+            {
+                rotor_model = std::make_shared<td::Yoerger>(alpha, beta);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Alpha or Beta of Yoerger rotor model in actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
+        }
+        // Bessa modoel
+        else if (rotor_model_type == "bessa")
+        {
+            Scalar jmsp, kv1, kv2, kt, rm;
+
+            if ((item2 = item->FirstChildElement("jmsp")) != nullptr && //
+                item2->QueryAttribute("value", &jmsp)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("kv1")) != nullptr && //
+                item2->QueryAttribute("value", &kv1)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("kv2")) != nullptr && //
+                item2->QueryAttribute("value", &kv2)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("kt")) != nullptr && //
+                item2->QueryAttribute("value", &kt)== XML_SUCCESS &&
+                (item2 = item->FirstChildElement("rm")) != nullptr && //
+                item2->QueryAttribute("value", &rm)== XML_SUCCESS)
+            {
+                rotor_model = std::make_shared<td::Bessa>(jmsp, kv1, kv2, kt, rm);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Bessa rotor model parameters in actuator '%s' missing!", actuatorName.c_str());
+                return nullptr;
+            }
+        }
+        //
+        else
+        {
+            log.Print(MessageType::ERROR, "Unknown rotor model type in actuator '%s'!", actuatorName.c_str());
+            return nullptr;
+        }
+
+        // Thrust Model
+        std::shared_ptr<td::ThrustModel> thrust_model;
+
+        std::string thrust_model_type = "";
+
+        if ((item = element->FirstChildElement("thrust_model")) == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Thrust model of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+
+        if (item->QueryStringAttribute("type", &aux) == XML_SUCCESS)
+        {
+            thrust_model_type = std::string(aux);
+        }
+
+        // Basic
+        if (thrust_model_type == "basic")
+        {
+            Scalar cf;
+            // get params
+            if ((item2 = item->FirstChildElement("rotor_constant")) != nullptr && //
+                item2->QueryAttribute("value", &cf) == XML_SUCCESS)
+            {
+                thrust_model = std::make_shared<td::BasicThrustConversion>(cf);
+            }
+            else
+            { 
+                log.Print(MessageType::ERROR, "Basic thrust model rotor_constant of actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
+
+        }
+        // Dead-zone
+        else if (thrust_model_type == "deadzone")
+        {
+            Scalar rcl, rcr, dl, dr;
+            // get params
+            if ((item2 = item->FirstChildElement("rotor_constant")) != nullptr && //
+                 item2->QueryAttribute("left",&rcl) == XML_SUCCESS &&   //
+                 item2->QueryAttribute("right",&rcr) == XML_SUCCESS &&  //
+                (item2 = item->FirstChildElement("delta")) != nullptr && //
+                 item2->QueryAttribute("left",&dl) == XML_SUCCESS &&          //
+                 item2->QueryAttribute("right",&dr) == XML_SUCCESS)
+            {
+                thrust_model = std::make_shared<td::DeadBandConversion>(rcl, rcr, dl, dr);
+            }
+            else{    
+                log.Print(MessageType::ERROR, "Deadzone thrust model parameters in actuator '%s' missing!",
+                        actuatorName.c_str());
+                return nullptr;
+            }
+
+        }
+        // Linear Interpolation
+        else if (thrust_model_type == "linear_interp")
+        {
+        std::vector<Scalar> input, output;
+        // get params
+        const char* cinput;
+        const char* coutput;
+        if ((item2 = item->FirstChildElement("input")) != nullptr &&  //
+             item2->QueryStringAttribute("value", &cinput) == XML_SUCCESS &&
+             (item2 = item->FirstChildElement("output")) != nullptr &&  //
+             item2->QueryStringAttribute("value", &coutput) == XML_SUCCESS)
+        {
+            
+            // Lambda function to convert a space-separated string to a vector of Scalars
+            // @TODO: Add as standard in the library?
+            auto stringToVector = [](const std::string& str) -> std::vector<Scalar> {
+                std::vector<Scalar> result;
+                std::stringstream ss(str);
+                Scalar temp;
+                while (ss >> temp)
+                {
+                result.push_back(temp);
+                }
+                return result;
+            };
+
+            input = stringToVector(std::string(cinput));
+            output = stringToVector(std::string(coutput));
+            
+            thrust_model = std::make_shared<td::LinearInterpolation>(input, output);
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Linear interpolation of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+
+        }
+        //
+        else
+        {
+        log.Print(MessageType::ERROR, "Unknown thrust model type in actuator '%s'!", actuatorName.c_str());
+        return nullptr;
+        }
+
+        ConfigurableThruster* th;
+        if (!has_inverted)  // makes sure no assumpion is made about the inverted default value
+        th = new ConfigurableThruster(actuatorName, prop, rotor_model, thrust_model, rightHand);
+        else
+        th = new ConfigurableThruster(actuatorName, prop, rotor_model, thrust_model, rightHand, inverted);
+
+        if (has_limits)
+        {
+        th->setVelocityLimits(vel_limits.first, vel_limits.second);
+        }
+
+        return th;
+    }
+
     else if(typeStr == "simple_thruster")
     {
         const char* propFile = nullptr;
