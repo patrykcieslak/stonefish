@@ -85,6 +85,11 @@ Scalar SimpleThruster::getAngle() const
     return theta;
 }
 
+Scalar SimpleThruster::getThrustSetpoint() const
+{
+    return sThrust;
+}
+
 Scalar SimpleThruster::getThrust() const
 {
     return thrust;
