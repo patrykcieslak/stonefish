@@ -16,6 +16,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Added an option to set internal parts of a compound body as always visible
 -  Added access to the computed wetted surface area and submerged volume
 -  Added maximum angular rate of change of the rudder actuator angle, to represent the actuator's dynamics
+-  Added an option to specify fluid dynamics computation prescaler, including parser support
 -  *Fixed loading sRGB and linear textures (fixes normal map issues)*
 -  Fixed ocean rendering error when switching between different views 
 -  Fixed calculation and rendering of the ellipsoidal approximation used for added mass estimation

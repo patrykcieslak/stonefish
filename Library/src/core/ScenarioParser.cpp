@@ -74,6 +74,7 @@
 #include "actuators/Rudder.h"
 #include "actuators/SimpleThruster.h"
 #include "actuators/Thruster.h"
+#include "actuators/Motor.h"
 #include "actuators/VariableBuoyancy.h"
 #include "actuators/SuctionCup.h"
 #include "comms/AcousticModem.h"
@@ -2234,6 +2235,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     switch(act->getType())
     {
         //Joint actuators
+        case ActuatorType::MOTOR:
         case ActuatorType::SERVO:
         {
             const char* jointName = nullptr;
@@ -2464,7 +2466,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
  
     //---- Specific ----
     XMLElement* item;
-    if(typeStr == "servo")
+    if(typeStr == "motor")
+    {
+        Motor* mtr = new Motor(actuatorName);
+        return mtr;
+    }
+    else if(typeStr == "servo")
     {
         Scalar kp, kv, maxTau;
         if((item = element->FirstChildElement("controller")) == nullptr 
