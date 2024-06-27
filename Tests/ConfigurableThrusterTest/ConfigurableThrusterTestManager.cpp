@@ -41,10 +41,10 @@ ConfigurableThrusterTestManager::ConfigurableThrusterTestManager(sf::Scalar step
   : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
 {
   rotor_model_ =  //
-      std::make_shared<sf::rm::FirstOrder>(0.99999999);
+      std::make_shared<sf::td::FirstOrder>(0.99999999);
 
   thrust_model_ =  //
-      std::make_shared<sf::tm::BasicThrustConversion>(0.005);
+      std::make_shared<sf::td::BasicThrustConversion>(0.005);
 
   mcap_sink_ = std::make_shared<DataTamer::MCAPSink>("thruster_test.mcap");
 

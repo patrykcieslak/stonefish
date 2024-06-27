@@ -42,8 +42,8 @@ namespace sf
 {
 
 ConfigurableThruster::ConfigurableThruster(std::string uniqueName, SolidEntity* propeller,     //
-                                           std::shared_ptr<rm::RotorDynamics> rotorDynamics,   //
-                                           std::shared_ptr<tm::ThrustModel> thrustConversion,  //
+                                           std::shared_ptr<td::RotorDynamics> rotorDynamics,   //
+                                           std::shared_ptr<td::ThrustModel> thrustConversion,  //
                                            bool rightHand, bool inverted)
   : LinkActuator(uniqueName)
   , RH_(rightHand)
@@ -70,7 +70,7 @@ ConfigurableThruster::~ConfigurableThruster()
 
 ActuatorType ConfigurableThruster::getType() const
 {
-  return ActuatorType::SIMPLE_THRUSTER;  //@TODO: ActuatorType::CONFIGURABLE_THRUSTER?
+  return ActuatorType::CONFIGURABLE_THRUSTER;
 }
 
 void ConfigurableThruster::setSetpoint(Scalar s)
@@ -129,11 +129,9 @@ void ConfigurableThruster::Update(Scalar dt)
     return;  // No attachment, no action
 
   // Update rotation & angular velocity
-  if (!btFuzzyZero(setpoint_))
-  {
-    omega_ = rotorModel_->f(rotorModel_->getLastTime() + dt, setpoint_);
-    omega_ = RH_ ? omega_ : -omega_;
-  }
+  omega_ = rotorModel_->f(rotorModel_->getLastTime() + dt, setpoint_);
+  omega_ = RH_ ? omega_ : -omega_;
+  
   theta_ += omega_ * dt;  // Just for animation
 
   // Update Thrust

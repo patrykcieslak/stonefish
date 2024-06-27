@@ -38,17 +38,15 @@ public:
   /*!
    \param uniqueName a name for the thruster
    \param propeller a pointer to a rigid body representing the propeller
-   \param diameter the diameter of the propeller [m]
-   \param thrustCoeff the thrust coefficient (forward and backward)
-   \param torqueCoeff the torque coefficient
-   \param maxRPM the maximum rotational speed of the thruster [rpm]
+   \param rotorDynamics a pointer to the rotor dynamics model
+   \param thrustConversion a pointer to the thrust conversion model
    \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
    \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
   */
-  ConfigurableThruster(std::string uniqueName, SolidEntity* propeller,                      //
-                 std::shared_ptr<rm::RotorDynamics> rotorDynamics,        //
-                 std::shared_ptr<tm::ThrustModel> thrustConversion,  //
-                 bool rightHand, bool inverted = false);
+  ConfigurableThruster(std::string uniqueName, SolidEntity* propeller,     //
+                       std::shared_ptr<td::RotorDynamics> rotorDynamics,   //
+                       std::shared_ptr<td::ThrustModel> thrustConversion,  //
+                       bool rightHand, bool inverted = false);
 
   //! A destructor.
   ~ConfigurableThruster();
@@ -113,7 +111,7 @@ private:
   Scalar setpoint_;  // [-]. Desired speed of the propeller
 
   // Dynamics
-  std::shared_ptr<rm::RotorDynamics> rotorModel_;
-  std::shared_ptr<tm::ThrustModel> thrustModel_;
+  std::shared_ptr<td::RotorDynamics> rotorModel_;
+  std::shared_ptr<td::ThrustModel> thrustModel_;
 };
 }  // namespace sf

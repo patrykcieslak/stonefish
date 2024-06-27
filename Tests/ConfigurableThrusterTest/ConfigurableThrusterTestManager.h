@@ -54,8 +54,8 @@ protected:
 
   sf::Scalar timestamp_;
 
-  std::shared_ptr<sf::rm::RotorDynamics> rotor_model_;
-  std::shared_ptr<sf::tm::ThrustModel> thrust_model_;
+  std::shared_ptr<sf::td::RotorDynamics> rotor_model_;
+  std::shared_ptr<sf::td::ThrustModel> thrust_model_;
 
   sf::ConfigurableThruster* thruster_;
 };

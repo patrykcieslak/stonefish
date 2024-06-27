@@ -6,19 +6,19 @@
 
 int main()
 {
-    sf::tm::BasicThrustConversion basic0001(0.001);
-    sf::tm::BasicThrustConversion basic0005(0.005);
-    sf::tm::BasicThrustConversion basic001(0.01);
-    sf::tm::BasicThrustConversion basic005(0.05);
-    sf::tm::BasicThrustConversion basic01(0.1);
-    sf::tm::BasicThrustConversion basic05(0.5);
+    sf::td::BasicThrustConversion basic0001(0.001);
+    sf::td::BasicThrustConversion basic0005(0.005);
+    sf::td::BasicThrustConversion basic001(0.01);
+    sf::td::BasicThrustConversion basic005(0.05);
+    sf::td::BasicThrustConversion basic01(0.1);
+    sf::td::BasicThrustConversion basic05(0.5);
 
-    sf::tm::DeadBandConversion db0001(0.001, 0.001 , - 30 * 30, 30 * 30);
-    sf::tm::DeadBandConversion db0005(0.005, 0.005 , - 30 * 30, 30 * 30);
-    sf::tm::DeadBandConversion db001(0.01, 0.01 , - 30 * 30, 30 * 30);
-    sf::tm::DeadBandConversion db005(0.05, 0.05 , - 30 * 30, 30 * 30);
-    sf::tm::DeadBandConversion db01(0.1, 0.1 , - 30 * 30, 30 * 30);
-    sf::tm::DeadBandConversion db05(0.5, 0.5 , - 30 * 30, 30 * 30);
+    sf::td::DeadBandConversion db0001(0.001, 0.001 , - 30 * 30, 30 * 30);
+    sf::td::DeadBandConversion db0005(0.005, 0.005 , - 30 * 30, 30 * 30);
+    sf::td::DeadBandConversion db001(0.01, 0.01 , - 30 * 30, 30 * 30);
+    sf::td::DeadBandConversion db005(0.05, 0.05 , - 30 * 30, 30 * 30);
+    sf::td::DeadBandConversion db01(0.1, 0.1 , - 30 * 30, 30 * 30);
+    sf::td::DeadBandConversion db05(0.5, 0.5 , - 30 * 30, 30 * 30);
 
     double input;
     double output0001, output0005, output001, output005, output01, output05;

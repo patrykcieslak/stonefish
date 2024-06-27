@@ -30,7 +30,7 @@
 
 namespace sf
 {
-namespace rm
+namespace td // thrust dynamics
 {
 
 class RotorDynamics
@@ -145,11 +145,6 @@ public:
   }
 };
 
-}  // namespace rm
-
-namespace tm
-{
-
 class ThrustModel
 {
 public:
@@ -202,5 +197,51 @@ public:
     }
   }
 };
-}  // namespace tm
+
+class LinearInterpolation : public ThrustModel
+{
+protected:
+  std::vector<Scalar> input_values_, output_values_;
+
+public:
+  LinearInterpolation(const std::vector<Scalar>& in, const std::vector<Scalar>& out)
+    : input_values_(in), output_values_(out)
+  {
+    if (input_values_.empty() || output_values_.empty())
+      throw std::runtime_error("Thrust Model Linear Interpolation: Input and output values must not be empty.");
+
+    if (input_values_.size() != output_values_.size())
+      throw std::runtime_error("Thrust Model Linear Interpolation: Input and output values must be same size");
+  }
+
+  Scalar f(Scalar val) override
+  {
+    // Ensure the input values are sorted
+    auto it = std::lower_bound(input_values_.begin(), input_values_.end(), val);
+
+    if (it == input_values_.begin())
+    {
+      // If the value is less than the smallest input value, return the first output value
+      return output_values_.front();
+    }
+    else if (it == input_values_.end())
+    {
+      // If the value is greater than the largest input value, return the last output value
+      return output_values_.back();
+    }
+    else
+    {
+      // Perform linear interpolation
+      auto idx = std::distance(input_values_.begin(), it);
+      Scalar x0 = input_values_[idx - 1];
+      Scalar x1 = input_values_[idx];
+      Scalar y0 = output_values_[idx - 1];
+      Scalar y1 = output_values_[idx];
+
+      return y0 + (val - x0) * (y1 - y0) / (x1 - x0);
+    }
+  }
+};
+
+}  // namespace td
 }  // namespace sf

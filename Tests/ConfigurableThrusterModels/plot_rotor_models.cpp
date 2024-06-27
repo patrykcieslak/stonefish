@@ -6,10 +6,10 @@
 
 int main()
 {
-    sf::rm::ZeroOrder zeroOrder;
-    sf::rm::FirstOrder firstOrder(1.0);
-    sf::rm::Yoerger yoerger(0.037, 16.5);
-    sf::rm::Bessa bessa(1,1,1,1,1);
+    sf::td::ZeroOrder zeroOrder;
+    sf::td::FirstOrder firstOrder(1.0);
+    sf::td::Yoerger yoerger(0.037, 16.5);
+    sf::td::Bessa bessa(1,1,1,1,1);
 
     double time = 0.0;
     double sp = 0.0;
