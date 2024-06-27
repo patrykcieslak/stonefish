@@ -86,8 +86,6 @@ void ConfigurableThruster::setSetpoint(Scalar s)
   }
 
   ResetWatchdog();
-
-  cInfo("ConfigurableThruster::setSetpoint: %lf", setpoint_);
 }
 
 void ConfigurableThruster::setVelocityLimits(Scalar lower, Scalar upper)

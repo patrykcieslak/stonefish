@@ -27,6 +27,7 @@
 
 #include "StonefishCommon.h"
 #include <memory>
+#include <iostream>
 
 namespace sf
 {
@@ -36,8 +37,8 @@ namespace td // thrust dynamics
 class RotorDynamics
 {
 protected:
-  Scalar last_output_;
-  Scalar last_time_;
+  Scalar last_output_ = 0.0;
+  Scalar last_time_ = 0.0;
 
 public:
   virtual Scalar f(Scalar time, Scalar sp) = 0;
