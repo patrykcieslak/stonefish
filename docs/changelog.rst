@@ -7,6 +7,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 1.4
 ===
 
+-  *Reimplemented the thruster actuator to support combinations of different mathematical models*
 -  *Rewritten computation of hydrodynamic drag*
 -  *Simple thruster is now a new actuator class and displays a rotating propeller*
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)

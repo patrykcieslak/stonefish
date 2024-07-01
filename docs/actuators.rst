@@ -171,17 +171,160 @@ A simple thruster is an extension of the *push* actuator that functions only und
 Thruster
 --------
 
-A thruster is an actuator working underwater, representing an underwater thruster with a propeller.
+A thruster actuator represents an underwater actuator based on a rotating propeller. Being the most common type of actuator for the underwater and surface vehicles it was given special attention. The mathematical model of the thruster is modular and combines two models: the model of rotor dynamics and the model of thrust (and torque) generation. The available models can be used in any combination, giving a very flexible setup, which should fulfill requirements of most of the users.
+
+To properly define a thruster one has to supply a few common parameters, as well as, fill three blocks: propeller definition, rotor dynamics, and thrust model. The common parameters specify the range an type of setpoints used to control the thruster, like the maximum angular velocity of the propeller, if the setpoints are inverted, and if the setpoints are normalized to the [-1, 1] range. 
+
+The following XML syntax presents the structue of the definition:
 
 .. code-block:: xml
 
     <actuator name="Thruster" type="thruster">
-        <specs thrust_coeff="0.45" thrust_coeff_backward="0.35" torque_coeff="0.02" max_rpm="1000" inverted="false"/>
+        <specs max_angular_velocity="1000.0" inverted_setpoint="false" normalised_setpoint="true"/>
         <propeller diameter="0.2" right="true">
             <mesh filename="propeller.obj" scale="1.0"/>
             <material name="Steel"/>
             <look name="Red"/>
         </propeller>
+        <rotor_dynamics type="...">
+            <!-- rotor dynamics parameters here -->
+        </rotor_dynamics>
+        <thrust_model type="...">
+            <!-- thrust model parameters here -->
+        </thrust_model>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </actuator>
+
+.. note:: 
+
+    The limit of the angular velocity of the propeller can be set either in radians per second using the ``max_angular_velocity`` attribute or in rotations per minute using the ``max_rpm`` attribute. One of the attributes is mandatory.
+
+The following models of rotor dynamics are implemented, with their respective parameters and example XML syntax. The input to each model is the desired angular velocity and the output is the actual velocity achieved by the propeller:
+
+1. ``zero_order`` a simple passthrough (no dynamics), no parameters
+   
+.. code-block:: xml
+
+    <rotor_dynamics type="zero_order"/>
+
+2. ``first_order`` first order system
+  - ``time_constant``
+
+.. code-block:: xml
+
+    <rotor_dynamics type="first_order">
+        <time_constant value="1.0"/>
+    </rotor_dynamics>
+
+3. ``yoerger`` Yoerger's model
+  - ``alpha``
+  - ``beta``
+
+.. code-block:: xml
+
+    <rotor_dynamics type="yoerger">
+        <alpha value="0.1"/>
+        <beta value="0.5"/>
+    </rotor_dynamics>
+
+4. ``bessa`` Bessa's model
+  - ``jmsp``
+  - ``kv1``
+  - ``kv2``
+  - ``kt``
+  - ``rm``
+
+.. code-block:: xml
+
+    <rotor_dynamics type="bessa">
+        <jmsp value="1.0"/>
+        <kv1 value="100.0"/>
+        <kv2 value="200.0"/>
+        <kt value="1.0"/>
+        <rm value="10.0"/>
+    </rotor_dynamics>
+
+5. ``mechanical_pi`` mechanical model of a rotating propeller, controlled using PI controller
+  - ``rotor_inertia`` combined inertia of the propeller and the added intertia of the accelerated fluid
+  - ``kp`` proportional gain
+  - ``ki`` integral gain
+  - ``ilim`` integral limit (anti-windup)
+
+.. code-block:: xml
+
+    <rotor_dynamics type="mechanical_pi">
+        <propeller_inertia value="1.0"/>
+        <kp value="8.0"/>
+        <ki value="5.0"/>
+        <ilim value="10.0"/>
+    </rotor_dynamics>
+
+The following thrust models are implemented, with their respective parameters and example XML syntax. The input to each of the models is the angular velocity of the propeller and the outputs are the generated thrust and the induced torque.
+
+1. ``quadratic``
+  - ``thrust_coeff`` symmetrical thrust coeffcient
+
+.. code-block:: xml
+
+    <thrust_model type="quadratic">
+        <thrust_coeff value="1.0"/>
+    </thrust_model>
+  
+2. ``deadband``
+  - ``thrust_coeff`` (``forward`` and ``reverse``) asymmetrical thrust coefficient
+  - ``deadband`` (``lower`` and ``upper``) deadband limits (tested on input)
+  
+.. code-block:: xml
+
+    <thrust_model type="deadband">
+        <thrust_coeff forward="0.5" reverse="0.3"/>
+        <deadband lower="-10.0" upper="10.0"/>
+    </thrust_model>
+
+3. ``linear_interpolation`` velocity to thrust transformation based on linearly interpolated tabulated data
+  - ``input`` space separated list of angular velocity values
+  - ``output`` space separated list of thrust values (length eqal to input!)
+  
+.. code-block:: xml
+
+    <thrust_model type="linear_interpolation">
+        <input value="-100.0 -20.0 0.0 20.0 100.0"/>
+        <output value="-7.0 -1.0 0.0 2.0 10.0"/>
+    </thrust_model>
+
+4. ``fluid_dynamics`` model based on advanced fluid dynamics equations, taking into account incomming fluid velocity
+  - ``thrust_coeff`` (``forward`` and ``reverse``) asymmetrical thrust coefficient
+  - ``torque_coeff`` induced torque coeffcient
+
+.. code-block:: xml
+
+    <thrust_model type="fluid_dynamics">
+        <thrust_coeff forward="0.5" reverse="0.3"/>
+        <torque_coeff value="0.1"/>
+    </thrust_model>
+
+An example of a full thruster definition utilising the XML syntax and the C++ code are shown below.
+
+.. code-block:: xml
+    
+    <actuator name="Thruster" type="thruster">
+        <specs max_angular_velocity="400.0" inverted_setpoint="false" normalised_setpoint="true"/>
+        <propeller diameter="0.18" right="true">
+            <mesh filename="propeller.obj" scale="1.0"/>
+            <material name="Steel"/>
+            <look name="Red"/>
+        </propeller>
+        <rotor_dynamics type="mechanical_pi">
+            <propeller_inertia value="1.0"/>
+            <kp value="10.0"/>
+            <ki value="5.0"/>
+            <ilim value="5.0"/>
+        </rotor_dynamics>
+        <thrust_model type="fluid_dynamics">
+            <thrust_coeff forward="0.88" reverse="0.48"/>
+            <torque_coeff value="0.05"/>
+        </thrust_model>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <link name="Link1"/>
     </actuator>
@@ -189,8 +332,12 @@ A thruster is an actuator working underwater, representing an underwater thruste
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Thruster.h>
-    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Red");
-    sf::Thruster* thruster = new sf::Thruster("Thruster", propMesh, 0.2, std::make_pair(0.45, 0.35), 0.02, 1000, true, false);
+    sf::Polyhedron* prop = new sf::Polyhedron("PropMesh", sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", sf::BodyPhysicsType::SUBMERGED, "Red");
+    std::shared_ptr<sf::MechanicalPI> rotorDynamics;
+    rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
+    std::shared_ptr<sf::FDThrust> thrustModel;
+    thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.88, 0.48, 0.05, true, 1000.0);
+    sf::Thruster* th = new sf::Thruster("Thruster", prop, rotorDynamics, thrustModel, 400.0, 0.18, true, false, true);
     robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
 
 Variable buoyancy system (VBS)

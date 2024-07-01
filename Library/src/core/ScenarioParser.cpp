@@ -2673,7 +2673,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         else if (rotorDynTypeStr == "mechanical_pi")
         {
             Scalar J = prop->getInertia().getX() + prop->getAddedInertia().getX();
-            if((item2 = item->FirstChildElement("propeller_inertia")) != nullptr)
+            if((item2 = item->FirstChildElement("rotor_inertia")) != nullptr)
                 item2->QueryAttribute("value", &J);
 
             Scalar kp, ki, iLim; // PI settings
@@ -2681,7 +2681,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 && item2->QueryAttribute("value", &kp) == XML_SUCCESS
                 && (item2 = item->FirstChildElement("ki")) != nullptr
                 && item2->QueryAttribute("value", &ki) == XML_SUCCESS
-                && (item2 = item->FirstChildElement("i_limit")) != nullptr
+                && (item2 = item->FirstChildElement("ilim")) != nullptr
                 && item2->QueryAttribute("value", &iLim) == XML_SUCCESS)
             {
                 rotorModel = std::make_shared<MechanicalPI>(J, kp, ki, iLim);
@@ -2727,12 +2727,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         // Quadratic
         if (thrustModelTypeStr == "quadratic")
         {
-            Scalar cf;
+            Scalar kt;
             // Get params
-            if ((item2 = item->FirstChildElement("rotor_constant")) != nullptr
-                && item2->QueryAttribute("value", &cf) == XML_SUCCESS)
+            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr
+                && item2->QueryAttribute("value", &kt) == XML_SUCCESS)
             {
-                thrustModel = std::make_shared<QuadraticThrust>(cf);
+                thrustModel = std::make_shared<QuadraticThrust>(kt);
             }
             else
             { 
@@ -2746,16 +2746,16 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         // Deadband
         else if (thrustModelTypeStr == "deadband")
         {
-            Scalar rcl, rcr, dl, dr;
+            Scalar ktn, ktp, dl, du;
             // get params
-            if ((item2 = item->FirstChildElement("rotor_constant")) != nullptr 
-                 && item2->QueryAttribute("left",&rcl) == XML_SUCCESS 
-                 && item2->QueryAttribute("right",&rcr) == XML_SUCCESS
-                 && (item2 = item->FirstChildElement("delta")) != nullptr
-                 && item2->QueryAttribute("left",&dl) == XML_SUCCESS
-                 && item2->QueryAttribute("right",&dr) == XML_SUCCESS)
+            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr 
+                 && item2->QueryAttribute("reverse", &ktn) == XML_SUCCESS 
+                 && item2->QueryAttribute("forward", &ktp) == XML_SUCCESS
+                 && (item2 = item->FirstChildElement("deadband")) != nullptr
+                 && item2->QueryAttribute("lower", &dl) == XML_SUCCESS
+                 && item2->QueryAttribute("upper", &du) == XML_SUCCESS)
             {
-                thrustModel = std::make_shared<DeadbandThrust>(rcl, rcr, dl, dr);
+                thrustModel = std::make_shared<DeadbandThrust>(ktn, ktp, dl, du);
             }
             else
             {    
