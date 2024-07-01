@@ -340,8 +340,12 @@ void GraphicalSimulationApp::WindowEvent(SDL_Event* event)
 void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 {
     GLfloat moveStep = 0.1f;
+    GLfloat rotateStep = 1.f;
     if(event->key.keysym.mod & KMOD_SHIFT)
+    {
         moveStep = 1.f;
+        rotateStep = 10.f;
+    }
 
     switch (event->key.keysym.sym)
     {
@@ -414,7 +418,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         }
             break;
             
-        case SDLK_q: //Up
+        case SDLK_r: //Up
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
@@ -422,11 +426,34 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         }
             break;
             
-        case SDLK_z: //Down
+        case SDLK_f: //Down
         {
             OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
             if(trackball->isEnabled())
                 trackball->MoveCenter(glm::vec3(0.f, 0.f, moveStep));
+        }
+            break;
+
+        case SDLK_q: //Rotate left
+        {
+            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
+            if(trackball->isEnabled())
+            {
+                glm::quat rotation = glm::angleAxis(glm::radians(-rotateStep), glm::vec3(0.0f, 0.0f, 1.0f));
+                trackball->Rotate(rotation);
+            }
+        }
+            break;
+    
+        case SDLK_e: // Rotate right.
+        {
+            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
+
+            if(trackball->isEnabled())
+            {
+                glm::quat rotation = glm::angleAxis(glm::radians(rotateStep),glm::vec3(0.0f, 0.0f, 1.0f));
+                trackball->Rotate(rotation);
+            }
         }
             break;
 
@@ -971,17 +998,19 @@ void GraphicalSimulationApp::DoHUD()
     //Keymap
     if(displayKeymap)
     {
-        offset = getWindowHeight()-246.f;
+        offset = getWindowHeight()-278.f;
         GLfloat left = getWindowWidth()-130.f; 
-        gui->DoPanel(left - 10.f, offset, 130.f, 206.f); offset += 10.f;
+        gui->DoPanel(left - 10.f, offset, 130.f, 238.f); offset += 10.f;
         gui->DoLabel(left, offset, "[H] show/hide GUI"); offset += 16.f;
         gui->DoLabel(left, offset, "[C] show/hide console"); offset += 16.f;
         gui->DoLabel(left, offset, "[W] move forward"); offset += 16.f;
         gui->DoLabel(left, offset, "[S] move backward"); offset += 16.f;
         gui->DoLabel(left, offset, "[A] move left"); offset += 16.f;
         gui->DoLabel(left, offset, "[D] move right"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Q] move up"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Z] move down"); offset += 16.f;
+        gui->DoLabel(left, offset, "[R] move up"); offset += 16.f;
+        gui->DoLabel(left, offset, "[F] move down"); offset += 16.f;
+        gui->DoLabel(left, offset, "[Q] Rotate left"); offset += 16.f;
+        gui->DoLabel(left, offset, "[E] Rotate right"); offset += 16.f;
         gui->DoLabel(left, offset, "[Shift] move fast"); offset += 16.f;
         gui->DoLabel(left, offset, "[Mouse right] rotate"); offset += 16.f;
         gui->DoLabel(left, offset, "[Mouse middle] move"); offset += 16.f;
