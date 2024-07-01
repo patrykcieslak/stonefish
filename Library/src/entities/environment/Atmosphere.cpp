@@ -23,7 +23,7 @@
 //  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
 //
 
-#include "entities/forcefields/Atmosphere.h"
+#include "entities/environment/Atmosphere.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"

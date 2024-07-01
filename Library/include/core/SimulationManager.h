@@ -27,8 +27,8 @@
 #define __Stonefish_SimulationManager__
 
 #include "StonefishCommon.h"
-#include "entities/forcefields/Ocean.h"
-#include "entities/forcefields/Atmosphere.h"
+#include "entities/environment/Ocean.h"
+#include "entities/environment/Atmosphere.h"
 #include "entities/SolidEntity.h"
 #include "utils/PerformanceMonitor.h"
 

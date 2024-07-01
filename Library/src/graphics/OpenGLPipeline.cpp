@@ -38,10 +38,10 @@
 #include "graphics/OpenGLSonar.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
-#include "graphics/OpenGLOceanParticles.h"
+#include "graphics/OpenGLMarineSnow.h"
 #include "utils/SystemUtil.hpp"
-#include "entities/forcefields/Ocean.h"
-#include "entities/forcefields/Atmosphere.h"
+#include "entities/environment/Ocean.h"
+#include "entities/environment/Atmosphere.h"
 #include "core/GraphicalSimulationApp.h"
 
 namespace sf
@@ -60,7 +60,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
     OpenGLSonar::Init();
-    OpenGLOceanParticles::Init();
+    OpenGLMarineSnow::Init();
     content = new OpenGLContent();
     
     //Create display framebuffer
@@ -87,7 +87,7 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLCamera::Destroy();
     OpenGLDepthCamera::Destroy();
     OpenGLSonar::Destroy();
-    OpenGLOceanParticles::Destroy();
+    OpenGLMarineSnow::Destroy();
     OpenGLLight::Destroy();
     delete content;
     
@@ -327,6 +327,20 @@ void OpenGLPipeline::DrawHelpers()
             }
         }
     }
+
+    //Wireframe on physical objects
+    OpenGLState::EnableCullFace();
+    content->SetDrawingMode(DrawingMode::FLAT);
+    OpenGLState::EnableBlend();
+    glBlendColor(1.f, 1.f, 1.f, 0.1f);
+    glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+    for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+    {
+        if(drawingQueueCopy[h].type == RenderableType::WIREFRAME)
+            content->DrawObject(drawingQueueCopy[h].objectId, drawingQueueCopy[h].lookId, drawingQueueCopy[h].model);
+    }
+    OpenGLState::DisableBlend();
+    OpenGLState::DisableCullFace();
 }
 
 void OpenGLPipeline::Render(SimulationManager* sim)
@@ -589,7 +603,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 
                 //Simulation debugging
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                //if(sim->getSolidDisplayMode() == DisplayMode::PHYSICAL) DrawObjects();
                 DrawHelpers();
                 if(hSettings.showOceanVelocityField && ocean != NULL) ocean->getOpenGLOcean()->DrawVelocityField(camera, 5.f);
                 if(hSettings.showBulletDebugInfo) sim->RenderBulletDebug();

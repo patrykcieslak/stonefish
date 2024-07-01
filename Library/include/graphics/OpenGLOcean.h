@@ -62,7 +62,7 @@ namespace sf
 
     class GLSLShader;
 	class OpenGLCamera;
-	class OpenGLOceanParticles;
+	class OpenGLMarineSnow;
     class VelocityField;
 	
     //! A class implementing ocean simulation in OpenGL.
@@ -189,7 +189,7 @@ namespace sf
         virtual void InitializeSimulation();
         float sqr(float x);
         
-        std::map<OpenGLCamera*, OpenGLOceanParticles*> oceanParticles;
+        std::map<OpenGLCamera*, OpenGLMarineSnow*> oceanParticles;
         glm::vec3 absorption[64];
         glm::vec3 scattering[64];
         OceanCurrentsUBO oceanCurrentsUBOData;

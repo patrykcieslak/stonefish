@@ -23,7 +23,7 @@
 //  Copyright(c) 2017-2023 Patryk Cieslak. All rights reserved.
 //
 
-#include "entities/forcefields/Ocean.h"
+#include "entities/environment/Ocean.h"
 
 #include <algorithm>
 #include "utils/SystemUtil.hpp"

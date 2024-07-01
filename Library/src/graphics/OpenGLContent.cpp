@@ -35,8 +35,8 @@
 #include "graphics/OpenGLView.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLOcean.h"
-#include "entities/forcefields/Ocean.h"
-#include "entities/forcefields/Atmosphere.h"
+#include "entities/environment/Ocean.h"
+#include "entities/environment/Atmosphere.h"
 #include "utils/SystemUtil.hpp"
 #include "utils/GeometryFileUtil.h"
 #define STB_IMAGE_IMPLEMENTATION

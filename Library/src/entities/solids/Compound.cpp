@@ -495,6 +495,9 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 item.vel = glVectorFromVector(getLinearVelocity());
                 item.avel = glVectorFromVector(getAngularVelocity());
                 items.push_back(item);
+
+                item.type = RenderableType::WIREFRAME;
+                items.push_back(item);
             }
         }
 

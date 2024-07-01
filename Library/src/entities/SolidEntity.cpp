@@ -30,8 +30,8 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "utils/SystemUtil.hpp"
-#include "entities/forcefields/Ocean.h"
-#include "entities/forcefields/Atmosphere.h"
+#include "entities/environment/Ocean.h"
+#include "entities/environment/Atmosphere.h"
 #include <iostream>
 #include <algorithm>
 
@@ -245,6 +245,9 @@ std::vector<Renderable> SolidEntity::Render()
             item.model = glMatrixFromTransform(getCTransform());
             item.vel = glVectorFromVector(getLinearVelocity());
             item.avel = glVectorFromVector(getAngularVelocity());
+            items.push_back(item);
+
+            item.type = RenderableType::WIREFRAME;
             items.push_back(item);
         }
         

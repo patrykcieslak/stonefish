@@ -16,14 +16,14 @@
 */
 
 //
-//  OpenGLOceanParticles.h
+//  OpenGLMarineSnow.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
-#include "graphics/OpenGLOceanParticles.h"
+#include "graphics/OpenGLMarineSnow.h"
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
@@ -34,38 +34,72 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLOcean.h"
-#include "entities/forcefields/Ocean.h"
+#include "entities/environment/Ocean.h"
 #include "utils/SystemUtil.hpp"
 
 namespace sf
 {
     
-GLuint OpenGLOceanParticles::flakeTexture = 0;
-GLuint OpenGLOceanParticles::noiseTexture = 0;
-GLSLShader* OpenGLOceanParticles::renderShader = NULL;
-GLSLShader* OpenGLOceanParticles::updateShader = NULL;
+GLuint OpenGLMarineSnow::flakeTexture = 0;
+GLuint OpenGLMarineSnow::noiseTexture = 0;
+GLSLShader* OpenGLMarineSnow::renderShader = nullptr;
+GLSLShader* OpenGLMarineSnow::updateShader = nullptr;
 
-OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibleRange) : OpenGLParticles(numOfParticles), uniformd(0, 1.f), normald(0, 1.f)
+OpenGLMarineSnow::OpenGLMarineSnow(GLuint numOfParticles, GLfloat visibleRange) : OpenGLParticleSystem(numOfParticles), uniformd(0, 1.f), normald(0, 1.f)
 {
     initialised = false;
     range = fabsf(visibleRange);
     lastEyePos = glm::vec3(0);
+
+    glGenBuffers(1, &particlePosSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * nParticles, NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glGenBuffers(1, &particleVelSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleVelSSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * nParticles, NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glGenBuffers(1, &particleEAB);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, particleEAB);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * 6 * nParticles, NULL, GL_STATIC_DRAW);
+    GLuint* indices = (GLuint*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * 6 * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for(GLuint i=0; i<nParticles; ++i) 
+    {
+        GLuint index = GLuint(i<<2);
+        *(indices++) = index;
+        *(indices++) = index+2;
+        *(indices++) = index+1;
+        *(indices++) = index;
+        *(indices++) = index+3;
+        *(indices++) = index+2;
+    }
+    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glGenVertexArrays(1, &particleVAO);
+    OpenGLState::BindVertexArray(particleVAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, particleEAB);
+    OpenGLState::BindVertexArray(0);
 }
     
-OpenGLOceanParticles::~OpenGLOceanParticles()
+OpenGLMarineSnow::~OpenGLMarineSnow()
 {
+    glDeleteBuffers(1, &particlePosSSBO);
+    glDeleteBuffers(1, &particleVelSSBO);
+    glDeleteBuffers(1, &particleEAB);
+    glDeleteVertexArrays(1, &particleVAO);
 }
 
-void OpenGLOceanParticles::Create(glm::vec3 eyePos)
+void OpenGLMarineSnow::Setup(OpenGLCamera* cam)
 {
-    lastEyePos = eyePos;
+    lastEyePos = cam->GetEyePosition();
+
     //Create particles randomly (uniformly) distributed inside a sphere
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO);
     glm::vec4* positions = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
     for(GLuint i=0; i<nParticles; ++i) 
     {
         GLfloat r = cbrtf(uniformd(generator)) * range; //cbrtf for uniform distribution in sphere volume
-        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + eyePos, uniformd(generator)*0.005f + 0.002f);
+        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + lastEyePos, uniformd(generator)*0.005f + 0.002f);
     }
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
@@ -77,23 +111,22 @@ void OpenGLOceanParticles::Create(glm::vec3 eyePos)
     initialised = true;
 }
     
-void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
+void OpenGLMarineSnow::Update(OpenGLCamera* cam, GLfloat dt)
 {
-    glm::vec3 eyePos = cam->GetEyePosition();
-    lastEyePos = eyePos;
-
     //Check if ever updated
     if(!initialised)
     {
-        Create(eyePos);
+        Setup(cam);
         return;
     }
+    
+    lastEyePos = cam->GetEyePosition();;
 
     //Move particles
     updateShader->Use();
     updateShader->SetUniform("dt", dt);
     updateShader->SetUniform("numParticles", nParticles);
-    updateShader->SetUniform("eyePos", eyePos);
+    updateShader->SetUniform("eyePos", lastEyePos);
     updateShader->SetUniform("R", range);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_3D, noiseTexture);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
@@ -104,8 +137,12 @@ void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
     
-void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
+void OpenGLMarineSnow::Draw(OpenGLCamera* cam)
 {
+    OpenGLOcean* glOcn = (OpenGLOcean*)SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean();
+    if(glOcn == nullptr)
+        return;
+
     glm::mat4 MV = cam->GetViewMatrix();
     renderShader->Use();
     renderShader->SetUniform("MV", MV);
@@ -128,7 +165,7 @@ void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
     OpenGLState::UseProgram(0);
 }
     
-void OpenGLOceanParticles::Init()
+void OpenGLMarineSnow::Init()
 {
     //Load shaders
 	std::vector<GLuint> precompiled;
@@ -216,7 +253,7 @@ void OpenGLOceanParticles::Init()
     delete [] noiseData;                                
 }
 
-void OpenGLOceanParticles::Destroy()
+void OpenGLMarineSnow::Destroy()
 {
     if(updateShader != NULL) delete updateShader;
     if(renderShader != NULL) delete renderShader;

@@ -35,10 +35,10 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLCamera.h"
-#include "graphics/OpenGLOceanParticles.h"
+#include "graphics/OpenGLMarineSnow.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "utils/SystemUtil.hpp"
-#include "entities/forcefields/Atmosphere.h"
+#include "entities/environment/Atmosphere.h"
 #include "entities/forcefields/Uniform.h"
 #include "entities/forcefields/Jet.h"
 #include "entities/forcefields/Pipe.h"
@@ -534,7 +534,7 @@ void OpenGLOcean::Simulate(GLfloat dt)
     //Simulate particles (this is done every frame becasue even if the camera is not updated the particels need to move)
     if(particlesEnabled)
     {
-        for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
+        for(std::map<OpenGLCamera*, OpenGLMarineSnow*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
             it->second->Update(it->first, dt);
     }
 }
@@ -573,7 +573,7 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
     if(!particlesEnabled)
         return;
 
-    OpenGLOceanParticles* particles;
+    OpenGLMarineSnow* particles;
     
     try
     {
@@ -581,11 +581,11 @@ void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
     }
     catch(const std::out_of_range& e)
     {
-        particles = new OpenGLOceanParticles(5000, 3.0);
-        oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLOceanParticles*>(cam, particles));
+        particles = new OpenGLMarineSnow(5000, 3.f);
+        oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLMarineSnow*>(cam, particles));
     }
 
-    particles->Draw(cam, this);
+    particles->Draw(cam);
 }
 
 void OpenGLOcean::DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax)

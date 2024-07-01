@@ -16,15 +16,15 @@
 */
 
 //
-//  OpenGLParticles.h
+//  OpenGLParticleSystem.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLParticles__
-#define __Stonefish_OpenGLParticles__
+#ifndef __Stonefish_OpenGLParticleSystem__
+#define __Stonefish_OpenGLParticleSystem__
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -33,24 +33,39 @@ namespace sf
 	class OpenGLCamera;
 
 	//! An abstract class implementing a general particle system
-	class OpenGLParticles
+	class OpenGLParticleSystem
 	{
 	public:
         //! A constructor.
         /*!
          \param numOfParticles the number of simulated particles
          */
-        OpenGLParticles(GLuint numOfParticles);
-		
+        OpenGLParticleSystem(GLuint numOfParticles);
+
         //! A destructor.
-        virtual ~OpenGLParticles();	
-		
+        virtual ~OpenGLParticleSystem();	
+
+        //! A method initializing/resetting the particle system.
+		/*!
+		 \param cam a pointer to the active camera
+		 */
+        virtual void Setup(OpenGLCamera* cam) = 0;
+
+        //! A method updating the positions/velocities of the particles.
+        /*!
+         \param cam a pointer to the active camera
+         \param dt time step of the simulation [s]
+         */
+        virtual void Update(OpenGLCamera* cam, GLfloat dt) = 0;
+
+        //! A method drawing the particles.
+        /*!
+         \param cam a pointer to the active camera
+         */
+		virtual void Draw(OpenGLCamera* cam) = 0;
+
 	protected:
 		GLuint nParticles;
-        GLuint particlePosSSBO; //Includes position and size
-        GLuint particleVelSSBO; //Includes velocity and opacity
-        GLuint particleVAO; //Vertex array
-        GLuint particleEAB; //Indices of particle triangles
 	};
 }
 

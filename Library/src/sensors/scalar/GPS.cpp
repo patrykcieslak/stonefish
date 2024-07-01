@@ -28,7 +28,7 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
-#include "entities/forcefields/Ocean.h"
+#include "entities/environment/Ocean.h"
 #include "sensors/Sample.h"
 
 namespace sf

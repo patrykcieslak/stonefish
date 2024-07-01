@@ -32,7 +32,7 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLOcean.h"
-#include "entities/forcefields/Ocean.h"
+#include "entities/environment/Ocean.h"
 
 namespace sf
 {
