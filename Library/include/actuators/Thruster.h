@@ -41,17 +41,16 @@ public:
    \param propeller a pointer to a rigid body representing the propeller
    \param rotorDynamics a pointer to the rotor dynamics model
    \param thrustConversion a pointer to the thrust conversion model
-   \param avelLimit limit of angular velocity setpoint [rad/s]
    \param diameter diameter of the propeller [m]
    \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
-   \param invertedSetpoints a flag to indicate if the setpoint is inverted (positive value results in backward force)
-   \param normalisedSetpoints a flag to indicate if the setpoints should be treated as normalised <-1, 1>
+   \param maxSetpoint limit of the thruster setpoint
+   \param invertedSetpoint a flag to indicate if the setpoint is inverted (positive value results in backward force)
   */
   Thruster(std::string uniqueName, SolidEntity* propeller,     
                        std::shared_ptr<RotorDynamics> rotorDynamics,   
                        std::shared_ptr<ThrustModel> thrustConversion,  
-                       Scalar avelLimit, Scalar diameter, bool rightHand, 
-                       bool invertedSetpoints = false, bool normalisedSetpoints = true);
+                       Scalar diameter, bool rightHand, Scalar maxSetpoint, 
+                       bool invertedSetpoint = false);
 
   //! A destructor.
   ~Thruster();
@@ -67,18 +66,18 @@ public:
 
   //! A method setting the new value of the thruster speed setpoint.
   /*!
-   \param s the desired speed of the thruster as fraction <0,1>
+   \param s the desired setpoint
    */
   void setSetpoint(Scalar s);
 
-  //! A method used to set the velocity limit.
+  //! A method used to set the thruster setpoint limit.
   /*!
-    \param limit limit of the thruster rotational velocity [rad/s]
+    \param limit limit of the thruster setpoint
   */
-  void setAngularVelocityLimit(Scalar limit);
+  void setSetpointLimit(Scalar limit);
 
-  //! A method returning the limit of the angular velocity setpoint.
-  Scalar getAngularVelocityLimit();
+  //! A method returning the limit of the thruster setpoint.
+  Scalar getSetpointLimit();
 
   //! A method returning the current setpoint.
   Scalar getSetpoint() const;
@@ -110,7 +109,6 @@ private:
   // Params
   SolidEntity* prop;
   bool RH;
-  bool inv;
   Scalar D;
 
   // States
@@ -119,10 +117,10 @@ private:
   Scalar thrust;  // Generated thrust [N]
   Scalar torque;  // Induced torque [Nm]
 
-  Scalar setpoint;  // Desired angular velocity of the propeller [rad/s]
-  Scalar omegaLimit; // Limit of the desired angular velocity [rad/s] 
-  bool normalised; // Are the setpoints normalised?
-
+  Scalar setpoint;  // Desired setpoint
+  Scalar setpointLimit; // Limit of the desired setpoint
+  bool inv; // Is setpoint value inverted?
+  
   // Dynamics
   std::shared_ptr<RotorDynamics> rotorModel;
   std::shared_ptr<ThrustModel> thrustModel;

@@ -38,12 +38,12 @@ namespace sf
 Thruster::Thruster(std::string uniqueName, SolidEntity* propeller,
                                             std::shared_ptr<RotorDynamics> rotorDynamics,
                                             std::shared_ptr<ThrustModel> thrustConversion,
-                                            Scalar avelLimit, Scalar diameter, bool rightHand, 
-                                            bool invertedSetpoints, bool normalisedSetpoints)
-    : LinkActuator(uniqueName), rotorModel(rotorDynamics), thrustModel(thrustConversion), D(diameter), RH(rightHand), inv(invertedSetpoints), 
-    normalised(normalisedSetpoints), theta(Scalar(0)), omega(Scalar(0)), thrust(Scalar(0)), torque(Scalar(0)), setpoint(Scalar(0))
+                                            Scalar diameter, bool rightHand, Scalar maxSetpoint,
+                                            bool invertedSetpoint)
+    : LinkActuator(uniqueName), rotorModel(rotorDynamics), thrustModel(thrustConversion), D(diameter), RH(rightHand), 
+      setpointLimit(maxSetpoint), inv(invertedSetpoint), theta(Scalar(0)), omega(Scalar(0)), thrust(Scalar(0)), torque(Scalar(0)), setpoint(Scalar(0))
 {
-    setAngularVelocityLimit(avelLimit);
+    setSetpointLimit(maxSetpoint);
     prop = propeller;
     prop->BuildGraphicalObject();
 }
@@ -61,27 +61,19 @@ ActuatorType Thruster::getType() const
 
 void Thruster::setSetpoint(Scalar s)
 {
-    if (normalised)
-        setpoint = btClamped(s, Scalar(-1), Scalar(1)) * omegaLimit;
-    else
-        setpoint = btClamped(s, -omegaLimit, omegaLimit);
-
-    if (inv)
-    {
-        setpoint *= Scalar(-1);
-    }
-
+    setpoint = btClamped(s, -setpointLimit, setpointLimit);
+    if (inv) setpoint *= Scalar(-1);
     ResetWatchdog();
 }
 
-void Thruster::setAngularVelocityLimit(Scalar limit)
+void Thruster::setSetpointLimit(Scalar limit)
 {
-    omegaLimit = btFabs(limit);
+    setpointLimit = btFabs(limit);
 }
 
-Scalar Thruster::getAngularVelocityLimit()
+Scalar Thruster::getSetpointLimit()
 {
-    return omegaLimit;
+    return setpointLimit;
 }
 
 Scalar Thruster::getSetpoint() const

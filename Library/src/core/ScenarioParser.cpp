@@ -2553,27 +2553,18 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
             propScale, I4(), std::string(mat), lookStr);
 
-        Scalar maxAVel;
+        Scalar maxSetpoint;
         bool inverted = false;
-        bool normalised = true;
 
         if ((item = element->FirstChildElement("specs")) != nullptr)
         {
-            if (item->QueryAttribute("max_angular_velocity", &maxAVel) == XML_SUCCESS)
-            {   
-            }
-            else if(item->QueryAttribute("max_rpm", &maxAVel) == XML_SUCCESS)
+            if (item->QueryAttribute("max_setpoint", &maxSetpoint) != XML_SUCCESS)
             {
-                maxAVel = maxAVel * Scalar(2) * M_PI / Scalar(60);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Max angular velocity of actuator '%s' missing!", actuatorName.c_str());
+                log.Print(MessageType::ERROR, "Max setpoint value of actuator '%s' missing!", actuatorName.c_str());
                 delete prop;
                 return nullptr;
             }
             item->QueryAttribute("inverted_setpoint", &inverted);
-            item->QueryAttribute("normalised_setpoint", &normalised);
         }
         else 
         {
@@ -2831,7 +2822,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             return nullptr;
         }
 
-        Thruster* th = new Thruster(actuatorName, prop, rotorModel, thrustModel, maxAVel, diameter, rightHand, inverted, normalised);
+        Thruster* th = new Thruster(actuatorName, prop, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted);
         return th;
     }
     else if(typeStr == "simple_thruster")
