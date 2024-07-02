@@ -45,12 +45,14 @@ public:
    \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
    \param maxSetpoint limit of the thruster setpoint
    \param invertedSetpoint a flag to indicate if the setpoint is inverted (positive value results in backward force)
+   \param normalizedSetpoint a flag to indicate if the setpoint given by the user is normalized [-1,1] 
   */
   Thruster(std::string uniqueName, SolidEntity* propeller,     
                        std::shared_ptr<RotorDynamics> rotorDynamics,   
                        std::shared_ptr<ThrustModel> thrustConversion,  
                        Scalar diameter, bool rightHand, Scalar maxSetpoint, 
-                       bool invertedSetpoint = false);
+                       bool invertedSetpoint = false,
+                       bool normalizedSetpoint = true);
 
   //! A destructor.
   ~Thruster();
@@ -120,6 +122,7 @@ private:
   Scalar setpoint;  // Desired setpoint
   Scalar setpointLimit; // Limit of the desired setpoint
   bool inv; // Is setpoint value inverted?
+  bool normalized; // Is setpoint normalized?
   
   // Dynamics
   std::shared_ptr<RotorDynamics> rotorModel;

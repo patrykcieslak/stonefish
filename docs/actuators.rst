@@ -29,7 +29,7 @@ Optionally, the user can enable a watchdog timer that will reset the actuator if
     sf::Thruster* th = new sf::Thruster(...);  
     th->setWatchdog(Scalar(1));
 
-Not all of the actuators are going to use the watchdog as it is limitted to the ones that have a clear zero state.
+Not all of the actuators are going to use the watchdog as it is limited to the ones that have a clear zero state.
 
 .. note::
 
@@ -58,13 +58,13 @@ The joint actuators are attached to the robot's joints and they apply forces or 
 Servomotor
 ----------
 
-A servomotor is an electric motor connected with control and power circuits that allow for controlling it in different modes: torque, position or velocity.
+A servomotor is an electric motor connected with control and power circuits that allow for controlling it in two modes: position or velocity.
 It is possible to define an initial position of the joint that will be achieved at the beginning of the simulation.
 
 .. code-block:: xml
 
     <actuator name="Servo" type="servo">
-        <controller position_gain="1.0" velocity_gain="0.5" max_torque="10.0"/>
+        <controller position_gain="1.0" velocity_gain="1.0" max_torque="10.0" max_velocity="0.1"/>
         <joint name="Joint1"/>
         <initial position="0.5"/>
     </actuator>
@@ -74,6 +74,7 @@ It is possible to define an initial position of the joint that will be achieved 
     #include <Stonefish/actuators/Servo.h>
     sf::Servo* srv = new sf::Servo("Servo", 1.0, 0.5, 10.0);
     srv->setControlMode(sf::ServoControlMode::POSITION_CTRL);
+    srv->setMaxVelocity(0.1);
     srv->setDesiredPosition(0.5);
     robot->AddJointActuator(srv, "Joint1");
 
@@ -173,14 +174,14 @@ Thruster
 
 A thruster actuator represents an underwater actuator based on a rotating propeller. Being the most common type of actuator for the underwater and surface vehicles it was given special attention. The mathematical model of the thruster is modular and combines two models: the model of rotor dynamics and the model of thrust (and torque) generation. The available models can be used in any combination, giving a very flexible setup, which should fulfill requirements of most of the users.
 
-To properly define a thruster one has to supply a few common parameters, as well as, fill three blocks: propeller definition, rotor dynamics, and thrust model. The common parameters specify the range of setpoints used to control the thruster and their sign.
+To properly define a thruster one has to supply a few common parameters, as well as, fill three blocks: propeller definition, rotor dynamics, and thrust model. The common parameters specify the range of the internal setpoint used to control the thruster, as well as, information about the setpoint values supplied by the user, which may be inverted and/or normalized (range [-1,1]) for convenience.
 
 The following XML syntax presents the structue of the definition:
 
 .. code-block:: xml
 
     <actuator name="Thruster" type="thruster">
-        <specs max_setpoint="1000.0" inverted_setpoint="false"/>
+        <specs max_setpoint="1000.0" inverted_setpoint="false" normalized_setpoint="true"/>
         <propeller diameter="0.2" right="true">
             <mesh filename="propeller.obj" scale="1.0"/>
             <material name="Steel"/>
@@ -198,7 +199,7 @@ The following XML syntax presents the structue of the definition:
 
 .. note:: 
 
-    The limit of the thruster setpoint, called ``max_setpoint``, is an absolute value. The setpoints will be limitted symmetrically. The quantity represented by the setpoints depends on the type of the input of the selected ``rotor_dynamics`` model.
+    The limit of the thruster setpoint, called ``max_setpoint``, is an absolute value. The setpoints will be limited symmetrically. The quantity represented by the setpoints depends on the type of the input of the selected ``rotor_dynamics`` model.
 
 The following rotor dynamics models are implemented, with their respective parameters and example XML syntax. The output of all of the models is the angular velocity of the propeller and the input quantity depends on the model of choice.
 
@@ -249,7 +250,7 @@ The following rotor dynamics models are implemented, with their respective param
   - ``rotor_inertia`` combined inertia of the propeller and the added intertia of the accelerated fluid
   - ``kp`` proportional gain
   - ``ki`` integral gain
-  - ``ilim`` integral limit (anti-windup)
+  - ``ilimit`` integral limit (anti-windup)
 
 .. code-block:: xml
 
@@ -257,7 +258,7 @@ The following rotor dynamics models are implemented, with their respective param
         <propeller_inertia value="1.0"/>
         <kp value="8.0"/>
         <ki value="5.0"/>
-        <ilim value="10.0"/>
+        <ilimit value="10.0"/>
     </rotor_dynamics>
 
 The following thrust models are implemented, with their respective parameters and example XML syntax. The input to all of the models is the angular velocity of the propeller and the outputs are the generated thrust and the induced torque.
@@ -309,7 +310,7 @@ An example of a full thruster definition utilising the XML syntax and the C++ co
 .. code-block:: xml
     
     <actuator name="Thruster" type="thruster">
-        <specs max_setpoint="400.0" inverted_setpoint="false"/>
+        <specs max_setpoint="400.0" inverted_setpoint="false" normalized_setpoint="true"/>
         <propeller diameter="0.18" right="true">
             <mesh filename="propeller.obj" scale="1.0"/>
             <material name="Steel"/>
@@ -319,7 +320,7 @@ An example of a full thruster definition utilising the XML syntax and the C++ co
             <propeller_inertia value="1.0"/>
             <kp value="10.0"/>
             <ki value="5.0"/>
-            <ilim value="5.0"/>
+            <ilimit value="5.0"/>
         </rotor_dynamics>
         <thrust_model type="fluid_dynamics">
             <thrust_coeff forward="0.88" reverse="0.48"/>
@@ -337,7 +338,7 @@ An example of a full thruster definition utilising the XML syntax and the C++ co
     rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
     std::shared_ptr<sf::FDThrust> thrustModel;
     thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.88, 0.48, 0.05, true, 1000.0);
-    sf::Thruster* th = new sf::Thruster("Thruster", prop, rotorDynamics, thrustModel, 0.18, true, 400.0, false);
+    sf::Thruster* th = new sf::Thruster("Thruster", prop, rotorDynamics, thrustModel, 0.18, true, 400.0, false, true);
     robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
 
 Variable buoyancy system (VBS)

@@ -2477,6 +2477,9 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             log.Print(MessageType::ERROR, "Controller definition for actuator '%s' missing!", actuatorName.c_str());
             return nullptr;
         }
+        Scalar maxVel(-1); // No limit
+        item->QueryAttribute("max_velocity", &maxVel); // Optional
+
         Scalar initialPos(0);
         if((item = element->FirstChildElement("initial")) != nullptr)
             item->QueryAttribute("position", &initialPos);
@@ -2484,6 +2487,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
         srv->setControlMode(ServoControlMode::POSITION);
         srv->setDesiredPosition(initialPos);
+        srv->setMaxVelocity(maxVel);
         return srv;
     }
     else if(typeStr == "push")
@@ -2555,6 +2559,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
 
         Scalar maxSetpoint;
         bool inverted = false;
+        bool normalized = false;
 
         if ((item = element->FirstChildElement("specs")) != nullptr)
         {
@@ -2565,6 +2570,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 return nullptr;
             }
             item->QueryAttribute("inverted_setpoint", &inverted);
+            item->QueryAttribute("normalized_setpoint", &normalized);
         }
         else 
         {
@@ -2672,7 +2678,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 && item2->QueryAttribute("value", &kp) == XML_SUCCESS
                 && (item2 = item->FirstChildElement("ki")) != nullptr
                 && item2->QueryAttribute("value", &ki) == XML_SUCCESS
-                && (item2 = item->FirstChildElement("ilim")) != nullptr
+                && (item2 = item->FirstChildElement("ilimit")) != nullptr
                 && item2->QueryAttribute("value", &iLim) == XML_SUCCESS)
             {
                 rotorModel = std::make_shared<MechanicalPI>(J, kp, ki, iLim);
@@ -2822,7 +2828,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             return nullptr;
         }
 
-        Thruster* th = new Thruster(actuatorName, prop, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted);
+        Thruster* th = new Thruster(actuatorName, prop, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted, normalized);
         return th;
     }
     else if(typeStr == "simple_thruster")
