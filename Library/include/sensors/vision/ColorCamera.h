@@ -48,7 +48,7 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1),
+        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,  double bl, bool ev, Scalar frequency = Scalar(-1),
            Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
         
         //! A destructor.
