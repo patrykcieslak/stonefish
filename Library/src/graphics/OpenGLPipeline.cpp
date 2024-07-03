@@ -60,6 +60,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLCamera::Init(rSettings);
     OpenGLDepthCamera::Init();
     OpenGLSonar::Init();
+    OpenGLParticleSystem::Init();
     OpenGLMarineSnow::Init();
     content = new OpenGLContent();
     
@@ -87,6 +88,7 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLCamera::Destroy();
     OpenGLDepthCamera::Destroy();
     OpenGLSonar::Destroy();
+    OpenGLParticleSystem::Destroy();
     OpenGLMarineSnow::Destroy();
     OpenGLLight::Destroy();
     delete content;

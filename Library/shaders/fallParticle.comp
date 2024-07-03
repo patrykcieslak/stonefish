@@ -1,0 +1,140 @@
+#version 430
+
+#define M_PI    3.141592654
+#define SQRT_2  1.414213562
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+uniform float dt;
+uniform uint numParticles;
+uniform vec3 eyePos;
+uniform float R;
+uniform sampler3D texNoise;
+uniform float invNoiseSize;
+
+struct Pose
+{
+    vec4 posScaleX; // xyz - position, w - scale X
+    vec4 rot;       // xyz - orientation axis, w - angle
+};
+
+struct Twist
+{
+    vec4 velScaleY; // xyz - velocity, w - scale Y
+    vec4 avelScaleZ; // xyz - angular velocity, w - scale Z
+};
+
+layout(std140) buffer Poses
+{
+    Pose pose[];
+};
+
+layout(std140) buffer Twists
+{
+    Twist twist[];
+};
+
+const float noiseFrequency = 100.0;
+const float noiseStrength = 0.02;
+const float sizeFactor = 100.0;
+
+#inject "velocityField.glsl"
+
+//Uniform random value in [-1, 1]
+vec3 noise3f(vec3 s)
+{
+    return texture(texNoise, s * invNoiseSize).xyz;
+}
+
+//Fractal sum
+vec3 fBm3f(vec3 p, int octaves, float lacunarity, float gain) 
+{
+    float freq = 1.0, amp = 0.5;
+    vec3 sum = vec3(0.0);
+    for(int i=0; i<octaves; ++i) 
+    {
+        sum += noise3f(p * freq) * amp;
+        freq *= lacunarity;
+        amp *= gain;
+    }
+    return sum;
+}
+
+void main()
+{
+    uint pid = gl_GlobalInvocationID.x;
+    if(pid < numParticles)
+    {
+        // //Drag factor
+        // float drag = posSize[pid].w * sizeFactor * dt;
+
+        // //Damp velocity
+        // velOpacity[pid].xyz -= velOpacity[pid].xyz * drag;
+
+        // //Add currents influence
+        // for(uint i=0; i<numCurrents; ++i)
+        // {
+        //     vec3 dir = vec3(1.0,0.0,0.0);
+        //     float vel = 0.0;
+
+        //     switch(currents[i].type)
+        //     {
+        //         case 0: //Uniform
+        //         {
+        //             vel = currents[i].dirV.w;    
+        //             dir = currents[i].dirV.xyz;
+        //         }
+        //             break;
+
+        //         case 1: //Jet
+        //         {
+        //             vec3 v = jet(posSize[pid].xyz, currents[i].posR.xyz, currents[i].posR.w, 
+        //                                            currents[i].dirV.xyz, currents[i].dirV.w);
+        //             vel = length(v);
+        //             if(vel > 0.0)
+        //                 dir = v/vel;
+        //         }
+        //             break;
+
+        //         case 2: //Pipe
+        //         {
+        //             vec3 v = pipe(posSize[pid].xyz, currents[i].posR.xyz, currents[i].posR.w,
+        //                                             currents[i].params.y, currents[i].params.x,
+        //                                             currents[i].dirV.xyz, currents[i].dirV.w,
+        //                                             currents[i].params.z);
+        //             vel = length(v);
+        //             if(vel > 0.0)
+        //                 dir = v/vel;
+        //         }
+        //             break;
+
+        //         case 10: //Thruster
+        //         {
+        //             vec3 v = thruster(posSize[pid].xyz, currents[i].posR.xyz, currents[i].posR.w, 
+        //                                                 currents[i].dirV.xyz, currents[i].dirV.w);
+        //             vel = length(v);
+        //             if(vel > 0.0)
+        //                 dir = v/vel;
+        //         }
+        //             break;
+                
+        //         default:
+        //             break;
+        //     }
+
+        //     if(dot(velOpacity[pid].xyz, dir) < vel)
+        //         velOpacity[pid].xyz += dir * vel * drag;
+        // }
+
+        // //Add fractal brownian motion
+        // velOpacity[pid].xyz += fBm3f(posSize[pid].xyz * noiseFrequency,4,2.0,0.5) * noiseStrength * dt;
+
+        // //Update position
+        // posSize[pid].xyz += velOpacity[pid].xyz * dt;
+
+        // //Move particles that are out of range
+        // float d = distance(eyePos, posSize[pid].xyz);
+        // if(d > R)
+        //     posSize[pid].xyz = noise3f(posSize[pid].xyz*1000.0) * R * SQRT_2 + eyePos;
+    }
+}

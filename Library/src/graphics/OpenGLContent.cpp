@@ -34,6 +34,7 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLView.h"
 #include "graphics/OpenGLLight.h"
+#include "graphics/OpenGLParticleSystem.h"
 #include "graphics/OpenGLOcean.h"
 #include "entities/environment/Ocean.h"
 #include "entities/environment/Atmosphere.h"
@@ -1137,6 +1138,24 @@ size_t OpenGLContent::getLightsCount()
     return lights.size();
 }
 
+void OpenGLContent::AddParticleSystem(OpenGLParticleSystem* ps)
+{
+    particleSystems.push_back(ps);
+}
+
+OpenGLParticleSystem* OpenGLContent::getParticleSystem(size_t id)
+{
+    if(id < particleSystems.size())
+        return particleSystems[id];
+    else
+        return nullptr;
+}
+
+size_t OpenGLContent::getParticleSystemsCount()
+{
+    return particleSystems.size();
+}
+
 int OpenGLContent::getLookId(const std::string& name)
 {
     for(size_t i=0; i<looks.size(); ++i)
@@ -1154,6 +1173,15 @@ const Object& OpenGLContent::getObject(size_t id)
 const Look& OpenGLContent::getLook(size_t id)
 {
     return looks[id];
+}
+
+const Look& OpenGLContent::getLook(const std::string name)
+{
+    int lookId = getLookId(name);
+    if(lookId >= 0)
+        return looks[lookId];
+    else
+        return looks[0];
 }
     
 //Static methods
@@ -2671,6 +2699,20 @@ void OpenGLContent::AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffse
     
     bsRadius = radius;
     bsCenterOffset = tempCenter;
+}
+
+PlainMesh* OpenGLContent::ConvertToPlainMesh(TexturableMesh* mesh)
+{
+    PlainMesh* plain = new PlainMesh;
+    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    {
+        Vertex v;
+        v.pos = mesh->vertices[i].pos;
+        v.normal = mesh->vertices[i].normal;
+        plain->vertices.push_back(v);
+    }
+    plain->faces = mesh->faces;
+    return plain;
 }
 
 }

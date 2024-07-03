@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLParticleSystem__
 
 #include "graphics/OpenGLDataStructs.h"
+#include <random>
 
 namespace sf
 {
@@ -38,9 +39,9 @@ namespace sf
 	public:
         //! A constructor.
         /*!
-         \param numOfParticles the number of simulated particles
+         \param maxParticles the maximum number of simulated particles
          */
-        OpenGLParticleSystem(GLuint numOfParticles);
+        OpenGLParticleSystem(GLuint maxParticles);
 
         //! A destructor.
         virtual ~OpenGLParticleSystem();	
@@ -64,8 +65,23 @@ namespace sf
          */
 		virtual void Draw(OpenGLCamera* cam) = 0;
 
+        //! A method used to load particle shaders and textures.
+        static void Init();
+
+        //! A method used to delete particle shaders and textures.
+        static void Destroy();
+
 	protected:
-		GLuint nParticles;
+		GLuint maxParticles; // Maximum number of simulated particles
+        GLuint poseSSBO;   // SSBO storing particle positions and orientations
+        GLuint twistSSBO;  // SSBO storing particle velocities and angular velocities
+        
+        std::default_random_engine randGen; // Random number generator
+		std::uniform_real_distribution<GLfloat> uniformDist; // Uniform distribution
+		std::normal_distribution<GLfloat> normalDist; // Normal distribution
+
+        static const GLuint noiseSize; // Size of the noise texture
+        static GLuint noiseTexture; // 3D uniform noise texture
 	};
 }
 

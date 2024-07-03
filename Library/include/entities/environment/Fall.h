@@ -26,12 +26,47 @@
 #ifndef __Stonefish_Fall__
 #define __Stonefish_Fall__
 
-//! A class implementing a plume.
+#include "core/MaterialManager.h"
+#include "graphics/OpenGLFall.h"
+
+namespace sf
+{
+
+//! A class implementing a system of falling particles.
 class Fall
 {
 public:
-    
+    //! A constructor.
+    /*!
+     \param uniqueName a name for the particle system
+     \param maxParticles the number of simulated particles
+     \param lifetime the lifetime of the particles [s]
+     \param emitterSizeX the size of the emmiter in X direction [m]
+     \param emitterSizeY the size of the emmiter in Y direction [m]
+     \param particleModelPaths a vector of paths to the models representing the particles
+     \param particleMaterial a material for the particles
+     \param particleLook a look for the particles
+     */
+    Fall(const std::string& uniqueName, unsigned int maxParticles, Scalar lifetime, Scalar emitterSizeX, Scalar emitterSizeY, 
+        std::vector<std::string> particleModelPaths, const std::string& particleMaterial, const std::string& particleLook);
 
+    //! A destructor.
+    virtual ~Fall();
+
+    //! A method used to add the entity to the simulation.
+    /*!
+      \param sm a pointer to a simulation manager
+      \param origin of the emitter in the world frame 
+     */
+    virtual void AddToSimulation(SimulationManager* sm, const Transform& origin);
+
+    //! A method implementing the rendering of the particle system dummy.
+    virtual std::vector<Renderable> Render();
+
+protected:
+    OpenGLFall* glFall;
 };
+
+}
 
 #endif /* defined(__Stonefish_Fall__) */

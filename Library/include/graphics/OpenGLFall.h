@@ -30,9 +30,64 @@
 
 namespace sf
 {
-	//! A class implementing a plume (smoke, oil, etc.)
+    class GLSLShader;
+
+	//! A class implementing a particle system simulating falling objects.
     class OpenGLFall : public OpenGLParticleSystem
     {
+    public:
+        //! A constructor.
+        /*!
+         \param maxParticles the number of simulated particles
+         \param lifetime the lifetime of the particles [s]
+         \param emmiterSize the size of the emmiter in XY plane [m]
+         \param meshes a vector of meshes representing the particles
+         \param material a material of the particles
+         \param look a look of the particles
+         */
+        OpenGLFall(GLuint maxParticles, GLfloat lifetime, glm::vec2 emitterSize, const std::vector<Mesh*>& meshes, 
+            const Material& material, const Look& look);
+        
+        //! A destructor.
+        ~OpenGLFall();	
+        
+        //! A method initializing/resetting the particle system.
+        /*!
+         \param cam a pointer to the active camera
+         */
+        virtual void Setup(OpenGLCamera* cam);
+
+        //! A method updating the positions/velocities of the particles.
+        /*!
+         \param cam a pointer to the active camera
+         \param dt time step of the simulation [s]
+         */
+        virtual void Update(OpenGLCamera* cam, GLfloat dt);
+
+        //! A method drawing the particles.
+        /*!
+         \param cam a pointer to the active camera
+         */
+		virtual void Draw(OpenGLCamera* cam);
+
+        //! A method used to load particle shaders.
+		static void Init();
+		
+		//! A method used to delete particle shaders.
+		static void Destroy();
+
+    private:
+        glm::vec2 emitterSize; // Size of the emitter in XY plane [m]
+        GLfloat lifetime;      // Lifetime of the particles [s]
+        Material material;     // Material of the particles (physics)
+        Look look;             // Look of the particles (rendering)
+
+        GLuint particleVAO; // Particle vertex array
+        GLuint particleVertexVBO; // Particle vertex buffer 
+        GLuint particleIndexVBO;  // Particle index buffer
+
+        static GLSLShader* updateShader;
+		static GLSLShader* renderShader;
     };
 }
 

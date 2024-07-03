@@ -36,6 +36,7 @@
 namespace sf
 {
     class OpenGLView;
+    class OpenGLParticleSystem;
 
     //! An enum specifiying supported texture filtration modes.
     enum class FilteringMode {NEAREST, BILINEAR, BILINEAR_MIPMAP, TRILINEAR};
@@ -240,6 +241,12 @@ namespace sf
          \param light a pointer to a light object
          */
         void AddLight(OpenGLLight* light);
+
+        //! A method to add a particle system to the list of particle systems.
+        /*!
+         \param ps a pointer to a particle system object
+         */
+        void AddParticleSystem(OpenGLParticleSystem* ps);
         
         //! A method to build a graphical object from a mesh structure.
         /*!
@@ -302,6 +309,16 @@ namespace sf
         
         //! A method returning the number of lights.
         size_t getLightsCount();
+
+        //! A method returning a pointer to a particle system.
+        /*!
+         \param id the index of the particle system
+         \return a pointer to the particle system object
+         */
+        OpenGLParticleSystem* getParticleSystem(size_t id);
+
+        //! A method returning the number of particle systems.
+        size_t getParticleSystemsCount();
         
         //! A method that updates lights UBO.
         void SetupLights();
@@ -324,6 +341,12 @@ namespace sf
          \param id the id of the look
          */
         const Look& getLook(size_t id);
+
+        //! A method returning a reference to the look structure.
+        /*!
+         \param name the name of the look
+         */
+        const Look& getLook(const std::string name);
         
         //! A static method to load a texture.
         /*!
@@ -508,6 +531,13 @@ namespace sf
          */
         static void AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffset);
         
+        //! A method to convert a texturable mesh to a plain mesh.
+        /*!
+         \param mesh a pointer to a texturable mesh structure
+         \return a pointer to the allocated mesh structure
+         */
+        static PlainMesh* ConvertToPlainMesh(TexturableMesh* mesh);
+
     private:
         //Modes
         DrawingMode mode;
@@ -516,6 +546,7 @@ namespace sf
         //Data
         std::vector<OpenGLView*> views;
         std::vector<OpenGLLight*> lights;
+        std::vector<OpenGLParticleSystem*> particleSystems;
         std::vector<Object> objects; //VBAs
         std::vector<Look> looks; //OpenGL materials
         NameManager lookNameManager;

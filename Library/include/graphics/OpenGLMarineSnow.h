@@ -26,7 +26,6 @@
 #ifndef __Stonefish_OpenGLMarineSnow__
 #define __Stonefish_OpenGLMarineSnow__
 
-#include <random>
 #include "graphics/OpenGLParticleSystem.h"
 
 namespace sf
@@ -39,10 +38,10 @@ namespace sf
 	public:
         //! A constructor.
         /*!
-         \param numOfParticles the number of simulated particles
+         \param maxParticles the number of simulated particles
 		 \param visibleRange a distance at which particles are destroyed/created
          */
-        OpenGLMarineSnow(GLuint numOfParticles, GLfloat visibleRange);
+        OpenGLMarineSnow(GLuint maxParticles, GLfloat visibleRange);
 		
         //! A destructor.
         ~OpenGLMarineSnow();	
@@ -73,20 +72,14 @@ namespace sf
 		static void Destroy();
 		
 	private:
-		std::default_random_engine generator;
-		std::uniform_real_distribution<GLfloat> uniformd;
-		std::normal_distribution<GLfloat> normald;
 		bool initialised;
 		GLfloat range;
 		glm::vec3 lastEyePos;
 
-		GLuint particlePosSSBO; //Includes position and scale
-        GLuint particleVelSSBO; //Includes velocity and opacity
         GLuint particleVAO; //Vertex array
         GLuint particleEAB; //Indices of particle triangles
 
 		static GLuint flakeTexture;
-		static GLuint noiseTexture; 
 		static GLSLShader* updateShader;
 		static GLSLShader* renderShader;
 	};

@@ -41,29 +41,29 @@ namespace sf
 {
     
 GLuint OpenGLMarineSnow::flakeTexture = 0;
-GLuint OpenGLMarineSnow::noiseTexture = 0;
 GLSLShader* OpenGLMarineSnow::renderShader = nullptr;
 GLSLShader* OpenGLMarineSnow::updateShader = nullptr;
 
-OpenGLMarineSnow::OpenGLMarineSnow(GLuint numOfParticles, GLfloat visibleRange) : OpenGLParticleSystem(numOfParticles), uniformd(0, 1.f), normald(0, 1.f)
+OpenGLMarineSnow::OpenGLMarineSnow(GLuint maxParticles, GLfloat visibleRange) 
+    : OpenGLParticleSystem(maxParticles)
 {
     initialised = false;
     range = fabsf(visibleRange);
     lastEyePos = glm::vec3(0);
 
-    glGenBuffers(1, &particlePosSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * nParticles, NULL, GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &poseSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, poseSSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * maxParticles, NULL, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glGenBuffers(1, &particleVelSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleVelSSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * nParticles, NULL, GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &twistSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, twistSSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * maxParticles, NULL, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glGenBuffers(1, &particleEAB);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, particleEAB);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * 6 * nParticles, NULL, GL_STATIC_DRAW);
-    GLuint* indices = (GLuint*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * 6 * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    for(GLuint i=0; i<nParticles; ++i) 
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * 6 * maxParticles, NULL, GL_STATIC_DRAW);
+    GLuint* indices = (GLuint*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * 6 * maxParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for(GLuint i=0; i<maxParticles; ++i) 
     {
         GLuint index = GLuint(i<<2);
         *(indices++) = index;
@@ -83,8 +83,8 @@ OpenGLMarineSnow::OpenGLMarineSnow(GLuint numOfParticles, GLfloat visibleRange) 
     
 OpenGLMarineSnow::~OpenGLMarineSnow()
 {
-    glDeleteBuffers(1, &particlePosSSBO);
-    glDeleteBuffers(1, &particleVelSSBO);
+    glDeleteBuffers(1, &poseSSBO);
+    glDeleteBuffers(1, &twistSSBO);
     glDeleteBuffers(1, &particleEAB);
     glDeleteVertexArrays(1, &particleVAO);
 }
@@ -94,18 +94,18 @@ void OpenGLMarineSnow::Setup(OpenGLCamera* cam)
     lastEyePos = cam->GetEyePosition();
 
     //Create particles randomly (uniformly) distributed inside a sphere
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO);
-    glm::vec4* positions = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    for(GLuint i=0; i<nParticles; ++i) 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, poseSSBO);
+    glm::vec4* positions = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * maxParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for(GLuint i=0; i<maxParticles; ++i) 
     {
-        GLfloat r = cbrtf(uniformd(generator)) * range; //cbrtf for uniform distribution in sphere volume
-        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + lastEyePos, uniformd(generator)*0.005f + 0.002f);
+        GLfloat r = cbrtf(uniformDist(randGen)) * range; //cbrtf for uniform distribution in sphere volume
+        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normalDist(randGen), normalDist(randGen), normalDist(randGen))) + lastEyePos, uniformDist(randGen)*0.005f + 0.002f);
     }
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleVelSSBO);
-    glm::vec4* velocities = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    memset(velocities, 0, sizeof(glm::vec4) * nParticles);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, twistSSBO);
+    glm::vec4* velocities = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * maxParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    memset(velocities, 0, sizeof(glm::vec4) * maxParticles);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     initialised = true;
@@ -125,13 +125,13 @@ void OpenGLMarineSnow::Update(OpenGLCamera* cam, GLfloat dt)
     //Move particles
     updateShader->Use();
     updateShader->SetUniform("dt", dt);
-    updateShader->SetUniform("numParticles", nParticles);
+    updateShader->SetUniform("numParticles", maxParticles);
     updateShader->SetUniform("eyePos", lastEyePos);
     updateShader->SetUniform("R", range);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_3D, noiseTexture);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, particleVelSSBO);
-    glDispatchCompute((GLuint)ceil(nParticles/256.0), 1, 1);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, poseSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, twistSSBO);
+    glDispatchCompute((GLuint)ceil(maxParticles/256.0), 1, 1);
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -153,12 +153,12 @@ void OpenGLMarineSnow::Draw(OpenGLCamera* cam)
     renderShader->SetUniform("viewDir", cam->GetLookingDirection());
     renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
     renderShader->SetUniform("bWater", glOcn->getLightScattering());
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, poseSSBO);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
     OpenGLState::BindVertexArray(particleVAO);
-    glDrawElements(GL_TRIANGLES, nParticles * 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, maxParticles * 6, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
     OpenGLState::DisableBlend();
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
@@ -172,7 +172,7 @@ void OpenGLMarineSnow::Init()
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     
 	std::vector<GLSLSource> sources;
-    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "oceanParticle.comp"));
+    sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "marineSnowParticle.comp"));
     updateShader = new GLSLShader(sources);
     updateShader->AddUniform("dt", ParameterType::FLOAT);
     updateShader->AddUniform("numParticles", ParameterType::UINT);
@@ -184,7 +184,6 @@ void OpenGLMarineSnow::Init()
     updateShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
     updateShader->BindShaderStorageBlock("Velocities", SSBO_PARTICLE_VEL);
 
-    GLuint noiseSize = 16;
     updateShader->Use();
     updateShader->SetUniform("texNoise", TEX_MAT_ALBEDO);
     updateShader->SetUniform("invNoiseSize", 1.f/(GLfloat)noiseSize);
@@ -195,7 +194,7 @@ void OpenGLMarineSnow::Init()
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "lightingNoShadow.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl"));
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanParticle.frag"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "marineSnowParticle.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "materialUUv.frag"));
     
     renderShader = new GLSLShader(sources, precompiled);
@@ -232,33 +231,13 @@ void OpenGLMarineSnow::Init()
 
     //Load textures
     flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, true);
-
-    unsigned int seed = (unsigned int)GetTimeInMicroseconds();
-    std::mt19937 generator(seed);
-    std::uniform_int_distribution<int8_t> dist(-127,127);
-    glm::uvec3 noiseSize3(noiseSize, noiseSize, noiseSize);
-    int8_t* noiseData = new int8_t[noiseSize3.x * noiseSize3.y * noiseSize3.z * 4];
-    int8_t *ptr = noiseData;
-    for(unsigned int z=0; z<noiseSize3.z; ++z)
-        for(unsigned int y=0; y<noiseSize3.y; ++y) 
-            for(unsigned int x=0; x<noiseSize3.x; ++x) 
-            {
-              *ptr++ = dist(generator);
-              *ptr++ = dist(generator);
-              *ptr++ = dist(generator);
-              *ptr++ = dist(generator);
-            }
-    noiseTexture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, noiseSize3,
-                                                  GL_RGBA8_SNORM, GL_RGBA, GL_BYTE, noiseData, FilteringMode::BILINEAR, true);
-    delete [] noiseData;                                
 }
 
 void OpenGLMarineSnow::Destroy()
 {
-    if(updateShader != NULL) delete updateShader;
-    if(renderShader != NULL) delete renderShader;
+    if(updateShader != nullptr) delete updateShader;
+    if(renderShader != nullptr) delete renderShader;
     if(flakeTexture != 0) glDeleteTextures(1, &flakeTexture);
-    if(noiseTexture != 0) glDeleteTextures(1, &noiseTexture);
 }
     
 }

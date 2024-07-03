@@ -24,3 +24,55 @@
 //
 
 #include "entities/environment/Fall.h"
+
+#include "core/GraphicalSimulationApp.h"
+#include "core/SimulationManager.h"
+#include "core/MaterialManager.h"
+#include "graphics/OpenGLPipeline.h"
+#include "graphics/OpenGLContent.h"
+
+namespace sf
+{
+
+Fall::Fall(const std::string& uniqueName, unsigned int maxParticles, Scalar lifetime, Scalar emitterSizeX, Scalar emitterSizeY, 
+            std::vector<std::string> particleModelPaths, const std::string& particleMaterial, const std::string& particleLook)
+{
+    if(!SimulationApp::getApp()->hasGraphics())
+        cCritical("Not possible to use a particle system in a console mode simulation! Use graphical simulation if possible.");
+    
+    Material material = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(particleMaterial);
+    Look look = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLook(particleLook);
+    bool texturableRequired = look.normalTexture > 0 || look.albedoTexture > 0;
+
+    std::vector<Mesh*> meshes;
+    for(size_t i=0; i<particleModelPaths.size(); ++i)
+    {
+        Mesh* mesh = OpenGLContent::LoadMesh(particleModelPaths[i], 1.f, false);
+        if(mesh == nullptr)
+            cCritical("Failed to load a mesh for the particle system! Path: " + particleModelPaths[i]);
+        if(texturableRequired && !mesh->isTexturable())
+            cCritical("The mesh for the particle system is not texturable!");
+        if(!texturableRequired && mesh->isTexturable())
+        {
+            PlainMesh* plainMesh = OpenGLContent::ConvertToPlainMesh((TexturableMesh*)mesh);
+            delete mesh;
+            mesh = plainMesh;
+        }
+        meshes.push_back(mesh);
+    }
+
+    glFall = new OpenGLFall(maxParticles, lifetime, glm::vec2((GLfloat)emitterSizeX, (GLfloat)emitterSizeY), meshes, material, look);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddParticleSystem(glFall);
+}
+
+Fall::~Fall()
+{
+    delete glFall;
+}
+
+std::vector<Renderable> Fall::Render()
+{
+    return std::vector<Renderable>();
+}
+
+}
