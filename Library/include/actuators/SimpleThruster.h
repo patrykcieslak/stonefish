@@ -64,6 +64,9 @@ namespace sf
         //! A method used to set the thrust limits.
         void setThrustLimits(Scalar lower, Scalar upper);
 
+        //! A method returning the requested setpoint.
+        Scalar getThrustSetpoint() const;
+
         //! A method returning the generated thrust.
         Scalar getThrust() const;
 

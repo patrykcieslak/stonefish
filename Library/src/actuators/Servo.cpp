@@ -40,6 +40,7 @@ Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, S
     tauMax = btFabs(maxTorque);
     pSetpoint = Scalar(0);
     vSetpoint = Scalar(0);
+    vLimit = Scalar(-1); // No limit
     mode = ServoControlMode::VELOCITY;
 }
 
@@ -62,7 +63,7 @@ void Servo::setDesiredPosition(Scalar pos)
     {
         FeatherstoneJoint jnt = fe->getJoint(jId);
         if(jnt.lowerLimit < jnt.upperLimit) //Does it have joint limits?
-            pos = pos < jnt.lowerLimit ? jnt.lowerLimit : (pos > jnt.upperLimit ? jnt.upperLimit : pos);
+            pos = btClamped(pos, jnt.lowerLimit, jnt.upperLimit);
     }
     
     pSetpoint = pos;
@@ -75,9 +76,18 @@ void Servo::setDesiredVelocity(Scalar vel)
         
     if(btFuzzyZero(vel))
         pSetpoint = getPosition();
-        
-    vSetpoint = vel;
+
+    if(vLimit > Scalar(0))
+        vSetpoint = btClamped(vel, -vLimit, vLimit);
+    else
+        vSetpoint = vel;
+
     ResetWatchdog();
+}
+
+void Servo::setMaxVelocity(Scalar vel)
+{
+    vLimit = vel;
 }
 
 void Servo::setMaxTorque(Scalar tau)
@@ -197,13 +207,16 @@ void Servo::Update(Scalar dt)
         {
             Scalar err = pSetpoint - getPosition();
             vSetpoint2 = Kp * err;
+            if(vLimit > Scalar(0))
+                vSetpoint2 = btClamped(vSetpoint2, -vLimit, vLimit);
         }
         else
         {
             //vSetpoint2 = vSetpoint;
             Scalar err = vSetpoint - getVelocity();  
             vSetpoint2 = Kv * err + vSetpoint;
-            cInfo("Velocity setpoint: %1.6lf Error: %1.6lf", vSetpoint, err);
+            if(vLimit > Scalar(0))
+                vSetpoint2 = btClamped(vSetpoint2, -vLimit, vLimit);
         }
 
         switch(j->getType())
@@ -223,8 +236,18 @@ void Servo::Update(Scalar dt)
         {
             case ServoControlMode::POSITION: 
             {
-                fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-                fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
+                Scalar err = pSetpoint - getPosition();
+                if(vLimit > Scalar(0)               // If velocity is limited 
+                   && btFabs(err) > vLimit * dt)    // and position error could result in crossing this limit
+                {
+                    fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
+                    fe->MotorVelocitySetpoint(jId, err > Scalar(0) ? vLimit : -vLimit, Kv);
+                }
+                else
+                {
+                    fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
+                    fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
+                }
             }
                 break;
                 
