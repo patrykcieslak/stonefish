@@ -39,7 +39,7 @@ namespace sf
     {
     public:
         //! A constructor.
-        RotorDynamics() : lastOutput(0) 
+        RotorDynamics() : lastOutput(0), outputLimit(-1)
         {}
 
         //! A method that updates the model.
@@ -52,8 +52,18 @@ namespace sf
         //! A method returning the model type.
         virtual RotorDynamicsType getType() = 0;
 
+        //! A method used to set the limit of output.
+        /*!
+          \param limit the absolute limit of the output [rad/s]
+        */
+        void setOutputLimit(Scalar limit)
+        {
+            outputLimit = limit;
+        }
+
     protected:
         Scalar lastOutput;
+        Scalar outputLimit;
     };
 
     // ---------- Implemententation of several models of rotor dynamics -----------
@@ -100,8 +110,8 @@ namespace sf
         {
             Scalar alpha = dt / tau;
             Scalar output = alpha * sp + (1 - alpha) * lastOutput;
-            lastOutput = output;
-            return output;
+            lastOutput = outputLimit > Scalar(0) ?  btClamped(output, -outputLimit, outputLimit) : output;
+            return lastOutput;
         }
 
         //! A method returning the model type.
@@ -136,8 +146,8 @@ namespace sf
         {
             // state += dt*(beta*_cmd - alpha*state*std::abs(state));
             Scalar output = lastOutput + dt * (beta * sp - (alpha * lastOutput * btFabs(lastOutput)));
-            lastOutput = output;
-            return output;
+            lastOutput = outputLimit > Scalar(0) ? btClamped(output, -outputLimit, outputLimit) : output;
+            return lastOutput;
         }
 
         //! A method returning the model type.
@@ -177,8 +187,8 @@ namespace sf
         {
             Scalar output = lastOutput +
                 dt * (sp * Kt/Rm - Kv1 * lastOutput - Kv2 * lastOutput * btFabs(lastOutput))/Jmsp;
-            lastOutput = output;
-            return output;
+            lastOutput = outputLimit > Scalar(0) ?  btClamped(output, -outputLimit, outputLimit) : output;
+            return lastOutput;
         }
 
         //! A method returning the model type.
@@ -224,8 +234,8 @@ namespace sf
 
             Scalar tauD = lastOutput > Scalar(0) ? damping : -damping;
             Scalar output = lastOutput + (tau - tauD)/J * dt;
-            lastOutput = output;
-            return output;
+            lastOutput = outputLimit > Scalar(0) ?  btClamped(output, -outputLimit, outputLimit) : output;
+            return lastOutput;
         }
 
         //! A method used to update the damping torque.

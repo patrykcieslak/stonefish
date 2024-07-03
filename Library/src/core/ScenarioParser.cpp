@@ -2552,10 +2552,9 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         BodyPhysicsSettings phy;
         phy.collisions = false;
         phy.buoyancy = false;
-
         phy.mode = BodyPhysicsMode::SUBMERGED;
         Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
-            propScale, I4(), std::string(mat), lookStr);
+            propScale, I4(), std::string(mat), lookStr, -1, GeometryApproxType::CYLINDER);
 
         Scalar maxSetpoint;
         bool inverted = false;
@@ -2671,7 +2670,14 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         {
             Scalar J = prop->getInertia().getX() + prop->getAddedInertia().getX();
             if((item2 = item->FirstChildElement("rotor_inertia")) != nullptr)
+            {
                 item2->QueryAttribute("value", &J);
+            }
+            else
+            {
+                log.Print(MessageType::INFO, "Actuator '%s': using calculated rotor inertia = %1.5lf and added inertia = %1.5lf.", 
+                    actuatorName.c_str(), prop->getInertia().getX(), prop->getAddedInertia().getX());
+            }
 
             Scalar kp, ki, iLim; // PI settings
             if ((item2 = item->FirstChildElement("kp")) != nullptr 
@@ -4615,10 +4621,6 @@ bool ScenarioParser::CopyNode(XMLNode* destParent, const XMLNode* src)
     {
         log.Print(MessageType::ERROR, "Performing XML node copy failed!");
         return false;
-    }
-    else
-    {
-        log.Print(MessageType::INFO, "Copied XML node '%s'", srcCopy->Value());
     }
 
     //Add this child

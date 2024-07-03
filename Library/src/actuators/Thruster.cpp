@@ -73,6 +73,7 @@ void Thruster::setSetpoint(Scalar s)
 void Thruster::setSetpointLimit(Scalar limit)
 {
     setpointLimit = btFabs(limit);
+    rotorModel->setOutputLimit(setpointLimit*2); // Protect against uncontrolled behavior
 }
 
 Scalar Thruster::getSetpointLimit()
