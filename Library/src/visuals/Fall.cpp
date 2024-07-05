@@ -23,7 +23,7 @@
 //  Copyright(c) 2024 Patryk Cieslak. All rights reserved.
 //
 
-#include "entities/environment/Fall.h"
+#include "visuals/Fall.h"
 
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
@@ -36,10 +36,8 @@ namespace sf
 
 Fall::Fall(const std::string& uniqueName, unsigned int maxParticles, Scalar lifetime, Scalar emitterSizeX, Scalar emitterSizeY, 
             std::vector<std::string> particleModelPaths, const std::string& particleMaterial, const std::string& particleLook)
-{
-    if(!SimulationApp::getApp()->hasGraphics())
-        cCritical("Not possible to use a particle system in a console mode simulation! Use graphical simulation if possible.");
-    
+    : Visual(uniqueName)
+{    
     Material material = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(particleMaterial);
     Look look = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLook(particleLook);
     bool texturableRequired = look.normalTexture > 0 || look.albedoTexture > 0;
@@ -68,6 +66,17 @@ Fall::Fall(const std::string& uniqueName, unsigned int maxParticles, Scalar life
 Fall::~Fall()
 {
     delete glFall;
+}
+
+VisualType Fall::getType() const
+{
+    return VisualType::FALL;
+}
+
+void Fall::UpdateTransform()
+{
+    // Transform t = getVisualFrame();
+    // glFall->UpdateTransform(t);
 }
 
 std::vector<Renderable> Fall::Render()

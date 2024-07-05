@@ -36,7 +36,7 @@ const GLuint OpenGLParticleSystem::noiseSize = 16;
 GLuint OpenGLParticleSystem::noiseTexture = 0;
 
 OpenGLParticleSystem::OpenGLParticleSystem(GLuint maxParticles) 
-    : maxParticles(maxParticles), uniformDist(0, 1.f), normalDist(0, 1.f)
+    : maxParticles(maxParticles), uniformDist(0, 1.f), normalDist(0, 1.f), initialized(false)
 {
 }
 

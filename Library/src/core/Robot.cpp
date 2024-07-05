@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/Robot.h"
@@ -34,6 +34,7 @@
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
 #include "comms/Comm.h"
+#include "visuals/Visual.h"
 
 namespace sf
 {
@@ -121,6 +122,23 @@ Comm* Robot::getComm(size_t index)
 {
     if(index < comms.size())
         return comms[index];
+    else
+        return nullptr;
+}
+
+Visual* Robot::getVisual(std::string name)
+{
+    for(size_t i=0; i<visuals.size(); ++i)
+        if(visuals[i]->getName() == name)
+            return visuals[i];
+    
+    return nullptr;
+}
+
+Visual* Robot::getVisual(size_t index)
+{
+    if(index < visuals.size())
+        return visuals[index];
     else
         return nullptr;
 }
@@ -217,6 +235,18 @@ void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transf
         cCritical("Link '%s' doesn't exist. Communication device '%s' cannot be attached!", attachmentLinkName.c_str(), c->getName().c_str());
 }
 
+void Robot::AddVisual(Visual* v, const std::string& attachmentLinkName, const Transform& origin)
+{
+    SolidEntity* link = getLink(attachmentLinkName);
+    if(link != nullptr)
+    {
+        v->AttachToSolid(link, origin);
+        visuals.push_back(v);
+    }
+    else
+        cCritical("Link '%s' doesn't exist. Visual effect '%s' cannot be attached!", attachmentLinkName.c_str(), v->getName().c_str());
+}
+
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     for(size_t i=0; i<sensors.size(); ++i)
@@ -225,6 +255,8 @@ void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
         sm->AddActuator(actuators[i]);
     for(size_t i=0; i<comms.size(); ++i)
         sm->AddComm(comms[i]);
+    for(size_t i=0; i<visuals.size(); ++i)
+        sm->AddVisual(visuals[i]);
 }
 
 void Robot::Respawn(SimulationManager* sm, const Transform& origin)

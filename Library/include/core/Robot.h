@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Robot__
@@ -37,6 +37,7 @@ namespace sf
     class Sensor;
     class Actuator;
     class Comm;
+    class Visual;
     class LinkSensor;
     class JointSensor;
     class VisionSensor;
@@ -156,6 +157,15 @@ namespace sf
          */
         void AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin);
         
+        //VISUAL EFFECTS
+        //! A method used to attach a visual to a specified link of the robot.
+        /*!
+         \param v a pointer to a visual object
+         \param attachmentLinkName a name of the link to which the visual is attached
+         \param origin a transformation from the link origin to the visual frame
+         */
+        void AddVisual(Visual* v, const std::string& attachmentLinkName, const Transform& origin);
+
         //GENERAL
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
@@ -212,6 +222,20 @@ namespace sf
          \return a pointer to the comm object
          */
         Comm* getComm(size_t index);
+
+        //! A method returning a pointer to the visual with a given name.
+        /*!
+         \param name the name of the visual
+         \return a pointer to the visual object
+         */
+        Visual* getVisual(std::string name);
+
+        //! A method returning a pointer to the visual by index.
+        /*!
+         \param index the id of the visual
+         \return a pointer to the visual object
+         */
+        Visual* getVisual(size_t index);
         
         //! A method returning a pointer to the base link solid.
         SolidEntity* getBaseLink();
@@ -258,6 +282,7 @@ namespace sf
         std::vector<Sensor*> sensors;
         std::vector<Actuator*> actuators;
         std::vector<Comm*> comms;
+        std::vector<Visual*> visuals;
         std::string name;
         bool fixed;
     };

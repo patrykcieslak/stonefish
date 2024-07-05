@@ -72,7 +72,6 @@ namespace sf
 		static void Destroy();
 		
 	private:
-		bool initialised;
 		GLfloat range;
 		glm::vec3 lastEyePos;
 

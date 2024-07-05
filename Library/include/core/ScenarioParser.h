@@ -41,7 +41,7 @@ namespace sf
     class SolidEntity;
     class Sensor;
     class Actuator;
-    class Light;
+    class Visual;
     class Comm;
     class VelocityField;
     class FixedJoint;
@@ -243,13 +243,13 @@ namespace sf
          */
         virtual Sensor* ParseSensor(XMLElement* element, const std::string& namePrefix);
         
-        //! A method used to parse a description of a light source.
+        //! A method used to parse a description of a visual object.
         /*!
          \param element a pointer to the XML node
-         \param namePrefix a string added at the beginning of the light name
+         \param namePrefix a string added at the beginning of the visuals name
          \return pointer to light
          */
-        virtual Light* ParseLight(XMLElement* element, const std::string& namePrefix);
+        virtual Visual* ParseVisual(XMLElement* element, const std::string& namePrefix);
 
         //! A method used to parse a communication device description.
         /*!

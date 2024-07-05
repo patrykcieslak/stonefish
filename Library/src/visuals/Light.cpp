@@ -20,10 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
 //
 
-#include "actuators/Light.h"
+#include "visuals/Light.h"
 
 #include "core/GraphicalSimulationApp.h"
 #include "graphics/OpenGLPipeline.h"
@@ -38,11 +38,8 @@ namespace sf
 {
 
 Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
-	: LinkActuator(uniqueName), attach2(nullptr), attach3(nullptr), c(color), coneAngle(0), glLight(nullptr)
+	: Visual(uniqueName), c(color), coneAngle(0), glLight(nullptr)
 {
-    if(!SimulationApp::getApp()->hasGraphics())
-        cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
-    
 	R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
     Fi = lum < Scalar(0) ? Scalar(0) : lum;
 }
@@ -53,69 +50,9 @@ Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color c
     coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
     
-ActuatorType Light::getType() const
+VisualType Light::getType() const
 {
-    return ActuatorType::LIGHT;
-}
-
-Transform Light::getActuatorFrame() const
-{
-	if(attach != nullptr)
-        return attach->getOTransform() * o2a; //Solid
-    else if(attach2 != nullptr)
-		return attach2->getTransform() * o2a; //Static
-	else if(attach3 != nullptr)
-        return attach3->getOTransform() * o2a; //Animated
-    else
-        return o2a;
-}
-
-void Light::AttachToWorld(const Transform& origin)
-{
-	o2a = origin;
-    attach = nullptr;
-    attach2 = nullptr;
-    attach3 = nullptr;
-    if(glLight == nullptr)
-	    InitGraphics();
-}
-        
-void Light::AttachToStatic(StaticEntity* body, const Transform& origin)
-{
-	if(body != nullptr)
-	{
-		o2a = origin;
-		attach = nullptr;
-        attach2 = body;
-        attach3 = nullptr;
-        if(glLight == nullptr)
-		    InitGraphics();
-	}
-}
-
-void Light::AttachToAnimated(AnimatedEntity* body, const Transform& origin)
-{
-    if(body != nullptr)
-    {
-        o2a = origin;
-        attach = nullptr;
-        attach2 = nullptr;
-        attach3 = body;
-        if(glLight == nullptr)
-            InitGraphics();
-    }
-}
-
-void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
-{
-    LinkActuator::AttachToSolid(body, origin);
-    if(body != nullptr)
-    {
-        attach2 = nullptr;
-        attach3 = nullptr;
-        if(glLight == nullptr)
-            InitGraphics();
-    }
+    return VisualType::LIGHT;
 }
 
 void Light::InitGraphics()
@@ -129,14 +66,10 @@ void Light::InitGraphics()
     glLight->UpdateTransform();
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
 }
-    
-void Light::Update(Scalar dt)
-{
-}
 
 void Light::UpdateTransform()
 {
-    Transform lightTransform = getActuatorFrame();
+    Transform lightTransform = getVisualFrame();
     Vector3 pos = lightTransform.getOrigin();
     glm::vec3 glPos((GLfloat)pos.x(), (GLfloat)pos.y(), (GLfloat)pos.z());
     glLight->UpdatePosition(glPos);
@@ -154,7 +87,7 @@ std::vector<Renderable> Light::Render()
     std::vector<Renderable> items(0);
     
     Renderable item;
-    item.model = glMatrixFromTransform(getActuatorFrame());
+    item.model = glMatrixFromTransform(getVisualFrame());
     item.type = RenderableType::ACTUATOR_LINES;
     
     GLfloat iconSize = 1.f;

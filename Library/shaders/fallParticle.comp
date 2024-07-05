@@ -15,7 +15,7 @@ uniform float invNoiseSize;
 struct Pose
 {
     vec4 posScaleX; // xyz - position, w - scale X
-    vec4 rot;       // xyz - orientation axis, w - angle
+    vec4 ori;       // xyz - orientation axis, w - angle
 };
 
 struct Twist

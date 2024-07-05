@@ -23,4 +23,4 @@
 //  Copyright(c) 2024 Patryk Cieslak. All rights reserved.
 //
 
-#include "entities/environment/Plume.h"
+#include "visuals/Plume.h"

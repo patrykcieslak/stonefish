@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationManager.h"
@@ -64,7 +64,7 @@
 #include "entities/statics/Plane.h"
 #include "joints/Joint.h"
 #include "actuators/Actuator.h"
-#include "actuators/Light.h"
+#include "visuals/Visual.h"
 #include "actuators/SuctionCup.h"
 #include "sensors/Sensor.h"
 #include "comms/Comm.h"
@@ -265,6 +265,12 @@ void SimulationManager::AddComm(Comm* comm)
 {
     if(comm != nullptr)
         comms.push_back(comm);
+}
+
+void SimulationManager::AddVisual(Visual* vis)
+{
+    if(vis != nullptr)
+        visuals.push_back(vis);
 }
 
 void SimulationManager::AddJoint(Joint* jnt)
@@ -496,6 +502,23 @@ Comm* SimulationManager::getComm(const std::string& name)
     for(size_t i = 0; i < comms.size(); ++i)
         if(comms[i]->getName() == name)
             return comms[i];
+    
+    return nullptr;
+}
+
+Visual* SimulationManager::getVisual(unsigned int index)
+{
+    if(index < visuals.size())
+        return visuals[index];
+    else
+        return nullptr;
+}
+
+Visual* SimulationManager::getVisual(const std::string& name)
+{
+    for(size_t i = 0; i < visuals.size(); ++i)
+        if(visuals[i]->getName() == name)
+            return visuals[i];
     
     return nullptr;
 }
@@ -924,6 +947,10 @@ void SimulationManager::DestroyScenario()
     for(size_t i=0; i<comms.size(); ++i)
         delete comms[i];
     comms.clear();
+
+    for(size_t i=0; i<visuals.size(); ++i)
+        delete visuals[i];
+    visuals.clear();
     
     for(size_t i=0; i<actuators.size(); ++i)
         delete actuators[i];
@@ -1125,11 +1152,7 @@ void SimulationManager::UpdateDrawingQueue()
         
     //Actuators
     for(size_t i=0; i<actuators.size(); ++i)
-    {
         glPipeline->AddToDrawingQueue(actuators[i]->Render());
-        if(actuators[i]->getType() == ActuatorType::LIGHT)
-            ((Light*)actuators[i])->UpdateTransform();
-    }
     
     //Sensors
     for(size_t i=0; i<sensors.size(); ++i)
@@ -1138,6 +1161,10 @@ void SimulationManager::UpdateDrawingQueue()
         if(sensors[i]->getType() == SensorType::VISION)
             ((VisionSensor*)sensors[i])->UpdateTransform();
     }
+
+    //Visuals
+    for(size_t i=0; i<visuals.size(); ++i)
+        visuals[i]->UpdateTransform();
     
     //Comms
     for(size_t i=0; i<comms.size(); ++i)

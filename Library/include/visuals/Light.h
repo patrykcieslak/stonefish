@@ -26,7 +26,7 @@
 #ifndef __Stonefish_Light__
 #define __Stonefish_Light__
 
-#include "actuators/LinkActuator.h"
+#include "visuals/Visual.h"
 #include "graphics/OpenGLDataStructs.h"
 
 namespace sf
@@ -36,7 +36,7 @@ namespace sf
     class AnimatedEntity;
     
     //! A class representing a light of two common types: omni and spot.
-    class Light : public LinkActuator
+    class Light : public Visual
     {
     public:
         //! A constructor of an omni light.
@@ -58,57 +58,18 @@ namespace sf
          */
         Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
         
-		//! A method used to attach the comm device to the world origin.
-        /*!
-         \param origin the place where the comm should be attached in the world frame
-         */
-        void AttachToWorld(const Transform& origin);
-        
-        //! A method used to attach the light to a static body.
-        /*!
-         \param body a pointer to the static body
-         \param origin the place where the light should be attached in the body origin frame
-         */
-        void AttachToStatic(StaticEntity* body, const Transform& origin);
-		
-        //! A method used to attach the light to an animated body.
-        /*!
-         \param body a pointer to the animated body
-         \param origin the place where the light should be attached in the body origin frame
-         */
-        void AttachToAnimated(AnimatedEntity* body, const Transform& origin);
-
-        //! A method used to attach the actuator to a specified rigid body.
-        /*!
-         \param solid a pointer to a rigid body
-         \param origin a transformation from the body origin to the actuator origin
-         */
-        void AttachToSolid(SolidEntity* body, const Transform& origin);
-        
-        //! A method which updates the pose of the light
-        /*!
-         \param dt a time step of the simulation
-         */
-        void Update(Scalar dt);
-        
         //! A method that updates light position.
-        void UpdateTransform();
+        void UpdateTransform() override;
         
         //! A method implementing the rendering of the light dummy.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
         
-		//! A method returning actuator frame in the world frame.
-		Transform getActuatorFrame() const;
-		
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning the type of the visual.
+        VisualType getType() const override;
         
     private:
         void InitGraphics();
         
-        //attach -> SolidEntity
-		StaticEntity* attach2;
-        AnimatedEntity* attach3;
         Color c;
 		Scalar R;
         Scalar Fi;

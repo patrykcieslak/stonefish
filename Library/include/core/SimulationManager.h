@@ -46,6 +46,7 @@ namespace sf
     class FeatherstoneEntity;
     class Joint;
     class Actuator;
+    class Visual;
     class Sensor;
     class Comm;
     class Contact;
@@ -206,6 +207,12 @@ namespace sf
          \param comm a pointer to the comm object
          */
         void AddComm(Comm* comm);
+
+        //! A method that adds a visual to the simulation world.
+        /*!
+         \param vis a pointer to the visual object
+         */
+        void AddVisual(Visual* vis);
         
         //! A method that adds contact monitoring between two entities.
         /*!
@@ -435,6 +442,20 @@ namespace sf
          \return a pointer to a comm object
          */
         Comm* getComm(const std::string& name);
+
+        //! A method returning a visual by index.
+        /*!
+         \param index an id of the visual
+         \return a pointer to a visual object
+         */
+        Visual* getVisual(unsigned int index);
+
+        //! A method returning a visual by name.
+        /*!
+         \param name a name of the visual
+         \return a pointer to a visual object
+         */
+        Visual* getVisual(const std::string& name);
         
         //! A method returning a pointer to the NED object.
         NED* getNED();
@@ -587,6 +608,7 @@ namespace sf
         std::vector<Sensor*> sensors;
         std::vector<Actuator*> actuators;
         std::vector<Comm*> comms;
+        std::vector<Visual*> visuals;
         std::vector<Contact*> contacts;
         std::vector<Collision> collisions;
         NED* ned;

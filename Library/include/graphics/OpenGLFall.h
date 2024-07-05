@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLFall__
 
 #include "graphics/OpenGLParticleSystem.h"
+#include "core/MaterialManager.h"
 
 namespace sf
 {
@@ -79,13 +80,18 @@ namespace sf
     private:
         glm::vec2 emitterSize; // Size of the emitter in XY plane [m]
         GLfloat lifetime;      // Lifetime of the particles [s]
+        GLuint nParticles;     // Number of particles currently active
         Material material;     // Material of the particles (physics)
         Look look;             // Look of the particles (rendering)
 
+        GLuint ageSSBO;     // Particles age buffer
+        GLuint particleDIB; // Particles draw indirect buffer
         GLuint particleVAO; // Particle vertex array
         GLuint particleVertexVBO; // Particle vertex buffer 
         GLuint particleIndexVBO;  // Particle index buffer
-
+        bool textured; // True if the particles are textured
+        std::vector<DrawElementsIndirectCommand> drawCommands; // Draw commands for particle meshes
+        
         static GLSLShader* updateShader;
 		static GLSLShader* renderShader;
     };

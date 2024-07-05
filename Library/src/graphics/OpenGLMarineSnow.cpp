@@ -47,7 +47,6 @@ GLSLShader* OpenGLMarineSnow::updateShader = nullptr;
 OpenGLMarineSnow::OpenGLMarineSnow(GLuint maxParticles, GLfloat visibleRange) 
     : OpenGLParticleSystem(maxParticles)
 {
-    initialised = false;
     range = fabsf(visibleRange);
     lastEyePos = glm::vec3(0);
 
@@ -108,13 +107,13 @@ void OpenGLMarineSnow::Setup(OpenGLCamera* cam)
     memset(velocities, 0, sizeof(glm::vec4) * maxParticles);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    initialised = true;
+    initialized = true;
 }
     
 void OpenGLMarineSnow::Update(OpenGLCamera* cam, GLfloat dt)
 {
     //Check if ever updated
-    if(!initialised)
+    if(!initialized)
     {
         Setup(cam);
         return;
@@ -129,8 +128,8 @@ void OpenGLMarineSnow::Update(OpenGLCamera* cam, GLfloat dt)
     updateShader->SetUniform("eyePos", lastEyePos);
     updateShader->SetUniform("R", range);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_3D, noiseTexture);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, poseSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, twistSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POSE, poseSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_TWIST, twistSSBO);
     glDispatchCompute((GLuint)ceil(maxParticles/256.0), 1, 1);
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
@@ -153,7 +152,7 @@ void OpenGLMarineSnow::Draw(OpenGLCamera* cam)
     renderShader->SetUniform("viewDir", cam->GetLookingDirection());
     renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
     renderShader->SetUniform("bWater", glOcn->getLightScattering());
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, poseSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POSE, poseSSBO);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
@@ -181,8 +180,8 @@ void OpenGLMarineSnow::Init()
     updateShader->AddUniform("texNoise", ParameterType::INT);
     updateShader->AddUniform("invNoiseSize", ParameterType::FLOAT);
     updateShader->BindUniformBlock("OceanCurrents", UBO_OCEAN_CURRENTS);
-    updateShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
-    updateShader->BindShaderStorageBlock("Velocities", SSBO_PARTICLE_VEL);
+    updateShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POSE);
+    updateShader->BindShaderStorageBlock("Velocities", SSBO_PARTICLE_TWIST);
 
     updateShader->Use();
     updateShader->SetUniform("texNoise", TEX_MAT_ALBEDO);
@@ -216,7 +215,7 @@ void OpenGLMarineSnow::Init()
     renderShader->AddUniform("irradiance_texture", ParameterType::INT);
     renderShader->BindUniformBlock("SunSky", UBO_SUNSKY);
     renderShader->BindUniformBlock("Lights", UBO_LIGHTS);
-    renderShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
+    renderShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POSE);
 
     renderShader->Use();
     renderShader->SetUniform("texAlbedo", TEX_MAT_ALBEDO);

@@ -68,7 +68,6 @@
 #include "sensors/vision/MSIS.h"
 #include "sensors/Contact.h"
 #include "actuators/Push.h"
-#include "actuators/Light.h"
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
 #include "actuators/Rudder.h"
@@ -80,6 +79,9 @@
 #include "comms/AcousticModem.h"
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
+#include "visuals/Light.h"
+#include "visuals/Plume.h"
+#include "visuals/Fall.h"
 #include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
@@ -273,14 +275,14 @@ bool ScenarioParser::Parse(std::string filename)
         element = element->NextSiblingElement("sensor");
     }
 
-    //Load standalone lights (optional)
-    element = root->FirstChildElement("light");
+    //Load standalone visuals (optional)
+    element = root->FirstChildElement("visual_effect");
     while(element != nullptr)
     {
-        Light* l = ParseLight(element, "");
-        if(l == nullptr)
+        Visual* vis = ParseVisual(element, "");
+        if(vis == nullptr)
         {
-            log.Print(MessageType::ERROR, "Light not properly defined!");
+            log.Print(MessageType::ERROR, "Visual effect not properly defined!");
             return false;
         }
         else
@@ -289,14 +291,14 @@ bool ScenarioParser::Parse(std::string filename)
             XMLElement* item;
             if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, origin))
             {
-                log.Print(MessageType::ERROR, "Light not properly defined!");
-                delete l;
+                log.Print(MessageType::ERROR, "Visual effect not properly defined!");
+                delete vis;
                 return false;
             }
-            l->AttachToWorld(origin);
-            sm->AddActuator(l);
+            vis->AttachToWorld(origin);
+            sm->AddVisual(vis);
         }
-        element = element->NextSiblingElement("light");
+        element = element->NextSiblingElement("visual_effect");
     }
 
     //Load standalone communication devices (beacons, optional)
@@ -1015,7 +1017,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             return false;
         }
         
-        if((item = element->FirstChildElement("visual")) != nullptr)
+        if((item = element->FirstChildElement("visual_effect")) != nullptr)
         {
             const char* graMesh = nullptr;
             Scalar graScale(1);
@@ -1085,13 +1087,13 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     }
 
     //---- Lights ----
-    item = element->FirstChildElement("light");
+    item = element->FirstChildElement("visual_effect");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, object->getName());
-        if(l == nullptr)
+        Visual* vis = ParseVisual(item, object->getName());
+        if(vis == nullptr)
         {
-            log.Print(MessageType::ERROR, "Light of static body '%s' not properly defined!", objectName.c_str());
+            log.Print(MessageType::ERROR, "Visual effect attached to static body '%s' not properly defined!", objectName.c_str());
             delete object;
             return false;
         }
@@ -1101,15 +1103,15 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             XMLElement* item2;
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
-                log.Print(MessageType::ERROR, "Light of static body '%s' not properly defined!", objectName.c_str());
-                delete l;
+                log.Print(MessageType::ERROR, "Visual effect attached to static body '%s' not properly defined!", objectName.c_str());
+                delete vis;
                 delete object;
                 return false;
             }
-            l->AttachToStatic(object, origin);
-            sm->AddActuator(l);
+            vis->AttachToStatic(object, origin);
+            sm->AddVisual(vis);
         }
-        item = item->NextSiblingElement("light");
+        item = item->NextSiblingElement("visual_effect");
     }
     
     //---- Communication devices ----
@@ -1372,7 +1374,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             return false;
         }
         
-        if((item = element->FirstChildElement("visual")) != nullptr)
+        if((item = element->FirstChildElement("visual_effect")) != nullptr)
         {
             const char* graMesh = nullptr;
             Scalar graScale;
@@ -1418,14 +1420,14 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
         item = item->NextSiblingElement("sensor");
     }
 
-    //---- Lights ----
-    item = element->FirstChildElement("light");
+    //---- Visual effects ----
+    item = element->FirstChildElement("visual_effect");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, object->getName());
-        if(l == nullptr)
+        Visual* vis = ParseVisual(item, object->getName());
+        if(vis == nullptr)
         {
-            log.Print(MessageType::ERROR, "Light of animated body '%s' not properly defined!", objectName.c_str());
+            log.Print(MessageType::ERROR, "Visual effect attached to animated body '%s' not properly defined!", objectName.c_str());
             delete object;
             return false;
         }
@@ -1435,15 +1437,15 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             XMLElement* item2;
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
-                log.Print(MessageType::ERROR, "Light of animated body '%s' not properly defined!", objectName.c_str());
-                delete l;
+                log.Print(MessageType::ERROR, "Visual effect attached to animated body '%s' not properly defined!", objectName.c_str());
+                delete vis;
                 delete object;
                 return false;
             }
-            l->AttachToAnimated(object, origin);
-            sm->AddActuator(l);
+            vis->AttachToAnimated(object, origin);
+            sm->AddVisual(vis);
         }
-        item = item->NextSiblingElement("light");
+        item = item->NextSiblingElement("visual_effect");
     }
 
     //---- Communication devices ----
@@ -1509,14 +1511,14 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
         item = item->NextSiblingElement("sensor");
     }
 
-    //---- Lights ----
-    item = element->FirstChildElement("light");
+    //---- Visual effect ----
+    item = element->FirstChildElement("visual_effect");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, solid->getName());
-        if(l == nullptr)
+        Visual* vis = ParseVisual(item, solid->getName());
+        if(vis == nullptr)
         {
-            log.Print(MessageType::ERROR, "Light of dynamic body '%s' not properly defined!", solid->getName().c_str());
+            log.Print(MessageType::ERROR, "Visual effect attached to dynamic body '%s' not properly defined!", solid->getName().c_str());
             delete solid;
             return false;
         }
@@ -1526,15 +1528,15 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
             XMLElement* item2;
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
-                log.Print(MessageType::ERROR, "Lght of dynamic body '%s' not properly defined!", solid->getName().c_str());
-                delete l;
+                log.Print(MessageType::ERROR, "Visual effect attached to dynamic body '%s' not properly defined!", solid->getName().c_str());
+                delete vis;
                 delete solid;
                 return false;
             }
-            l->AttachToSolid(solid, origin);
-            sm->AddActuator(l);
+            vis->AttachToSolid(solid, origin);
+            sm->AddVisual(vis);
         }
-        item = item->NextSiblingElement("light");
+        item = item->NextSiblingElement("visual_effect");
     }
 
     //---- Communication devices ----
@@ -1863,7 +1865,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 return false;
             }
             
-            if((item = element->FirstChildElement("visual")) != nullptr)
+            if((item = element->FirstChildElement("visual_effect")) != nullptr)
             {
                 const char* graMesh = nullptr;
                 Scalar graScale(1);
@@ -2052,14 +2054,14 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         item = item->NextSiblingElement("actuator");
     }
 
-    //---- Lights ----
-    item = element->FirstChildElement("light");
+    //---- Visual effects ----
+    item = element->FirstChildElement("visual_effect");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, robot->getName());
-        if(l == nullptr)
+        Visual* vis = ParseVisual(item, robot->getName());
+        if(vis == nullptr)
         {
-            log.Print(MessageType::ERROR, "Light of robot '%s' not properly defined!", robotName.c_str());
+            log.Print(MessageType::ERROR, "Visual effect attached to robot '%s' not properly defined!", robotName.c_str());
             delete robot;
             return false;
         }
@@ -2071,14 +2073,14 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
             if( ((item2 = item->FirstChildElement("link")) == nullptr || item2->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
                 || ((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin)) )
             {
-                log.Print(MessageType::ERROR, "Light of robot '%s' not properly defined!", robotName.c_str());
-                delete l;
+                log.Print(MessageType::ERROR, "Visual effect attached to robot '%s' not properly defined!", robotName.c_str());
+                delete vis;
                 delete robot;
                 return false;
             }
-            robot->AddLinkActuator(l, robotName + "/" + std::string(linkName), origin);
+            robot->AddVisual(vis, robotName + "/" + std::string(linkName), origin);
         }
-        item = item->NextSiblingElement("light");
+        item = item->NextSiblingElement("visual_effect");
     }
     
     //---- Communication devices ----
@@ -2661,7 +2663,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         item->QueryAttribute("stall_angle", &stallAngle); //Optional
         item->QueryAttribute("max_angular_rate", &maxAngularRate); //Optional
 
-        if((item = element->FirstChildElement("visual")) == nullptr)
+        if((item = element->FirstChildElement("visual_effect")) == nullptr)
         {
             log.Print(MessageType::ERROR, "Visual definition of actuator '%s' missing!", actuatorName.c_str());
             return nullptr;
@@ -3779,7 +3781,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
 
     //---- Visuals ----
     const char* visFile = nullptr;
-    if((item = element->FirstChildElement("visual")) != nullptr && item->QueryStringAttribute("filename", &visFile) == XML_SUCCESS)
+    if((item = element->FirstChildElement("visual_effect")) != nullptr && item->QueryStringAttribute("filename", &visFile) == XML_SUCCESS)
     {
         if(!isGraphicalSim())
         {
@@ -3800,58 +3802,73 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     return sens;
 }
 
-Light* ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
+Visual* ScenarioParser::ParseVisual(XMLElement* element, const std::string& namePrefix)
 {
     if(!isGraphicalSim())
     {
-        log.Print(MessageType::ERROR, "Lights not supported in console mode!");
+        log.Print(MessageType::ERROR, "Visual effects not supported in console mode!");
         return nullptr;
     }
 
     const char* name = nullptr;
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
-        log.Print(MessageType::ERROR, "Light name missing (namespace '%s')!", namePrefix.c_str());
+        log.Print(MessageType::ERROR, "Visual effect name is missing (namespace '%s')!", namePrefix.c_str());
         return nullptr;
     }
-
-    std::string lightName = std::string(name);
+    std::string visualName = std::string(name);
     if(namePrefix != "")
-        lightName = namePrefix + "/" + lightName;
+        visualName = namePrefix + "/" + visualName;
     
+    const char* type = nullptr;
+    if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Type of visual effect '%s' is missing!", visualName.c_str());
+        return nullptr;
+    }
+    std::string typeStr(type);
+
     XMLElement* item;
-    Scalar illu, radius;
-	Scalar cone = Scalar(0);
-    Color color = Color::Gray(1.f);
-    
-    if((item = element->FirstChildElement("specs")) != nullptr)
+    Visual* vis;
+    if(typeStr == "light")
     {
-        if((item->QueryAttribute("illuminance", &illu) != XML_SUCCESS)
-           || (item->QueryAttribute("radius", &radius) != XML_SUCCESS))
-        {
-            log.Print(MessageType::ERROR, "Specs of light '%s' not properly defined!", lightName.c_str());
-            return nullptr;
-        }        
-        item->QueryAttribute("cone_angle", &cone);
-    } 
-    else
-    {
-        log.Print(MessageType::ERROR, "Specs of light '%s' not defined!", lightName.c_str());
-        return nullptr;
-    }
-    
-    if((item = element->FirstChildElement("color")) == nullptr || !ParseColor(item, color))
-    {
-        log.Print(MessageType::ERROR, "Color of light '%s' not properly defined!", lightName.c_str());
-        return nullptr;
-    }
+        Scalar illu, radius;
+        Scalar cone = Scalar(0);
+        Color color = Color::Gray(1.f);
         
-    Light* light;
-    if(cone > Scalar(0))
-        light = new Light(lightName, radius, cone, color, illu);
-    else
-        light = new Light(lightName, radius, color, illu);
-    return light;
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            if((item->QueryAttribute("illuminance", &illu) != XML_SUCCESS)
+            || (item->QueryAttribute("radius", &radius) != XML_SUCCESS))
+            {
+                log.Print(MessageType::ERROR, "Specs of light '%s' not properly defined!", visualName.c_str());
+                return nullptr;
+            }        
+            item->QueryAttribute("cone_angle", &cone);
+        } 
+        else
+        {
+            log.Print(MessageType::ERROR, "Specs of light '%s' not defined!", visualName.c_str());
+            return nullptr;
+        }
+        
+        if((item = element->FirstChildElement("color")) == nullptr || !ParseColor(item, color))
+        {
+            log.Print(MessageType::ERROR, "Color of light '%s' not properly defined!", visualName.c_str());
+            return nullptr;
+        }
+            
+        if(cone > Scalar(0))
+            vis = new Light(visualName, radius, cone, color, illu);
+        else
+            vis = new Light(visualName, radius, color, illu);
+        return vis;
+    }
+    else 
+    {
+        log.Print(MessageType::ERROR, "Unknown type of visual effect '%s'!", visualName.c_str());
+        return nullptr;
+    }
 }
 
 Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePrefix)

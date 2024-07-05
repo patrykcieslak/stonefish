@@ -39,6 +39,7 @@
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLLight.h"
 #include "graphics/OpenGLMarineSnow.h"
+#include "graphics/OpenGLFall.h"
 #include "utils/SystemUtil.hpp"
 #include "entities/environment/Ocean.h"
 #include "entities/environment/Atmosphere.h"
@@ -62,6 +63,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLSonar::Init();
     OpenGLParticleSystem::Init();
     OpenGLMarineSnow::Init();
+    OpenGLFall::Init();
     content = new OpenGLContent();
     
     //Create display framebuffer
@@ -90,6 +92,7 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLSonar::Destroy();
     OpenGLParticleSystem::Destroy();
     OpenGLMarineSnow::Destroy();
+    OpenGLFall::Destroy();
     OpenGLLight::Destroy();
     delete content;
     
@@ -195,11 +198,16 @@ void OpenGLPipeline::DrawDisplay()
 
 void OpenGLPipeline::DrawObjects()
 {
+    //Draw objects
     for(size_t i=0; i<drawingQueueCopy.size(); ++i)
     {
 		if(drawingQueueCopy[i].type == RenderableType::SOLID)
 			content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
     }
+
+    //Draw particle systems
+    for(size_t i=0; i<content->getParticleSystemsCount(); ++i)
+        content->getParticleSystem(i)->Draw(nullptr);
 }
 
 void OpenGLPipeline::DrawLights()
@@ -363,6 +371,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         ocean->getOpenGLOcean()->Simulate(dt);
         renderMode = rSettings.ocean > RenderQuality::DISABLED && ocean->isRenderable() ? 1 : 0;
     }
+
+    //Simulate particle systems (independent of camera position)
+    for(size_t i=0; i<content->getParticleSystemsCount(); ++i)
+        content->getParticleSystem(i)->Update(nullptr, dt);
+
+    //Get the active atmosphere
     Atmosphere* atm = sim->getAtmosphere();
     OpenGLState::EnableDepthTest();
     OpenGLState::EnableCullFace();

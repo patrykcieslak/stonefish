@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum specifying the type of entity.
-    enum class EntityType {STATIC, SOLID, ANIMATED, FEATHERSTONE, CABLE, FORCEFIELD};
+    enum class EntityType {STATIC, SOLID, ANIMATED, FEATHERSTONE, FORCEFIELD};
     
     //! An enum used for collision filtering.
     typedef enum

@@ -26,14 +26,15 @@
 #ifndef __Stonefish_Fall__
 #define __Stonefish_Fall__
 
-#include "core/MaterialManager.h"
+#include "visuals/Visual.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLFall.h"
 
 namespace sf
 {
 
 //! A class implementing a system of falling particles.
-class Fall
+class Fall : public Visual
 {
 public:
     //! A constructor.
@@ -53,15 +54,14 @@ public:
     //! A destructor.
     virtual ~Fall();
 
-    //! A method used to add the entity to the simulation.
-    /*!
-      \param sm a pointer to a simulation manager
-      \param origin of the emitter in the world frame 
-     */
-    virtual void AddToSimulation(SimulationManager* sm, const Transform& origin);
+    //! A method that updates the emitter position.
+    void UpdateTransform() override;
 
     //! A method implementing the rendering of the particle system dummy.
-    virtual std::vector<Renderable> Render();
+    std::vector<Renderable> Render() override;
+
+    //! A method returning the type of the visual.
+    VisualType getType() const override;
 
 protected:
     OpenGLFall* glFall;

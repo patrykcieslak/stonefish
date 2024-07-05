@@ -77,10 +77,11 @@
 #define SSBO_QTREE_CULL         ((GLuint)4)
 #define AC_QTREE_LOD            ((GLuint)5)
 #define AC_QTREE_CULL           ((GLuint)6)
-#define SSBO_PARTICLE_POS       ((GLuint)7)
-#define SSBO_PARTICLE_VEL       ((GLuint)8)
-#define SSBO_QTREE_INDIRECT     ((GLuint)9)
-#define SSBO_QTREE_SIZE         ((GLuint)10)
+#define SSBO_PARTICLE_POSE      ((GLuint)7)
+#define SSBO_PARTICLE_TWIST     ((GLuint)8)
+#define SSBO_PARTICLE_AGE       ((GLuint)9)
+#define SSBO_QTREE_INDIRECT     ((GLuint)10)
+#define SSBO_QTREE_SIZE         ((GLuint)11)
 
 //Light params
 #define MAX_POINT_LIGHTS        ((GLint)32)
@@ -98,11 +99,11 @@ namespace sf
     
     struct DrawElementsIndirectCommand 
     {
-        GLuint  count;
-        GLuint  instanceCount;
-        GLuint  firstIndex;
-        GLuint  baseVertex;
-        GLuint  baseInstance;
+        GLuint  count;          // Number of elements to be rendered
+        GLuint  instanceCount;  // Number of instances to be rendered
+        GLuint  firstIndex;     // The offset of the base of the index array
+        GLuint  baseVertex;     // The offset of the base of the vertex array
+        GLuint  baseInstance;   // The base instance for use in fetching instanced vertex attributes
     };
 
     struct DispatchIndirectCommand

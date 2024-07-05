@@ -31,6 +31,32 @@
 
 namespace sf
 {
+    //! A structure representing particle pose.
+    struct ParticlePose
+    {
+        glm::vec4 posScaleX;
+        glm::vec4 ori;
+        
+        ParticlePose()
+        {
+            posScaleX = glm::vec4(0.f, 0.f, 0.f, 1.f);
+            ori = glm::vec4(0.f, 0.f, 1.f, 0.f);
+        }
+    };
+
+    //! A structure representing particle twist.
+    struct ParticleTwist
+    {
+        glm::vec4 velScaleY;
+        glm::vec4 avelScaleZ;
+        
+        ParticleTwist()
+        {
+            velScaleY = glm::vec4(0.f, 0.f, 0.f, 1.f);
+            avelScaleZ = glm::vec4(0.f, 0.f, 0.f, 1.f);
+        }
+    };
+
 	class OpenGLCamera;
 
 	//! An abstract class implementing a general particle system
@@ -72,6 +98,7 @@ namespace sf
         static void Destroy();
 
 	protected:
+        bool initialized;
 		GLuint maxParticles; // Maximum number of simulated particles
         GLuint poseSSBO;   // SSBO storing particle positions and orientations
         GLuint twistSSBO;  // SSBO storing particle velocities and angular velocities
