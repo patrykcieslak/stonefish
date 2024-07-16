@@ -29,6 +29,8 @@
 #include "core/SimulationApp.h"
 #include "utils/SystemUtil.hpp"
 
+#include <unordered_map>
+
 namespace sf
 {
 
@@ -65,7 +67,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> uvs;
     Mesh* mesh_ = nullptr;
-    int64_t start = GetTimeInMicroseconds();
+    const int64_t start = GetTimeInMicroseconds();
     
     //Read vertices
     while(fgets(line, 1024, file))
@@ -95,9 +97,9 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     }
     fseek(file, 0, SEEK_SET); //Go back to beginning of file
     
-    size_t genVStart = positions.size();
-    bool hasNormals = normals.size() > 0;
-    bool hasUVs = uvs.size() > 0;
+    const std::size_t genVStart = positions.size();
+    const bool hasNormals = normals.size() > 0;
+    const bool hasUVs = uvs.size() > 0;
 
 #ifdef DEBUG
     printf("Vertices: %ld Normals: %ld\n", genVStart, normals.size());
@@ -107,13 +109,9 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     {
         TexturableMesh* mesh = new TexturableMesh;
 
-        //Initialize positions
-        for(size_t i=0; i<positions.size(); ++i)
-        {
-            TexturableVertex v;
-            v.pos = positions[i];
-            mesh->vertices.push_back(v);
-        }
+        mesh->vertices.reserve(std::max(positions.size(), normals.size()));
+
+        std::unordered_map<TexturableVertex, GLuint, TexturableVertexHash> vertexCache;
 
         //Read faces
         while(fgets(line, 1024, file))
@@ -125,37 +123,36 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
             unsigned int vID[3];
             unsigned int uvID[3];
             unsigned int nID[3];
-            sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
+
+            if(hasNormals)
+            {
+                sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
+            }
+            else
+            {
+                sscanf(line, "f %u/%u %u/%u %u/%u\n", &vID[0], &uvID[0], &vID[1], &uvID[1], &vID[2], &uvID[2]);
+            }
         
             for(short unsigned int i=0; i<3; ++i)
             {
-                TexturableVertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
-            
-                if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
+                TexturableVertex v;
+                v.pos = positions[vID[i]];
+                v.uv = uvs[uvID[i]];
+                if(hasNormals)
                 {
-                    mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
-                    mesh->vertices[vID[i]-1].uv = uvs[uvID[i]-1];
-                    face.vertexID[i] = vID[i]-1;
+                    v.normal = normals[nID[i]];
                 }
-                else if((v.normal == normals[nID[i]-1]) && (v.uv == uvs[uvID[i]-1])) //Does it have the same normal and UV?
+
+                const auto it = vertexCache.find(v);
+                if(it != vertexCache.end()) 
                 {
-                    face.vertexID[i] = vID[i]-1;
-                }
-                else //Otherwise search the generated pool
+                    face.vertexID[i] = it->second;
+                } 
+                else 
                 {
-                    v.normal = normals[nID[i]-1];
-                    v.uv = uvs[uvID[i]-1];
-                
-                    std::vector<TexturableVertex>::iterator it;
-                    if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
-                    {
-                        face.vertexID[i] = (GLuint)(it - mesh->vertices.begin());
-                    }
-                    else
-                    {
-                        mesh->vertices.push_back(v);
-                        face.vertexID[i] = (GLuint)mesh->vertices.size()-1;
-                    }
+                    mesh->vertices.push_back(std::move(v));
+                    face.vertexID[i] = (GLuint)mesh->vertices.size() - 1;
+                    vertexCache[v] = face.vertexID[i];
                 }
             }
 
@@ -167,12 +164,19 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     {
         PlainMesh* mesh = new PlainMesh;
 
-        //Initialize positions
-        for(size_t i=0; i<positions.size(); ++i)
+        mesh->vertices.reserve(std::max(positions.size(), normals.size()));
+
+        std::unordered_map<Vertex, GLuint, VertexHash> vertexCache;
+
+        if (!hasNormals)
         {
-            Vertex v;
-            v.pos = positions[i];
-            mesh->vertices.push_back(v);
+            //Initialize positions
+            for(size_t i=0; i<positions.size(); ++i)
+            {
+                Vertex v;
+                v.pos = positions[i];
+                mesh->vertices.push_back(std::move(v));
+            }
         }
 
         //Read faces
@@ -191,31 +195,20 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                 
                 for(short unsigned int i=0; i<3; ++i)
                 {
-                    Vertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
-                    
-                    if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
+                    Vertex v;
+                    v.pos = positions[vID[i]];
+                    v.normal = normals[nID[i]];
+
+                    const auto it = vertexCache.find(v);
+                    if(it != vertexCache.end()) 
                     {
-                        mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
-                        face.vertexID[i] = vID[i]-1;
-                    }
-                    else if(v.normal == normals[nID[i]-1]) //Does it have the same normal?
+                        face.vertexID[i] = it->second;
+                    } 
+                    else 
                     {
-                        face.vertexID[i] = vID[i]-1;
-                    }
-                    else //Otherwise search the generated pool
-                    {
-                        v.normal = normals[nID[i]-1];
-                        
-                        std::vector<Vertex>::iterator it;
-                        if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
-                        {
-                            face.vertexID[i] = (GLuint)(it - mesh->vertices.begin());
-                        }
-                        else
-                        {
-                            mesh->vertices.push_back(v);
-                            face.vertexID[i] = (GLuint)mesh->vertices.size()-1;
-                        }
+                        mesh->vertices.push_back(std::move(v));
+                        face.vertexID[i] = (GLuint)mesh->vertices.size() - 1;
+                        vertexCache[v] = face.vertexID[i];
                     }
                 }
             }
@@ -235,7 +228,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     }
     fclose(file);
     
-    int64_t end = GetTimeInMicroseconds();
+    const int64_t end = GetTimeInMicroseconds();
     
 #ifdef DEBUG
     printf("Loaded: %ld Generated: %ld\n", genVStart, mesh_->getNumOfVertices()-genVStart);
