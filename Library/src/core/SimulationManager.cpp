@@ -92,6 +92,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     angSleepThreshold = Scalar(0);
     fdCounter = 0;
     currentTime = 0;
+    timeOffset = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
     dynamicsWorld = nullptr;
@@ -525,11 +526,17 @@ bool SimulationManager::isSimulationFresh() const
     return simulationFresh;
 }
 
-Scalar SimulationManager::getSimulationTime() const
+Scalar SimulationManager::getSimulationTime(bool applyOffset) const
 {
+    // Thread safe access to simulation time
     SDL_LockMutex(simInfoMutex);
     Scalar st = simulationTime;
     SDL_UnlockMutex(simInfoMutex);
+    
+    // Apply time offset in seconds
+    if(applyOffset)
+        st += timeOffset/(Scalar)1e6;
+
     return st;
 }
 
@@ -1047,7 +1054,9 @@ void SimulationManager::AdvanceSimulation()
     if(currentTime == 0) //Start of simulation
     {
         deltaTime = 0.0;
+        simulationTime = 0.0;
         currentTime = getSimulationClock();
+        timeOffset = currentTime;
         return;
     }
 
