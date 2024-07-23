@@ -50,22 +50,25 @@ namespace sf
 		/*!
 		 \param cam a pointer to the active camera
 		 */
-        virtual void Setup(OpenGLCamera* cam);
+        void Setup(OpenGLCamera* cam) override;
 
         //! A method updating the positions/velocities of the particles.
         /*!
          \param cam a pointer to the active camera
          \param dt time step of the simulation [s]
          */
-        virtual void Update(OpenGLCamera* cam, GLfloat dt);
+        void Update(OpenGLCamera* cam, GLfloat dt) override;
 
         //! A method drawing the particles.
         /*!
          \param cam a pointer to the active camera
          */
-		virtual void Draw(OpenGLCamera* cam);
-		
-		//! A method used to load particle shaders.
+		void Draw(OpenGLCamera* cam) override;
+
+        //! A method updating the transformation of the particle system.
+        void UpdateTransform() override;
+
+    	//! A method used to load particle shaders.
 		static void Init();
 		
 		//! A method used to delete particle shaders.

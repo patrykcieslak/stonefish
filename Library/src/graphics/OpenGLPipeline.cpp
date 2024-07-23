@@ -162,15 +162,19 @@ void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
 
     //Update vision sensor transforms and copy generated data to ensure consistency
     glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
-    for(unsigned int i=0; i < content->getViewsCount(); ++i)
+    for(size_t i=0; i < content->getViewsCount(); ++i)
         content->getView(i)->UpdateTransform();
     //Update light transforms to ensure consistency
-    for(unsigned int i=0; i < content->getLightsCount(); ++i)
+    for(size_t i=0; i < content->getLightsCount(); ++i)
         content->getLight(i)->UpdateTransform();
+    //Update particle systems transforms
+    for(size_t i=0; i < content->getParticleSystemsCount(); ++i)
+        content->getParticleSystem(i)->UpdateTransform();
     //Update ocean currents for particle systems
     Ocean* ocean = sim->getOcean();
     if(ocean != NULL) ocean->UpdateCurrentsData();
-
+    
+    //Perfrom copy of the drawing queue
     if(!drawingQueue.empty())
     {
         drawingQueueCopy.clear();
@@ -204,16 +208,17 @@ void OpenGLPipeline::DrawObjects()
 		if(drawingQueueCopy[i].type == RenderableType::SOLID)
 			content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
     }
+}
+
+void OpenGLPipeline::DrawVisuals(OpenGLCamera* cam)
+{
+    //Draw lights
+    for(unsigned int i=0; i<content->getLightsCount(); ++i)
+        content->DrawLightSource(i);
 
     //Draw particle systems
     for(size_t i=0; i<content->getParticleSystemsCount(); ++i)
-        content->getParticleSystem(i)->Draw(nullptr);
-}
-
-void OpenGLPipeline::DrawLights()
-{
-    for(unsigned int i=0; i<content->getLightsCount(); ++i)
-        content->DrawLightSource(i);
+        content->getParticleSystem(i)->Draw(cam);
 }
     
 void OpenGLPipeline::DrawHelpers()
@@ -268,6 +273,16 @@ void OpenGLPipeline::DrawHelpers()
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
+        }
+    }
+
+    //Visual effects (lights, particle systems...)
+    if(hSettings.showVisuals)
+    {
+        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        {
+            if(drawingQueueCopy[h].type == RenderableType::VISUAL_LINES)
                 content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].points, glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
         }
     }
@@ -493,7 +508,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Render all objects
                 content->SetDrawingMode(DrawingMode::FULL);
                 DrawObjects();
-                DrawLights();
+                DrawVisuals(camera);
 
                 //Ambient occlusion
                 if(rSettings.ao > RenderQuality::DISABLED)
@@ -520,7 +535,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glOcean->DrawBackground(camera);
                     glOcean->DrawBacksurface(camera);
                     //camera->GenerateBloom();
-                    DrawLights();
+                    DrawVisuals(camera);
                     
                     if(rSettings.ssr > RenderQuality::DISABLED)
                     {
@@ -555,7 +570,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 {
                     content->SetDrawingMode(DrawingMode::UNDERWATER);
                     DrawObjects();
-                    DrawLights();
+                    DrawVisuals(camera);
                     glOcean->DrawBackground(camera);
 
                     //Draw surface to back buffer
@@ -577,7 +592,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     camera->SetRenderBuffers(0, true, false); //Color + Normal
                     content->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
-                    DrawLights();
+                    DrawVisuals(camera);
                 
                     //Render sky (left for the end to only fill empty spaces)
                     atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);    

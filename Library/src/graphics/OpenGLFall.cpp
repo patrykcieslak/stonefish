@@ -45,6 +45,9 @@ OpenGLFall::OpenGLFall(GLuint maxParticles, GLfloat lifetime, glm::vec2 emitterS
     const Material& material, const Look& look) : OpenGLParticleSystem(maxParticles), lifetime(lifetime), emitterSize(emitterSize),
     material(material), look(look), nParticles(0)
 {
+    pos = tempPos = glm::vec3(0.f);
+    dir = tempDir = glm::vec3(0.f,0.f,1.f);
+
     //Sum mesh vertices
     size_t numVertices = 0;
     size_t numFaces = 0;
@@ -108,7 +111,7 @@ OpenGLFall::OpenGLFall(GLuint maxParticles, GLfloat lifetime, glm::vec2 emitterS
     DrawElementsIndirectCommand cmd;
     glGenBuffers(1, &particleDIB);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, particleDIB);
-    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(DrawElementsIndirectCommand) * maxParticles, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(DrawElementsIndirectCommand) * maxParticles, NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
     //Generate draw commands based on mesh data
@@ -209,13 +212,14 @@ void OpenGLFall::Setup(OpenGLCamera* cam)
     {
         size_t index = (size_t)roundf((uniformDist(randGen)+1.f)/2.f * (drawCommands.size()-1));
         cmds[i] = drawCommands[index];
-        cmds[i].instanceCount = i;
+        cmds[i].baseInstance = i;
     }
 
     glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
     initialized = true;
+    nParticles = 100;
 }
 
 void OpenGLFall::Update(OpenGLCamera* cam, GLfloat dt)
@@ -226,10 +230,13 @@ void OpenGLFall::Update(OpenGLCamera* cam, GLfloat dt)
         return;
     }
 
+    printf("Update fall\n");
+
     //Update particles
     // updateShader->Use();
     // updateShader->SetUniform("dt", dt);
     // updateShader->SetUniform("numParticles", nParticles);
+    
     
 
 
@@ -237,30 +244,42 @@ void OpenGLFall::Update(OpenGLCamera* cam, GLfloat dt)
 
 void OpenGLFall::Draw(OpenGLCamera* cam)
 {
+    printf("Draw fall\n");
 
     //Draw particles
-    // renderShader->Use();
-    // renderShader->SetUniform("MV", cam->getMV());
-    // renderShader->SetUniform("iMV", cam->getIMV());
-    // renderShader->SetUniform("P", cam->getP());
-    // renderShader->SetUniform("FC", cam->getFarClip());
+    renderShader->Use();
+    renderShader->SetUniform("V", cam->GetViewMatrix());
+    renderShader->SetUniform("VP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
+    renderShader->SetUniform("FC", cam->GetLogDepthConstant());
     // renderShader->SetUniform("eyePos", cam->getPos());
     // renderShader->SetUniform("viewDir", cam->getDir());
     // renderShader->SetUniform("color", look.color);
     // renderShader->SetUniform("reflectivity", material.reflectivity);
     // renderShader->SetUniform("cWater", material.cWater);
     // renderShader->SetUniform("bWater", material.bWater);
-    // renderShader->SetUniform("SunSky", UBO_SUNSKY);
-    // renderShader->SetUniform("Lights", UBO_LIGHTS);
-    // renderShader->SetUniform("Positions", SSBO_PARTICLE_POSE);
     // renderShader->SetUniform("enableAlbedoTex", look.textured);
     // renderShader->SetUniform("enableNormalTex", look.textured && look.normalMap != nullptr);
-    
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POSE, poseSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_TWIST, twistSSBO);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, particleDIB);
-    glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (const void*)0, nParticles, 0);
+    OpenGLState::BindVertexArray(particleVAO);
+    glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (GLvoid*)0, nParticles, 0);
+    OpenGLState::BindVertexArray(0);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
-    // OpenGLState::UseProgram(0);
+    OpenGLState::UseProgram(0);
+}
+
+void OpenGLFall::UpdateEmitter(glm::vec3 p, glm::vec3 d)
+{
+    tempPos = p;
+    tempDir = d;
+}
+
+void OpenGLFall::UpdateTransform()
+{
+    pos = tempPos;
+    dir = tempDir;
 }
 
 void OpenGLFall::Init()
@@ -289,19 +308,18 @@ void OpenGLFall::Init()
 
     sources.clear();
 
-
-    //sources.push_back(GLSLSource(GL_VERTEX_SHADER, "particle.vert"));
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "fallParticle.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "flat.frag"));
     // sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "lightingNoShadow.frag"));
     // sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
     // sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl"));
     // sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "fallParticle.frag"));
     // sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "materialUUv.frag"));
     
-    // renderShader = new GLSLShader(sources, precompiled);
-    // renderShader->AddUniform("MV", ParameterType::MAT4);
-    // renderShader->AddUniform("iMV", ParameterType::MAT4);
-    // renderShader->AddUniform("P", ParameterType::MAT4);
-    // renderShader->AddUniform("FC", ParameterType::FLOAT);
+    renderShader = new GLSLShader(sources);//, precompiled);
+    renderShader->AddUniform("V", ParameterType::MAT4);
+    renderShader->AddUniform("VP", ParameterType::MAT4);
+    renderShader->AddUniform("FC", ParameterType::FLOAT);
     // renderShader->AddUniform("eyePos", ParameterType::VEC3);
     // renderShader->AddUniform("viewDir", ParameterType::VEC3);
     // renderShader->AddUniform("color", ParameterType::VEC4);
@@ -316,8 +334,9 @@ void OpenGLFall::Init()
     // renderShader->AddUniform("irradiance_texture", ParameterType::INT);
     // renderShader->BindUniformBlock("SunSky", UBO_SUNSKY);
     // renderShader->BindUniformBlock("Lights", UBO_LIGHTS);
-    // renderShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POSE);
-
+    renderShader->BindShaderStorageBlock("Poses", SSBO_PARTICLE_POSE);
+    renderShader->BindShaderStorageBlock("Twists", SSBO_PARTICLE_TWIST);
+    
     // renderShader->Use();
     // renderShader->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
     // renderShader->SetUniform("enableAlbedoTex", true);

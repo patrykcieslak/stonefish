@@ -40,7 +40,7 @@ namespace sf
         ParticlePose()
         {
             posScaleX = glm::vec4(0.f, 0.f, 0.f, 1.f);
-            ori = glm::vec4(0.f, 0.f, 1.f, 0.f);
+            ori = glm::vec4(0.f, 0.f, 0.f, 1.f);
         }
     };
 
@@ -90,6 +90,9 @@ namespace sf
          \param cam a pointer to the active camera
          */
 		virtual void Draw(OpenGLCamera* cam) = 0;
+
+        //! A method updating the transformation of the particle system.
+        virtual void UpdateTransform() = 0;
 
         //! A method used to load particle shaders and textures.
         static void Init();

@@ -94,8 +94,6 @@ namespace sf
         std::string getName() const;
         
     protected:
-        virtual void InitGraphics() = 0;
-        
         std::string name;
         Transform o2a;
         SolidEntity* attach;

@@ -1164,7 +1164,10 @@ void SimulationManager::UpdateDrawingQueue()
 
     //Visuals
     for(size_t i=0; i<visuals.size(); ++i)
+    {
         visuals[i]->UpdateTransform();
+        glPipeline->AddToDrawingQueue(visuals[i]->Render());
+    }
     
     //Comms
     for(size_t i=0; i<comms.size(); ++i)

@@ -163,6 +163,11 @@ void OpenGLMarineSnow::Draw(OpenGLCamera* cam)
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
 }
+
+void OpenGLMarineSnow::UpdateTransform()
+{
+    //Do nothing
+}
     
 void OpenGLMarineSnow::Init()
 {

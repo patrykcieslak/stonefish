@@ -78,8 +78,11 @@ namespace sf
         //! A method that draws all normal objects.
         void DrawObjects();
 		
-		//! A method that draws all lights.
-		void DrawLights();
+		//! A method that draws all visual effects (lights, particle systems, etc.).
+        /*!
+         \param cam a pointer to the active camera
+         */
+		void DrawVisuals(OpenGLCamera* cam);
         
         //! A method that blits the screen FBO to the main framebuffer.
         void DrawDisplay();

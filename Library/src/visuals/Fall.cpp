@@ -28,6 +28,7 @@
 #include "core/GraphicalSimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/MaterialManager.h"
+#include "graphics/OpenGLFall.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 
@@ -59,7 +60,13 @@ Fall::Fall(const std::string& uniqueName, unsigned int maxParticles, Scalar life
         meshes.push_back(mesh);
     }
 
-    glFall = new OpenGLFall(maxParticles, lifetime, glm::vec2((GLfloat)emitterSizeX, (GLfloat)emitterSizeY), meshes, material, look);
+    sizeX = emitterSizeX > Scalar(0) ? emitterSizeX : Scalar(1);
+    sizeY = emitterSizeY > Scalar(0) ? emitterSizeY : Scalar(1);
+
+    glFall = new OpenGLFall(maxParticles, lifetime, glm::vec2((GLfloat)sizeX, (GLfloat)sizeY), meshes, material, look);
+
+    UpdateTransform();
+    glFall->UpdateTransform();
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddParticleSystem(glFall);
 }
 
@@ -75,13 +82,40 @@ VisualType Fall::getType() const
 
 void Fall::UpdateTransform()
 {
-    // Transform t = getVisualFrame();
-    // glFall->UpdateTransform(t);
+    Transform t = getVisualFrame();
+    Vector3 p = t.getOrigin();
+    Vector3 d = t.getBasis().getColumn(2);
+    glm::vec3 pos((GLfloat)p.x(), (GLfloat)p.y(), (GLfloat)p.z());
+    glm::vec3 dir((GLfloat)d.x(), (GLfloat)d.y(), (GLfloat)d.z());
+    glFall->UpdateEmitter(pos, dir);
 }
 
 std::vector<Renderable> Fall::Render()
 {
-    return std::vector<Renderable>();
+    std::vector<Renderable> items;
+    
+    //Render emitter
+    Renderable item;
+    item.model = glMatrixFromTransform(getVisualFrame());
+    item.type = RenderableType::VISUAL_LINES;
+    
+    item.points.push_back(glm::vec3(-(GLfloat)sizeX/2.f, (GLfloat)sizeY/2.f, 0));
+    item.points.push_back(glm::vec3((GLfloat)sizeX/2.f, (GLfloat)sizeY/2.f, 0));
+
+    item.points.push_back(glm::vec3(-(GLfloat)sizeX/2.f, -(GLfloat)sizeY/2.f, 0));
+    item.points.push_back(glm::vec3((GLfloat)sizeX/2.f, -(GLfloat)sizeY/2.f, 0));
+
+    item.points.push_back(glm::vec3(-(GLfloat)sizeX/2.f, -(GLfloat)sizeY/2.f, 0));
+    item.points.push_back(glm::vec3(-(GLfloat)sizeX/2.f, (GLfloat)sizeY/2.f, 0));
+
+    item.points.push_back(glm::vec3((GLfloat)sizeX/2.f, -(GLfloat)sizeY/2.f, 0));
+    item.points.push_back(glm::vec3((GLfloat)sizeX/2.f, (GLfloat)sizeY/2.f, 0));
+
+    item.points.push_back(glm::vec3(0.f, 0.f, 0.f));
+    item.points.push_back(glm::vec3(0.f, 0.f, (GLfloat)sqrtf(sizeX*sizeX + sizeY*sizeY)));
+
+    items.push_back(item);    
+    return items;
 }
 
 }

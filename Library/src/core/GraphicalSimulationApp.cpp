@@ -223,7 +223,7 @@ void GraphicalSimulationApp::InitializeSDL()
     //Create OpenGL contexts
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -279,8 +279,8 @@ void GraphicalSimulationApp::InitializeSDL()
     int version = gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
     int vmajor = GLAD_VERSION_MAJOR(version);
     int vminor = GLAD_VERSION_MINOR(version);
-    if(vmajor < 4 || (vmajor == 4 && vminor < 3))
-        cCritical("This program requires support for OpenGL 4.3, however OpenGL %d.%d was detected! Exiting...", vmajor, vminor);
+    if(vmajor < 4 || (vmajor == 4 && vminor < 6))
+        cCritical("This program requires support for OpenGL 4.6, however OpenGL %d.%d was detected! Exiting...", vmajor, vminor);
 
     //Initialize OpenGL pipeline
     cInfo("Window created. OpenGL %d.%d contexts created.", vmajor, vminor);
@@ -695,7 +695,7 @@ void GraphicalSimulationApp::DoHUD()
     Ocean* ocn = getSimulationManager()->getOcean();
     
     GLfloat offset = 10.f;
-    gui->DoPanel(10.f, offset, 160.f, ocn != nullptr ? 226.f : 159.f);
+    gui->DoPanel(10.f, offset, 160.f, ocn != nullptr ? 248.f : 181.f);
     offset += 5.f;
     gui->DoLabel(15.f, offset, "DEBUG");
     offset += 15.f;
@@ -720,26 +720,30 @@ void GraphicalSimulationApp::DoHUD()
     id.item = 3;
     hs.showActuators = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showActuators, "Actuators");
     offset += 22.f;
-    
+
     id.item = 4;
-    hs.showJoints = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showJoints, "Joints");
+    hs.showVisuals = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showVisuals, "Visual FX");
     offset += 22.f;
     
     id.item = 5;
+    hs.showJoints = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showJoints, "Joints");
+    offset += 22.f;
+    
+    id.item = 6;
     hs.showBulletDebugInfo = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showBulletDebugInfo, "Collision");
     offset += 22.f;
     
     if(ocn != nullptr)
     {
-        id.item = 6;
+        id.item = 7;
         hs.showForces = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showForces, "Fluid Forces");
         offset += 22.f;
     
-        id.item = 7;
+        id.item = 8;
         hs.showFluidDynamics = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
         offset += 22.f;
 
-        id.item = 8;
+        id.item = 9;
         hs.showOceanVelocityField = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showOceanVelocityField, "Water velocity");
         offset += 22.f;
     }

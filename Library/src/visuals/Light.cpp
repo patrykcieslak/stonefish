@@ -38,33 +38,35 @@ namespace sf
 {
 
 Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
-	: Visual(uniqueName), c(color), coneAngle(0), glLight(nullptr)
+	: Visual(uniqueName), coneAngle(0), glLight(nullptr)
 {
-	R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
-    Fi = lum < Scalar(0) ? Scalar(0) : lum;
+	Scalar R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
+    Scalar Fi = lum < Scalar(0) ? Scalar(0) : lum;
+
+    glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, color.rgb, (GLfloat)Fi);
+    
+    UpdateTransform();
+    glLight->UpdateTransform();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
 }
 
 Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
-	: Light(uniqueName, radius, color, lum)
+	: Visual(uniqueName), glLight(nullptr)
 {
+    Scalar R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
+    Scalar Fi = lum < Scalar(0) ? Scalar(0) : lum;
     coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
+
+    glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, color.rgb, (GLfloat)Fi);
+    
+    UpdateTransform();
+    glLight->UpdateTransform();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
 }
     
 VisualType Light::getType() const
 {
     return VisualType::LIGHT;
-}
-
-void Light::InitGraphics()
-{
-    if(coneAngle > Scalar(0)) //Spot light
-        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, c.rgb, (GLfloat)Fi);
-    else //Omnidirectional light
-        glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, c.rgb, (GLfloat)Fi);
-    
-    UpdateTransform();
-    glLight->UpdateTransform();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
 }
 
 void Light::UpdateTransform()
@@ -88,7 +90,7 @@ std::vector<Renderable> Light::Render()
     
     Renderable item;
     item.model = glMatrixFromTransform(getVisualFrame());
-    item.type = RenderableType::ACTUATOR_LINES;
+    item.type = RenderableType::VISUAL_LINES;
     
     GLfloat iconSize = 1.f;
     unsigned int div = 24;

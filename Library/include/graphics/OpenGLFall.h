@@ -56,20 +56,30 @@ namespace sf
         /*!
          \param cam a pointer to the active camera
          */
-        virtual void Setup(OpenGLCamera* cam);
+        void Setup(OpenGLCamera* cam) override;
 
         //! A method updating the positions/velocities of the particles.
         /*!
          \param cam a pointer to the active camera
          \param dt time step of the simulation [s]
          */
-        virtual void Update(OpenGLCamera* cam, GLfloat dt);
+        void Update(OpenGLCamera* cam, GLfloat dt) override;
 
         //! A method drawing the particles.
         /*!
          \param cam a pointer to the active camera
          */
-		virtual void Draw(OpenGLCamera* cam);
+		void Draw(OpenGLCamera* cam) override;
+
+        //! A method updating the transformation of the particle system.
+        void UpdateTransform() override;
+
+        //! A method used to update the position of the emitter and its emitting direction.
+        /*!
+         \param p the new position of the emitter in the world frame
+         \param d the new direction of the emitter in the world frame
+         */
+        void UpdateEmitter(glm::vec3 p, glm::vec3 d);
 
         //! A method used to load particle shaders.
 		static void Init();
@@ -83,6 +93,10 @@ namespace sf
         GLuint nParticles;     // Number of particles currently active
         Material material;     // Material of the particles (physics)
         Look look;             // Look of the particles (rendering)
+        glm::vec3 tempPos;     // Temporary position of the emitter
+        glm::vec3 tempDir;     // Temporary direction of the emitter
+        glm::vec3 pos;         // Position of the emitter
+        glm::vec3 dir;         // Direction of the emitter
 
         GLuint ageSSBO;     // Particles age buffer
         GLuint particleDIB; // Particles draw indirect buffer

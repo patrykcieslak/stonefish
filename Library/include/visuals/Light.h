@@ -27,7 +27,6 @@
 #define __Stonefish_Light__
 
 #include "visuals/Visual.h"
-#include "graphics/OpenGLDataStructs.h"
 
 namespace sf
 {
@@ -68,11 +67,6 @@ namespace sf
         VisualType getType() const override;
         
     private:
-        void InitGraphics();
-        
-        Color c;
-		Scalar R;
-        Scalar Fi;
         Scalar coneAngle;
         OpenGLLight* glLight;
     };

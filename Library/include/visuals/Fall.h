@@ -28,10 +28,11 @@
 
 #include "visuals/Visual.h"
 #include "core/SimulationManager.h"
-#include "graphics/OpenGLFall.h"
 
 namespace sf
 {
+
+class OpenGLFall;
 
 //! A class implementing a system of falling particles.
 class Fall : public Visual
@@ -64,9 +65,11 @@ public:
     VisualType getType() const override;
 
 protected:
+    Scalar sizeX;
+    Scalar sizeY;
     OpenGLFall* glFall;
 };
 
 }
 
-#endif /* defined(__Stonefish_Fall__) */
+#endif

@@ -456,7 +456,7 @@ namespace sf
     enum class RenderableType {
         SOLID = 0, WIREFRAME, SOLID_CS, MULTIBODY_AXIS,
         HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, HYDRO_TRIANGLES,
-        SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES, PATH_POINTS, PATH_LINE_STRIP,
+        SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, VISUAL_LINES, JOINT_LINES, PATH_POINTS, PATH_LINE_STRIP,
         FORCE_GRAVITY, FORCE_BUOYANCY, FORCE_LINEAR_DRAG, FORCE_QUADRATIC_DRAG
     };
 
@@ -548,6 +548,7 @@ namespace sf
         bool showJoints;
         bool showActuators;
         bool showSensors;
+        bool showVisuals;
         bool showFluidDynamics;
         bool showOceanVelocityField;
         bool showForces;
@@ -560,6 +561,7 @@ namespace sf
             showJoints = false;
             showActuators = false;
             showSensors = false;
+            showVisuals = false;
             showFluidDynamics = false;
             showOceanVelocityField = false;
             showForces = false;

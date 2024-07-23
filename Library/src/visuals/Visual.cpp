@@ -72,7 +72,6 @@ void Visual::AttachToWorld(const Transform& origin)
     attach = nullptr;
     attach2 = nullptr;
     attach3 = nullptr;
-    InitGraphics();
 }
         
 void Visual::AttachToStatic(StaticEntity* body, const Transform& origin)
@@ -83,7 +82,6 @@ void Visual::AttachToStatic(StaticEntity* body, const Transform& origin)
 		attach = nullptr;
         attach2 = body;
         attach3 = nullptr;
-        InitGraphics();
 	}
 }
 
@@ -95,7 +93,6 @@ void Visual::AttachToAnimated(AnimatedEntity* body, const Transform& origin)
         attach = nullptr;
         attach2 = nullptr;
         attach3 = body;
-        InitGraphics();
     }
 }
 
@@ -107,7 +104,6 @@ void Visual::AttachToSolid(SolidEntity* body, const Transform& origin)
         attach = body;
         attach2 = nullptr;
         attach3 = nullptr;
-        InitGraphics();
     }
 }
     
