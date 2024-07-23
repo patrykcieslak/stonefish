@@ -287,7 +287,7 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
             Transform thFrame = th->getActuatorFrame();
             Vector3 thPos = thFrame.getOrigin();
             Vector3 thDir = -thFrame.getBasis().getColumn(0);
-            Scalar R = th->getDiameter()/Scalar(2);
+            Scalar R = th->getPropellerDiameter()/Scalar(2);
             Scalar vel = (th->isPropellerRight() ? Scalar(0.1) : Scalar(-0.1)) * th->getThrust();
             glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
                                                                              (GLfloat)thPos.getY(), 

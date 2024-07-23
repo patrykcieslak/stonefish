@@ -116,6 +116,10 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform&
     
     //Resize matrices
     multiBody->finalizeMultiDof();
+
+    //Apply solver settings
+    multiBody->setAngularDamping(sm->getDynamicsWorld()->getSolverInfo().m_damping);
+    multiBody->setLinearDamping(sm->getDynamicsWorld()->getSolverInfo().m_damping);
     
     //Add multibody to the world
     Respawn(origin);

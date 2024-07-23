@@ -82,7 +82,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Display FBO initialization failed!");
     OpenGLState::BindFramebuffer(0);
-    lastSimTime = Scalar(0);
+    lastSimTime = Scalar(-1);
 }
 
 OpenGLPipeline::~OpenGLPipeline()

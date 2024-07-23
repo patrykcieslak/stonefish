@@ -1020,7 +1020,7 @@ void SolidEntity::BuildGraphicalObject()
     phyObjectId = graObjectId;
 }
 
-void SolidEntity::BuildRigidBody()
+void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
 {
     if(rigidBody == nullptr)
     {
@@ -1048,9 +1048,9 @@ void SolidEntity::BuildRigidBody()
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0.); //not used
-        rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0.); //not used
+        rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = world->getSolverInfo().m_damping;
         rigidBodyCI.m_additionalDamping = false;
-        
+
         rigidBody = new btRigidBody(rigidBodyCI);
         rigidBody->setUserPointer(this);
         rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
@@ -1130,7 +1130,7 @@ void SolidEntity::AddToSimulation(SimulationManager* sm, const Transform& origin
     if(rigidBody == nullptr)
     {
         // Build
-        BuildRigidBody();
+        BuildRigidBody(sm->getDynamicsWorld());
         BuildGraphicalObject();
         
         // Setup sleeping

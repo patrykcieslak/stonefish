@@ -83,6 +83,12 @@ namespace sf
          */
         void setDesiredVelocity(Scalar vel);
         
+        //! A method to set the maximum velocity of the servo.
+        /*!
+         \param vel the maximum allowed servo velocity [rad/s]
+        */
+        void setMaxVelocity(Scalar vel);
+
         //! A method to set the maximum torque applied by the servo.
         /*!
          \param tau the max torque [Nm]
@@ -113,6 +119,7 @@ namespace sf
         ServoControlMode mode;
         Scalar pSetpoint;
         Scalar vSetpoint;
+        Scalar vLimit;
         Scalar Kp;
         Scalar Kv;
         Scalar tauMax;
