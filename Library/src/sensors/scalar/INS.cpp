@@ -74,7 +74,7 @@ void INS::Reset()
 
 void INS::InternalUpdate(Scalar dt)
 {
-    Scalar now = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+    Scalar now = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
     
     //--- internal sensors
     //get sensor frame in world
