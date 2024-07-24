@@ -136,11 +136,11 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
             for(short unsigned int i=0; i<3; ++i)
             {
                 TexturableVertex v;
-                v.pos = positions[vID[i]];
-                v.uv = uvs[uvID[i]];
+                v.pos = positions[vID[i]-1];
+                v.uv = uvs[uvID[i]-1];
                 if(hasNormals)
                 {
-                    v.normal = normals[nID[i]];
+                    v.normal = normals[nID[i]-1];
                 }
 
                 const auto it = vertexCache.find(v);
@@ -196,8 +196,8 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                 for(short unsigned int i=0; i<3; ++i)
                 {
                     Vertex v;
-                    v.pos = positions[vID[i]];
-                    v.normal = normals[nID[i]];
+                    v.pos = positions[vID[i]-1];
+                    v.normal = normals[nID[i]-1];
 
                     const auto it = vertexCache.find(v);
                     if(it != vertexCache.end()) 
