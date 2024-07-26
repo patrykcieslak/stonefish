@@ -67,8 +67,13 @@ void FloatingTestManager::BuildScenario()
     //Propeller
     phy.mode = sf::BodyPhysicsMode::SUBMERGED;
     phy.buoyancy = false;
-    sf::Polyhedron* prop = new sf::Polyhedron("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");   
-    sf::Thruster* thrust = new sf::Thruster("Thruster", prop, 0.3, std::make_pair(0.48, 0.48), 0.05, 500.0, true);
+
+    sf::Polyhedron* prop = new sf::Polyhedron("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
+    std::shared_ptr<sf::MechanicalPI> rotorDynamics;
+    rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
+    std::shared_ptr<sf::FDThrust> thrustModel;
+    thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
+    sf::Thruster* thrust = new sf::Thruster("Thruster", prop, rotorDynamics, thrustModel, 0.18, true, 105.0, false, true);
 
     //Sensors   
     sf::Odometry* odom = new sf::Odometry("Odom");

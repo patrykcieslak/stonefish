@@ -118,10 +118,6 @@ void UnderwaterTestManager::BuildScenario()
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
-    //sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
-    //AddStaticEntity(tank, sf::I4());
-    //sf::Plane* seabed = new sf::Plane("Seabed", 1000.0, "Rock", "seabed", 5.f);
-    //AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,5.0)));
     sf::Terrain* seabed = new sf::Terrain("Seabed", sf::GetDataPath() + "terrain.png", 1.0, 1.0, 5.0, "Rock", "seabed", 5.f);
     AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,15.0)));
     sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, sf::I4(), "Fiberglass", "seabed");
@@ -189,7 +185,6 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* finger1 = new sf::Polyhedron("Finger1", phy, sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
     sf::Polyhedron* finger2 = new sf::Polyhedron("Finger2", phy, sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
     
-    
     std::vector<sf::SolidEntity*> arm;
     arm.push_back(baseLink);
     arm.push_back(link1);
@@ -226,11 +221,7 @@ void UnderwaterTestManager::BuildScenario()
     //vmeshes.push_back(sf::GetDataPath() + "vbs_max.obj");
     //vmeshes.push_back(sf::GetDataPath() + "vbs_min.obj");
     //sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", vmeshes, 0.002);
-    
-    //Create ligths
-    //sf::Light* spot1 = new sf::Light("Spot1", sf::Color::BlackBody(4000.0), 100000.0); //OMNI
-    //sf::Light* spot1 = new sf::Light("Spot1", 30.0, sf::Color::BlackBody(4000.0), 100000.0);
-    
+       
     //Create sensors
     sf::Odometry* odom = new sf::Odometry("Odom");
     sf::Pressure* press = new sf::Pressure("Pressure");
@@ -287,7 +278,6 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddLinkActuator(thrusters[2], "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.2807,0.2587,-0.38)));
     auv->AddLinkActuator(thrusters[3], "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(-0.5337,0.0,-0.6747)));
     auv->AddLinkActuator(thrusters[4], "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(0.5837,0.0,-0.6747)));
-    //auv->AddLinkActuator(spot1, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));
     //auv->AddLinkActuator(vbs, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0.0,0.0)));
     
     //Sensors
