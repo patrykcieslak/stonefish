@@ -890,7 +890,7 @@ float OpenGLOcean::sqr(float x)
 
 float OpenGLOcean::omega(float k)
 {
-    return sqrt(9.81 * k * (1.0 + sqr(k / params.km))); // Eq 24
+    return sqrt(9.81f * k * (1.f + sqr(k / params.km))); // Eq 24
 }
 
 // 1/kx and 1/ky in meters
@@ -904,25 +904,25 @@ float OpenGLOcean::spectrum(float kx, float ky, bool omnispectrum)
     float c = omega(k) / k;
 
     // spectral peak
-    float kp = 9.81 * sqr(Omega / U10); // after Eq 3
+    float kp = 9.81f * sqr(Omega / U10); // after Eq 3
     float cp = omega(kp) / kp;
 
     // friction velocity
-    float z0 = 3.7e-5 * sqr(U10) / 9.81 * pow(U10 / cp, 0.9f); // Eq 66
-    float u_star = 0.41 * U10 / log(10.0 / z0); // Eq 60
+    float z0 = 3.7e-5f * sqr(U10) / 9.81f * pow(U10 / cp, 0.9f); // Eq 66
+    float u_star = 0.41f * U10 / log(10.f / z0); // Eq 60
 
-    float Lpm = exp(- 5.0 / 4.0 * sqr(kp / k)); // after Eq 3
-    float gamma = Omega < 1.0 ? 1.7 : 1.7 + 6.0 * log(Omega); // after Eq 3 // log10 or log??
-    float sigma = 0.08 * (1.0 + 4.0 / pow(Omega, 3.0f)); // after Eq 3
-    float Gamma = exp(-1.0 / (2.0 * sqr(sigma)) * sqr(sqrt(k / kp) - 1.0));
+    float Lpm = exp(-5.f / 4.f * sqr(kp / k)); // after Eq 3
+    float gamma = Omega < 1.f ? 1.7f : 1.7f + 6.f * log(Omega); // after Eq 3 // log10 or log??
+    float sigma = 0.08f * (1.f + 4.f / pow(Omega, 3.f)); // after Eq 3
+    float Gamma = exp(-1.f / (2.f * sqr(sigma)) * sqr(sqrt(k / kp) - 1.f));
     float Jp = pow(gamma, Gamma); // Eq 3
-    float Fp = Lpm * Jp * exp(- Omega / sqrt(10.0) * (sqrt(k / kp) - 1.0)); // Eq 32
-    float alphap = 0.006 * sqrt(Omega); // Eq 34
-    float Bl = 0.5 * alphap * cp / c * Fp; // Eq 31
+    float Fp = Lpm * Jp * exp(- Omega / sqrt(10.f) * (sqrt(k / kp) - 1.f)); // Eq 32
+    float alphap = 0.006f * sqrt(Omega); // Eq 34
+    float Bl = 0.5f * alphap * cp / c * Fp; // Eq 31
 
-    float alpham = 0.01 * (u_star < params.cm ? 1.0 + log(u_star / params.cm) : 1.0 + 3.0 * log(u_star / params.cm)); // Eq 44
-    float Fm = exp(-0.25 * sqr(k / params.km - 1.0)); // Eq 41
-    float Bh = 0.5 * alpham * params.cm / c * Fm; // Eq 40
+    float alpham = 0.01f * (u_star < params.cm ? 1.f + log(u_star / params.cm) : 1.f + 3.f * log(u_star / params.cm)); // Eq 44
+    float Fm = exp(-0.25f * sqr(k / params.km - 1.f)); // Eq 41
+    float Bh = 0.5f * alpham * params.cm / c * Fm; // Eq 40
 
     Bh *= Lpm; 
 
@@ -931,48 +931,48 @@ float OpenGLOcean::spectrum(float kx, float ky, bool omnispectrum)
         return params.A * (Bl + Bh) / (k * sqr(k)); // Eq 30
     }
 
-    float a0 = log(2.0) / 4.0;
-    float ap = 4.0;
-    float am = 0.13 * u_star / params.cm; // Eq 59
+    float a0 = log(2.f) / 4.f;
+    float ap = 4.f;
+    float am = 0.13f * u_star / params.cm; // Eq 59
     float Delta = tanh(a0 + ap * pow(c / cp, 2.5f) + am * pow(params.cm / c, 2.5f)); // Eq 57
 
     float phi = atan2(ky, kx);
 
     if(params.propagate)
     {
-        if (kx < 0.0)
+        if (kx < 0.f)
         {
-            return 0.0;
+            return 0.f;
         }
         else
         {
-            Bl *= 2.0;
-            Bh *= 2.0;
+            Bl *= 2.f;
+            Bh *= 2.f;
         }
     }
 
     // remove waves perpendicular to wind dir
     float tweak = sqrtf( std::max( kx/sqrtf(kx*kx+ky*ky), 0.f) );
-    tweak = 1.0f;
-    return params.A * (Bl + Bh) * (1.0 + Delta * cos(2.0 * phi)) / (2.0 * M_PI * sqr(sqr(k))) * tweak; // Eq 67
+    tweak = 1.f;
+    return params.A * (Bl + Bh) * (1.f + Delta * cos(2.f * phi)) / (2.f * M_PI * sqr(sqr(k))) * tweak; // Eq 67
 }
 
 void OpenGLOcean::GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result)
 {
     static long seed = 1234;
-    float dk = 2.0 * M_PI / lengthScale;
+    float dk = 2.f * (float)M_PI / lengthScale;
     float kx = i * dk;
     float ky = j * dk;
     if(fabsf(kx) < kMin && fabsf(ky) < kMin)
     {
-        result[0] = 0.0;
-        result[1] = 0.0;
+        result[0] = 0.f;
+        result[1] = 0.f;
     }
     else
     {
         float S = spectrum(kx, ky);
-        float h = sqrtf(S / 2.0) * dk;
-        float phi = frandom(&seed) * 2.0 * M_PI;
+        float h = sqrtf(S / 2.f) * dk;
+        float phi = frandom(&seed) * 2.f * (float)M_PI;
         result[0] = h * cos(phi);
         result[1] = h * sin(phi);
     }
@@ -1010,19 +1010,19 @@ float OpenGLOcean::GetSlopeVariance(float kx, float ky, float *spectrumSample)
     float real = spectrumSample[0];
     float img = spectrumSample[1];
     float hSquare = real * real + img * img;
-    return kSquare * hSquare * 2.0;
+    return kSquare * hSquare * 2.f;
 }
 
 // precomputes filtered slope variances in a 3d texture, based on the wave spectrum
 float OpenGLOcean::ComputeSlopeVariance()
 {
     //slope variance due to all waves, by integrating over the full spectrum
-    float theoreticSlopeVariance = 0.0;
-    float k = 5e-3;
-    while (k < 1e3)
+    float theoreticSlopeVariance = 0.f;
+    float k = 5e-3f;
+    while (k < 1e3f)
     {
-        float nextK = k * 1.001;
-        theoreticSlopeVariance += k * k * spectrum(k, 0, true) * (nextK - k);
+        float nextK = k * 1.001f;
+        theoreticSlopeVariance += k * k * spectrum(k, 0.f, true) * (nextK - k);
         k = nextK;
     }
 
@@ -1033,14 +1033,14 @@ float OpenGLOcean::ComputeSlopeVariance()
     // the two is added as a "delta" slope variance in the "variances" shader,
     // to be sure not to lose the variance due to missing wave frequencies in
     // the four nested grids
-    float totalSlopeVariance = 0.0;
+    float totalSlopeVariance = 0.f;
     for (int y = 0; y < params.fftSize; ++y)
     {
         for (int x = 0; x < params.fftSize; ++x)
         {
             int offset = 4 * (x + y * params.fftSize);
-            float i = 2.f * M_PI * (x >= params.fftSize / 2 ? x - params.fftSize : x);
-            float j = 2.f * M_PI * (y >= params.fftSize / 2 ? y - params.fftSize : y);
+            float i = 2.f * (float)M_PI * (x >= params.fftSize / 2 ? x - params.fftSize : x);
+            float j = 2.f * (float)M_PI * (y >= params.fftSize / 2 ? y - params.fftSize : y);
             totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[0], j / params.gridSizes[0], params.spectrum12 + offset);
             totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[1], j / params.gridSizes[1], params.spectrum12 + offset + 2);
             totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[2], j / params.gridSizes[2], params.spectrum34 + offset);

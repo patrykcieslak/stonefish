@@ -2433,16 +2433,28 @@ GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh*
         {
             TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
             TexturableVertex vt;
-            vt.pos =  glm::normalize(edge0 + edge1);
+
+            glm::vec3 sum = edge0 + edge1;
+            if(glm::length2(sum) > FLT_EPSILON)
+                vt.pos = glm::normalize(sum);
+            else
+                vt.pos = glm::vec3(0.f);
+            
             vt.normal = vt.pos;
-            vt.uv = glm::vec2(0,0);
+            vt.uv = glm::vec2(0.f);
             m->vertices.push_back(vt);
         }
         else
         {
             PlainMesh* m = static_cast<PlainMesh*>(mesh);
             Vertex vt;
-            vt.pos =  glm::normalize(edge0 + edge1);
+
+            glm::vec3 sum = edge0 + edge1;
+            if(glm::length2(sum) > FLT_EPSILON)
+                vt.pos = glm::normalize(sum);
+            else
+                vt.pos = glm::vec3(0.f);
+            
             vt.normal = vt.pos;
             m->vertices.push_back(vt);
         }
@@ -2474,8 +2486,19 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
             
             TexturableVertex vt;
             vt.pos = (edge0 + edge1)/2.f;
-            vt.normal = glm::normalize(edge0n + edge1n);
-            vt.tangent = glm::normalize(edge0t + edge1t);
+            
+            glm::vec3 sumn = edge0n + edge1n;
+            if(glm::length2(sumn) > FLT_EPSILON)
+                vt.normal = glm::normalize(sumn);
+            else
+                vt.normal = glm::vec3(0.f);
+
+            glm::vec3 sumt = edge0t + edge1t;
+            if(glm::length2(sumt) > FLT_EPSILON)
+                vt.tangent = glm::normalize(sumt);
+            else
+                vt.tangent = glm::vec3(0.f);
+
             vt.uv = (edge0uv + edge1uv)/2.f;
             m->vertices.push_back(vt);
         }
@@ -2489,7 +2512,13 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
             
             Vertex vt;
             vt.pos = (edge0 + edge1)/2.f;
-            vt.normal = glm::normalize(edge0n + edge1n);
+
+            glm::vec3 sumn = edge0n + edge1n;
+            if(glm::length2(sumn) > FLT_EPSILON)
+                vt.normal = glm::normalize(sumn);
+            else
+                vt.normal = glm::vec3(0.f);
+
             m->vertices.push_back(vt);
         }
     }
@@ -2556,9 +2585,7 @@ void OpenGLContent::Refine(Mesh* mesh, GLfloat sizeThreshold)
     const GLfloat minArea = 0.01f*0.01f;
     GLfloat avgFaceArea = std::max(ComputeAverageFaceArea(mesh), minArea);
     size_t nSubdivided = 0;
-#ifdef DEBUG
     size_t nFaceBefore = mesh->faces.size();
-#endif
     
     while(1)
     {
@@ -2611,7 +2638,6 @@ void OpenGLContent::Refine(Mesh* mesh, GLfloat sizeThreshold)
         else
             break;
     }
-    
 #ifdef DEBUG
     cInfo("Mesh refined (%ld/%ld).", nFaceBefore, mesh->faces.size());
 #endif
