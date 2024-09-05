@@ -118,10 +118,6 @@ void UnderwaterTestManager::BuildScenario()
     getAtmosphere()->SetupSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
-    //sf::Obstacle* tank = new sf::Obstacle("CIRS Tank", sf::GetDataPath() + "cirs_tank.obj", 1.0, sf::I4(), "Rock", "seabed");
-    //AddStaticEntity(tank, sf::I4());
-    //sf::Plane* seabed = new sf::Plane("Seabed", 1000.0, "Rock", "seabed", 5.f);
-    //AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,5.0)));
     sf::Terrain* seabed = new sf::Terrain("Seabed", sf::GetDataPath() + "terrain.png", 1.0, 1.0, 5.0, "Rock", "seabed", 5.f);
     AddStaticEntity(seabed, sf::Transform(sf::IQ(), sf::Vector3(0,0,15.0)));
     sf::Obstacle* cyl = new sf::Obstacle("Cyl", 0.5, 5.0, sf::I4(), "Fiberglass", "seabed");
@@ -189,7 +185,6 @@ void UnderwaterTestManager::BuildScenario()
     sf::Polyhedron* finger1 = new sf::Polyhedron("Finger1", phy, sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
     sf::Polyhedron* finger2 = new sf::Polyhedron("Finger2", phy, sf::GetDataPath() + "fingerA_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
     
-    
     std::vector<sf::SolidEntity*> arm;
     arm.push_back(baseLink);
     arm.push_back(link1);
@@ -209,27 +204,24 @@ void UnderwaterTestManager::BuildScenario()
     sf::Servo* srv6 = new sf::Servo("FServo2", 1.0, 1.0, 10.0);
     
     //Create thrusters
-    sf::Polyhedron* prop1 = new sf::Polyhedron("Propeller1", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
-    sf::Polyhedron* prop2 = new sf::Polyhedron("Propeller2", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
-    sf::Polyhedron* prop3 = new sf::Polyhedron("Propeller3", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
-    sf::Polyhedron* prop4 = new sf::Polyhedron("Propeller4", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
-    sf::Polyhedron* prop5 = new sf::Polyhedron("Propeller5", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
-    sf::Thruster* thSway = new sf::Thruster("ThrusterSway", prop1, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
-    sf::Thruster* thSurgeP = new sf::Thruster("ThrusterSurgePort", prop2, 0.18, std::make_pair(0.88, 0.48), 0.05, 1000.0, true);
-    sf::Thruster* thSurgeS = new sf::Thruster("ThrusterSurgeStarboard", prop3, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
-    sf::Thruster* thHeaveS = new sf::Thruster("ThrusterHeaveStern", prop4, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
-    sf::Thruster* thHeaveB = new sf::Thruster("ThrusterHeaveBow", prop5, 0.18, std::make_pair(0.48, 0.48), 0.05, 1000.0, true);
-    
+    std::array<std::string, 5> thrusterNames = {"ThrusterSway", "ThrusterSurgePort", "ThrusterSurgeStarboard", "ThrusterHeaveStern", "ThrusterHeaveBow"}; 
+    std::array<sf::Thruster*, 5> thrusters;
+    for(size_t i=0; i<thrusterNames.size(); ++i)
+    {
+        sf::Polyhedron* prop = new sf::Polyhedron("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Dummy", "propeller");
+        std::shared_ptr<sf::MechanicalPI> rotorDynamics;
+        rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
+        std::shared_ptr<sf::FDThrust> thrustModel;
+        thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
+        thrusters[i] = new sf::Thruster(thrusterNames[i], prop, rotorDynamics, thrustModel, 0.18, true, 105.0, false, true);
+    }
+
     //Create VBS
     //std::vector<std::string> vmeshes;
     //vmeshes.push_back(sf::GetDataPath() + "vbs_max.obj");
     //vmeshes.push_back(sf::GetDataPath() + "vbs_min.obj");
     //sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", vmeshes, 0.002);
-    
-    //Create ligths
-    //sf::Light* spot1 = new sf::Light("Spot1", sf::Color::BlackBody(4000.0), 100000.0); //OMNI
-    //sf::Light* spot1 = new sf::Light("Spot1", 30.0, sf::Color::BlackBody(4000.0), 100000.0);
-    
+       
     //Create sensors
     sf::Odometry* odom = new sf::Odometry("Odom");
     sf::Pressure* press = new sf::Pressure("Pressure");
@@ -281,12 +273,11 @@ void UnderwaterTestManager::BuildScenario()
     auv->AddJointActuator(srv6, "Joint6");
     
     //Thrusters
-    auv->AddLinkActuator(thSway, "Vehicle", sf::Transform(sf::Quaternion(M_PI_2,M_PI,0), sf::Vector3(-0.0137, 0.0307, -0.38)));
-    auv->AddLinkActuator(thSurgeP, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.2807,-0.2587,-0.38)));
-    auv->AddLinkActuator(thSurgeS, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.2807,0.2587,-0.38)));
-    auv->AddLinkActuator(thHeaveS, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(-0.5337,0.0,-0.6747)));
-    auv->AddLinkActuator(thHeaveB, "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(0.5837,0.0,-0.6747)));
-    //auv->AddLinkActuator(spot1, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(0,0,1.0)));
+    auv->AddLinkActuator(thrusters[0], "Vehicle", sf::Transform(sf::Quaternion(M_PI_2,M_PI,0), sf::Vector3(-0.0137, 0.0307, -0.38)));
+    auv->AddLinkActuator(thrusters[1], "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.2807,-0.2587,-0.38)));
+    auv->AddLinkActuator(thrusters[2], "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.2807,0.2587,-0.38)));
+    auv->AddLinkActuator(thrusters[3], "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(-0.5337,0.0,-0.6747)));
+    auv->AddLinkActuator(thrusters[4], "Vehicle", sf::Transform(sf::Quaternion(0,-M_PI_2,0), sf::Vector3(0.5837,0.0,-0.6747)));
     //auv->AddLinkActuator(vbs, "Vehicle", sf::Transform(sf::IQ(), sf::Vector3(-0.5,0.0,0.0)));
     
     //Sensors

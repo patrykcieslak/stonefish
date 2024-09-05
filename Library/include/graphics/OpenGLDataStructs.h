@@ -322,37 +322,8 @@ namespace sf
         bool texturable;
     };
     
-    //! An enum representing the type of look of an object.
-    enum class LookType {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT};
-    
     //! An enum representing the rendering mode.
     enum class DrawingMode {RAW, SHADOW, FLAT, FULL, UNDERWATER};
-    
-    //! A structure containing data of a graphical material.
-    struct Look
-    {
-        std::string name;
-        LookType type;
-        glm::vec3 color;
-        std::vector<GLfloat> params;
-        GLfloat reflectivity;
-        GLuint albedoTexture;
-        GLuint normalMap;
-        GLuint thermalMap;
-        glm::vec2 thermalRange;
-
-        Look()
-        {
-            name = "";
-            type = LookType::SIMPLE;
-            color = glm::vec3(0.f);
-            reflectivity = 0.f;
-            albedoTexture = 0;
-            normalMap = 0;
-            thermalMap = 0;
-            thermalRange = glm::vec2(20.f);
-        }
-    };
     
     //! A structure containing data of a view frustum.
     struct ViewFrustum
@@ -398,6 +369,12 @@ namespace sf
     {
         glm::vec3 rgb;
         
+        //! The default constructor.
+        Color()
+        {
+            rgb = glm::vec3(0.f);
+        }
+
         //! A constructor.
         /*!
          \param R red component value
@@ -407,6 +384,15 @@ namespace sf
         Color(GLfloat R, GLfloat G, GLfloat B)
         {
             rgb = glm::vec3(R,G,B);
+        }
+
+        //! A method returning the color components converted to sRGB space.
+        glm::vec3 toSRGB()
+        {
+            glm::bvec3 cutoff = glm::lessThan(rgb, glm::vec3(0.0031308f));
+            glm::vec3 higher = glm::vec3(1.055f)*glm::pow(rgb, glm::vec3(1.f/2.4f)) - glm::vec3(0.055f);
+            glm::vec3 lower = rgb * glm::vec3(12.92f);
+            return glm::mix(higher, lower, cutoff);
         }
         
         //! A static method used to create a new grayscale color.
@@ -471,6 +457,54 @@ namespace sf
         HYDRO_CYLINDER, HYDRO_ELLIPSOID, HYDRO_CS, HYDRO_POINTS, HYDRO_LINES, HYDRO_LINE_STRIP, HYDRO_TRIANGLES,
         SENSOR_CS, SENSOR_LINES, SENSOR_LINE_STRIP, SENSOR_POINTS, ACTUATOR_LINES, JOINT_LINES, PATH_POINTS, PATH_LINE_STRIP,
         FORCE_GRAVITY, FORCE_BUOYANCY, FORCE_LINEAR_DRAG, FORCE_QUADRATIC_DRAG
+    };
+
+    //! An enum representing the type of look of an object.
+    enum class LookType {SIMPLE, PHYSICAL, MIRROR, TRANSPARENT};
+
+    //! A structure containing data of a graphical material.
+    struct Look
+    {
+        std::string name;
+        LookType type;
+        Color color;
+        std::vector<GLfloat> params;
+        GLuint albedoTexture;
+        GLuint normalTexture;
+        GLfloat reflectivity;
+
+        Look()
+        {
+            name = "";
+            type = LookType::SIMPLE;
+            albedoTexture = normalTexture = 0;
+            reflectivity = 0.f;
+        }
+    };
+
+    //! A structure containing data of a graphical material.
+    struct Look
+    {
+        std::string name;
+        LookType type;
+        Color color;
+        std::vector<GLfloat> params;
+        GLfloat reflectivity;
+        GLuint albedoTexture;
+        GLuint normalMap;
+        GLuint thermalMap;
+        glm::vec2 thermalRange;
+
+        Look()
+        {
+            name = "";
+            type = LookType::SIMPLE;
+            reflectivity = 0.f;
+            albedoTexture = 0;
+            normalMap = 0;
+            thermalMap = 0;
+            thermalRange = glm::vec2(20.f);
+        }
     };
     
     //! A structure that represents a renderable object.

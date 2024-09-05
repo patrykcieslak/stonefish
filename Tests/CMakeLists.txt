@@ -1,5 +1,7 @@
 add_definitions(-DDATA_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Data/\")
 
+find_package(data_tamer_cpp QUIET)
+
 add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestApp.cpp ConsoleTest/ConsoleTestManager.cpp)
 target_link_libraries(ConsoleTest Stonefish_test)
 
@@ -20,3 +22,6 @@ target_link_libraries(SlidingTest Stonefish_test)
 
 add_executable(UnderwaterTest UnderwaterTest/main.cpp UnderwaterTest/UnderwaterTestApp.cpp UnderwaterTest/UnderwaterTestManager.cpp)
 target_link_libraries(UnderwaterTest Stonefish_test)
+
+add_executable(FluidDynamicsTest FluidDynamicsTest/main.cpp FluidDynamicsTest/FluidDynamicsTestApp.cpp FluidDynamicsTest/FluidDynamicsTestManager.cpp)
+target_link_libraries(FluidDynamicsTest Stonefish_test)

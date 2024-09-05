@@ -128,6 +128,8 @@ void BSTrajectory::Interpolate()
             Vector3 lastInterpVel = interpVel;
             std::vector<Scalar> v = deriv.eval(net.knot()).result();
             interpVel = Vector3(v[1]/v[0], v[2]/v[0], v[3]/v[0]);  // dx/dt = (dx/ds) / (ds/dt)
+            if(!forward)
+                interpVel = -interpVel;
 
             if(lastPlayTime > 0.0)
                 interpAcc = (interpVel - lastInterpVel)/(playTime - lastPlayTime);
@@ -140,6 +142,8 @@ void BSTrajectory::Interpolate()
         Vector3 dummy;
         interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1)));
         calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel);
+        if(!forward)
+            interpAngVel = -interpAngVel;
     }
 }
 

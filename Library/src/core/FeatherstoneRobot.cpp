@@ -210,9 +210,7 @@ void FeatherstoneRobot::BuildKinematicStructure()
         
                 if(jointsData[i].damping > Scalar(0))
                 {
-                    dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, jointsData[i].damping);
-                    dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
-                    dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+                    dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0.0, jointsData[i].damping);
                 }
             }
                 break;
@@ -221,12 +219,10 @@ void FeatherstoneRobot::BuildKinematicStructure()
             {
                 dynamics->AddPrismaticJoint(jointsData[i].name, parentId, childId, linkTrans.getBasis() * jointsData[i].axis);
                 dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, jointsData[i].posLim.first, jointsData[i].posLim.second);
-        
+
                 if(jointsData[i].damping > Scalar(0))
                 {
-                    dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, jointsData[i].damping);
-                    dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
-                    dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+                    dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0.0, jointsData[i].damping);
                 }
             }
                 break;

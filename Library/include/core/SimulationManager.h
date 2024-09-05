@@ -258,7 +258,13 @@ namespace sf
          \param steps number steps of simulation per second
          */
         void setStepsPerSecond(Scalar steps);
-        
+
+        //! A method that directly sets the fluid dynamics prescaler.
+        /*!
+         \param presc a prescaler used to compute the update frequency of fluid dynamics computations
+         */
+        void setFluidDynamicsPrescaler(unsigned int presc);
+
         //! A method that sets how simulation time relates to real time.
         /*!
          \param f a multiple of real time (1.0 = real time)
@@ -446,7 +452,11 @@ namespace sf
         Vector3 getGravity() const;
         
         //! A method returning the simulation time in seconds.
-        Scalar getSimulationTime() const;
+        /*! 
+         \param applyOffset a flag deciding if the offset between simulation time and real time should be applied
+         \return the time of simulation in seconds
+         */
+        Scalar getSimulationTime(bool applyOffset = false) const;
         
         //! A method informing about the relation between the simulated time and real time.
         Scalar getRealtimeFactor() const;
@@ -537,9 +547,10 @@ namespace sf
         void InitializeScenario();
         
         // State
-        Scalar simulationTime;
-        uint64_t currentTime;
-        uint64_t ssus;
+        Scalar simulationTime; // Time of simulation run in seconds
+        uint64_t currentTime;  // Current system time in us
+        uint64_t timeOffset;   // Offset between simulation time and system time in us
+        uint64_t ssus;         // Simulation step time in us
         bool simulationFresh;
 
         // Performance

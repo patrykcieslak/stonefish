@@ -404,7 +404,7 @@ namespace sf
         void ComputeEllipsoidalApprox();
         
         Scalar LambKFactor(Scalar r1, Scalar r2);
-        virtual void BuildRigidBody();
+        virtual void BuildRigidBody(btDynamicsWorld* world);
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
         
         //Body

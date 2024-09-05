@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/20.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFLS.h"
@@ -400,30 +400,15 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO, bool updated)
     if(display)
     {
         OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        if(0)
-        {    
-            OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0,0,nBeams,nBeamSamples);
-            GLuint offset = 0;
-            for(size_t i=0; i<views.size(); ++i)
-            {
-                content->DrawTexturedQuad((GLfloat)offset, 0.f, (GLfloat)nViewBeams, (GLfloat)nBeamSamples, 
-                                                                                    inputRangeIntensityTex, i, true);
-                offset += views[i].nBeams;
-            }
-            OpenGLState::BindFramebuffer(0);
-        }
-        else
-        {
-            int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-            int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
-            OpenGLState::BindFramebuffer(destinationFBO);    
-            OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
-            OpenGLState::DisableCullFace();
-            content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
-            OpenGLState::EnableCullFace();
-            OpenGLState::BindFramebuffer(0);   
-        }
+        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLState::BindFramebuffer(destinationFBO);    
+        content->SetViewportSize(windowWidth, windowHeight);
+        OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
+        OpenGLState::DisableCullFace();
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
+        OpenGLState::EnableCullFace();
+        OpenGLState::BindFramebuffer(0);
     }
     
     //Copy texture to sonar buffer

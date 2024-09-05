@@ -169,56 +169,106 @@
 		<actuator name="ThrusterSurgePort" type="thruster">
 			<link name="Vehicle"/>
 			<origin rpy="3.1416 0.0 0.0" xyz="-0.3297 -0.2587 -0.021"/>
-			<specs thrust_coeff="0.48" torque_coeff="0.05" max_rpm="1000.0" inverted="true"/>
+			<specs max_setpoint="${1000.0/60.0*2.0*pi}" inverted_setpoint="true" normalized_setpoint="true"/>
 			<propeller diameter="0.18" right="true">
-				<mesh filename="propeller.obj" scale="1.0"/>
-				<material name="Neutral"/>
-				<look name="propeller"/>
+				<mesh filename="propeller.obj" scale="1.0" />
+				<material name="Neutral" />
+				<look name="propeller" />
 			</propeller>
+			<rotor_dynamics type="mechanical_pi">
+				<!-- <rotor_inertia value="0.05"/> -->
+				<kp value="1.0"/>
+				<ki value="0.5"/>
+				<ilimit value="2.0"/>
+			</rotor_dynamics>
+			<thrust_model type="fluid_dynamics">
+				<thrust_coeff forward="0.48" reverse="0.48"/>
+				<torque_coeff value="0.05"/>
+			</thrust_model>
 		</actuator>
 
 		<actuator name="ThrusterSurgeStarboard" type="thruster">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 0.0" xyz="-0.3297 0.2587 -0.021"/>
-			<specs thrust_coeff="0.48" torque_coeff="0.05" max_rpm="1000.0" inverted="true"/>
+			<specs max_setpoint="${1000.0/60.0*2.0*pi}" inverted_setpoint="true" normalized_setpoint="true"/>
 			<propeller diameter="0.18" right="true">
-				<mesh filename="propeller.obj" scale="1.0"/>
-				<material name="Neutral"/>
-				<look name="propeller"/>
+				<mesh filename="propeller.obj" scale="1.0" />
+				<material name="Neutral" />
+				<look name="propeller" />
 			</propeller>
+			<rotor_dynamics type="mechanical_pi">
+				<!-- <rotor_inertia value="0.05"/> -->
+				<kp value="1.0"/>
+				<ki value="0.5"/>
+				<ilimit value="2.0"/>
+			</rotor_dynamics>
+			<thrust_model type="fluid_dynamics">
+				<thrust_coeff forward="0.48" reverse="0.48"/>
+				<torque_coeff value="0.05"/>
+			</thrust_model>
 		</actuator>
 
 		<actuator name="ThrusterHeaveBow" type="thruster">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 -1.571 -1.571" xyz="0.5347 0.0 -0.3137"/>
-			<specs thrust_coeff="0.48" torque_coeff="0.05" max_rpm="1000.0" inverted="true"/>
+			<specs max_setpoint="${1000.0/60.0*2.0*pi}" inverted_setpoint="true" normalized_setpoint="true"/>
 			<propeller diameter="0.18" right="true">
-				<mesh filename="propeller.obj" scale="1.0"/>
-				<material name="Neutral"/>
-				<look name="propeller"/>
+				<mesh filename="propeller.obj" scale="1.0" />
+				<material name="Neutral" />
+				<look name="propeller" />
 			</propeller>
+			<rotor_dynamics type="mechanical_pi">
+				<!-- <rotor_inertia value="0.05"/> -->
+				<kp value="1.0"/>
+				<ki value="0.5"/>
+				<ilimit value="2.0"/>
+			</rotor_dynamics>
+			<thrust_model type="fluid_dynamics">
+				<thrust_coeff forward="0.48" reverse="0.48"/>
+				<torque_coeff value="0.05"/>
+			</thrust_model>
 		</actuator>
 
 		<actuator name="ThrusterHeaveStern" type="thruster">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 -1.571 1.571" xyz="-0.5827 0.0 -0.3137"/>
-			<specs thrust_coeff="0.48" torque_coeff="0.05" max_rpm="1000.0" inverted="true"/>
+			<specs max_setpoint="${1000.0/60.0*2.0*pi}" inverted_setpoint="true" normalized_setpoint="true"/>
 			<propeller diameter="0.18" right="true">
-				<mesh filename="propeller.obj" scale="1.0"/>
-				<material name="Neutral"/>
-				<look name="propeller"/>
+				<mesh filename="propeller.obj" scale="1.0" />
+				<material name="Neutral" />
+				<look name="propeller" />
 			</propeller>
+			<rotor_dynamics type="mechanical_pi">
+				<!-- <rotor_inertia value="0.05"/> -->
+				<kp value="1.0"/>
+				<ki value="0.5"/>
+				<ilimit value="2.0"/>
+			</rotor_dynamics>
+			<thrust_model type="fluid_dynamics">
+				<thrust_coeff forward="0.48" reverse="0.48"/>
+				<torque_coeff value="0.05"/>
+			</thrust_model>
 		</actuator>
 
 		<actuator name="ThrusterSway" type="thruster">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 3.1416 1.571" xyz="-0.0627 0.0307 -0.021"/>
-			<specs thrust_coeff="0.48" torque_coeff="0.05" max_rpm="1000.0" inverted="true"/>
+			<specs max_setpoint="${1000.0/60.0*2.0*pi}" inverted_setpoint="true" normalized_setpoint="true"/>
 			<propeller diameter="0.18" right="true">
-				<mesh filename="propeller.obj" scale="1.0"/>
-				<material name="Neutral"/>
-				<look name="propeller"/>
+				<mesh filename="propeller.obj" scale="1.0" />
+				<material name="Neutral" />
+				<look name="propeller" />
 			</propeller>
+			<rotor_dynamics type="mechanical_pi">
+				<!-- <rotor_inertia value="0.05"/> -->
+				<kp value="1.0"/>
+				<ki value="0.5"/>
+				<ilimit value="2.0"/>
+			</rotor_dynamics>
+			<thrust_model type="fluid_dynamics">
+				<thrust_coeff forward="0.48" reverse="0.48"/>
+				<torque_coeff value="0.05"/>
+			</thrust_model>
 		</actuator>
 
 		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>

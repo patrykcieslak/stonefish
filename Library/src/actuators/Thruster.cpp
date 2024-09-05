@@ -1,4 +1,4 @@
-/*    
+/*
     This file is a part of Stonefish.
 
     Stonefish is free software: you can redistribute it and/or modify
@@ -19,8 +19,9 @@
 //  Thruster.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 10/10/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Created by Roger Pi on 03/06/2024
+//  Modified by Patryk Cieslak on 30/06/2024
+//  Copyright (c) 2024 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Thruster.h"
@@ -34,34 +35,23 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller, Scalar diameter, std::pair<Scalar, Scalar> thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+Thruster::Thruster(std::string uniqueName, SolidEntity* propeller,
+                                            std::shared_ptr<RotorDynamics> rotorDynamics,
+                                            std::shared_ptr<ThrustModel> thrustConversion,
+                                            Scalar diameter, bool rightHand, Scalar maxSetpoint,
+                                            bool invertedSetpoint, bool normalizedSetpoint)
+    : LinkActuator(uniqueName), rotorModel(rotorDynamics), thrustModel(thrustConversion), D(diameter), RH(rightHand), 
+      setpointLimit(maxSetpoint), inv(invertedSetpoint), normalized(normalizedSetpoint), 
+      theta(Scalar(0)), omega(Scalar(0)), thrust(Scalar(0)), torque(Scalar(0)), setpoint(Scalar(0))
 {
-    D = diameter;
-    kT = thrustCoeff;
-    kQ = torqueCoeff;
-    alpha = Scalar(-1) * kT.first;
-    beta = Scalar(-1) * kQ;
-    kp = Scalar(8.0);
-    ki = Scalar(3.0);
-    iLim = Scalar(2.0);
-    RH = rightHand;
-    inv = inverted;
-    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //[rad/s] (always positive)
-
-    theta = Scalar(0);
-    omega = Scalar(0);
-    thrust = Scalar(0);
-    torque = Scalar(0);
-    setpoint = Scalar(0);
-    iError = Scalar(0);
-    
+    setSetpointLimit(maxSetpoint);
     prop = propeller;
     prop->BuildGraphicalObject();
 }
 
 Thruster::~Thruster()
 {
-    if(prop != nullptr)
+    if (prop != nullptr)
         delete prop;
 }
 
@@ -72,9 +62,23 @@ ActuatorType Thruster::getType() const
 
 void Thruster::setSetpoint(Scalar s)
 {
-    if(inv) s *= Scalar(-1);
-    setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
+    if (normalized)
+        setpoint = btClamped(s, Scalar(-1), Scalar(1)) * setpointLimit;
+    else
+        setpoint = btClamped(s, -setpointLimit, setpointLimit);
+    if (inv) setpoint *= Scalar(-1);
     ResetWatchdog();
+}
+
+void Thruster::setSetpointLimit(Scalar limit)
+{
+    setpointLimit = btFabs(limit);
+    rotorModel->setOutputLimit(setpointLimit*2); // Protect against uncontrolled behavior
+}
+
+Scalar Thruster::getSetpointLimit()
+{
+    return setpointLimit;
 }
 
 Scalar Thruster::getSetpoint() const
@@ -102,108 +106,92 @@ Scalar Thruster::getTorque() const
     return torque;
 }
 
-Scalar Thruster::getDiameter() const
-{
-    return D;
-}
-
-Scalar Thruster::getMaxRPM() const
-{
-    return omegaLim * Scalar(60)/(Scalar(2) * M_PI);
-}
-
 bool Thruster::isPropellerRight() const
 {
     return RH;
+}
+
+Scalar Thruster::getPropellerDiameter() const
+{
+    return D;
 }
 
 void Thruster::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if(attach != nullptr)
-    {
-        //Update thruster velocity
-        Scalar error = setpoint * omegaLim - omega;
-        Scalar motorTorque = kp * error + ki * iError;
-        omega += (motorTorque - (-torque))*dt;
-        theta += omega * dt; //Just for animation
-    
-        //Integrate error
-        iError += error * dt;
-        iError = iError > iLim ? iLim : (iError < -iLim ? -iLim : iError);
-        
-        //Get transforms
-        Transform solidTrans = attach->getCGTransform();
-        Transform thrustTrans = attach->getOTransform() * o2a;
-        Vector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
-        Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
-        
-        //Calculate thrust
-        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        if(ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
-        {
-            bool backward = (RH && omega < Scalar(0)) || (!RH && omega > Scalar(0));
-            
-            /*kT and kQ depend on the advance ratio J
-                J = u/(omega*D), where:
-                u - ambient velocity [m/s]
-                n - propeller rotational rate [1/s]
-                D - propeller diameter [m] */
-            Scalar n = (backward ? Scalar(-1) : Scalar(1)) * btFabs(omega)/(Scalar(2) * M_PI); // Accounts for propoller handedness
-            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(ocn->GetFluidVelocity(thrustTrans.getOrigin()) - velocity); //Incoming water velocity
-            
-            //Thrust
-            Scalar kT0 = backward ? kT.second : kT.first; //In case of non-symmetrical thrusters the coefficient may be different
-            //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust = ocn->getLiquid().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
-            
-            //Torque
-            Scalar kQ0 = kQ;
-            //kQ(J) = kQ0 + beta * J --> approximated with linear function
-            torque = (RH ? Scalar(-1) : Scalar(1)) * ocn->getLiquid().density * D*D*D*D * btFabs(n) * (D*kQ0*n + beta*u); //Torque is the loading of propeller due to water resistance (reaction force)
+    if (attach == nullptr)
+        return; // No attachment, no action
 
-            //Apply forces and torques
-            Vector3 thrustV(thrust, 0, 0);
-            Vector3 torqueV(torque, 0, 0);
-            attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
-            attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
-            attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
-        }
-        else
+    // Update rotation & angular velocity
+    if (rotorModel->getType() == RotorDynamicsType::MECHANICAL_PI)
+        std::static_pointer_cast<MechanicalPI>(rotorModel)->setDampingTorque(btFabs(torque));
+    omega = rotorModel->Update(dt, setpoint);
+    theta += omega * dt; // Just for animation
+
+    // Check if thruster is sumberged and compute thrust model
+    Transform solidTrans = attach->getCGTransform();
+    Transform thrustTrans = attach->getOTransform() * o2a;
+    Ocean *ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+
+    if (ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
+    {
+        // Update Thrust
+        if (thrustModel->getType() == ThrustModelType::FD)
         {
-            thrust = Scalar(0);
-            torque = Scalar(0);
+            Vector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
+            Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
+            Scalar u = -thrustTrans.getBasis().getColumn(0).dot(ocn->GetFluidVelocity(thrustTrans.getOrigin()) - velocity);
+            std::static_pointer_cast<FDThrust>(thrustModel)->setIncomingFluidVelocity(u);
         }
+        std::pair<Scalar, Scalar> out = thrustModel->Update(omega);
+        thrust = out.first;
+        torque = out.second;
+
+        // Account for handedness of the propeller
+        if (!RH && thrustModel->getType() != ThrustModelType::FD)
+            thrust = -thrust;
+    
+        // Apply forces and torques
+        Vector3 thrustV(thrust, 0, 0);
+        Vector3 torqueV(torque, 0, 0);
+        attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
+        attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+        attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+    }
+    else
+    {
+        thrust = Scalar(0);
+        torque = Scalar(0);
     }
 }
 
 std::vector<Renderable> Thruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
-    if(attach != nullptr)
+    if (attach != nullptr)
         thrustTrans = attach->getOTransform() * o2a;
     else
         LinkActuator::Render();
-    
-    //Rotate propeller
-    thrustTrans *= Transform(Quaternion(0, 0, theta), Vector3(0,0,0));
-    
-    //Add renderable
+
+    // Rotate propeller
+    thrustTrans *= Transform(Quaternion(0, 0, theta), Vector3(0, 0, 0));
+
+    // Add renderable
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
     item.materialName = prop->getMaterial().name;
     item.objectId = prop->getGraphicalObject();
     item.lookId = dm == DisplayMode::GRAPHICAL ? prop->getLook() : -1;
-	item.model = glMatrixFromTransform(thrustTrans);
+    item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
-    
+
     item.type = RenderableType::ACTUATOR_LINES;
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(0.1f*thrust,0,0));
+    item.points.push_back(glm::vec3(0, 0, 0));
+    item.points.push_back(glm::vec3(0.1f * thrust, 0, 0));
     items.push_back(item);
-    
+
     return items;
 }
 
@@ -211,5 +199,5 @@ void Thruster::WatchdogTimeout()
 {
     setSetpoint(Scalar(0));
 }
-    
-}
+
+} // namespace sf

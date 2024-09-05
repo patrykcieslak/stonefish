@@ -177,7 +177,7 @@ void AcousticModem::SendMessage(std::string data)
             if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
             {
                 AcousticDataFrame* msg = new AcousticDataFrame();
-                msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+                msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
                 msg->seq = txSeq++;
                 msg->source = getDeviceId();
                 msg->destination = nodeIds[i];
@@ -193,7 +193,7 @@ void AcousticModem::SendMessage(std::string data)
             return;
         
         AcousticDataFrame* msg = new AcousticDataFrame();
-        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
         msg->seq = txSeq++;
         msg->source = getDeviceId();
         msg->destination = getConnectedId();

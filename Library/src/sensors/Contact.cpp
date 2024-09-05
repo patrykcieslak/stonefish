@@ -117,7 +117,7 @@ void Contact::AddContactPoint(ContactPoint p)
     if(historyLen > 0 && points.size() == historyLen)
         points.pop_front();
 
-    p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+    p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
     points.push_back(p);
     
     newDataAvailable = true;
