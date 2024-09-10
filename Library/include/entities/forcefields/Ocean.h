@@ -57,7 +57,13 @@ namespace sf
         
         //! A destructor.
         ~Ocean();
-        
+
+        //! A method to set the environmental conditions.
+        /*!
+         \param waterTemp the temperature of the water at the surface [degC]
+        */
+        void SetConditions(Scalar waterTemp);
+
         //! A method used to add a velocity field to the ocean.
         /*!
          \param field a pointer to a velocity field object
@@ -164,6 +170,7 @@ namespace sf
         OceanCurrentsUBO glOceanCurrentsUBOData;
         Scalar depth;
         Scalar waterType;
+        Scalar salinity;
         Scalar oceanState;
         bool currentsEnabled;
         Renderable wavesDebug;

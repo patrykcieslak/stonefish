@@ -66,7 +66,7 @@ void JointsTestManager::BuildScenario()
     
     ////////OBJECTS
     setSolverParams(0.25, 0.5, 0.25, 0.25, 0.0, -1.0, -1.0);
-    getAtmosphere()->SetupSunPosition(0.0, 70.0);
+    getAtmosphere()->SetSunPosition(0.0, 70.0);
     getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
     getNED()->Init(-10.0, -10.0, 0.0);
     

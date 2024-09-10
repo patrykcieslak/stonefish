@@ -71,7 +71,7 @@ void FluidDynamicsTestManager::BuildScenario()
     ////////OBJECTS    
     EnableOcean(0.0);
     getOcean()->setWaterType(0.2);
-    getAtmosphere()->SetupSunPosition(0.0, 60.0);
+    getAtmosphere()->SetSunPosition(0.0, 60.0);
 
     //Externals
     sf::BodyPhysicsSettings phy;

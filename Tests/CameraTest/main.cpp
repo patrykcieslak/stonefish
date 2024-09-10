@@ -17,30 +17,25 @@
 
 //
 //  main.cpp
-//  UnderwaterTest
+//  CameraTest
 //
-//  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright(c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 09/02/2024.
+//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
 //
 
-#include "UnderwaterTestApp.h"
-#include "UnderwaterTestManager.h"
-#include <cfenv>
+#include <core/GraphicalSimulationApp.h>
+#include "CameraTestManager.h"
 
 int main(int argc, const char * argv[])
 {
-    //feenableexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
-    //feenableexcept(FE_INVALID | FE_OVERFLOW);
-    
     sf::RenderSettings s;
     s.windowW = 1200;
     s.windowH = 900;
     s.aa = sf::RenderQuality::HIGH;
     s.shadows = sf::RenderQuality::HIGH;
     s.ao = sf::RenderQuality::HIGH;
-    s.atmosphere = sf::RenderQuality::MEDIUM;
+    s.atmosphere = sf::RenderQuality::HIGH;
     s.ocean = sf::RenderQuality::HIGH;
-    s.ssr = sf::RenderQuality::HIGH;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;
@@ -50,11 +45,9 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    UnderwaterTestManager simulationManager(200.0);
-    simulationManager.setRealtimeFactor(1.0);
-    UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
+    CameraTestManager* simulationManager = new CameraTestManager(100.0);
+    sf::GraphicalSimulationApp app("CameraTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
     app.Run();
     
     return 0;
 }
-

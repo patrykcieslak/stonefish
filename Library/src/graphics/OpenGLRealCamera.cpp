@@ -66,7 +66,7 @@ OpenGLRealCamera::~OpenGLRealCamera()
     }
 }
 
-ViewType OpenGLRealCamera::getType()
+ViewType OpenGLRealCamera::getType() const
 {
     return ViewType::CAMERA;
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOceanParticles.h"
@@ -30,7 +30,7 @@
 #include "graphics/OpenGLState.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
-#include "graphics/OpenGLCamera.h"
+#include "graphics/OpenGLView.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLAtmosphere.h"
 #include "graphics/OpenGLOcean.h"
@@ -77,9 +77,9 @@ void OpenGLOceanParticles::Create(glm::vec3 eyePos)
     initialised = true;
 }
     
-void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
+void OpenGLOceanParticles::Update(OpenGLView* view, GLfloat dt)
 {
-    glm::vec3 eyePos = cam->GetEyePosition();
+    glm::vec3 eyePos = view->GetEyePosition();
     lastEyePos = eyePos;
 
     //Check if ever updated
@@ -104,16 +104,16 @@ void OpenGLOceanParticles::Update(OpenGLCamera* cam, GLfloat dt)
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
     
-void OpenGLOceanParticles::Draw(OpenGLCamera* cam, OpenGLOcean* glOcn)
+void OpenGLOceanParticles::Draw(OpenGLView* view, OpenGLOcean* glOcn)
 {
-    glm::mat4 MV = cam->GetViewMatrix();
+    glm::mat4 MV = view->GetViewMatrix();
     renderShader->Use();
     renderShader->SetUniform("MV", MV);
     renderShader->SetUniform("iMV", glm::inverse(MV));
-    renderShader->SetUniform("P", cam->GetProjectionMatrix());
-    renderShader->SetUniform("FC", cam->GetLogDepthConstant());
-    renderShader->SetUniform("eyePos", cam->GetEyePosition());
-    renderShader->SetUniform("viewDir", cam->GetLookingDirection());
+    renderShader->SetUniform("P", view->GetProjectionMatrix());
+    renderShader->SetUniform("FC", view->GetLogDepthConstant());
+    renderShader->SetUniform("eyePos", view->GetEyePosition());
+    renderShader->SetUniform("viewDir", view->GetLookingDirection());
     renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
     renderShader->SetUniform("bWater", glOcn->getLightScattering());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);

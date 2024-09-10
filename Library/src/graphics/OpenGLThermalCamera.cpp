@@ -36,49 +36,44 @@
 namespace sf
 {
 
-GLSLShader* OpenGLThermalCamera::thermalCameraOutputShader = nullptr;
 GLSLShader* OpenGLThermalCamera::thermalVisualizeShader = nullptr;
-GLSLShader* OpenGLThermalCamera::flipShader = nullptr;
+GLSLShader* OpenGLThermalCamera::thermalOutputShader = nullptr;
 
 OpenGLThermalCamera::OpenGLThermalCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
-                          GLint originX, GLint originY, GLint width, GLint height,
-                          GLfloat horizontalFOVDeg, glm::vec2 range, bool continuousUpdate)
- : OpenGLView(originX, originY, width, height), randDist(0.f, 1.f)
+                          GLint originX, GLint originY, GLint width, GLint height, GLfloat horizontalFOVDeg, 
+                          glm::vec2 tempRange, glm::vec2 depthRange, bool continuousUpdate)
+ : OpenGLView(originX, originY, width, height), randDist(0.f, 1.f), temperatureNoise(0.f), newData(false), camera(nullptr), _needsUpdate(false)
 {
-    _needsUpdate = false;
     continuous = continuousUpdate;
-    newData = false;
-    camera = nullptr;
-    temperatureNoise = 0.0;
-    temperatureRange = glm::vec2(0.f, 100.f);
-    this->range = range;
+    this->depthRange = depthRange;
+    temperatureRange = displayRange = tempRange;
+    colorMap = ColorMap::JET;
     
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
     
-    GLfloat fovx = horizontalFOVDeg/180.f*M_PI;
-    GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
-    projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
-    focalLength = ((GLfloat)viewportWidth/2.f)/tanf(fovx/2.f);
+    fov.x = horizontalFOVDeg/180.f*M_PI;
+    fov.y = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fov.x/2.f) );
+    projection = glm::perspectiveFov(fov.y, (GLfloat)viewportWidth, (GLfloat)viewportHeight, depthRange.x, depthRange.y);
     
     //Direct temperature output
-    renderTemperatureTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
-                                            GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
-    renderTemperatureTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
-                                            GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    renderTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                            GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    renderTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                            GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     renderDepthTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
                                                            GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     std::vector<FBOTexture> fboTextures;
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTemperatureTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderTemperatureTex[1]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTex[0])); // Temperature
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderTex[1])); // Flipped temperature
     fboTextures.push_back(FBOTexture(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, renderDepthTex));
     renderFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
 
-    //Flow visualization with color map
-    displayTemperatureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
+    //Temperature visualization with color map
+    displayTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
 
     fboTextures.clear();
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTemperatureTex));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTex));
     displayFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //Display quad
@@ -114,8 +109,8 @@ OpenGLThermalCamera::OpenGLThermalCamera(glm::vec3 eyePosition, glm::vec3 direct
 OpenGLThermalCamera::~OpenGLThermalCamera()
 {
     glDeleteTextures(1, &renderDepthTex);
-    glDeleteTextures(2, renderTemperatureTex);
-    glDeleteTextures(1, &displayTemperatureTex);
+    glDeleteTextures(2, renderTex);
+    glDeleteTextures(1, &displayTex);
     glDeleteFramebuffers(1, &renderFBO);
     glDeleteFramebuffers(1, &displayFBO);
     glDeleteVertexArrays(1, &displayVAO);
@@ -195,9 +190,24 @@ glm::mat4 OpenGLThermalCamera::GetViewMatrix() const
     return cameraTransform;
 }
 
+GLfloat OpenGLThermalCamera::GetNearClip() const
+{
+    return depthRange.x;
+}
+
 GLfloat OpenGLThermalCamera::GetFarClip() const
 {
-    return range.y;
+    return depthRange.y;
+}
+
+GLfloat OpenGLThermalCamera::GetFOVX() const
+{
+    return fov.x;
+}
+        
+GLfloat OpenGLThermalCamera::GetFOVY() const
+{
+    return fov.y;
 }
 
 void OpenGLThermalCamera::Update()
@@ -222,7 +232,7 @@ void OpenGLThermalCamera::setCamera(Camera* cam, unsigned int index)
 
     glGenBuffers(1, &outputPBO);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 2 * sizeof(GLfloat), 0, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * sizeof(GLfloat), 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     glGenBuffers(1, &displayPBO);
@@ -236,78 +246,43 @@ void OpenGLThermalCamera::setNoise(GLfloat temperatureStdDev)
     temperatureNoise = temperatureStdDev;
 }
 
-void OpenGLThermalCamera::setTemperatureRange(glm::vec2 range)
+void OpenGLThermalCamera::setDisplayRange(glm::vec2 tempRange)
 {
-    temperatureRange = range;
+    displayRange = tempRange;
 }
 
-ViewType OpenGLThermalCamera::getType()
+void OpenGLThermalCamera::setColorMap(ColorMap cm)
+{
+    colorMap = cm;
+}
+
+ViewType OpenGLThermalCamera::getType() const
 {
     return ViewType::THERMAL_CAMERA;
 }
 
-void OpenGLThermalCamera::ComputeOutput(std::vector<Renderable>& objects)
+void OpenGLThermalCamera::ComputeOutput()
 {
-    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-    content->SetCurrentView(this);
-    content->SetDrawingMode(DrawingMode::RAW);
-    
-    //Optical flow velocity output
-    OpenGLState::BindFramebuffer(renderFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::mat4 VP = GetProjectionMatrix() * GetViewMatrix();
-
-    thermalCameraOutputShader->Use();
-    thermalCameraOutputShader->SetUniform("FC", GetLogDepthConstant());
-    thermalCameraOutputShader->SetUniform("VR", glm::mat3(GetViewMatrix()));
-    thermalCameraOutputShader->SetUniform("d", GetLookingDirection());
-    thermalCameraOutputShader->SetUniform("c", glm::vec2(viewportWidth/2.f, viewportHeight/2.f));
-    thermalCameraOutputShader->SetUniform("f", focalLength);
-    thermalCameraOutputShader->SetUniform("P_c", GetEyePosition());
-    
-    // if(camera != nullptr)
-    // {
-    //     Vector3 linear, angular;
-    //     camera->getSensorVelocity(linear, angular);
-    //     thermalCameraOutputShader->SetUniform("v_c", glVectorFromVector(linear));
-    //     thermalCameraOutputShader->SetUniform("w_c", glVectorFromVector(angular));
-    // }
-    // else
-    // {
-    //     thermalCameraOutputShader->SetUniform("v_c", glm::vec3(0.f));
-    //     thermalCameraOutputShader->SetUniform("w_c", glm::vec3(0.f));
-    // }
-
-    // for(size_t i=0; i<objects.size(); ++i)
-    // {
-    //     if(objects[i].type != RenderableType::SOLID)
-    //         continue;
-    //     thermalCameraOutputShader->SetUniform("MVP", VP * objects[i].model);
-    //     thermalCameraOutputShader->SetUniform("M", objects[i].model);
-    //     thermalCameraOutputShader->SetUniform("P_b", objects[i].cor);
-    //     thermalCameraOutputShader->SetUniform("v_b", objects[i].vel);
-    //     thermalCameraOutputShader->SetUniform("w_b", objects[i].avel);
-    //     content->DrawObject(objects[i].objectId, -1, objects[i].model);
-    // }
-
-    //Flip image
+    //Flip image and saturate to measurement range
     glDrawBuffer(GL_COLOR_ATTACHMENT1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTemperatureTex[0]);
-    flipShader->Use();
-    flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTex[0]);
+    thermalOutputShader->Use();
+    thermalOutputShader->SetUniform("texSource", TEX_POSTPROCESS1);
+    thermalOutputShader->SetUniform("temperatureRange", temperatureRange);
+    thermalOutputShader->SetUniform("noiseSeed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
+    thermalOutputShader->SetUniform("noiseStddev", temperatureNoise);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
-    //Color mapped velocity display
+    //Color mapped temperature display
     OpenGLState::BindFramebuffer(displayFBO);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
     glClear(GL_COLOR_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTemperatureTex[1]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTex[1]);
     thermalVisualizeShader->Use();
-    thermalVisualizeShader->SetUniform("texFlow", TEX_POSTPROCESS1);
-    //thermalVisualizeShader->SetUniform("maxVel", maxVel);
+    thermalVisualizeShader->SetUniform("texTemperature", TEX_POSTPROCESS1);
+    thermalVisualizeShader->SetUniform("colorMap", (GLint)colorMap);
+    thermalVisualizeShader->SetUniform("displayRange", displayRange);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     OpenGLState::BindVertexArray(displayVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -333,9 +308,10 @@ void OpenGLThermalCamera::DrawLDR(GLuint destinationFBO, bool updated)
         int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
         int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
+        content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
-        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTemperatureTex);
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex);
         OpenGLState::EnableCullFace();
         OpenGLState::BindFramebuffer(0);
     }
@@ -343,11 +319,11 @@ void OpenGLThermalCamera::DrawLDR(GLuint destinationFBO, bool updated)
     //Copy texture to camera buffer
     if(camera != nullptr && updated)
     {
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTemperatureTex[1]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTex[1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTemperatureTex);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTex);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -359,38 +335,22 @@ void OpenGLThermalCamera::DrawLDR(GLuint destinationFBO, bool updated)
 ///////////////////////// Static /////////////////////////////
 void OpenGLThermalCamera::Init()
 {   
-    thermalCameraOutputShader = new GLSLShader("thermal.frag", "thermal.vert");
-    //Vertex shader
-    thermalCameraOutputShader->AddUniform("MVP", ParameterType::MAT4);
-    thermalCameraOutputShader->AddUniform("M", ParameterType::MAT4);
-    thermalCameraOutputShader->AddUniform("N", ParameterType::MAT3);
-    thermalCameraOutputShader->AddUniform("MV", ParameterType::MAT3);
-    thermalCameraOutputShader->AddUniform("FC", ParameterType::FLOAT);
-    //Fragment shader
-    thermalCameraOutputShader->AddUniform("sunDir", ParameterType::VEC3);
-    thermalCameraOutputShader->AddUniform("albedo", ParameterType::VEC3);
-    thermalCameraOutputShader->AddUniform("roughness", ParameterType::FLOAT);
-    thermalCameraOutputShader->AddUniform("temperatureRange", ParameterType::VEC2);
-    thermalCameraOutputShader->AddUniform("enableAlbedoTexture", ParameterType::BOOLEAN);
-    thermalCameraOutputShader->AddUniform("enableNormalMap", ParameterType::BOOLEAN);
-    thermalCameraOutputShader->AddUniform("enableThermalMap", ParameterType::BOOLEAN);
-    thermalCameraOutputShader->AddUniform("texAlbedo", ParameterType::INT);
-    thermalCameraOutputShader->AddUniform("texNormal", ParameterType::INT);
-    thermalCameraOutputShader->AddUniform("texThermal", ParameterType::INT);
-
+    thermalOutputShader = new GLSLShader("thermalOutput.frag");
+    thermalOutputShader->AddUniform("texSource", ParameterType::INT);
+    thermalOutputShader->AddUniform("temperatureRange", ParameterType::VEC2);
+    thermalOutputShader->AddUniform("noiseSeed", ParameterType::VEC3);
+    thermalOutputShader->AddUniform("noiseStddev", ParameterType::FLOAT);
+    
     thermalVisualizeShader = new GLSLShader("thermalVisualize.frag");
-    thermalVisualizeShader->AddUniform("texThermal", ParameterType::INT);
-    thermalVisualizeShader->AddUniform("thermalRange", ParameterType::FLOAT);
-
-    flipShader = new GLSLShader("verticalFlip.frag");
-    flipShader->AddUniform("texSource", ParameterType::INT);
+    thermalVisualizeShader->AddUniform("texTemperature", ParameterType::INT);
+    thermalVisualizeShader->AddUniform("colorMap", ParameterType::INT);
+    thermalVisualizeShader->AddUniform("displayRange", ParameterType::VEC2);
 }
 
 void OpenGLThermalCamera::Destroy()
 {
-    if(thermalCameraOutputShader != nullptr) delete thermalCameraOutputShader;
+    if(thermalOutputShader != nullptr) delete thermalOutputShader;
     if(thermalVisualizeShader != nullptr) delete thermalVisualizeShader;
-    if(flipShader != nullptr) delete flipShader;
 }
 
 }

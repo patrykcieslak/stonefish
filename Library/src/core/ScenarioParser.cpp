@@ -679,7 +679,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
                 log.Print(MessageType::WARNING, "Sun position definition incorrect - using defualts.");
             }
             else
-                sm->getAtmosphere()->SetupSunPosition(az, elev);
+                sm->getAtmosphere()->SetSunPosition(az, elev);
         }
 
         //Winds

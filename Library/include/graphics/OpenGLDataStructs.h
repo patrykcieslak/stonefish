@@ -61,6 +61,7 @@
 #define TEX_SPOT_DEPTH          ((GLint)14)
 #define TEX_MAT_ALBEDO          ((GLint)15)
 #define TEX_MAT_NORMAL          ((GLint)16)
+#define TEX_MAT_TEMPERATURE     ((GLint)17)
 //#define TEX_POINT_SHADOW        ((GLint)X) 
 //#define TEX_POINT_DEPTH         ((GLint)X)
 
@@ -323,7 +324,7 @@ namespace sf
     };
     
     //! An enum representing the rendering mode.
-    enum class DrawingMode {RAW, SHADOW, FLAT, FULL, UNDERWATER};
+    enum class DrawingMode {RAW, SHADOW, FLAT, FULL, UNDERWATER, TEMPERATURE};
     
     //! A structure containing data of a view frustum.
     struct ViewFrustum
@@ -336,7 +337,7 @@ namespace sf
     };
     
     //! An enum defining supported color maps.
-    enum class ColorMap : int32_t {HOT, JET, PERULA, GREEN_BLUE, ORANGE_COPPER, COLD_BLUE};
+    enum class ColorMap : GLint {HOT, JET, PERULA, GREEN_BLUE, ORANGE_COPPER, COLD_BLUE, GREY};
 
     //! A structure representing a color system.
     struct ColorSystem
@@ -469,31 +470,11 @@ namespace sf
         LookType type;
         Color color;
         std::vector<GLfloat> params;
-        GLuint albedoTexture;
-        GLuint normalTexture;
-        GLfloat reflectivity;
-
-        Look()
-        {
-            name = "";
-            type = LookType::SIMPLE;
-            albedoTexture = normalTexture = 0;
-            reflectivity = 0.f;
-        }
-    };
-
-    //! A structure containing data of a graphical material.
-    struct Look
-    {
-        std::string name;
-        LookType type;
-        Color color;
-        std::vector<GLfloat> params;
         GLfloat reflectivity;
         GLuint albedoTexture;
         GLuint normalMap;
-        GLuint thermalMap;
-        glm::vec2 thermalRange;
+        GLuint temperatureMap;
+        glm::vec2 temperatureRange;
 
         Look()
         {
@@ -502,8 +483,8 @@ namespace sf
             reflectivity = 0.f;
             albedoTexture = 0;
             normalMap = 0;
-            thermalMap = 0;
-            thermalRange = glm::vec2(20.f);
+            temperatureMap = 0;
+            temperatureRange = glm::vec2(20.f);
         }
     };
     

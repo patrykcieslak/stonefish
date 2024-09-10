@@ -56,7 +56,7 @@ void FlyingTestManager::BuildScenario()
 
     ////////OBJECTS    
     //Create environment
-    getAtmosphere()->SetupSunPosition(0.0, 60.0);
+    getAtmosphere()->SetSunPosition(0.0, 60.0);
     
     sf::Plane* floor = new sf::Plane("Floor", 10000, "Ground", "grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());

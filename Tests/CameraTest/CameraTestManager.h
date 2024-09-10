@@ -1,6 +1,4 @@
 /*    
-    Copyright (c) 2024 Patryk Cieslak. All rights reserved.
-
     This file is a part of Stonefish.
 
     Stonefish is free software: you can redistribute it and/or modify
@@ -17,21 +15,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#version 330
+//
+//  CameraTestManager.h
+//  Stonefish
+//
+//  Created by Patryk Cieslak on 09/02/2024.
+//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//
 
-layout(location = 0) in vec3 vt;
+#ifndef __Stonefish__CameraTestManager__
+#define __Stonefish__CameraTestManager__
 
-out vec4 fragPos;
-out float logz;
+#include <core/SimulationManager.h>
 
-uniform mat4 MVP;
-uniform mat4 M;
-uniform float FC;
-
-void main()
+class CameraTestManager : public sf::SimulationManager 
 {
-	fragPos = M * vec4(vt, 1.0);
-	gl_Position = MVP * vec4(vt, 1.0); 
-    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
-    logz = 1.0 + gl_Position.w;
-}
+public:
+    CameraTestManager(sf::Scalar stepsPerSecond);
+    
+    void BuildScenario();
+};
+
+#endif

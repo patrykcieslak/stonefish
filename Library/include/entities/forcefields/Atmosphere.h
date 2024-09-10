@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Atmosphere__
@@ -63,14 +63,22 @@ namespace sf
          \param latitudeDeg the home latitude [deg]
          \param utc the UTC time at home
          */
-        void SetupSunPosition(Scalar longitudeDeg, Scalar latitudeDeg, std::tm& utc);
+        void SetSunPosition(Scalar longitudeDeg, Scalar latitudeDeg, std::tm& utc);
         
         //! A method used to set the position of the sun in the sky.
         /*!
          \param azimuthDeg the sun azimuth [deg]
          \param elevationDeg the sun elevation [deg]
          */
-        void SetupSunPosition(Scalar azimuthDeg, Scalar elevationDeg);
+        void SetSunPosition(Scalar azimuthDeg, Scalar elevationDeg);
+
+        //! A method used to set the atmospheric conditions.
+        /*!
+         \param temperature the air temperature at sea level [degC]
+         \param pressure the air pressure at sea level [Pa]
+         \param humidity the air relative humidity at sea level [0-1]
+         */
+        void SetConditions(Scalar temperature, Scalar pressure, Scalar humidity);
         
         //! A method used to add a velocity field to the atmosphere.
         /*!

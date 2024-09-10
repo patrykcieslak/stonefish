@@ -51,6 +51,7 @@ OpenGLSonar::OpenGLSonar(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 s
     settingsUpdated = true;
     outputPBO = 0;
     displayPBO = 0;
+    fov = glm::vec2(1.0);
     cMap = ColorMap::GREEN_BLUE;
     SetupSonar(eyePosition, direction, sonarUp);
 }
@@ -113,9 +114,24 @@ glm::mat4 OpenGLSonar::GetViewMatrix() const
     return sonarTransform;
 }
 
+GLfloat OpenGLSonar::GetNearClip() const
+{
+    return range.x;
+}
+
 GLfloat OpenGLSonar::GetFarClip() const
 {
     return range.y;
+}
+
+GLfloat OpenGLSonar::GetFOVX() const
+{
+    return fov.x;
+}
+        
+GLfloat OpenGLSonar::GetFOVY() const
+{
+    return fov.y;
 }
 
 void OpenGLSonar::Update()
@@ -139,7 +155,7 @@ void OpenGLSonar::setColorMap(ColorMap cm)
     cMap = cm;
 }
 
-ViewType OpenGLSonar::getType()
+ViewType OpenGLSonar::getType() const
 {
     return ViewType::SONAR;
 }

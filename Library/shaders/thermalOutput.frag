@@ -20,16 +20,22 @@
 #version 330
 
 in vec2 texcoord;
-out vec4 fragColor;
-uniform sampler2D texTemperature;
-uniform int colorMap;
-uniform vec2 displayRange;
+out float fragColor;
+uniform sampler2D texSource;
+uniform vec2 temperatureRange;
+uniform vec3 noiseSeed;
+uniform float noiseStddev;
 
-#inject "colorMapping.glsl"
+#inject "gaussianNoise.glsl"
 
-void main()
+void main(void) 
 {
-    float T = texture(texTemperature, texcoord).r;
-    float Tnormalized = (T - displayRange.x)/(displayRange.y - displayRange.x);
-    fragColor = vec4(applyColorMapping(Tnormalized, colorMap), 1.0);
+    //Read perfect temperature
+    float temperature = texture(texSource, vec2(texcoord.x, 1.0-texcoord.y)).r;
+
+    //Add noise
+    temperature += gaussian(texcoord, noiseSeed, noiseStddev, 0.0);
+
+    //Limit temperature to range
+    fragColor = clamp(temperature, temperatureRange.x, temperatureRange.y);
 }

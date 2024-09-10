@@ -1,9 +1,10 @@
 add_definitions(-DDATA_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Data/\")
 
-find_package(data_tamer_cpp QUIET)
-
 add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestApp.cpp ConsoleTest/ConsoleTestManager.cpp)
 target_link_libraries(ConsoleTest Stonefish_test)
+
+add_executable(CameraTest CameraTest/main.cpp CameraTest/CameraTestManager.cpp)
+target_link_libraries(CameraTest Stonefish_test)
 
 add_executable(FallingTest FallingTest/main.cpp FallingTest/FallingTestApp.cpp FallingTest/FallingTestManager.cpp)
 target_link_libraries(FallingTest Stonefish_test)

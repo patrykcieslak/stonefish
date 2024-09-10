@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLMSIS__
@@ -60,17 +60,17 @@ namespace sf
         /*!
          \param objects a reference to a vector of renderable objects
          */
-        void ComputeOutput(std::vector<Renderable>& objects);
+        void ComputeOutput(std::vector<Renderable>& objects) override;
         
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
          \param updated a flag indicating if view content was updated
          */
-        void DrawLDR(GLuint destinationFBO, bool updated);
+        void DrawLDR(GLuint destinationFBO, bool updated) override;
         
         //! A method that updates sonar world transform.
-        void UpdateTransform();
+        void UpdateTransform() override;
 
         //! A method to set the noise properties of the sonar.
         /*!
@@ -92,7 +92,6 @@ namespace sf
         glm::uvec2 nBeamSamples;
         glm::mat4 beamRotation;
         GLint currentStep;
-        glm::vec2 fov;
         glm::vec2 rotationLimits;
         glm::vec2 noise;
         //OpenGL

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLTrackball__
@@ -110,22 +110,22 @@ namespace sf
         void DrawSelection(const std::vector<Renderable>& r, GLuint destinationFBO);
         
         //! A method returning the view matrix.
-        glm::mat4 GetViewMatrix() const;
+        glm::mat4 GetViewMatrix() const override;
         
         //! A method returning the eye position in the world frame.
-        glm::vec3 GetEyePosition() const;
+        glm::vec3 GetEyePosition() const override;
         
         //! A method returning a unit vector parallel to the optical axis of the camera.
-        glm::vec3 GetLookingDirection() const;
+        glm::vec3 GetLookingDirection() const override;
         
         //! A method returning a unit vector pointing to the top edge of the image.
-        glm::vec3 GetUpDirection() const;
+        glm::vec3 GetUpDirection() const override;
         
         //! A method returning the type of the view.
-        ViewType getType();
+        ViewType getType() const override;
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool needsUpdate() override;
         
     private:
         GLfloat calculateZ(GLfloat x, GLfloat y);

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLRealCamera__
@@ -61,7 +61,7 @@ namespace sf
          \param destinationFBO the id of the framebuffer used as the destination for rendering
          \param updated a flag indicating if view content was updated
          */
-        void DrawLDR(GLuint destinationFBO, bool updated);
+        void DrawLDR(GLuint destinationFBO, bool updated) override;
         
         //! A method that sets up the camera.
         void SetupCamera();
@@ -81,19 +81,19 @@ namespace sf
         void Update();
         
         //! A method returning the view matrix.
-        glm::mat4 GetViewMatrix() const;
+        glm::mat4 GetViewMatrix() const override;
         
         //! A method returning the eye position.
-        glm::vec3 GetEyePosition() const;
+        glm::vec3 GetEyePosition() const override;
         
         //! A method returning a unit vector parallel to the optical axis of the camera.
-        glm::vec3 GetLookingDirection() const;
+        glm::vec3 GetLookingDirection() const override;
         
         //! A method returning a unit vector pointing to the top edge of the image.
-        glm::vec3 GetUpDirection() const;
+        glm::vec3 GetUpDirection() const override;
         
         //! A method returning the type of the view.
-        ViewType getType();
+        ViewType getType() const override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
@@ -102,7 +102,7 @@ namespace sf
         void setCamera(ColorCamera* cam);
          
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool needsUpdate() override;
         
     private:
         ColorCamera* camera;

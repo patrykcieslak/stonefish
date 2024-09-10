@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLView__
@@ -84,6 +84,15 @@ namespace sf
         //! A method that returns the view matrix.
         virtual glm::mat4 GetViewMatrix() const = 0;
 
+        //! A method that returns the horizontal field of view.
+        virtual GLfloat GetFOVX() const = 0;
+        
+        //! A method that returns the vertical field of view.
+        virtual GLfloat GetFOVY() const = 0;
+
+        //! A method that returns the far clip plane distance.
+        virtual GLfloat GetNearClip() const = 0;
+
         //! A method that returns the far clip plane distance.
         virtual GLfloat GetFarClip() const = 0;
 
@@ -94,7 +103,7 @@ namespace sf
         virtual bool needsUpdate() = 0;
         
         //! A method returning the type of the view.
-        virtual ViewType getType() = 0;
+        virtual ViewType getType() const = 0;
         
         //! A method that sets the current viewport.
         void SetViewport();

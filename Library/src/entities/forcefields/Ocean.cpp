@@ -128,6 +128,12 @@ void Ocean::setParticles(bool enabled)
         glOcean->setParticles(enabled);
 }
 
+void Ocean::SetConditions(Scalar waterTemp)
+{
+    if(glOcean != nullptr)
+        glOcean->setWaterTemperature((float)waterTemp);
+}
+
 void Ocean::AddVelocityField(VelocityField* field)
 {
     currents.push_back(field);

@@ -49,46 +49,53 @@ namespace sf
          \param width the width of the view
          \param height the height of the view
          \param horizontalFovDeg the horizontal field of view of the camera [deg]
-         \param range the minimum and maximum rendering distance of the camera [m]
+         \param tempRange the range of the temperature measured by the camera [degC]
+         \param depthRange the range of the rendering distance of the camera [m]
          \param continuousUpdate a flag indicating if the depth camera has to be always updated
          */
         OpenGLThermalCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
-                          GLint originX, GLint originY, GLint width, GLint height,
-                          GLfloat horizontalFOVDeg, glm::vec2 range, bool continuousUpdate);
+                          GLint originX, GLint originY, GLint width, GLint height, GLfloat horizontalFOVDeg,
+                          glm::vec2 tempRange, glm::vec2 depthRange, bool continuousUpdate);
         
         //! A destructor.
         ~OpenGLThermalCamera();
         
         //! A method that computes simulated thermal data.
-        /*
-         \param objects a reference to a vector of renderable objects
-         */
-        void ComputeOutput(std::vector<Renderable>& objects);
+        void ComputeOutput();
 
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
          \param destinationFBO the id of the framebuffer used as the destination for rendering
          \param updated a flag indicating if view content was updated
          */
-        void DrawLDR(GLuint destinationFBO, bool updated);
+        void DrawLDR(GLuint destinationFBO, bool updated) override;
         
         //! A method returning the eye position.
-        glm::vec3 GetEyePosition() const;
+        glm::vec3 GetEyePosition() const override;
         
         //! A method returning a unit vector parallel to the optical axis of the camera.
-        glm::vec3 GetLookingDirection() const;
+        glm::vec3 GetLookingDirection() const override;
         
         //! A method returning a unit vector pointing to the top edge of the image.
-        glm::vec3 GetUpDirection() const;
+        glm::vec3 GetUpDirection() const override;
 
         //! A method returning the projection matrix.
-        glm::mat4 GetProjectionMatrix() const;
+        glm::mat4 GetProjectionMatrix() const override;
         
         //! A method returning the view matrix.
-        glm::mat4 GetViewMatrix() const;
+        glm::mat4 GetViewMatrix() const override;
+
+        //! A method that returns the near clip plane distance.
+        GLfloat GetNearClip() const override;
 
         //! A method that returns the far clip plane distance.
-        GLfloat GetFarClip() const;
+        GLfloat GetFarClip() const override;
+
+        //! A method that returns the horizontal field of view.
+        GLfloat GetFOVX() const override;
+        
+        //! A method that returns the vertical field of view.
+        GLfloat GetFOVY() const override;
         
         //! A method that sets up the camera.
         void SetupCamera();
@@ -102,13 +109,13 @@ namespace sf
         void SetupCamera(glm::vec3 eye, glm::vec3 dir, glm::vec3 up);
         
         //! A method that updates camera world transform.
-        void UpdateTransform();
+        void UpdateTransform() override;
 
         //! A method that flags the camera as needing update.
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool needsUpdate() override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
@@ -119,18 +126,24 @@ namespace sf
         
         //! A method to set the noise properties of the thermal camera.
         /*!
-         \param temperatureStdDev the standard deviation of the temperature measurement
+         \param tempStdDev the standard deviation of the temperature measurement
          */
-        void setNoise(GLfloat temperatureStdDev);
+        void setNoise(GLfloat tempStdDev);
 
         //! A method to set the range of temperatures represented by the color mapped image.
         /*!
          \param range the range of the temperatures in deg C
         */
-        void setTemperatureRange(glm::vec2 range);
+        void setDisplayRange(glm::vec2 tempRange);
+
+        //! A method to set the color map used during temperature data visulization.
+        /*!
+         \param cm the color map to be used
+         */
+        void setColorMap(ColorMap cm);
 
         //! A method returning the type of the view.
-        ViewType getType();
+        ViewType getType() const override;
         
         //! A static method to load shaders.
         static void Init();
@@ -148,25 +161,27 @@ namespace sf
         glm::vec3 tempDir;
         glm::vec3 tempUp;
         glm::mat4 projection;
-        GLfloat focalLength;
+        glm::vec2 fov;
         bool _needsUpdate;
         bool newData;
-        glm::vec2 range;
-        GLfloat temperatureNoise;
+        glm::vec2 depthRange;
         glm::vec2 temperatureRange;
+        GLfloat temperatureNoise;
         std::default_random_engine randGen;
         std::uniform_real_distribution<float> randDist;
+        glm::vec2 displayRange;
+        ColorMap colorMap;
+
         GLuint renderDepthTex;
-        GLuint renderTemperatureTex[2];
-        GLuint displayTemperatureTex;
+        GLuint renderTex[3];
+        GLuint displayTex;
         GLuint outputPBO;
         GLuint displayPBO;
         GLuint displayFBO;
         GLuint displayVAO;
         GLuint displayVBO;
-        static GLSLShader* thermalCameraOutputShader;
         static GLSLShader* thermalVisualizeShader;
-        static GLSLShader* flipShader;
+        static GLSLShader* thermalOutputShader;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFlatOcean.h"
@@ -29,7 +29,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
-#include "graphics/OpenGLCamera.h"
+#include "graphics/OpenGLView.h"
 #include "graphics/OpenGLAtmosphere.h"
 
 namespace sf
@@ -41,13 +41,13 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     params.A = 1.0f;
     params.omega = 2.f;
 
-    //Surface rendering
     GLint compiled;
     GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
 	std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
     precompiled.push_back(pcssFragment);
 
+    //Surface rendering
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "oceanSurface.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
@@ -75,7 +75,38 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     oceanShaders["surface"]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
     oceanShaders["surface"]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
     oceanShaders["surface"]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);    
+    OpenGLState::UseProgram(0);
 
+    //Surface temeperature rendering
+    sources.pop_back();
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceTemp.frag"));
+    oceanShaders["surfaceTemp"] = new GLSLShader(sources, precompiled);
+    oceanShaders["surfaceTemp"]->AddUniform("size", ParameterType::FLOAT);
+    oceanShaders["surfaceTemp"]->AddUniform("texWaveFFT", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("texSlopeVariance", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("MVP", ParameterType::MAT4);
+    oceanShaders["surfaceTemp"]->AddUniform("gridSizes", ParameterType::VEC4);
+    oceanShaders["surfaceTemp"]->AddUniform("eyePos", ParameterType::VEC3);
+    oceanShaders["surfaceTemp"]->AddUniform("viewDir", ParameterType::VEC3);
+    oceanShaders["surfaceTemp"]->AddUniform("MV", ParameterType::MAT3);
+    oceanShaders["surfaceTemp"]->AddUniform("FC", ParameterType::FLOAT);
+    oceanShaders["surfaceTemp"]->AddUniform("viewport", ParameterType::VEC2);
+    oceanShaders["surfaceTemp"]->AddUniform("transmittance_texture", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("scattering_texture", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("irradiance_texture", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("sunShadowMap", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("sunDepthMap", ParameterType::INT);
+    oceanShaders["surfaceTemp"]->AddUniform("waterTemperature", ParameterType::FLOAT);
+    oceanShaders["surfaceTemp"]->BindUniformBlock("SunSky", UBO_SUNSKY);
+
+    oceanShaders["surfaceTemp"]->Use();
+    oceanShaders["surfaceTemp"]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    oceanShaders["surfaceTemp"]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    oceanShaders["surfaceTemp"]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+    oceanShaders["surfaceTemp"]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+    oceanShaders["surfaceTemp"]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+    OpenGLState::UseProgram(0);
+    
     //Backsurface rendering
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
     precompiled.pop_back();
@@ -106,6 +137,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     oceanShaders["backsurface"]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
     oceanShaders["backsurface"]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
     oceanShaders["backsurface"]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+    OpenGLState::UseProgram(0);
 
     //Mask rendering
     sources.pop_back();
@@ -151,24 +183,24 @@ OpenGLFlatOcean::~OpenGLFlatOcean()
     glDeleteBuffers(1, &vbo);
 }
     
-void OpenGLFlatOcean::UpdateSurface(OpenGLCamera* cam)
+void OpenGLFlatOcean::UpdateSurface(OpenGLView* view)
 {
 }
         
-void OpenGLFlatOcean::DrawSurface(OpenGLCamera* cam)
+void OpenGLFlatOcean::DrawSurface(OpenGLView* view)
 {
-    GLint* viewport = cam->GetViewport();
+    GLint* viewport = view->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
 
     oceanShaders["surface"]->Use();
-    oceanShaders["surface"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
-    oceanShaders["surface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
-    oceanShaders["surface"]->SetUniform("FC", cam->GetLogDepthConstant());
+    oceanShaders["surface"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
+    oceanShaders["surface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view->GetViewMatrix()))));
+    oceanShaders["surface"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["surface"]->SetUniform("size", oceanSize);
     oceanShaders["surface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-    oceanShaders["surface"]->SetUniform("eyePos", cam->GetEyePosition());
-    oceanShaders["surface"]->SetUniform("viewDir", cam->GetLookingDirection());
+    oceanShaders["surface"]->SetUniform("eyePos", view->GetEyePosition());
+    oceanShaders["surface"]->SetUniform("viewDir", view->GetLookingDirection());
     oceanShaders["surface"]->SetUniform("gridSizes", params.gridSizes);
     oceanShaders["surface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["surface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
@@ -181,19 +213,48 @@ void OpenGLFlatOcean::DrawSurface(OpenGLCamera* cam)
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     delete [] viewport;
 }
-        
-void OpenGLFlatOcean::DrawBacksurface(OpenGLCamera* cam)
+
+void OpenGLFlatOcean::DrawSurfaceTemperature(OpenGLView* view)
 {
-    GLint* viewport = cam->GetViewport();
+    GLint* viewport = view->GetViewport();
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+
+    oceanShaders["surfaceTemp"]->Use();
+    oceanShaders["surfaceTemp"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
+    oceanShaders["surfaceTemp"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view->GetViewMatrix()))));
+    oceanShaders["surfaceTemp"]->SetUniform("FC", view->GetLogDepthConstant());
+    oceanShaders["surfaceTemp"]->SetUniform("size", oceanSize);
+    oceanShaders["surfaceTemp"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
+    oceanShaders["surfaceTemp"]->SetUniform("eyePos", view->GetEyePosition());
+    oceanShaders["surfaceTemp"]->SetUniform("viewDir", view->GetLookingDirection());
+    oceanShaders["surfaceTemp"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["surfaceTemp"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+    oceanShaders["surfaceTemp"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
+    oceanShaders["surfaceTemp"]->SetUniform("waterTemperature", waterTemperature);
+
+    OpenGLState::BindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 12);
+    OpenGLState::BindVertexArray(0);
+
+    OpenGLState::UseProgram(0);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+    delete [] viewport;
+}
+        
+void OpenGLFlatOcean::DrawBacksurface(OpenGLView* view)
+{
+    GLint* viewport = view->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
 
     oceanShaders["backsurface"]->Use();
-    oceanShaders["backsurface"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
-    oceanShaders["backsurface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(cam->GetViewMatrix()))));
-    oceanShaders["backsurface"]->SetUniform("FC", cam->GetLogDepthConstant());
+    oceanShaders["backsurface"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
+    oceanShaders["backsurface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view->GetViewMatrix()))));
+    oceanShaders["backsurface"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["backsurface"]->SetUniform("size", oceanSize);
-    oceanShaders["backsurface"]->SetUniform("eyePos", cam->GetEyePosition());
+    oceanShaders["backsurface"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["backsurface"]->SetUniform("gridSizes", params.gridSizes);
     oceanShaders["backsurface"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["backsurface"]->SetUniform("bWater", getLightScattering());
@@ -211,12 +272,12 @@ void OpenGLFlatOcean::DrawBacksurface(OpenGLCamera* cam)
     delete [] viewport;
 }
         
-void OpenGLFlatOcean::DrawUnderwaterMask(OpenGLCamera* cam)
+void OpenGLFlatOcean::DrawUnderwaterMask(OpenGLView* view)
 {
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     oceanShaders["mask"]->Use();
-    oceanShaders["mask"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
-    oceanShaders["mask"]->SetUniform("FC", cam->GetLogDepthConstant());
+    oceanShaders["mask"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
+    oceanShaders["mask"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["mask"]->SetUniform("size", oceanSize);
     
     //1. Draw surface to depth buffer
@@ -237,7 +298,7 @@ void OpenGLFlatOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     OpenGLState::BindVertexArray(0);
 
     //3. Draw box around whole ocean
-    OpenGLOcean::DrawUnderwaterMask(cam);
+    OpenGLOcean::DrawUnderwaterMask(view);
 
     glCullFace(GL_BACK);
     OpenGLState::DisableStencilTest();

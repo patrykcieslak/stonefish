@@ -44,12 +44,14 @@ namespace sf
          \param resolutionX the horizontal resolution [pix]
          \param resolutionY the vertical resolution[pix]
          \param hFOVDeg the horizontal field of view [deg]
+         \param minTemp minimum temperature that the sensor can measure [degC]
+         \param maxTemp maximum temperature that the sensor can measure [degC]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        ThermalCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
-            Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
+        ThermalCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp, 
+            Scalar frequency = Scalar(-1), Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE));
         
         //! A destructor.
         ~ThermalCamera();
@@ -82,15 +84,17 @@ namespace sf
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param temperatureStdDev standard deviation of the temperature measurement in deg C
+         \param tempStdDev standard deviation of the temperature measurement [degC]
          */
-        void setNoise(GLfloat temperatureStdDev);
+        void setNoise(float tempStdDev);
 
         //! A method used to set the display settings of the sensor.
         /*!
-         \param temperatureRange range of temperatures to map on display
+         \param cm the color map used to display the image
+         \param minTemp the minimum temperature displayed [degC]
+         \param maxTemp the maximum temperature displayed [degC]
          */
-        void setDisplaySettings(glm::vec2 temperatureRange);
+        void setDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxTemp);
 
         //! A method returning the pointer to the image data.
         /*!
@@ -113,6 +117,8 @@ namespace sf
         GLubyte* displayData;
         glm::vec2 depthRange;
         GLfloat noiseStdDev;
+        glm::vec2 measurementRange;
+        ColorMap colorMap;
         glm::vec2 displayRange;
         std::function<void(ThermalCamera*)> newDataCallback;
     };

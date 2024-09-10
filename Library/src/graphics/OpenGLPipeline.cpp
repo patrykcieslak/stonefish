@@ -430,8 +430,74 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         else if(view->getType() == ViewType::THERMAL_CAMERA)
         {
             OpenGLThermalCamera* camera = static_cast<OpenGLThermalCamera*>(view);
-            //Draw objects and compute thermal data
-            camera->ComputeOutput(drawingQueueCopy);
+            glm::vec3 eye = camera->GetEyePosition();
+
+            if(renderMode == 1 && ocean->GetDepth(eye) > 0.f) //Camera underwater (not working)
+            {
+                //Clear camera to water temperature
+                OpenGLState::BindFramebuffer(camera->getRenderFBO());
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                glClearColor(ocean->getOpenGLOcean()->getWaterTemperature(), 0.f, 0.f, 0.f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            }
+            else //Camera above water or no ocean enabled
+            {
+                //Apply view properties
+                GLint* viewport = camera->GetViewport();
+                content->SetViewportSize(viewport[2],viewport[3]);
+            
+                //Bake parallel-split shadowmaps for sun
+                if(rSettings.shadows > RenderQuality::DISABLED)
+                {
+                    content->SetDrawingMode(DrawingMode::SHADOW);
+                    atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
+                }
+                atm->getOpenGLAtmosphere()->SetupMaterialShaders();
+ 
+                //Clear main framebuffer and setup camera
+                OpenGLState::BindFramebuffer(camera->getRenderFBO());
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                glClearColor(0.f, 0.f, 0.f, 0.f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                
+                camera->SetViewport();
+                content->SetCurrentView(camera);
+                
+                //Draw scene
+                if(renderMode == 0) //NO OCEAN
+                {
+                    //Render all objects
+                    content->SetDrawingMode(DrawingMode::TEMPERATURE);
+                    DrawObjects();
+                
+                    //Render sky (at the end to take profit of early bailing)
+                    atm->getOpenGLAtmosphere()->DrawSkyAndSunTemperature(camera);
+                }
+                else if(renderMode == 1) //OCEAN
+                {
+                    OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+                    
+                    //Update ocean for this camera
+                    if(ocean->hasWaves())
+                        glOcean->UpdateSurface(camera);
+
+                    //Rendering only above water
+                    //possible because camera near plane is (virtually) removed with logarithmic depth buffer.
+                    glm::vec3 eye = camera->GetEyePosition();
+                    
+                    glOcean->DrawSurfaceTemperature(camera);
+                    //Draw all objects as above surface 
+                    //(depth testing will secure drawing only what is above water)
+                    content->SetDrawingMode(DrawingMode::TEMPERATURE);
+                    DrawObjects();
+                    
+                    //Render sky (left for the end to only fill empty spaces)
+                    atm->getOpenGLAtmosphere()->DrawSkyAndSunTemperature(camera);
+                }
+            }
+            //Flip thermal image and render display texture
+            camera->ComputeOutput();
+
             //Draw camera output
             camera->DrawLDR(screenFBO, true);
         }
@@ -457,7 +523,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 content->SetDrawingMode(DrawingMode::SHADOW);
                 atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
             }
-
             atm->getOpenGLAtmosphere()->SetupMaterialShaders();
         
             //Clear main framebuffer and setup camera

@@ -37,4 +37,6 @@ layout (std140) uniform SunSky
 	float planetRadiusInUnits;
 	vec3 whitePoint;
     float atmLengthUnitInMeters;
+    float skyEmissivity;
+    float airTemperature;
 };

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLRealOcean__
@@ -60,37 +60,43 @@ namespace sf
 		/*!
 		 \param dt time since last update
 		 */
-        void Simulate(GLfloat dt);
+        void Simulate(GLfloat dt) override;
          
         //! A method that resets the quad tree.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        void ResetSurface(OpenGLCamera* cam);
+        void ResetSurface(OpenGLView* view);
         
         //! A method that updates the wave mesh.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        void UpdateSurface(OpenGLCamera* cam);
+        void UpdateSurface(OpenGLView* view) override;
 
         //! A method that draws the surface of the ocean.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        void DrawSurface(OpenGLCamera* cam);
+        void DrawSurface(OpenGLView* view) override;
+
+        //! A method that draws the surface of the ocean as thermal image.
+        /*!
+         \param view a pointer to the active view
+         */
+        void DrawSurfaceTemperature(OpenGLView* view) override;
         
         //! A method that draws the surface of the ocean, seen from underwater.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        void DrawBacksurface(OpenGLCamera* cam);
+        void DrawBacksurface(OpenGLView* view) override;
         
         //! A method that generates the stencil mask.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        void DrawUnderwaterMask(OpenGLCamera* cam);
+        void DrawUnderwaterMask(OpenGLView* view) override;
                 
         //! A method to get wave height at a specified coordinate.
         /*!
@@ -98,7 +104,7 @@ namespace sf
          \param y the y coordinate in world frame [m]
          \return wave height [m]
          */
-        GLfloat ComputeWaveHeight(GLfloat x, GLfloat y);
+        GLfloat ComputeWaveHeight(GLfloat x, GLfloat y) override;
 
         //! A method do enable wireframe rendering.
         /*!
@@ -107,13 +113,13 @@ namespace sf
         void setWireframe(bool enabled);
         
     private:
-        void InitializeSimulation();
+        void InitializeSimulation() override;
         GLfloat ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel);
 
         GLuint vao;
         GLuint oceanBuffers[2];
         GLuint fftPBO;
-        std::map<OpenGLCamera*, OceanQT> oceanTrees; 
+        std::map<OpenGLView*, OceanQT> oceanTrees; 
         SDL_mutex* hydroMutex;
         GLfloat* fftData;
         GLint qtGridTessFactor;
