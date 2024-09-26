@@ -1,0 +1,104 @@
+/*   
+    Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0) uniform atomic_uint eventCounter; // Atomic counter of events
+layout(rgba32f) uniform image2D currColor; // Current color image (in)
+layout(r32f) uniform image2D logLum; // Logarithm luminance image (in/out)
+layout(rg32i) uniform iimage2D events; // Events (out)
+layout(r32i) uniform iimage2D eventTimes; // Last event times (in/out)
+layout(r32f) uniform image2D crossings; // Crossings history (in/out)
+
+uniform uint dT; // Time step [ns]
+uniform uint Tr; // Refractory period [ns]
+uniform vec2 C;   // Contrast thresholds
+uniform vec2 sigmaC; // Standard deviation of contrast threshold noise
+uniform vec3 seed; // Noise seed
+
+#define RGB_TO_LUM  vec3(0.2125, 0.7154, 0.0721)
+#define LOG_EPS     0.001
+#define TOL         1.0e-6
+#define MIN_CONTRAST_THRESHOLD  0.01
+
+#inject "gaussianNoise.glsl"
+
+void main()
+{
+    ivec2 inDim = imageSize(logLum);
+
+    if(gl_GlobalInvocationID.x < inDim.x && gl_GlobalInvocationID.y < inDim.y)
+    {
+        ivec2 coord;
+        coord.x = int(gl_GlobalInvocationID.x);
+        coord.y = int(gl_GlobalInvocationID.y);
+
+        // Read last logarithm luminance image
+        float it = imageLoad(logLum, coord).r;
+
+        // Compute logarithm luminance of current image
+        vec3 color = imageLoad(currColor, coord).rgb; 
+        float itdt = log(LOG_EPS + dot(color, RGB_TO_LUM));
+        imageStore(logLum, coord, vec4(itdt)); // Save computed logarithm luminance image
+        
+        // Compute events
+        int lastT = 0;
+        if(abs(it - itdt) > TOL)
+        {
+            float polC;
+            vec2 noiseCoord = vec2(coord.x/float(inDim.x), coord.y/float(inDim.y)); // Normalized coord
+            if(itdt >= it)
+                polC = max(C.x + gaussian(noiseCoord, seed, sigmaC.x, 0.0), MIN_CONTRAST_THRESHOLD);
+            else
+                polC = -max(C.y + gaussian(noiseCoord, seed, sigmaC.y, 0.0), MIN_CONTRAST_THRESHOLD);
+            
+            float currCrossing = imageLoad(crossings, coord).r; // Start from last crossing
+            int lastEventTime = imageLoad(eventTimes, coord).r; // Get last event time
+            int sinceLastEvent = 0;
+            if(lastEventTime != 0)
+                sinceLastEvent = int(dT) - abs(lastEventTime);
+            
+            for(int i=0; i<10000000; ++i)
+            {
+                currCrossing += polC;
+                // Check if crossing occured
+                if( (polC > 0.0 && currCrossing > it && currCrossing <= itdt)
+                    ||(polC < 0.0 && currCrossing < it && currCrossing >= itdt))
+                {
+                    int edt = int(round((currCrossing - it) * float(dT) / (itdt - it))) + 1; // Event time (+1 to reserve time==0 for no events)
+                    if(lastEventTime == 0 || edt + sinceLastEvent - lastT >= Tr) // Check if time difference larger than refractory period
+                    {
+                        ivec4 event;
+                        event.r = coord.x << 16 | coord.y;
+                        event.g = int(sign(polC)) * edt;
+                        int index = int(atomicCounterIncrement(eventCounter));
+                        imageStore(events, ivec2(index % MAX_TEXTURE_WIDTH, index/MAX_TEXTURE_WIDTH), event);
+                        lastT = edt + sinceLastEvent;
+                    }
+                    imageStore(crossings, coord, vec4(currCrossing)); // Save crossing value
+                }
+                else
+                    break;
+            }
+            if(lastT > 0)
+                lastT = (lastT - sinceLastEvent)*int(sign(polC));
+        }
+        imageStore(eventTimes, coord, ivec4(lastT)); // Save last event time
+    }
+}

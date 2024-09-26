@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/06/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Current.h"
@@ -35,6 +35,17 @@ Current::Current(std::string uniqueName, Scalar frequency, int historyLength) : 
 {
     motor = NULL;
     channels.push_back(SensorChannel("Current", QuantityType::CURRENT));
+}
+
+Transform Current::getSensorFrame() const
+{
+    return I4();
+}
+
+void Current::getSensorVelocity(Vector3& linear, Vector3& angular) const
+{
+    linear = V0();
+    angular = V0();
 }
 
 void Current::AttachToMotor(DCMotor* m)

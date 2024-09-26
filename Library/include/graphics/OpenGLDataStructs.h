@@ -496,6 +496,7 @@ namespace sf
         int objectId;
         std::string materialName;
         glm::mat4 model;
+        glm::vec3 cor;
         glm::vec3 vel;
         glm::vec3 avel;
         std::vector<glm::vec3> points;
@@ -507,6 +508,7 @@ namespace sf
             objectId = -1;
             materialName = "";
             model = glm::mat4(1.f);
+            cor = glm::vec3(0.f);
             vel = glm::vec3(0.f);
             avel = glm::vec3(0.f);
         }

@@ -44,13 +44,7 @@ namespace sf
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
         JointSensor(std::string uniqueName, Scalar frequency, int historyLength);
-        
-        //! A method performing internal update of the sensor state.
-        /*!
-         \param dt the sample time of the simulation [s]
-         */
-        virtual void InternalUpdate(Scalar dt) = 0;
-        
+                
         //! A method used to attach the sensor to a multibody joint.
         /*!
          \param multibody a pointer to a multibody
@@ -68,7 +62,14 @@ namespace sf
         SensorType getType() const;
         
         //! A method returning the current sensor frame in world.
-        virtual Transform getSensorFrame() const;
+        Transform getSensorFrame() const;
+
+        //! A method returning the velocity of the sensor measurement frame.
+        /*!
+         \param linear output of the linear velocity of the sensor measurement frame [m/s]
+         \param angular output of the angular velocity of the sensor measurement frame [rad/s]
+         */
+        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the name of the joint that the sensor is attached to.
         std::string getJointName() const;

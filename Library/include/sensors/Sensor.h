@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sensor__
@@ -107,6 +107,13 @@ namespace sf
 
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame() const = 0;
+
+        //! A method returning the velocity of the sensor measurement frame.
+        /*!
+         \param linear output of the linear velocity of the sensor measurement frame [m/s]
+         \param angular output of the angular velocity of the sensor measurement frame [rad/s]
+         */
+        virtual void getSensorVelocity(Vector3& linear, Vector3& angular) const = 0;
         
     protected:
         Scalar freq;

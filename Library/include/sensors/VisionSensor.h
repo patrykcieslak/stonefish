@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VisionSensor__
@@ -31,7 +31,7 @@
 namespace sf
 {
     //! An enum defining types of vision sensors.
-    enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, THERMAL_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
+    enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, THERMAL_CAMERA, EVENT_BASED_CAMERA, OPTICAL_FLOW_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
     
     class Entity;
     class StaticEntity;
@@ -87,10 +87,17 @@ namespace sf
         void setRelativeSensorFrame(const Transform& origin);
 
         //! A method returning the type of the sensor.
-        virtual SensorType getType() const;
+        SensorType getType() const override;
 
         //! A method returning the sensor measurement frame.
-        virtual Transform getSensorFrame() const;
+        Transform getSensorFrame() const override;
+
+        //! A method returning the velocity of the sensor measurement frame.
+        /*!
+         \param linear output of the linear velocity of the sensor measurement frame [m/s]
+         \param angular output of the angular velocity of the sensor measurement frame [rad/s]
+         */
+        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the type of the vision sensor.
         virtual VisionSensorType getVisionSensorType() const = 0;

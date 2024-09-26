@@ -518,10 +518,13 @@ namespace sf
          \param reflectivity how reflective the material is
          \param albedoTexturePath a path to a texture specifying albedo color
          \param normalTexturePath a path to a texture specifying surface normal (bump mapping)
+         \param temperatureTexturePath a path to a texture specifying temperature distribution
+         \param temperatureRange a range of temperatures represented by the texture values
          \return the actual name of the created look
          */
         std::string CreateLook(const std::string& name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
-                               const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "");
+                               const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "", 
+                               const std::string& temperatureTexturePath = "", const std::pair<float, float>& temperatureRange = std::make_pair(20.f, 20.f));
         
     protected:
         static void SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep);

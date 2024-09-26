@@ -28,6 +28,8 @@
 
 #include <core/SimulationManager.h>
 
+//#define TEST_THERMAL_CAMERA
+
 class CameraTestManager : public sf::SimulationManager 
 {
 public:

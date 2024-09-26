@@ -482,6 +482,7 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 item.objectId = parts.at(partId).solid->getGraphicalObject();
                 item.lookId = parts.at(partId).solid->getLook();
                 item.model = glMatrixFromTransform(oTrans);
+                item.cor = glVectorFromVector(getCGTransform().getOrigin());
                 item.vel = glVectorFromVector(getLinearVelocity());
                 item.avel = glVectorFromVector(getAngularVelocity());
                 items.push_back(item);
@@ -492,6 +493,7 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 item.objectId = parts.at(partId).solid->getPhysicalObject();
                 item.lookId = -1;
                 item.model = glMatrixFromTransform(oTrans);
+                item.cor = glVectorFromVector(getCGTransform().getOrigin());
                 item.vel = glVectorFromVector(getLinearVelocity());
                 item.avel = glVectorFromVector(getAngularVelocity());
                 items.push_back(item);
