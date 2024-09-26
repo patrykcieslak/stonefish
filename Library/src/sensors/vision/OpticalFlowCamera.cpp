@@ -50,14 +50,12 @@ OpticalFlowCamera::~OpticalFlowCamera()
     glCamera = nullptr;
 }
 
-void OpticalFlowCamera::setNoise(glm::vec2 velocityStdDev)
+void OpticalFlowCamera::setNoise(float velocityXStdDev, float velocityYStdDev)
 {
-    if(glm::length(velocityStdDev) >= 0.f && velocityStdDev != noiseStdDev)
-    {
-        noiseStdDev = velocityStdDev;
-        if(glCamera != nullptr)
-            glCamera->setNoise(noiseStdDev);
-    }
+    noiseStdDev.x = velocityXStdDev > 0.f ? velocityXStdDev : 0.f;
+    noiseStdDev.y = velocityYStdDev > 0.f ? velocityYStdDev : 0.f;
+    if(glCamera != nullptr)
+        glCamera->setNoise(noiseStdDev);
 }
 
 void OpticalFlowCamera::setDisplaySettings(GLfloat maxVelocity)

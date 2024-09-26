@@ -62,6 +62,9 @@
 #include "sensors/scalar/Multibeam.h"
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
+#include "sensors/vision/ThermalCamera.h"
+#include "sensors/vision/OpticalFlowCamera.h"
+#include "sensors/vision/EventBasedCamera.h"
 #include "sensors/vision/Multibeam2.h"
 #include "sensors/vision/FLS.h"
 #include "sensors/vision/SSS.h"
@@ -3797,7 +3800,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
             || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
         {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+            log.Print(MessageType::ERROR, "Specs of camera '%s' not properly defined!", sensorName.c_str());
             return nullptr;
         }
 
@@ -3806,8 +3809,8 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
         {
-            Scalar minDist(0.02);
-            Scalar maxDist(100000.0);
+            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
             int c = 0;
 
             if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
@@ -3845,7 +3848,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
             || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
         {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+            log.Print(MessageType::ERROR, "Specs of depth camera '%s' not properly defined!", sensorName.c_str());
             return nullptr;
         }
         
@@ -3858,9 +3861,210 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             if(item->QueryAttribute("depth", &depth) == XML_SUCCESS)
                 dcam->setNoise(depth);
             else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+                log.Print(MessageType::WARNING, "Noise of depth camera '%s' not properly defined - using defaults.", sensorName.c_str());
         }
         sens = dcam;
+    }
+    else if(typeStr == "thermalcamera")
+    {
+        if(!isGraphicalSim())
+        {
+            log.Print(MessageType::ERROR, "Thermal cameras not supported in console mode!");
+            return nullptr;
+        }
+
+        int resX, resY;
+        Scalar hFov;
+        Scalar tempMin, tempMax;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("temperature_min", &tempMin) != XML_SUCCESS
+            || item->QueryAttribute("temperature_max", &tempMax) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of thermal camera '%s' not properly defined!", sensorName.c_str());
+            return nullptr;
+        }
+
+        ThermalCamera* tcam;
+        
+        //Optional parameters
+        if((item = element->FirstChildElement("rendering")) != nullptr) 
+        {
+            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+            int c = 0;
+
+            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+                ++c;
+
+            if(c == 0)
+            {
+                log.Print(MessageType::WARNING, "Rendering options of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
+                tcam = new ThermalCamera(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
+            }
+            else
+                tcam = new ThermalCamera(sensorName, resX, resY, hFov, tempMin, tempMax, rate, minDist, maxDist);
+        }
+        else
+            tcam = new ThermalCamera(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
+
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            float temperature;
+            if(item->QueryAttribute("temperature", &temperature) == XML_SUCCESS)
+                tcam->setNoise(temperature);
+            else
+                log.Print(MessageType::WARNING, "Noise of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
+        }
+
+        //Optional display settings
+        if((item = element->FirstChildElement("display")) != nullptr)
+        {
+            ColorMap cMap = ColorMap::JET;
+            ParseColorMap(item, cMap);
+
+            //Initial values are equal to measurement range
+            item->QueryAttribute("temperature_min", &tempMin);
+            item->QueryAttribute("temperature_max", &tempMax);
+            
+            tcam->setDisplaySettings(cMap, tempMin, tempMax);
+        }
+        sens = tcam;   
+    }
+    else if(typeStr == "opticalflow")
+    {
+        if(!isGraphicalSim())
+        {
+            log.Print(MessageType::ERROR, "Optical flow cameras not supported in console mode!");
+            return nullptr;
+        }
+
+        int resX, resY;
+        Scalar hFov;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of optical flow camera '%s' not properly defined!", sensorName.c_str());
+            return nullptr;
+        }
+
+        OpticalFlowCamera* ofcam;
+
+        //Optional parameters
+        if((item = element->FirstChildElement("rendering")) != nullptr) 
+        {
+            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+            int c = 0;
+
+            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+                ++c;
+
+            if(c == 0)
+            {
+                log.Print(MessageType::WARNING, "Rendering options of optical flow camera '%s' not properly defined - using defaults.", sensorName.c_str());
+                ofcam = new OpticalFlowCamera(sensorName, resX, resY, hFov, rate);
+            }
+            else
+                ofcam = new OpticalFlowCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+        }
+        else
+            ofcam = new OpticalFlowCamera(sensorName, resX, resY, hFov, rate);
+
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar velX(0);
+            Scalar velY(0);
+            item->QueryAttribute("velocity_x", &velX);
+            item->QueryAttribute("velocity_y", &velX);
+            ofcam->setNoise(velX, velY);
+        }
+
+        //Optional display settings
+        if((item = element->FirstChildElement("display")) != nullptr)
+        {
+            GLfloat maxV;
+            if(item->QueryAttribute("velocity_max", &maxV) == XML_SUCCESS)
+                ofcam->setDisplaySettings(maxV);
+        }
+        sens = ofcam;
+    }
+    else if(typeStr == "ebc" || typeStr == "eventbasedcamera")
+    {
+        if(!isGraphicalSim())
+        {
+            log.Print(MessageType::ERROR, "Event-based cameras not supported in console mode!");
+            return nullptr;
+        }
+
+        int resX, resY;
+        Scalar hFov;
+        float Cp, Cm;
+        uint32_t Tref;
+
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+            || item->QueryAttribute("contrast_threshold_pos", &Cp) != XML_SUCCESS
+            || item->QueryAttribute("contrast_threshold_neg", &Cm) != XML_SUCCESS
+            || item->QueryAttribute("refractory_period_ns", &Tref) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of event-based camera '%s' not properly defined!", sensorName.c_str());
+            return nullptr;
+        }
+
+        EventBasedCamera* ebc;
+        
+        //Optional parameters
+        if((item = element->FirstChildElement("rendering")) != nullptr) 
+        {
+            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+            int c = 0;
+
+            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+                ++c;
+
+            if(c == 0)
+            {
+                log.Print(MessageType::WARNING, "Rendering options of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
+                ebc = new EventBasedCamera(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
+            }
+            else
+                ebc = new EventBasedCamera(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate, minDist, maxDist);
+        }
+        else
+            ebc = new EventBasedCamera(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
+
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar sigmaCp(0);
+            Scalar sigmaCm(0);
+            int c = 0;
+            if(item->QueryAttribute("contrast_threshold_pos", &sigmaCp) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("contrast_threshold_neg", &sigmaCm) == XML_SUCCESS)
+                ++c;
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Noise of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                ebc->setNoise(sigmaCp, sigmaCm);
+        }
+        sens = ebc;
     }
     else if(typeStr == "multibeam2d")
     {
@@ -4712,6 +4916,8 @@ bool ScenarioParser::ParseColorMap(XMLElement* element, ColorMap& cm)
             cm = ColorMap::COLD_BLUE;
         else if(colorMapStr == "orangecopper")
             cm = ColorMap::ORANGE_COPPER;
+        else if(colorMapStr == "grey")
+            cm = ColorMap::GREY;
         else
         {
             log.Print(MessageType::ERROR, "Unknown color map name '%s'!", colorMapStr.c_str());

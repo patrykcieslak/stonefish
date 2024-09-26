@@ -82,9 +82,10 @@ namespace sf
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
-         \param velocityStdDev standard deviation of the velocity measurement in pixels
+         \param velocityXStdDev standard deviation of the velocity measurement in pixels (X-axis)
+         \param velocityYStdDev standard deviation of the velocity measurement in pixels (Y-axis)
          */
-        void setNoise(glm::vec2 velocityStdDev);
+        void setNoise(float velocityXStdDev, float velocityYStdDev);
 
         //! A method used to set the display settings of the sensor.
         /*!
