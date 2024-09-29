@@ -367,7 +367,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
     glGenerateMipmap(GL_TEXTURE_2D);
     sonarVisualizeShader->Use();
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS1);
-    sonarVisualizeShader->SetUniform("colormap", static_cast<GLint>(cMap));
+    sonarVisualizeShader->SetUniform("colorMap", static_cast<GLint>(cMap));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     OpenGLState::BindVertexArray(displayVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, (fanDiv+1)*2);

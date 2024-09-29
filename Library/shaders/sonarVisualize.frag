@@ -22,11 +22,11 @@
 in vec2 texcoord;
 out vec3 fragcolor;
 uniform sampler2D texSonarData;
-uniform int colormap;
+uniform int colorMap;
 
 #inject "colorMapping.glsl"
 
 void main()
 {
-    fragcolor = applyColorMapping(texture(texSonarData, texcoord).r, colormap);
+    fragcolor = applyColorMapping(texture(texSonarData, texcoord).r, colorMap);
 }

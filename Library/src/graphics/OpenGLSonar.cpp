@@ -183,7 +183,7 @@ void OpenGLSonar::Init()
     
     sonarVisualizeShader = new GLSLShader("sonarVisualize.frag", "printer.vert");
     sonarVisualizeShader->AddUniform("texSonarData", ParameterType::INT);
-    sonarVisualizeShader->AddUniform("colormap", ParameterType::INT);
+    sonarVisualizeShader->AddUniform("colorMap", ParameterType::INT);
 }
 
 void OpenGLSonar::Destroy()

@@ -347,7 +347,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, outputTex[1-pingpong + 1]);
     sonarVisualizeShader->Use();
     sonarVisualizeShader->SetUniform("texSonarData", TEX_POSTPROCESS2);
-    sonarVisualizeShader->SetUniform("colormap", static_cast<GLint>(cMap));
+    sonarVisualizeShader->SetUniform("colorMap", static_cast<GLint>(cMap));
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     OpenGLState::BindVertexArray(displayVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
